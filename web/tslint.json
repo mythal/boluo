@@ -1,0 +1,35 @@
+{
+  "extends": [
+    "tslint:recommended",
+    "tslint-react",
+    "tslint-react-hooks"
+  ],
+  "defaultSeverity": "warning",
+  "rules": {
+    "react-hooks-nesting": "error",
+    "quotemark": false,
+    "no-empty-interface": false,
+    "interface-name": false,
+    "member-access": false,
+    "trailing-comma": false,
+    "arrow-parens": false,
+    "ordered-imports": false,
+    "curly": false,
+    "no-shadowed-variable": false,
+    "object-literal-sort-keys": false,
+    "semicolon": false,
+    "no-trailing-whitespace": false,
+    "no-var-requires": false,
+    "no-namespace": false,
+    "no-console": false,
+    "jsx-curly-spacing": false,
+    "jsx-wrap-multiline": false
+  },
+  "linterOptions": {
+    "exclude": [
+      "config/**/*.js",
+      "node_modules/**/*.ts",
+      "coverage/lcov-report/*.js"
+    ]
+  }
+}

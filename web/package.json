@@ -22,5 +22,10 @@
     "tslint-react": "^4.0.0",
     "tslint-react-hooks": "^2.1.0",
     "typescript": "3.5.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   }
 }

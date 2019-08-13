@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { JWT_SECRET } from '../settings';
 
-export interface JwtPayload {
+export interface JwtUser {
   id: string;
   email: string;
 }
@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<JwtPayload> {
+  async validate(payload: JwtUser): Promise<JwtUser> {
     console.log(payload);
     return payload;
   }

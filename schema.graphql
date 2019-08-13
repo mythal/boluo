@@ -17,9 +17,7 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 """
 scalar DateTime
 
-"""
-A type tag of entities.
-"""
+"""A type tag of entities."""
 enum EntityType {
   ROLL
   LINK
@@ -34,9 +32,7 @@ type Message {
   charName: String!
   isAction: Boolean!
 
-  """
-  Message plain text.
-  """
+  """Message plain text."""
   content: String!
   entities: [MessageEntity!]!
   previous: ID
@@ -44,29 +40,21 @@ type Message {
   created: DateTime!
   modified: DateTime!
 
-  """
-  Is a cached message.
-  """
+  """Is a cached message."""
   cached: Boolean
 }
 
-"""
-Text block, range is [start, start+offset).
-"""
+"""Text block, range is [start, start+offset)."""
 type MessageEntity {
   type: EntityType!
   start: Int!
   offset: Int!
 
-  """
-  Appears only when the type is link
-  """
+  """Appears only when the type is link"""
   link: String
 }
 
-"""
-A type tag of messages.
-"""
+"""A type tag of messages."""
 enum MessageType {
   SYSTEM
   SAY
@@ -79,22 +67,17 @@ type Mutation {
 }
 
 type Query {
-  """
-  Get all messages.
-  """
+  """Get all messages."""
   messages: [Message!]!
   getMessageById(id: ID!): Message!
 
-  """
-  Get all users.
-  """
+  """Get all users."""
   users: [User!]!
   getUserById(id: ID!): User
   getUserByEmail(email: String!): User
+  getMe: User!
 
-  """
-  Get all channels.
-  """
+  """Get all channels."""
   channels: [Channel!]!
   getChannelById(id: ID!): Channel
 }

@@ -90,6 +90,7 @@ type Query {
   """
   users: [User!]!
   getUserById(id: ID!): User
+  getUserByEmail(email: String!): User
 
   """
   Get all channels.

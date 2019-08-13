@@ -19,6 +19,10 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
+  findByEmail(email: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ where: [{ email }] });
+  }
+
   async create(email: string, nickname: string, password: string): Promise<User> {
     const user = new User();
     user.id = generateId();

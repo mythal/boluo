@@ -1,19 +1,19 @@
-import { Query, Resolver } from '@nestjs/graphql';
+import { Args, Query, Resolver } from '@nestjs/graphql';
 import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
-import { Arg, ID } from 'type-graphql';
+import { ID } from 'type-graphql';
 
-@Resolver(of => Channel)
+@Resolver(() => Channel)
 export class ChannelResolver {
   constructor(private channelService: ChannelService) {}
 
-  @Query(returns => [Channel], { description: 'Get all channels.' })
+  @Query(() => [Channel], { description: 'Get all channels.' })
   async channels() {
     return await this.channelService.findAll();
   }
 
-  @Query(returns => Channel, { nullable: true })
-  async getChannelById(@Arg('id', type => ID) id: string) {
+  @Query(() => Channel, { nullable: true })
+  async getChannelById(@Args({ name: 'id', type: () => ID }) id: string) {
     return await this.channelService.findById(id);
   }
 }

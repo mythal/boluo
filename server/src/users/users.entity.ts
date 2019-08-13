@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn } from 'typeorm';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { passwordVerify } from '../utils';
 
@@ -6,9 +6,10 @@ import { passwordVerify } from '../utils';
 @ObjectType('User')
 export class User {
   @PrimaryColumn({ type: 'uuid' })
-  @Field(type => ID)
+  @Field(() => ID)
   id: string;
 
+  @Index({ unique: true })
   @Column()
   @Field()
   email: string;

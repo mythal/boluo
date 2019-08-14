@@ -12,6 +12,7 @@ const pubSub = new PubSub();
 
 const NEW_MESSAGE = 'newMessage';
 const PREVIEW_MESSAGE = 'updatePreviewMessage';
+const MESSAGE_DELETED = 'messageDeleted';
 
 @ObjectType()
 class PreviewMessage {
@@ -125,6 +126,7 @@ export class MessageResolver {
     }
     message.deleted = true;
     await this.messageService.saveMassage(message);
+    pubSub.publish(MESSAGE_DELETED, { [MESSAGE_DELETED]: message.id }).catch(console.error);
     return true;
   }
 
@@ -136,5 +138,10 @@ export class MessageResolver {
   @Subscription(() => PreviewMessage)
   messagePreview() {
     return pubSub.asyncIterator(PREVIEW_MESSAGE);
+  }
+
+  @Subscription(() => ID)
+  messageDeleted() {
+    return pubSub.asyncIterator(MESSAGE_DELETED);
   }
 }

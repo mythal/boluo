@@ -43,6 +43,7 @@ import { PassportModule } from '@nestjs/passport';
     GraphQLModule.forRoot({
       autoSchemaFile: '../schema.graphql',
       context: ({ req }) => ({ req }),
+      installSubscriptionHandlers: true,
     }),
     TypeOrmModule.forFeature([Message, User, Channel]),
     JwtModule.register({

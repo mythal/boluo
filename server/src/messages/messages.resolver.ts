@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { Message, MessageType } from './messages.entity';
 import { MessageService } from './messages.service';
 import { ID } from 'type-graphql';
@@ -6,6 +6,11 @@ import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/auth.guard';
+import { PubSub } from 'apollo-server-express';
+
+const pubSub = new PubSub();
+
+const NEW_MESSAGE = 'newMessage';
 
 @Resolver(() => Message)
 export class MessageResolver {
@@ -34,7 +39,11 @@ export class MessageResolver {
     if (content.trim().length === 0) {
       throw Error('Empty message');
     }
-    return await this.messageService.create(id, content, channelId, charName, user.id, type);
+    const message = await this.messageService.create(id, content, channelId, charName, user.id, type);
+    if (message) {
+      pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message }).catch(console.error);
+    }
+    return message;
   }
 
   @Mutation(() => Message)
@@ -71,5 +80,10 @@ export class MessageResolver {
     message.deleted = true;
     await this.messageService.saveMassage(message);
     return true;
+  }
+
+  @Subscription(() => Message)
+  newMessage() {
+    return pubSub.asyncIterator(NEW_MESSAGE);
   }
 }

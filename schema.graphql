@@ -90,6 +90,10 @@ type Query {
   getChannelById(id: ID!): Channel
 }
 
+type Subscription {
+  newMessage: Message!
+}
+
 type User {
   id: ID!
   email: String!

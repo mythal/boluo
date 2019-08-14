@@ -22,6 +22,9 @@ export class User {
   @Field()
   created: Date;
 
+  @Column({ default: true })
+  isActive: boolean;
+
   @Column()
   password: string;
 

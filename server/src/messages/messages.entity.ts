@@ -28,11 +28,11 @@ export interface MessageEntity {
 
 @ObjectType('MessageEntity', { description: 'Text block, range is [start, start+offset).' })
 export class MessageEntityDefinition implements MessageEntity {
-  @Field(type => EntityType)
+  @Field(() => EntityType)
   type: EntityType;
-  @Field(type => Int)
+  @Field(() => Int)
   start: number;
-  @Field(type => Int)
+  @Field(() => Int)
   offset: number;
   @Field({ nullable: true, description: 'Appears only when the type is link' })
   link?: string;
@@ -42,25 +42,30 @@ export class MessageEntityDefinition implements MessageEntity {
 @ObjectType()
 export class Message {
   @PrimaryColumn({ type: 'uuid' })
-  @Field(type => ID)
+  @Field(() => ID)
   id: string;
 
   @Column({ type: 'enum', enum: MessageType })
-  @Field(type => MessageType)
+  @Field(() => MessageType)
   type: MessageType;
 
-  @ManyToOne(type => User, { nullable: true })
-  @JoinColumn()
-  @Field(type => User)
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'userId' })
+  @Field(() => User, { nullable: true })
   user: Promise<User>;
 
-  @ManyToOne(type => Channel, channel => channel.messages)
-  @Field(type => Channel, { nullable: true })
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  userId: string;
+
+  @ManyToOne(() => Channel, channel => channel.messages)
+  @JoinColumn({ name: 'channelId' })
+  @Field(() => Channel, { nullable: true })
   channel: Promise<Channel>;
 
-  @Column()
-  @Field()
-  nickname: string;
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  channelId: string;
 
   @Column()
   @Field()
@@ -75,16 +80,16 @@ export class Message {
   content: string;
 
   @Column({ type: 'jsonb', default: [] })
-  @Field(type => [MessageEntityDefinition])
+  @Field(() => [MessageEntityDefinition])
   entities: MessageEntity[];
 
   @Column({ type: 'uuid', nullable: true, default: null })
-  @Field(type => ID, { nullable: true })
+  @Field(() => ID, { nullable: true })
   previous: string | null;
 
-  @Column({ type: 'boolean', default: false })
-  @Field()
-  inThread: boolean;
+  @Column({ type: 'uuid', nullable: true, default: null })
+  @Field(() => ID, { nullable: true })
+  threadHead: string | null;
 
   @Column({ type: 'boolean', default: false })
   deleted: boolean;

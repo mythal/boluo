@@ -18,7 +18,8 @@
     "no-var-requires": false,
     "no-trailing-whitespace": false,
     "no-unused-variable": false,
-    "no-consecutive-blank-lines": false
+    "no-consecutive-blank-lines": false,
+    "trailing-comma": false
   },
   "rulesDirectory": []
 }

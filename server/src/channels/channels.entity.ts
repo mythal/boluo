@@ -1,12 +1,22 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Message } from '../messages/messages.entity';
+import { User } from '../users/users.entity';
 
 @Entity('channels')
 @ObjectType('Channel')
 export class Channel {
   @PrimaryColumn({ type: 'uuid' })
-  @Field(type => ID)
+  @Field(() => ID)
   id: string;
 
   @Column()
@@ -25,7 +35,16 @@ export class Channel {
   @Field()
   modified: Date;
 
-  @OneToMany(type => Message, message => message.channel)
-  @Field(type => [Message])
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'creatorId' })
+  @Field(() => User, { nullable: true })
+  creator: Promise<User> | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  creatorId: string;
+
+  @OneToMany(() => Message, message => message.channel)
+  @Field(() => [Message])
   messages: Promise<Message[]>;
 }

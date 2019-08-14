@@ -9,6 +9,8 @@ type Channel {
   topic: String
   created: DateTime!
   modified: DateTime!
+  creator: User
+  creatorId: ID
   messages: [Message!]!
 }
 
@@ -26,9 +28,10 @@ enum EntityType {
 type Message {
   id: ID!
   type: MessageType!
-  user: User!
+  user: User
+  userId: ID
   channel: Channel
-  nickname: String!
+  channelId: ID
   charName: String!
   isAction: Boolean!
 
@@ -36,7 +39,7 @@ type Message {
   content: String!
   entities: [MessageEntity!]!
   previous: ID
-  inThread: Boolean!
+  threadHead: ID
   created: DateTime!
   modified: DateTime!
 
@@ -63,7 +66,12 @@ enum MessageType {
 }
 
 type Mutation {
-  register(nickname: String!, password: String!, email: String!): User
+  sendMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
+  editMessage(content: String!, messageId: String!): Message!
+  deleteMessage(messageId: String!): Boolean!
+  register(nickname: String!, password: String!, email: String!): User!
+  createChannel(title: String!): Channel!
+  renameChannel(title: String!, id: ID!): Channel!
 }
 
 type Query {

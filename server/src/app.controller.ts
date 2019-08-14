@@ -17,7 +17,6 @@ export class AppController {
   async login(@Request() req) {
     const { id, nickname } = req.user;
     const token = this.jwtService.sign({ id, nickname });
-    console.log(this.jwtService.decode(token));
     return { token };
   }
 

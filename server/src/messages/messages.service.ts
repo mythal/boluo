@@ -11,11 +11,11 @@ export class MessageService {
   ) {}
 
   findAll(): Promise<Message[]> {
-    return this.messageRepository.find();
+    return this.messageRepository.find({ where: { deleted: false } });
   }
 
   findById(id: string): Promise<Message | undefined> {
-    return this.messageRepository.findOne(id);
+    return this.messageRepository.findOne(id, { where: { deleted: false } });
   }
 
   async create(id: string, content: string, channelId: string, charName: string, userId: string, type: MessageType) {

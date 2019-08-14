@@ -102,7 +102,7 @@ export class MessageResolver {
     @Args('content') content: string
   ) {
     const message = await this.messageService.findById(messageId);
-    if (!message) {
+    if (!message || message.deleted) {
       throw Error('No message found');
     }
     if (message.userId !== user.id) {

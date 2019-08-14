@@ -13,6 +13,7 @@ const pubSub = new PubSub();
 const NEW_MESSAGE = 'newMessage';
 const PREVIEW_MESSAGE = 'updatePreviewMessage';
 const MESSAGE_DELETED = 'messageDeleted';
+const MESSAGE_EDITED = 'messageEdited';
 
 @ObjectType()
 class PreviewMessage {
@@ -108,7 +109,9 @@ export class MessageResolver {
       throw Error('No editing authority');
     }
     message.content = content;
-    return this.messageService.saveMassage(message);
+    const savedMessage = await this.messageService.saveMassage(message);
+    pubSub.publish(MESSAGE_EDITED, savedMessage).catch(console.error);
+    return savedMessage;
   }
 
   @Mutation(() => Boolean)
@@ -143,5 +146,10 @@ export class MessageResolver {
   @Subscription(() => ID)
   messageDeleted() {
     return pubSub.asyncIterator(MESSAGE_DELETED);
+  }
+
+  @Subscription(() => Message)
+  messageEdited() {
+    return pubSub.asyncIterator(MESSAGE_EDITED);
   }
 }

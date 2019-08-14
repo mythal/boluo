@@ -101,7 +101,4 @@ export class Message {
   @UpdateDateColumn()
   @Field()
   modified: Date;
-
-  @Field({ description: 'Is a cached message.', defaultValue: false })
-  cached: boolean = false;
 }

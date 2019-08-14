@@ -1,7 +1,7 @@
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { Message, MessageType } from './messages.entity';
 import { MessageService } from './messages.service';
-import { ID } from 'type-graphql';
+import { Field, ID, ObjectType } from 'type-graphql';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
@@ -11,6 +11,28 @@ import { PubSub } from 'apollo-server-express';
 const pubSub = new PubSub();
 
 const NEW_MESSAGE = 'newMessage';
+const PREVIEW_MESSAGE = 'updatePreviewMessage';
+
+@ObjectType()
+class PreviewMessage {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => MessageType)
+  type: MessageType;
+
+  @Field(() => ID)
+  userId: string;
+
+  @Field(() => ID)
+  channelId: string;
+
+  @Field()
+  charName: string;
+
+  @Field({ description: 'Message plain text.' })
+  content: string;
+}
 
 @Resolver(() => Message)
 export class MessageResolver {
@@ -43,6 +65,30 @@ export class MessageResolver {
     if (message) {
       pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message }).catch(console.error);
     }
+    return message;
+  }
+
+  @Mutation(() => PreviewMessage)
+  @UseGuards(GqlAuthGuard)
+  async updatePreviewMessage(
+    @Args({ name: 'id', type: () => ID }) id: string,
+    @Args('content') content: string,
+    @Args({ name: 'channelId', type: () => ID }) channelId: string,
+    @Args('charName') charName: string,
+    @Args({ name: 'type', type: () => MessageType }) type: MessageType,
+    @CurrentUser() user: JwtUser
+  ) {
+    if (content.trim().length === 0) {
+      return false;
+    }
+    const message = new PreviewMessage();
+    message.channelId = channelId;
+    message.charName = charName;
+    message.type = type;
+    message.userId = user.id;
+    message.id = id;
+    message.content = content;
+    pubSub.publish(PREVIEW_MESSAGE, { [PREVIEW_MESSAGE]: message }).catch(console.error);
     return message;
   }
 
@@ -85,5 +131,10 @@ export class MessageResolver {
   @Subscription(() => Message)
   newMessage() {
     return pubSub.asyncIterator(NEW_MESSAGE);
+  }
+
+  @Subscription(() => PreviewMessage)
+  messagePreview() {
+    return pubSub.asyncIterator(PREVIEW_MESSAGE);
   }
 }

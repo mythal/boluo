@@ -42,9 +42,6 @@ type Message {
   threadHead: ID
   created: DateTime!
   modified: DateTime!
-
-  """Is a cached message."""
-  cached: Boolean
 }
 
 """Text block, range is [start, start+offset)."""
@@ -67,11 +64,23 @@ enum MessageType {
 
 type Mutation {
   sendMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
+  updatePreviewMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): PreviewMessage!
   editMessage(content: String!, messageId: String!): Message!
   deleteMessage(messageId: String!): Boolean!
   register(nickname: String!, password: String!, email: String!): User!
   createChannel(title: String!): Channel!
   renameChannel(title: String!, id: ID!): Channel!
+}
+
+type PreviewMessage {
+  id: ID!
+  type: MessageType!
+  userId: ID!
+  channelId: ID!
+  charName: String!
+
+  """Message plain text."""
+  content: String!
 }
 
 type Query {
@@ -92,6 +101,7 @@ type Query {
 
 type Subscription {
   newMessage: Message!
+  messagePreview: PreviewMessage!
 }
 
 type User {

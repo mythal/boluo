@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { TOKEN_KEY } from './settings';
+import { TOKEN_KEY } from '../settings';
 import { Redirect } from 'react-router';
 import { InputChangeHandler } from './App';
-import { isLoggedIn, isUserLoading, useUserState } from './user';
+import { isLoggedIn, isUserLoading, useUserState } from '../user';
 import { Button, Container, Grid, makeStyles, Paper, Snackbar, TextField, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
   paper: {
     padding: theme.spacing(3, 2),
-    margin: theme.spacing(5),
+    margin: '5rem 0',
   },
 }));
 

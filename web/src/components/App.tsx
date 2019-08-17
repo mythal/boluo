@@ -1,9 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Link as RouterLink, Route } from 'react-router-dom';
-import './App.css';
 import { Register } from './Register';
 import { Login } from './Login';
-import { isGuest, isLoggedIn, useGetMe, UserContext } from './user';
+import { isGuest, isLoggedIn, useGetMe, UserContext } from '../user';
 import { Logout } from './Logout';
 import {
   AppBar,
@@ -17,17 +16,19 @@ import {
   Toolbar,
 } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
-
-function Index() {
-  return null;
-}
+import { AppDrawer } from './AppDrawer';
 
 export type InputChangeHandler = React.ChangeEventHandler<HTMLInputElement>;
+export const drawerWidth = 200;
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      flexGrow: 1,
+      display: 'flex',
+    },
+    appBar: {
+      width: `calc(100% - ${drawerWidth}px)`,
+      // marginLeft: drawerWidth,
     },
     menuButton: {
       marginRight: theme.spacing(2),
@@ -36,8 +37,25 @@ const useStyles = makeStyles((theme: Theme) =>
       flexGrow: 1,
       color: '#FFFFFF',
     },
+    drawer: {
+      width: drawerWidth,
+      flexShrink: 0,
+    },
+    drawerPaper: {
+      width: drawerWidth,
+    },
+    toolbar: theme.mixins.toolbar,
+    content: {
+      flexGrow: 1,
+      backgroundColor: theme.palette.background.default,
+      padding: theme.spacing(3),
+    },
   })
 );
+
+const Index: React.FC = () => {
+  return null;
+};
 
 const App: React.FC = () => {
   const userState = useGetMe();
@@ -64,7 +82,8 @@ const App: React.FC = () => {
       <CssBaseline />
       <Router>
         <div className={classes.root}>
-          <AppBar position="static">
+          <AppDrawer open={true} drawerClass={classes.drawer} drawerPaperClass={classes.drawerPaper} />
+          <AppBar className={classes.appBar} position="fixed">
             <Toolbar>
               <IconButton edge="start" className={classes.menuButton} href="" color="inherit" aria-label="menu">
                 <MenuIcon />
@@ -77,11 +96,12 @@ const App: React.FC = () => {
               {isLoggedIn(userState) ? logoutLink : null}
             </Toolbar>
           </AppBar>
-          {isLoggedIn(userState) ? <p>Welcome {userState.nickname}</p> : null}
-          <Route path="/" exact={true} component={Index} />
-          <Route path="/register/" component={Register} />
-          <Route path="/login/" component={Login} />
-          <Route path="/logout/" component={Logout} />
+          <main className={classes.content}>
+            <Route path="/" exact={true} component={Index} />
+            <Route path="/register/" component={Register} />
+            <Route path="/login/" component={Login} />
+            <Route path="/logout/" component={Logout} />
+          </main>
         </div>
       </Router>
     </UserContext.Provider>

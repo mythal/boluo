@@ -1,5 +1,5 @@
 import React from 'react';
-import { TOKEN_KEY } from './settings';
+import { TOKEN_KEY } from '../settings';
 import { Redirect } from 'react-router';
 
 export function Logout() {

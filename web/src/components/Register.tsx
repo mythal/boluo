@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Redirect } from 'react-router';
 import { InputChangeHandler } from './App';
-import { checkNickname, checkPassword, checkUsername } from './common';
+import { checkNickname, checkPassword, checkUsername } from '../../../common';
 import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
-import { isLoggedIn, isUserLoading, useUserState } from './user';
+import { isLoggedIn, isUserLoading, useUserState } from '../user';
 import { Button, Container, Grid, makeStyles, Paper, Snackbar, TextField, Typography } from '@material-ui/core';
 
 const REGISTER = gql`
@@ -18,7 +18,7 @@ const REGISTER = gql`
 const useStyles = makeStyles(theme => ({
   paper: {
     padding: theme.spacing(3, 2),
-    margin: theme.spacing(5),
+    margin: '5rem 0',
   },
 }));
 

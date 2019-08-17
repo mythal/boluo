@@ -17,6 +17,7 @@ import {
 } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
 import { AppDrawer } from './AppDrawer';
+import { Channel } from './Channel';
 
 export type InputChangeHandler = React.ChangeEventHandler<HTMLInputElement>;
 export const drawerWidth = 200;
@@ -49,6 +50,7 @@ const useStyles = makeStyles((theme: Theme) =>
       flexGrow: 1,
       backgroundColor: theme.palette.background.default,
       padding: theme.spacing(3),
+      paddingTop: theme.spacing(9),
     },
   })
 );
@@ -101,6 +103,7 @@ const App: React.FC = () => {
             <Route path="/register/" component={Register} />
             <Route path="/login/" component={Login} />
             <Route path="/logout/" component={Logout} />
+            <Route path="/channel/:id/" component={Channel} />
           </main>
         </div>
       </Router>

@@ -1,45 +1,66 @@
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { TOKEN_KEY } from './settings';
 
 export interface User {
+  type: 'user';
   id: string;
   nickname: string;
+  refetch: () => void;
 }
 
-export type UserState = 'guest' | 'loading' | User;
-export const UserContext = React.createContext<UserState>('guest');
-export const isUserLoading = (state: UserState): state is 'loading' => state === 'loading';
-export const isGuest = (state: UserState): state is 'guest' => state === 'guest';
-export const isLoggedIn = (state: UserState): state is User => state !== 'guest' && state !== 'loading';
-export const useUserState = (): UserState => {
-  return useContext(UserContext);
-};
+export interface Guest {
+  type: 'guest';
+  refetch: () => void;
+}
+
+export interface Loading {
+  type: 'loading';
+  refetch: () => void;
+}
+
+export type UserState = User | Guest | Loading;
+
+export const UserContext = React.createContext<UserState>({
+  type: 'guest',
+  refetch: () => console.error('empty content refetch'),
+});
+export const isUserLoading = (state: UserState): state is Loading => state.type === 'loading';
+export const isGuest = (state: UserState): state is Guest => state.type === 'guest';
+export const isLoggedIn = (state: UserState): state is User => state.type === 'user';
+
+export const useUserState = (): UserState => useContext(UserContext);
+
+const GET_ME = gql`
+  {
+    getMe {
+      id
+      nickname
+    }
+  }
+`;
+
 export const useGetMe = () => {
-  const [userState, setUserState] = useState<UserState>('guest');
-  const { loading, error, data } = useQuery<{ getMe?: User }>(
-    gql`
-      {
-        getMe {
-          id
-          nickname
-        }
-      }
-    `
-  );
+  const { loading, error, data, refetch, client } = useQuery<{ getMe?: User }>(GET_ME);
+  const refetchWrap = useCallback(() => {
+    client.resetStore().then(() => refetch());
+  }, [refetch]);
+  const [userState, setUserState] = useState<UserState>({ type: 'guest', refetch: refetchWrap });
   if (loading) {
-    if (userState !== 'loading') {
-      setUserState('loading');
+    if (!isUserLoading(userState)) {
+      setUserState({ type: 'loading', refetch: refetchWrap });
     }
   } else if (error) {
-    if (userState !== 'guest') {
-      setUserState('guest');
+    if (!isGuest(userState)) {
+      setUserState({ type: 'guest', refetch: refetchWrap });
     }
     localStorage.removeItem(TOKEN_KEY);
   } else if (data) {
-    if (userState === 'loading' || userState === 'guest') {
-      if (data.getMe) setUserState(data.getMe);
+    if (!isLoggedIn(userState)) {
+      if (data.getMe) {
+        setUserState({ ...data.getMe, refetch: refetchWrap, type: 'user' });
+      }
     }
   }
   return userState;

@@ -46,15 +46,13 @@ export const Register = () => {
     return <Redirect to="/login" />;
   }
 
-  console.log('rendering', called, error, loading);
-
   if (called && loading) {
     return null;
   }
   return (
     <>
       <h2>Register</h2>
-      <form>
+      <form onSubmit={submitRegister}>
         {error ? <p>Register failed: {error.message}</p> : null}
         <p>
           <label htmlFor="username">Username: </label>
@@ -83,7 +81,7 @@ export const Register = () => {
           {!isPasswordMatch ? <span>Passwords do not match</span> : null}
         </p>
         <p>
-          <input disabled={!canSubmit} type="submit" value="Register" onClick={submitRegister} />
+          <input disabled={!canSubmit} type="submit" value="Register" />
         </p>
       </form>
     </>

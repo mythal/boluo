@@ -15,7 +15,8 @@
     "react-router-dom": "^5.0.1"
   },
   "scripts": {
-    "start": "parcel start src/index.html"
+    "start": "parcel start src/index.html",
+    "watch": "parcel watch --no-hmr src/index.html"
   },
   "devDependencies": {
     "@types/node": "12.7.2",

@@ -16,11 +16,11 @@ export function Login() {
   const setToken = (result: { token: string }) => {
     if (result.token) {
       localStorage.setItem(TOKEN_KEY, result.token);
-      location.reload();
+      userState.refetch();
     }
   };
 
-  const submitLogin: React.MouseEventHandler = e => {
+  const submitLogin = (e: React.SyntheticEvent) => {
     e.preventDefault();
     fetch(process.env.LOGIN_URL || '', {
       method: 'POST',
@@ -44,7 +44,7 @@ export function Login() {
   return (
     <>
       <h2>Login</h2>
-      <form>
+      <form onSubmit={submitLogin}>
         {loginFailure ? <p>Login Failed</p> : null}
         <p>
           <label htmlFor="username">Username: </label>
@@ -55,7 +55,7 @@ export function Login() {
           <input id="password" type="password" value={password} onChange={handlePassword} />
         </p>
         <p>
-          <input type="submit" value="Login" onClick={submitLogin} />
+          <input type="submit" value="Login" />
         </p>
       </form>
     </>

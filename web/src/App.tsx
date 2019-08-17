@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Link, Route } from 'react-router-dom';
 import './App.css';
-import { TOKEN_KEY } from './settings';
 import { Register } from './Register';
 import { Login } from './Login';
 import { isGuest, isLoggedIn, useGetMe, UserContext } from './user';
+import { Logout } from './Logout';
 
 function Index() {
   return <h2>Home</h2>;
@@ -15,19 +15,9 @@ export type InputChangeHandler = React.ChangeEventHandler<HTMLInputElement>;
 const App: React.FC = () => {
   const userState = useGetMe();
 
-  const handleLogout: React.MouseEventHandler = e => {
-    e.preventDefault();
-    localStorage.removeItem(TOKEN_KEY);
-    location.reload();
-  };
-
   const loginLink = <Link to="/login/">Login</Link>;
   const registerLink = <Link to="/register/">Register</Link>;
-  const logoutLink = (
-    <Link to="#" onClick={handleLogout}>
-      Logout
-    </Link>
-  );
+  const logoutLink = <Link to="/logout/">Logout</Link>;
 
   return (
     <UserContext.Provider value={userState}>
@@ -48,6 +38,7 @@ const App: React.FC = () => {
           <Route path="/" exact={true} component={Index} />
           <Route path="/register/" component={Register} />
           <Route path="/login/" component={Login} />
+          <Route path="/logout/" component={Logout} />
         </div>
       </Router>
     </UserContext.Provider>

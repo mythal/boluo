@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { TOKEN_KEY } from './settings';
@@ -42,24 +42,21 @@ const GET_ME = gql`
 `;
 
 export const useGetMe = () => {
-  const { loading, error, data, refetch, client } = useQuery<{ getMe?: User }>(GET_ME);
-  const refetchWrap = useCallback(() => {
-    client.resetStore().then(() => refetch());
-  }, [refetch]);
-  const [userState, setUserState] = useState<UserState>({ type: 'guest', refetch: refetchWrap });
+  const { loading, error, data, refetch } = useQuery<{ getMe?: User }>(GET_ME);
+  const [userState, setUserState] = useState<UserState>({ type: 'guest', refetch });
   if (loading) {
     if (!isUserLoading(userState)) {
-      setUserState({ type: 'loading', refetch: refetchWrap });
+      setUserState({ type: 'loading', refetch });
     }
   } else if (error) {
     if (!isGuest(userState)) {
-      setUserState({ type: 'guest', refetch: refetchWrap });
+      setUserState({ type: 'guest', refetch });
     }
     localStorage.removeItem(TOKEN_KEY);
   } else if (data) {
     if (!isLoggedIn(userState)) {
       if (data.getMe) {
-        setUserState({ ...data.getMe, refetch: refetchWrap, type: 'user' });
+        setUserState({ ...data.getMe, refetch, type: 'user' });
       }
     }
   }

@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@apollo/react-hooks": "^3.0.0",
+    "@material-ui/core": "^4.3.2",
+    "@material-ui/icons": "^4.2.1",
     "apollo-boost": "^0.4.4",
     "apollo-client": "^2.6.4",
     "apollo-link-context": "^1.0.18",

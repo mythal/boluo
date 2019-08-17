@@ -5,7 +5,7 @@ export function checkEmailFormat(email: string): boolean {
 }
 
 export function checkUsername(username: string): [boolean, string] {
-  if (/^[\w_\d]+$/.test(username)) {
+  if (!/^[\w_\d]+$/.test(username)) {
     return [false, 'Username can only contain letters, "_" and numbers.'];
   } else if (username.length < 3) {
     return [false, 'Username must be at least 3 characters.'];

@@ -5,6 +5,7 @@ import { checkNickname, checkPassword, checkUsername } from './common';
 import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
 import { isLoggedIn, isUserLoading, useUserState } from './user';
+import { Button, Container, Grid, makeStyles, Paper, Snackbar, TextField, Typography } from '@material-ui/core';
 
 const REGISTER = gql`
   mutation Register($nickname: String!, $password: String!, $username: String!) {
@@ -13,6 +14,14 @@ const REGISTER = gql`
     }
   }
 `;
+
+const useStyles = makeStyles(theme => ({
+  paper: {
+    padding: theme.spacing(3, 2),
+    margin: theme.spacing(5),
+  },
+}));
+
 export const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +29,7 @@ export const Register = () => {
   const [nickname, setNickname] = useState('');
   const userState = useUserState();
   const [register, { loading, called, error }] = useMutation(REGISTER);
+  const classes = useStyles();
 
   const handleUsername: InputChangeHandler = e => setUsername(e.currentTarget.value.trim());
   const handlePassword: InputChangeHandler = e => setPassword(e.currentTarget.value);
@@ -49,41 +59,76 @@ export const Register = () => {
   if (called && loading) {
     return null;
   }
+
+  const registerFailedSnackBar = (
+    <Snackbar open={!!error} autoHideDuration={6000} message={`Register Failed: ${error}`} />
+  );
+
   return (
-    <>
-      <h2>Register</h2>
-      <form onSubmit={submitRegister}>
-        {error ? <p>Register failed: {error.message}</p> : null}
-        <p>
-          <label htmlFor="username">Username: </label>
-          <input id="username" type="text" required={true} value={username} onChange={handleUsername} />
-          {!isValidUsername ? <span>{usernameInvalidReason}</span> : null}
-        </p>
-        <p>
-          <label htmlFor="nickname">Nickname: </label>
-          <input id="nickname" type="text" required={true} value={nickname} onChange={handleNickname} />
-          {!isValidNickname ? <span>{nicknameInvalidReason}</span> : null}
-        </p>
-        <p>
-          <label htmlFor="password">Password: </label>
-          <input id="password" type="password" required={true} value={password} onChange={handlePassword} />
-          {!isValidPassword ? <span>{passwordInvalidReason}</span> : null}
-        </p>
-        <p>
-          <label htmlFor="repeat-password">Repeat Password: </label>
-          <input
-            id="repeat-password"
-            type="password"
-            required={true}
-            value={repeatPassword}
-            onChange={handleRepeatPassword}
-          />
-          {!isPasswordMatch ? <span>Passwords do not match</span> : null}
-        </p>
-        <p>
-          <input disabled={!canSubmit} type="submit" value="Register" />
-        </p>
-      </form>
-    </>
+    <Container maxWidth="sm">
+      {error ? registerFailedSnackBar : null}
+      <Paper className={classes.paper}>
+        <Typography component="h1" variant="h5">
+          Register
+        </Typography>
+        <form onSubmit={submitRegister}>
+          <Grid container={true} spacing={2}>
+            <Grid item={true} xs={12} sm={6}>
+              <TextField
+                required={true}
+                fullWidth={true}
+                name="username"
+                onChange={handleUsername}
+                error={!isValidUsername}
+                label="Username"
+                helperText={usernameInvalidReason}
+                type="text"
+              />
+            </Grid>
+            <Grid item={true} xs={12} sm={6}>
+              <TextField
+                required={true}
+                fullWidth={true}
+                name="nickname"
+                onChange={handleNickname}
+                error={!isValidNickname}
+                label="Nickname"
+                helperText={nicknameInvalidReason}
+                type="text"
+              />
+            </Grid>
+            <Grid item={true} xs={12} sm={6}>
+              <TextField
+                required={true}
+                fullWidth={true}
+                name="password"
+                onChange={handlePassword}
+                error={!isValidPassword}
+                label="Password"
+                helperText={passwordInvalidReason}
+                type="password"
+              />
+            </Grid>
+            <Grid item={true} xs={12} sm={6}>
+              <TextField
+                required={true}
+                fullWidth={true}
+                name="repeat-password"
+                onChange={handleRepeatPassword}
+                error={password !== repeatPassword}
+                label="Repeat Password"
+                helperText={!isPasswordMatch ? <span>Passwords do not match</span> : null}
+                type="password"
+              />
+            </Grid>
+            <Grid item={true} xs={12} sm={12}>
+              <Button type="submit" fullWidth={true} variant="contained" disabled={!canSubmit} color="primary" href="">
+                Register
+              </Button>
+            </Grid>
+          </Grid>
+        </form>
+      </Paper>
+    </Container>
   );
 };

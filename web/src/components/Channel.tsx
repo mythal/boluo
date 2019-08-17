@@ -1,6 +1,6 @@
 import React, { ChangeEventHandler, FormEventHandler, useState } from 'react';
 import { RouteComponentProps } from 'react-router';
-import { useMutation, useQuery } from '@apollo/react-hooks';
+import { useMutation, useQuery, useSubscription } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import {
   Button,
@@ -47,9 +47,23 @@ const CHANNEL = gql`
 `;
 
 const SEND_MESSAGE = gql`
-  mutation sendMessage($messageId: ID!, $channelId: ID!, $messageText: String!) {
-    sendMessage(type: SAY, charName: "神明大人", channelId: $channelId, content: $messageText, id: $messageId) {
+  mutation sendMessage($messageId: ID!, $charName: String!, $channelId: ID!, $messageText: String!) {
+    sendMessage(type: SAY, charName: $charName, channelId: $channelId, content: $messageText, id: $messageId) {
       id
+    }
+  }
+`;
+
+const SUBSCRIPT_NEW_MESSAGE = gql`
+  subscription {
+    newMessage {
+      id
+      content
+      created
+      charName
+      user {
+        nickname
+      }
     }
   }
 `;
@@ -90,24 +104,41 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+const newMessages: Message[] = [];
+
 export const Channel = ({ match }: Props) => {
   const { id } = match.params;
   const { error, loading, data } = useQuery<Data>(CHANNEL, { variables: { id } });
   const classes = useStyles();
   const [messageId, setMessageId] = useState(generateId());
   const [messageText, setMessageText] = useState('');
+  const [charName, setCharName] = useState('');
   const [sendMessage, sendResult] = useMutation(SEND_MESSAGE, {
     variables: {
       messageId,
       messageText,
       channelId: id,
+      charName,
     },
   });
+  const subscriptionResult = useSubscription<{ newMessage?: Message }>(SUBSCRIPT_NEW_MESSAGE);
   const userState = useUserState();
   if (error || loading || !data || !data.getChannelById) {
     return null;
   }
   const channel = data.getChannelById;
+
+  if (!subscriptionResult.loading && subscriptionResult.data && subscriptionResult.data.newMessage) {
+    const newMessage = subscriptionResult.data.newMessage;
+    const peekMessage: Message | undefined = newMessages.pop();
+    if (peekMessage) {
+      newMessages.push(peekMessage);
+    }
+    if (!peekMessage || peekMessage.id !== newMessage.id) {
+      newMessages.push(newMessage);
+      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
+    }
+  }
 
   const messageMapper = (message: Message) => {
     let name = 'Anonymous';
@@ -128,11 +159,16 @@ export const Channel = ({ match }: Props) => {
     setMessageText(e.currentTarget.value);
   };
 
+  const handleCharName: ChangeEventHandler<HTMLInputElement> = e => {
+    setCharName(e.currentTarget.value);
+  };
+
   const handleSubmit: FormEventHandler = async e => {
     e.preventDefault();
 
     setMessageId(generateId());
     await sendMessage();
+    setMessageText('');
   };
 
   const canSend = isLoggedIn(userState) && !sendResult.loading;
@@ -143,13 +179,19 @@ export const Channel = ({ match }: Props) => {
         <Typography component="h1" variant="h5">
           {channel.title}
         </Typography>
-        <List>{channel.messages.map(messageMapper)}</List>
+        <List>{channel.messages.concat(newMessages).map(messageMapper)}</List>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
+            <Grid container item md={12} sm={12} xs={12}>
+              <Grid item md={4} sm={5} xs={6}>
+                <TextField required label="Character Name" onChange={handleCharName} />
+              </Grid>
+            </Grid>
             <Grid item md={10} sm={9} xs={8}>
               <TextField
                 fullWidth
                 multiline
+                required
                 onChange={handleMessageText}
                 value={messageText}
                 error={!!error}

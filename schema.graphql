@@ -67,7 +67,7 @@ type Mutation {
   updatePreviewMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): PreviewMessage!
   editMessage(content: String!, messageId: String!): Message!
   deleteMessage(messageId: String!): Boolean!
-  register(nickname: String!, password: String!, email: String!): User!
+  register(nickname: String!, password: String!, username: String!): User!
   createChannel(title: String!): Channel!
   renameChannel(title: String!, id: ID!): Channel!
 }
@@ -91,7 +91,7 @@ type Query {
   """Get all users."""
   users: [User!]!
   getUserById(id: ID!): User
-  getUserByEmail(email: String!): User
+  getUserByUsername(username: String!): User
   getMe: User!
 
   """Get all channels."""
@@ -108,7 +108,7 @@ type Subscription {
 
 type User {
   id: ID!
-  email: String!
+  username: String!
   nickname: String!
   created: DateTime!
 }

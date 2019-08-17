@@ -19,15 +19,15 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
-  findByEmail(email: string): Promise<User | undefined> {
-    return this.userRepository.findOne({ where: [{ email }] });
+  findByUsername(username: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ where: [{ username }] });
   }
 
-  async create(email: string, nickname: string, password: string): Promise<User> {
+  async create(username: string, nickname: string, password: string): Promise<User> {
     const user = new User();
     user.id = generateId();
     user.nickname = nickname;
-    user.email = email;
+    user.username = username;
     user.password = await passwordHash(password);
     return this.userRepository.save(user);
   }

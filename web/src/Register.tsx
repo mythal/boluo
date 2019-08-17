@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
 import { Redirect } from 'react-router';
-import { InputChangeHandler, isLoggedIn, isUserLoading, useUserState } from './App';
-import { checkEmailFormat, checkNickname } from './common';
+import { InputChangeHandler } from './App';
+import { checkNickname, checkPassword, checkUsername } from './common';
 import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
+import { isLoggedIn, isUserLoading, useUserState } from './user';
 
 const REGISTER = gql`
-  mutation Register($nickname: String!, $password: String!, $email: String!) {
-    register(nickname: $nickname, password: $password, email: $email) {
+  mutation Register($nickname: String!, $password: String!, $username: String!) {
+    register(nickname: $nickname, password: $password, username: $username) {
       id
     }
   }
 `;
 export const Register = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const userState = useUserState();
   const [register, { loading, called, error }] = useMutation(REGISTER);
 
-  const handleEmail: InputChangeHandler = e => setEmail(e.currentTarget.value.trim());
+  const handleUsername: InputChangeHandler = e => setUsername(e.currentTarget.value.trim());
   const handlePassword: InputChangeHandler = e => setPassword(e.currentTarget.value);
   const handleRepeatPassword: InputChangeHandler = e => setRepeatPassword(e.currentTarget.value);
   const handleNickname: InputChangeHandler = e => setNickname(e.currentTarget.value);
@@ -32,14 +33,14 @@ export const Register = () => {
   }
 
   const isPasswordMatch = password === repeatPassword;
-  const passwordGreaterThan8 = password.length >= 8;
-  const isValidEmail = checkEmailFormat(email);
+  const [isValidPassword, passwordInvalidReason] = checkPassword(password);
+  const [isValidUsername, usernameInvalidReason] = checkUsername(username);
   const [isValidNickname, nicknameInvalidReason] = checkNickname(nickname);
-  const canSubmit = isPasswordMatch && passwordGreaterThan8 && isValidNickname && !loading;
+  const canSubmit = isPasswordMatch && isValidPassword && isValidUsername && isValidNickname && !loading;
 
   const submitRegister = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    register({ variables: { nickname, email, password } }).catch(console.error);
+    register({ variables: { nickname, username, password } }).catch(console.error);
   };
   if (called && !error && !loading) {
     return <Redirect to="/login" />;
@@ -56,9 +57,9 @@ export const Register = () => {
       <form>
         {error ? <p>Register failed: {error.message}</p> : null}
         <p>
-          <label htmlFor="email">Email: </label>
-          <input id="email" type="email" required={true} value={email} onChange={handleEmail} />
-          {!isValidEmail ? <span>Invalid Email address</span> : null}
+          <label htmlFor="username">Username: </label>
+          <input id="username" type="text" required={true} value={username} onChange={handleUsername} />
+          {!isValidUsername ? <span>{usernameInvalidReason}</span> : null}
         </p>
         <p>
           <label htmlFor="nickname">Nickname: </label>
@@ -68,7 +69,7 @@ export const Register = () => {
         <p>
           <label htmlFor="password">Password: </label>
           <input id="password" type="password" required={true} value={password} onChange={handlePassword} />
-          {!passwordGreaterThan8 ? <span>Password is too short</span> : null}
+          {!isValidPassword ? <span>{passwordInvalidReason}</span> : null}
         </p>
         <p>
           <label htmlFor="repeat-password">Repeat Password: </label>

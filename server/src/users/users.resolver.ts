@@ -6,7 +6,7 @@ import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { QueryFailedError } from 'typeorm';
-import { checkEmailFormat, checkNickname, checkPassword } from '../common';
+import { checkNickname, checkPassword, checkUsername } from '../common';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -23,26 +23,32 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async getUserByEmail(@Args('email') email: string) {
-    return await this.userService.findByEmail(email);
+  async getUserByUsername(@Args('username') username: string) {
+    return await this.userService.findByUsername(username);
   }
 
   @Mutation(() => User, { nullable: false })
-  async register(@Args('email') email: string, @Args('password') password: string, @Args('nickname') nickname: string) {
+  async register(
+    @Args('username') username: string,
+    @Args('password') password: string,
+    @Args('nickname') nickname: string
+  ) {
+    username = username.trim();
     nickname = nickname.trim();
-    if (!checkEmailFormat(email)) {
-      throw Error('Invalid Email address');
-    }
+    const [isUsernameValid, usernameInvalidReason] = checkUsername(username);
     const [isNicknameValid, nicknameInvalidReason] = checkNickname(nickname);
+    const [isPasswordValid, passwordInvalidReason] = checkPassword(password);
     if (!isNicknameValid) {
       throw Error(nicknameInvalidReason);
     }
-    const [isPasswordValid, passwordInvalidReason] = checkPassword(password);
+    if (!isUsernameValid) {
+      throw Error(usernameInvalidReason);
+    }
     if (!isPasswordValid) {
       throw Error(passwordInvalidReason);
     }
     try {
-      return await this.userService.create(email, nickname, password);
+      return await this.userService.create(username, nickname, password);
     } catch (e) {
       if (e instanceof QueryFailedError) {
         throw Error('Email is registered');

@@ -4,6 +4,17 @@ export function checkEmailFormat(email: string): boolean {
   return re.test(String(email).toLowerCase());
 }
 
+export function checkUsername(username: string): [boolean, string] {
+  if (/^[\w_\d]+$/.test(username)) {
+    return [false, 'Username can only contain letters, "_" and numbers.'];
+  } else if (username.length < 3) {
+    return [false, 'Username must be at least 3 characters.'];
+  } else if (username.length > 32) {
+    return [false, 'Username must be at most 32 characters.'];
+  }
+  return [true, ''];
+}
+
 export function checkNickname(nickname: string): [boolean, string] {
   const NICKNAME_MAX_CHARACTERS = 24;
   if (nickname.length === 0) {

@@ -4,6 +4,7 @@ import { useQuery } from '@apollo/react-hooks';
 import './App.css';
 import { gql } from 'apollo-boost';
 import { TOKEN_KEY } from './settings';
+import { Register } from './Register';
 
 interface User {
   id: string;
@@ -14,11 +15,7 @@ function Index() {
   return <h2>Home</h2>;
 }
 
-function Register() {
-  return <h2>Register</h2>;
-}
-
-type InputChangeHandler = React.ChangeEventHandler<HTMLInputElement>;
+export type InputChangeHandler = React.ChangeEventHandler<HTMLInputElement>;
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -26,13 +23,8 @@ function Login() {
   const [loginFailure, setLoginFailure] = useState(false);
   const userState = useUserState();
 
-  const handleEmail: InputChangeHandler = e => {
-    setEmail(e.currentTarget.value);
-  };
-
-  const handlePassword: InputChangeHandler = e => {
-    setPassword(e.currentTarget.value);
-  };
+  const handleEmail: InputChangeHandler = e => setEmail(e.currentTarget.value);
+  const handlePassword: InputChangeHandler = e => setPassword(e.currentTarget.value);
 
   const setToken = (result: { token: string }) => {
     if (result.token) {
@@ -69,11 +61,11 @@ function Login() {
         {loginFailure ? <p>Login Failed</p> : null}
         <p>
           <label htmlFor="email">Email: </label>
-          <input type="email" value={email} onChange={handleEmail} />
+          <input id="email" type="email" value={email} onChange={handleEmail} />
         </p>
         <p>
           <label htmlFor="password">Password: </label>
-          <input type="password" value={password} onChange={handlePassword} />
+          <input id="password" type="password" value={password} onChange={handlePassword} />
         </p>
         <p>
           <input type="submit" value="Login" onClick={submitLogin} />
@@ -83,21 +75,21 @@ function Login() {
   );
 }
 
-type UserState = 'guest' | 'loading' | User;
+export type UserState = 'guest' | 'loading' | User;
 
-const UserContext = React.createContext<UserState>('guest');
+export const UserContext = React.createContext<UserState>('guest');
 
-const isUserLoading = (state: UserState): state is 'loading' => state === 'loading';
-const isGuest = (state: UserState): state is 'guest' => state === 'guest';
-const isLoggedIn = (state: UserState): state is User => state !== 'guest' && state !== 'loading';
+export const isUserLoading = (state: UserState): state is 'loading' => state === 'loading';
+export const isGuest = (state: UserState): state is 'guest' => state === 'guest';
+export const isLoggedIn = (state: UserState): state is User => state !== 'guest' && state !== 'loading';
 
-const useUserState = () => {
+export const useUserState = (): UserState => {
   return useContext(UserContext);
 };
 
 const useGetMe = () => {
   const [userState, setUserState] = useState<UserState>('guest');
-  const { loading, error, data } = useQuery<{ getMe: User }>(
+  const { loading, error, data } = useQuery<{ getMe?: User }>(
     gql`
       {
         getMe {
@@ -118,7 +110,7 @@ const useGetMe = () => {
     localStorage.removeItem(TOKEN_KEY);
   } else if (data) {
     if (userState === 'loading' || userState === 'guest') {
-      setUserState(data.getMe);
+      if (data.getMe) setUserState(data.getMe);
     }
   }
   return userState;
@@ -133,6 +125,14 @@ const App: React.FC = () => {
     location.reload();
   };
 
+  const loginLink = <Link to="/login/">Login</Link>;
+  const registerLink = <Link to="/register/">Register</Link>;
+  const logoutLink = (
+    <Link to="#" onClick={handleLogout}>
+      Logout
+    </Link>
+  );
+
   return (
     <UserContext.Provider value={userState}>
       <h1>🍍</h1>
@@ -143,23 +143,9 @@ const App: React.FC = () => {
               <li>
                 <Link to="/">Home</Link>
               </li>
-              {isGuest(userState) ? (
-                <li>
-                  <Link to="/register/">Register</Link>
-                </li>
-              ) : null}
-              {isGuest(userState) ? (
-                <li>
-                  <Link to="/login/">Login</Link>
-                </li>
-              ) : null}
-              {isLoggedIn(userState) ? (
-                <li>
-                  <Link to="#" onClick={handleLogout}>
-                    Logout
-                  </Link>
-                </li>
-              ) : null}
+              {isGuest(userState) ? <li>{loginLink}</li> : null}
+              {isGuest(userState) ? <li>{registerLink}</li> : null}
+              {isLoggedIn(userState) ? <li>{logoutLink}</li> : null}
             </ul>
           </nav>
           {isLoggedIn(userState) ? <p>Welcome {userState.nickname}</p> : null}

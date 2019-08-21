@@ -18,6 +18,7 @@ import {
 } from '@material-ui/core';
 import { isLoggedIn, useUserState } from '../user';
 import { List } from 'immutable';
+import { CHAR_NAME_KEY } from '../settings';
 
 const generateId = require('uuid/v1');
 
@@ -80,6 +81,7 @@ const SUBSCRIPT_NEW_MESSAGE = gql`
       id
       content
       created
+      channelId
       charName
       user {
         nickname
@@ -116,6 +118,7 @@ interface User {
 
 interface Message {
   id: string;
+  channelId: string;
   content: string;
   created: Date;
   charName: string;
@@ -144,7 +147,7 @@ const useStyles = makeStyles((theme: Theme) =>
       marginLeft: theme.spacing(1),
     },
     preview: {
-      backgroundColor: '#a0b6dd',
+      backgroundColor: '#bdd8ff',
     },
   })
 );
@@ -168,9 +171,6 @@ const useSubmitPreview = (): ((messageVariables: SendMessageVariables) => void) 
   const SUBMIT_PREVIEW_THRESHOLD = 300;
 
   return messageVariables => {
-    if (messageVariables.messageText.trim().length === 0) {
-      return;
-    }
     const isNewMessage = prevSubmitId.current !== messageVariables.messageId;
     if (isNewMessage) {
       prevSubmitId.current = messageVariables.messageId;
@@ -184,7 +184,7 @@ const useSubmitPreview = (): ((messageVariables: SendMessageVariables) => void) 
   };
 };
 
-const useSubscribePreview = (newMessages: Message[]): List<PreviewMessage> => {
+const useSubscribePreview = (channelId: string, newMessages: Message[]): List<PreviewMessage> => {
   const { loading, data, error } = useSubscription<{ messagePreview?: PreviewMessage }>(SUBSCRIPT_PREVIEW_MESSAGE);
   const [previewList, setPreviewList] = useState<List<PreviewMessage>>(List());
 
@@ -192,6 +192,9 @@ const useSubscribePreview = (newMessages: Message[]): List<PreviewMessage> => {
     return previewList;
   }
   const newPreview: PreviewMessage = data.messagePreview;
+  if (newPreview.channelId !== channelId) {
+    return previewList;
+  }
   let nextList = previewList;
   let isUpdate = false;
   for (let i = 0; i < previewList.size; i++) {
@@ -210,7 +213,7 @@ const useSubscribePreview = (newMessages: Message[]): List<PreviewMessage> => {
         return false;
       }
     }
-    return true;
+    return preview.content.trim().length !== 0;
   });
 
   if (!nextList.equals(previewList)) {
@@ -220,7 +223,7 @@ const useSubscribePreview = (newMessages: Message[]): List<PreviewMessage> => {
   return previewList;
 };
 
-const useNewMessage = (): Message[] => {
+const useNewMessage = (channelId: string): Message[] => {
   const { loading, data, error } = useSubscription<{ newMessage?: Message }>(SUBSCRIPT_NEW_MESSAGE);
   const messagesRef = useRef<Message[]>([]);
   const messages = messagesRef.current;
@@ -228,7 +231,7 @@ const useNewMessage = (): Message[] => {
     return messages;
   }
   const { newMessage } = data;
-  if (!newMessage) {
+  if (!newMessage || newMessage.channelId !== channelId) {
     return messages;
   }
   const len = messages.length;
@@ -245,7 +248,8 @@ export const Channel = ({ match }: Props) => {
   const classes = useStyles();
   const [messageId, setMessageId] = useState(generateId());
   const [messageText, setMessageText] = useState('');
-  const [charName, setCharName] = useState('');
+  const [charName, setCharName] = useState(localStorage.getItem(CHAR_NAME_KEY) || '');
+
   const messageVariables: SendMessageVariables = {
     messageId,
     messageText,
@@ -253,11 +257,11 @@ export const Channel = ({ match }: Props) => {
     charName,
   };
   const [sendMessage, sendResult] = useMutation(SEND_MESSAGE, { variables: messageVariables });
-  const newMessages = useNewMessage();
+  const newMessages = useNewMessage(id);
   const userState = useUserState();
   const submitPreview = useSubmitPreview();
   const messageInputRef = useRef<HTMLInputElement | null>(null);
-  const previewMessages = useSubscribePreview(newMessages);
+  const previewMessages = useSubscribePreview(id, newMessages);
 
   if (error || loading || !data || !data.getChannelById) {
     return null;
@@ -301,7 +305,9 @@ export const Channel = ({ match }: Props) => {
   };
 
   const handleCharName: ChangeEventHandler<HTMLInputElement> = e => {
-    setCharName(e.currentTarget.value);
+    const newCharName = e.currentTarget.value;
+    setCharName(newCharName);
+    localStorage.setItem(CHAR_NAME_KEY, newCharName);
   };
 
   const handleSubmit: FormEventHandler = async e => {
@@ -318,7 +324,7 @@ export const Channel = ({ match }: Props) => {
 
   const canSend = isLoggedIn(userState) && !sendResult.loading && charName.trim() !== '';
   return (
-    <Container maxWidth="md">
+    <Container>
       <Paper className={classes.paper}>
         <Typography component="h1" variant="h5">
           {channel.title}
@@ -334,6 +340,7 @@ export const Channel = ({ match }: Props) => {
                 <TextField
                   required
                   label="Character Name"
+                  value={charName}
                   onChange={handleCharName}
                   disabled={!isLoggedIn(userState)}
                 />

@@ -87,9 +87,6 @@ export class MessageResolver {
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
     @CurrentUser() user: JwtUser
   ) {
-    if (content.trim().length === 0) {
-      return false;
-    }
     const message = new PreviewMessage();
     message.channelId = channelId;
     message.charName = charName;

@@ -11,7 +11,7 @@ import { PubSub } from 'apollo-server-express';
 const pubSub = new PubSub();
 
 const NEW_MESSAGE = 'newMessage';
-const PREVIEW_MESSAGE = 'updatePreviewMessage';
+const PREVIEW_MESSAGE = 'messagePreview';
 const MESSAGE_DELETED = 'messageDeleted';
 const MESSAGE_EDITED = 'messageEdited';
 
@@ -34,6 +34,12 @@ class PreviewMessage {
 
   @Field({ description: 'Message plain text.' })
   content: string;
+
+  @Field({ nullable: false })
+  startTime: Date;
+
+  @Field({ nullable: false })
+  updateTime: Date;
 }
 
 @Resolver(() => Message)
@@ -70,7 +76,7 @@ export class MessageResolver {
     return message;
   }
 
-  @Mutation(() => PreviewMessage)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async updatePreviewMessage(
     @Args({ name: 'id', type: () => ID }) id: string,
@@ -78,6 +84,7 @@ export class MessageResolver {
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args('charName') charName: string,
     @Args({ name: 'type', type: () => MessageType }) type: MessageType,
+    @Args({ name: 'startTime', type: () => Date }) startTime: Date,
     @CurrentUser() user: JwtUser
   ) {
     if (content.trim().length === 0) {
@@ -86,12 +93,18 @@ export class MessageResolver {
     const message = new PreviewMessage();
     message.channelId = channelId;
     message.charName = charName;
-    message.type = type;
+    message.type = MessageType.SAY;
     message.userId = user.id;
     message.id = id;
     message.content = content;
-    pubSub.publish(PREVIEW_MESSAGE, { [PREVIEW_MESSAGE]: message }).catch(console.error);
-    return message;
+    message.startTime = startTime;
+    message.updateTime = new Date();
+    if (message) {
+      pubSub.publish(PREVIEW_MESSAGE, { [PREVIEW_MESSAGE]: message }).catch(console.error);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Mutation(() => Message)

@@ -64,7 +64,7 @@ enum MessageType {
 
 type Mutation {
   sendMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
-  updatePreviewMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): PreviewMessage!
+  updatePreviewMessage(startTime: DateTime!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Boolean!
   editMessage(content: String!, messageId: String!): Message!
   deleteMessage(messageId: String!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
@@ -81,6 +81,8 @@ type PreviewMessage {
 
   """Message plain text."""
   content: String!
+  startTime: DateTime!
+  updateTime: DateTime!
 }
 
 type Query {

@@ -34,6 +34,7 @@ type Message {
   channelId: ID
   charName: String!
   isAction: Boolean!
+  isOoc: Boolean!
 
   """Message plain text."""
   content: String!
@@ -63,8 +64,8 @@ enum MessageType {
 }
 
 type Mutation {
-  sendMessage(type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
-  updatePreviewMessage(startTime: DateTime!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Boolean!
+  sendMessage(isOoc: Boolean!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
+  updatePreviewMessage(isOoc: Boolean!, justTyping: Boolean!, startTime: DateTime!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Boolean!
   editMessage(content: String!, messageId: String!): Message!
   deleteMessage(messageId: String!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
@@ -83,6 +84,8 @@ type PreviewMessage {
   content: String!
   startTime: DateTime!
   updateTime: DateTime!
+  justTyping: Boolean!
+  isOoc: Boolean!
 }
 
 type Query {

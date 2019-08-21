@@ -6,6 +6,7 @@ import { JWT_SECRET } from '../settings';
 export interface JwtUser {
   id: string;
   username: string;
+  nickname: string;
 }
 
 @Injectable()

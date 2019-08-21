@@ -6,12 +6,13 @@ import {
   Button,
   Container,
   createStyles,
+  FormControlLabel,
   Grid,
   Icon,
   List as ItemList,
-  ListItem,
   makeStyles,
   Paper,
+  Switch,
   TextField,
   Theme,
   Typography,
@@ -19,6 +20,8 @@ import {
 import { isLoggedIn, useUserState } from '../user';
 import { List } from 'immutable';
 import { CHAR_NAME_KEY } from '../settings';
+import { PreviewMessageItem } from './PreviewMessageItem';
+import { MessageItem } from './MessageItem';
 
 const generateId = require('uuid/v1');
 
@@ -39,7 +42,9 @@ const CHANNEL = gql`
         id
         content
         created
+        userId
         charName
+        isOoc
         user {
           nickname
         }
@@ -49,8 +54,15 @@ const CHANNEL = gql`
 `;
 
 const SEND_MESSAGE = gql`
-  mutation sendMessage($messageId: ID!, $charName: String!, $channelId: ID!, $messageText: String!) {
-    sendMessage(type: SAY, charName: $charName, channelId: $channelId, content: $messageText, id: $messageId) {
+  mutation sendMessage($messageId: ID!, $charName: String!, $channelId: ID!, $messageText: String!, $isOoc: Boolean!) {
+    sendMessage(
+      type: SAY
+      charName: $charName
+      channelId: $channelId
+      content: $messageText
+      id: $messageId
+      isOoc: $isOoc
+    ) {
       id
     }
   }
@@ -63,6 +75,8 @@ const SUBMIT_PREVIEW = gql`
     $channelId: ID!
     $messageText: String!
     $startTime: DateTime!
+    $justTyping: Boolean!
+    $isOoc: Boolean!
   ) {
     updatePreviewMessage(
       type: SAY
@@ -71,6 +85,8 @@ const SUBMIT_PREVIEW = gql`
       content: $messageText
       id: $messageId
       startTime: $startTime
+      justTyping: $justTyping
+      isOoc: $isOoc
     )
   }
 `;
@@ -82,6 +98,8 @@ const SUBSCRIPT_NEW_MESSAGE = gql`
       content
       created
       channelId
+      userId
+      isOoc
       charName
       user {
         nickname
@@ -99,30 +117,36 @@ const SUBSCRIPT_PREVIEW_MESSAGE = gql`
       channelId
       startTime
       updateTime
+      justTyping
+      isOoc
     }
   }
 `;
 
-interface PreviewMessage {
+export interface PreviewMessage {
   id: string;
   content: string;
   charName: string;
   channelId: string;
   startTime: string;
   updateTime: string;
+  justTyping: boolean;
+  isOoc: boolean;
 }
 
 interface User {
   nickname: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   channelId: string;
+  userId: string;
   content: string;
   created: Date;
   charName: string;
   user?: User;
+  isOoc: boolean;
 }
 
 interface Channel {
@@ -146,9 +170,6 @@ const useStyles = makeStyles((theme: Theme) =>
     rightIcon: {
       marginLeft: theme.spacing(1),
     },
-    preview: {
-      backgroundColor: '#bdd8ff',
-    },
   })
 );
 
@@ -157,27 +178,34 @@ interface SendMessageVariables {
   messageText: string;
   channelId: string;
   charName: string;
+  isOoc: boolean;
 }
 
 interface SubmitPreviewVariables extends SendMessageVariables {
   startTime: Date;
+  justTyping: boolean;
 }
 
-const useSubmitPreview = (): ((messageVariables: SendMessageVariables) => void) => {
+const useSubmitPreview = (): ((messageVariables: SendMessageVariables, justTyping: boolean) => void) => {
   const [submitPreview] = useMutation<boolean, SubmitPreviewVariables>(SUBMIT_PREVIEW);
   const prevSubmitId = useRef<string>(generateId());
   const prevSubmitTime = useRef<Date>(new Date());
   const prevSubmitTimeout = useRef<number | undefined>(undefined);
   const SUBMIT_PREVIEW_THRESHOLD = 300;
 
-  return messageVariables => {
+  return (messageVariables, justTyping) => {
     const isNewMessage = prevSubmitId.current !== messageVariables.messageId;
     if (isNewMessage) {
       prevSubmitId.current = messageVariables.messageId;
       prevSubmitTime.current = new Date();
     }
     window.clearTimeout(prevSubmitTimeout.current);
-    const variables: SubmitPreviewVariables = { ...messageVariables, startTime: prevSubmitTime.current };
+    const variables: SubmitPreviewVariables = {
+      ...messageVariables,
+      startTime: prevSubmitTime.current,
+      justTyping,
+      messageText: justTyping ? '' : messageVariables.messageText,
+    };
     prevSubmitTimeout.current = window.setTimeout(() => {
       submitPreview({ variables }).catch(console.error);
     }, SUBMIT_PREVIEW_THRESHOLD);
@@ -213,7 +241,7 @@ const useSubscribePreview = (channelId: string, newMessages: Message[]): List<Pr
         return false;
       }
     }
-    return preview.content.trim().length !== 0;
+    return preview.content.trim().length !== 0 || preview.justTyping;
   });
 
   if (!nextList.equals(previewList)) {
@@ -249,12 +277,15 @@ export const Channel = ({ match }: Props) => {
   const [messageId, setMessageId] = useState(generateId());
   const [messageText, setMessageText] = useState('');
   const [charName, setCharName] = useState(localStorage.getItem(CHAR_NAME_KEY) || '');
+  const [isSendPreview, setIsSendPreview] = useState(true);
+  const [isOoc, setIsOoc] = useState(false);
 
   const messageVariables: SendMessageVariables = {
     messageId,
     messageText,
     channelId: id,
     charName,
+    isOoc,
   };
   const [sendMessage, sendResult] = useMutation(SEND_MESSAGE, { variables: messageVariables });
   const newMessages = useNewMessage(id);
@@ -268,40 +299,14 @@ export const Channel = ({ match }: Props) => {
   }
   const channel = data.getChannelById;
 
-  const messageMapper = (message: Message) => {
-    let name = 'Anonymous';
-    if (message.user) {
-      name = message.charName;
-    }
-    return (
-      <ListItem key={message.id}>
-        <Typography>
-          <strong>{name}: </strong>
-          {message.content}
-        </Typography>
-      </ListItem>
-    );
-  };
+  const messageMapper = (message: Message) => <MessageItem key={message.id} message={message} />;
 
-  const now = new Date().getTime();
-  const previewMessageMapper = (preview: PreviewMessage) => {
-    if (new Date(preview.updateTime).getTime() < now - 5000) {
-      return null;
-    }
-    return (
-      <ListItem key={preview.id} className={classes.preview}>
-        <Typography>
-          <strong>{preview.charName}: </strong>
-          {preview.content}
-        </Typography>
-      </ListItem>
-    );
-  };
+  const previewMessageMapper = (preview: PreviewMessage) => <PreviewMessageItem key={preview.id} preview={preview} />;
 
   const handleMessageText: ChangeEventHandler<HTMLTextAreaElement> = e => {
     const content = e.currentTarget.value;
     setMessageText(content);
-    submitPreview({ ...messageVariables, messageText: content });
+    submitPreview({ ...messageVariables, messageText: content }, !isSendPreview);
   };
 
   const handleCharName: ChangeEventHandler<HTMLInputElement> = e => {
@@ -316,11 +321,20 @@ export const Channel = ({ match }: Props) => {
     setMessageId(generateId());
     await sendMessage();
     setMessageText('');
+    setIsOoc(false);
     const input = messageInputRef.current;
     if (input !== null) {
       input.focus();
     }
   };
+
+  const handleTogglePreview = () => setIsSendPreview(!isSendPreview);
+  const handleToggleOoc = () => setIsOoc(!isOoc);
+
+  const togglePreviewSwitch = (
+    <Switch checked={isSendPreview} onChange={handleTogglePreview} value="isSendPreview" color="primary" />
+  );
+  const toggleOocSwitch = <Switch checked={isOoc} onChange={handleToggleOoc} value="isOoc" color="primary" />;
 
   const canSend = isLoggedIn(userState) && !sendResult.loading && charName.trim() !== '';
   return (
@@ -345,6 +359,9 @@ export const Channel = ({ match }: Props) => {
                   disabled={!isLoggedIn(userState)}
                 />
               </Grid>
+              <Grid item md={4} sm={4} xs={4}>
+                <FormControlLabel control={togglePreviewSwitch} label="Realtime Preview" />
+              </Grid>
             </Grid>
             <Grid item md={10} sm={9} xs={8}>
               <TextField
@@ -360,6 +377,7 @@ export const Channel = ({ match }: Props) => {
               />
             </Grid>
             <Grid item md={2} sm={3} xs={4}>
+              <FormControlLabel control={toggleOocSwitch} label="OOC" />
               <Button
                 fullWidth
                 variant="contained"

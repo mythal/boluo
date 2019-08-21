@@ -40,6 +40,12 @@ class PreviewMessage {
 
   @Field({ nullable: false })
   updateTime: Date;
+
+  @Field({ nullable: false })
+  justTyping: boolean;
+
+  @Field({ nullable: false })
+  isOoc: boolean;
 }
 
 @Resolver(() => Message)
@@ -64,12 +70,21 @@ export class MessageResolver {
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args('charName') charName: string,
     @Args({ name: 'type', type: () => MessageType }) type: MessageType,
+    @Args({ name: 'isOoc', type: () => Boolean }) isOoc: boolean,
     @CurrentUser() user: JwtUser
   ) {
     if (content.trim().length === 0) {
       throw Error('Empty message');
     }
-    const message = await this.messageService.create(id, content, channelId, charName, user.id, type);
+    const message = await this.messageService.create(
+      id,
+      content,
+      channelId,
+      isOoc ? user.nickname : charName,
+      user.id,
+      type,
+      isOoc
+    );
     if (message) {
       pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message }).catch(console.error);
     }
@@ -85,17 +100,21 @@ export class MessageResolver {
     @Args('charName') charName: string,
     @Args({ name: 'type', type: () => MessageType }) type: MessageType,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
+    @Args({ name: 'justTyping', type: () => Boolean }) justTyping: boolean,
+    @Args({ name: 'isOoc', type: () => Boolean }) isOoc: boolean,
     @CurrentUser() user: JwtUser
   ) {
     const message = new PreviewMessage();
     message.channelId = channelId;
-    message.charName = charName;
+    message.charName = isOoc ? user.nickname : charName;
     message.type = MessageType.SAY;
     message.userId = user.id;
     message.id = id;
     message.content = content;
     message.startTime = startTime;
     message.updateTime = new Date();
+    message.justTyping = justTyping;
+    message.isOoc = isOoc;
     if (message) {
       pubSub.publish(PREVIEW_MESSAGE, { [PREVIEW_MESSAGE]: message }).catch(console.error);
       return true;

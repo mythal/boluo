@@ -10,8 +10,8 @@ export class AppController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Request() req) {
-    const { id, nickname } = req.user;
-    const token = this.jwtService.sign({ id, nickname });
+    const { id, nickname, username } = req.user;
+    const token = this.jwtService.sign({ id, nickname, username });
     return { token };
   }
 }

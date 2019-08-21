@@ -1,13 +1,14 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
-import { ID } from 'type-graphql';
+import { FieldResolver, ID, Root } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Message } from '../messages/messages.entity';
 
 @Resolver(() => Channel)
 export class ChannelResolver {
@@ -16,6 +17,12 @@ export class ChannelResolver {
     @InjectRepository(Channel)
     private readonly channelRepository: Repository<Channel>
   ) {}
+
+  @FieldResolver(() => [Message])
+  async messages(@Root() channel: Channel) {
+    const messages: Message[] = await channel.messages;
+    return messages.filter(m => !m.deleted);
+  }
 
   @Query(() => [Channel], { description: 'Get all channels.' })
   async channels() {

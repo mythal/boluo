@@ -18,7 +18,15 @@ export class MessageService {
     return this.messageRepository.findOne(id, { where: { deleted: false } });
   }
 
-  async create(id: string, content: string, channelId: string, charName: string, userId: string, type: MessageType) {
+  async create(
+    id: string,
+    content: string,
+    channelId: string,
+    charName: string,
+    userId: string,
+    type: MessageType,
+    isOoc: boolean
+  ) {
     const deleted = false;
     const threadHead = null;
     const entities = [];
@@ -32,6 +40,7 @@ export class MessageService {
       threadHead,
       entities,
       type,
+      isOoc,
     });
     return this.findById(id);
   }

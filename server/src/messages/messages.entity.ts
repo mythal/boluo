@@ -75,6 +75,10 @@ export class Message {
   @Field()
   isAction: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  @Field()
+  isOoc: boolean;
+
   @Column({ type: 'text' })
   @Field({ description: 'Message plain text.' })
   content: string;

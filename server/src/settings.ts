@@ -1,7 +1,10 @@
-export const JWT_SECRET = 'DEVELOPMENT_SECRET';
+export const DEBUG = Boolean(process.env.DEBUG) || false;
+export const PORT = Number(process.env.PORT) || 3005;
 
-export const POSTGRES_PASSWORD = 'POSTGRES_PASSWORD';
-export const POSTGRES_USERNAME = 'postgres';
-export const POSTGRES_PORT = 5432;
-export const POSTGRES_HOST = 'db';
-export const POSTGRES_DATABASE = 'boluo';
+export const JWT_SECRET = process.env.JWT_SECRET;
+
+export const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD;
+export const POSTGRES_USERNAME = process.env.POSTGRES_USERNAME;
+export const POSTGRES_PORT = Number(process.env.POSTGRES_PORT);
+export const POSTGRES_HOST = process.env.POSTGRES_HOST;
+export const POSTGRES_DATABASE = process.env.POSTGRES_DATABASE;

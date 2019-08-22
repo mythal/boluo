@@ -32,7 +32,7 @@ import { PassportModule } from '@nestjs/passport';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'web', 'dist'),
+      rootPath: join(__dirname, 'web'),
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forRoot({

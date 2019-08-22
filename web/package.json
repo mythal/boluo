@@ -24,8 +24,8 @@
     "uuid": "^3.3.2"
   },
   "scripts": {
-    "start": "parcel start src/index.html",
-    "watch": "parcel watch --no-hmr src/index.html"
+    "watch": "parcel watch --no-hmr src/index.html  --out-dir ../server/dist/web",
+    "build": "parcel build src/index.html  --out-dir ../server/dist/web"
   },
   "devDependencies": {
     "@types/node": "12.7.2",

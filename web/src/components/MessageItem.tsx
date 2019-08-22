@@ -7,7 +7,7 @@ import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
 
 const DELETE_MESSAGE = gql`
-  mutation($id: String!) {
+  mutation($id: ID!) {
     deleteMessage(messageId: $id)
   }
 `;
@@ -72,9 +72,9 @@ export const MessageItem = ({ message }: Props) => {
 
   const isAction = Boolean(message.content.match(ME_REGEX));
 
-  const handleRemove = () => {
-    removeMessage();
+  const handleRemove = async () => {
     setRemoved(true);
+    await removeMessage();
   };
 
   const removeButton = (

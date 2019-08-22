@@ -18,7 +18,7 @@ import {
   Typography,
 } from '@material-ui/core';
 import { isLoggedIn, useUserState } from '../user';
-import { List } from 'immutable';
+import { OrderedMap, Set } from 'immutable';
 import { CHAR_NAME_KEY } from '../settings';
 import { PreviewMessageItem } from './PreviewMessageItem';
 import { MessageItem } from './MessageItem';
@@ -50,6 +50,12 @@ const CHANNEL = gql`
         }
       }
     }
+  }
+`;
+
+const SUBSCRIBE_MESSAGE_DELETE = gql`
+  subscription {
+    messageDeleted
   }
 `;
 
@@ -186,6 +192,16 @@ interface SubmitPreviewVariables extends SendMessageVariables {
   justTyping: boolean;
 }
 
+const useDeletedMessageIds = (): Set<string> => {
+  const idSet = useRef<Set<string>>(Set());
+  const { data } = useSubscription<{ messageDeleted?: string }>(SUBSCRIBE_MESSAGE_DELETE);
+  if (!data || !data.messageDeleted) {
+    return idSet.current;
+  }
+  idSet.current = idSet.current.add(data.messageDeleted);
+  return idSet.current;
+};
+
 const useSubmitPreview = (): ((messageVariables: SendMessageVariables, justTyping: boolean) => void) => {
   const [submitPreview] = useMutation<boolean, SubmitPreviewVariables>(SUBMIT_PREVIEW);
   const prevSubmitId = useRef<string>(generateId());
@@ -212,62 +228,51 @@ const useSubmitPreview = (): ((messageVariables: SendMessageVariables, justTypin
   };
 };
 
-const useSubscribePreview = (channelId: string, newMessages: Message[]): List<PreviewMessage> => {
+const useSubscribePreview = (
+  channelId: string,
+  newMessages: OrderedMap<string, Message>
+): OrderedMap<string, PreviewMessage> => {
   const { loading, data, error } = useSubscription<{ messagePreview?: PreviewMessage }>(SUBSCRIPT_PREVIEW_MESSAGE);
-  const [previewList, setPreviewList] = useState<List<PreviewMessage>>(List());
+  const previewList = useRef<OrderedMap<string, PreviewMessage>>(OrderedMap());
 
   if (loading || error || !data || !data.messagePreview) {
-    return previewList;
+    return previewList.current;
   }
   const newPreview: PreviewMessage = data.messagePreview;
   if (newPreview.channelId !== channelId) {
-    return previewList;
+    return previewList.current;
   }
-  let nextList = previewList;
-  let isUpdate = false;
-  for (let i = 0; i < previewList.size; i++) {
-    const preview = previewList.get(i);
-    if (preview && preview.id === newPreview.id) {
-      nextList = nextList.set(i, newPreview);
-      isUpdate = true;
-    }
+
+  const oldPreview = previewList.current.get(newPreview.id, null);
+  if (!oldPreview || oldPreview.updateTime !== newPreview.updateTime) {
+    previewList.current = previewList.current.set(newPreview.id, newPreview);
   }
-  if (!isUpdate) {
-    nextList = nextList.push(newPreview).sortBy(x => x.startTime);
-  }
-  nextList = nextList.filter(preview => {
-    for (const newMessage of newMessages) {
-      if (newMessage.id === preview.id) {
-        return false;
-      }
+  previewList.current = previewList.current.filter(preview => {
+    if (newMessages.has(preview.id)) {
+      return false;
     }
     return preview.content.trim().length !== 0 || preview.justTyping;
   });
 
-  if (!nextList.equals(previewList)) {
-    setPreviewList(nextList);
-  }
-
-  return previewList;
+  return previewList.current;
 };
 
-const useNewMessage = (channelId: string): Message[] => {
+const useNewMessage = (channelId: string): OrderedMap<string, Message> => {
   const { loading, data, error } = useSubscription<{ newMessage?: Message }>(SUBSCRIPT_NEW_MESSAGE);
-  const messagesRef = useRef<Message[]>([]);
-  const messages = messagesRef.current;
+  const messages = useRef<OrderedMap<string, Message>>(OrderedMap());
   if (loading || error || !data) {
-    return messages;
+    return messages.current;
   }
   const { newMessage } = data;
   if (!newMessage || newMessage.channelId !== channelId) {
-    return messages;
+    return messages.current;
   }
-  const len = messages.length;
-  if (len === 0 || messages[len - 1].id !== newMessage.id) {
-    messages.push(newMessage);
+  const inMap: boolean = messages.current.has(newMessage.id);
+  messages.current = messages.current.set(newMessage.id, newMessage);
+  if (!inMap) {
     window.setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 1);
   }
-  return messages;
+  return messages.current;
 };
 
 export const Channel = ({ match }: Props) => {
@@ -279,6 +284,7 @@ export const Channel = ({ match }: Props) => {
   const [charName, setCharName] = useState(localStorage.getItem(CHAR_NAME_KEY) || '');
   const [isSendPreview, setIsSendPreview] = useState(true);
   const [isOoc, setIsOoc] = useState(false);
+  const deletedIds = useDeletedMessageIds();
 
   const messageVariables: SendMessageVariables = {
     messageId,
@@ -299,7 +305,12 @@ export const Channel = ({ match }: Props) => {
   }
   const channel = data.getChannelById;
 
-  const messageMapper = (message: Message) => <MessageItem key={message.id} message={message} />;
+  const messageMapper = (message: Message) => {
+    if (deletedIds.contains(message.id)) {
+      return null;
+    }
+    return <MessageItem key={message.id} message={message} />;
+  };
 
   const previewMessageMapper = (preview: PreviewMessage) => <PreviewMessageItem key={preview.id} preview={preview} />;
 
@@ -344,8 +355,9 @@ export const Channel = ({ match }: Props) => {
           {channel.title}
         </Typography>
         <ItemList>
-          {channel.messages.concat(newMessages).map(messageMapper)}
-          {previewMessages.map(previewMessageMapper)}
+          {channel.messages.map(messageMapper)}
+          {newMessages.toList().map(messageMapper)}
+          {previewMessages.toList().map(previewMessageMapper)}
         </ItemList>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>

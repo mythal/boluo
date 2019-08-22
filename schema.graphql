@@ -67,7 +67,7 @@ type Mutation {
   sendMessage(isOoc: Boolean!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
   updatePreviewMessage(isOoc: Boolean!, justTyping: Boolean!, startTime: DateTime!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Boolean!
   editMessage(content: String!, messageId: String!): Message!
-  deleteMessage(messageId: String!): Boolean!
+  deleteMessage(messageId: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
   createChannel(title: String!): Channel!
   renameChannel(title: String!, id: ID!): Channel!

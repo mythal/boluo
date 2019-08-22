@@ -145,7 +145,7 @@ export class MessageResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async deleteMessage(@CurrentUser() user: JwtUser, @Args('messageId') messageId: string) {
+  async deleteMessage(@CurrentUser() user: JwtUser, @Args({ name: 'messageId', type: () => ID }) messageId: string) {
     const message = await this.messageService.findById(messageId);
     if (!message) {
       throw Error('No message found');

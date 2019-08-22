@@ -13,3 +13,18 @@ export function randomWithSeed(str: string) {
     return (h ^= h >>> 16) >>> 0;
   };
 }
+
+const nameColorMap: { [name: string]: string } = {};
+
+export const nameToHSL = (name: string): string => {
+  if (nameColorMap[name]) {
+    return nameColorMap[name];
+  }
+  const rng = randomWithSeed(name);
+  const h = rng() % 365;
+  const s = (rng() % 80) + 20;
+  const l = (rng() % 15) + (rng() % 15) + (rng() % 15) + (rng() % 10);
+  const color = `hsl(${h}, ${s}%, ${l}%)`;
+  nameColorMap[name] = color;
+  return color;
+};

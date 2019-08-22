@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PreviewMessage } from './Channel';
 import { createStyles, ListItem, makeStyles, Typography } from '@material-ui/core';
+import { nameToHSL } from '../utils';
 
 const useStyles = makeStyles(() =>
   createStyles({
     preview: {
-      backgroundColor: '#bdd8ff',
+      backgroundColor: '#deffdf',
     },
     ooc: {
       width: '100%',
@@ -41,7 +42,11 @@ export const PreviewMessageItem = ({ preview }: Props) => {
     return null;
   }
   let content = (
-    <Typography display="block" className={preview.isOoc ? classes.ooc : ''}>
+    <Typography
+      display="block"
+      style={{ color: nameToHSL(preview.charName) }}
+      className={preview.isOoc ? classes.ooc : ''}
+    >
       <strong>{preview.charName}: </strong>
       {preview.content}
     </Typography>
@@ -49,7 +54,7 @@ export const PreviewMessageItem = ({ preview }: Props) => {
 
   if (preview.justTyping) {
     content = (
-      <Typography>
+      <Typography className={classes.message}>
         <strong>{preview.charName}</strong> is typing...
       </Typography>
     );

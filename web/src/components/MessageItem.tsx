@@ -5,7 +5,7 @@ import { useUserState } from '../user';
 import RemoveIcon from '@material-ui/icons/Delete';
 import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
-import { randomWithSeed } from '../utils';
+import { nameToHSL, randomWithSeed } from '../utils';
 
 const DELETE_MESSAGE = gql`
   mutation($id: ID!) {
@@ -77,7 +77,7 @@ export const MessageItem = ({ message }: Props) => {
   const className: string = message.isOoc ? classes.ooc : classes.message;
   return (
     <ListItem key={message.id}>
-      <Typography className={className}>
+      <Typography className={className} style={{ color: nameToHSL(message.charName) }}>
         {!isAction ? <strong>{name}: </strong> : <small>({name}) </small>}
         <span>{content}</span>
       </Typography>

@@ -41,7 +41,7 @@ export const PreviewMessageItem = ({ preview }: Props) => {
     return null;
   }
   let content = (
-    <Typography className={preview.isOoc ? classes.ooc : ''}>
+    <Typography display="block" className={preview.isOoc ? classes.ooc : ''}>
       <strong>{preview.charName}: </strong>
       {preview.content}
     </Typography>

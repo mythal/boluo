@@ -22,8 +22,7 @@ import { OrderedMap, Set } from 'immutable';
 import { CHAR_NAME_KEY } from '../settings';
 import { PreviewMessageItem } from './PreviewMessageItem';
 import { MessageItem } from './MessageItem';
-
-const generateId = require('uuid/v1');
+import { generateId } from '../utils';
 
 interface Match {
   id: string;
@@ -371,11 +370,25 @@ export const Channel = ({ match }: Props) => {
                   disabled={!isLoggedIn(userState)}
                 />
               </Grid>
-              <Grid item md={4} sm={4} xs={4}>
+              <Grid item md={7} sm={6} xs={6}>
                 <FormControlLabel control={togglePreviewSwitch} label="Realtime Preview" />
+                <FormControlLabel control={toggleOocSwitch} label="OOC" />
+              </Grid>
+              <Grid item md={2} sm={2} xs={2}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  href=""
+                  disabled={!canSend || messageText.trim().length === 0}
+                >
+                  Send
+                  <Icon className={classes.rightIcon}>send</Icon>
+                </Button>
               </Grid>
             </Grid>
-            <Grid item md={10} sm={9} xs={8}>
+            <Grid item md={12} sm={12} xs={12}>
               <TextField
                 fullWidth
                 multiline
@@ -387,20 +400,6 @@ export const Channel = ({ match }: Props) => {
                 error={!!error}
                 disabled={!canSend}
               />
-            </Grid>
-            <Grid item md={2} sm={3} xs={4}>
-              <FormControlLabel control={toggleOocSwitch} label="OOC" />
-              <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                type="submit"
-                href=""
-                disabled={!canSend || messageText.trim().length === 0}
-              >
-                Send
-                <Icon className={classes.rightIcon}>send</Icon>
-              </Button>
             </Grid>
           </Grid>
         </form>

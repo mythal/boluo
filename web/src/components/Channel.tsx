@@ -227,10 +227,7 @@ const useSubmitPreview = (): ((messageVariables: SendMessageVariables, justTypin
   };
 };
 
-const useSubscribePreview = (
-  channelId: string,
-  newMessages: OrderedMap<string, Message>
-): OrderedMap<string, PreviewMessage> => {
+const useSubscribePreview = (newMessages: OrderedMap<string, Message>): OrderedMap<string, PreviewMessage> => {
   const { loading, data, error } = useSubscription<{ messagePreview?: PreviewMessage }>(SUBSCRIPT_PREVIEW_MESSAGE);
   const previewList = useRef<OrderedMap<string, PreviewMessage>>(OrderedMap());
 
@@ -238,10 +235,6 @@ const useSubscribePreview = (
     return previewList.current;
   }
   const newPreview: PreviewMessage = data.messagePreview;
-  if (newPreview.channelId !== channelId) {
-    return previewList.current;
-  }
-
   const oldPreview = previewList.current.get(newPreview.id, null);
   if (!oldPreview || oldPreview.updateTime !== newPreview.updateTime) {
     previewList.current = previewList.current.set(newPreview.id, newPreview);
@@ -297,7 +290,7 @@ export const Channel = ({ match }: Props) => {
   const userState = useUserState();
   const submitPreview = useSubmitPreview();
   const messageInputRef = useRef<HTMLInputElement | null>(null);
-  const previewMessages = useSubscribePreview(id, newMessages);
+  const previewMessages = useSubscribePreview(newMessages).filter(preview => preview.channelId === id);
 
   if (error || loading || !data || !data.getChannelById) {
     return null;

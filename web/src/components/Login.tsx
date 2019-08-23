@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TOKEN_KEY } from '../settings';
+import { LOGIN_URL, TOKEN_KEY } from '../settings';
 import { Redirect } from 'react-router';
 import { InputChangeHandler } from './App';
 import { isLoggedIn, isUserLoading, useUserState } from '../user';
@@ -31,7 +31,7 @@ export function Login() {
 
   const submitLogin = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    fetch(process.env.LOGIN_URL || '', {
+    fetch(LOGIN_URL, {
       method: 'POST',
       body: JSON.stringify({ username, password }),
       headers: { 'content-type': 'application/json' },

@@ -3,13 +3,13 @@ import { split } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import { setContext } from 'apollo-link-context';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { TOKEN_KEY } from './settings';
+import { GRAPHQL_URL, TOKEN_KEY, WEBSOCKET_URL } from './settings';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 
 const token = localStorage.getItem(TOKEN_KEY);
 const wsLink = new WebSocketLink({
-  uri: `ws://127.0.0.1:3005/graphql`,
+  uri: WEBSOCKET_URL,
   options: {
     reconnect: true,
     connectionParams: {
@@ -19,7 +19,7 @@ const wsLink = new WebSocketLink({
 });
 
 const httpLink = createHttpLink({
-  uri: '/graphql',
+  uri: GRAPHQL_URL,
 });
 
 const authLink = setContext((_, { headers }) => {

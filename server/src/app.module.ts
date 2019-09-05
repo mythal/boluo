@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AuthController } from './auth/auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -56,9 +55,8 @@ import { PassportModule } from '@nestjs/passport';
       signOptions: { expiresIn: '60s' },
     }),
   ],
-  controllers: [AppController],
+  controllers: [AuthController],
   providers: [
-    AppService,
     MessageService,
     UserService,
     ChannelService,

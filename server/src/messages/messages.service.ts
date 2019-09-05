@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Message, MessageType } from './messages.entity';
+import { Message } from './messages.entity';
 
 @Injectable()
 export class MessageService {
@@ -18,29 +18,20 @@ export class MessageService {
     return this.messageRepository.findOne(id, { where: { deleted: false } });
   }
 
-  async create(
-    id: string,
-    content: string,
-    channelId: string,
-    charName: string,
-    userId: string,
-    type: MessageType,
-    isOoc: boolean
-  ) {
+  async create(id: string, source: string, channelId: string, character: string, userId: string, isRoll: boolean) {
     const deleted = false;
-    const threadHead = null;
-    const entities = [];
+    const threadRoot = null;
+    const seed = Math.random();
     await this.messageRepository.insert({
       id,
-      content,
+      source,
       channelId,
-      charName,
+      character,
       userId,
       deleted,
-      threadHead,
-      entities,
-      type,
-      isOoc,
+      threadRoot,
+      isRoll,
+      seed,
     });
     return this.findById(id);
   }

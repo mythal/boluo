@@ -1,42 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../users/users.entity';
-import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
+import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
-
-export enum MessageType {
-  SYSTEM = 'SYSTEM',
-  SAY = 'SAY',
-  ROLL = 'ROLL',
-  OOC = 'OOC',
-}
-
-registerEnumType(MessageType, { name: 'MessageType', description: 'A type tag of messages.' });
-
-export enum EntityType {
-  ROLL = 'ROLL',
-  LINK = 'LINK',
-}
-
-registerEnumType(EntityType, { name: 'EntityType', description: 'A type tag of entities.' });
-
-export interface MessageEntity {
-  type: EntityType;
-  start: number;
-  offset: number;
-  link?: string;
-}
-
-@ObjectType('MessageEntity', { description: 'Text block, range is [start, start+offset).' })
-export class MessageEntityDefinition implements MessageEntity {
-  @Field(() => EntityType)
-  type: EntityType;
-  @Field(() => Int)
-  start: number;
-  @Field(() => Int)
-  offset: number;
-  @Field({ nullable: true, description: 'Appears only when the type is link' })
-  link?: string;
-}
 
 @Entity('messages')
 @ObjectType()
@@ -44,10 +9,6 @@ export class Message {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
   id: string;
-
-  @Column({ type: 'enum', enum: MessageType })
-  @Field(() => MessageType)
-  type: MessageType;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'userId' })
@@ -68,35 +29,30 @@ export class Message {
   channelId: string;
 
   @Column()
-  @Field()
-  charName: string;
+  @Field({ description: 'Name of character. The message is a Out-of-Character message only if this field empty' })
+  character: string;
 
   @Column({ type: 'boolean', default: false })
   @Field()
   isAction: boolean;
 
   @Column({ type: 'boolean', default: false })
-  @Field()
-  isOoc: boolean;
+  isRoll: boolean;
 
   @Column({ type: 'text' })
-  @Field({ description: 'Message plain text.' })
-  content: string;
-
-  @Column({ type: 'jsonb', default: [] })
-  @Field(() => [MessageEntityDefinition])
-  entities: MessageEntity[];
+  @Field({ description: 'Message plain text source.' })
+  source: string;
 
   @Column({ type: 'uuid', nullable: true, default: null })
   @Field(() => ID, { nullable: true })
-  previous: string | null;
-
-  @Column({ type: 'uuid', nullable: true, default: null })
-  @Field(() => ID, { nullable: true })
-  threadHead: string | null;
+  threadRoot: string | null;
 
   @Column({ type: 'boolean', default: false })
   deleted: boolean;
+
+  @Column({ type: 'integer' })
+  @Field(() => Int)
+  seed: number;
 
   @CreateDateColumn()
   @Field()

@@ -43,21 +43,4 @@ export class ChannelResolver {
     }
     return await this.channelService.create(title, user.id);
   }
-
-  @Mutation(() => Channel)
-  @UseGuards(GqlAuthGuard)
-  async renameChannel(
-    @CurrentUser() user: JwtUser,
-    @Args({ name: 'id', type: () => ID }) id: string,
-    @Args('title') title: string
-  ) {
-    const channel = await this.channelService.findById(id);
-    if (!channel) {
-      throw Error("Channel doesn't exist");
-    } else if (channel.creatorId !== user.id) {
-      throw Error('You are not the creator of this channel');
-    }
-    channel.title = title.trim();
-    return this.channelRepository.save(channel);
-  }
 }

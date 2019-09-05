@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
-import { Message, MessageType } from './messages.entity';
+import { Message } from './messages.entity';
 import { MessageService } from './messages.service';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { CurrentUser } from '../decorators';
@@ -11,7 +11,7 @@ import { PubSub } from 'apollo-server-express';
 const pubSub = new PubSub();
 
 const NEW_MESSAGE = 'newMessage';
-const PREVIEW_MESSAGE = 'messagePreview';
+const MESSAGE_PREVIEW = 'messagePreview';
 const MESSAGE_DELETED = 'messageDeleted';
 const MESSAGE_EDITED = 'messageEdited';
 
@@ -20,8 +20,8 @@ class PreviewMessage {
   @Field(() => ID)
   id: string;
 
-  @Field(() => MessageType)
-  type: MessageType;
+  @Field(() => Boolean)
+  isRoll: boolean;
 
   @Field(() => ID)
   userId: string;
@@ -30,10 +30,10 @@ class PreviewMessage {
   channelId: string;
 
   @Field()
-  charName: string;
+  character: string;
 
-  @Field({ description: 'Message plain text.' })
-  content: string;
+  @Field()
+  source: string;
 
   @Field({ nullable: false })
   startTime: Date;
@@ -43,9 +43,6 @@ class PreviewMessage {
 
   @Field({ nullable: false })
   justTyping: boolean;
-
-  @Field({ nullable: false })
-  isOoc: boolean;
 }
 
 @Resolver(() => Message)
@@ -66,57 +63,46 @@ export class MessageResolver {
   @UseGuards(GqlAuthGuard)
   async sendMessage(
     @Args({ name: 'id', type: () => ID }) id: string,
-    @Args('content') content: string,
+    @Args('source') source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args('charName') charName: string,
-    @Args({ name: 'type', type: () => MessageType }) type: MessageType,
-    @Args({ name: 'isOoc', type: () => Boolean }) isOoc: boolean,
+    @Args('character') character: string,
+    @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll: boolean,
     @CurrentUser() user: JwtUser
   ) {
-    if (content.trim().length === 0) {
+    if (source.trim().length === 0) {
       throw Error('Empty message');
     }
-    const message = await this.messageService.create(
-      id,
-      content,
-      channelId,
-      isOoc ? user.nickname : charName,
-      user.id,
-      type,
-      isOoc
-    );
+    const message = await this.messageService.create(id, source, channelId, character.trim(), user.id, isRoll);
     if (message) {
-      pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message }).catch(console.error);
+      await pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
     }
     return message;
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async updatePreviewMessage(
+  async sendMessagePreview(
     @Args({ name: 'id', type: () => ID }) id: string,
-    @Args('content') content: string,
+    @Args('source') source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args('charName') charName: string,
-    @Args({ name: 'type', type: () => MessageType }) type: MessageType,
+    @Args('character') character: string,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
-    @Args({ name: 'justTyping', type: () => Boolean }) justTyping: boolean,
-    @Args({ name: 'isOoc', type: () => Boolean }) isOoc: boolean,
+    @Args({ name: 'justTyping', type: () => Boolean, defaultValue: false }) justTyping: boolean,
+    @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll,
     @CurrentUser() user: JwtUser
   ) {
     const message = new PreviewMessage();
     message.channelId = channelId;
-    message.charName = isOoc ? user.nickname : charName;
-    message.type = MessageType.SAY;
+    message.character = character;
     message.userId = user.id;
+    message.isRoll = isRoll;
     message.id = id;
-    message.content = content;
+    message.source = source;
     message.startTime = startTime;
     message.updateTime = new Date();
     message.justTyping = justTyping;
-    message.isOoc = isOoc;
     if (message) {
-      pubSub.publish(PREVIEW_MESSAGE, { [PREVIEW_MESSAGE]: message }).catch(console.error);
+      await pubSub.publish(MESSAGE_PREVIEW, { [MESSAGE_PREVIEW]: message });
       return true;
     } else {
       return false;
@@ -128,7 +114,7 @@ export class MessageResolver {
   async editMessage(
     @CurrentUser() user: JwtUser,
     @Args('messageId') messageId: string,
-    @Args('content') content: string
+    @Args('source') source: string
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message || message.deleted) {
@@ -137,7 +123,7 @@ export class MessageResolver {
     if (message.userId !== user.id) {
       throw Error('No editing authority');
     }
-    message.content = content;
+    message.source = source;
     const savedMessage = await this.messageService.saveMassage(message);
     pubSub.publish(MESSAGE_EDITED, savedMessage).catch(console.error);
     return savedMessage;
@@ -169,7 +155,7 @@ export class MessageResolver {
 
   @Subscription(() => PreviewMessage)
   messagePreview() {
-    return pubSub.asyncIterator(PREVIEW_MESSAGE);
+    return pubSub.asyncIterator(MESSAGE_PREVIEW);
   }
 
   @Subscription(() => ID)

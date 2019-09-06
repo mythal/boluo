@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from '../messages/messages.entity';
 import { MemberService } from '../members/members.service';
+import { Member } from '../members/members.entity';
 
 @Resolver(() => Channel)
 export class ChannelResolver {
@@ -60,5 +61,19 @@ export class ChannelResolver {
     const channel = await this.channelService.create(name, title, user.id, isGame, isPublic, description);
     await this.memberService.addUserToChannel(user.id, channel.id, true);
     return channel;
+  }
+
+  @Mutation(() => Member)
+  @UseGuards(GqlAuthGuard)
+  async joinChannel(
+    @CurrentUser() user: JwtUser,
+    @Args({ name: 'channelId', type: () => ID }) channelId: string,
+    @Args({ name: 'userId', type: () => ID, nullable: true }) userId: string | null
+  ) {
+    const channel = await this.channelService.findById(channelId);
+    if (!channel || !channel.isPublic) {
+      throw Error('Cannot join channel.');
+    }
+    return await this.memberService.addUserToChannel(userId || user.id, channelId);
   }
 }

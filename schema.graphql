@@ -89,6 +89,7 @@ type Mutation {
   deleteMessage(messageId: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
   createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
+  joinChannel(userId: ID, channelId: ID!): Members!
 }
 
 type PreviewMessage {

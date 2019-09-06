@@ -10,7 +10,7 @@ export class Invitation {
   @Field()
   token: string;
 
-  @ManyToOne(() => Channel, channel => channel.invitations, { nullable: false })
+  @ManyToOne(() => Channel, channel => channel.invitations, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
   channel: Promise<Channel>;
@@ -19,7 +19,7 @@ export class Invitation {
   @Field(() => ID)
   channelId: string;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'creatorId' })
   @Field(() => User)
   creator: Promise<User>;

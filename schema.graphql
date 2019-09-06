@@ -40,9 +40,9 @@ type Invitation {
 
 type Members {
   user: User!
-  userId: String!
+  userId: ID!
   channel: Channel!
-  channelId: String!
+  channelId: ID!
   isAdmin: Boolean!
   joinDate: DateTime!
   isMuted: Boolean!
@@ -52,10 +52,10 @@ type Members {
 
 type Message {
   id: ID!
-  user: User!
-  userId: ID!
+  user: User
+  userId: ID
   channel: Channel!
-  channelId: ID
+  channelId: ID!
 
   """
   Name of character. The message is a Out-of-Character message only if this field empty
@@ -65,7 +65,8 @@ type Message {
 
   """Message plain text source."""
   source: String!
-  threadRoot: ID
+  parent: ID
+  parentId: ID
   seed: Int!
   created: DateTime!
   modified: DateTime!

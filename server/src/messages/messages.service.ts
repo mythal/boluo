@@ -23,7 +23,7 @@ export class MessageService {
 
   async create(id: string, source: string, channelId: string, character: string, userId: string, isRoll: boolean) {
     const deleted = false;
-    const threadRoot = null;
+    const parent = null;
     const seed = Math.random();
     const member = await this.memberService.findByChannelAndUser(channelId, userId);
     if (!member) {
@@ -36,7 +36,7 @@ export class MessageService {
       character,
       userId,
       deleted,
-      threadRoot,
+      parent,
       isRoll,
       isGm: member.isAdmin,
       seed,

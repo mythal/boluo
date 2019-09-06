@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../users/users.entity';
 import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
@@ -10,22 +19,22 @@ export class Message {
   @Field(() => ID)
   id: string;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'userId' })
-  @Field(() => User)
-  user: Promise<User>;
+  @Field(() => User, { nullable: true })
+  user: Promise<User> | null;
 
-  @Column({ type: 'uuid', nullable: false })
-  @Field(() => ID)
-  userId: string;
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  userId: string | null;
 
-  @ManyToOne(() => Channel, channel => channel.messages, { nullable: false })
+  @ManyToOne(() => Channel, channel => channel.messages, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
   channel: Promise<Channel>;
 
-  @Column({ type: 'uuid', nullable: true })
-  @Field(() => ID, { nullable: true })
+  @Column({ type: 'uuid' })
+  @Field(() => ID)
   channelId: string;
 
   @Column()
@@ -46,9 +55,17 @@ export class Message {
   @Field({ description: 'Message plain text source.' })
   source: string;
 
-  @Column({ type: 'uuid', nullable: true, default: null })
+  @OneToMany(() => Message, message => message.parent)
+  children: Promise<Message[]>;
+
+  @ManyToOne(() => Message, message => message.children, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'parentId' })
   @Field(() => ID, { nullable: true })
-  threadRoot: string | null;
+  parent: Promise<Message> | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  parentId: string | null;
 
   @Column({ type: 'boolean', default: false })
   deleted: boolean;

@@ -1,27 +1,27 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { Field, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType } from 'type-graphql';
 import { User } from '../users/users.entity';
 import { Channel } from '../channels/channels.entity';
 
 @Entity('members')
 @ObjectType('Members')
 export class Member {
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   @Field(() => User)
   user: Promise<User>;
 
   @PrimaryColumn({ type: 'uuid' })
-  @Field()
+  @Field(() => ID)
   userId: string;
 
-  @ManyToOne(() => Channel, channel => channel.members, { nullable: false })
+  @ManyToOne(() => Channel, channel => channel.members, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
   channel: Promise<Channel>;
 
   @PrimaryColumn({ type: 'uuid' })
-  @Field()
+  @Field(() => ID)
   channelId: string;
 
   @Column({ type: 'boolean', default: false })

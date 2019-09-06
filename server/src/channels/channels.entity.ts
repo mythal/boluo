@@ -78,9 +78,9 @@ export class Channel {
 
   @OneToMany(() => Invitation, invitation => invitation.channel)
   @Field(() => [Invitation])
-  invitations: Promise<Invitation>;
+  invitations: Promise<Invitation[]>;
 
   @OneToMany(() => Member, member => member.channel)
   @Field(() => [Member])
-  members: Promise<Member>;
+  members: Promise<Member[]>;
 }

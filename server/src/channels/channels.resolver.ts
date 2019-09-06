@@ -76,4 +76,10 @@ export class ChannelResolver {
     }
     return await this.memberService.addUserToChannel(userId || user.id, channelId);
   }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async quitChannel(@CurrentUser() user: JwtUser, @Args({ name: 'channelId', type: () => ID }) channelId: string) {
+    return this.memberService.removeUserFromChannel(user.id, channelId);
+  }
 }

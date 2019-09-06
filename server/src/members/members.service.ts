@@ -23,4 +23,13 @@ export class MemberService {
     await this.memberRepository.save(member);
     return member;
   }
+
+  async removeUserFromChannel(userId: string, channelId: string): Promise<boolean> {
+    const result = await this.memberRepository.delete({ userId, channelId });
+    if (result.affected) {
+      return result.affected > 0;
+    } else {
+      return false;
+    }
+  }
 }

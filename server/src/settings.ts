@@ -10,3 +10,8 @@ export const POSTGRES_USERNAME = process.env.POSTGRES_USERNAME;
 export const POSTGRES_PORT = Number(process.env.POSTGRES_PORT);
 export const POSTGRES_HOST = process.env.POSTGRES_HOST;
 export const POSTGRES_DATABASE = process.env.POSTGRES_DATABASE;
+
+export const REDIS_HOST = process.env.REDIS_HOST;
+export const REDIS_PORT = process.env.REDIS_PORT;
+export const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
+export const REDIS_DB = process.env.REDIS_DB;

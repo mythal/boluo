@@ -32,6 +32,7 @@ import { MemberResolver } from './members/members.resolver';
 import { Member } from './members/members.entity';
 import { Invitation } from './invitaions/invitaions.entity';
 import { MemberService } from './members/members.service';
+import { RedisService } from './redis/redis.service';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { MemberService } from './members/members.service';
   ],
   controllers: [AuthController],
   providers: [
+    RedisService,
     MessageService,
     UserService,
     ChannelService,

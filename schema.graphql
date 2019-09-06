@@ -47,6 +47,7 @@ type Members {
   joinDate: DateTime!
   isMuted: Boolean!
   character: String!
+  isOnline: Boolean!
 }
 
 type Message {
@@ -105,11 +106,11 @@ type Query {
   """Get all messages."""
   messages: [Message!]!
   getMessageById(id: ID!): Message!
-
-  """Get all users."""
-  users: [User!]!
   getUserById(id: ID!): User
   getUserByUsername(username: String!): User
+
+  """Keep alive."""
+  ping: Boolean!
   getMe: User!
 
   """Get all channels."""
@@ -130,4 +131,5 @@ type User {
   nickname: String!
   avatar: String!
   created: DateTime!
+  isOnline: Boolean!
 }

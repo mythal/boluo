@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, ResolveProperty, Resolver, Root } from '@nestjs/graphql';
 import { User } from './users.entity';
 import { UserService } from './users.service';
 import { ID } from 'type-graphql';
@@ -12,11 +12,6 @@ import { JwtUser } from '../auth/jwt.strategy';
 @Resolver(() => User)
 export class UserResolver {
   constructor(private userService: UserService) {}
-
-  @Query(() => [User], { description: 'Get all users.' })
-  async users() {
-    return await this.userService.findAll();
-  }
 
   @Query(() => User, { nullable: true })
   async getUserById(@Args({ name: 'id', type: () => ID }) id: string) {
@@ -56,6 +51,18 @@ export class UserResolver {
       }
       throw e;
     }
+  }
+
+  @ResolveProperty(() => Boolean)
+  async isOnline(@Root() user: User) {
+    return await this.userService.isOnline(user.id);
+  }
+
+  @Query(() => Boolean, { description: 'Keep alive.' })
+  @UseGuards(GqlAuthGuard)
+  async ping(@CurrentUser() user: JwtUser) {
+    this.userService.ping(user.id);
+    return true;
   }
 
   @Query(() => User)

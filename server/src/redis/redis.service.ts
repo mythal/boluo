@@ -17,8 +17,12 @@ export class RedisService {
     });
   }
 
-  set(key: string, value: string) {
-    this.client.set(key, value);
+  set(key: string, value: string, expiration: number = 0) {
+    if (expiration > 0) {
+      this.client.setex(key, expiration, value);
+    } else {
+      this.client.set(key, value);
+    }
   }
 
   get(key: string): Promise<string | null> {

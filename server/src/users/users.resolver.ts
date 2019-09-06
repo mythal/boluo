@@ -5,7 +5,6 @@ import { ID } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
-import { QueryFailedError } from 'typeorm';
 import { checkNickname, checkPassword, checkUsername } from '../common';
 import { JwtUser } from '../auth/jwt.strategy';
 
@@ -43,14 +42,11 @@ export class UserResolver {
     if (!isPasswordValid) {
       throw Error(passwordInvalidReason);
     }
-    try {
-      return await this.userService.create(username, nickname, password);
-    } catch (e) {
-      if (e instanceof QueryFailedError) {
-        throw Error('Username is registered');
-      }
-      throw e;
+    const hasUsername = await this.userService.hasUsername(username);
+    if (hasUsername) {
+      throw Error('Username is registered');
     }
+    return await this.userService.create(username, nickname, password);
   }
 
   @ResolveProperty(() => Boolean)

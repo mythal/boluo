@@ -15,6 +15,11 @@ export class UserService {
     private readonly redisService: RedisService
   ) {}
 
+  async hasUsername(username: string): Promise<boolean> {
+    const counter = await this.userRepository.count({ username });
+    return counter > 0;
+  }
+
   findById(id: string): Promise<User | undefined> {
     return this.userRepository.findOne(id);
   }

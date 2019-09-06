@@ -10,6 +10,7 @@ type Channel {
   isGame: Boolean!
   isPublic: Boolean!
   isDeleted: Boolean!
+  name: String!
   title: String!
   topic: String!
   description: String!
@@ -38,7 +39,6 @@ type Invitation {
 }
 
 type Members {
-  id: ID!
   user: User!
   userId: String!
   channel: Channel!
@@ -88,7 +88,7 @@ type Mutation {
   editMessage(source: String!, messageId: String!): Message!
   deleteMessage(messageId: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
-  createChannel(title: String!): Channel!
+  createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
 }
 
 type PreviewMessage {

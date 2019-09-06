@@ -19,9 +19,23 @@ export class ChannelService {
     return this.channelRepository.findOne(id);
   }
 
-  async create(title: string, creatorId: string): Promise<Channel> {
+  async hasName(name: string): Promise<boolean> {
+    const counter = await this.channelRepository.count({ name });
+    return counter > 0;
+  }
+
+  async create(
+    name: string,
+    title: string,
+    creatorId: string,
+    isGame: boolean = false,
+    isPublic: boolean = false,
+    description: string = ''
+  ): Promise<Channel> {
     const id = generateId();
-    const channel = await this.channelRepository.create({ id, creatorId, title });
+    name = name.trim();
+    description = description.trim();
+    const channel = await this.channelRepository.create({ id, creatorId, name, title, isGame, isPublic, description });
     return await this.channelRepository.save(channel);
   }
 }

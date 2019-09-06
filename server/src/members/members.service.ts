@@ -13,4 +13,14 @@ export class MemberService {
   findByChannelAndUser(channelId: string, userId: string): Promise<Member | undefined> {
     return this.memberRepository.findOne({ where: { channelId, userId } });
   }
+
+  async addUserToChannel(userId: string, channelId: string, asAdmin: boolean = false) {
+    const member = this.memberRepository.create({
+      userId,
+      channelId,
+      isAdmin: asAdmin,
+    });
+    await this.memberRepository.save(member);
+    return member;
+  }
 }

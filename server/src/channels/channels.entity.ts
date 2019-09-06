@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -34,10 +35,15 @@ export class Channel {
   isDeleted: boolean;
 
   @Column()
+  @Index({ unique: true })
+  @Field()
+  name: string;
+
+  @Column()
   @Field()
   title: string;
 
-  @Column({ default: '', nullable: false })
+  @Column({ default: '' })
   @Field()
   topic: string;
 

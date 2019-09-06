@@ -5,7 +5,7 @@ import { Channel } from '../channels/channels.entity';
 
 @Entity('members')
 @ObjectType('Members')
-export class Members {
+export class Member {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
   id: string;
@@ -19,7 +19,7 @@ export class Members {
   @Field()
   userId: string;
 
-  @ManyToOne(() => Channel, { nullable: false })
+  @ManyToOne(() => Channel, channel => channel.members, { nullable: false })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
   channel: Promise<Channel>;
@@ -42,5 +42,5 @@ export class Members {
 
   @Column({ default: '' })
   @Field()
-  charName: string;
+  character: string;
 }

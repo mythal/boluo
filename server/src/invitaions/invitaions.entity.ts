@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
 import { User } from '../users/users.entity';
@@ -6,6 +6,10 @@ import { User } from '../users/users.entity';
 @Entity('invitations')
 @ObjectType('Invitation')
 export class Invitation {
+  @PrimaryColumn()
+  @Field()
+  token: string;
+
   @ManyToOne(() => Channel, channel => channel.invitations, { nullable: false })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
@@ -24,11 +28,7 @@ export class Invitation {
   @Field(() => ID)
   creatorId: string;
 
-  @Column()
-  @Field()
-  token: string;
-
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   @Field()
   expiration: Date;
 }

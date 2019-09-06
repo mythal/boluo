@@ -10,18 +10,18 @@ export class Message {
   @Field(() => ID)
   id: string;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'userId' })
-  @Field(() => User, { nullable: true })
+  @Field(() => User)
   user: Promise<User>;
 
-  @Column({ type: 'uuid', nullable: true })
-  @Field(() => ID, { nullable: true })
+  @Column({ type: 'uuid', nullable: false })
+  @Field(() => ID)
   userId: string;
 
-  @ManyToOne(() => Channel, channel => channel.messages)
+  @ManyToOne(() => Channel, channel => channel.messages, { nullable: false })
   @JoinColumn({ name: 'channelId' })
-  @Field(() => Channel, { nullable: true })
+  @Field(() => Channel)
   channel: Promise<Channel>;
 
   @Column({ type: 'uuid', nullable: true })
@@ -38,6 +38,9 @@ export class Message {
 
   @Column({ type: 'boolean', default: false })
   isRoll: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isGm: boolean;
 
   @Column({ type: 'text' })
   @Field({ description: 'Message plain text source.' })

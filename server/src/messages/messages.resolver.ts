@@ -40,9 +40,6 @@ class PreviewMessage {
 
   @Field({ nullable: false })
   updateTime: Date;
-
-  @Field({ nullable: false })
-  justTyping: boolean;
 }
 
 @Resolver(() => Message)
@@ -63,9 +60,9 @@ export class MessageResolver {
   @UseGuards(GqlAuthGuard)
   async sendMessage(
     @Args({ name: 'id', type: () => ID }) id: string,
-    @Args('source') source: string,
+    @Args({ name: 'source', type: () => String }) source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args('character') character: string,
+    @Args({ name: 'character', type: () => String }) character: string,
     @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll: boolean,
     @CurrentUser() user: JwtUser
   ) {
@@ -73,9 +70,7 @@ export class MessageResolver {
       throw Error('Empty message');
     }
     const message = await this.messageService.create(id, source, channelId, character.trim(), user.id, isRoll);
-    if (message) {
-      await pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
-    }
+    await pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
     return message;
   }
 
@@ -83,12 +78,13 @@ export class MessageResolver {
   @UseGuards(GqlAuthGuard)
   async sendMessagePreview(
     @Args({ name: 'id', type: () => ID }) id: string,
-    @Args('source') source: string,
+    @Args({ name: 'source', type: () => String, description: 'If blank, just show "sb. is typing...".' })
+    source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args('character') character: string,
+    @Args({ name: 'character', type: () => String, description: 'If blank, this is a Out-of-Character message.' })
+    character: string,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
-    @Args({ name: 'justTyping', type: () => Boolean, defaultValue: false }) justTyping: boolean,
-    @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll,
+    @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll: boolean,
     @CurrentUser() user: JwtUser
   ) {
     const message = new PreviewMessage();
@@ -100,21 +96,16 @@ export class MessageResolver {
     message.source = source;
     message.startTime = startTime;
     message.updateTime = new Date();
-    message.justTyping = justTyping;
-    if (message) {
-      await pubSub.publish(MESSAGE_PREVIEW, { [MESSAGE_PREVIEW]: message });
-      return true;
-    } else {
-      return false;
-    }
+    await pubSub.publish(MESSAGE_PREVIEW, { [MESSAGE_PREVIEW]: message });
+    return true;
   }
 
   @Mutation(() => Message)
   @UseGuards(GqlAuthGuard)
   async editMessage(
     @CurrentUser() user: JwtUser,
-    @Args('messageId') messageId: string,
-    @Args('source') source: string
+    @Args({ name: 'messageId', type: () => String }) messageId: string,
+    @Args({ name: 'source', type: () => String }) source: string
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message || message.deleted) {
@@ -125,7 +116,7 @@ export class MessageResolver {
     }
     message.source = source;
     const savedMessage = await this.messageService.saveMassage(message);
-    pubSub.publish(MESSAGE_EDITED, savedMessage).catch(console.error);
+    await pubSub.publish(MESSAGE_EDITED, { [MESSAGE_EDITED]: savedMessage });
     return savedMessage;
   }
 
@@ -144,7 +135,7 @@ export class MessageResolver {
     }
     message.deleted = true;
     await this.messageService.saveMassage(message);
-    pubSub.publish(MESSAGE_DELETED, { [MESSAGE_DELETED]: message.id }).catch(console.error);
+    await pubSub.publish(MESSAGE_DELETED, { [MESSAGE_DELETED]: message.id });
     return true;
   }
 

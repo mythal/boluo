@@ -5,13 +5,22 @@
 
 type Channel {
   id: ID!
+
+  """Whether this channel is a RPG channel."""
+  isGame: Boolean!
+  isPublic: Boolean!
+  isDeleted: Boolean!
   title: String!
-  topic: String
+  topic: String!
+  description: String!
   created: DateTime!
   modified: DateTime!
-  creator: User
-  creatorId: ID
+  isArchived: Boolean!
+  creator: User!
+  creatorId: ID!
   messages: [Message!]!
+  invitations: [Invitation!]!
+  members: [Members!]!
 }
 
 """
@@ -19,73 +28,77 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 """
 scalar DateTime
 
-"""A type tag of entities."""
-enum EntityType {
-  ROLL
-  LINK
+type Invitation {
+  token: String!
+  channel: Channel!
+  channelId: ID!
+  creator: User!
+  creatorId: ID!
+  expiration: DateTime!
+}
+
+type Members {
+  id: ID!
+  user: User!
+  userId: String!
+  channel: Channel!
+  channelId: String!
+  isAdmin: Boolean!
+  joinDate: DateTime!
+  isMuted: Boolean!
+  character: String!
 }
 
 type Message {
   id: ID!
-  type: MessageType!
-  user: User
-  userId: ID
-  channel: Channel
+  user: User!
+  userId: ID!
+  channel: Channel!
   channelId: ID
-  charName: String!
-  isAction: Boolean!
-  isOoc: Boolean!
 
-  """Message plain text."""
-  content: String!
-  entities: [MessageEntity!]!
-  previous: ID
-  threadHead: ID
+  """
+  Name of character. The message is a Out-of-Character message only if this field empty
+  """
+  character: String!
+  isAction: Boolean!
+
+  """Message plain text source."""
+  source: String!
+  threadRoot: ID
+  seed: Int!
   created: DateTime!
   modified: DateTime!
 }
 
-"""Text block, range is [start, start+offset)."""
-type MessageEntity {
-  type: EntityType!
-  start: Int!
-  offset: Int!
-
-  """Appears only when the type is link"""
-  link: String
-}
-
-"""A type tag of messages."""
-enum MessageType {
-  SYSTEM
-  SAY
-  ROLL
-  OOC
-}
-
 type Mutation {
-  sendMessage(isOoc: Boolean!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Message!
-  updatePreviewMessage(isOoc: Boolean!, justTyping: Boolean!, startTime: DateTime!, type: MessageType!, charName: String!, channelId: ID!, content: String!, id: ID!): Boolean!
-  editMessage(content: String!, messageId: String!): Message!
+  sendMessage(isRoll: Boolean = false, character: String!, channelId: ID!, source: String!, id: ID!): Message!
+  sendMessagePreview(
+    isRoll: Boolean = false
+    startTime: DateTime!
+
+    """If blank, this is a Out-of-Character message."""
+    character: String!
+    channelId: ID!
+
+    """If blank, just show "sb. is typing..."."""
+    source: String!
+    id: ID!
+  ): Boolean!
+  editMessage(source: String!, messageId: String!): Message!
   deleteMessage(messageId: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
   createChannel(title: String!): Channel!
-  renameChannel(title: String!, id: ID!): Channel!
 }
 
 type PreviewMessage {
   id: ID!
-  type: MessageType!
+  isRoll: Boolean!
   userId: ID!
   channelId: ID!
-  charName: String!
-
-  """Message plain text."""
-  content: String!
+  character: String!
+  source: String!
   startTime: DateTime!
   updateTime: DateTime!
-  justTyping: Boolean!
-  isOoc: Boolean!
 }
 
 type Query {
@@ -115,5 +128,6 @@ type User {
   id: ID!
   username: String!
   nickname: String!
+  avatar: String!
   created: DateTime!
 }

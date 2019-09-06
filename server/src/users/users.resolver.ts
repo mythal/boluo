@@ -7,6 +7,7 @@ import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { QueryFailedError } from 'typeorm';
 import { checkNickname, checkPassword, checkUsername } from '../common';
+import { JwtUser } from '../auth/jwt.strategy';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -51,7 +52,7 @@ export class UserResolver {
       return await this.userService.create(username, nickname, password);
     } catch (e) {
       if (e instanceof QueryFailedError) {
-        throw Error('Email is registered');
+        throw Error('Username is registered');
       }
       throw e;
     }
@@ -59,7 +60,7 @@ export class UserResolver {
 
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async getMe(@CurrentUser() user) {
+  async getMe(@CurrentUser() user: JwtUser) {
     return this.userService.findById(user.id);
   }
 }

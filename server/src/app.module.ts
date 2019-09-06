@@ -19,6 +19,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import {
+  JWT_EXPIRES_IN,
   JWT_SECRET,
   POSTGRES_DATABASE,
   POSTGRES_HOST,
@@ -27,6 +28,10 @@ import {
   POSTGRES_USERNAME,
 } from './settings';
 import { PassportModule } from '@nestjs/passport';
+import { MemberResolver } from './members/members.resolver';
+import { Member } from './members/members.entity';
+import { Invitation } from './invitaions/invitaions.entity';
+import { MemberService } from './members/members.service';
 
 @Module({
   imports: [
@@ -49,10 +54,10 @@ import { PassportModule } from '@nestjs/passport';
       context: ({ req }) => ({ req }),
       installSubscriptionHandlers: true,
     }),
-    TypeOrmModule.forFeature([Message, User, Channel]),
+    TypeOrmModule.forFeature([Message, User, Channel, Member, Invitation]),
     JwtModule.register({
       secret: JWT_SECRET,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: JWT_EXPIRES_IN },
     }),
   ],
   controllers: [AuthController],
@@ -63,6 +68,8 @@ import { PassportModule } from '@nestjs/passport';
     MessageResolver,
     UserResolver,
     ChannelResolver,
+    MemberResolver,
+    MemberService,
     AuthService,
     LocalStrategy,
     JwtStrategy,

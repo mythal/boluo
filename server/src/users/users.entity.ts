@@ -18,6 +18,10 @@ export class User {
   @Field()
   nickname: string;
 
+  @Column({ default: '' })
+  @Field()
+  avatar: string;
+
   @CreateDateColumn()
   @Field()
   created: Date;

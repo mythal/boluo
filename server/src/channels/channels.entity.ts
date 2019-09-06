@@ -12,6 +12,7 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { Message } from '../messages/messages.entity';
 import { User } from '../users/users.entity';
 import { Invitation } from '../invitaions/invitaions.entity';
+import { Member } from '../members/members.entity';
 
 @Entity('channels')
 @ObjectType('Channel')
@@ -36,12 +37,12 @@ export class Channel {
   @Field()
   title: string;
 
-  @Column({ default: '' })
-  @Field({ defaultValue: '' })
+  @Column({ default: '', nullable: false })
+  @Field()
   topic: string;
 
   @Column({ default: '' })
-  @Field({ defaultValue: '' })
+  @Field()
   description: string;
 
   @CreateDateColumn()
@@ -59,10 +60,10 @@ export class Channel {
   @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'creatorId' })
   @Field(() => User, { nullable: false })
-  creator: Promise<User> | null;
+  creator: Promise<User>;
 
-  @Column({ type: 'uuid', nullable: true })
-  @Field(() => ID, { nullable: true })
+  @Column({ type: 'uuid' })
+  @Field(() => ID)
   creatorId: string;
 
   @OneToMany(() => Message, message => message.channel)
@@ -72,4 +73,8 @@ export class Channel {
   @OneToMany(() => Invitation, invitation => invitation.channel)
   @Field(() => [Invitation])
   invitations: Promise<Invitation>;
+
+  @OneToMany(() => Member, member => member.channel)
+  @Field(() => [Member])
+  members: Promise<Member>;
 }

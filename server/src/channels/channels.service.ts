@@ -27,7 +27,7 @@ export class ChannelService {
   async create(
     name: string,
     title: string,
-    creatorId: string,
+    ownerId: string,
     isGame: boolean = false,
     isPublic: boolean = false,
     description: string = ''
@@ -35,7 +35,7 @@ export class ChannelService {
     const id = generateId();
     name = name.trim();
     description = description.trim();
-    const channel = await this.channelRepository.create({ id, creatorId, name, title, isGame, isPublic, description });
+    const channel = await this.channelRepository.create({ id, ownerId, name, title, isGame, isPublic, description });
     return await this.channelRepository.save(channel);
   }
 }

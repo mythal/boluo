@@ -32,3 +32,24 @@ export function checkPassword(password: string): [boolean, string] {
   }
   return [true, ''];
 }
+
+export function checkChannelName(name: string): [boolean, string] {
+  if (!/^[\w_\d]+$/.test(name)) {
+    return [false, 'Channel name can only contain letters, "_" and numbers.'];
+  } else if (name.length < 3) {
+    return [false, 'Channel name must be at least 3 characters.'];
+  } else if (name.length > 32) {
+    return [false, 'Channel name must be at most 32 characters.'];
+  }
+  return [true, ''];
+}
+
+export function checkChannelTitle(title: string): [boolean, string] {
+  const TITLE_MAX_CHARACTERS = 24;
+  if (title.length === 0) {
+    return [false, 'Empty title.'];
+  } else if (title.length > TITLE_MAX_CHARACTERS) {
+    return [false, `Title must be less than ${TITLE_MAX_CHARACTERS} characters.`];
+  }
+  return [true, ''];
+}

@@ -17,8 +17,8 @@ type Channel {
   created: DateTime!
   modified: DateTime!
   isArchived: Boolean!
-  creator: User!
-  creatorId: ID!
+  owner: User!
+  ownerId: ID!
   messages: [Message!]!
   invitations: [Invitation!]!
   members: [Members!]!
@@ -91,6 +91,7 @@ type Mutation {
   createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
   joinChannel(userId: ID, channelId: ID!): Members!
   quitChannel(channelId: ID!): Boolean!
+  editChannel(description: String, isArchive: Boolean, isDelete: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Boolean!
 }
 
 type PreviewMessage {

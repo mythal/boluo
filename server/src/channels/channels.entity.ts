@@ -64,13 +64,13 @@ export class Channel {
   isArchived: boolean;
 
   @ManyToOne(() => User, { nullable: false })
-  @JoinColumn({ name: 'creatorId' })
+  @JoinColumn({ name: 'ownerId' })
   @Field(() => User, { nullable: false })
-  creator: Promise<User>;
+  owner: Promise<User>;
 
   @Column({ type: 'uuid' })
   @Field(() => ID)
-  creatorId: string;
+  ownerId: string;
 
   @OneToMany(() => Message, message => message.channel)
   @Field(() => [Message])

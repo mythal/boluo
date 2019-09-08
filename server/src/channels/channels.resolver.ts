@@ -3,6 +3,7 @@ import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
 import { FieldResolver, ID, Root } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
+import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
@@ -53,10 +54,10 @@ export class ChannelResolver {
     const [validName, nameInvalidReason] = checkChannelName(name);
     const [validTitle, titleInvalidReason] = checkChannelTitle(title);
     if (!validName || !validTitle) {
-      throw Error(nameInvalidReason || titleInvalidReason);
+      throw new UserInputError(nameInvalidReason || titleInvalidReason);
     }
     if (await this.channelService.hasName(name)) {
-      throw Error('Channel name already exists.');
+      throw new UserInputError('Channel name already exists.');
     }
     const channel = await this.channelService.create(name, title, user.id, isGame, isPublic, description);
     await this.memberService.addUserToChannel(user.id, channel.id, true);
@@ -72,7 +73,7 @@ export class ChannelResolver {
   ) {
     const channel = await this.channelService.findById(channelId);
     if (!channel || !channel.isPublic) {
-      throw Error('Cannot join channel.');
+      throw new ForbiddenError('Cannot join the channel.');
     }
     return await this.memberService.addUserToChannel(userId || user.id, channelId);
   }
@@ -85,6 +86,25 @@ export class ChannelResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
+  async deleteChannel(
+    @CurrentUser() user: JwtUser,
+    @Args({ name: 'channelId', type: () => ID }) channelId: string,
+    @Args({ name: 'name', type: () => String }) name: string
+  ) {
+    const channel = await this.channelService.findById(channelId);
+    if (!channel) {
+      throw new ForbiddenError('Channel does not exists.');
+    } else if (channel.ownerId !== user.id) {
+      throw new ForbiddenError('You have no permission to delete the channel.');
+    } else if (channel.name !== name) {
+      throw new UserInputError('Channel id and channel name do not match');
+    }
+    await this.channelRepository.delete(channelId);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
   async editChannel(
     @CurrentUser() user: JwtUser,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
@@ -92,16 +112,15 @@ export class ChannelResolver {
     @Args({ name: 'title', type: () => String, nullable: true }) title?: string,
     @Args({ name: 'isGame', type: () => Boolean, nullable: true }) isGame?: boolean,
     @Args({ name: 'isPublic', type: () => Boolean, nullable: true }) isPublic?: boolean,
-    @Args({ name: 'isDelete', type: () => Boolean, nullable: true }) isDelete?: boolean,
     @Args({ name: 'isArchive', type: () => Boolean, nullable: true }) isArchive?: boolean,
     @Args({ name: 'description', type: () => String, nullable: true }) description?: string
   ) {
     const channel = await this.channelService.findById(channelId);
-    if (!channel || channel.isDeleted) {
-      throw Error('Channel does not exists.');
+    if (!channel) {
+      throw new ForbiddenError('Channel does not exists.');
     }
     const member = await this.memberService.findByChannelAndUser(channelId, user.id);
-    const noPermission = new Error('You have no permission.');
+    const noPermission = new ForbiddenError('You have no permission.');
     const isOwner = channel.ownerId === user.id;
     const isAdmin = member && member.isAdmin;
     if (!isOwner && !isAdmin) {
@@ -110,7 +129,7 @@ export class ChannelResolver {
 
     const changePublicity = isPublic !== null && isPublic !== channel.isPublic;
     const changeName = name !== undefined;
-    const doOwnerOnlyOperate = isDelete || isArchive || changePublicity || changeName;
+    const doOwnerOnlyOperate = isArchive || changePublicity || changeName;
     if (!isOwner && doOwnerOnlyOperate) {
       throw noPermission;
     }
@@ -121,9 +140,9 @@ export class ChannelResolver {
       name = name.trim();
       const [valid, reason] = checkChannelName(name);
       if (!valid) {
-        throw Error(reason);
+        throw new UserInputError(reason);
       } else if (await this.channelService.hasName(name)) {
-        throw Error('Channel name already exists.');
+        throw new UserInputError('Channel name already exists.');
       }
       if (channel.name !== name) {
         channel.name = name;
@@ -134,7 +153,7 @@ export class ChannelResolver {
       title = title.trim();
       const [valid, reason] = checkChannelTitle(title);
       if (!valid) {
-        throw Error(reason);
+        throw new UserInputError(reason);
       }
       if (channel.title !== title) {
         isChanged = true;
@@ -154,10 +173,6 @@ export class ChannelResolver {
     }
     if (isArchive !== undefined && channel.isArchived !== isArchive) {
       channel.isArchived = isArchive;
-      isChanged = true;
-    }
-    if (isDelete !== undefined && channel.isDeleted !== isDelete) {
-      channel.isDeleted = isDelete;
       isChanged = true;
     }
     if (isChanged) {

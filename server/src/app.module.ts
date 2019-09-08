@@ -19,6 +19,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import {
+  DEBUG,
   JWT_EXPIRES_IN,
   JWT_SECRET,
   POSTGRES_DATABASE,
@@ -54,6 +55,7 @@ import { RedisService } from './redis/redis.service';
       autoSchemaFile: '../schema.graphql',
       context: ({ req }) => ({ req }),
       installSubscriptionHandlers: true,
+      debug: DEBUG,
     }),
     TypeOrmModule.forFeature([Message, User, Channel, Member, Invitation]),
     JwtModule.register({

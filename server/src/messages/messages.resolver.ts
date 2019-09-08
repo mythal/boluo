@@ -6,7 +6,7 @@ import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/auth.guard';
-import { PubSub } from 'apollo-server-express';
+import { ForbiddenError, PubSub, UserInputError } from 'apollo-server-express';
 
 const pubSub = new PubSub();
 
@@ -67,7 +67,7 @@ export class MessageResolver {
     @CurrentUser() user: JwtUser
   ) {
     if (source.trim().length === 0) {
-      throw Error('Empty message');
+      throw new UserInputError('Empty message');
     }
     const message = await this.messageService.create(id, source, channelId, character.trim(), user.id, isRoll);
     await pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
@@ -78,7 +78,7 @@ export class MessageResolver {
   @UseGuards(GqlAuthGuard)
   async sendMessagePreview(
     @Args({ name: 'id', type: () => ID }) id: string,
-    @Args({ name: 'source', type: () => String, description: 'If blank, just show "sb. is typing...".' })
+    @Args({ name: 'source', type: () => String, description: 'If blank, just show typing.' })
     source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'character', type: () => String, description: 'If blank, this is a Out-of-Character message.' })
@@ -109,10 +109,10 @@ export class MessageResolver {
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message || message.deleted) {
-      throw Error('No message found');
+      throw new UserInputError('No message found');
     }
     if (message.userId !== user.id) {
-      throw Error('No editing authority');
+      throw new ForbiddenError('No editing authority');
     }
     message.source = source;
     const savedMessage = await this.messageService.saveMassage(message);
@@ -125,13 +125,13 @@ export class MessageResolver {
   async deleteMessage(@CurrentUser() user: JwtUser, @Args({ name: 'messageId', type: () => ID }) messageId: string) {
     const message = await this.messageService.findById(messageId);
     if (!message) {
-      throw Error('No message found');
+      throw new UserInputError('No message found');
     }
     if (message.userId !== user.id) {
-      throw Error('No editing authority');
+      throw new ForbiddenError('No editing authority');
     }
     if (message.deleted) {
-      throw Error('Already deleted');
+      throw new UserInputError('Already deleted');
     }
     message.deleted = true;
     await this.messageService.saveMassage(message);

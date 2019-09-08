@@ -3,6 +3,7 @@ import { User } from './users.entity';
 import { UserService } from './users.service';
 import { ID } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
+import { UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { checkNickname, checkPassword, checkUsername } from '../common';
@@ -33,18 +34,13 @@ export class UserResolver {
     const [isUsernameValid, usernameInvalidReason] = checkUsername(username);
     const [isNicknameValid, nicknameInvalidReason] = checkNickname(nickname);
     const [isPasswordValid, passwordInvalidReason] = checkPassword(password);
-    if (!isNicknameValid) {
-      throw Error(nicknameInvalidReason);
-    }
-    if (!isUsernameValid) {
-      throw Error(usernameInvalidReason);
-    }
-    if (!isPasswordValid) {
-      throw Error(passwordInvalidReason);
+    const isAllValid = isUsernameValid && isNicknameValid && isPasswordValid;
+    if (!isAllValid) {
+      throw new UserInputError(usernameInvalidReason || nicknameInvalidReason || passwordInvalidReason);
     }
     const hasUsername = await this.userService.hasUsername(username);
     if (hasUsername) {
-      throw Error('Username is registered');
+      throw new UserInputError('Username is registered');
     }
     return await this.userService.create(username, nickname, password);
   }

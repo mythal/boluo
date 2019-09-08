@@ -30,10 +30,6 @@ export class Channel {
   @Field()
   isPublic: boolean;
 
-  @Column({ type: 'boolean', default: false })
-  @Field()
-  isDeleted: boolean;
-
   @Column()
   @Index({ unique: true })
   @Field()

@@ -9,7 +9,6 @@ type Channel {
   """Whether this channel is a RPG channel."""
   isGame: Boolean!
   isPublic: Boolean!
-  isDeleted: Boolean!
   name: String!
   title: String!
   topic: String!
@@ -82,7 +81,7 @@ type Mutation {
     character: String!
     channelId: ID!
 
-    """If blank, just show "sb. is typing..."."""
+    """If blank, just show typing."""
     source: String!
     id: ID!
   ): Boolean!
@@ -92,7 +91,8 @@ type Mutation {
   createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
   joinChannel(userId: ID, channelId: ID!): Members!
   quitChannel(channelId: ID!): Boolean!
-  editChannel(description: String, isArchive: Boolean, isDelete: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Boolean!
+  deleteChannel(name: String!, channelId: ID!): Boolean!
+  editChannel(description: String, isArchive: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Boolean!
 }
 
 type PreviewMessage {

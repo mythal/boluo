@@ -34,6 +34,7 @@ import { Member } from './members/members.entity';
 import { Invitation } from './invitaions/invitaions.entity';
 import { MemberService } from './members/members.service';
 import { RedisService } from './redis/redis.service';
+import { DateScalar } from './scalars';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { RedisService } from './redis/redis.service';
   ],
   controllers: [AuthController],
   providers: [
+    DateScalar,
     RedisService,
     MessageService,
     UserService,

@@ -13,8 +13,8 @@ type Channel {
   title: String!
   topic: String!
   description: String!
-  created: DateTime!
-  modified: DateTime!
+  created: Date!
+  modified: Date!
   isArchived: Boolean!
   owner: User!
   ownerId: ID!
@@ -23,10 +23,8 @@ type Channel {
   members: [Members!]!
 }
 
-"""
-The javascript `Date` as string. Type represents date and time as the ISO Date string.
-"""
-scalar DateTime
+"""Date custom scalar type"""
+scalar Date
 
 type Invitation {
   token: String!
@@ -34,8 +32,13 @@ type Invitation {
   channelId: ID!
   creator: User!
   creatorId: ID!
-  expiration: DateTime!
+  expiration: Date!
 }
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject
 
 type Members {
   user: User!
@@ -43,7 +46,7 @@ type Members {
   channel: Channel!
   channelId: ID!
   isAdmin: Boolean!
-  joinDate: DateTime!
+  joinDate: Date!
   isMuted: Boolean!
   character: String!
   isOnline: Boolean!
@@ -62,20 +65,21 @@ type Message {
   character: String!
   isAction: Boolean!
 
-  """Message plain text source."""
-  source: String!
+  """Message plain text."""
+  text: String!
+  entities: [JSONObject!]!
   parent: ID
   parentId: ID
   seed: Int!
-  created: DateTime!
-  modified: DateTime!
+  created: Date!
+  modified: Date!
 }
 
 type Mutation {
   sendMessage(isRoll: Boolean = false, character: String!, channelId: ID!, source: String!, id: ID!): Message!
   sendMessagePreview(
     isRoll: Boolean = false
-    startTime: DateTime!
+    startTime: Date!
 
     """If blank, this is a Out-of-Character message."""
     character: String!
@@ -102,8 +106,8 @@ type PreviewMessage {
   channelId: ID!
   character: String!
   source: String!
-  startTime: DateTime!
-  updateTime: DateTime!
+  startTime: Date!
+  updateTime: Date!
 }
 
 type Query {
@@ -134,6 +138,6 @@ type User {
   username: String!
   nickname: String!
   avatar: String!
-  created: DateTime!
+  created: Date!
   isOnline: Boolean!
 }

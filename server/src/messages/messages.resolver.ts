@@ -114,7 +114,7 @@ export class MessageResolver {
     if (message.userId !== user.id) {
       throw new ForbiddenError('No editing authority');
     }
-    message.source = source;
+    message.text = source;
     const savedMessage = await this.messageService.saveMassage(message);
     await pubSub.publish(MESSAGE_EDITED, { [MESSAGE_EDITED]: savedMessage });
     return savedMessage;

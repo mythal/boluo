@@ -11,6 +11,8 @@ import {
 import { User } from '../users/users.entity';
 import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
+import { GraphQLJSONObject } from 'graphql-type-json';
+import { Entity as MessageEntity } from '../common/entities';
 
 @Entity('messages')
 @ObjectType()
@@ -52,8 +54,12 @@ export class Message {
   isGm: boolean;
 
   @Column({ type: 'text' })
-  @Field({ description: 'Message plain text source.' })
-  source: string;
+  @Field({ description: 'Message plain text.' })
+  text: string;
+
+  @Column({ type: 'jsonb', default: [] })
+  @Field(() => GraphQLJSONObject)
+  entities: MessageEntity[];
 
   @OneToMany(() => Message, message => message.parent)
   children: Promise<Message[]>;

@@ -5,167 +5,172 @@ interface State {
   rest: string;
 }
 
-type Parser<T> = (state: State) => [T, State] | null;
+// Infrastructure
 
-const map = <T, U>(parser: Parser<T>, mapper: (x: T) => U): Parser<U> => state => {
-  const parseResult = parser(state);
-  if (parseResult) {
-    const [r, s] = parseResult;
-    return [mapper(r), s];
-  } else {
-    return null;
-  }
-};
+class P<T> {
+  constructor(public run: (state: State) => [T, State] | null) {}
 
-const many = <T>(parser: Parser<T>): Parser<T[]> => state => {
-  const values: T[] = [];
-  for (;;) {
-    const result = parser(state);
-    if (!result) {
-      break;
-    }
-    const [v, s] = result;
-    values.push(v);
-    state = s;
-  }
-  return [values, state];
-};
+  map = <U>(mapper: (x: T) => U): P<U> =>
+    new P(state => {
+      const result = this.run(state);
+      if (!result) {
+        return null;
+      }
+      const [r, s] = result;
+      return [mapper(r), s];
+    });
 
-const many1 = <T>(parser: Parser<T>): Parser<T[]> => {
-  const manyParser = many(parser);
-  return state => {
-    const result = manyParser(state);
-    if (!result || result[0].length === 0) {
-      return null;
-    } else {
-      return result;
-    }
+  then = <U>(mapper: (result: [T, State]) => [U, State] | null): P<U> =>
+    new P<U>(state => {
+      const result = this.run(state);
+      if (!result) {
+        return null;
+      }
+      return mapper(result);
+    });
+
+  skip = <U>(p2: P<U>): P<T> =>
+    new P(state => {
+      const result = this.run(state);
+      if (!result) {
+        return null;
+      }
+      const [r, s1] = result;
+      const skipResult = p2.run(s1);
+      if (!skipResult) {
+        return null;
+      }
+      const [_, s] = skipResult;
+      return [r, s];
+    });
+
+  with = <U>(p2: P<U>): P<U> =>
+    new P<U>(state => {
+      const result = this.run(state);
+      if (!result) {
+        return null;
+      }
+      return p2.run(result[1]);
+    });
+
+  many = (): P<T[]> =>
+    new P(state => {
+      const xs: T[] = [];
+      for (;;) {
+        const result = this.run(state);
+        if (!result) {
+          break;
+        }
+        const [v, s] = result;
+        xs.push(v);
+        state = s;
+      }
+      return [xs, state];
+    });
+
+  many1 = (): P<T[]> => {
+    const parser = this.many();
+    return new P(state => {
+      const result = parser.run(state);
+      return result && result[0].length > 0 ? result : null;
+    });
   };
-};
-
-const and = <T>(parsers: Array<Parser<T>>): Parser<T[]> => state => {
-  const xs: T[] = [];
-  for (const parser of parsers) {
-    const result = parser(state);
-    if (!result) {
-      return null;
-    }
-    const [v, s] = result;
-    state = s;
-    xs.push(v);
-  }
-  return [xs, state];
-};
-
-const choice = <T>(parsers: Array<Parser<T>>): Parser<T> => state => {
-  for (const parser of parsers) {
-    const result = parser(state);
-    if (result) {
-      return result;
-    }
-  }
-  return null;
-};
-
-const skipBefore = <T, U>(parser: Parser<T>, skipParser: Parser<U>): Parser<T> => state => {
-  const result = parser(state);
-  if (!result) {
-    return null;
-  }
-  const [r, sSkip] = result;
-  const skipResult = skipParser(sSkip);
-  if (!skipResult) {
-    return null;
-  }
-  const [_, s] = skipResult;
-  return [r, s];
-};
-
-const skipAfter = <T, U>(skipParser: Parser<T>, parser: Parser<U>): Parser<U> => state => {
-  const skipResult = skipParser(state);
-  if (!skipResult) {
-    return null;
-  }
-  return parser(skipResult[1]);
-};
-
-const strong = (): Parser<Entity> => ({ text, rest }) => {
-  const STRONG_REGEX = /^\*\*(.+?)\*\*/;
-  const match = rest.match(STRONG_REGEX);
-  if (!match) {
-    return null;
-  }
-  const matched = match[0];
-  const content = match[1];
-  const entity: Strong = {
-    type: 'Strong',
-    start: text.length,
-    offset: matched.length,
-  };
-  text += content;
-  rest = rest.substr(matched.length);
-  return [entity, { text, rest }];
-};
-
-const autoUrl = (): Parser<Entity> => ({ text, rest }) => {
-  const URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/;
-  const match = rest.match(URL_REGEX);
-  if (!match) {
-    return null;
-  }
-  const content = match[0];
-  const entity: Link = {
-    type: 'Link',
-    href: content,
-    start: text.length,
-    offset: content.length,
-  };
-  text += content;
-  rest = rest.substr(content.length);
-  return [entity, { text, rest }];
-};
-
-const span = (): Parser<Text> => ({ text, rest }) => {
-  const TEXT_REGEX = /^[\s\S][^*[@\s]*\s*/;
-  const match = rest.match(TEXT_REGEX);
-  if (!match) {
-    return null;
-  }
-  const matched = match[0];
-  const entity: Text = {
-    type: 'Text',
-    start: text.length,
-    offset: matched.length,
-  };
-  text += matched;
-  rest = rest.substr(matched.length);
-  return [entity, { text, rest }];
-};
-
-const link = (): Parser<Entity> => ({ text, rest }) => {
-  const LINK_REGEX = /^\[(.+)]\((.+)\)/;
-  const match = rest.match(LINK_REGEX);
-  if (!match) {
-    return null;
-  }
-  const matched = match[0];
-  const content = match[1];
-  const url = match[2];
-  const entity: Link = {
-    type: 'Link',
-    start: text.length,
-    offset: content.length,
-    href: url,
-  };
-  text += content;
-  rest = rest.substr(matched.length);
-  return [entity, { text, rest }];
-};
-
-interface ParseResult {
-  text: string;
-  entities: Entity[];
 }
+
+const and = <T>(parsers: Array<P<T>>): P<T[]> =>
+  new P(state => {
+    const xs: T[] = [];
+    for (const parser of parsers) {
+      const result = parser.run(state);
+      if (!result) {
+        return null;
+      }
+      const [v, s] = result;
+      state = s;
+      xs.push(v);
+    }
+    return [xs, state];
+  });
+
+const choice = <T>(parsers: Array<P<T>>): P<T> =>
+  new P(state => {
+    for (const parser of parsers) {
+      const result = parser.run(state);
+      if (result) {
+        return result;
+      }
+    }
+    return null;
+  });
+
+const regex = (pattern: RegExp): P<RegExpMatchArray> =>
+  new P(({ text, rest }) => {
+    const match = rest.match(pattern);
+    if (!match) {
+      return null;
+    }
+    const matched = match[0];
+    rest = rest.substr(matched.length);
+    return [match, { text, rest }];
+  });
+
+// Parsers
+
+const STRONG_REGEX = /^\*\*(.+?)\*\*/;
+const strong = (): P<Entity> =>
+  regex(STRONG_REGEX).then(([match, { text, rest }]) => {
+    const [_, content] = match;
+    const entity: Strong = {
+      type: 'Strong',
+      start: text.length,
+      offset: content.length,
+    };
+    text += content;
+    return [entity, { text, rest }];
+  });
+
+const URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/;
+
+const autoUrl = (): P<Entity> =>
+  regex(URL_REGEX).then(([match, { text, rest }]) => {
+    const [content] = match;
+    const entity: Link = {
+      type: 'Link',
+      href: content,
+      start: text.length,
+      offset: content.length,
+    };
+    text += content;
+    return [entity, { text, rest }];
+  });
+
+const TEXT_REGEX = /^[\s\S][^*[@\s]*\s*/;
+const span = (): P<Text> =>
+  regex(TEXT_REGEX).then(([match, { text, rest }]) => {
+    const [content] = match;
+    const offset = content.length;
+    const entity: Text = {
+      type: 'Text',
+      start: text.length,
+      offset,
+    };
+    text += content;
+    return [entity, { text, rest }];
+  });
+
+const LINK_REGEX = /^\[(.+)]\((.+)\)/;
+const link = (): P<Entity> =>
+  regex(LINK_REGEX).then(([match, { text, rest }]) => {
+    const [_, content, url] = match;
+    const entity: Link = {
+      type: 'Link',
+      start: text.length,
+      offset: content.length,
+      href: url,
+    };
+    text += content;
+    return [entity, { text, rest }];
+  });
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   if (entity.type !== 'Text') {
@@ -183,15 +188,20 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   return entities;
 };
 
+export interface ParseResult {
+  text: string;
+  entities: Entity[];
+}
+
 export const parse = (source: string): ParseResult => {
   let state: State = { text: '', rest: source };
 
   const entity = choice<Entity>([strong(), link(), autoUrl(), span()]);
 
-  const message: Parser<Entity[]> = map(many(entity), entityList =>
-    entityList.reduce<Entity[]>(mergeTextEntitiesReducer, [])
-  );
-  const result = message(state);
+  const message: P<Entity[]> = entity
+    .many()
+    .map(entityList => entityList.reduce<Entity[]>(mergeTextEntitiesReducer, []));
+  const result = message.run(state);
 
   if (!result) {
     throw Error('Parse error.');

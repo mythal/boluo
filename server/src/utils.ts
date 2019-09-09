@@ -1,4 +1,7 @@
-export const generateId = require('uuid/v1');
+export const uuid1 = require('uuid/v1');
+
+export const generateId = (): string => uuid1();
+
 const argon2 = require('argon2');
 
 export const passwordHash = (password: string): Promise<string> => {

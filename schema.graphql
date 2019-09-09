@@ -76,7 +76,7 @@ type Message {
 }
 
 type Mutation {
-  sendMessage(isRoll: Boolean = false, character: String!, channelId: ID!, source: String!, id: ID!): Message!
+  sendMessage(id: ID, isRoll: Boolean = false, character: String!, channelId: ID!, source: String!): Message!
   sendMessagePreview(
     isRoll: Boolean = false
     startTime: Date!

@@ -7,6 +7,7 @@ import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, PubSub, UserInputError } from 'apollo-server-express';
+import { generateId } from '../utils';
 
 const pubSub = new PubSub();
 
@@ -59,13 +60,16 @@ export class MessageResolver {
   @Mutation(() => Message)
   @UseGuards(GqlAuthGuard)
   async sendMessage(
-    @Args({ name: 'id', type: () => ID }) id: string,
+    @CurrentUser() user: JwtUser,
     @Args({ name: 'source', type: () => String }) source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'character', type: () => String }) character: string,
     @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll: boolean,
-    @CurrentUser() user: JwtUser
+    @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
   ) {
+    if (!id) {
+      id = generateId();
+    }
     if (source.trim().length === 0) {
       throw new UserInputError('Empty message');
     }

@@ -13,8 +13,9 @@ export interface Link extends BaseEntity {
   title?: string;
 }
 
-export interface Roll extends BaseEntity {
-  type: 'Roll';
+export interface Expr extends BaseEntity {
+  type: 'Expr';
+  node: ExprNode;
 }
 
 export interface Strong extends BaseEntity {
@@ -31,4 +32,23 @@ export interface Mention extends BaseEntity {
   self?: boolean;
 }
 
-export type Entity = Text | Link | Roll | Strong | Emphasis | Mention;
+export type Entity = Text | Link | Expr | Strong | Emphasis | Mention;
+
+export interface Roll {
+  type: 'Roll';
+  face?: number;
+  counter: number;
+}
+
+export interface Number {
+  type: 'Number';
+  value: number;
+}
+
+export interface Add {
+  type: 'Add';
+  a: ExprNode;
+  b: ExprNode;
+}
+
+export type ExprNode = Roll | Add | Number;

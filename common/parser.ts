@@ -1,4 +1,4 @@
-import { Entity, Link, Strong, Text } from './entities';
+import { Entity, Link, Strong, Text, ExprNode, Roll, Expr } from './entities';
 
 interface State {
   text: string;
@@ -172,6 +172,31 @@ const link = (): P<Entity> =>
     return [entity, { text, rest }];
   });
 
+const roll = (): P<ExprNode> =>
+  regex(/^(\d{0,2})d(\d{0,3})/).then(([match, state]) => {
+    const [_, before, after] = match;
+    const node: Roll = {
+      type: 'Roll',
+      counter: before === '' ? 1 : Number(before),
+      face: after === '' ? undefined : Number(after),
+    };
+    return [node, state];
+  });
+
+const expr = (): P<Entity> => {
+  return choice([roll()]).then<Entity>(([node, { text, rest }]) => {
+    const content = '[expression]';
+    const entity: Expr = {
+      type: 'Expr',
+      start: text.length,
+      offset: content.length,
+      node,
+    };
+    text += content;
+    return [entity, { text, rest }];
+  });
+};
+
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   if (entity.type !== 'Text') {
     entities.push(entity);
@@ -196,7 +221,7 @@ export interface ParseResult {
 export const parse = (source: string): ParseResult => {
   let state: State = { text: '', rest: source };
 
-  const entity = choice<Entity>([strong(), link(), autoUrl(), span()]);
+  const entity = choice<Entity>([strong(), link(), autoUrl(), expr(), span()]);
 
   const message: P<Entity[]> = entity
     .many()

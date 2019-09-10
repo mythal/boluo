@@ -23,6 +23,15 @@ type Channel {
   members: [Members!]!
 }
 
+type ChannelEvent {
+  newMessage: Message
+  messageDeleted: ID
+  messageEdited: Message
+  messagePreview: PreviewMessage
+  publishTime: Date!
+  channelId: ID!
+}
+
 type Content {
   text: String!
   entities: [JSONObject!]!
@@ -145,10 +154,7 @@ type Query {
 }
 
 type Subscription {
-  newMessage: Message!
-  messagePreview: PreviewMessage!
-  messageDeleted: ID!
-  messageEdited: Message!
+  channelEvent(channelId: ID!): ChannelEvent!
 }
 
 type User {

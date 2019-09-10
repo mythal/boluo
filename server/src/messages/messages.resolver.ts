@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, ResolveProperty, Resolver, Root, Subscription } from '@nestjs/graphql';
+import { Args, Mutation, Query, ResolveProperty, Resolver, Root } from '@nestjs/graphql';
 import { Message } from './messages.entity';
 import { MessageService } from './messages.service';
 import { Field, ID, Int, ObjectType } from 'type-graphql';
@@ -7,47 +7,12 @@ import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { GqlAuthGuard } from '../auth/auth.guard';
-import { ForbiddenError, PubSub, UserInputError } from 'apollo-server-express';
+import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { generateId } from '../utils';
 import { Entity as MessageEntity } from '../common/entities';
 import { parse } from '../common';
-
-const pubSub = new PubSub();
-
-const NEW_MESSAGE = 'newMessage';
-const MESSAGE_PREVIEW = 'messagePreview';
-const MESSAGE_DELETED = 'messageDeleted';
-const MESSAGE_EDITED = 'messageEdited';
-
-export const publishNewMessage = (message: Message): Promise<void> =>
-  pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
-
-@ObjectType()
-class PreviewMessage {
-  @Field(() => ID)
-  id: string;
-
-  @Field(() => Boolean)
-  isExpression: boolean;
-
-  @Field(() => ID)
-  userId: string;
-
-  @Field(() => ID)
-  channelId: string;
-
-  @Field()
-  character: string;
-
-  @Field()
-  source: string;
-
-  @Field({ nullable: false })
-  startTime: Date;
-
-  @Field({ nullable: false })
-  updateTime: Date;
-}
+import { PreviewMessage } from './PreviewMessage';
+import { EventService } from '../events/events.service';
 
 @ObjectType()
 class Content {
@@ -63,7 +28,7 @@ class Content {
 
 @Resolver(() => Message)
 export class MessageResolver {
-  constructor(private messageService: MessageService) {}
+  constructor(private messageService: MessageService, private eventService: EventService) {}
 
   @Query(() => Message)
   async getMessageById(@Args({ name: 'id', type: () => ID }) id: string) {
@@ -132,7 +97,7 @@ export class MessageResolver {
       isHidden,
       whisperTo
     );
-    await publishNewMessage(message);
+    await this.eventService.newMessage(message);
     return message;
   }
 
@@ -175,7 +140,7 @@ export class MessageResolver {
     message.source = source.length < PREVIEW_SOURCE_MAX_LENGTH ? source : '';
     message.startTime = startTime;
     message.updateTime = new Date();
-    await pubSub.publish(MESSAGE_PREVIEW, { [MESSAGE_PREVIEW]: message });
+    await this.eventService.messagePreview(message);
     return true;
   }
 
@@ -194,11 +159,8 @@ export class MessageResolver {
     if (message.userId !== user.id) {
       throw new ForbiddenError('No editing authority');
     }
-    message.text = text;
-    message.entities = entities;
-    message.editDate = new Date();
-    const savedMessage = await this.messageService.saveMassage(message);
-    await pubSub.publish(MESSAGE_EDITED, { [MESSAGE_EDITED]: savedMessage });
+    const savedMessage = await this.messageService.editMessage(message, text, entities);
+    await this.eventService.messageEdited(savedMessage);
     return savedMessage;
   }
 
@@ -217,27 +179,7 @@ export class MessageResolver {
     }
     message.deleted = true;
     await this.messageService.saveMassage(message);
-    await pubSub.publish(MESSAGE_DELETED, { [MESSAGE_DELETED]: message.id });
+    await this.eventService.messageDeleted(message.channelId, message.id);
     return true;
-  }
-
-  @Subscription(() => Message)
-  newMessage() {
-    return pubSub.asyncIterator(NEW_MESSAGE);
-  }
-
-  @Subscription(() => PreviewMessage)
-  messagePreview() {
-    return pubSub.asyncIterator(MESSAGE_PREVIEW);
-  }
-
-  @Subscription(() => ID)
-  messageDeleted() {
-    return pubSub.asyncIterator(MESSAGE_DELETED);
-  }
-
-  @Subscription(() => Message)
-  messageEdited() {
-    return pubSub.asyncIterator(MESSAGE_EDITED);
   }
 }

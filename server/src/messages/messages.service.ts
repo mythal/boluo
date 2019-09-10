@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './messages.entity';
 import { MemberService } from '../members/members.service';
-import { Entity } from '../common/entities';
+import { Entity } from '../common';
 import { generateId } from '../utils';
 
 const crypto = require('crypto');
@@ -33,6 +33,13 @@ export class MessageService {
   ) {
     this.rngBuffer = new Int32Array(RNG_BUFFER_LEN);
     this.fillRngBuffer();
+  }
+
+  async editMessage(message: Message, text: string, entities: Entity[]): Promise<Message> {
+    message.text = text;
+    message.entities = entities;
+    message.editDate = new Date();
+    return await this.messageRepository.save(message);
   }
 
   async leftMessage(channelId: string, userId: string) {

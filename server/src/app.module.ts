@@ -35,6 +35,8 @@ import { Invitation } from './invitaions/invitaions.entity';
 import { MemberService } from './members/members.service';
 import { RedisService } from './redis/redis.service';
 import { DateScalar } from './scalars';
+import { ChannelEventResolver } from './events/events.resolver';
+import { EventService } from './events/events.service';
 
 @Module({
   imports: [
@@ -76,6 +78,8 @@ import { DateScalar } from './scalars';
     UserResolver,
     MemberResolver,
     MemberService,
+    ChannelEventResolver,
+    EventService,
     AuthService,
     LocalStrategy,
     JwtStrategy,

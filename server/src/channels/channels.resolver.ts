@@ -10,16 +10,17 @@ import { JwtUser } from '../auth/jwt.strategy';
 import { Message } from '../messages/messages.entity';
 import { MemberService } from '../members/members.service';
 import { Member } from '../members/members.entity';
-import { checkChannelName, checkChannelTitle } from '../common/validators';
+import { checkChannelName, checkChannelTitle } from '../common';
 import { MessageService } from '../messages/messages.service';
-import { publishNewMessage } from '../messages/messages.resolver';
+import { EventService } from '../events/events.service';
 
 @Resolver(() => Channel)
 export class ChannelResolver {
   constructor(
     private messageService: MessageService,
     private channelService: ChannelService,
-    private memberService: MemberService
+    private memberService: MemberService,
+    private eventService: EventService
   ) {}
 
   @ResolveProperty(() => [Message])
@@ -74,14 +75,14 @@ export class ChannelResolver {
       throw new ForbiddenError('Cannot join the channel.');
     }
     userId = userId || user.id;
-    this.messageService.joinMessage(channelId, userId).then(publishNewMessage);
+    this.messageService.joinMessage(channelId, userId).then(this.eventService.newMessage);
     return this.memberService.addUserToChannel(userId, channelId);
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async quitChannel(@CurrentUser() user: JwtUser, @Args({ name: 'channelId', type: () => ID }) channelId: string) {
-    this.messageService.leftMessage(channelId, user.id).then(publishNewMessage);
+    this.messageService.leftMessage(channelId, user.id).then(this.eventService.newMessage);
     return this.memberService.removeUserFromChannel(user.id, channelId);
   }
 

@@ -24,6 +24,16 @@ export class ChannelService {
     return counter > 0;
   }
 
+  async delete(channelId: string): Promise<boolean> {
+    const result = await this.channelRepository.delete(channelId);
+    return result.affected ? result.affected > 0 : false;
+  }
+
+  async update(channel: Channel): Promise<boolean> {
+    await this.channelRepository.save(channel);
+    return true;
+  }
+
   async create(
     name: string,
     title: string,

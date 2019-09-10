@@ -21,7 +21,7 @@ export class MemberService {
       isAdmin: asAdmin,
     });
     await this.memberRepository.save(member);
-    return member;
+    return this.memberRepository.findOneOrFail({ where: { userId, channelId } });
   }
 
   async removeUserFromChannel(userId: string, channelId: string): Promise<boolean> {

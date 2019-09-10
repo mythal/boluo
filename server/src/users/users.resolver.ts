@@ -50,9 +50,16 @@ export class UserResolver {
     return await this.userService.isOnline(user.id);
   }
 
-  @Query(() => Boolean, { description: 'Keep alive.' })
+  @Query(() => Boolean, { description: 'Keep alive.', name: 'ping' })
   @UseGuards(GqlAuthGuard)
-  async ping(@CurrentUser() user: JwtUser) {
+  async pingQuery(@CurrentUser() user: JwtUser) {
+    this.userService.ping(user.id);
+    return true;
+  }
+
+  @Mutation(() => Boolean, { description: 'Keep alive.', name: 'ping' })
+  @UseGuards(GqlAuthGuard)
+  async pingMutation(@CurrentUser() user: JwtUser) {
     this.userService.ping(user.id);
     return true;
   }

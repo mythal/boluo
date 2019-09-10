@@ -49,11 +49,27 @@ export class Message {
 
   @Column({ type: 'boolean', default: false })
   @Field()
+  isJoin: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  @Field()
+  isLeft: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  @Field()
   isGm: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field()
   isPinned: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  @Field()
+  isHidden: boolean;
+
+  @Column({ type: 'uuid', array: true, default: '{}' })
+  @Field(() => [ID])
+  whisperTo: string[];
 
   @Column({ type: 'text' })
   @Field({ description: 'Message plain text.' })
@@ -78,7 +94,7 @@ export class Message {
   @Column({ type: 'boolean', default: false })
   deleted: boolean;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'integer', default: 0 })
   @Field(() => Int)
   seed: number;
 
@@ -86,7 +102,19 @@ export class Message {
   @Field()
   created: Date;
 
+  @CreateDateColumn()
+  @Field()
+  orderDate: Date;
+
+  @Column({ type: 'integer', default: 0 })
+  @Field(() => Int)
+  orderOffset: number;
+
   @UpdateDateColumn()
   @Field()
   modified: Date;
+
+  isPublic() {
+    return !this.isHidden && this.whisperTo.length === 0;
+  }
 }

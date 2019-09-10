@@ -1,7 +1,7 @@
-import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { Args, Mutation, Query, ResolveProperty, Resolver, Root, Subscription } from '@nestjs/graphql';
 import { Message } from './messages.entity';
 import { MessageService } from './messages.service';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
@@ -18,6 +18,9 @@ const NEW_MESSAGE = 'newMessage';
 const MESSAGE_PREVIEW = 'messagePreview';
 const MESSAGE_DELETED = 'messageDeleted';
 const MESSAGE_EDITED = 'messageEdited';
+
+export const publishNewMessage = (message: Message): Promise<void> =>
+  pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
 
 @ObjectType()
 class PreviewMessage {
@@ -46,21 +49,61 @@ class PreviewMessage {
   updateTime: Date;
 }
 
+@ObjectType()
+class Content {
+  @Field()
+  text: string;
+
+  @Field(() => GraphQLJSONObject)
+  entities: MessageEntity[];
+
+  @Field(() => Int)
+  seed: number;
+}
+
 @Resolver(() => Message)
 export class MessageResolver {
   constructor(private messageService: MessageService) {}
-
-  @Query(() => [Message], { description: 'Get all messages.' })
-  async messages() {
-    return await this.messageService.findAll();
-  }
 
   @Query(() => Message)
   async getMessageById(@Args({ name: 'id', type: () => ID }) id: string) {
     return await this.messageService.findById(id);
   }
 
-  @Mutation(() => Message)
+  @ResolveProperty(() => String)
+  async text(@Root() message: Message) {
+    return message.isPublic() ? message.text : '';
+  }
+
+  @ResolveProperty(() => GraphQLJSONObject)
+  async entities(@Root() message: Message) {
+    return message.isPublic() ? message.entities : [];
+  }
+
+  @ResolveProperty(() => Number)
+  async seed(@Root() message: Message) {
+    return message.isPublic() ? message.seed : 0;
+  }
+
+  @Query(() => Content, { nullable: true })
+  @UseGuards(GqlAuthGuard)
+  async actuallyContent(@Args({ name: 'id', type: () => ID }) id: string, @CurrentUser() user: JwtUser) {
+    const message = await this.messageService.findById(id);
+    if (!message) {
+      throw new UserInputError('No message found');
+    }
+    const content = new Content();
+    content.entities = message.entities;
+    content.seed = message.seed;
+    content.text = message.text;
+    if (await this.messageService.canRead(message, user.id)) {
+      return content;
+    } else {
+      throw new ForbiddenError('No permission to view.');
+    }
+  }
+
+  @Mutation(() => Message, { nullable: true })
   @UseGuards(GqlAuthGuard)
   async sendMessage(
     @CurrentUser() user: JwtUser,
@@ -68,6 +111,8 @@ export class MessageResolver {
     @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'character', type: () => String }) character: string,
+    @Args({ name: 'hide', type: () => Boolean, defaultValue: false }) isHidden: boolean,
+    @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
   ) {
     const TEXT_MAX_LENGTH = 4096;
@@ -77,12 +122,21 @@ export class MessageResolver {
     if (text.length > TEXT_MAX_LENGTH) {
       throw new UserInputError(`Max length of message is ${TEXT_MAX_LENGTH}.`);
     }
-    const message = await this.messageService.create(id, text, entities, channelId, character.trim(), user.id);
-    await pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
+    const message = await this.messageService.create(
+      id,
+      text,
+      entities,
+      channelId,
+      character.trim(),
+      user.id,
+      isHidden,
+      whisperTo
+    );
+    await publishNewMessage(message);
     return message;
   }
 
-  @Mutation(() => Message)
+  @Mutation(() => Message, { deprecationReason: "Don't use, just for development." })
   @UseGuards(GqlAuthGuard)
   async sendMessageSource(
     @CurrentUser() user: JwtUser,
@@ -90,10 +144,12 @@ export class MessageResolver {
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'character', type: () => String }) character: string,
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: true }) isExpression: boolean,
+    @Args({ name: 'hide', type: () => Boolean, defaultValue: false }) isHidden: boolean,
+    @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
   ) {
     const { text, entities } = parse(source, isExpression);
-    return this.sendMessage(user, text, entities, channelId, character, id);
+    return this.sendMessage(user, text, entities, channelId, character, isHidden, whisperTo, id);
   }
 
   @Mutation(() => Boolean)

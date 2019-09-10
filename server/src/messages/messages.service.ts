@@ -4,10 +4,21 @@ import { Repository } from 'typeorm';
 import { Message } from './messages.entity';
 import { MemberService } from '../members/members.service';
 import { Entity } from '../common/entities';
+import { generateId } from '../utils';
 
 const crypto = require('crypto');
 
 const RNG_BUFFER_LEN = 128;
+
+export const hide = (userId: string) => (message: Message) => {
+  if (!message.isHidden || message.whisperTo.length === 0 || message.whisperTo.indexOf(userId) !== -1) {
+    return message;
+  }
+  message.text = '';
+  message.entities = [];
+  message.seed = 0;
+  return message;
+};
 
 @Injectable()
 export class MessageService {
@@ -24,9 +35,48 @@ export class MessageService {
     this.fillRngBuffer();
   }
 
-  async create(id: string, text: string, entities: Entity[], channelId: string, character: string, userId: string) {
-    const deleted = false;
-    const parent = null;
+  async leftMessage(channelId: string, userId: string) {
+    const id = generateId();
+    await this.messageRepository.insert({
+      id,
+      text: '',
+      entities: [],
+      channelId,
+      character: '',
+      userId,
+      isGm: false,
+      seed: this.genRandom(),
+      isLeft: true,
+    });
+    return this.messageRepository.findOneOrFail(id);
+  }
+
+  async joinMessage(channelId: string, userId: string) {
+    const id = generateId();
+    await this.messageRepository.insert({
+      id,
+      text: '',
+      entities: [],
+      channelId,
+      character: '',
+      userId,
+      isGm: false,
+      seed: this.genRandom(),
+      isJoin: true,
+    });
+    return this.messageRepository.findOneOrFail(id);
+  }
+
+  async create(
+    id: string,
+    text: string,
+    entities: Entity[],
+    channelId: string,
+    character: string,
+    userId: string,
+    isHidden: boolean = false,
+    whisperTo: string[] = []
+  ) {
     const seed = this.genRandom();
     const member = await this.memberService.findByChannelAndUser(channelId, userId);
     if (!member) {
@@ -40,20 +90,34 @@ export class MessageService {
       channelId,
       character,
       userId,
-      deleted,
-      parent,
       isGm,
       seed,
+      isHidden,
+      whisperTo,
     });
-    return this.findById(id);
+    return await this.messageRepository.findOneOrFail(id);
   }
 
-  findAll(): Promise<Message[]> {
-    return this.messageRepository.find({ where: { deleted: false } });
+  async canRead(message: Message, userId: string | null): Promise<boolean> {
+    if (!message.isHidden && message.whisperTo.length === 0) {
+      return true;
+    }
+    if (!userId) {
+      return false;
+    }
+    const member = await this.memberService.findByChannelAndUser(message.channelId, userId);
+    if (!member) {
+      return false;
+    }
+    return member.isAdmin;
   }
 
   findById(id: string): Promise<Message | undefined> {
     return this.messageRepository.findOne(id, { where: { deleted: false } });
+  }
+
+  findByChannel(channelId: string): Promise<Message[]> {
+    return this.messageRepository.find({ where: { channelId, deleted: false } });
   }
 
   private fillRngBuffer() {

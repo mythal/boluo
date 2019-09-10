@@ -1,32 +1,30 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, ResolveProperty, Resolver } from '@nestjs/graphql';
 import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
-import { FieldResolver, ID, Root } from 'type-graphql';
+import { ID, Root } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Message } from '../messages/messages.entity';
 import { MemberService } from '../members/members.service';
 import { Member } from '../members/members.entity';
 import { checkChannelName, checkChannelTitle } from '../common/validators';
+import { MessageService } from '../messages/messages.service';
+import { publishNewMessage } from '../messages/messages.resolver';
 
 @Resolver(() => Channel)
 export class ChannelResolver {
   constructor(
+    private messageService: MessageService,
     private channelService: ChannelService,
-    private memberService: MemberService,
-    @InjectRepository(Channel)
-    private readonly channelRepository: Repository<Channel>
+    private memberService: MemberService
   ) {}
 
-  @FieldResolver(() => [Message])
+  @ResolveProperty(() => [Message])
   async messages(@Root() channel: Channel) {
-    const messages: Message[] = await channel.messages;
-    return messages.filter(m => !m.deleted);
+    return this.messageService.findByChannel(channel.id);
   }
 
   @Query(() => [Channel], { description: 'Get all channels.' })
@@ -64,7 +62,7 @@ export class ChannelResolver {
     return channel;
   }
 
-  @Mutation(() => Member)
+  @Mutation(() => Member, { nullable: true })
   @UseGuards(GqlAuthGuard)
   async joinChannel(
     @CurrentUser() user: JwtUser,
@@ -75,12 +73,15 @@ export class ChannelResolver {
     if (!channel || !channel.isPublic) {
       throw new ForbiddenError('Cannot join the channel.');
     }
-    return await this.memberService.addUserToChannel(userId || user.id, channelId);
+    userId = userId || user.id;
+    this.messageService.joinMessage(channelId, userId).then(publishNewMessage);
+    return this.memberService.addUserToChannel(userId, channelId);
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async quitChannel(@CurrentUser() user: JwtUser, @Args({ name: 'channelId', type: () => ID }) channelId: string) {
+    this.messageService.leftMessage(channelId, user.id).then(publishNewMessage);
     return this.memberService.removeUserFromChannel(user.id, channelId);
   }
 
@@ -99,7 +100,7 @@ export class ChannelResolver {
     } else if (channel.name !== name) {
       throw new UserInputError('Channel id and channel name do not match');
     }
-    await this.channelRepository.delete(channelId);
+    await this.channelService.delete(channelId);
     return true;
   }
 
@@ -176,7 +177,7 @@ export class ChannelResolver {
       isChanged = true;
     }
     if (isChanged) {
-      await this.channelRepository.save(channel);
+      await this.channelService.update(channel);
     }
     return isChanged;
   }

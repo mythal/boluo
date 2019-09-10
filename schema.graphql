@@ -23,6 +23,12 @@ type Channel {
   members: [Members!]!
 }
 
+type Content {
+  text: String!
+  entities: [JSONObject!]!
+  seed: Int!
+}
+
 """Date custom scalar type"""
 scalar Date
 
@@ -64,8 +70,12 @@ type Message {
   """
   character: String!
   isAction: Boolean!
+  isJoin: Boolean!
+  isLeft: Boolean!
   isGm: Boolean!
   isPinned: Boolean!
+  isHidden: Boolean!
+  whisperTo: [ID!]!
 
   """Message plain text."""
   text: String!
@@ -74,12 +84,14 @@ type Message {
   parentId: ID
   seed: Int!
   created: Date!
+  orderDate: Date!
+  orderOffset: Int!
   modified: Date!
 }
 
 type Mutation {
-  sendMessage(id: ID, character: String!, channelId: ID!, entities: [JSONObject!]!, text: String!): Message!
-  sendMessageSource(id: ID, isExpression: Boolean = true, character: String!, channelId: ID!, source: String!): Message!
+  sendMessage(id: ID, whisperTo: [ID!] = [], hide: Boolean = false, character: String!, channelId: ID!, entities: [JSONObject!]!, text: String!): Message
+  sendMessageSource(id: ID, whisperTo: [ID!] = [], hide: Boolean = false, isExpression: Boolean = true, character: String!, channelId: ID!, source: String!): Message! @deprecated(reason: "Don't use, just for development.")
   sendMessagePreview(
     isExpression: Boolean = false
     startTime: Date!
@@ -95,8 +107,11 @@ type Mutation {
   editMessage(source: String!, messageId: String!): Message!
   deleteMessage(messageId: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
+
+  """Keep alive."""
+  ping: Boolean!
   createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
-  joinChannel(userId: ID, channelId: ID!): Members!
+  joinChannel(userId: ID, channelId: ID!): Members
   quitChannel(channelId: ID!): Boolean!
   deleteChannel(name: String!, channelId: ID!): Boolean!
   editChannel(description: String, isArchive: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Boolean!
@@ -114,9 +129,8 @@ type PreviewMessage {
 }
 
 type Query {
-  """Get all messages."""
-  messages: [Message!]!
   getMessageById(id: ID!): Message!
+  actuallyContent(id: ID!): Content
   getUserById(id: ID!): User
   getUserByUsername(username: String!): User
 

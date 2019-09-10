@@ -10,7 +10,7 @@ import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, PubSub, UserInputError } from 'apollo-server-express';
 import { generateId } from '../utils';
 import { Entity as MessageEntity } from '../common/entities';
-import { parse } from '../common/parser';
+import { parse } from '../common';
 
 const pubSub = new PubSub();
 
@@ -184,7 +184,8 @@ export class MessageResolver {
   async editMessage(
     @CurrentUser() user: JwtUser,
     @Args({ name: 'messageId', type: () => String }) messageId: string,
-    @Args({ name: 'source', type: () => String }) source: string
+    @Args({ name: 'text', type: () => String }) text: string,
+    @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[]
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message || message.deleted) {
@@ -193,7 +194,9 @@ export class MessageResolver {
     if (message.userId !== user.id) {
       throw new ForbiddenError('No editing authority');
     }
-    message.text = source;
+    message.text = text;
+    message.entities = entities;
+    message.editDate = new Date();
     const savedMessage = await this.messageService.saveMassage(message);
     await pubSub.publish(MESSAGE_EDITED, { [MESSAGE_EDITED]: savedMessage });
     return savedMessage;

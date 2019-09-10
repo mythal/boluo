@@ -87,6 +87,7 @@ type Message {
   orderDate: Date!
   orderOffset: Int!
   modified: Date!
+  editDate: Date
 }
 
 type Mutation {
@@ -104,7 +105,7 @@ type Mutation {
     source: String!
     id: ID!
   ): Boolean!
-  editMessage(source: String!, messageId: String!): Message!
+  editMessage(entities: [JSONObject!]!, text: String!, messageId: String!): Message!
   deleteMessage(messageId: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
 

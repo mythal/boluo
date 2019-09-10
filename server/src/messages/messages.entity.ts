@@ -114,6 +114,10 @@ export class Message {
   @Field()
   modified: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  @Field(() => Date, { nullable: true })
+  editDate: Date | null;
+
   isPublic() {
     return !this.isHidden && this.whisperTo.length === 0;
   }

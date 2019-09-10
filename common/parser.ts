@@ -1,4 +1,4 @@
-import { Entity, Link, Strong, Text, ExprNode, Roll, Expr } from './entities';
+import { Entity, Link, Strong, Text, ExprNode, Roll, Expr, Binary, Num, Operator } from './entities';
 
 interface State {
   text: string;
@@ -7,6 +7,7 @@ interface State {
 
 // Infrastructure
 
+// Parser
 class P<T> {
   constructor(public run: (state: State) => [T, State] | null) {}
 
@@ -75,7 +76,36 @@ class P<T> {
       return result && result[0].length > 0 ? result : null;
     });
   };
+
+  maybe = (): P<T | null> =>
+    new P<T | null>(state => {
+      const result = this.run(state);
+      return result ? result : [null, state];
+    });
+
+  and = <U>(p2: P<U>): P<[T, U]> =>
+    new P<[T, U]>(state => {
+      const r1 = this.run(state);
+      if (!r1) {
+        return null;
+      }
+      const [x1, s1] = r1;
+      const r2 = p2.run(s1);
+      if (!r2) {
+        return null;
+      }
+      const [x2, s2] = r2;
+      return [[x1, x2], s2];
+    });
+
+  or = (p2: P<T>): P<T> =>
+    new P<T>(state => {
+      const r1 = this.run(state);
+      return r1 ? r1 : p2.run(state);
+    });
 }
+
+const fail = <T>(): P<T> => new P<T>(state => null);
 
 const and = <T>(parsers: Array<P<T>>): P<T[]> =>
   new P(state => {
@@ -144,7 +174,8 @@ const autoUrl = (): P<Entity> =>
     return [entity, { text, rest }];
   });
 
-const TEXT_REGEX = /^[\s\S][^*[@\s]*\s*/;
+const TEXT_REGEX = /\d+|.[^\d*@[(（#\s]*\s*/s;
+
 const span = (): P<Text> =>
   regex(TEXT_REGEX).then(([match, { text, rest }]) => {
     const [content] = match;
@@ -172,8 +203,10 @@ const link = (): P<Entity> =>
     return [entity, { text, rest }];
   });
 
+const spaces = (): P<null> => regex(/^\s*/).map(() => null);
+
 const roll = (): P<ExprNode> =>
-  regex(/^(\d{0,2})d(\d{0,3})/).then(([match, state]) => {
+  regex(/^(\d{0,3})d(?![a-zA-Z])(\d{0,4})/).then(([match, state]) => {
     const [_, before, after] = match;
     const node: Roll = {
       type: 'Roll',
@@ -183,8 +216,106 @@ const roll = (): P<ExprNode> =>
     return [node, state];
   });
 
-const expr = (): P<Entity> => {
-  return choice([roll()]).then<Entity>(([node, { text, rest }]) => {
+const str = (s: string, appendText: boolean = false): P<string> =>
+  new P(({ text, rest }) => {
+    if (!rest.startsWith(s)) {
+      return null;
+    }
+    rest = rest.substr(s.length);
+    if (appendText) {
+      text += s;
+    }
+    return [s, { text, rest }];
+  });
+
+const atom = (): P<ExprNode> => {
+  const subExpr = choice([
+    regex(/^\(\s*/)
+      .with(expr())
+      .skip(regex(/^\s*\)/)), // match (...)
+    regex(/^（\s*/)
+      .with(expr())
+      .skip(regex(/^\s*）/)), // match （...）
+    regex(/^\[\s*/)
+      .with(expr())
+      .skip(regex(/^\s*]/)), // match [...]
+  ]);
+  return choice([roll(), num(), subExpr]);
+};
+
+const operator1 = (): P<Operator> =>
+  regex(/^[-+]/).map(
+    ([op]): Operator => {
+      if (op === '+') {
+        return '+';
+      } else if (op === '-') {
+        return '-';
+      }
+      throw Error('unreachable');
+    }
+  );
+
+const operator2 = (): P<Operator> =>
+  regex(/^[*/×÷]/).map(
+    ([op]): Operator => {
+      if (op === '×' || op === '*') {
+        return '×';
+      } else if (op === '÷' || op === '/') {
+        return '÷';
+      }
+      throw Error('unreachable');
+    }
+  );
+
+const num = (): P<ExprNode> => regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
+
+const expr2 = (): P<ExprNode> =>
+  new P(state => {
+    const left = atom();
+    const restExpr: P<[Operator, ExprNode]> = spaces().with(
+      operator2()
+        .skip(spaces())
+        .and(expr2())
+    );
+    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(restExpr.maybe());
+    return maybeExpr
+      .map<ExprNode>(([l, maybeRest]) => {
+        if (!maybeRest) {
+          return l;
+        }
+        const [op, r] = maybeRest;
+        const node: Binary = { type: 'Binary', l, r, op };
+        return node;
+      })
+      .run(state);
+  });
+
+const expr = (): P<ExprNode> =>
+  new P(state => {
+    const left = expr2();
+    const restExpr: P<[Operator, ExprNode]> = spaces().with(
+      operator1()
+        .skip(spaces())
+        .and(expr())
+    );
+    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(restExpr.maybe());
+    return maybeExpr
+      .map<ExprNode>(([l, maybeRest]) => {
+        if (!maybeRest) {
+          return l;
+        }
+        const [op, r] = maybeRest;
+        const node: Binary = { type: 'Binary', l, r, op };
+        return node;
+      })
+      .run(state);
+  });
+
+const expression = (): P<Entity> =>
+  expr().then<Entity>(([node, { text, rest }]) => {
+    if (node.type === 'Num') {
+      return null;
+    }
     const content = '[expression]';
     const entity: Expr = {
       type: 'Expr',
@@ -195,7 +326,6 @@ const expr = (): P<Entity> => {
     text += content;
     return [entity, { text, rest }];
   });
-};
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   if (entity.type !== 'Text') {
@@ -218,10 +348,11 @@ export interface ParseResult {
   entities: Entity[];
 }
 
-export const parse = (source: string): ParseResult => {
+export const parse = (source: string, parseExpr: boolean = true): ParseResult => {
   let state: State = { text: '', rest: source };
+  const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
 
-  const entity = choice<Entity>([strong(), link(), autoUrl(), expr(), span()]);
+  const entity = choice<Entity>([strong(), link(), autoUrl(), maybeParseExpr, span()]);
 
   const message: P<Entity[]> = entity
     .many()

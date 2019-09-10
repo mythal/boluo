@@ -40,15 +40,18 @@ export interface Roll {
   counter: number;
 }
 
-export interface Number {
-  type: 'Number';
+export interface Num {
+  type: 'Num';
   value: number;
 }
 
-export interface Add {
-  type: 'Add';
-  a: ExprNode;
-  b: ExprNode;
+export type Operator = '+' | '-' | '×' | '÷';
+
+export interface Binary {
+  type: 'Binary';
+  op: Operator;
+  l: ExprNode;
+  r: ExprNode;
 }
 
-export type ExprNode = Roll | Add | Number;
+export type ExprNode = Roll | Binary | Num;

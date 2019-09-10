@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './messages.entity';
 import { MemberService } from '../members/members.service';
-import { parse } from '../common/parser';
+import { Entity } from '../common/entities';
 
 const crypto = require('crypto');
 
@@ -24,7 +24,7 @@ export class MessageService {
     this.fillRngBuffer();
   }
 
-  async create(id: string, source: string, channelId: string, character: string, userId: string, isRoll: boolean) {
+  async create(id: string, text: string, entities: Entity[], channelId: string, character: string, userId: string) {
     const deleted = false;
     const parent = null;
     const seed = this.genRandom();
@@ -33,7 +33,6 @@ export class MessageService {
       throw Error('You are not a member of this channel.');
     }
     const isGm = member.isAdmin;
-    const { text, entities } = parse(source);
     await this.messageRepository.insert({
       id,
       text,
@@ -43,7 +42,6 @@ export class MessageService {
       userId,
       deleted,
       parent,
-      isRoll,
       isGm,
       seed,
     });

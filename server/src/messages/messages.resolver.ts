@@ -5,9 +5,12 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
 import { UseGuards } from '@nestjs/common';
+import { GraphQLJSONObject } from 'graphql-type-json';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, PubSub, UserInputError } from 'apollo-server-express';
 import { generateId } from '../utils';
+import { Entity as MessageEntity } from '../common/entities';
+import { parse } from '../common/parser';
 
 const pubSub = new PubSub();
 
@@ -22,7 +25,7 @@ class PreviewMessage {
   id: string;
 
   @Field(() => Boolean)
-  isRoll: boolean;
+  isExpression: boolean;
 
   @Field(() => ID)
   userId: string;
@@ -61,21 +64,36 @@ export class MessageResolver {
   @UseGuards(GqlAuthGuard)
   async sendMessage(
     @CurrentUser() user: JwtUser,
-    @Args({ name: 'source', type: () => String }) source: string,
+    @Args({ name: 'text', type: () => String }) text: string,
+    @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'character', type: () => String }) character: string,
-    @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll: boolean,
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
   ) {
+    const TEXT_MAX_LENGTH = 4096;
     if (!id) {
       id = generateId();
     }
-    if (source.trim().length === 0) {
-      throw new UserInputError('Empty message');
+    if (text.length > TEXT_MAX_LENGTH) {
+      throw new UserInputError(`Max length of message is ${TEXT_MAX_LENGTH}.`);
     }
-    const message = await this.messageService.create(id, source, channelId, character.trim(), user.id, isRoll);
+    const message = await this.messageService.create(id, text, entities, channelId, character.trim(), user.id);
     await pubSub.publish(NEW_MESSAGE, { [NEW_MESSAGE]: message });
     return message;
+  }
+
+  @Mutation(() => Message)
+  @UseGuards(GqlAuthGuard)
+  async sendMessageSource(
+    @CurrentUser() user: JwtUser,
+    @Args({ name: 'source', type: () => String }) source: string,
+    @Args({ name: 'channelId', type: () => ID }) channelId: string,
+    @Args({ name: 'character', type: () => String }) character: string,
+    @Args({ name: 'isExpression', type: () => Boolean, defaultValue: true }) isExpression: boolean,
+    @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
+  ) {
+    const { text, entities } = parse(source, isExpression);
+    return this.sendMessage(user, text, entities, channelId, character, id);
   }
 
   @Mutation(() => Boolean)
@@ -88,16 +106,17 @@ export class MessageResolver {
     @Args({ name: 'character', type: () => String, description: 'If blank, this is a Out-of-Character message.' })
     character: string,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
-    @Args({ name: 'isRoll', type: () => Boolean, defaultValue: false }) isRoll: boolean,
+    @Args({ name: 'isExpression', type: () => Boolean, defaultValue: false }) isExpression: boolean,
     @CurrentUser() user: JwtUser
   ) {
+    const PREVIEW_SOURCE_MAX_LENGTH = 1024;
     const message = new PreviewMessage();
     message.channelId = channelId;
     message.character = character;
     message.userId = user.id;
-    message.isRoll = isRoll;
+    message.isExpression = isExpression;
     message.id = id;
-    message.source = source;
+    message.source = source.length < PREVIEW_SOURCE_MAX_LENGTH ? source : '';
     message.startTime = startTime;
     message.updateTime = new Date();
     await pubSub.publish(MESSAGE_PREVIEW, { [MESSAGE_PREVIEW]: message });

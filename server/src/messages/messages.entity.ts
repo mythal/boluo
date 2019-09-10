@@ -48,10 +48,12 @@ export class Message {
   isAction: boolean;
 
   @Column({ type: 'boolean', default: false })
-  isRoll: boolean;
+  @Field()
+  isGm: boolean;
 
   @Column({ type: 'boolean', default: false })
-  isGm: boolean;
+  @Field()
+  isPinned: boolean;
 
   @Column({ type: 'text' })
   @Field({ description: 'Message plain text.' })

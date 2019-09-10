@@ -7,13 +7,23 @@ interface State {
 
 // Infrastructure
 
+export interface Env {
+  defaultFace: number;
+  resolveUsername: (name: string) => string | null;
+}
+
+const emptyEnv: Env = {
+  defaultFace: 20,
+  resolveUsername: () => null,
+};
+
 // Parser
 class P<T> {
-  constructor(public run: (state: State) => [T, State] | null) {}
+  constructor(public run: (state: State, env: Env) => [T, State] | null) {}
 
   map = <U>(mapper: (x: T) => U): P<U> =>
-    new P(state => {
-      const result = this.run(state);
+    new P((state, env) => {
+      const result = this.run(state, env);
       if (!result) {
         return null;
       }
@@ -21,23 +31,23 @@ class P<T> {
       return [mapper(r), s];
     });
 
-  then = <U>(mapper: (result: [T, State]) => [U, State] | null): P<U> =>
-    new P<U>(state => {
-      const result = this.run(state);
+  then = <U>(mapper: (result: [T, State], env: Env) => [U, State] | null): P<U> =>
+    new P<U>((state, env) => {
+      const result = this.run(state, env);
       if (!result) {
         return null;
       }
-      return mapper(result);
+      return mapper(result, env);
     });
 
   skip = <U>(p2: P<U>): P<T> =>
-    new P(state => {
-      const result = this.run(state);
+    new P((state, env) => {
+      const result = this.run(state, env);
       if (!result) {
         return null;
       }
       const [r, s1] = result;
-      const skipResult = p2.run(s1);
+      const skipResult = p2.run(s1, env);
       if (!skipResult) {
         return null;
       }
@@ -46,19 +56,19 @@ class P<T> {
     });
 
   with = <U>(p2: P<U>): P<U> =>
-    new P<U>(state => {
-      const result = this.run(state);
+    new P<U>((state, env) => {
+      const result = this.run(state, env);
       if (!result) {
         return null;
       }
-      return p2.run(result[1]);
+      return p2.run(result[1], env);
     });
 
   many = (): P<T[]> =>
-    new P(state => {
+    new P((state, env) => {
       const xs: T[] = [];
       for (;;) {
-        const result = this.run(state);
+        const result = this.run(state, env);
         if (!result) {
           break;
         }
@@ -71,26 +81,26 @@ class P<T> {
 
   many1 = (): P<T[]> => {
     const parser = this.many();
-    return new P(state => {
-      const result = parser.run(state);
+    return new P((state, env) => {
+      const result = parser.run(state, env);
       return result && result[0].length > 0 ? result : null;
     });
   };
 
   maybe = (): P<T | null> =>
-    new P<T | null>(state => {
-      const result = this.run(state);
+    new P<T | null>((state, env) => {
+      const result = this.run(state, env);
       return result ? result : [null, state];
     });
 
   and = <U>(p2: P<U>): P<[T, U]> =>
-    new P<[T, U]>(state => {
-      const r1 = this.run(state);
+    new P<[T, U]>((state, env) => {
+      const r1 = this.run(state, env);
       if (!r1) {
         return null;
       }
       const [x1, s1] = r1;
-      const r2 = p2.run(s1);
+      const r2 = p2.run(s1, env);
       if (!r2) {
         return null;
       }
@@ -99,19 +109,19 @@ class P<T> {
     });
 
   or = (p2: P<T>): P<T> =>
-    new P<T>(state => {
-      const r1 = this.run(state);
-      return r1 ? r1 : p2.run(state);
+    new P<T>((state, env) => {
+      const r1 = this.run(state, env);
+      return r1 ? r1 : p2.run(state, env);
     });
 }
 
 const fail = <T>(): P<T> => new P<T>(state => null);
 
 const and = <T>(parsers: Array<P<T>>): P<T[]> =>
-  new P(state => {
+  new P((state, env) => {
     const xs: T[] = [];
     for (const parser of parsers) {
-      const result = parser.run(state);
+      const result = parser.run(state, env);
       if (!result) {
         return null;
       }
@@ -123,9 +133,9 @@ const and = <T>(parsers: Array<P<T>>): P<T[]> =>
   });
 
 const choice = <T>(parsers: Array<P<T>>): P<T> =>
-  new P(state => {
+  new P((state, env) => {
     for (const parser of parsers) {
-      const result = parser.run(state);
+      const result = parser.run(state, env);
       if (result) {
         return result;
       }
@@ -206,12 +216,12 @@ const link = (): P<Entity> =>
 const spaces = (): P<null> => regex(/^\s*/).map(() => null);
 
 const roll = (): P<ExprNode> =>
-  regex(/^(\d{0,3})d(?![a-zA-Z])(\d{0,4})/).then(([match, state]) => {
+  regex(/^(\d{0,3})d(?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
     const [_, before, after] = match;
     const node: Roll = {
       type: 'Roll',
       counter: before === '' ? 1 : Number(before),
-      face: after === '' ? undefined : Number(after),
+      face: after === '' ? env.defaultFace : Number(after),
     };
     return [node, state];
   });
@@ -270,7 +280,7 @@ const operator2 = (): P<Operator> =>
 const num = (): P<ExprNode> => regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
 
 const expr2 = (): P<ExprNode> =>
-  new P(state => {
+  new P((state, env) => {
     const left = atom();
     const restExpr: P<[Operator, ExprNode]> = spaces().with(
       operator2()
@@ -287,11 +297,11 @@ const expr2 = (): P<ExprNode> =>
         const node: Binary = { type: 'Binary', l, r, op };
         return node;
       })
-      .run(state);
+      .run(state, env);
   });
 
 const expr = (): P<ExprNode> =>
-  new P(state => {
+  new P((state, env) => {
     const left = expr2();
     const restExpr: P<[Operator, ExprNode]> = spaces().with(
       operator1()
@@ -308,7 +318,7 @@ const expr = (): P<ExprNode> =>
         const node: Binary = { type: 'Binary', l, r, op };
         return node;
       })
-      .run(state);
+      .run(state, env);
   });
 
 const expression = (): P<Entity> =>
@@ -348,7 +358,7 @@ export interface ParseResult {
   entities: Entity[];
 }
 
-export const parse = (source: string, parseExpr: boolean = true): ParseResult => {
+export const parse = (source: string, parseExpr: boolean = true, env: Env = emptyEnv): ParseResult => {
   let state: State = { text: '', rest: source };
   const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
 
@@ -357,7 +367,7 @@ export const parse = (source: string, parseExpr: boolean = true): ParseResult =>
   const message: P<Entity[]> = entity
     .many()
     .map(entityList => entityList.reduce<Entity[]>(mergeTextEntitiesReducer, []));
-  const result = message.run(state);
+  const result = message.run(state, env);
 
   if (!result) {
     throw Error('Parse error.');

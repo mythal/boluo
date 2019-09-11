@@ -1,7 +1,7 @@
-import { Args, Mutation, Query, ResolveProperty, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveProperty, Resolver } from '@nestjs/graphql';
 import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
-import { ID, Root } from 'type-graphql';
+import { ID, Int } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
@@ -24,8 +24,12 @@ export class ChannelResolver {
   ) {}
 
   @ResolveProperty(() => [Message])
-  async messages(@Root() channel: Channel) {
-    return this.messageService.findByChannel(channel.id);
+  async messages(
+    @Parent() channel: Channel,
+    @Args({ name: 'limit', type: () => Int, nullable: true }) limit?: number,
+    @Args({ name: 'after', type: () => ID, nullable: true }) after?: string
+  ) {
+    return this.messageService.findByChannel(channel.id, after, limit);
   }
 
   @Query(() => [Channel], { description: 'Get all channels.' })

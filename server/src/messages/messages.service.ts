@@ -10,16 +10,6 @@ const crypto = require('crypto');
 
 const RNG_BUFFER_LEN = 128;
 
-export const hide = (userId: string) => (message: Message) => {
-  if (!message.isHidden || message.whisperTo.length === 0 || message.whisperTo.indexOf(userId) !== -1) {
-    return message;
-  }
-  message.text = '';
-  message.entities = [];
-  message.seed = 0;
-  return message;
-};
-
 @Injectable()
 export class MessageService {
   private readonly rngBuffer: Int32Array;
@@ -123,8 +113,27 @@ export class MessageService {
     return this.messageRepository.findOne(id, { where: { deleted: false } });
   }
 
-  findByChannel(channelId: string): Promise<Message[]> {
-    return this.messageRepository.find({ where: { channelId, deleted: false } });
+  async findByChannel(channelId: string, baseId?: string, limit: number = 128): Promise<Message[]> {
+    let order: [Date, number] | null = null;
+    if (baseId) {
+      const base = await this.messageRepository.findOneOrFail(baseId);
+      order = [base.orderDate, base.orderOffset];
+    }
+    let query = this.messageRepository
+      .createQueryBuilder('message')
+      .limit(limit)
+      .orderBy('message.orderDate', 'DESC')
+      .addOrderBy('message.orderOffset', 'ASC')
+      .where('message.channelId = :channelId', { channelId })
+      .andWhere('message.deleted = false');
+    if (order) {
+      const [date, offset] = order;
+      query = query.andWhere(
+        'message.orderDate < :date OR (message.orderDate = :date AND message.orderOffset < :offset)',
+        { date, offset }
+      );
+    }
+    return query.getMany();
   }
 
   private fillRngBuffer() {

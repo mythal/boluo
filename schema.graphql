@@ -116,6 +116,7 @@ type Mutation {
   ): Boolean!
   editMessage(entities: [JSONObject!]!, text: String!, messageId: String!): Message!
   deleteMessage(messageId: ID!): Boolean!
+  moveMessage(after: ID, before: ID, message: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
 
   """Keep alive."""

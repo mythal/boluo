@@ -182,4 +182,37 @@ export class MessageResolver {
     await this.eventService.messageDeleted(message.channelId, message.id);
     return true;
   }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async moveMessage(
+    @CurrentUser() user: JwtUser,
+    @Args({ name: 'message', type: () => ID }) messageId: string,
+    @Args({ name: 'before', type: () => ID, nullable: true }) beforeId?: string,
+    @Args({ name: 'after', type: () => ID, nullable: true }) afterId?: string
+  ) {
+    const message = await this.messageService.findById(messageId);
+    if (!message) {
+      throw new UserInputError("Can't found message.");
+    }
+    if (messageId === beforeId || messageId === afterId) {
+      throw new UserInputError("Don't move same message.");
+    }
+    if (beforeId) {
+      const before = await this.messageService.findById(beforeId);
+      if (!before) {
+        throw new UserInputError("Can't found message.");
+      }
+      await this.messageService.moveAfter(message, before);
+    } else if (afterId) {
+      const after = await this.messageService.findById(afterId);
+      if (!after) {
+        throw new UserInputError("Can't found message.");
+      }
+      await this.messageService.moveBefore(message, after);
+    } else {
+      throw new UserInputError('Must specify a before message or a after message.');
+    }
+    return true;
+  }
 }

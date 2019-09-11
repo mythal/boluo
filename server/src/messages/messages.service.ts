@@ -109,6 +109,34 @@ export class MessageService {
     return member.isAdmin;
   }
 
+  async moveAfter(message: Message, before: Message) {
+    const channelId = before.channelId;
+    const orderDate = before.orderDate;
+    const orderOffset = before.orderOffset;
+    const update = this.messageRepository
+      .createQueryBuilder()
+      .update(Message)
+      .set({ orderOffset: () => '"orderOffset" + 1' })
+      .where('channelId = :channelId', { channelId })
+      .andWhere('orderDate = :orderDate AND orderOffset > :orderOffset', { orderDate, orderOffset });
+    await update.execute();
+    await this.messageRepository.update(message.id, { orderDate, orderOffset: orderOffset + 1 });
+  }
+
+  async moveBefore(message: Message, after: Message) {
+    const channelId = after.channelId;
+    const orderDate = after.orderDate;
+    const orderOffset = after.orderOffset;
+    const update = this.messageRepository
+      .createQueryBuilder()
+      .update(Message)
+      .set({ orderOffset: () => '"orderOffset" - 1' })
+      .where('channelId = :channelId', { channelId })
+      .andWhere('orderDate = :orderDate AND orderOffset < :orderOffset', { orderDate, orderOffset });
+    await update.execute();
+    await this.messageRepository.update(message.id, { orderDate, orderOffset: orderOffset - 1 });
+  }
+
   findById(id: string): Promise<Message | undefined> {
     return this.messageRepository.findOne(id, { where: { deleted: false } });
   }

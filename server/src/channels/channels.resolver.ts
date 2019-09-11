@@ -109,7 +109,7 @@ export class ChannelResolver {
     return true;
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Channel)
   @UseGuards(GqlAuthGuard)
   async editChannel(
     @CurrentUser() user: JwtUser,
@@ -139,10 +139,7 @@ export class ChannelResolver {
     if (!isOwner && doOwnerOnlyOperate) {
       throw noPermission;
     }
-
-    let isChanged = false;
-
-    if (name) {
+    if (name !== undefined) {
       name = name.trim();
       const [valid, reason] = checkChannelName(name);
       if (!valid) {
@@ -150,40 +147,14 @@ export class ChannelResolver {
       } else if (await this.channelService.hasName(name)) {
         throw new UserInputError('Channel name already exists.');
       }
-      if (channel.name !== name) {
-        channel.name = name;
-        isChanged = true;
-      }
     }
-    if (title) {
+    if (title !== undefined) {
       title = title.trim();
       const [valid, reason] = checkChannelTitle(title);
       if (!valid) {
         throw new UserInputError(reason);
       }
-      if (channel.title !== title) {
-        isChanged = true;
-      }
     }
-    if (isGame !== undefined && channel.isGame !== isGame) {
-      channel.isGame = isGame;
-      isChanged = true;
-    }
-    if (isPublic !== undefined && channel.isPublic !== isPublic) {
-      channel.isPublic = isPublic;
-      isChanged = true;
-    }
-    if (description !== undefined && channel.description !== description) {
-      channel.description = description;
-      isChanged = true;
-    }
-    if (isArchive !== undefined && channel.isArchived !== isArchive) {
-      channel.isArchived = isArchive;
-      isChanged = true;
-    }
-    if (isChanged) {
-      await this.channelService.update(channel);
-    }
-    return isChanged;
+    return this.channelService.edit(channelId, name, title, description, isGame, isPublic, isArchive);
   }
 }

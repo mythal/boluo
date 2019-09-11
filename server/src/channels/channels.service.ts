@@ -29,9 +29,17 @@ export class ChannelService {
     return result.affected ? result.affected > 0 : false;
   }
 
-  async update(channel: Channel): Promise<boolean> {
-    await this.channelRepository.save(channel);
-    return true;
+  async edit(
+    channelId: string,
+    name?: string,
+    title?: string,
+    description?: string,
+    isGame?: boolean,
+    isPublic?: boolean,
+    isArchived?: boolean
+  ) {
+    await this.channelRepository.update(channelId, { name, title, description, isGame, isPublic, isArchived });
+    return await this.channelRepository.findOneOrFail(channelId);
   }
 
   async create(

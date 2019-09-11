@@ -13,6 +13,7 @@ import { Entity as MessageEntity } from '../common/entities';
 import { checkCharacterName, checkMessage, parse } from '../common';
 import { PreviewMessage } from './PreviewMessage';
 import { EventService } from '../events/events.service';
+import { MemberService } from '../members/members.service';
 
 @ObjectType()
 class Content {
@@ -30,7 +31,11 @@ class Content {
 export class MessageResolver {
   private readonly logger = new Logger(MessageResolver.name);
 
-  constructor(private messageService: MessageService, private eventService: EventService) {}
+  constructor(
+    private readonly messageService: MessageService,
+    private readonly eventService: EventService,
+    private readonly memberService: MemberService
+  ) {}
 
   @Query(() => Message)
   async getMessageById(@Args({ name: 'id', type: () => ID }) id: string) {
@@ -187,6 +192,32 @@ export class MessageResolver {
     return edited;
   }
 
+  @Mutation(() => Message, { nullable: true })
+  @UseGuards(GqlAuthGuard)
+  async setMessageCrossOff(
+    @CurrentUser() user: JwtUser,
+    @Args({ name: 'messageId', type: () => ID }) messageId: string,
+    @Args({ name: 'crossOff', type: () => Boolean, defaultValue: true }) crossOff: boolean
+  ) {
+    const message = await this.messageService.findById(messageId);
+    if (!message) {
+      throw new UserInputError('No message found');
+    }
+    const member = await this.memberService.findByChannelAndUser(message.channelId, user.id);
+    if (message.senderId !== user.id && (!member || !member.isAdmin)) {
+      throw new ForbiddenError('No editing authority');
+    }
+    if (message.deleted) {
+      throw new UserInputError('Already deleted');
+    }
+    if (message.crossOff === crossOff) {
+      return null;
+    }
+    const updated = await this.messageService.messageCrossOff(message.id, crossOff);
+    await this.eventService.messageEdited(updated);
+    return updated;
+  }
+
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async deleteMessage(@CurrentUser() user: JwtUser, @Args({ name: 'messageId', type: () => ID }) messageId: string) {
@@ -194,7 +225,8 @@ export class MessageResolver {
     if (!message) {
       throw new UserInputError('No message found');
     }
-    if (message.senderId !== user.id) {
+    const member = await this.memberService.findByChannelAndUser(message.channelId, user.id);
+    if (message.senderId !== user.id && (!member || !member.isAdmin)) {
       throw new ForbiddenError('No editing authority');
     }
     if (message.deleted) {

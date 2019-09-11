@@ -105,6 +105,10 @@ export class Message {
   parentId: string | null;
 
   @Column({ type: 'boolean', default: false })
+  @Field()
+  crossOff: boolean;
+
+  @Column({ type: 'boolean', default: false })
   deleted: boolean;
 
   @Column({ type: 'integer', default: 0 })

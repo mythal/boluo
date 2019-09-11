@@ -120,6 +120,7 @@ type Message {
   mediaId: ID
   parent: ID
   parentId: ID
+  crossOff: Boolean!
 
   """Random seed. If this message is not public, the seed is always 0."""
   seed: Int!
@@ -146,6 +147,7 @@ type Mutation {
     id: ID!
   ): Boolean!
   editMessage(character: String, entities: [JSONObject!]!, text: String!, messageId: String!): Message!
+  setMessageCrossOff(crossOff: Boolean = true, messageId: ID!): Message
   deleteMessage(messageId: ID!): Boolean!
   moveMessage(after: ID, before: ID, message: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!

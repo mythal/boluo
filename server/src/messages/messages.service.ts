@@ -180,4 +180,9 @@ export class MessageService {
   async deleteMessage(messageId: string) {
     await this.messageRepository.update(messageId, { deleted: true });
   }
+
+  async messageCrossOff(messageId: string, crossOff: boolean) {
+    await this.messageRepository.update(messageId, { crossOff });
+    return this.messageRepository.findOneOrFail(messageId);
+  }
 }

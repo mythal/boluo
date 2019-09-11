@@ -13,6 +13,7 @@ import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { Entity as MessageEntity } from '../common/entities';
+import { Media } from '../media/media.entity';
 
 @Entity('messages')
 @ObjectType()
@@ -81,6 +82,15 @@ export class Message {
     description: 'Message rich text entities. If this message is not public, the list is always empty',
   })
   entities: MessageEntity[];
+
+  @ManyToOne(() => Media, { nullable: true })
+  @JoinColumn({ name: 'mediaId' })
+  @Field(() => Media, { nullable: true })
+  media: Promise<Media>;
+
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  mediaId: string;
 
   @OneToMany(() => Message, message => message.parent)
   children: Promise<Message[]>;

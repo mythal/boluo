@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { passwordVerify } from '../utils';
+import { Media } from '../media/media.entity';
 
 @Entity('users')
 @ObjectType('User')
@@ -18,10 +19,6 @@ export class User {
   @Field()
   nickname: string;
 
-  @Column({ default: '' })
-  @Field()
-  avatar: string;
-
   @CreateDateColumn()
   @Field()
   created: Date;
@@ -31,6 +28,15 @@ export class User {
 
   @Column()
   password: string;
+
+  @ManyToOne(() => Media, { nullable: true })
+  @JoinColumn({ name: 'avatarMediaId' })
+  @Field(() => Media, { nullable: true })
+  avatar: Promise<Media>;
+
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  avatarMediaId: string;
 
   async validate(password: string): Promise<boolean> {
     const hash = this.password;

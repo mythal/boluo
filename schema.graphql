@@ -55,6 +55,19 @@ The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](
 """
 scalar JSONObject
 
+type Media {
+  id: ID!
+  uploader: User
+  uploaderId: ID
+  filename: String!
+  originalFilename: String
+  mimeType: String!
+  hash: String!
+  size: Int!
+  description: String!
+  created: Date!
+}
+
 type Members {
   user: User!
   userId: ID!
@@ -103,6 +116,8 @@ type Message {
   Message rich text entities. If this message is not public, the list is always empty
   """
   entities: [JSONObject!]!
+  media: Media
+  mediaId: ID
   parent: ID
   parentId: ID
 
@@ -141,7 +156,7 @@ type Mutation {
   joinChannel(userId: ID, channelId: ID!): Members
   quitChannel(channelId: ID!): Boolean!
   deleteChannel(name: String!, channelId: ID!): Boolean!
-  editChannel(description: String, isArchive: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Boolean!
+  editChannel(description: String, isArchive: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Channel!
 }
 
 type PreviewMessage {
@@ -168,6 +183,7 @@ type Query {
   """Get all channels."""
   channels: [Channel!]!
   getChannelById(id: ID!): Channel
+  getMediaInfo(id: ID!): Media
 }
 
 type Subscription {
@@ -178,7 +194,8 @@ type User {
   id: ID!
   username: String!
   nickname: String!
-  avatar: String!
   created: Date!
+  avatar: Media
+  avatarMediaId: ID
   isOnline: Boolean!
 }

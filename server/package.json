@@ -27,6 +27,7 @@
     "graphql": "^14.5.4",
     "graphql-tag-pluck": "^0.8.4",
     "graphql-type-json": "^0.3.0",
+    "hasha": "^5.0.0",
     "ioredis": "^4.14.0",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",

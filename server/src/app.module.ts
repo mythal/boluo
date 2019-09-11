@@ -37,6 +37,10 @@ import { RedisService } from './redis/redis.service';
 import { DateScalar } from './scalars';
 import { ChannelEventResolver } from './events/events.resolver';
 import { EventService } from './events/events.service';
+import { MediaService } from './media/media.service';
+import { MediaResolver } from './media/media.resolver';
+import { Media } from './media/media.entity';
+import { MediaController } from './media/media.controller';
 
 @Module({
   imports: [
@@ -60,18 +64,20 @@ import { EventService } from './events/events.service';
       installSubscriptionHandlers: true,
       debug: DEBUG,
     }),
-    TypeOrmModule.forFeature([Message, User, Channel, Member, Invitation]),
+    TypeOrmModule.forFeature([Message, User, Channel, Member, Invitation, Media]),
     JwtModule.register({
       secret: JWT_SECRET,
       signOptions: { expiresIn: JWT_EXPIRES_IN },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, MediaController],
   providers: [
     DateScalar,
     RedisService,
     UserService,
+    MediaService,
     MessageService,
+    MediaResolver,
     ChannelResolver,
     ChannelService,
     MessageResolver,

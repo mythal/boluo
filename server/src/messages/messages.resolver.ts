@@ -242,8 +242,8 @@ export class MessageResolver {
   async moveMessage(
     @CurrentUser() user: JwtUser,
     @Args({ name: 'message', type: () => ID }) messageId: string,
-    @Args({ name: 'before', type: () => ID, nullable: true }) beforeId?: string,
-    @Args({ name: 'after', type: () => ID, nullable: true }) afterId?: string
+    @Args({ name: 'moveAfterOf', type: () => ID, nullable: true }) beforeId?: string,
+    @Args({ name: 'moveBeforeOf', type: () => ID, nullable: true }) afterId?: string
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message) {
@@ -257,13 +257,13 @@ export class MessageResolver {
       if (!before) {
         throw new UserInputError("Can't found message.");
       }
-      await this.messageService.moveAfter(message, before);
+      await this.messageService.moveAfterOf(message, before);
     } else if (afterId) {
       const after = await this.messageService.findById(afterId);
       if (!after) {
         throw new UserInputError("Can't found message.");
       }
-      await this.messageService.moveBefore(message, after);
+      await this.messageService.moveBeforeOf(message, after);
     } else {
       throw new UserInputError('Must specify a before message or a after message.');
     }

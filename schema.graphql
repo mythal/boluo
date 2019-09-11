@@ -149,7 +149,7 @@ type Mutation {
   editMessage(character: String, entities: [JSONObject!]!, text: String!, messageId: String!): Message!
   setMessageCrossOff(crossOff: Boolean = true, messageId: ID!): Message
   deleteMessage(messageId: ID!): Boolean!
-  moveMessage(after: ID, before: ID, message: ID!): Boolean!
+  moveMessage(moveBeforeOf: ID, moveAfterOf: ID, message: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!
 
   """Keep alive."""

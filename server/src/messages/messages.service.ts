@@ -108,10 +108,10 @@ export class MessageService {
     return member.isAdmin;
   }
 
-  async moveAfter(message: Message, before: Message) {
-    const channelId = before.channelId;
-    const orderDate = before.orderDate;
-    const orderOffset = before.orderOffset;
+  async moveAfterOf(message: Message, target: Message) {
+    const channelId = target.channelId;
+    const orderDate = target.orderDate;
+    const orderOffset = target.orderOffset;
     const update = this.messageRepository
       .createQueryBuilder()
       .update(Message)
@@ -122,10 +122,10 @@ export class MessageService {
     await this.messageRepository.update(message.id, { orderDate, orderOffset: orderOffset + 1 });
   }
 
-  async moveBefore(message: Message, after: Message) {
-    const channelId = after.channelId;
-    const orderDate = after.orderDate;
-    const orderOffset = after.orderOffset;
+  async moveBeforeOf(message: Message, target: Message) {
+    const channelId = target.channelId;
+    const orderDate = target.orderDate;
+    const orderOffset = target.orderOffset;
     const update = this.messageRepository
       .createQueryBuilder()
       .update(Message)

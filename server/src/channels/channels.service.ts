@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Channel } from './channels.entity';
@@ -6,6 +6,8 @@ import { generateId } from '../utils';
 
 @Injectable()
 export class ChannelService {
+  private readonly logger = new Logger(ChannelService.name);
+
   constructor(
     @InjectRepository(Channel)
     private readonly channelRepository: Repository<Channel>
@@ -24,9 +26,10 @@ export class ChannelService {
     return counter > 0;
   }
 
-  async delete(channelId: string): Promise<boolean> {
-    const result = await this.channelRepository.delete(channelId);
-    return result.affected ? result.affected > 0 : false;
+  async delete(channel: Channel): Promise<boolean> {
+    await this.channelRepository.delete(channel.id);
+    this.logger.log(`The channel #${channel.name} (${channel.title}) has been deleted.`);
+    return true;
   }
 
   async edit(
@@ -53,7 +56,8 @@ export class ChannelService {
     const id = generateId();
     name = name.trim();
     description = description.trim();
-    const channel = await this.channelRepository.create({ id, ownerId, name, title, isGame, isPublic, description });
-    return await this.channelRepository.save(channel);
+    await this.channelRepository.insert({ id, ownerId, name, title, isGame, isPublic, description });
+    this.logger.log(`A channel #${name} (${title}) has been created.`);
+    return await this.channelRepository.findOneOrFail(id);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './users.entity';
 import { Repository } from 'typeorm';
@@ -9,6 +9,8 @@ import { KEEP_ALIVE_SEC } from '../settings';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -40,11 +42,10 @@ export class UserService {
   }
 
   async create(username: string, nickname: string, password: string): Promise<User> {
-    const user = new User();
-    user.id = generateId();
-    user.nickname = nickname;
-    user.username = username;
-    user.password = await passwordHash(password);
-    return this.userRepository.save(user);
+    const id = generateId();
+    password = await passwordHash(password);
+    await this.userRepository.insert({ id, username, nickname, password });
+    this.logger.log(`A user has registered, username: ${username}, nickname: ${nickname}.`);
+    return this.userRepository.findOneOrFail(id);
   }
 }

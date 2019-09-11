@@ -20,7 +20,8 @@
     "no-unused-variable": false,
     "no-consecutive-blank-lines": false,
     "trailing-comma": false,
-    "semicolon": false
+    "semicolon": false,
+    "no-empty": false
   },
   "rulesDirectory": []
 }

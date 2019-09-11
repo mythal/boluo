@@ -4,7 +4,7 @@ import { MessageService } from './messages.service';
 import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { CurrentUser } from '../decorators';
 import { JwtUser } from '../auth/jwt.strategy';
-import { UseGuards } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
@@ -28,6 +28,8 @@ class Content {
 
 @Resolver(() => Message)
 export class MessageResolver {
+  private readonly logger = new Logger(MessageResolver.name);
+
   constructor(private messageService: MessageService, private eventService: EventService) {}
 
   @Query(() => Message)
@@ -64,6 +66,7 @@ export class MessageResolver {
     if (await this.messageService.canRead(message, user.id)) {
       return content;
     } else {
+      this.logger.warn(`A user (${user.id}) tried to read non-public message.`);
       throw new ForbiddenError('No permission to view.');
     }
   }

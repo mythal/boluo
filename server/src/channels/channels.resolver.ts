@@ -2,7 +2,7 @@ import { Args, Mutation, Parent, Query, ResolveProperty, Resolver } from '@nestj
 import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
 import { ID, Int } from 'type-graphql';
-import { UseGuards } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
@@ -16,6 +16,8 @@ import { EventService } from '../events/events.service';
 
 @Resolver(() => Channel)
 export class ChannelResolver {
+  private readonly logger = new Logger(ChannelService.name);
+
   constructor(
     private messageService: MessageService,
     private channelService: ChannelService,
@@ -75,7 +77,10 @@ export class ChannelResolver {
     @Args({ name: 'userId', type: () => ID, nullable: true }) userId?: string
   ) {
     const channel = await this.channelService.findById(channelId);
-    if (!channel || !channel.isPublic) {
+    if (!channel) {
+      throw new UserInputError("The channel doesn't exist.");
+    } else if (!channel.isPublic) {
+      this.logger.warn(`Forbidden: A user (${user.id}) tried to join a private channel.`);
       throw new ForbiddenError('Cannot join the channel.');
     }
     userId = userId || user.id;
@@ -101,11 +106,12 @@ export class ChannelResolver {
     if (!channel) {
       throw new ForbiddenError('Channel does not exists.');
     } else if (channel.ownerId !== user.id) {
+      this.logger.warn(`Forbidden: A user (${user.id}) tried to delete #${channel.name} channel.`);
       throw new ForbiddenError('You have no permission to delete the channel.');
     } else if (channel.name !== name) {
       throw new UserInputError('Channel id and channel name do not match');
     }
-    await this.channelService.delete(channelId);
+    await this.channelService.delete(channel);
     return true;
   }
 
@@ -130,6 +136,7 @@ export class ChannelResolver {
     const isOwner = channel.ownerId === user.id;
     const isAdmin = member && member.isAdmin;
     if (!isOwner && !isAdmin) {
+      this.logger.warn(`Forbidden: A user (${user.id}) tried to change #${channel.name} channel settings.`);
       throw noPermission;
     }
 

@@ -69,8 +69,8 @@ type Members {
 
 type Message {
   id: ID!
-  user: User
-  userId: ID
+  sender: User
+  senderId: ID
   channel: Channel!
   channelId: ID!
 
@@ -78,19 +78,35 @@ type Message {
   Name of character. The message is a Out-of-Character message only if this field empty
   """
   character: String!
+
+  """Whether this message represents an action."""
   isAction: Boolean!
+
+  """Empty massage mark the member has joined."""
   isJoin: Boolean!
-  isLeft: Boolean!
+
+  """Empty massage mark the member has left."""
+  isLeave: Boolean!
   isGm: Boolean!
   isPinned: Boolean!
   isHidden: Boolean!
+
+  """If the list is not empty, it represents this is a whisper message."""
   whisperTo: [ID!]!
 
-  """Message plain text."""
+  """
+  Message plain text. If this message is not public, the string is always empty.
+  """
   text: String!
+
+  """
+  Message rich text entities. If this message is not public, the list is always empty
+  """
   entities: [JSONObject!]!
   parent: ID
   parentId: ID
+
+  """Random seed. If this message is not public, the seed is always 0."""
   seed: Int!
   created: Date!
   orderDate: Date!
@@ -114,7 +130,7 @@ type Mutation {
     source: String!
     id: ID!
   ): Boolean!
-  editMessage(entities: [JSONObject!]!, text: String!, messageId: String!): Message!
+  editMessage(character: String, entities: [JSONObject!]!, text: String!, messageId: String!): Message!
   deleteMessage(messageId: ID!): Boolean!
   moveMessage(after: ID, before: ID, message: ID!): Boolean!
   register(nickname: String!, password: String!, username: String!): User!

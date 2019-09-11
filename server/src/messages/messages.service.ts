@@ -25,11 +25,10 @@ export class MessageService {
     this.fillRngBuffer();
   }
 
-  async editMessage(message: Message, text: string, entities: Entity[]): Promise<Message> {
-    message.text = text;
-    message.entities = entities;
-    message.editDate = new Date();
-    return await this.messageRepository.save(message);
+  async editMessage(messageId: string, text: string, entities: Entity[], character?: string): Promise<Message> {
+    const editDate = new Date();
+    await this.messageRepository.update(messageId, { text, entities, character, editDate });
+    return await this.messageRepository.findOneOrFail(messageId);
   }
 
   async leftMessage(channelId: string, userId: string) {
@@ -40,10 +39,10 @@ export class MessageService {
       entities: [],
       channelId,
       character: '',
-      userId,
+      senderId: userId,
       isGm: false,
       seed: this.genRandom(),
-      isLeft: true,
+      isLeave: true,
     });
     return this.messageRepository.findOneOrFail(id);
   }
@@ -56,7 +55,7 @@ export class MessageService {
       entities: [],
       channelId,
       character: '',
-      userId,
+      senderId: userId,
       isGm: false,
       seed: this.genRandom(),
       isJoin: true,
@@ -86,7 +85,7 @@ export class MessageService {
       entities,
       channelId,
       character,
-      userId,
+      senderId: userId,
       isGm,
       seed,
       isHidden,
@@ -178,7 +177,7 @@ export class MessageService {
     return rng;
   }
 
-  async saveMassage(message: Message) {
-    return this.messageRepository.save(message);
+  async deleteMessage(messageId: string) {
+    await this.messageRepository.update(messageId, { deleted: true });
   }
 }

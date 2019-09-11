@@ -10,7 +10,7 @@ import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { generateId } from '../utils';
 import { Entity as MessageEntity } from '../common/entities';
-import { parse } from '../common';
+import { checkCharacterName, checkMessage, parse } from '../common';
 import { PreviewMessage } from './PreviewMessage';
 import { EventService } from '../events/events.service';
 
@@ -80,12 +80,13 @@ export class MessageResolver {
     @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
   ) {
-    const TEXT_MAX_LENGTH = 4096;
     if (!id) {
       id = generateId();
     }
-    if (text.length > TEXT_MAX_LENGTH) {
-      throw new UserInputError(`Max length of message is ${TEXT_MAX_LENGTH}.`);
+    const [isNameValid, nameReason] = checkCharacterName(character);
+    const [isValid, reason] = checkMessage(text, entities);
+    if (!isValid || !isNameValid) {
+      throw new UserInputError(reason || nameReason);
     }
     const message = await this.messageService.create(
       id,
@@ -131,6 +132,13 @@ export class MessageResolver {
     @CurrentUser() user: JwtUser
   ) {
     const PREVIEW_SOURCE_MAX_LENGTH = 1024;
+    character = character.trim();
+
+    const [isNameValid, nameReason] = checkCharacterName(character);
+    if (!isNameValid) {
+      throw new UserInputError(nameReason);
+    }
+
     const message = new PreviewMessage();
     message.channelId = channelId;
     message.character = character;
@@ -150,18 +158,30 @@ export class MessageResolver {
     @CurrentUser() user: JwtUser,
     @Args({ name: 'messageId', type: () => String }) messageId: string,
     @Args({ name: 'text', type: () => String }) text: string,
-    @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[]
+    @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
+    @Args({ name: 'character', type: () => String, nullable: true }) character?: string
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message || message.deleted) {
       throw new UserInputError('No message found');
     }
-    if (message.userId !== user.id) {
+    if (message.senderId !== user.id) {
       throw new ForbiddenError('No editing authority');
     }
-    const savedMessage = await this.messageService.editMessage(message, text, entities);
-    await this.eventService.messageEdited(savedMessage);
-    return savedMessage;
+    if (character) {
+      character = character.trim();
+      const [isNameValid, nameReason] = checkCharacterName(character);
+      if (!isNameValid) {
+        throw new UserInputError(nameReason);
+      }
+    }
+    const [isValid, reason] = checkMessage(text, entities);
+    if (!isValid) {
+      throw new UserInputError(reason);
+    }
+    const edited = await this.messageService.editMessage(message.id, text, entities, character);
+    await this.eventService.messageEdited(edited);
+    return edited;
   }
 
   @Mutation(() => Boolean)
@@ -171,14 +191,13 @@ export class MessageResolver {
     if (!message) {
       throw new UserInputError('No message found');
     }
-    if (message.userId !== user.id) {
+    if (message.senderId !== user.id) {
       throw new ForbiddenError('No editing authority');
     }
     if (message.deleted) {
       throw new UserInputError('Already deleted');
     }
-    message.deleted = true;
-    await this.messageService.saveMassage(message);
+    await this.messageService.deleteMessage(message.id);
     await this.eventService.messageDeleted(message.channelId, message.id);
     return true;
   }

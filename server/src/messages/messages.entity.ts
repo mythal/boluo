@@ -22,13 +22,13 @@ export class Message {
   id: string;
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'senderId' })
   @Field(() => User, { nullable: true })
-  user: Promise<User> | null;
+  sender: Promise<User> | null;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })
-  userId: string | null;
+  senderId: string | null;
 
   @ManyToOne(() => Channel, channel => channel.messages, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
@@ -44,16 +44,17 @@ export class Message {
   character: string;
 
   @Column({ type: 'boolean', default: false })
-  @Field()
+  @Field({ description: 'Whether this message represents an action.' })
   isAction: boolean;
 
   @Column({ type: 'boolean', default: false })
+  @Field(() => Boolean, { description: 'Empty massage mark the member has joined.' })
   @Field()
   isJoin: boolean;
 
   @Column({ type: 'boolean', default: false })
-  @Field()
-  isLeft: boolean;
+  @Field(() => Boolean, { description: 'Empty massage mark the member has left.' })
+  isLeave: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field()
@@ -68,15 +69,17 @@ export class Message {
   isHidden: boolean;
 
   @Column({ type: 'uuid', array: true, default: '{}' })
-  @Field(() => [ID])
+  @Field(() => [ID], { description: 'If the list is not empty, it represents this is a whisper message.' })
   whisperTo: string[];
 
   @Column({ type: 'text' })
-  @Field({ description: 'Message plain text.' })
+  @Field({ description: 'Message plain text. If this message is not public, the string is always empty.' })
   text: string;
 
   @Column({ type: 'jsonb', default: [] })
-  @Field(() => GraphQLJSONObject)
+  @Field(() => GraphQLJSONObject, {
+    description: 'Message rich text entities. If this message is not public, the list is always empty',
+  })
   entities: MessageEntity[];
 
   @OneToMany(() => Message, message => message.parent)
@@ -95,7 +98,7 @@ export class Message {
   deleted: boolean;
 
   @Column({ type: 'integer', default: 0 })
-  @Field(() => Int)
+  @Field(() => Int, { description: 'Random seed. If this message is not public, the seed is always 0.' })
   seed: number;
 
   @CreateDateColumn()

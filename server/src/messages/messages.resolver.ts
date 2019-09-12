@@ -25,6 +25,12 @@ class Content {
 
   @Field(() => Int)
   seed: number;
+
+  constructor(text: string, entities: MessageEntity[], seed: number) {
+    this.text = text;
+    this.entities = entities;
+    this.seed = seed;
+  }
 }
 
 @Resolver(() => Message)
@@ -64,10 +70,7 @@ export class MessageResolver {
     if (!message) {
       throw new UserInputError('No message found');
     }
-    const content = new Content();
-    content.entities = message.entities;
-    content.seed = message.seed;
-    content.text = message.text;
+    const content = new Content(message.text, message.entities, message.seed);
     if (await this.messageService.canRead(message, user.id)) {
       return content;
     } else {
@@ -139,7 +142,6 @@ export class MessageResolver {
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: false }) isExpression: boolean,
     @CurrentUser() user: TokenUserInfo
   ) {
-    const PREVIEW_SOURCE_MAX_LENGTH = 1024;
     character = character.trim();
 
     const [isNameValid, nameReason] = checkCharacterName(character);
@@ -147,15 +149,7 @@ export class MessageResolver {
       throw new UserInputError(nameReason);
     }
 
-    const message = new PreviewMessage();
-    message.channelId = channelId;
-    message.character = character;
-    message.userId = user.id;
-    message.isExpression = isExpression;
-    message.id = id;
-    message.source = source.length < PREVIEW_SOURCE_MAX_LENGTH ? source : '';
-    message.startTime = startTime;
-    message.updateTime = new Date();
+    const message = new PreviewMessage(id, user.id, channelId, character, source, isExpression, startTime);
     await this.eventService.messagePreview(message);
     return true;
   }

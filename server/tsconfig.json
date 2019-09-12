@@ -11,8 +11,13 @@
     "baseUrl": "./",
     "incremental": true,
     "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "importHelpers": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true
   },
   "exclude": ["node_modules", "dist"]
 }

@@ -31,7 +31,7 @@ export class MediaController {
   @UseGuards(AuthGuard('jwt'))
   @Post('upload/image')
   @UseInterceptors(FileInterceptor('media'))
-  async uploadImage(@Request() req, @UploadedFile() received?: ReceivedFile) {
+  async uploadImage(@Request() req: any, @UploadedFile() received?: ReceivedFile) {
     if (!received) {
       throw new BadRequestException('The server has not received the file.');
     }

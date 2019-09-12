@@ -20,6 +20,7 @@
     "no-unused-variable": false,
     "no-consecutive-blank-lines": false,
     "trailing-comma": false,
+    "no-shadowed-variable": false,
     "semicolon": false,
     "no-empty": false
   },

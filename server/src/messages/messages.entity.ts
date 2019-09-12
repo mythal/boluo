@@ -29,124 +29,124 @@ registerEnumType(MessageType, { name: 'MessageType' });
 export class Message {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Column({ type: 'enum', enum: MessageType, default: MessageType.OOC })
   @Field(() => MessageType)
-  type: MessageType;
+  type!: MessageType;
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'senderId' })
   @Field(() => User, { nullable: true })
-  sender: Promise<User> | null;
+  sender!: Promise<User> | null;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })
-  senderId: string | null;
+  senderId!: string | null;
 
   @ManyToOne(() => Channel, channel => channel.messages, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
-  channel: Promise<Channel>;
+  channel!: Promise<Channel>;
 
   @Column({ type: 'uuid' })
   @Field(() => ID)
-  channelId: string;
+  channelId!: string;
 
   @Column()
   @Field({ description: 'Name of character. The message is a Out-of-Character message only if this field empty' })
-  character: string;
+  character!: string;
 
   @Column({ type: 'boolean', default: false })
   @Field({ description: 'Whether this message represents an action.' })
-  isAction: boolean;
+  isAction!: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field(() => Boolean, { description: 'Empty massage mark the member has joined.' })
   @Field()
-  isJoin: boolean;
+  isJoin!: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field(() => Boolean, { description: 'Empty massage mark the member has left.' })
-  isLeave: boolean;
+  isLeave!: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isGm: boolean;
+  isGm!: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isPinned: boolean;
+  isPinned!: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isHidden: boolean;
+  isHidden!: boolean;
 
   @Column({ type: 'uuid', array: true, default: '{}' })
   @Field(() => [ID], { description: 'If the list is not empty, it represents this is a whisper message.' })
-  whisperTo: string[];
+  whisperTo!: string[];
 
   @Column({ type: 'text' })
   @Field({ description: 'Message plain text. If this message is not public, the string is always empty.' })
-  text: string;
+  text!: string;
 
   @Column({ type: 'jsonb', default: [] })
   @Field(() => GraphQLJSONObject, {
     description: 'Message rich text entities. If this message is not public, the list is always empty',
   })
-  entities: MessageEntity[];
+  entities!: MessageEntity[];
 
   @ManyToOne(() => Media, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'mediaId' })
   @Field(() => Media, { nullable: true })
-  media: Media;
+  media!: Media;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })
-  mediaId: string;
+  mediaId!: string;
 
   @OneToMany(() => Message, message => message.parent)
-  children: Promise<Message[]>;
+  children!: Promise<Message[]>;
 
   @ManyToOne(() => Message, message => message.children, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'parentId' })
   @Field(() => ID, { nullable: true })
-  parent: Promise<Message> | null;
+  parent!: Promise<Message> | null;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })
-  parentId: string | null;
+  parentId!: string | null;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  crossOff: boolean;
+  crossOff!: boolean;
 
   @Column({ type: 'boolean', default: false })
-  deleted: boolean;
+  deleted!: boolean;
 
   @Column({ type: 'integer', default: 0 })
   @Field(() => Int, { description: 'Random seed. If this message is not public, the seed is always 0.' })
-  seed: number;
+  seed!: number;
 
   @CreateDateColumn()
   @Field()
-  created: Date;
+  created!: Date;
 
   @CreateDateColumn()
   @Field()
-  orderDate: Date;
+  orderDate!: Date;
 
   @Column({ type: 'integer', default: 0 })
   @Field(() => Int)
-  orderOffset: number;
+  orderOffset!: number;
 
   @UpdateDateColumn()
   @Field()
-  modified: Date;
+  modified!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
   @Field(() => Date, { nullable: true })
-  editDate: Date | null;
+  editDate!: Date | null;
 
   isPublic() {
     return !this.isHidden && this.whisperTo.length === 0;

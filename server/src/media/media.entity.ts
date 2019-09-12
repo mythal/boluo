@@ -7,42 +7,42 @@ import { User } from '../users/users.entity';
 export class Media {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'uploaderId' })
   @Field(() => User, { nullable: true })
-  uploader: Promise<User> | null;
+  uploader!: Promise<User> | null;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })
-  uploaderId: string | null;
+  uploaderId!: string | null;
 
   @Column()
   @Field(() => String)
-  filename: string;
+  filename!: string;
 
   @Column({ nullable: true })
   @Field(() => String, { nullable: true })
-  originalFilename: string;
+  originalFilename!: string;
 
   @Column()
   @Field(() => String)
-  mimeType: string;
+  mimeType!: string;
 
   @Column()
   @Field(() => String)
-  hash: string;
+  hash!: string;
 
   @Column({ type: 'integer' })
   @Field(() => Int)
-  size: number;
+  size!: number;
 
   @Column({ type: 'text', default: '' })
   @Field()
-  description: string;
+  description!: string;
 
   @CreateDateColumn()
   @Field()
-  created: Date;
+  created!: Date;
 }

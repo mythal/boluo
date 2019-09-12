@@ -64,35 +64,6 @@ class P<T> {
       return p2.run(result[1], env);
     });
 
-  many = (): P<T[]> =>
-    new P((state, env) => {
-      const xs: T[] = [];
-      for (;;) {
-        const result = this.run(state, env);
-        if (!result) {
-          break;
-        }
-        const [v, s] = result;
-        xs.push(v);
-        state = s;
-      }
-      return [xs, state];
-    });
-
-  many1 = (): P<T[]> => {
-    const parser = this.many();
-    return new P((state, env) => {
-      const result = parser.run(state, env);
-      return result && result[0].length > 0 ? result : null;
-    });
-  };
-
-  maybe = (): P<T | null> =>
-    new P<T | null>((state, env) => {
-      const result = this.run(state, env);
-      return result ? result : [null, state];
-    });
-
   and = <U>(p2: P<U>): P<[T, U]> =>
     new P<[T, U]>((state, env) => {
       const r1 = this.run(state, env);
@@ -107,13 +78,28 @@ class P<T> {
       const [x2, s2] = r2;
       return [[x1, x2], s2];
     });
-
-  or = (p2: P<T>): P<T> =>
-    new P<T>((state, env) => {
-      const r1 = this.run(state, env);
-      return r1 ? r1 : p2.run(state, env);
-    });
 }
+
+const maybe = <T>(p: P<T | null>) =>
+  new P<T | null>((state, env) => {
+    const result = p.run(state, env);
+    return result ? result : [null, state];
+  });
+
+const many = <T>(p: P<T>) =>
+  new P((state, env) => {
+    const xs: T[] = [];
+    for (;;) {
+      const result = p.run(state, env);
+      if (!result) {
+        break;
+      }
+      const [v, s] = result;
+      xs.push(v);
+      state = s;
+    }
+    return [xs, state];
+  });
 
 const fail = <T>(): P<T> => new P<T>(state => null);
 
@@ -157,6 +143,7 @@ const regex = (pattern: RegExp): P<RegExpMatchArray> =>
 // Parsers
 
 const STRONG_REGEX = /^\*\*(.+?)\*\*/;
+
 const strong = (): P<Entity> =>
   regex(STRONG_REGEX).then(([match, { text, rest }]) => {
     const [_, content] = match;
@@ -228,6 +215,7 @@ const roll = (): P<ExprNode> =>
 
 const str = (s: string, appendText: boolean = false): P<string> =>
   new P(({ text, rest }) => {
+    // @ts-ignore
     if (!rest.startsWith(s)) {
       return null;
     }
@@ -287,7 +275,7 @@ const expr2 = (): P<ExprNode> =>
         .skip(spaces())
         .and(expr2())
     );
-    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(restExpr.maybe());
+    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(maybe(restExpr));
     return maybeExpr
       .map<ExprNode>(([l, maybeRest]) => {
         if (!maybeRest) {
@@ -308,7 +296,7 @@ const expr = (): P<ExprNode> =>
         .skip(spaces())
         .and(expr())
     );
-    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(restExpr.maybe());
+    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(maybe(restExpr));
     return maybeExpr
       .map<ExprNode>(([l, maybeRest]) => {
         if (!maybeRest) {
@@ -364,9 +352,7 @@ export const parse = (source: string, parseExpr: boolean = true, env: Env = empt
 
   const entity = choice<Entity>([strong(), link(), autoUrl(), maybeParseExpr, span()]);
 
-  const message: P<Entity[]> = entity
-    .many()
-    .map(entityList => entityList.reduce<Entity[]>(mergeTextEntitiesReducer, []));
+  const message: P<Entity[]> = many(entity).map(entityList => entityList.reduce(mergeTextEntitiesReducer, []));
   const result = message.run(state, env);
 
   if (!result) {

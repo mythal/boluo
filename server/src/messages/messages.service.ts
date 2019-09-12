@@ -13,7 +13,7 @@ const RNG_BUFFER_LEN = 128;
 @Injectable()
 export class MessageService {
   private readonly rngBuffer: Int32Array;
-  private rngOffset: number;
+  private rngOffset: number = 0;
 
   constructor(
     @InjectRepository(Message)

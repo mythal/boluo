@@ -27,63 +27,63 @@ registerEnumType(ChannelType, { name: 'ChannelType' });
 export class Channel {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Column({ type: 'enum', enum: ChannelType, default: ChannelType.Discuss })
   @Field(() => ChannelType)
-  type: ChannelType;
+  type!: ChannelType;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isPublic: boolean;
+  isPublic!: boolean;
 
   @Column()
   @Index({ unique: true })
   @Field()
-  name: string;
+  name!: string;
 
   @Column()
   @Field()
-  title: string;
+  title!: string;
 
   @Column({ default: '' })
   @Field()
-  topic: string;
+  topic!: string;
 
   @Column({ default: '' })
   @Field()
-  description: string;
+  description!: string;
 
   @CreateDateColumn()
   @Field()
-  created: Date;
+  created!: Date;
 
   @UpdateDateColumn()
   @Field()
-  modified: Date;
+  modified!: Date;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isArchived: boolean;
+  isArchived!: boolean;
 
   @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'ownerId' })
   @Field(() => User, { nullable: false })
-  owner: Promise<User>;
+  owner!: Promise<User>;
 
   @Column({ type: 'uuid' })
   @Field(() => ID)
-  ownerId: string;
+  ownerId!: string;
 
   @OneToMany(() => Message, message => message.channel)
   @Field(() => [Message])
-  messages: Promise<Message[]>;
+  messages!: Promise<Message[]>;
 
   @OneToMany(() => Invitation, invitation => invitation.channel)
   @Field(() => [Invitation])
-  invitations: Promise<Invitation[]>;
+  invitations!: Promise<Invitation[]>;
 
   @OneToMany(() => Member, member => member.channel)
   @Field(() => [Member])
-  members: Promise<Member[]>;
+  members!: Promise<Member[]>;
 }

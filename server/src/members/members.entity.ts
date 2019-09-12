@@ -9,34 +9,34 @@ export class Member {
   @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   @Field(() => User)
-  user: Promise<User>;
+  user!: Promise<User>;
 
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
-  userId: string;
+  userId!: string;
 
   @ManyToOne(() => Channel, channel => channel.members, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
-  channel: Promise<Channel>;
+  channel!: Promise<Channel>;
 
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
-  channelId: string;
+  channelId!: string;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isAdmin: boolean;
+  isAdmin!: boolean;
 
   @CreateDateColumn()
   @Field()
-  joinDate: Date;
+  joinDate!: Date;
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isMuted: boolean;
+  isMuted!: boolean;
 
   @Column({ default: '' })
   @Field()
-  character: string;
+  character!: string;
 }

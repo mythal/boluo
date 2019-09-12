@@ -41,34 +41,38 @@ import { Media } from './media/media.entity';
 import { MediaController } from './media/media.controller';
 import { AuthResolver } from './auth/auth.resolver';
 
+const imports = [
+  PassportModule.register({ defaultStrategy: 'jwt' }),
+  TypeOrmModule.forRoot({
+    type: 'postgres',
+    host: POSTGRES_HOST,
+    port: POSTGRES_PORT,
+    username: POSTGRES_USERNAME,
+    password: POSTGRES_PASSWORD,
+    database: POSTGRES_DATABASE,
+    entities: [__dirname + '/**/*.entity{.ts,.js}'],
+    synchronize: true,
+  }),
+  GraphQLModule.forRoot({
+    autoSchemaFile: '../schema.graphql',
+    context: ({ req }) => ({ req }),
+    installSubscriptionHandlers: true,
+    debug: DEBUG,
+  }),
+  TypeOrmModule.forFeature([Message, User, Channel, Member, Invitation, Media]),
+  JwtModule.register({
+    secret: JWT_SECRET,
+    signOptions: { expiresIn: JWT_EXPIRES_IN },
+  }),
+];
+
+if (DEBUG) {
+  const rootPath = join(__dirname, '../../web/dist');
+  imports.push(ServeStaticModule.forRoot({ rootPath }));
+}
+
 @Module({
-  imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, 'web'),
-    }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: POSTGRES_HOST,
-      port: POSTGRES_PORT,
-      username: POSTGRES_USERNAME,
-      password: POSTGRES_PASSWORD,
-      database: POSTGRES_DATABASE,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
-    }),
-    GraphQLModule.forRoot({
-      autoSchemaFile: '../schema.graphql',
-      context: ({ req }) => ({ req }),
-      installSubscriptionHandlers: true,
-      debug: DEBUG,
-    }),
-    TypeOrmModule.forFeature([Message, User, Channel, Member, Invitation, Media]),
-    JwtModule.register({
-      secret: JWT_SECRET,
-      signOptions: { expiresIn: JWT_EXPIRES_IN },
-    }),
-  ],
+  imports,
   controllers: [MediaController],
   providers: [
     DateScalar,

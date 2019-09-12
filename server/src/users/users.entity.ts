@@ -8,35 +8,35 @@ import { Media } from '../media/media.entity';
 export class User {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Index({ unique: true })
   @Column()
   @Field()
-  username: string;
+  username!: string;
 
   @Column()
   @Field()
-  nickname: string;
+  nickname!: string;
 
   @CreateDateColumn()
   @Field()
-  created: Date;
+  created!: Date;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column()
-  password: string;
+  password!: string;
 
   @ManyToOne(() => Media, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'avatarMediaId' })
   @Field(() => Media, { nullable: true })
-  avatar: Media;
+  avatar!: Media;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })
-  avatarMediaId: string;
+  avatarMediaId!: string;
 
   async validate(password: string): Promise<boolean> {
     const hash = this.password;

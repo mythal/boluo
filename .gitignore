@@ -1,4 +1,6 @@
 .DS_Store
+dist/
+build/
 
 # Logs
 logs
@@ -71,7 +73,7 @@ typings/
 !.vscode/extensions.json
 
 # IDE - IDEA
-.idea/*
+.idea/
 
 
 # Server related deploy files

@@ -8,27 +8,27 @@ import { User } from '../users/users.entity';
 export class Invitation {
   @PrimaryColumn()
   @Field()
-  token: string;
+  token!: string;
 
   @ManyToOne(() => Channel, channel => channel.invitations, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   @Field(() => Channel)
-  channel: Promise<Channel>;
+  channel!: Promise<Channel>;
 
   @Column({ type: 'uuid' })
   @Field(() => ID)
-  channelId: string;
+  channelId!: string;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'creatorId' })
   @Field(() => User)
-  creator: Promise<User>;
+  creator!: Promise<User>;
 
   @Column({ type: 'uuid' })
   @Field(() => ID)
-  creatorId: string;
+  creatorId!: string;
 
   @Column({ type: 'timestamp' })
   @Field()
-  expiration: Date;
+  expiration!: Date;
 }

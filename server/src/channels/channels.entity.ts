@@ -9,11 +9,18 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, registerEnumType } from 'type-graphql';
 import { Message } from '../messages/messages.entity';
 import { User } from '../users/users.entity';
 import { Invitation } from '../invitaions/invitaions.entity';
 import { Member } from '../members/members.entity';
+
+export enum ChannelType {
+  Game = 'Game',
+  Discuss = 'Discuss',
+}
+
+registerEnumType(ChannelType, { name: 'ChannelType' });
 
 @Entity('channels')
 @ObjectType('Channel')
@@ -22,9 +29,9 @@ export class Channel {
   @Field(() => ID)
   id: string;
 
-  @Column({ type: 'boolean', default: true })
-  @Field(() => Boolean, { description: 'Whether this channel is a RPG channel.' })
-  isGame: boolean;
+  @Column({ type: 'enum', enum: ChannelType, default: ChannelType.Discuss })
+  @Field(() => ChannelType)
+  type: ChannelType;
 
   @Column({ type: 'boolean', default: false })
   @Field()

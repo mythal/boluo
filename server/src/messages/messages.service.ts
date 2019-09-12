@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Message } from './messages.entity';
+import { Message, MessageType } from './messages.entity';
 import { MemberService } from '../members/members.service';
 import { Entity } from '../common';
 import { generateId } from '../utils';
@@ -42,7 +42,7 @@ export class MessageService {
       senderId: userId,
       isGm: false,
       seed: this.genRandom(),
-      isLeave: true,
+      type: MessageType.Left,
     });
     return this.messageRepository.findOneOrFail(id);
   }
@@ -58,7 +58,7 @@ export class MessageService {
       senderId: userId,
       isGm: false,
       seed: this.genRandom(),
-      isJoin: true,
+      type: MessageType.Joined,
     });
     return this.messageRepository.findOneOrFail(id);
   }
@@ -79,6 +79,7 @@ export class MessageService {
       throw Error('You are not a member of this channel.');
     }
     const isGm = member.isAdmin;
+    const type = character.length === 0 ? MessageType.OOC : MessageType.Say;
     await this.messageRepository.insert({
       id,
       text,
@@ -90,6 +91,7 @@ export class MessageService {
       seed,
       isHidden,
       whisperTo,
+      type,
     });
     return await this.messageRepository.findOneOrFail(id);
   }

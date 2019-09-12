@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Channel } from './channels.entity';
+import { Channel, ChannelType } from './channels.entity';
 import { generateId } from '../utils';
 
 @Injectable()
@@ -41,7 +41,8 @@ export class ChannelService {
     isPublic?: boolean,
     isArchived?: boolean
   ) {
-    await this.channelRepository.update(channelId, { name, title, description, isGame, isPublic, isArchived });
+    const type = isGame ? ChannelType.Game : ChannelType.Discuss;
+    await this.channelRepository.update(channelId, { name, title, description, type, isPublic, isArchived });
     return await this.channelRepository.findOneOrFail(channelId);
   }
 
@@ -56,7 +57,8 @@ export class ChannelService {
     const id = generateId();
     name = name.trim();
     description = description.trim();
-    await this.channelRepository.insert({ id, ownerId, name, title, isGame, isPublic, description });
+    const type = isGame ? ChannelType.Game : ChannelType.Discuss;
+    await this.channelRepository.insert({ id, ownerId, name, title, type, isPublic, description });
     this.logger.log(`A channel #${name} (${title}) has been created.`);
     return await this.channelRepository.findOneOrFail(id);
   }

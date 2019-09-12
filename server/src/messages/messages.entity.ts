@@ -9,11 +9,20 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../users/users.entity';
-import { Field, ID, Int, ObjectType } from 'type-graphql';
+import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { Entity as MessageEntity } from '../common/entities';
 import { Media } from '../media/media.entity';
+
+export enum MessageType {
+  Say = 'Say',
+  OOC = 'OOC',
+  Joined = 'Join',
+  Left = 'Left',
+}
+
+registerEnumType(MessageType, { name: 'MessageType' });
 
 @Entity('messages')
 @ObjectType()
@@ -21,6 +30,10 @@ export class Message {
   @PrimaryColumn({ type: 'uuid' })
   @Field(() => ID)
   id: string;
+
+  @Column({ type: 'enum', enum: MessageType, default: MessageType.OOC })
+  @Field(() => MessageType)
+  type: MessageType;
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'senderId' })

@@ -5,9 +5,7 @@
 
 type Channel {
   id: ID!
-
-  """Whether this channel is a RPG channel."""
-  isGame: Boolean!
+  type: ChannelType!
   isPublic: Boolean!
   name: String!
   title: String!
@@ -30,6 +28,11 @@ type ChannelEvent {
   messagePreview: PreviewMessage
   publishTime: Date!
   channelId: ID!
+}
+
+enum ChannelType {
+  Game
+  Discuss
 }
 
 type Content {
@@ -82,6 +85,7 @@ type Members {
 
 type Message {
   id: ID!
+  type: MessageType!
   sender: User
   senderId: ID
   channel: Channel!
@@ -129,6 +133,13 @@ type Message {
   orderOffset: Int!
   modified: Date!
   editDate: Date
+}
+
+enum MessageType {
+  Say
+  OOC
+  Joined
+  Left
 }
 
 type Mutation {

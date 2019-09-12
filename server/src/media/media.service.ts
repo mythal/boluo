@@ -40,7 +40,7 @@ export class MediaService {
       size,
       hash,
     });
-    this.logger.log(`A file "${originalFilename}" uploaded. size: ${size} MIME: ${mimeType} hash: ${hash}`);
-    return { id, filename };
+    this.logger.log(`A file "${originalFilename}" was uploaded. size: ${size} MIME: ${mimeType} hash: ${hash}`);
+    return this.mediaRepository.findOneOrFail(id);
   }
 }

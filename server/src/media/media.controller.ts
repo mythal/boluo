@@ -1,4 +1,14 @@
-import { Controller, Post, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  PayloadTooLargeException,
+  Post,
+  Request,
+  UnsupportedMediaTypeException,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { MediaService } from './media.service';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,17 +33,23 @@ export class MediaController {
   @UseInterceptors(FileInterceptor('media'))
   async uploadImage(@Request() req, @UploadedFile() received?: ReceivedFile) {
     if (!received) {
-      return { error: 'The server has not received the file.' };
+      throw new BadRequestException('The server has not received the file.');
     }
     const { buffer, originalname, size } = received;
     const mimeType = received.mimetype.toLowerCase();
     if (size > MAX_UPLOAD_IMAGE_SIZE) {
-      return { error: 'The file is too large.' };
+      throw new PayloadTooLargeException('The file is too large.');
     } else if (mimeType !== 'image/jpeg' && mimeType !== 'image/png' && mimeType !== 'image/gif') {
-      return { error: 'You can only upload JPEG, PNG, GIF image files.' };
+      throw new UnsupportedMediaTypeException('You can only upload JPEG, PNG, GIF image files.');
     }
     const user: TokenUserInfo = req.user;
-    const saved = await this.mediaService.saveNewMedia(user.id, originalname, buffer, size, mimeType);
-    return { error: null, saved };
+    const { id, filename, uploaderId, originalFilename, hash } = await this.mediaService.saveNewMedia(
+      user.id,
+      originalname,
+      buffer,
+      size,
+      mimeType
+    );
+    return { id, filename, uploaderId, mimeType, size, originalFilename, hash };
   }
 }

@@ -154,7 +154,8 @@ export class MessageService {
       .orderBy('message.orderDate', 'DESC')
       .addOrderBy('message.orderOffset', 'ASC')
       .where('message.channelId = :channelId', { channelId })
-      .andWhere('message.deleted = false');
+      .andWhere('message.deleted = false')
+      .leftJoinAndSelect('message.media', 'media');
     if (order) {
       const [date, offset] = order;
       query = query.andWhere(

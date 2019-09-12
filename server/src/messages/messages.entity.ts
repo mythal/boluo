@@ -96,10 +96,10 @@ export class Message {
   })
   entities: MessageEntity[];
 
-  @ManyToOne(() => Media, { nullable: true })
+  @ManyToOne(() => Media, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'mediaId' })
   @Field(() => Media, { nullable: true })
-  media: Promise<Media>;
+  media: Media;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })

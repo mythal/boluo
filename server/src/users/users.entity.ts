@@ -29,10 +29,10 @@ export class User {
   @Column()
   password: string;
 
-  @ManyToOne(() => Media, { nullable: true })
+  @ManyToOne(() => Media, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'avatarMediaId' })
   @Field(() => Media, { nullable: true })
-  avatar: Promise<Media>;
+  avatar: Media;
 
   @Column({ type: 'uuid', nullable: true })
   @Field(() => ID, { nullable: true })

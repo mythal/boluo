@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { JWT_ENABLE_EXPIRATION, JWT_SECRET } from '../settings';
 
-export interface JwtUser {
+export interface TokenUserInfo {
   id: string;
   username: string;
   nickname: string;
@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtUser): Promise<JwtUser> {
+  validate(payload: TokenUserInfo): TokenUserInfo {
     return payload;
   }
 }

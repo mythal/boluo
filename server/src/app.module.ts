@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth/auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -13,7 +12,6 @@ import { Channel } from './channels/channels.entity';
 import { UserResolver } from './users/users.resolver';
 import { ChannelResolver } from './channels/channels.resolver';
 import { AuthService } from './auth/auth.service';
-import { LocalStrategy } from './auth/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -41,6 +39,7 @@ import { MediaService } from './media/media.service';
 import { MediaResolver } from './media/media.resolver';
 import { Media } from './media/media.entity';
 import { MediaController } from './media/media.controller';
+import { AuthResolver } from './auth/auth.resolver';
 
 @Module({
   imports: [
@@ -70,7 +69,7 @@ import { MediaController } from './media/media.controller';
       signOptions: { expiresIn: JWT_EXPIRES_IN },
     }),
   ],
-  controllers: [AuthController, MediaController],
+  controllers: [MediaController],
   providers: [
     DateScalar,
     RedisService,
@@ -87,7 +86,7 @@ import { MediaController } from './media/media.controller';
     ChannelEventResolver,
     EventService,
     AuthService,
-    LocalStrategy,
+    AuthResolver,
     JwtStrategy,
   ],
 })

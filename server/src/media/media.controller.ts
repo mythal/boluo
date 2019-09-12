@@ -2,7 +2,7 @@ import { Controller, Post, Request, UploadedFile, UseGuards, UseInterceptors } f
 import { MediaService } from './media.service';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtUser } from '../auth/jwt.strategy';
+import { TokenUserInfo } from '../auth/jwt.strategy';
 import { MAX_UPLOAD_IMAGE_SIZE } from '../settings';
 
 interface ReceivedFile {
@@ -32,7 +32,7 @@ export class MediaController {
     } else if (mimeType !== 'image/jpeg' && mimeType !== 'image/png' && mimeType !== 'image/gif') {
       return { error: 'You can only upload JPEG, PNG, GIF image files.' };
     }
-    const user: JwtUser = req.user;
+    const user: TokenUserInfo = req.user;
     const saved = await this.mediaService.saveNewMedia(user.id, originalname, buffer, size, mimeType);
     return { error: null, saved };
   }

@@ -6,7 +6,7 @@ export const PORT = Number(process.env.PORT) || 3005;
 
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const JWT_ENABLE_EXPIRATION = Boolean(process.env.JWT_EXPIRATION);
-export const JWT_EXPIRES_IN = '7 days';
+export const JWT_EXPIRES_IN = '14 days';
 
 export const UPLOAD_DIR = process.env.UPLOAD_DIR || '';
 if (!UPLOAD_DIR) {

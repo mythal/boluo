@@ -3,7 +3,7 @@ import { Message } from './messages.entity';
 import { MessageService } from './messages.service';
 import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { CurrentUser } from '../decorators';
-import { JwtUser } from '../auth/jwt.strategy';
+import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Logger, UseGuards } from '@nestjs/common';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { GqlAuthGuard } from '../auth/auth.guard';
@@ -59,7 +59,7 @@ export class MessageResolver {
 
   @Query(() => Content, { nullable: true })
   @UseGuards(GqlAuthGuard)
-  async actuallyContent(@Args({ name: 'id', type: () => ID }) id: string, @CurrentUser() user: JwtUser) {
+  async actuallyContent(@Args({ name: 'id', type: () => ID }) id: string, @CurrentUser() user: TokenUserInfo) {
     const message = await this.messageService.findById(id);
     if (!message) {
       throw new UserInputError('No message found');
@@ -79,7 +79,7 @@ export class MessageResolver {
   @Mutation(() => Message, { nullable: true })
   @UseGuards(GqlAuthGuard)
   async sendMessage(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'text', type: () => String }) text: string,
     @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
@@ -113,7 +113,7 @@ export class MessageResolver {
   @Mutation(() => Message, { deprecationReason: "Don't use, just for development." })
   @UseGuards(GqlAuthGuard)
   async sendMessageSource(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'source', type: () => String }) source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'character', type: () => String }) character: string,
@@ -137,7 +137,7 @@ export class MessageResolver {
     character: string,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: false }) isExpression: boolean,
-    @CurrentUser() user: JwtUser
+    @CurrentUser() user: TokenUserInfo
   ) {
     const PREVIEW_SOURCE_MAX_LENGTH = 1024;
     character = character.trim();
@@ -163,7 +163,7 @@ export class MessageResolver {
   @Mutation(() => Message)
   @UseGuards(GqlAuthGuard)
   async editMessage(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'messageId', type: () => String }) messageId: string,
     @Args({ name: 'text', type: () => String }) text: string,
     @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
@@ -195,7 +195,7 @@ export class MessageResolver {
   @Mutation(() => Message, { nullable: true })
   @UseGuards(GqlAuthGuard)
   async setMessageCrossOff(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'messageId', type: () => ID }) messageId: string,
     @Args({ name: 'crossOff', type: () => Boolean, defaultValue: true }) crossOff: boolean
   ) {
@@ -220,7 +220,10 @@ export class MessageResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async deleteMessage(@CurrentUser() user: JwtUser, @Args({ name: 'messageId', type: () => ID }) messageId: string) {
+  async deleteMessage(
+    @CurrentUser() user: TokenUserInfo,
+    @Args({ name: 'messageId', type: () => ID }) messageId: string
+  ) {
     const message = await this.messageService.findById(messageId);
     if (!message) {
       throw new UserInputError('No message found');
@@ -240,7 +243,7 @@ export class MessageResolver {
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async moveMessage(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'message', type: () => ID }) messageId: string,
     @Args({ name: 'moveAfterOf', type: () => ID, nullable: true }) beforeId?: string,
     @Args({ name: 'moveBeforeOf', type: () => ID, nullable: true }) afterId?: string

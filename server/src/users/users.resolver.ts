@@ -7,7 +7,7 @@ import { UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { checkNickname, checkPassword, checkUsername } from '../common';
-import { JwtUser } from '../auth/jwt.strategy';
+import { TokenUserInfo } from '../auth/jwt.strategy';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -52,21 +52,21 @@ export class UserResolver {
 
   @Query(() => Boolean, { description: 'Keep alive.', name: 'ping' })
   @UseGuards(GqlAuthGuard)
-  async pingQuery(@CurrentUser() user: JwtUser) {
+  async pingQuery(@CurrentUser() user: TokenUserInfo) {
     this.userService.ping(user.id);
     return true;
   }
 
   @Mutation(() => Boolean, { description: 'Keep alive.', name: 'ping' })
   @UseGuards(GqlAuthGuard)
-  async pingMutation(@CurrentUser() user: JwtUser) {
+  async pingMutation(@CurrentUser() user: TokenUserInfo) {
     this.userService.ping(user.id);
     return true;
   }
 
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async getMe(@CurrentUser() user: JwtUser) {
+  async getMe(@CurrentUser() user: TokenUserInfo) {
     return this.userService.findById(user.id);
   }
 }

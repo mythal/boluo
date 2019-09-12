@@ -6,7 +6,7 @@ import { Logger, UseGuards } from '@nestjs/common';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
-import { JwtUser } from '../auth/jwt.strategy';
+import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Message } from '../messages/messages.entity';
 import { MemberService } from '../members/members.service';
 import { Member } from '../members/members.entity';
@@ -47,7 +47,7 @@ export class ChannelResolver {
   @Mutation(() => Channel)
   @UseGuards(GqlAuthGuard)
   async createChannel(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'name', type: () => String }) name: string,
     @Args({ name: 'title', type: () => String }) title: string,
     @Args({ name: 'isGame', type: () => Boolean, defaultValue: false }) isGame: boolean,
@@ -72,7 +72,7 @@ export class ChannelResolver {
   @Mutation(() => Member, { nullable: true })
   @UseGuards(GqlAuthGuard)
   async joinChannel(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'userId', type: () => ID, nullable: true }) userId?: string
   ) {
@@ -90,7 +90,10 @@ export class ChannelResolver {
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async quitChannel(@CurrentUser() user: JwtUser, @Args({ name: 'channelId', type: () => ID }) channelId: string) {
+  async quitChannel(
+    @CurrentUser() user: TokenUserInfo,
+    @Args({ name: 'channelId', type: () => ID }) channelId: string
+  ) {
     this.messageService.leftMessage(channelId, user.id).then(this.eventService.newMessage);
     return this.memberService.removeUserFromChannel(user.id, channelId);
   }
@@ -98,7 +101,7 @@ export class ChannelResolver {
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async deleteChannel(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'name', type: () => String }) name: string
   ) {
@@ -118,7 +121,7 @@ export class ChannelResolver {
   @Mutation(() => Channel)
   @UseGuards(GqlAuthGuard)
   async editChannel(
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'name', type: () => String, nullable: true }) name?: string,
     @Args({ name: 'title', type: () => String, nullable: true }) title?: string,

@@ -101,7 +101,7 @@ const many = <T>(p: P<T>) =>
     return [xs, state];
   });
 
-const fail = <T>(): P<T> => new P<T>(state => null);
+const fail = <T>(): P<T> => new P<T>(() => null);
 
 const and = <T>(parsers: Array<P<T>>): P<T[]> =>
   new P((state, env) => {
@@ -310,19 +310,24 @@ const expr = (): P<ExprNode> =>
   });
 
 const expression = (): P<Entity> =>
-  expr().then<Entity>(([node, { text, rest }]) => {
-    if (node.type === 'Num') {
+  new P((state, env) => {
+    const exprResult = expr().run(state, env);
+    if (!exprResult) {
       return null;
     }
-    const content = '[expression]';
+    const [node, { text, rest }] = exprResult;
+    if (node.type === 'Num') {
+      // A number isn't a expression.
+      return null;
+    }
+    const consumed = state.rest.substr(0, state.rest.length - rest.length);
     const entity: Expr = {
       type: 'Expr',
       start: text.length,
-      offset: content.length,
+      offset: consumed.length,
       node,
     };
-    text += content;
-    return [entity, { text, rest }];
+    return [entity, { text: text + consumed, rest }];
   });
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {

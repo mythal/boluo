@@ -1295,10 +1295,10 @@ bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.4.0:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.8.tgz#2cde09eb5ee341f484746bb0309b3253b1b1442f"
   integrity sha512-ItfYfPLkWHUjckQCk8xC+LwxgK8NYcXywGigJgSwOP8Y2iyWT4f2vsZnoOXTTbo+o5yXmIUJ4gn5538SO5S3gA==
 
-boluo-common@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/boluo-common/-/boluo-common-0.1.1.tgz#6977d12a8a0e614f190ebd185a714a998a731884"
-  integrity sha512-T1/dCGATMhJJhch+houIi5k06yA2xjAOYv83l5EkXKc6n8Xfug9yhdPZL9+7S6i9DuwTxuMvq197MsHRcIlVPQ==
+boluo-common@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/boluo-common/-/boluo-common-0.1.2.tgz#585905834e89d9426f93871077ccdc6f120b8071"
+  integrity sha512-Ap9/JkNPqrG9Cil4eRilPRKPDt4erWIXqpmB5lVsyjkhq6sqAGufebUUAp9JB/AE39LJWn202VxcpAIBzdn6Jw==
 
 boolbase@^1.0.0, boolbase@~1.0.0:
   version "1.0.0"

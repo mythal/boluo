@@ -68,7 +68,7 @@ const imports = [
 
 if (DEBUG) {
   const rootPath = join(__dirname, '../../web/dist');
-  imports.push(ServeStaticModule.forRoot({ rootPath }));
+  imports.unshift(ServeStaticModule.forRoot({ rootPath }));
 }
 
 @Module({

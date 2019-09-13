@@ -12,7 +12,7 @@ import { User } from '../users/users.entity';
 import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
 import { GraphQLJSONObject } from 'graphql-type-json';
-import { Entity as MessageEntity } from '../common/entities';
+import { Entity as MessageEntity } from 'boluo-common';
 import { Media } from '../media/media.entity';
 
 export enum MessageType {

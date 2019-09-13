@@ -6,7 +6,7 @@ import { UseGuards } from '@nestjs/common';
 import { UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
-import { checkNickname, checkPassword, checkUsername } from '../common';
+import { checkNickname, checkPassword, checkUsername } from 'boluo-common';
 import { TokenUserInfo } from '../auth/jwt.strategy';
 
 @Resolver(() => User)

@@ -1,0 +1,16 @@
+{
+  "name": "boluo-common",
+  "version": "0.1.1",
+  "main": "lib/main.js",
+  "types": "lib/main.d.ts",
+  "license": "GPL-3.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "tslib": "^1.10.0",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.3"
+  },
+  "dependencies": {}
+}

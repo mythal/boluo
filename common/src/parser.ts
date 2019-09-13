@@ -1,4 +1,4 @@
-import { Entity, Link, Strong, Text, ExprNode, Roll, Expr, Binary, Num, Operator } from './entities';
+import { Binary, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, Text } from './entities';
 
 interface State {
   text: string;

@@ -10,7 +10,7 @@ import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Message } from '../messages/messages.entity';
 import { MemberService } from '../members/members.service';
 import { Member } from '../members/members.entity';
-import { checkChannelName, checkChannelTitle } from '../common';
+import { checkChannelName, checkChannelTitle } from 'boluo-common';
 import { MessageService } from '../messages/messages.service';
 import { EventService } from '../events/events.service';
 

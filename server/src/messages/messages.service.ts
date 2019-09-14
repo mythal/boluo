@@ -5,25 +5,16 @@ import { Message, MessageType } from './messages.entity';
 import { MemberService } from '../members/members.service';
 import { Entity } from 'boluo-common';
 import { generateId } from '../utils';
-
-const crypto = require('crypto');
-
-const RNG_BUFFER_LEN = 128;
+import { RandomService } from '../random/random.service';
 
 @Injectable()
 export class MessageService {
-  private readonly rngBuffer: Int32Array;
-  private rngOffset: number = 0;
-
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
-
-    private readonly memberService: MemberService
-  ) {
-    this.rngBuffer = new Int32Array(RNG_BUFFER_LEN);
-    this.fillRngBuffer();
-  }
+    private readonly memberService: MemberService,
+    private readonly randomService: RandomService
+  ) {}
 
   async editMessage(messageId: string, text: string, entities: Entity[], character?: string): Promise<Message> {
     const editDate = new Date();
@@ -41,7 +32,7 @@ export class MessageService {
       character: '',
       senderId: userId,
       isGm: false,
-      seed: this.genRandom(),
+      seed: this.randomService.genRandom(),
       type: MessageType.Left,
     });
     return this.messageRepository.findOneOrFail(id);
@@ -57,7 +48,7 @@ export class MessageService {
       character: '',
       senderId: userId,
       isGm: false,
-      seed: this.genRandom(),
+      seed: this.randomService.genRandom(),
       type: MessageType.Joined,
     });
     return this.messageRepository.findOneOrFail(id);
@@ -73,7 +64,7 @@ export class MessageService {
     isHidden: boolean = false,
     whisperTo: string[] = []
   ) {
-    const seed = this.genRandom();
+    const seed = this.randomService.genRandom();
     const member = await this.memberService.findByChannelAndUser(channelId, userId);
     if (!member) {
       throw Error('You are not a member of this channel.');
@@ -164,20 +155,6 @@ export class MessageService {
       );
     }
     return query.getMany();
-  }
-
-  private fillRngBuffer() {
-    crypto.randomFillSync(this.rngBuffer);
-    this.rngOffset = 0;
-  }
-
-  private genRandom(): number {
-    if (this.rngOffset >= RNG_BUFFER_LEN) {
-      this.fillRngBuffer();
-    }
-    const rng = this.rngBuffer[this.rngOffset];
-    this.rngOffset += 1;
-    return rng;
   }
 
   async deleteMessage(messageId: string) {

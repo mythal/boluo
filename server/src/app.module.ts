@@ -40,6 +40,7 @@ import { MediaResolver } from './media/media.resolver';
 import { Media } from './media/media.entity';
 import { MediaController } from './media/media.controller';
 import { AuthResolver } from './auth/auth.resolver';
+import { RandomService } from './random/random.service';
 
 const imports = [
   PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -93,6 +94,7 @@ if (DEBUG) {
     AuthService,
     AuthResolver,
     JwtStrategy,
+    RandomService,
   ],
 })
 export class AppModule {

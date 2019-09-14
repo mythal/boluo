@@ -115,6 +115,7 @@ export class ChannelResolver {
       throw new UserInputError('Channel id and channel name do not match');
     }
     await this.channelService.delete(channel);
+    await this.eventService.channelDeleted(channelId);
     return true;
   }
 

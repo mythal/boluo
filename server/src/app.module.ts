@@ -55,7 +55,8 @@ const imports = [
   }),
   GraphQLModule.forRoot({
     autoSchemaFile: '../schema.graphql',
-    context: ({ req }) => ({ req }),
+    // GraphQL Subscriptions authentication https://github.com/nestjs/docs.nestjs.com/issues/394
+    context: ({ req, connection }) => (connection ? { req: { headers: connection.context } } : { req }),
     installSubscriptionHandlers: true,
     debug: DEBUG,
   }),

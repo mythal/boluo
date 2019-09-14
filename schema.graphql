@@ -26,6 +26,8 @@ type ChannelEvent {
   messageDeleted: ID
   messageEdited: Message
   messagePreview: PreviewMessage
+  channelDeleted: Boolean
+  needResubscribe: Boolean
   publishTime: Date!
   channelId: ID!
 }

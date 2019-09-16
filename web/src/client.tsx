@@ -1,5 +1,5 @@
 import { ApolloClient } from 'apollo-client';
-import { split } from 'apollo-link';
+import { from, split } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import { setContext } from 'apollo-link-context';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -8,6 +8,7 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 
 const token = localStorage.getItem(TOKEN_KEY);
+
 const wsLink = new WebSocketLink({
   uri: WEBSOCKET_URL,
   options: {
@@ -22,6 +23,7 @@ const httpLink = createHttpLink({
   uri: GRAPHQL_URL,
 });
 
+// https://www.apollographql.com/docs/react/recipes/authentication/#header
 const authLink = setContext((_, { headers }) => {
   // get the authentication token from local storage if it exists
   const token = localStorage.getItem(TOKEN_KEY);
@@ -41,7 +43,7 @@ const link = split(
     return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
   },
   wsLink,
-  authLink.concat(httpLink)
+  from([authLink, httpLink])
 );
 
 export const client = new ApolloClient({

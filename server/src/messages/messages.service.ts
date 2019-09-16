@@ -3,8 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message, MessageType } from './messages.entity';
 import { MemberService } from '../members/members.service';
-import { Entity } from 'boluo-common';
-import { generateId } from '../utils';
+import { Entity, generateId } from 'boluo-common';
 import { RandomService } from '../random/random.service';
 
 @Injectable()

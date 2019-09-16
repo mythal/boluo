@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Message } from '../messages/messages.entity';
 import { PreviewMessage } from '../messages/PreviewMessage';
 import { RedisService } from '../redis/redis.service';
-import { generateId } from '../utils';
+import { generateId } from 'boluo-common';
 import { ChannelEvent } from './ChannelEvent';
 import { pubSub } from './pubSub';
 

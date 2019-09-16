@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Media } from './media.entity';
 import { Repository } from 'typeorm';
-import { generateId } from '../utils';
+import { generateId } from 'boluo-common';
 import { MEDIA_DIR } from '../settings';
 
 const fs = require('fs');

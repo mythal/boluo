@@ -1,3 +1,4 @@
+export { generateId } from './utils';
 export {
   Text,
   Link,

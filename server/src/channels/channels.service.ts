@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Channel, ChannelType } from './channels.entity';
-import { generateId } from '../utils';
+import { generateId } from 'boluo-common';
 
 @Injectable()
 export class ChannelService {

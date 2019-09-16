@@ -1,5 +1,3 @@
-export const generateId = require('uuid/v1');
-
 export function randomWithSeed(str: string) {
   // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
   let h = 1779033703 ^ str.length;

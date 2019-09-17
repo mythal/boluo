@@ -9,3 +9,11 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
     return ctx.getContext().req;
   }
 }
+
+@Injectable()
+export class GqlUserGuard extends GqlAuthGuard {
+  canActivate(context: ExecutionContext): boolean {
+    super.canActivate(context);
+    return true;
+  }
+}

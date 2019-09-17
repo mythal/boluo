@@ -9,7 +9,7 @@ import { MemberService } from '../members/members.service';
 import { ChannelEvent } from './ChannelEvent';
 import { EventService } from './events.service';
 import { pubSub } from './pubSub';
-import { GqlAuthGuard } from '../auth/auth.guard';
+import { GqlUserGuard } from '../auth/auth.guard';
 
 @Resolver(() => ChannelEvent)
 export class ChannelEventResolver {
@@ -22,7 +22,7 @@ export class ChannelEventResolver {
   ) {}
 
   @Subscription(() => ChannelEvent)
-  @UseGuards(GqlAuthGuard)
+  @UseGuards(GqlUserGuard)
   async channelEvent(
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @CurrentUser() user?: TokenUserInfo

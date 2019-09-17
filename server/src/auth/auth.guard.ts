@@ -12,8 +12,8 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
 
 @Injectable()
 export class GqlUserGuard extends GqlAuthGuard {
-  canActivate(context: ExecutionContext): boolean {
-    super.canActivate(context);
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    await super.canActivate(context);
     return true;
   }
 }

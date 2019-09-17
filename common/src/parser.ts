@@ -334,6 +334,7 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   if (entity.type !== 'Text') {
     entities.push(entity);
   } else if (entities.length === 0) {
+    entities.push(entity);
     return entities;
   } else {
     const last = entities[entities.length - 1];

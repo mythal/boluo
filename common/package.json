@@ -1,6 +1,6 @@
 {
   "name": "boluo-common",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "lib/main.js",
   "types": "lib/main.d.ts",
   "license": "GPL-3.0",

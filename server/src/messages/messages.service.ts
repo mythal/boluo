@@ -61,7 +61,8 @@ export class MessageService {
     character: string,
     userId: string,
     isHidden: boolean = false,
-    whisperTo: string[] = []
+    whisperTo: string[] = [],
+    mediaId?: string
   ) {
     const seed = this.randomService.genRandom();
     const member = await this.memberService.findByChannelAndUser(channelId, userId);
@@ -82,6 +83,7 @@ export class MessageService {
       isHidden,
       whisperTo,
       type,
+      mediaId,
     });
     return await this.messageRepository.findOneOrFail(id);
   }

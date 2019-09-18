@@ -12,6 +12,8 @@ import { checkCharacterName, checkMessage, Entity as MessageEntity, generateId, 
 import { PreviewMessage } from './PreviewMessage';
 import { EventService } from '../events/events.service';
 import { MemberService } from '../members/members.service';
+import { MediaService } from '../media/media.service';
+import { Media } from '../media/media.entity';
 
 @ObjectType()
 class Content {
@@ -38,7 +40,8 @@ export class MessageResolver {
   constructor(
     private readonly messageService: MessageService,
     private readonly eventService: EventService,
-    private readonly memberService: MemberService
+    private readonly memberService: MemberService,
+    private readonly mediaService: MediaService
   ) {}
 
   @Query(() => Message)
@@ -87,7 +90,8 @@ export class MessageResolver {
     @Args({ name: 'character', type: () => String }) character: string,
     @Args({ name: 'hide', type: () => Boolean, defaultValue: false }) isHidden: boolean,
     @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
-    @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
+    @Args({ name: 'id', type: () => ID, nullable: true }) id?: string,
+    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
   ) {
     if (!id) {
       id = generateId();
@@ -97,6 +101,7 @@ export class MessageResolver {
     if (!isValid || !isNameValid) {
       throw new UserInputError(reason || nameReason);
     }
+    await this.getImage(mediaId);
     const message = await this.messageService.create(
       id,
       text,
@@ -105,7 +110,8 @@ export class MessageResolver {
       character.trim(),
       user.id,
       isHidden,
-      whisperTo
+      whisperTo,
+      mediaId
     );
     await this.eventService.newMessage(message);
     return message;
@@ -121,15 +127,17 @@ export class MessageResolver {
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: true }) isExpression: boolean,
     @Args({ name: 'hide', type: () => Boolean, defaultValue: false }) isHidden: boolean,
     @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
-    @Args({ name: 'id', type: () => ID, nullable: true }) id?: string
+    @Args({ name: 'id', type: () => ID, nullable: true }) id?: string,
+    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
   ) {
     const { text, entities } = parse(source, isExpression);
-    return this.sendMessage(user, text, entities, channelId, character, isHidden, whisperTo, id);
+    return this.sendMessage(user, text, entities, channelId, character, isHidden, whisperTo, id, mediaId);
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async sendMessagePreview(
+    @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'id', type: () => ID }) id: string,
     @Args({ name: 'source', type: () => String, description: 'If blank, just show typing.' })
     source: string,
@@ -138,7 +146,7 @@ export class MessageResolver {
     character: string,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: false }) isExpression: boolean,
-    @CurrentUser() user: TokenUserInfo
+    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
   ) {
     character = character.trim();
 
@@ -146,8 +154,8 @@ export class MessageResolver {
     if (!isNameValid) {
       throw new UserInputError(nameReason);
     }
-
-    const message = new PreviewMessage(id, user.id, channelId, character, source, isExpression, startTime);
+    const media = await this.getImage(mediaId);
+    const message = new PreviewMessage(id, user.id, channelId, character, source, isExpression, startTime, media);
     await this.eventService.messagePreview(message);
     return true;
   }
@@ -263,5 +271,18 @@ export class MessageResolver {
       throw new UserInputError('Must specify a before message or a after message.');
     }
     return true;
+  }
+
+  async getImage(mediaId?: string): Promise<Media | undefined> {
+    let media: Media | undefined;
+    if (mediaId) {
+      media = await this.mediaService.getMediaById(mediaId);
+      if (!media) {
+        throw new UserInputError('Can not find the media.');
+      } else if (!media.mimeType.startsWith('image/')) {
+        throw new UserInputError('At this point, only images are supported.');
+      }
+    }
+    return media;
   }
 }

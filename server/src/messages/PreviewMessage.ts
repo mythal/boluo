@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from 'type-graphql';
+import { Media } from '../media/media.entity';
 
 const PREVIEW_SOURCE_MAX_LENGTH = 1024;
 
@@ -28,6 +29,9 @@ export class PreviewMessage {
   @Field({ nullable: false })
   updateTime: Date;
 
+  @Field(() => Media, { nullable: true })
+  media?: Media;
+
   constructor(
     id: string,
     userId: string,
@@ -35,7 +39,8 @@ export class PreviewMessage {
     character: string,
     source: string,
     isExpression: boolean,
-    startTime: Date
+    startTime: Date,
+    media?: Media
   ) {
     this.id = id;
     this.userId = userId;
@@ -45,5 +50,6 @@ export class PreviewMessage {
     this.isExpression = isExpression;
     this.startTime = startTime;
     this.updateTime = new Date();
+    this.media = media;
   }
 }

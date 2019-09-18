@@ -18,9 +18,7 @@ export const ChannelLink = ({ channel: { id, title, name }, opened }: Props) => 
 
   const onClick: React.MouseEventHandler = e => {
     e.preventDefault();
-    if (!opened) {
-      dispatch({ type: 'OPEN_CHANNEL', id, title, name });
-    }
+    dispatch({ type: 'OPEN_CHANNEL', id, title, name });
   };
 
   const className = opened ? 'ChannelLink opened' : 'ChannelLink';

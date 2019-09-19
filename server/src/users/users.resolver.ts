@@ -4,7 +4,7 @@ import { UserService } from './users.service';
 import { ID } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
 import { UserInputError } from 'apollo-server-express';
-import { GqlAuthGuard } from '../auth/auth.guard';
+import { GqlAuthGuard, GqlUserGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { checkNickname, checkPassword, checkUsername } from 'boluo-common';
 import { TokenUserInfo } from '../auth/jwt.strategy';
@@ -64,9 +64,12 @@ export class UserResolver {
     return true;
   }
 
-  @Query(() => User)
-  @UseGuards(GqlAuthGuard)
-  async getMe(@CurrentUser() user: TokenUserInfo) {
+  @Query(() => User, { nullable: true })
+  @UseGuards(GqlUserGuard)
+  async getMe(@CurrentUser() user?: TokenUserInfo) {
+    if (!user) {
+      return null;
+    }
     return this.userService.findById(user.id);
   }
 }

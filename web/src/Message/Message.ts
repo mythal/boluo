@@ -1,15 +1,11 @@
+import { User } from '../user';
+
 export interface Message {
   id: string;
   channelId: string;
   text: string;
   created: Date;
   character: string;
-  sender?: Sender;
+  sender?: User;
   senderId?: string;
-}
-
-interface Sender {
-  nickname: string;
-  id: string;
-  username: string;
 }

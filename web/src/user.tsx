@@ -13,6 +13,12 @@ const GET_ME = gql`
   }
 `;
 
+export enum UserState {
+  Loading,
+  Guest,
+  LoggedIn,
+}
+
 export interface User {
   nickname: string;
   id: string;
@@ -21,33 +27,33 @@ export interface User {
 }
 
 export interface Loading {
-  type: 'LOADING';
+  state: UserState.Loading;
 }
 
 export interface Guest {
-  type: 'GUEST';
+  state: UserState.Guest;
 }
 
 export interface LoggedIn {
-  type: 'LOGGED_IN';
+  state: UserState.LoggedIn;
   user: User;
   logout: () => void;
 }
 
-export type UserState = Loading | Guest | LoggedIn;
+export type GetMe = Loading | Guest | LoggedIn;
 
-export const useGetMe = (): UserState => {
+export const useGetMe = (): GetMe => {
   const { loading, data, error, updateQuery } = useQuery<{ getMe?: User }>(GET_ME);
   if (loading) {
-    return { type: 'LOADING' };
+    return { state: UserState.Loading };
   } else if (error || !data || !data.getMe) {
     localStorage.removeItem(TOKEN_KEY);
-    return { type: 'GUEST' };
+    return { state: UserState.Guest };
   } else {
     const logout = () => {
       localStorage.removeItem(TOKEN_KEY);
       updateQuery(() => ({ getMe: undefined }));
     };
-    return { type: 'LOGGED_IN', user: data.getMe, logout };
+    return { state: UserState.LoggedIn, user: data.getMe, logout };
   }
 };

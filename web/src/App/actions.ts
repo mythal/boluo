@@ -1,12 +1,17 @@
+export enum ActionType {
+  OpenChannel,
+  ClosePane,
+}
+
 export interface OpenChannel {
-  type: 'OPEN_CHANNEL';
+  type: ActionType.OpenChannel;
   name: string;
   title: string;
   id: string;
 }
 
 export interface ClosePane {
-  type: 'CLOSE_PANE';
+  type: ActionType.ClosePane;
   id: string;
 }
 

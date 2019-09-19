@@ -1,7 +1,7 @@
 import React from 'react';
 import { Channel } from '../Channel/Channel';
 import { useDispatch } from '../App/App';
-import { ClosePane } from '../App/actions';
+import { ActionType, ClosePane } from '../App/actions';
 import { Pane } from './Pane';
 
 export interface Props {
@@ -17,7 +17,7 @@ export const PaneView = ({ pane }: Props) => {
   }
   const close: React.MouseEventHandler = e => {
     e.preventDefault();
-    dispatch({ type: 'CLOSE_PANE', id });
+    dispatch({ type: ActionType.ClosePane, id });
   };
   return (
     <section className="pane">

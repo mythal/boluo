@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGetMe } from '../user';
+import { useGetMe, UserState } from '../user';
 import { Message } from '../Message/Message';
 import { MessageView } from '../Message/MessageView';
 import gql from 'graphql-tag';
@@ -18,8 +18,8 @@ const DELETE_MESSAGE = gql`
 
 export const MessageList = ({ messages }: Props) => {
   const [deleteMessage] = useMutation<boolean, Id>(DELETE_MESSAGE);
-  const userState = useGetMe();
-  const user = userState.type === 'LOGGED_IN' ? userState.user : undefined;
+  const getMe = useGetMe();
+  const user = getMe.state === UserState.LoggedIn ? getMe.user : undefined;
   const messageList = messages.map(message => {
     const id = message.id;
     const remove = () => deleteMessage({ variables: { id } });

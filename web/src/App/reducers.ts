@@ -1,5 +1,5 @@
 import { AppState } from './state';
-import { AppAction, ClosePane, OpenChannel } from './actions';
+import { ActionType, AppAction, ClosePane, OpenChannel } from './actions';
 
 type Reducer<T extends AppAction = AppAction> = (state: AppState, action: T) => AppState;
 
@@ -19,9 +19,9 @@ const handleClosePane: Reducer<ClosePane> = (state, action) => {
 
 export const appReducer: Reducer = (state, action) => {
   switch (action.type) {
-    case 'OPEN_CHANNEL':
+    case ActionType.OpenChannel:
       return handleOpenChannel(state, action);
-    case 'CLOSE_PANE':
+    case ActionType.ClosePane:
       return handleClosePane(state, action);
     default:
       return state;

@@ -1,12 +1,12 @@
 import React, { useContext, useReducer } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { Sidebar } from '../Sidebar/Sidebar';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { appReducer } from './reducers';
 import { appStateInit } from './state';
 import { AppAction } from './actions';
 import { List } from 'immutable';
-import { PaneView } from '../Pane/PaneView';
 import { Pane } from '../Pane/Pane';
+import { Main } from '../Main/Main';
+import { NotFound } from '../NotFound/NotFound';
 
 const AppDispatch = React.createContext<(action: AppAction) => void>(
   () => new Error('The context does not be initialized.')
@@ -20,14 +20,15 @@ export const usePanes = (): List<Pane> => useContext(AppPanes);
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, appStateInit);
-  const panes = state.panes.map(pane => <PaneView key={pane.id} pane={pane} />);
 
   return (
     <AppDispatch.Provider value={dispatch}>
       <AppPanes.Provider value={state.panes}>
         <Router>
-          <Sidebar />
-          {panes}
+          <Switch>
+            <Route path="/" exact component={Main} />
+            <Route component={NotFound} />
+          </Switch>
         </Router>
       </AppPanes.Provider>
     </AppDispatch.Provider>

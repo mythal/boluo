@@ -4,7 +4,7 @@ export interface Message {
   id: string;
   channelId: string;
   text: string;
-  created: Date;
+  created: number;
   character: string;
   sender?: User;
   senderId?: string;

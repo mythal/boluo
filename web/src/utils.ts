@@ -26,3 +26,12 @@ export const nameToHSL = (name: string): string => {
   nameColorMap[name] = color;
   return color;
 };
+
+export const leadingZero = (n: number, width: number = 2, char: string = '0'): string => {
+  let s = n.toString();
+  const len = s.length;
+  if (len < width) {
+    s = char.repeat(width - len) + s;
+  }
+  return s;
+};

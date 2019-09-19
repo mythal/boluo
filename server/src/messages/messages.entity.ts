@@ -12,15 +12,8 @@ import { User } from '../users/users.entity';
 import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
 import { GraphQLJSONObject } from 'graphql-type-json';
-import { Entity as MessageEntity } from 'boluo-common';
+import { Entity as MessageEntity, MessageType } from 'boluo-common';
 import { Media } from '../media/media.entity';
-
-export enum MessageType {
-  Say = 'Say',
-  OOC = 'OOC',
-  Joined = 'Join',
-  Left = 'Left',
-}
 
 registerEnumType(MessageType, { name: 'MessageType' });
 

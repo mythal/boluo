@@ -1,3 +1,4 @@
+export { MessageType } from './messages';
 export { generateId } from './utils';
 export {
   Text,

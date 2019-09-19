@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Message, MessageType } from './messages.entity';
+import { Message } from './messages.entity';
 import { MemberService } from '../members/members.service';
-import { Entity, generateId } from 'boluo-common';
+import { Entity, generateId, MessageType } from 'boluo-common';
 import { RandomService } from '../random/random.service';
 
 @Injectable()

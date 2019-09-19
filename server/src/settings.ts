@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
+process.env.TZ = 'UTC';
 export const DEBUG = Boolean(process.env.DEBUG) || false;
 export const PORT = Number(process.env.PORT) || 3005;
 

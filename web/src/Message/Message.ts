@@ -1,4 +1,3 @@
-import { User } from '../user';
 import { MessageType } from 'boluo-common';
 
 export interface Message {
@@ -6,8 +5,7 @@ export interface Message {
   channelId: string;
   text: string;
   created: number;
-  character: string;
-  sender?: User;
+  name: string;
   senderId?: string;
   type: keyof typeof MessageType;
 }

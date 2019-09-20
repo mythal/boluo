@@ -17,12 +17,11 @@ export {
 } from './entities';
 export { parse, Env, ParseResult } from './parser';
 export {
-  checkNickname,
+  checkName,
   checkMessage,
   checkChannelTitle,
   checkChannelName,
   checkPassword,
   checkUsername,
   checkEmailFormat,
-  checkCharacterName,
 } from './validators';

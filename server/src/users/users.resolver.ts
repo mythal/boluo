@@ -6,7 +6,7 @@ import { UseGuards } from '@nestjs/common';
 import { UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard, GqlUserGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
-import { checkNickname, checkPassword, checkUsername } from 'boluo-common';
+import { checkName, checkPassword, checkUsername } from 'boluo-common';
 import { TokenUserInfo } from '../auth/jwt.strategy';
 
 @Resolver(() => User)
@@ -32,7 +32,7 @@ export class UserResolver {
     username = username.trim();
     nickname = nickname.trim();
     const [isUsernameValid, usernameInvalidReason] = checkUsername(username);
-    const [isNicknameValid, nicknameInvalidReason] = checkNickname(nickname);
+    const [isNicknameValid, nicknameInvalidReason] = checkName(nickname);
     const [isPasswordValid, passwordInvalidReason] = checkPassword(password);
     const isAllValid = isUsernameValid && isNicknameValid && isPasswordValid;
     if (!isAllValid) {

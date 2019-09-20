@@ -944,9 +944,9 @@ body-parser@1.19.0, body-parser@^1.18.3:
     type-is "~1.6.17"
 
 boluo-common@latest:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/boluo-common/-/boluo-common-0.1.5.tgz#8d8dd4509ff1a260c9640d1f22571424014cb8f9"
-  integrity sha512-vH2IRmyZ2InVFZHsKRsfLp06aeePsKKtAfg6twlg54r9qf7X7Wxnq/STX+FBQzhxJbVsieckP46tqPnu/zPArw==
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/boluo-common/-/boluo-common-0.1.6.tgz#fc58c526c29c767ddcd3c3a48314edd7cc04a7b8"
+  integrity sha512-qCYykTADXHDwvBNyMUOGIfqdZ4swSqGZyqhU9DMfH0VB7C8vemy0bBmilF0DX5UKwJxpaE46aXiQwb/WYPt+Kg==
   dependencies:
     uuid "^3.3.3"
 

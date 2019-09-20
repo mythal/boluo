@@ -17,12 +17,12 @@ export function checkUsername(username: string): [boolean, string] {
   return [true, ''];
 }
 
-export function checkNickname(nickname: string): [boolean, string] {
-  const NICKNAME_MAX_CHARACTERS = 24;
+export function checkName(nickname: string): [boolean, string] {
+  const NAME_MAX_LENGTH = 32;
   if (nickname.length === 0) {
-    return [false, 'Empty nickname.'];
-  } else if (nickname.length > NICKNAME_MAX_CHARACTERS) {
-    return [false, `Nickname must be less than ${NICKNAME_MAX_CHARACTERS} characters.`];
+    return [false, 'Empty name.'];
+  } else if (nickname.length > NAME_MAX_LENGTH) {
+    return [false, `Name must be less than ${NAME_MAX_LENGTH} characters.`];
   }
   return [true, ''];
 }
@@ -52,14 +52,6 @@ export function checkChannelTitle(title: string): [boolean, string] {
     return [false, 'Empty title.'];
   } else if (title.length > TITLE_MAX_CHARACTERS) {
     return [false, `Title must be less than ${TITLE_MAX_CHARACTERS} characters.`];
-  }
-  return [true, ''];
-}
-
-export function checkCharacterName(name: string): [boolean, string] {
-  const CHARACTER_NAME_MAX_LENGTH = 64;
-  if (name.length > CHARACTER_NAME_MAX_LENGTH) {
-    return [false, 'Character name too long.'];
   }
   return [true, ''];
 }

@@ -15,21 +15,27 @@ export class MessageService {
     private readonly randomService: RandomService
   ) {}
 
-  async editMessage(messageId: string, text: string, entities: Entity[], character?: string): Promise<Message> {
+  async editMessage(
+    type: MessageType,
+    messageId: string,
+    text: string,
+    entities: Entity[],
+    name?: string
+  ): Promise<Message> {
     const editDate = new Date();
-    await this.messageRepository.update(messageId, { text, entities, character, editDate });
+    await this.messageRepository.update(messageId, { type, text, entities, name, editDate });
     return await this.messageRepository.findOneOrFail(messageId);
   }
 
-  async leftMessage(channelId: string, userId: string) {
+  async leftMessage(channelId: string, senderId: string, name: string) {
     const id = generateId();
     await this.messageRepository.insert({
       id,
       text: '',
       entities: [],
       channelId,
-      character: '',
-      senderId: userId,
+      name,
+      senderId,
       isGm: false,
       seed: this.randomService.genRandom(),
       type: MessageType.Left,
@@ -37,15 +43,15 @@ export class MessageService {
     return this.messageRepository.findOneOrFail(id);
   }
 
-  async joinMessage(channelId: string, userId: string) {
+  async joinMessage(channelId: string, senderId: string, name: string) {
     const id = generateId();
     await this.messageRepository.insert({
       id,
       text: '',
       entities: [],
       channelId,
-      character: '',
-      senderId: userId,
+      name,
+      senderId,
       isGm: false,
       seed: this.randomService.genRandom(),
       type: MessageType.Joined,
@@ -54,30 +60,30 @@ export class MessageService {
   }
 
   async create(
+    type: MessageType,
     id: string,
     text: string,
     entities: Entity[],
     channelId: string,
-    character: string,
-    userId: string,
+    name: string,
+    senderId: string,
     isHidden: boolean = false,
     whisperTo: string[] = [],
     mediaId?: string
   ) {
     const seed = this.randomService.genRandom();
-    const member = await this.memberService.findByChannelAndUser(channelId, userId);
+    const member = await this.memberService.findByChannelAndUser(channelId, senderId);
     if (!member) {
       throw Error('You are not a member of this channel.');
     }
     const isGm = member.isAdmin;
-    const type = character.length === 0 ? MessageType.OOC : MessageType.Say;
     await this.messageRepository.insert({
       id,
       text,
       entities,
       channelId,
-      character,
-      senderId: userId,
+      name,
+      senderId,
       isGm,
       seed,
       isHidden,

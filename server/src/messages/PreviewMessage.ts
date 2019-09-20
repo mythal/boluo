@@ -18,7 +18,7 @@ export class PreviewMessage {
   channelId: string;
 
   @Field()
-  character: string;
+  name: string;
 
   @Field()
   source: string;
@@ -36,7 +36,7 @@ export class PreviewMessage {
     id: string,
     userId: string,
     channelId: string,
-    character: string,
+    name: string,
     source: string,
     isExpression: boolean,
     startTime: Date,
@@ -45,7 +45,7 @@ export class PreviewMessage {
     this.id = id;
     this.userId = userId;
     this.channelId = channelId;
-    this.character = character;
+    this.name = name;
     this.source = source.length < PREVIEW_SOURCE_MAX_LENGTH ? source : '';
     this.isExpression = isExpression;
     this.startTime = startTime;

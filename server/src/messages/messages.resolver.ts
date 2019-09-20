@@ -8,7 +8,7 @@ import { Logger, UseGuards } from '@nestjs/common';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
-import { checkCharacterName, checkMessage, Entity as MessageEntity, generateId, parse } from 'boluo-common';
+import { checkMessage, checkName, Entity as MessageEntity, generateId, MessageType, parse } from 'boluo-common';
 import { PreviewMessage } from './PreviewMessage';
 import { EventService } from '../events/events.service';
 import { MemberService } from '../members/members.service';
@@ -87,27 +87,30 @@ export class MessageResolver {
     @Args({ name: 'text', type: () => String }) text: string,
     @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args({ name: 'character', type: () => String }) character: string,
+    @Args({ name: 'name', type: () => String }) name: string,
     @Args({ name: 'hide', type: () => Boolean, defaultValue: false }) isHidden: boolean,
     @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string,
-    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
+    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string,
+    @Args({ name: 'isOOC', type: () => Boolean, defaultValue: true }) isOOC?: boolean
   ) {
     if (!id) {
       id = generateId();
     }
-    const [isNameValid, nameReason] = checkCharacterName(character);
+    name = name.trim();
+    const [isNameValid, nameReason] = checkName(name);
     const [isValid, reason] = checkMessage(text, entities);
     if (!isValid || !isNameValid) {
       throw new UserInputError(reason || nameReason);
     }
     await this.getImage(mediaId);
     const message = await this.messageService.create(
+      isOOC ? MessageType.OOC : MessageType.Say,
       id,
       text,
       entities,
       channelId,
-      character.trim(),
+      name,
       user.id,
       isHidden,
       whisperTo,
@@ -123,15 +126,16 @@ export class MessageResolver {
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'source', type: () => String }) source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args({ name: 'character', type: () => String }) character: string,
+    @Args({ name: 'name', type: () => String }) name: string,
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: true }) isExpression: boolean,
     @Args({ name: 'hide', type: () => Boolean, defaultValue: false }) isHidden: boolean,
     @Args({ name: 'whisperTo', type: () => [ID], defaultValue: [] }) whisperTo: string[],
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string,
-    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
+    @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string,
+    @Args({ name: 'isOOC', type: () => Boolean, defaultValue: true }) isOOC?: boolean
   ) {
     const { text, entities } = parse(source, isExpression);
-    return this.sendMessage(user, text, entities, channelId, character, isHidden, whisperTo, id, mediaId);
+    return this.sendMessage(user, text, entities, channelId, name, isHidden, whisperTo, id, mediaId, isOOC);
   }
 
   @Mutation(() => Boolean)
@@ -142,20 +146,19 @@ export class MessageResolver {
     @Args({ name: 'source', type: () => String, description: 'If blank, just show typing.' })
     source: string,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
-    @Args({ name: 'character', type: () => String, description: 'If blank, this is a Out-of-Character message.' })
-    character: string,
+    @Args({ name: 'name', type: () => String }) name: string,
     @Args({ name: 'startTime', type: () => Date }) startTime: Date,
     @Args({ name: 'isExpression', type: () => Boolean, defaultValue: false }) isExpression: boolean,
     @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
   ) {
-    character = character.trim();
+    name = name.trim();
 
-    const [isNameValid, nameReason] = checkCharacterName(character);
+    const [isNameValid, nameReason] = checkName(name);
     if (!isNameValid) {
       throw new UserInputError(nameReason);
     }
     const media = await this.getImage(mediaId);
-    const message = new PreviewMessage(id, user.id, channelId, character, source, isExpression, startTime, media);
+    const message = new PreviewMessage(id, user.id, channelId, name, source, isExpression, startTime, media);
     await this.eventService.messagePreview(message);
     return true;
   }
@@ -167,18 +170,22 @@ export class MessageResolver {
     @Args({ name: 'messageId', type: () => String }) messageId: string,
     @Args({ name: 'text', type: () => String }) text: string,
     @Args({ name: 'entities', type: () => [GraphQLJSONObject] }) entities: MessageEntity[],
-    @Args({ name: 'character', type: () => String, nullable: true }) character?: string
+    @Args({ name: 'name', type: () => String, nullable: true }) name?: string,
+    @Args({ name: 'isOOC', type: () => Boolean, nullable: true }) isOOC?: boolean
   ) {
     const message = await this.messageService.findById(messageId);
     if (!message || message.deleted) {
       throw new UserInputError('No message found');
     }
+    if (message.type !== MessageType.Say && message.type !== MessageType.OOC) {
+      throw new UserInputError('Incorrect message type');
+    }
     if (message.senderId !== user.id) {
       throw new ForbiddenError('No editing authority');
     }
-    if (character) {
-      character = character.trim();
-      const [isNameValid, nameReason] = checkCharacterName(character);
+    if (name) {
+      name = name.trim();
+      const [isNameValid, nameReason] = checkName(name);
       if (!isNameValid) {
         throw new UserInputError(nameReason);
       }
@@ -187,7 +194,8 @@ export class MessageResolver {
     if (!isValid) {
       throw new UserInputError(reason);
     }
-    const edited = await this.messageService.editMessage(message.id, text, entities, character);
+    const type = isOOC ? MessageType.OOC : message.type;
+    const edited = await this.messageService.editMessage(type, message.id, text, entities, name);
     await this.eventService.messageEdited(edited);
     return edited;
   }

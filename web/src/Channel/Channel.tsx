@@ -22,13 +22,7 @@ const CHANNEL = gql`
         text
         created
         senderId
-        character
-        sender {
-          id
-          username
-          nickname
-          isOnline
-        }
+        name
       }
     }
   }

@@ -33,7 +33,7 @@ export const MessageView = ({ message, user, remove }: Props) => {
       <div>
         <Time timestamp={message.created} />
       </div>
-      <div className="Message-speaker">{message.character}</div>
+      <div className="Message-speaker">{message.name}</div>
       <div className="Message-body">{message.text}</div>
       <div className="Message-footer">{user ? deleteButton : null}</div>
     </div>

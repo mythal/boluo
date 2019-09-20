@@ -84,7 +84,7 @@ export class ChannelResolver {
       throw new ForbiddenError('Cannot join the channel.');
     }
     userId = userId || user.id;
-    this.messageService.joinMessage(channelId, userId).then(this.eventService.newMessage);
+    this.messageService.joinMessage(channelId, userId, user.nickname).then(this.eventService.newMessage);
     return this.memberService.addUserToChannel(userId, channelId);
   }
 
@@ -94,7 +94,7 @@ export class ChannelResolver {
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string
   ) {
-    this.messageService.leftMessage(channelId, user.id).then(this.eventService.newMessage);
+    this.messageService.leftMessage(channelId, user.id, user.nickname).then(this.eventService.newMessage);
     return this.memberService.removeUserFromChannel(user.id, channelId);
   }
 

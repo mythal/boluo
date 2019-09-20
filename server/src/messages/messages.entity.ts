@@ -47,8 +47,8 @@ export class Message {
   channelId!: string;
 
   @Column()
-  @Field({ description: 'Name of character. The message is a Out-of-Character message only if this field empty' })
-  character!: string;
+  @Field()
+  name!: string;
 
   @Column({ type: 'boolean', default: false })
   @Field({ description: 'Whether this message represents an action.' })

@@ -2,6 +2,7 @@ import React from 'react';
 import { Message } from './Message';
 import { User } from '../user';
 import { leadingZero } from '../utils';
+import { MessageType } from 'boluo-common';
 
 export interface Props {
   message: Message;
@@ -25,9 +26,10 @@ export const MessageView = ({ message, user, remove }: Props) => {
     e.preventDefault();
     remove();
   };
+  const type = MessageType[message.type];
   const deleteButton = <button onClick={handleClick}>Delete</button>;
   return (
-    <div className="Message">
+    <div className={`Message Message-${type}`}>
       <div>
         <Time timestamp={message.created} />
       </div>

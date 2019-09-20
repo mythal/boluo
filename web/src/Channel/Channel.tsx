@@ -17,6 +17,7 @@ const CHANNEL = gql`
       created
       modified
       messages {
+        type
         id
         text
         created

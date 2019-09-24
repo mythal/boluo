@@ -160,9 +160,10 @@ type Mutation {
     id: ID!
   ): Boolean!
   editMessage(isOOC: Boolean, name: String, entities: [JSONObject!]!, text: String!, messageId: String!): Message!
-  setMessageCrossOff(crossOff: Boolean = true, messageId: ID!): Message
+  setMessageCrossOff(crossOff: Boolean = true, messageId: ID!): Message!
   deleteMessage(messageId: ID!): Boolean!
-  moveMessage(moveBeforeOf: ID, moveAfterOf: ID, message: ID!): Boolean!
+  moveAfterOf(target: ID!, messageId: ID!): Message!
+  moveBeforeOf(target: ID!, messageId: ID!): Message!
   register(nickname: String!, password: String!, username: String!): User!
 
   """Keep alive."""
@@ -170,8 +171,7 @@ type Mutation {
   createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
   joinChannel(userId: ID, channelId: ID!): Members
   quitChannel(channelId: ID!): Boolean!
-  deleteChannel(name: String!, channelId: ID!): Boolean!
-  editChannel(description: String, isArchive: Boolean, isPublic: Boolean, isGame: Boolean, title: String, name: String, channelId: ID!): Channel!
+  deleteChannel(channelId: ID!): Boolean!
 }
 
 type PreviewMessage {

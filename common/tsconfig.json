@@ -6,7 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./lib",
+    "outDir": "./dist",
     "importHelpers": true,
     "downlevelIteration": true,
     "strict": true,

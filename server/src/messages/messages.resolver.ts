@@ -8,12 +8,13 @@ import { Logger, UseGuards } from '@nestjs/common';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { GqlAuthGuard } from '../auth/auth.guard';
 import { ForbiddenError, UserInputError } from 'apollo-server-express';
-import { checkMessage, checkName, Entity as MessageEntity, generateId, MessageType, parse } from 'boluo-common';
+import { checkName, Entity as MessageEntity, generateId, parse, Result } from 'boluo-common';
 import { PreviewMessage } from './PreviewMessage';
 import { EventService } from '../events/events.service';
 import { MemberService } from '../members/members.service';
 import { MediaService } from '../media/media.service';
 import { Media } from '../media/media.entity';
+import { throwApolloError } from '../error';
 
 @ObjectType()
 class Content {
@@ -97,25 +98,19 @@ export class MessageResolver {
     if (!id) {
       id = generateId();
     }
-    name = name.trim();
-    const [isNameValid, nameReason] = checkName(name);
-    const [isValid, reason] = checkMessage(text, entities);
-    if (!isValid || !isNameValid) {
-      throw new UserInputError(reason || nameReason);
-    }
-    await this.getImage(mediaId);
-    const message = await this.messageService.create(
-      isOOC ? MessageType.OOC : MessageType.Say,
+    const messageResult = await this.messageService.send(
       id,
       text,
       entities,
       channelId,
       name,
       user.id,
+      isOOC || false,
       isHidden,
       whisperTo,
       mediaId
     );
+    const message = throwApolloError(messageResult);
     await this.eventService.newMessage(message);
     return message;
   }
@@ -152,12 +147,12 @@ export class MessageResolver {
     @Args({ name: 'mediaId', type: () => ID, nullable: true }) mediaId?: string
   ) {
     name = name.trim();
-
-    const [isNameValid, nameReason] = checkName(name);
-    if (!isNameValid) {
-      throw new UserInputError(nameReason);
+    Result.throwErr(UserInputError, checkName(name));
+    let media: Media | undefined;
+    if (mediaId) {
+      media = throwApolloError(await this.mediaService.getImage(mediaId));
     }
-    const media = await this.getImage(mediaId);
+
     const message = new PreviewMessage(id, user.id, channelId, name, source, isExpression, startTime, media);
     await this.eventService.messagePreview(message);
     return true;
@@ -173,55 +168,20 @@ export class MessageResolver {
     @Args({ name: 'name', type: () => String, nullable: true }) name?: string,
     @Args({ name: 'isOOC', type: () => Boolean, nullable: true }) isOOC?: boolean
   ) {
-    const message = await this.messageService.findById(messageId);
-    if (!message || message.deleted) {
-      throw new UserInputError('No message found');
-    }
-    if (message.type !== MessageType.Say && message.type !== MessageType.OOC) {
-      throw new UserInputError('Incorrect message type');
-    }
-    if (message.senderId !== user.id) {
-      throw new ForbiddenError('No editing authority');
-    }
-    if (name) {
-      name = name.trim();
-      const [isNameValid, nameReason] = checkName(name);
-      if (!isNameValid) {
-        throw new UserInputError(nameReason);
-      }
-    }
-    const [isValid, reason] = checkMessage(text, entities);
-    if (!isValid) {
-      throw new UserInputError(reason);
-    }
-    const type = isOOC ? MessageType.OOC : message.type;
-    const edited = await this.messageService.editMessage(type, message.id, text, entities, name);
+    const editResult = await this.messageService.editMessage(messageId, user.id, text, entities, isOOC, name);
+    const edited = throwApolloError(editResult);
     await this.eventService.messageEdited(edited);
     return edited;
   }
 
-  @Mutation(() => Message, { nullable: true })
+  @Mutation(() => Message)
   @UseGuards(GqlAuthGuard)
   async setMessageCrossOff(
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'messageId', type: () => ID }) messageId: string,
     @Args({ name: 'crossOff', type: () => Boolean, defaultValue: true }) crossOff: boolean
   ) {
-    const message = await this.messageService.findById(messageId);
-    if (!message) {
-      throw new UserInputError('No message found');
-    }
-    const member = await this.memberService.findByChannelAndUser(message.channelId, user.id);
-    if (message.senderId !== user.id && (!member || !member.isAdmin)) {
-      throw new ForbiddenError('No editing authority');
-    }
-    if (message.deleted) {
-      throw new UserInputError('Already deleted');
-    }
-    if (message.crossOff === crossOff) {
-      return null;
-    }
-    const updated = await this.messageService.messageCrossOff(message.id, crossOff);
+    const updated = throwApolloError(await this.messageService.messageCrossOff(user.id, messageId, crossOff));
     await this.eventService.messageEdited(updated);
     return updated;
   }
@@ -232,65 +192,28 @@ export class MessageResolver {
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'messageId', type: () => ID }) messageId: string
   ) {
-    const message = await this.messageService.findById(messageId);
-    if (!message) {
-      throw new UserInputError('No message found');
-    }
-    const member = await this.memberService.findByChannelAndUser(message.channelId, user.id);
-    if (message.senderId !== user.id && (!member || !member.isAdmin)) {
-      throw new ForbiddenError('No editing authority');
-    }
-    if (message.deleted) {
-      throw new UserInputError('Already deleted');
-    }
-    await this.messageService.deleteMessage(message.id);
-    await this.eventService.messageDeleted(message.channelId, message.id);
+    const deletedMessage = throwApolloError(await this.messageService.deleteMessage(user.id, messageId));
+    await this.eventService.messageDeleted(deletedMessage.channelId, messageId);
     return true;
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Message)
   @UseGuards(GqlAuthGuard)
-  async moveMessage(
+  async moveAfterOf(
     @CurrentUser() user: TokenUserInfo,
-    @Args({ name: 'message', type: () => ID }) messageId: string,
-    @Args({ name: 'moveAfterOf', type: () => ID, nullable: true }) beforeId?: string,
-    @Args({ name: 'moveBeforeOf', type: () => ID, nullable: true }) afterId?: string
+    @Args({ name: 'messageId', type: () => ID }) messageId: string,
+    @Args({ name: 'target', type: () => ID }) target: string
   ) {
-    const message = await this.messageService.findById(messageId);
-    if (!message) {
-      throw new UserInputError("Can't found message.");
-    }
-    if (messageId === beforeId || messageId === afterId) {
-      throw new UserInputError("Don't move same message.");
-    }
-    if (beforeId) {
-      const before = await this.messageService.findById(beforeId);
-      if (!before) {
-        throw new UserInputError("Can't found message.");
-      }
-      await this.messageService.moveAfterOf(message, before);
-    } else if (afterId) {
-      const after = await this.messageService.findById(afterId);
-      if (!after) {
-        throw new UserInputError("Can't found message.");
-      }
-      await this.messageService.moveBeforeOf(message, after);
-    } else {
-      throw new UserInputError('Must specify a before message or a after message.');
-    }
-    return true;
+    return throwApolloError(await this.messageService.moveAfterOf(user.id, messageId, target));
   }
 
-  async getImage(mediaId?: string): Promise<Media | undefined> {
-    let media: Media | undefined;
-    if (mediaId) {
-      media = await this.mediaService.getMediaById(mediaId);
-      if (!media) {
-        throw new UserInputError('Can not find the media.');
-      } else if (!media.mimeType.startsWith('image/')) {
-        throw new UserInputError('At this point, only images are supported.');
-      }
-    }
-    return media;
+  @Mutation(() => Message)
+  @UseGuards(GqlAuthGuard)
+  async moveBeforeOf(
+    @CurrentUser() user: TokenUserInfo,
+    @Args({ name: 'messageId', type: () => ID }) messageId: string,
+    @Args({ name: 'target', type: () => ID }) target: string
+  ) {
+    return throwApolloError(await this.messageService.moveBeforeOf(user.id, messageId, target));
   }
 }

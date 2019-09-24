@@ -1,8 +1,8 @@
 {
   "name": "boluo-common",
-  "version": "0.1.6",
-  "main": "lib/main.js",
-  "types": "lib/main.d.ts",
+  "version": "0.2.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "GPL-3.0",
   "scripts": {
     "build": "tsc"
@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "uuid": "^3.3.3"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

@@ -2,11 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './users.entity';
 import { Repository } from 'typeorm';
-import { generateId } from 'boluo-common';
+import { checkName, checkPassword, checkUsername, generateId, Result } from 'boluo-common';
 import { passwordHash } from '../utils';
 import { onlineKey } from '../redis/key';
 import { RedisService } from '../redis/redis.service';
 import { KEEP_ALIVE_SEC } from '../settings';
+import { inputError, ServiceResult } from '../error';
 
 @Injectable()
 export class UserService {
@@ -42,11 +43,28 @@ export class UserService {
     return Boolean(result);
   }
 
-  async create(username: string, nickname: string, password: string): Promise<User> {
+  async create(username: string, nickname: string, password: string): Promise<ServiceResult<User>> {
+    username = username.trim();
+    nickname = nickname.trim();
+    if (await this.hasUsername(username)) {
+      return Result.Err(inputError('Username is registered'));
+    }
+    const usernameCheck = Result.mapErr(checkUsername(username), inputError);
+    if (!usernameCheck.ok) {
+      return usernameCheck;
+    }
+    const nicknameCheck = Result.mapErr(checkName(username), inputError);
+    if (!nicknameCheck.ok) {
+      return nicknameCheck;
+    }
+    const passwordCheck = Result.mapErr(checkPassword(username), inputError);
+    if (!passwordCheck.ok) {
+      return passwordCheck;
+    }
     const id = generateId();
     password = await passwordHash(password);
     await this.userRepository.insert({ id, username, nickname, password });
     this.logger.log(`A user has registered, username: ${username}, nickname: ${nickname}.`);
-    return this.userRepository.findOneOrFail(id);
+    return Result.Ok(await this.userRepository.findOneOrFail(id));
   }
 }

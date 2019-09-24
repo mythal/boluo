@@ -1,4 +1,10 @@
 import { Entity } from './entities';
+import { Result } from './result';
+
+const Err = Result.Err;
+const ok = Result.Ok(undefined);
+
+export type ValidatorResult = Result.Result<undefined, string>;
 
 export function checkEmailFormat(email: string): boolean {
   // tslint:disable-next-line:max-line-length
@@ -6,77 +12,77 @@ export function checkEmailFormat(email: string): boolean {
   return re.test(String(email).toLowerCase());
 }
 
-export function checkUsername(username: string): [boolean, string] {
+export function checkUsername(username: string): ValidatorResult {
   if (!/^[\w_\d]+$/.test(username)) {
-    return [false, 'Username can only contain letters, "_" and numbers.'];
+    return Err('Username can only contain letters, "_" and numbers.');
   } else if (username.length < 3) {
-    return [false, 'Username must be at least 3 characters.'];
+    return Err('Username must be at least 3 characters.');
   } else if (username.length > 32) {
-    return [false, 'Username must be at most 32 characters.'];
+    return Err('Username must be at most 32 characters.');
   }
-  return [true, ''];
+  return ok;
 }
 
-export function checkName(nickname: string): [boolean, string] {
+export function checkName(nickname: string): ValidatorResult {
   const NAME_MAX_LENGTH = 32;
   if (nickname.length === 0) {
-    return [false, 'Empty name.'];
+    return Err('Empty name.');
   } else if (nickname.length > NAME_MAX_LENGTH) {
-    return [false, `Name must be less than ${NAME_MAX_LENGTH} characters.`];
+    return Err(`Name must be less than ${NAME_MAX_LENGTH} characters.`);
   }
-  return [true, ''];
+  return ok;
 }
 
-export function checkPassword(password: string): [boolean, string] {
+export function checkPassword(password: string): ValidatorResult {
   const MIN_PASSWORD_LENGTH = 8;
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return [false, `Password must have at least ${MIN_PASSWORD_LENGTH} characters.`];
+    return Err(`Password must have at least ${MIN_PASSWORD_LENGTH} characters.`);
   }
-  return [true, ''];
+  return ok;
 }
 
-export function checkChannelName(name: string): [boolean, string] {
+export function checkChannelName(name: string): ValidatorResult {
   if (!/^[\w_\d]+$/.test(name)) {
-    return [false, 'Channel name can only contain letters, "_" and numbers.'];
+    return Err('Channel name can only contain letters, "_" and numbers.');
   } else if (name.length < 3) {
-    return [false, 'Channel name must be at least 3 characters.'];
+    return Err('Channel name must be at least 3 characters.');
   } else if (name.length > 32) {
-    return [false, 'Channel name must be at most 32 characters.'];
+    return Err('Channel name must be at least 3 characters.');
   }
-  return [true, ''];
+  return ok;
 }
 
-export function checkChannelTitle(title: string): [boolean, string] {
+export function checkChannelTitle(title: string): ValidatorResult {
   const TITLE_MAX_CHARACTERS = 24;
   if (title.length === 0) {
-    return [false, 'Empty title.'];
+    return Err('Empty title.');
   } else if (title.length > TITLE_MAX_CHARACTERS) {
-    return [false, `Title must be less than ${TITLE_MAX_CHARACTERS} characters.`];
+    return Err(`Title must be less than ${TITLE_MAX_CHARACTERS} characters.`);
   }
-  return [true, ''];
+  return ok;
 }
 
-export function checkMessage(text: string, entities: Entity[]): [boolean, string] {
+export function checkMessage(text: string, entities: Entity[]): ValidatorResult {
   const MESSAGE_TEXT_MAX_LENGTH = 4096;
   if (text.length > MESSAGE_TEXT_MAX_LENGTH) {
-    return [false, 'Message content too long.'];
+    return Err('Message content too long.');
   } else if (text.trim().length === 0) {
-    return [false, 'Empty message.'];
+    return Err('Empty message.');
   }
   try {
     if (entities.length > 1024) {
-      return [false, 'Too much entities.'];
+      return Err('Too much entities.');
     }
     let prevEnd = -1;
     for (const entity of entities) {
       const end = entity.start + entity.offset;
       if (text.length <= entity.start || entity.start < prevEnd || text.length < end) {
-        return [false, 'Wrong entity properties.'];
+        return Err('Wrong entity properties.');
       }
       prevEnd = end;
     }
   } catch (e) {
-    return [false, 'Wrong entities.'];
+    return Err('Wrong entities.');
   }
-  return [true, ''];
+  return ok;
 }

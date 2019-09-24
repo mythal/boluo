@@ -3,11 +3,10 @@ import { User } from './users.entity';
 import { UserService } from './users.service';
 import { ID } from 'type-graphql';
 import { UseGuards } from '@nestjs/common';
-import { UserInputError } from 'apollo-server-express';
 import { GqlAuthGuard, GqlUserGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
-import { checkName, checkPassword, checkUsername } from 'boluo-common';
 import { TokenUserInfo } from '../auth/jwt.strategy';
+import { throwApolloError } from '../error';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -29,20 +28,7 @@ export class UserResolver {
     @Args('password') password: string,
     @Args('nickname') nickname: string
   ) {
-    username = username.trim();
-    nickname = nickname.trim();
-    const [isUsernameValid, usernameInvalidReason] = checkUsername(username);
-    const [isNicknameValid, nicknameInvalidReason] = checkName(nickname);
-    const [isPasswordValid, passwordInvalidReason] = checkPassword(password);
-    const isAllValid = isUsernameValid && isNicknameValid && isPasswordValid;
-    if (!isAllValid) {
-      throw new UserInputError(usernameInvalidReason || nicknameInvalidReason || passwordInvalidReason);
-    }
-    const hasUsername = await this.userService.hasUsername(username);
-    if (hasUsername) {
-      throw new UserInputError('Username is registered');
-    }
-    return await this.userService.create(username, nickname, password);
+    return throwApolloError(await this.userService.create(username, nickname, password));
   }
 
   @ResolveProperty(() => Boolean)

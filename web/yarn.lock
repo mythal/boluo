@@ -1303,10 +1303,8 @@ bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.4.0:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.8.tgz#2cde09eb5ee341f484746bb0309b3253b1b1442f"
   integrity sha512-ItfYfPLkWHUjckQCk8xC+LwxgK8NYcXywGigJgSwOP8Y2iyWT4f2vsZnoOXTTbo+o5yXmIUJ4gn5538SO5S3gA==
 
-boluo-common@^0.2.2:
+"boluo-common@file:../common":
   version "0.2.2"
-  resolved "https://registry.yarnpkg.com/boluo-common/-/boluo-common-0.2.2.tgz#a65515c25791aeac7f541f955d251508a90a45f5"
-  integrity sha512-l7pVpCkQxFkq6YBxCF9Vveqvpxtr3OpihWPsGCs8XwUFoKmTTF5BtZXa+Q9GqFDI0uL99x4nifkGHHDyS4+TNw==
   dependencies:
     uuid "^3.3.3"
 

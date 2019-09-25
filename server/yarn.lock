@@ -943,10 +943,8 @@ body-parser@1.19.0, body-parser@^1.18.3:
     raw-body "2.4.0"
     type-is "~1.6.17"
 
-boluo-common@^0.2.2:
+"boluo-common@file:../common":
   version "0.2.2"
-  resolved "https://registry.yarnpkg.com/boluo-common/-/boluo-common-0.2.2.tgz#a65515c25791aeac7f541f955d251508a90a45f5"
-  integrity sha512-l7pVpCkQxFkq6YBxCF9Vveqvpxtr3OpihWPsGCs8XwUFoKmTTF5BtZXa+Q9GqFDI0uL99x4nifkGHHDyS4+TNw==
   dependencies:
     uuid "^3.3.3"
 

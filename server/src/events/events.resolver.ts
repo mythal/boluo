@@ -5,7 +5,6 @@ import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Logger, UseGuards } from '@nestjs/common';
 import { ChannelService } from '../channels/channels.service';
 import { ForbiddenError } from 'apollo-server-errors';
-import { MemberService } from '../members/members.service';
 import { ChannelEvent } from './ChannelEvent';
 import { EventService } from './events.service';
 import { pubSub } from './pubSub';
@@ -16,11 +15,7 @@ import { throwApolloError } from '../error';
 export class ChannelEventResolver {
   private readonly logger = new Logger(ChannelEventResolver.name);
 
-  constructor(
-    private readonly channelService: ChannelService,
-    private readonly eventService: EventService,
-    private readonly memberService: MemberService
-  ) {}
+  constructor(private readonly channelService: ChannelService, private readonly eventService: EventService) {}
 
   @Subscription(() => ChannelEvent)
   @UseGuards(GqlUserGuard)
@@ -33,7 +28,7 @@ export class ChannelEventResolver {
       if (!user) {
         throw new ForbiddenError('You are not logged in');
       }
-      const member = this.channelService.getInheritedMember(channel, user.id);
+      const member = this.channelService.getRootMember(channel, user.id);
       if (!member) {
         this.logger.warn(`[Forbidden] A user (${user.id}) attempt to subscribe a channel that they does not joined.`);
         throw new ForbiddenError('You are not a member of this channel.');

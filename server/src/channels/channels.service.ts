@@ -46,7 +46,7 @@ export class ChannelService {
     limit: number = 128
   ): Promise<ServiceResult<Message[]>> {
     if (!channel.isPublic) {
-      if (!userId || !(await this.getInheritedMember(channel, userId))) {
+      if (!userId || !(await this.getRootMember(channel, userId))) {
         return Result.Err(forbiddenError('This channel is private.'));
       }
     }
@@ -82,7 +82,7 @@ export class ChannelService {
     return member;
   }
 
-  async getInheritedMember(channel: Channel, userId: string): Promise<Member | null> {
+  async getRootMember(channel: Channel, userId: string): Promise<Member | null> {
     let root = channel;
     while (root.parent) {
       root = await root.parent;
@@ -92,7 +92,7 @@ export class ChannelService {
     return member ? member : null;
   }
 
-  async isOwner(channel: Channel, userId: string): Promise<boolean> {
+  async hasOwnerPermission(channel: Channel, userId: string): Promise<boolean> {
     if (!channel.parent) {
       return channel.ownerId === userId;
     }
@@ -117,7 +117,7 @@ export class ChannelService {
       return channelResult;
     }
     const channel = channelResult.some;
-    if (!(await this.isOwner(channel, operatorId))) {
+    if (!(await this.hasOwnerPermission(channel, operatorId))) {
       this.logger.warn(`Forbidden: A user (${operatorId}) tried to delete #${channel.name} channel.`);
       return Result.Err(forbiddenError('You have no permission to delete the channel.'));
     }
@@ -179,7 +179,7 @@ export class ChannelService {
       return channelResult;
     }
     const channel = channelResult.some;
-    const isOwner = await this.isOwner(channel, operatorId);
+    const isOwner = await this.hasOwnerPermission(channel, operatorId);
     if (!isOwner) {
       return Result.Err(forbiddenError("Forbidden: You can't grant an admin"));
     }

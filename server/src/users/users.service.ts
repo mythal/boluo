@@ -8,6 +8,7 @@ import { onlineKey } from '../redis/key';
 import { RedisService } from '../redis/redis.service';
 import { KEEP_ALIVE_SEC } from '../settings';
 import { inputError, ServiceResult } from '../error';
+import { Member } from '../members/members.entity';
 
 @Injectable()
 export class UserService {
@@ -16,7 +17,9 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    @InjectRepository(Member)
+    private readonly memberRepository: Repository<Member>
   ) {}
 
   async hasUsername(username: string): Promise<boolean> {
@@ -66,5 +69,9 @@ export class UserService {
     await this.userRepository.insert({ id, username, nickname, password });
     this.logger.log(`A user has registered, username: ${username}, nickname: ${nickname}.`);
     return Result.Ok(await this.userRepository.findOneOrFail(id));
+  }
+
+  getChannelMembers(userId: string): Promise<Member[]> {
+    return this.memberRepository.find({ where: { userId }, relations: ['channel'] });
   }
 }

@@ -196,6 +196,7 @@ type Query {
   """Keep alive."""
   ping: Boolean!
   getMe: User
+  myChannels: [Members!]!
 
   """Get all channels."""
   channels: [Channel!]!

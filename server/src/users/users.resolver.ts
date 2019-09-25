@@ -7,6 +7,7 @@ import { GqlAuthGuard, GqlUserGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { TokenUserInfo } from '../auth/jwt.strategy';
 import { throwApolloError } from '../error';
+import { Member } from '../members/members.entity';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -57,5 +58,11 @@ export class UserResolver {
       return null;
     }
     return this.userService.findById(user.id);
+  }
+
+  @Query(() => [Member])
+  @UseGuards(GqlAuthGuard)
+  async myChannels(@CurrentUser() user: TokenUserInfo) {
+    return this.userService.getChannelMembers(user.id);
   }
 }

@@ -14,6 +14,7 @@ import { EventService } from '../events/events.service';
 import { throwApolloError } from '../error';
 
 @Resolver(() => Channel)
+@UseGuards(GqlUserGuard)
 export class ChannelResolver {
   private readonly logger = new Logger(ChannelService.name);
 
@@ -25,12 +26,11 @@ export class ChannelResolver {
   ) {}
 
   @ResolveProperty(() => [Message])
-  @UseGuards(GqlUserGuard)
   async messages(
     @Parent() channel: Channel,
-    @CurrentUser() user?: TokenUserInfo,
     @Args({ name: 'limit', type: () => Int, nullable: true }) limit?: number,
-    @Args({ name: 'after', type: () => ID, nullable: true }) after?: string
+    @Args({ name: 'after', type: () => ID, nullable: true }) after?: string,
+    @CurrentUser() user?: TokenUserInfo
   ) {
     const userId = user ? user.id : undefined;
     return throwApolloError(await this.channelService.getMessages(channel, userId, after, limit));

@@ -48,6 +48,7 @@ export class Channel {
   parentId!: string | null;
 
   @OneToMany(() => Channel, channel => channel.parent)
+  @Field(() => [Channel])
   children!: Promise<Channel[]>;
 
   @Column()

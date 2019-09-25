@@ -9,6 +9,7 @@ type Channel {
   isPublic: Boolean!
   parent: Channel
   parentId: ID
+  children: [Channel!]!
   name: String!
   topic: String!
   description: String!

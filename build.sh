@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 
-cd "$(dirname "$0")/" || exit
+set -e
 
-cd common/ || exit
+cd "$(dirname "$0")/"
+
+cd common/
+yarn install
 yarn build
 
-cd ../web || exit
+cd ../web
+yarn install
 yarn upgrade boluo-common --latest
 rm -rf .cache
 rm -rf dist
 yarn build
 
-cd ../server || exit
+cd ../server
+yarn install
 yarn upgrade boluo-common --latest
 rm -rf dist
 yarn build

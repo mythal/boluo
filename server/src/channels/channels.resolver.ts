@@ -3,7 +3,7 @@ import { Channel } from './channels.entity';
 import { ChannelService } from './channels.service';
 import { ID, Int } from 'type-graphql';
 import { Logger, UseGuards } from '@nestjs/common';
-import { GqlAuthGuard } from '../auth/auth.guard';
+import { GqlAuthGuard, GqlUserGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../decorators';
 import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Message } from '../messages/messages.entity';
@@ -25,12 +25,15 @@ export class ChannelResolver {
   ) {}
 
   @ResolveProperty(() => [Message])
+  @UseGuards(GqlUserGuard)
   async messages(
     @Parent() channel: Channel,
+    @CurrentUser() user?: TokenUserInfo,
     @Args({ name: 'limit', type: () => Int, nullable: true }) limit?: number,
     @Args({ name: 'after', type: () => ID, nullable: true }) after?: string
   ) {
-    return this.messageService.findByChannel(channel.id, after, limit);
+    const userId = user ? user.id : undefined;
+    return throwApolloError(await this.channelService.getMessages(channel, userId, after, limit));
   }
 
   @Query(() => [Channel], { description: 'Get all channels.' })
@@ -40,7 +43,7 @@ export class ChannelResolver {
 
   @Query(() => Channel, { nullable: true })
   async getChannelById(@Args({ name: 'id', type: () => ID }) id: string) {
-    return await this.channelService.findById(id);
+    return throwApolloError(await this.channelService.findById(id));
   }
 
   @Mutation(() => Channel)
@@ -48,12 +51,12 @@ export class ChannelResolver {
   async createChannel(
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'name', type: () => String }) name: string,
-    @Args({ name: 'title', type: () => String }) title: string,
     @Args({ name: 'isGame', type: () => Boolean, defaultValue: false }) isGame: boolean,
     @Args({ name: 'isPublic', type: () => Boolean, defaultValue: true }) isPublic: boolean,
-    @Args({ name: 'description', type: () => String, defaultValue: '' }) description: string
+    @Args({ name: 'description', type: () => String, defaultValue: '' }) description: string,
+    @Args({ name: 'parentId', type: () => ID, nullable: true }) parentId?: string
   ) {
-    return throwApolloError(await this.channelService.create(name, title, user.id, isGame, isPublic, description));
+    return throwApolloError(await this.channelService.create(name, user.id, isGame, isPublic, description, parentId));
   }
 
   @Mutation(() => Member, { nullable: true })
@@ -65,7 +68,7 @@ export class ChannelResolver {
   ) {
     userId = userId || user.id;
     this.messageService.joinMessage(channelId, userId, user.nickname).then(this.eventService.newMessage);
-    return throwApolloError(await this.memberService.addUserToChannel(user.id, userId, channelId));
+    return throwApolloError(await this.channelService.addUserToChannel(user.id, userId, channelId));
   }
 
   @Mutation(() => Boolean)
@@ -75,7 +78,7 @@ export class ChannelResolver {
     @Args({ name: 'channelId', type: () => ID }) channelId: string
   ) {
     this.messageService.leftMessage(channelId, user.id, user.nickname).then(this.eventService.newMessage);
-    return throwApolloError(await this.memberService.removeUserFromChannel(user.id, channelId));
+    return throwApolloError(await this.channelService.removeUserFromChannel(user.id, channelId));
   }
 
   @Mutation(() => Boolean)
@@ -87,5 +90,16 @@ export class ChannelResolver {
     await this.channelService.delete(channelId, user.id);
     await this.eventService.channelDeleted(channelId);
     return true;
+  }
+
+  @Mutation(() => Member)
+  @UseGuards(GqlAuthGuard)
+  async setAdmin(
+    @CurrentUser() user: TokenUserInfo,
+    @Args({ name: 'channelId', type: () => ID }) channelId: string,
+    @Args({ name: 'userId', type: () => ID }) userId: string,
+    @Args({ name: 'admin', type: () => Boolean }) admin: boolean
+  ) {
+    return throwApolloError(await this.channelService.setAdmin(channelId, user.id, userId, admin));
   }
 }

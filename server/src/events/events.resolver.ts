@@ -4,12 +4,13 @@ import { CurrentUser } from '../decorators';
 import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Logger, UseGuards } from '@nestjs/common';
 import { ChannelService } from '../channels/channels.service';
-import { ForbiddenError, UserInputError } from 'apollo-server-errors';
+import { ForbiddenError } from 'apollo-server-errors';
 import { MemberService } from '../members/members.service';
 import { ChannelEvent } from './ChannelEvent';
 import { EventService } from './events.service';
 import { pubSub } from './pubSub';
 import { GqlUserGuard } from '../auth/auth.guard';
+import { throwApolloError } from '../error';
 
 @Resolver(() => ChannelEvent)
 export class ChannelEventResolver {
@@ -27,14 +28,12 @@ export class ChannelEventResolver {
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @CurrentUser() user?: TokenUserInfo
   ) {
-    const channel = await this.channelService.findById(channelId);
-    if (!channel) {
-      throw new UserInputError('Attempt subscribe a channel that does not exist.');
-    } else if (!channel.isPublic) {
+    const channel = throwApolloError(await this.channelService.findById(channelId));
+    if (!channel.isPublic) {
       if (!user) {
         throw new ForbiddenError('You are not logged in');
       }
-      const member = this.memberService.findByChannelAndUser(channelId, user.id);
+      const member = this.channelService.getInheritedMember(channel, user.id);
       if (!member) {
         this.logger.warn(`[Forbidden] A user (${user.id}) attempt to subscribe a channel that they does not joined.`);
         throw new ForbiddenError('You are not a member of this channel.');

@@ -32,10 +32,6 @@ export class Member {
   @Field()
   joinDate!: Date;
 
-  @Column({ type: 'boolean', default: false })
-  @Field()
-  isMuted!: boolean;
-
   @Column({ default: '' })
   @Field()
   character!: string;

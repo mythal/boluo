@@ -23,6 +23,7 @@ export enum ChannelType {
 registerEnumType(ChannelType, { name: 'ChannelType' });
 
 @Entity('channels')
+@Index(['name', 'parentId'], { unique: true })
 @ObjectType('Channel')
 export class Channel {
   @PrimaryColumn({ type: 'uuid' })
@@ -37,14 +38,21 @@ export class Channel {
   @Field()
   isPublic!: boolean;
 
-  @Column()
-  @Index({ unique: true })
-  @Field()
-  name!: string;
+  @ManyToOne(() => Channel, channel => channel.children, { nullable: true })
+  @JoinColumn({ name: 'parentId' })
+  @Field(() => Channel, { nullable: true })
+  parent!: Promise<Channel> | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  @Field(() => ID, { nullable: true })
+  parentId!: string | null;
+
+  @OneToMany(() => Channel, channel => channel.parent)
+  children!: Promise<Channel[]>;
 
   @Column()
   @Field()
-  title!: string;
+  name!: string;
 
   @Column({ default: '' })
   @Field()

@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './messages.entity';
-import { MemberService } from '../members/members.service';
 import { checkMessage, checkName, Entity, generateId, MessageType, Result } from 'boluo-common';
 import { RandomService } from '../random/random.service';
 import { forbiddenError, inputError, ServiceResult } from '../error';
 import { MediaService } from '../media/media.service';
+import { ChannelService } from '../channels/channels.service';
 
 @Injectable()
 export class MessageService {
@@ -14,7 +14,7 @@ export class MessageService {
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
-    private readonly memberService: MemberService,
+    private readonly channelService: ChannelService,
     private readonly randomService: RandomService,
     private readonly mediaService: MediaService
   ) {}
@@ -103,7 +103,7 @@ export class MessageService {
     whisperTo: string[],
     mediaId?: string
   ): Promise<ServiceResult<Message>> {
-    const member = await this.memberService.findByChannelAndUser(channelId, senderId);
+    const member = await this.channelService.getMemberById(channelId, senderId);
     if (!member) {
       return Result.Err(forbiddenError('You are not a member of this channel.'));
     }
@@ -149,11 +149,12 @@ export class MessageService {
     if (!userId) {
       return false;
     }
-    const member = await this.memberService.findByChannelAndUser(message.channelId, userId);
-    if (!member) {
-      return false;
+    if (message.whisperTo.length > 0) {
+      if (message.senderId === userId || message.whisperTo.indexOf(userId) !== -1) {
+        return true;
+      }
     }
-    return member.isAdmin;
+    return await this.channelService.isAdmin(message.channelId, userId);
   }
 
   async checkMove(
@@ -175,8 +176,8 @@ export class MessageService {
     if (message.channelId !== target.channelId) {
       return Result.Err(inputError('Channels are different.'));
     }
-    const member = await this.memberService.findByChannelAndUser(message.channelId, operatorId);
-    if (!member || !member.isAdmin || message.senderId !== operatorId) {
+    const isAdmin = await this.channelService.isAdmin(message.channelId, operatorId);
+    if (message.senderId !== operatorId && !isAdmin) {
       return Result.Err(forbiddenError('No move authority'));
     }
     return Result.Ok({ message, target });
@@ -226,37 +227,13 @@ export class MessageService {
     return this.messageRepository.findOne(id, { where: { deleted: false } });
   }
 
-  async findByChannel(channelId: string, baseId?: string, limit: number = 128): Promise<Message[]> {
-    let order: [Date, number] | null = null;
-    if (baseId) {
-      const base = await this.messageRepository.findOneOrFail(baseId);
-      order = [base.orderDate, base.orderOffset];
-    }
-    let query = this.messageRepository
-      .createQueryBuilder('message')
-      .limit(limit)
-      .orderBy('message.orderDate', 'DESC')
-      .addOrderBy('message.orderOffset', 'ASC')
-      .where('message.channelId = :channelId', { channelId })
-      .andWhere('message.deleted = false')
-      .leftJoinAndSelect('message.media', 'media');
-    if (order) {
-      const [date, offset] = order;
-      query = query.andWhere(
-        'message.orderDate < :date OR (message.orderDate = :date AND message.orderOffset < :offset)',
-        { date, offset }
-      );
-    }
-    return query.getMany();
-  }
-
   async deleteMessage(operatorId: string, messageId: string): Promise<ServiceResult<Message>> {
     const message = await this.findById(messageId);
     if (!message) {
       return Result.Err(inputError('No message found'));
     }
-    const member = await this.memberService.findByChannelAndUser(message.channelId, operatorId);
-    if (message.senderId !== operatorId && !(member && member.isAdmin)) {
+    const isAdmin = await this.channelService.isAdmin(message.channelId, operatorId);
+    if (message.senderId !== operatorId && !isAdmin) {
       return Result.Err(forbiddenError('No delete authority'));
     }
     await this.messageRepository.update(messageId, { deleted: true });
@@ -268,8 +245,8 @@ export class MessageService {
     if (!message) {
       return Result.Err(inputError('No message found'));
     }
-    const member = await this.memberService.findByChannelAndUser(message.channelId, operatorId);
-    if (message.senderId !== operatorId && !(member && member.isAdmin)) {
+    const isAdmin = await this.channelService.isAdmin(message.channelId, operatorId);
+    if (message.senderId !== operatorId && !isAdmin) {
       return Result.Err(forbiddenError('No editing authority'));
     }
     await this.messageRepository.update(messageId, { crossOff });

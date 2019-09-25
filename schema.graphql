@@ -7,8 +7,9 @@ type Channel {
   id: ID!
   type: ChannelType!
   isPublic: Boolean!
+  parent: Channel
+  parentId: ID
   name: String!
-  title: String!
   topic: String!
   description: String!
   created: Date!
@@ -85,7 +86,6 @@ type Members {
   channelId: ID!
   isAdmin: Boolean!
   joinDate: Date!
-  isMuted: Boolean!
   character: String!
   isOnline: Boolean!
 }
@@ -168,10 +168,11 @@ type Mutation {
 
   """Keep alive."""
   ping: Boolean!
-  createChannel(description: String = "", isPublic: Boolean = true, isGame: Boolean = false, title: String!, name: String!): Channel!
+  createChannel(parentId: ID, description: String = "", isPublic: Boolean = true, isGame: Boolean = false, name: String!): Channel!
   joinChannel(userId: ID, channelId: ID!): Members
   quitChannel(channelId: ID!): Boolean!
   deleteChannel(channelId: ID!): Boolean!
+  setAdmin(admin: Boolean!, userId: ID!, channelId: ID!): Members!
 }
 
 type PreviewMessage {

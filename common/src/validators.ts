@@ -42,22 +42,12 @@ export function checkPassword(password: string): ValidatorResult {
 }
 
 export function checkChannelName(name: string): ValidatorResult {
-  if (!/^[\w_\d]+$/.test(name)) {
-    return Err('Channel name can only contain letters, "_" and numbers.');
-  } else if (name.length < 3) {
-    return Err('Channel name must be at least 3 characters.');
+  if (name.length < 2) {
+    return Err('Channel name must be at least 2 characters.');
   } else if (name.length > 32) {
-    return Err('Channel name must be at least 3 characters.');
-  }
-  return ok;
-}
-
-export function checkChannelTitle(title: string): ValidatorResult {
-  const TITLE_MAX_CHARACTERS = 24;
-  if (title.length === 0) {
-    return Err('Empty title.');
-  } else if (title.length > TITLE_MAX_CHARACTERS) {
-    return Err(`Title must be less than ${TITLE_MAX_CHARACTERS} characters.`);
+    return Err('Channel name must be at most 32 characters.');
+  } else if (name.match(/\s/)) {
+    return Err('Channel name cannot contain spaces.');
   }
   return ok;
 }

@@ -20,7 +20,6 @@ export { parse, Env, ParseResult } from './parser';
 export {
   checkName,
   checkMessage,
-  checkChannelTitle,
   checkChannelName,
   checkPassword,
   checkUsername,

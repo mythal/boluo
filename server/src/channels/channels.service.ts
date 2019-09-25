@@ -187,7 +187,7 @@ export class ChannelService {
     if (!member) {
       return Result.Err(inputError('This user is not joined this channel.'));
     }
-    await this.memberRepository.update(member, { isAdmin });
+    await this.memberRepository.update({ channelId, userId }, { isAdmin });
     member.isAdmin = isAdmin;
     return Result.Ok(member);
   }

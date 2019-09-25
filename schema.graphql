@@ -39,8 +39,13 @@ enum ChannelType {
 }
 
 type Content {
+  """Message plain text."""
   text: String!
+
+  """Message rich text entities."""
   entities: [JSONObject!]!
+
+  """Random seed."""
   seed: Int!
 }
 
@@ -113,29 +118,17 @@ type Message {
 
   """If the list is not empty, it represents this is a whisper message."""
   whisperTo: [ID!]!
-
-  """
-  Message plain text. If this message is not public, the string is always empty.
-  """
-  text: String!
-
-  """
-  Message rich text entities. If this message is not public, the list is always empty
-  """
-  entities: [JSONObject!]!
   media: Media
   mediaId: ID
   parent: ID
   parentId: ID
   crossOff: Boolean!
-
-  """Random seed. If this message is not public, the seed is always 0."""
-  seed: Int!
   created: Date!
   orderDate: Date!
   orderOffset: Int!
   modified: Date!
   editDate: Date
+  content: Content
 }
 
 enum MessageType {
@@ -189,7 +182,6 @@ type PreviewMessage {
 
 type Query {
   getMessageById(id: ID!): Message!
-  actuallyContent(id: ID!): Content
   getUserById(id: ID!): User
   getUserByUsername(username: String!): User
 

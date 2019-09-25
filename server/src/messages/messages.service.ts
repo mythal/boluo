@@ -7,6 +7,7 @@ import { RandomService } from '../random/random.service';
 import { forbiddenError, inputError, ServiceResult } from '../error';
 import { MediaService } from '../media/media.service';
 import { ChannelService } from '../channels/channels.service';
+import { Content } from './Content';
 
 @Injectable()
 export class MessageService {
@@ -18,6 +19,21 @@ export class MessageService {
     private readonly randomService: RandomService,
     private readonly mediaService: MediaService
   ) {}
+
+  async content(message: Message, userId: string | null): Promise<Content | null> {
+    if (message.isPublic()) {
+      return message.content();
+    } else if (!userId) {
+      return null;
+    }
+    if (message.whisperTo.length > 0) {
+      if (message.senderId === userId || message.whisperTo.indexOf(userId) !== -1) {
+        return message.content();
+      }
+    }
+    const isAdmin = await this.channelService.isAdmin(message.channelId, userId);
+    return isAdmin ? message.content() : null;
+  }
 
   async editMessage(
     messageId: string,
@@ -140,21 +156,6 @@ export class MessageService {
       mediaId,
     });
     return Result.Ok(await this.messageRepository.findOneOrFail(id));
-  }
-
-  async canRead(message: Message, userId: string | null): Promise<boolean> {
-    if (!message.isHidden && message.whisperTo.length === 0) {
-      return true;
-    }
-    if (!userId) {
-      return false;
-    }
-    if (message.whisperTo.length > 0) {
-      if (message.senderId === userId || message.whisperTo.indexOf(userId) !== -1) {
-        return true;
-      }
-    }
-    return await this.channelService.isAdmin(message.channelId, userId);
   }
 
   async checkMove(

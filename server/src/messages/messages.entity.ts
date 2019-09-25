@@ -11,9 +11,9 @@ import {
 import { User } from '../users/users.entity';
 import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
-import { GraphQLJSONObject } from 'graphql-type-json';
 import { Entity as MessageEntity, MessageType } from 'boluo-common';
 import { Media } from '../media/media.entity';
+import { Content } from './Content';
 
 registerEnumType(MessageType, { name: 'MessageType' });
 
@@ -80,13 +80,9 @@ export class Message {
   whisperTo!: string[];
 
   @Column({ type: 'text' })
-  @Field({ description: 'Message plain text. If this message is not public, the string is always empty.' })
   text!: string;
 
   @Column({ type: 'jsonb', default: [] })
-  @Field(() => GraphQLJSONObject, {
-    description: 'Message rich text entities. If this message is not public, the list is always empty',
-  })
   entities!: MessageEntity[];
 
   @ManyToOne(() => Media, { nullable: true, eager: true, onDelete: 'SET NULL' })
@@ -118,7 +114,6 @@ export class Message {
   deleted!: boolean;
 
   @Column({ type: 'integer', default: 0 })
-  @Field(() => Int, { description: 'Random seed. If this message is not public, the seed is always 0.' })
   seed!: number;
 
   @CreateDateColumn()
@@ -143,5 +138,9 @@ export class Message {
 
   isPublic() {
     return !this.isHidden && this.whisperTo.length === 0;
+  }
+
+  content() {
+    return new Content(this.text, this.entities, this.seed);
   }
 }

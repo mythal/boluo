@@ -1,13 +1,13 @@
 import { Args, Mutation, Query, ResolveProperty, Resolver, Root } from '@nestjs/graphql';
 import { Message } from './messages.entity';
 import { MessageService } from './messages.service';
-import { Field, ID, Int, ObjectType } from 'type-graphql';
+import { ID } from 'type-graphql';
 import { CurrentUser } from '../decorators';
 import { TokenUserInfo } from '../auth/jwt.strategy';
 import { Logger, UseGuards } from '@nestjs/common';
 import { GraphQLJSONObject } from 'graphql-type-json';
-import { GqlAuthGuard } from '../auth/auth.guard';
-import { ForbiddenError, UserInputError } from 'apollo-server-express';
+import { GqlAuthGuard, GqlUserGuard } from '../auth/auth.guard';
+import { UserInputError } from 'apollo-server-express';
 import { checkName, Entity as MessageEntity, generateId, parse, Result } from 'boluo-common';
 import { PreviewMessage } from './PreviewMessage';
 import { EventService } from '../events/events.service';
@@ -15,24 +15,7 @@ import { MemberService } from '../members/members.service';
 import { MediaService } from '../media/media.service';
 import { Media } from '../media/media.entity';
 import { throwApolloError } from '../error';
-
-@ObjectType()
-class Content {
-  @Field()
-  text: string;
-
-  @Field(() => GraphQLJSONObject)
-  entities: MessageEntity[];
-
-  @Field(() => Int)
-  seed: number;
-
-  constructor(text: string, entities: MessageEntity[], seed: number) {
-    this.text = text;
-    this.entities = entities;
-    this.seed = seed;
-  }
-}
+import { Content } from './Content';
 
 @Resolver(() => Message)
 export class MessageResolver {
@@ -50,35 +33,10 @@ export class MessageResolver {
     return await this.messageService.findById(id);
   }
 
-  @ResolveProperty(() => String)
-  async text(@Root() message: Message) {
-    return message.isPublic() ? message.text : '';
-  }
-
-  @ResolveProperty(() => GraphQLJSONObject)
-  async entities(@Root() message: Message) {
-    return message.isPublic() ? message.entities : [];
-  }
-
-  @ResolveProperty(() => Number)
-  async seed(@Root() message: Message) {
-    return message.isPublic() ? message.seed : 0;
-  }
-
-  @Query(() => Content, { nullable: true })
-  @UseGuards(GqlAuthGuard)
-  async actuallyContent(@Args({ name: 'id', type: () => ID }) id: string, @CurrentUser() user: TokenUserInfo) {
-    const message = await this.messageService.findById(id);
-    if (!message) {
-      throw new UserInputError('No message found');
-    }
-    const content = new Content(message.text, message.entities, message.seed);
-    if (await this.messageService.canRead(message, user.id)) {
-      return content;
-    } else {
-      this.logger.warn(`A user (${user.id}) tried to read non-public message.`);
-      throw new ForbiddenError('No permission to view.');
-    }
+  @ResolveProperty(() => Content, { nullable: true })
+  @UseGuards(GqlUserGuard)
+  async content(@Root() message: Message, @CurrentUser() user?: TokenUserInfo) {
+    return this.messageService.content(message, user ? user.id : null);
   }
 
   @Mutation(() => Message, { nullable: true })

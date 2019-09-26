@@ -103,12 +103,12 @@ export class ChannelService {
     return root.ownerId === userId;
   }
 
-  async isAdmin(channelId: string, userId: string): Promise<boolean> {
+  async isMaster(channelId: string, userId: string): Promise<boolean> {
     const member = await this.memberRepository.findOne({ where: { userId, channelId } });
     if (!member) {
       return false;
     }
-    return member.isAdmin;
+    return member.isMaster;
   }
 
   async delete(channelId: string, operatorId: string): Promise<ServiceResult<undefined>> {
@@ -157,22 +157,22 @@ export class ChannelService {
       if (!member) {
         return Result.Err(forbiddenError('You are not a member of the parent channel.'));
       }
-      if (!member.isAdmin) {
-        return Result.Err(forbiddenError('Only admin can create sub-channel.'));
+      if (!member.isMaster) {
+        return Result.Err(forbiddenError('Only master can create sub-channel.'));
       }
     }
     const type = isGame ? ChannelType.Game : ChannelType.Discuss;
     await this.channelRepository.insert({ id, ownerId, name, type, isPublic, description, parentId });
     this.logger.log(`A channel #${name} has been created.`);
-    await this.memberRepository.insert({ channelId: id, userId: ownerId, isAdmin: false });
+    await this.memberRepository.insert({ channelId: id, userId: ownerId, isMaster: false });
     return Result.Ok(await this.channelRepository.findOneOrFail(id));
   }
 
-  async setAdmin(
+  async setMaster(
     channelId: string,
     operatorId: string,
     userId: string,
-    isAdmin: boolean
+    isMaster: boolean
   ): Promise<ServiceResult<Member>> {
     const channelResult = await this.findById(channelId);
     if (Result.isErr(channelResult)) {
@@ -181,14 +181,14 @@ export class ChannelService {
     const channel = channelResult.some;
     const isOwner = await this.hasOwnerPermission(channel, operatorId);
     if (!isOwner) {
-      return Result.Err(forbiddenError("Forbidden: You can't grant an admin"));
+      return Result.Err(forbiddenError("Forbidden: You can't grant a master"));
     }
     const member = await this.memberRepository.findOne({ where: { channelId, userId } });
     if (!member) {
       return Result.Err(inputError('This user is not joined this channel.'));
     }
-    await this.memberRepository.update({ channelId, userId }, { isAdmin });
-    member.isAdmin = isAdmin;
+    await this.memberRepository.update({ channelId, userId }, { isMaster });
+    member.isMaster = isMaster;
     return Result.Ok(member);
   }
 
@@ -210,7 +210,7 @@ export class ChannelService {
     const channel = channelResult.some;
 
     const operatorMember = await this.memberRepository.findOne({ where: { channelId, userId: operatorId } });
-    if (!channel.isPublic && !(operatorMember && operatorMember.isAdmin)) {
+    if (!channel.isPublic && !(operatorMember && operatorMember.isMaster)) {
       this.logger.warn(`Forbidden: A user (${userId}) tried to join a private channel.`);
       return Result.Err(forbiddenError('Cannot join this channel.'));
     }
@@ -218,7 +218,7 @@ export class ChannelService {
     const member = this.memberRepository.create({
       userId,
       channelId,
-      isAdmin: false,
+      isMaster: false,
     });
     await this.memberRepository.save(member);
     return Result.Ok(await this.memberRepository.findOneOrFail({ where: { userId, channelId } }));

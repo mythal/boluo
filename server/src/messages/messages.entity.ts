@@ -55,17 +55,8 @@ export class Message {
   isAction!: boolean;
 
   @Column({ type: 'boolean', default: false })
-  @Field(() => Boolean, { description: 'Empty massage mark the member has joined.' })
   @Field()
-  isJoin!: boolean;
-
-  @Column({ type: 'boolean', default: false })
-  @Field(() => Boolean, { description: 'Empty massage mark the member has left.' })
-  isLeave!: boolean;
-
-  @Column({ type: 'boolean', default: false })
-  @Field()
-  isGm!: boolean;
+  isMaster!: boolean;
 
   @Column({ type: 'boolean', default: false })
   @Field()

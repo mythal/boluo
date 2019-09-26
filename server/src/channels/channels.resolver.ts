@@ -94,12 +94,12 @@ export class ChannelResolver {
 
   @Mutation(() => Member)
   @UseGuards(GqlAuthGuard)
-  async setAdmin(
+  async setMaster(
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'userId', type: () => ID }) userId: string,
-    @Args({ name: 'admin', type: () => Boolean }) admin: boolean
+    @Args({ name: 'master', type: () => Boolean }) master: boolean
   ) {
-    return throwApolloError(await this.channelService.setAdmin(channelId, user.id, userId, admin));
+    return throwApolloError(await this.channelService.setMaster(channelId, user.id, userId, master));
   }
 }

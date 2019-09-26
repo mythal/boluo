@@ -31,8 +31,8 @@ export class MessageService {
         return message.content();
       }
     }
-    const isAdmin = await this.channelService.isAdmin(message.channelId, userId);
-    return isAdmin ? message.content() : null;
+    const isMaster = await this.channelService.isMaster(message.channelId, userId);
+    return isMaster ? message.content() : null;
   }
 
   async editMessage(
@@ -84,7 +84,7 @@ export class MessageService {
       channelId,
       name,
       senderId,
-      isGm: false,
+      isMaster: false,
       seed: this.randomService.genRandom(),
       type: MessageType.Left,
     });
@@ -100,7 +100,7 @@ export class MessageService {
       channelId,
       name,
       senderId,
-      isGm: false,
+      isMaster: false,
       seed: this.randomService.genRandom(),
       type: MessageType.Joined,
     });
@@ -140,7 +140,7 @@ export class MessageService {
     }
     const type = isOOC ? MessageType.OOC : MessageType.Say;
     const seed = this.randomService.genRandom();
-    const isGm = member.isAdmin;
+    const isMaster = member.isMaster;
     await this.messageRepository.insert({
       id,
       text,
@@ -148,7 +148,7 @@ export class MessageService {
       channelId,
       name,
       senderId,
-      isGm,
+      isMaster,
       seed,
       isHidden,
       whisperTo,
@@ -177,8 +177,8 @@ export class MessageService {
     if (message.channelId !== target.channelId) {
       return Result.Err(inputError('Channels are different.'));
     }
-    const isAdmin = await this.channelService.isAdmin(message.channelId, operatorId);
-    if (message.senderId !== operatorId && !isAdmin) {
+    const isMaster = await this.channelService.isMaster(message.channelId, operatorId);
+    if (message.senderId !== operatorId && !isMaster) {
       return Result.Err(forbiddenError('No move authority'));
     }
     return Result.Ok({ message, target });
@@ -233,8 +233,8 @@ export class MessageService {
     if (!message) {
       return Result.Err(inputError('No message found'));
     }
-    const isAdmin = await this.channelService.isAdmin(message.channelId, operatorId);
-    if (message.senderId !== operatorId && !isAdmin) {
+    const isMaster = await this.channelService.isMaster(message.channelId, operatorId);
+    if (message.senderId !== operatorId && !isMaster) {
       return Result.Err(forbiddenError('No delete authority'));
     }
     await this.messageRepository.update(messageId, { deleted: true });
@@ -246,8 +246,8 @@ export class MessageService {
     if (!message) {
       return Result.Err(inputError('No message found'));
     }
-    const isAdmin = await this.channelService.isAdmin(message.channelId, operatorId);
-    if (message.senderId !== operatorId && !isAdmin) {
+    const isMaster = await this.channelService.isMaster(message.channelId, operatorId);
+    if (message.senderId !== operatorId && !isMaster) {
       return Result.Err(forbiddenError('No editing authority'));
     }
     await this.messageRepository.update(messageId, { crossOff });

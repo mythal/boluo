@@ -26,7 +26,7 @@ export class Member {
 
   @Column({ type: 'boolean', default: false })
   @Field()
-  isAdmin!: boolean;
+  isMaster!: boolean;
 
   @CreateDateColumn()
   @Field()

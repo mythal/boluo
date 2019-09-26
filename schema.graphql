@@ -90,7 +90,7 @@ type Members {
   userId: ID!
   channel: Channel!
   channelId: ID!
-  isAdmin: Boolean!
+  isMaster: Boolean!
   joinDate: Date!
   character: String!
   isOnline: Boolean!
@@ -107,13 +107,7 @@ type Message {
 
   """Whether this message represents an action."""
   isAction: Boolean!
-
-  """Empty massage mark the member has joined."""
-  isJoin: Boolean!
-
-  """Empty massage mark the member has left."""
-  isLeave: Boolean!
-  isGm: Boolean!
+  isMaster: Boolean!
   isPinned: Boolean!
   isHidden: Boolean!
 
@@ -166,7 +160,7 @@ type Mutation {
   joinChannel(userId: ID, channelId: ID!): Members
   quitChannel(channelId: ID!): Boolean!
   deleteChannel(channelId: ID!): Boolean!
-  setAdmin(admin: Boolean!, userId: ID!, channelId: ID!): Members!
+  setMaster(master: Boolean!, userId: ID!, channelId: ID!): Members!
 }
 
 type PreviewMessage {

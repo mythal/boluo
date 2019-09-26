@@ -26,9 +26,14 @@ export interface Emphasis extends BaseEntity {
   type: 'Emphasis';
 }
 
+export interface EntityUser {
+  id: string;
+  name: string;
+}
+
 export interface Mention extends BaseEntity {
   type: 'Mention';
-  userId: string;
+  user: EntityUser;
   self?: boolean;
 }
 

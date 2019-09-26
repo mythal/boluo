@@ -113,6 +113,7 @@ type Message {
 
   """If the list is not empty, it represents this is a whisper message."""
   whisperTo: [ID!]!
+  metadata: JSONObject
   media: Media
   mediaId: ID
   parent: ID
@@ -129,8 +130,7 @@ type Message {
 enum MessageType {
   Say
   OOC
-  Joined
-  Left
+  System
 }
 
 type Mutation {
@@ -157,10 +157,10 @@ type Mutation {
   """Keep alive."""
   ping: Boolean!
   createChannel(parentId: ID, description: String = "", isPublic: Boolean = true, isGame: Boolean = false, name: String!): Channel!
-  joinChannel(userId: ID, channelId: ID!): Members
-  quitChannel(channelId: ID!): Boolean!
+  addChannelMember(userId: ID, channelId: ID!): Members
+  leaveChannel(channelId: ID!): Boolean!
   deleteChannel(channelId: ID!): Boolean!
-  setMaster(master: Boolean!, userId: ID!, channelId: ID!): Members!
+  setChannelMaster(master: Boolean!, userId: ID!, channelId: ID!): Members!
 }
 
 type PreviewMessage {

@@ -56,29 +56,30 @@ export class ChannelResolver {
     @Args({ name: 'description', type: () => String, defaultValue: '' }) description: string,
     @Args({ name: 'parentId', type: () => ID, nullable: true }) parentId?: string
   ) {
-    return throwApolloError(await this.channelService.create(name, user.id, isGame, isPublic, description, parentId));
+    const create = this.channelService.create(name, user.id, user.nickname, isGame, isPublic, description, parentId);
+    return throwApolloError(await create);
   }
 
   @Mutation(() => Member, { nullable: true })
   @UseGuards(GqlAuthGuard)
-  async joinChannel(
+  async addChannelMember(
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'userId', type: () => ID, nullable: true }) userId?: string
   ) {
     userId = userId || user.id;
-    this.messageService.joinMessage(channelId, userId, user.nickname).then(this.eventService.newMessage);
-    return throwApolloError(await this.channelService.addUserToChannel(user.id, userId, channelId));
+    const addMember = this.channelService.addMember(channelId, user.id, user.nickname, userId);
+    return throwApolloError(await addMember);
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async quitChannel(
+  async leaveChannel(
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string
   ) {
-    this.messageService.leftMessage(channelId, user.id, user.nickname).then(this.eventService.newMessage);
-    return throwApolloError(await this.channelService.removeUserFromChannel(user.id, channelId));
+    const leaveChannel = this.channelService.leave(channelId, user.id, user.nickname);
+    return throwApolloError(await leaveChannel);
   }
 
   @Mutation(() => Boolean)
@@ -94,12 +95,13 @@ export class ChannelResolver {
 
   @Mutation(() => Member)
   @UseGuards(GqlAuthGuard)
-  async setMaster(
+  async setChannelMaster(
     @CurrentUser() user: TokenUserInfo,
     @Args({ name: 'channelId', type: () => ID }) channelId: string,
     @Args({ name: 'userId', type: () => ID }) userId: string,
     @Args({ name: 'master', type: () => Boolean }) master: boolean
   ) {
-    return throwApolloError(await this.channelService.setMaster(channelId, user.id, userId, master));
+    const setMaster = this.channelService.setMaster(channelId, user.id, user.nickname, userId, master);
+    return throwApolloError(await setMaster);
   }
 }

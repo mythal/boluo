@@ -11,9 +11,10 @@ import {
 import { User } from '../users/users.entity';
 import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { Channel } from '../channels/channels.entity';
-import { Entity as MessageEntity, MessageType } from 'boluo-common';
+import { Entity as MessageEntity, MessageType, Metadata } from 'boluo-common';
 import { Media } from '../media/media.entity';
 import { Content } from './Content';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 registerEnumType(MessageType, { name: 'MessageType' });
 
@@ -75,6 +76,10 @@ export class Message {
 
   @Column({ type: 'jsonb', default: [] })
   entities!: MessageEntity[];
+
+  @Column({ type: 'jsonb', nullable: true })
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  metadata!: Metadata | null;
 
   @ManyToOne(() => Media, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'mediaId' })

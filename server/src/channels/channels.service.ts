@@ -2,10 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Channel, ChannelType } from './channels.entity';
-import { checkChannelName, generateId, Result } from 'boluo-common';
+import {
+  checkChannelName,
+  EntityUser,
+  generateId,
+  MemberJoined,
+  MemberLeft,
+  MessageType,
+  NewMaster,
+  NewSubChannel,
+  Result,
+} from 'boluo-common';
 import { forbiddenError, inputError, ServiceResult } from '../error';
 import { Member } from '../members/members.entity';
 import { Message } from '../messages/messages.entity';
+import { EventService } from '../events/events.service';
 
 @Injectable()
 export class ChannelService {
@@ -19,7 +30,9 @@ export class ChannelService {
     private readonly memberRepository: Repository<Member>,
 
     @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>
+    private readonly messageRepository: Repository<Message>,
+
+    private readonly eventService: EventService
   ) {}
 
   findAll(): Promise<Channel[]> {
@@ -129,6 +142,7 @@ export class ChannelService {
   async create(
     name: string,
     ownerId: string,
+    ownerName: string,
     isGame: boolean = false,
     isPublic: boolean = false,
     description: string = '',
@@ -165,12 +179,16 @@ export class ChannelService {
     await this.channelRepository.insert({ id, ownerId, name, type, isPublic, description, parentId });
     this.logger.log(`A channel #${name} has been created.`);
     await this.memberRepository.insert({ channelId: id, userId: ownerId, isMaster: false });
+    if (parentId) {
+      this.newSubChannelMessage(parentId, ownerId, ownerName, id, name);
+    }
     return Result.Ok(await this.channelRepository.findOneOrFail(id));
   }
 
   async setMaster(
     channelId: string,
     operatorId: string,
+    operatorName: string,
     userId: string,
     isMaster: boolean
   ): Promise<ServiceResult<Member>> {
@@ -179,29 +197,54 @@ export class ChannelService {
       return channelResult;
     }
     const channel = channelResult.some;
-    const isOwner = await this.hasOwnerPermission(channel, operatorId);
-    if (!isOwner) {
+    if (!(await this.hasOwnerPermission(channel, operatorId))) {
       return Result.Err(forbiddenError("Forbidden: You can't grant a master"));
     }
-    const member = await this.memberRepository.findOne({ where: { channelId, userId } });
+    const member = await this.memberRepository.findOne({
+      where: { channelId, userId },
+      relations: ['user'],
+    });
     if (!member) {
       return Result.Err(inputError('This user is not joined this channel.'));
     }
+
+    if (isMaster === member.isMaster) {
+      return Result.Ok(member);
+    }
+
+    const user = await member.user;
     await this.memberRepository.update({ channelId, userId }, { isMaster });
     member.isMaster = isMaster;
+    if (isMaster) {
+      this.newMasterMessage(channelId, operatorId, operatorName, userId, user.nickname);
+    }
     return Result.Ok(member);
   }
 
-  async removeUserFromChannel(userId: string, channelId: string): Promise<ServiceResult<boolean>> {
+  async leave(channelId: string, userId: string, userName: string): Promise<ServiceResult<boolean>> {
+    const result = await this.removeUserFromChannel(channelId, userId);
+    if (result) {
+      this.leftMessage(channelId, userId, userName);
+    }
+    this.leftMessage(channelId, userId, userName);
+    return Result.Ok(result);
+  }
+
+  async removeUserFromChannel(channelId: string, userId: string): Promise<boolean> {
     const result = await this.memberRepository.delete({ userId, channelId });
     if (result.affected) {
-      return Result.Ok(result.affected > 0);
+      return result.affected > 0;
     } else {
-      return Result.Ok(false);
+      return false;
     }
   }
 
-  async addUserToChannel(operatorId: string, userId: string, channelId: string): Promise<ServiceResult<Member>> {
+  async addMember(
+    channelId: string,
+    operatorId: string,
+    operatorName: string,
+    userId: string
+  ): Promise<ServiceResult<Member>> {
     const channelResult = await this.findById(channelId);
 
     if (Result.isErr(channelResult)) {
@@ -209,18 +252,117 @@ export class ChannelService {
     }
     const channel = channelResult.some;
 
-    const operatorMember = await this.memberRepository.findOne({ where: { channelId, userId: operatorId } });
-    if (!channel.isPublic && !(operatorMember && operatorMember.isMaster)) {
-      this.logger.warn(`Forbidden: A user (${userId}) tried to join a private channel.`);
-      return Result.Err(forbiddenError('Cannot join this channel.'));
+    if (!channel.isPublic && !(await this.hasOwnerPermission(channel, operatorId))) {
+      const operator = await this.memberRepository.findOne({ where: { channelId, userId: operatorId } });
+      if (!operator || !operator.isMaster) {
+        this.logger.warn(`Forbidden: A user (${operatorId}) tried to join a private channel.`);
+        return Result.Err(forbiddenError('Cannot join this channel.'));
+      }
     }
-
-    const member = this.memberRepository.create({
+    await this.memberRepository.insert({
       userId,
       channelId,
       isMaster: false,
     });
-    await this.memberRepository.save(member);
-    return Result.Ok(await this.memberRepository.findOneOrFail({ where: { userId, channelId } }));
+    const member = await this.memberRepository.findOneOrFail({
+      where: { userId, channelId },
+      relations: ['user'],
+    });
+    const user = await member.user;
+    this.joinMessage(channelId, userId, user.nickname, operatorId, operatorName);
+    return Result.Ok(member);
+  }
+
+  async joinMessage(channelId: string, userId: string, userName: string, operatorId: string, operatorName: string) {
+    const id = generateId();
+    const user: EntityUser = { id: userId, name: userName };
+    const operator: EntityUser = { id: operatorId, name: operatorName };
+    const metadata: MemberJoined = { type: 'MemberJoined', user, operator };
+    await this.messageRepository.insert({
+      id,
+      text: `${user.name} joined the channel`,
+      entities: [],
+      metadata,
+      channelId,
+      name: operator.name,
+      senderId: operator.id,
+      isMaster: false,
+      seed: 0,
+      type: MessageType.System,
+    });
+    const message = await this.messageRepository.findOneOrFail(id);
+    await this.eventService.newMessage(message);
+  }
+
+  async leftMessage(channelId: string, userId: string, userName: string) {
+    const id = generateId();
+    const user: EntityUser = { id: userId, name: userName };
+    const metadata: MemberLeft = { type: 'MemberLeft', user };
+    await this.messageRepository.insert({
+      id,
+      text: `${userName} has left`,
+      entities: [],
+      metadata,
+      channelId,
+      name: userName,
+      senderId: userId,
+      isMaster: false,
+      seed: 0,
+      type: MessageType.System,
+    });
+    const message = await this.messageRepository.findOneOrFail(id);
+    await this.eventService.newMessage(message);
+  }
+
+  async newMasterMessage(
+    channelId: string,
+    operatorId: string,
+    operatorName: string,
+    userId: string,
+    userName: string
+  ) {
+    const id = generateId();
+    const user: EntityUser = { id: userId, name: userName };
+    const metadata: NewMaster = { type: 'NewMaster', user };
+    await this.messageRepository.insert({
+      id,
+      text: `${userName} has been set as master`,
+      entities: [],
+      metadata,
+      channelId,
+      name: operatorName,
+      senderId: operatorId,
+      isMaster: false,
+      seed: 0,
+      type: MessageType.System,
+    });
+    const message = await this.messageRepository.findOneOrFail(id);
+    await this.eventService.newMessage(message);
+  }
+
+  async newSubChannelMessage(
+    channelId: string,
+    operatorId: string,
+    operatorName: string,
+    subChannelId: string,
+    subChannelName: string
+  ) {
+    const id = generateId();
+    const owner: EntityUser = { id: operatorId, name: operatorName };
+    const metadata: NewSubChannel = { type: 'NewSubChannel', id: subChannelId, name: subChannelName, owner };
+    await this.messageRepository.insert({
+      id,
+      text: `A sub-channel #${subChannelName} is created`,
+      entities: [],
+      metadata,
+      channelId,
+      name: operatorName,
+      senderId: operatorId,
+      isMaster: false,
+      seed: 0,
+      type: MessageType.System,
+    });
+    const message = await this.messageRepository.findOneOrFail(id);
+    await this.eventService.newMessage(message);
   }
 }

@@ -15,6 +15,7 @@ export {
   Roll,
   Binary,
   Num,
+  EntityUser,
 } from './entities';
 export { parse, Env, ParseResult } from './parser';
 export {
@@ -25,3 +26,4 @@ export {
   checkUsername,
   checkEmailFormat,
 } from './validators';
+export { Metadata, MemberLeft, MemberJoined, NewMaster, NewSubChannel } from './metadata';

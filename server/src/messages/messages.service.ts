@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './messages.entity';
-import { checkMessage, checkName, Entity, generateId, MessageType, Result } from 'boluo-common';
+import { checkMessage, checkName, Entity, MessageType, Result } from 'boluo-common';
 import { RandomService } from '../random/random.service';
 import { forbiddenError, inputError, ServiceResult } from '../error';
 import { MediaService } from '../media/media.service';
@@ -73,38 +73,6 @@ export class MessageService {
     const editDate = new Date();
     await this.messageRepository.update(messageId, { type, text, entities, name, editDate });
     return Result.Ok(await this.messageRepository.findOneOrFail(messageId));
-  }
-
-  async leftMessage(channelId: string, senderId: string, name: string): Promise<Message> {
-    const id = generateId();
-    await this.messageRepository.insert({
-      id,
-      text: '',
-      entities: [],
-      channelId,
-      name,
-      senderId,
-      isMaster: false,
-      seed: this.randomService.genRandom(),
-      type: MessageType.Left,
-    });
-    return this.messageRepository.findOneOrFail(id);
-  }
-
-  async joinMessage(channelId: string, senderId: string, name: string) {
-    const id = generateId();
-    await this.messageRepository.insert({
-      id,
-      text: '',
-      entities: [],
-      channelId,
-      name,
-      senderId,
-      isMaster: false,
-      seed: this.randomService.genRandom(),
-      type: MessageType.Joined,
-    });
-    return this.messageRepository.findOneOrFail(id);
   }
 
   async send(

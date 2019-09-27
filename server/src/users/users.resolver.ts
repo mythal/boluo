@@ -23,6 +23,13 @@ export class UserResolver {
     return await this.userService.findByUsername(username);
   }
 
+  @Mutation(() => User)
+  @UseGuards(GqlAuthGuard)
+  async setAvatar(@CurrentUser() user: TokenUserInfo, @Args({ name: 'mediaId', type: () => ID }) mediaId: string) {
+    const setAvatar = this.userService.setAvatar(user.id, mediaId);
+    return throwApolloError(await setAvatar);
+  }
+
   @Mutation(() => User, { nullable: false })
   async register(
     @Args('username') username: string,

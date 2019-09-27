@@ -9,6 +9,7 @@ import { RedisService } from '../redis/redis.service';
 import { KEEP_ALIVE_SEC } from '../settings';
 import { inputError, ServiceResult } from '../error';
 import { Member } from '../members/members.entity';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class UserService {
@@ -18,9 +19,20 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly redisService: RedisService,
+    private readonly mediaService: MediaService,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>
   ) {}
+
+  async setAvatar(userId: string, mediaId: string): Promise<ServiceResult<User>> {
+    const imageResult = await this.mediaService.getImage(mediaId);
+    if (Result.isErr(imageResult)) {
+      return imageResult;
+    }
+    await this.userRepository.update(userId, { avatarMediaId: mediaId });
+    const user = await this.userRepository.findOneOrFail(userId);
+    return Result.Ok(user);
+  }
 
   async hasUsername(username: string): Promise<boolean> {
     const counter = await this.userRepository.count({ username });

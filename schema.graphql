@@ -152,6 +152,7 @@ type Mutation {
   deleteMessage(messageId: ID!): Boolean!
   moveAfterOf(target: ID!, messageId: ID!): Message!
   moveBeforeOf(target: ID!, messageId: ID!): Message!
+  setAvatar(mediaId: ID!): User!
   register(nickname: String!, password: String!, username: String!): User!
 
   """Keep alive."""

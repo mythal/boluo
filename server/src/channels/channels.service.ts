@@ -47,6 +47,10 @@ export class ChannelService {
     return Result.Ok(channel);
   }
 
+  memberNumber(channelId: string): Promise<number> {
+    return this.memberRepository.count({ where: { channelId } });
+  }
+
   async hasName(name: string, parentId: string | null = null): Promise<boolean> {
     const counter = await this.channelRepository.count({ name, parentId });
     return counter > 0;

@@ -25,6 +25,11 @@ export class ChannelResolver {
     private eventService: EventService
   ) {}
 
+  @ResolveProperty(() => Int)
+  async memberNumber(@Parent() channel: Channel) {
+    return this.channelService.memberNumber(channel.id);
+  }
+
   @ResolveProperty(() => [Message])
   async messages(
     @Parent() channel: Channel,

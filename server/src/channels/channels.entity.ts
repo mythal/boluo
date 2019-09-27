@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Field, ID, ObjectType, registerEnumType } from 'type-graphql';
+import { Field, ID, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { Message } from '../messages/messages.entity';
 import { User } from '../users/users.entity';
 import { Invitation } from '../invitaions/invitaions.entity';
@@ -95,4 +95,12 @@ export class Channel {
   @OneToMany(() => Member, member => member.channel)
   @Field(() => [Member])
   members!: Promise<Member[]>;
+
+  @Column({ type: 'integer', default: 20 })
+  @Field(() => Int)
+  diceDefaultFace!: number;
+
+  @Column({ type: 'text', default: '' })
+  @Field(() => String, { description: 'ISO 639-1, An empty string represents the language of the channel is not set' })
+  language!: string;
 }

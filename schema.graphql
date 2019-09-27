@@ -21,6 +21,13 @@ type Channel {
   messages(after: ID, limit: Int): [Message!]!
   invitations: [Invitation!]!
   members: [Members!]!
+  diceDefaultFace: Int!
+
+  """
+  ISO 639-1, An empty string represents the language of the channel is not set
+  """
+  language: String!
+  memberNumber: Int!
 }
 
 type ChannelEvent {

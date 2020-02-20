@@ -12,6 +12,7 @@ import { SignUpPage } from '../SignUp/SignUpPage';
 import { Welcome } from '../Welcome/Welcome';
 import { Loading } from '../Loading/Loading';
 import { Page } from './Page';
+import '../style.css';
 
 const DispatchContext = React.createContext<(action: Action) => void>(() => {
   console.warn();

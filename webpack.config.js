@@ -4,14 +4,18 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
+const PRODUCTION = process.env.NODE_ENV === 'production';
 
 module.exports = {
   entry: './src/index.tsx',
 
-  devtool: 'source-map',
-  mode: 'development',
+  // https://webpack.js.org/configuration/devtool/
+  devtool: PRODUCTION ? 'source-map' : 'eval-cheap-source-map',
+  mode: PRODUCTION ? 'production' : 'development',
 
   output: {
     filename: '[name].[hash].js',
@@ -25,6 +29,7 @@ module.exports = {
       favicon: path.resolve(rootPath, 'public/favicon.ico'),
     }),
     new CleanWebpackPlugin(),
+    new MiniCssExtractPlugin(),
   ],
 
   devServer: {
@@ -45,9 +50,18 @@ module.exports = {
       { test: /\.tsx?$/, loader: 'ts-loader' },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: [
+          PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' },
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          { loader: 'postcss-loader' },
+        ],
       },
       { test: /\.(png|svg|jpg|gif)$/, use: ['file-loader'] },
     ],
+  },
+
+  optimization: {
+    minimize: PRODUCTION,
+    minimizer: [new TerserPlugin()],
   },
 };

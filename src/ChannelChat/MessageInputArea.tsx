@@ -51,9 +51,10 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
   const ok = text.trim().length > 0 && (!inGame || nameError.isOk);
 
   const channelId = channel.id;
-  if (sendPreviewFlag.current && ok && isBroadcast) {
+  if (sendPreviewFlag.current) {
     sendPreviewFlag.current = false;
-    const parsed = parse(text);
+    const hasContent = ok && isBroadcast;
+    const content = hasContent ? parse(text) : { text: '', entities: [] };
     sendPreview({
       id,
       channelId: channel.id,
@@ -63,7 +64,7 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
       isAction,
       whisperToUsers: null,
       start: startRef.current,
-      ...parsed,
+      ...content,
     });
   }
 

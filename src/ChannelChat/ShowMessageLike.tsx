@@ -15,8 +15,10 @@ interface Props {
 }
 
 export const ShowMessageLike: React.FC<Props> = props => {
-  const { name, text, entities, seed, color, inGame, isAction } = props;
+  const { name, text, entities, seed, color, inGame, isPreview } = props;
   const style: React.CSSProperties = inGame ? { color } : {};
+  const isTyping = isPreview && text.length === 0 && entities.length === 0;
+  const isAction = isTyping || props.isAction;
   return (
     <div
       className={`px-5 py-2 ${inGame ? 'text-lg hover:bg-gray-200' : ' bg-gray-700 hover:bg-gray-800 text-white'} ${
@@ -28,7 +30,7 @@ export const ShowMessageLike: React.FC<Props> = props => {
         {name}
         {!isAction ? ':' : ''}
       </div>
-      <MessageContent text={text} entities={entities} seed={seed} />
+      {isTyping ? <span>正在输入...</span> : <MessageContent text={text} entities={entities} seed={seed} />}
     </div>
   );
 };

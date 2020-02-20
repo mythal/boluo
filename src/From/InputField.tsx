@@ -9,7 +9,7 @@ interface Props {
   disabled?: boolean;
   label?: string;
   type?: string;
-  error?: string;
+  error?: string | null;
 }
 
 export const InputField: React.FC<Props> = ({ value, onChange, label, type, error, disabled }) => {

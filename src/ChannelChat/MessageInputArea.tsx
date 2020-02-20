@@ -6,7 +6,7 @@ import { parse } from '../parser';
 import { post } from '../api/request';
 import { errorText } from '../api/error';
 import { NewPreview } from '../api/messages';
-import { checkDisplayName, getErrorMessage } from '../validators';
+import { checkCharacterName } from '../validators';
 import { InputField } from '../From/InputField';
 
 interface Props {
@@ -15,7 +15,6 @@ interface Props {
   channel: Channel;
 }
 
-type HandleName = React.ChangeEventHandler<HTMLInputElement>;
 type HandleText = React.ChangeEventHandler<HTMLTextAreaElement>;
 type HandleSubmit = React.FormEventHandler<HTMLFormElement>;
 
@@ -38,7 +37,6 @@ const useSendPreview = () => {
 export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
   const [text, setText] = useState('');
   const [name, setName] = useState(member.characterName);
-  const [nameError, setNameError] = useState('');
   const [inGame, setInGame] = useState(true);
   const [isAction, setIsAction] = useState(false);
   const [isBroadcast, setIsBroadcast] = useState(true);
@@ -48,7 +46,9 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
   const sendPreviewFlag = useRef(false);
   const id = idRef.current;
 
-  const ok = text.trim().length > 0 && nameError === '';
+  const nameError = checkCharacterName(name);
+
+  const ok = text.trim().length > 0 && (!inGame || nameError.isOk);
 
   const channelId = channel.id;
   if (sendPreviewFlag.current && ok && isBroadcast) {
@@ -75,7 +75,6 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
 
   const handleName = (value: string) => {
     setName(value);
-    setNameError(getErrorMessage(checkDisplayName(value)));
     sendPreviewFlag.current = true;
   };
 
@@ -133,8 +132,13 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
     <form className="border-t" onSubmit={handleSubmit}>
       <div className="flex items-end justify-between">
         <div className="ml-2">
-          <InputField label="名字" value={inGame ? name : me.nickname} onChange={handleName} disabled={!inGame} />
-          <div>{nameError}</div>
+          <InputField
+            label="名字"
+            value={inGame ? name : me.nickname}
+            error={inGame ? nameError.err() : undefined}
+            onChange={handleName}
+            disabled={!inGame}
+          />
         </div>
 
         <div className="text-lg">

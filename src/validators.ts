@@ -40,6 +40,13 @@ export function checkDisplayName(nickname: string): ValidatorResult {
   return ok;
 }
 
+export function checkCharacterName(characterName: string): ValidatorResult {
+  if (characterName.length === 0) {
+    return new Err('角色名不得为空');
+  }
+  return ok;
+}
+
 export function checkPassword(password: string): ValidatorResult {
   const MIN_PASSWORD_LENGTH = 8;
   if (password.length < MIN_PASSWORD_LENGTH) {

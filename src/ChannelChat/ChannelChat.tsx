@@ -39,9 +39,11 @@ export const ChannelChat: React.FC<Props> = () => {
     me === GUEST || !member ? null : <MessageInputArea key={id} me={me} member={member} channel={channel} />;
 
   return (
-    <div>
+    <div className="h-screen flex flex-col">
       <ChannelChatHeader channel={channel} member={member} />
-      <MessageList key={id} channelId={id} colorList={colorList} />
+      <div className="h-full overflow-y-scroll">
+        <MessageList key={id} channelId={id} colorList={colorList} />
+      </div>
       <div>{inputArea}</div>
     </div>
   );

@@ -94,8 +94,8 @@ export const SignUpForm: React.FC = () => {
         error={passwordRepeatError}
         type="password"
       />
-      <div>
-        <button type="submit" disabled={isDisabled}>
+      <div className="text-center">
+        <button className="w-20 m-5 px-4 py-2 btn" type="submit" disabled={isDisabled}>
           注册
         </button>
       </div>

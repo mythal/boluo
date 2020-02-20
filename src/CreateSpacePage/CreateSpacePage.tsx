@@ -46,15 +46,15 @@ export const CreateSpacePage: React.FC<Props> = () => {
   };
 
   return (
-    <div>
+    <div className="max-w-sm p-4">
       <div>
-        <h1>创建位面</h1>
+        <h1 className="text-xl">创建位面</h1>
         <p>位面是你们冒险发生的地方。</p>
       </div>
       <div>
         <form onSubmit={handleSubmit}>
           <InputField value={name} onChange={handleName} label="位面名" error={nameError} />
-          <button type="submit" disabled={!allOk}>
+          <button className="btn p-2" type="submit" disabled={!allOk}>
             创建
           </button>
         </form>

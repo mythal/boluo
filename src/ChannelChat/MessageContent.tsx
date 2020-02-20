@@ -28,5 +28,5 @@ export const MessageContent: React.FC<Props> = ({ text, entities, seed }) => {
       content.push(<em key={key}>{text.substr(entity.start, entity.offset)}</em>);
     }
   }
-  return <div>{content}</div>;
+  return <div className="inline">{content}</div>;
 };

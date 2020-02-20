@@ -16,7 +16,10 @@ export const UserZone: React.FC<Props> = () => {
   } else {
     return (
       <div>
-        {me.nickname} <Link to="/logout">登出</Link>
+        {me.nickname}
+        <Link className="ml-1" to="/logout">
+          登出
+        </Link>
       </div>
     );
   }

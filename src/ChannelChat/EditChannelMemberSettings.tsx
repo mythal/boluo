@@ -35,13 +35,27 @@ export const EditChannelMemberSettings: React.FC<Props> = ({ member, dismiss }) 
     }
   };
   return (
-    <form onSubmit={handleSubmit}>
-      <InputField value={characterName} onChange={setCharacterName} label="角色名" />
-      <input value={textColor} onChange={e => setTextColor(e.target.value)} type="color" />
-      <button type="button" onClick={dismiss}>
-        取消
-      </button>
-      <button type="submit">修改</button>
-    </form>
+    <div className="relative">
+      <form onSubmit={handleSubmit} className="border absolute p-2 w-64 bg-white top-0 right-0">
+        <InputField value={characterName} onChange={setCharacterName} label="角色名" />
+        <div className="text-right">
+          <div>
+            <label className="text-xs" htmlFor="text-color">
+              文字色彩
+            </label>
+            <input
+              className="w-8 h-8"
+              id="text-color"
+              value={textColor}
+              onChange={e => setTextColor(e.target.value)}
+              type="color"
+            />
+          </div>
+          <button className="btn p-1" type="submit">
+            修改
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };

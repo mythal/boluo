@@ -28,18 +28,33 @@ export const SidebarSpaceItem: React.FC<Props> = ({ space, channels, currentSpac
     .toArray();
   const toggleFold = () => setFold(!fold);
   const hide = !isCurrent && fold;
+  let symbol = '';
+  if (spaceChannels.length > 0 && !isCurrent) {
+    symbol = hide ? '+' : '-';
+  }
   const expandButton = (
-    <button disabled={spaceChannels.length === 0} onClick={toggleFold}>
+    <button className="" disabled={spaceChannels.length === 0} onClick={toggleFold}>
       {hide ? '+' : '-'}
     </button>
   );
   const name = isCurrent ? <strong>{space.name}</strong> : <span>{space.name}</span>;
   return (
     <div>
-      <div>
-        {expandButton} <Link to={`/space/${space.id}`}>{name}</Link>
+      <div
+        className={`flex w-full justify-between hover:bg-teal-800 py-1 px-2 ${isCurrent ? '  bg-gray-600' : ''}`}
+        onClick={toggleFold}
+      >
+        <Link
+          className="truncate block flext-1 text-white hover:no-underline hover:text-white"
+          to={`/space/${space.id}`}
+        >
+          {name}
+        </Link>
+        {isCurrent ? null : (
+          <div className="block text-gray-500 mx-1 w-4 text-center cursor-pointer select-none">{symbol}</div>
+        )}
       </div>
-      {hide ? null : <ul>{spaceChannels}</ul>}
+      {hide ? null : <ul className="bg-teal-800 shadow-inner">{spaceChannels}</ul>}
     </div>
   );
 };

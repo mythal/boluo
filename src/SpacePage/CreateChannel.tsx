@@ -43,9 +43,11 @@ export const CreateChannel: React.FC<Props> = ({ spaceId, onCreated }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="max-w-sm" onSubmit={handleSubmit}>
       <InputField value={name} onChange={handleName} label="频道名" error={nameError} />
-      <button type="submit">创建</button>
+      <button className="btn p-1" type="submit" disabled={isDisabled}>
+        创建
+      </button>
     </form>
   );
 };

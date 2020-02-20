@@ -15,8 +15,8 @@ export const ChannelChatHeader: React.FC<Props> = ({ channel, member }) => {
   const userZone =
     me === GUEST ? <ChannelGuestUserZone /> : <ChannelUserZone channel={channel} user={me} member={member} />;
   return (
-    <div>
-      <div>{channel.name}</div>
+    <div className="border-b p-4 flex justify-between">
+      <div className="text-xl">{channel.name}</div>
       <div>{userZone}</div>
     </div>
   );

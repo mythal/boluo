@@ -1,6 +1,46 @@
 /* purgecss start ignore */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
+@tailwind base;
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  @apply text-blue-700;
+}
+
+a:hover {
+  @apply underline text-blue-500;
+}
+
+a:active {
+  @apply text-blue-400;
+}
+
+a:active {
+  @apply text-blue-800;
+}
+
+@tailwind components;
 /* purgecss end ignore */
 
-@import 'tailwindcss/utilities';
+.login-and-sign-up-container {
+  @apply max-w-md mx-auto my-8 p-4;
+}
+
+.login-and-sign-up-title {
+  @apply text-2xl text-center my-4;
+}
+.btn {
+  @apply bg-teal-600 text-white shadow border-b-2 border-teal-700;
+}
+.btn:hover {
+  @apply bg-teal-500 border-teal-600;
+}
+.btn:disabled {
+  @apply bg-gray-400 border-gray-400;
+}
+.btn:active {
+  @apply bg-teal-700;
+}
+@tailwind utilities;

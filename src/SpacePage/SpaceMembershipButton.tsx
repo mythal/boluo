@@ -29,7 +29,7 @@ export const SpaceMembershipButton: React.FC<Props> = ({ joined, space }) => {
     }
   };
   return (
-    <button type="button" onClick={handle}>
+    <button className="btn p-1" type="button" onClick={handle}>
       {joined ? '离开位面' : '加入位面'}
     </button>
   );

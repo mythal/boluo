@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExprNode } from '../entities';
+import '../style.css';
 
 interface Props {
   node: ExprNode;
@@ -8,20 +9,20 @@ interface Props {
 
 export const ExprEntity: React.FC<Props> = ({ node }) => {
   if (node.type === 'Num') {
-    return <div>{node.value}</div>;
+    return <div className="inline text-lg">{node.value}</div>;
   } else if (node.type === 'Roll') {
     return (
-      <div>
+      <div className="inline-block">
         {node.counter}D{node.face}
       </div>
     );
   } else if (node.type === 'Binary') {
     return (
-      <div className="entity entity-binary">
+      <div className="inline-block">
         <ExprEntity node={node.l} /> {node.op} <ExprEntity node={node.r} />
       </div>
     );
   } else {
-    return <div>[不支持]</div>;
+    return <div className="inline">[不支持]</div>;
   }
 };

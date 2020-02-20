@@ -31,7 +31,7 @@ export const ChannelMembershipButton: React.FC<Props> = ({ joined, channel }) =>
     }
   };
   return (
-    <button type="button" onClick={handle}>
+    <button className="btn p-1" type="button" onClick={handle}>
       {joined ? '离开频道' : '加入频道'}
     </button>
   );

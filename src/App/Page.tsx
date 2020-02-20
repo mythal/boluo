@@ -21,39 +21,45 @@ const renderSidebar = ({ match }: RouteComponentProps<IdParams>) => {
 
 export const Page: React.FC = () => {
   return (
-    <div>
-      <Switch>
-        <Route path="/channel/:channelId" render={renderSidebar} />
-        <Route path="/space/:spaceId" render={renderSidebar} />
-        <Route path="/">
-          <Sidebar />
-        </Route>
-      </Switch>
-      <Switch>
-        <Route path="/channel" />
-        <Route path="/">
-          <Header />
-        </Route>
-      </Switch>
-      <AppErrorBoundary>
+    <div className="flex">
+      <div className="flex-shrink-0 w-1/4 md:w-48">
         <Switch>
-          <Route exact path="/">
-            <FindSpace />
-          </Route>
-          <Route path="/channel/:id">
-            <ChannelChat />
-          </Route>
-          <Route path="/space/create">
-            <CreateSpacePage />
-          </Route>
-          <Route path="/space/:id">
-            <SpacePage />
-          </Route>
+          <Route path="/channel/:channelId" render={renderSidebar} />
+          <Route path="/space/:spaceId" render={renderSidebar} />
           <Route path="/">
-            <NotFound />
+            <Sidebar />
           </Route>
         </Switch>
-      </AppErrorBoundary>
+      </div>
+      <div className="w-full">
+        <div>
+          <Switch>
+            <Route path="/channel" />
+            <Route path="/">
+              <Header />
+            </Route>
+          </Switch>
+        </div>
+        <AppErrorBoundary>
+          <Switch>
+            <Route exact path="/">
+              <FindSpace />
+            </Route>
+            <Route path="/channel/:id">
+              <ChannelChat />
+            </Route>
+            <Route path="/space/create">
+              <CreateSpacePage />
+            </Route>
+            <Route path="/space/:id">
+              <SpacePage />
+            </Route>
+            <Route path="/">
+              <NotFound />
+            </Route>
+          </Switch>
+        </AppErrorBoundary>
+      </div>
     </div>
   );
 };

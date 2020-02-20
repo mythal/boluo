@@ -15,17 +15,17 @@ export function checkEmailFormat(email: string): ValidatorResult {
   if (re.test(String(email).toLowerCase())) {
     return ok;
   } else {
-    return new Err('Invalid email address.');
+    return new Err('无效的电子邮箱地址。');
   }
 }
 
 export function checkName(username: string): ValidatorResult {
   if (!/^[\w_\d]+$/.test(username)) {
-    return new Err('Name can only contain letters, "_" and numbers.');
+    return new Err('名字只允许包含字母、下划线或数字。');
   } else if (username.length < 3) {
-    return new Err('Name must be at least 3 characters.');
+    return new Err('名字至少需要3个字符。');
   } else if (username.length > 32) {
-    return new Err('Name must be at most 32 characters.');
+    return new Err('名字最多只能有32个字符。');
   }
   return ok;
 }
@@ -33,9 +33,9 @@ export function checkName(username: string): ValidatorResult {
 export function checkDisplayName(nickname: string): ValidatorResult {
   const NAME_MAX_LENGTH = 32;
   if (nickname.length < 2) {
-    return new Err('Name length shall not be less than 2.\n');
+    return new Err('名字至少需要两个字符\n');
   } else if (nickname.length > NAME_MAX_LENGTH) {
-    return new Err(`Name must be less than ${NAME_MAX_LENGTH} characters.`);
+    return new Err(`名字最多只能有${NAME_MAX_LENGTH}个字符。`);
   }
   return ok;
 }
@@ -43,7 +43,7 @@ export function checkDisplayName(nickname: string): ValidatorResult {
 export function checkPassword(password: string): ValidatorResult {
   const MIN_PASSWORD_LENGTH = 8;
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return new Err(`Password must have at least ${MIN_PASSWORD_LENGTH} characters.`);
+    return new Err(`密码必须至少有${MIN_PASSWORD_LENGTH}个字符.`);
   }
   return ok;
 }

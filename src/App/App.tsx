@@ -61,24 +61,26 @@ export const App: React.FC = () => {
       <DispatchContext.Provider value={dispatch}>
         <MyContext.Provider value={my}>
           <MeContext.Provider value={state.me}>
-            <InformationList informationList={state.informationList} />
-            <Switch>
-              <Route exact path="/">
-                {state.me === GUEST ? <Welcome /> : <Page />}
-              </Route>
-              <Route exact path="/login">
-                <LoginPage />
-              </Route>
-              <Route exact path="/sign_up">
-                <SignUpPage />
-              </Route>
-              <Route exact path="/logout">
-                <Logout />
-              </Route>
-              <Route path="/">
-                <Page />
-              </Route>
-            </Switch>
+            <div className="subpixel-antialiased text-sm">
+              <InformationList informationList={state.informationList} />
+              <Switch>
+                <Route exact path="/">
+                  {state.me === GUEST ? <Welcome /> : <Page />}
+                </Route>
+                <Route exact path="/login">
+                  <LoginPage />
+                </Route>
+                <Route exact path="/sign_up">
+                  <SignUpPage />
+                </Route>
+                <Route exact path="/logout">
+                  <Logout />
+                </Route>
+                <Route path="/">
+                  <Page />
+                </Route>
+              </Switch>
+            </div>
           </MeContext.Provider>
         </MyContext.Provider>
       </DispatchContext.Provider>

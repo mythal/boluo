@@ -7,6 +7,7 @@ import { post } from '../api/request';
 import { errorText } from '../api/error';
 import { NewPreview } from '../api/messages';
 import { checkDisplayName, getErrorMessage } from '../validators';
+import { InputField } from '../From/InputField';
 
 interface Props {
   me: User;
@@ -72,8 +73,7 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
     sendPreviewFlag.current = true;
   };
 
-  const handleName: HandleName = e => {
-    const value = e.target.value;
+  const handleName = (value: string) => {
     setName(value);
     setNameError(getErrorMessage(checkDisplayName(value)));
     sendPreviewFlag.current = true;
@@ -130,28 +130,36 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <input value={inGame ? name : me.nickname} onChange={handleName} disabled={!inGame} required />
-        {nameError}
+    <form className="border-t" onSubmit={handleSubmit}>
+      <div className="flex items-end justify-between">
+        <div className="ml-2">
+          <InputField label="名字" value={inGame ? name : me.nickname} onChange={handleName} disabled={!inGame} />
+          <div>{nameError}</div>
+        </div>
+
+        <div className="text-lg">
+          <button type="button" className="btn m-1 p-2" onClick={toggleIsBroadcast}>
+            {isBroadcast ? '预览中' : '实时预览关'}
+          </button>
+          <button type="button" className="btn m-1 p-2" onClick={toggleInGame}>
+            {inGame ? '游戏内' : '游戏外'}
+          </button>
+          <button type="button" className="btn m-1 p-2" onClick={toggleIsAction}>
+            {isAction ? '动作' : '发言'}
+          </button>
+
+          <button className="btn m-1 p-2" type="submit" disabled={!ok}>
+            发送 (Ctrl/⌘ + ↵)
+          </button>
+        </div>
       </div>
-      <div>
-        <button type="button" onClick={toggleInGame}>
-          {inGame ? '游戏内' : '游戏外'}
-        </button>
-        <button type="button" onClick={toggleIsAction}>
-          {isAction ? '动作' : '发言'}
-        </button>
-        <button type="button" onClick={toggleIsBroadcast}>
-          {isBroadcast ? '预览中' : '实时预览关'}
-        </button>
-      </div>
-      <div>
-        <textarea value={text} onChange={handleText} onKeyDown={handleKey} placeholder="说点什么…" />
-        <button type="submit" disabled={!ok}>
-          发送 (Ctrl/⌘ + ↵)
-        </button>
-      </div>
+      <textarea
+        className="w-full h-32 text-base p-2"
+        value={text}
+        onChange={handleText}
+        onKeyDown={handleKey}
+        placeholder="说点什么…"
+      />
     </form>
   );
 };

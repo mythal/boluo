@@ -25,8 +25,8 @@ export const SpaceList: React.FC<Props> = ({ spaces }) => {
   const spaceList = spaces.filter(spaceFilter(filter)).map(space => <SpaceItem key={space.id} space={space} />);
 
   return (
-    <div>
-      <div>
+    <div className="p-4">
+      <div className="max-w-sm">
         <InputField value={filter} onChange={setFilter} label="过滤" />
       </div>
       <div>{spaceList}</div>

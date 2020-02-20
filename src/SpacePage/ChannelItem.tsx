@@ -15,7 +15,10 @@ export const ChannelItem: React.FC<Props> = ({ channel, isSpaceMember }) => {
   return (
     <div>
       <div>
-        <Link to={`/channel/${channel.id}`}>{channel.name}</Link> {button}
+        <Link className="text-xl" to={`/channel/${channel.id}`}>
+          {channel.name}
+        </Link>{' '}
+        {button}
       </div>
     </div>
   );

@@ -6,11 +6,11 @@ interface Props {}
 
 export const LoginPage: React.FC<Props> = () => {
   return (
-    <div>
-      <div>登录</div>
+    <div className="login-and-sign-up-container">
+      <h1 className="login-and-sign-up-title">登录</h1>
       <LoginForm />
 
-      <div className="no-account-yet">
+      <div className="text-xs text-center">
         还没有菠萝菠萝账号？<Link to="/sign_up">点这里注册吧</Link>。
       </div>
     </div>

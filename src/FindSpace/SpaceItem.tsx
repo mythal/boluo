@@ -8,11 +8,11 @@ interface Props {
 
 export const SpaceItem: React.FC<Props> = ({ space }) => {
   return (
-    <div>
-      <h1>
+    <div className="py-1 my-1 border-b max-w-md">
+      <h1 className="text-base">
         <Link to={`/space/${space.id}`}>{space.name}</Link>
       </h1>
-      <div>{space.description}</div>
+      <div className="text-xs">{space.description}</div>
     </div>
   );
 };

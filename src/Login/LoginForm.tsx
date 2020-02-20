@@ -55,8 +55,8 @@ export const LoginForm: React.FC<Props> = () => {
     <form onSubmit={onSubmit}>
       <InputField value={username} onChange={onUsernameChange} label="用户名" />
       <InputField value={password} onChange={onPasswordChange} label="密码" type="password" />
-      <div>
-        <button type="submit" disabled={isDisabled}>
+      <div className="text-center">
+        <button className="w-20 m-5 px-4 py-2 btn" type="submit" disabled={isDisabled}>
           登录
         </button>
       </div>

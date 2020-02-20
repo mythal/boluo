@@ -38,16 +38,16 @@ export const SpacePage: React.FC = () => {
   ));
 
   const createChannel = member?.isAdmin ? (
-    <div>
-      <h2>创建频道</h2>
+    <div className="my-4">
+      <h2 className="text-lg">创建频道</h2>
       <CreateChannel spaceId={id} onCreated={refetch} />
     </div>
   ) : null;
 
   return (
-    <div>
+    <div className="p-4">
       <div>
-        <h1>
+        <h1 className="text-2xl">
           <Link to={`/space/${id}`}>{space.name}</Link>
         </h1>
         <div>{space.description}</div>
@@ -56,8 +56,8 @@ export const SpacePage: React.FC = () => {
         </div>
       </div>
       {createChannel}
-      <div>
-        <h2>频道</h2>
+      <div className="my-4">
+        <h2 className="text-lg">频道</h2>
         <ul>{channelList}</ul>
       </div>
     </div>

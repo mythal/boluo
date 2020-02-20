@@ -14,7 +14,7 @@ export const Sidebar: React.FC<Props> = ({ channelId, spaceId }) => {
   const { mySpaces, myChannels } = useMy();
 
   if (me === GUEST) {
-    return <div />;
+    return null;
   }
   if (channelId) {
     spaceId = myChannels.get(channelId)?.channel.spaceId;
@@ -32,5 +32,5 @@ export const Sidebar: React.FC<Props> = ({ channelId, spaceId }) => {
       />
     </li>
   ));
-  return <ul>{list}</ul>;
+  return <ul className="h-screen bg-teal-900">{list}</ul>;
 };

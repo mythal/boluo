@@ -15,7 +15,7 @@ export const ExprEntity: React.FC<Props> = ({ node, rng }) => {
   const [_, setCounter] = useState(0);
   useEffect(() => {
     let counter = 0;
-    if (rng !== undefined || node.type !== 'Roll') {
+    if (rng !== undefined || node.type !== 'Roll' || node.face === 1) {
       return;
     }
     const interval = window.setInterval(() => {
@@ -33,13 +33,17 @@ export const ExprEntity: React.FC<Props> = ({ node, rng }) => {
     }
     const result: number[] = [];
     let sum = 0;
-    for (let i = 0; i < node.counter; i++) {
-      const x = (rng ?? fakeRng).nextInt(1, node.face);
-      sum += x;
-      result.push(x);
+    if (node.face === 1) {
+      sum = node.counter;
+    } else {
+      for (let i = 0; i < node.counter; i++) {
+        const x = (rng ?? fakeRng).nextInt(1, node.face);
+        sum += x;
+        result.push(x);
+      }
     }
     return (
-      <div className="inline-block" title={result.join(', ')}>
+      <div className="inline-block" title={result.length > 1 ? result.join(', ') : undefined}>
         {node.counter}D{node.face}={sum}
       </div>
     );

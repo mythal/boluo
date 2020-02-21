@@ -22,10 +22,11 @@ const makeRng = (seed?: number[]): Prando | undefined => {
 
 export const MessageContent: React.FC<Props> = ({ text, entities, seed }) => {
   const content = [];
+  let rng: Prando | undefined = undefined;
   for (let key = 0; key < entities.length; key += 1) {
     const entity = entities[key];
     if (entity.type === 'Expr') {
-      const rng = makeRng(seed);
+      rng = rng ?? makeRng(seed);
       content.push(
         <div key={key} className="inline font-mono border-dashed border-b-2 border-gray-500">
           <ExprEntity node={entity.node} rng={rng} top />

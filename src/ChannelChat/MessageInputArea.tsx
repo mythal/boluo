@@ -8,6 +8,7 @@ import { errorText } from '../api/error';
 import { NewPreview } from '../api/messages';
 import { checkCharacterName } from '../validators';
 import { InputField } from '../From/InputField';
+import { classNames } from '../classname';
 
 interface Props {
   me: User;
@@ -106,14 +107,6 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
     await handleSend();
   };
 
-  const handleKey: React.KeyboardEventHandler = async e => {
-    // Ctrl/⌘ + ↵
-    if (e.metaKey && e.keyCode === 13) {
-      e.preventDefault();
-      await handleSend();
-    }
-  };
-
   const toggleInGame = () => {
     setInGame(!inGame);
     sendPreviewFlag.current = true;
@@ -129,6 +122,29 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
     sendPreviewFlag.current = true;
   };
 
+  const handleKey: React.KeyboardEventHandler = async e => {
+    // Ctrl/⌘ + ↵
+    if ((e.metaKey || e.ctrlKey) && e.keyCode === 13) {
+      e.preventDefault();
+      await handleSend();
+    }
+    // Alt + P
+    if (e.altKey && e.keyCode === 80) {
+      e.preventDefault();
+      toggleIsBroadcast();
+    }
+    // Alt + G
+    if (e.altKey && e.keyCode === 71) {
+      e.preventDefault();
+      toggleInGame();
+    }
+    // Alt + A
+    if (e.altKey && e.keyCode === 65) {
+      e.preventDefault();
+      toggleIsAction();
+    }
+  };
+
   return (
     <form className="border-t" onSubmit={handleSubmit}>
       <div className="flex items-end justify-between">
@@ -142,19 +158,35 @@ export const MessageInputArea: React.FC<Props> = ({ me, member, channel }) => {
           />
         </div>
 
-        <div className="text-lg">
-          <button type="button" className="btn m-1 p-2" onClick={toggleIsBroadcast}>
-            {isBroadcast ? '预览中' : '实时预览关'}
+        <div className="text-lg flex">
+          <button
+            type="button"
+            className={classNames('flex flex-col m-1 p-2', isBroadcast ? 'btn' : 'btn-down')}
+            onClick={toggleIsBroadcast}
+          >
+            <span>实时预览</span>
+            <span className="text-xs">Alt + P</span>
           </button>
-          <button type="button" className="btn m-1 p-2" onClick={toggleInGame}>
-            {inGame ? '游戏内' : '游戏外'}
+          <button
+            type="button"
+            className={classNames('flex flex-col m-1 p-2', inGame ? 'btn' : 'btn-down')}
+            onClick={toggleInGame}
+          >
+            <span>游戏外</span>
+            <span className="text-xs">Alt + G</span>
           </button>
-          <button type="button" className="btn m-1 p-2" onClick={toggleIsAction}>
-            {isAction ? '动作' : '发言'}
+          <button
+            type="button"
+            className={classNames('flex flex-col m-1 p-2', isAction ? 'btn-down' : 'btn')}
+            onClick={toggleIsAction}
+          >
+            <span>动作</span>
+            <span className="text-xs">Alt + A</span>
           </button>
 
-          <button className="btn m-1 p-2" type="submit" disabled={!ok}>
-            发送 (Ctrl/⌘ + ↵)
+          <button className="btn m-1 p-2 flex flex-col inline-block" type="submit" disabled={!ok}>
+            <span className="">发送</span>
+            <span className="text-xs">Ctrl/⌘ + ↵</span>
           </button>
         </div>
       </div>

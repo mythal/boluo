@@ -43,4 +43,11 @@ a:active {
 .btn:active {
   @apply bg-teal-700;
 }
+.btn-down {
+  @apply bg-teal-800 text-white shadow-inner border-b-2 border-teal-700 border-teal-500;
+}
+.btn-down:hover {
+  @apply bg-teal-900;
+}
+
 @tailwind utilities;

@@ -41,7 +41,7 @@ export type Entity = Text | Link | Expr | Strong | Emphasis | Mention;
 
 export interface Roll {
   type: 'Roll';
-  face?: number;
+  face: number;
   counter: number;
 }
 

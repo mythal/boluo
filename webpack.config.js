@@ -18,8 +18,9 @@ module.exports = {
   mode: PRODUCTION ? 'production' : 'development',
 
   output: {
-    filename: '[name].[hash].js',
+    filename: '[name].js',
     path: path.resolve(rootPath, 'dist'),
+    publicPath: '/',
   },
 
   plugins: [

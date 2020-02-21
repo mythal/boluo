@@ -32,7 +32,11 @@ export const MessageContent: React.FC<Props> = ({ text, entities, seed }) => {
         </div>
       );
     } else if (entity.type === 'Text') {
-      content.push(<span key={key}>{text.substr(entity.start, entity.offset)}</span>);
+      content.push(
+        <span className="whitespace-pre" key={key}>
+          {text.substr(entity.start, entity.offset)}
+        </span>
+      );
     } else if (entity.type === 'Link') {
       content.push(
         <a key={key} href={entity.href}>

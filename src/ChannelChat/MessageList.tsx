@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { Id } from '../id';
 import { OrderedMap } from 'immutable';
 import { Message, Preview } from '../api/messages';
@@ -6,7 +6,7 @@ import { get } from '../api/request';
 import { MessageItem } from './MessageItem';
 import { ColorList } from '../api/channels';
 import { MessagePreviewItem } from './MessagePreviewItem';
-import { MESSAGE_DELETED, MESSAGE_PREVIEW, NEW_MESSAGE } from '../api/events';
+import { ChannelEvent, MESSAGE_DELETED, MESSAGE_PREVIEW, NEW_MESSAGE } from '../api/events';
 import { Loading } from '../Loading/Loading';
 import { ChannelAction, EVENTS_LOADED, EventsLoaded, MESSAGES_LOADED, MessagesLoaded, SWITCH_CHANNEL } from './actions';
 
@@ -74,32 +74,15 @@ const reducer = (state: State, action: ChannelAction): State => {
   }
 };
 
-const usePolling = (dispatch: (action: EventsLoaded) => void, channelId: Id, after: number) => {
-  const afterRef = useRef(after);
-  const timeoutRef = useRef<number | undefined>();
-  afterRef.current = after;
-
+const usePolling = (dispatch: (action: EventsLoaded) => void, channelId: Id) => {
   useEffect(() => {
-    const polling = async () => {
-      const mailbox = channelId;
-      const after = afterRef.current;
-      const result = await get('/events/subscribe', { mailbox, after });
-      if (timeoutRef.current === undefined) {
-        return;
-      }
-      if (result.isOk && result.value.length > 0) {
-        dispatch({
-          tag: EVENTS_LOADED,
-          events: result.value,
-        });
-      }
-      timeoutRef.current = window.setTimeout(polling, 0);
+    const ws = new WebSocket(`ws://${window.location.host}/api/events/connect?id=${channelId}`);
+    ws.onmessage = e => {
+      const event = JSON.parse(e.data) as ChannelEvent;
+      dispatch({ tag: EVENTS_LOADED, events: [event] });
     };
-    timeoutRef.current = window.setTimeout(polling, 0);
-    return () => {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = undefined;
-    };
+
+    return () => ws.close();
   }, [channelId]);
 };
 
@@ -117,10 +100,10 @@ const useLoadMessages = (dispatch: (action: MessagesLoaded) => void, channelId: 
 };
 
 export const MessageList: React.FC<Props> = ({ channelId, colorList }) => {
-  const [{ messages, previews, loaded, after }, dispatch] = useReducer(reducer, initState(channelId));
+  const [{ messages, previews, loaded }, dispatch] = useReducer(reducer, initState(channelId));
 
   useLoadMessages(dispatch, channelId);
-  usePolling(dispatch, channelId, after);
+  usePolling(dispatch, channelId);
 
   if (!loaded) {
     return (

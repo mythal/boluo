@@ -22,6 +22,7 @@ export interface ChannelMember {
   characterName: string;
   isMaster: boolean;
   textColor: string | null;
+  online?: boolean;
 }
 
 export interface ChannelWithMember {

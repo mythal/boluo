@@ -1,4 +1,5 @@
 import { Id } from '../id';
+import { AppResult, makeUri, request } from './request';
 
 export interface Media {
   id: Id;
@@ -9,4 +10,8 @@ export interface Media {
   hash: string;
   description: string;
   created: number;
+}
+
+export function upload(file: Blob, filename: string, mimeType: string): Promise<AppResult<Media>> {
+  return request(makeUri('/media/upload', { filename, mimeType }), 'POST', file);
 }

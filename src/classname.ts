@@ -1,6 +1,12 @@
-export type ClassName = string | ClassName[] | { [name: string]: boolean } | null | undefined | boolean;
+export type ClassName =
+  | string
+  | ClassName[]
+  | { [name: string]: boolean | undefined | null }
+  | null
+  | undefined
+  | boolean;
 
-export const classNames = (...xs: ClassName[]) => {
+export const cls = (...xs: ClassName[]) => {
   const classNameList: string[] = [];
   for (const x of xs) {
     if (!x || x === true) {
@@ -9,7 +15,7 @@ export const classNames = (...xs: ClassName[]) => {
     if (typeof x === 'string') {
       classNameList.push(x);
     } else if (Array.isArray(x)) {
-      classNameList.push(classNames(...x));
+      classNameList.push(cls(...x));
     } else {
       for (const entry of Object.entries(x)) {
         if (entry[1]) {

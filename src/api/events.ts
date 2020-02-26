@@ -1,4 +1,4 @@
-import { Message, Preview } from './messages';
+import { Message, NewPreview, Preview } from './messages';
 import { Id } from '../id';
 
 export const NEW_MESSAGE = 'newMessage';
@@ -61,4 +61,12 @@ export interface ChannelEdited {
 
 export interface ChannelDeleted {
   type: CHANNEL_DELETED;
+}
+
+export const NEW_PREVIEW_EVENT = 'preview';
+export type NEW_PREVIEW_EVENT = typeof NEW_PREVIEW_EVENT;
+
+interface NewPreviewEvent {
+  type: NewPreviewEvent;
+  preview: NewPreview;
 }

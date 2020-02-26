@@ -8,7 +8,7 @@ export interface Message {
   name: string;
   mediaId: Id | null;
   seed: number[];
-  deleted: boolean;
+  deleted?: boolean;
   inGame: boolean;
   isAction: boolean;
   isMaster: boolean;
@@ -74,6 +74,6 @@ export interface EditMessage {
 
 export interface ByChannel {
   channelId: Id;
+  after?: number;
   before?: number;
-  amount?: number;
 }

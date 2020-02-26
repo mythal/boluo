@@ -1,0 +1,7 @@
+@responsive {
+  @variants hover, focus {
+    .shadow-hard {
+      box-shadow: var(--shadow-hard);
+    }
+  }
+}

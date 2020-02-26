@@ -1,0 +1,206 @@
+.link {
+  @apply text-green-700;
+
+  &:hover {
+    @apply border-b border-green-500 text-green-600;
+  }
+
+  &:active {
+    @apply text-green-500;
+  }
+}
+
+.btn {
+  @apply px-3 py-1 border border-teal-600 bg-white shadow-hard transition duration-75;
+
+  &:hover {
+    @apply bg-gray-100 shadow-hard;
+  }
+  &:active {
+    @apply btn-down;
+  }
+  &:focus {
+    @apply outline-none;
+  }
+  &:disabled {
+    @apply bg-gray-500 border-gray-700 cursor-not-allowed text-white;
+
+    &:hover {
+      @apply bg-gray-500;
+    }
+  }
+}
+
+.btn-down {
+  @apply transform translate-y-px shadow-none bg-gray-300;
+
+  &:hover {
+    @apply shadow-none;
+  }
+}
+
+.btn-primary {
+  @apply text-white bg-teal-600;
+
+  &:hover {
+    @apply bg-teal-500;
+  }
+  &:active {
+    @apply bg-teal-700;
+  }
+}
+
+.input {
+  @apply border shadow-hard border-gray-700 p-1 outline-none transition duration-75;
+
+  box-shadow: theme('colors.teal.400') 0 0 0 0px inset, var(--shadow-hard);
+
+  &:focus {
+    @apply transform translate-y-px border-teal-800;
+    box-shadow: theme('colors.teal.400') 0 0 0 2px inset;
+  }
+
+  &:disabled {
+    @apply cursor-not-allowed bg-gray-200;
+  }
+}
+
+.checkbox {
+  @apply border border-gray-600 appearance-none inline-block w-3 h-3;
+  @apply shadow-hard;
+  &:hover {
+    @apply bg-teal-300;
+  }
+  &:active {
+    @apply shadow-none transform translate-y-px;
+  }
+  &:checked {
+    @apply bg-teal-600 transform translate-y-px;
+    box-shadow: white 0 0 0 2px inset;
+  }
+  &:focus {
+    @apply outline-none;
+  }
+}
+
+.input-error {
+  @apply border-red-400 bg-red-100;
+
+  &:focus {
+    @apply bg-red-100;
+    box-shadow: theme('colors.red.500') 0 0 0 2px inset;
+  }
+}
+
+.menu {
+  @apply w-32 shadow-lg bg-white border border-gray-700;
+}
+
+.menu-item {
+  @apply p-2 border-t border-gray-500 select-none;
+
+  &:first-of-type {
+    @apply border-t-0;
+  }
+
+  &:hover {
+    @apply bg-gray-300;
+  }
+
+  &:active {
+    @apply bg-gray-100;
+  }
+}
+
+.menu-item-static {
+  @apply bg-gray-100 text-gray-700;
+  &:hover {
+    @apply bg-gray-100;
+  }
+  &:active {
+    @apply bg-gray-100;
+  }
+}
+
+.tooltip-wrap {
+  @apply inline-block relative;
+  & .tooltip-content {
+    @apply hidden;
+  }
+
+  &:hover .tooltip-content {
+    @apply inline-block text-xs p-2 text-white absolute pointer-events-none z-10;
+    background-color: var(--tooltip-bg);
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    &::after {
+      @apply z-10 transform translate-y-1 absolute left-0 right-0 mx-auto block w-0 h-0;
+      content: '';
+      border: 1em solid transparent;
+      border-top: 1em solid var(--tooltip-bg);
+    }
+  }
+
+  &:hover .tooltip-bottom {
+    top: 100%;
+    bottom: unset;
+
+    &::before {
+      @apply z-10 absolute left-0 right-0 mx-auto block w-0 h-0;
+      content: '';
+      border: 1em solid transparent;
+      border-bottom: 1em solid var(--tooltip-bg);
+      top: 0;
+      transform: translateY(-100%);
+    }
+
+    &::after {
+      content: none;
+    }
+  }
+}
+
+.callout {
+  @apply absolute p-2 z-10;
+  background-color: var(--callout-bg);
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0px 1px 2px rgb(45, 45, 45));
+
+  &::after {
+    @apply z-10 transform translate-y-1 absolute left-0 right-0 mx-auto block w-0 h-0 pointer-events-none;
+    content: '';
+    border: 1em solid transparent;
+    border-top: 1em solid var(--callout-bg);
+  }
+}
+
+.mask {
+  @apply z-40 flex justify-center items-center;
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.bg-logo {
+  background-image: url('../../public/logo-512x512.png');
+}
+
+.channel-item {
+  @apply w-full pl-4 py-1 text-sm inline-block;
+  &:hover {
+    @apply bg-gray-300;
+  }
+  &:active {
+    @apply bg-gray-100;
+  }
+  &::before {
+    @apply font-mono mr-1 text-gray-600;
+    content: '#';
+  }
+}

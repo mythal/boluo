@@ -9,7 +9,7 @@ export const getErrorMessage = (result: ValidatorResult): string => {
   return result.isErr ? result.value : '';
 };
 
-export function checkEmailFormat(email: string): ValidatorResult {
+export function checkEmail(email: string): ValidatorResult {
   // tslint:disable-next-line:max-line-length
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   if (re.test(String(email).toLowerCase())) {
@@ -19,7 +19,7 @@ export function checkEmailFormat(email: string): ValidatorResult {
   }
 }
 
-export function checkName(username: string): ValidatorResult {
+export function checkUsername(username: string): ValidatorResult {
   if (!/^[\w_\d]+$/.test(username)) {
     return new Err('名字只允许包含字母、下划线或数字。');
   } else if (username.length < 3) {
@@ -33,7 +33,7 @@ export function checkName(username: string): ValidatorResult {
 export function checkDisplayName(nickname: string): ValidatorResult {
   const NAME_MAX_LENGTH = 32;
   if (nickname.length < 2) {
-    return new Err('名字至少需要两个字符\n');
+    return new Err('名字至少需要两个字符。');
   } else if (nickname.length > NAME_MAX_LENGTH) {
     return new Err(`名字最多只能有${NAME_MAX_LENGTH}个字符。`);
   }
@@ -42,7 +42,7 @@ export function checkDisplayName(nickname: string): ValidatorResult {
 
 export function checkCharacterName(characterName: string): ValidatorResult {
   if (characterName.length === 0) {
-    return new Err('角色名不得为空');
+    return new Err('角色名不得为空。');
   }
   return ok;
 }

@@ -1,0 +1,5 @@
+:root {
+  --shadow-hard: rgba(45, 45, 45, 0.3) 1px 3px 0 -2px;
+  --tooltip-bg: rgba(45, 45, 45, 1);
+  --callout-bg: white;
+}

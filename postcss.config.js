@@ -6,5 +6,11 @@ const purgecss = require('@fullhuman/postcss-purgecss')({
 });
 
 module.exports = ({ env }) => ({
-  plugins: [require('postcss-import'), require('tailwindcss'), env === 'production' ? purgecss : null],
+  plugins: [
+    require('postcss-import'),
+    require('tailwindcss'),
+    require('postcss-nested'),
+    env === 'production' ? purgecss : null,
+    require('autoprefixer'),
+  ],
 });

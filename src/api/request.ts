@@ -14,8 +14,7 @@ import {
   EditChannelMember,
   JoinChannel,
 } from './channels';
-import { EventQuery, ChannelEvent } from './events';
-import { ByChannel, EditMessage, Message, NewMessage, NewPreview, Preview } from './messages';
+import { ByChannel, EditMessage, Message, NewMessage } from './messages';
 
 export type AppResult<T> = Result<T, AppError>;
 
@@ -42,26 +41,14 @@ const toResult = <T, E>(apiResult: ApiOk<T> | ApiErr<E>): Result<T, E> => {
 export const request = async <T>(
   path: string,
   method: string,
-  payload: object | null,
+  body: RequestInit['body'],
   csrf = true
 ): Promise<AppResult<T>> => {
-  if (path[0] !== '/') {
-    path = '/api/' + path;
-  } else {
-    path = '/api' + path;
-  }
-
   const headers = new Headers({
     'Content-Type': 'application/json',
   });
   if (csrf) {
     headers.append('csrf-token', await getCsrfToken());
-  }
-  let body: string | null;
-  if (payload !== null) {
-    body = JSON.stringify(payload);
-  } else {
-    body = null;
   }
   const result = await fetch(path, {
     method,
@@ -76,7 +63,12 @@ export const request = async <T>(
   }
 };
 
-const makeUri = (path: string, query?: object): string => {
+export const makeUri = (path: string, query?: object): string => {
+  if (path[0] !== '/') {
+    path = '/api/' + path;
+  } else {
+    path = '/api' + path;
+  }
   if (query === undefined) {
     return path;
   }
@@ -118,14 +110,13 @@ export function post(path: '/channels/delete', payload: {}, query: IdQuery): Pro
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
 export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
 export function post(path: '/messages/edit', payload: EditMessage): Promise<AppResult<Message>>;
-export function post(path: '/messages/preview', payload: NewPreview): Promise<AppResult<Preview>>;
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,
   query?: Q,
   csrf = true
 ): Promise<AppResult<T>> {
-  return request(makeUri(path, query), 'POST', payload, csrf);
+  return request(makeUri(path, query), 'POST', JSON.stringify(payload), csrf);
 }
 
 export function get(path: '/users/query', query: IdQuery): Promise<AppResult<User | null>>;
@@ -139,8 +130,6 @@ export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;
 export function get(path: '/channels/members', query: IdQuery): Promise<AppResult<ChannelMember[]>>;
-export function get(path: '/events/subscribe', query: EventQuery): Promise<AppResult<ChannelEvent[]>>;
-export function get(path: '/events/events', query: EventQuery): Promise<AppResult<ChannelEvent[]>>;
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
 

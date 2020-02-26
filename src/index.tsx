@@ -1,5 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { App } from './App/App';
+import { App } from './components/App';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+export const getRoot = () => {
+  const root = document.getElementById('root');
+  if (!root) {
+    throw new Error('Root not found');
+  }
+  return root;
+};
+
+ReactDOM.render(<App />, getRoot());

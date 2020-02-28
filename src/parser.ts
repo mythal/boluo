@@ -175,7 +175,7 @@ const autoUrl = (): P<Entity> =>
 // \d+ match digits and stop.
 // \s(?=\S) match single space and stop.
 // [^...]: stop characters.
-const TEXT_REGEX = /\d+|\s(?=\S)|.[^\d*@[(（#\s]*\s*/s;
+const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*@[(（#\s]*\s*/;
 
 const span = (): P<Text> =>
   regex(TEXT_REGEX).then(([match, { text, rest }]) => {

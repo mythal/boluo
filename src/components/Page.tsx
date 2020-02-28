@@ -9,6 +9,7 @@ import { AlertList } from './AlertList';
 import { AppHeader } from './AppHeader';
 import { Sidebar } from './Sidebar';
 import { SpacePage } from './SpacePage';
+import { ChannelChat } from './chat/ChannelChat';
 
 interface Props {
   sidebar: boolean;
@@ -17,18 +18,21 @@ interface Props {
 export const Page: React.FC<Props> = ({ sidebar }) => {
   const my = useMy();
   return (
-    <div className="w-full h-screen overflow-y-hidden">
+    <div className="flex flex-col h-screen w-screen">
       <AlertList />
       <AppHeader sidebar={sidebar} />
-      <div className="flex h-full w-full">
+      <div className="flex-1 flex w-screen">
         {my === 'GUEST' ? null : <Sidebar my={my} open={sidebar} />}
-        <div className="h-full w-full">
+        <div className="flex-1 h-full w-full">
           <Switch>
             <Route exact path="/">
               {my === 'GUEST' ? <Welcome /> : <Catalog />}
             </Route>
             <Route path="/space/:id">
               <SpacePage />
+            </Route>
+            <Route path="/channel/:id">
+              <ChannelChat />
             </Route>
             <Route path="/components">
               <ComponentsPage />

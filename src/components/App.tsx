@@ -1,7 +1,7 @@
 import '../styles/main.css';
 import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { Alert, initState, MyState } from '../states/states';
+import { Alert, Chat, initState, MyState } from '../states/states';
 import { reducer } from '../states/reducers';
 import { Action, LoggedIn, LoggedOut } from '../states/actions';
 import { get } from '../api/request';
@@ -9,6 +9,7 @@ import { Loading } from './Loading';
 import { Page } from './Page';
 import { neverFn } from '../helper';
 import { List } from 'immutable';
+import { Channel, ChannelMember, ChannelWithRelated } from '../api/channels';
 
 const DispatchContext = React.createContext<(action: Action) => void>(neverFn);
 
@@ -20,6 +21,15 @@ export const useMy = (): MyState => useContext(MyContext);
 
 const AlertListContext = React.createContext<List<Alert>>(List());
 export const useAlertList = (): List<Alert> => useContext(AlertListContext);
+
+const ChatContext = React.createContext<Chat | undefined>(undefined);
+export const useChat = (): Chat | undefined => useContext(ChatContext);
+
+const ChannelContext = React.createContext<Channel | undefined>(undefined);
+export const useChannel = (): Channel | undefined => useContext(ChannelContext);
+
+const ChannelMemberContext = React.createContext<ChannelMember[] | undefined>(undefined);
+export const useChannelMember = (): ChannelMember[] | undefined => useContext(ChannelMemberContext);
 
 const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
   useEffect(() => {
@@ -33,6 +43,7 @@ const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
       }
       finish();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };
 
@@ -52,9 +63,15 @@ export const App: React.FC = () => {
     <DispatchContext.Provider value={dispatch}>
     <MyContext.Provider value={state.my}>
     <AlertListContext.Provider value={state.alertList}>
+    <ChatContext.Provider value={state.chat}>
+    <ChannelContext.Provider value={state.chat?.channel}>
+    <ChannelMemberContext.Provider value={state.chat?.members}>
     <BrowserRouter>
       <Page sidebar={state.appearance.sidebar} />
     </BrowserRouter>
+    </ChannelMemberContext.Provider>
+    </ChannelContext.Provider>
+    </ChatContext.Provider>
     </AlertListContext.Provider>
     </MyContext.Provider>
     </DispatchContext.Provider>

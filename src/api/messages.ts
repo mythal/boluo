@@ -61,6 +61,7 @@ export interface NewMessage {
   entities: Entity[];
   inGame: boolean;
   isAction: boolean;
+  orderDate: number | null;
 }
 
 export interface EditMessage {
@@ -74,6 +75,6 @@ export interface EditMessage {
 
 export interface ByChannel {
   channelId: Id;
-  after?: number;
   before?: number;
+  limit?: number;
 }

@@ -25,6 +25,7 @@ import { faAngleRight } from '@fortawesome/free-solid-svg-icons/faAngleRight';
 import { faSatelliteDish } from '@fortawesome/free-solid-svg-icons/faSatelliteDish';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons/faUserCircle';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons/faCaretRight';
+import { faUserEdit } from '@fortawesome/free-solid-svg-icons/faUserEdit';
 
 export interface IconProps {
   className?: string;
@@ -55,3 +56,4 @@ export const SignOutIcon = (props: IconProps) => <FontAwesomeIcon icon={faSignOu
 export const DownIcon = (props: IconProps) => <FontAwesomeIcon icon={faAngleDown} {...props} />;
 export const RightIcon = (props: IconProps) => <FontAwesomeIcon icon={faAngleRight} {...props} />;
 export const UserIcon = (props: IconProps) => <FontAwesomeIcon icon={faUserCircle} {...props} />;
+export const UserEditIcon = (props: IconProps) => <FontAwesomeIcon icon={faUserEdit} {...props} />;

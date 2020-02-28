@@ -1,7 +1,9 @@
 import { User } from '../api/users';
 import { Space, SpaceMember, SpaceWithMember } from '../api/spaces';
-import { Channel, ChannelMember, ChannelWithMember } from '../api/channels';
+import { Channel, ChannelMember, ChannelWithMember, ChannelWithRelated } from '../api/channels';
 import { Id } from '../id';
+import { Message } from '../api/messages';
+import { ChannelEvent } from '../api/events';
 
 export interface LoggedIn {
   type: 'LOGGED_IN';
@@ -57,6 +59,32 @@ export interface ToggleSidebar {
   type: 'TOGGLE_SIDEBAR';
 }
 
+export interface LoadChat {
+  type: 'LOAD_CHAT';
+  channelWithRelated: ChannelWithRelated;
+}
+
+export interface ReloadChat {
+  type: 'RELOAD_CHAT';
+  channelWithRelated: ChannelWithRelated;
+}
+
+export interface CloseChat {
+  type: 'CLOSE_CHAT';
+  id: Id;
+}
+
+export interface LoadMessages {
+  type: 'LOAD_MESSAGES';
+  messages: Message[];
+  finished: boolean;
+}
+
+export interface ChannelEventReceived {
+  type: 'CHANNEL_EVENT_RECEIVED';
+  event: ChannelEvent;
+}
+
 export type Action =
   | LoggedIn
   | LoggedOut
@@ -67,4 +95,8 @@ export type Action =
   | LeftChannel
   | ChannelMemberEdited
   | NewAlert
-  | ToggleSidebar;
+  | ToggleSidebar
+  | LoadChat
+  | ChannelEventReceived
+  | LoadMessages
+  | CloseChat;

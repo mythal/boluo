@@ -63,10 +63,7 @@ export interface ChannelDeleted {
   type: CHANNEL_DELETED;
 }
 
-export const NEW_PREVIEW_EVENT = 'preview';
-export type NEW_PREVIEW_EVENT = typeof NEW_PREVIEW_EVENT;
-
-interface NewPreviewEvent {
-  type: NewPreviewEvent;
+export interface NewPreviewEvent {
+  type: 'preview';
   preview: NewPreview;
 }

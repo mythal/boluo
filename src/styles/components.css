@@ -129,7 +129,8 @@
   }
 
   &:hover .tooltip-content {
-    @apply inline-block text-xs p-2 text-white absolute pointer-events-none z-10;
+    @apply block text-xs p-2 text-white absolute pointer-events-none z-10;
+    width: max-content;
     background-color: var(--tooltip-bg);
     bottom: 100%;
     left: 50%;
@@ -210,5 +211,33 @@
   &::before {
     @apply font-mono mr-1 text-gray-600;
     content: '#';
+  }
+}
+
+.message-list {
+  @apply bg-gray-100;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: scroll;
+}
+
+.preview-item {
+  background: repeating-linear-gradient(
+    45deg,
+    theme('colors.gray.200'),
+    theme('colors.gray.200') 10px,
+    theme('colors.gray.300') 10px,
+    theme('colors.gray.300') 20px
+  );
+
+  &:hover {
+    background: repeating-linear-gradient(
+      45deg,
+      theme('colors.gray.300'),
+      theme('colors.gray.300') 10px,
+      theme('colors.gray.400') 10px,
+      theme('colors.gray.400') 20px
+    );
   }
 }

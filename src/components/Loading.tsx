@@ -5,7 +5,7 @@ interface Props {
   className?: string;
 }
 
-export const Loading: React.FC<Props> = ({ className }) => {
+export const Loading = React.memo<Props>(({ className }) => {
   return (
     <svg
       className={cls('inline-block', className)}
@@ -67,4 +67,4 @@ export const Loading: React.FC<Props> = ({ className }) => {
       </g>
     </svg>
   );
-};
+});

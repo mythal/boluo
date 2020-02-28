@@ -1,8 +1,8 @@
 import { User } from '../api/users';
-import { List, OrderedMap } from 'immutable';
+import { List, OrderedMap, Map } from 'immutable';
 import { Id } from '../id';
 import { SpaceWithMember } from '../api/spaces';
-import { Channel, ChannelMember, ChannelWithMember, ColorList } from '../api/channels';
+import { Channel, ChannelMember, ChannelWithMember } from '../api/channels';
 import { Message, Preview } from '../api/messages';
 
 export type MySpaces = OrderedMap<Id, SpaceWithMember>;
@@ -23,18 +23,21 @@ export interface Alert {
 }
 
 export type ChatItem =
-  | { type: 'MESSAGE'; message: Message }
-  | { type: 'PREVIEW'; preview: Preview }
+  | { type: 'MESSAGE'; message: Message; date: Date }
+  | { type: 'PREVIEW'; preview: Preview; date: Date }
   | { type: 'DAY_DIVIDER'; date: Date };
 
-interface Chat {
+export const newDayDivider = (date: Date): ChatItem => ({ type: 'DAY_DIVIDER', date });
+
+export interface Chat {
   channel: Channel;
-  members: List<ChannelMember>;
-  colorList: ColorList;
-  items: OrderedMap<Id, ChatItem>;
-  loading: boolean;
-  latest: number;
+  members: ChannelMember[];
+  colorMap: Map<Id, string>;
+  itemList: List<ChatItem>;
+  previewMap: Map<Id, Id>;
+  finished: boolean;
   oldest: number;
+  latest: number;
 }
 
 interface Appearance {
@@ -48,13 +51,13 @@ const appearanceStateInit: Appearance = {
 export interface State {
   my: MyState;
   alertList: List<Alert>;
-  chat: Chat | 'LOADING';
+  chat: Chat | undefined;
   appearance: Appearance;
 }
 
 export const initState: State = {
   my: 'GUEST',
   alertList: List(),
-  chat: 'LOADING',
+  chat: undefined,
   appearance: appearanceStateInit,
 };

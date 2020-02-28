@@ -35,15 +35,11 @@ export interface JoinChannel {
   characterName?: string;
 }
 
-export interface ColorList {
-  [userId: string]: string;
-}
-
 export interface ChannelWithRelated {
   channel: Channel;
   members: ChannelMember[];
   space: Space;
-  colorList: ColorList;
+  colorList: { [userId: string]: string };
 }
 
 export interface EditChannel {

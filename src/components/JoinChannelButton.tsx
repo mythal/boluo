@@ -14,7 +14,7 @@ interface Props {
   className?: string;
 }
 
-export const JoinChannelButton: React.FC<Props> = ({ channel, className }) => {
+export const JoinChannelButton = React.memo<Props>(({ channel, className }) => {
   const [dialog, setDialog] = useState(false);
   const [characterName, setCharacterName] = useState('');
   const dispatch = useDispatch();
@@ -95,4 +95,4 @@ export const JoinChannelButton: React.FC<Props> = ({ channel, className }) => {
       </Dialog>
     </>
   );
-};
+});

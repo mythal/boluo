@@ -10,7 +10,7 @@ interface Props {
   dismiss?: () => void;
 }
 
-export const AlertItem: React.FC<Props> = ({ level, message, className, dismiss }) => {
+export const AlertItem = React.memo<Props>(({ level, message, className, dismiss }) => {
   let color;
   let Icon;
   switch (level) {
@@ -42,4 +42,4 @@ export const AlertItem: React.FC<Props> = ({ level, message, className, dismiss 
       </div>
     </div>
   );
-};
+});

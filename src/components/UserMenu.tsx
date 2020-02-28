@@ -12,7 +12,7 @@ interface Props {
   profile: User;
 }
 
-export const UserMenu: React.FC<Props> = ({ profile }) => {
+export const UserMenu = React.memo<Props>(({ profile }) => {
   const dispatch = useDispatch();
   const ref = useRef<HTMLUListElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -40,4 +40,4 @@ export const UserMenu: React.FC<Props> = ({ profile }) => {
       </ul>
     </div>
   );
-};
+});

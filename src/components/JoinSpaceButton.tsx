@@ -12,7 +12,7 @@ interface Props {
   className?: string;
 }
 
-export const JoinSpaceButton: React.FC<Props> = ({ space, className }) => {
+export const JoinSpaceButton = React.memo<Props>(({ space, className }) => {
   const [dialog, setDialog] = useState(false);
   const dispatch = useDispatch();
   const my = useMy();
@@ -72,4 +72,4 @@ export const JoinSpaceButton: React.FC<Props> = ({ space, className }) => {
       </Dialog>
     </>
   );
-};
+});

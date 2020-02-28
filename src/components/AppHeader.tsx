@@ -10,7 +10,7 @@ export interface Props {
   sidebar: boolean;
 }
 
-export const AppHeader: React.FC<Props> = ({ sidebar }) => {
+export const AppHeader = React.memo<Props>(({ sidebar }) => {
   const my = useMy();
   const dispatch = useDispatch();
   const [login, setLogin] = useState(false);
@@ -41,4 +41,4 @@ export const AppHeader: React.FC<Props> = ({ sidebar }) => {
       )}
     </div>
   );
-};
+});

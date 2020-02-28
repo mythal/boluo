@@ -1,6 +1,9 @@
 import { Dispatch } from './components/App';
 import { AppError, errorText } from './api/error';
 
+export const maxDate = new Date(8640000000000000);
+export const minDate = new Date(-8640000000000000);
+
 export const neverFn = (): never => {
   throw new Error('Never say never.');
 };

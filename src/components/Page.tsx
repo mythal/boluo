@@ -8,6 +8,7 @@ import { useMy } from './App';
 import { AlertList } from './AlertList';
 import { AppHeader } from './AppHeader';
 import { Sidebar } from './Sidebar';
+import { SpacePage } from './SpacePage';
 
 interface Props {
   sidebar: boolean;
@@ -25,6 +26,9 @@ export const Page: React.FC<Props> = ({ sidebar }) => {
           <Switch>
             <Route exact path="/">
               {my === 'GUEST' ? <Welcome /> : <Catalog />}
+            </Route>
+            <Route path="/space/:id">
+              <SpacePage />
             </Route>
             <Route path="/components">
               <ComponentsPage />

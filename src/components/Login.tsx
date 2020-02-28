@@ -100,7 +100,7 @@ export const Login: React.FC<Props> = ({ dismiss, signUp }) => {
 
   return (
     <Dialog dismiss={dismiss}>
-      <form className="p-6 w-64" onSubmit={handleSubmit}>
+      <form className="dialog" onSubmit={handleSubmit}>
         {error === null ? null : <AlertItem level="ERROR" message={error} />}
         <div>
           <Input label="用户名" value={username} onChange={setUsername} error={usernameError} />

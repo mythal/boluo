@@ -187,12 +187,20 @@
   right: 0;
 }
 
+.dialog {
+  @apply max-w-sm p-4;
+}
+
+.dialog-title {
+  @apply text-xl mt-1 mb-4;
+}
+
 .bg-logo {
   background-image: url('../../public/logo-512x512.png');
 }
 
 .channel-item {
-  @apply w-full pl-4 py-1 text-sm inline-block;
+  @apply w-full px-4 py-1 text-sm inline-block truncate;
   &:hover {
     @apply bg-gray-300;
   }

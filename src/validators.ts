@@ -43,6 +43,8 @@ export function checkDisplayName(nickname: string): ValidatorResult {
 export function checkCharacterName(characterName: string): ValidatorResult {
   if (characterName.length === 0) {
     return new Err('角色名不得为空。');
+  } else if (characterName.length > 32) {
+    return new Err('角色名长度不得超过 32 字符。');
   }
   return ok;
 }

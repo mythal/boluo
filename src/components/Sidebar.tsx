@@ -57,7 +57,7 @@ const SpaceItem: React.FC<SpaceItemProps> = ({ space, member, channels, channelI
         <span className="mr-1 w-4 inline-block">
           <Icon />
         </span>
-        <span className="flex-grow inline-block">{space.name}</span>
+        <span className="flex-grow inline-block mr-1">{space.name}</span>
         <button className="opacity-0 group-hover:opacity-100 btn py-0 px-2 text-xs rounded" onClick={enterSpace}>
           <CaretRightIcon />
         </button>
@@ -76,11 +76,14 @@ interface Props {
 }
 
 export const Sidebar: React.FC<Props> = ({ my, open }) => {
+  if (!open) {
+    return null;
+  }
   const spaceList = my.spaces
     .valueSeq()
     .map(({ space, member }) => <SpaceItem key={space.id} space={space} member={member} channels={my.channels} />);
   return (
-    <div className="w-1/4 md:w-48 bg-gray-200 h-full overflow-y-scroll border-r" hidden={!open}>
+    <div className="w-48 fixed pb-2 md:static bg-gray-200 md:h-full md:overflow-y-scroll border-r border-b md:border-b-0 shadow-lg md:shadow-none">
       <ul>{spaceList}</ul>
 
       <div className="mt-4 mx-2">

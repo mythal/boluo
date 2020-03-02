@@ -4,7 +4,6 @@ import { Dispatch, useChat, useDispatch, useMy } from '../App';
 import { useParams } from 'react-router-dom';
 import { ChannelEventReceived, LoadChat, NewAlert } from '../../states/actions';
 import { throwErr } from '../../helper';
-import { Chat, ChatItem } from '../../states/states';
 import { Id } from '../../id';
 import { connect } from '../../api/connect';
 import { ChannelEvent, NewPreviewEvent } from '../../api/events';
@@ -13,6 +12,7 @@ import { LoadMoreButton } from './LoadMoreButton';
 import { Compose } from './Compose';
 import { MessageItem } from './MessageItem';
 import { DayDivider } from './DayDivider';
+import { Chat, ChatItem } from '../../states/chat';
 
 interface Params {
   id: string;
@@ -107,7 +107,7 @@ export const ChannelChat: React.FC<Props> = () => {
     );
   }
   const { colorMap } = chat;
-  let { previewMap } = chat;
+  const { previewMap } = chat;
 
   const chatItemMapper = (item: ChatItem) => {
     if (item.type === 'MESSAGE') {
@@ -135,12 +135,11 @@ export const ChannelChat: React.FC<Props> = () => {
       if (previewMap.get(item.preview.senderId) !== item.preview.id) {
         return null;
       }
-      previewMap = previewMap.remove(item.preview.senderId);
       const { id, text, entities, name, isAction, isMaster, inGame, start } = item.preview;
       const color = colorMap.get(item.preview.senderId);
       return (
         <MessageItem
-          key={id}
+          key={'preview-' + id}
           isPreview={true}
           text={text}
           entities={entities}

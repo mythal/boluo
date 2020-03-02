@@ -222,7 +222,7 @@
   overflow-y: scroll;
 }
 
-.preview-item {
+.preview-item-in-game {
   background: repeating-linear-gradient(
     45deg,
     theme('colors.gray.200'),
@@ -238,6 +238,26 @@
       theme('colors.gray.300') 10px,
       theme('colors.gray.400') 10px,
       theme('colors.gray.400') 20px
+    );
+  }
+}
+
+.preview-item {
+  background: repeating-linear-gradient(
+    45deg,
+    theme('colors.gray.700'),
+    theme('colors.gray.700') 10px,
+    theme('colors.gray.800') 10px,
+    theme('colors.gray.800') 20px
+  );
+
+  &:hover {
+    background: repeating-linear-gradient(
+      45deg,
+      theme('colors.gray.800'),
+      theme('colors.gray.800') 10px,
+      theme('colors.gray.900') 10px,
+      theme('colors.gray.900') 20px
     );
   }
 }

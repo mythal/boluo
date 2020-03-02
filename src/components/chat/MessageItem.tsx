@@ -30,7 +30,8 @@ export const MessageItem = React.memo<Props>(props => {
       className={cls(
         'flex w-full items-center hover:bg-gray-200',
         { 'bg-gray-900 text-white text-xs hover:bg-gray-800': !inGame },
-        { 'preview-item': isPreview }
+        { 'preview-item-in-game': isPreview && inGame },
+        { 'preview-item': isPreview && !inGame }
       )}
       style={style}
     >

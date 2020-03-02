@@ -1,4 +1,4 @@
-import { Chat, ChatItem, newDayDivider, State } from './states';
+import { State } from './states';
 import {
   Action,
   ChannelEventReceived,
@@ -19,6 +19,7 @@ import { ChannelWithMember } from '../api/channels';
 import { Id } from '../id';
 import { SpaceWithMember } from '../api/spaces';
 import { Message, Preview } from '../api/messages';
+import { Chat, ChatItem, newDayDivider, newMessageChatItem, newPreviewChatItem } from './chat';
 
 type Reducer<T extends Action = Action> = (state: State, action: T) => State;
 
@@ -140,13 +141,13 @@ const loadMessages: Reducer<LoadMessages> = (state, { messages, finished }) => {
   for (const message of messages) {
     const date = new Date(message.orderDate);
     if (date.getDay() !== messageDate.getDay()) {
-      itemList = itemList.push({ type: 'DAY_DIVIDER', date });
+      itemList = itemList.push(newDayDivider(date));
     }
-    itemList = itemList.push({ type: 'MESSAGE', message, date });
+    itemList = itemList.push(newMessageChatItem(message));
     messageDate = date;
   }
   if (finished) {
-    itemList = itemList.push({ type: 'DAY_DIVIDER', date: messageDate });
+    itemList = itemList.push(newDayDivider(messageDate));
   }
   const oldest = Math.min(messageDate.getTime(), chat.oldest);
   const latest = Math.max(messages[0].orderDate, chat.latest);
@@ -179,8 +180,7 @@ const editMessage = (itemList: List<ChatItem>, message: Message): List<ChatItem>
   if (index === -1) {
     return itemList;
   }
-  const date = new Date(message.orderDate);
-  return itemList.set(index, { type: 'MESSAGE', message, date });
+  return itemList.set(index, newMessageChatItem(message));
 };
 
 const deleteMessage = (itemList: List<ChatItem>, messageId: Id): List<ChatItem> => {
@@ -192,10 +192,7 @@ const deleteMessage = (itemList: List<ChatItem>, messageId: Id): List<ChatItem> 
   if (item?.type !== 'MESSAGE') {
     return itemList;
   }
-  const message = item.message;
-  const date = item.date;
-  const next: ChatItem = { type: 'MESSAGE', message: { ...message, deleted: true }, date };
-  return itemList.set(index, next);
+  return itemList.set(index, newMessageChatItem({ ...item.message, deleted: true }));
 };
 
 const newPreview = (
@@ -205,7 +202,7 @@ const newPreview = (
   prevDate: Date
 ): [List<ChatItem>, Map<Id, Id>] => {
   const date = new Date(preview.start);
-  const previewItem: ChatItem = { type: 'PREVIEW', preview, date };
+  const previewItem: ChatItem = newPreviewChatItem(preview);
 
   const previewDate = new Date(preview.start);
   const firstItem = itemList.first(undefined);
@@ -219,12 +216,14 @@ const newPreview = (
   }
   let i = 0;
   for (const item of itemList) {
-    if (item.type === 'PREVIEW' && item.preview.id === preview.id) {
-      return [itemList.set(i, previewItem), nextPreviewMap];
+    if (item.id === preview.id) {
+      if (item.type === 'PREVIEW') {
+        return [itemList.set(i, previewItem), nextPreviewMap];
+      } else {
+        return [itemList, previewMap];
+      }
     } else if (item.date < previewDate) {
       return [itemList.insert(i, previewItem), nextPreviewMap];
-    } else if (item.type === 'MESSAGE' && item.message.id === preview.id) {
-      return [itemList, previewMap];
     }
     i += 1;
   }
@@ -234,7 +233,7 @@ const newPreview = (
 const newMessage = (itemList: List<ChatItem>, message: Message, prevDate: Date): List<ChatItem> => {
   const date = new Date(message.orderDate);
   const firstDate = itemList.first(undefined)?.date;
-  const messageItem: ChatItem = { type: 'MESSAGE', message, date: date };
+  const messageItem: ChatItem = newMessageChatItem(message);
   if (firstDate === undefined || firstDate < date) {
     if (prevDate.getDate() !== date.getDate()) {
       itemList = itemList.unshift(newDayDivider(date));
@@ -245,12 +244,10 @@ const newMessage = (itemList: List<ChatItem>, message: Message, prevDate: Date):
 
   let i = 0;
   for (const item of itemList) {
-    if (item.type === 'PREVIEW' && item.preview.id === message.id) {
+    if (item.id === message.id) {
       return itemList.set(i, messageItem);
     } else if (item.date < date) {
       return itemList.insert(i, messageItem);
-    } else if (item.type === 'MESSAGE' && item.message.id === message.id) {
-      return itemList;
     }
     i += 1;
   }

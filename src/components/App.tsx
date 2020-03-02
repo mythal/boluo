@@ -1,7 +1,7 @@
 import '../styles/main.css';
 import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { Alert, Chat, initState, MyState } from '../states/states';
+import { Alert, initState, MyState } from '../states/states';
 import { reducer } from '../states/reducers';
 import { Action, LoggedIn, LoggedOut } from '../states/actions';
 import { get } from '../api/request';
@@ -10,6 +10,7 @@ import { Page } from './Page';
 import { neverFn } from '../helper';
 import { List } from 'immutable';
 import { Channel, ChannelMember, ChannelWithRelated } from '../api/channels';
+import { Chat } from '../states/chat';
 
 const DispatchContext = React.createContext<(action: Action) => void>(neverFn);
 

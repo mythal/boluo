@@ -107,13 +107,9 @@ export const ChannelChat: React.FC<Props> = () => {
     );
   }
   const { colorMap } = chat;
-  const { previewMap } = chat;
 
   const chatItemMapper = (item: ChatItem) => {
     if (item.type === 'MESSAGE') {
-      if (item.message.deleted) {
-        return null;
-      }
       const { id, text, entities, name, isAction, isMaster, inGame, seed, created } = item.message;
       const color = colorMap.get(item.message.senderId);
       return (
@@ -132,14 +128,11 @@ export const ChannelChat: React.FC<Props> = () => {
         />
       );
     } else if (item.type === 'PREVIEW') {
-      if (previewMap.get(item.preview.senderId) !== item.preview.id) {
-        return null;
-      }
       const { id, text, entities, name, isAction, isMaster, inGame, start } = item.preview;
       const color = colorMap.get(item.preview.senderId);
       return (
         <MessageItem
-          key={'preview-' + id}
+          key={id}
           isPreview={true}
           text={text}
           entities={entities}
@@ -151,8 +144,10 @@ export const ChannelChat: React.FC<Props> = () => {
           time={start}
         />
       );
-    } else {
+    } else if (item.type === 'DAY_DIVIDER') {
       return <DayDivider key={item.date.getTime()} date={item.date} />;
+    } else {
+      return null;
     }
   };
 

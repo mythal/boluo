@@ -15,7 +15,8 @@
   },
   "scripts": {
     "start": "webpack-dev-server --output-public-path / --progress",
-    "build": "NODE_ENV=production webpack --config webpack.config.js"
+    "build": "NODE_ENV=production webpack --config webpack.config.js",
+    "build:dev": "NODE_ENV=production webpack --config webpack.config.js"
   },
   "devDependencies": {
     "@fullhuman/postcss-purgecss": "^2.0.6",

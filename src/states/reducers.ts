@@ -19,7 +19,18 @@ import { ChannelWithMember } from '../api/channels';
 import { Id } from '../id';
 import { SpaceWithMember } from '../api/spaces';
 import { Message, Preview } from '../api/messages';
-import { Chat, ChatItem, newDayDivider, newMessageChatItem, newPreviewChatItem } from './chat';
+import {
+  addMessageToItemMap,
+  addPreviewToItemMap,
+  Chat,
+  ChatItem,
+  findItem,
+  ItemMap,
+  newDayDivider,
+  newEmptyItem,
+  newMessageChatItem,
+  newPreviewChatItem,
+} from './chat';
 
 type Reducer<T extends Action = Action> = (state: State, action: T) => State;
 
@@ -136,7 +147,7 @@ const loadMessages: Reducer<LoadMessages> = (state, { messages, finished }) => {
   } else if (len === 0) {
     return { ...state, chat: { ...chat, finished } };
   }
-  let { itemList } = chat;
+  let { itemList, itemMap } = chat;
   let messageDate = new Date(messages[0].orderDate);
   for (const message of messages) {
     const date = new Date(message.orderDate);
@@ -144,6 +155,7 @@ const loadMessages: Reducer<LoadMessages> = (state, { messages, finished }) => {
       itemList = itemList.push(newDayDivider(date));
     }
     itemList = itemList.push(newMessageChatItem(message));
+    itemMap = addMessageToItemMap(itemMap, message);
     messageDate = date;
   }
   if (finished) {
@@ -151,7 +163,7 @@ const loadMessages: Reducer<LoadMessages> = (state, { messages, finished }) => {
   }
   const oldest = Math.min(messageDate.getTime(), chat.oldest);
   const latest = Math.max(messages[0].orderDate, chat.latest);
-  return { ...state, chat: { ...chat, oldest, itemList, finished, latest } };
+  return { ...state, chat: { ...chat, oldest, itemList, itemMap, finished, latest } };
 };
 
 const loadChat: Reducer<LoadChat> = (state, { channelWithRelated }) => {
@@ -165,93 +177,148 @@ const loadChat: Reducer<LoadChat> = (state, { channelWithRelated }) => {
     const chat: Chat = { ...state.chat, channel, members, colorMap };
     return { ...state, chat };
   } else {
-    const itemList = List<ChatItem>();
-    const previewMap = Map<Id, Id>();
+    const itemList: Chat['itemList'] = List();
+    const itemMap: Chat['itemMap'] = Map();
     const oldest = new Date().getTime();
     const latest = oldest;
     const finished = false;
-    const chat: Chat = { channel, members, colorMap, itemList, previewMap, oldest, finished, latest };
+    const chat: Chat = { channel, members, colorMap, itemList, itemMap, oldest, finished, latest };
     return { ...state, chat };
   }
 };
 
-const editMessage = (itemList: List<ChatItem>, message: Message): List<ChatItem> => {
-  const index = itemList.findIndex(item => item.type === 'MESSAGE' && item.message.id === message.id);
-  if (index === -1) {
+const editMessage = (itemList: List<ChatItem>, itemMap: ItemMap, message: Message): List<ChatItem> => {
+  const itemInfo = itemMap.get(message.id);
+  if (itemInfo === undefined) {
     return itemList;
   }
+  const { type, date } = itemInfo;
+  if (type === 'PREVIEW') {
+    console.warn('attempt edit a preview item');
+    return itemList;
+  }
+  const [index] = findItem(itemList, date, message.id);
   return itemList.set(index, newMessageChatItem(message));
 };
 
-const deleteMessage = (itemList: List<ChatItem>, messageId: Id): List<ChatItem> => {
-  const index = itemList.findIndex(item => item.type === 'MESSAGE' && item.message.id === messageId);
-  if (index === -1) {
-    return itemList;
+const deleteMessage = (itemList: List<ChatItem>, itemMap: ItemMap, messageId: Id): [List<ChatItem>, ItemMap] => {
+  const itemInfo = itemMap.get(messageId);
+  if (itemInfo === undefined) {
+    return [itemList, itemMap];
   }
-  const item = itemList.get(index);
-  if (item?.type !== 'MESSAGE') {
-    return itemList;
+  const { type, date } = itemInfo;
+  if (type === 'PREVIEW') {
+    console.warn('attempt edit a preview item');
+    return [itemList, itemMap];
   }
-  return itemList.set(index, newMessageChatItem({ ...item.message, deleted: true }));
+  const [index, item] = findItem(itemList, date, messageId);
+  if (item.type !== 'MESSAGE') {
+    console.warn('failed to find item');
+    return [itemList, itemMap];
+  }
+  return [itemList.set(index, newEmptyItem(item.date)), itemMap.remove(messageId)];
 };
 
 const newPreview = (
   itemList: List<ChatItem>,
-  previewMap: Map<Id, Id>,
+  itemMap: ItemMap,
   preview: Preview,
   prevDate: Date
-): [List<ChatItem>, Map<Id, Id>] => {
-  const date = new Date(preview.start);
-  const previewItem: ChatItem = newPreviewChatItem(preview);
-
-  const previewDate = new Date(preview.start);
-  const firstItem = itemList.first(undefined);
-  const nextPreviewMap = previewMap.set(preview.senderId, preview.id);
-  if (firstItem === undefined || firstItem.date < previewDate) {
-    if (prevDate.getDate() !== date.getDate()) {
-      itemList = itemList.unshift(newDayDivider(date));
+): [List<ChatItem>, ItemMap] => {
+  const messageInfo = itemMap.get(preview.id);
+  if (messageInfo !== undefined) {
+    // There is already a message with the same id.
+    if (messageInfo.type !== 'MESSAGE') {
+      console.log(messageInfo);
+      console.log(itemMap.toJS());
+      throw new Error();
     }
-    itemList = itemList.unshift(previewItem);
-    return [itemList, nextPreviewMap];
+    console.warn('preview after the message');
+    return [itemList, itemMap];
   }
+
+  const previousPreviewInfo = itemMap.get(preview.senderId);
+  if (previousPreviewInfo !== undefined) {
+    // Users have sent previews.
+    if (previousPreviewInfo.type !== 'PREVIEW') {
+      throw new Error();
+    }
+    const { id, date } = previousPreviewInfo;
+    const entry = findItem(itemList, date, id);
+    if (entry === null) {
+      throw new Error();
+    }
+    const [index] = entry;
+    if (id === preview.id) {
+      // same id, replace it.
+      itemList = itemList.set(index, newPreviewChatItem(preview));
+      return [itemList, itemMap];
+    } else {
+      // different id, delete it.
+      itemList = itemList.set(index, newEmptyItem(date));
+    }
+  }
+
+  itemMap = addPreviewToItemMap(itemMap, preview);
+  const previewItem = newPreviewChatItem(preview);
+  const startDate = previewItem.date;
+
   let i = 0;
   for (const item of itemList) {
-    if (item.id === preview.id) {
-      if (item.type === 'PREVIEW') {
-        return [itemList.set(i, previewItem), nextPreviewMap];
-      } else {
-        return [itemList, previewMap];
-      }
-    } else if (item.date < previewDate) {
-      return [itemList.insert(i, previewItem), nextPreviewMap];
+    if (item.date < startDate) {
+      return [i === 0 ? itemList.unshift(previewItem) : itemList.insert(i, previewItem), itemMap];
     }
     i += 1;
   }
-  return [itemList.push(previewItem), nextPreviewMap];
+  return [itemList.push(previewItem), itemMap];
 };
 
-const newMessage = (itemList: List<ChatItem>, message: Message, prevDate: Date): List<ChatItem> => {
-  const date = new Date(message.orderDate);
-  const firstDate = itemList.first(undefined)?.date;
-  const messageItem: ChatItem = newMessageChatItem(message);
-  if (firstDate === undefined || firstDate < date) {
-    if (prevDate.getDate() !== date.getDate()) {
-      itemList = itemList.unshift(newDayDivider(date));
+const newMessage = (
+  itemList: List<ChatItem>,
+  itemMap: ItemMap,
+  message: Message,
+  prevDate: Date
+): [List<ChatItem>, ItemMap] => {
+  const previousPreview = itemMap.get(message.senderId);
+  if (previousPreview !== undefined) {
+    // Users have sent previews.
+    if (previousPreview.type !== 'PREVIEW') {
+      throw new Error();
     }
-    itemList = itemList.unshift(messageItem);
-    return itemList;
+    const { id, date } = previousPreview;
+    const entry = findItem(itemList, date, id);
+    if (entry === null) {
+      throw new Error();
+    }
+    itemMap = itemMap.remove(message.senderId);
+    const [index] = entry;
+    if (id === message.id) {
+      // same id, replace it.
+      itemList = itemList.set(index, newMessageChatItem(message));
+      itemMap = addMessageToItemMap(itemMap, message);
+      return [itemList, itemMap];
+    } else {
+      // different id, delete it.
+      itemList = itemList.set(index, newEmptyItem(date));
+    }
   }
 
+  const previousMessage = itemMap.get(message.id);
+  if (previousMessage !== undefined) {
+    console.warn('duplicate message.');
+    return [itemList, itemMap];
+  }
+  itemMap = addMessageToItemMap(itemMap, message);
+  const messageItem = newMessageChatItem(message);
+  const messageDate = messageItem.date;
   let i = 0;
   for (const item of itemList) {
-    if (item.id === message.id) {
-      return itemList.set(i, messageItem);
-    } else if (item.date < date) {
-      return itemList.insert(i, messageItem);
+    if (item.date < messageDate) {
+      return [i === 0 ? itemList.unshift(messageItem) : itemList.insert(i, messageItem), itemMap];
     }
     i += 1;
   }
-  return itemList.push(messageItem);
+  return [itemList.push(messageItem), itemMap];
 };
 
 const handleChannelEvent: Reducer<ChannelEventReceived> = (state, { event }) => {
@@ -260,30 +327,27 @@ const handleChannelEvent: Reducer<ChannelEventReceived> = (state, { event }) => 
     return state;
   }
   const body = event.body;
-  let { itemList, previewMap } = chat;
+  let { itemList, itemMap } = chat;
 
   let oldest = chat.oldest;
   const prevDate = new Date(chat.latest);
   switch (body.type) {
     case 'newMessage':
-      itemList = newMessage(itemList, body.message, prevDate);
-      previewMap = previewMap.remove(body.message.id);
+      [itemList, itemMap] = newMessage(itemList, itemMap, body.message, prevDate);
       oldest = Math.min(body.message.orderDate, oldest);
       break;
     case 'messagePreview':
-      [itemList, previewMap] = newPreview(itemList, previewMap, body.preview, prevDate);
+      [itemList, itemMap] = newPreview(itemList, itemMap, body.preview, prevDate);
       break;
     case 'messageDeleted':
-      itemList = deleteMessage(itemList, body.messageId);
-      previewMap = previewMap.remove(body.messageId);
+      [itemList, itemMap] = deleteMessage(itemList, itemMap, body.messageId);
       break;
     case 'messageEdited':
-      itemList = editMessage(itemList, body.message);
-      previewMap = previewMap.remove(body.message.id);
+      itemList = editMessage(itemList, itemMap, body.message);
       break;
   }
   const latest = event.timestamp;
-  return { ...state, chat: { ...chat, itemList, previewMap, latest, oldest } };
+  return { ...state, chat: { ...chat, itemList, itemMap, latest, oldest } };
 };
 
 const closeChat: Reducer<CloseChat> = (state, { id }) => {

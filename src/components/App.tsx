@@ -7,12 +7,12 @@ import { Action, LoggedIn, LoggedOut } from '../states/actions';
 import { get } from '../api/request';
 import { Loading } from './Loading';
 import { Page } from './Page';
-import { neverFn } from '../helper';
+import { unwrap } from '../helper';
 import { List } from 'immutable';
-import { Channel, ChannelMember, ChannelWithRelated } from '../api/channels';
+import { Channel, ChannelMember } from '../api/channels';
 import { Chat } from '../states/chat';
 
-const DispatchContext = React.createContext<(action: Action) => void>(neverFn);
+const DispatchContext = React.createContext<(action: Action) => void>(unwrap);
 
 export type Dispatch = <T extends Action>(action: T) => void;
 export const useDispatch = (): Dispatch => useContext(DispatchContext);

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Binary, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, Text } from './entities';
+import { Binary, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, SubExpr, Text } from './entities';
 
 interface State {
   text: string;
@@ -255,63 +255,76 @@ const operator2 = (): P<Operator> =>
 
 const num = (): P<ExprNode> => regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
 
-const expr = (): P<ExprNode> =>
+const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T): P<T> =>
   new P((state, env) => {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    const left = expr2();
-    const restExpr: P<[Operator, ExprNode]> = spaces().with(
-      operator1()
-        .skip(spaces())
-        .and(expr())
-    );
-    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(maybe(restExpr));
-    return maybeExpr
-      .map<ExprNode>(([l, maybeRest]) => {
-        if (!maybeRest) {
-          return l;
-        }
-        const [op, r] = maybeRest;
-        const node: Binary = { type: 'Binary', l, r, op };
-        return node;
-      })
-      .run(state, env);
+    const rest = (l: T): P<T> =>
+      new P((state, env) => {
+        const restExpr: P<T> = spaces()
+          .with(op.skip(spaces()).and(p()))
+          .then(([[op, r], state], env) => {
+            return rest(cons(op, l, r)).run(state, env);
+          });
+        return maybe(restExpr)
+          .map(node => node ?? l)
+          .run(state, env);
+      });
+
+    const result = p().run(state, env);
+    if (result === null) {
+      return null;
+    }
+    const [node, state2] = result;
+    return rest(node).run(state2, env);
   });
+
+const min = (): P<ExprNode> => {
+  return regex(/^[Mm][Ii][Nn]\s*/)
+    .then(([_, state], env) => atom().run(state, env))
+    .map(node => {
+      if (node.type !== 'Roll') {
+        return node;
+      } else {
+        return { type: 'Min', node };
+      }
+    });
+};
+
+const max = (): P<ExprNode> => {
+  return regex(/^[Mm][Aa][Xx]\s*/)
+    .then(([_, state], env) => atom().run(state, env))
+    .map(node => {
+      if (node.type !== 'Roll') {
+        return node;
+      } else {
+        return { type: 'Max', node };
+      }
+    });
+};
+
+const subExprMapper = (node: ExprNode): SubExpr => (node.type === 'SubExpr' ? node : { type: 'SubExpr', node });
 
 const atom = (): P<ExprNode> => {
   const subExpr = choice([
     regex(/^\(\s*/)
       .with(expr())
-      .skip(regex(/^\s*\)/)), // match (...)
+      .skip(regex(/^\s*\)/))
+      .map(subExprMapper), // match (...)
     regex(/^（\s*/)
       .with(expr())
-      .skip(regex(/^\s*）/)), // match （...）
+      .skip(regex(/^\s*）/))
+      .map(subExprMapper), // match （...）
     regex(/^\[\s*/)
       .with(expr())
-      .skip(regex(/^\s*]/)), // match [...]
+      .skip(regex(/^\s*]/))
+      .map(subExprMapper), // match [...]
   ]);
-  return choice([roll(), num(), subExpr]);
+  return choice([roll(), num(), subExpr, max(), min()]);
 };
 
 const expr2 = (): P<ExprNode> =>
-  new P((state, env) => {
-    const left = atom();
-    const restExpr: P<[Operator, ExprNode]> = spaces().with(
-      operator2()
-        .skip(spaces())
-        .and(expr2())
-    );
-    const maybeExpr: P<[ExprNode, [Operator, ExprNode] | null]> = left.and(maybe(restExpr));
-    return maybeExpr
-      .map<ExprNode>(([l, maybeRest]) => {
-        if (!maybeRest) {
-          return l;
-        }
-        const [op, r] = maybeRest;
-        const node: Binary = { type: 'Binary', l, r, op };
-        return node;
-      })
-      .run(state, env);
-  });
+  chainl1<ExprNode, Operator>(operator2(), atom, (op, l, r) => ({ type: 'Binary', l, r, op }));
+const expr = (): P<ExprNode> =>
+  chainl1<ExprNode, Operator>(operator1(), expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
 
 const expression = (): P<Entity> =>
   new P((state, env) => {

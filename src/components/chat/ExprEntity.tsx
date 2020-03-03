@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { MouseEventHandler, useState } from 'react';
 import Prando from 'prando';
-import { Binary, ExprNode, Roll } from '../../entities';
+import { EvaluatedExprNode, ExprNode, RollResult } from '../../entities';
 import { D20Icon } from '../icons';
+import { evaluate, TOO_MUCH_LAYER } from '../../eval';
 
 interface Props {
   node: ExprNode;
@@ -11,58 +12,79 @@ interface Props {
 
 const fakeRng = new Prando();
 
-const rollTheDice = (node: Roll, rng: Prando): number[] | null => {
-  if (node.counter > 64 || node.face > 65535) {
-    return null;
-  }
-  const result: number[] = [];
-  if (node.face === 1) {
-    return [node.counter];
-  } else {
-    for (let i = 0; i < node.counter; i++) {
-      const x = (rng ?? fakeRng).nextInt(1, node.face);
-      result.push(x);
-    }
-  }
-  return result;
+const Unsupported = () => <span className="inline text-gray-300">[不支持]</span>;
+
+const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
+  const [expand, setExpand] = useState(false);
+
+  const handleMouse: MouseEventHandler = e => {
+    e.preventDefault();
+    setExpand(!expand);
+  };
+
+  return (
+    <span
+      className="group inline-block border-dashed border-b-2 border-gray-500 cursor-pointer"
+      onMouseDown={handleMouse}
+    >
+      <D20Icon className="mr-1 opacity-50" />
+      {node.counter}D{node.face}
+      {expand && (
+        <>
+          =[{node.values.join(', ')}]={node.value}
+        </>
+      )}
+    </span>
+  );
 };
 
-export const ExprEntity: React.FC<Props> = ({ node, rng }) => {
-  const [_, setCounter] = useState(0);
-  useEffect(() => {
-    let counter = 0;
-    if (rng !== undefined || node.type !== 'Roll' || node.face === 1) {
-      return;
-    }
-    const interval = window.setInterval(() => {
-      setCounter(counter + 1);
-      counter += 1;
-    }, 500);
-    return () => clearInterval(interval);
-  }, [rng]);
-
-  const unsupported = <div className="inline text-gray-300">[不支持]</div>;
+const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
   if (node.type === 'Num') {
     return <div className="inline text-lg">{node.value}</div>;
   } else if (node.type === 'Roll') {
-    const result = rollTheDice(node, rng ?? fakeRng);
-    if (result === null) {
-      return unsupported;
-    }
-    const sum = result.reduce((a, b) => a + b);
-    return (
-      <span className="inline-block" title={result.length > 1 ? result.join(', ') : undefined}>
-        <D20Icon className="mr-1 opacity-50" />
-        {node.counter}D{node.face}={sum}
-      </span>
-    );
+    return <RollNode node={node} />;
   } else if (node.type === 'Binary') {
     return (
-      <span className="inline-block cursor-pointer">
-        <ExprEntity node={node.l} rng={rng} /> {node.op} <ExprEntity node={node.r} rng={rng} />
+      <span>
+        <Node node={node.l} /> {node.op} <Node node={node.r} />
       </span>
     );
-  } else {
-    return unsupported;
+  } else if (node.type === 'Max') {
+    return (
+      <span>
+        max(
+        <RollNode node={node.node} />
+        )={node.value}
+      </span>
+    );
+  } else if (node.type === 'Min') {
+    return (
+      <span>
+        min(
+        <RollNode node={node.node} />
+        )={node.value}
+      </span>
+    );
+  } else if (node.type === 'SubExpr') {
+    return <span>({<Node node={node.node} />})</span>;
   }
+
+  return <Unsupported />;
 };
+
+export const ExprEntity = React.memo<Props>(({ node, rng }) => {
+  try {
+    const evaluated = evaluate(node, rng ?? fakeRng);
+    return (
+      <span>
+        <Node node={evaluated} /> = {evaluated.value}
+      </span>
+    );
+  } catch (e) {
+    if (e === TOO_MUCH_LAYER) {
+      return <span>表达式嵌套太深</span>;
+    } else {
+      throw e;
+    }
+  }
+});

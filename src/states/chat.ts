@@ -26,7 +26,7 @@ export interface DayDividerChatItem {
 export interface EmptyItem {
   type: 'EMPTY';
   date: Date;
-  id: undefined;
+  id: Id;
 }
 
 export type ChatItem = MessageChatItem | PreviewChatItem | DayDividerChatItem | EmptyItem;
@@ -47,7 +47,7 @@ export const newMessageChatItem = (message: Message): MessageChatItem => ({
 
 export const newDayDivider = (date: Date): DayDividerChatItem => ({ type: 'DAY_DIVIDER', date, id: newId() });
 
-export const newEmptyItem = (date: Date): EmptyItem => ({ type: 'EMPTY', date, id: undefined });
+export const newEmptyItem = (date: Date): EmptyItem => ({ type: 'EMPTY', date, id: newId() });
 
 export interface PreviewEntry {
   type: 'PREVIEW';

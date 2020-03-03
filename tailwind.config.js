@@ -20,6 +20,9 @@ module.exports = {
     backgroundColor: ['responsive', 'hover', 'focus', 'active', 'disabled'],
     borderColor: ['responsive', 'hover', 'focus', 'active', 'disabled', 'group-hover'],
     opacity: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
+    display: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
+    width: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
+    height: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
   },
   plugins: [],
 };

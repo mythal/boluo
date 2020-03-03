@@ -59,4 +59,47 @@ export interface Binary {
   r: ExprNode;
 }
 
-export type ExprNode = Roll | Binary | Num;
+export interface Max {
+  type: 'Max';
+  node: Roll;
+}
+
+export interface Min {
+  type: 'Min';
+  node: Roll;
+}
+
+export interface SubExpr {
+  type: 'SubExpr';
+  node: ExprNode;
+}
+
+export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr;
+
+export interface RollResult extends Roll {
+  values: number[];
+  value: number;
+}
+
+export interface BinaryResult extends Binary {
+  l: EvaluatedExprNode;
+  r: EvaluatedExprNode;
+  value: number;
+}
+
+export interface MaxResult extends Max {
+  node: RollResult;
+  value: number;
+}
+
+export interface MinResult extends Min {
+  node: RollResult;
+  value: number;
+}
+
+export interface SubExprResult extends SubExpr {
+  node: EvaluatedExprNode;
+  value: number;
+}
+
+export type EvaluatedExprNode = RollResult | BinaryResult | Num | MaxResult | MinResult | SubExprResult;

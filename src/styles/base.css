@@ -3,3 +3,7 @@
   --tooltip-bg: rgba(45, 45, 45, 1);
   --callout-bg: white;
 }
+
+body {
+  overflow: hidden;
+}

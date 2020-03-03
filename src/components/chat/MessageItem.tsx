@@ -28,17 +28,17 @@ export const MessageItem = React.memo<Props>(props => {
   return (
     <div
       className={cls(
-        'flex w-full items-center hover:bg-gray-200',
+        'flex w-full items-center hover:bg-gray-200 flex-shrink-0 items-stretch',
         { 'bg-gray-900 text-white text-xs hover:bg-gray-800': !inGame },
-        { 'preview-item-in-game': isPreview && inGame },
-        { 'preview-item': isPreview && !inGame }
+        { 'stripe-light': isPreview && inGame },
+        { 'stripe-dark': isPreview && !inGame }
       )}
       style={style}
     >
-      <div className="hidden md:block flex-none pl-1 w-24 text-gray-400 font-mono">
+      <div className="hidden md:block flex-none py-2 pl-1 w-24 text-gray-500 font-mono">
         {num(time.getHours())}:{num(time.getMinutes())}:{num(time.getSeconds())}
       </div>
-      <div className="flex-none h-full w-24 py-2 pl-1 text-right border-r pr-2 mr-2 border-gray-500">
+      <div className="flex-none w-24 py-2 pl-1 text-right border-r pr-2 mr-2 border-gray-500">
         {!isAction && <Name name={name} />}
       </div>
       <div className={cls('py-2', { italic: isAction })}>

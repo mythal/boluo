@@ -20,9 +20,11 @@ const ChannelItem: React.FC<{ channel: Channel; isSpaceMember: boolean }> = ({ c
           {channel.name}
         </Link>
       </div>
-      <div className="opacity-0 group-hover:opacity-100 text-right">
-        <JoinChannelButton className="text-xs rounded py-1 px-1" channel={channel} />
-      </div>
+      {isSpaceMember && (
+        <div className="opacity-0 group-hover:opacity-100 text-right">
+          <JoinChannelButton className="text-xs rounded py-1 px-1" channel={channel} />
+        </div>
+      )}
     </li>
   );
 };

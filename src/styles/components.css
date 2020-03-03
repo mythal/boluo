@@ -222,7 +222,7 @@
   overflow-y: scroll;
 }
 
-.preview-item-in-game {
+.stripe-light {
   background: repeating-linear-gradient(
     45deg,
     theme('colors.gray.200'),
@@ -242,7 +242,7 @@
   }
 }
 
-.preview-item {
+.stripe-dark {
   background: repeating-linear-gradient(
     45deg,
     theme('colors.gray.700'),

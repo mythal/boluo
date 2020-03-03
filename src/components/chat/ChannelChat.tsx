@@ -154,7 +154,7 @@ export const ChannelChat: React.FC<Props> = () => {
   const messageList = chat.itemList.map(chatItemMapper);
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="message-list w-full">
+      <div className="message-list w-full overflow-x-hidden">
         {messageList}
         {!chat.finished && <LoadMoreButton channelId={id} before={chat.oldest} dispatch={dispatch} />}
       </div>

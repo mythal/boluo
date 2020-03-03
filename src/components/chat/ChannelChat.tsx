@@ -1,18 +1,17 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { get } from '../../api/request';
 import { Dispatch, useChat, useDispatch, useMy } from '../App';
 import { useParams } from 'react-router-dom';
-import { ChannelEventReceived, LoadChat, NewAlert } from '../../states/actions';
-import { throwErr } from '../../helper';
+import { ChannelEventReceived, LoadChat } from '../../states/actions';
 import { Id } from '../../id';
-import { connect } from '../../api/connect';
+import { connect as apiConnect } from '../../api/connect';
 import { ChannelEvent, NewPreviewEvent } from '../../api/events';
 import { Loading } from '../Loading';
 import { LoadMoreButton } from './LoadMoreButton';
 import { Compose } from './Compose';
-import { MessageItem } from './MessageItem';
-import { DayDivider } from './DayDivider';
-import { Chat, ChatItem } from '../../states/chat';
+import { Chat } from '../../states/chat';
+import { ChatListItem } from './ChatListItem';
+import { errorText } from '../../api/error';
 
 interface Params {
   id: string;
@@ -20,18 +19,16 @@ interface Params {
 
 interface Props {}
 
-const REFETCH_CHAT_INFO_TIME = 30000;
-
 export type SendAction = (preview: NewPreviewEvent) => void;
 
-export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, SendAction] => {
-  const throwE = throwErr(dispatch);
+export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, SendAction, string | null] => {
+  const [error, setError] = useState<string | null>('正在连接...');
   const chat = useChat();
 
   const loadChat = useCallback(async () => {
     const result = await get('/channels/query_with_related', { id });
     if (result.isErr) {
-      return throwE(result.value);
+      return setError(errorText(result.value));
     }
     const channelWithRelated = result.value;
     dispatch<LoadChat>({
@@ -43,10 +40,7 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
   }, [id]);
   useEffect(() => {
     loadChat().catch(console.warn);
-
-    const timeout = window.setTimeout(loadChat, REFETCH_CHAT_INFO_TIME);
     return () => {
-      window.clearTimeout(timeout);
       dispatch({ type: 'CLOSE_CHAT', id });
     };
 
@@ -54,30 +48,34 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
   }, [id]);
 
   const connection = useRef<WebSocket | null>(null);
+  const reconnectionTimeout = useRef<number | undefined>(undefined);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const warning = (e: any) => {
-    console.warn(e);
-    dispatch<NewAlert>({
-      type: 'NEW_ALERT',
-      level: 'ERROR',
-      message: '和服务器的连接出现错误，请刷新一下试试',
-    });
-  };
-
-  useEffect(() => {
-    const id = chat?.channel.id;
-    if (id !== undefined) {
-      const after = new Date().getTime() - 24 * 60 * 60 * 1000;
-      connection.current = connect(id, after);
+  const connect = () => {
+    if (chat !== undefined) {
+      connection.current = apiConnect(chat.channel.id, chat.latest);
+      connection.current.onopen = () => setError(null);
       connection.current.onmessage = wsMsg => {
         const event = JSON.parse(wsMsg.data) as ChannelEvent;
         dispatch<ChannelEventReceived>({ type: 'CHANNEL_EVENT_RECEIVED', event });
       };
-      connection.current.onerror = warning;
-      connection.current.onclose = warning;
+      connection.current.onerror = e => {
+        console.warn(e);
+        setError('和服务器的连接出现错误');
+        window.clearTimeout(reconnectionTimeout.current);
+        reconnectionTimeout.current = window.setTimeout(connect, 1000);
+      };
+      connection.current.onclose = () => {
+        window.clearTimeout(reconnectionTimeout.current);
+        reconnectionTimeout.current = window.setTimeout(connect, 1000);
+      };
     }
+  };
+
+  useEffect(() => {
+    connect();
     return () => {
+      window.clearTimeout(reconnectionTimeout.current);
+      reconnectionTimeout.current = undefined;
       if (connection.current) {
         connection.current.onclose = null;
         connection.current.close();
@@ -89,14 +87,14 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
 
   const sendAction = useCallback<SendAction>(action => connection.current?.send(JSON.stringify(action)), []);
 
-  return [chat, sendAction];
+  return [chat, sendAction, error];
 };
 
 export const ChannelChat: React.FC<Props> = () => {
   const { id } = useParams<Params>();
   const dispatch = useDispatch();
   const my = useMy();
-  const [chat, sendAction] = useLoadChat(id, dispatch);
+  const [chat, sendAction, connError] = useLoadChat(id, dispatch);
   const member = my === 'GUEST' ? undefined : my.channels.get(id)?.member;
 
   if (chat === undefined) {
@@ -107,53 +105,10 @@ export const ChannelChat: React.FC<Props> = () => {
     );
   }
   const { colorMap } = chat;
-
-  const chatItemMapper = (item: ChatItem) => {
-    if (item.type === 'MESSAGE') {
-      const { id, text, entities, name, isAction, isMaster, inGame, seed, created } = item.message;
-      const color = colorMap.get(item.message.senderId);
-      return (
-        <MessageItem
-          key={id}
-          isPreview={false}
-          text={text}
-          entities={entities}
-          name={name}
-          isAction={isAction}
-          isMaster={isMaster}
-          inGame={inGame}
-          color={color}
-          seed={seed}
-          time={created}
-        />
-      );
-    } else if (item.type === 'PREVIEW') {
-      const { id, text, entities, name, isAction, isMaster, inGame, start } = item.preview;
-      const color = colorMap.get(item.preview.senderId);
-      return (
-        <MessageItem
-          key={id}
-          isPreview={true}
-          text={text}
-          entities={entities}
-          name={name}
-          isAction={isAction}
-          isMaster={isMaster}
-          inGame={inGame}
-          color={color}
-          time={start}
-        />
-      );
-    } else if (item.type === 'DAY_DIVIDER') {
-      return <DayDivider key={item.date.getTime()} date={item.date} />;
-    } else {
-      return null;
-    }
-  };
-
-  const messageList = chat.itemList.map(chatItemMapper);
+  const messageList = chat.itemList.map(item => <ChatListItem key={item.id} item={item} colorMap={colorMap} />);
   return (
     <div className="flex flex-col w-full h-full">
+      {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
       <div className="message-list w-full overflow-x-hidden">
         {messageList}
         {!chat.finished && <LoadMoreButton channelId={id} before={chat.oldest} dispatch={dispatch} />}

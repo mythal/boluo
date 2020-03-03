@@ -179,7 +179,7 @@ const loadChat: Reducer<LoadChat> = (state, { channelWithRelated }) => {
   } else {
     const itemList: Chat['itemList'] = List();
     const itemMap: Chat['itemMap'] = Map();
-    const oldest = new Date().getTime();
+    const oldest = new Date().getTime() - 24 * 60 * 60 * 1000;
     const latest = oldest;
     const finished = false;
     const chat: Chat = { channel, members, colorMap, itemList, itemMap, oldest, finished, latest };

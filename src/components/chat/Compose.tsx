@@ -84,10 +84,10 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   const handleText: React.ChangeEventHandler<HTMLTextAreaElement> = e => {
     const value = e.target.value;
     setText(value);
-    sendPreviewFlag.current = true;
     if (text.length === 0 && value.length > 0) {
       reset();
     }
+    sendPreviewFlag.current = true;
   };
 
   const handleName = (value: string) => {

@@ -277,28 +277,38 @@ const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T):
     return rest(node).run(state2, env);
   });
 
+const ExprMinMax = (node: ExprNode, type: 'Min' | 'Max'): ExprNode => {
+  if (node.type === 'Roll') {
+    return { type, node };
+  } else if (node.type === 'Min') {
+    return ExprMinMax(node.node, 'Min');
+  } else if (node.type === 'Max') {
+    return ExprMinMax(node.node, 'Max');
+  } else if (node.type === 'Binary') {
+    const l = ExprMinMax(node.l, type);
+    const r = ExprMinMax(node.r, type);
+    return { type: 'Binary', l, r, op: node.op };
+  } else if (node.type === 'SubExpr') {
+    if (node.node.type !== 'Binary') {
+      return ExprMinMax(node.node, type);
+    }
+    const innerNode = ExprMinMax(node.node, type);
+    return { type: 'SubExpr', node: innerNode };
+  } else {
+    return node;
+  }
+};
+
 const min = (): P<ExprNode> => {
   return regex(/^[Mm][Ii][Nn]\s*/)
     .then(([_, state], env) => atom().run(state, env))
-    .map(node => {
-      if (node.type !== 'Roll') {
-        return node;
-      } else {
-        return { type: 'Min', node };
-      }
-    });
+    .map(node => ExprMinMax(node, 'Min'));
 };
 
 const max = (): P<ExprNode> => {
   return regex(/^[Mm][Aa][Xx]\s*/)
     .then(([_, state], env) => atom().run(state, env))
-    .map(node => {
-      if (node.type !== 'Roll') {
-        return node;
-      } else {
-        return { type: 'Max', node };
-      }
-    });
+    .map(node => ExprMinMax(node, 'Max'));
 };
 
 const subExprMapper = (node: ExprNode): SubExpr => (node.type === 'SubExpr' ? node : { type: 'SubExpr', node });

@@ -8,9 +8,18 @@ import { DayDivider } from './DayDivider';
 interface Props {
   item: ChatItem;
   colorMap: Map<Id, string>;
+  prevItemTime?: Date;
 }
 
-export const ChatListItem = React.memo<Props>(({ item, colorMap }) => {
+export const ChatListItem = React.memo<Props>(({ item, colorMap, prevItemTime }) => {
+  if (prevItemTime && item.date.getDate() !== prevItemTime.getDate()) {
+    return (
+      <>
+        <DayDivider date={prevItemTime} />
+        <ChatListItem item={item} colorMap={colorMap} />
+      </>
+    );
+  }
   if (item.type === 'MESSAGE') {
     const { text, entities, name, isAction, isMaster, inGame, seed, created } = item.message;
     const color = colorMap.get(item.message.senderId);

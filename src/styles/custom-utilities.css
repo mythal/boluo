@@ -11,5 +11,9 @@
     .flex-1-0 {
       flex: 1 1 0;
     }
+
+    .h-screen-true {
+      height: var(--inner-h);
+    }
   }
 }

@@ -18,12 +18,14 @@ interface Props {
 export const Page: React.FC<Props> = ({ sidebar }) => {
   const my = useMy();
   return (
-    <div className="flex flex-col h-screen w-screen">
+    <div className="flex flex-col h-screen-true w-screen">
       <AlertList />
-      <AppHeader sidebar={sidebar} />
-      <div className="flex-1 flex w-screen">
+      <div className="w-full flex-none">
+        <AppHeader sidebar={sidebar} />
+      </div>
+      <div className="flex-1 flex w-full">
         {my === 'GUEST' ? null : <Sidebar my={my} open={sidebar} />}
-        <div className="flex-1 h-full w-full">
+        <div className="flex-1 h-full">
           <Switch>
             <Route exact path="/">
               {my === 'GUEST' ? <Welcome /> : <Catalog />}

@@ -11,3 +11,12 @@ export const getRoot = () => {
 };
 
 ReactDOM.render(<App />, getRoot());
+
+const setTrueScreenHeight = () => {
+  // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+  document.documentElement.style.setProperty('--inner-h', `${window.innerHeight}px`);
+};
+
+setTrueScreenHeight();
+
+window.addEventListener('resize', setTrueScreenHeight);

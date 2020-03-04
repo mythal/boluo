@@ -156,7 +156,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   };
 
   return (
-    <div className="h-48 flex flex-col p-1 border-t border-gray-500">
+    <div className="h-40 flex-initial flex flex-col p-1 border-t border-gray-500">
       <div className="text-right mb-1 sm:flex sm:justify-between">
         <div className="mb-1">
           <input

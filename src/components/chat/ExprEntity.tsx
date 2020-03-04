@@ -22,6 +22,8 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
     setExpand(!expand);
   };
 
+  const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
+
   return (
     <span
       className="group inline-block border-dashed border-b-2 border-gray-500 cursor-pointer"
@@ -31,7 +33,7 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
       {node.counter}D{node.face}
       {expand && (
         <>
-          =[{node.values.join(', ')}]={node.value}
+          {resultList}={node.value}
         </>
       )}
     </span>
@@ -77,7 +79,8 @@ export const ExprEntity = React.memo<Props>(({ node, rng }) => {
     const evaluated = evaluate(node, rng ?? fakeRng);
     return (
       <span>
-        <Node node={evaluated} /> = {evaluated.value}
+        <Node node={evaluated} />
+        {rng ? <span className="px-1">={evaluated.value}</span> : <span className="text-xs">(预览)</span>}
       </span>
     );
   } catch (e) {

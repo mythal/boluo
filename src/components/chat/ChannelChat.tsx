@@ -109,7 +109,7 @@ export const ChannelChat: React.FC<Props> = () => {
   return (
     <div className="flex flex-col w-full h-full">
       {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
-      <div className="message-list w-full overflow-x-hidden">
+      <div className="bg-gray-100 flex-1-0 flex flex-col-reverse overflow-y-scroll w-full overflow-x-hidden">
         {messageList}
         {!chat.finished && <LoadMoreButton channelId={id} before={chat.oldest} dispatch={dispatch} />}
       </div>

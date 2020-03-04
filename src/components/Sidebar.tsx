@@ -104,7 +104,7 @@ export const Sidebar = React.memo<Props>(({ my, open }) => {
       />
     ));
   return (
-    <div className="w-48 fixed pb-2 md:static bg-gray-200 md:h-full md:overflow-y-scroll border-r border-b md:border-b-0 shadow-lg md:shadow-none">
+    <div className="w-48 fixed pb-2 md:static md:flex-0-auto bg-gray-200 md:h-full md:overflow-y-scroll border-r border-b md:border-b-0 shadow-lg md:shadow-none">
       <ul>{spaceList}</ul>
 
       <div className="mt-4 mx-2">

@@ -3,5 +3,13 @@
     .shadow-hard {
       box-shadow: var(--shadow-hard);
     }
+
+    .flex-0-auto {
+      flex: 0 0 auto;
+    }
+
+    .flex-1-0 {
+      flex: 1 1 0;
+    }
   }
 }

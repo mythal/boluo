@@ -52,7 +52,7 @@ export const SpacePage: React.FC = () => {
       </div>
       <div className="my-4">
         <h2 className="text-lg mb-2">频道</h2>
-        <CreateChannel spaceId={space.id} onCreated={refetch} />
+        {member?.isAdmin && <CreateChannel spaceId={space.id} onCreated={refetch} />}
         <ul className="block">{channelList}</ul>
       </div>
     </div>

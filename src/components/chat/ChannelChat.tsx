@@ -52,7 +52,7 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
 
   const connect = () => {
     if (chat !== undefined) {
-      connection.current = apiConnect(chat.channel.id, chat.latest);
+      connection.current = apiConnect(chat.channel.id, chat.eventAfter);
       connection.current.onopen = () => setError(null);
       connection.current.onmessage = wsMsg => {
         const event = JSON.parse(wsMsg.data) as ChannelEvent;
@@ -111,7 +111,7 @@ export const ChannelChat: React.FC<Props> = () => {
       {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
       <div className="bg-gray-100 flex-1-0 flex flex-col-reverse overflow-y-scroll w-full overflow-x-hidden">
         {messageList}
-        {!chat.finished && <LoadMoreButton channelId={id} before={chat.oldest} dispatch={dispatch} />}
+        {!chat.finished && <LoadMoreButton channelId={id} before={chat.messageBefore} dispatch={dispatch} />}
       </div>
 
       {my !== 'GUEST' && member && (

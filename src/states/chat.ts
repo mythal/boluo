@@ -17,19 +17,13 @@ export interface PreviewChatItem {
   id: Id;
 }
 
-export interface DayDividerChatItem {
-  type: 'DAY_DIVIDER';
-  date: Date;
-  id: Id;
-}
-
 export interface EmptyItem {
   type: 'EMPTY';
   date: Date;
   id: Id;
 }
 
-export type ChatItem = MessageChatItem | PreviewChatItem | DayDividerChatItem | EmptyItem;
+export type ChatItem = MessageChatItem | PreviewChatItem | EmptyItem;
 
 export const newPreviewChatItem = (preview: Preview): PreviewChatItem => ({
   type: 'PREVIEW',
@@ -44,8 +38,6 @@ export const newMessageChatItem = (message: Message): MessageChatItem => ({
   id: message.id,
   message,
 });
-
-export const newDayDivider = (date: Date): DayDividerChatItem => ({ type: 'DAY_DIVIDER', date, id: newId() });
 
 export const newEmptyItem = (date: Date): EmptyItem => ({ type: 'EMPTY', date, id: newId() });
 
@@ -69,8 +61,8 @@ export interface Chat {
   itemList: List<ChatItem>;
   itemMap: ItemMap;
   finished: boolean;
-  oldest: number;
-  latest: number;
+  messageBefore: number;
+  eventAfter: number;
 }
 
 export const addMessageToItemMap = (itemMap: ItemMap, message: Message): ItemMap =>
@@ -90,4 +82,26 @@ export const findItem = (itemList: List<ChatItem>, date: Date, id: Id): [number,
     i += 1;
   }
   throw new Error('failed to find item');
+};
+
+export const queryMessageEntry = (itemMap: ItemMap, messageId: Id): MessageEntry | undefined => {
+  const result = itemMap.get(messageId);
+  if (result === undefined) {
+    return undefined;
+  } else if (result.type !== 'MESSAGE') {
+    throw new Error('Unexpected entry');
+  } else {
+    return result;
+  }
+};
+
+export const queryPreviewEntry = (itemMap: ItemMap, senderId: Id): PreviewEntry | undefined => {
+  const result = itemMap.get(senderId);
+  if (result === undefined) {
+    return undefined;
+  } else if (result.type !== 'PREVIEW') {
+    throw new Error('Unexpected entry');
+  } else {
+    return result;
+  }
 };

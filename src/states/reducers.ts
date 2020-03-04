@@ -26,10 +26,11 @@ import {
   ChatItem,
   findItem,
   ItemMap,
-  newDayDivider,
   newEmptyItem,
   newMessageChatItem,
   newPreviewChatItem,
+  queryMessageEntry,
+  queryPreviewEntry,
 } from './chat';
 
 type Reducer<T extends Action = Action> = (state: State, action: T) => State;
@@ -148,22 +149,29 @@ const loadMessages: Reducer<LoadMessages> = (state, { messages, finished }) => {
     return { ...state, chat: { ...chat, finished } };
   }
   let { itemList, itemMap } = chat;
-  let messageDate = new Date(messages[0].orderDate);
+
   for (const message of messages) {
-    const date = new Date(message.orderDate);
-    if (date.getDay() !== messageDate.getDay()) {
-      itemList = itemList.push(newDayDivider(date));
+    if (itemMap.has(message.id)) {
+      continue;
     }
     itemList = itemList.push(newMessageChatItem(message));
     itemMap = addMessageToItemMap(itemMap, message);
-    messageDate = date;
   }
-  if (finished) {
-    itemList = itemList.push(newDayDivider(messageDate));
-  }
-  const oldest = Math.min(messageDate.getTime(), chat.oldest);
-  const latest = Math.max(messages[0].orderDate, chat.latest);
-  return { ...state, chat: { ...chat, oldest, itemList, itemMap, finished, latest } };
+
+  itemList = itemList
+    .filter(item => item.type !== 'EMPTY')
+    .sort((a, b) => {
+      if (a.date > b.date) {
+        return -1;
+      } else if (a.date < b.date) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+  const messageBefore = Math.min(messages[len - 1].orderDate, chat.messageBefore);
+  const eventAfter = itemList.first(undefined)?.date.getTime() ?? chat.eventAfter;
+  return { ...state, chat: { ...chat, messageBefore, itemList, itemMap, finished, eventAfter } };
 };
 
 const loadChat: Reducer<LoadChat> = (state, { channelWithRelated }) => {
@@ -179,10 +187,10 @@ const loadChat: Reducer<LoadChat> = (state, { channelWithRelated }) => {
   } else {
     const itemList: Chat['itemList'] = List();
     const itemMap: Chat['itemMap'] = Map();
-    const oldest = new Date().getTime() - 24 * 60 * 60 * 1000;
-    const latest = oldest;
+    const messageBefore = new Date().getTime();
+    const eventAfter = messageBefore - 24 * 60 * 60 * 1000;
     const finished = false;
-    const chat: Chat = { channel, members, colorMap, itemList, itemMap, oldest, finished, latest };
+    const chat: Chat = { channel, members, colorMap, itemList, itemMap, messageBefore, finished, eventAfter };
     return { ...state, chat };
   }
 };
@@ -219,36 +227,19 @@ const deleteMessage = (itemList: List<ChatItem>, itemMap: ItemMap, messageId: Id
   return [itemList.set(index, newEmptyItem(item.date)), itemMap.remove(messageId)];
 };
 
-const newPreview = (
-  itemList: List<ChatItem>,
-  itemMap: ItemMap,
-  preview: Preview,
-  prevDate: Date
-): [List<ChatItem>, ItemMap] => {
-  const messageInfo = itemMap.get(preview.id);
+const newPreview = (itemList: List<ChatItem>, itemMap: ItemMap, preview: Preview): [List<ChatItem>, ItemMap] => {
+  const messageInfo = queryMessageEntry(itemMap, preview.id);
   if (messageInfo !== undefined) {
     // There is already a message with the same id.
-    if (messageInfo.type !== 'MESSAGE') {
-      console.log(messageInfo);
-      console.log(itemMap.toJS());
-      throw new Error();
-    }
     console.warn('preview after the message');
     return [itemList, itemMap];
   }
 
-  const previousPreviewInfo = itemMap.get(preview.senderId);
-  if (previousPreviewInfo !== undefined) {
+  const previousPreviewEntry = queryPreviewEntry(itemMap, preview.senderId);
+  if (previousPreviewEntry !== undefined) {
     // Users have sent previews.
-    if (previousPreviewInfo.type !== 'PREVIEW') {
-      throw new Error();
-    }
-    const { id, date } = previousPreviewInfo;
-    const entry = findItem(itemList, date, id);
-    if (entry === null) {
-      throw new Error();
-    }
-    const [index] = entry;
+    const { id, date } = previousPreviewEntry;
+    const [index] = findItem(itemList, date, id);
     if (id === preview.id) {
       // same id, replace it.
       itemList = itemList.set(index, newPreviewChatItem(preview));
@@ -277,24 +268,34 @@ const newMessage = (
   itemList: List<ChatItem>,
   itemMap: ItemMap,
   message: Message,
-  prevDate: Date
+  messageBefore: number,
+  eventAfter: number
 ): [List<ChatItem>, ItemMap] => {
-  const previousPreview = itemMap.get(message.senderId);
-  if (previousPreview !== undefined) {
-    // Users have sent previews.
-    if (previousPreview.type !== 'PREVIEW') {
-      throw new Error();
+  const messageItem = newMessageChatItem(message);
+  const messageDate = messageItem.date;
+  const previousPreview = queryPreviewEntry(itemMap, message.senderId);
+
+  // new message ordered before oldest message.
+  if (message.orderDate < Math.min(messageBefore, eventAfter)) {
+    if (previousPreview === undefined) {
+      return [itemList, itemMap];
     }
-    const { id, date } = previousPreview;
-    const entry = findItem(itemList, date, id);
-    if (entry === null) {
-      throw new Error();
-    }
+    // delete preview.
     itemMap = itemMap.remove(message.senderId);
-    const [index] = entry;
+    const [index] = findItem(itemList, previousPreview.date, previousPreview.id);
+    itemList = itemList.set(index, newEmptyItem(previousPreview.date));
+    return [itemList, itemMap];
+  }
+
+  // Users have sent previews.
+  if (previousPreview !== undefined) {
+    const { id, date } = previousPreview;
+    const [index] = findItem(itemList, date, id);
+    itemMap = itemMap.remove(message.senderId);
+
     if (id === message.id) {
       // same id, replace it.
-      itemList = itemList.set(index, newMessageChatItem(message));
+      itemList = itemList.set(index, messageItem);
       itemMap = addMessageToItemMap(itemMap, message);
       return [itemList, itemMap];
     } else {
@@ -309,8 +310,6 @@ const newMessage = (
     return [itemList, itemMap];
   }
   itemMap = addMessageToItemMap(itemMap, message);
-  const messageItem = newMessageChatItem(message);
-  const messageDate = messageItem.date;
   let i = 0;
   for (const item of itemList) {
     if (item.date < messageDate) {
@@ -329,15 +328,15 @@ const handleChannelEvent: Reducer<ChannelEventReceived> = (state, { event }) => 
   const body = event.body;
   let { itemList, itemMap } = chat;
 
-  let oldest = chat.oldest;
-  const prevDate = new Date(chat.latest);
+  let messageBefore = chat.messageBefore;
+  const eventAfter = event.timestamp;
   switch (body.type) {
     case 'newMessage':
-      [itemList, itemMap] = newMessage(itemList, itemMap, body.message, prevDate);
-      oldest = Math.min(body.message.orderDate, oldest);
+      [itemList, itemMap] = newMessage(itemList, itemMap, body.message, messageBefore, eventAfter);
+      messageBefore = Math.min(body.message.orderDate, messageBefore);
       break;
     case 'messagePreview':
-      [itemList, itemMap] = newPreview(itemList, itemMap, body.preview, prevDate);
+      [itemList, itemMap] = newPreview(itemList, itemMap, body.preview);
       break;
     case 'messageDeleted':
       [itemList, itemMap] = deleteMessage(itemList, itemMap, body.messageId);
@@ -346,8 +345,7 @@ const handleChannelEvent: Reducer<ChannelEventReceived> = (state, { event }) => 
       itemList = editMessage(itemList, itemMap, body.message);
       break;
   }
-  const latest = event.timestamp;
-  return { ...state, chat: { ...chat, itemList, itemMap, latest, oldest } };
+  return { ...state, chat: { ...chat, itemList, itemMap, eventAfter, messageBefore } };
 };
 
 const closeChat: Reducer<CloseChat> = (state, { id }) => {

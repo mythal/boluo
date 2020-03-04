@@ -8,6 +8,8 @@ export const unwrap = (): never => {
   throw new Error();
 };
 
+export const never: never = undefined as never;
+
 export const throwErr = (dispatch: Dispatch) => (err: AppError) => {
   const message = errorText(err);
   dispatch({ type: 'NEW_ALERT', level: 'ERROR', message });

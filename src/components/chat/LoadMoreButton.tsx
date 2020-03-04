@@ -34,8 +34,6 @@ export const LoadMoreButton = React.memo<Props>(({ dispatch, before, channelId }
     });
   };
 
-  useEffect(handleClick, [channelId]);
-
   return (
     <div className="w-full text-center">
       <button className="btn my-1 w-24 h-10" disabled={loading} onClick={handleClick}>

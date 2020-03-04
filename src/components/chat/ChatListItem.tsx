@@ -44,8 +44,6 @@ export const ChatListItem = React.memo<Props>(({ item, colorMap }) => {
         time={start}
       />
     );
-  } else if (item.type === 'DAY_DIVIDER') {
-    return <DayDivider key={item.date.getTime()} date={item.date} />;
   } else {
     return null;
   }

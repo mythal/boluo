@@ -39,6 +39,7 @@ export const CreateSpace: React.FC = () => {
     const { space, member } = result.value;
     dispatch<JoinedSpace>({ type: 'JOINED_SPACE', space, member });
     history.push(`/space/${space.id}`);
+    dismiss();
   };
 
   return (

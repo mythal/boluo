@@ -19,16 +19,14 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
 
   const handleMouse: MouseEventHandler = e => {
     e.preventDefault();
+    e.stopPropagation();
     setExpand(!expand);
   };
 
   const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
 
   return (
-    <span
-      className="group inline-block border-dashed border-b-2 border-gray-500 cursor-pointer"
-      onMouseDown={handleMouse}
-    >
+    <span className="group inline-block border-dashed border-b-2 border-gray-500 cursor-pointer" onClick={handleMouse}>
       <D20Icon className="mr-1 opacity-50" />
       {node.counter}D{node.face}
       {expand && (

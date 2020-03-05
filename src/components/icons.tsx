@@ -26,6 +26,9 @@ import { faSatelliteDish } from '@fortawesome/free-solid-svg-icons/faSatelliteDi
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons/faUserCircle';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons/faCaretRight';
 import { faUserEdit } from '@fortawesome/free-solid-svg-icons/faUserEdit';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons/faEyeSlash';
+import { faLevelDownAlt } from '@fortawesome/free-solid-svg-icons/faLevelDownAlt';
+import { faExpandAlt } from '@fortawesome/free-solid-svg-icons/faExpandAlt';
 
 export interface IconProps {
   className?: string;
@@ -57,3 +60,6 @@ export const DownIcon = (props: IconProps) => <FontAwesomeIcon icon={faAngleDown
 export const RightIcon = (props: IconProps) => <FontAwesomeIcon icon={faAngleRight} {...props} />;
 export const UserIcon = (props: IconProps) => <FontAwesomeIcon icon={faUserCircle} {...props} />;
 export const UserEditIcon = (props: IconProps) => <FontAwesomeIcon icon={faUserEdit} {...props} />;
+export const FoldIcon = (props: IconProps) => <FontAwesomeIcon icon={faEyeSlash} {...props} />;
+export const ExpandIcon = (props: IconProps) => <FontAwesomeIcon icon={faExpandAlt} {...props} />;
+export const InsertIcon = (props: IconProps) => <FontAwesomeIcon icon={faLevelDownAlt} {...props} />;

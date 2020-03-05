@@ -109,7 +109,7 @@ export function post(path: '/channels/leave', payload: {}, query: IdQuery): Prom
 export function post(path: '/channels/delete', payload: {}, query: IdQuery): Promise<AppResult<Channel>>;
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
 export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
-export function post(path: '/messages/edit', payload: EditMessage): Promise<AppResult<Message>>;
+export function post(path: '/messages/toggle_fold', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,

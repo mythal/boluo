@@ -1,3 +1,5 @@
+const all = ['responsive', 'hover', 'focus', 'active', 'disabled', 'group-hover'];
+
 module.exports = {
   theme: {
     extend: {
@@ -17,12 +19,13 @@ module.exports = {
     },
   },
   variants: {
-    backgroundColor: ['responsive', 'hover', 'focus', 'active', 'disabled'],
-    borderColor: ['responsive', 'hover', 'focus', 'active', 'disabled', 'group-hover'],
-    opacity: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
-    display: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
-    width: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
-    height: ['responsive', 'hover', 'focus', 'active', 'group-hover'],
+    backgroundColor: all,
+    textColor: all,
+    borderColor: all,
+    opacity: all,
+    display: all,
+    width: all,
+    height: all,
   },
   plugins: [],
 };

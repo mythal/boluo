@@ -253,3 +253,19 @@
     );
   }
 }
+
+.message-item {
+  transition: max-height 0.5s;
+}
+
+.message-operation {
+  @apply px-2 py-2 opacity-50;
+
+  &:hover {
+    @apply opacity-100;
+  }
+
+  &:focus {
+    @apply outline-none;
+  }
+}

@@ -4,7 +4,7 @@ import { MessageContent } from './MessageContent';
 import { Name } from './Name';
 import { cls } from '../../classname';
 import { MessageMenu } from './MessageMenu';
-import { ChannelMember } from '../../api/channels';
+import { useMember } from './ChannelChat';
 
 interface Props {
   id: string;
@@ -19,7 +19,6 @@ interface Props {
   seed?: number[];
   color?: string;
   time: number;
-  member?: ChannelMember;
 }
 
 const num = (n: number) => (n > 9 ? String(n) : `0${n}`);
@@ -31,6 +30,7 @@ export const MessageItem = React.memo<Props>(props => {
   const isAction = isTyping || props.isAction;
   const time = new Date(props.time);
   const [folded, setFolded] = useState(props.folded);
+  const member = useMember();
 
   useEffect(() => setFolded(props.folded), [props.folded]);
 
@@ -90,14 +90,21 @@ export const MessageItem = React.memo<Props>(props => {
           {isAction && <Name className="mr-2" name={name} />}
           {isTyping ? <span>正在输入...</span> : <MessageContent text={text} entities={entities} seed={seed} />}
         </div>
-        {!isPreview && props.member && (
+        {!isPreview && member.channel && member.space && (
           <div
             className={cls(
               'flex-initial opacity-0 group-hover:opacity-100 text-sm text-right w-24 mr-2',
               inGame ? 'text-black' : 'text-white'
             )}
           >
-            <MessageMenu id={props.id} folded={props.folded} inGame={inGame} member={props.member} />
+            <MessageMenu
+              id={props.id}
+              folded={props.folded}
+              inGame={inGame}
+              spaceMember={member.space}
+              channelMember={member.channel}
+              text={text}
+            />
           </div>
         )}
       </div>

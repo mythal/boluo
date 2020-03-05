@@ -1,5 +1,5 @@
 import { Id } from '../../id';
-import { Dispatch } from '../App';
+import { Dispatch, useDispatch } from '../App';
 import React, { useEffect, useState } from 'react';
 import { get } from '../../api/request';
 import { LoadMessages, NewAlert } from '../../states/actions';
@@ -7,11 +7,11 @@ import { Loading } from '../Loading';
 
 interface Props {
   channelId: Id;
-  dispatch: Dispatch;
   before: number;
 }
 
-export const LoadMoreButton = React.memo<Props>(({ dispatch, before, channelId }) => {
+export const LoadMoreButton = React.memo<Props>(({ before, channelId }) => {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
   const handleClick = () => {
@@ -36,7 +36,7 @@ export const LoadMoreButton = React.memo<Props>(({ dispatch, before, channelId }
 
   return (
     <div className="w-full text-center">
-      <button className="btn my-1 w-24 h-10" disabled={loading} onClick={handleClick}>
+      <button className="btn my-1 w-24 h-10 my-4" disabled={loading} onClick={handleClick}>
         {loading ? <Loading /> : '载入更多'}
       </button>
     </div>

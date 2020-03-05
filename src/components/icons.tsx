@@ -29,6 +29,7 @@ import { faUserEdit } from '@fortawesome/free-solid-svg-icons/faUserEdit';
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons/faEyeSlash';
 import { faLevelDownAlt } from '@fortawesome/free-solid-svg-icons/faLevelDownAlt';
 import { faExpandAlt } from '@fortawesome/free-solid-svg-icons/faExpandAlt';
+import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 
 export interface IconProps {
   className?: string;
@@ -63,3 +64,4 @@ export const UserEditIcon = (props: IconProps) => <FontAwesomeIcon icon={faUserE
 export const FoldIcon = (props: IconProps) => <FontAwesomeIcon icon={faEyeSlash} {...props} />;
 export const ExpandIcon = (props: IconProps) => <FontAwesomeIcon icon={faExpandAlt} {...props} />;
 export const InsertIcon = (props: IconProps) => <FontAwesomeIcon icon={faLevelDownAlt} {...props} />;
+export const DeleteIcon = (props: IconProps) => <FontAwesomeIcon icon={faTrash} {...props} />;

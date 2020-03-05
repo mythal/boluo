@@ -129,14 +129,14 @@
   }
 
   &:hover .tooltip-content {
-    @apply block text-xs p-2 text-white absolute pointer-events-none z-10;
+    @apply block text-xs p-2 text-white absolute pointer-events-none z-30;
     width: max-content;
     background-color: var(--tooltip-bg);
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     &::after {
-      @apply z-10 transform translate-y-1 absolute left-0 right-0 mx-auto block w-0 h-0;
+      @apply z-30 transform translate-y-1 absolute left-0 right-0 mx-auto block w-0 h-0;
       content: '';
       border: 1em solid transparent;
       border-top: 1em solid var(--tooltip-bg);

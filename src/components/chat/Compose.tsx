@@ -56,17 +56,17 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   const reset = () => {
     startRef.current = new Date().getTime();
     idRef.current = newId();
-    sendPreviewFlag.current = false;
   };
 
   const id = idRef.current;
   const nameError = checkCharacterName(name);
-  const ok = text.trim().length > 0 && (!inGame || nameError.isOk);
+  const canSendPreview = !inGame || nameError.isOk;
+  const canSend = text.trim().length > 0 && canSendPreview;
 
   if (sendPreviewFlag.current) {
     sendPreviewFlag.current = false;
-    if (ok) {
-      const content = isBroadcast ? parse(text) : { text: '', entities: [] };
+    if (canSendPreview) {
+      const content = isBroadcast ? parse(text) : { text: null, entities: [] };
       sendPreview({
         id,
         channelId,
@@ -74,7 +74,6 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
         mediaId: null,
         inGame,
         isAction,
-        whisperToUsers: null,
         start: startRef.current,
         ...content,
       });
@@ -111,7 +110,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   };
 
   const handleSend = async () => {
-    if (!ok) {
+    if (!canSend) {
       return;
     }
     const parsed = parse(text);
@@ -128,6 +127,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
       setText('');
       setIsAction(false);
       reset();
+      sendPreviewFlag.current = false;
     } else {
       throwErr(dispatch)(sent.value);
     }
@@ -189,7 +189,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
             </button>
           </KeyTooltip>
           <KeyTooltip help="发送" keyHelp="Ctrl / ⌘ + ↵">
-            <button className="btn btn-primary" onClick={handleSend}>
+            <button className="btn btn-primary" disabled={!canSend} onClick={handleSend}>
               <SendIcon className="mr-2" />
               发送
             </button>

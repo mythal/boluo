@@ -34,7 +34,7 @@ export interface Preview {
   inGame: boolean;
   isAction: boolean;
   isMaster: boolean;
-  text: string;
+  text: string | null;
   whisperToUsers: Id[] | null;
   entities: Entity[];
   start: number;
@@ -47,8 +47,7 @@ export interface NewPreview {
   mediaId: Id | null;
   inGame: boolean;
   isAction: boolean;
-  text: string;
-  whisperToUsers: Id[] | null;
+  text: string | null;
   entities: Entity[];
   start: number;
 }

@@ -38,12 +38,15 @@ export const ChatListItem = React.memo<Props>(({ item, colorMap, prevItemTime })
       />
     );
   } else if (item.type === 'PREVIEW') {
+    if (item.preview.text === '') {
+      return null;
+    }
     const { text, entities, name, isAction, isMaster, inGame, start } = item.preview;
     const color = colorMap.get(item.preview.senderId);
     return (
       <MessageItem
         isPreview={true}
-        text={text}
+        text={text ?? ''}
         entities={entities}
         name={name}
         isAction={isAction}

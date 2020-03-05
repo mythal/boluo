@@ -110,7 +110,7 @@ export const ChannelChat: React.FC<Props> = () => {
       {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
       <div className="flex flex-1-0 overflow-y-scroll h-full">
         <div className="bg-gray-100 flex-1 flex flex-col-reverse w-px overflow-x-hidden">
-          <ChatList itemList={chat.itemList} colorMap={chat.colorMap} />
+          <ChatList itemList={chat.itemList} colorMap={chat.colorMap} member={member} />
           {chat.finished ? (
             <DayDivider date={new Date(chat.messageBefore)} />
           ) : (

@@ -4,6 +4,7 @@ import { MessageContent } from './MessageContent';
 import { Name } from './Name';
 import { cls } from '../../classname';
 import { MessageMenu } from './MessageMenu';
+import { ChannelMember } from '../../api/channels';
 
 interface Props {
   id: string;
@@ -18,6 +19,7 @@ interface Props {
   seed?: number[];
   color?: string;
   time: number;
+  member?: ChannelMember;
 }
 
 const num = (n: number) => (n > 9 ? String(n) : `0${n}`);
@@ -82,18 +84,20 @@ export const MessageItem = React.memo<Props>(props => {
         <div className="flex-none w-24 py-2 pl-1 text-right border-r pr-2 mr-2 border-gray-500">
           {!isAction && <Name name={name} />}
         </div>
-        <div className={cls('py-2 flex-grow', { italic: isAction }, { 'line-through': props.folded })}>
+        <div
+          className={cls('py-2 flex-grow flex-shrink truncate', { italic: isAction }, { 'line-through': props.folded })}
+        >
           {isAction && <Name className="mr-2" name={name} />}
           {isTyping ? <span>正在输入...</span> : <MessageContent text={text} entities={entities} seed={seed} />}
         </div>
-        {!isPreview && (
+        {!isPreview && props.member && (
           <div
             className={cls(
               'flex-initial opacity-0 group-hover:opacity-100 text-sm text-right w-24 mr-2',
               inGame ? 'text-black' : 'text-white'
             )}
           >
-            <MessageMenu id={props.id} folded={props.folded} inGame={inGame} />
+            <MessageMenu id={props.id} folded={props.folded} inGame={inGame} member={props.member} />
           </div>
         )}
       </div>

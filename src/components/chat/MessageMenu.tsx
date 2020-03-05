@@ -1,28 +1,27 @@
-import React, { MouseEventHandler, useRef, useState } from 'react';
-import { EllipsisIcon, ExpandIcon, FoldIcon, InsertIcon, SignOutIcon } from '../icons';
-import { cls } from '../../classname';
-import { useOutside } from '../../hooks';
+import React, { MouseEventHandler } from 'react';
+import { ExpandIcon, FoldIcon, InsertIcon } from '../icons';
 import { post } from '../../api/request';
-import { useDispatch } from '../App';
-import { MessageEdited } from '../../api/events';
+import { ChannelMember } from '../../api/channels';
 
 interface Props {
   id: string;
   folded: boolean;
   inGame: boolean;
+  member: ChannelMember;
 }
 
-export const MessageMenu = React.memo<Props>(({ inGame, folded, id }) => {
-  const dispatch = useDispatch();
-
+export const MessageMenu = React.memo<Props>(({ member, folded, id }) => {
   const toggleFold: MouseEventHandler = async e => {
     e.stopPropagation();
     await post('/messages/toggle_fold', {}, { id });
   };
 
+  const iAmMaster = member.isMaster;
+  const isMine = member.userId === id;
+
   return (
     <>
-      <button className="message-operation" onClick={toggleFold}>
+      <button hidden={iAmMaster || isMine} className="message-operation" onClick={toggleFold}>
         {folded ? <ExpandIcon /> : <FoldIcon />}
       </button>
       {/*<button className="message-operation"><InsertIcon/></button>*/}

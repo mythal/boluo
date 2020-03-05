@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const ChatList = React.memo<Props>(({ itemList, colorMap }) => {
-  let prevItemDate = new Date();
+  let prevItemDate = itemList.first(undefined)?.date;
   const chatList = itemList.map(item => {
     const chatListItem = <ChatListItem key={item.id} item={item} colorMap={colorMap} prevItemTime={prevItemDate} />;
     prevItemDate = item.date;

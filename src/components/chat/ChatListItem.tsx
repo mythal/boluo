@@ -15,7 +15,7 @@ export const ChatListItem = React.memo<Props>(({ item, colorMap, prevItemTime })
   if (prevItemTime && item.date.getDate() !== prevItemTime.getDate()) {
     return (
       <>
-        <DayDivider date={prevItemTime} />
+        <DayDivider date={item.date} />
         <ChatListItem item={item} colorMap={colorMap} />
       </>
     );

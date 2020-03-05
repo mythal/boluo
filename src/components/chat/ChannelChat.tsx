@@ -105,8 +105,30 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
 export const ChannelChat: React.FC<Props> = () => {
   const { id } = useParams<Params>();
   const dispatch = useDispatch();
+  const chatListRef = useRef<HTMLDivElement>(null);
   const my = useMy();
   const [chat, sendAction, connError] = useLoadChat(id, dispatch);
+  const scrollEnd = useRef<number>(0);
+
+  useEffect(() => {
+    if (!chatListRef.current) {
+      return;
+    }
+    const chatList = chatListRef.current;
+    const lockSpan = chatList.clientHeight >> 1;
+    if (chatList.scrollTop < lockSpan || scrollEnd.current < lockSpan) {
+      chatList.scrollTo(0, chatList.scrollHeight - chatList.clientHeight - scrollEnd.current);
+    }
+  });
+
+  const handleChatListScroll = () => {
+    if (chatListRef.current === null) {
+      return;
+    }
+    const chatList = chatListRef.current;
+    scrollEnd.current = chatList.scrollHeight - chatList.scrollTop - chatList.clientHeight;
+    console.log(scrollEnd.current);
+  };
 
   if (chat === undefined) {
     return (
@@ -119,17 +141,19 @@ export const ChannelChat: React.FC<Props> = () => {
   const spaceMember = my === 'GUEST' ? undefined : my.spaces.get(chat.channel.spaceId)?.member;
   return (
     <MemberContext.Provider value={{ channel: member, space: spaceMember }}>
-      <div className="flex flex-col w-full h-full ">
+      <div className="flex flex-col w-full h-full">
         {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
-        <div className="flex flex-1-0 overflow-y-scroll h-full">
-          <div className="bg-gray-100 flex-1 flex flex-col-reverse w-px overflow-x-hidden">
-            <ChatList itemList={chat.itemList} colorMap={chat.colorMap} />
-            {chat.finished ? (
-              <DayDivider date={new Date(chat.messageBefore)} />
-            ) : (
-              <LoadMoreButton channelId={id} before={chat.messageBefore} />
-            )}
-          </div>
+        <div
+          className="h-px flex-auto overflow-y-scroll overflow-x-hidden"
+          ref={chatListRef}
+          onScroll={handleChatListScroll}
+        >
+          {chat.finished ? (
+            <DayDivider date={new Date(chat.messageBefore)} />
+          ) : (
+            <LoadMoreButton channelId={id} before={chat.messageBefore} />
+          )}
+          <ChatList itemList={chat.itemList.reverse()} colorMap={chat.colorMap} />
         </div>
 
         {my !== 'GUEST' && member && (

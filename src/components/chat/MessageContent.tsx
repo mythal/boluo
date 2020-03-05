@@ -28,7 +28,7 @@ export const MessageContent = React.memo<Props>(({ text, entities, seed }) => {
     if (entity.type === 'Expr') {
       rng = rng ?? makeRng(seed);
       content.push(
-        <span key={key} className="inline font-mono ">
+        <span key={key} className="font-mono inline-block">
           <ExprEntity node={entity.node} rng={rng} top />
         </span>
       );

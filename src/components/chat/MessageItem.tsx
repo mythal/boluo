@@ -41,7 +41,7 @@ export const MessageItem = React.memo<Props>(props => {
   };
 
   return (
-    <div className={cls('flex-shrink-0 group', { 'active:bg-gray-400 cursor-pointer': props.folded })}>
+    <div className={cls('group bg-gray-100 w-full', { 'active:bg-gray-400 cursor-pointer': props.folded })}>
       {props.folded && (
         <div
           className={cls(
@@ -61,7 +61,7 @@ export const MessageItem = React.memo<Props>(props => {
       )}
       <div
         className={cls(
-          'flex w-full items-center items-stretch transform  overflow-hidden message-item max-h-screen transition-size duration-500',
+          'flex w-full items-center items-stretch transform overflow-hidden message-item max-h-screen transition-size duration-500 pr-1',
           { 'bg-gray-900 text-white text-xs': !inGame },
           { 'stripe-light': isPreview && inGame },
           { 'stripe-dark': isPreview && !inGame },
@@ -75,7 +75,7 @@ export const MessageItem = React.memo<Props>(props => {
       >
         <div
           className={cls(
-            'hidden md:block flex-none py-2 pl-1 w-24 text-gray-500 font-mono',
+            'text-xs hidden md:block flex-none py-2 pl-1 w-24 text-gray-500 font-mono',
             inGame ? 'group-hover:text-gray-700' : 'group-hover:text-gray-300'
           )}
         >
@@ -85,7 +85,11 @@ export const MessageItem = React.memo<Props>(props => {
           {!isAction && <Name name={name} />}
         </div>
         <div
-          className={cls('py-2 flex-grow flex-shrink truncate', { italic: isAction }, { 'line-through': props.folded })}
+          className={cls(
+            'py-2 flex-grow flex-shrink w-px truncate',
+            { italic: isAction },
+            { 'line-through': props.folded }
+          )}
         >
           {isAction && <Name className="mr-2" name={name} />}
           {isTyping ? <span>正在输入...</span> : <MessageContent text={text} entities={entities} seed={seed} />}
@@ -93,7 +97,7 @@ export const MessageItem = React.memo<Props>(props => {
         {!isPreview && member.channel && member.space && (
           <div
             className={cls(
-              'flex-initial opacity-0 group-hover:opacity-100 text-sm text-right w-24 mr-2',
+              'flex-none opacity-0 group-hover:opacity-100 text-sm text-right mr-2',
               inGame ? 'text-black' : 'text-white'
             )}
           >

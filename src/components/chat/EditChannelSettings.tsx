@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Dialog } from '../Dialog';
 import { Input } from '../Input';
 import { KeyTooltip } from './KeyTooltip';
 import { UserEditIcon } from '../icons';
@@ -9,6 +8,7 @@ import { useDispatch } from '../App';
 import { post } from '../../api/request';
 import { throwErr } from '../../helper';
 import { ChannelMember, EditChannelMember } from '../../api/channels';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface Props {
   member: ChannelMember;
@@ -21,8 +21,7 @@ export const EditChannelSettings = React.memo<Props>(({ member }) => {
   const [characterName, setName] = useState(member.characterName);
   const [textColor, setTextColor] = useState(member.textColor || '#000000');
   const dismiss = () => setOpen(false);
-  const handleSubmit: React.FormEventHandler = async e => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     const editMember: EditChannelMember = { channelId };
     if (characterName !== member.characterName) {
       editMember.characterName = characterName;
@@ -46,20 +45,10 @@ export const EditChannelSettings = React.memo<Props>(({ member }) => {
           <UserEditIcon />
         </button>
       </KeyTooltip>
-      <Dialog open={open} dismiss={dismiss}>
-        <form className="dialog" onSubmit={handleSubmit}>
-          <Input value={characterName} onChange={setName} label="角色名" />
-          <ColorPicker value={textColor} onChange={setTextColor} />
-          <div className="mt-4 text-right">
-            <button type="button" className="btn mr-1" onClick={dismiss}>
-              取消
-            </button>
-            <button type="submit" className="btn btn-primary">
-              修改
-            </button>
-          </div>
-        </form>
-      </Dialog>
+      <ConfirmDialog dismiss={dismiss} submit={handleSubmit} open={open} confirmText="修改">
+        <Input value={characterName} onChange={setName} label="角色名" />
+        <ColorPicker value={textColor} onChange={setTextColor} />
+      </ConfirmDialog>
     </>
   );
 });

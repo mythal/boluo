@@ -8,6 +8,7 @@ import { JoinedChannel, LeftChannel } from '../states/actions';
 import { throwErr } from '../helper';
 import { Input } from './Input';
 import { checkCharacterName } from '../validators';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface Props {
   channel: Channel;
@@ -79,20 +80,12 @@ export const JoinChannelButton = React.memo<Props>(({ channel, className }) => {
       <button className={cls('btn', className)} onClick={open}>
         加入频道
       </button>
-      <Dialog open={dialog} dismiss={close} className="dialog">
+      <ConfirmDialog dismiss={close} submit={join} open={dialog} confirmText="加入">
         <p className="dialog-title">加入频道</p>
         <p className="my-1">要加入频道「{channel.name}」吗？</p>
         <Input label="角色名" value={characterName} onChange={setCharacterName} error={nameError?.err()} />
-        <p className="text-xs">（选填）你在这个频道担当的角色的称呼。</p>
-        <div className="mt-4 text-right">
-          <button className="btn mr-1" onClick={close}>
-            取消
-          </button>
-          <button className="btn btn-primary" autoFocus onClick={join} disabled={Boolean(nameError?.isErr)}>
-            加入频道
-          </button>
-        </div>
-      </Dialog>
+        <p className="text-xs">（选填）你在这个频道所扮演的角色的称呼。</p>
+      </ConfirmDialog>
     </>
   );
 });

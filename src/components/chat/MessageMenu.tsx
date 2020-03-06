@@ -23,8 +23,7 @@ export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, space
   };
 
   const dismissDeleteDialog = () => setDeleteConfirm(false);
-  const deleteMessage: MouseEventHandler = async e => {
-    e.stopPropagation();
+  const deleteMessage = async () => {
     await post('/messages/delete', {}, { id });
     dismissDeleteDialog();
   };

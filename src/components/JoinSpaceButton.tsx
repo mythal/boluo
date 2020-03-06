@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Dialog } from './Dialog';
 import { useDispatch, useMy } from './App';
 import { cls } from '../classname';
 import { post } from '../api/request';
 import { JoinedSpace, LeftSpace } from '../states/actions';
 import { throwErr } from '../helper';
 import { Space } from '../api/spaces';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface Props {
   space: Space;
@@ -58,18 +58,10 @@ export const JoinSpaceButton = React.memo<Props>(({ space, className }) => {
       <button className={cls('btn', className)} onClick={handleClick}>
         {joined ? '退出位面' : '加入位面'}
       </button>
-      <Dialog open={dialog} dismiss={close} className="dialog">
+      <ConfirmDialog dismiss={close} submit={leave} open={dialog} confirmText="退出">
         <p className="dialog-title">退出位面</p>
         <p className="my-1">要退出位面「{space?.name}」吗？</p>
-        <div className="mt-4 text-right">
-          <button className="btn mr-1" onClick={close}>
-            取消
-          </button>
-          <button className="btn btn-primary" onClick={leave}>
-            退出
-          </button>
-        </div>
-      </Dialog>
+      </ConfirmDialog>
     </>
   );
 });

@@ -3,7 +3,6 @@ import { Route, Switch } from 'react-router-dom';
 import { NotFound } from './NotFound';
 import { Catalog } from './Catalog';
 import { Welcome } from './Welcome';
-import { ComponentsPage } from './ComponentsPage';
 import { useMy } from './App';
 import { AlertList } from './AlertList';
 import { AppHeader } from './AppHeader';
@@ -35,9 +34,6 @@ export const Page: React.FC<Props> = ({ sidebar }) => {
             </Route>
             <Route path="/channel/:id">
               <ChannelChat />
-            </Route>
-            <Route path="/components">
-              <ComponentsPage />
             </Route>
             <Route path="/">
               <NotFound />

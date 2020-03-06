@@ -6,9 +6,8 @@ import { post } from '../api/request';
 import { CONFLICT, errorText } from '../api/error';
 import { JoinedSpace } from '../states/actions';
 import { PlusIcon } from './icons';
-import { Dialog } from './Dialog';
 import { Input } from './Input';
-import { AlertItem } from './AlertItem';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export const CreateSpace: React.FC = () => {
   const history = useHistory();
@@ -21,8 +20,7 @@ export const CreateSpace: React.FC = () => {
   const nameError = name.length > 0 ? checkDisplayName(name).err() : null;
   const disabled = name.length === 0 || nameError !== null;
 
-  const handleCreate: React.FormEventHandler = async e => {
-    e.preventDefault();
+  const handleCreate = async () => {
     setError(null);
     const result = await post('/spaces/create', {
       name,
@@ -48,22 +46,19 @@ export const CreateSpace: React.FC = () => {
         <PlusIcon className="mr-2" />
         新位面
       </button>
-      <Dialog open={open} dismiss={dismiss} className="max-w-sm p-4">
-        {error === null ? null : <AlertItem level="ERROR" message={error} />}
-        <form className="" onSubmit={handleCreate}>
-          <p className="dialog-title">创建位面</p>
-          <p className="text-sm my-2">集结你的队友，进入位面开始冒险吧。</p>
-          <Input label="名称" value={name} onChange={setName} error={nameError} />
-          <div className="mt-4 text-right">
-            <button className="btn mr-1" type="button" onClick={dismiss}>
-              取消
-            </button>
-            <button className="btn btn-primary" type="submit" disabled={disabled}>
-              创建
-            </button>
-          </div>
-        </form>
-      </Dialog>
+      <ConfirmDialog
+        open={open}
+        dismiss={dismiss}
+        className="max-w-sm p-4"
+        submit={handleCreate}
+        confirmText="创建"
+        error={error}
+        disabled={disabled}
+      >
+        <p className="dialog-title">创建位面</p>
+        <p className="text-sm my-2">集结你的队友，进入位面开始冒险吧。</p>
+        <Input label="名称" value={name} onChange={setName} error={nameError} />
+      </ConfirmDialog>
     </>
   );
 };

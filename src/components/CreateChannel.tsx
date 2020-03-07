@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch } from './App';
+import { useDispatch } from './Provider';
 import { checkDisplayName } from '../validators';
 import { post } from '../api/request';
 import { CONFLICT, errorText } from '../api/error';

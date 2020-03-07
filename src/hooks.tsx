@@ -21,7 +21,7 @@ export function useOutside(ref: React.MutableRefObject<HTMLElement | null>, call
   );
 
   useEffect(() => {
-    if (ref.current?.offsetParent === null) {
+    if (!ref.current || ref.current.offsetParent === null) {
       return;
     }
     // Bind the event listener
@@ -66,3 +66,8 @@ export const useFetchResult = <T,>(
   }
   return [result.mapErr(err => <AlertItem level="ERROR" message={errorText(err)} />), refetch];
 };
+
+export function useForceUpdate() {
+  const [_, setValue] = useState(0); // integer state
+  return () => setValue(value => ++value); // update the state to force render
+}

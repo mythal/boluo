@@ -23,7 +23,7 @@
     @apply outline-none;
   }
   &:disabled {
-    @apply bg-gray-500 border-gray-700 cursor-not-allowed text-white;
+    @apply bg-gray-500 border-gray-700 cursor-not-allowed pointer-events-none text-white;
 
     &:hover {
       @apply bg-gray-500;
@@ -47,6 +47,30 @@
   }
   &:active {
     @apply bg-teal-700;
+  }
+}
+
+.sidebar-btn {
+  @apply py-1 px-3 m-1 h-8 rounded w-10 text-center;
+
+  &:hover {
+    @apply bg-gray-400;
+  }
+
+  &:active {
+    @apply sidebar-btn-down;
+  }
+
+  &:focus {
+    @apply outline-none;
+  }
+}
+
+.sidebar-btn-down {
+  @apply bg-gray-500;
+
+  &:hover {
+    @apply bg-gray-400;
   }
 }
 
@@ -120,6 +144,41 @@
   &:active {
     @apply bg-gray-100;
   }
+}
+
+.tooltip {
+  @apply pointer-events-none text-white p-1 text-xs transform;
+  background-color: var(--tooltip-bg);
+  @apply -translate-x-1/2 -translate-y-full;
+  &::after {
+    @apply z-30 transform translate-y-1 absolute left-0 right-0 mx-auto block w-0 h-0;
+    content: '';
+    border: 0.5em solid transparent;
+    border-top: 0.5em solid var(--tooltip-bg);
+  }
+}
+
+.tooltip-left {
+  @apply -translate-x-full;
+}
+
+.tooltip-bottom {
+  @apply translate-y-0;
+  &::after {
+    content: none;
+  }
+  &::before {
+    @apply z-10 absolute left-0 right-0 mx-auto block w-0 h-0;
+    content: '';
+    border: 0.5em solid transparent;
+    border-bottom: 0.5em solid var(--tooltip-bg);
+    top: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.tooltip-right {
+  @apply translate-x-0;
 }
 
 .tooltip-wrap {

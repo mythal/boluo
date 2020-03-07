@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useMy } from './App';
+import { useMy } from './Provider';
 import { useFetchResult } from '../hooks';
 import { get } from '../api/request';
 import { Channel } from '../api/channels';

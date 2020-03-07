@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog } from './Dialog';
 import { Input } from './Input';
-import { useDispatch, useMy } from './App';
+import { useDispatch, useMy } from './Provider';
 import { checkDisplayName, checkEmail, checkPassword, checkUsername } from '../validators';
 import { post } from '../api/request';
 import { clearCsrfToken, getCsrfToken } from '../api/csrf';

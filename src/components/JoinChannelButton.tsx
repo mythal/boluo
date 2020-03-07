@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog } from './Dialog';
-import { useDispatch, useMy } from './App';
+import { useDispatch, useMy } from './Provider';
 import { cls } from '../classname';
 import { Channel } from '../api/channels';
 import { post } from '../api/request';

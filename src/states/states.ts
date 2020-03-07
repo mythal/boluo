@@ -27,7 +27,7 @@ interface Appearance {
 }
 
 const appearanceStateInit: Appearance = {
-  sidebar: false,
+  sidebar: localStorage.getItem('sidebar') === 'true',
 };
 
 export interface State {

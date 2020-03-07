@@ -130,6 +130,11 @@ const editChannelMember: Reducer<ChannelMemberEdited> = (state, { channelId, mem
 const toggleSidebar: Reducer = state => {
   const { appearance } = state;
   const sidebar = !appearance.sidebar;
+  if (sidebar) {
+    localStorage.setItem('sidebar', 'true');
+  } else {
+    localStorage.removeItem('sidebar');
+  }
   return { ...state, appearance: { ...appearance, sidebar } };
 };
 

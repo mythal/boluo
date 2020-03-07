@@ -9,8 +9,8 @@ interface KeyTooltipProps {
 export const KeyTooltip: React.FC<KeyTooltipProps> = React.memo<KeyTooltipProps>(({ help, keyHelp, children }) => (
   <Tooltip
     message={
-      <div className="text-right">
-        <div className="text-base">{help}</div>
+      <div className="text-right px-2" style={{ width: 'max-content' }}>
+        <div className="text-sm">{help}</div>
         <div className="text-xs">{keyHelp}</div>
       </div>
     }

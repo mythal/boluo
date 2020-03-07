@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { useDispatch } from './App';
-import { checkDisplayName } from '../validators';
-import { post } from '../api/request';
-import { CONFLICT, errorText } from '../api/error';
-import { JoinedSpace } from '../states/actions';
-import { PlusIcon } from './icons';
-import { Input } from './Input';
-import { ConfirmDialog } from './ConfirmDialog';
+import { useDispatch } from '../Provider';
+import { checkDisplayName } from '../../validators';
+import { post } from '../../api/request';
+import { CONFLICT, errorText } from '../../api/error';
+import { JoinedSpace } from '../../states/actions';
+import { PlusIcon } from '../icons';
+import { Input } from '../Input';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { Tooltip } from '../Tooltip';
 
 export const CreateSpace: React.FC = () => {
   const history = useHistory();
@@ -42,10 +43,11 @@ export const CreateSpace: React.FC = () => {
 
   return (
     <>
-      <button className="btn my-2 text-xs" onClick={toggle}>
-        <PlusIcon className="mr-2" />
-        新位面
-      </button>
+      <Tooltip message={<div>创建位面</div>}>
+        <button className="sidebar-btn" onClick={toggle}>
+          <PlusIcon />
+        </button>
+      </Tooltip>
       <ConfirmDialog
         open={open}
         dismiss={dismiss}

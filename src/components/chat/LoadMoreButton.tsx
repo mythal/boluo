@@ -1,5 +1,5 @@
 import { Id } from '../../id';
-import { Dispatch, useDispatch } from '../App';
+import { Dispatch, useDispatch } from '../Provider';
 import React, { useEffect, useState } from 'react';
 import { get } from '../../api/request';
 import { LoadMessages, NewAlert } from '../../states/actions';

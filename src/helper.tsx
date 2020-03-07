@@ -1,4 +1,4 @@
-import { Dispatch } from './components/App';
+import { Dispatch } from './components/Provider';
 import { AppError, errorText } from './api/error';
 
 export const maxDate = new Date(8640000000000000);

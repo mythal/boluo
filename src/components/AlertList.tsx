@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertItem } from './AlertItem';
-import { useAlertList } from './App';
+import { useAlertList } from './Provider';
 
 export const AlertList: React.FC = () => {
   const alertList = useAlertList();

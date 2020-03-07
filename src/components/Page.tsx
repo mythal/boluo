@@ -3,27 +3,21 @@ import { Route, Switch } from 'react-router-dom';
 import { NotFound } from './NotFound';
 import { Catalog } from './Catalog';
 import { Welcome } from './Welcome';
-import { useMy } from './App';
+import { useMy } from './Provider';
 import { AlertList } from './AlertList';
-import { AppHeader } from './AppHeader';
-import { Sidebar } from './Sidebar';
+import { Sidebar } from './sidebar/Sidebar';
 import { SpacePage } from './SpacePage';
 import { ChannelChat } from './chat/ChannelChat';
 
-interface Props {
-  sidebar: boolean;
-}
+interface Props {}
 
-export const Page: React.FC<Props> = ({ sidebar }) => {
+export const Page: React.FC<Props> = () => {
   const my = useMy();
   return (
-    <div className="flex flex-col h-screen-true w-screen">
+    <div className="h-screen-true w-screen">
       <AlertList />
-      <div className="w-full flex-none">
-        <AppHeader sidebar={sidebar} />
-      </div>
-      <div className="flex-1 flex w-full">
-        {my === 'GUEST' ? null : <Sidebar my={my} open={sidebar} />}
+      <div className="h-full flex w-full">
+        <Sidebar />
         <div className="flex-1 h-full">
           <Switch>
             <Route exact path="/">

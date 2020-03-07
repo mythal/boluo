@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch, useMy } from './App';
+import { useDispatch, useMy } from './Provider';
 import { cls } from '../classname';
 import { post } from '../api/request';
 import { JoinedSpace, LeftSpace } from '../states/actions';

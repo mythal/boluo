@@ -10,7 +10,7 @@ import { parse } from '../../parser';
 import { NewPreview } from '../../api/messages';
 import { post } from '../../api/request';
 import { throwErr } from '../../helper';
-import { useDispatch } from '../App';
+import { useDispatch } from '../Provider';
 import { User } from '../../api/users';
 import { EditChannelSettings } from './EditChannelSettings';
 

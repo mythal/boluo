@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { get } from '../../api/request';
-import { Dispatch, useChat, useDispatch, useMy } from '../App';
+import { Dispatch, useChat, useDispatch, useMy } from '../Provider';
 import { useParams } from 'react-router-dom';
 import { ChannelEventReceived, LoadChat } from '../../states/actions';
 import { Id } from '../../id';

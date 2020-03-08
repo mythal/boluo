@@ -1,4 +1,4 @@
-import { Channel, ChannelMember } from '../api/channels';
+import { Channel, ChannelMember, Member } from '../api/channels';
 import { List, Map } from 'immutable';
 import { Id, newId } from '../id';
 import { Message, Preview } from '../api/messages';
@@ -56,7 +56,7 @@ export type ItemMap = Map<Id, PreviewEntry | MessageEntry>;
 
 export interface Chat {
   channel: Channel;
-  members: ChannelMember[];
+  members: Member[];
   colorMap: Map<Id, string>;
   itemList: List<ChatItem>;
   itemMap: ItemMap;

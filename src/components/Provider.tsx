@@ -8,7 +8,7 @@ import { get } from '../api/request';
 import { Loading } from './Loading';
 import { unwrap } from '../helper';
 import { List } from 'immutable';
-import { Channel, ChannelMember } from '../api/channels';
+import { Channel, Member } from '../api/channels';
 import { Chat } from '../states/chat';
 
 const DispatchContext = React.createContext<(action: Action) => void>(unwrap);
@@ -28,8 +28,8 @@ export const useChat = (): Chat | undefined => useContext(ChatContext);
 const ChannelContext = React.createContext<Channel | undefined>(undefined);
 export const useChannel = (): Channel | undefined => useContext(ChannelContext);
 
-const ChannelMemberContext = React.createContext<ChannelMember[] | undefined>(undefined);
-export const useChannelMember = (): ChannelMember[] | undefined => useContext(ChannelMemberContext);
+const ChannelMemberContext = React.createContext<Member[] | undefined>(undefined);
+export const useChannelMember = (): Member[] | undefined => useContext(ChannelMemberContext);
 
 const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
   useEffect(() => {

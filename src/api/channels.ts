@@ -1,5 +1,6 @@
-import { Space } from './spaces';
+import { Space, SpaceMember } from './spaces';
 import { Id } from '../id';
+import { User } from './users';
 
 export interface CreateChannel {
   spaceId: Id;
@@ -30,6 +31,13 @@ export interface ChannelWithMember {
   member: ChannelMember;
 }
 
+export interface Member {
+  channel: ChannelMember;
+  space: SpaceMember;
+  user: User;
+  online: boolean;
+}
+
 export interface JoinChannel {
   channelId: Id;
   characterName?: string;
@@ -37,7 +45,7 @@ export interface JoinChannel {
 
 export interface ChannelWithRelated {
   channel: Channel;
-  members: ChannelMember[];
+  members: Member[];
   space: Space;
   colorList: { [userId: string]: string };
 }

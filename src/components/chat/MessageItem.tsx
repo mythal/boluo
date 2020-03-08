@@ -6,6 +6,7 @@ import { cls } from '../../classname';
 import { MessageMenu } from './MessageMenu';
 import { useMember } from './ChannelChat';
 import { mediaUrl } from '../../api/media';
+import { Id } from '../../id';
 
 interface Props {
   id: string;
@@ -20,13 +21,14 @@ interface Props {
   seed?: number[];
   color?: string;
   time: number;
-  mediaId: string | null;
+  mediaId: Id | null;
+  senderId: Id;
 }
 
 const num = (n: number) => (n > 9 ? String(n) : `0${n}`);
 
 export const MessageItem = React.memo<Props>(props => {
-  const { name, inGame, color, text, seed, isPreview, isMaster, entities, mediaId } = props;
+  const { name, inGame, color, text, seed, isPreview, entities, mediaId } = props;
   const style: React.CSSProperties = inGame ? { color } : {};
   const isTyping = isPreview && text.length === 0 && entities.length === 0;
   const isAction = isTyping || props.isAction;
@@ -63,7 +65,7 @@ export const MessageItem = React.memo<Props>(props => {
       )}
       <div
         className={cls(
-          'flex w-full items-center items-stretch transform overflow-hidden message-item max-h-screen transition-size duration-500 pr-1',
+          'flex w-full items-center items-stretch transform overflow-x-hidden message-item max-h-screen transition-size duration-500 pr-1',
           { 'bg-gray-900 text-white text-xs': !inGame },
           { 'stripe-light': isPreview && inGame },
           { 'stripe-dark': isPreview && !inGame },
@@ -84,7 +86,7 @@ export const MessageItem = React.memo<Props>(props => {
           {num(time.getHours())}:{num(time.getMinutes())}:{num(time.getSeconds())}
         </div>
         <div className="flex-none w-24 py-2 pl-1 text-right border-r pr-2 mr-2 border-gray-500">
-          {!isAction && <Name name={name} />}
+          {!isAction && <Name name={name} userId={props.senderId} />}
         </div>
         <div
           className={cls(
@@ -93,7 +95,7 @@ export const MessageItem = React.memo<Props>(props => {
             { 'line-through': props.folded }
           )}
         >
-          {isAction && <Name className="mr-2" name={name} />}
+          {isAction && <Name className="mr-2" name={name} userId={props.senderId} />}
           {isTyping ? <span>正在输入...</span> : <MessageContent text={text} entities={entities} seed={seed} />}
           {mediaId && <img alt="用户上传的图片" className="w-full max-w-sm" src={mediaUrl(mediaId)} />}
         </div>

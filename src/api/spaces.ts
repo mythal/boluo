@@ -16,7 +16,7 @@ export interface Space {
 export interface SpaceMember {
   userId: Id;
   spaceId: Id;
-  isAdmin: string;
+  isAdmin: boolean;
   joinDate: string;
 }
 

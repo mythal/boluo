@@ -52,7 +52,9 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
   }, [id]);
   useEffect(() => {
     loadChat().catch(console.warn);
+    const interval = window.setInterval(loadChat, 16000);
     return () => {
+      window.clearInterval(interval);
       dispatch({ type: 'CLOSE_CHAT', id });
     };
 

@@ -6,14 +6,14 @@ import { Loading } from './components/Loading';
 import { AlertItem } from './components/AlertItem';
 import { errorText } from './api/error';
 
-export function useOutside(ref: React.MutableRefObject<HTMLElement | null>, callback: () => void) {
+export function useOutside(ref: React.MutableRefObject<HTMLElement | null>, callback?: () => void) {
   /**
    * https://stackoverflow.com/a/42234988
    */
 
   const handleClickOutside = useCallback(
     function(event: MouseEvent) {
-      if (!ref.current?.contains(event.target as Element)) {
+      if (!ref.current?.contains(event.target as Element) && callback) {
         callback();
       }
     },
@@ -68,6 +68,6 @@ export const useFetchResult = <T,>(
 };
 
 export function useForceUpdate() {
-  const [_, setValue] = useState(0); // integer state
+  const [, setValue] = useState(0); // integer state
   return () => setValue(value => ++value); // update the state to force render
 }

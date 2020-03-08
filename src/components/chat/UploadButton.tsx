@@ -32,7 +32,10 @@ export const UploadButton = React.memo<Props>(({ file, setFile }) => {
   let name = null;
   if (file) {
     const i = file.name.lastIndexOf('.');
-    const text = i === -1 ? name : file.name.substr(0, i);
+    let text = i === -1 ? name : file.name.substr(0, i);
+    if (text && text.length > 8) {
+      text = text.substr(0, 6) + '…';
+    }
     name = <span className="ml-2 text-sm">{text}</span>;
   }
   if (error) {

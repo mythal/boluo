@@ -13,7 +13,7 @@ export interface Media {
 }
 
 export function upload(file: Blob, filename: string, mimeType: string): Promise<AppResult<Media>> {
-  return request(makeUri('/media/upload', { filename, mimeType }), 'POST', file);
+  return request(makeUri('/media/upload', { filename, mimeType }), 'POST', file, true, mimeType);
 }
 
 export function mediaUrl(id: string, download = false): string {

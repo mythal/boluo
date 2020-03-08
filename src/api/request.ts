@@ -14,7 +14,7 @@ import {
   EditChannelMember,
   JoinChannel,
 } from './channels';
-import { ByChannel, EditMessage, Message, NewMessage } from './messages';
+import { ByChannel, Message, NewMessage } from './messages';
 
 export type AppResult<T> = Result<T, AppError>;
 
@@ -42,10 +42,11 @@ export const request = async <T>(
   path: string,
   method: string,
   body: RequestInit['body'],
-  csrf = true
+  csrf = true,
+  contentType = 'application/json'
 ): Promise<AppResult<T>> => {
   const headers = new Headers({
-    'Content-Type': 'application/json',
+    'Content-Type': contentType,
   });
   if (csrf) {
     headers.append('csrf-token', await getCsrfToken());

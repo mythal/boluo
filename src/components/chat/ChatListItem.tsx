@@ -21,7 +21,7 @@ export const ChatListItem = React.memo<Props>(({ item, colorMap, prevItemTime })
     );
   }
   if (item.type === 'MESSAGE') {
-    const { id, text, entities, name, isAction, isMaster, inGame, seed, created, folded } = item.message;
+    const { id, text, entities, name, isAction, isMaster, inGame, seed, created, folded, mediaId } = item.message;
     const color = colorMap.get(item.message.senderId);
     return (
       <MessageItem
@@ -37,6 +37,7 @@ export const ChatListItem = React.memo<Props>(({ item, colorMap, prevItemTime })
         seed={seed}
         time={created}
         folded={folded}
+        mediaId={mediaId}
       />
     );
   } else if (item.type === 'PREVIEW') {
@@ -58,6 +59,7 @@ export const ChatListItem = React.memo<Props>(({ item, colorMap, prevItemTime })
         color={color}
         time={start}
         folded={false}
+        mediaId={null}
       />
     );
   } else {

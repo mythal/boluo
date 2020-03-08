@@ -5,6 +5,7 @@ import { Name } from './Name';
 import { cls } from '../../classname';
 import { MessageMenu } from './MessageMenu';
 import { useMember } from './ChannelChat';
+import { mediaUrl } from '../../api/media';
 
 interface Props {
   id: string;
@@ -19,12 +20,13 @@ interface Props {
   seed?: number[];
   color?: string;
   time: number;
+  mediaId: string | null;
 }
 
 const num = (n: number) => (n > 9 ? String(n) : `0${n}`);
 
 export const MessageItem = React.memo<Props>(props => {
-  const { name, inGame, color, text, seed, isPreview, isMaster, entities } = props;
+  const { name, inGame, color, text, seed, isPreview, isMaster, entities, mediaId } = props;
   const style: React.CSSProperties = inGame ? { color } : {};
   const isTyping = isPreview && text.length === 0 && entities.length === 0;
   const isAction = isTyping || props.isAction;
@@ -93,6 +95,7 @@ export const MessageItem = React.memo<Props>(props => {
         >
           {isAction && <Name className="mr-2" name={name} />}
           {isTyping ? <span>正在输入...</span> : <MessageContent text={text} entities={entities} seed={seed} />}
+          {mediaId && <img alt="用户上传的图片" className="w-full max-w-sm" src={mediaUrl(mediaId)} />}
         </div>
         {!isPreview && member.channel && member.space && (
           <div

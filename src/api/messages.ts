@@ -60,6 +60,7 @@ export interface NewMessage {
   entities: Entity[];
   inGame: boolean;
   isAction: boolean;
+  mediaId: string | null;
   orderDate: number | null;
 }
 

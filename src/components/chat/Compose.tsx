@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon, BroadcastIcon, CharacterIcon, HistoryIcon, SendIcon } from '../icons';
+import { ActionIcon, BroadcastIcon, CharacterIcon, FileImageIcon, HistoryIcon, SendIcon } from '../icons';
 import { KeyTooltip } from './KeyTooltip';
 import { Id, newId } from '../../id';
 import { SendAction } from './ChannelChat';
@@ -13,6 +13,9 @@ import { throwErr } from '../../helper';
 import { useDispatch } from '../Provider';
 import { User } from '../../api/users';
 import { EditChannelSettings } from './EditChannelSettings';
+import { UploadButton } from './UploadButton';
+import { Loading } from '../Loading';
+import { upload } from '../../api/media';
 
 interface Props {
   channelId: Id;
@@ -43,6 +46,8 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   const [inGame, setInGame] = useState(true);
   const [isAction, setIsAction] = useState(false);
   const [isBroadcast, setIsBroadcast] = useState(true);
+  const [media, setMedia] = useState<File | null>(null);
+  const [sending, setSending] = useState<boolean>(false);
   const sendPreview = useSendPreview(sendAction);
   const startRef = useRef<number>(new Date().getTime());
   const idRef = useRef<Id>(newId());
@@ -61,7 +66,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   const id = idRef.current;
   const nameError = checkCharacterName(name);
   const canSendPreview = !inGame || nameError.isOk;
-  const canSend = text.trim().length > 0 && canSendPreview;
+  const canSend = text.trim().length > 0 && canSendPreview && !sending;
 
   if (sendPreviewFlag.current) {
     sendPreviewFlag.current = false;
@@ -113,13 +118,27 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
     if (!canSend) {
       return;
     }
+    setSending(true);
     const parsed = parse(text);
+    let mediaId = null;
+
+    if (media) {
+      const uploaded = await upload(media, media.name, media.type);
+      if (uploaded.isErr) {
+        throwErr(dispatch)(uploaded.value);
+        setSending(false);
+        return;
+      }
+      mediaId = uploaded.value.id;
+    }
+    console.log(mediaId);
     const sent = await post('/messages/send', {
       messageId: id,
       channelId,
       name: inGame ? name : profile.nickname,
       inGame,
       isAction,
+      mediaId,
       orderDate: startRef.current,
       ...parsed,
     });
@@ -128,8 +147,10 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
       setIsAction(false);
       reset();
       sendPreviewFlag.current = false;
+      setSending(false);
     } else {
       throwErr(dispatch)(sent.value);
+      setSending(false);
     }
   };
   const handleKey: React.KeyboardEventHandler = async e => {
@@ -176,6 +197,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
               <CharacterIcon />
             </button>
           </KeyTooltip>
+          <UploadButton file={media} setFile={setMedia} />
         </div>
         <div className="mb-1">
           <KeyTooltip help="发送实时预览" keyHelp="Ctrl + Q">
@@ -190,8 +212,8 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
           </KeyTooltip>
           <KeyTooltip help="发送" keyHelp="Ctrl / ⌘ + ↵">
             <button className="btn btn-primary" disabled={!canSend} onClick={handleSend}>
-              <SendIcon className="mr-2" />
-              发送
+              {sending ? <Loading className="w-4 h-4" /> : <SendIcon />}
+              <span className="ml-2">发送</span>
             </button>
           </KeyTooltip>
         </div>

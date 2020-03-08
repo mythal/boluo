@@ -31,6 +31,7 @@ import { faLevelDownAlt } from '@fortawesome/free-solid-svg-icons/faLevelDownAlt
 import { faExpandAlt } from '@fortawesome/free-solid-svg-icons/faExpandAlt';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
+import { faFileImage } from '@fortawesome/free-solid-svg-icons/faFileImage';
 
 export interface IconProps {
   className?: string;
@@ -67,3 +68,4 @@ export const ExpandIcon = (props: IconProps) => <FontAwesomeIcon icon={faExpandA
 export const InsertIcon = (props: IconProps) => <FontAwesomeIcon icon={faLevelDownAlt} {...props} />;
 export const DeleteIcon = (props: IconProps) => <FontAwesomeIcon icon={faTrash} {...props} />;
 export const SearchIcon = (props: IconProps) => <FontAwesomeIcon icon={faSearch} {...props} />;
+export const FileImageIcon = (props: IconProps) => <FontAwesomeIcon icon={faFileImage} {...props} />;

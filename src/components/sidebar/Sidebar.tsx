@@ -25,7 +25,7 @@ export const Sidebar = React.memo<Props>(({}) => {
   };
   return (
     <div
-      className={cls('w-12 flex-0-auto flex flex-col bg-gray-200 h-full border-r transition-all duration-500', {
+      className={cls('w-12 flex-0-auto flex flex-col bg-gray-200 h-full border-r', {
         'w-40': expand,
       })}
     >

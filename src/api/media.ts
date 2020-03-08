@@ -15,3 +15,7 @@ export interface Media {
 export function upload(file: Blob, filename: string, mimeType: string): Promise<AppResult<Media>> {
   return request(makeUri('/media/upload', { filename, mimeType }), 'POST', file);
 }
+
+export function mediaUrl(id: string, download = false): string {
+  return makeUri('/media/get', { id, download });
+}

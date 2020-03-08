@@ -4,7 +4,7 @@ import { List, OrderedMap } from 'immutable';
 import { Id } from '../../id';
 import { ChannelWithMember } from '../../api/channels';
 import { CaretRightIcon, DownIcon, RightIcon } from '../icons';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { ChannelItem } from './ChannelItem';
 
 const EnterSpaceLink = React.memo<{ id: Id }>(({ id }) => {
@@ -28,7 +28,7 @@ interface SpaceItemProps {
   channelId?: string;
 }
 
-export const SpaceItem = React.memo<SpaceItemProps>(({ space, member, channels, channelId }) => {
+export const SpaceItem = React.memo<SpaceItemProps>(({ space, channels, channelId }) => {
   const [fold, setFold] = useState(false);
   const Icon = fold ? RightIcon : DownIcon;
   const channelList = fold

@@ -22,13 +22,9 @@ export interface Alert {
   created: number;
 }
 
-interface Appearance {
-  sidebar: boolean;
-}
+interface Appearance {}
 
-const appearanceStateInit: Appearance = {
-  sidebar: localStorage.getItem('sidebar') === 'true',
-};
+const appearanceStateInit: Appearance = {};
 
 export interface State {
   my: MyState;

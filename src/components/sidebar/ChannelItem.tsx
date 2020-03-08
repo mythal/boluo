@@ -1,7 +1,6 @@
 import React from 'react';
 import { Channel, ChannelMember } from '../../api/channels';
-import { Link, NavLink } from 'react-router-dom';
-import { cls } from '../../classname';
+import { NavLink } from 'react-router-dom';
 
 interface ChannelItemProps {
   channel: Channel;

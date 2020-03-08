@@ -127,17 +127,6 @@ const editChannelMember: Reducer<ChannelMemberEdited> = (state, { channelId, mem
   return { ...state, chat, my: { ...my, channels } };
 };
 
-const toggleSidebar: Reducer = state => {
-  const { appearance } = state;
-  const sidebar = !appearance.sidebar;
-  if (sidebar) {
-    localStorage.setItem('sidebar', 'true');
-  } else {
-    localStorage.removeItem('sidebar');
-  }
-  return { ...state, appearance: { ...appearance, sidebar } };
-};
-
 const newAlert: Reducer<NewAlert> = (state, { level, message }) => {
   let { alertList } = state;
   const created = new Date().getTime();
@@ -372,8 +361,6 @@ export const reducer = (state: State, action: Action) => {
       return login(state, action);
     case 'LOGGED_OUT':
       return logout(state, action);
-    case 'TOGGLE_SIDEBAR':
-      return toggleSidebar(state, action);
     case 'JOINED_SPACE':
       return joinSpace(state, action);
     case 'LEFT_SPACE':

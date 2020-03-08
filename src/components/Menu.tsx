@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useReducer } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Portal } from './Portal';
 import { useOutside, useForceUpdate } from '../hooks';
 import { cls } from '../classname';
@@ -42,7 +42,6 @@ export const Menu: React.FC<Props> = React.memo<Props>(({ children, open, dismis
       }
 
       if (top !== style.top || left !== style.left) {
-        console.log(top, left);
         setStyle({
           position: 'absolute',
           top,
@@ -68,9 +67,15 @@ export const Menu: React.FC<Props> = React.memo<Props>(({ children, open, dismis
     translateX = 'translate-x-0';
   }
 
+  const onClick: React.MouseEventHandler = e => {
+    e.stopPropagation();
+    dismiss();
+  };
+
   return (
     <Portal>
       <ul
+        onClick={onClick}
         className={cls('menu absolute z-10 text-sm transform', translateX, { '-translate-y-full': t })}
         style={style}
         ref={menuRef}

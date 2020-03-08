@@ -1,9 +1,11 @@
-import React, { MouseEventHandler, useState } from 'react';
-import { DeleteIcon, ExpandIcon, FoldIcon, InsertIcon } from '../icons';
+import React, { MouseEventHandler, useRef, useState } from 'react';
+import { EllipsisIcon, FoldIcon } from '../icons';
 import { post } from '../../api/request';
 import { ChannelMember } from '../../api/channels';
 import { SpaceMember } from '../../api/spaces';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { cls } from '../../classname';
+import { Menu } from '../Menu';
 
 interface Props {
   id: string;
@@ -15,14 +17,24 @@ interface Props {
 }
 
 export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, spaceMember, text }) => {
-  const [openDeleteDialog, setDeleteConfirm] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
 
-  const toggleFold: MouseEventHandler = async e => {
+  const openMenu: MouseEventHandler = e => {
     e.stopPropagation();
+    setOpen(true);
+  };
+  const closeMenu = () => setOpen(false);
+
+  const toggleFold = async () => {
     await post('/messages/toggle_fold', {}, { id });
   };
 
-  const dismissDeleteDialog = () => setDeleteConfirm(false);
+  const openDeleteDialog = () => {
+    setDeleteDialog(true);
+  };
+  const dismissDeleteDialog = () => setDeleteDialog(false);
   const deleteMessage = async () => {
     await post('/messages/delete', {}, { id });
     dismissDeleteDialog();
@@ -34,10 +46,22 @@ export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, space
 
   return (
     <>
-      <button title="折叠" hidden={!iAmMaster && !isMine} className="message-operation" onClick={toggleFold}>
-        {folded ? <ExpandIcon /> : <FoldIcon />}
+      <button
+        className={cls('sidebar-btn text-black mt-1', { 'sidebar-btn-down': open })}
+        onClick={openMenu}
+        ref={buttonRef}
+      >
+        <EllipsisIcon />
       </button>
-      <ConfirmDialog open={openDeleteDialog} confirmText="删除" dismiss={dismissDeleteDialog} submit={deleteMessage}>
+      <Menu dismiss={closeMenu} open={open} anchor={buttonRef} l>
+        <li className="menu-item" hidden={!iAmAdmin} onClick={openDeleteDialog}>
+          删除
+        </li>
+        <li className="menu-item" hidden={!iAmMaster && !isMine} onClick={toggleFold}>
+          {folded ? <span>展开</span> : <span>折叠</span>}
+        </li>
+      </Menu>
+      <ConfirmDialog open={deleteDialog} confirmText="删除" dismiss={dismissDeleteDialog} submit={deleteMessage}>
         <div className="font-bold text-sm">想要删除这条消息吗？</div>
         <div className="text-xs my-1 max-w-sm">
           删除用于清理垃圾消息，主持人也可以使用「折叠」（
@@ -46,10 +70,6 @@ export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, space
         </div>
         <div className="font-mono whitespace-pre max-w-sm truncate border-teal-400 border-l-4 pl-2 my-4">{text}</div>
       </ConfirmDialog>
-      <button title="删除" hidden={!iAmAdmin} className="message-operation" onClick={() => setDeleteConfirm(true)}>
-        <DeleteIcon />
-      </button>
-      {/*<button className="message-operation"><InsertIcon/></button>*/}
     </>
   );
 });

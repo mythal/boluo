@@ -1,11 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon, BroadcastIcon, CharacterIcon, FileImageIcon, HistoryIcon, SendIcon } from '../icons';
-import { KeyTooltip } from './KeyTooltip';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Id, newId } from '../../id';
 import { SendAction } from './ChannelChat';
 import { ChannelMember } from '../../api/channels';
 import { checkCharacterName } from '../../validators';
-import { cls } from '../../classname';
 import { parse } from '../../parser';
 import { NewPreview } from '../../api/messages';
 import { post } from '../../api/request';
@@ -14,8 +11,11 @@ import { useDispatch } from '../Provider';
 import { User } from '../../api/users';
 import { EditChannelSettings } from './EditChannelSettings';
 import { UploadButton } from './UploadButton';
-import { Loading } from '../Loading';
 import { upload } from '../../api/media';
+import { InGameButton } from './InGameButton';
+import { BroadcastButton } from './BroadcastButton';
+import { ActionButton } from './ActionButton';
+import { SendButton } from './SendButton';
 
 interface Props {
   channelId: Id;
@@ -25,9 +25,32 @@ interface Props {
 }
 
 const PREVIEW_SEND_TIMEOUT_MILLIS = 200;
-const useSendPreview = (sendAction: SendAction) => {
+const useSendPreview = (sendAction: SendAction, nickname: string) => {
   const sendPreviewTimeout = useRef<number | null>(null);
-  return (preview: NewPreview) => {
+  return (
+    id: Id,
+    channelId: Id,
+    inGame: boolean,
+    isAction: boolean,
+    isBroadcast: boolean,
+    characterName: string,
+    start: number,
+    text: string
+  ) => {
+    const content = isBroadcast ? parse(text) : { text: null, entities: [] };
+    const name = inGame ? characterName : nickname;
+
+    const preview: NewPreview = {
+      id,
+      channelId,
+      name,
+      mediaId: null,
+      inGame,
+      isAction,
+      start,
+      ...content,
+    };
+
     if (sendPreviewTimeout.current !== null) {
       window.clearTimeout(sendPreviewTimeout.current);
       sendPreviewTimeout.current = null;
@@ -48,7 +71,9 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   const [isBroadcast, setIsBroadcast] = useState(true);
   const [media, setMedia] = useState<File | null>(null);
   const [sending, setSending] = useState<boolean>(false);
-  const sendPreview = useSendPreview(sendAction);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const sendPreview = useSendPreview(sendAction, profile.nickname);
   const startRef = useRef<number>(new Date().getTime());
   const idRef = useRef<Id>(newId());
   const sendPreviewFlag = useRef(false);
@@ -64,55 +89,50 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   };
 
   const id = idRef.current;
-  const nameError = checkCharacterName(name);
-  const canSendPreview = !inGame || nameError.isOk;
-  const canSend = text.trim().length > 0 && canSendPreview && !sending;
+  const canSendPreview = !inGame || nameError === null;
+  const canSend = text.trim().length > 0 && canSendPreview && !sending && mediaError === null;
 
   if (sendPreviewFlag.current) {
     sendPreviewFlag.current = false;
     if (canSendPreview) {
-      const content = isBroadcast ? parse(text) : { text: null, entities: [] };
-      sendPreview({
-        id,
-        channelId,
-        name: inGame ? name : profile.nickname,
-        mediaId: null,
-        inGame,
-        isAction,
-        start: startRef.current,
-        ...content,
-      });
+      sendPreview(id, channelId, inGame, isAction, isBroadcast, name, startRef.current, text);
     }
   }
 
-  const handleText: React.ChangeEventHandler<HTMLTextAreaElement> = e => {
-    const value = e.target.value;
-    setText(value);
-    if (text.length === 0 && value.length > 0) {
-      reset();
-    }
-    sendPreviewFlag.current = true;
-  };
+  type TextChangeHandler = React.ChangeEventHandler<HTMLTextAreaElement>;
+  const handleText = useCallback<TextChangeHandler>(
+    e => {
+      const value = e.target.value;
+      setText(value);
+      if (text.length === 0 && value.length > 0) {
+        reset();
+      }
+      sendPreviewFlag.current = true;
+    },
+    [text]
+  );
 
-  const handleName = (value: string) => {
+  const handleName = useCallback((value: string) => {
+    const result = checkCharacterName(value);
+    setNameError(result.err());
     setName(value);
     sendPreviewFlag.current = true;
-  };
+  }, []);
 
-  const toggleInGame = () => {
-    setInGame(!inGame);
+  const toggleInGame = useCallback(() => {
+    setInGame(inGame => !inGame);
     sendPreviewFlag.current = true;
-  };
+  }, []);
 
-  const toggleIsAction = () => {
-    setIsAction(!isAction);
+  const toggleIsAction = useCallback(() => {
+    setIsAction(isAction => !isAction);
     sendPreviewFlag.current = true;
-  };
+  }, []);
 
-  const toggleIsBroadcast = () => {
-    setIsBroadcast(!isBroadcast);
+  const toggleIsBroadcast = useCallback(() => {
+    setIsBroadcast(isBroadcast => !isBroadcast);
     sendPreviewFlag.current = true;
-  };
+  }, []);
 
   const handleSend = async () => {
     if (!canSend) {
@@ -131,7 +151,6 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
       }
       mediaId = uploaded.value.id;
     }
-    console.log(mediaId);
     const sent = await post('/messages/send', {
       messageId: id,
       channelId,
@@ -153,6 +172,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
       setSending(false);
     }
   };
+
   const handleKey: React.KeyboardEventHandler = async e => {
     // Tab
     if (e.keyCode === 9) {
@@ -177,7 +197,8 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   };
 
   return (
-    <div className="h-40 flex-initial flex flex-col p-1 border-t border-gray-500">
+    <div className="flex-initial p-1 border-t border-gray-500" onKeyDown={handleKey}>
+      {(nameError || mediaError) && <div className="text-center p-2">{nameError || mediaError}</div>}
       <div className="text-right mb-1 sm:flex sm:justify-between">
         <div className="mb-1">
           <input
@@ -187,44 +208,21 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
             onChange={e => handleName(e.target.value)}
           />
           <EditChannelSettings member={member} />
-          {/*<KeyTooltip help="历史名字" keyHelp="">*/}
-          {/*  <button className="btn">*/}
-          {/*    <HistoryIcon/>*/}
-          {/*  </button>*/}
-          {/*</KeyTooltip>*/}
-          <KeyTooltip help="游戏内消息" keyHelp="Tab">
-            <button onClick={toggleInGame} className={cls('btn', { 'btn-down': inGame })}>
-              <CharacterIcon />
-            </button>
-          </KeyTooltip>
-          <UploadButton file={media} setFile={setMedia} />
+          <InGameButton toggle={toggleInGame} inGame={inGame} />
+          <UploadButton file={media} setFile={setMedia} setError={setMediaError} />
         </div>
         <div className="mb-1">
-          <KeyTooltip help="发送实时预览" keyHelp="Ctrl + Q">
-            <button onClick={toggleIsBroadcast} className={cls('btn', { 'btn-down': isBroadcast })}>
-              <BroadcastIcon />
-            </button>
-          </KeyTooltip>
-          <KeyTooltip help="表示动作" keyHelp="Ctrl + M">
-            <button onClick={toggleIsAction} className={cls('btn', { 'btn-down': isAction })}>
-              <ActionIcon />
-            </button>
-          </KeyTooltip>
-          <KeyTooltip help="发送" keyHelp="Ctrl / ⌘ + ↵">
-            <button className="btn btn-primary" disabled={!canSend} onClick={handleSend}>
-              {sending ? <Loading className="w-4 h-4" /> : <SendIcon />}
-              <span className="ml-2">发送</span>
-            </button>
-          </KeyTooltip>
+          <BroadcastButton toggle={toggleIsBroadcast} isBroadcast={isBroadcast} />
+          <ActionButton toggle={toggleIsAction} isAction={isAction} />
+          <SendButton send={handleSend} canSend={canSend} sending={sending} />
         </div>
       </div>
       <textarea
-        onKeyDown={handleKey}
         value={text}
         onChange={handleText}
         placeholder="你的故事……"
         autoFocus
-        className="w-full h-full outline-none resize-none"
+        className="w-full h-32 outline-none resize-none"
       />
     </div>
   );

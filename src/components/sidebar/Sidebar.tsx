@@ -6,13 +6,11 @@ import { CreateSpace } from './CreateSpace';
 import { ToggleButton } from './ToggleButton';
 import { LoginButton } from './LoginButton';
 import { SpaceList } from '../SpaceList';
-import { Tooltip } from '../Tooltip';
-import { SearchIcon } from '../icons';
-import { Link, NavLink } from 'react-router-dom';
+import { FindSpaceButton } from './FindSpaceButton';
 
 interface Props {}
 
-export const Sidebar = React.memo<Props>(({}) => {
+export const Sidebar = React.memo<Props>(() => {
   const my = useMy();
   const [expand, setExpand] = useState<boolean>(localStorage.getItem('sidebar') !== null);
   const toggleSidebar = () => {
@@ -37,13 +35,8 @@ export const Sidebar = React.memo<Props>(({}) => {
             <ToggleButton toggle={toggleSidebar} expand={expand} />
           </div>
           <div className="flex-1 w-full overflow-y-scroll ">{expand && <SpaceList my={my} />}</div>
-          <div className="w-full text-right"></div>
           <div className={cls('w-full flex', expand ? 'justify-between p-2' : ' flex-col')}>
-            <Tooltip message={<div>寻找位面</div>}>
-              <NavLink exact className="sidebar-btn inline-block" activeClassName="sidebar-btn-down" to="/">
-                <SearchIcon />
-              </NavLink>
-            </Tooltip>
+            <FindSpaceButton />
             <CreateSpace />
             <UserMenu profile={my.profile} />
           </div>

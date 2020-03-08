@@ -102,12 +102,7 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
   return [chat, sendAction, error];
 };
 
-export const ChannelChat: React.FC<Props> = () => {
-  const { id } = useParams<Params>();
-  const dispatch = useDispatch();
-  const chatListRef = useRef<HTMLDivElement>(null);
-  const my = useMy();
-  const [chat, sendAction, connError] = useLoadChat(id, dispatch);
+const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
   const scrollEnd = useRef<number>(0);
 
   useEffect(() => {
@@ -121,14 +116,22 @@ export const ChannelChat: React.FC<Props> = () => {
     }
   });
 
-  const handleChatListScroll = () => {
+  return useCallback(() => {
     if (chatListRef.current === null) {
       return;
     }
     const chatList = chatListRef.current;
     scrollEnd.current = chatList.scrollHeight - chatList.scrollTop - chatList.clientHeight;
-    console.log(scrollEnd.current);
-  };
+  }, [chatListRef]);
+};
+
+export const ChannelChat: React.FC<Props> = () => {
+  const { id } = useParams<Params>();
+  const dispatch = useDispatch();
+  const chatListRef = useRef<HTMLDivElement>(null);
+  const my = useMy();
+  const [chat, sendAction, connError] = useLoadChat(id, dispatch);
+  const onScroll = useAutoScroll(chatListRef);
 
   if (chat === undefined) {
     return (
@@ -143,11 +146,7 @@ export const ChannelChat: React.FC<Props> = () => {
     <MemberContext.Provider value={{ channel: member, space: spaceMember }}>
       <div className="flex flex-col w-full h-full">
         {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
-        <div
-          className="h-px flex-auto overflow-y-scroll overflow-x-hidden"
-          ref={chatListRef}
-          onScroll={handleChatListScroll}
-        >
+        <div className="h-px flex-auto overflow-y-scroll overflow-x-hidden" ref={chatListRef} onScroll={onScroll}>
           {chat.finished ? (
             <DayDivider date={new Date(chat.messageBefore)} />
           ) : (

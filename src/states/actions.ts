@@ -95,7 +95,6 @@ export type Action =
   | LeftChannel
   | ChannelMemberEdited
   | NewAlert
-  | ToggleSidebar
   | LoadChat
   | ChannelEventReceived
   | LoadMessages

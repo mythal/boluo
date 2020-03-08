@@ -82,14 +82,14 @@ export function checkMessage(text: string, entities: Entity[]): ValidatorResult 
   return ok;
 }
 
-export function checkImage(file: File): string | null {
-  const MAX_SIZE = 5 * 1024 * 1024;
+export function checkImage(file: File): ValidatorResult {
+  const MAX_SIZE = 10 * 1024 * 1024;
 
   if (file.size > MAX_SIZE) {
-    return '文件不得超过 5 MiB';
+    return new Err('文件不得超过 10 MiB');
   }
   if (!file.type.startsWith('image')) {
-    return '你上传的不是图片';
+    return new Err('你上传的不是图片');
   }
-  return null;
+  return ok;
 }

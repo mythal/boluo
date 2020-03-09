@@ -3,7 +3,7 @@ import { Id, newId } from '../../id';
 import { SendAction } from './ChannelChat';
 import { ChannelMember } from '../../api/channels';
 import { checkCharacterName } from '../../validators';
-import { parse } from '../../parser';
+import { parse, Env as ParserEnv } from '../../parser';
 import { post } from '../../api/request';
 import { throwErr } from '../../helper';
 import { useDispatch } from '../Provider';
@@ -19,13 +19,14 @@ import { NewPreview } from '../../api/events';
 
 interface Props {
   channelId: Id;
+  defaultDiceType: string;
   sendAction: SendAction;
   member: ChannelMember;
   profile: User;
 }
 
 const PREVIEW_SEND_TIMEOUT_MILLIS = 200;
-const useSendPreview = (sendAction: SendAction, nickname: string) => {
+const useSendPreview = (sendAction: SendAction, nickname: string, env: ParserEnv) => {
   const sendPreviewTimeout = useRef<number | null>(null);
   return (
     id: Id,
@@ -37,7 +38,7 @@ const useSendPreview = (sendAction: SendAction, nickname: string) => {
     start: number,
     text: string
   ) => {
-    const content = isBroadcast ? parse(text) : { text: null, entities: [] };
+    const content = isBroadcast ? parse(text, true, env) : { text: null, entities: [] };
     const name = inGame ? characterName : nickname;
 
     const preview: NewPreview = {
@@ -62,7 +63,17 @@ const useSendPreview = (sendAction: SendAction, nickname: string) => {
   };
 };
 
-export const Compose = React.memo<Props>(({ channelId, sendAction, member, profile }) => {
+const getDiceFace = (diceType: string): number => {
+  const pattern = /^[dD](\d{1,3})$/;
+  const match = diceType.match(pattern);
+  if (match === null) {
+    return 20;
+  } else {
+    return Number(match[1]);
+  }
+};
+
+export const Compose = React.memo<Props>(({ channelId, sendAction, member, profile, defaultDiceType }) => {
   const dispatch = useDispatch();
   const [text, setText] = useState('');
   const [name, setName] = useState(member.characterName);
@@ -73,7 +84,11 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
   const [sending, setSending] = useState<boolean>(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [mediaError, setMediaError] = useState<string | null>(null);
-  const sendPreview = useSendPreview(sendAction, profile.nickname);
+  const parserEnv: ParserEnv = {
+    defaultDiceFace: getDiceFace(defaultDiceType),
+    resolveUsername: () => null,
+  };
+  const sendPreview = useSendPreview(sendAction, profile.nickname, parserEnv);
   const startRef = useRef<number>(new Date().getTime());
   const idRef = useRef<Id>(newId());
   const sendPreviewFlag = useRef(false);
@@ -139,7 +154,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
       return;
     }
     setSending(true);
-    const parsed = parse(text);
+    const parsed = parse(text, true, parserEnv);
     let mediaId = null;
 
     if (media) {

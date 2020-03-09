@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/no-use-before-define */
 import { Binary, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, SubExpr, Text } from './entities';
 
 interface State {
@@ -9,12 +9,12 @@ interface State {
 // Infrastructure
 
 export interface Env {
-  defaultFace: number;
+  defaultDiceFace: number;
   resolveUsername: (name: string) => string | null;
 }
 
 const emptyEnv: Env = {
-  defaultFace: 20,
+  defaultDiceFace: 20,
   resolveUsername: () => null,
 };
 
@@ -193,7 +193,7 @@ const span = (): P<Text> =>
 const LINK_REGEX = /^\[(.+)]\((.+)\)/;
 const link = (): P<Entity> =>
   regex(LINK_REGEX).then(([match, { text, rest }]) => {
-    const [_, content, url] = match;
+    const [, content, url] = match;
     const entity: Link = {
       type: 'Link',
       start: text.length,
@@ -208,11 +208,11 @@ const spaces = (): P<null> => regex(/^\s*/).map(() => null);
 
 const roll = (): P<ExprNode> =>
   regex(/^(\d{0,3})d(?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
-    const [_, before, after] = match;
+    const [, before, after] = match;
     const node: Roll = {
       type: 'Roll',
       counter: before === '' ? 1 : Number(before),
-      face: after === '' ? env.defaultFace : Number(after),
+      face: after === '' ? env.defaultDiceFace : Number(after),
     };
     return [node, state];
   });

@@ -14,6 +14,7 @@ export interface Channel {
   spaceId: string;
   created: number;
   isPublic: boolean;
+  defaultDiceType: string;
 }
 
 export interface ChannelMember {
@@ -23,7 +24,6 @@ export interface ChannelMember {
   characterName: string;
   isMaster: boolean;
   textColor: string | null;
-  online?: boolean;
 }
 
 export interface ChannelWithMember {
@@ -52,7 +52,9 @@ export interface ChannelWithRelated {
 
 export interface EditChannel {
   channelId: Id;
-  name: string;
+  name: string | null;
+  topic: string | null;
+  defaultDiceType: string | null;
 }
 
 export interface EditChannelMember {

@@ -173,7 +173,13 @@ export const ChannelChat: React.FC<Props> = () => {
         </div>
 
         {my !== 'GUEST' && member && (
-          <Compose member={member} sendAction={sendAction} channelId={id} profile={my.profile} />
+          <Compose
+            member={member}
+            sendAction={sendAction}
+            channelId={id}
+            profile={my.profile}
+            defaultDiceType={chat.channel.defaultDiceType}
+          />
         )}
       </div>
     </MemberContext.Provider>

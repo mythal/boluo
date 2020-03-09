@@ -30,11 +30,11 @@ export function checkUsername(username: string): ValidatorResult {
   return ok;
 }
 
-export function checkDisplayName(nickname: string): ValidatorResult {
+export function checkDisplayName(name: string): ValidatorResult {
   const NAME_MAX_LENGTH = 32;
-  if (nickname.length < 2) {
+  if (name.length < 2) {
     return new Err('名字至少需要两个字符。');
-  } else if (nickname.length > NAME_MAX_LENGTH) {
+  } else if (name.length > NAME_MAX_LENGTH) {
     return new Err(`名字最多只能有${NAME_MAX_LENGTH}个字符。`);
   }
   return ok;
@@ -45,6 +45,20 @@ export function checkCharacterName(characterName: string): ValidatorResult {
     return new Err('角色名不得为空。');
   } else if (characterName.length > 32) {
     return new Err('角色名长度不得超过 32 字符。');
+  }
+  return ok;
+}
+
+export function checkBio(bio: string): ValidatorResult {
+  if (bio.length > 256) {
+    return new Err('长度不得大于 256 字符');
+  }
+  return ok;
+}
+
+export function checkTopic(topic: string): ValidatorResult {
+  if (topic.length > 128) {
+    return new Err('长度不得大于 128 字符');
   }
   return ok;
 }

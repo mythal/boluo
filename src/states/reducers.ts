@@ -18,7 +18,7 @@ import { List, Map, OrderedMap } from 'immutable';
 import { ChannelWithMember } from '../api/channels';
 import { Id } from '../id';
 import { SpaceWithMember } from '../api/spaces';
-import { Message, Preview } from '../api/messages';
+import { Message } from '../api/messages';
 import {
   addMessageToItemMap,
   addPreviewToItemMap,
@@ -32,6 +32,7 @@ import {
   queryMessageEntry,
   queryPreviewEntry,
 } from './chat';
+import { Preview } from '../api/events';
 
 type Reducer<T extends Action = Action> = (state: State, action: T) => State;
 

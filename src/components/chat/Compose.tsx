@@ -4,7 +4,6 @@ import { SendAction } from './ChannelChat';
 import { ChannelMember } from '../../api/channels';
 import { checkCharacterName } from '../../validators';
 import { parse } from '../../parser';
-import { NewPreview } from '../../api/messages';
 import { post } from '../../api/request';
 import { throwErr } from '../../helper';
 import { useDispatch } from '../Provider';
@@ -16,6 +15,7 @@ import { InGameButton } from './InGameButton';
 import { BroadcastButton } from './BroadcastButton';
 import { ActionButton } from './ActionButton';
 import { SendButton } from './SendButton';
+import { NewPreview } from '../../api/events';
 
 interface Props {
   channelId: Id;

@@ -24,34 +24,6 @@ export interface Message {
   orderOffset: number;
 }
 
-export interface Preview {
-  id: string;
-  senderId: Id;
-  channelId: Id;
-  parentMessageId: string | null;
-  name: string;
-  mediaId: Id | null;
-  inGame: boolean;
-  isAction: boolean;
-  isMaster: boolean;
-  text: string | null;
-  whisperToUsers: Id[] | null;
-  entities: Entity[];
-  start: number;
-}
-
-export interface NewPreview {
-  id: string;
-  channelId: Id;
-  name: string;
-  mediaId: Id | null;
-  inGame: boolean;
-  isAction: boolean;
-  text: string | null;
-  entities: Entity[];
-  start: number;
-}
-
 export interface NewMessage {
   messageId: Id;
   channelId: Id;
@@ -62,15 +34,6 @@ export interface NewMessage {
   isAction: boolean;
   mediaId: string | null;
   orderDate: number | null;
-}
-
-export interface EditMessage {
-  messageId: Id;
-  name?: string;
-  text?: string;
-  entities?: Entity[];
-  inGame?: boolean;
-  isAction?: boolean;
 }
 
 export interface ByChannel {

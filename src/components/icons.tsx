@@ -32,6 +32,9 @@ import { faExpandAlt } from '@fortawesome/free-solid-svg-icons/faExpandAlt';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { faFileImage } from '@fortawesome/free-solid-svg-icons/faFileImage';
+import { faUsers } from '@fortawesome/free-solid-svg-icons/faUsers';
+import { faBookReader } from '@fortawesome/free-solid-svg-icons/faBookReader';
+import { faCrown } from '@fortawesome/free-solid-svg-icons/faCrown';
 
 export interface IconProps {
   className?: string;
@@ -69,3 +72,6 @@ export const InsertIcon = (props: IconProps) => <FontAwesomeIcon icon={faLevelDo
 export const DeleteIcon = (props: IconProps) => <FontAwesomeIcon icon={faTrash} {...props} />;
 export const SearchIcon = (props: IconProps) => <FontAwesomeIcon icon={faSearch} {...props} />;
 export const FileImageIcon = (props: IconProps) => <FontAwesomeIcon icon={faFileImage} {...props} />;
+export const MemberIcon = (props: IconProps) => <FontAwesomeIcon icon={faUsers} {...props} />;
+export const GmIcon = (props: IconProps) => <FontAwesomeIcon icon={faBookReader} {...props} />;
+export const AdminIcon = (props: IconProps) => <FontAwesomeIcon icon={faCrown} {...props} />;

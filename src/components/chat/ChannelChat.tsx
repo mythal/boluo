@@ -15,6 +15,8 @@ import { ChatList } from './ChatList';
 import { DayDivider } from './DayDivider';
 import { ChannelMember } from '../../api/channels';
 import { SpaceMember } from '../../api/spaces';
+import { Header } from './Header';
+import { MemberList } from './MemberList';
 
 export interface Member {
   channel?: ChannelMember;
@@ -133,6 +135,7 @@ export const ChannelChat: React.FC<Props> = () => {
   const chatListRef = useRef<HTMLDivElement>(null);
   const my = useMy();
   const [chat, sendAction, connError] = useLoadChat(id, dispatch);
+  const [isMemberListOpen, setIsMemberListOpen] = useState<boolean>(false);
   const onScroll = useAutoScroll(chatListRef);
 
   if (chat === undefined) {
@@ -147,14 +150,26 @@ export const ChannelChat: React.FC<Props> = () => {
   return (
     <MemberContext.Provider value={{ channel: member, space: spaceMember }}>
       <div className="flex flex-col w-full h-full">
+        <Header
+          chat={chat}
+          isMemberListOpen={isMemberListOpen}
+          toggleMemberList={() => setIsMemberListOpen(open => !open)}
+        />
         {connError && <div className="p-1 border-b text-xl text-center bg-red-800 text-white">{connError}</div>}
-        <div className="h-px flex-auto overflow-y-scroll overflow-x-hidden" ref={chatListRef} onScroll={onScroll}>
-          {chat.finished ? (
-            <DayDivider date={new Date(chat.messageBefore)} />
-          ) : (
-            <LoadMoreButton channelId={id} before={chat.messageBefore} />
+        <div className="h-px flex-auto flex">
+          <div className="overflow-y-scroll overflow-x-hidden h-full flex-grow" ref={chatListRef} onScroll={onScroll}>
+            {chat.finished ? (
+              <DayDivider date={new Date(chat.messageBefore)} />
+            ) : (
+              <LoadMoreButton channelId={id} before={chat.messageBefore} />
+            )}
+            <ChatList itemList={chat.itemList.reverse()} colorMap={chat.colorMap} />
+          </div>
+          {isMemberListOpen && (
+            <div className="h-full flex-grow-0 w-32 border-l overflow-y-scroll">
+              <MemberList members={chat.members} />
+            </div>
           )}
-          <ChatList itemList={chat.itemList.reverse()} colorMap={chat.colorMap} />
         </div>
 
         {my !== 'GUEST' && member && (

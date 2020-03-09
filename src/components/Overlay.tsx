@@ -3,7 +3,7 @@ import { Portal } from './Portal';
 import { useOutside, useForceUpdate } from '../hooks';
 import { cls } from '../classname';
 
-interface Props {
+export interface Props {
   open?: boolean;
   dismiss?: () => void;
   anchor: React.RefObject<HTMLElement | null>;

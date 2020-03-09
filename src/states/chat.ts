@@ -1,7 +1,8 @@
-import { Channel, ChannelMember, Member } from '../api/channels';
+import { Channel, Member } from '../api/channels';
 import { List, Map } from 'immutable';
 import { Id, newId } from '../id';
-import { Message, Preview } from '../api/messages';
+import { Message } from '../api/messages';
+import { Preview } from '../api/events';
 
 export interface MessageChatItem {
   id: Id;

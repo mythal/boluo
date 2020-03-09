@@ -1,5 +1,6 @@
-import { Message, NewPreview, Preview } from './messages';
+import { Message } from './messages';
 import { Id } from '../id';
+import { Entity } from '../entities';
 
 export const NEW_MESSAGE = 'newMessage';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;
@@ -25,7 +26,6 @@ export interface EventQuery {
 }
 
 export interface Event<B> {
-  eventId: Id;
   mailbox: Id;
   timestamp: number;
   body: B;
@@ -48,6 +48,34 @@ export interface MessageDeleted {
 export interface MessageEdited {
   type: MESSAGE_EDITED;
   message: Message;
+}
+
+export interface Preview {
+  id: string;
+  senderId: Id;
+  channelId: Id;
+  parentMessageId: string | null;
+  name: string;
+  mediaId: Id | null;
+  inGame: boolean;
+  isAction: boolean;
+  isMaster: boolean;
+  text: string | null;
+  whisperToUsers: Id[] | null;
+  entities: Entity[];
+  start: number;
+}
+
+export interface NewPreview {
+  id: string;
+  channelId: Id;
+  name: string;
+  mediaId: Id | null;
+  inGame: boolean;
+  isAction: boolean;
+  text: string | null;
+  entities: Entity[];
+  start: number;
 }
 
 export interface MessagePreview {

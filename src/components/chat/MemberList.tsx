@@ -3,7 +3,7 @@ import { Member } from '../../api/channels';
 import { cls } from '../../classname';
 import { AdminIcon, GmIcon } from '../icons';
 import { Tooltip } from '../Tooltip';
-import { NameCard } from './NameCard';
+import { UserCard } from './UserCard';
 
 const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
   const ref = useRef<HTMLLIElement | null>(null);
@@ -30,7 +30,7 @@ const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
             </span>
           </Tooltip>
         )}
-        <NameCard anchor={ref} id={member.user.id} open={open} dismiss={() => setOpen(false)} l />
+        <UserCard anchor={ref} id={member.user.id} open={open} dismiss={() => setOpen(false)} l />
       </li>
     </>
   );

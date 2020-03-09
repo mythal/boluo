@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { cls } from '../../classname';
-import { NameCard } from './NameCard';
+import { UserCard } from './UserCard';
 
 interface Props {
   name: string;
@@ -19,7 +19,7 @@ export const Name = React.memo<Props>(({ name, className, userId }) => {
         <span ref={ref} className="inline-block hover:underline cursor-pointer">
           {name}
         </span>
-        <NameCard open={open} dismiss={dismiss} anchor={ref} id={userId} r />
+        <UserCard open={open} dismiss={dismiss} anchor={ref} id={userId} r />
       </span>
     </>
   );

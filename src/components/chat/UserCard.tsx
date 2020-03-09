@@ -1,15 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Id } from '../../id';
 import { useChannelMember } from '../Provider';
 import { useFetchResult } from '../../hooks';
 import { get } from '../../api/request';
 import { Overlay, Props as OverlayProps } from '../Overlay';
 
-export interface Props extends OverlayProps {
-  id: Id;
-}
-
-export const NameCard: React.FC<Props> = ({ id, anchor, open, dismiss, l, r, t }) => {
+const CardContent: React.FC<{ id: Id }> = ({ id }) => {
   const channelMemberList = useChannelMember();
   const [result] = useFetchResult(() => get('/users/query', { id }), [id]);
   if (result.isErr) {
@@ -30,20 +26,29 @@ export const NameCard: React.FC<Props> = ({ id, anchor, open, dismiss, l, r, t }
       isAdmin = member.space.isAdmin;
     }
   }
+  return (
+    <div className="shadow-xl p-2 bg-white w-64 border rounded">
+      <div className="p-1">
+        <div className="text-lg mb-2 ">
+          {user.nickname}
+          {isMaster && <span className="inline-block p-1 ml-2 rounded bg-teal-300 text-xs">主持人</span>}
+          {isOnline && <span className="inline-block p-1 ml-2 rounded bg-green-300 text-xs">在线</span>}
+          {isAdmin && <span className="inline-block p-1 ml-2 rounded bg-blue-300 text-xs">管理员</span>}
+        </div>
+        <div className="text-sm">{user.bio}</div>
+      </div>
+    </div>
+  );
+};
 
+export interface Props extends OverlayProps {
+  id: Id;
+}
+
+export const UserCard: React.FC<Props> = ({ id, anchor, open, dismiss, l, r, t }) => {
   return (
     <Overlay open={open} dismiss={dismiss} anchor={anchor} l={l} r={r} t={t}>
-      <div className="shadow-xl p-2 bg-white w-64 border rounded">
-        <div className="p-1">
-          <div className="text-lg mb-2 ">
-            {user.nickname}
-            {isMaster && <span className="inline-block p-1 ml-2 rounded bg-teal-300 text-xs">主持人</span>}
-            {isOnline && <span className="inline-block p-1 ml-2 rounded bg-green-300 text-xs">在线</span>}
-            {isAdmin && <span className="inline-block p-1 ml-2 rounded bg-blue-300 text-xs">管理员</span>}
-          </div>
-          <div className="text-sm">{user.bio}</div>
-        </div>
-      </div>
+      <CardContent id={id} />
     </Overlay>
   );
 };

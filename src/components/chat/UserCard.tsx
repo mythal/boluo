@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Id } from '../../id';
 import { useChannelMember } from '../Provider';
 import { useFetchResult } from '../../hooks';
@@ -27,16 +27,14 @@ const CardContent: React.FC<{ id: Id }> = ({ id }) => {
     }
   }
   return (
-    <div className="shadow-xl p-2 bg-white w-64 border rounded">
-      <div className="p-1">
-        <div className="text-lg mb-2 ">
-          {user.nickname}
-          {isMaster && <span className="inline-block p-1 ml-2 rounded bg-teal-300 text-xs">主持人</span>}
-          {isOnline && <span className="inline-block p-1 ml-2 rounded bg-green-300 text-xs">在线</span>}
-          {isAdmin && <span className="inline-block p-1 ml-2 rounded bg-blue-300 text-xs">管理员</span>}
-        </div>
-        <div className="text-sm">{user.bio}</div>
+    <div className="p-1">
+      <div className="text-lg mb-2 ">
+        {user.nickname}
+        {isMaster && <span className="inline-block p-1 ml-2 rounded bg-teal-300 text-xs">主持人</span>}
+        {isOnline && <span className="inline-block p-1 ml-2 rounded bg-green-300 text-xs">在线</span>}
+        {isAdmin && <span className="inline-block p-1 ml-2 rounded bg-blue-300 text-xs">管理员</span>}
       </div>
+      <div className="text-sm">{user.bio}</div>
     </div>
   );
 };
@@ -48,7 +46,9 @@ export interface Props extends OverlayProps {
 export const UserCard: React.FC<Props> = ({ id, anchor, open, dismiss, l, r, t }) => {
   return (
     <Overlay open={open} dismiss={dismiss} anchor={anchor} l={l} r={r} t={t}>
-      <CardContent id={id} />
+      <div className="shadow-xl p-2 bg-white w-64 border rounded">
+        <CardContent id={id} />
+      </div>
     </Overlay>
   );
 };

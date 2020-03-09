@@ -23,7 +23,7 @@ export const Header = React.memo<Props>(({ chat, isMemberListOpen, toggleMemberL
         </div>
       </div>
       <div>
-        <JoinChannelButton className="text-xs p-1 h-8" channel={chat.channel} />
+        {member.space && <JoinChannelButton className="text-xs p-1 h-8" channel={chat.channel} />}
         {member.space?.isAdmin && <ChannelSettings channel={chat.channel} />}
         <button
           onClick={toggleMemberList}

@@ -15,7 +15,7 @@ const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
         ref={ref}
         onClick={() => setOpen(true)}
       >
-        <span className={cls({ 'text-gray-500': !member.online }, 'mr-1')}>{member.user.nickname}</span>
+        <span className={cls({ 'text-gray-500': !member.online }, 'mr-1 break-all')}>{member.user.nickname}</span>
         {member.channel.isMaster && (
           <Tooltip message={<div>主持人</div>}>
             <span className="inline-block rounded text-xs p-1">

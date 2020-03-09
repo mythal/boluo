@@ -16,7 +16,7 @@ export const Name = React.memo<Props>(({ name, className, userId }) => {
   return (
     <>
       <span className={cls('font-bold', className)} onClick={() => setOpen(true)}>
-        <span ref={ref} className="inline-block hover:underline cursor-pointer">
+        <span ref={ref} className="inline-block hover:underline cursor-pointer break-all">
           {name}
         </span>
         <UserCard open={open} dismiss={dismiss} anchor={ref} id={userId} r />

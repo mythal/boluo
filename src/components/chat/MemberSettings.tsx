@@ -14,7 +14,7 @@ interface Props {
   member: ChannelMember;
 }
 
-export const EditChannelSettings = React.memo<Props>(({ member }) => {
+export const MemberSettings = React.memo<Props>(({ member }) => {
   const dispatch = useDispatch();
   const { channelId } = member;
   const [open, setOpen] = useState(false);

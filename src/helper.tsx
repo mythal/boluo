@@ -14,3 +14,14 @@ export const throwErr = (dispatch: Dispatch) => (err: AppError) => {
   const message = errorText(err);
   dispatch({ type: 'NEW_ALERT', level: 'ERROR', message });
 };
+
+export const objectEqual = (a: object, b: object) => {
+  for (const key of Object.getOwnPropertyNames(a)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    if (!Object.is(a[key], b[key])) {
+      return false;
+    }
+  }
+  return true;
+};

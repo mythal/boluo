@@ -64,11 +64,6 @@ export interface LoadChat {
   channelWithRelated: ChannelWithRelated;
 }
 
-export interface ReloadChat {
-  type: 'RELOAD_CHAT';
-  channelWithRelated: ChannelWithRelated;
-}
-
 export interface CloseChat {
   type: 'CLOSE_CHAT';
   id: Id;

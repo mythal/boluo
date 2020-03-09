@@ -1,6 +1,7 @@
 import { Message } from './messages';
 import { Id } from '../id';
 import { Entity } from '../entities';
+import { Channel, Member } from './channels';
 
 export const NEW_MESSAGE = 'newMessage';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;
@@ -32,7 +33,7 @@ export interface Event<B> {
 }
 
 export type ChannelEvent = Event<
-  NewMessage | MessageDeleted | MessageEdited | MessagePreview | ChannelEdited | ChannelDeleted
+  NewMessage | MessageDeleted | MessageEdited | MessagePreview | ChannelEdited | ChannelDeleted | PushMembers
 >;
 
 export interface NewMessage {
@@ -85,10 +86,16 @@ export interface MessagePreview {
 
 export interface ChannelEdited {
   type: CHANNEL_EDITED;
+  channel: Channel;
 }
 
 export interface ChannelDeleted {
   type: CHANNEL_DELETED;
+}
+
+export interface PushMembers {
+  type: 'members';
+  members: Member[];
 }
 
 export interface NewPreviewEvent {

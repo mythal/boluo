@@ -100,7 +100,7 @@ export function post(path: '/spaces/join', payload: {}, query: IdQuery): Promise
 export function post(path: '/spaces/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(path: '/spaces/delete', payload: {}, query: IdQuery): Promise<AppResult<Space>>;
 export function post(path: '/channels/create', payload: CreateChannel): Promise<AppResult<ChannelWithMember>>;
-export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<Channel>>;
+export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<true>>;
 export function post(
   path: '/channels/edit_member',
   payload: EditChannelMember

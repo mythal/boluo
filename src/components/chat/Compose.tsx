@@ -8,7 +8,7 @@ import { post } from '../../api/request';
 import { throwErr } from '../../helper';
 import { useDispatch } from '../Provider';
 import { User } from '../../api/users';
-import { EditChannelSettings } from './EditChannelSettings';
+import { MemberSettings } from './MemberSettings';
 import { UploadButton } from './UploadButton';
 import { upload } from '../../api/media';
 import { InGameButton } from './InGameButton';
@@ -222,7 +222,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
             value={inGame ? name : profile.nickname}
             onChange={e => handleName(e.target.value)}
           />
-          <EditChannelSettings member={member} />
+          <MemberSettings member={member} />
           <InGameButton toggle={toggleInGame} inGame={inGame} />
           <UploadButton file={media} setFile={setMedia} setError={setMediaError} />
         </div>

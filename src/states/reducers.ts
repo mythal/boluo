@@ -15,7 +15,7 @@ import {
   SpaceEdited,
 } from './actions';
 import { List, Map, OrderedMap } from 'immutable';
-import { ChannelWithMember } from '../api/channels';
+import { ChannelWithMember, Member } from '../api/channels';
 import { Id } from '../id';
 import { SpaceWithMember } from '../api/spaces';
 import { Message } from '../api/messages';
@@ -32,7 +32,7 @@ import {
   queryMessageEntry,
   queryPreviewEntry,
 } from './chat';
-import { Preview } from '../api/events';
+import { ChannelEdited, Preview, Event, PushMembers } from '../api/events';
 
 type Reducer<T extends Action = Action> = (state: State, action: T) => State;
 
@@ -315,6 +315,64 @@ const newMessage = (
   return [itemList.push(messageItem), itemMap];
 };
 
+const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
+  for (const member of members) {
+    const { textColor, userId } = member.channel;
+    if (textColor !== colorMap.get(userId, null)) {
+      if (textColor) {
+        colorMap = colorMap.set(userId, textColor);
+      } else {
+        colorMap = colorMap.remove(userId);
+      }
+    }
+  }
+  return colorMap;
+};
+
+const updateMembers = (state: State, event: Event<PushMembers>): State => {
+  const { chat, my } = state;
+  const channelId = event.mailbox;
+  const { members } = event.body;
+  const nextState: Partial<State> = {};
+  if (my !== 'GUEST') {
+    const myMember = members.find(member => member.user.id === my.profile.id);
+    if (myMember) {
+      let { channels, spaces } = my;
+      const myChannel = channels.get(channelId, undefined);
+      if (myChannel !== undefined) {
+        channels = channels.set(channelId, { ...myChannel, member: myMember.channel });
+      }
+      const mySpace = spaces.get(myMember.space.spaceId, undefined);
+      if (mySpace !== undefined) {
+        spaces = spaces.set(myMember.space.spaceId, { ...mySpace, member: myMember.space });
+      }
+      nextState.my = { ...my, channels, spaces };
+    }
+  }
+  if (chat && chat.channel.id === channelId) {
+    const colorMap = updateColorMap(members, chat.colorMap);
+    nextState.chat = { ...chat, members, colorMap, eventAfter: event.timestamp };
+  }
+  return { ...state, ...nextState };
+};
+
+const updateChannel = (state: State, event: Event<ChannelEdited>): State => {
+  const { chat, my } = state;
+  const { channel } = event.body;
+  const nextState: Partial<State> = {};
+  if (my !== 'GUEST') {
+    const myChannel = my.channels.get(channel.id, undefined);
+    if (myChannel !== undefined) {
+      const channels = my.channels.set(channel.id, { ...myChannel, channel });
+      nextState.my = { ...my, channels };
+    }
+  }
+  if (chat && chat.channel.id === channel.id) {
+    nextState.chat = { ...chat, channel, eventAfter: event.timestamp };
+  }
+  return { ...state, ...nextState };
+};
+
 const handleChannelEvent: Reducer<ChannelEventReceived> = (state, { event }) => {
   const { chat } = state;
   if (chat === undefined || event.mailbox !== chat.channel.id) {
@@ -339,6 +397,10 @@ const handleChannelEvent: Reducer<ChannelEventReceived> = (state, { event }) => 
     case 'messageEdited':
       itemList = editMessage(itemList, itemMap, body.message);
       break;
+    case 'channelEdited':
+      return updateChannel(state, event as Event<typeof body>);
+    case 'members':
+      return updateMembers(state, event as Event<typeof body>);
   }
   return { ...state, chat: { ...chat, itemList, itemMap, eventAfter, messageBefore } };
 };

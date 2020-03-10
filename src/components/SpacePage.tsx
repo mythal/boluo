@@ -7,6 +7,7 @@ import { Channel } from '../api/channels';
 import { JoinChannelButton } from './JoinChannelButton';
 import { JoinSpaceButton } from './JoinSpaceButton';
 import { CreateChannel } from './CreateChannel';
+import { SpaceSettings } from './SpaceSettings';
 
 interface Params {
   id: string;
@@ -47,12 +48,15 @@ export const SpacePage: React.FC = () => {
       <div>
         <h1 className="text-2xl">
           <Link to={`/space/${id}`}>{space.name}</Link> <JoinSpaceButton space={space} className="text-sm" />
+          <SpaceSettings space={space} onEdited={refetch} />
         </h1>
         <div>{space.description}</div>
       </div>
       <div className="my-4">
         <h2 className="text-lg mb-2">频道</h2>
-        {member?.isAdmin && <CreateChannel spaceId={space.id} onCreated={refetch} />}
+        {member?.isAdmin && (
+          <CreateChannel spaceId={space.id} onCreated={refetch} spaceDefaultDiceType={space.defaultDiceType} />
+        )}
         <ul className="block">{channelList}</ul>
       </div>
     </div>

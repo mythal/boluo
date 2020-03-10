@@ -7,6 +7,7 @@ import { Input } from '../Input';
 import { checkDisplayName, checkTopic } from '../../validators';
 import { post } from '../../api/request';
 import { errorText } from '../../api/error';
+import { SelectDefaultDice } from '../SelectDefaultDice';
 
 interface Props {
   channel: Channel;
@@ -58,21 +59,7 @@ export const ChannelSettings = React.memo<Props>(({ channel }) => {
           <Input value={name} onChange={setName} label="频道名" error={nameError.err()} />
           <Input value={topic} onChange={setTopic} label="当前主题" error={topicError.err()} />
           <div className="my-2">
-            <label>
-              默认骰子类型：
-              <select
-                value={defaultDiceType}
-                onChange={e => setDefaultDiceType(e.target.value)}
-                className="text-lg p-2"
-              >
-                <option value="d20">D20</option>
-                <option value="d100">D100</option>
-                <option value="d4">D4</option>
-                <option value="d6">D6</option>
-                <option value="d8">D8</option>
-                <option value="d10">D10</option>
-              </select>
-            </label>
+            <SelectDefaultDice value={defaultDiceType} setValue={setDefaultDiceType} />
           </div>
         </div>
       </ConfirmDialog>

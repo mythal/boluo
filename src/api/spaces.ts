@@ -28,12 +28,15 @@ export interface SpaceWithMember {
 export interface CreateSpace {
   name: string;
   password: string | null;
+  description: string;
+  defaultDiceType: string | null;
 }
 
 export interface EditSpace {
   spaceId: Id;
   name?: string;
   description?: string;
+  defaultDiceType: string | null;
 }
 
 export interface SpaceWithRelated {

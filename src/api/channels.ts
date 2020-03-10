@@ -5,6 +5,8 @@ import { User } from './users';
 export interface CreateChannel {
   spaceId: Id;
   name: string;
+  characterName: string;
+  defaultDiceType: string | null;
 }
 
 export interface Channel {

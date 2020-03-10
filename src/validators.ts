@@ -56,6 +56,13 @@ export function checkBio(bio: string): ValidatorResult {
   return ok;
 }
 
+export function checkDescription(text: string): ValidatorResult {
+  if (text.length > 256) {
+    return new Err('长度不得大于 256 字符');
+  }
+  return ok;
+}
+
 export function checkTopic(topic: string): ValidatorResult {
   if (topic.length > 128) {
     return new Err('长度不得大于 128 字符');

@@ -107,7 +107,8 @@ export const MessageItem = React.memo<Props>(props => {
             )}
           >
             <MessageMenu
-              id={props.id}
+              messageId={props.id}
+              senderId={props.senderId}
               folded={props.folded}
               inGame={inGame}
               spaceMember={member.space}

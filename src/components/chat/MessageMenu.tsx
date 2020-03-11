@@ -8,7 +8,8 @@ import { cls } from '../../classname';
 import { Menu } from '../Menu';
 
 interface Props {
-  id: string;
+  messageId: string;
+  senderId: string;
   folded: boolean;
   inGame: boolean;
   channelMember: ChannelMember;
@@ -16,7 +17,7 @@ interface Props {
   text: string;
 }
 
-export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, spaceMember, text }) => {
+export const MessageMenu = React.memo<Props>(({ folded, messageId, senderId, channelMember, spaceMember, text }) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
@@ -28,7 +29,7 @@ export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, space
   const closeMenu = () => setOpen(false);
 
   const toggleFold = async () => {
-    await post('/messages/toggle_fold', {}, { id });
+    await post('/messages/toggle_fold', {}, { id: messageId });
   };
 
   const openDeleteDialog = () => {
@@ -36,13 +37,16 @@ export const MessageMenu = React.memo<Props>(({ folded, id, channelMember, space
   };
   const dismissDeleteDialog = () => setDeleteDialog(false);
   const deleteMessage = async () => {
-    await post('/messages/delete', {}, { id });
+    await post('/messages/delete', {}, { id: messageId });
     dismissDeleteDialog();
   };
 
   const iAmMaster = channelMember.isMaster;
-  const isMine = channelMember.userId === id;
+  const isMine = channelMember.userId === senderId;
   const iAmAdmin = spaceMember.isAdmin;
+  if (!isMine && !iAmMaster && !iAmAdmin) {
+    return null;
+  }
 
   return (
     <>

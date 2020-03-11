@@ -207,7 +207,7 @@ const link = (): P<Entity> =>
 const spaces = (): P<null> => regex(/^\s*/).map(() => null);
 
 const roll = (): P<ExprNode> =>
-  regex(/^(\d{0,3})d(?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
+  regex(/^(\d{0,3})[dD](?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
     const [, before, after] = match;
     const node: Roll = {
       type: 'Roll',

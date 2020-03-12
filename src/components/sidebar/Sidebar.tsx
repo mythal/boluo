@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useMy } from '../Provider';
+import { useProfile } from '../Provider';
 import { cls } from '../../classname';
 import { UserMenu } from './UserMenu';
 import { CreateSpace } from './CreateSpace';
@@ -11,7 +11,7 @@ import { FindSpaceButton } from './FindSpaceButton';
 interface Props {}
 
 export const Sidebar = React.memo<Props>(() => {
-  const my = useMy();
+  const profile = useProfile();
   const [expand, setExpand] = useState<boolean>(localStorage.getItem('sidebar') !== null);
   const toggleSidebar = () => {
     if (expand) {
@@ -27,18 +27,18 @@ export const Sidebar = React.memo<Props>(() => {
         'w-40': expand,
       })}
     >
-      {my === 'GUEST' ? (
+      {profile === undefined ? (
         <LoginButton />
       ) : (
         <>
           <div className="w-full text-right">
             <ToggleButton toggle={toggleSidebar} expand={expand} />
           </div>
-          <div className="flex-1 w-full overflow-y-scroll ">{expand && <SpaceList my={my} />}</div>
+          <div className="flex-1 w-full overflow-y-scroll ">{expand && <SpaceList profile={profile} />}</div>
           <div className={cls('w-full flex', expand ? 'justify-between p-2' : ' flex-col')}>
             <FindSpaceButton />
             <CreateSpace />
-            <UserMenu profile={my.profile} />
+            <UserMenu profile={profile.user} />
           </div>
         </>
       )}

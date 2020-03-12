@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Dialog } from './Dialog';
 import { Input } from './Input';
-import { useDispatch, useMy } from './Provider';
+import { useDispatch, useProfile } from './Provider';
 import { checkDisplayName, checkEmail, checkPassword, checkUsername } from '../validators';
 import { post } from '../api/request';
 import { clearCsrfToken, getCsrfToken } from '../api/csrf';
-import { AlertItem } from './AlertItem';
+import { InformationItem } from './InformationItem';
 import { CONFLICT, errorText, NO_PERMISSION } from '../api/error';
 
 interface Props {
@@ -34,7 +34,7 @@ const IfYou: React.FC<{ signingUp: boolean; toggle: () => void }> = ({ signingUp
 };
 
 export const Login: React.FC<Props> = ({ dismiss, signUp }) => {
-  const my = useMy();
+  const profile = useProfile();
   const dispatch = useDispatch();
   const [signingUp, setSigningUp] = useState(Boolean(signUp));
   const [username, setUsername] = useState('');
@@ -44,7 +44,7 @@ export const Login: React.FC<Props> = ({ dismiss, signUp }) => {
   const [passwordRepeat, setPasswordRepeat] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  if (my !== 'GUEST') {
+  if (profile === undefined) {
     return null;
   }
   const usernameError = username.length === 0 ? null : checkUsername(username).err();
@@ -101,7 +101,7 @@ export const Login: React.FC<Props> = ({ dismiss, signUp }) => {
   return (
     <Dialog dismiss={dismiss}>
       <form className="dialog" onSubmit={handleSubmit}>
-        {error === null ? null : <AlertItem level="ERROR" message={error} />}
+        {error === null ? null : <InformationItem level="ERROR" content={error} />}
         <div>
           <Input label="用户名" value={username} onChange={setUsername} error={usernameError} />
         </div>

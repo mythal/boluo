@@ -4,9 +4,9 @@ import { SignOutIcon, UserIcon } from '../icons';
 import { cls } from '../../classname';
 import { get } from '../../api/request';
 import { clearCsrfToken } from '../../api/csrf';
-import { LoggedOut } from '../../states/actions';
 import { useDispatch } from '../Provider';
 import { Menu } from '../Menu';
+import { LoggedOut } from '../../actions/profile';
 
 interface Props {
   profile: User;

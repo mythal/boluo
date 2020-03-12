@@ -4,12 +4,12 @@ import { useDispatch } from '../Provider';
 import { checkDescription, checkDisplayName } from '../../validators';
 import { post } from '../../api/request';
 import { CONFLICT, errorText } from '../../api/error';
-import { JoinedSpace } from '../../states/actions';
 import { PlusIcon } from '../icons';
 import { Input } from '../Input';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { Tooltip } from '../Tooltip';
 import { SelectDefaultDice } from '../SelectDefaultDice';
+import { JoinedSpace } from '../../actions/profile';
 
 export const CreateSpace: React.FC = () => {
   const history = useHistory();

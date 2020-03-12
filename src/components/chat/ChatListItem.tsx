@@ -1,9 +1,9 @@
 import React from 'react';
 import { Map } from 'immutable';
-import { ChatItem } from '../../states/chat';
 import { Id } from '../../id';
 import { MessageItem } from './MessageItem';
 import { DayDivider } from './DayDivider';
+import { ChatItem } from '../../reducers/chat';
 
 interface Props {
   item: ChatItem;

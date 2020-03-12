@@ -1,13 +1,13 @@
 import React from 'react';
-import { Chat } from '../../states/chat';
 import { JoinChannelButton } from '../JoinChannelButton';
 import { MemberIcon } from '../icons';
 import { cls } from '../../classname';
 import { useMember } from './ChannelChat';
 import { ChannelSettings } from './ChannelSettings';
+import { ChatState } from '../../reducers/chat';
 
 interface Props {
-  chat: Chat;
+  chat: ChatState;
   toggleMemberList: () => void;
   isMemberListOpen: boolean;
 }

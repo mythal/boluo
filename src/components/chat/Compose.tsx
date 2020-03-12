@@ -57,7 +57,7 @@ const useSendPreview = (sendAction: SendAction, nickname: string, env: ParserEnv
       sendPreviewTimeout.current = null;
     }
     sendPreviewTimeout.current = window.setTimeout(async () => {
-      sendAction({ type: 'preview', preview });
+      sendAction({ type: 'PREVIEW', preview });
       sendPreviewTimeout.current = null;
     }, PREVIEW_SEND_TIMEOUT_MILLIS);
   };
@@ -96,6 +96,7 @@ export const Compose = React.memo<Props>(({ channelId, sendAction, member, profi
     if (name !== member.characterName) {
       setName(member.characterName);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [member.characterName]);
 
   const reset = () => {

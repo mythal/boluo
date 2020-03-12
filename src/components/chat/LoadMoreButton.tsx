@@ -1,9 +1,10 @@
 import { Id } from '../../id';
-import { Dispatch, useDispatch } from '../Provider';
-import React, { useEffect, useState } from 'react';
+import { useDispatch } from '../Provider';
+import React, { useState } from 'react';
 import { get } from '../../api/request';
-import { LoadMessages, NewAlert } from '../../states/actions';
 import { Loading } from '../Loading';
+import { LoadMessages } from '../../actions/chat';
+import { showError } from '../../actions/information';
 
 interface Props {
   channelId: Id;
@@ -21,7 +22,7 @@ export const LoadMoreButton = React.memo<Props>(({ before, channelId }) => {
       setLoading(false);
       if (result.isErr) {
         console.warn(result.value);
-        dispatch<NewAlert>({ type: 'NEW_ALERT', level: 'ERROR', message: '载入新消息失败' });
+        showError(<span>载入新消息失败</span>);
         return;
       }
       const messages = result.value;

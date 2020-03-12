@@ -1,5 +1,7 @@
+import React from 'react';
 import { Dispatch } from './components/Provider';
 import { AppError, errorText } from './api/error';
+import { showError } from './actions/information';
 
 export const maxDate = new Date(8640000000000000);
 export const minDate = new Date(-8640000000000000);
@@ -11,8 +13,7 @@ export const unwrap = (): never => {
 export const never: never = undefined as never;
 
 export const throwErr = (dispatch: Dispatch) => (err: AppError) => {
-  const message = errorText(err);
-  dispatch({ type: 'NEW_ALERT', level: 'ERROR', message });
+  dispatch(showError(<span>{errorText(err)}</span>));
 };
 
 export const objectEqual = (a: object, b: object) => {

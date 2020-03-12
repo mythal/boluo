@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useDispatch, useMy } from './Provider';
+import { useDispatch, useProfile } from './Provider';
 import { cls } from '../classname';
 import { post } from '../api/request';
-import { JoinedSpace, LeftSpace } from '../states/actions';
 import { throwErr } from '../helper';
 import { Space } from '../api/spaces';
 import { ConfirmDialog } from './ConfirmDialog';
+import { JoinedSpace, LeftSpace } from '../actions/profile';
 
 interface Props {
   space: Space;
@@ -15,12 +15,12 @@ interface Props {
 export const JoinSpaceButton = React.memo<Props>(({ space, className }) => {
   const [dialog, setDialog] = useState(false);
   const dispatch = useDispatch();
-  const my = useMy();
-  if (my === 'GUEST') {
+  const profile = useProfile();
+  if (profile === undefined) {
     return null;
   }
 
-  const joined = my.spaces.has(space.id);
+  const joined = profile.spaces.has(space.id);
   const throwE = throwErr(dispatch);
 
   const open = () => setDialog(true);

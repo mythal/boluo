@@ -3,12 +3,12 @@ import { useDispatch } from './Provider';
 import { checkCharacterName, checkDisplayName } from '../validators';
 import { post } from '../api/request';
 import { CONFLICT, errorText } from '../api/error';
-import { JoinedChannel } from '../states/actions';
 import { PlusIcon } from './icons';
 import { Input } from './Input';
 import { Id } from '../id';
 import { ConfirmDialog } from './ConfirmDialog';
 import { SelectDefaultDice } from './SelectDefaultDice';
+import { JoinedChannel } from '../actions/profile';
 
 interface Props {
   spaceId: Id;

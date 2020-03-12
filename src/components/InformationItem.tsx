@@ -1,16 +1,16 @@
 import React from 'react';
-import { Alert } from '../states/states';
+import { InformationLevel } from '../actions/information';
 import { CancelIcon, InfoIcon, SuccessIcon, WarningIcon } from './icons';
 import { cls } from '../classname';
 
 interface Props {
-  level: Alert['level'];
-  message: string;
+  level: InformationLevel;
+  content: React.ReactChild;
   className?: string;
   dismiss?: () => void;
 }
 
-export const AlertItem = React.memo<Props>(({ level, message, className, dismiss }) => {
+export const InformationItem = React.memo<Props>(({ level, content, className, dismiss }) => {
   let color;
   let Icon;
   switch (level) {
@@ -33,7 +33,7 @@ export const AlertItem = React.memo<Props>(({ level, message, className, dismiss
         <div className="w-6 text-center ml-1   mr-2">
           <Icon size="lg" />
         </div>
-        <div className="flex-grow">{message}</div>
+        <div className="flex-grow">{content}</div>
         {dismiss ? (
           <button className="btn py-1 px-2 ml-1" onClick={dismiss}>
             <CancelIcon />

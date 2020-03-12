@@ -1,22 +1,22 @@
 import React from 'react';
-import { My } from '../states/states';
 import { useChannel } from './Provider';
 import { SpaceItem } from './sidebar/SpaceItem';
+import { ProfileState } from '../reducers/profile';
 
 interface Props {
-  my: My;
+  profile: ProfileState;
 }
 
-export const SpaceList = React.memo<Props>(({ my }) => {
+export const SpaceList = React.memo<Props>(({ profile }) => {
   const channel = useChannel();
-  const spaceList = my.spaces
+  const spaceList = profile.spaces
     .valueSeq()
     .map(({ space, member }) => (
       <SpaceItem
         key={space.id}
         space={space}
         member={member}
-        channels={my.channels}
+        channels={profile.channels}
         channelId={channel?.id}
         isCurrent={channel?.spaceId === space.id}
       />

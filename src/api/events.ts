@@ -3,22 +3,22 @@ import { Id } from '../id';
 import { Entity } from '../entities';
 import { Channel, Member } from './channels';
 
-export const NEW_MESSAGE = 'newMessage';
+export const NEW_MESSAGE = 'NEW_MESSAGE';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;
 
-export const MESSAGE_DELETED = 'messageDeleted';
+export const MESSAGE_DELETED = 'MESSAGE_DELETED';
 export type MESSAGE_DELETED = typeof MESSAGE_DELETED;
 
-export const MESSAGE_EDITED = 'messageEdited';
+export const MESSAGE_EDITED = 'MESSAGE_EDITED';
 export type MESSAGE_EDITED = typeof MESSAGE_EDITED;
 
-export const MESSAGE_PREVIEW = 'messagePreview';
+export const MESSAGE_PREVIEW = 'MESSAGE_PREVIEW';
 export type MESSAGE_PREVIEW = typeof MESSAGE_PREVIEW;
 
-export const CHANNEL_DELETED = 'channelDeleted';
+export const CHANNEL_DELETED = 'CHANNEL_DELETED';
 export type CHANNEL_DELETED = typeof CHANNEL_DELETED;
 
-export const CHANNEL_EDITED = 'channelEdited';
+export const CHANNEL_EDITED = 'CHANNEL_EDITED';
 export type CHANNEL_EDITED = typeof CHANNEL_EDITED;
 
 export interface EventQuery {
@@ -32,9 +32,15 @@ export interface Event<B> {
   body: B;
 }
 
-export type ChannelEvent = Event<
-  NewMessage | MessageDeleted | MessageEdited | MessagePreview | ChannelEdited | ChannelDeleted | PushMembers
->;
+export type ChannelEvent =
+  | Event<NewMessage>
+  | Event<MessageDeleted>
+  | Event<MessageEdited>
+  | Event<MessagePreview>
+  | Event<ChannelEdited>
+  | Event<ChannelDeleted>
+  | Event<PushMembers>
+  | Event<Heartbeat>;
 
 export interface NewMessage {
   type: NEW_MESSAGE;
@@ -94,11 +100,23 @@ export interface ChannelDeleted {
 }
 
 export interface PushMembers {
-  type: 'members';
+  type: 'MEMBERS';
   members: Member[];
 }
 
-export interface NewPreviewEvent {
-  type: 'preview';
+export interface Heartbeat {
+  type: 'HEARTBEAT';
+  user_id: Id;
+}
+
+export interface SendPreview {
+  type: 'PREVIEW';
   preview: NewPreview;
 }
+
+export interface SendHeartbeat {
+  type: 'HEARTBEAT';
+  mailbox: Id;
+}
+
+export type ClientEvent = SendPreview | SendHeartbeat;

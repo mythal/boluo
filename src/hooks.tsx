@@ -3,7 +3,7 @@ import React, { DependencyList, ReactElement, useCallback, useEffect, useState }
 import { AppResult } from './api/request';
 import { Err, Result } from './result';
 import { Loading } from './components/Loading';
-import { AlertItem } from './components/AlertItem';
+import { InformationItem } from './components/InformationItem';
 import { errorText } from './api/error';
 
 export function useOutside(ref: React.MutableRefObject<HTMLElement | null>, callback?: () => void) {
@@ -64,7 +64,7 @@ export const useFetchResult = <T,>(
       refetch,
     ];
   }
-  return [result.mapErr(err => <AlertItem level="ERROR" message={errorText(err)} />), refetch];
+  return [result.mapErr(err => <InformationItem level="ERROR" content={<span>{errorText(err)}</span>} />), refetch];
 };
 
 export function useForceUpdate() {

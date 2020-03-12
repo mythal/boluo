@@ -1,7 +1,7 @@
 import React, { FormEventHandler } from 'react';
 import { Dialog } from './Dialog';
 import { cls } from '../classname';
-import { AlertItem } from './AlertItem';
+import { InformationItem } from './InformationItem';
 
 interface Props {
   dismiss: () => void;
@@ -27,7 +27,7 @@ export const ConfirmDialog: React.FC<Props> = React.memo<Props>(
     return (
       <Dialog dismiss={dismiss}>
         <form onSubmit={handleSubmit} className={cls('p-4', className)}>
-          {!error ? null : <AlertItem level="ERROR" message={error} />}
+          {!error ? null : <InformationItem level="ERROR" content={<span>{error}</span>} />}
           <div className="py-1">{children}</div>
           <div className="text-right mt-4">
             <button className="btn mr-2" onClick={dismiss}>

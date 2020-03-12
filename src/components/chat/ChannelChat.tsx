@@ -1,15 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { get } from '../../api/request';
-import { Dispatch, useChat, useDispatch, useMy } from '../Provider';
+import { Dispatch, useChat, useDispatch, useProfile } from '../Provider';
 import { useParams } from 'react-router-dom';
-import { ChannelEventReceived, LoadChat } from '../../states/actions';
 import { Id } from '../../id';
 import { connect as apiConnect } from '../../api/connect';
-import { ChannelEvent, NewPreviewEvent } from '../../api/events';
+import { ChannelEvent, ClientEvent } from '../../api/events';
 import { Loading } from '../Loading';
 import { LoadMoreButton } from './LoadMoreButton';
 import { Compose } from './Compose';
-import { Chat } from '../../states/chat';
 import { errorText } from '../../api/error';
 import { ChatList } from './ChatList';
 import { DayDivider } from './DayDivider';
@@ -17,6 +15,8 @@ import { ChannelMember } from '../../api/channels';
 import { SpaceMember } from '../../api/spaces';
 import { Header } from './Header';
 import { MemberList } from './MemberList';
+import { ChannelEventReceived, LoadChat } from '../../actions/chat';
+import { ChatState } from '../../reducers/chat';
 
 export interface Member {
   channel?: ChannelMember;
@@ -33,9 +33,9 @@ interface Params {
 
 interface Props {}
 
-export type SendAction = (preview: NewPreviewEvent) => void;
+export type SendAction = (preview: ClientEvent) => void;
 
-export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, SendAction, string | null] => {
+export const useLoadChat = (id: Id, dispatch: Dispatch): [ChatState | undefined, SendAction, string | null] => {
   const [error, setError] = useState<string | null>('正在连接...');
   const chat = useChat();
 
@@ -103,6 +103,17 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [Chat | undefined, Send
 
   const sendAction = useCallback<SendAction>(action => connection.current?.send(JSON.stringify(action)), []);
 
+  const heartbeat = useCallback(() => {
+    if (document.visibilityState === 'visible') {
+      sendAction({ type: 'HEARTBEAT', mailbox: id });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const heartbeatHandler = window.setInterval(heartbeat, 2000);
+    return () => window.clearInterval(heartbeatHandler);
+  }, [sendAction, heartbeat]);
+
   return [chat, sendAction, error];
 };
 
@@ -133,7 +144,7 @@ export const ChannelChat: React.FC<Props> = () => {
   const { id } = useParams<Params>();
   const dispatch = useDispatch();
   const chatListRef = useRef<HTMLDivElement>(null);
-  const my = useMy();
+  const profile = useProfile();
   const [chat, sendAction, connError] = useLoadChat(id, dispatch);
   const [isMemberListOpen, setIsMemberListOpen] = useState<boolean>(false);
   const onScroll = useAutoScroll(chatListRef);
@@ -145,8 +156,8 @@ export const ChannelChat: React.FC<Props> = () => {
       </div>
     );
   }
-  const member = my === 'GUEST' ? undefined : my.channels.get(id)?.member;
-  const spaceMember = my === 'GUEST' ? undefined : my.spaces.get(chat.channel.spaceId)?.member;
+  const member = profile?.channels.get(id)?.member;
+  const spaceMember = profile?.spaces.get(chat.channel.spaceId)?.member;
   return (
     <MemberContext.Provider value={{ channel: member, space: spaceMember }}>
       <div className="flex flex-col w-full h-full">
@@ -172,12 +183,12 @@ export const ChannelChat: React.FC<Props> = () => {
           )}
         </div>
 
-        {my !== 'GUEST' && member && (
+        {profile && member && (
           <Compose
             member={member}
             sendAction={sendAction}
             channelId={id}
-            profile={my.profile}
+            profile={profile.user}
             defaultDiceType={chat.channel.defaultDiceType}
           />
         )}

@@ -1,8 +1,8 @@
 import React from 'react';
 import { List, Map } from 'immutable';
 import { Id } from '../../id';
-import { ChatItem } from '../../states/chat';
 import { ChatListItem } from './ChatListItem';
+import { ChatItem } from '../../reducers/chat';
 
 interface Props {
   itemList: List<ChatItem>;

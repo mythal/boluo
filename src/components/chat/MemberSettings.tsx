@@ -3,12 +3,12 @@ import { Input } from '../Input';
 import { KeyTooltip } from './KeyTooltip';
 import { UserEditIcon } from '../icons';
 import { ColorPicker } from './ColorPicker';
-import { ChannelMemberEdited } from '../../states/actions';
 import { useDispatch } from '../Provider';
 import { post } from '../../api/request';
 import { throwErr } from '../../helper';
 import { ChannelMember, EditChannelMember } from '../../api/channels';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { ChannelMemberEdited } from '../../actions/profile';
 
 interface Props {
   member: ChannelMember;

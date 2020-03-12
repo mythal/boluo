@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Dialog } from './Dialog';
-import { useDispatch, useMy } from './Provider';
+import { useDispatch, useProfile } from './Provider';
 import { cls } from '../classname';
 import { Channel } from '../api/channels';
 import { post } from '../api/request';
-import { JoinedChannel, LeftChannel } from '../states/actions';
 import { throwErr } from '../helper';
 import { Input } from './Input';
 import { checkCharacterName } from '../validators';
 import { ConfirmDialog } from './ConfirmDialog';
+import { JoinedChannel, LeftChannel } from '../actions/profile';
 
 interface Props {
   channel: Channel;
@@ -19,13 +19,13 @@ export const JoinChannelButton = React.memo<Props>(({ channel, className }) => {
   const [dialog, setDialog] = useState(false);
   const [characterName, setCharacterName] = useState('');
   const dispatch = useDispatch();
-  const my = useMy();
-  if (my === 'GUEST') {
+  const profile = useProfile();
+  if (profile === undefined) {
     return null;
   }
   const nameError = characterName.length > 0 ? checkCharacterName(characterName) : null;
   const id = channel.id;
-  const joined = my.channels.has(id);
+  const joined = profile.channels.has(id);
   const throwE = throwErr(dispatch);
 
   const open = () => setDialog(true);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useMy } from './Provider';
+import { useProfile } from './Provider';
 import { useFetchResult } from '../hooks';
 import { get } from '../api/request';
 import { Channel } from '../api/channels';
@@ -32,8 +32,8 @@ const ChannelItem: React.FC<{ channel: Channel; isSpaceMember: boolean }> = ({ c
 
 export const SpacePage: React.FC = () => {
   const { id } = useParams<Params>();
-  const my = useMy();
-  const member = my === 'GUEST' ? undefined : my.spaces.get(id)?.member;
+  const profile = useProfile();
+  const member = profile?.spaces.get(id)?.member;
   const isMember = Boolean(member);
   const [spaceWithRelated, refetch] = useFetchResult(() => get('/spaces/query_with_related', { id }), [id]);
   if (spaceWithRelated.isErr) {

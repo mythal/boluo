@@ -4,8 +4,9 @@ import { useChannelMember } from '../Provider';
 import { useFetchResult } from '../../hooks';
 import { get } from '../../api/request';
 import { Overlay, Props as OverlayProps } from '../Overlay';
+import { lastSeenIsOnline } from '../../helper';
 
-const CardContent: React.FC<{ id: Id }> = ({ id }) => {
+const CardContent: React.FC<{ id: Id; lastSeen?: number }> = ({ id, lastSeen }) => {
   const channelMemberList = useChannelMember();
   const [result] = useFetchResult(() => get('/users/query', { id }), [id]);
   if (result.isErr) {
@@ -22,7 +23,7 @@ const CardContent: React.FC<{ id: Id }> = ({ id }) => {
     const member = channelMemberList.find(member => member.user.id === id);
     if (member) {
       isMaster = member.channel.isMaster;
-      isOnline = member.online;
+      isOnline = lastSeenIsOnline(lastSeen);
       isAdmin = member.space.isAdmin;
     }
   }
@@ -41,13 +42,14 @@ const CardContent: React.FC<{ id: Id }> = ({ id }) => {
 
 export interface Props extends OverlayProps {
   id: Id;
+  lastSeen?: number;
 }
 
-export const UserCard: React.FC<Props> = ({ id, anchor, open, dismiss, l, r, t }) => {
+export const UserCard: React.FC<Props> = ({ id, anchor, open, dismiss, l, r, t, lastSeen }) => {
   return (
     <Overlay open={open} dismiss={dismiss} anchor={anchor} l={l} r={r} t={t}>
       <div className="shadow-xl p-2 bg-white w-64 border rounded">
-        <CardContent id={id} />
+        <CardContent id={id} lastSeen={lastSeen} />
       </div>
     </Overlay>
   );

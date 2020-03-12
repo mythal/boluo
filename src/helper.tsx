@@ -26,3 +26,7 @@ export const objectEqual = (a: object, b: object) => {
   }
   return true;
 };
+
+export const lastSeenIsOnline = (timestamp?: number): boolean => {
+  return timestamp !== undefined && new Date().getDate() - timestamp < 5000;
+};

@@ -104,6 +104,7 @@ export interface ChatState {
   members: Member[];
   colorMap: Map<Id, string>;
   itemList: List<ChatItem>;
+  heartbeatMap: Map<Id, number>;
   itemMap: ItemMap;
   finished: boolean;
   messageBefore: number;
@@ -126,7 +127,8 @@ const loadChat = (state: ChatState | undefined, { channelWithRelated }: LoadChat
   const messageBefore = new Date().getTime();
   const eventAfter = messageBefore - 24 * 60 * 60 * 1000;
   const finished = false;
-  return { channel, members, colorMap, itemList, itemMap, messageBefore, finished, eventAfter };
+  const heartbeatMap: ChatState['heartbeatMap'] = Map();
+  return { channel, members, colorMap, itemList, itemMap, messageBefore, finished, eventAfter, heartbeatMap };
 };
 
 export const closeChat = (state: ChatState, { id }: CloseChat): ChatState | undefined => {
@@ -308,7 +310,7 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived): C
     return chat;
   }
   const body = event.body;
-  let { itemList, itemMap, channel, colorMap, members } = chat;
+  let { itemList, itemMap, channel, colorMap, members, heartbeatMap } = chat;
 
   let messageBefore = chat.messageBefore;
   const eventAfter = event.timestamp;
@@ -338,8 +340,11 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived): C
       members = body.members;
       colorMap = updateColorMap(members, colorMap);
       break;
+    case 'HEARTBEAT':
+      heartbeatMap = heartbeatMap.set(body.userId, event.timestamp);
+      break;
   }
-  return { ...chat, channel, colorMap, itemList, itemMap, eventAfter, messageBefore };
+  return { ...chat, channel, colorMap, itemList, itemMap, eventAfter, messageBefore, heartbeatMap };
 };
 
 export const chatReducer = (state: ChatState | undefined, action: Action): ChatState | undefined => {

@@ -37,7 +37,6 @@ export interface Member {
   channel: ChannelMember;
   space: SpaceMember;
   user: User;
-  online: boolean;
 }
 
 export interface JoinChannel {

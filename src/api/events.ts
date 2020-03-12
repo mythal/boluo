@@ -106,7 +106,7 @@ export interface PushMembers {
 
 export interface Heartbeat {
   type: 'HEARTBEAT';
-  user_id: Id;
+  userId: Id;
 }
 
 export interface SendPreview {

@@ -107,7 +107,7 @@ export const useLoadChat = (id: Id, dispatch: Dispatch): [ChatState | undefined,
     if (document.visibilityState === 'visible') {
       sendAction({ type: 'HEARTBEAT', mailbox: id });
     }
-  }, [id]);
+  }, [id, sendAction]);
 
   useEffect(() => {
     const heartbeatHandler = window.setInterval(heartbeat, 2000);
@@ -178,7 +178,7 @@ export const ChannelChat: React.FC<Props> = () => {
           </div>
           {isMemberListOpen && (
             <div className="h-full flex-grow-0 w-32 border-l overflow-y-scroll">
-              <MemberList members={chat.members} />
+              <MemberList members={chat.members} heartbeatMap={chat.heartbeatMap} />
             </div>
           )}
         </div>

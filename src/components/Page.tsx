@@ -4,7 +4,7 @@ import { NotFound } from './NotFound';
 import { Catalog } from './Catalog';
 import { Welcome } from './Welcome';
 import { useProfile } from './Provider';
-import { AlertList } from './AlertList';
+import { InformationList } from './InformationList';
 import { Sidebar } from './sidebar/Sidebar';
 import { SpacePage } from './SpacePage';
 import { ChannelChat } from './chat/ChannelChat';
@@ -15,7 +15,7 @@ export const Page: React.FC<Props> = () => {
   const profile = useProfile();
   return (
     <div className="h-screen-true w-screen">
-      <AlertList />
+      <InformationList />
       <div className="h-full flex w-full">
         <Sidebar />
         <div className="flex-1 h-full">

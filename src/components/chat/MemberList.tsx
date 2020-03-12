@@ -1,13 +1,17 @@
 import React, { useRef, useState } from 'react';
+import { Map } from 'immutable';
 import { Member } from '../../api/channels';
 import { cls } from '../../classname';
 import { AdminIcon, GmIcon } from '../icons';
 import { Tooltip } from '../Tooltip';
 import { UserCard } from './UserCard';
+import { Id } from '../../id';
+import { lastSeenIsOnline } from '../../helper';
 
-const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
+const MemberItem: React.FC<{ member: Member; lastSeen?: number }> = ({ member, lastSeen }) => {
   const ref = useRef<HTMLLIElement | null>(null);
   const [open, setOpen] = useState(false);
+  const online = lastSeenIsOnline(lastSeen);
   return (
     <>
       <li
@@ -15,7 +19,7 @@ const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
         ref={ref}
         onClick={() => setOpen(true)}
       >
-        <span className={cls({ 'text-gray-500': !member.online }, 'mr-1 break-all')}>{member.user.nickname}</span>
+        <span className={cls({ 'text-gray-500': !online }, 'mr-1 break-all')}>{member.user.nickname}</span>
         {member.channel.isMaster && (
           <Tooltip message={<div>主持人</div>}>
             <span className="inline-block rounded text-xs p-1">
@@ -30,7 +34,7 @@ const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
             </span>
           </Tooltip>
         )}
-        <UserCard anchor={ref} id={member.user.id} open={open} dismiss={() => setOpen(false)} l />
+        <UserCard anchor={ref} id={member.user.id} open={open} dismiss={() => setOpen(false)} l lastSeen={lastSeen} />
       </li>
     </>
   );
@@ -38,19 +42,22 @@ const MemberItem: React.FC<{ member: Member }> = ({ member }) => {
 
 interface Props {
   members: Member[];
+  heartbeatMap: Map<Id, number>;
 }
 
-export const MemberList = React.memo<Props>(({ members }) => {
+export const MemberList = React.memo<Props>(({ members, heartbeatMap }) => {
   members.sort((a, b): number => {
     if (a.channel.isMaster !== b.channel.isMaster) {
       return Number(b.channel.isMaster) - Number(a.channel.isMaster);
     }
-    if (a.online !== b.online) {
-      return Number(b.online) - Number(a.online);
-    }
+    // if (a.online !== b.online) {
+    //   return Number(b.online) - Number(a.online);
+    // }
     return a.channel.joinDate - b.channel.joinDate;
   });
 
-  const items = members.map(member => <MemberItem key={member.user.id} member={member} />);
+  const items = members.map(member => (
+    <MemberItem key={member.user.id} member={member} lastSeen={heartbeatMap.get(member.user.id)} />
+  ));
   return <ul>{items}</ul>;
 });

@@ -21,27 +21,37 @@ export const Sidebar = React.memo<Props>(() => {
     }
     setExpand(!expand);
   };
+
+  const content = profile ? (
+    <div>
+      <ToggleButton toggle={toggleSidebar} expand={expand} />
+    </div>
+  ) : (
+    <div></div>
+  );
+
   return (
     <div
-      className={cls('w-12 flex-0-auto flex flex-col bg-gray-200 h-full border-r', {
+      className={cls('w-12 flex-0-auto flex flex-col bg-gray-800 h-full text-white', {
         'w-40': expand,
       })}
     >
-      {profile === undefined ? (
-        <LoginButton />
-      ) : (
-        <>
-          <div className="w-full text-right">
-            <ToggleButton toggle={toggleSidebar} expand={expand} />
-          </div>
-          <div className="flex-1 w-full overflow-y-scroll ">{expand && <SpaceList profile={profile} />}</div>
-          <div className={cls('w-full flex', expand ? 'justify-between p-2' : ' flex-col')}>
-            <FindSpaceButton />
-            <CreateSpace />
-            <UserMenu profile={profile.user} />
-          </div>
-        </>
-      )}
+      {content}
+      {/*{profile === undefined ? (*/}
+      {/*  <LoginButton />*/}
+      {/*) : (*/}
+      {/*  <>*/}
+      {/*    <div className="w-full text-right">*/}
+      {/*      <ToggleButton toggle={toggleSidebar} expand={expand} />*/}
+      {/*    </div>*/}
+      {/*    <div className="flex-1 w-full overflow-y-scroll ">{expand && <SpaceList profile={profile} />}</div>*/}
+      {/*    <div className={cls('w-full flex', expand ? 'justify-between p-2' : ' flex-col')}>*/}
+      {/*      <FindSpaceButton />*/}
+      {/*      <CreateSpace />*/}
+      {/*      <UserMenu profile={profile.user} />*/}
+      {/*    </div>*/}
+      {/*  </>*/}
+      {/*)}*/}
     </div>
   );
 });

@@ -5,23 +5,37 @@ import { Err, Result } from './result';
 import { Loading } from './components/Loading';
 import { InformationItem } from './components/InformationItem';
 import { errorText } from './api/error';
+import lottie from 'lottie-web';
 
-export function useOutside(ref: React.MutableRefObject<HTMLElement | null>, callback?: () => void) {
+export function useOutside(
+  callback: (() => void) | undefined,
+  overlayRef: React.RefObject<HTMLElement | null>,
+  triggerRef?: React.RefObject<HTMLElement | null>
+) {
   /**
    * https://stackoverflow.com/a/42234988
    */
 
   const handleClickOutside = useCallback(
     function(event: MouseEvent) {
-      if (!ref.current?.contains(event.target as Element) && callback) {
-        callback();
+      const target = event.target as Element;
+      if (!callback || !overlayRef.current || target === null) {
+        return;
+      } else if (overlayRef.current.contains(target)) {
+        return;
       }
+      if (triggerRef) {
+        if (triggerRef.current === null || triggerRef.current.contains(target)) {
+          return;
+        }
+      }
+      callback();
     },
-    [ref, callback]
+    [overlayRef, callback]
   );
 
   useEffect(() => {
-    if (!ref.current || ref.current.offsetParent === null) {
+    if (callback === undefined || !overlayRef.current?.offsetParent) {
       return;
     }
     // Bind the event listener
@@ -70,4 +84,18 @@ export const useFetchResult = <T,>(
 export function useForceUpdate() {
   const [, setValue] = useState(0); // integer state
   return () => setValue(value => ++value); // update the state to force render
+}
+
+export function useLottie(container: React.RefObject<Element | null>, animationData: object) {
+  useEffect(() => {
+    if (container.current) {
+      lottie.loadAnimation({
+        container: container.current,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData,
+      });
+    }
+  }, [container.current === null]);
 }

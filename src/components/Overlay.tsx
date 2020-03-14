@@ -18,7 +18,7 @@ export const Overlay: React.FC<Props> = React.memo<Props>(({ children, open, dis
   const [style, setStyle] = useState<React.CSSProperties>({});
   const rerender = useForceUpdate();
 
-  useOutside(overlayRef, dismiss);
+  useOutside(dismiss, overlayRef);
 
   const onResize = () => {
     window.clearTimeout(timer.current);

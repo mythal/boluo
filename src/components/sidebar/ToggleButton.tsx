@@ -1,6 +1,5 @@
 import React from 'react';
-import { cls } from '../../classname';
-import { BarsIcon } from '../icons';
+import { SidebarButton } from './SidebarButton';
 
 interface Props {
   toggle: () => void;
@@ -8,9 +7,5 @@ interface Props {
 }
 
 export const ToggleButton = React.memo<Props>(({ toggle, expand }) => {
-  return (
-    <button className={cls('sidebar-btn', { 'sidebar-btn-down': expand })} onClick={toggle}>
-      <BarsIcon />
-    </button>
-  );
+  return <SidebarButton iconName="bars" text="折叠" expand={expand} onClick={toggle} />;
 });

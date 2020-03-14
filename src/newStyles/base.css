@@ -1,0 +1,8 @@
+:root {
+  --inner-h: 100vh;
+  --focus-color: rgba(0, 0, 0, 0.25);
+  --focus-shadow: 0 0 0 1px var(--focus-color);
+}
+
+body {
+}

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Provider } from './Provider';
 import { Page } from './Page';
-import '../styles/main.css';
+import { Provider } from './Provider';
+import '../newStyles/main.css';
 
 interface Props {}
 

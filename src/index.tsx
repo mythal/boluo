@@ -1,13 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { App } from './components/App';
+import { App as OldApp } from './components/App';
+import { App } from './newComponents/App';
+import { Design } from './newComponents/Design';
 
 export const getRoot = () => {
-  const root = document.getElementById('root');
-  if (!root) {
-    throw new Error('Root not found');
-  }
-  return root;
+  return document.getElementById('root') as HTMLElement;
 };
 
 ReactDOM.render(<App />, getRoot());

@@ -1,5 +1,5 @@
-import { Entity } from '../entities';
-import { Id } from '../id';
+import { Entity } from '../interpreter/entities';
+import { Id } from '../utils';
 
 export interface Message {
   id: string;

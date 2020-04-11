@@ -2,8 +2,8 @@
 import React, { DependencyList, ReactElement, useCallback, useEffect, useState } from 'react';
 import { AppResult } from './api/request';
 import { Err, Result } from './result';
-import { Loading } from './components/Loading';
-import { InformationItem } from './components/InformationItem';
+import { Loading } from './old-components/Loading';
+import { InformationItem } from './old-components/InformationItem';
 import { errorText } from './api/error';
 import lottie from 'lottie-web';
 
@@ -17,7 +17,7 @@ export function useOutside(
    */
 
   const handleClickOutside = useCallback(
-    function(event: MouseEvent) {
+    function (event: MouseEvent) {
       const target = event.target as Element;
       if (!callback || !overlayRef.current || target === null) {
         return;
@@ -78,12 +78,12 @@ export const useFetchResult = <T,>(
       refetch,
     ];
   }
-  return [result.mapErr(err => <InformationItem level="ERROR" content={<span>{errorText(err)}</span>} />), refetch];
+  return [result.mapErr((err) => <InformationItem level="ERROR" content={<span>{errorText(err)}</span>} />), refetch];
 };
 
 export function useForceUpdate() {
   const [, setValue] = useState(0); // integer state
-  return () => setValue(value => ++value); // update the state to force render
+  return () => setValue((value) => ++value); // update the state to force render
 }
 
 export function useLottie(container: React.RefObject<Element | null>, animationData: object) {

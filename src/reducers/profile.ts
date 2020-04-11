@@ -1,6 +1,6 @@
 import { User } from '../api/users';
 import { OrderedMap } from 'immutable';
-import { Id } from '../id';
+import { Id } from '../utils';
 import { SpaceWithMember } from '../api/spaces';
 import { ChannelWithMember } from '../api/channels';
 import { Action } from '../actions';
@@ -60,7 +60,7 @@ const editChannelMember = (state: ProfileState, { channelId, member }: ChannelMe
 };
 
 const editChannelMemberByList = (state: ProfileState, channelId: Id, event: PushMembers): ProfileState => {
-  const member = event.members.find(member => member.user.id === state.user.id);
+  const member = event.members.find((member) => member.user.id === state.user.id);
   if (!member) {
     return state;
   }

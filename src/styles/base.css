@@ -1,18 +1,8 @@
 :root {
-  --shadow-hard: rgba(45, 45, 45, 0.3) 1px 3px 0 -2px;
-  --tooltip-bg: rgba(45, 45, 45, 1);
-  --callout-bg: white;
-  --inner-h: 100vh;
+  --page-height: 100vh;
+  --focus-color: rgba(0, 0, 0, 0.25);
+  --focus-shadow: 0 0 0 1px var(--focus-color);
 }
 
 body {
-  overflow: hidden;
-  touch-action: manipulation;
-}
-
-@viewport {
-  user-zoom: fixed;
-  zoom: 1;
-  min-zoom: 1;
-  max-zoom: 1;
 }

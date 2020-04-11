@@ -1,4 +1,4 @@
-import { Id } from '../id';
+import { Id } from '../utils';
 
 export const connect = (id: Id, after: number): WebSocket => {
   const { host, protocol } = window.location;

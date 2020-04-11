@@ -1,26 +1,59 @@
 import React from 'react';
-import { Overlay } from './Overlay';
+import Overlay, { AnchorPosition } from './Overlay';
+import { cls } from '../utils';
 
 interface Props {
-  open: boolean;
   dismiss: () => void;
-  anchor: React.RefObject<HTMLElement | null>;
-  t?: boolean;
-  l?: boolean;
-  r?: boolean;
+  open: boolean;
+  trigger: React.RefObject<HTMLElement>;
+  children: React.ReactNode;
+  top?: boolean;
+  left?: boolean;
+  out?: boolean;
 }
 
-export const Menu: React.FC<Props> = React.memo<Props>(({ children, open, dismiss, anchor, t, l, r }) => {
-  const onClick: React.MouseEventHandler = e => {
-    e.stopPropagation();
-    dismiss();
-  };
+function Menu({ children, trigger, open, dismiss, top, left, out }: Props) {
+  const position: AnchorPosition = { x: -1, y: 1 };
+  let translate = 'origin-top-left';
+
+  if (top) {
+    position.y = -1;
+    translate = '-translate-y-full origin-bottom';
+  }
+
+  if (left) {
+    position.x = 1;
+    translate = cls(translate, '-translate-x-full');
+  }
+
+  if (out) {
+    if (left) {
+      position.x = -1;
+      position.y = 1;
+    } else {
+      position.x = 1;
+      position.y = 1;
+    }
+
+    if (!top) {
+      position.y = -1;
+    }
+  }
 
   return (
-    <Overlay anchor={anchor} open={open} dismiss={dismiss} l={l} t={t} r={r}>
-      <ul onClick={onClick} className="menu text-sm">
-        {children}
-      </ul>
+    <Overlay
+      anchor={trigger}
+      {...position}
+      onOuter={dismiss}
+      className={cls(
+        'transition duration-150 transform z-30',
+        open ? '' : ' scale-y-0 opacity-0 pointer-events-none',
+        translate
+      )}
+    >
+      <ul className="menu">{children}</ul>
     </Overlay>
   );
-});
+}
+
+export default React.memo(Menu);

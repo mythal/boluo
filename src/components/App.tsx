@@ -1,6 +1,6 @@
 import React from 'react';
-import { Provider } from './Provider';
 import { Page } from './Page';
+import { Provider } from './Provider';
 import '../styles/main.css';
 
 interface Props {}

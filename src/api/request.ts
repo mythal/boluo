@@ -1,9 +1,9 @@
-import { Result, Ok, Err } from '../result';
+import { Err, Ok, Result } from '../result';
 import { AppError, notJson } from './error';
 import { getCsrfToken } from './csrf';
 import { EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
 import { CreateSpace, EditSpace, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
-import { Id } from '../id';
+import { Id } from '../utils';
 import {
   Channel,
   ChannelMember,

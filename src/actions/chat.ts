@@ -1,5 +1,5 @@
 import { ChannelWithRelated } from '../api/channels';
-import { Id } from '../id';
+import { Id } from '../utils';
 import { Message } from '../api/messages';
 import { ChannelEvent } from '../api/events';
 

@@ -1,6 +1,6 @@
 import { Message } from './messages';
-import { Id } from '../id';
-import { Entity } from '../entities';
+import { Id } from '../utils';
+import { Entity } from '../interpreter/entities';
 import { Channel, Member } from './channels';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';

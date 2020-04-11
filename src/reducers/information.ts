@@ -1,6 +1,6 @@
 import { OrderedMap } from 'immutable';
 import { DismissInformation, Information } from '../actions/information';
-import { Id } from '../id';
+import { Id } from '../utils';
 import { Action } from '../actions';
 
 export type InformationState = OrderedMap<Id, Information>;

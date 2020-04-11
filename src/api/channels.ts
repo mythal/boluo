@@ -1,5 +1,5 @@
 import { Space, SpaceMember } from './spaces';
-import { Id } from '../id';
+import { Id } from '../utils';
 import { User } from './users';
 
 export interface CreateChannel {

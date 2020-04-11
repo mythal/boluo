@@ -1,57 +1,41 @@
-import React, { ReactChild, useEffect, useRef, useState } from 'react';
-import { cls } from '../classname';
-import { Portal } from './Portal';
+import React, { useRef, useState } from 'react';
+import Overlay, { AnchorPosition } from './Overlay';
+import { cls } from '../utils';
 
-interface Props {
-  message: ReactChild;
+interface Props extends AnchorPosition {
+  message: React.ReactChild;
+  children: React.ReactChild;
   className?: string;
-  l?: boolean;
-  r?: boolean;
-  b?: boolean;
 }
 
-export const Tooltip: React.FC<Props> = ({ message, children, className, l, r, b }) => {
-  const ref = useRef<HTMLSpanElement | null>(null);
-  const [show, setShow] = useState<boolean>();
-  const [style, setStyle] = useState<React.CSSProperties>({});
+function Tooltip({ message, children, x, y, className }: Props) {
+  const wrapper = useRef<HTMLSpanElement | null>(null);
+  const [mount, setMount] = useState<boolean>(false);
+  const [show, setShow] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (ref.current) {
-      const node = ref.current;
-      let top = node.offsetTop;
-      if (b) {
-        top += node.clientHeight;
-      }
-      let left = node.offsetLeft;
-      if (r) {
-      } else if (l) {
-        left += node.clientWidth;
-      } else {
-        left += node.clientWidth >> 1;
-      }
-      if (top !== style.top || left !== style.left) {
-        setStyle({
-          position: 'absolute',
-          top,
-          left,
-        });
-      }
-    }
-  });
+  const open = () => {
+    setMount(true);
+    setShow(true);
+  };
+  const dismiss = () => setShow(false);
 
   return (
-    <span className="tooltip-wrap" ref={ref} onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
-      {show && (
-        <Portal>
-          <div
-            className={cls('tooltip', { 'tooltip-left': l }, { 'tooltip-right': r }, { 'tooltip-bottom': b })}
-            style={style}
-          >
-            {message}
-          </div>
-        </Portal>
+    <React.Fragment>
+      <span style={{ display: 'inline-block' }} onMouseEnter={open} onMouseLeave={dismiss} ref={wrapper}>
+        {children}
+      </span>
+      {mount && (
+        <Overlay
+          anchor={wrapper}
+          x={x}
+          y={y}
+          className={cls('z-20 pointer-events-none transform', show ? 'tooltip-show' : 'tooltip-hide')}
+        >
+          <div className={cls('text-white bg-gray-800 px-2 py-1 shadow rounded-sm', className)}>{message}</div>
+        </Overlay>
       )}
-      {children}
-    </span>
+    </React.Fragment>
   );
-};
+}
+
+export default Tooltip;

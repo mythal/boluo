@@ -1,6 +1,6 @@
 import { SpaceWithMember } from './spaces';
 import { ChannelWithMember } from './channels';
-import { Id } from '../id';
+import { Id } from '../utils';
 
 export interface User {
   id: Id;

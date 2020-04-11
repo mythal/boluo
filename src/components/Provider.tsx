@@ -1,10 +1,9 @@
-import '../styles/main.css';
 import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Action } from '../actions';
 import { get } from '../api/request';
-import { Loading } from './Loading';
-import { unwrap } from '../helper';
+import PageLoading from './PageLoading';
+import { unwrap } from '../errors';
 import { Channel, Member } from '../api/channels';
 import { ChatState, initChatState } from '../reducers/chat';
 import { initProfileState, ProfileState } from '../reducers/profile';
@@ -55,7 +54,7 @@ export const Provider: React.FC = ({ children }) => {
   if (loading) {
     return (
       <div className="w-screen h-screen flex items-center">
-        <Loading className="mx-auto w-32" />
+        <PageLoading className="mx-auto w-32" />
       </div>
     );
   }

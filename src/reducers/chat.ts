@@ -1,10 +1,10 @@
 import { Channel, Member } from '../api/channels';
 import { List, Map } from 'immutable';
-import { Id, newId } from '../id';
+import { Id, newId } from '../utils';
 import { Message } from '../api/messages';
 import { Preview } from '../api/events';
 import { Action } from '../actions';
-import { CloseChat, LoadChat, LoadMessages, ChannelEventReceived } from '../actions/chat';
+import { ChannelEventReceived, CloseChat, LoadChat, LoadMessages } from '../actions/chat';
 import { DEBUG } from '../config';
 
 export interface MessageChatItem {
@@ -151,7 +151,7 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages): Ch
   }
 
   itemList = itemList
-    .filter(item => item.type !== 'EMPTY')
+    .filter((item) => item.type !== 'EMPTY')
     .sort((a, b) => {
       if (a.date > b.date) {
         return -1;

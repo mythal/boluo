@@ -1,27 +1,4 @@
 @responsive {
-  @variants hover, focus {
-    .shadow-hard {
-      box-shadow: var(--shadow-hard);
-    }
-
-    .flex-0-auto {
-      flex: 0 0 auto;
-    }
-
-    .flex-1-0 {
-      flex: 1 1 0;
-    }
-
-    .max-h-0 {
-      max-height: 0;
-    }
-    .h-screen-true {
-      height: var(--inner-h);
-    }
-
-    .transition-size {
-      transition-property: max-height, height;
-      transition-timing-function: linear;
-    }
+  @variants hover, focus, active, disabled, {
   }
 }

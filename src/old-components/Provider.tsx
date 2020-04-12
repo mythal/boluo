@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Action } from '../actions';
 import { get } from '../api/request';
 import { Loading } from './Loading';
-import { unwrap } from '../errors';
+import { panic } from '../errors';
 import { Channel, Member } from '../api/channels';
 import { ChatState, initChatState } from '../reducers/chat';
 import { initProfileState, ProfileState } from '../reducers/profile';
@@ -11,7 +11,7 @@ import { InformationState, initInformationState } from '../reducers/information'
 import { applicationReducer, initApplicationState } from '../reducers';
 import { LoggedIn, LoggedOut } from '../actions/profile';
 
-const DispatchContext = React.createContext<(action: Action) => void>(unwrap);
+const DispatchContext = React.createContext<(action: Action) => void>(panic);
 
 export type Dispatch = <T extends Action>(action: T) => void;
 export const useDispatch = (): Dispatch => useContext(DispatchContext);

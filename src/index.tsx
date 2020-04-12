@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { App } from './components/App';
+// import { App } from './components/App';
 import { getRoot, setRealHeight } from './dom';
-import { Design } from './components/Design';
+import NewDesign from './components/NewDesign';
 
-ReactDOM.render(<Design />, getRoot());
+ReactDOM.render(<NewDesign />, getRoot());
 
 setRealHeight();
 

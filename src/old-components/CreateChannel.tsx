@@ -50,7 +50,7 @@ export const CreateChannel: React.FC<Props> = ({ spaceId, spaceDefaultDiceType, 
 
   return (
     <>
-      <button className="btn my-2 text-xs" onClick={toggle}>
+      <button className="btn-sized my-2 text-xs" onClick={toggle}>
         <PlusIcon className="mr-2" />
         新频道
       </button>

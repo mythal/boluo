@@ -14,7 +14,7 @@ export const LoginButton = React.memo<Props>(() => {
     <div className="p-1">
       {isOpen ? <Login dismiss={dismiss} /> : null}
       <Tooltip r b message={<div className="w-8 text-center">登录</div>}>
-        <button onClick={open} className="btn text-sm round">
+        <button onClick={open} className="btn-sized text-sm round">
           <LoginIcon />
         </button>
       </Tooltip>

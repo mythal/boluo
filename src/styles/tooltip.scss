@@ -1,0 +1,30 @@
+.tooltip-show {
+  animation: tooltip-show 0.15s linear;
+}
+
+.tooltip-hide {
+  animation: tooltip-hide 0.1s linear;
+  opacity: 0;
+}
+
+@keyframes tooltip-show {
+  0% {
+    opacity: 0;
+    transform: translateY(-1em);
+  }
+  100% {
+    opacity: 100%;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tooltip-hide {
+  0% {
+    opacity: 100%;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(1em);
+  }
+}

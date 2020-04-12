@@ -1,5 +1,6 @@
 import React from 'react';
 import { cls } from '../utils';
+import solidIcons from '../icons/solid.svg';
 
 interface Props {
   name: string;
@@ -8,7 +9,7 @@ interface Props {
 }
 
 function Icon({ name, className, style }: Props) {
-  const href = `/icons/solid.svg#${name}`;
+  const href = `${solidIcons}#${name}`;
   return (
     <span className={cls('icon', className)}>
       <svg width="1em" style={style} height="1em">

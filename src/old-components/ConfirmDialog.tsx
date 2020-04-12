@@ -30,10 +30,10 @@ export const ConfirmDialog: React.FC<Props> = React.memo<Props>(
           {!error ? null : <InformationItem level="ERROR" content={<span>{error}</span>} />}
           <div className="py-1">{children}</div>
           <div className="text-right mt-4">
-            <button className="btn mr-2" onClick={dismiss}>
+            <button className="btn-sized mr-2" onClick={dismiss}>
               取消
             </button>
-            <button type="submit" className="btn btn-primary" disabled={disabled}>
+            <button type="submit" className="btn-sized btn-primary" disabled={disabled}>
               {confirmText ?? '确定'}
             </button>
           </div>

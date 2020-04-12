@@ -41,7 +41,7 @@ export const MemberSettings = React.memo<Props>(({ member }) => {
   return (
     <>
       <KeyTooltip help="编辑发言信息" keyHelp="">
-        <button className="btn" onClick={() => setOpen(true)}>
+        <button className="btn-sized" onClick={() => setOpen(true)}>
           <UserEditIcon />
         </button>
       </KeyTooltip>

@@ -12,7 +12,7 @@ const EnterSpaceLink = React.memo<{ id: Id }>(({ id }) => {
     <NavLink
       to={`/space/${id}`}
       onClick={(e) => e.stopPropagation()}
-      className="opacity-0 group-hover:opacity-100 py-0 px-2 text-xs btn rounded"
+      className="opacity-0 group-hover:opacity-100 py-0 px-2 text-xs btn-sized rounded"
       activeClassName="btn-down"
     >
       <CaretRightIcon />

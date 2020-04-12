@@ -64,10 +64,10 @@ export const JoinChannelButton = React.memo<Props>(({ channel, className }) => {
           <p className="dialog-title">退出频道</p>
           <p className="my-1">要退出频道「{channel.name}」吗？</p>
           <div className="mt-4 text-right">
-            <button className="btn mr-1" onClick={close}>
+            <button className="btn-sized mr-1" onClick={close}>
               取消
             </button>
-            <button className="btn btn-primary" onClick={leave}>
+            <button className="btn-sized btn-primary" onClick={leave}>
               退出频道
             </button>
           </div>

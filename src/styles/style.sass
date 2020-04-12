@@ -1,0 +1,113 @@
+@import "node_modules/normalize-scss/sass/normalize"
+@import "./breakpoints"
+@import "./spacing"
+@import "./variables"
+@include normalize()
+
+*
+  box-sizing: border-box
+
+\:root
+  --page-height: 100vh
+
+
+@mixin focus-outline
+  &:focus
+    z-index: 1
+    outline: none
+    box-shadow: 0 0 0 1px $bg-color, 0 0 0 2px $focus-outline-color, 0 0 0 3px $bg-color
+
+
+@import "./tooltip.scss"
+
+h1, h2, h3, h4, h5, h6
+  font-weight: normal
+  font-size: 1rem
+  padding: 0
+  margin: 0
+
+body
+  height: var(--page-height)
+  background-color: $bg-color
+  color: $text-color
+
+.NewDesign
+  +p(2)
+  +py(4)
+  h1
+    font-size: 2rem
+  h2
+    font-size: 1.25rem
+  .buttons
+    .btn-auto
+      margin: $spacing
+
+
+
+@mixin btn-base-down($color)
+  background-color: darken($color, 6%)
+  border-color: transparent
+
+@mixin btn-base($color)
+  position: relative
+  cursor: pointer
+  color: $btn-text-color
+  background-color: $color
+  border: 1px solid lighten($color, 5%)
+  border-radius: 1px
+  text-shadow: 0 1px 0 $btn-text-shadow-color
+  transition-property: all
+  transition-duration: $btn-transition-duration
+  transition-timing-function: ease-in
+
+  &:hover
+    filter: brightness(110%)
+
+  &:active
+    +btn-base-down($color)
+
+  +focus-outline
+
+  &:disabled
+    cursor: not-allowed
+    background-color: $btn-disable-bg
+    color: darken($btn-text-color, 30%)
+    &:hover
+      filter: none
+
+.icon
+  //
+    https://juejin.im/entry/5bc441a5f265da0aca333506
+    https://zhuanlan.zhihu.com/p/30624268
+  display: inline-flex
+  align-items: center
+
+  &::before
+    content: '\200b'
+
+  & svg
+    fill: currentColor
+    display: inline-block
+
+
+
+.btn-auto
+  +pxy(2, 1)
+
+
+.btn-sized
+  min-width: 5rem
+  @extend .btn-auto
+
+.btn-normal
+  +btn-base($btn-bg)
+
+.btn-down
+  +btn-base($btn-bg)
+  +btn-base-down($btn-bg)
+
+.btn-primary
+  +btn-base($btn-primary-bg)
+
+.btn-danger
+  +btn-base($btn-danger-bg)

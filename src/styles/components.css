@@ -59,7 +59,7 @@
   }
 }
 
-.btn {
+.btn-sized {
   @apply py-2 px-4 bg-white border border-gray-600 transition duration-150 select-none;
   min-width: 5rem;
 
@@ -81,18 +81,6 @@
   }
 }
 
-.btn-group {
-  @apply rounded-none border-r-0 shadow-ui;
-  &:first-of-type {
-    @apply rounded-l;
-  }
-  &:last-of-type {
-    @apply rounded-r border-r;
-  }
-  &:nth-of-type(even) {
-  }
-}
-
 .btn-down {
   filter: brightness(90%);
 
@@ -109,35 +97,6 @@
     border-color: var(--focus-color);
     box-shadow: var(--focus-shadow);
   }
-}
-
-.btn-3d {
-  @apply py-2 px-4 bg-white border border-gray-600 select-none;
-  min-width: 5rem;
-  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.25);
-
-  &:hover {
-    filter: brightness(96%);
-  }
-
-  &:focus {
-    @apply outline-none;
-    box-shadow: var(--focus-shadow);
-  }
-
-  &:active {
-    @apply btn-3d-down;
-  }
-
-  &:disabled {
-    @apply opacity-50 pointer-events-none;
-  }
-}
-
-.btn-3d-down {
-  box-shadow: none;
-  transform: translateY(1px);
-  filter: brightness(90%);
 }
 
 .btn-primary {
@@ -157,7 +116,7 @@
 }
 
 .input {
-  @apply rounded-sm border border-gray-700 py-1 px-2 transition duration-150;
+  @apply border border-gray-700 py-1 px-2 transition duration-150;
 
   &:focus {
     @apply outline-none;
@@ -186,7 +145,7 @@
 }
 
 .menu {
-  @apply bg-white py-1 rounded-sm shadow-ui;
+  @apply bg-white shadow-ui;
 }
 
 .menu-item {

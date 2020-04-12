@@ -21,7 +21,7 @@ function Modal({ open, dismiss, children }: Props) {
       />
       {open && (
         <div className="modal">
-          <button className="btn btn-icon float-right text-sm m-2 p-0 w-6 h-6 circles" onClick={dismiss}>
+          <button className="btn-sized btn-icon float-right text-sm m-2 p-0 w-6 h-6 circles" onClick={dismiss}>
             <Icon name="times" />
           </button>
           {children}

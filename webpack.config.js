@@ -51,13 +51,20 @@ module.exports = {
 
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: 'ts-loader' },
       {
-        test: /\.p?css$/,
+        test: /\.tsx?$/,
+        use: [{ loader: 'ts-loader' }],
+      },
+      {
+        test: /\.css$/,
+        use: [PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }, { loader: 'css-loader' }],
+      },
+      {
+        test: /\.s[ac]ss$/,
         use: [
           PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' },
-          { loader: 'css-loader', options: { importLoaders: 1 } },
-          { loader: 'postcss-loader' },
+          { loader: 'css-loader' },
+          { loader: 'sass-loader' },
         ],
       },
       { test: /\.(png|svg|jpg|gif)$/, use: ['file-loader'] },

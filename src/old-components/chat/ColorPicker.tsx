@@ -13,7 +13,7 @@ export const ColorPicker = React.memo<Props>(({ onChange, value }) => {
   return (
     <div className="" onClick={handleClick}>
       <input hidden type="color" ref={inputRef} onChange={(e) => onChange(e.target.value)} />
-      <button type="button" className="btn text-sm inline-flex items-center">
+      <button type="button" className="btn-sized text-sm inline-flex items-center">
         修改颜色
         <span className="inline-block w-4 h-4 ml-1 border border-green-600" style={{ backgroundColor: value }} />
       </button>

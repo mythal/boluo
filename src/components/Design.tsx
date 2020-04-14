@@ -29,60 +29,60 @@ export const Design = () => {
       <div>
         <h2 className="text-lg">按钮</h2>
         <div className="flex justify-around items-end my-1">
-          <button className="btn-sized btn-normal">普通</button>
-          <button className="btn-sized btn-normal btn-down">按下</button>
-          <button className="btn-sized btn-normal" disabled>
+          <button className="btn-large btn-normal">普通</button>
+          <button className="btn-large btn-normal btn-down">按下</button>
+          <button className="btn-large btn-normal" disabled>
             禁用
           </button>
-          <button className="btn-sized btn-normal btn-icon">
+          <button className="btn-large btn-normal btn-icon">
             <Icon name="file-upload" />
           </button>
-          <button className="btn-sized btn-normal">
+          <button className="btn-large btn-normal">
             <Icon name="compass" /> 指南针
           </button>
-          <button className="btn-sized btn-normal btn-icon circles">
+          <button className="btn-large btn-normal btn-icon circles">
             <Icon name="comments" />
           </button>
-          <button className="btn-sized btn-normal btn-icon circles">
+          <button className="btn-large btn-normal btn-icon circles">
             <SpinnerIcon />
           </button>
         </div>
 
         <div className="flex justify-around items-end my-1">
-          <button className="btn-sized btn-primary">普通</button>
-          <button className="btn-sized btn-primary btn-down">按下</button>
-          <button className="btn-sized btn-primary" disabled>
+          <button className="btn-large btn-primary">普通</button>
+          <button className="btn-large btn-primary btn-down">按下</button>
+          <button className="btn-large btn-primary" disabled>
             禁用
           </button>
-          <button className="btn-sized btn-primary btn-icon">
+          <button className="btn-large btn-primary btn-icon">
             <Icon name="file-upload" />
           </button>
-          <button className="btn-sized btn-primary">
+          <button className="btn-large btn-primary">
             <Icon name="compass" /> 指南针
           </button>
-          <button className="btn-sized btn-primary btn-icon circles">
+          <button className="btn-large btn-primary btn-icon circles">
             <Icon name="comments" />
           </button>
-          <button className="btn-sized btn-primary btn-icon circles">
+          <button className="btn-large btn-primary btn-icon circles">
             <SpinnerIcon />
           </button>
         </div>
         <div className="flex justify-around items-end my-1">
-          <button className="btn-sized btn-danger">普通</button>
-          <button className="btn-sized btn-danger btn-down">按下</button>
-          <button className="btn-sized btn-danger" disabled>
+          <button className="btn-large btn-danger">普通</button>
+          <button className="btn-large btn-danger btn-down">按下</button>
+          <button className="btn-large btn-danger" disabled>
             禁用
           </button>
-          <button className="btn-sized btn-danger btn-icon">
+          <button className="btn-large btn-danger btn-icon">
             <Icon name="file-upload" />
           </button>
-          <button className="btn-sized btn-danger">
+          <button className="btn-large btn-danger">
             <Icon name="compass" /> 指南针
           </button>
-          <button className="btn-sized btn-danger btn-icon circles">
+          <button className="btn-large btn-danger btn-icon circles">
             <Icon name="comments" />
           </button>
-          <button className="btn-sized btn-danger btn-icon circles">
+          <button className="btn-large btn-danger btn-icon circles">
             <SpinnerIcon />
           </button>
         </div>
@@ -140,7 +140,7 @@ export const Design = () => {
         <div className="p-32">
           <Tooltip x={0} y={-1} className=" transform -translate-y-full -translate-x-1/2" message={<p>hello, world</p>}>
             <div className="w-40 h-32 p-2 bg-green-400 border">
-              <button className="btn-sized" ref={menuRef} onClick={() => setMenuOpen((isOpen) => !isOpen)}>
+              <button className="btn-large" ref={menuRef} onClick={() => setMenuOpen((isOpen) => !isOpen)}>
                 打开菜单 <Icon name="caret-down" />
               </button>
               <Menu open={menuOpen} dismiss={() => setMenuOpen(false)} trigger={menuRef}>
@@ -149,7 +149,7 @@ export const Design = () => {
                 <li className="menu-item">菜单项</li>
               </Menu>
 
-              <button className="btn-sized my-2" onClick={() => setModalOpen(true)}>
+              <button className="btn-large my-2" onClick={() => setModalOpen(true)}>
                 Modal
               </button>
             </div>

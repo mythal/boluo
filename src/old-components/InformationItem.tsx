@@ -35,7 +35,7 @@ export const InformationItem = React.memo<Props>(({ level, content, className, d
         </div>
         <div className="flex-grow">{content}</div>
         {dismiss ? (
-          <button className="btn-sized py-1 px-2 ml-1" onClick={dismiss}>
+          <button className="btn-large py-1 px-2 ml-1" onClick={dismiss}>
             <CancelIcon />
           </button>
         ) : null}

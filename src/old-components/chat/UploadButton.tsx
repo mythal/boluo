@@ -49,13 +49,13 @@ export const UploadButton = React.memo<Props>(({ file, setFile, setError }) => {
   return (
     <>
       <KeyTooltip help="图片" keyHelp="">
-        <button onClick={triggerUpload} className="btn-sized">
+        <button onClick={triggerUpload} className="btn-large">
           <FileImageIcon />
           {name}
         </button>
       </KeyTooltip>
       {file && (
-        <button className="btn-sized" onClick={cancelFile}>
+        <button className="btn-large" onClick={cancelFile}>
           <CancelIcon />
         </button>
       )}

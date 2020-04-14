@@ -37,7 +37,7 @@ export const LoadMoreButton = React.memo<Props>(({ before, channelId }) => {
 
   return (
     <div className="w-full text-center">
-      <button className="btn-sized my-1 w-24 h-10 my-4" disabled={loading} onClick={handleClick}>
+      <button className="btn-large my-1 w-24 h-10 my-4" disabled={loading} onClick={handleClick}>
         {loading ? <Loading /> : '载入更多'}
       </button>
     </div>

@@ -14,10 +14,10 @@ export const Welcome: React.FC<Props> = () => {
     <div className="p-4">
       <h1 className="text-4xl font-serif">菠萝</h1>
       <p className="my-3">这是欢迎页面，还没来得及好好写</p>
-      <button className="btn-sized btn-primary mr-2" onClick={() => setState('SIGN_UP')}>
+      <button className="btn-large btn-primary mr-2" onClick={() => setState('SIGN_UP')}>
         注册
       </button>
-      <button className="btn-sized" onClick={() => setState('LOGIN')}>
+      <button className="btn-large" onClick={() => setState('LOGIN')}>
         登录
       </button>
       {dialog}

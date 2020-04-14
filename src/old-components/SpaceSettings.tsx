@@ -42,7 +42,7 @@ export const SpaceSettings = React.memo<Props>(({ space, onEdited }) => {
   const disabled = false;
   return (
     <>
-      <button className="btn-sized text-sm" onClick={() => setOpen(true)}>
+      <button className="btn-large text-sm" onClick={() => setOpen(true)}>
         位面设置
       </button>
 

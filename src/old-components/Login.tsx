@@ -17,7 +17,7 @@ const IfYou: React.FC<{ signingUp: boolean; toggle: () => void }> = ({ signingUp
   return signingUp ? (
     <p className="p-1 text-xs">
       如果已经有账号了，请
-      <button onClick={toggle} className="btn-sized m-1 px-1 rounded">
+      <button onClick={toggle} className="btn-large m-1 px-1 rounded">
         登录
       </button>
       吧。
@@ -25,7 +25,7 @@ const IfYou: React.FC<{ signingUp: boolean; toggle: () => void }> = ({ signingUp
   ) : (
     <p className="p-1 text-xs">
       如果还没有账号，请
-      <button onClick={toggle} className="btn-sized m-1 px-1 rounded">
+      <button onClick={toggle} className="btn-large m-1 px-1 rounded">
         注册
       </button>
       吧。
@@ -124,10 +124,10 @@ export const Login: React.FC<Props> = ({ dismiss, signUp }) => {
           />
         </div>
         <div className="my-3 text-right">
-          <button className="btn-sized mr-1" type="button" onClick={dismiss}>
+          <button className="btn-large mr-1" type="button" onClick={dismiss}>
             取消
           </button>
-          <button type="submit" disabled={!canSubmit} className="btn-sized btn-primary">
+          <button type="submit" disabled={!canSubmit} className="btn-large btn-primary">
             {signingUp ? '注册' : '登录'}
           </button>
         </div>

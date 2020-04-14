@@ -1,0 +1,11 @@
+@import './variables';
+@import './spacing';
+@import './breakpoints';
+
+@mixin focus-outline {
+  &:focus {
+    z-index: 1;
+    outline: none;
+    box-shadow: 0 0 0 1px $bg-color, 0 0 0 2px $focus-outline-color, 0 0 0 3px $bg-color;
+  }
+}

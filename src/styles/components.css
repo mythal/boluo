@@ -59,7 +59,7 @@
   }
 }
 
-.btn-sized {
+.btn-large {
   @apply py-2 px-4 bg-white border border-gray-600 transition duration-150 select-none;
   min-width: 5rem;
 

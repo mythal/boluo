@@ -77,14 +77,14 @@ export const makeUri = (path: string, query?: object): string => {
   if (entities.length === 0) {
     return path;
   }
-  const parts = [];
+  const searchParams = new URLSearchParams();
   for (const entry of entities) {
     const [key, value] = entry;
     if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
-      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+      searchParams.set(key, String(value));
     }
   }
-  return `${path}?${parts.join('&')}`;
+  return `${path}?${searchParams}`;
 };
 
 interface IdQuery {

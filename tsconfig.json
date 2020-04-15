@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "target": "es5",
+    "target": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -13,6 +13,7 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "types": ["node", "@emotion/core"],
     "isolatedModules": true,
     "jsx": "react",
     "downlevelIteration": true

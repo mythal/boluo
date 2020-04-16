@@ -15,7 +15,7 @@
     "resolveJsonModule": true,
     "types": ["node", "@emotion/core"],
     "isolatedModules": true,
-    "jsx": "react",
+    "jsx": "preserve",
     "downlevelIteration": true
   },
   "include": ["src"]

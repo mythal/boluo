@@ -8,6 +8,13 @@ export const lastSeenIsOnline = (timestamp?: number): boolean => {
   return timestamp !== undefined && new Date().getDate() - timestamp < 5000;
 };
 
+export const ifMobile = (then: () => void) => {
+  // https://stackoverflow.com/a/24600597
+  if (/Mobi|Android/i.test(navigator.userAgent)) {
+    then();
+  }
+};
+
 export type ClassName =
   | string
   | ClassName[]

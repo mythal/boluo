@@ -3,9 +3,11 @@ import ReactDOM from 'react-dom';
 // import { App } from './components/App';
 import { getRoot, setRealHeight } from './dom';
 import NewDesign from './components/NewDesign';
+import { ifMobile } from './utils';
 
 ReactDOM.render(<NewDesign />, getRoot());
 
-setRealHeight();
-
-window.addEventListener('resize', setRealHeight);
+ifMobile(() => {
+  setRealHeight();
+  window.addEventListener('resize', setRealHeight);
+});

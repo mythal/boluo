@@ -1,5 +1,5 @@
 import { css, Interpolation, keyframes } from '@emotion/core';
-import { bgColor } from './theme';
+import { transparentize } from 'polished';
 
 export const onDisabled = (...styles: Interpolation[]) =>
   css`
@@ -38,5 +38,5 @@ export const spin = css`
 
 export const focusOutline = css`
   outline: none;
-  box-shadow: 0 0 0 1px ${bgColor}, 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 3px ${bgColor};
+  box-shadow: 0 0 0 2px ${transparentize(0.6, '#FFFFFF')};
 `;

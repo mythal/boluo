@@ -1,6 +1,6 @@
 import React from 'react';
 import { Portal } from './Portal';
-import Icon from './TextIcon';
+import Icon from './atoms/TextIcon';
 import close from '../assets/icons/x-circle.svg';
 import { cls } from '../utils';
 

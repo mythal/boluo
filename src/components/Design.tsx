@@ -1,27 +1,23 @@
 import React from 'react';
-import 'normalize-css/normalize.css';
-import Icon from './TextIcon';
+import 'modern-normalize/modern-normalize.css';
+import Icon from './atoms/TextIcon';
 import { css, Global } from '@emotion/core';
-import { bgColor, spacingN, textColor } from '../styles/theme';
+import { bgColor, fontBase, spacingN, textColor } from '../styles/theme';
 import { spin } from '../styles/atoms';
 import styled from '@emotion/styled';
 import Button from './atoms/Button';
 import SpinnerIcon from './atoms/SpinnerIcon';
 import fan from '../assets/icons/fan.svg';
 import close from '../assets/icons/x-circle.svg';
+import { Input } from './atoms/Input';
+import PageLoading from './PageLoading';
 
 const baseStyle = css`
   html {
     font-size: 14px;
+    font-family: ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
-    box-sizing: border-box;
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: inherit;
   }
 `;
 
@@ -44,7 +40,15 @@ function Design() {
     <View>
       <BaseStyle />
       <h1>组件设计页面</h1>
-      <div className="buttons">
+      <div
+        css={css`
+          width: 10em;
+          height: 10em;
+        `}
+      >
+        <PageLoading />
+      </div>
+      <div>
         <h2 className="title">按钮</h2>
         <div>
           <ButtonList>
@@ -60,8 +64,8 @@ function Design() {
             <Button iconOnly>
               <SpinnerIcon />
             </Button>
-            <Button type="primary">主要</Button>
-            <Button data-btn="danger">危险</Button>
+            <Button type="primary">Primary</Button>
+            <Button type="danger">危险</Button>
             <Button disabled>禁用</Button>
           </ButtonList>
         </div>
@@ -79,16 +83,22 @@ function Design() {
             <Button small iconOnly>
               <Icon sprite={fan} css={spin} />
             </Button>
-            <Button small data-btn="primary">
+            <Button small type="primary">
               主要
             </Button>
-            <Button small data-btn="danger">
+            <Button small type="danger">
               危险
             </Button>
             <Button small disabled>
               禁用
             </Button>
           </ButtonList>
+        </div>
+      </div>
+      <div>
+        <h2>输入框</h2>
+        <div>
+          <Input />
         </div>
       </div>
     </View>

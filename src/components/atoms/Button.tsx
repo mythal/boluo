@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { spacingN, textSm } from '../../styles/theme';
+import { controlRounded, spacingN, textSm } from '../../styles/theme';
 import { focusOutline, onDisabled, onFocus, onHover } from '../../styles/atoms';
 import { lighten } from 'polished';
 
@@ -18,20 +18,20 @@ const btnColor = (color: string) => css`
 `;
 
 const btn = css`
-  // display: inline-flex;
-  // justify-content: space-around;
-  // grid-template-columns: repeat(auto-fill, auto);
+  display: inline-flex;
+  justify-content: space-around;
+  grid-template-columns: repeat(auto-fill, auto);
   min-width: 5em;
-  position: relative;
   user-select: none;
   cursor: pointer;
   border: 1px solid;
-  border-radius: 1px;
   color: white;
   text-shadow: ${btnTextShadow};
   transition-property: all;
   transition-duration: 0.1s;
   transition-timing-function: ease-in;
+
+  ${controlRounded};
 
   & svg {
     filter: drop-shadow(${btnTextShadow});

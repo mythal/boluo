@@ -6,9 +6,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
 
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
+
+const iconPath = path.resolve(__dirname, './src/assets/icons');
 
 module.exports = {
   entry: './src/index.tsx',
@@ -31,6 +34,7 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin(),
+    new SpriteLoaderPlugin(),
   ],
 
   devServer: {
@@ -59,15 +63,8 @@ module.exports = {
         test: /\.css$/,
         use: [PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }, { loader: 'css-loader' }],
       },
-      {
-        test: /\.s[ac]ss$/,
-        use: [
-          PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' },
-          { loader: 'css-loader' },
-          { loader: 'sass-loader' },
-        ],
-      },
-      { test: /\.(png|svg|jpe?g|gif)$/, use: ['file-loader'] },
+      { test: /\.(png|svg|jpe?g|gif)$/, use: ['file-loader'], exclude: [iconPath] },
+      { test: /\.svg$/, loader: 'svg-sprite-loader', options: { extract: true }, include: [iconPath] },
     ],
   },
 

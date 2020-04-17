@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dispatch } from './old-components/Provider';
+import { Dispatch } from './components/Provider';
 import { AppError, errorText } from './api/error';
 import { showError } from './actions/information';
 

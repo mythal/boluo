@@ -1,6 +1,7 @@
 import React from 'react';
 import { Portal } from './Portal';
-import Icon from './Icon';
+import Icon from './TextIcon';
+import close from '../assets/icons/x-circle.svg';
 import { cls } from '../utils';
 
 interface Props {
@@ -22,7 +23,7 @@ function Modal({ open, dismiss, children }: Props) {
       {open && (
         <div className="modal">
           <button className="btn-large btn-icon float-right text-sm m-2 p-0 w-6 h-6 circles" onClick={dismiss}>
-            <Icon name="times" />
+            <Icon sprite={close} />
           </button>
           {children}
         </div>

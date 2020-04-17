@@ -2,10 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 // import { App } from './components/App';
 import { getRoot, setRealHeight } from './dom';
-import NewDesign from './components/NewDesign';
+import Design from './components/Design';
 import { ifMobile } from './utils';
 
-ReactDOM.render(<NewDesign />, getRoot());
+ReactDOM.render(<Design />, getRoot());
 
 ifMobile(() => {
   setRealHeight();

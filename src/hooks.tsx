@@ -2,8 +2,8 @@
 import React, { DependencyList, ReactElement, useCallback, useEffect, useState } from 'react';
 import { AppResult } from './api/request';
 import { Err, Result } from './result';
-import { Loading } from './old-components/Loading';
-import { InformationItem } from './old-components/InformationItem';
+import PageLoading from './components/PageLoading';
+// import { InformationItem } from './old-components/InformationItem';
 import { errorText } from './api/error';
 import lottie from 'lottie-web';
 
@@ -61,25 +61,25 @@ export const useFetch = <T,>(f: () => Promise<T>, deps: DependencyList): [T | 'L
   return [result, refetch];
 };
 
-export const useFetchResult = <T,>(
-  fetch: () => Promise<AppResult<T>>,
-  deps: DependencyList
-): [Result<T, ReactElement>, () => void] => {
-  const [result, refetch] = useFetch<AppResult<T>>(fetch, deps);
-  if (result === 'LOADING') {
-    return [
-      new Err(
-        (
-          <div className="h-full w-full flex items-center justify-center">
-            <Loading className="w-32 h-32" />
-          </div>
-        )
-      ),
-      refetch,
-    ];
-  }
-  return [result.mapErr((err) => <InformationItem level="ERROR" content={<span>{errorText(err)}</span>} />), refetch];
-};
+// export const useFetchResult = <T,>(
+//   fetch: () => Promise<AppResult<T>>,
+//   deps: DependencyList
+// ): [Result<T, ReactElement>, () => void] => {
+//   const [result, refetch] = useFetch<AppResult<T>>(fetch, deps);
+//   if (result === 'LOADING') {
+//     return [
+//       new Err(
+//         (
+//           <div className="h-full w-full flex items-center justify-center">
+//             <PageLoading className="w-32 h-32" />
+//           </div>
+//         )
+//       ),
+//       refetch,
+//     ];
+//   }
+//   return [result.mapErr((err) => <InformationItem level="ERROR" content={<span>{errorText(err)}</span>} />), refetch];
+// };
 
 export function useForceUpdate() {
   const [, setValue] = useState(0); // integer state

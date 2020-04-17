@@ -16,5 +16,5 @@ export const getRoot = () => {
 
 export const setRealHeight = () => {
   // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
-  document.documentElement.style.setProperty('--page-height', `${window.innerHeight}px`);
+  document.documentElement.style.setProperty('--window-height', `${window.innerHeight}px`);
 };

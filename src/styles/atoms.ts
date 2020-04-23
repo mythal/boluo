@@ -40,3 +40,15 @@ export const focusOutline = css`
   outline: none;
   box-shadow: 0 0 0 2px ${transparentize(0.6, '#FFFFFF')};
 `;
+
+export const roundedPx = css`
+  border-radius: 1px;
+`;
+
+export const disableFilter = css`
+  filter: grayscale(80%) brightness(80%) contrast(30%);
+`;
+
+export const border = (color: string, width = '1px') => css`
+  border: ${width} solid ${color};
+`;

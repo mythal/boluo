@@ -1,9 +1,11 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { BrowserSpriteSymbol } from '*.svg';
+import { SpriteSymbol } from '*.svg';
+import SpriteSvg from './SpriteSvg';
+import { spacingN } from '../../styles/theme';
 
 interface Props {
-  sprite: BrowserSpriteSymbol;
+  sprite: SpriteSymbol;
   className?: string;
 }
 
@@ -18,15 +20,13 @@ const Strut = styled.span`
   display: inline-flex;
   align-items: center;
 
-  padding: 0 0.175em;
+  padding: 0 ${spacingN(0.5)};
 `;
 
 function TextIcon({ sprite, className }: Props) {
   return (
     <Strut>
-      <svg width="1em" height="1em" viewBox={sprite.viewBox} fill="currentColor" className={className}>
-        <use xlinkHref={sprite.url} />
-      </svg>
+      <SpriteSvg sprite={sprite} className={className} width="1em" height="1em" fill="currentColor" />
     </Strut>
   );
 }

@@ -19,12 +19,12 @@ declare module '*.gif' {
 }
 
 declare module '*.svg' {
-  export interface BrowserSpriteSymbol {
+  export interface SpriteSymbol {
     id: string;
     viewBox: string;
     url: string;
     node: SVGSymbolElement;
   }
-  const spriteSymbol: BrowserSpriteSymbol;
+  const spriteSymbol: SpriteSymbol;
   export default spriteSymbol;
 }

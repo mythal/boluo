@@ -1,14 +1,26 @@
 import * as React from 'react';
-import { css } from '@emotion/core';
-import { focusOutline, onFocus } from '../../styles/atoms';
-import { inputBgColor, controlRounded, textColor, spacingN, textLg } from '../../styles/theme';
+import { border, disableFilter, focusOutline, onDisabled, onFocus } from '../../styles/atoms';
+import {
+  inputBgColor,
+  controlRounded,
+  textColor,
+  spacingN,
+  textLg,
+  errorColor,
+  inputBorderColor,
+} from '../../styles/theme';
 import { lighten } from 'polished';
+import styled from '@emotion/styled';
 
-interface Props {}
+interface AdditionalProps {
+  variant?: 'error' | 'normal';
+}
 
-const style = css`
+type Props = AdditionalProps & React.InputHTMLAttributes<HTMLInputElement>;
+
+const StyledInput = styled.input`
   background-color: ${inputBgColor};
-  border: none;
+  ${border(inputBorderColor)};
   padding: ${spacingN(1.5)};
   color: ${textColor};
   font-size: ${textLg};
@@ -16,8 +28,13 @@ const style = css`
   transition-duration: 200ms;
   ${controlRounded};
   ${onFocus(focusOutline, { backgroundColor: lighten(0.05, inputBgColor) })};
+
+  &[data-variant='error'] {
+    background-color: ${errorColor};
+  }
+  ${onDisabled(disableFilter)}
 `;
 
-export function Input(props: Props) {
-  return <input css={style} />;
-}
+export default React.forwardRef<HTMLInputElement, Props>(function Input(props, ref) {
+  return <StyledInput ref={ref} data-variant={props.variant} {...props} />;
+});

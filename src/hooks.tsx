@@ -2,10 +2,9 @@
 import React, { DependencyList, ReactElement, useCallback, useEffect, useState } from 'react';
 import { AppResult } from './api/request';
 import { Err, Result } from './result';
-import PageLoading from './components/PageLoading';
-// import { InformationItem } from './old-components/InformationItem';
+import PageLoading from './components/molecules/PageLoading';
 import { errorText } from './api/error';
-import lottie from 'lottie-web';
+import UiMessage from './components/molecules/UiMessage';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -61,41 +60,25 @@ export const useFetch = <T,>(f: () => Promise<T>, deps: DependencyList): [T | 'L
   return [result, refetch];
 };
 
-// export const useFetchResult = <T,>(
-//   fetch: () => Promise<AppResult<T>>,
-//   deps: DependencyList
-// ): [Result<T, ReactElement>, () => void] => {
-//   const [result, refetch] = useFetch<AppResult<T>>(fetch, deps);
-//   if (result === 'LOADING') {
-//     return [
-//       new Err(
-//         (
-//           <div className="h-full w-full flex items-center justify-center">
-//             <PageLoading className="w-32 h-32" />
-//           </div>
-//         )
-//       ),
-//       refetch,
-//     ];
-//   }
-//   return [result.mapErr((err) => <InformationItem level="ERROR" content={<span>{errorText(err)}</span>} />), refetch];
-// };
+export const useFetchResult = <T,>(
+  fetch: () => Promise<AppResult<T>>,
+  deps: DependencyList
+): [Result<T, ReactElement>, () => void] => {
+  const [result, refetch] = useFetch<AppResult<T>>(fetch, deps);
+  if (result === 'LOADING') {
+    return [new Err(<PageLoading />), refetch];
+  }
+  return [
+    result.mapErr((err) => (
+      <UiMessage variant="error">
+        <span>{errorText(err)}</span>
+      </UiMessage>
+    )),
+    refetch,
+  ];
+};
 
 export function useForceUpdate() {
   const [, setValue] = useState(0); // integer state
-  return () => setValue((value) => ++value); // update the state to force render
-}
-
-export function useLottie(container: React.RefObject<Element | null>, animationData: object) {
-  useEffect(() => {
-    if (container.current) {
-      lottie.loadAnimation({
-        container: container.current,
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        animationData,
-      });
-    }
-  }, [container.current === null]);
+  return useCallback(() => setValue((value) => ++value), []); // update the state to force render
 }

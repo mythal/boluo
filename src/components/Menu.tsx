@@ -1,5 +1,5 @@
 import React from 'react';
-import Overlay, { AnchorPosition } from './Overlay';
+import Overlay, { AnchorPosition } from './atoms/Overlay';
 import { cls } from '../utils';
 
 interface Props {

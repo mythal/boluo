@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Action } from '../actions';
 import { get } from '../api/request';
-import PageLoading from './PageLoading';
+import PageLoading from './molecules/PageLoading';
 import { panic } from '../errors';
 import { Channel, Member } from '../api/channels';
 import { ChatState, initChatState } from '../reducers/chat';

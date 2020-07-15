@@ -17,10 +17,9 @@ interface Props {
 
 const colorStyle = (color: string) => css`
   background-color: ${color};
-  border: 1px solid ${lighten(0.2, color)};
 
   &:hover {
-    border-color: ${lighten(0.1, color)};
+    background-color: ${lighten(0.1, color)};
   }
 `;
 
@@ -32,8 +31,9 @@ const style = css`
   display: grid;
   grid-template-columns: 1fr auto;
   padding: ${spacingN(1)};
-  ${roundedPx};
+  margin-bottom: ${spacingN(2)};
   font-size: ${textLg};
+  ${roundedPx}
   &[data-variant='info'] {
     ${colorStyle(infoColor)};
   }

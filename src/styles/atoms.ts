@@ -28,7 +28,8 @@ export const onActive = (...styles: Interpolation[]) =>
 
 export const spinFrames = keyframes`
   100% {
-    transform: rotate(360deg);
+    // https://stackoverflow.com/a/13293044
+    transform: rotate(360deg) translateZ(0);
   }
 `;
 
@@ -45,8 +46,14 @@ export const roundedPx = css`
   border-radius: 1px;
 `;
 
-export const disableFilter = css`
+export const disabled = css`
   filter: grayscale(80%) brightness(80%) contrast(30%);
+  cursor: not-allowed;
+`;
+
+export const focused = css`
+  filter: brightness(150%);
+  outline: none;
 `;
 
 export const border = (color: string, width = '1px') => css`

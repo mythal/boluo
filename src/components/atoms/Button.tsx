@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import { controlRounded, dangerColor, normalColor, primaryColor, spacingN, textSm } from '../../styles/theme';
-import { disableFilter, focusOutline, onDisabled, onFocus, onHover } from '../../styles/atoms';
+import { disabled, focused, onDisabled, onHover } from '../../styles/atoms';
 import { lighten } from 'polished';
 
 const btnTextShadow = '0 1px 0 rgba(0, 0, 0, 0.125)';
@@ -34,8 +34,13 @@ const btn = css`
     filter: brightness(110%);
   }
 
-  &:active {
+  &:active,
+  &:focus:active {
     filter: brightness(95%);
+  }
+
+  &:focus {
+    ${focused};
   }
 
   padding: ${spacingN(2.5)} ${spacingN(3)};
@@ -58,9 +63,7 @@ const btn = css`
     font-size: ${textSm};
   }
 
-  ${onFocus(focusOutline, { zIndex: 1 })};
-
-  ${onDisabled(disableFilter, onHover(disableFilter), { cursor: 'default' })};
+  ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};
 `;
 
 interface Props {
@@ -72,7 +75,10 @@ interface Props {
   disabled?: boolean;
 }
 
-export default function Button({ children, iconOnly, small, variant, onClick, disabled }: Props) {
+function Button(
+  { children, iconOnly, small, variant, onClick, disabled, ...props }: Props,
+  ref?: React.Ref<HTMLButtonElement>
+) {
   const handleClick: React.MouseEventHandler = () => {
     if (onClick) {
       onClick();
@@ -81,13 +87,17 @@ export default function Button({ children, iconOnly, small, variant, onClick, di
   return (
     <button
       css={btn}
+      ref={ref}
       data-icon={iconOnly}
       data-variant={variant}
       data-small={small}
       onClick={handleClick}
       disabled={disabled}
+      {...props}
     >
       {children}
     </button>
   );
 }
+
+export default React.forwardRef<HTMLButtonElement, Props>(Button);

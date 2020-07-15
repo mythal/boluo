@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Action } from '../actions';
 import { get } from '../api/request';
-import PageLoading from './molecules/PageLoading';
 import { panic } from '../errors';
 import { Channel, Member } from '../api/channels';
 import { ChatState, initChatState } from '../reducers/chat';
@@ -52,11 +51,7 @@ export const Provider: React.FC = ({ children }) => {
   const [loading, setLoading] = useState(true);
   useGetMe(dispatch, () => setLoading(false));
   if (loading) {
-    return (
-      <div className="w-screen h-screen flex items-center">
-        <PageLoading className="mx-auto w-32" />
-      </div>
-    );
+    return <div className="w-screen h-screen flex items-center">loading</div>;
   }
   return (
     <DispatchContext.Provider value={dispatch}>

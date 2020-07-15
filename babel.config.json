@@ -1,6 +1,7 @@
 {
   "presets": [
     "@babel/env",
+    "@babel/typescript",
     "@babel/react",
     [
       "@emotion/babel-preset-css-prop",
@@ -10,5 +11,9 @@
       }
     ]
   ],
-  "plugins": [["emotion", { "sourceMap": true }], "@babel/proposal-class-properties"]
+  "plugins": [
+    ["emotion", { "sourceMap": true }],
+    "@babel/proposal-class-properties",
+    ["@babel/plugin-transform-runtime", { "regenerator": true }]
+  ]
 }

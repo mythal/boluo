@@ -3,16 +3,15 @@ import 'modern-normalize/modern-normalize.css';
 import Icon from './atoms/TextIcon';
 import { css, Global } from '@emotion/core';
 import { bgColor, fontBase, spacingN, textColor } from '../styles/theme';
-import { spin } from '../styles/atoms';
 import styled from '@emotion/styled';
 import Button from './atoms/Button';
-import SpinnerIcon from './molecules/SpinnerIcon';
 import fan from '../assets/icons/fan.svg';
 import close from '../assets/icons/x-circle.svg';
+import chevronDown from '../assets/icons/chevron-down.svg';
 import Input from './atoms/Input';
-import PageLoading from './molecules/PageLoading';
 import UiMessage from './molecules/UiMessage';
 import Overlay from './atoms/Overlay';
+import Menu from './atoms/Menu';
 
 const baseStyle = css`
   html {
@@ -39,7 +38,9 @@ const View = styled.div`
 
 function Design() {
   const overlayAnchor = useRef<HTMLDivElement | null>(null);
+  const menuAnchor = useRef<HTMLButtonElement | null>(null);
   const showMessage = useState(true);
+  const [showMenu, setShowMenu] = useState(true);
   return (
     <View>
       <BaseStyle />
@@ -50,7 +51,7 @@ function Design() {
           height: 10em;
         `}
       >
-        <PageLoading />
+        {/*<PageLoading />*/}
       </div>
       <div>
         <h2 className="title">按钮</h2>
@@ -64,9 +65,6 @@ function Design() {
             <Button>
               <Icon sprite={fan} />
               图标
-            </Button>
-            <Button iconOnly>
-              <SpinnerIcon />
             </Button>
             <Button variant="primary">Primary</Button>
             <Button variant="danger">危险</Button>
@@ -83,9 +81,6 @@ function Design() {
             <Button small>
               <Icon sprite={close} />
               图标
-            </Button>
-            <Button small iconOnly>
-              <Icon sprite={fan} css={spin} />
             </Button>
             <Button small variant="primary">
               主要
@@ -131,6 +126,7 @@ function Design() {
               width: 10em;
               height: 10em;
               background-color: tomato;
+              margin-left: 20em;
             `}
             ref={overlayAnchor}
           />
@@ -161,6 +157,28 @@ function Design() {
           <Overlay anchor={overlayAnchor} x={1} y={1}>
             RB
           </Overlay>
+        </div>
+      </section>
+
+      <section>
+        <h2>菜单</h2>
+        <div>
+          <Button
+            ref={menuAnchor}
+            css={css`
+              width: ${spacingN(32)};
+              justify-content: space-between;
+            `}
+            onClick={() => setShowMenu((value) => !value)}
+          >
+            菜单
+            <Icon sprite={chevronDown} />
+          </Button>
+          {showMenu && (
+            <Overlay x={1} y={1} selfY={-1} selfX={1} anchor={menuAnchor} onOuter={() => setShowMenu(false)}>
+              <Menu items={[{ text: 'hello' }, { text: 'world' }]} />
+            </Overlay>
+          )}
         </div>
       </section>
     </View>

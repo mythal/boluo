@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Portal } from '../Portal';
+import { Portal } from './Portal';
 import { useForceUpdate, useOutside } from '../../hooks';
 
 function useRerenderWhenResize() {
@@ -13,31 +13,42 @@ function useRerenderWhenResize() {
 
   useEffect(() => {
     window.addEventListener('resize', onResize);
-    return () => window.clearTimeout(timer.current);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.clearTimeout(timer.current);
+    };
   }, [onResize]);
-}
-
-function useOverlayOutside(onOutside: (() => void) | undefined, anchor: React.RefObject<HTMLElement | null>) {
-  const overlayRef = useRef<HTMLDivElement | null>(null);
-  useOutside(onOutside, overlayRef, anchor);
-  return overlayRef;
 }
 
 export interface AnchorPosition {
   x: -1 | 0 | 1;
   y: -1 | 0 | 1;
+  selfX?: -1 | 0 | 1;
+  selfY?: -1 | 0 | 1;
 }
 
-interface Props extends AnchorPosition {
-  anchor: React.RefObject<HTMLElement | null>;
-  children: React.ReactChild;
-  className?: string;
-  onOuter?: () => void;
-}
+type Props = React.HTMLAttributes<HTMLDivElement> &
+  AnchorPosition & {
+    anchor: React.RefObject<HTMLElement | null>;
+    children: React.ReactChild;
+    className?: string;
+    onOuter?: () => void;
+  };
 
-function Overlay({ anchor, children, x, y, className, onOuter }: Props) {
+function Overlay({
+  anchor,
+  children,
+  x,
+  y,
+  className,
+  onOuter,
+  selfX,
+  selfY,
+  ...rest
+}: Props): React.ReactElement | null {
   useRerenderWhenResize();
-  const overlayRef = useOverlayOutside(onOuter, anchor);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  useOutside(onOuter, overlayRef, anchor);
   const [node, setNode] = useState(anchor.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => setNode(anchor.current), [anchor.current]);
@@ -65,9 +76,28 @@ function Overlay({ anchor, children, x, y, className, onOuter }: Props) {
   } else if (x === 1) {
     style.left = scrollLeft + rect.right;
   }
+  if (selfX === undefined) {
+    selfX = x;
+  }
+  if (selfY === undefined) {
+    selfY = y;
+  }
+  let translateX = '0';
+  let translateY = '0';
+  if (selfX === -1) {
+    translateX = '-100%';
+  } else if (selfX === 0) {
+    translateX = '-50%';
+  }
+  if (selfY === -1) {
+    translateY = '-100%';
+  } else if (selfY == 0) {
+    translateY = '-50%';
+  }
+  style.transform = `translate(${translateX}, ${translateY})`;
   return (
     <Portal>
-      <div ref={overlayRef} className={className} style={style}>
+      <div ref={overlayRef} className={className} style={style} {...rest}>
         {children}
       </div>
     </Portal>

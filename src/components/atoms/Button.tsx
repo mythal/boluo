@@ -1,19 +1,20 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { controlRounded, dangerColor, normalColor, primaryColor, spacingN, textSm } from '../../styles/theme';
-import { disabled, focused, onDisabled, onHover } from '../../styles/atoms';
+import { dangerColor, normalColor, primaryColor, spacingN, textSm } from '../../styles/theme';
+import { controlRounded, disabled, focused, onDisabled, onHover, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
 
 const btnTextShadow = '0 1px 0 rgba(0, 0, 0, 0.125)';
 
 const btnColor = (color: string) => css`
   background-color: ${color};
-  border-color: ${lighten(0.2, color)};
+  border-color: ${lighten(0.075, color)};
 `;
 
 const btn = css`
   display: inline-flex;
   justify-content: space-around;
+  align-items: center;
   min-width: 5em;
   user-select: none;
   cursor: pointer;
@@ -23,6 +24,7 @@ const btn = css`
   transition-property: all;
   transition-duration: 0.1s;
   transition-timing-function: ease-in;
+  ${uiShadow};
 
   ${controlRounded};
 
@@ -36,7 +38,7 @@ const btn = css`
 
   &:active,
   &:focus:active {
-    filter: brightness(95%);
+    filter: brightness(80%);
   }
 
   &:focus {
@@ -55,6 +57,10 @@ const btn = css`
     ${btnColor(dangerColor)};
   }
 
+  &[data-variant='dark'] {
+    ${btnColor('#1d1d1d')};
+  }
+
   &[data-icon='true'] {
     min-width: unset;
   }
@@ -67,10 +73,10 @@ const btn = css`
 `;
 
 interface Props {
-  variant?: 'normal' | 'danger' | 'primary';
+  variant?: 'normal' | 'danger' | 'primary' | 'dark';
   iconOnly?: boolean;
   small?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
 }

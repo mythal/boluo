@@ -2,11 +2,9 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { errorColor, infoColor, spacingN, textLg, warnColor } from '../../styles/theme';
 import { lighten } from 'polished';
-import Button from '../atoms/Button';
-import TextIcon from '../atoms/TextIcon';
-import close from '../../assets/icons/x-circle.svg';
 import styled from '@emotion/styled';
-import { roundedPx } from '../../styles/atoms';
+import { roundedPx, uiShadow } from '../../styles/atoms';
+import CloseButton from './CloseButton';
 
 interface Props {
   variant: 'warning' | 'info' | 'error';
@@ -29,11 +27,13 @@ const Container = styled.div`
 
 const style = css`
   display: grid;
+  align-items: center;
   grid-template-columns: 1fr auto;
   padding: ${spacingN(1)};
-  margin-bottom: ${spacingN(2)};
   font-size: ${textLg};
-  ${roundedPx}
+  ${roundedPx};
+
+  ${uiShadow};
   &[data-variant='info'] {
     ${colorStyle(infoColor)};
   }
@@ -50,18 +50,7 @@ function UiMessage({ variant, className, dismiss, children }: Props) {
   return (
     <div css={style} data-variant={variant} className={className}>
       <Container>{children}</Container>
-      {dismiss && (
-        <Button
-          small
-          css={css`
-            float: right;
-          `}
-          iconOnly
-          onClick={dismiss}
-        >
-          <TextIcon sprite={close} />
-        </Button>
-      )}
+      {dismiss && <CloseButton onClick={dismiss} />}
     </div>
   );
 }

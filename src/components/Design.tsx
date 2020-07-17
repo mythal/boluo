@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import 'modern-normalize/modern-normalize.css';
-import Icon from './atoms/TextIcon';
+import Icon from './atoms/Icon';
 import { css, Global } from '@emotion/core';
 import { bgColor, fontBase, spacingN, textColor } from '../styles/theme';
 import styled from '@emotion/styled';
@@ -12,6 +12,7 @@ import Input from './atoms/Input';
 import UiMessage from './molecules/UiMessage';
 import Overlay from './atoms/Overlay';
 import Menu from './atoms/Menu';
+import Dialog from './molecules/Dialog';
 
 const baseStyle = css`
   html {
@@ -41,6 +42,7 @@ function Design() {
   const menuAnchor = useRef<HTMLButtonElement | null>(null);
   const showMessage = useState(true);
   const [showMenu, setShowMenu] = useState(true);
+  const [showModel, setShowModel] = useState(true);
   return (
     <View>
       <BaseStyle />
@@ -176,10 +178,25 @@ function Design() {
           </Button>
           {showMenu && (
             <Overlay x={1} y={1} selfY={-1} selfX={1} anchor={menuAnchor} onOuter={() => setShowMenu(false)}>
-              <Menu items={[{ text: 'hello' }, { text: 'world' }]} />
+              <Menu
+                dismiss={() => setShowMenu(false)}
+                items={[
+                  { text: 'hello', callback: () => alert('hello'), disabled: true },
+                  { text: 'hello', callback: () => alert('hello'), disabled: false },
+                  { text: 'world', icon: fan },
+                ]}
+              />
             </Overlay>
           )}
         </div>
+      </section>
+      <section>
+        <Button onClick={() => setShowModel(true)}>打开对话框</Button>
+        {showModel && (
+          <Dialog mask dismiss={() => setShowModel(false)} confirm={() => setShowModel(false)} title="Hello, world">
+            hello, world
+          </Dialog>
+        )}
       </section>
     </View>
   );

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { disabled, focused, onDisabled } from '../../styles/atoms';
-import { inputBgColor, controlRounded, textColor, spacingN, textLg, errorColor } from '../../styles/theme';
+import { controlRounded, disabled, duration200, focused, uiShadow } from '../../styles/atoms';
+import { inputBgColor, textColor, spacingN, textLg, errorColor } from '../../styles/theme';
 import styled from '@emotion/styled';
 
 interface AdditionalProps {
@@ -15,16 +15,19 @@ const StyledInput = styled.input`
   padding: ${spacingN(2)};
   color: ${textColor};
   font-size: ${textLg};
+  ${uiShadow};
   transition-property: all;
-  transition-duration: 200ms;
+  ${duration200};
   ${controlRounded};
   &:focus {
     ${focused};
   }
+  &:disabled {
+    ${disabled};
+  }
   &[data-variant='error'] {
     background-color: ${errorColor};
   }
-  ${onDisabled(disabled)}
 `;
 
 export default React.forwardRef<HTMLInputElement, Props>(function Input(props, ref) {

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Portal } from './Portal';
 import { useForceUpdate, useOutside } from '../../hooks';
+import { overlayZIndex } from '../../styles/theme';
 
 function useRerenderWhenResize() {
   const forceUpdate = useForceUpdate();
@@ -33,6 +34,7 @@ type Props = React.HTMLAttributes<HTMLDivElement> &
     children: React.ReactChild;
     className?: string;
     onOuter?: () => void;
+    zIndex?: number;
   };
 
 function Overlay({
@@ -44,6 +46,7 @@ function Overlay({
   onOuter,
   selfX,
   selfY,
+  zIndex,
   ...rest
 }: Props): React.ReactElement | null {
   useRerenderWhenResize();
@@ -58,6 +61,7 @@ function Overlay({
   const rect = node.getBoundingClientRect();
   const style: React.CSSProperties = {
     position: 'absolute',
+    zIndex: zIndex || overlayZIndex,
   };
   const documentElement = document.documentElement;
   const { scrollTop, scrollLeft } = documentElement;

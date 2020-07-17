@@ -2,7 +2,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { css, keyframes } from '@emotion/core';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
-import TextIcon from '../atoms/TextIcon';
+import TextIcon from '../atoms/Icon';
 import { spin } from '../../styles/atoms';
 import { spacingN, textXl } from '../../styles/theme';
 

@@ -7,28 +7,32 @@ import { spacingN } from '../../styles/theme';
 interface Props {
   sprite: SpriteSymbol;
   className?: string;
+  noStrut?: boolean;
 }
 
 const Strut = styled.span`
-  &::before {
-    /*
-    * https://juejin.im/entry/5bc441a5f265da0aca333506
-    * https://codepen.io/airen/pen/pZVvyL
-    */
-    content: '\u200b';
+  &[data-strut='true'] {
+    &::before {
+      /*
+      * https://juejin.im/entry/5bc441a5f265da0aca333506
+      * https://codepen.io/airen/pen/pZVvyL
+      */
+      content: '\u200b';
+    }
+    display: inline-flex;
+    align-items: center;
   }
-  display: inline-flex;
-  align-items: center;
+  font-size: 1em;
 
   padding: 0 ${spacingN(0.5)};
 `;
 
-function TextIcon({ sprite, className }: Props) {
+function Icon({ sprite, className, noStrut }: Props) {
   return (
-    <Strut>
+    <Strut data-strut={!noStrut}>
       <SpriteSvg sprite={sprite} className={className} width="1em" height="1em" fill="currentColor" />
     </Strut>
   );
 }
 
-export default React.memo(TextIcon);
+export default React.memo(Icon);

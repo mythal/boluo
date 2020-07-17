@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon from '../atoms/TextIcon';
+import Icon from '../atoms/Icon';
 import fan from '../../assets/icons/fan.svg';
 import { spin } from '../../styles/atoms';
 

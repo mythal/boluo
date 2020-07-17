@@ -1,5 +1,6 @@
 import { css, Interpolation, keyframes } from '@emotion/core';
 import { transparentize } from 'polished';
+import { uiShadowColor } from './theme';
 
 export const onDisabled = (...styles: Interpolation[]) =>
   css`
@@ -49,6 +50,7 @@ export const roundedPx = css`
 export const disabled = css`
   filter: grayscale(80%) brightness(80%) contrast(30%);
   cursor: not-allowed;
+  box-shadow: none;
 `;
 
 export const focused = css`
@@ -58,4 +60,13 @@ export const focused = css`
 
 export const border = (color: string, width = '1px') => css`
   border: ${width} solid ${color};
+`;
+
+export const uiShadow = css`
+  box-shadow: 0 0 4px 0 ${transparentize(0.6, uiShadowColor)}, 0 1px 1px 0 ${uiShadowColor};
+`;
+export const controlRounded = roundedPx;
+
+export const duration200 = css`
+  transition-duration: 200ms;
 `;

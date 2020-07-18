@@ -21,6 +21,8 @@ export type CHANNEL_DELETED = typeof CHANNEL_DELETED;
 export const CHANNEL_EDITED = 'CHANNEL_EDITED';
 export type CHANNEL_EDITED = typeof CHANNEL_EDITED;
 
+export type MailboxType = 'CHANNEL';
+
 export interface EventQuery {
   mailbox: Id;
   after: number;
@@ -29,6 +31,7 @@ export interface EventQuery {
 export interface Event<B> {
   mailbox: Id;
   timestamp: number;
+  mailboxType: MailboxType;
   body: B;
 }
 
@@ -117,6 +120,7 @@ export interface SendPreview {
 export interface SendHeartbeat {
   type: 'HEARTBEAT';
   mailbox: Id;
+  mailboxType: MailboxType;
 }
 
 export type ClientEvent = SendPreview | SendHeartbeat;

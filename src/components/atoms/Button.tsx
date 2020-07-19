@@ -3,6 +3,7 @@ import { css } from '@emotion/core';
 import { dangerColor, normalColor, primaryColor, spacingN, textSm } from '../../styles/theme';
 import { controlRounded, disabled, focused, onDisabled, onHover, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
+import styled from '@emotion/styled';
 
 const btnTextShadow = '0 1px 0 rgba(0, 0, 0, 0.125)';
 
@@ -11,7 +12,13 @@ const btnColor = (color: string) => css`
   border-color: ${lighten(0.075, color)};
 `;
 
-const btn = css`
+interface DataAttributes {
+  'data-variant'?: 'normal' | 'danger' | 'primary' | 'dark';
+  'data-icon'?: boolean;
+  'data-small'?: boolean;
+}
+
+const Button = styled.button<DataAttributes>`
   display: inline-flex;
   justify-content: space-around;
   align-items: center;
@@ -72,38 +79,4 @@ const btn = css`
   ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};
 `;
 
-interface Props {
-  variant?: 'normal' | 'danger' | 'primary' | 'dark';
-  iconOnly?: boolean;
-  small?: boolean;
-  children?: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-}
-
-function Button(
-  { children, iconOnly, small, variant, onClick, disabled, ...props }: Props,
-  ref?: React.Ref<HTMLButtonElement>
-) {
-  const handleClick: React.MouseEventHandler = () => {
-    if (onClick) {
-      onClick();
-    }
-  };
-  return (
-    <button
-      css={btn}
-      ref={ref}
-      data-icon={iconOnly}
-      data-variant={variant}
-      data-small={small}
-      onClick={handleClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
-export default React.forwardRef<HTMLButtonElement, Props>(Button);
+export default Button;

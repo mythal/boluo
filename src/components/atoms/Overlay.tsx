@@ -47,7 +47,7 @@ function Overlay({
   selfX,
   selfY,
   zIndex,
-  ...rest
+  ...divProps
 }: Props): React.ReactElement | null {
   useRerenderWhenResize();
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -101,7 +101,7 @@ function Overlay({
   style.transform = `translate(${translateX}, ${translateY})`;
   return (
     <Portal>
-      <div ref={overlayRef} className={className} style={style} {...rest}>
+      <div ref={overlayRef} className={className} style={style} {...divProps}>
         {children}
       </div>
     </Portal>

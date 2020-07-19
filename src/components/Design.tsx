@@ -42,7 +42,7 @@ function Design() {
   const menuAnchor = useRef<HTMLButtonElement | null>(null);
   const showMessage = useState(true);
   const [showMenu, setShowMenu] = useState(true);
-  const [showModel, setShowModel] = useState(true);
+  const [showModel, setShowModel] = useState(false);
   return (
     <View>
       <BaseStyle />
@@ -68,29 +68,29 @@ function Design() {
               <Icon sprite={fan} />
               图标
             </Button>
-            <Button variant="primary">Primary</Button>
-            <Button variant="danger">危险</Button>
+            <Button data-variant="primary">Primary</Button>
+            <Button data-variant="danger">危险</Button>
             <Button disabled>禁用</Button>
           </ButtonList>
         </div>
         <div>
           <ButtonList>
-            <Button small>普通</Button>
-            <Button small>
+            <Button data-small>普通</Button>
+            <Button data-small>
               <Icon sprite={fan} />
               图标
             </Button>
-            <Button small>
+            <Button data-small>
               <Icon sprite={close} />
               图标
             </Button>
-            <Button small variant="primary">
+            <Button data-small data-variant="primary">
               主要
             </Button>
-            <Button small variant="danger">
+            <Button data-small data-variant="danger">
               危险
             </Button>
-            <Button small disabled>
+            <Button data-small disabled>
               禁用
             </Button>
           </ButtonList>
@@ -101,7 +101,7 @@ function Design() {
         <div>
           <Input placeholder="hello, world" />
           <Input placeholder="hello, world" disabled />
-          <Input placeholder="错误的内容" variant="error" />
+          <Input placeholder="错误的内容" data-variant="error" />
         </div>
       </div>
       <section>

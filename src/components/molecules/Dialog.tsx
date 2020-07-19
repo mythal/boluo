@@ -5,6 +5,7 @@ import Button from '../atoms/Button';
 import { roundedPx, uiShadow } from '../../styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
+import { useCallback, useEffect } from 'react';
 
 interface Props {
   children: React.ReactChild;
@@ -48,6 +49,20 @@ const contentStyle = css`
 
 function Dialog({ children, mask, dismiss, confirm, confirmText, title }: Props) {
   confirmText = confirmText || '确定';
+  const handleKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && dismiss) {
+        dismiss();
+      }
+    },
+    [dismiss]
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [handleKey]);
+
   return (
     <Modal css={style} mask={mask} onClickMask={dismiss}>
       {title && (
@@ -59,7 +74,7 @@ function Dialog({ children, mask, dismiss, confirm, confirmText, title }: Props)
       <div css={contentStyle}>{children}</div>
       {confirm && (
         <div css={buttonAreaStyle}>
-          <Button small variant="primary" onClick={confirm}>
+          <Button data-small autoFocus data-variant="primary" onClick={confirm}>
             {confirmText}
           </Button>
         </div>

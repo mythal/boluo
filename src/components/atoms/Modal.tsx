@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Portal } from './Portal';
-import { css } from '@emotion/core';
+import { css, keyframes } from '@emotion/core';
 import { modalMaskColor, modalZIndex } from '../../styles/theme';
 import styled from '@emotion/styled';
 
-type Props = React.HTMLAttributes<HTMLDivElement> & {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   mask?: boolean;
   onClickMask?: () => void;
-};
+}
 
 const style = css`
   position: fixed;
@@ -15,6 +15,12 @@ const style = css`
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: ${modalZIndex};
+`;
+
+const maskIn = keyframes`
+  100% {
+    opacity: 100%;
+  }
 `;
 
 const Mask = styled.div`
@@ -25,6 +31,8 @@ const Mask = styled.div`
   height: 100vh;
   background-color: ${modalMaskColor};
   z-index: ${modalZIndex - 1};
+  opacity: 0;
+  animation: ${maskIn} 0.1s ease-in forwards;
 `;
 
 function Modal({ children, mask, onClickMask, ...props }: Props) {

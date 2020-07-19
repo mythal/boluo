@@ -3,13 +3,11 @@ import { controlRounded, disabled, duration200, focused, uiShadow } from '../../
 import { inputBgColor, textColor, spacingN, textLg, errorColor } from '../../styles/theme';
 import styled from '@emotion/styled';
 
-interface AdditionalProps {
-  variant?: 'error' | 'normal';
+interface DataAttributes {
+  'data-variant'?: 'error' | 'normal';
 }
 
-type Props = AdditionalProps & React.InputHTMLAttributes<HTMLInputElement>;
-
-const StyledInput = styled.input`
+const Input = styled.input<DataAttributes>`
   background-color: ${inputBgColor};
   border: none;
   padding: ${spacingN(2)};
@@ -30,6 +28,4 @@ const StyledInput = styled.input`
   }
 `;
 
-export default React.forwardRef<HTMLInputElement, Props>(function Input(props, ref) {
-  return <StyledInput ref={ref} data-variant={props.variant} {...props} />;
-});
+export default Input;

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { SpriteSymbol } from '*.svg';
-import { css } from '@emotion/core';
+import { css, keyframes } from '@emotion/core';
 import TextIcon from './Icon';
-import { menuBgColor, menuItemHoverColor, menuShadowColor, spacingN } from '../../styles/theme';
-import { roundedPx } from '../../styles/atoms';
+import { menuBgColor, menuItemHoverColor, spacingN } from '../../styles/theme';
+import { roundedPx, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
 
 export interface IMenuItem {
@@ -59,12 +59,25 @@ function MenuItem({ text, icon, callback, dismiss, disabled }: IMenuItem & Pick<
   );
 }
 
+const menuEnter = keyframes`
+  60% {
+    opacity: 100%;
+  }
+  100% {
+    opacity: 100%;
+    transform: translateY(0);
+  }
+`;
+
 const menuStyle = css`
   background-color: ${menuBgColor};
   padding: ${spacingN(4)} ${spacingN(2)};
   width: ${spacingN(48)};
   ${roundedPx};
-  box-shadow: 0 0 8px ${menuShadowColor};
+  opacity: 0;
+  transform: translateY(-1rem);
+  ${uiShadow};
+  animation: ${menuEnter} 0.1s ease-in forwards;
 `;
 
 function Menu({ items, dismiss }: Props) {

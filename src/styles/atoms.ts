@@ -28,9 +28,11 @@ export const onActive = (...styles: Interpolation[]) =>
   `;
 
 export const spinFrames = keyframes`
-  100% {
-    // https://stackoverflow.com/a/13293044
-    transform: rotate(360deg) translateZ(0);
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
   }
 `;
 

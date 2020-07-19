@@ -13,6 +13,7 @@ import UiMessage from './molecules/UiMessage';
 import Overlay from './atoms/Overlay';
 import Menu from './atoms/Menu';
 import Dialog from './molecules/Dialog';
+import PageLoading from './molecules/PageLoading';
 
 const baseStyle = css`
   html {
@@ -53,7 +54,7 @@ function Design() {
           height: 10em;
         `}
       >
-        {/*<PageLoading />*/}
+        <PageLoading />
       </div>
       <div>
         <h2 className="title">按钮</h2>
@@ -80,9 +81,8 @@ function Design() {
               <Icon sprite={fan} />
               图标
             </Button>
-            <Button data-small>
-              <Icon sprite={close} />
-              图标
+            <Button data-small data-icon>
+              <Icon sprite={close} spin />
             </Button>
             <Button data-small data-variant="primary">
               主要

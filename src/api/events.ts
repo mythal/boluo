@@ -1,7 +1,7 @@
 import { Message } from './messages';
-import { Id } from '../utils';
 import { Entity } from '../interpreter/entities';
 import { Channel, Member } from './channels';
+import { Id } from '../utils/id';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;
@@ -63,7 +63,8 @@ export interface MessageEdited {
 export interface Preview {
   id: string;
   senderId: Id;
-  channelId: Id;
+  mailbox: Id;
+  mailboxType: MailboxType;
   parentMessageId: string | null;
   name: string;
   mediaId: Id | null;
@@ -76,16 +77,14 @@ export interface Preview {
   start: number;
 }
 
-export interface NewPreview {
+export interface PreviewPost {
   id: string;
-  channelId: Id;
   name: string;
   mediaId: Id | null;
   inGame: boolean;
   isAction: boolean;
   text: string | null;
   entities: Entity[];
-  start: number;
 }
 
 export interface MessagePreview {
@@ -114,13 +113,11 @@ export interface Heartbeat {
 
 export interface SendPreview {
   type: 'PREVIEW';
-  preview: NewPreview;
+  preview: PreviewPost;
 }
 
 export interface SendHeartbeat {
   type: 'HEARTBEAT';
-  mailbox: Id;
-  mailboxType: MailboxType;
 }
 
 export type ClientEvent = SendPreview | SendHeartbeat;

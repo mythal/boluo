@@ -1,7 +1,7 @@
 import { ChannelWithRelated } from '../api/channels';
-import { Id } from '../utils';
 import { Message } from '../api/messages';
 import { ChannelEvent } from '../api/events';
+import { Id } from '../utils/id';
 
 export interface LoadChat {
   type: 'LOAD_CHAT';

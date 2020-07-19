@@ -61,21 +61,21 @@ export const fetchFailed: AppError = {
 export const errorText = (e: AppError): string => {
   switch (e.code) {
     case UNAUTHENTICATED:
-      return '认证失败，需要登录';
+      return '您没有登陆，无法进行此项操作';
     case NO_PERMISSION:
-      return '您没有访问权限';
+      return '您没有执行这项操作或查询的权限';
     case VALIDATION_FAIL:
       return `您的输入有误：${e.message}`;
     case FETCH_FAIL:
-      return `遭遇到未知的网络错误`;
+      return `遇到网络错误，这可能是我们的服务器出错或者您的网络故障`;
     case NOT_JSON:
-      return '搞砸了! 服务器返回的消息格式有误，可能是服务器或者您的网络故障';
+      return '糟糕！服务器返回的消息格式有误，这可能是我们的服务器出错或者您的网络故障';
     case UNEXPECTED:
-      return 'Oops! 服务器内部错误';
+      return '糟糕！出现了服务器内部错误，请联系我们';
     case BAD_REQUEST:
-      return `出错了! 请求格式有误: ${e.message}`;
+      return `您发送的 API 请求格式有误: ${e.message}`;
     default:
       console.warn(e);
-      return `发生了一个本该处理但未处理的错误: ${e.message}`;
+      return `网页发生了一个本该处理但未处理的错误: ${e.message}`;
   }
 };

@@ -1,5 +1,5 @@
 import { Entity } from './interpreter/entities';
-import { Err, Ok, Result } from './result';
+import { Err, Ok, Result } from './utils/result';
 
 export type ValidatorResult = Result<undefined, string>;
 

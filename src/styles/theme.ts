@@ -1,4 +1,5 @@
 import { darken, lighten } from 'polished';
+import { css } from '@emotion/core';
 
 export const spacing = '0.25em';
 export const spacingN = (n: number): string => `calc(${spacing} * ${n})`;
@@ -21,6 +22,7 @@ export const infoColor = '#45675e';
 export const warnColor = '#307830';
 export const errorColor = '#711518';
 export const normalColor = '#555555';
+export const successColor = '#2F855A';
 export const lineColor = lighten(0.35, normalColor);
 export const primaryColor = '#616625';
 export const dangerColor = '#9a4444';
@@ -45,3 +47,12 @@ export const modalMaskColor = 'rgba(0,0,0,0.5)';
 export const dialogBgColor = '#343434';
 export const dialogTitleColor = darken(0.3, textColor);
 export const dialogHeaderBgColor = darken(0.075, dialogBgColor);
+
+export const baseStyle = css`
+  html {
+    font-size: 14px;
+    font-family: ${fontBase};
+    background-color: ${bgColor};
+    color: ${textColor};
+  }
+`;

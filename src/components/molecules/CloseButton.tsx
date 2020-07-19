@@ -6,6 +6,7 @@ import close from '../../assets/icons/x-circle.svg';
 
 interface Props {
   onClick: () => void;
+  className?: string;
 }
 
 const style = css`
@@ -26,9 +27,9 @@ const style = css`
   }
 `;
 
-function CloseButton({ onClick }: Props) {
+function CloseButton({ onClick, className }: Props) {
   return (
-    <button css={style} onClick={() => onClick()}>
+    <button css={style} className={className} onClick={() => onClick()}>
       <Icon sprite={close} />
     </button>
   );

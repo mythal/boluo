@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { errorColor, infoColor, spacingN, textLg, warnColor } from '../../styles/theme';
+import { errorColor, infoColor, spacingN, successColor, textLg, warnColor } from '../../styles/theme';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
 import { roundedPx, uiShadow } from '../../styles/atoms';
 import CloseButton from './CloseButton';
+import { InformationLevel } from '../../actions/information';
 
 interface Props {
-  variant: 'warning' | 'info' | 'error';
+  variant: InformationLevel;
   children: React.ReactChild;
   className?: string;
   dismiss?: () => void;
@@ -34,19 +35,21 @@ const style = css`
   ${roundedPx};
 
   ${uiShadow};
-  &[data-variant='info'] {
+  &[data-variant='INFO'] {
     ${colorStyle(infoColor)};
   }
-  &[data-variant='error'] {
+  &[data-variant='ERROR'] {
     ${colorStyle(errorColor)};
   }
-
-  &[data-variant='warning'] {
+  &[data-variant='SUCCESS'] {
     ${colorStyle(warnColor)};
+  }
+  &[data-variant='WARNING'] {
+    ${colorStyle(successColor)};
   }
 `;
 
-function UiMessage({ variant, className, dismiss, children }: Props) {
+function InformationBar({ variant, className, dismiss, children }: Props) {
   return (
     <div css={style} data-variant={variant} className={className}>
       <Container>{children}</Container>
@@ -55,4 +58,4 @@ function UiMessage({ variant, className, dismiss, children }: Props) {
   );
 }
 
-export default React.memo(UiMessage);
+export default React.memo(InformationBar);

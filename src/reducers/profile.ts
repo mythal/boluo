@@ -1,11 +1,11 @@
 import { User } from '../api/users';
 import { OrderedMap } from 'immutable';
-import { Id } from '../utils';
 import { SpaceWithMember } from '../api/spaces';
 import { ChannelWithMember } from '../api/channels';
 import { Action } from '../actions';
 import { ChannelMemberEdited, JoinedChannel, JoinedSpace, LeftChannel, LeftSpace, LoggedIn } from '../actions/profile';
 import { ChannelEdited, PushMembers } from '../api/events';
+import { Id } from '../utils/id';
 
 export type MySpaces = OrderedMap<Id, SpaceWithMember>;
 export type MyChannels = OrderedMap<Id, ChannelWithMember>;

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { useProfile } from './Provider';
-import { bgColor, fontBase, headerHeight, sidebarMaxWidth, sidebarMinWidth, textColor } from '../styles/theme';
+import {
+  baseStyle,
+  bgColor,
+  fontBase,
+  headerHeight,
+  sidebarMaxWidth,
+  sidebarMinWidth,
+  textColor,
+} from '../styles/theme';
 import { css, Global } from '@emotion/core';
 import 'modern-normalize/modern-normalize.css';
+import { newId } from '../utils/id';
 
 interface Props {}
-
-const baseStyle = css`
-  html {
-    font-size: 14px;
-    font-family: ${fontBase};
-    background-color: ${bgColor};
-    color: ${textColor};
-  }
-`;
 
 const gridStyle = css`
   display: grid;

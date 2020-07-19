@@ -1,7 +1,7 @@
 import { User } from '../api/users';
 import { Space, SpaceMember, SpaceWithMember } from '../api/spaces';
 import { Channel, ChannelMember, ChannelWithMember } from '../api/channels';
-import { Id } from '../utils';
+import { Id } from '../utils/id';
 
 export interface LoggedIn {
   type: 'LOGGED_IN';

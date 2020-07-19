@@ -1,5 +1,5 @@
-import { Id } from '../utils';
 import { AppResult, makeUri, request } from './request';
+import { Id } from '../utils/id';
 
 export interface Media {
   id: Id;

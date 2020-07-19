@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { DependencyList, ReactElement, useCallback, useEffect, useState } from 'react';
 import { AppResult } from './api/request';
-import { Err, Result } from './result';
+import { Err, Result } from './utils/result';
 import PageLoading from './components/molecules/PageLoading';
 import { errorText } from './api/error';
-import UiMessage from './components/molecules/UiMessage';
+import UiMessage from './components/molecules/InformationBar';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -70,7 +70,7 @@ export const useFetchResult = <T,>(
   }
   return [
     result.mapErr((err) => (
-      <UiMessage variant="error">
+      <UiMessage variant="ERROR">
         <span>{errorText(err)}</span>
       </UiMessage>
     )),

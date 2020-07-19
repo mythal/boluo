@@ -1,11 +1,11 @@
 import { Channel, Member } from '../api/channels';
 import { List, Map } from 'immutable';
-import { Id, newId } from '../utils';
 import { Message } from '../api/messages';
 import { Preview } from '../api/events';
 import { Action } from '../actions';
 import { ChannelEventReceived, CloseChat, LoadChat, LoadMessages } from '../actions/chat';
-import { DEBUG } from '../config';
+import { DEBUG } from '../settings';
+import { Id, newId } from '../utils/id';
 
 export interface MessageChatItem {
   id: Id;

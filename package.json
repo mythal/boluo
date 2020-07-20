@@ -13,7 +13,7 @@
     "react": "^16.13",
     "react-dom": "^16.13",
     "react-hook-form": "^6.0.8",
-    "react-router-dom": "^5.1.2",
+    "react-router-dom": "^5.2.0",
     "uuid": "^8.2.0"
   },
   "scripts": {

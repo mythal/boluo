@@ -1,9 +1,17 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { errorColor, infoColor, spacingN, successColor, textLg, warnColor } from '../../styles/theme';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
-import { roundedPx, uiShadow } from '../../styles/atoms';
+import {
+  errorColor,
+  infoColor,
+  roundedPx,
+  spacingN,
+  successColor,
+  textLg,
+  uiShadow,
+  warnColor,
+} from '../../styles/atoms';
 import CloseButton from './CloseButton';
 import { InformationLevel } from '../../actions/information';
 
@@ -31,7 +39,7 @@ const style = css`
   align-items: center;
   grid-template-columns: 1fr auto;
   padding: ${spacingN(1)};
-  font-size: ${textLg};
+  ${textLg};
   ${roundedPx};
 
   ${uiShadow};

@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useProfile } from './Provider';
-import {
-  baseStyle,
-  bgColor,
-  fontBase,
-  headerHeight,
-  sidebarMaxWidth,
-  sidebarMinWidth,
-  textColor,
-} from '../styles/theme';
-import { css, Global } from '@emotion/core';
+import { css } from '@emotion/core';
 import 'modern-normalize/modern-normalize.css';
-import { newId } from '../utils/id';
+import { Route, Switch } from 'react-router-dom';
+import GuestHome from './GuestHome';
+import Home from '../Home';
+import { headerHeight, sidebarMaxWidth, sidebarMinWidth } from '../styles/atoms';
 
 interface Props {}
 
@@ -33,40 +27,9 @@ const gridStyle = css`
 
 export const Page: React.FC<Props> = () => {
   const profile = useProfile();
-  const [sidebar, setSidebar] = useState(Boolean(profile));
   return (
-    <div css={gridStyle} data-sidebar={sidebar}>
-      <Global styles={baseStyle} />
-      <div
-        css={css`
-          grid-area: left-header;
-        `}
-      >
-        <input type="checkbox" checked={sidebar} onChange={(e) => setSidebar(e.target.checked)} />
-      </div>
-      <div
-        css={css`
-          grid-area: right-header;
-        `}
-      >
-        right-header
-      </div>
-      {sidebar && (
-        <div
-          css={css`
-            grid-area: sidebar;
-          `}
-        >
-          sidebar
-        </div>
-      )}
-      <div
-        css={css`
-          grid-area: content;
-        `}
-      >
-        content
-      </div>
-    </div>
+    <Switch>
+      <Route path="/">{profile ? <Home /> : <GuestHome />}</Route>
+    </Switch>
   );
 };

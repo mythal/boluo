@@ -2,8 +2,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { SpriteSymbol } from '*.svg';
 import SpriteSvg from './SpriteSvg';
-import { spacingN } from '../../styles/theme';
-import { spin as spinStyle } from '../../styles/atoms';
+import { spacingN, spin as spinStyle } from '../../styles/atoms';
 
 interface Props {
   sprite: SpriteSymbol;

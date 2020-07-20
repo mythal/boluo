@@ -1,8 +1,15 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { dialogBgColor, dialogHeaderBgColor, dialogTitleColor, spacingN, textSm } from '../../styles/theme';
 import Button from '../atoms/Button';
-import { roundedPx, uiShadow } from '../../styles/atoms';
+import {
+  dialogBgColor,
+  dialogHeaderBgColor,
+  dialogTitleColor,
+  roundedPx,
+  spacingN,
+  textSm,
+  uiShadow,
+} from '../../styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
 import { useCallback, useEffect } from 'react';
@@ -31,7 +38,7 @@ const buttonAreaStyle = css`
 `;
 
 const headerStyle = css`
-  font-size: ${textSm};
+  ${textSm};
   display: flex;
   justify-content: space-between;
   align-items: center;

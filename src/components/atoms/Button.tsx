@@ -1,7 +1,18 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { dangerColor, normalColor, primaryColor, spacingN, textSm } from '../../styles/theme';
-import { controlRounded, disabled, focused, onDisabled, onHover, uiShadow } from '../../styles/atoms';
+import {
+  controlRounded,
+  dangerColor,
+  disabled,
+  focused,
+  normalColor,
+  onDisabled,
+  onHover,
+  primaryColor,
+  spacingN,
+  textSm,
+  uiShadow,
+} from '../../styles/atoms';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
 
@@ -73,7 +84,7 @@ const Button = styled.button<DataAttributes>`
   }
 
   &[data-small='true'] {
-    font-size: ${textSm};
+    ${textSm};
   }
 
   ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};

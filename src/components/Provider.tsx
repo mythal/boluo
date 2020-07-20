@@ -9,6 +9,9 @@ import { initProfileState, ProfileState } from '../reducers/profile';
 import { InformationState, initInformationState } from '../reducers/information';
 import { applicationReducer, initApplicationState } from '../reducers';
 import { LoggedIn, LoggedOut } from '../actions/profile';
+import PageLoading from './molecules/PageLoading';
+import { Global } from '@emotion/core';
+import { baseStyle } from '../styles/atoms';
 
 const DispatchContext = React.createContext<(action: Action) => void>(panic);
 
@@ -51,7 +54,12 @@ export const Provider: React.FC = ({ children }) => {
   const [loading, setLoading] = useState(true);
   useGetMe(dispatch, () => setLoading(false));
   if (loading) {
-    return <div className="w-screen h-screen flex items-center">loading</div>;
+    return (
+      <div css={{ width: '100vw', height: '100vh' }}>
+        <Global styles={baseStyle} />
+        <PageLoading />
+      </div>
+    );
   }
   return (
     <DispatchContext.Provider value={dispatch}>
@@ -60,6 +68,7 @@ export const Provider: React.FC = ({ children }) => {
           <ChatContext.Provider value={state.chat}>
             <ChannelContext.Provider value={state.chat?.channel}>
               <ChannelMemberContext.Provider value={state.chat?.members}>
+                <Global styles={baseStyle} />
                 <BrowserRouter>{children}</BrowserRouter>
               </ChannelMemberContext.Provider>
             </ChannelContext.Provider>

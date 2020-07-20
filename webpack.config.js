@@ -65,8 +65,8 @@ module.exports = {
         test: /\.css$/,
         use: [PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }, { loader: 'css-loader' }],
       },
-      { test: /\.(png|svg|jpe?g|gif)$/, use: ['file-loader'], exclude: [iconPath] },
-      { test: /\.svg$/, loader: 'svg-sprite-loader', options: { extract: true }, include: [iconPath] },
+      { test: /\.(png|jpe?g|gif)$/, use: ['file-loader'] },
+      { test: /\.svg$/, loader: 'svg-sprite-loader', options: { extract: true } },
     ],
   },
 

@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import 'modern-normalize/modern-normalize.css';
 import Icon from './atoms/Icon';
 import { css, Global } from '@emotion/core';
-import { baseStyle, bgColor, fontBase, spacingN, textColor } from '../styles/theme';
 import styled from '@emotion/styled';
 import Button from './atoms/Button';
 import fan from '../assets/icons/fan.svg';
@@ -15,6 +14,7 @@ import Menu from './atoms/Menu';
 import Dialog from './molecules/Dialog';
 import PageLoading from './molecules/PageLoading';
 import Panel from './molecules/Panel';
+import { baseStyle, spacingN } from '../styles/atoms';
 
 function BaseStyle() {
   return <Global styles={baseStyle} />;

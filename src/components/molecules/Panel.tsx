@@ -1,8 +1,8 @@
 import * as React from 'react';
 import Modal from '../atoms/Modal';
 import { css, keyframes } from '@emotion/core';
-import { dialogBgColor, spacingN } from '../../styles/theme';
 import CloseButton from './CloseButton';
+import { dialogBgColor, spacingN } from '../../styles/atoms';
 
 interface Props {
   dismiss?: () => void;

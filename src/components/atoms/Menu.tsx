@@ -2,8 +2,7 @@ import * as React from 'react';
 import { SpriteSymbol } from '*.svg';
 import { css, keyframes } from '@emotion/core';
 import TextIcon from './Icon';
-import { menuBgColor, menuItemHoverColor, spacingN } from '../../styles/theme';
-import { roundedPx, uiShadow } from '../../styles/atoms';
+import { menuBgColor, menuItemHoverColor, roundedPx, spacingN, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
 
 export interface IMenuItem {

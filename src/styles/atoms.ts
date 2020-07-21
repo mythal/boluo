@@ -116,7 +116,7 @@ export const inputBgColor = lighten(0.1, bgColor);
 export const inputBorderColor = '#555555';
 export const headerBgColor = '#333333';
 export const linkColor = lighten(0.2, primaryColor);
-export const headerHeight = spacingN(12);
+export const headerHeight = spacingN(14);
 export const sidebarMinWidth = spacingN(48);
 export const sidebarMaxWidth = '20%';
 export const menuBgColor = '#000000';
@@ -214,7 +214,7 @@ export const m = (n: number) => css`
 `;
 export const mX = (n: number) =>
   css`
-    margin-left: 0 ${spacingN(n)};
+    margin-left: ${spacingN(n)};
     margin-right: ${spacingN(n)};
   `;
 export const mY = (n: number) =>
@@ -283,3 +283,19 @@ export const floatLeft = css`
 export const floatRight = css`
   float: right;
 `;
+
+export const mainP = pX(6);
+
+export const listStyleSquare = css`
+  list-style-type: square;
+`;
+
+export const flex1 = css`
+  flex: 1 1;
+`;
+
+export const widthFull = css`
+  width: 100%;
+`;
+
+export const largeInput = [widthFull, textXl];

@@ -40,3 +40,11 @@ export interface LoginResult {
   me: GetMe;
   token: null;
 }
+
+export interface CheckEmail {
+  email: string;
+}
+
+export interface CheckUsername {
+  username: string;
+}

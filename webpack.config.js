@@ -12,8 +12,6 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
-const iconPath = path.resolve(__dirname, './src/assets/icons');
-
 module.exports = {
   entry: './src/index.tsx',
 
@@ -31,7 +29,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.resolve(rootPath, 'public/index.html'),
       inject: true,
-      favicon: path.resolve(rootPath, 'public/favicon.ico'),
+      favicon: PRODUCTION
+        ? path.resolve(rootPath, 'src/assets/logo.svg')
+        : path.resolve(rootPath, 'src/assets/logo-dev.svg'),
     }),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin(),

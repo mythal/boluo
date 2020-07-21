@@ -2,7 +2,7 @@
 import { Err, Ok, Result } from '../utils/result';
 import { AppError, notJson } from './error';
 import { getCsrfToken } from './csrf';
-import { EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
+import { CheckEmail, CheckUsername, EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
 import { CreateSpace, EditSpace, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
 import {
   Channel,
@@ -124,6 +124,8 @@ export function post<T, U extends object = object, Q extends object = {}>(
 export function get(path: '/users/query', query: IdQuery): Promise<AppResult<User | null>>;
 export function get(path: '/users/get_me'): Promise<AppResult<GetMe | null>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
+export function get(path: '/users/check_username', query: CheckUsername): Promise<AppResult<boolean>>;
+export function get(path: '/users/check_email', query: CheckEmail): Promise<AppResult<boolean>>;
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;

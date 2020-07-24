@@ -3,7 +3,15 @@ import { OrderedMap } from 'immutable';
 import { SpaceWithMember } from '../api/spaces';
 import { ChannelWithMember } from '../api/channels';
 import { Action } from '../actions';
-import { ChannelMemberEdited, JoinedChannel, JoinedSpace, LeftChannel, LeftSpace, LoggedIn } from '../actions/profile';
+import {
+  ChannelMemberEdited,
+  JoinedChannel,
+  JoinedSpace,
+  LeftChannel,
+  LeftSpace,
+  LoggedIn,
+  UserEdited,
+} from '../actions/profile';
 import { ChannelEdited, PushMembers } from '../api/events';
 import { Id } from '../utils/id';
 
@@ -27,6 +35,10 @@ const login = (state: ProfileState | undefined, action: LoggedIn): ProfileState 
     channels = channels.set(c.channel.id, c);
   }
 
+  return { user, channels, spaces };
+};
+
+const editUser = ({ channels, spaces }: ProfileState, { user }: UserEdited): ProfileState => {
   return { user, channels, spaces };
 };
 
@@ -99,6 +111,8 @@ export const profileReducer = (state: ProfileState | undefined, action: Action):
     return undefined;
   }
   switch (action.type) {
+    case 'USER_EDITED':
+      return editUser(state, action);
     case 'JOINED_SPACE':
       return joinSpace(state, action);
     case 'LEFT_SPACE':

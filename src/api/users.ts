@@ -21,7 +21,6 @@ export interface GetMe {
 export interface EditUser {
   nickname?: string;
   bio?: string;
-  avatar?: string;
 }
 
 export interface RegisterData {

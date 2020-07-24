@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { css, keyframes } from '@emotion/core';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import TextIcon from '../atoms/Icon';
-import { spacingN, textXl } from '../../styles/atoms';
+import { pY, spacingN, textXl } from '../../styles/atoms';
 
 interface Props {
   className?: string;
@@ -26,6 +26,7 @@ const loadingKeyframes = keyframes`
 const Container = styled.div`
   width: 100%;
   height: 100%;
+  ${pY(2)};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,7 +40,7 @@ const rotateIconStyle = css`
   margin-inline-end: ${spacingN(1)};
 `;
 
-export default function PageLoading({ className }: Props) {
+export default function Loading({ className }: Props) {
   return (
     <Container className={className}>
       <TextIcon sprite={rotateIcon} spin css={rotateIconStyle} />

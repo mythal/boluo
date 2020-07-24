@@ -30,6 +30,7 @@ export interface CreateSpace {
   password: string | null;
   description: string;
   defaultDiceType: string | null;
+  firstChannelName: string;
 }
 
 export interface EditSpace {
@@ -43,4 +44,8 @@ export interface SpaceWithRelated {
   space: Space;
   members: SpaceMember[];
   channels: Channel[];
+}
+
+export interface CheckName {
+  name: string;
 }

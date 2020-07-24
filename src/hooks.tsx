@@ -2,7 +2,7 @@
 import React, { DependencyList, ReactElement, useCallback, useEffect, useState } from 'react';
 import { AppResult } from './api/request';
 import { Err, Result } from './utils/result';
-import PageLoading from './components/molecules/PageLoading';
+import Loading from './components/molecules/Loading';
 import { errorText } from './api/error';
 import UiMessage from './components/molecules/InformationBar';
 
@@ -66,7 +66,7 @@ export const useFetchResult = <T,>(
 ): [Result<T, ReactElement>, () => void] => {
   const [result, refetch] = useFetch<AppResult<T>>(fetch, deps);
   if (result === 'LOADING') {
-    return [new Err(<PageLoading />), refetch];
+    return [new Err(<Loading />), refetch];
   }
   return [
     result.mapErr((err) => (
@@ -76,6 +76,17 @@ export const useFetchResult = <T,>(
     )),
     refetch,
   ];
+};
+
+export const useRefetch = (refetch: () => void, intervalSecond = 32) => {
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refetch();
+      }
+    }, intervalSecond * 1000);
+    return () => window.clearInterval(interval);
+  }, [refetch]);
 };
 
 export function useForceUpdate() {
@@ -92,4 +103,16 @@ export function useTitle(suffix: string, prefix = ' - Boluo') {
       document.title = DEFAULT_TITLE;
     };
   }, [suffix, prefix]);
+}
+
+export function useTitleWithFetchResult<T>(result: AppResult<T> | 'LOADING', titleMapper: (value: T) => string) {
+  let title;
+  if (result === 'LOADING') {
+    title = '载入中';
+  } else if (result.isOk) {
+    title = titleMapper(result.value);
+  } else {
+    title = '出错了';
+  }
+  useTitle(title);
 }

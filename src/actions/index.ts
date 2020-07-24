@@ -8,6 +8,7 @@ import {
   LoggedIn,
   LoggedOut,
   SpaceEdited,
+  UserEdited,
 } from './profile';
 import { ChannelEventReceived, CloseChat, LoadChat, LoadMessages } from './chat';
 
@@ -16,6 +17,7 @@ export type Action =
   | DismissInformation
   | LoggedIn
   | LoggedOut
+  | UserEdited
   | JoinedSpace
   | SpaceEdited
   | LeftSpace

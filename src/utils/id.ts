@@ -1,7 +1,7 @@
 import { v1 as uuidV1 } from 'uuid';
 
 const getNodeId = (): number[] => {
-  const key = 'clientNodeId';
+  const key = 'client-node-id';
   const serializedId = localStorage.getItem(key);
   if (serializedId) {
     try {

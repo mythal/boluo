@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page } from './Page';
+import { Router } from './Router';
 import { Provider } from './Provider';
 
 interface Props {}
@@ -7,7 +7,7 @@ interface Props {}
 export const App = React.memo<Props>(() => {
   return (
     <Provider>
-      <Page />
+      <Router />
     </Provider>
   );
 });

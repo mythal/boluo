@@ -3,7 +3,7 @@ import { Err, Ok, Result } from '../utils/result';
 import { AppError, notJson } from './error';
 import { getCsrfToken } from './csrf';
 import { CheckEmail, CheckUsername, EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
-import { CreateSpace, EditSpace, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
+import { CheckName, CreateSpace, EditSpace, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
 import {
   Channel,
   ChannelMember,
@@ -16,6 +16,7 @@ import {
 } from './channels';
 import { ByChannel, Message, NewMessage } from './messages';
 import { Id } from '../utils/id';
+import { Media } from './media';
 
 export type AppResult<T> = Result<T, AppError>;
 
@@ -130,6 +131,7 @@ export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMember[]>>;
+export function get(path: '/spaces/check_name', query: CheckName): Promise<AppResult<boolean>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;
@@ -139,4 +141,22 @@ export function get(path: '/messages/by_channel', query: ByChannel): Promise<App
 
 export function get<Q extends object, T>(path: string, query?: Q): Promise<AppResult<T>> {
   return request(makeUri(path, query), 'GET', null, false);
+}
+
+export function editAvatar(file: Blob, filename: string, mimeType: string): Promise<AppResult<User>> {
+  const path = '/users/edit_avatar';
+  return request(makeUri(path, { filename, mimeType }), 'POST', file, true, mimeType);
+}
+
+export function upload(
+  file: Blob,
+  filename: string,
+  mimeType: string,
+  path = '/media/upload'
+): Promise<AppResult<Media>> {
+  return request(makeUri(path, { filename, mimeType }), 'POST', file, true, mimeType);
+}
+
+export function mediaUrl(id: string, download = false): string {
+  return makeUri('/media/get', { id, download });
 }

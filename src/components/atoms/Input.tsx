@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   controlRounded,
   disabled,
@@ -12,12 +11,13 @@ import {
   uiShadow,
 } from '../../styles/atoms';
 import styled from '@emotion/styled';
+import { css } from '@emotion/core';
 
 interface DataAttributes {
   'data-variant'?: 'error' | 'normal';
 }
 
-const Input = styled.input<DataAttributes>`
+export const inputStyle = css`
   background-color: ${inputBgColor};
   border: none;
   padding: ${spacingN(2)};
@@ -36,6 +36,10 @@ const Input = styled.input<DataAttributes>`
   &[data-variant='error'] {
     background-color: ${errorColor};
   }
+`;
+
+const Input = styled.input<DataAttributes>`
+  ${inputStyle}
 `;
 
 export default Input;

@@ -19,11 +19,10 @@ import {
   textLg,
   textXl,
   uiShadow,
-} from '../styles/atoms';
-import logo from '../assets/logo.svg';
+} from '../../styles/atoms';
+import logo from '../../assets/logo.svg';
 import { darken, lighten } from 'polished';
-import BasePage from './templates/BasePage';
-import Title from './atoms/Title';
+import Title from '../atoms/Title';
 
 const signUpButtonStyle = css`
   background-color: ${darken(0.05, linkColor)};
@@ -46,7 +45,7 @@ const signUpButtonStyle = css`
 
 function GuestHome() {
   return (
-    <BasePage>
+    <>
       <svg css={[mY(8), floatRight, mX(4)]} width="14rem" height="14rem" viewBox={logo.viewBox}>
         <use xlinkHref={logo.url} />
       </svg>
@@ -77,7 +76,7 @@ function GuestHome() {
         <li>开放的源代码和 API。</li>
         <li>即将到来的变量系统、回合指示器、战斗地图…</li>
       </ul>
-    </BasePage>
+    </>
   );
 }
 

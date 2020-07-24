@@ -9,7 +9,7 @@ import { initProfileState, ProfileState } from '../reducers/profile';
 import { InformationState, initInformationState } from '../reducers/information';
 import { applicationReducer, initApplicationState } from '../reducers';
 import { LoggedIn, LoggedOut } from '../actions/profile';
-import PageLoading from './molecules/PageLoading';
+import Loading from './molecules/Loading';
 import { Global } from '@emotion/core';
 import { baseStyle } from '../styles/atoms';
 
@@ -57,7 +57,7 @@ export const Provider: React.FC = ({ children }) => {
     return (
       <div css={{ width: '100vw', height: '100vh' }}>
         <Global styles={baseStyle} />
-        <PageLoading />
+        <Loading />
       </div>
     );
   }

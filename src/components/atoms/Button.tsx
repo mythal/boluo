@@ -9,6 +9,8 @@ import {
   onDisabled,
   onHover,
   primaryColor,
+  pX,
+  pY,
   spacingN,
   textSm,
   uiShadow,
@@ -84,7 +86,7 @@ const Button = styled.button<DataAttributes>`
   }
 
   &[data-small='true'] {
-    ${textSm};
+    ${[textSm, pX(1.75), pY(1.5)]};
   }
 
   ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};

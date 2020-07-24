@@ -10,6 +10,11 @@ export interface LoggedIn {
   myChannels: ChannelWithMember[];
 }
 
+export interface UserEdited {
+  type: 'USER_EDITED';
+  user: User;
+}
+
 export interface LoggedOut {
   type: 'LOGGED_OUT';
 }

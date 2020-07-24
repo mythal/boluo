@@ -26,17 +26,25 @@ export const onActive = (...styles: Interpolation[]) =>
     }
   `;
 
-export const mediaQuery = (breakPoint: number, ...styles: Interpolation[]) =>
+export const mediaQuery = (breakPoint: string) => `@media (min-width: ${breakPoint})`;
+
+export const responsive = (breakPoint: string, ...styles: Interpolation[]) =>
   css`
-    @media (min-width: ${breakPoint}px) {
+    ${mediaQuery(breakPoint)} {
       ${css(styles)}
     }
   `;
+export const breakpoint = {
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+};
 
-export const sm = (...styles: Interpolation[]) => mediaQuery(640, styles);
-export const md = (...styles: Interpolation[]) => mediaQuery(768, styles);
-export const lg = (...styles: Interpolation[]) => mediaQuery(1024, styles);
-export const xl = (...styles: Interpolation[]) => mediaQuery(1280, styles);
+export const sm = (...styles: Interpolation[]) => responsive(breakpoint.sm, styles);
+export const md = (...styles: Interpolation[]) => responsive(breakpoint.md, styles);
+export const lg = (...styles: Interpolation[]) => responsive(breakpoint.lg, styles);
+export const xl = (...styles: Interpolation[]) => responsive(breakpoint.xl, styles);
 
 export const spinFrames = keyframes`
   from {
@@ -79,6 +87,7 @@ export const spacing = '0.25rem';
 export const spacingN = (n: number): string => `calc(${spacing} * ${n})`;
 export const bgColor = '#292929';
 export const textColor = '#dddddd';
+export const minorTextColor = darken(0.2, textColor);
 export const darkTextColor = '#242424';
 export const uiShadowColor = '#000000';
 export const textBase = css`
@@ -109,8 +118,8 @@ export const warnColor = '#307830';
 export const errorColor = '#711518';
 export const normalColor = '#555555';
 export const successColor = '#2F855A';
-export const lineColor = lighten(0.35, normalColor);
-export const primaryColor = '#616625';
+export const lineColor = lighten(0.15, bgColor);
+export const primaryColor = '#B18139';
 export const dangerColor = '#9a4444';
 export const inputBgColor = lighten(0.1, bgColor);
 export const inputBorderColor = '#555555';
@@ -130,28 +139,7 @@ export const modalMaskColor = 'rgba(0,0,0,0.5)';
 export const dialogBgColor = '#343434';
 export const dialogTitleColor = darken(0.3, textColor);
 export const dialogHeaderBgColor = darken(0.075, dialogBgColor);
-export const baseStyle = css`
-  html {
-    font-size: 14px;
-    font-family: ${fontBase};
-    background-color: ${bgColor};
-    color: ${textColor};
-    line-height: 1.8em;
-  }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-weight: normal;
-    ${textBase};
-    padding: 0;
-    margin: 0;
-    line-height: 1.8em;
-  }
-`;
 export const mainWidth = css`
   max-width: 50em;
 `;
@@ -171,6 +159,10 @@ export const color = (color: string) =>
 
 export const margin0Auto = css`
   margin: 0 auto;
+`;
+
+export const preLine = css`
+  white-space: pre-line;
 `;
 
 export const p = (n: number) => css`
@@ -263,6 +255,9 @@ export const block = css`
 export const inlineBlock = css`
   display: inline-block;
 `;
+export const grid = css`
+  display: grid;
+`;
 
 export const alignCenter = css`
   text-align: center;
@@ -298,4 +293,62 @@ export const widthFull = css`
   width: 100%;
 `;
 
-export const largeInput = [widthFull, textXl];
+export const controlHeight = css`
+  height: 2.5rem;
+`;
+
+export const largeInput = [widthFull, textXl, controlHeight];
+
+export const gridColumn = (start: number, end: number) => css`
+  grid-column: ${start} / ${end};
+`;
+
+export const spaceGrid = [
+  grid,
+  css`
+    grid-template-columns: 1fr 1fr;
+    gap: ${spacingN(2)};
+  `,
+  sm(
+    css`
+      grid-template-columns: 1fr 1fr 1fr;
+    `
+  ),
+  md(
+    css`
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    `
+  ),
+];
+export const baseStyle = css`
+  html {
+    font-size: 14px;
+    font-family: ${fontBase};
+    background-color: ${bgColor};
+    color: ${textColor};
+    line-height: 1.8em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: normal;
+    ${textBase};
+    padding: 0;
+    margin: 0;
+    line-height: 1.8em;
+  }
+
+  p {
+    ${textBase};
+    ${pY(1)};
+    margin: 0;
+  }
+
+  small {
+    ${textSm};
+  }
+`;

@@ -15,7 +15,12 @@ export const style = css`
   text-decoration: none;
   padding: ${spacingN(2)} ${spacingN(3)};
   background-color: ${bgColor};
-  ${roundedPx}
+  max-width: 12rem;
+  ${roundedPx};
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   &:hover {
     background-color: rgba(255, 255, 255, 0.25);
   }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { inlineBlock, roundedPx, uiShadow } from '../../styles/atoms';
+import { roundedPx, uiShadow } from '../../styles/atoms';
 import { css } from '@emotion/core';
 import SpriteSvg from '../atoms/SpriteSvg';
 import defaultAvatar from '../../assets/cultist.svg';
@@ -18,15 +18,28 @@ const style = css`
 
 function Avatar({ className, size, source, onClick }: Props) {
   size = size || '4rem';
-  return (
-    <div css={[inlineBlock]} onClick={onClick} className={className}>
-      {source ? (
-        <img alt="用户头像" css={[style, { height: size, width: size }]} src={source} />
-      ) : (
-        <SpriteSvg css={style} width={size} height={size} sprite={defaultAvatar} />
-      )}
-    </div>
-  );
+  if (source) {
+    return (
+      <img
+        alt="用户头像"
+        onClick={onClick}
+        className={className}
+        css={[style, { height: size, width: size }]}
+        src={source}
+      />
+    );
+  } else {
+    return (
+      <SpriteSvg
+        onClick={onClick}
+        className={className}
+        css={style}
+        width={size}
+        height={size}
+        sprite={defaultAvatar}
+      />
+    );
+  }
 }
 
 export default Avatar;

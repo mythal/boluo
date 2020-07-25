@@ -29,10 +29,10 @@ export const Router: React.FC<Props> = () => {
             <My profile={profile} />
           </Route>
           <Route path="/profile/:id">
-            <Profile profile={profile} />
+            <Profile />
           </Route>
-          <Route path="/profile">
-            <Profile profile={profile} />
+          <Route path="/profile" exact>
+            <Profile />
           </Route>
           <Route path="/space/new">
             <NewSpace />

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { bgColor, roundedPx, spacingN, textColor } from '../../styles/atoms';
+import { bgColor, breakpoint, mediaQuery, roundedPx, spacingN, textColor } from '../../styles/atoms';
 import { NavLink } from 'react-router-dom';
 
 interface Props {
@@ -15,8 +15,14 @@ export const style = css`
   text-decoration: none;
   padding: ${spacingN(2)} ${spacingN(3)};
   background-color: ${bgColor};
-  max-width: 12rem;
+  max-width: 8rem;
   ${roundedPx};
+  ${mediaQuery(breakpoint.sm)} {
+    max-width: 16rem;
+  }
+  ${mediaQuery(breakpoint.lg)} {
+    max-width: 24rem;
+  }
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;

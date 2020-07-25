@@ -27,22 +27,27 @@ export const HeaderInner = styled.div`
   justify-content: space-between;
 `;
 
+const Nav = styled.nav`
+  display: flex;
+  align-items: center;
+`;
+
 function Guest() {
   return (
     <HeaderInner>
-      <nav>
+      <Nav>
         <HeaderLink css={mR(1)} exact to="/">
           <Icon css={mR(1)} sprite={logo} />
           菠萝
         </HeaderLink>
         <HeaderLink to="/space/explore">探索位面</HeaderLink>
-      </nav>
-      <nav>
+      </Nav>
+      <Nav>
         <HeaderLink css={mR(1)} to="/login">
           登录
         </HeaderLink>
         <HeaderLink to="/sign-up">注册</HeaderLink>
-      </nav>
+      </Nav>
     </HeaderInner>
   );
 }
@@ -50,7 +55,7 @@ function Guest() {
 function User({ profile }: { profile: ProfileState }) {
   return (
     <HeaderInner>
-      <nav>
+      <Nav>
         <HeaderLink css={mR(1)} exact to="/">
           <Icon css={mR(1)} sprite={logo} />
           我的
@@ -61,15 +66,15 @@ function User({ profile }: { profile: ProfileState }) {
         <HeaderLink to="/space/new">
           <Icon sprite={plus} />
         </HeaderLink>
-      </nav>
-      <nav>
-        <HeaderLink to="/profile" css={mR(1)}>
+      </Nav>
+      <Nav>
+        <HeaderLink to="/profile" css={mR(1)} exact>
           {profile.user.nickname}
         </HeaderLink>
         <HeaderLink to="/settings" css={[mR(1)]}>
           <Icon sprite={cog} />
         </HeaderLink>
-      </nav>
+      </Nav>
     </HeaderInner>
   );
 }

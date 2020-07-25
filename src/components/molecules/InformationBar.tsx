@@ -17,7 +17,7 @@ import { InformationLevel } from '../../actions/information';
 
 interface Props {
   variant: InformationLevel;
-  children: React.ReactChild;
+  children: React.ReactNode;
   className?: string;
   dismiss?: () => void;
 }

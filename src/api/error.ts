@@ -68,24 +68,34 @@ export const fetchFailed: AppError = {
   table: null,
 };
 
-export const errorText = (e: AppError): string => {
-  switch (e.code) {
+export interface ErrorText {
+  description: string;
+  detail?: string;
+  raw: AppError;
+}
+
+export const errorText = (raw: AppError): ErrorText => {
+  switch (raw.code) {
     case UNAUTHENTICATED:
-      return '您没有登陆，无法进行此项操作';
+      return { description: '您没有登陆，无法进行此项操作', raw };
     case NO_PERMISSION:
-      return '您没有执行这项操作或查询的权限';
+      return { description: '您没有执行这项操作或查询的权限', raw };
     case VALIDATION_FAIL:
-      return `您的输入有误：${e.message}`;
+      return { description: `您的输入有误`, detail: raw.message, raw };
     case FETCH_FAIL:
-      return `遇到网络错误，这可能是我们的服务器出错或者您的网络故障`;
+      return { description: '遇到网络错误', detail: '这可能是我们的服务器出错或者的网络故障', raw };
     case NOT_JSON:
-      return '糟糕！服务器返回的消息格式有误，这可能是我们的服务器出错或者您的网络故障';
+      return { description: '糟糕！服务器返回的消息格式有误', detail: '这可能是我们的服务器出错或者您的网络故障', raw };
     case UNEXPECTED:
-      return '糟糕！出现了服务器内部错误，请联系我们';
+      return {
+        description: '糟糕！出现了服务器内部错误',
+        detail: '这代表服务器出现了未曾预料的错误，如果反复出现可以联系我们',
+        raw,
+      };
     case BAD_REQUEST:
-      return `您发送的 API 请求格式有误: ${e.message}`;
+      return { description: '请求格式错误', detail: raw.message, raw };
     default:
-      console.warn(e);
-      return `网页发生了一个本该处理但未处理的错误: ${e.message}`;
+      console.warn(raw);
+      return { description: '发生了一个未处理的错误', detail: raw.message, raw };
   }
 };

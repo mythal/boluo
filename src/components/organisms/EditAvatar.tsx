@@ -8,6 +8,7 @@ import { mediaUrl } from '../../api/request';
 interface Props {
   mediaId: Id | null;
   selectFile: (file: File) => void;
+  size: string;
   className?: string;
 }
 
@@ -21,7 +22,7 @@ const avatarStyle = css`
   }
 `;
 
-function EditAvatar({ className, mediaId, selectFile }: Props) {
+function EditAvatar({ className, mediaId, selectFile, size }: Props) {
   const input = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const onClick = () => {
@@ -47,8 +48,7 @@ function EditAvatar({ className, mediaId, selectFile }: Props) {
   const uri = previewUrl || (mediaId ? mediaUrl(mediaId) : null);
 
   return (
-    <div className={className}>
-      <Avatar source={uri} size="6rem" onClick={onClick} css={avatarStyle} />
+    <>
       <input
         id="inputAvatar"
         accept="image/gif,image/png,image/jpeg"
@@ -57,7 +57,8 @@ function EditAvatar({ className, mediaId, selectFile }: Props) {
         ref={input}
         hidden
       />
-    </div>
+      <Avatar source={uri} size={size} onClick={onClick} css={avatarStyle} className={className} />
+    </>
   );
 }
 

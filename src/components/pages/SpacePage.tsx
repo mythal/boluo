@@ -1,11 +1,9 @@
 import * as React from 'react';
 import Title from '../atoms/Title';
 import { useParams } from 'react-router-dom';
-import { useFetch, useRefetch, useTitleWithFetchResult } from '../../hooks';
-import { AppResult, get } from '../../api/request';
+import { useRegisterFetch, useRefetch, useTitleWithFetchResult } from '../../hooks';
+import { get } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
-import Loading from '../molecules/Loading';
-import NotFound from './NotFound';
 import Tag from '../atoms/Tag';
 import Button from '../atoms/Button';
 import { useProfile } from '../Provider';
@@ -16,6 +14,7 @@ import handOfGod from '../../assets/icons/hand-of-god.svg';
 import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
+import { RenderError } from '../molecules/RenderError';
 
 interface Params {
   id: string;
@@ -25,16 +24,14 @@ const buttonStyle = [mR(1), textXl];
 
 function SpacePage() {
   const { id } = useParams<Params>();
-  const [result, refetch] = useFetch<AppResult<SpaceWithRelated>>(() => get('/spaces/query_with_related', { id }), [
+  const [result, refetch] = useRegisterFetch<SpaceWithRelated>(id, () => get('/spaces/query_with_related', { id }), [
     id,
   ]);
-  useRefetch(refetch);
+  useRefetch(refetch, 64);
   useTitleWithFetchResult<SpaceWithRelated>(result, ({ space }) => space.name);
   const profile = useProfile();
-  if (result === 'LOADING') {
-    return <Loading />;
-  } else if (!result.isOk) {
-    return <NotFound />;
+  if (!result.isOk) {
+    return <RenderError error={result.value} />;
   }
   const { space, members } = result.value;
   const myMember = profile?.spaces.get(id)?.member;

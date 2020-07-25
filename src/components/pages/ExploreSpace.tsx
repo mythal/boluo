@@ -8,6 +8,7 @@ import { SpaceGrid } from '../atoms/SpaceGrid';
 import NewSpaceCard from '../organisms/NewSpaceCard';
 import spaceIcon from '../../assets/icons/star-sattelites.svg';
 import Icon from '../atoms/Icon';
+import { RenderError } from '../molecules/RenderError';
 
 function ExploreSpace() {
   const [result] = useFetchResult<Space[]>(() => get('/spaces/list'), []);
@@ -23,7 +24,7 @@ function ExploreSpace() {
           {result.value.map(spacesMapper)}
         </SpaceGrid>
       ) : (
-        result.value
+        <RenderError error={result.value} />
       )}
     </>
   );

@@ -1,10 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { DependencyList, ReactElement, useCallback, useEffect, useState } from 'react';
+import React, { DependencyList, useCallback, useEffect, useState } from 'react';
 import { AppResult } from './api/request';
-import { Err, Result } from './utils/result';
-import Loading from './components/molecules/Loading';
-import { errorText } from './api/error';
-import UiMessage from './components/molecules/InformationBar';
+import { Err, Ok } from './utils/result';
+import { LOADING, loading } from './api/error';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -46,9 +44,8 @@ export function useOutside(
   });
 }
 
-export const useFetch = <T,>(f: () => Promise<T>, deps: DependencyList): [T | 'LOADING', () => void] => {
+export function useFetch<T>(f: () => Promise<T>, deps: DependencyList): [T | 'LOADING', () => void] {
   const [result, setResult] = useState<T | 'LOADING'>('LOADING');
-
   useEffect(() => {
     f().then(setResult);
   }, deps);
@@ -58,25 +55,19 @@ export const useFetch = <T,>(f: () => Promise<T>, deps: DependencyList): [T | 'L
   }, deps);
 
   return [result, refetch];
-};
+}
 
-export const useFetchResult = <T,>(
-  fetch: () => Promise<AppResult<T>>,
-  deps: DependencyList
-): [Result<T, ReactElement>, () => void] => {
-  const [result, refetch] = useFetch<AppResult<T>>(fetch, deps);
-  if (result === 'LOADING') {
-    return [new Err(<Loading />), refetch];
+export function flatResult<T>(result: AppResult<T> | 'LOADING'): AppResult<T> {
+  if (result !== 'LOADING') {
+    return result;
   }
-  return [
-    result.mapErr((err) => (
-      <UiMessage variant="ERROR">
-        <span>{errorText(err)}</span>
-      </UiMessage>
-    )),
-    refetch,
-  ];
-};
+  return new Err(loading) as AppResult<T>;
+}
+
+export function useFetchResult<T>(f: () => Promise<AppResult<T>>, deps: DependencyList): [AppResult<T>, () => void] {
+  const [result, refetch] = useFetch(f, deps);
+  return [flatResult<T>(result), refetch];
+}
 
 export const useRefetch = (refetch: () => void, intervalSecond = 32) => {
   useEffect(() => {
@@ -111,8 +102,57 @@ export function useTitleWithFetchResult<T>(result: AppResult<T> | 'LOADING', tit
     title = '载入中';
   } else if (result.isOk) {
     title = titleMapper(result.value);
+  } else if (result.value.code === LOADING) {
+    title = '载入中';
   } else {
-    title = '出错了';
+    title = 'Oops 出错了';
   }
   useTitle(title);
+}
+
+export type Mapper<T> = (prev: T) => T;
+export type Updater<T> = (mapper: Mapper<T>) => void;
+const register: Record<string, Array<Updater<unknown>>> = {};
+
+export const useRegisterFetch = <T,>(
+  id: string,
+  f: () => Promise<AppResult<T>>,
+  deps: DependencyList
+): [AppResult<T>, () => void] => {
+  const [result, setResult] = useState<AppResult<T> | 'LOADING'>('LOADING');
+  useEffect(() => {
+    f().then(setResult);
+  }, deps);
+
+  const refetch = useCallback(() => {
+    f().then(setResult);
+  }, deps);
+
+  const updater = useCallback((mapper: Mapper<T>) => {
+    setResult((prev: AppResult<T> | 'LOADING') => {
+      if (prev === 'LOADING' || !prev.isOk) {
+        return prev;
+      }
+      return new Ok(mapper(prev.value)) as AppResult<T>;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (register[id]) {
+      register[id].push(updater as Updater<unknown>);
+    } else {
+      register[id] = [updater as Updater<unknown>];
+    }
+    return () => {
+      register[id] = register[id].filter((x) => x !== updater);
+    };
+  }, [id]);
+
+  return [flatResult<T>(result), refetch];
+};
+
+export function updateCache<T>(id: string, mapper: Mapper<T>) {
+  if (register[id]) {
+    register[id].forEach((updater) => setTimeout(() => updater(mapper as Mapper<unknown>), 0));
+  }
 }

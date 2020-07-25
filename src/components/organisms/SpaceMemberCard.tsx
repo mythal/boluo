@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Space, SpaceMember } from '../../api/spaces';
 import { useProfile } from '../Provider';
-import { useFetchResult } from '../../hooks';
+import { useRegisterFetch } from '../../hooks';
 import { get } from '../../api/request';
 import SpaceRoleTag from '../molecules/SpaceRoleTag';
 import Tag from '../atoms/Tag';
@@ -9,6 +9,7 @@ import { css } from '@emotion/core';
 import { bgColor, mR, mT, pX, pY, roundedPx, textLg, uiShadow } from '../../styles/atoms';
 import { darken } from 'polished';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
+import { RenderError } from '../molecules/RenderError';
 
 interface Props {
   member: SpaceMember;
@@ -19,9 +20,9 @@ interface Props {
 function MemberCardContent({ member, space }: Props) {
   const profile = useProfile();
   const id = member.userId;
-  const [result] = useFetchResult(() => get('/users/query', { id }), [id]);
+  const [result] = useRegisterFetch(id, () => get('/users/query', { id }), [id]);
   if (!result.isOk) {
-    return result.value;
+    return <RenderError error={result.value} />;
   }
   const self = profile?.user.id === id;
   const user = result.value;

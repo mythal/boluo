@@ -2,7 +2,7 @@ import * as React from 'react';
 import { inlineBlock, roundedPx, uiShadow } from '../../styles/atoms';
 import { css } from '@emotion/core';
 import SpriteSvg from '../atoms/SpriteSvg';
-import defaultAvatar from '../../assets/default-avatar.svg';
+import defaultAvatar from '../../assets/cultist.svg';
 
 interface Props {
   size?: string;

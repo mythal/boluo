@@ -122,7 +122,7 @@ export function post<T, U extends object = object, Q extends object = {}>(
   return request(makeUri(path, query), 'POST', JSON.stringify(payload), csrf);
 }
 
-export function get(path: '/users/query', query: IdQuery): Promise<AppResult<User | null>>;
+export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User | null>>;
 export function get(path: '/users/get_me'): Promise<AppResult<GetMe | null>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(path: '/users/check_username', query: CheckUsername): Promise<AppResult<boolean>>;

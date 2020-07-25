@@ -28,6 +28,9 @@ export const Router: React.FC<Props> = () => {
           <Route path="/my" exact>
             <My profile={profile} />
           </Route>
+          <Route path="/profile/:id">
+            <Profile profile={profile} />
+          </Route>
           <Route path="/profile">
             <Profile profile={profile} />
           </Route>
@@ -58,6 +61,9 @@ export const Router: React.FC<Props> = () => {
           </Route>
           <Route path="/sign-up">
             <SignUp />
+          </Route>
+          <Route path="/profile/:id">
+            <Profile />
           </Route>
           <Route path="/space/explore">
             <ExploreSpace />

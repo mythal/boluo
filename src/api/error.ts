@@ -8,6 +8,7 @@ export type ErrorCode =
   | VALIDATION_FAIL
   | CONFLICT
   | FETCH_FAIL
+  | LOADING
   | METHOD_NOT_ALLOWED;
 
 export const UNAUTHENTICATED = 'UNAUTHENTICATED';
@@ -40,14 +41,23 @@ export type CONFLICT = typeof CONFLICT;
 export const METHOD_NOT_ALLOWED = 'METHOD_NOT_ALLOWED';
 export type METHOD_NOT_ALLOWED = typeof METHOD_NOT_ALLOWED;
 
+export const LOADING = 'LOADING';
+export type LOADING = typeof LOADING;
+
 export interface AppError {
   code: ErrorCode;
   message: string;
   table: string | null;
 }
 
+export const loading: AppError = {
+  code: LOADING,
+  message: '载入中',
+  table: null,
+};
+
 export const notJson: AppError = {
-  code: 'NOT_JSON',
+  code: NOT_JSON,
   message: 'The response body is not JSON',
   table: null,
 };

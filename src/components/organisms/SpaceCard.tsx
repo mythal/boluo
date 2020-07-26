@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { css } from '@emotion/core';
 import { bgColor, mY, p, pX, pY, roundedPx, textColor, textXl, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
+import { encodeUuid } from '../../utils/id';
 
 interface Props {
   space: Space;
@@ -39,7 +40,7 @@ function truncate(description: string): string {
 
 function SpaceCard({ space }: Props) {
   return (
-    <Link css={cardStyle} to={`/space/${space.id}`}>
+    <Link css={cardStyle} to={`/space/${encodeUuid(space.id)}`}>
       <p css={nameStyle}>{space.name}</p>
       <div>
         <small>{truncate(space.description)}</small>

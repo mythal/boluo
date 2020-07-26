@@ -21,6 +21,7 @@ import Icon from '../atoms/Icon';
 import { channelNameValidation, descriptionValidation, spaceNameValidation } from '../../validators';
 import { RenderError } from '../molecules/RenderError';
 import DiceSelect from '../molecules/DiceSelect';
+import { encodeUuid } from '../../utils/id';
 
 export const fieldsLayout = css`
   display: grid;
@@ -40,7 +41,7 @@ function NewSpace() {
     if (result.isOk) {
       const { space, member } = result.value;
       dispatch<JoinedSpace>({ type: 'JOINED_SPACE', space, member });
-      history.push(`/space/${space.id}`);
+      history.push(`/space/${encodeUuid(space.id)}`);
     } else {
       setCreationError(result.value);
     }

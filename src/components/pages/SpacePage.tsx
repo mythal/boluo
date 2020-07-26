@@ -17,6 +17,7 @@ import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
 import { useState } from 'react';
 import ManageSpace from '../organisms/ManageSpace';
+import { decodeUuid } from '../../utils/id';
 
 interface Params {
   id: string;
@@ -25,7 +26,8 @@ interface Params {
 const buttonStyle = [mR(1), textLg];
 
 function SpacePage() {
-  const { id } = useParams<Params>();
+  let { id } = useParams<Params>();
+  id = decodeUuid(id);
   const [managing, setManaging] = useState(false);
   const [result, refetch] = useRegisterFetch<SpaceWithRelated>(id, () => get('/spaces/query_with_related', { id }), [
     id,

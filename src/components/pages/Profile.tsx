@@ -7,15 +7,17 @@ import { useParams } from 'react-router-dom';
 import { useFetchResult, useTitleWithFetchResult } from '../../hooks';
 import { User } from '../../api/users';
 import { RenderError } from '../molecules/RenderError';
+import { decodeUuid } from '../../utils/id';
 
 interface Params {
   id?: string;
 }
 
 function Profile() {
-  const { id } = useParams<Params>();
+  let { id } = useParams<Params>();
+  id = id ? decodeUuid(id) : undefined;
   const [result] = useFetchResult<User>(() => get('/users/query', { id }), [id]);
-  useTitleWithFetchResult<User>(result, (user) => (user ? user.nickname : '找不到'));
+  useTitleWithFetchResult<User>(result, (user) => user.nickname);
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;
   }

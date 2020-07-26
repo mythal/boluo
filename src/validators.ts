@@ -195,3 +195,47 @@ export const bioValidation: ValidationRules = {
     message: '简介长度不能超过 256 字符',
   },
 };
+export const spaceNameValidation = (currentName?: string): ValidationRules => ({
+  required: '必须填写位面名',
+  maxLength: {
+    value: 32,
+    message: '位面名不可超过32字符',
+  },
+  validate: async (name: string) => {
+    const striped = name.replace(/\s/g, '');
+    if (striped.length === 0) {
+      return '位面名不能为空';
+    } else if (striped.length < 2) {
+      return '位面名至少需要两个字符';
+    }
+    if (!currentName) {
+      const result = await get('/spaces/check_name', { name });
+      if (!result.isOk) {
+        console.warn(result);
+      } else if (result.value) {
+        return '这个位面名已经存在';
+      }
+    }
+  },
+});
+export const channelNameValidation: ValidationRules = {
+  required: '必须填写频道名',
+  maxLength: {
+    value: 32,
+    message: '频道名不可超过32字符',
+  },
+  validate: async (name: string) => {
+    const striped = name.replace(/\s/g, '');
+    if (striped.length === 0) {
+      return '位面名不能为空';
+    } else if (striped.length < 2) {
+      return '位面名至少需要两个字符';
+    }
+  },
+};
+export const descriptionValidation: ValidationRules = {
+  maxLength: {
+    value: 128,
+    message: '简介最多128字符',
+  },
+};

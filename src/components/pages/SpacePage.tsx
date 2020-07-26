@@ -15,6 +15,8 @@ import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
+import { useState } from 'react';
+import ManageSpace from '../organisms/ManageSpace';
 
 interface Params {
   id: string;
@@ -24,6 +26,7 @@ const buttonStyle = [mR(1), textLg];
 
 function SpacePage() {
   const { id } = useParams<Params>();
+  const [managing, setManaging] = useState(false);
   const [result, refetch] = useRegisterFetch<SpaceWithRelated>(id, () => get('/spaces/query_with_related', { id }), [
     id,
   ]);
@@ -33,8 +36,9 @@ function SpacePage() {
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;
   }
-  const { space, members } = result.value;
+  const { space, members, channels } = result.value;
   const myMember = profile?.spaces.get(id)?.member;
+  const stopManage = () => setManaging(false);
   return (
     <>
       <div>
@@ -56,12 +60,15 @@ function SpacePage() {
         )}
         {profile && !myMember && <JoinSpaceButton css={buttonStyle} id={space.id} />}
         {myMember?.isAdmin && (
-          <Button css={buttonStyle}>
+          <Button css={buttonStyle} onClick={() => setManaging(true)}>
             <Icon sprite={userCog} /> 管理位面
           </Button>
         )}
         {myMember && <LeaveSpaceButton css={buttonStyle} id={space.id} name={space.name} />}
       </div>
+      {managing && myMember && (
+        <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />
+      )}
     </>
   );
 }

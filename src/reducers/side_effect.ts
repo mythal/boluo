@@ -19,5 +19,11 @@ export const sideEffectReducer = (state: ApplicationState, action: Action) => {
         return { space, members, channels };
       });
       break;
+    case 'SPACE_EDITED':
+      updateCache<SpaceWithRelated>(action.space.id, ({ channels, members }) => {
+        const { space } = action;
+        return { space, channels, members };
+      });
+      break;
   }
 };

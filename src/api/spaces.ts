@@ -27,7 +27,6 @@ export interface SpaceWithMember {
 
 export interface CreateSpace {
   name: string;
-  password: string | null;
   description: string;
   defaultDiceType: string | null;
   firstChannelName: string;

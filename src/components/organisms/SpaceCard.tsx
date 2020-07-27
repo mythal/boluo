@@ -2,9 +2,10 @@ import * as React from 'react';
 import { Space } from '../../api/spaces';
 import { Link } from 'react-router-dom';
 import { css } from '@emotion/core';
-import { bgColor, mY, p, pX, pY, roundedPx, textColor, textXl, uiShadow } from '../../styles/atoms';
+import { bgColor, m, mT, p, pX, pY, roundedPx, textColor, textXl, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
 import { encodeUuid } from '../../utils/id';
+import styled from '@emotion/styled';
 
 interface Props {
   space: Space;
@@ -14,8 +15,8 @@ const cardStyle = css`
   background-color: ${lighten(0.05, bgColor)};
   ${uiShadow};
   ${roundedPx};
-  ${pY(3)};
-  ${pX(4)};
+  ${pY(5)};
+  ${pX(3)};
   text-decoration: none;
   color: ${textColor};
 
@@ -24,10 +25,7 @@ const cardStyle = css`
   }
 `;
 
-const nameStyle = css`
-  ${textXl};
-  ${mY(1)};
-`;
+const SpaceName = styled.h2(textXl, p(0), m(0));
 
 function truncate(description: string): string {
   const length = 32;
@@ -41,8 +39,8 @@ function truncate(description: string): string {
 function SpaceCard({ space }: Props) {
   return (
     <Link css={cardStyle} to={`/space/${encodeUuid(space.id)}`}>
-      <p css={nameStyle}>{space.name}</p>
-      <div>
+      <SpaceName>{space.name}</SpaceName>
+      <div css={[mT(2)]}>
         <small>{truncate(space.description)}</small>
       </div>
     </Link>

@@ -31,7 +31,7 @@ const style = css`
   background-color: ${dialogBgColor};
   padding: ${spacingN(6)} ${spacingN(12)} ${spacingN(6)} ${spacingN(6)};
   box-shadow: 0 0 24px #000000;
-  animation: ${slideIn} 0.25s ease-in forwards;
+  animation: ${slideIn} 0.1s ease-in forwards;
 `;
 
 const closeButtonStyle = css`

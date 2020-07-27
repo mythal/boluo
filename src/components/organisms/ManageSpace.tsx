@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { EditSpace, Space, SpaceMember } from '../../api/spaces';
 import { Channel } from '../../api/channels';
-import { breakpoint, gridColumn, largeInput, mediaQuery, mY, spacingN, widthFull } from '../../styles/atoms';
+import { breakpoint, flexCol, largeInput, mediaQuery, mY, spacingN, widthFull } from '../../styles/atoms';
 import { PanelTitle } from '../atoms/PanelTitle';
 import { css } from '@emotion/core';
 import Panel from '../molecules/Panel';
@@ -78,19 +78,18 @@ function ManageSpace({ space, channels, members, my, dismiss }: Props) {
             当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
           </HelpText>
         </div>
-        <div css={[mY(2), gridColumn(1, -1)]}>
+        <div css={[mY(2), flexCol]}>
           <Label htmlFor="description">简介</Label>
           <TextArea
             id="description"
             defaultValue={space.description}
             name="description"
-            css={{ height: '8rem' }}
             ref={register(descriptionValidation)}
           />
-          <HelpText>（选填）简要描述一下这个位面。</HelpText>
+          <HelpText>简要描述一下这个位面。</HelpText>
         </div>
         <Button data-variant="primary" disabled={editing} css={widthFull} type="submit">
-          编辑位面信息
+          提交修改
         </Button>
       </form>
     </Panel>

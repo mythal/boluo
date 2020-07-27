@@ -5,7 +5,7 @@ import { useRegisterFetch, useRefetch, useTitleWithFetchResult } from '../../hoo
 import { get } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
 import Tag from '../atoms/Tag';
-import Button from '../atoms/Button';
+import Button, { LinkButton } from '../atoms/Button';
 import { useProfile } from '../Provider';
 import { mR, mT, preLine, textLg } from '../../styles/atoms';
 import binoculars from '../../assets/icons/binoculars.svg';
@@ -17,7 +17,7 @@ import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
 import { useState } from 'react';
 import ManageSpace from '../organisms/ManageSpace';
-import { decodeUuid } from '../../utils/id';
+import { decodeUuid, encodeUuid } from '../../utils/id';
 
 interface Params {
   id: string;
@@ -40,6 +40,7 @@ function SpacePage() {
   }
   const { space, members, channels } = result.value;
   const myMember = profile?.spaces.get(id)?.member;
+  const chatPath = `/chat/${encodeUuid(space.id)}`;
   const stopManage = () => setManaging(false);
   return (
     <>
@@ -52,13 +53,13 @@ function SpacePage() {
       <div css={[preLine, mT(2)]}>{space.description}</div>
       <div css={[mT(4)]}>
         {myMember ? (
-          <Button css={buttonStyle} data-variant="primary">
+          <LinkButton to={chatPath} css={buttonStyle} data-variant="primary">
             <Icon sprite={teleport} /> 进入位面
-          </Button>
+          </LinkButton>
         ) : (
-          <Button css={buttonStyle}>
+          <LinkButton to={chatPath} css={buttonStyle}>
             <Icon sprite={binoculars} /> 作为旁观者进入
-          </Button>
+          </LinkButton>
         )}
         {profile && !myMember && <JoinSpaceButton css={buttonStyle} id={space.id} />}
         {myMember?.isAdmin && (

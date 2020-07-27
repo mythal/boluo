@@ -7,13 +7,13 @@
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
     "immutable": "^4.0.0-rc.12",
-    "modern-normalize": "^0.7.0",
     "polished": "^3.5.1",
     "prando": "^5.1.2",
     "react": "^16.13",
     "react-dom": "^16.13",
     "react-hook-form": "^6.0.8",
     "react-router-dom": "^5.2.0",
+    "sanitize.css": "^11.0.1",
     "uuid": "^8.2.0"
   },
   "scripts": {

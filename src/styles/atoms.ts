@@ -326,29 +326,11 @@ export const baseStyle = css`
     font-family: ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
-    line-height: 1.8em;
+    line-height: 1.5em;
   }
+`;
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-weight: normal;
-    ${textBase};
-    padding: 0;
-    margin: 0;
-    line-height: 1.8em;
-  }
-
-  p {
-    ${textBase};
-    ${pY(1)};
-    margin: 0;
-  }
-
-  small {
-    ${textSm};
-  }
+export const flexCol = css`
+  display: flex;
+  flex-direction: column;
 `;

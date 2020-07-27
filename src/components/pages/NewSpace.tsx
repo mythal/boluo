@@ -22,6 +22,7 @@ import { channelNameValidation, descriptionValidation, spaceNameValidation } fro
 import { RenderError } from '../molecules/RenderError';
 import DiceSelect from '../molecules/DiceSelect';
 import { encodeUuid } from '../../utils/id';
+import TextArea from '../atoms/TextArea';
 
 export const fieldsLayout = css`
   display: grid;
@@ -80,8 +81,12 @@ function NewSpace() {
           </div>
           <div css={[mY(2), gridColumn(1, -1)]}>
             <Label htmlFor="description">简介</Label>
-            <Input css={largeInput} id="description" name="description" ref={register(descriptionValidation)} />
-            <HelpText>（选填）简要描述一下这个位面。</HelpText>
+            <TextArea
+              placeholder="（选填）简要描述一下这个位面。"
+              id="description"
+              name="description"
+              ref={register(descriptionValidation)}
+            />
           </div>
         </div>
         <div css={[alignRight]}>

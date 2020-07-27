@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import 'modern-normalize/modern-normalize.css';
 import Icon from '../atoms/Icon';
+import 'sanitize.css';
+import 'sanitize.css/typography.css';
 import { css, Global } from '@emotion/core';
 import styled from '@emotion/styled';
 import Button from '../atoms/Button';

@@ -15,7 +15,7 @@ import Input from '../atoms/Input';
 import { descriptionValidation, required, spaceNameValidation } from '../../validators';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';
-import DiceSelect from '../molecules/DiceSelect';
+import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
 import TextArea from '../atoms/TextArea';
 import Button from '../atoms/Button';
 import { post } from '../../api/request';
@@ -35,9 +35,16 @@ const panelStyle = css`
   }
 `;
 
+export const dictOptions = [
+  { value: 'd20', label: 'D20' },
+  { value: 'd100', label: 'D100' },
+  { value: 'd6', label: 'D6' },
+];
+
 function ManageSpace({ space, channels, members, my, dismiss }: Props) {
   const { register, handleSubmit, errors } = useForm<EditSpace>();
   const [editError, setEditError] = useState<AppError | null>(null);
+  const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const dispatch = useDispatch();
   if (space.ownerId !== my.userId && !my.isAdmin) {
@@ -45,6 +52,7 @@ function ManageSpace({ space, channels, members, my, dismiss }: Props) {
   }
   const onSubmit = async (payload: EditSpace) => {
     setEditing(true);
+    payload.defaultDiceType = defaultDice?.value;
     const result = await post('/spaces/edit', payload);
     setEditing(false);
     if (!result.isOk) {
@@ -73,7 +81,13 @@ function ManageSpace({ space, channels, members, my, dismiss }: Props) {
         </div>
         <div>
           <Label htmlFor="defaultDiceType">默认骰子</Label>
-          <DiceSelect defaultValue={space.defaultDiceType} ref={register({ required })} />
+          <DiceSelect
+            id="defaultDiceType"
+            name="defaultDiceType"
+            defaultDiceType={space.defaultDiceType}
+            value={defaultDice}
+            onChange={setDefaultDice}
+          />
           <HelpText>
             当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
           </HelpText>

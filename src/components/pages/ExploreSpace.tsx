@@ -9,8 +9,10 @@ import NewSpaceCard from '../organisms/NewSpaceCard';
 import spaceIcon from '../../assets/icons/star-sattelites.svg';
 import Icon from '../atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
+import { useProfile } from '../Provider';
 
 function ExploreSpace() {
+  const profile = useProfile();
   const [result] = useFetchResult<Space[]>(() => get('/spaces/list'), []);
   const spacesMapper = (space: Space) => <SpaceCard key={space.id} space={space} />;
   return (
@@ -20,7 +22,7 @@ function ExploreSpace() {
       </Title>
       {result.isOk ? (
         <SpaceGrid>
-          <NewSpaceCard />
+          {profile && <NewSpaceCard />}
           {result.value.map(spacesMapper)}
         </SpaceGrid>
       ) : (

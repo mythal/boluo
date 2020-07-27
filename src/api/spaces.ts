@@ -28,7 +28,7 @@ export interface SpaceWithMember {
 export interface CreateSpace {
   name: string;
   description: string;
-  defaultDiceType: string | null;
+  defaultDiceType: string | undefined;
   firstChannelName: string;
 }
 
@@ -36,7 +36,7 @@ export interface EditSpace {
   spaceId: Id;
   name?: string;
   description?: string;
-  defaultDiceType: string | null;
+  defaultDiceType: string | undefined;
 }
 
 export interface SpaceWithRelated {

@@ -20,7 +20,7 @@ import implosion from '../../assets/icons/implosion.svg';
 import Icon from '../atoms/Icon';
 import { channelNameValidation, descriptionValidation, spaceNameValidation } from '../../validators';
 import { RenderError } from '../molecules/RenderError';
-import DiceSelect from '../molecules/DiceSelect';
+import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
 import { encodeUuid } from '../../utils/id';
 import TextArea from '../atoms/TextArea';
 
@@ -33,11 +33,13 @@ export const fieldsLayout = css`
 function NewSpace() {
   useTitle('新建位面');
   const [creationError, setCreationError] = useState<AppError | null>(null);
+  const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
   const { register, handleSubmit, errors } = useForm<CreateSpace>();
   const history = useHistory();
   const dispatch = useDispatch();
 
   const onSubmit = async (data: CreateSpace) => {
+    data.defaultDiceType = defaultDice?.value;
     const result = await post('/spaces/create', data);
     if (result.isOk) {
       const { space, member } = result.value;
@@ -63,7 +65,15 @@ function NewSpace() {
           </div>
           <div css={mY(2)}>
             <Label htmlFor="defaultDiceType">默认骰子</Label>
-            <DiceSelect ref={register({ required: true })} />
+
+            <DiceSelect
+              id="defaultDiceType"
+              name="defaultDiceType"
+              defaultDiceType="d20"
+              value={defaultDice}
+              onChange={setDefaultDice}
+            />
+            {/*<Controller name="defaultDiceType" as={DiceSelect} control={control} rules={{ required }}/>*/}
             <HelpText>
               当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
             </HelpText>

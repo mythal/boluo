@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { DependencyList, useCallback, useEffect, useState } from 'react';
-import { AppResult } from './api/request';
+import { AppResult, get } from './api/request';
 import { Err, Ok } from './utils/result';
 import { LOADING, loading } from './api/error';
+import { SpaceWithRelated } from './api/spaces';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -71,13 +72,16 @@ export function useFetchResult<T>(f: () => Promise<AppResult<T>>, deps: Dependen
 
 export const useRefetch = (refetch: () => void, intervalSecond = 32) => {
   useEffect(() => {
+    if (intervalSecond === 0) {
+      return;
+    }
     const interval = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
         refetch();
       }
     }, intervalSecond * 1000);
     return () => window.clearInterval(interval);
-  }, [refetch]);
+  }, [refetch, intervalSecond]);
 };
 
 export function useForceUpdate() {
@@ -155,4 +159,8 @@ export function updateCache<T>(id: string, mapper: Mapper<T>) {
   if (register[id]) {
     register[id].forEach((updater) => setTimeout(() => updater(mapper as Mapper<unknown>), 0));
   }
+}
+
+export function useSpaceWithRelated(id: string): [AppResult<SpaceWithRelated>, () => void] {
+  return useRegisterFetch<SpaceWithRelated>(id, () => get('/spaces/query_with_related', { id }), [id]);
 }

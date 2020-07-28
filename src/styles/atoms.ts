@@ -334,3 +334,8 @@ export const flexCol = css`
   display: flex;
   flex-direction: column;
 `;
+
+export const chatRight = css`
+  grid-column: header-start / header-end;
+  grid-row: header-start / compose-end;
+`;

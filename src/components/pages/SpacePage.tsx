@@ -1,8 +1,8 @@
 import * as React from 'react';
+import { useState } from 'react';
 import Title from '../atoms/Title';
 import { useParams } from 'react-router-dom';
-import { useRegisterFetch, useRefetch, useTitleWithFetchResult } from '../../hooks';
-import { get } from '../../api/request';
+import { useRefetch, useSpaceWithRelated, useTitleWithFetchResult } from '../../hooks';
 import { SpaceWithRelated } from '../../api/spaces';
 import Tag from '../atoms/Tag';
 import Button, { LinkButton } from '../atoms/Button';
@@ -15,7 +15,6 @@ import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
-import { useState } from 'react';
 import ManageSpace from '../organisms/ManageSpace';
 import { decodeUuid, encodeUuid } from '../../utils/id';
 
@@ -29,9 +28,7 @@ function SpacePage() {
   let { id } = useParams<Params>();
   id = decodeUuid(id);
   const [managing, setManaging] = useState(false);
-  const [result, refetch] = useRegisterFetch<SpaceWithRelated>(id, () => get('/spaces/query_with_related', { id }), [
-    id,
-  ]);
+  const [result, refetch] = useSpaceWithRelated(id);
   useRefetch(refetch, 64);
   useTitleWithFetchResult<SpaceWithRelated>(result, ({ space }) => space.name);
   const profile = useProfile();

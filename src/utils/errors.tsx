@@ -8,5 +8,5 @@ export const panic = (): never => {
 };
 
 export const throwErr = (dispatch: Dispatch) => (err: AppError) => {
-  dispatch(showError(<span>{errorText(err)}</span>));
+  dispatch(showError(<span>{errorText(err).description}</span>));
 };

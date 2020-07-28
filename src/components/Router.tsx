@@ -16,6 +16,7 @@ import { ProfileState } from '../reducers/profile';
 import Chat from './pages/Chat';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
+import Design from './pages/Design';
 
 interface Props {}
 
@@ -90,6 +91,9 @@ export const Router: React.FC<Props> = () => {
 
   return (
     <Switch>
+      <Route path="/design">
+        <Design />
+      </Route>
       <Route path="/chat/:spaceId/:channelId">
         <Chat />
       </Route>

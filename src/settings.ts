@@ -1,2 +1,1 @@
-export const DEBUG = true;
-export const DESIGN = false;
+export const DEBUG = process.env.NODE_ENV === 'development';

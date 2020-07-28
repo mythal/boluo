@@ -15,7 +15,7 @@ import Modal from '../atoms/Modal';
 import { useCallback, useEffect } from 'react';
 
 interface Props {
-  children: React.ReactChild;
+  children: React.ReactNode;
   mask?: boolean;
   title?: string;
   dismiss?: () => void;
@@ -28,13 +28,13 @@ const style = css`
   ${roundedPx};
   ${uiShadow};
   transform: translate(-50%, -50%);
-  min-width: 20em;
+  min-width: 24em;
 `;
 
 const buttonAreaStyle = css`
   text-align: right;
   padding-top: ${spacingN(4)};
-  padding: ${spacingN(2)};
+  padding: ${spacingN(4)};
 `;
 
 const headerStyle = css`
@@ -51,7 +51,7 @@ const titleStyle = css`
 `;
 
 const contentStyle = css`
-  padding: ${spacingN(2)};
+  padding: ${spacingN(4)};
 `;
 
 function Dialog({ children, mask, dismiss, confirm, confirmText, title }: Props) {

@@ -9,6 +9,7 @@ import {
   textColor,
   textLg,
   uiShadow,
+  widthFull,
 } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
@@ -27,6 +28,7 @@ export const inputStyle = css`
   transition-property: all;
   ${duration200};
   ${controlRounded};
+  ${widthFull};
   &:focus {
     ${focused};
   }

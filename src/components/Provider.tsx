@@ -6,12 +6,12 @@ import { panic } from '../utils/errors';
 import { Channel, Member } from '../api/channels';
 import { ChatState, initChatState } from '../reducers/chat';
 import { initProfileState, ProfileState } from '../reducers/profile';
-import { InformationState, initInformationState } from '../reducers/information';
 import { applicationReducer, initApplicationState } from '../reducers';
 import { LoggedIn, LoggedOut } from '../actions/profile';
 import Loading from './molecules/Loading';
 import { Global } from '@emotion/core';
 import { baseStyle } from '../styles/atoms';
+import Flash from './organisms/Flash';
 
 const DispatchContext = React.createContext<(action: Action) => void>(panic);
 
@@ -20,9 +20,6 @@ export const useDispatch = (): Dispatch => useContext(DispatchContext);
 
 const ProfileContext = React.createContext<ProfileState | undefined>(initProfileState);
 export const useProfile = (): ProfileState | undefined => useContext(ProfileContext);
-
-const InformationContext = React.createContext<InformationState>(initInformationState);
-export const useInformationSet = (): InformationState => useContext(InformationContext);
 
 const ChatContext = React.createContext<ChatState | undefined>(initChatState);
 export const useChat = (): ChatState | undefined => useContext(ChatContext);
@@ -64,16 +61,15 @@ export const Provider: React.FC = ({ children }) => {
   return (
     <DispatchContext.Provider value={dispatch}>
       <ProfileContext.Provider value={state.profile}>
-        <InformationContext.Provider value={state.information}>
-          <ChatContext.Provider value={state.chat}>
-            <ChannelContext.Provider value={state.chat?.channel}>
-              <ChannelMemberContext.Provider value={state.chat?.members}>
-                <Global styles={baseStyle} />
-                <BrowserRouter>{children}</BrowserRouter>
-              </ChannelMemberContext.Provider>
-            </ChannelContext.Provider>
-          </ChatContext.Provider>
-        </InformationContext.Provider>
+        <ChatContext.Provider value={state.chat}>
+          <ChannelContext.Provider value={state.chat?.channel}>
+            <ChannelMemberContext.Provider value={state.chat?.members}>
+              <Global styles={baseStyle} />
+              <BrowserRouter>{children}</BrowserRouter>
+              {state.information.size !== 0 && <Flash information={state.information} />}
+            </ChannelMemberContext.Provider>
+          </ChannelContext.Provider>
+        </ChatContext.Provider>
       </ProfileContext.Provider>
     </DispatchContext.Provider>
   );

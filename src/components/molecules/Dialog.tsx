@@ -10,7 +10,7 @@ import {
   spacingN,
   textSm,
   uiShadow,
-} from '../../styles/atoms';
+} from '@/styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
 import { useCallback, useEffect } from 'react';

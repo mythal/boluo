@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Space } from '../../api/spaces';
+import { Space } from '@/api/spaces';
 import { Link } from 'react-router-dom';
 import { css } from '@emotion/core';
-import { bgColor, m, mT, p, pX, pY, roundedPx, textColor, textXl, uiShadow } from '../../styles/atoms';
+import { bgColor, m, mT, p, pX, pY, roundedPx, textColor, textXl, uiShadow } from '@/styles/atoms';
 import { lighten } from 'polished';
-import { encodeUuid } from '../../utils/id';
+import { encodeUuid } from '@/utils/id';
 import styled from '@emotion/styled';
 
 interface Props {

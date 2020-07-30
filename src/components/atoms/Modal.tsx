@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Portal } from './Portal';
 import { css, keyframes } from '@emotion/core';
 import styled from '@emotion/styled';
-import { modalMaskColor, modalZIndex } from '../../styles/atoms';
+import { modalMaskColor, modalZIndex } from '@/styles/atoms';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   mask?: boolean;

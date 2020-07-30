@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Button from '../atoms/Button';
 import { css } from '@emotion/core';
-import { pX, pY, textSm } from '../../styles/atoms';
+import { pX, pY, textSm } from '@/styles/atoms';
 
 interface Props {
   className?: string;

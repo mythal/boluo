@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Select, { Props as SelectProps, Theme } from 'react-select';
-import { bgColor, controlHeight, dangerColor, primaryColor, textColor, uiShadow } from '../../styles/atoms';
+import { bgColor, dangerColor, primaryColor, textColor, uiShadow } from '@/styles/atoms';
 import { darken, mix } from 'polished';
 
 interface Props extends Omit<SelectProps, 'options'> {
@@ -49,7 +49,7 @@ function DiceSelect({ defaultDiceType, ...rest }: Props) {
   }
   return (
     <Select
-      css={[uiShadow, controlHeight]}
+      css={[uiShadow]}
       defaultValue={defaultDice}
       options={[
         { value: 'd20', label: 'D20' },

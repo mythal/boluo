@@ -1,5 +1,6 @@
 import { css } from '@emotion/core';
 import {
+  baseLineHeight,
   controlRounded,
   dangerColor,
   disabled,
@@ -14,10 +15,9 @@ import {
   textBase,
   textSm,
   uiShadow,
-} from '../../styles/atoms';
+} from '@/styles/atoms';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
-import { Link } from 'react-router-dom';
 
 const btnTextShadow = '0 1px 0 rgba(0, 0, 0, 0.125)';
 
@@ -33,7 +33,7 @@ interface DataAttributes {
 }
 
 export const buttonStyle = css`
-  line-height: 1.2em;
+  ${baseLineHeight};
   display: inline-flex;
   justify-content: space-around;
   align-items: center;
@@ -66,7 +66,7 @@ export const buttonStyle = css`
     ${focusShadow};
   }
 
-  padding: ${spacingN(2.5)} ${spacingN(3)};
+  padding: ${spacingN(2)} ${spacingN(3)};
 
   ${btnColor(normalColor)};
 
@@ -87,13 +87,11 @@ export const buttonStyle = css`
   }
 
   &[data-small='true'] {
-    ${[textSm, pX(1.75), pY(1.5)]};
+    ${[textSm, pX(1.75), pY(1.25)]};
   }
 
   ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};
 `;
-
-export const LinkButton = styled(Link)<DataAttributes>(buttonStyle);
 
 const Button = styled.button<DataAttributes>(buttonStyle);
 

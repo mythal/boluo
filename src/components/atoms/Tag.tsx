@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { pX, pY, roundedPx, textSm, uiShadow } from '../../styles/atoms';
+import { pX, pY, roundedPx, textSm, uiShadow } from '@/styles/atoms';
 import { darken, lighten } from 'polished';
 
 interface Props {

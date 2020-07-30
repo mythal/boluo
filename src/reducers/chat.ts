@@ -360,5 +360,3 @@ export const chatReducer = (state: ChatState | undefined, action: Action): ChatS
   }
   return state;
 };
-
-export const initChatState = undefined;

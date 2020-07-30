@@ -1,34 +1,21 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
+import { useTitle } from '@/hooks';
 import { css } from '@emotion/core';
-import {
-  alignRight,
-  flex,
-  largeInput,
-  link,
-  md,
-  mL,
-  mY,
-  sm,
-  spacingN,
-  textLg,
-  textSm,
-  textXl,
-} from '../../styles/atoms';
+import { alignRight, flex, largeInput, link, md, mL, mY, sm, spacingN, textLg, textSm, textXl } from '@/styles/atoms';
 import Input from '../atoms/Input';
 import Button from '../atoms/Button';
 import { useForm, ValidationRules } from 'react-hook-form';
-import { post } from '../../api/request';
-import { AppError, errorText } from '../../api/error';
+import { post } from '@/api/request';
+import { AppError, errorText } from '@/api/error';
 import InformationBar from '../molecules/InformationBar';
 import { useHistory } from 'react-router-dom';
-import { RegisterData } from '../../api/users';
+import { RegisterData } from '@/api/users';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { Label } from '../atoms/Label';
 import { HelpText } from '../atoms/HelpText';
-import { emailValidation, nicknameValidation, passwordValidation, usernameValidation } from '../../validators';
+import { emailValidation, nicknameValidation, passwordValidation, usernameValidation } from '@/validators';
 
 interface FormData extends RegisterData {
   passwordRepeat: string;

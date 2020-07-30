@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { breakpoint, grid, mediaQuery, spacingN } from '../../styles/atoms';
+import { breakpoint, grid, mediaQuery, spacingN } from '@/styles/atoms';
 
 export const SpaceGrid = styled.div`
   ${grid};

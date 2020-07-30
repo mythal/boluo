@@ -19,7 +19,7 @@ function ExploreSpace() {
     return () => {
       dispatch(resetUi());
     };
-  }, []);
+  }, [dispatch]);
   const result = useSelector((state) => state.ui.exploreSpaceList);
   const spacesMapper = (space: Space) => <SpaceCard key={space.id} space={space} />;
   return (

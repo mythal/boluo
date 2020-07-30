@@ -1,5 +1,5 @@
 import React from 'react';
-import { Id, newId } from '../utils/id';
+import { Id, newId } from '@/utils/id';
 
 export type InformationLevel = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
 

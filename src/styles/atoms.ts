@@ -73,6 +73,10 @@ export const focused = css`
   outline: none;
 `;
 
+export const baseLineHeight = css`
+  line-height: 1.5em;
+`;
+
 export const border = (color: string, width = '1px') => css`
   border: ${width} solid ${color};
 `;
@@ -329,7 +333,7 @@ export const baseStyle = css`
     font-family: ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
-    line-height: 1.5em;
+    ${baseLineHeight};
   }
 `;
 
@@ -345,4 +349,17 @@ export const chatRight = css`
 
 export const flexGrow = css`
   flex-grow: 1;
+`;
+
+export const lightButton = css`
+  display: inline-block;
+  color: ${textColor};
+  ${textXl};
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.15);
+  ${[roundedPx, pX(4), pY(3)]};
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+  }
 `;

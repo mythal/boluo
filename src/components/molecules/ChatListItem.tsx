@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChatItem } from '../../reducers/chat';
+import { ChatItem } from '@/reducers/chat';
 
 interface Props {
   item: ChatItem;

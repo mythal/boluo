@@ -3,7 +3,7 @@ import { EvaluatedExprNode, ExprNode } from './entities';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 
-export const evaluate = (node: ExprNode, rng: Prando, layer: number = 0): EvaluatedExprNode => {
+export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprNode => {
   if (layer > 64) {
     throw TOO_MUCH_LAYER;
   }

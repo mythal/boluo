@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { mainWidth, margin0Auto, pX, pY } from '../../styles/atoms';
+import { mainWidth, margin0Auto, pX, pY } from '@/styles/atoms';
 import Header from '../organisms/Header';
 
 interface Props {

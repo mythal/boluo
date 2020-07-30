@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Err, Ok, Result } from '../utils/result';
+import { Err, Ok, Result } from '@/utils/result';
 import { AppError, notJson } from './error';
 import { getCsrfToken } from './csrf';
 import { CheckEmail, CheckUsername, EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
@@ -15,7 +15,7 @@ import {
   JoinChannel,
 } from './channels';
 import { ByChannel, Message, NewMessage } from './messages';
-import { Id } from '../utils/id';
+import { Id } from '@/utils/id';
 import { Media } from './media';
 
 export type AppResult<T> = Result<T, AppError>;

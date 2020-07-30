@@ -21,11 +21,16 @@ const input = css`
 function ChatCompose() {
   const channelId = useSelector((state) => state.ui.chat!.channel.id);
   const defaultDiceType = useSelector((state) => state.ui.chat!.channel.defaultDiceType);
-  const nickname = useSelector((state) => state.profile!.user.nickname);
+  const nickname = useSelector((state) => state.profile?.user.nickname);
   const messageId = useRef(newId());
   const [draft, setDraft] = useState('');
   const [inGame, setInGame] = useState(false);
   const [isAction, setIsAction] = useState(false);
+
+  if (nickname === undefined) {
+    return null;
+  }
+
   const parserEnv: ParseEnv = {
     defaultDiceFace: getDiceFace(defaultDiceType),
     resolveUsername: () => null,

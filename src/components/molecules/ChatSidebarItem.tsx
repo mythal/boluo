@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Channel } from '../../api/channels';
+import { Channel } from '@/api/channels';
 import { Link } from 'react-router-dom';
-import { channelChatPath } from '../../utils/path';
+import { channelChatPath } from '@/utils/path';
 import { css } from '@emotion/core';
-import { textColor } from '../../styles/atoms';
+import { textColor } from '@/styles/atoms';
 
 interface Props {
   channel: Channel;

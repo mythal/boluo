@@ -15,9 +15,12 @@ interface Props {
 }
 
 function LeaveSpaceButton({ id, name, ...props }: Props) {
-  const userId = useSelector((state) => state.profile!.user.id);
+  const userId = useSelector((state) => state.profile?.spaces.get(id)?.member.userId);
   const dispatch = useDispatch();
   const [leaving, setLeaving] = useState(false);
+  if (!userId) {
+    return null;
+  }
   const leave = async () => {
     if (confirm(`确认要退出「${name}」位面吗？`)) {
       setLeaving(true);
@@ -32,7 +35,7 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
   return (
     <Button data-variant="danger" onClick={leave} disabled={leaving} {...props}>
       <Icon sprite={doorOpen} loading={leaving} />
-      退出位面
+      退出
     </Button>
   );
 }

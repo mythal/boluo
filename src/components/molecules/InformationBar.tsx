@@ -2,18 +2,9 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
-import {
-  errorColor,
-  infoColor,
-  roundedPx,
-  spacingN,
-  successColor,
-  textLg,
-  uiShadow,
-  warnColor,
-} from '../../styles/atoms';
+import { errorColor, infoColor, roundedPx, spacingN, successColor, textLg, uiShadow, warnColor } from '@/styles/atoms';
 import CloseButton from './CloseButton';
-import { InformationLevel } from '../../actions/information';
+import { InformationLevel } from '@/actions/information';
 
 interface Props {
   variant: InformationLevel;

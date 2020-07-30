@@ -10,7 +10,7 @@ import {
   textLg,
   uiShadow,
   widthFull,
-} from '../../styles/atoms';
+} from '@/styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 

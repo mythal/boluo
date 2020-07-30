@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { Channel } from '../../api/channels';
+import { Channel } from '@/api/channels';
 import ChatSidebarItem from '../molecules/ChatSidebarItem';
 
 interface Props {

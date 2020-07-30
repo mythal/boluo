@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Space, SpaceMember } from '../../api/spaces';
+import { Space, SpaceMember } from '@/api/spaces';
 import Tag from '../atoms/Tag';
 
 interface Props {

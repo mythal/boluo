@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
+import { useTitle } from '@/hooks';
 
 function NotFound() {
   useTitle('页面没有找到');

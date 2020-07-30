@@ -1,5 +1,5 @@
 import { Channel } from './channels';
-import { Id } from '../utils/id';
+import { Id } from '@/utils/id';
 
 export interface Space {
   id: Id;

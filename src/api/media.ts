@@ -1,4 +1,4 @@
-import { Id } from '../utils/id';
+import { Id } from '@/utils/id';
 
 export interface Media {
   id: Id;

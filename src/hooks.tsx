@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { DependencyList, useCallback, useEffect, useState } from 'react';
+import React, { DependencyList, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { AppResult, get } from './api/request';
 import { Err, Ok } from './utils/result';
 import { LOADING, loading } from './api/error';
@@ -49,15 +49,32 @@ export function useOutside(
   });
 }
 
+export function useIsUnmount(): RefObject<boolean> {
+  const flag = useRef(false);
+  useEffect(
+    () => () => {
+      flag.current = true;
+    },
+    []
+  );
+  return flag;
+}
+
 export function useFetch<T>(f: () => Promise<T>, deps: DependencyList): [T | 'LOADING', () => void] {
   const [result, setResult] = useState<T | 'LOADING'>('LOADING');
-  useEffect(() => {
-    f().then(setResult);
-  }, deps);
+  const isUnmount = useIsUnmount();
+  const load = () => {
+    f().then((result) => {
+      if (isUnmount.current) {
+        return;
+      }
+      setResult(result);
+    });
+  };
 
-  const refetch = useCallback(() => {
-    f().then(setResult);
-  }, deps);
+  useEffect(load, deps);
+
+  const refetch = useCallback(load, deps);
 
   return [result, refetch];
 }
@@ -128,13 +145,17 @@ export const useRegisterFetch = <T,>(
   deps: DependencyList
 ): [AppResult<T>, () => void] => {
   const [result, setResult] = useState<AppResult<T> | 'LOADING'>('LOADING');
-  useEffect(() => {
-    f().then(setResult);
-  }, deps);
-
-  const refetch = useCallback(() => {
-    f().then(setResult);
-  }, deps);
+  const isUnmount = useIsUnmount();
+  const load = () => {
+    f().then((result) => {
+      if (isUnmount.current) {
+        return;
+      }
+      setResult(result);
+    });
+  };
+  useEffect(load, deps);
+  const refetch = useCallback(load, deps);
 
   const updater = useCallback((mapper: Mapper<T>) => {
     setResult((prev: AppResult<T> | 'LOADING') => {

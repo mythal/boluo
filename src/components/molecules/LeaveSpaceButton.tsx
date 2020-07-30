@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { Id } from '../../utils/id';
+import { Id } from '@/utils/id';
 import Button from '../atoms/Button';
-import { post } from '../../api/request';
-import { useDispatch } from '../Provider';
-import doorOpen from '../../assets/icons/door-open.svg';
+import { post } from '@/api/request';
+import doorOpen from '@/assets/icons/door-open.svg';
 import Icon from '../atoms/Icon';
 import { useState } from 'react';
+import { useDispatch, useSelector } from '@/store';
 
 interface Props {
   id: Id;
@@ -15,16 +15,17 @@ interface Props {
 }
 
 function LeaveSpaceButton({ id, name, ...props }: Props) {
+  const userId = useSelector((state) => state.profile!.user.id);
   const dispatch = useDispatch();
   const [leaving, setLeaving] = useState(false);
   const leave = async () => {
     if (confirm(`确认要退出「${name}」位面吗？`)) {
       setLeaving(true);
       const result = await post('/spaces/leave', {}, { id });
-      if (result.isOk) {
-        dispatch({ type: 'LEFT_SPACE', id });
-      }
       setLeaving(false);
+      if (result.isOk) {
+        dispatch({ type: 'LEFT_SPACE', spaceId: id, userId });
+      }
     }
   };
 

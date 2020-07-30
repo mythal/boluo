@@ -1,7 +1,7 @@
 import React from 'react';
-import { Dispatch } from '../components/Provider';
-import { AppError, errorText } from '../api/error';
-import { showError } from '../actions/information';
+import { AppError, errorText } from '@/api/error';
+import { showError } from '@/actions/information';
+import { Dispatch } from '@/store';
 
 export const panic = (): never => {
   throw new Error();

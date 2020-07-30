@@ -6,8 +6,9 @@ import { LOADING, loading } from './api/error';
 import { SpaceWithRelated } from './api/spaces';
 import { clearCsrfToken } from './api/csrf';
 import { LoggedOut } from './actions/profile';
-import { useDispatch } from './components/Provider';
 import { useHistory } from 'react-router-dom';
+import { ProfileState } from './reducers/profile';
+import { useDispatch, useSelector } from './store';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -121,7 +122,7 @@ export function useTitle(suffix: string, prefix = ' - Boluo') {
   }, [suffix, prefix]);
 }
 
-export function useTitleWithFetchResult<T>(result: AppResult<T> | 'LOADING', titleMapper: (value: T) => string) {
+export function useTitleWithResult<T>(result: AppResult<T> | 'LOADING', titleMapper: (value: T) => string) {
   let title;
   if (result === 'LOADING') {
     title = '载入中';
@@ -199,4 +200,12 @@ export function useLogout(): () => void {
     dispatch<LoggedOut>({ type: 'LOGGED_OUT' });
     history.push('/');
   };
+}
+
+export function useProfile(): ProfileState | undefined {
+  return useSelector((state) => state.profile);
+}
+
+export function useIsLoggedIn(): boolean {
+  return useSelector((state) => state.profile !== undefined);
 }

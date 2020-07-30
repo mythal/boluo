@@ -1,17 +1,16 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { Channel, ChannelMember } from '../../api/channels';
-import { useDispatch } from '../Provider';
-import { throwErr } from '../../utils/errors';
-import { post } from '../../api/request';
-import { Id } from '../../utils/id';
+import { ChannelMember } from '@/api/channels';
+import { throwErr } from '@/utils/errors';
+import { post } from '@/api/request';
+import { Id } from '@/utils/id';
 import { useState } from 'react';
 import Dialog from '../molecules/Dialog';
 import Input from '../atoms/Input';
 import { Label } from '../atoms/Label';
+import { useDispatch, useSelector } from '@/store';
 
 interface Props {
-  channel: Channel;
   member?: ChannelMember;
 }
 
@@ -46,9 +45,9 @@ function useChannelJoinLeave(id: Id): { join: (characterName?: string) => void; 
   return { join, leave };
 }
 
-function ChatHeader({ member, channel }: Props) {
-  const { id } = channel;
-  const { leave, join } = useChannelJoinLeave(id);
+function ChatHeader({ member }: Props) {
+  const channelId = useSelector((state) => state.ui.chat!.channel.id);
+  const { leave, join } = useChannelJoinLeave(channelId);
   const [open, setOpen] = useState(false);
   const [characterName, setCharacterName] = useState('');
   const onConfirm = () => {

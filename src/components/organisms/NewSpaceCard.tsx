@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import { Link } from 'react-router-dom';
-import { bgColor, flex, pY, roundedPx, text3Xl, textColor } from '../../styles/atoms';
+import { bgColor, flex, pY, roundedPx, text3Xl, textColor } from '@/styles/atoms';
 import { darken, lighten } from 'polished';
-import plus from '../../assets/icons/plus-circle.svg';
+import plus from '@/assets/icons/plus-circle.svg';
 import Icon from '../atoms/Icon';
 
 const style = css`

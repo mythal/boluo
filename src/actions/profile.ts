@@ -1,7 +1,7 @@
-import { User } from '../api/users';
-import { Space, SpaceMember, SpaceWithMember } from '../api/spaces';
-import { Channel, ChannelMember, ChannelWithMember } from '../api/channels';
-import { Id } from '../utils/id';
+import { User } from '@/api/users';
+import { Space, SpaceMember, SpaceWithMember } from '@/api/spaces';
+import { Channel, ChannelMember, ChannelWithMember } from '@/api/channels';
+import { Id } from '@/utils/id';
 
 export interface LoggedIn {
   type: 'LOGGED_IN';
@@ -32,7 +32,7 @@ export interface SpaceEdited {
 
 export interface LeftSpace {
   type: 'LEFT_SPACE';
-  id: Id;
+  spaceId: Id;
 }
 
 export interface JoinedChannel {

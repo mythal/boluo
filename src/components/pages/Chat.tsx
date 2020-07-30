@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import ChatSidebar from '../organisms/ChatSidebar';
-import { decodeUuid, Id } from '../../utils/id';
+import { decodeUuid, Id } from '@/utils/id';
 import ChannelChat from '../organisms/ChannelChat';
 import ChatHome from '../organisms/ChatHome';
-import { useRefetch, useSpaceWithRelated } from '../../hooks';
+import { useRefetch, useSpaceWithRelated } from '@/hooks';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 

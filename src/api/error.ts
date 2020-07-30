@@ -1,3 +1,6 @@
+import { AppResult } from '@/api/request';
+import { Err } from '@/utils/result';
+
 export type ErrorCode =
   | UNAUTHENTICATED
   | NO_PERMISSION
@@ -54,6 +57,10 @@ export const loading: AppError = {
   code: LOADING,
   message: '载入中',
   table: null,
+};
+
+export const errLoading = <T>(): AppResult<T> => {
+  return new Err(loading);
 };
 
 export const notJson: AppError = {

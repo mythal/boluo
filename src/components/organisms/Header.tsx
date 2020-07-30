@@ -1,22 +1,21 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { headerBgColor, headerHeight, mainP, mainWidth, mR } from '../../styles/atoms';
+import { headerBgColor, headerHeight, mainP, mainWidth, mR } from '@/styles/atoms';
 import HeaderLink, { HeaderButton } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
-import logo from '../../assets/logo.svg';
-import { useProfile } from '../Provider';
-import { ProfileState } from '../../reducers/profile';
+import logo from '@/assets/logo.svg';
 import styled from '@emotion/styled';
-import plus from '../../assets/icons/plus-circle.svg';
-import cog from '../../assets/icons/cog.svg';
-import chevronDown from '../../assets/icons/chevron-down.svg';
-import chevronUp from '../../assets/icons/chevron-up.svg';
+import plus from '@/assets/icons/plus-circle.svg';
+import cog from '@/assets/icons/cog.svg';
+import chevronDown from '@/assets/icons/chevron-down.svg';
+import chevronUp from '@/assets/icons/chevron-up.svg';
 import { useRef, useState } from 'react';
 import Menu, { IMenuItem } from '../atoms/Menu';
 import Overlay from '../atoms/Overlay';
-import logoutIcon from '../../assets/icons/logout.svg';
+import logoutIcon from '@/assets/icons/logout.svg';
 import { useHistory } from 'react-router-dom';
-import { useLogout } from '../../hooks';
+import { useIsLoggedIn, useLogout } from '@/hooks';
+import { useSelector } from '@/store';
 
 export const headerStyle = css`
   display: flex;
@@ -60,11 +59,12 @@ function Guest() {
   );
 }
 
-function User({ profile }: { profile: ProfileState }) {
+function User() {
   const [menu, setMenu] = useState(false);
   const menuAnchor = useRef<HTMLButtonElement | null>(null);
   const history = useHistory();
   const logout = useLogout();
+  const nickname = useSelector((state) => state.profile?.user.nickname);
   const toggle = () => setMenu((open) => !open);
   const dismiss = () => setMenu(false);
 
@@ -89,7 +89,7 @@ function User({ profile }: { profile: ProfileState }) {
       </Nav>
       <Nav>
         <HeaderButton css={mR(1)} onClick={toggle} ref={menuAnchor}>
-          {profile.user.nickname} <Icon sprite={menu ? chevronUp : chevronDown} />
+          {nickname} <Icon sprite={menu ? chevronUp : chevronDown} />
         </HeaderButton>
         {menu && (
           <Overlay x={1} y={1} selfY={1} selfX={-1} anchor={menuAnchor} onOuter={dismiss}>
@@ -102,8 +102,8 @@ function User({ profile }: { profile: ProfileState }) {
 }
 
 function Header() {
-  const profile = useProfile();
-  return <header css={[headerStyle, mainP]}>{profile ? <User profile={profile} /> : <Guest />}</header>;
+  const isLoggedIn = useIsLoggedIn();
+  return <header css={[headerStyle, mainP]}>{isLoggedIn ? <User /> : <Guest />}</header>;
 }
 
 export default Header;

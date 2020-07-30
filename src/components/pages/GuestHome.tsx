@@ -19,8 +19,8 @@ import {
   textLg,
   textXl,
   uiShadow,
-} from '../../styles/atoms';
-import logo from '../../assets/logo.svg';
+} from '@/styles/atoms';
+import logo from '@/assets/logo.svg';
 import { darken, lighten } from 'polished';
 import Title from '../atoms/Title';
 

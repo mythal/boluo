@@ -1,11 +1,11 @@
-import { Channel, Member } from '../api/channels';
+import { Channel, Member } from '@/api/channels';
 import { List, Map } from 'immutable';
-import { Message } from '../api/messages';
-import { Preview } from '../api/events';
-import { Action } from '../actions';
-import { ChannelEventReceived, CloseChat, LoadChat, LoadMessages } from '../actions/chat';
-import { DEBUG } from '../settings';
-import { Id, newId } from '../utils/id';
+import { Message } from '@/api/messages';
+import { Preview } from '@/api/events';
+import { Action } from '@/actions';
+import { ChannelEventReceived, CloseChat, LoadMessages } from '@/actions/chat';
+import { DEBUG } from '@/settings';
+import { Id, newId } from '@/utils/id';
 
 export interface MessageChatItem {
   id: Id;
@@ -100,6 +100,7 @@ export const queryPreviewEntry = (itemMap: ItemMap, senderId: Id): PreviewEntry 
 };
 
 export interface ChatState {
+  connection: WebSocket;
   channel: Channel;
   members: Member[];
   colorMap: Map<Id, string>;
@@ -111,24 +112,19 @@ export interface ChatState {
   eventAfter: number;
 }
 
-const loadChat = (state: ChatState | undefined, { channelWithRelated }: LoadChat): ChatState => {
-  const { channel, members, colorList } = channelWithRelated;
-  let colorMap = Map<Id, string>(Object.entries(colorList));
-  if (state && state.colorMap.equals(colorMap)) {
-    colorMap = state.colorMap;
+const loadChat = (prevState: ChatState | undefined, nextState: ChatState): ChatState => {
+  if (!prevState) {
+    return nextState;
   }
-  if (state?.channel.id === channel.id) {
+  if (prevState.colorMap.equals(nextState.colorMap)) {
+    nextState.colorMap = prevState.colorMap;
+  }
+  if (prevState.channel.id === nextState.channel.id) {
     // reload
-    return { ...state, channel, members, colorMap };
+    const { channel, members, colorMap, connection } = nextState;
+    return { ...prevState, channel, members, colorMap, connection };
   }
-
-  const itemList: ChatState['itemList'] = List();
-  const itemMap: ChatState['itemMap'] = Map();
-  const messageBefore = new Date().getTime();
-  const eventAfter = messageBefore - 24 * 60 * 60 * 1000;
-  const finished = false;
-  const heartbeatMap: ChatState['heartbeatMap'] = Map();
-  return { channel, members, colorMap, itemList, itemMap, messageBefore, finished, eventAfter, heartbeatMap };
+  return nextState;
 };
 
 export const closeChat = (state: ChatState, { id }: CloseChat): ChatState | undefined => {
@@ -348,8 +344,8 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived): C
 };
 
 export const chatReducer = (state: ChatState | undefined, action: Action): ChatState | undefined => {
-  if (action.type === 'LOAD_CHAT') {
-    return loadChat(state, action);
+  if (action.type === 'CHAT_LOADED') {
+    return loadChat(state, action.chat);
   }
   if (state === undefined) {
     return undefined;

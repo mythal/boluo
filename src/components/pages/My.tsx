@@ -1,18 +1,15 @@
 import * as React from 'react';
 import Title from '../atoms/Title';
-import { ProfileState } from '../../reducers/profile';
 import SpaceCard from '../organisms/SpaceCard';
 import { SpaceGrid } from '../atoms/SpaceGrid';
 import NewSpaceCard from '../organisms/NewSpaceCard';
-import planetConquest from '../../assets/icons/planet-conquest.svg';
+import planetConquest from '@/assets/icons/planet-conquest.svg';
 import Icon from '../atoms/Icon';
+import { useSelector } from '@/store';
 
-interface Props {
-  profile: ProfileState;
-}
-
-function My({ profile }: Props) {
-  const spaces = profile.spaces.valueSeq().map(({ space }) => <SpaceCard key={space.id} space={space} />);
+function My() {
+  const spaces = useSelector((state) => state.profile!.spaces);
+  const cards = spaces.valueSeq().map(({ space }) => <SpaceCard key={space.id} space={space} />);
   return (
     <>
       <Title>
@@ -20,7 +17,7 @@ function My({ profile }: Props) {
       </Title>
       <SpaceGrid>
         <NewSpaceCard />
-        {spaces}
+        {cards}
       </SpaceGrid>
     </>
   );

@@ -12,6 +12,13 @@
     ]
   ],
   "plugins": [
+    [
+      "babel-plugin-root-import",
+      {
+        "rootPathPrefix": "@/",
+        "rootPathSuffix": "src/"
+      }
+    ],
     ["emotion", { "sourceMap": true }],
     "@babel/proposal-class-properties",
     ["@babel/plugin-transform-runtime", { "regenerator": true }]

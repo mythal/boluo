@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { SpriteSymbol } from '*.svg';
 import SpriteSvg from './SpriteSvg';
 import { spacingN, spin as spinStyle } from '../../styles/atoms';
-import rotate from '../../assets/icons/rotate-cw.svg';
+import rotate from '@/assets/icons/rotate-cw.svg';
 
 interface Props {
   sprite: SpriteSymbol;

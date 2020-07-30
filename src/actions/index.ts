@@ -10,7 +10,8 @@ import {
   SpaceEdited,
   UserEdited,
 } from './profile';
-import { ChannelEventReceived, CloseChat, LoadChat, LoadMessages } from './chat';
+import { ChannelEventReceived, ChatLoaded, CloseChat, LoadChat, LoadMessages } from './chat';
+import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace } from '@/actions/ui';
 
 export type Action =
   | Information
@@ -25,6 +26,12 @@ export type Action =
   | LeftChannel
   | ChannelMemberEdited
   | LoadChat
+  | ChatLoaded
   | CloseChat
   | LoadMessages
-  | ChannelEventReceived;
+  | ChannelEventReceived
+  | SwitchExploreSpace
+  | ExploreSpaceLoaded
+  | SwitchChat
+  | ResetUi
+  | SpaceLoaded;

@@ -16,7 +16,11 @@
     "types": ["node", "@emotion/core"],
     "isolatedModules": true,
     "jsx": "preserve",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
   "include": ["src"]
 }

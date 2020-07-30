@@ -1,22 +1,23 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Title from '../atoms/Title';
 import { useParams } from 'react-router-dom';
-import { useRefetch, useSpaceWithRelated, useTitleWithFetchResult } from '../../hooks';
-import { SpaceWithRelated } from '../../api/spaces';
+import { useIsLoggedIn, useTitleWithResult } from '@/hooks';
 import Tag from '../atoms/Tag';
 import Button, { LinkButton } from '../atoms/Button';
-import { useProfile } from '../Provider';
-import { mR, mT, preLine, textLg } from '../../styles/atoms';
-import binoculars from '../../assets/icons/binoculars.svg';
-import teleport from '../../assets/icons/teleport.svg';
-import userCog from '../../assets/icons/user-cog.svg';
+import { mR, mT, preLine, textLg } from '@/styles/atoms';
+import binoculars from '@/assets/icons/binoculars.svg';
+import teleport from '@/assets/icons/teleport.svg';
+import userCog from '@/assets/icons/user-cog.svg';
 import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
 import ManageSpace from '../organisms/ManageSpace';
-import { decodeUuid, encodeUuid } from '../../utils/id';
+import { decodeUuid, encodeUuid } from '@/utils/id';
+import { useDispatch, useSelector } from '@/store';
+import { loadSpace, resetUi } from '@/actions/ui';
+import { SpaceWithRelated } from '@/api/spaces';
 
 interface Params {
   id: string;
@@ -28,15 +29,21 @@ function SpacePage() {
   let { id } = useParams<Params>();
   id = decodeUuid(id);
   const [managing, setManaging] = useState(false);
-  const [result, refetch] = useSpaceWithRelated(id);
-  useRefetch(refetch, 64);
-  useTitleWithFetchResult<SpaceWithRelated>(result, ({ space }) => space.name);
-  const profile = useProfile();
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(loadSpace(id));
+    return () => {
+      dispatch(resetUi());
+    };
+  }, [id]);
+  const result = useSelector((state) => state.ui.spacePage);
+  useTitleWithResult<SpaceWithRelated>(result, ({ space }) => space.name);
+  const isLoggedIn = useIsLoggedIn();
+  const myMember = useSelector((state) => state.profile?.spaces.get(id)?.member);
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;
   }
   const { space, members, channels } = result.value;
-  const myMember = profile?.spaces.get(id)?.member;
   const chatPath = `/chat/${encodeUuid(space.id)}`;
   const stopManage = () => setManaging(false);
   return (
@@ -58,7 +65,7 @@ function SpacePage() {
             <Icon sprite={binoculars} /> 作为旁观者进入
           </LinkButton>
         )}
-        {profile && !myMember && <JoinSpaceButton css={buttonStyle} id={space.id} />}
+        {isLoggedIn && !myMember && <JoinSpaceButton css={buttonStyle} id={space.id} />}
         {myMember?.isAdmin && (
           <Button css={buttonStyle} onClick={() => setManaging(true)}>
             <Icon sprite={userCog} /> 管理位面

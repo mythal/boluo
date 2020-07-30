@@ -1,19 +1,11 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { SendEvent } from './ChannelChat';
 import { useRef, useState } from 'react';
-import { post } from '../../api/request';
-import { newId } from '../../utils/id';
-import { ProfileState } from '../../reducers/profile';
+import { post } from '@/api/request';
+import { newId } from '@/utils/id';
 import { parse, Env as ParseEnv } from '../../interpreter/parser';
-import { getDiceFace } from '../../utils/game';
-import { Channel } from '../../api/channels';
-
-interface Props {
-  sendEvent: SendEvent;
-  profile: ProfileState;
-  channel: Channel;
-}
+import { getDiceFace } from '@/utils/game';
+import { useSelector } from '@/store';
 
 const container = css`
   background-color: teal;
@@ -26,14 +18,16 @@ const input = css`
   width: 100%;
 `;
 
-function ChatCompose({ sendEvent, channel, profile }: Props) {
-  const channelId = channel.id;
+function ChatCompose() {
+  const channelId = useSelector((state) => state.ui.chat!.channel.id);
+  const defaultDiceType = useSelector((state) => state.ui.chat!.channel.defaultDiceType);
+  const nickname = useSelector((state) => state.profile!.user.nickname);
   const messageId = useRef(newId());
   const [draft, setDraft] = useState('');
   const [inGame, setInGame] = useState(false);
   const [isAction, setIsAction] = useState(false);
   const parserEnv: ParseEnv = {
-    defaultDiceFace: getDiceFace(channel.defaultDiceType),
+    defaultDiceFace: getDiceFace(defaultDiceType),
     resolveUsername: () => null,
   };
 
@@ -43,13 +37,12 @@ function ChatCompose({ sendEvent, channel, profile }: Props) {
       messageId: messageId.current,
       channelId,
       mediaId: null,
-      name: inGame ? name : profile.user.nickname,
+      name: inGame ? name : nickname,
       inGame,
       isAction,
       orderDate: null,
       ...parsed,
     });
-    console.log(sent);
     messageId.current = newId();
   };
 

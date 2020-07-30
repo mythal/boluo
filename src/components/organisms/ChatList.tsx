@@ -1,19 +1,15 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { ChatItem } from '../../reducers/chat';
 import ChatListItem from '../molecules/ChatListItem';
-import { List } from 'immutable';
-
-interface Props {
-  itemList: List<ChatItem>;
-}
+import { useSelector } from '@/store';
 
 const container = css`
   grid-area: list;
   background-color: darkslateblue;
 `;
 
-function ChatList({ itemList }: Props) {
+function ChatList() {
+  const itemList = useSelector((state) => state.ui.chat!.itemList);
   return (
     <div css={container}>
       {itemList.map((item) => (

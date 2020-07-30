@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import Icon from '../atoms/Icon';
-import close from '../../assets/icons/x-circle.svg';
-import { closeButtonActiveColor, closeButtonHoverColor, textColor } from '../../styles/atoms';
+import close from '@/assets/icons/x-circle.svg';
+import { closeButtonActiveColor, closeButtonHoverColor, textColor } from '@/styles/atoms';
 
 interface Props {
   onClick: () => void;

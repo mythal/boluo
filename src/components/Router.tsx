@@ -1,5 +1,4 @@
 import React from 'react';
-import { useProfile } from './Provider';
 import { Route, Switch } from 'react-router-dom';
 import GuestHome from './pages/GuestHome';
 import My from './pages/My';
@@ -12,12 +11,12 @@ import SpacePage from './pages/SpacePage';
 import ExploreSpace from './pages/ExploreSpace';
 import BasePage from './templates/BasePage';
 import Settings from './pages/Settings';
-import { ProfileState } from '../reducers/profile';
 import Chat from './pages/Chat';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
 import Design from './pages/Design';
 import Loading from './molecules/Loading';
+import { useIsLoggedIn } from '@/hooks';
 
 interface Props {}
 
@@ -51,15 +50,15 @@ function GuestRouter() {
   );
 }
 
-function LoggedInRouter({ profile }: { profile: ProfileState }) {
+function LoggedInRouter() {
   return (
     <BasePage>
       <Switch>
         <Route path="/" exact>
-          <My profile={profile} />
+          <My />
         </Route>
         <Route path="/my" exact>
-          <My profile={profile} />
+          <My />
         </Route>
         <Route path="/profile/:id">
           <Profile />
@@ -77,7 +76,7 @@ function LoggedInRouter({ profile }: { profile: ProfileState }) {
           <SpacePage />
         </Route>
         <Route path="/settings">
-          <Settings profile={profile} />
+          <Settings />
         </Route>
         <Route path="/loading">
           <Loading />
@@ -91,7 +90,7 @@ function LoggedInRouter({ profile }: { profile: ProfileState }) {
 }
 
 export const Router: React.FC<Props> = () => {
-  const profile = useProfile();
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <Switch>
@@ -104,7 +103,7 @@ export const Router: React.FC<Props> = () => {
       <Route path="/chat/:spaceId">
         <Chat />
       </Route>
-      <Route path="/">{profile ? <LoggedInRouter profile={profile} /> : <GuestRouter />}</Route>
+      <Route path="/">{isLoggedIn ? <LoggedInRouter /> : <GuestRouter />}</Route>
     </Switch>
   );
 };

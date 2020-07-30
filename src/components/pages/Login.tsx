@@ -1,21 +1,21 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
+import { useTitle } from '@/hooks';
 import Input from '../atoms/Input';
-import { alignRight, flex, flex1, largeInput, mR, mT, mY, sm, textLg } from '../../styles/atoms';
+import { alignRight, flex, flex1, largeInput, mR, mT, mY, sm, textLg } from '@/styles/atoms';
 import Button from '../atoms/Button';
 import { useForm } from 'react-hook-form';
-import { LoginData } from '../../api/users';
+import { LoginData } from '@/api/users';
 import { ErrorMessage } from '../atoms/ErrorMessage';
-import { post } from '../../api/request';
-import { AppError, errorText, NO_PERMISSION } from '../../api/error';
+import { post } from '@/api/request';
+import { AppError, errorText, NO_PERMISSION } from '@/api/error';
 import InformationBar from '../molecules/InformationBar';
 import { useLocation, useHistory } from 'react-router-dom';
-import { useDispatch } from '../Provider';
-import { LoggedIn } from '../../actions/profile';
+import { useDispatch } from '@/store';
+import { LoggedIn } from '@/actions/profile';
 import { Label } from '../atoms/Label';
-import { clearCsrfToken } from '../../api/csrf';
+import { clearCsrfToken } from '@/api/csrf';
 
 interface State {
   next?: string;

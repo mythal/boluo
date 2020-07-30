@@ -1,27 +1,27 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
-import { AppError } from '../../api/error';
+import { useTitle } from '@/hooks';
+import { AppError } from '@/api/error';
 import { useForm } from 'react-hook-form';
-import { CreateSpace } from '../../api/spaces';
-import { alignRight, gridColumn, largeInput, md, mT, mY, spacingN, textLg } from '../../styles/atoms';
+import { CreateSpace } from '@/api/spaces';
+import { alignRight, gridColumn, largeInput, md, mT, mY, spacingN, textLg } from '@/styles/atoms';
 import { Label } from '../atoms/Label';
 import Input from '../atoms/Input';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';
 import { css } from '@emotion/core';
-import { post } from '../../api/request';
+import { post } from '@/api/request';
 import Button from '../atoms/Button';
 import { useHistory } from 'react-router-dom';
-import { useDispatch } from '../Provider';
-import { JoinedSpace } from '../../actions/profile';
-import implosion from '../../assets/icons/implosion.svg';
+import { useDispatch } from '@/store';
+import { JoinedSpace } from '@/actions/profile';
+import implosion from '@/assets/icons/implosion.svg';
 import Icon from '../atoms/Icon';
-import { channelNameValidation, descriptionValidation, spaceNameValidation } from '../../validators';
+import { channelNameValidation, descriptionValidation, spaceNameValidation } from '@/validators';
 import { RenderError } from '../molecules/RenderError';
 import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
-import { encodeUuid } from '../../utils/id';
+import { encodeUuid } from '@/utils/id';
 import TextArea from '../atoms/TextArea';
 
 export const fieldsLayout = css`

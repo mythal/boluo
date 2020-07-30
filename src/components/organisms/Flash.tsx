@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { InformationState } from '../../reducers/information';
+import { InformationState } from '@/reducers/information';
 import { Portal } from '../atoms/Portal';
 import InformationBar from '../molecules/InformationBar';
 import { css } from '@emotion/core';
-import { useDispatch } from '../Provider';
-import { dismissInformation, Information } from '../../actions/information';
+import { dismissInformation, Information } from '@/actions/information';
+import { useDispatch } from '@/store';
 
 interface Props {
   information: InformationState;

@@ -5,6 +5,7 @@ import {
   dialogBgColor,
   dialogHeaderBgColor,
   dialogTitleColor,
+  p,
   roundedPx,
   spacingN,
   textSm,
@@ -38,7 +39,7 @@ const buttonAreaStyle = css`
 `;
 
 const headerStyle = css`
-  ${textSm};
+  ${[textSm, p(2)]};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -47,7 +48,6 @@ const headerStyle = css`
 
 const titleStyle = css`
   color: ${dialogTitleColor};
-  padding: ${spacingN(2)};
 `;
 
 const contentStyle = css`

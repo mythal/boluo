@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { EditUser } from '../../api/users';
-import { alignRight, flex, largeInput, mR, mT, mY, spacingN, textLg } from '../../styles/atoms';
+import { alignRight, flex, largeInput, mT, spacingN, textLg } from '../../styles/atoms';
 import { Label } from '../atoms/Label';
 import Input from '../atoms/Input';
 import { bioValidation, nicknameValidation } from '../../validators';
@@ -11,17 +11,12 @@ import { ProfileState } from '../../reducers/profile';
 import { useState } from 'react';
 import { AppError, errorText } from '../../api/error';
 import InformationBar from '../molecules/InformationBar';
-import { editAvatar, get, post } from '../../api/request';
+import { editAvatar, post } from '../../api/request';
 import { useDispatch } from '../Provider';
-import logout from '../../assets/icons/logout.svg';
 import save from '../../assets/icons/save.svg';
 import Icon from '../atoms/Icon';
-import { useHistory } from 'react-router-dom';
-import { clearCsrfToken } from '../../api/csrf';
-import { LoggedOut } from '../../actions/profile';
 import TextArea from '../atoms/TextArea';
 import EditAvatar from '../organisms/EditAvatar';
-import Separator from '../atoms/Separator';
 import { css } from '@emotion/core';
 
 interface Props {
@@ -38,7 +33,6 @@ const nicknameFieldStyle = css`
 
 function Settings({ profile }: Props) {
   const dispatch = useDispatch();
-  const history = useHistory();
   const { register, handleSubmit, errors } = useForm<EditUser>();
   const [updated, setUpdated] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -67,20 +61,8 @@ function Settings({ profile }: Props) {
     }
   };
 
-  const onLogout = async () => {
-    await get('/users/logout');
-    clearCsrfToken();
-    dispatch<LoggedOut>({ type: 'LOGGED_OUT' });
-    history.push('/');
-  };
   return (
     <>
-      <div css={[mY(6)]}>
-        <Button css={[mR(2)]} data-variant="danger" type="button" onClick={onLogout}>
-          <Icon sprite={logout} /> 登出账号
-        </Button>
-      </div>
-      <Separator css={[mY(2)]} />
       {updated && <InformationBar variant="SUCCESS">设置已更新</InformationBar>}
       {appError && <InformationBar variant="ERROR">{errorText(appError)}</InformationBar>}
       <form onSubmit={handleSubmit(onSubmit)}>

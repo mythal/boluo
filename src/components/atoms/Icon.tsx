@@ -3,12 +3,14 @@ import styled from '@emotion/styled';
 import { SpriteSymbol } from '*.svg';
 import SpriteSvg from './SpriteSvg';
 import { spacingN, spin as spinStyle } from '../../styles/atoms';
+import rotate from '../../assets/icons/rotate-cw.svg';
 
 interface Props {
   sprite: SpriteSymbol;
   className?: string;
   noStrut?: boolean;
   spin?: boolean;
+  loading?: boolean;
 }
 
 const Strut = styled.span`
@@ -28,7 +30,11 @@ const Strut = styled.span`
   padding: 0 ${spacingN(0.5)};
 `;
 
-function Icon({ sprite, className, noStrut, spin }: Props) {
+function Icon({ sprite, className, noStrut, spin, loading }: Props) {
+  if (loading) {
+    spin = true;
+    sprite = rotate;
+  }
   return (
     <Strut data-strut={!noStrut}>
       <SpriteSvg

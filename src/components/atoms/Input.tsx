@@ -3,7 +3,7 @@ import {
   disabled,
   duration200,
   errorColor,
-  focused,
+  focusShadow,
   inputBgColor,
   spacingN,
   textColor,
@@ -30,7 +30,7 @@ export const inputStyle = css`
   ${controlRounded};
   ${widthFull};
   &:focus {
-    ${focused};
+    ${focusShadow};
   }
   &:disabled {
     ${disabled};

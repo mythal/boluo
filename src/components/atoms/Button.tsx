@@ -3,7 +3,7 @@ import {
   controlRounded,
   dangerColor,
   disabled,
-  focused,
+  focusShadow,
   normalColor,
   onDisabled,
   onHover,
@@ -33,7 +33,7 @@ interface DataAttributes {
 }
 
 export const buttonStyle = css`
-  line-height: 1.5em;
+  line-height: 1.2em;
   display: inline-flex;
   justify-content: space-around;
   align-items: center;
@@ -63,7 +63,7 @@ export const buttonStyle = css`
   }
 
   &:focus {
-    ${focused};
+    ${focusShadow};
   }
 
   padding: ${spacingN(2.5)} ${spacingN(3)};

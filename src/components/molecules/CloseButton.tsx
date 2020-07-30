@@ -11,9 +11,12 @@ interface Props {
 
 const style = css`
   font-size: 1em;
-  padding: 0.25em;
-  border-radius: 100%;
+  width: 1.4em;
+  line-height: 1em;
+  height: 1.4em;
+  border-radius: 50%;
   border: none;
+  padding: 0;
   background-color: transparent;
   color: ${textColor};
   &:hover {

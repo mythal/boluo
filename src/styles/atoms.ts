@@ -59,11 +59,6 @@ export const spin = css`
   animation: ${spinFrames} 1.5s linear infinite;
 `;
 
-export const focusOutline = css`
-  outline: none;
-  box-shadow: 0 0 0 2px ${transparentize(0.6, '#FFFFFF')};
-`;
-
 export const roundedPx = css`
   border-radius: 1px;
 `;
@@ -75,7 +70,6 @@ export const disabled = css`
 `;
 
 export const focused = css`
-  filter: brightness(150%);
   outline: none;
 `;
 
@@ -139,12 +133,21 @@ export const modalMaskColor = 'rgba(0,0,0,0.5)';
 export const dialogBgColor = '#343434';
 export const dialogTitleColor = darken(0.3, textColor);
 export const dialogHeaderBgColor = darken(0.075, dialogBgColor);
+export const focusOutlineColor = 'rgba(255, 255, 255, 0.4)';
 
 export const mainWidth = css`
   max-width: 50em;
 `;
 export const uiShadow = css`
   box-shadow: 0 0 4px 0 ${transparentize(0.6, uiShadowColor)}, 0 1px 1px 0 ${uiShadowColor};
+`;
+export const shadowXl = css`
+  box-shadow: 0 0 24px #000000;
+`;
+export const focusShadow = css`
+  outline: none;
+  box-shadow: 0 0 0 2px ${focusOutlineColor}, 0 0 4px 0 ${transparentize(0.6, uiShadowColor)},
+    0 1px 1px 0 ${uiShadowColor};
 `;
 export const controlRounded = roundedPx;
 
@@ -279,7 +282,7 @@ export const floatRight = css`
   float: right;
 `;
 
-export const mainP = pX(6);
+export const mainP = [pX(6), pY(4)];
 
 export const listStyleSquare = css`
   list-style-type: square;
@@ -338,4 +341,8 @@ export const flexCol = css`
 export const chatRight = css`
   grid-column: header-start / header-end;
   grid-row: header-start / compose-end;
+`;
+
+export const flexGrow = css`
+  flex-grow: 1;
 `;

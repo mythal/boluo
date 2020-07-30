@@ -2,6 +2,7 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { bgColor, breakpoint, mediaQuery, roundedPx, spacingN, textColor } from '../../styles/atoms';
 import { NavLink } from 'react-router-dom';
+import styled from '@emotion/styled';
 
 interface Props {
   to: string;
@@ -23,6 +24,8 @@ export const style = css`
   ${mediaQuery(breakpoint.lg)} {
     max-width: 24rem;
   }
+  border: 0;
+  line-height: 1.5em;
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
@@ -30,10 +33,15 @@ export const style = css`
   &:hover {
     background-color: rgba(255, 255, 255, 0.25);
   }
-  &.active {
+  &:active {
     background-color: rgba(255, 255, 255, 0.15);
   }
+  &:focus {
+    outline: none;
+  }
 `;
+
+export const HeaderButton = styled.button(style);
 
 function HeaderLink({ children, ...props }: Props) {
   return (

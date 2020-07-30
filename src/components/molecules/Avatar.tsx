@@ -13,7 +13,6 @@ interface Props {
 
 const style = css`
   ${[uiShadow, roundedPx]};
-  border: 0.15rem solid #000;
 `;
 
 function Avatar({ className, size, source, onClick }: Props) {

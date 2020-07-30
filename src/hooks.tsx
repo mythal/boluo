@@ -4,6 +4,10 @@ import { AppResult, get } from './api/request';
 import { Err, Ok } from './utils/result';
 import { LOADING, loading } from './api/error';
 import { SpaceWithRelated } from './api/spaces';
+import { clearCsrfToken } from './api/csrf';
+import { LoggedOut } from './actions/profile';
+import { useDispatch } from './components/Provider';
+import { useHistory } from 'react-router-dom';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -163,4 +167,15 @@ export function updateCache<T>(id: string, mapper: Mapper<T>) {
 
 export function useSpaceWithRelated(id: string): [AppResult<SpaceWithRelated>, () => void] {
   return useRegisterFetch<SpaceWithRelated>(id, () => get('/spaces/query_with_related', { id }), [id]);
+}
+
+export function useLogout(): () => void {
+  const dispatch = useDispatch();
+  const history = useHistory();
+  return async () => {
+    await get('/users/logout');
+    clearCsrfToken();
+    dispatch<LoggedOut>({ type: 'LOGGED_OUT' });
+    history.push('/');
+  };
 }

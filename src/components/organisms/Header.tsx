@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import { headerBgColor, headerHeight, mainP, mainWidth, mR } from '../../styles/atoms';
-import HeaderLink from '../atoms/HeaderLink';
+import HeaderLink, { HeaderButton } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
 import logo from '../../assets/logo.svg';
 import { useProfile } from '../Provider';
@@ -9,6 +9,14 @@ import { ProfileState } from '../../reducers/profile';
 import styled from '@emotion/styled';
 import plus from '../../assets/icons/plus-circle.svg';
 import cog from '../../assets/icons/cog.svg';
+import chevronDown from '../../assets/icons/chevron-down.svg';
+import chevronUp from '../../assets/icons/chevron-up.svg';
+import { useRef, useState } from 'react';
+import Menu, { IMenuItem } from '../atoms/Menu';
+import Overlay from '../atoms/Overlay';
+import logoutIcon from '../../assets/icons/logout.svg';
+import { useHistory } from 'react-router-dom';
+import { useLogout } from '../../hooks';
 
 export const headerStyle = css`
   display: flex;
@@ -53,6 +61,18 @@ function Guest() {
 }
 
 function User({ profile }: { profile: ProfileState }) {
+  const [menu, setMenu] = useState(false);
+  const menuAnchor = useRef<HTMLButtonElement | null>(null);
+  const history = useHistory();
+  const logout = useLogout();
+  const toggle = () => setMenu((open) => !open);
+  const dismiss = () => setMenu(false);
+
+  const menuItems: IMenuItem[] = [
+    { text: '个人资料页', callback: () => history.push('/profile') },
+    { text: '设置', callback: () => history.push('/settings'), icon: cog },
+    { text: '登出', callback: logout, icon: logoutIcon },
+  ];
   return (
     <HeaderInner>
       <Nav>
@@ -68,12 +88,14 @@ function User({ profile }: { profile: ProfileState }) {
         </HeaderLink>
       </Nav>
       <Nav>
-        <HeaderLink to="/profile" css={mR(1)} exact>
-          {profile.user.nickname}
-        </HeaderLink>
-        <HeaderLink to="/settings" css={[mR(1)]}>
-          <Icon sprite={cog} />
-        </HeaderLink>
+        <HeaderButton css={mR(1)} onClick={toggle} ref={menuAnchor}>
+          {profile.user.nickname} <Icon sprite={menu ? chevronUp : chevronDown} />
+        </HeaderButton>
+        {menu && (
+          <Overlay x={1} y={1} selfY={1} selfX={-1} anchor={menuAnchor} onOuter={dismiss}>
+            <Menu dismiss={dismiss} items={menuItems} />
+          </Overlay>
+        )}
       </Nav>
     </HeaderInner>
   );

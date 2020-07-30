@@ -30,7 +30,7 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
 
   return (
     <Button data-variant="danger" onClick={leave} disabled={leaving} {...props}>
-      <Icon sprite={doorOpen} spin={leaving} />
+      <Icon sprite={doorOpen} loading={leaving} />
       退出位面
     </Button>
   );

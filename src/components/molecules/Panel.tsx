@@ -2,7 +2,7 @@ import * as React from 'react';
 import Modal from '../atoms/Modal';
 import { css, keyframes } from '@emotion/core';
 import CloseButton from './CloseButton';
-import { dialogBgColor, spacingN } from '../../styles/atoms';
+import { dialogBgColor, shadowXl, spacingN } from '../../styles/atoms';
 
 interface Props {
   dismiss?: () => void;
@@ -30,8 +30,8 @@ const style = css`
   top: 0;
   background-color: ${dialogBgColor};
   padding: ${spacingN(6)} ${spacingN(12)} ${spacingN(6)} ${spacingN(6)};
-  box-shadow: 0 0 24px #000000;
   animation: ${slideIn} 0.1s ease-in forwards;
+  ${[shadowXl]};
 `;
 
 const closeButtonStyle = css`

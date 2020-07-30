@@ -17,6 +17,7 @@ import Chat from './pages/Chat';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
 import Design from './pages/Design';
+import Loading from './molecules/Loading';
 
 interface Props {}
 
@@ -77,6 +78,9 @@ function LoggedInRouter({ profile }: { profile: ProfileState }) {
         </Route>
         <Route path="/settings">
           <Settings profile={profile} />
+        </Route>
+        <Route path="/loading">
+          <Loading />
         </Route>
         <Route path="/">
           <NotFound />

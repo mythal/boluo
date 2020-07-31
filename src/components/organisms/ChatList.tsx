@@ -9,7 +9,8 @@ const container = css`
 `;
 
 function ChatList() {
-  const itemList = useSelector((state) => state.ui.chat!.itemList);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const itemList = useSelector((state) => state.chat!.itemList);
   return (
     <div css={container}>
       {itemList.map((item) => (

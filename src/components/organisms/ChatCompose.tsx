@@ -19,8 +19,10 @@ const input = css`
 `;
 
 function ChatCompose() {
-  const channelId = useSelector((state) => state.ui.chat!.channel.id);
-  const defaultDiceType = useSelector((state) => state.ui.chat!.channel.defaultDiceType);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const channelId = useSelector((state) => state.chat!.channel.id);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const defaultDiceType = useSelector((state) => state.chat!.channel.defaultDiceType);
   const nickname = useSelector((state) => state.profile?.user.nickname);
   const messageId = useRef(newId());
   const [draft, setDraft] = useState('');

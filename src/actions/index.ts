@@ -11,7 +11,7 @@ import {
   UserEdited,
 } from './profile';
 import { ChannelEventReceived, ChatLoaded, CloseChat, LoadChat, LoadMessages } from './chat';
-import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace } from '@/actions/ui';
+import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from '@/actions/ui';
 
 export type Action =
   | Information
@@ -34,4 +34,5 @@ export type Action =
   | ExploreSpaceLoaded
   | SwitchChat
   | ResetUi
-  | SpaceLoaded;
+  | SpaceLoaded
+  | UserLoaded;

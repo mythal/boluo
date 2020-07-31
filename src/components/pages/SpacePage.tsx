@@ -14,9 +14,11 @@ import { RenderError } from '../molecules/RenderError';
 import ManageSpace from '../organisms/ManageSpace';
 import { decodeUuid } from '@/utils/id';
 import { useDispatch, useSelector } from '@/store';
-import { loadSpace, resetUi } from '@/actions/ui';
+import { loadSpace } from '@/actions/ui';
 import { SpaceWithRelated } from '@/api/spaces';
 import GotoSpaceLink from '@/components/molecules/GotoSpaceLink';
+import { AppResult } from '@/api/request';
+import { errLoading } from '@/api/error';
 
 interface Params {
   id: string;
@@ -31,11 +33,8 @@ function SpacePage() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(loadSpace(id));
-    return () => {
-      dispatch(resetUi());
-    };
   }, [id, dispatch]);
-  const result = useSelector((state) => state.ui.spacePage);
+  const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(id, errLoading()));
   useTitleWithResult<SpaceWithRelated>(result, ({ space }) => space.name);
   const isLoggedIn = useIsLoggedIn();
   const myMember = useSelector((state) => state.profile?.spaces.get(id)?.member);

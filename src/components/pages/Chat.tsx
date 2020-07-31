@@ -5,9 +5,14 @@ import ChatSidebar from '../organisms/ChatSidebar';
 import { decodeUuid, Id } from '@/utils/id';
 import ChannelChat from '../organisms/ChannelChat';
 import ChatHome from '../organisms/ChatHome';
-import { useRefetch, useSpaceWithRelated } from '@/hooks';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from '@/store';
+import { loadSpace } from '@/actions/ui';
+import { errLoading } from '@/api/error';
+import { AppResult } from '@/api/request';
+import { SpaceWithRelated } from '@/api/spaces';
 
 interface Params {
   spaceId: string;
@@ -30,8 +35,11 @@ function Chat() {
   const params = useParams<Params>();
   const spaceId: Id = decodeUuid(params.spaceId);
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
-  const [result, refetch] = useSpaceWithRelated(spaceId);
-  useRefetch(refetch, 64);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(loadSpace(spaceId));
+  }, [spaceId, dispatch]);
+  const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
     return (
       <BasePage>

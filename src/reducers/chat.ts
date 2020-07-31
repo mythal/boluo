@@ -112,6 +112,8 @@ export interface ChatState {
   eventAfter: number;
 }
 
+export const initChatState = undefined;
+
 const loadChat = (prevState: ChatState | undefined, nextState: ChatState): ChatState => {
   if (!prevState) {
     return nextState;

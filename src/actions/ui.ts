@@ -2,6 +2,7 @@ import { Space, SpaceWithRelated } from '@/api/spaces';
 import { AppResult, get } from '@/api/request';
 import { Dispatch } from '@/store';
 import { Id } from '@/utils/id';
+import { User } from '@/api/users';
 
 export const SWITCH_EXPLORE_SPACE = 'SWITCH_EXPLORE_SPACE';
 
@@ -30,9 +31,26 @@ export interface SwitchChat {
 
 export interface SpaceLoaded {
   type: 'SPACE_LOADED';
-  space: AppResult<SpaceWithRelated>;
+  spaceId: Id;
+  result: AppResult<SpaceWithRelated>;
 }
 
 export const loadSpace = (id: Id) => (dispatch: Dispatch) => {
-  get('/spaces/query_with_related', { id }).then((space) => dispatch({ type: 'SPACE_LOADED', space }));
+  get('/spaces/query_with_related', { id }).then((result) => {
+    const action: SpaceLoaded = { type: 'SPACE_LOADED', result, spaceId: id };
+    dispatch(action);
+  });
+};
+
+export interface UserLoaded {
+  type: 'USER_LOADED';
+  userId: Id;
+  result: AppResult<User>;
+}
+
+export const loadUser = (id: Id) => (dispatch: Dispatch) => {
+  get('/users/query', { id }).then((result) => {
+    const action: UserLoaded = { type: 'USER_LOADED', result, userId: id };
+    dispatch(action);
+  });
 };

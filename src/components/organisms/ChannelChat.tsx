@@ -48,7 +48,7 @@ interface Props {
 
 function ChannelChat({ channelId }: Props) {
   useLoadChat(channelId);
-  const loading = useSelector((state) => state.ui.chat === undefined);
+  const loading = useSelector((state) => state.chat === undefined);
   const member = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   if (loading) {
     return (

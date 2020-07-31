@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Space, SpaceMember } from '@/api/spaces';
-import { useRegisterFetch } from '@/hooks';
-import { get } from '@/api/request';
+import { AppResult } from '@/api/request';
 import SpaceRoleTag from '../molecules/SpaceRoleTag';
 import Tag from '../atoms/Tag';
 import { css } from '@emotion/core';
@@ -9,7 +8,11 @@ import { bgColor, mR, mT, pX, pY, roundedPx, textLg, uiShadow } from '@/styles/a
 import { darken } from 'polished';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
-import { useSelector } from '@/store';
+import { useDispatch, useSelector } from '@/store';
+import { useEffect } from 'react';
+import { loadUser } from '@/actions/ui';
+import { errLoading } from '@/api/error';
+import { User } from '@/api/users';
 
 interface Props {
   member: SpaceMember;
@@ -20,7 +23,11 @@ interface Props {
 function MemberCardContent({ member, space }: Props) {
   const id = member.userId;
   const self = useSelector((state) => state.profile?.user.id === id);
-  const [result] = useRegisterFetch(id, () => get('/users/query', { id }), [id]);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(loadUser(id));
+  }, [id, dispatch]);
+  const result: AppResult<User> = useSelector((state) => state.ui.userSet.get(id, errLoading()));
   if (!result.isOk) {
     return <RenderError error={result.value} />;
   }

@@ -46,7 +46,8 @@ function useChannelJoinLeave(id: Id): { join: (characterName?: string) => void; 
 }
 
 function ChatHeader({ member }: Props) {
-  const channelId = useSelector((state) => state.ui.chat!.channel.id);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const channelId = useSelector((state) => state.chat!.channel.id);
   const { leave, join } = useChannelJoinLeave(channelId);
   const [open, setOpen] = useState(false);
   const [characterName, setCharacterName] = useState('');

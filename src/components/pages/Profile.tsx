@@ -2,12 +2,16 @@ import * as React from 'react';
 import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
 import { floatRight } from '@/styles/atoms';
-import { get, mediaUrl } from '@/api/request';
+import { AppResult, mediaUrl } from '@/api/request';
 import { useParams } from 'react-router-dom';
-import { useFetchResult, useTitleWithResult } from '@/hooks';
+import { useTitleWithResult } from '@/hooks';
 import { User } from '@/api/users';
 import { RenderError } from '../molecules/RenderError';
 import { decodeUuid } from '@/utils/id';
+import { useDispatch, useSelector } from '@/store';
+import { useEffect } from 'react';
+import { loadUser } from '@/actions/ui';
+import { errLoading, notFound } from '@/api/error';
 
 interface Params {
   id?: string;
@@ -16,7 +20,21 @@ interface Params {
 function Profile() {
   let { id } = useParams<Params>();
   id = id ? decodeUuid(id) : undefined;
-  const [result] = useFetchResult<User>(() => get('/users/query', { id }), [id]);
+  const myId = useSelector((state) => state.profile?.user.id);
+  id = id ?? myId;
+  const dispatch = useDispatch();
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    dispatch(loadUser(id));
+  }, [id, dispatch]);
+  const result: AppResult<User> = useSelector((state) => {
+    if (!id) {
+      return notFound('没有找到要查询的用户的ID。');
+    }
+    return state.ui.userSet.get(id, errLoading<User>());
+  });
   useTitleWithResult<User>(result, (user) => user.nickname);
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;

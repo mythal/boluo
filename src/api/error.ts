@@ -63,6 +63,10 @@ export const errLoading = <T>(): AppResult<T> => {
   return new Err(loading);
 };
 
+export const notFound = <T>(message = ''): AppResult<T> => {
+  return new Err({ code: NOT_FOUND, message }) as AppResult<T>;
+};
+
 export const notJson: AppError = {
   code: NOT_JSON,
   message: 'The response body is not JSON',

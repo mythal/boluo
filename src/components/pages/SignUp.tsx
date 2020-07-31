@@ -3,7 +3,21 @@ import { useState } from 'react';
 import Title from '../atoms/Title';
 import { useTitle } from '@/hooks';
 import { css } from '@emotion/core';
-import { alignRight, flex, largeInput, link, md, mL, mY, sm, spacingN, textLg, textSm, textXl } from '@/styles/atoms';
+import {
+  alignRight,
+  flex,
+  largeInput,
+  link,
+  listItemSquare,
+  md,
+  mL,
+  mY,
+  sm,
+  spacingN,
+  textLg,
+  textSm,
+  textXl,
+} from '@/styles/atoms';
 import Input from '../atoms/Input';
 import Button from '../atoms/Button';
 import { useForm, ValidationRules } from 'react-hook-form';
@@ -16,6 +30,8 @@ import { ErrorMessage } from '../atoms/ErrorMessage';
 import { Label } from '../atoms/Label';
 import { HelpText } from '../atoms/HelpText';
 import { emailValidation, nicknameValidation, passwordValidation, usernameValidation } from '@/validators';
+import signUpIcon from '../../assets/icons/sign-up.svg';
+import Icon from '@/components/atoms/Icon';
 
 interface FormData extends RegisterData {
   passwordRepeat: string;
@@ -41,7 +57,7 @@ const footerStyle = css`
 
 const noticeStyle = css`
   padding: 0;
-  ${[textSm]};
+  ${[textSm, listItemSquare]};
 `;
 
 function SignUp() {
@@ -120,6 +136,7 @@ function SignUp() {
           </div>
           <div css={[alignRight]}>
             <Button css={[mL(4), textLg]} disabled={submitting} data-variant="primary" type="submit">
+              <Icon sprite={signUpIcon} loading={submitting} />
               注册账号
             </Button>
           </div>

@@ -41,7 +41,7 @@ export const dictOptions = [
   { value: 'd6', label: 'D6' },
 ];
 
-function ManageSpace({ space, channels, members, my, dismiss }: Props) {
+function ManageSpace({ space, my, dismiss }: Props) {
   const { register, handleSubmit, errors } = useForm<EditSpace>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
@@ -101,6 +101,7 @@ function ManageSpace({ space, channels, members, my, dismiss }: Props) {
             ref={register(descriptionValidation)}
           />
           <HelpText>简要描述一下这个位面。</HelpText>
+          {errors.description && <ErrorMessage>{errors.description.message}</ErrorMessage>}
         </div>
         <Button data-variant="primary" disabled={editing} css={widthFull} type="submit">
           提交修改

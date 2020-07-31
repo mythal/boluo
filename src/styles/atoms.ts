@@ -238,13 +238,8 @@ export const mB = (n: number) =>
     margin-bottom: ${spacingN(n)};
   `;
 
-export const link = css`
-  color: ${linkColor};
-  text-decoration: none;
-
-  &:hover {
-    border-bottom: 0.1em solid ${linkColor};
-  }
+export const listItemSquare = css`
+  list-style-type: square;
 `;
 
 export const hidden = css`
@@ -264,6 +259,10 @@ export const inlineBlock = css`
 `;
 export const grid = css`
   display: grid;
+`;
+
+export const alignItemCenter = css`
+  align-items: center;
 `;
 
 export const alignCenter = css`
@@ -327,6 +326,30 @@ export const spaceGrid = [
     `
   ),
 ];
+
+export const link = css`
+  ${inlineBlock};
+  color: ${linkColor};
+  text-decoration: none;
+
+  transition-property: all;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in;
+  border-bottom: 1px solid ${linkColor};
+
+  &:hover {
+    color: ${lighten(0.1, linkColor)};
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:focus {
+    ${[focusShadow, roundedPx]};
+  }
+`;
+
 export const baseStyle = css`
   html {
     font-size: 14px;
@@ -351,15 +374,19 @@ export const flexGrow = css`
   flex-grow: 1;
 `;
 
-export const lightButton = css`
+export const outlineButton = css`
   display: inline-block;
   color: ${textColor};
-  ${textXl};
+  ${textLg};
+  background-color: rgba(255, 255, 255, 0.05);
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.15);
-  ${[roundedPx, pX(4), pY(3)]};
+  border: 0.075em solid rgba(255, 255, 255, 0.2);
+  ${[roundedPx, pX(3), pY(2), uiShadow]};
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.22);
+    border-color: ${lighten(0, primaryColor)};
+  }
+  &:active {
+    background-color: rgba(255, 255, 255, 0.1);
   }
 `;

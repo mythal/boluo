@@ -1,7 +1,9 @@
 import * as React from 'react';
-import Select, { Props as SelectProps, Theme } from 'react-select';
+import { Props as SelectProps, Theme } from 'react-select';
 import { bgColor, dangerColor, primaryColor, textColor, uiShadow } from '@/styles/atoms';
 import { darken, mix } from 'polished';
+
+const Select = React.lazy(() => import('react-select'));
 
 interface Props extends Omit<SelectProps, 'options'> {
   defaultDiceType?: string;

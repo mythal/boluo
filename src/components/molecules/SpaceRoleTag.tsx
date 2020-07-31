@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Space, SpaceMember } from '@/api/spaces';
-import Tag from '../atoms/Tag';
+import Badge from '../atoms/Badge';
 
 interface Props {
   space: Space;
@@ -11,27 +11,27 @@ interface Props {
 function SpaceRoleTag({ space, member, className }: Props) {
   if (!member) {
     return (
-      <Tag className={className} color="#4A5568">
+      <Badge className={className} color="#4A5568">
         未加入
-      </Tag>
+      </Badge>
     );
   } else if (space.ownerId === member.userId) {
     return (
-      <Tag className={className} color="#6B46C1">
+      <Badge className={className} color="#6B46C1">
         创建者
-      </Tag>
+      </Badge>
     );
   } else if (member.isAdmin) {
     return (
-      <Tag className={className} color="#2B6CB0">
+      <Badge className={className} color="#2B6CB0">
         管理员
-      </Tag>
+      </Badge>
     );
   } else {
     return (
-      <Tag className={className} color="#2F855A">
+      <Badge className={className} color="#2F855A">
         成员
-      </Tag>
+      </Badge>
     );
   }
 }

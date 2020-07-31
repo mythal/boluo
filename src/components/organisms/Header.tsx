@@ -10,12 +10,12 @@ import cog from '@/assets/icons/cog.svg';
 import chevronDown from '@/assets/icons/chevron-down.svg';
 import chevronUp from '@/assets/icons/chevron-up.svg';
 import { useRef, useState } from 'react';
-import Menu, { IMenuItem } from '../atoms/Menu';
+import Menu from '../atoms/Menu';
 import Overlay from '../atoms/Overlay';
 import logoutIcon from '@/assets/icons/logout.svg';
-import { useHistory } from 'react-router-dom';
-import { useIsLoggedIn, useLogout } from '@/hooks';
+import { useIsLoggedIn } from '@/hooks';
 import { useSelector } from '@/store';
+import { MenuItemLink } from '@/components/atoms/MenuItem';
 
 export const headerStyle = css`
   display: flex;
@@ -62,17 +62,10 @@ function Guest() {
 function User() {
   const [menu, setMenu] = useState(false);
   const menuAnchor = useRef<HTMLButtonElement | null>(null);
-  const history = useHistory();
-  const logout = useLogout();
   const nickname = useSelector((state) => state.profile?.user.nickname);
   const toggle = () => setMenu((open) => !open);
   const dismiss = () => setMenu(false);
 
-  const menuItems: IMenuItem[] = [
-    { text: '个人资料页', callback: () => history.push('/profile') },
-    { text: '设置', callback: () => history.push('/settings'), icon: cog },
-    { text: '登出', callback: logout, icon: logoutIcon },
-  ];
   return (
     <HeaderInner>
       <Nav>
@@ -93,7 +86,15 @@ function User() {
         </HeaderButton>
         {menu && (
           <Overlay x={1} y={1} selfY={1} selfX={-1} anchor={menuAnchor} onOuter={dismiss}>
-            <Menu dismiss={dismiss} items={menuItems} />
+            <Menu dismiss={dismiss}>
+              <MenuItemLink to="/profile">个人资料页</MenuItemLink>
+              <MenuItemLink to="/settings" icon={cog}>
+                设置
+              </MenuItemLink>
+              <MenuItemLink to="/logout" icon={logoutIcon}>
+                登出
+              </MenuItemLink>
+            </Menu>
           </Overlay>
         )}
       </Nav>

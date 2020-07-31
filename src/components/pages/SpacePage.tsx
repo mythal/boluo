@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import Title from '../atoms/Title';
 import { useParams } from 'react-router-dom';
-import { useIsLoggedIn, useTitleWithResult } from '@/hooks';
-import Tag from '../atoms/Tag';
+import { useTitleWithResult } from '@/hooks';
+import Badge from '../atoms/Badge';
 import Button from '../atoms/Button';
-import { floatRight, mR, mT, pB, preLine } from '@/styles/atoms';
+import { alignItemCenter, flex, mL, mR, mT, preLine } from '@/styles/atoms';
 import userCog from '@/assets/icons/user-cog.svg';
 import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
@@ -19,12 +19,18 @@ import { SpaceWithRelated } from '@/api/spaces';
 import GotoSpaceLink from '@/components/molecules/GotoSpaceLink';
 import { AppResult } from '@/api/request';
 import { errLoading } from '@/api/error';
+import styled from '@emotion/styled';
 
 interface Params {
   id: string;
 }
 
-const buttonStyle = [mR(1)];
+const OperatorBar = styled.div`
+  ${mT(6)};
+  display: flex;
+  align-items: flex-start;
+  // justify-content: space-between;
+`;
 
 function SpacePage() {
   let { id } = useParams<Params>();
@@ -36,7 +42,6 @@ function SpacePage() {
   }, [id, dispatch]);
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(id, errLoading()));
   useTitleWithResult<SpaceWithRelated>(result, ({ space }) => space.name);
-  const isLoggedIn = useIsLoggedIn();
   const myMember = useSelector((state) => state.profile?.spaces.get(id)?.member);
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;
@@ -45,23 +50,23 @@ function SpacePage() {
   const stopManage = () => setManaging(false);
   return (
     <>
-      <div css={[floatRight, pB(4)]}>
+      <Title css={[flex, alignItemCenter]}>
+        {space.name}
+        <Badge css={[mL(3)]} color={'#375942'}>
+          {members.length} 名成员
+        </Badge>
+      </Title>
+      <div css={[preLine, mT(2)]}>{space.description}</div>
+      <OperatorBar>
+        <GotoSpaceLink css={[mR(3)]} isMember={Boolean(myMember)} spaceId={space.id} />
         {myMember?.isAdmin && (
-          <Button css={buttonStyle} onClick={() => setManaging(true)}>
+          <Button data-small css={mR(1)} onClick={() => setManaging(true)}>
             <Icon sprite={userCog} /> 管理
           </Button>
         )}
-        {isLoggedIn && !myMember && <JoinSpaceButton css={buttonStyle} id={space.id} />}
-        <LeaveSpaceButton css={buttonStyle} id={space.id} name={space.name} />
-      </div>
-      <Title>{space.name}</Title>
-      <div>
-        <Tag color="#38A169">{members.length} 名成员</Tag>
-      </div>
-      <div css={[preLine, mT(2)]}>{space.description}</div>
-      <div css={[mT(6)]}>
-        <GotoSpaceLink isMember={Boolean(myMember)} spaceId={space.id} />
-      </div>
+        <JoinSpaceButton data-small id={space.id} />
+        <LeaveSpaceButton data-small id={space.id} name={space.name} />
+      </OperatorBar>
       {managing && myMember && (
         <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />
       )}

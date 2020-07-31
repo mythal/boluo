@@ -7,6 +7,7 @@ import { pY, spacingN, textXl } from '@/styles/atoms';
 
 interface Props {
   className?: string;
+  text?: string;
 }
 
 const loadingKeyframes = keyframes`
@@ -40,11 +41,10 @@ const rotateIconStyle = css`
   margin-inline-end: ${spacingN(1)};
 `;
 
-export default function Loading({ className }: Props) {
+export default function Loading({ className, text = 'loading' }: Props) {
   return (
     <Container className={className}>
-      <TextIcon sprite={rotateIcon} spin css={rotateIconStyle} />
-      <span>Loading ...</span>
+      <TextIcon sprite={rotateIcon} spin css={rotateIconStyle} /> <span>{text} ...</span>
     </Container>
   );
 }

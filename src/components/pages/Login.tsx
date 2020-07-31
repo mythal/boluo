@@ -16,6 +16,8 @@ import { useDispatch } from '@/store';
 import { LoggedIn } from '@/actions/profile';
 import { Label } from '../atoms/Label';
 import { clearCsrfToken } from '@/api/csrf';
+import loginIcon from '../../assets/icons/sign-in.svg';
+import Icon from '@/components/atoms/Icon';
 
 interface State {
   next?: string;
@@ -38,8 +40,11 @@ function Login() {
   const next = (location.state && location.state.next) || '/';
   const [loginError, setLoginError] = useState<AppError | null>(null);
   const { register, handleSubmit, errors } = useForm<LoginData>();
+  const [loggingIn, setLoggingIn] = useState(false);
   const onSubmit = async (data: LoginData) => {
+    setLoggingIn(true);
     const result = await post('/users/login', data);
+    setLoggingIn(false);
     clearCsrfToken();
     if (result.isOk) {
       dispatch<LoggedIn>({ type: 'LOGGED_IN', ...result.value.me });
@@ -68,7 +73,8 @@ function Login() {
           </div>
         </div>
         <div css={alignRight}>
-          <Button css={[mT(4), textLg]} data-variant="primary" type="submit">
+          <Button css={[mT(4), textLg]} data-variant="primary" type="submit" disabled={loggingIn}>
+            <Icon sprite={loginIcon} loading={loggingIn} />
             登录
           </Button>
         </div>

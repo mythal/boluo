@@ -17,6 +17,7 @@ import { useHistory } from 'react-router-dom';
 import { useDispatch } from '@/store';
 import { JoinedSpace } from '@/actions/profile';
 import implosion from '@/assets/icons/implosion.svg';
+import nightSky from '@/assets/icons/night-sky.svg';
 import Icon from '../atoms/Icon';
 import { channelNameValidation, descriptionValidation, spaceNameValidation } from '@/validators';
 import { RenderError } from '../molecules/RenderError';
@@ -35,12 +36,16 @@ function NewSpace() {
   const [creationError, setCreationError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
   const { register, handleSubmit, errors } = useForm<CreateSpace>();
+  const [submitting, setSubmitting] = useState(false);
+
   const history = useHistory();
   const dispatch = useDispatch();
 
   const onSubmit = async (data: CreateSpace) => {
     data.defaultDiceType = defaultDice?.value;
+    setSubmitting(true);
     const result = await post('/spaces/create', data);
+    setSubmitting(false);
     if (result.isOk) {
       const { space, member } = result.value;
       dispatch<JoinedSpace>({ type: 'JOINED_SPACE', space, member });
@@ -100,7 +105,8 @@ function NewSpace() {
           </div>
         </div>
         <div css={[alignRight]}>
-          <Button css={[mT(4), textLg]} type="submit" data-variant="primary">
+          <Button css={[mT(4), textLg]} type="submit" data-variant="primary" disabled={submitting}>
+            <Icon sprite={nightSky} loading={submitting} />
             创建位面
           </Button>
         </div>

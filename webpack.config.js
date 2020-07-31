@@ -8,6 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
@@ -20,7 +21,7 @@ module.exports = {
   mode: PRODUCTION ? 'production' : 'development',
 
   output: {
-    filename: '[name].js',
+    filename: '[name].[hash].js',
     path: path.resolve(rootPath, 'dist'),
     publicPath: '/',
   },
@@ -34,7 +35,10 @@ module.exports = {
         : path.resolve(rootPath, 'src/assets/logo-dev.svg'),
     }),
     new CleanWebpackPlugin(),
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({
+      filename: '[name].[hash].css',
+      chunkFilename: '[id].[hash].css',
+    }),
     new SpriteLoaderPlugin(),
     // new BundleAnalyzerPlugin(),
   ],
@@ -72,6 +76,10 @@ module.exports = {
 
   optimization: {
     minimize: PRODUCTION,
-    minimizer: [new TerserPlugin()],
+    splitChunks: {
+      chunks: 'all',
+      minSize: 200000,
+    },
+    minimizer: [new TerserPlugin(), new OptimizeCSSAssetsPlugin({})],
   },
 };

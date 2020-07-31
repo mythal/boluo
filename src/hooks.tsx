@@ -5,7 +5,7 @@ import { LOADING } from './api/error';
 import { clearCsrfToken } from './api/csrf';
 import { LoggedOut } from './actions/profile';
 import { useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from './store';
+import { Dispatch, useDispatch, useSelector } from './store';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -91,3 +91,19 @@ export function useLogout(): () => void {
 export function useIsLoggedIn(): boolean {
   return useSelector((state) => state.profile !== undefined);
 }
+
+export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
+  useEffect(() => {
+    (async () => {
+      const me = await get('/users/get_me');
+      if (me.isOk && me.value !== null) {
+        const { user, mySpaces, myChannels } = me.value;
+        dispatch({ type: 'LOGGED_IN', user, myChannels, mySpaces });
+      } else {
+        dispatch({ type: 'LOGGED_OUT' });
+      }
+      finish();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+};

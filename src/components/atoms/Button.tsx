@@ -45,7 +45,7 @@ export const buttonStyle = css`
   text-shadow: ${btnTextShadow};
   text-decoration: none;
   transition-property: all;
-  transition-duration: 0.1s;
+  transition-duration: 0.2s;
   transition-timing-function: ease-in;
   ${[uiShadow, controlRounded, textBase]};
 
@@ -60,6 +60,7 @@ export const buttonStyle = css`
   &:active,
   &:focus:active {
     filter: brightness(80%);
+    transform: translateY(1px);
   }
 
   &:focus {

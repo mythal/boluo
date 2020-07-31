@@ -1,47 +1,21 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { css } from '@emotion/core';
 import {
-  bgColor,
   color,
   floatRight,
-  fontBold,
-  inlineBlock,
   link,
-  linkColor,
   listStyleSquare,
   mT,
   mX,
   mY,
+  outlineButton,
   p,
-  roundedPx,
   textColor,
-  textLg,
   textXl,
-  uiShadow,
 } from '@/styles/atoms';
 import logo from '@/assets/logo.svg';
-import { darken, lighten } from 'polished';
+import { darken } from 'polished';
 import Title from '../atoms/Title';
-
-const signUpButtonStyle = css`
-  background-color: ${darken(0.05, linkColor)};
-  ${p(4)};
-  ${textLg};
-  ${fontBold};
-  text-decoration: none;
-  color: ${bgColor};
-  ${roundedPx};
-  ${mY(1)};
-  ${inlineBlock};
-  ${uiShadow};
-  &:hover {
-    background-color: ${linkColor};
-  }
-  &:active {
-    background-color: ${lighten(0.1, linkColor)};
-  }
-`;
 
 function GuestHome() {
   return (
@@ -58,7 +32,7 @@ function GuestHome() {
         、微酸香甜。
       </h2>
       <p>
-        <Link css={signUpButtonStyle} to="/sign-up">
+        <Link css={outlineButton} to="/sign-up">
           立即加入
         </Link>
       </p>

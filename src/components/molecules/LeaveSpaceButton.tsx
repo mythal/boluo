@@ -6,6 +6,8 @@ import doorOpen from '@/assets/icons/door-open.svg';
 import Icon from '../atoms/Icon';
 import { useState } from 'react';
 import { useDispatch, useSelector } from '@/store';
+import Text from '../atoms/Text';
+import Dialog from '@/components/molecules/Dialog';
 
 interface Props {
   id: Id;
@@ -18,25 +20,32 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
   const userId = useSelector((state) => state.profile?.spaces.get(id)?.member.userId);
   const dispatch = useDispatch();
   const [leaving, setLeaving] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(false);
   if (!userId) {
     return null;
   }
   const leave = async () => {
-    if (confirm(`确认要退出「${name}」位面吗？`)) {
-      setLeaving(true);
-      const result = await post('/spaces/leave', {}, { id });
-      setLeaving(false);
-      if (result.isOk) {
-        dispatch({ type: 'LEFT_SPACE', spaceId: id, userId });
-      }
+    setConfirmDialog(false);
+    setLeaving(true);
+    const result = await post('/spaces/leave', {}, { id });
+    setLeaving(false);
+    if (result.isOk) {
+      dispatch({ type: 'LEFT_SPACE', spaceId: id, userId });
     }
   };
 
   return (
-    <Button data-variant="danger" onClick={leave} disabled={leaving} {...props}>
-      <Icon sprite={doorOpen} loading={leaving} />
-      退出
-    </Button>
+    <>
+      <Button data-variant="danger" onClick={() => setConfirmDialog(true)} disabled={leaving} {...props}>
+        <Icon sprite={doorOpen} loading={leaving} />
+        退出
+      </Button>
+      {confirmDialog && (
+        <Dialog confirm={leave} dismiss={() => setConfirmDialog(false)} mask title="退出位面">
+          <Text>确认要退出「{name}」位面吗？</Text>
+        </Dialog>
+      )}
+    </>
   );
 }
 

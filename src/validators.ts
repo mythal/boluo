@@ -235,7 +235,7 @@ export const channelNameValidation: ValidationRules = {
 };
 export const descriptionValidation: ValidationRules = {
   maxLength: {
-    value: 128,
-    message: '简介最多128字符',
+    value: 512,
+    message: '简介最多512字符',
   },
 };

@@ -2,6 +2,8 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { mainWidth, margin0Auto, pX, pY } from '@/styles/atoms';
 import Header from '../organisms/Header';
+import { Suspense } from 'react';
+import Loading from '@/components/molecules/Loading';
 
 interface Props {
   children: React.ReactNode;
@@ -16,7 +18,9 @@ function BasePage({ children }: Props) {
     <div>
       <Header />
       <div css={[mainStyle]}>
-        <div css={[mainWidth, margin0Auto]}>{children}</div>
+        <div css={[mainWidth, margin0Auto]}>
+          <Suspense fallback={<Loading />}>{children}</Suspense>
+        </div>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ import Dialog from '../molecules/Dialog';
 import Loading from '../molecules/Loading';
 import Panel from '../molecules/Panel';
 import { baseStyle, spacingN } from '@/styles/atoms';
+import { MenuItem, MenuItemDisabled } from '@/components/atoms/MenuItem';
 
 function BaseStyle() {
   return <Global styles={baseStyle} />;
@@ -173,14 +174,12 @@ function Design() {
           </Button>
           {showMenu && (
             <Overlay x={1} y={1} selfY={-1} selfX={1} anchor={menuAnchor} onOuter={() => setShowMenu(false)}>
-              <Menu
-                dismiss={() => setShowMenu(false)}
-                items={[
-                  { text: 'hello', callback: () => alert('hello'), disabled: true },
-                  { text: 'hello', callback: () => alert('hello'), disabled: false },
-                  { text: 'world', icon: fan },
-                ]}
-              />
+              <Menu dismiss={() => setShowMenu(false)}>
+                <MenuItem onClick={() => alert('hello')}>Hello</MenuItem>
+                <MenuItem onClick={() => alert('hello')}>World</MenuItem>
+                <MenuItemDisabled icon={fan}>Disabled</MenuItemDisabled>
+                <MenuItem icon={fan}>Fan</MenuItem>
+              </Menu>
             </Overlay>
           )}
         </div>

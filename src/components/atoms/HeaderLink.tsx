@@ -3,6 +3,7 @@ import { css } from '@emotion/core';
 import { bgColor, breakpoint, mediaQuery, roundedPx, spacingN, textColor } from '@/styles/atoms';
 import { NavLink } from 'react-router-dom';
 import styled from '@emotion/styled';
+import { darken } from 'polished';
 
 interface Props {
   to: string;
@@ -13,6 +14,7 @@ interface Props {
 
 export const style = css`
   color: ${textColor};
+  cursor: pointer;
   text-decoration: none;
   padding: ${spacingN(2)} ${spacingN(3)};
   background-color: ${bgColor};
@@ -30,6 +32,9 @@ export const style = css`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  &.active {
+    background-color: ${darken(0.03, bgColor)};
+  }
   &:hover {
     background-color: rgba(255, 255, 255, 0.25);
   }

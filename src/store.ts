@@ -16,3 +16,5 @@ export const useDispatch = (): Dispatch => {
 export function useSelector<T>(mapper: (state: ApplicationState) => T, equalityFn?: (a: T, b: T) => boolean): T {
   return useReduxSelector<ApplicationState, T>(mapper, equalityFn);
 }
+
+export default store;

@@ -21,7 +21,8 @@ export const initUiState: UiState = {
 };
 
 const handleJoinSpace = ({ spaceSet, ...state }: UiState, action: JoinedSpace): UiState => {
-  spaceSet = spaceSet.update(action.space.id, (result) =>
+  console.log(spaceSet.toJS());
+  spaceSet = spaceSet.update(action.space.id, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
       members = members.filter((member) => member.userId !== action.member.userId);
       members.push(action.member);
@@ -32,7 +33,7 @@ const handleJoinSpace = ({ spaceSet, ...state }: UiState, action: JoinedSpace): 
 };
 
 const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, userId: Id | undefined): UiState => {
-  spaceSet = spaceSet.update(action.spaceId, (result) =>
+  spaceSet = spaceSet.update(action.spaceId, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
       members = members.filter((member) => member.userId !== userId);
       return { ...rest, members };
@@ -42,7 +43,9 @@ const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, use
 };
 
 const handleSpaceEdited = ({ spaceSet, ...state }: UiState, { space }: SpaceEdited): UiState => {
-  spaceSet = spaceSet.update(space.id, (result) => result.map((spaceWithRelated) => ({ ...spaceWithRelated, space })));
+  spaceSet = spaceSet.update(space.id, errLoading(), (result) =>
+    result.map((spaceWithRelated) => ({ ...spaceWithRelated, space }))
+  );
   return { ...state, spaceSet };
 };
 

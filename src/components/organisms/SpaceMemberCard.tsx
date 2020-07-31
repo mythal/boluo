@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Space, SpaceMember } from '@/api/spaces';
 import { AppResult } from '@/api/request';
 import SpaceRoleTag from '../molecules/SpaceRoleTag';
-import Tag from '../atoms/Tag';
+import Badge from '../atoms/Badge';
 import { css } from '@emotion/core';
 import { bgColor, mR, mT, pX, pY, roundedPx, textLg, uiShadow } from '@/styles/atoms';
 import { darken } from 'polished';
@@ -40,7 +40,7 @@ function MemberCardContent({ member, space }: Props) {
       <div>
         <span css={[textLg, mR(2)]}>{user.nickname}</span>
         <SpaceRoleTag space={space} member={member} />
-        {self && <Tag color="#555">我自己</Tag>}
+        {self && <Badge color="#555">我自己</Badge>}
       </div>
       {self && (
         <div css={[mT(4)]}>

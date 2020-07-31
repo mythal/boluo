@@ -21,42 +21,33 @@ export const initUiState: UiState = {
 };
 
 const handleJoinSpace = ({ spaceSet, ...state }: UiState, action: JoinedSpace): UiState => {
-  const result = spaceSet.get(action.space.id);
-  const next = result?.map(({ members, ...rest }) => {
-    members = members.filter((member) => member.userId !== action.member.userId);
-    members.push(action.member);
-    return { ...rest, members };
-  });
-  if (next) {
-    spaceSet = spaceSet.set(action.space.id, next);
-  }
+  spaceSet = spaceSet.update(action.space.id, (result) =>
+    result.map(({ members, ...rest }) => {
+      members = members.filter((member) => member.userId !== action.member.userId);
+      members.push(action.member);
+      return { ...rest, members };
+    })
+  );
   return { ...state, spaceSet };
 };
 
 const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, userId: Id | undefined): UiState => {
-  const spaceWithRelated = spaceSet.get(action.spaceId)?.map(({ members, ...rest }) => {
-    members = members.filter((member) => member.userId !== userId);
-    return { ...rest, members };
-  });
-  if (spaceWithRelated) {
-    spaceSet.set(action.spaceId, spaceWithRelated);
-  }
+  spaceSet = spaceSet.update(action.spaceId, (result) =>
+    result.map(({ members, ...rest }) => {
+      members = members.filter((member) => member.userId !== userId);
+      return { ...rest, members };
+    })
+  );
   return { ...state, spaceSet };
 };
 
 const handleSpaceEdited = ({ spaceSet, ...state }: UiState, { space }: SpaceEdited): UiState => {
-  const spaceWithRelated = spaceSet.get(space.id)?.map((spaceWithRelated) => ({ ...spaceWithRelated, space }));
-  if (spaceWithRelated) {
-    spaceSet = spaceSet.set(space.id, spaceWithRelated);
-  }
+  spaceSet = spaceSet.update(space.id, (result) => result.map((spaceWithRelated) => ({ ...spaceWithRelated, space })));
   return { ...state, spaceSet };
 };
 
 const handleUserEdited = ({ userSet, ...state }: UiState, { user }: UserEdited): UiState => {
-  const userResult = userSet.get(user.id)?.map(() => user);
-  if (userResult) {
-    userSet = userSet.set(user.id, userResult);
-  }
+  userSet = userSet.set(user.id, new Ok(user));
   return { ...state, userSet };
 };
 

@@ -1,10 +1,21 @@
 import * as React from 'react';
+import { useCallback, useEffect } from 'react';
 import { css } from '@emotion/core';
 import Button from '../atoms/Button';
-import { dialogBgColor, dialogTitleColor, pX, pY, roundedPx, spacingN, textXl, uiShadow } from '@/styles/atoms';
+import {
+  breakpoint,
+  dialogBgColor,
+  dialogTitleColor,
+  mediaQuery,
+  pX,
+  pY,
+  roundedPx,
+  spacingN,
+  textXl,
+  uiShadow,
+} from '@/styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
-import { useCallback, useEffect } from 'react';
 
 interface Props {
   children: React.ReactNode;
@@ -20,7 +31,11 @@ const style = css`
   ${roundedPx};
   ${uiShadow};
   transform: translate(-50%, -50%);
-  min-width: 24em;
+  min-width: 18em;
+
+  ${mediaQuery(breakpoint.md)} {
+    min-width: 24em;
+  }
 `;
 
 const buttonAreaStyle = css`

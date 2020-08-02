@@ -90,7 +90,7 @@ function NewSpace() {
               defaultValue="综合"
               id="firstChannelName"
               name="firstChannelName"
-              ref={register(channelNameValidation)}
+              ref={register(channelNameValidation())}
             />
             <HelpText>频道中可以发送各种消息。</HelpText>
           </div>

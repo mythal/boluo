@@ -13,6 +13,7 @@ interface Props {
 const container = css`
   position: fixed;
   top: 0;
+  z-index: 200;
 `;
 
 function Flash({ information }: Props) {

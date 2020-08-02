@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { encodeUuid, Id } from '@/utils/id';
-import { Link } from 'react-router-dom';
 import Icon from '@/components/atoms/Icon';
 import teleport from '@/assets/icons/teleport.svg';
 import binoculars from '@/assets/icons/binoculars.svg';
-import { outlineButton } from '@/styles/atoms';
+import { OutlineButtonLink } from '@/components/atoms/OutlineButton';
 
 interface Props {
   isMember: boolean;
@@ -16,15 +15,15 @@ function GotoSpaceLink({ isMember, spaceId, className }: Props) {
   const chatPath = `/chat/${encodeUuid(spaceId)}`;
   if (isMember) {
     return (
-      <Link css={outlineButton} className={className} to={chatPath}>
+      <OutlineButtonLink css={[]} className={className} to={chatPath}>
         <Icon sprite={teleport} /> 进入位面
-      </Link>
+      </OutlineButtonLink>
     );
   } else {
     return (
-      <Link css={outlineButton} className={className} to={chatPath}>
+      <OutlineButtonLink className={className} to={chatPath}>
         <Icon sprite={binoculars} /> 作为旁观者进入
-      </Link>
+      </OutlineButtonLink>
     );
   }
 }

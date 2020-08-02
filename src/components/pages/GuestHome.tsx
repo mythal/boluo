@@ -1,21 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  color,
-  floatRight,
-  link,
-  listStyleSquare,
-  mT,
-  mX,
-  mY,
-  outlineButton,
-  p,
-  textColor,
-  textXl,
-} from '@/styles/atoms';
+import { color, floatRight, link, listStyleSquare, mT, mX, mY, p, textColor, textXl } from '@/styles/atoms';
 import logo from '@/assets/logo.svg';
 import { darken } from 'polished';
 import Title from '../atoms/Title';
+import { OutlineButtonLink } from '@/components/atoms/OutlineButton';
 
 function GuestHome() {
   return (
@@ -32,9 +21,7 @@ function GuestHome() {
         、微酸香甜。
       </h2>
       <p>
-        <Link css={outlineButton} to="/sign-up">
-          立即加入
-        </Link>
+        <OutlineButtonLink to="/sign-up">立即加入</OutlineButtonLink>
       </p>
       <p>
         已经<del css={color(darken(0.5, textColor))}>菠萝菠萝哒</del>有账号了？

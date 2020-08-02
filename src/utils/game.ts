@@ -7,3 +7,10 @@ export const getDiceFace = (diceType: string): number => {
     return Number(match[1]);
   }
 };
+
+export const chatName = (characterName: string | undefined | null, nickname?: string): string | undefined => {
+  if (characterName && characterName.length > 0) {
+    return characterName;
+  }
+  return nickname;
+};

@@ -1,5 +1,6 @@
 import { css, Interpolation, keyframes } from '@emotion/core';
-import { darken, lighten, transparentize } from 'polished';
+import { darken, lighten, mix, transparentize } from 'polished';
+import { Theme } from 'react-select';
 
 export const onDisabled = (...styles: Interpolation[]) =>
   css`
@@ -138,20 +139,25 @@ export const dialogBgColor = '#343434';
 export const dialogTitleColor = darken(0.3, textColor);
 export const dialogHeaderBgColor = darken(0.075, dialogBgColor);
 export const focusOutlineColor = 'rgba(255, 255, 255, 0.4)';
+export const chatSidebarColor = darken(0.03, headerBgColor);
 
 export const mainWidth = css`
   max-width: 50em;
 `;
+export const uiShadowValue = `0 0 4px 0 ${transparentize(0.6, uiShadowColor)}, 0 1px 1px 0 ${uiShadowColor}`;
 export const uiShadow = css`
-  box-shadow: 0 0 4px 0 ${transparentize(0.6, uiShadowColor)}, 0 1px 1px 0 ${uiShadowColor};
+  box-shadow: ${uiShadowValue};
+`;
+
+export const headerShadow = css`
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.5);
 `;
 export const shadowXl = css`
   box-shadow: 0 0 24px #000000;
 `;
 export const focusShadow = css`
   outline: none;
-  box-shadow: 0 0 0 2px ${focusOutlineColor}, 0 0 4px 0 ${transparentize(0.6, uiShadowColor)},
-    0 1px 1px 0 ${uiShadowColor};
+  box-shadow: 0 0 0 2px ${focusOutlineColor}, ${uiShadowValue};
 `;
 export const controlRounded = roundedPx;
 
@@ -389,4 +395,55 @@ export const outlineButton = css`
   &:active {
     background-color: rgba(255, 255, 255, 0.1);
   }
+`;
+
+export const headerTransition = css`
+  transition: all 120ms ease-in-out;
+`;
+
+export const chatHeaderPadding = css`
+  ${[pX(2), pY(1.5)]};
+`;
+export const sidebarWidth = css`
+  min-width: 200px;
+  max-width: 200px;
+`;
+
+export const chatHeaderStyle = css`
+  background-color: ${headerBgColor};
+  ${[chatHeaderPadding]};
+  grid-area: header;
+  z-index: 6;
+  ${headerShadow};
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+`;
+export const selectTheme = (theme: Theme): Theme => ({
+  borderRadius: 1,
+  spacing: theme.spacing,
+  colors: {
+    primary: primaryColor,
+    primary75: darken(0.3, primaryColor),
+    primary50: darken(0.25, primaryColor),
+    primary25: darken(0.2, primaryColor),
+    danger: dangerColor,
+    dangerLight: darken(0.2, dangerColor),
+    neutral0: bgColor,
+    neutral5: mix(0.9, bgColor, textColor),
+    neutral10: mix(0.8, bgColor, textColor),
+    neutral20: mix(0.7, bgColor, textColor),
+    neutral30: mix(0.6, bgColor, textColor),
+    neutral40: mix(0.5, bgColor, textColor),
+    neutral50: mix(0.4, bgColor, textColor),
+    neutral60: mix(0.3, bgColor, textColor),
+    neutral70: mix(0.2, bgColor, textColor),
+    neutral80: mix(0.1, bgColor, textColor),
+    neutral90: textColor,
+  },
+});
+const colorA = 'rgba(48, 48, 48, 0.9)';
+const colorB = 'rgba(52, 52, 52, 0.9)';
+export const previewStyle = css`
+  background: repeating-linear-gradient(45deg, ${colorA}, ${colorA} 10px, ${colorB} 10px, ${colorB} 20px);
 `;

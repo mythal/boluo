@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { Suspense } from 'react';
 import { Portal } from './Portal';
 import { css, keyframes } from '@emotion/core';
 import styled from '@emotion/styled';
 import { modalMaskColor, modalZIndex } from '@/styles/atoms';
-import { Suspense } from 'react';
 import Loading from '@/components/molecules/Loading';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {

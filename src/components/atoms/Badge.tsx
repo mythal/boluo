@@ -15,6 +15,8 @@ export const tagStyle = (color: string) => css`
   background-color: ${color};
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
+  display: inline-block;
+  white-space: nowrap;
 `;
 
 function Badge({ color, children, className }: Props) {

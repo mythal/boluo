@@ -7,4 +7,4 @@ A chat tool made for play RPG.
 ## Licenses
 
 - [FontAwesome](https://fontawesome.com/license)
-- [feather](https://github.com/feathericons/feather/blob/master/LICENSE)
+- [GameIcons](https://game-icons.net/) - [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/)

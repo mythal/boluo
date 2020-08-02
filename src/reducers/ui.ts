@@ -7,6 +7,7 @@ import { Id } from '@/utils/id';
 import { Map } from 'immutable';
 import { User } from '@/api/users';
 import { Ok } from '@/utils/result';
+import { Channel } from '@/api/channels';
 
 export interface UiState {
   exploreSpaceList: AppResult<Space[]>;
@@ -49,6 +50,29 @@ const handleSpaceEdited = ({ spaceSet, ...state }: UiState, { space }: SpaceEdit
   return { ...state, spaceSet };
 };
 
+const handleChannel = (state: UiState, channel: Channel): UiState => {
+  let { spaceSet } = state;
+  const result: AppResult<SpaceWithRelated> = spaceSet.get(channel.spaceId, errLoading());
+  if (!result || !result.isOk) {
+    return state;
+  }
+  let updated = false;
+  const channels = result.value.channels.map((item) => {
+    if (item.id !== channel.id) {
+      return item;
+    } else {
+      updated = true;
+      return channel;
+    }
+  });
+  if (!updated) {
+    channels.push(channel);
+  }
+  const spaceWithRelated: SpaceWithRelated = { ...result.value, channels };
+  spaceSet = spaceSet.set(spaceWithRelated.space.id, new Ok(spaceWithRelated));
+  return { ...state, spaceSet };
+};
+
 const handleUserEdited = ({ userSet, ...state }: UiState, { user }: UserEdited): UiState => {
   userSet = userSet.set(user.id, new Ok(user));
   return { ...state, userSet };
@@ -68,10 +92,17 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
       return handleUserEdited(state, action);
     case 'JOINED_SPACE':
       return handleJoinSpace(state, action);
+    case 'JOINED_CHANNEL':
+      return handleChannel(state, action.channel);
     case 'LEFT_SPACE':
       return handleLeftSpace(state, action, userId);
     case 'SPACE_EDITED':
       return handleSpaceEdited(state, action);
+    case 'CHANNEL_EVENT_RECEIVED':
+      switch (action.event.body.type) {
+        case 'CHANNEL_EDITED':
+          return handleChannel(state, action.event.body.channel);
+      }
   }
   return state;
 }

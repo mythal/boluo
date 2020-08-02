@@ -1,4 +1,4 @@
-import { createStore, applyMiddleware } from 'redux';
+import { applyMiddleware, createStore } from 'redux';
 import thunk, { ThunkDispatch } from 'redux-thunk';
 import { applicationReducer, ApplicationState, initApplicationState } from './reducers';
 import { Action } from './actions';

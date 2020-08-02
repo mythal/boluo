@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { useRef, useState } from 'react';
 import { css } from '@emotion/core';
-import { headerBgColor, headerHeight, mainP, mainWidth, mR } from '@/styles/atoms';
+import { headerBgColor, headerHeight, headerShadow, mainP, mainWidth, mR } from '@/styles/atoms';
 import HeaderLink, { HeaderButton } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
 import logo from '@/assets/logo.svg';
@@ -9,7 +10,6 @@ import plus from '@/assets/icons/plus-circle.svg';
 import cog from '@/assets/icons/cog.svg';
 import chevronDown from '@/assets/icons/chevron-down.svg';
 import chevronUp from '@/assets/icons/chevron-up.svg';
-import { useRef, useState } from 'react';
 import Menu from '../atoms/Menu';
 import Overlay from '../atoms/Overlay';
 import logoutIcon from '@/assets/icons/logout.svg';
@@ -23,7 +23,7 @@ export const headerStyle = css`
   justify-content: stretch;
   height: ${headerHeight};
   background-color: ${headerBgColor};
-  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.5);
+  ${headerShadow};
 `;
 
 export const HeaderInner = styled.div`

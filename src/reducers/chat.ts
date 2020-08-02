@@ -21,6 +21,13 @@ export interface PreviewChatItem {
   id: Id;
 }
 
+export interface MyPreviewItem {
+  type: 'MY_PREVIEW';
+  preview?: Preview;
+  date: Date;
+  id: Id;
+}
+
 export interface EmptyItem {
   type: 'EMPTY';
   date: Date;
@@ -31,7 +38,7 @@ export const newPreviewChatItem = (preview: Preview): PreviewChatItem => ({
   type: 'PREVIEW',
   preview,
   date: new Date(preview.start),
-  id: preview.id,
+  id: preview.senderId,
 });
 
 export const newMessageChatItem = (message: Message): MessageChatItem => ({
@@ -41,14 +48,21 @@ export const newMessageChatItem = (message: Message): MessageChatItem => ({
   message,
 });
 
+export const newMyPreviewItem = (myId: Id, preview?: Preview): MyPreviewItem => ({
+  type: 'MY_PREVIEW',
+  date: preview ? new Date(preview.start) : new Date(),
+  id: myId,
+  preview,
+});
+
 export const newEmptyItem = (date: Date): EmptyItem => ({ type: 'EMPTY', date, id: newId() });
 
-export type ChatItem = MessageChatItem | PreviewChatItem | EmptyItem;
+export type ChatItem = MessageChatItem | PreviewChatItem | EmptyItem | MyPreviewItem;
 
 export interface PreviewEntry {
   type: 'PREVIEW';
   date: Date;
-  id: Id;
+  previewId: Id;
 }
 
 export interface MessageEntry {
@@ -62,7 +76,7 @@ export const addMessageToItemMap = (itemMap: ItemMap, message: Message): ItemMap
   itemMap.set(message.id, { type: 'MESSAGE', date: new Date(message.orderDate) });
 
 export const addPreviewToItemMap = (itemMap: ItemMap, preview: Preview): ItemMap =>
-  itemMap.set(preview.senderId, { type: 'PREVIEW', date: new Date(preview.start), id: preview.id });
+  itemMap.set(preview.senderId, { type: 'PREVIEW', date: new Date(preview.start), previewId: preview.id });
 
 export const findItem = (itemList: List<ChatItem>, date: Date, id: Id): [number, ChatItem] => {
   let i = 0;
@@ -110,6 +124,9 @@ export interface ChatState {
   finished: boolean;
   messageBefore: number;
   eventAfter: number;
+  initialized: boolean;
+  filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
+  memberList: boolean;
 }
 
 export const initChatState = undefined;
@@ -196,22 +213,29 @@ const deleteMessage = (itemList: List<ChatItem>, itemMap: ItemMap, messageId: Id
   return [itemList.set(index, newEmptyItem(item.date)), itemMap.remove(messageId)];
 };
 
-const newPreview = (itemList: List<ChatItem>, itemMap: ItemMap, preview: Preview): [List<ChatItem>, ItemMap] => {
+const newPreview = (
+  itemList: List<ChatItem>,
+  itemMap: ItemMap,
+  preview: Preview,
+  myId: Id | undefined
+): [List<ChatItem>, ItemMap] => {
   const messageInfo = queryMessageEntry(itemMap, preview.id);
   if (messageInfo !== undefined) {
-    // There is already a message with the same id.
-    console.warn('preview after the message');
+    console.warn('There is already a message with the same id.');
+    console.debug(preview, messageInfo);
     return [itemList, itemMap];
   }
 
   const previousPreviewEntry = queryPreviewEntry(itemMap, preview.senderId);
+  const previewItem = preview.senderId === myId ? newMyPreviewItem(myId, preview) : newPreviewChatItem(preview);
+
+  // Users have sent previews.
   if (previousPreviewEntry !== undefined) {
-    // Users have sent previews.
-    const { id, date } = previousPreviewEntry;
-    const [index] = findItem(itemList, date, id);
-    if (id === preview.id) {
+    const { previewId, date } = previousPreviewEntry;
+    const [index] = findItem(itemList, date, preview.senderId);
+    if (previewId === preview.id) {
       // same id, replace it.
-      itemList = itemList.set(index, newPreviewChatItem(preview));
+      itemList = itemList.set(index, previewItem);
       return [itemList, itemMap];
     } else {
       // different id, delete it.
@@ -220,9 +244,9 @@ const newPreview = (itemList: List<ChatItem>, itemMap: ItemMap, preview: Preview
   }
 
   itemMap = addPreviewToItemMap(itemMap, preview);
-  const previewItem = newPreviewChatItem(preview);
   const startDate = previewItem.date;
 
+  // insert new item to item list.
   let i = 0;
   for (const item of itemList) {
     if (item.date < startDate) {
@@ -238,31 +262,33 @@ const newMessage = (
   itemMap: ItemMap,
   message: Message,
   messageBefore: number,
-  eventAfter: number
+  eventAfter: number,
+  initialized: boolean,
+  finished: boolean
 ): [List<ChatItem>, ItemMap] => {
   const messageItem = newMessageChatItem(message);
   const messageDate = messageItem.date;
   const previousPreview = queryPreviewEntry(itemMap, message.senderId);
 
-  // new message ordered before oldest message.
-  if (message.orderDate < Math.min(messageBefore, eventAfter)) {
+  // new message ordered before oldest message, don't show it.
+  if (initialized && !finished && message.orderDate < Math.min(messageBefore, eventAfter)) {
     if (previousPreview === undefined) {
       return [itemList, itemMap];
     }
     // delete preview.
     itemMap = itemMap.remove(message.senderId);
-    const [index] = findItem(itemList, previousPreview.date, previousPreview.id);
+    const [index] = findItem(itemList, previousPreview.date, message.senderId);
     itemList = itemList.set(index, newEmptyItem(previousPreview.date));
     return [itemList, itemMap];
   }
 
-  // Users have sent previews.
+  // Some users have sent preview messages
   if (previousPreview !== undefined) {
-    const { id, date } = previousPreview;
-    const [index] = findItem(itemList, date, id);
+    const { previewId, date } = previousPreview;
+    const [index] = findItem(itemList, date, message.senderId);
     itemMap = itemMap.remove(message.senderId);
 
-    if (id === message.id) {
+    if (previewId === message.id) {
       // same id, replace it.
       itemList = itemList.set(index, messageItem);
       itemMap = addMessageToItemMap(itemMap, message);
@@ -303,25 +329,32 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
   return colorMap;
 };
 
-const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived): ChatState => {
+const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, myId: Id | undefined): ChatState => {
   if (event.mailbox !== chat.channel.id) {
     return chat;
   }
   const body = event.body;
-  let { itemList, itemMap, channel, colorMap, members, heartbeatMap } = chat;
+  let { itemList, itemMap, channel, colorMap, members, heartbeatMap, eventAfter, initialized } = chat;
 
   let messageBefore = chat.messageBefore;
-  const eventAfter = event.timestamp;
-  if (body.type !== 'HEARTBEAT' && DEBUG) {
+  if (DEBUG) {
     console.log('Channel Event: ', body.type, body);
   }
   switch (body.type) {
     case 'NEW_MESSAGE':
-      [itemList, itemMap] = newMessage(itemList, itemMap, body.message, messageBefore, eventAfter);
+      [itemList, itemMap] = newMessage(
+        itemList,
+        itemMap,
+        body.message,
+        messageBefore,
+        eventAfter,
+        initialized,
+        chat.finished
+      );
       messageBefore = Math.min(body.message.orderDate, messageBefore);
       break;
     case 'MESSAGE_PREVIEW':
-      [itemList, itemMap] = newPreview(itemList, itemMap, body.preview);
+      [itemList, itemMap] = newPreview(itemList, itemMap, body.preview, myId);
       break;
     case 'MESSAGE_DELETED':
       [itemList, itemMap] = deleteMessage(itemList, itemMap, body.messageId);
@@ -334,18 +367,26 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived): C
         channel = body.channel;
       }
       break;
+    case 'INITIALIZED':
+      initialized = true;
+      break;
     case 'MEMBERS':
       members = body.members;
       colorMap = updateColorMap(members, colorMap);
       break;
-    case 'HEARTBEAT':
-      heartbeatMap = heartbeatMap.set(body.userId, event.timestamp);
+    case 'HEARTBEAT_MAP':
+      heartbeatMap = Map(body.heartbeatMap);
       break;
   }
-  return { ...chat, channel, colorMap, itemList, itemMap, eventAfter, messageBefore, heartbeatMap };
+  eventAfter = event.timestamp;
+  return { ...chat, channel, colorMap, itemList, itemMap, eventAfter, messageBefore, heartbeatMap, initialized };
 };
 
-export const chatReducer = (state: ChatState | undefined, action: Action): ChatState | undefined => {
+export const chatReducer = (
+  state: ChatState | undefined,
+  action: Action,
+  myId: Id | undefined
+): ChatState | undefined => {
   if (action.type === 'CHAT_LOADED') {
     return loadChat(state, action.chat);
   }
@@ -357,8 +398,12 @@ export const chatReducer = (state: ChatState | undefined, action: Action): ChatS
       return closeChat(state, action);
     case 'LOAD_MESSAGES':
       return loadMessages(state, action);
+    case 'CHAT_FILTER':
+      return { ...state, filter: action.filter };
+    case 'TOGGLE_MEMBER_LIST':
+      return { ...state, memberList: !state.memberList };
     case 'CHANNEL_EVENT_RECEIVED':
-      return handleChannelEvent(state, action);
+      return handleChannelEvent(state, action, myId);
   }
   return state;
 };

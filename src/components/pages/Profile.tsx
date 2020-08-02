@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useEffect } from 'react';
 import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
 import { floatRight } from '@/styles/atoms';
@@ -9,7 +10,6 @@ import { User } from '@/api/users';
 import { RenderError } from '../molecules/RenderError';
 import { decodeUuid } from '@/utils/id';
 import { useDispatch, useSelector } from '@/store';
-import { useEffect } from 'react';
 import { loadUser } from '@/actions/ui';
 import { errLoading, notFound } from '@/api/error';
 

@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Flash from './organisms/Flash';
 import { useDispatch, useSelector } from '@/store';

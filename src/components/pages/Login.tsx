@@ -11,7 +11,7 @@ import { ErrorMessage } from '../atoms/ErrorMessage';
 import { post } from '@/api/request';
 import { AppError, errorText, NO_PERMISSION } from '@/api/error';
 import InformationBar from '../molecules/InformationBar';
-import { useLocation, useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { useDispatch } from '@/store';
 import { LoggedIn } from '@/actions/profile';
 import { Label } from '../atoms/Label';

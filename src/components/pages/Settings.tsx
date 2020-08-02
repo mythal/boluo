@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { EditUser } from '@/api/users';
 import { alignRight, flex, largeInput, mT, spacingN, textLg } from '@/styles/atoms';
@@ -7,7 +8,6 @@ import Input from '../atoms/Input';
 import { bioValidation, nicknameValidation } from '@/validators';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import Button from '../atoms/Button';
-import { useState } from 'react';
 import { AppError, errorText } from '@/api/error';
 import InformationBar from '../molecules/InformationBar';
 import { editAvatar, post } from '@/api/request';

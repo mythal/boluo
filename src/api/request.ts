@@ -3,12 +3,21 @@ import { Err, Ok, Result } from '@/utils/result';
 import { AppError, notJson } from './error';
 import { getCsrfToken } from './csrf';
 import { CheckEmail, CheckUsername, EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
-import { CheckName, CreateSpace, EditSpace, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
+import {
+  CheckSpaceName,
+  CreateSpace,
+  EditSpace,
+  Space,
+  SpaceMember,
+  SpaceWithMember,
+  SpaceWithRelated,
+} from './spaces';
 import {
   Channel,
   ChannelMember,
   ChannelWithMember,
   ChannelWithRelated,
+  CheckChannelName,
   CreateChannel,
   EditChannel,
   EditChannelMember,
@@ -102,11 +111,8 @@ export function post(path: '/spaces/join', payload: {}, query: IdQuery): Promise
 export function post(path: '/spaces/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(path: '/spaces/delete', payload: {}, query: IdQuery): Promise<AppResult<Space>>;
 export function post(path: '/channels/create', payload: CreateChannel): Promise<AppResult<ChannelWithMember>>;
-export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<true>>;
-export function post(
-  path: '/channels/edit_member',
-  payload: EditChannelMember
-): Promise<AppResult<ChannelMember | null>>;
+export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<Channel>>;
+export function post(path: '/channels/edit_member', payload: EditChannelMember): Promise<AppResult<ChannelMember>>;
 export function post(path: '/channels/join', payload: JoinChannel): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(path: '/channels/delete', payload: {}, query: IdQuery): Promise<AppResult<Channel>>;
@@ -131,11 +137,12 @@ export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMember[]>>;
-export function get(path: '/spaces/check_name', query: CheckName): Promise<AppResult<boolean>>;
+export function get(path: '/spaces/check_name', query: CheckSpaceName): Promise<AppResult<boolean>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;
 export function get(path: '/channels/members', query: IdQuery): Promise<AppResult<ChannelMember[]>>;
+export function get(path: '/channels/check_name', query: CheckChannelName): Promise<AppResult<boolean>>;
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
 

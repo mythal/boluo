@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import Title from '../atoms/Title';
 import { useParams } from 'react-router-dom';
 import { useTitleWithResult } from '@/hooks';
 import Badge from '../atoms/Badge';
 import Button from '../atoms/Button';
-import { alignItemCenter, flex, mL, mR, mT, preLine } from '@/styles/atoms';
+import { alignItemCenter, flex, inlineBlock, m, mB, mL, mR, mT, p, preLine, text3Xl } from '@/styles/atoms';
 import userCog from '@/assets/icons/user-cog.svg';
 import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
@@ -32,6 +31,12 @@ const OperatorBar = styled.div`
   // justify-content: space-between;
 `;
 
+const SpaceTitle = styled.h1`
+  ${[inlineBlock, text3Xl, m(0), p(0)]};
+  font-weight: normal;
+  line-height: 1.25em;
+`;
+
 function SpacePage() {
   let { id } = useParams<Params>();
   id = decodeUuid(id);
@@ -50,12 +55,12 @@ function SpacePage() {
   const stopManage = () => setManaging(false);
   return (
     <>
-      <Title css={[flex, alignItemCenter]}>
-        {space.name}
+      <div css={[flex, alignItemCenter, mB(6)]}>
+        <SpaceTitle>{space.name}</SpaceTitle>
         <Badge css={[mL(3)]} color={'#375942'}>
           {members.length} 名成员
         </Badge>
-      </Title>
+      </div>
       <div css={[preLine, mT(2)]}>{space.description}</div>
       <OperatorBar>
         <GotoSpaceLink css={[mR(3)]} isMember={Boolean(myMember)} spaceId={space.id} />

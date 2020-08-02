@@ -1,76 +1,121 @@
 import * as React from 'react';
-import { css } from '@emotion/core';
-import { ChannelMember } from '@/api/channels';
-import { throwErr } from '@/utils/errors';
-import { post } from '@/api/request';
-import { Id } from '@/utils/id';
 import { useState } from 'react';
-import Dialog from '../molecules/Dialog';
-import Input from '../atoms/Input';
-import { Label } from '../atoms/Label';
-import { useDispatch, useSelector } from '@/store';
+import { css } from '@emotion/core';
+import { useSelector } from '@/store';
+import {
+  breakpoint,
+  chatHeaderStyle,
+  flex,
+  fontBold,
+  mediaQuery,
+  mL,
+  mR,
+  pR,
+  textBase,
+  textColor,
+  textLg,
+} from '@/styles/atoms';
+import ChannelMemberButton from './ChannelMemberButton';
+import sliders from '@/assets/icons/sliders.svg';
+import ChatHeaderButton from '@/components/atoms/ChatHeaderButton';
+import Icon from '@/components/atoms/Icon';
+import ManageChannel from '@/components/organisms/ManageChannel';
+import styled from '@emotion/styled';
+import { darken } from 'polished';
+import ChatFilter from '@/components/organisms/ChatFilter';
+import { useTitle } from '@/hooks';
+import MemberListButton from '@/components/molecules/MemberListButton';
 
-interface Props {
-  member?: ChannelMember;
-}
+const Topic = styled.div`
+  display: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  color: ${darken(0.2, textColor)};
 
-const container = css`
-  background-color: lightcoral;
-  height: 3rem;
-  grid-area: header;
+  ${mediaQuery(breakpoint.md)} {
+    display: inline-block;
+    width: 14em;
+  }
+
+  ${mediaQuery(breakpoint.lg)} {
+    width: 24em;
+  }
+
+  ${mediaQuery(breakpoint.xl)} {
+    width: 32em;
+  }
 `;
 
-function useChannelJoinLeave(id: Id): { join: (characterName?: string) => void; leave: () => void } {
-  const dispatch = useDispatch();
-  const throwE = throwErr(dispatch);
-  const leave = async () => {
-    const result = await post('/channels/leave', {}, { id });
-    if (result.isOk) {
-      dispatch({ type: 'LEFT_CHANNEL', id });
-    } else {
-      throwE(result.value);
-    }
-  };
-  const join = async (characterName?: string) => {
-    const result = await post('/channels/join', {
-      channelId: id,
-      characterName,
-    });
-    if (result.isOk) {
-      dispatch({ type: 'JOINED_CHANNEL', ...result.value });
-    } else {
-      throwE(result.value);
-    }
-  };
-  return { join, leave };
-}
+const leftPart = css`
+  ${[flex]};
+  flex-shrink: 1;
+  align-items: center;
+  min-width: 0;
+`;
 
-function ChatHeader({ member }: Props) {
+const rightPart = css`
+  ${[flex, mL(2)]};
+  align-items: stretch;
+`;
+
+const ChannelName = styled.div`
+  ${[textBase, fontBold, textLg]};
+  color: ${textColor};
+  display: none;
+  ${pR(1)};
+  ${mR(1)};
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 6em;
+
+  ${mediaQuery(breakpoint.sm)} {
+    display: inline-block;
+    max-width: 6em;
+  }
+  ${mediaQuery(breakpoint.md)} {
+    max-width: 12em;
+  }
+  ${mediaQuery(breakpoint.lg)} {
+    max-width: 16em;
+  }
+  ${mediaQuery(breakpoint.xl)} {
+    max-width: 24em;
+  }
+
+  &::before {
+    content: '#';
+    font-family: monospace;
+    color: ${darken(0.2, textColor)};
+    ${[pR(1)]};
+  }
+`;
+
+function ChatHeader() {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const channelId = useSelector((state) => state.chat!.channel.id);
-  const { leave, join } = useChannelJoinLeave(channelId);
-  const [open, setOpen] = useState(false);
-  const [characterName, setCharacterName] = useState('');
-  const onConfirm = () => {
-    join(characterName);
-    setOpen(false);
-  };
+  const channel = useSelector((state) => state.chat!.channel);
+  const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
+  const [managePanel, setManagePanel] = useState(false);
+  useTitle(channel.name);
   return (
-    <div css={container}>
-      {member ? <button onClick={leave}>退出频道</button> : <button onClick={() => setOpen(true)}>加入频道</button>}
-      {open && (
-        <Dialog title="加入频道" dismiss={() => setOpen(false)} confirm={onConfirm} mask confirmText="加入">
-          <Label htmlFor="characterName">
-            角色名<small>（选填）</small>
-          </Label>
-          <Input
-            id="characterName"
-            value={characterName}
-            onChange={(e) => setCharacterName(e.target.value)}
-            placeholder="例如：甘道夫"
-          />
-        </Dialog>
-      )}
+    <div css={chatHeaderStyle}>
+      <div css={leftPart}>
+        <ChannelName>{channel.name}</ChannelName>
+        <Topic>{channel.topic}</Topic>
+      </div>
+      <div css={rightPart}>
+        {isSpaceAdmin && (
+          <ChatHeaderButton onClick={() => setManagePanel(true)}>
+            <Icon sprite={sliders} />
+          </ChatHeaderButton>
+        )}
+        <ChatFilter css={[mL(1)]} />
+        <MemberListButton channelId={channel.id} css={[mL(1)]} />
+        <ChannelMemberButton css={mL(1)} />
+      </div>
+      {managePanel && <ManageChannel channel={channel} dismiss={() => setManagePanel(false)} />}
     </div>
   );
 }

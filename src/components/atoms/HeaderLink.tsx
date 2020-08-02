@@ -1,9 +1,18 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { bgColor, breakpoint, mediaQuery, roundedPx, spacingN, textColor } from '@/styles/atoms';
+import {
+  bgColor,
+  breakpoint,
+  headerTransition,
+  mediaQuery,
+  primaryColor,
+  roundedPx,
+  spacingN,
+  textColor,
+} from '@/styles/atoms';
 import { NavLink } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { darken } from 'polished';
+import { darken, lighten } from 'polished';
 
 interface Props {
   to: string;
@@ -32,11 +41,14 @@ export const style = css`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  ${headerTransition};
   &.active {
     background-color: ${darken(0.03, bgColor)};
+    box-shadow: 0 -2px 0 0 ${primaryColor} inset;
   }
   &:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: ${lighten(0.1, bgColor)};
+    box-shadow: 0 -2px 0 0 ${primaryColor} inset;
   }
   &:active {
     background-color: rgba(255, 255, 255, 0.15);

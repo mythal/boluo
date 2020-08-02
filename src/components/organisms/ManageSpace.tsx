@@ -35,26 +35,21 @@ const panelStyle = css`
   }
 `;
 
-export const dictOptions = [
-  { value: 'd20', label: 'D20' },
-  { value: 'd100', label: 'D100' },
-  { value: 'd6', label: 'D6' },
-];
-
 function ManageSpace({ space, my, dismiss }: Props) {
   const { register, handleSubmit, errors } = useForm<EditSpace>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
-  const [editing, setEditing] = useState(false);
+
+  const [submitting, setSubmitting] = useState(false);
   const dispatch = useDispatch();
   if (space.ownerId !== my.userId && !my.isAdmin) {
     return <PanelTitle>没有权限管理位面</PanelTitle>;
   }
   const onSubmit = async (payload: EditSpace) => {
-    setEditing(true);
+    setSubmitting(true);
     payload.defaultDiceType = defaultDice?.value;
     const result = await post('/spaces/edit', payload);
-    setEditing(false);
+    setSubmitting(false);
     if (!result.isOk) {
       setEditError(result.value);
       return;
@@ -103,7 +98,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
           <HelpText>简要描述一下这个位面。</HelpText>
           {errors.description && <ErrorMessage>{errors.description.message}</ErrorMessage>}
         </div>
-        <Button data-variant="primary" disabled={editing} css={widthFull} type="submit">
+        <Button data-variant="primary" disabled={submitting} css={widthFull} type="submit">
           提交修改
         </Button>
       </form>

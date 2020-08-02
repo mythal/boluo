@@ -45,6 +45,6 @@ export interface SpaceWithRelated {
   channels: Channel[];
 }
 
-export interface CheckName {
+export interface CheckSpaceName {
   name: string;
 }

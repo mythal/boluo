@@ -20,7 +20,7 @@ export const applicationReducer = (
     profile: profileReducer(state.profile, action),
     information: informationReducer(state.information, action),
     ui: uiReducer(state.ui, action, userId),
-    chat: chatReducer(state.chat, action),
+    chat: chatReducer(state.chat, action, state.profile?.user.id),
   };
 };
 

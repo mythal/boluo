@@ -12,6 +12,7 @@ interface State {
 const Mask = styled.div`
   width: 100vw;
   height: 100vh;
+  backdrop-filter: brightness(30%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,10 +36,12 @@ class PageError extends React.Component<Props, State> {
     if (this.state.error !== undefined) {
       return (
         <Mask>
-          <Title>发生未知错误</Title>
-          <Text>
-            请刷新重试，如果依然错误请联系网站管理员：<code>{String(this.state.error)}</code>
-          </Text>
+          <div>
+            <Title>发生未知错误</Title>
+            <Text>
+              请刷新重试，如果依然错误请联系网站管理员：<code>{String(this.state.error)}</code>
+            </Text>
+          </div>
         </Mask>
       );
     }

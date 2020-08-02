@@ -21,6 +21,9 @@ export type CHANNEL_DELETED = typeof CHANNEL_DELETED;
 export const CHANNEL_EDITED = 'CHANNEL_EDITED';
 export type CHANNEL_EDITED = typeof CHANNEL_EDITED;
 
+export type INITIALIZED = typeof INITIALIZED;
+export const INITIALIZED = 'INITIALIZED';
+
 export type MailboxType = 'CHANNEL';
 
 export interface EventQuery {
@@ -43,7 +46,12 @@ export type ChannelEvent =
   | Event<ChannelEdited>
   | Event<ChannelDeleted>
   | Event<PushMembers>
-  | Event<Heartbeat>;
+  | Event<Initialized>
+  | Event<HeartbeatMap>;
+
+export interface Initialized {
+  type: INITIALIZED;
+}
 
 export interface NewMessage {
   type: NEW_MESSAGE;
@@ -106,9 +114,9 @@ export interface PushMembers {
   members: Member[];
 }
 
-export interface Heartbeat {
-  type: 'HEARTBEAT';
-  userId: Id;
+export interface HeartbeatMap {
+  type: 'HEARTBEAT_MAP';
+  heartbeatMap: Record<Id, number>;
 }
 
 export interface SendPreview {

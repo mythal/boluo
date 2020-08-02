@@ -1,6 +1,6 @@
 import * as React from 'react';
-import Avatar from '../molecules/Avatar';
 import { useRef, useState } from 'react';
+import Avatar from '../molecules/Avatar';
 import { Id } from '@/utils/id';
 import { css } from '@emotion/core';
 import { mediaUrl } from '@/api/request';

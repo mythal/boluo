@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import ChatSidebar from '../organisms/ChatSidebar';
@@ -7,7 +8,6 @@ import ChannelChat from '../organisms/ChannelChat';
 import ChatHome from '../organisms/ChatHome';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
-import { useEffect } from 'react';
 import { useDispatch, useSelector } from '@/store';
 import { loadSpace } from '@/actions/ui';
 import { errLoading } from '@/api/error';
@@ -23,12 +23,12 @@ const Container = styled.div`
   display: grid;
   height: 100vh;
   overflow: hidden;
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: auto 1fr;
+  grid-template-rows: 3rem 1fr auto;
+  grid-template-columns: auto 1fr auto;
   grid-template-areas:
-    'sidebar header'
-    'sidebar list'
-    'sidebar compose';
+    'sidebar-header header header'
+    'sidebar-body list members'
+    'sidebar-body compose compose';
 `;
 
 function Chat() {
@@ -47,11 +47,11 @@ function Chat() {
       </BasePage>
     );
   }
-  const { channels, space, members } = result.value;
+  const { channels, space } = result.value;
   return (
     <Container>
-      <ChatSidebar channels={channels} />
-      {channelId ? <ChannelChat spaceId={spaceId} channelId={channelId} /> : <ChatHome />}
+      <ChatSidebar space={space} channels={channels} />
+      {channelId ? <ChannelChat spaceId={spaceId} channelId={channelId} /> : <ChatHome space={space} />}
     </Container>
   );
 }

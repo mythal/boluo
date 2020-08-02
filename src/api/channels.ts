@@ -6,7 +6,7 @@ export interface CreateChannel {
   spaceId: Id;
   name: string;
   characterName: string;
-  defaultDiceType: string | null;
+  defaultDiceType?: string;
 }
 
 export interface Channel {
@@ -48,18 +48,26 @@ export interface ChannelWithRelated {
   channel: Channel;
   members: Member[];
   space: Space;
-  colorList: { [userId: string]: string };
+  colorList: Record<Id, string>;
+  heartbeatMap: Record<Id, number>;
 }
 
 export interface EditChannel {
   channelId: Id;
   name: string | null;
   topic: string | null;
-  defaultDiceType: string | null;
+  defaultDiceType?: string;
+  grantMasters?: Id[];
+  removeMasters?: Id[];
 }
 
 export interface EditChannelMember {
   channelId: Id;
   characterName?: string;
   textColor?: string;
+}
+
+export interface CheckChannelName {
+  spaceId: Id;
+  name: string;
 }

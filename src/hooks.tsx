@@ -6,6 +6,7 @@ import { clearCsrfToken } from './api/csrf';
 import { LoggedOut } from './actions/profile';
 import { useHistory } from 'react-router-dom';
 import { Dispatch, useDispatch, useSelector } from './store';
+import { ClientEvent } from '@/api/events';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -106,4 +107,17 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+};
+
+export const useSend = (): ((event: ClientEvent) => void) => {
+  const connection = useSelector((state) => state.chat?.connection);
+  if (!connection) {
+    throw new Error('Calling the send interface without loading the chat.');
+  }
+  return useCallback(
+    (event: ClientEvent) => {
+      connection.send(JSON.stringify(event));
+    },
+    [connection]
+  );
 };

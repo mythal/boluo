@@ -6,6 +6,7 @@ import { bgColor, m, mT, p, pX, pY, roundedPx, textColor, textXl, uiShadow } fro
 import { lighten } from 'polished';
 import { encodeUuid } from '@/utils/id';
 import styled from '@emotion/styled';
+import nightSky from '../../assets/space-card-background.svg';
 
 interface Props {
   space: Space;
@@ -13,6 +14,12 @@ interface Props {
 
 const cardStyle = css`
   background-color: ${lighten(0.05, bgColor)};
+  background-image: url(${nightSky.url});
+  background-position: right bottom;
+  background-size: 60%;
+  background-repeat: no-repeat;
+  text-shadow: 0 1px 1px #000;
+  min-height: 8rem;
   ${uiShadow};
   ${roundedPx};
   ${pY(5)};

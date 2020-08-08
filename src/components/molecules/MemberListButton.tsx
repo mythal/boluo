@@ -16,10 +16,12 @@ interface Props {
 }
 
 function MemberListButton({ className, channelId }: Props) {
-  const channelMembers = useSelector((state) => state.chat?.members) || [];
-  const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
-  const open = useSelector((state) => state.chat?.memberList) || false;
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
+  const channelMembers = useSelector((state) => state.chat!.members);
+  const open = useSelector((state) => state.chat!.memberList);
   const heartbeatMap = useSelector((state) => state.chat!.heartbeatMap);
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const dispatch = useDispatch();
   const send = useSend();
   useEffect(() => {

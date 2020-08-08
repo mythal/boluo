@@ -15,17 +15,16 @@ import {
   spacingN,
   textBase,
   textColor,
-  textSm,
+  textXl,
 } from '@/styles/atoms';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from '@/store';
-import { Env as ParseEnv, parse } from '@/interpreter/parser';
+import { Env as ParseEnv, parse, ParseResult } from '@/interpreter/parser';
 import { getDiceFace } from '@/utils/game';
 import { useSend } from '@/hooks';
 import { Preview, PreviewPost } from '@/api/events';
 import { post } from '@/api/request';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
-import ChatItemName from '@/components/atoms/ChatItemName';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import { lighten } from 'polished';
 import mask from '../../assets/icons/theater-masks.svg';
@@ -33,6 +32,8 @@ import running from '../../assets/icons/running.svg';
 import broadcastTower from '../../assets/icons/broadcast-tower.svg';
 import paperPlane from '../../assets/icons/paper-plane.svg';
 import Icon from '@/components/atoms/Icon';
+import { css } from '@emotion/core';
+import ChatItemContent from '@/components/molecules/ChatItemContent';
 
 interface Props {
   preview: Preview | undefined;
@@ -40,7 +41,9 @@ interface Props {
 
 export const Container = styled.div`
   display: grid;
-  ${[pX(2), pY(1), previewStyle]};
+  ${[pX(2), pY(3), previewStyle]};
+  border-top: 1px solid ${lighten(0.1, bgColor)};
+  border-bottom: 1px solid ${lighten(0.1, bgColor)};
   position: sticky;
   top: 0;
   bottom: 0;
@@ -54,16 +57,26 @@ export const Container = styled.div`
   gap: ${spacingN(1)} ${spacingN(2)};
 `;
 
-const Content = styled.div`
-  grid-area: content;
+const inputStyle = css`
+  ${[roundedPx, textBase]};
+  background-color: ${lighten(0.05, bgColor)};
+  color: ${textColor};
+  border: 1px solid ${lighten(0.2, bgColor)};
+  &:hover {
+    border-color: ${lighten(0.3, bgColor)};
+  }
+  &:focus {
+    outline: none;
+    border-color: ${lighten(0.4, bgColor)};
+  }
+  &:disabled {
+    filter: contrast(60%);
+  }
 `;
 
 const Compose = styled.textarea`
-  ${[p(2)]};
+  ${[p(2), inputStyle]};
   grid-area: compose;
-  background-color: ${bgColor};
-  color: ${textColor};
-  border: 1px solid ${lighten(0.2, bgColor)};
   resize: none;
   &:focus {
     outline: none;
@@ -71,20 +84,10 @@ const Compose = styled.textarea`
 `;
 
 const NameInput = styled.input`
-  ${p(1)};
-  background-color: ${bgColor};
-  color: ${textColor};
+  ${[p(1), inputStyle]};
   text-align: right;
-  ${textBase};
   width: 100%;
-  border: 1px solid ${lighten(0.2, bgColor)};
-
-  &:focus {
-    outline: none;
-  }
-  &:disabled {
-    filter: contrast(60%);
-  }
+  height: 2em;
 `;
 
 const ButtonBar = styled.div`
@@ -103,11 +106,21 @@ const ComposeButton = styled.button`
   border: none;
   color: ${textColor};
   cursor: pointer;
-  background-color: rgba(255, 255, 255, 0.1);
-  ${[roundedPx, pX(1), pY(0.5), textSm]};
+  background-color: rgba(255, 255, 255, 0.2);
+  ${[roundedPx, pX(1), pY(1), textXl]};
+  & > span {
+    display: none;
+  }
 
   ${mediaQuery(breakpoint.sm)} {
     ${[pX(2), pY(1), textBase]};
+    & > span {
+      display: inline;
+    }
+  }
+
+  &:hover {
+    box-shadow: 0 0 0 1px ${textColor} inset;
   }
 
   &[data-on='false'] {
@@ -138,18 +151,28 @@ const ComposeButton = styled.button`
 `;
 
 const Naming = styled.div`
-  grid-area: naming;
+  grid-area: name;
   display: flex;
   align-items: start;
   justify-content: flex-end;
 `;
 
 const PREVIEW_SEND_TIMEOUT_MILLIS = 200;
-const useSendPreview = (nickname: string, env: ParseEnv) => {
+const useSendPreview = (nickname: string) => {
   const send = useSend();
   const sendPreviewTimeout = useRef<number | null>(null);
-  return (id: Id, inGame: boolean, isAction: boolean, isBroadcast: boolean, characterName: string, text: string) => {
-    const content = isBroadcast ? parse(text, true, env) : { text: null, entities: [] };
+  return (
+    id: Id,
+    inGame: boolean,
+    isAction: boolean,
+    isBroadcast: boolean,
+    characterName: string,
+    parsed: ParseResult
+  ) => {
+    let content: Pick<PreviewPost, 'entities' | 'text'> = parsed;
+    if (!isBroadcast) {
+      content = { text: null, entities: [] };
+    }
     const name = inGame ? characterName : nickname;
 
     const preview: PreviewPost = {
@@ -195,11 +218,8 @@ function ChatMyPreview({ preview }: Props) {
   const [inGame, setInGame] = useState(() => preview?.inGame || false);
   const [broadcast, setBroadcast] = useState(true);
   const [isAction, setIsAction] = useState(() => preview?.isAction || false);
-  const parseEnv: ParseEnv = {
-    defaultDiceFace: getDiceFace(defaultDiceType),
-    resolveUsername: () => null,
-  };
-  const postPreview = useSendPreview(nickname, parseEnv);
+
+  const postPreview = useSendPreview(nickname);
   const shouldPostPreview = useRef(false);
 
   const [name, setName] = useState<string>(() => {
@@ -215,7 +235,15 @@ function ChatMyPreview({ preview }: Props) {
     if (myMember) {
       setName(myMember.characterName);
     }
-  }, [myMember, myMember?.characterName]);
+  }, [myMember]);
+  const trimmedDraft = draft.trim();
+  const parsed = useMemo(() => {
+    const parseEnv: ParseEnv = {
+      defaultDiceFace: getDiceFace(defaultDiceType),
+      resolveUsername: () => null,
+    };
+    return parse(trimmedDraft, true, parseEnv);
+  }, [trimmedDraft, defaultDiceType]);
 
   const toggleInGame = useToggle(shouldPostPreview, setInGame);
   const toggleAction = useToggle(shouldPostPreview, setIsAction);
@@ -228,9 +256,8 @@ function ChatMyPreview({ preview }: Props) {
       return null;
     }
   }
-  const characterName = myMember.characterName;
   if (shouldPostPreview.current) {
-    postPreview(messageId.current, inGame, isAction, broadcast, characterName, draft);
+    postPreview(messageId.current, inGame, isAction, broadcast, name, parsed);
     shouldPostPreview.current = false;
   }
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
@@ -250,7 +277,6 @@ function ChatMyPreview({ preview }: Props) {
     if (canNotSend) {
       return;
     }
-    const parsed = parse(draft, true, parseEnv);
     await post('/messages/send', {
       messageId: messageId.current,
       channelId,
@@ -271,7 +297,6 @@ function ChatMyPreview({ preview }: Props) {
   };
   return (
     <Container>
-      <ChatItemName master={myMember.isMaster} name={inGame ? name : nickname} userId={myMember.userId} />
       <ChatItemTime timestamp={preview?.start || new Date().getTime()} />
       <Naming>
         <NameInput
@@ -281,25 +306,25 @@ function ChatMyPreview({ preview }: Props) {
           placeholder="写下你的名字"
         />
       </Naming>
-      <Content>{preview?.text}</Content>
+      <ChatItemContent entities={parsed.entities} text={parsed.text} action={isAction} inGame={inGame} />
       <ButtonBar>
         <ComposeButton css={[mR(1)]} data-on={inGame} onClick={toggleInGame}>
           <Icon sprite={mask} />
-          游戏内
+          <span>游戏内</span>
         </ComposeButton>
         <ComposeButton css={[mR(1)]} data-on={isAction} onClick={toggleAction}>
           <Icon sprite={running} />
-          动作
+          <span>动作</span>
         </ComposeButton>
         <ComposeButton data-on={broadcast} onClick={toggleBroadcast}>
           <Icon sprite={broadcastTower} />
-          预览
+          <span>预览</span>
         </ComposeButton>
       </ButtonBar>
       <SendContainer>
         <ComposeButton onClick={onSend} disabled={canNotSend}>
           <Icon sprite={paperPlane} />
-          发送
+          <span>发送</span>
         </ComposeButton>
       </SendContainer>
       <Compose value={draft} placeholder={inGame ? '书写独一无二的冒险吧' : '尽情聊天吧'} onChange={handleChange} />

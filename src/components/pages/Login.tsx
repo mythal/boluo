@@ -63,12 +63,25 @@ function Login() {
         <div css={[sm(flex)]}>
           <div css={[mY(2), sm(mR(2), flex1)]}>
             <Label htmlFor="username">用户名 / 邮箱</Label>
-            <Input css={largeInput} id="username" name="username" ref={register({ required })} />
+            <Input
+              css={largeInput}
+              id="username"
+              name="username"
+              autoComplete="username"
+              ref={register({ required })}
+            />
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
           <div css={[mY(2), flex1]}>
             <Label htmlFor="password">密码</Label>
-            <Input css={largeInput} type="password" id="password" name="password" ref={register({ required })} />
+            <Input
+              css={largeInput}
+              type="password"
+              id="password"
+              name="password"
+              autoComplete="current-password"
+              ref={register({ required })}
+            />
             {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
           </div>
         </div>

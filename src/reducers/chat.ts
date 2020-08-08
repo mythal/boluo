@@ -221,8 +221,7 @@ const newPreview = (
 ): [List<ChatItem>, ItemMap] => {
   const messageInfo = queryMessageEntry(itemMap, preview.id);
   if (messageInfo !== undefined) {
-    console.warn('There is already a message with the same id.');
-    console.debug(preview, messageInfo);
+    // There is already a message with the same id.
     return [itemList, itemMap];
   }
 
@@ -379,7 +378,18 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, my
       break;
   }
   eventAfter = event.timestamp;
-  return { ...chat, channel, colorMap, itemList, itemMap, eventAfter, messageBefore, heartbeatMap, initialized };
+  return {
+    ...chat,
+    channel,
+    members,
+    colorMap,
+    itemList,
+    itemMap,
+    eventAfter,
+    messageBefore,
+    heartbeatMap,
+    initialized,
+  };
 };
 
 export const chatReducer = (

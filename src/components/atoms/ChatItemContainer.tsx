@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
-import { pX, pY, spacingN } from '@/styles/atoms';
+import { bgColor, pX, pY, spacingN } from '@/styles/atoms';
+import { darken } from 'polished';
 
 export const ChatItemContainer = styled.div`
   display: grid;
@@ -10,4 +11,8 @@ export const ChatItemContainer = styled.div`
     'name content'
     'time content';
   gap: ${spacingN(1)} ${spacingN(2)};
+
+  &[data-in-game='false'] {
+    background-color: ${darken(0.035, bgColor)};
+  }
 `;

@@ -7,6 +7,7 @@ import {
   chatHeaderStyle,
   flex,
   fontBold,
+  fontMono,
   mediaQuery,
   mL,
   mR,
@@ -87,7 +88,7 @@ const ChannelName = styled.div`
 
   &::before {
     content: '#';
-    font-family: monospace;
+    ${fontMono};
     color: ${darken(0.2, textColor)};
     ${[pR(1)]};
   }

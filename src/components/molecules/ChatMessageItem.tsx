@@ -3,7 +3,7 @@ import { Message } from '@/api/messages';
 import { ChatItemContainer } from '@/components/atoms/ChatItemContainer';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
 import ChatItemName from '@/components/atoms/ChatItemName';
-import ChatItemContent from '@/components/atoms/ChatItemContent';
+import ChatItemContent from '@/components/molecules/ChatItemContent';
 
 interface Props {
   message: Message;
@@ -11,10 +11,16 @@ interface Props {
 
 function ChatMessageItem({ message }: Props) {
   return (
-    <ChatItemContainer>
+    <ChatItemContainer data-in-game={message.inGame}>
       <ChatItemTime timestamp={message.created} />
-      <ChatItemName master={message.isMaster} name={message.name} userId={message.senderId} />
-      <ChatItemContent action={message.isAction} text={message.text} />
+      <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
+      <ChatItemContent
+        entities={message.entities}
+        seed={message.seed}
+        inGame={message.inGame}
+        action={message.isAction}
+        text={message.text}
+      />
     </ChatItemContainer>
   );
 }

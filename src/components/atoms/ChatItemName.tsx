@@ -11,6 +11,7 @@ import masterIcon from '../../assets/icons/gamemaster.svg';
 interface Props {
   name: string;
   master: boolean;
+  action: boolean;
   userId: Id;
 }
 
@@ -30,7 +31,7 @@ function genColor(rng: Prando): string {
   return hsl(rng.next(0, 365), rng.next(), rng.next(0.5, 0.8));
 }
 
-function ChatItemName({ name, userId, master }: Props) {
+function ChatItemName({ name, userId, master, action }: Props) {
   if (!colorMap[name]) {
     const rng = new Prando(name);
     colorMap[name] = genColor(rng);
@@ -42,6 +43,7 @@ function ChatItemName({ name, userId, master }: Props) {
       <NameLink css={{ color }} to={`/profile/${encodeUuid(userId)}`}>
         {name}
       </NameLink>
+      {!action && ':'}
     </Container>
   );
 }

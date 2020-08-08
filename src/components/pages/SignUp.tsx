@@ -92,7 +92,13 @@ function SignUp() {
           </div>
           <div css={[mY(2)]}>
             <Label htmlFor="username">用户名</Label>
-            <Input css={largeInput} id="username" name="username" ref={register(usernameValidation)} />
+            <Input
+              css={largeInput}
+              id="username"
+              name="username"
+              autoComplete="username"
+              ref={register(usernameValidation)}
+            />
             <HelpText>英文、数字和下划线。至少3个字符。</HelpText>
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
@@ -103,7 +109,14 @@ function SignUp() {
           </div>
           <div css={mY(2)}>
             <Label htmlFor="password">密码</Label>
-            <Input css={largeInput} type="password" id="password" name="password" ref={register(passwordValidation)} />
+            <Input
+              css={largeInput}
+              type="password"
+              id="password"
+              name="password"
+              autoComplete="new-password"
+              ref={register(passwordValidation)}
+            />
             <HelpText>至少8个字符，请勿过于简单。</HelpText>
             {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
           </div>
@@ -114,6 +127,7 @@ function SignUp() {
               type="password"
               id="passwordRepeat"
               name="passwordRepeat"
+              autoComplete="new-password"
               ref={register(passwordRepeatValidation)}
             />
             {errors.passwordRepeat && <ErrorMessage>{errors.passwordRepeat.message}</ErrorMessage>}

@@ -110,8 +110,17 @@ export const text2Xl = css`
 export const text3Xl = css`
   font-size: 1.875rem;
 `;
-export const fontSans = 'system-ui, -apple-system, sans-serif';
+export const fontSans = css`
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif;
+`;
 export const fontBase = fontSans;
+export const fontSerif = css`
+  font-family: Georgia, Cambria, 'Times New Roman', Times, serif;
+`;
+export const fontMono = css`
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+`;
 export const infoColor = '#45675e';
 export const warnColor = '#307830';
 export const errorColor = '#711518';
@@ -359,7 +368,7 @@ export const link = css`
 export const baseStyle = css`
   html {
     font-size: 14px;
-    font-family: ${fontBase};
+    ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
     ${baseLineHeight};

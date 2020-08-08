@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { css, keyframes } from '@emotion/core';
 import rotateIcon from '@/assets/icons/rotate-cw.svg';
 import TextIcon from '../atoms/Icon';
-import { pY, spacingN, textXl } from '@/styles/atoms';
+import { fontMono, pY, spacingN, textXl } from '@/styles/atoms';
 
 interface Props {
   className?: string;
@@ -31,7 +31,7 @@ const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: monospace;
+  ${fontMono};
   ${textXl};
   white-space: pre;
   animation: ${loadingKeyframes} 2s linear infinite;

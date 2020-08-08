@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Space } from '@/api/spaces';
 import { Channel } from '@/api/channels';
 import styled from '@emotion/styled';
-import { fontBold, mY, pL, pR, textBase, textColor } from '@/styles/atoms';
+import { fontBold, fontMono, mY, pL, pR, textBase, textColor } from '@/styles/atoms';
 import { SidebarItemLink } from '@/components/atoms/SidebarItem';
 import { encodeUuid } from '@/utils/id';
 import { channelChatPath } from '@/utils/path';
@@ -29,7 +29,7 @@ const ChannelName = styled.span`
   position: relative;
   &::before {
     content: '#';
-    font-family: monospace;
+    ${fontMono};
     position: absolute;
     left: -1em;
 

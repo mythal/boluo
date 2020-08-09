@@ -8,7 +8,7 @@ import Input from '../atoms/Input';
 import { bioValidation, nicknameValidation } from '@/validators';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import Button from '../atoms/Button';
-import { AppError, errorText } from '@/api/error';
+import { AppError } from '@/api/error';
 import InformationBar from '../molecules/InformationBar';
 import { editAvatar, post } from '@/api/request';
 import { useDispatch, useSelector } from '@/store';
@@ -17,6 +17,7 @@ import Icon from '../atoms/Icon';
 import TextArea from '../atoms/TextArea';
 import EditAvatar from '../organisms/EditAvatar';
 import { css } from '@emotion/core';
+import { RenderError } from '../molecules/RenderError';
 
 const nicknameFieldStyle = css`
   flex-grow: 1;
@@ -67,7 +68,7 @@ function Settings() {
   return (
     <>
       {updated && <InformationBar variant="SUCCESS">设置已更新</InformationBar>}
-      {appError && <InformationBar variant="ERROR">{errorText(appError)}</InformationBar>}
+      {appError && <RenderError error={appError} variant="component" />}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div css={[flex, mT(4)]}>
           <div css={nicknameFieldStyle}>

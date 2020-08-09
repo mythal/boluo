@@ -43,7 +43,10 @@ class PageError extends React.Component<Props, State> {
           <div>
             <Title>发生未知错误</Title>
             <Text>
-              可能是页面载入出错。请 <Button onClick={this.onClick}>刷新</Button>{' '}
+              可能是页面载入出错。请{' '}
+              <Button data-small onClick={this.onClick}>
+                刷新
+              </Button>{' '}
               重试，如果依然错误请联系网站管理员。错误详情：<code>{String(this.state.error)}</code>
             </Text>
           </div>

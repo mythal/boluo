@@ -1,4 +1,4 @@
-import { AppError, BAD_REQUEST, errorText, LOADING, NOT_FOUND } from '@/api/error';
+import { AppError, BAD_REQUEST, ErrorCode, errorText, LOADING, NOT_FOUND } from '@/api/error';
 import Loading from './Loading';
 import NotFound from '../pages/NotFound';
 import InformationBar from './InformationBar';
@@ -10,10 +10,10 @@ interface Props {
   error: AppError;
   variant?: 'page' | 'component';
   more404?: boolean;
+  rewrite?: { [code in ErrorCode]?: string };
 }
 
-export function RenderError({ error, more404, variant }: Props) {
-  variant = variant ?? 'page';
+export function RenderError({ error, more404, variant = 'page', rewrite = {} }: Props) {
   if (error.code === LOADING) {
     if (variant === 'page') {
       return (
@@ -30,7 +30,12 @@ export function RenderError({ error, more404, variant }: Props) {
       return <NotFound />;
     }
   }
-  const { description, detail } = errorText(error);
+  let { description, detail } = errorText(error);
+  const rewriteText = rewrite[error.code];
+  if (rewriteText) {
+    description = rewriteText;
+    detail = undefined;
+  }
   if (variant === 'component') {
     return (
       <InformationBar variant="ERROR">

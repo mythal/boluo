@@ -9,8 +9,7 @@ import { useForm } from 'react-hook-form';
 import { LoginData } from '@/api/users';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { post } from '@/api/request';
-import { AppError, errorText, NO_PERMISSION } from '@/api/error';
-import InformationBar from '../molecules/InformationBar';
+import { AppError, NO_PERMISSION } from '@/api/error';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useDispatch } from '@/store';
 import { LoggedIn } from '@/actions/profile';
@@ -18,6 +17,7 @@ import { Label } from '../atoms/Label';
 import { clearCsrfToken } from '@/api/csrf';
 import loginIcon from '../../assets/icons/sign-in.svg';
 import Icon from '@/components/atoms/Icon';
+import { RenderError } from '../molecules/RenderError';
 
 interface State {
   next?: string;
@@ -25,12 +25,9 @@ interface State {
 
 const required = '必须填写这个字段';
 
-function loginErrorText(e: AppError) {
-  if (e.code === NO_PERMISSION) {
-    return '用户名或密码错误';
-  }
-  return errorText(e);
-}
+const errorRewrite = {
+  [NO_PERMISSION]: '用户名或密码错误',
+};
 
 function Login() {
   useTitle('登录');
@@ -57,7 +54,7 @@ function Login() {
   return (
     <>
       <Title>登录</Title>
-      {loginError && <InformationBar variant="ERROR">{loginErrorText(loginError)}</InformationBar>}
+      {loginError && <RenderError error={loginError} variant="component" rewrite={errorRewrite} />}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div css={[sm(flex)]}>

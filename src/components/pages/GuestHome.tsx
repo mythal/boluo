@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { color, floatRight, link, listStyleSquare, mT, mX, mY, p, textColor, textXl } from '@/styles/atoms';
+import { color, floatRight, link, listStyleSquare, mT, mX, mY, p, sm, textColor, textXl } from '@/styles/atoms';
 import logo from '@/assets/logo.svg';
 import { darken } from 'polished';
 import Title from '../atoms/Title';
@@ -9,7 +9,7 @@ import { OutlineButtonLink } from '@/components/atoms/OutlineButton';
 function GuestHome() {
   return (
     <>
-      <svg css={[mY(8), floatRight, mX(4)]} width="14rem" height="14rem" viewBox={logo.viewBox}>
+      <svg css={[mY(8), sm(floatRight), mX(4)]} width="14rem" height="14rem" viewBox={logo.viewBox}>
         <use xlinkHref={logo.url} />
       </svg>
       <Title>菠萝</Title>

@@ -137,8 +137,8 @@ function SignUp() {
           <div>
             <h2 css={[textXl]}>须知</h2>
             <ul css={noticeStyle}>
-              <li>本站可用于举办桌面 RPG 游戏聚会，以及玩家间不限主题的闲聊，</li>
-              <li>出于保护网站的目的，有政治风险的内容请不要设为公开访问。</li>
+              <li>本站可用于举办桌面 RPG 游戏聚会，以及玩家间不限主题的闲聊。</li>
+              <li>出于保护网站的目的，有风险的内容请不要设为公开访问。</li>
               <li>用户在本站产生的内容，版权归用户本人所有。</li>
               <li>
                 <a css={link} href="https://github.com/mythal/boluo">

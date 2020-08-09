@@ -21,14 +21,15 @@ module.exports = {
   mode: PRODUCTION ? 'production' : 'development',
 
   output: {
-    filename: '[name].[hash].js',
+    filename: 'main.[hash].js',
+    chunkFilename: '[id].[contenthash].js',
     path: path.resolve(rootPath, 'dist'),
     publicPath: '/',
   },
 
   plugins: [
     new HtmlWebpackPlugin({
-      template: path.resolve(rootPath, 'public/index.html'),
+      template: path.resolve(rootPath, PRODUCTION ? 'public/index.html' : 'public/index.dev.html'),
       inject: true,
       favicon: PRODUCTION
         ? path.resolve(rootPath, 'src/assets/logo.svg')
@@ -74,11 +75,18 @@ module.exports = {
     ],
   },
 
+  externals: PRODUCTION
+    ? {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+      }
+    : {},
+
   optimization: {
     minimize: PRODUCTION,
     splitChunks: {
       chunks: 'all',
-      minSize: 200000,
+      minSize: 1000000,
     },
     minimizer: [new TerserPlugin(), new OptimizeCSSAssetsPlugin({})],
   },

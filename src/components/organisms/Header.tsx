@@ -41,7 +41,7 @@ const Nav = styled.nav`
 
 function ForumLink() {
   return (
-    <a css={[headerLinkStyle, mR(1)]} href="https://forum.boluo.chat/">
+    <a css={[headerLinkStyle, mR(1)]} href="https://forum.boluo.chat/" rel="noopener noreferrer" target="_blank">
       讨论版
     </a>
   );

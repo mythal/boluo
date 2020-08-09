@@ -21,7 +21,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-export const style = css`
+export const headerLinkStyle = css`
   color: ${textColor};
   cursor: pointer;
   text-decoration: none;
@@ -58,11 +58,11 @@ export const style = css`
   }
 `;
 
-export const HeaderButton = styled.button(style);
+export const HeaderButton = styled.button(headerLinkStyle);
 
 function HeaderLink({ children, ...props }: Props) {
   return (
-    <NavLink css={style} activeClassName="active" {...props}>
+    <NavLink css={headerLinkStyle} activeClassName="active" {...props}>
       {children}
     </NavLink>
   );

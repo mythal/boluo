@@ -42,13 +42,26 @@ const spaceLinkStyle = css`
   ${mR(1)};
 `;
 
+const SIDEBAR_KEY = 'sidebar-state';
+
+function sidebarState(): boolean {
+  const sidebarState = localStorage.getItem(SIDEBAR_KEY);
+  if (sidebarState === 'true') {
+    return true;
+  } else if (sidebarState === 'false') {
+    return false;
+  } else {
+    localStorage.setItem(SIDEBAR_KEY, 'true');
+    return true;
+  }
+}
+
 function ChatSidebar({ space, channels }: Props) {
-  const SIDEBAR_KEY = 'expand-sidebar';
-  const [expand, setExpand] = useState(Boolean(localStorage.getItem(SIDEBAR_KEY)));
+  const [expand, setExpand] = useState(sidebarState());
   const toggle = () =>
     setExpand((value) => {
       if (value) {
-        localStorage.removeItem(SIDEBAR_KEY);
+        localStorage.setItem(SIDEBAR_KEY, 'false');
       } else {
         localStorage.setItem(SIDEBAR_KEY, 'true');
       }

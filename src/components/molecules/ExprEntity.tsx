@@ -4,7 +4,7 @@ import { EvaluatedExprNode, ExprNode, RollResult } from '@/interpreter/entities'
 import D20Icon from '../../assets/icons/d20.svg';
 import { evaluate, TOO_MUCH_LAYER } from '@/interpreter/eval';
 import Icon from '@/components/atoms/Icon';
-import { minorTextColor, p, textColor, textLg, textSm } from '@/styles/atoms';
+import { inlineBlock, minorTextColor, pX, pY, roundedPx, textColor, textLg, textSm } from '@/styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 
@@ -23,7 +23,7 @@ const Num = styled.span`
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 
 const Roll = styled.span`
-  ${[textLg, p(1)]};
+  ${[pX(1), pY(0.5), inlineBlock, roundedPx]};
   cursor: pointer;
   background-color: ${darken(0.7, textColor)};
   border: 1px solid ${darken(0.6, textColor)};
@@ -46,7 +46,7 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
   const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
 
   return (
-    <Roll onClick={handleMouse}>
+    <Roll onMouseDown={handleMouse}>
       <Icon sprite={D20Icon} />
       {node.counter}D{node.face}
       {expand && (

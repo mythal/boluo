@@ -4,7 +4,7 @@ import { darken } from 'polished';
 
 export const ChatItemContainer = styled.div`
   display: grid;
-  ${[pX(2), pY(1)]};
+  ${[pX(2), pY(2)]};
   grid-template-columns: 8rem 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:

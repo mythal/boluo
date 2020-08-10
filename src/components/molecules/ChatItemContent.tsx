@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { fontMono, link, textBase, textColor, textLg } from '@/styles/atoms';
+import { fontMono, link, p, textBase, textColor, textLg } from '@/styles/atoms';
 import { darken } from 'polished';
 import Prando from 'prando';
 import { Entity } from '@/interpreter/entities';
@@ -28,6 +28,7 @@ const makeRng = (seed?: number[]): Prando | undefined => {
 const Content = styled.div`
   grid-area: content;
   line-height: 1.6em;
+  ${[p(1)]};
 
   &[data-action='true'] {
     font-style: italic;

@@ -27,7 +27,7 @@ interface Params {
 const OperatorBar = styled.div`
   ${mT(6)};
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   // justify-content: space-between;
 `;
 
@@ -63,7 +63,7 @@ function SpacePage() {
       </div>
       <div css={[preLine, mT(2)]}>{space.description}</div>
       <OperatorBar>
-        <GotoSpaceLink css={[mR(3)]} isMember={Boolean(myMember)} spaceId={space.id} />
+        <GotoSpaceLink css={[mR(2)]} isMember={Boolean(myMember)} spaceId={space.id} />
         {myMember?.isAdmin && (
           <Button data-small css={mR(1)} onClick={() => setManaging(true)}>
             <Icon sprite={userCog} /> 管理

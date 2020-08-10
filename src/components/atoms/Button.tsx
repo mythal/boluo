@@ -18,6 +18,7 @@ import {
 } from '@/styles/atoms';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
+import { Link } from 'react-router-dom';
 
 const btnTextShadow = '0 1px 0 rgba(0, 0, 0, 0.125)';
 
@@ -93,6 +94,8 @@ export const buttonStyle = css`
 
   ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};
 `;
+
+export const ButtonLink = styled(Link)<DataAttributes>(buttonStyle);
 
 const Button = styled.button<DataAttributes>(buttonStyle);
 

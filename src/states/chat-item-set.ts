@@ -83,10 +83,10 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
 
 export const editMessage = (itemSet: ChatItemSet, editItem: MessageItem): ChatItemSet => {
   const index = itemSet.messages.findLastIndex((item) => item.id === editItem.id);
-  if (index === -1) {
-    return itemSet;
-  }
   const editions = itemSet.editions.remove(editItem.id);
+  if (index === -1) {
+    return { ...itemSet, editions };
+  }
   let { messages } = itemSet;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const target = messages.get(index)!;

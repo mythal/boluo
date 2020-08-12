@@ -4,12 +4,19 @@ import { ChatItemContainer } from '@/components/atoms/ChatItemContainer';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
 import ChatItemName from '@/components/atoms/ChatItemName';
 import ChatItemContent from '@/components/molecules/ChatItemContent';
+import Button from '@/components/atoms/Button';
+import { useDispatch } from '@/store';
 
 interface Props {
   message: Message;
+  mine?: boolean;
 }
 
-function ChatMessageItem({ message }: Props) {
+function ChatMessageItem({ message, mine = false }: Props) {
+  const dispatch = useDispatch();
+  const startEdit = () => {
+    dispatch({ type: 'START_EDIT_MESSAGE', message: message });
+  };
   return (
     <ChatItemContainer data-in-game={message.inGame}>
       <ChatItemTime timestamp={message.created} />
@@ -21,6 +28,11 @@ function ChatMessageItem({ message }: Props) {
         action={message.isAction}
         text={message.text}
       />
+      {mine && (
+        <Button data-small onClick={startEdit}>
+          编辑
+        </Button>
+      )}
     </ChatItemContainer>
   );
 }

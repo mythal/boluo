@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import ChatListItem from '../molecules/ChatListItem';
 import { useSelector } from '@/store';
 import { bgColor, pY } from '@/styles/atoms';
 import LoadMoreButton from '@/components/molecules/LoadMoreButton';
 import styled from '@emotion/styled';
-import { ChatItem, newMyPreviewItem } from '@/reducers/chat';
 import { useCallback, useEffect, useRef } from 'react';
+import { ChatItem, ChatItemSet, MessageItem, PreviewItem } from '@/states/chat-item-set';
+import ChatPreviewCompose from '../molecules/ChatPreviewCompose';
+import { ChatState } from '@/reducers/chat';
+import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
+import ChatMessageItem from '@/components/molecules/ChatMessageItem';
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>): (() => void) => {
   const scrollEnd = useRef<number>(0);
@@ -47,58 +50,97 @@ const LoadMoreContainer = styled.div`
 
 const ItemLayout = styled.div``;
 
-const isInGame = (item: ChatItem) => {
-  if (item.type === 'MESSAGE') {
-    return item.message.inGame;
-  } else if (item.type === 'PREVIEW') {
-    return item.preview.inGame;
-  } else if (item.type === 'MY_PREVIEW') {
+const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
+  if (type === 'NONE') {
     return true;
   }
-  return false;
+  const inGame = type === 'IN_GAME';
+  if (item.type === 'MESSAGE') {
+    return inGame === item.message.inGame;
+  } else if (item.type === 'PREVIEW' && item.preview) {
+    return inGame === item.preview.inGame;
+  } else if (item.type === 'EDIT') {
+    if (item.preview) {
+      return inGame === item.preview.inGame;
+    }
+  }
+  return true;
 };
 
-const isOutGame = (item: ChatItem) => {
-  if (item.type === 'MESSAGE') {
-    return !item.message.inGame;
-  } else if (item.type === 'PREVIEW') {
-    return !item.preview.inGame;
-  } else if (item.type === 'MY_PREVIEW') {
-    return true;
+export const itemCompare = (a: ChatItem, b: ChatItem) => {
+  return a.date - b.date;
+};
+
+const makePreview = (item: PreviewItem) => {
+  if (item.mine) {
+    return <ChatPreviewCompose key={item.id} preview={item.preview} />;
+  } else {
+    return <ChatPreviewItem key={item.id} preview={item.preview} />;
   }
-  return false;
+};
+
+const makeMessage = (item: MessageItem) => {
+  return <ChatMessageItem key={item.id} message={item.message} mine={item.mine} />;
+};
+
+const genItemList = (itemSet: ChatItemSet, filterType: ChatState['filter']): React.ReactNodeArray => {
+  const itemList: React.ReactNodeArray = [];
+  const previews = [...itemSet.previews.values()].sort(itemCompare);
+  const filter = itemFilter(filterType);
+
+  for (const messageItem of itemSet.messages) {
+    const { message } = messageItem;
+    const previewsLen = previews.length;
+    while (previewsLen > 0 && previews[previewsLen - 1].date < messageItem.date) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const previewItem = previews.pop()!;
+      if (filter(previewItem)) {
+        itemList.push(makePreview(previewItem));
+      }
+    }
+    if (!filter(messageItem)) {
+      continue;
+    }
+    const editItem = itemSet.editions.get(messageItem.id);
+    if (editItem) {
+      if (editItem.mine) {
+        itemList.push(<ChatPreviewCompose key={editItem.id} preview={editItem.preview} editTo={message} />);
+      } else if (
+        editItem.preview &&
+        message.modified === editItem.preview.editFor && // correct edit target
+        editItem.preview.senderId === message.senderId // same user
+      ) {
+        itemList.push(<ChatPreviewItem key={editItem.id} preview={editItem.preview} />);
+      } else {
+        itemList.push(makeMessage(messageItem));
+      }
+    } else {
+      itemList.push(makeMessage(messageItem));
+    }
+  }
+  return itemList;
 };
 
 function ChatList() {
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const initialized = useSelector((state) => state.chat!.initialized);
-  const filter = useSelector((state) => state.chat!.filter);
-  let itemList = useSelector((state) => state.chat!.itemList)
-    .toSeq()
-    .reverse();
+  const filterType = useSelector((state) => state.chat!.filter);
+  const itemSet = useSelector((state) => state.chat!.itemSet);
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
   const chatListRef = useRef(null);
   const onScroll = useAutoScroll(chatListRef);
 
+  // If shouldn't display dummy preview, `myId` is undefended.
   const myId = useSelector((state) => {
     if (!state.profile || !state.chat) {
       return false;
     }
     const myId = state.profile.user.id;
     const member = state.profile.channels.get(state.chat.channel.id);
-    const entry = state.chat.itemMap.get(myId);
-    return member && !entry ? myId : undefined;
+    const preview = state.chat.itemSet.previews.get(myId);
+    return member && !preview ? myId : undefined;
   });
-
-  if (filter === 'IN_GAME') {
-    itemList = itemList.filter(isInGame);
-  } else if (filter === 'OUT_GAME') {
-    itemList = itemList.filter(isOutGame);
-  }
-  if (myId && initialized) {
-    itemList = itemList.concat(newMyPreviewItem(myId));
-  }
-
+  const itemList = genItemList(itemSet, filterType);
   return (
     <div css={container} ref={chatListRef} onScroll={onScroll}>
       {initialized && (
@@ -107,9 +149,8 @@ function ChatList() {
         </LoadMoreContainer>
       )}
       <ItemLayout>
-        {itemList.map((item) => (
-          <ChatListItem key={item.id} item={item} />
-        ))}
+        {itemList}
+        {myId && initialized && <ChatPreviewCompose key={myId} preview={undefined} />}
       </ItemLayout>
     </div>
   );

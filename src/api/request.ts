@@ -23,7 +23,7 @@ import {
   EditChannelMember,
   JoinChannel,
 } from './channels';
-import { ByChannel, Message, NewMessage } from './messages';
+import { ByChannel, EditMessage, Message, NewMessage } from './messages';
 import { Id } from '@/utils/id';
 import { Media } from './media';
 
@@ -126,6 +126,16 @@ export function post<T, U extends object = object, Q extends object = {}>(
   csrf = true
 ): Promise<AppResult<T>> {
   return request(makeUri(path, query), 'POST', JSON.stringify(payload), csrf);
+}
+
+export function patch(path: '/messages/edit', payload: EditMessage): Promise<AppResult<Message>>;
+export function patch<T, U extends object = object, Q extends object = {}>(
+  path: string,
+  payload: U,
+  query?: Q,
+  csrf = true
+): Promise<AppResult<T>> {
+  return request(makeUri(path, query), 'PATCH', JSON.stringify(payload), csrf);
 }
 
 export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User>>;

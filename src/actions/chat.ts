@@ -7,7 +7,8 @@ import { get } from '@/api/request';
 import { throwErr } from '@/utils/errors';
 import { connect as apiConnect } from '@/api/connect';
 import { ChatState } from '@/reducers/chat';
-import { List, Map } from 'immutable';
+import { Map } from 'immutable';
+import { initialChatItemSet } from '@/states/chat-item-set';
 
 export interface LoadChat {
   type: 'LOAD_CHAT';
@@ -60,8 +61,7 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
   const connection = connect(dispatch, channel.id, eventAfter);
   const chat: ChatState = {
     colorMap: Map<Id, string>(Object.entries(colorList)),
-    itemList: List(),
-    itemMap: Map(),
+    itemSet: initialChatItemSet,
     messageBefore,
     eventAfter,
     finished: false,
@@ -92,3 +92,14 @@ export interface ToggleMemberList {
 }
 
 export const toggleMemberList: ToggleMemberList = { type: 'TOGGLE_MEMBER_LIST' };
+
+export interface StartEditMessage {
+  type: 'START_EDIT_MESSAGE';
+  message: Message;
+}
+
+export interface StopEditMessage {
+  type: 'STOP_EDIT_MESSAGE';
+  messageId: Id;
+  editFor: number;
+}

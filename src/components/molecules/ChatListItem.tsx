@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { ChatItem } from '@/reducers/chat';
 import ChatMessageItem from '@/components/molecules/ChatMessageItem';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
-import ChatMyPreview from '@/components/molecules/ChatMyPreview';
+import ChatPreviewCompose from './ChatPreviewCompose';
+import { ChatItem } from '@/states/chat-item-set';
 
 interface Props {
   item: ChatItem;
@@ -12,9 +12,11 @@ function ChatListItem({ item }: Props) {
   if (item.type === 'MESSAGE') {
     return <ChatMessageItem message={item.message} />;
   } else if (item.type === 'PREVIEW') {
-    return <ChatPreviewItem preview={item.preview} />;
-  } else if (item.type === 'MY_PREVIEW') {
-    return <ChatMyPreview preview={item.preview} />;
+    if (item.mine) {
+      return <ChatPreviewCompose preview={item.preview} />;
+    } else if (item.preview) {
+      return <ChatPreviewItem preview={item.preview} />;
+    }
   }
   return null;
 }

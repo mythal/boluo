@@ -83,6 +83,7 @@ export interface Preview {
   whisperToUsers: Id[] | null;
   entities: Entity[];
   start: number;
+  editFor: number | null;
 }
 
 export interface PreviewPost {
@@ -93,6 +94,7 @@ export interface PreviewPost {
   isAction: boolean;
   text: string | null;
   entities: Entity[];
+  editFor: number | null;
 }
 
 export interface MessagePreview {

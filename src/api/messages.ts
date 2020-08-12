@@ -36,6 +36,15 @@ export interface NewMessage {
   orderDate: number | null;
 }
 
+export interface EditMessage {
+  messageId: Id;
+  name?: string;
+  text?: string;
+  entities?: Entity[];
+  inGame?: boolean;
+  isAction?: boolean;
+}
+
 export interface ByChannel {
   channelId: Id;
   before?: number;

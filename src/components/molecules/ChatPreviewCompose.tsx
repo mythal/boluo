@@ -18,25 +18,28 @@ import {
   textXl,
 } from '@/styles/atoms';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSelector } from '@/store';
+import { useDispatch, useSelector } from '@/store';
 import { Env as ParseEnv, parse, ParseResult } from '@/interpreter/parser';
 import { getDiceFace } from '@/utils/game';
 import { useSend } from '@/hooks';
 import { Preview, PreviewPost } from '@/api/events';
-import { post } from '@/api/request';
+import { patch, post } from '@/api/request';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
-import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import { lighten } from 'polished';
 import mask from '../../assets/icons/theater-masks.svg';
 import running from '../../assets/icons/running.svg';
 import broadcastTower from '../../assets/icons/broadcast-tower.svg';
 import paperPlane from '../../assets/icons/paper-plane.svg';
+import editIcon from '../../assets/icons/edit.svg';
+import cancelIcon from '../../assets/icons/cancel.svg';
 import Icon from '@/components/atoms/Icon';
 import { css } from '@emotion/core';
 import ChatItemContent from '@/components/molecules/ChatItemContent';
+import { Message } from '@/api/messages';
 
 interface Props {
   preview: Preview | undefined;
+  editTo?: Message;
 }
 
 export const Container = styled.div`
@@ -55,6 +58,9 @@ export const Container = styled.div`
     '  time buttons    send'
     'naming compose compose';
   gap: ${spacingN(1)} ${spacingN(2)};
+  &[data-edit='true'] {
+    position: static;
+  }
 `;
 
 const inputStyle = css`
@@ -100,6 +106,8 @@ const ButtonBar = styled.div`
 const SendContainer = styled.div`
   grid-area: send;
   justify-self: right;
+  display: flex;
+  align-items: stretch;
 `;
 
 const ComposeButton = styled.button`
@@ -158,7 +166,7 @@ const Naming = styled.div`
 `;
 
 const PREVIEW_SEND_TIMEOUT_MILLIS = 200;
-const useSendPreview = (nickname: string) => {
+const useSendPreview = (nickname: string, editFor: number | null = null) => {
   const send = useSend();
   const sendPreviewTimeout = useRef<number | null>(null);
   return (
@@ -181,6 +189,7 @@ const useSendPreview = (nickname: string) => {
       inGame,
       isAction,
       mediaId: null,
+      editFor,
       ...content,
     };
 
@@ -205,26 +214,29 @@ function useToggle(
   }, [setState, shouldPostPreview]);
 }
 
-function ChatMyPreview({ preview }: Props) {
-  const messageId = useRef(preview?.id ?? newId());
+function ChatPreviewCompose({ preview, editTo }: Props) {
+  const messageId = useRef(preview?.id ?? editTo?.id ?? newId());
+  const dispatch = useDispatch();
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const channelId = useSelector((state) => state.chat!.channel.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const defaultDiceType = useSelector((state) => state.chat!.channel.defaultDiceType);
-  const myMember = useSelector((state) => state.profile!.channels.get(channelId)?.member);
+  const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-  const [draft, setDraft] = useState(() => preview?.text || '');
-  const [inGame, setInGame] = useState(() => preview?.inGame || false);
+  const [draft, setDraft] = useState(() => preview?.text || editTo?.text || '');
+  const [inGame, setInGame] = useState(() => preview?.inGame || editTo?.inGame || false);
   const [broadcast, setBroadcast] = useState(true);
-  const [isAction, setIsAction] = useState(() => preview?.isAction || false);
+  const [isAction, setIsAction] = useState(() => preview?.isAction || editTo?.isAction || false);
 
-  const postPreview = useSendPreview(nickname);
+  const postPreview = useSendPreview(nickname, editTo?.modified);
   const shouldPostPreview = useRef(false);
 
   const [name, setName] = useState<string>(() => {
     if (preview && preview.inGame) {
       return preview.name;
+    } else if (editTo?.name) {
+      return editTo.name;
     } else if (myMember) {
       return myMember.characterName;
     } else {
@@ -249,13 +261,6 @@ function ChatMyPreview({ preview }: Props) {
   const toggleAction = useToggle(shouldPostPreview, setIsAction);
   const toggleBroadcast = useToggle(shouldPostPreview, setBroadcast);
 
-  if (!myMember) {
-    if (preview) {
-      return <ChatPreviewItem preview={preview} />;
-    } else {
-      return null;
-    }
-  }
   if (shouldPostPreview.current) {
     postPreview(messageId.current, inGame, isAction, broadcast, name, parsed);
     shouldPostPreview.current = false;
@@ -268,13 +273,23 @@ function ChatMyPreview({ preview }: Props) {
     if (prev !== current) {
       shouldPostPreview.current = true;
     }
-    if (current === '') {
+    if (current === '' && editTo === undefined) {
       messageId.current = newId();
     }
   };
   const canNotSend = draft.trim() === '' || (inGame && name === '');
   const onSend = async () => {
     if (canNotSend) {
+      return;
+    }
+    if (editTo) {
+      await patch('/messages/edit', {
+        messageId: editTo.id,
+        name: inGame ? name : nickname,
+        inGame,
+        isAction,
+        ...parsed,
+      });
       return;
     }
     await post('/messages/send', {
@@ -291,12 +306,19 @@ function ChatMyPreview({ preview }: Props) {
     setDraft('');
     setIsAction(false);
   };
+  const cancelEdit = () => {
+    if (editTo !== undefined) {
+      const messageId = editTo.id;
+      patch('/messages/edit', { messageId }).then();
+      dispatch({ type: 'STOP_EDIT_MESSAGE', messageId, editFor: editTo.modified });
+    }
+  };
   const onEditName: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
     setName(value.substr(0, 32));
   };
   return (
-    <Container>
+    <Container data-edit={editTo !== undefined}>
       <ChatItemTime timestamp={preview?.start || new Date().getTime()} />
       <Naming>
         <NameInput
@@ -322,14 +344,26 @@ function ChatMyPreview({ preview }: Props) {
         </ComposeButton>
       </ButtonBar>
       <SendContainer>
-        <ComposeButton onClick={onSend} disabled={canNotSend}>
-          <Icon sprite={paperPlane} />
-          <span>发送</span>
-        </ComposeButton>
+        {editTo && (
+          <ComposeButton css={mR(1)} onClick={cancelEdit}>
+            <Icon sprite={cancelIcon} />
+          </ComposeButton>
+        )}
+        {editTo ? (
+          <ComposeButton onClick={onSend} disabled={canNotSend}>
+            <Icon sprite={editIcon} />
+            <span>修改</span>
+          </ComposeButton>
+        ) : (
+          <ComposeButton onClick={onSend} disabled={canNotSend}>
+            <Icon sprite={paperPlane} />
+            <span>发送</span>
+          </ComposeButton>
+        )}
       </SendContainer>
       <Compose value={draft} placeholder={inGame ? '书写独一无二的冒险吧' : '尽情聊天吧'} onChange={handleChange} />
     </Container>
   );
 }
 
-export default ChatMyPreview;
+export default ChatPreviewCompose;

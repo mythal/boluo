@@ -17,6 +17,8 @@ import {
   CloseChat,
   LoadChat,
   LoadMessages,
+  StartEditMessage,
+  StopEditMessage,
   ToggleMemberList,
 } from './chat';
 import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from '@/actions/ui';
@@ -45,4 +47,6 @@ export type Action =
   | SpaceLoaded
   | UserLoaded
   | ChatFilter
-  | ToggleMemberList;
+  | ToggleMemberList
+  | StartEditMessage
+  | StopEditMessage;

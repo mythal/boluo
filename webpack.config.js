@@ -7,7 +7,6 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
@@ -40,8 +39,10 @@ module.exports = {
       filename: '[name].[hash].css',
       chunkFilename: '[id].[hash].css',
     }),
-    new SpriteLoaderPlugin(),
-    // new BundleAnalyzerPlugin(),
+    new SpriteLoaderPlugin({
+      spriteFilename: 'sprites.[hash].svg',
+    }),
+    // new require('webpack-bundle-analyzer').BundleAnalyzerPlugin,
   ],
 
   devServer: {

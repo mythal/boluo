@@ -3,7 +3,7 @@ import Prando from 'prando';
 import { encodeUuid, Id } from '@/utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { fontBold } from '@/styles/atoms';
+import { alignRight, floatLeft, fontBold, mR } from '@/styles/atoms';
 import { hsl } from 'polished';
 import Icon from '@/components/atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
@@ -15,13 +15,12 @@ interface Props {
   userId: Id;
 }
 
-const Container = styled.div`
-  grid-area: name;
-  text-align: right;
-  ${[fontBold]};
+const Container = styled.span`
+  ${[mR(1), alignRight]};
 `;
 
 const NameLink = styled(Link)`
+  ${[fontBold]};
   text-decoration: none;
 `;
 
@@ -39,7 +38,7 @@ function ChatItemName({ name, userId, master, action }: Props) {
   const color = colorMap[name];
   return (
     <Container>
-      {master && <Icon sprite={masterIcon} />}
+      {master && <Icon css={mR(1)} sprite={masterIcon} />}
       <NameLink css={{ color }} to={`/profile/${encodeUuid(userId)}`}>
         {name}
       </NameLink>

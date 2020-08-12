@@ -1,22 +1,7 @@
 import * as React from 'react';
 import { Id, newId } from '@/utils/id';
 import styled from '@emotion/styled';
-import {
-  bgColor,
-  breakpoint,
-  mediaQuery,
-  mR,
-  p,
-  previewStyle,
-  primaryColor,
-  pX,
-  pY,
-  roundedPx,
-  spacingN,
-  textBase,
-  textColor,
-  textXl,
-} from '@/styles/atoms';
+import { bgColor, mR, p, previewStyle, pX, pY, roundedPx, spacingN, textBase, textColor } from '@/styles/atoms';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from '@/store';
 import { Env as ParseEnv, parse, ParseResult } from '@/interpreter/parser';
@@ -25,17 +10,21 @@ import { useSend } from '@/hooks';
 import { Preview, PreviewPost } from '@/api/events';
 import { patch, post } from '@/api/request';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
-import { lighten } from 'polished';
+import { darken, lighten } from 'polished';
 import mask from '../../assets/icons/theater-masks.svg';
 import running from '../../assets/icons/running.svg';
 import broadcastTower from '../../assets/icons/broadcast-tower.svg';
 import paperPlane from '../../assets/icons/paper-plane.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import cancelIcon from '../../assets/icons/cancel.svg';
-import Icon from '@/components/atoms/Icon';
 import { css } from '@emotion/core';
 import ChatItemContent from '@/components/molecules/ChatItemContent';
 import { Message } from '@/api/messages';
+import { nameColWidth, timeColWidth } from '@/components/atoms/ChatItemContainer';
+import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
+import ChatItemToolbar from '@/components/molecules/ChatItemToolbar';
+import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
+import ChatItemName from '@/components/atoms/ChatItemName';
 
 interface Props {
   preview: Preview | undefined;
@@ -44,28 +33,26 @@ interface Props {
 
 export const Container = styled.div`
   display: grid;
-  ${[pX(2), pY(3), previewStyle]};
+  ${[pX(2), pY(2), previewStyle]};
   border-top: 1px solid ${lighten(0.1, bgColor)};
   border-bottom: 1px solid ${lighten(0.1, bgColor)};
   position: sticky;
   top: 0;
   bottom: 0;
-  grid-template-columns: 8rem auto 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-columns: ${timeColWidth} ${nameColWidth} auto 1fr;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
-    '  name content content'
-    '  time content content'
-    '  time buttons    send'
-    'naming compose compose';
+    '  time    name content content'
+    '     .       . compose compose';
   gap: ${spacingN(1)} ${spacingN(2)};
   &[data-edit='true'] {
-    position: static;
+    position: relative;
   }
 `;
 
 const inputStyle = css`
   ${[roundedPx, textBase]};
-  background-color: ${lighten(0.05, bgColor)};
+  background-color: ${darken(0.05, bgColor)};
   color: ${textColor};
   border: 1px solid ${lighten(0.2, bgColor)};
   &:hover {
@@ -96,68 +83,6 @@ const NameInput = styled.input`
   height: 2em;
 `;
 
-const ButtonBar = styled.div`
-  grid-area: buttons;
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-`;
-
-const SendContainer = styled.div`
-  grid-area: send;
-  justify-self: right;
-  display: flex;
-  align-items: stretch;
-`;
-
-const ComposeButton = styled.button`
-  border: none;
-  color: ${textColor};
-  cursor: pointer;
-  background-color: rgba(255, 255, 255, 0.2);
-  ${[roundedPx, pX(1), pY(1), textXl]};
-  & > span {
-    display: none;
-  }
-
-  ${mediaQuery(breakpoint.sm)} {
-    ${[pX(2), pY(1), textBase]};
-    & > span {
-      display: inline;
-    }
-  }
-
-  &:hover {
-    box-shadow: 0 0 0 1px ${textColor} inset;
-  }
-
-  &[data-on='false'] {
-    filter: brightness(40%);
-
-    &:hover {
-      filter: brightness(80%);
-    }
-
-    &:active {
-      filter: brightness(120%);
-    }
-  }
-
-  &[data-on='true'] {
-    color: ${lighten(0.3, primaryColor)};
-    box-shadow: 0 0 0 1px ${lighten(0.3, primaryColor)} inset;
-  }
-
-  &:focus {
-    outline: none;
-  }
-
-  &:disabled {
-    filter: contrast(60%);
-    cursor: not-allowed;
-  }
-`;
-
 const Naming = styled.div`
   grid-area: name;
   display: flex;
@@ -169,39 +94,35 @@ const PREVIEW_SEND_TIMEOUT_MILLIS = 200;
 const useSendPreview = (nickname: string, editFor: number | null = null) => {
   const send = useSend();
   const sendPreviewTimeout = useRef<number | null>(null);
-  return (
-    id: Id,
-    inGame: boolean,
-    isAction: boolean,
-    isBroadcast: boolean,
-    characterName: string,
-    parsed: ParseResult
-  ) => {
-    let content: Pick<PreviewPost, 'entities' | 'text'> = parsed;
-    if (!isBroadcast) {
-      content = { text: null, entities: [] };
-    }
-    const name = inGame ? characterName : nickname;
+  return useCallback(
+    (id: Id, inGame: boolean, isAction: boolean, isBroadcast: boolean, characterName: string, parsed: ParseResult) => {
+      let content: Pick<PreviewPost, 'entities' | 'text'> = parsed;
+      if (!isBroadcast) {
+        content = { text: null, entities: [] };
+      }
+      const name = inGame ? characterName : nickname;
 
-    const preview: PreviewPost = {
-      id,
-      name,
-      inGame,
-      isAction,
-      mediaId: null,
-      editFor,
-      ...content,
-    };
+      const preview: PreviewPost = {
+        id,
+        name,
+        inGame,
+        isAction,
+        mediaId: null,
+        editFor,
+        ...content,
+      };
 
-    if (sendPreviewTimeout.current !== null) {
-      window.clearTimeout(sendPreviewTimeout.current);
-      sendPreviewTimeout.current = null;
-    }
-    sendPreviewTimeout.current = window.setTimeout(async () => {
-      send({ type: 'PREVIEW', preview });
-      sendPreviewTimeout.current = null;
-    }, PREVIEW_SEND_TIMEOUT_MILLIS);
-  };
+      if (sendPreviewTimeout.current !== null) {
+        window.clearTimeout(sendPreviewTimeout.current);
+        sendPreviewTimeout.current = null;
+      }
+      sendPreviewTimeout.current = window.setTimeout(async () => {
+        send({ type: 'PREVIEW', preview });
+        sendPreviewTimeout.current = null;
+      }, PREVIEW_SEND_TIMEOUT_MILLIS);
+    },
+    [send, nickname, editFor]
+  );
 };
 
 function useToggle(
@@ -232,7 +153,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const postPreview = useSendPreview(nickname, editTo?.modified);
   const shouldPostPreview = useRef(false);
 
-  const [name, setName] = useState<string>(() => {
+  const [inputName, setName] = useState<string>(() => {
     if (preview && preview.inGame) {
       return preview.name;
     } else if (editTo?.name) {
@@ -248,6 +169,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       setName(myMember.characterName);
     }
   }, [myMember]);
+  const name = inGame ? inputName : nickname;
   const trimmedDraft = draft.trim();
   const parsed = useMemo(() => {
     const parseEnv: ParseEnv = {
@@ -262,7 +184,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const toggleBroadcast = useToggle(shouldPostPreview, setBroadcast);
 
   if (shouldPostPreview.current) {
-    postPreview(messageId.current, inGame, isAction, broadcast, name, parsed);
+    postPreview(messageId.current, inGame, isAction, broadcast, inputName, parsed);
     shouldPostPreview.current = false;
   }
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
@@ -277,7 +199,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       messageId.current = newId();
     }
   };
-  const canNotSend = draft.trim() === '' || (inGame && name === '');
+  const canNotSend = draft.trim() === '' || (inGame && inputName === '');
   const onSend = async () => {
     if (canNotSend) {
       return;
@@ -285,7 +207,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     if (editTo) {
       await patch('/messages/edit', {
         messageId: editTo.id,
-        name: inGame ? name : nickname,
+        name: inGame ? inputName : nickname,
         inGame,
         isAction,
         ...parsed,
@@ -296,7 +218,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       messageId: messageId.current,
       channelId,
       mediaId: null,
-      name: inGame ? name : nickname,
+      name: inGame ? inputName : nickname,
       inGame,
       isAction,
       orderDate: null,
@@ -317,51 +239,42 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     const { value } = e.target;
     setName(value.substr(0, 32));
   };
+  const chatItemName = <ChatItemName action={true} master={myMember.isMaster} name={name} userId={myMember.userId} />;
   return (
     <Container data-edit={editTo !== undefined}>
       <ChatItemTime timestamp={preview?.start || new Date().getTime()} />
-      <Naming>
-        <NameInput
-          value={inGame ? name : nickname}
-          disabled={!inGame}
-          onChange={onEditName}
-          placeholder="写下你的名字"
-        />
-      </Naming>
-      <ChatItemContent entities={parsed.entities} text={parsed.text} action={isAction} inGame={inGame} />
-      <ButtonBar>
-        <ComposeButton css={[mR(1)]} data-on={inGame} onClick={toggleInGame}>
-          <Icon sprite={mask} />
-          <span>游戏内</span>
-        </ComposeButton>
-        <ComposeButton css={[mR(1)]} data-on={isAction} onClick={toggleAction}>
-          <Icon sprite={running} />
-          <span>动作</span>
-        </ComposeButton>
-        <ComposeButton data-on={broadcast} onClick={toggleBroadcast}>
-          <Icon sprite={broadcastTower} />
-          <span>预览</span>
-        </ComposeButton>
-      </ButtonBar>
-      <SendContainer>
-        {editTo && (
-          <ComposeButton css={mR(1)} onClick={cancelEdit}>
-            <Icon sprite={cancelIcon} />
-          </ComposeButton>
-        )}
-        {editTo ? (
-          <ComposeButton onClick={onSend} disabled={canNotSend}>
-            <Icon sprite={editIcon} />
-            <span>修改</span>
-          </ComposeButton>
-        ) : (
-          <ComposeButton onClick={onSend} disabled={canNotSend}>
-            <Icon sprite={paperPlane} />
-            <span>发送</span>
-          </ComposeButton>
-        )}
-      </SendContainer>
+      {inGame && (
+        <Naming>
+          <NameInput value={inputName} onChange={onEditName} placeholder="写下你的名字" />
+        </Naming>
+      )}
+      {!inGame && !isAction && chatItemName}
+      <ChatItemContentContainer data-action={isAction} data-in-game={inGame}>
+        {isAction && chatItemName}
+        <ChatItemContent entities={parsed.entities} text={parsed.text} />
+      </ChatItemContentContainer>
+
       <Compose value={draft} placeholder={inGame ? '书写独一无二的冒险吧' : '尽情聊天吧'} onChange={handleChange} />
+      <ChatItemToolbar>
+        <ChatItemToolbarButton css={mR(1)} on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" />
+
+        <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleAction} sprite={running} title="描述动作" />
+
+        <ChatItemToolbarButton
+          css={mR(4)}
+          sprite={broadcastTower}
+          on={broadcast}
+          onClick={toggleBroadcast}
+          title="输入中广播"
+        />
+
+        {editTo && <ChatItemToolbarButton css={mR(1)} sprite={cancelIcon} onClick={cancelEdit} title="取消" />}
+        <ChatItemToolbarButton
+          sprite={editTo ? editIcon : paperPlane}
+          onClick={onSend}
+          title={editTo ? '提交修改' : '发送'}
+        />
+      </ChatItemToolbar>
     </Container>
   );
 }

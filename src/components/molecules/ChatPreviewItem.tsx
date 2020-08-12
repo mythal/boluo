@@ -5,6 +5,7 @@ import ChatItemTime from '@/components/atoms/ChatItemTime';
 import ChatItemName from '@/components/atoms/ChatItemName';
 import { previewStyle } from '@/styles/atoms';
 import ChatItemContent from '@/components/molecules/ChatItemContent';
+import { ChatItemContentContainer } from '@/components/atoms/ChatItemContentContainer';
 
 interface Props {
   preview: Preview;
@@ -21,11 +22,18 @@ function ChatPreviewItem({ preview }: Props) {
     isAction = true;
   }
 
+  const name = (
+    <ChatItemName action={isAction} master={preview.isMaster} name={preview.name} userId={preview.senderId} />
+  );
+
   return (
     <ChatItemContainer css={[previewStyle]}>
       <ChatItemTime timestamp={preview.start} />
-      <ChatItemName action={isAction} master={preview.isMaster} name={preview.name} userId={preview.senderId} />
-      <ChatItemContent entities={preview.entities} inGame={preview.inGame} action={isAction} text={text} />
+      {!isAction && name}
+      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
+        {isAction && name}
+        <ChatItemContent entities={preview.entities} text={text} />
+      </ChatItemContentContainer>
     </ChatItemContainer>
   );
 }

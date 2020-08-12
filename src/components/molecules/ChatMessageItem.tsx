@@ -4,34 +4,38 @@ import { ChatItemContainer } from '@/components/atoms/ChatItemContainer';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
 import ChatItemName from '@/components/atoms/ChatItemName';
 import ChatItemContent from '@/components/molecules/ChatItemContent';
-import Button from '@/components/atoms/Button';
 import { useDispatch } from '@/store';
+import { ChatItemContentContainer } from '@/components/atoms/ChatItemContentContainer';
+import ChatItemToolbar from '@/components/molecules/ChatItemToolbar';
+import editIcon from '../../assets/icons/edit.svg';
+import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 
 interface Props {
   message: Message;
   mine?: boolean;
+  successive?: boolean;
 }
 
-function ChatMessageItem({ message, mine = false }: Props) {
+function ChatMessageItem({ message, mine = false, successive = false }: Props) {
   const dispatch = useDispatch();
   const startEdit = () => {
     dispatch({ type: 'START_EDIT_MESSAGE', message: message });
   };
+  const name = (
+    <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
+  );
   return (
     <ChatItemContainer data-in-game={message.inGame}>
       <ChatItemTime timestamp={message.created} />
-      <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
-      <ChatItemContent
-        entities={message.entities}
-        seed={message.seed}
-        inGame={message.inGame}
-        action={message.isAction}
-        text={message.text}
-      />
+      {!message.isAction && name}
+      <ChatItemContentContainer data-in-game={message.inGame} data-action={message.isAction}>
+        {message.isAction && name}
+        <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
+      </ChatItemContentContainer>
       {mine && (
-        <Button data-small onClick={startEdit}>
-          编辑
-        </Button>
+        <ChatItemToolbar className="show-on-hover">
+          <ChatItemToolbarButton onClick={startEdit} sprite={editIcon} title="编辑" />
+        </ChatItemToolbar>
       )}
     </ChatItemContainer>
   );

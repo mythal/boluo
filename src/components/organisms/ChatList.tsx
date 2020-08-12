@@ -10,6 +10,7 @@ import ChatPreviewCompose from '../molecules/ChatPreviewCompose';
 import { ChatState } from '@/reducers/chat';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import ChatMessageItem from '@/components/molecules/ChatMessageItem';
+import { Id } from '@/utils/id';
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>): (() => void) => {
   const scrollEnd = useRef<number>(0);
@@ -116,6 +117,12 @@ const genItemList = (itemSet: ChatItemSet, filterType: ChatState['filter']): Rea
       }
     } else {
       itemList.push(makeMessage(messageItem));
+    }
+  }
+
+  for (const previewItem of previews) {
+    if (filter(previewItem)) {
+      itemList.push(makePreview(previewItem));
     }
   }
   return itemList;

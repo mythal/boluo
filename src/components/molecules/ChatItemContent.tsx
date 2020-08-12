@@ -1,15 +1,12 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { fontMono, link, textBase, textColor, textLg } from '@/styles/atoms';
-import { darken } from 'polished';
+import { fontMono, link } from '@/styles/atoms';
 import Prando from 'prando';
 import { Entity } from '@/interpreter/entities';
 import { ExprEntity } from './ExprEntity';
 
 interface Props {
   text: string;
-  action: boolean;
-  inGame: boolean;
   entities: Entity[];
   seed?: number[];
 }
@@ -25,30 +22,17 @@ const makeRng = (seed?: number[]): Prando | undefined => {
   return new Prando(a);
 };
 
-const Content = styled.div`
-  grid-area: content;
-  line-height: 1.6em;
-
-  &[data-action='true'] {
-    font-style: italic;
-  }
-
-  &[data-in-game='true'] {
-    ${textLg};
-  }
-  &[data-in-game='false'] {
-    ${textBase};
-    color: ${darken(0.1, textColor)};
-  }
-`;
-
 const Text = styled.span`
   white-space: pre-wrap;
 `;
 
-const Strong = styled.strong``;
+const Strong = styled.strong`
+  white-space: pre-wrap;
+`;
 
-const Emphasis = styled.em``;
+const Emphasis = styled.em`
+  white-space: pre-wrap;
+`;
 
 const MessageLink = styled.a`
   ${link};
@@ -58,7 +42,7 @@ const Expr = styled.span`
   ${fontMono};
 `;
 
-function ChatItemContent({ text, action, entities, inGame, seed }: Props) {
+function ChatItemContent({ text, entities, seed }: Props) {
   const content = [];
   let rng: Prando | undefined = undefined;
 
@@ -85,11 +69,7 @@ function ChatItemContent({ text, action, entities, inGame, seed }: Props) {
       content.push(<Emphasis key={key}>{text.substr(entity.start, entity.offset)}</Emphasis>);
     }
   }
-  return (
-    <Content data-action={action} data-in-game={inGame}>
-      {content}
-    </Content>
-  );
+  return <React.Fragment>{content}</React.Fragment>;
 }
 
 export default React.memo(ChatItemContent);

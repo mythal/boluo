@@ -453,6 +453,13 @@ export const selectTheme = (theme: Theme): Theme => ({
 });
 const colorA = 'rgba(48, 48, 48, 0.9)';
 const colorB = 'rgba(52, 52, 52, 0.9)';
+const previewStripWidth = 4;
 export const previewStyle = css`
-  background: repeating-linear-gradient(45deg, ${colorA}, ${colorA} 10px, ${colorB} 10px, ${colorB} 20px);
+  background: repeating-linear-gradient(
+    45deg,
+    ${colorA},
+    ${colorA} ${previewStripWidth}px,
+    ${colorB} ${previewStripWidth}px,
+    ${colorB} ${previewStripWidth * 2}px
+  );
 `;

@@ -116,7 +116,10 @@ export const useSend = (): ((event: ClientEvent) => void) => {
   }
   return useCallback(
     (event: ClientEvent) => {
-      connection.send(JSON.stringify(event));
+      // TODO: queued events.
+      if (connection.readyState === WebSocket.OPEN) {
+        connection.send(JSON.stringify(event));
+      }
     },
     [connection]
   );

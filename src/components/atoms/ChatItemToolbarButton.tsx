@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { p, roundedPx, spacingN, textColor } from '@/styles/atoms';
+import { p, textColor } from '@/styles/atoms';
 import { toolbarRadius } from '@/components/molecules/ChatItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { SpriteSymbol } from '*.svg';
 import Icon from '@/components/atoms/Icon';
+import Tooltip from '@/components/atoms/Tooltip';
 
 const style = css`
   border: none;
@@ -49,24 +50,13 @@ interface Props {
   title: string;
 }
 
-const tooltip = css`
-  ${[p(2), roundedPx]};
-  width: max-content;
-  position: absolute;
-  left: 50%;
-  top: ${spacingN(-2)};
-  z-index: 100;
-  transform: translate(-50%, -100%);
-  background-color: black;
-`;
-
 const container = css`
   display: inline-block;
   position: relative;
-  & .css-${tooltip.name} {
+  & .tooltip {
     visibility: hidden;
   }
-  &:hover .css-${tooltip.name} {
+  &:hover .tooltip {
     visibility: visible;
   }
 `;
@@ -74,7 +64,7 @@ const container = css`
 function ChatItemToolbarButton({ onClick, sprite, className, on, title }: Props) {
   return (
     <div css={container}>
-      <div css={tooltip}>{title}</div>
+      <Tooltip className="tooltip">{title}</Tooltip>
       <button css={style} data-on={on} className={className} onClick={onClick}>
         <Icon sprite={sprite} />
       </button>

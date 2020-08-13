@@ -103,7 +103,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       entities,
     };
     send({ type: 'PREVIEW', preview });
-  }, [editTo?.modified, inGame, isAction, name, text, entities, send]);
+  }, [editTo?.modified, inGame, isAction, name, text, send]);
   const handleChange = (next: ParseResult) => {
     setParsed(next);
     if (next.text === '' && editTo === undefined) {

@@ -39,9 +39,7 @@ module.exports = {
       filename: '[name].[hash].css',
       chunkFilename: '[id].[hash].css',
     }),
-    new SpriteLoaderPlugin({
-      spriteFilename: 'sprites.[hash].svg',
-    }),
+    new SpriteLoaderPlugin(),
     // new require('webpack-bundle-analyzer').BundleAnalyzerPlugin,
   ],
 
@@ -72,7 +70,14 @@ module.exports = {
         use: [PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }, { loader: 'css-loader' }],
       },
       { test: /\.(png|jpe?g|gif)$/, use: ['file-loader'] },
-      { test: /\.svg$/, loader: 'svg-sprite-loader', options: { extract: true } },
+      {
+        test: /\.svg$/,
+        loader: 'svg-sprite-loader',
+        options: {
+          extract: true,
+          spriteFilename: '[hash].svg',
+        },
+      },
     ],
   },
 

@@ -463,3 +463,19 @@ export const previewStyle = css`
     ${colorB} ${previewStripWidth * 2}px
   );
 `;
+export const composeInputStyle = css`
+  ${[roundedPx, textBase]};
+  background-color: ${darken(0.05, bgColor)};
+  color: ${textColor};
+  border: 1px solid ${lighten(0.2, bgColor)};
+  &:hover {
+    border-color: ${lighten(0.3, bgColor)};
+  }
+  &:focus {
+    outline: none;
+    border-color: ${lighten(0.4, bgColor)};
+  }
+  &:disabled {
+    filter: contrast(60%);
+  }
+`;

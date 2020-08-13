@@ -7,6 +7,8 @@ import { LoggedOut } from './actions/profile';
 import { useHistory } from 'react-router-dom';
 import { Dispatch, useDispatch, useSelector } from './store';
 import { ClientEvent } from '@/api/events';
+import { parse, ParseResult } from '@/interpreter/parser';
+import { getDiceFace } from '@/utils/game';
 
 export function useOutside(
   callback: (() => void) | undefined,
@@ -122,5 +124,18 @@ export const useSend = (): ((event: ClientEvent) => void) => {
       }
     },
     [connection]
+  );
+};
+
+export const useParse = (parseExpr = true): ((source: string) => ParseResult) => {
+  const chatDiceType = useSelector((state) => state.chat?.channel.defaultDiceType);
+  const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;
+  return useCallback(
+    (source: string) =>
+      parse(source, parseExpr, {
+        defaultDiceFace,
+        resolveUsername: () => null,
+      }),
+    [parseExpr, defaultDiceFace]
   );
 };

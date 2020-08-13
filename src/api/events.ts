@@ -94,7 +94,7 @@ export interface PreviewPost {
   isAction: boolean;
   text: string | null;
   entities: Entity[];
-  editFor: number | null;
+  editFor?: number | null;
 }
 
 export interface MessagePreview {

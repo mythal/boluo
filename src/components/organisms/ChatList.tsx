@@ -10,7 +10,7 @@ import ChatPreviewCompose from '../molecules/ChatPreviewCompose';
 import { ChatState } from '@/reducers/chat';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import ChatMessageItem from '@/components/molecules/ChatMessageItem';
-import { Id } from '@/utils/id';
+import Loading from '@/components/molecules/Loading';
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>): (() => void) => {
   const scrollEnd = useRef<number>(0);
@@ -147,17 +147,20 @@ function ChatList() {
     const preview = state.chat.itemSet.previews.get(myId);
     return member && !preview ? myId : undefined;
   });
+
+  if (!initialized) {
+    return <Loading />;
+  }
+
   const itemList = genItemList(itemSet, filterType);
   return (
     <div css={container} ref={chatListRef} onScroll={onScroll}>
-      {initialized && (
-        <LoadMoreContainer>
-          <LoadMoreButton />
-        </LoadMoreContainer>
-      )}
+      <LoadMoreContainer>
+        <LoadMoreButton />
+      </LoadMoreContainer>
       <ItemLayout>
         {itemList}
-        {myId && initialized && <ChatPreviewCompose key={myId} preview={undefined} />}
+        {myId && <ChatPreviewCompose key={myId} preview={undefined} />}
       </ItemLayout>
     </div>
   );

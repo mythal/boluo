@@ -91,8 +91,7 @@ const genItemList = (itemSet: ChatItemSet, filterType: ChatState['filter']): Rea
 
   for (const messageItem of itemSet.messages) {
     const { message } = messageItem;
-    const previewsLen = previews.length;
-    while (previewsLen > 0 && previews[previewsLen - 1].date < messageItem.date) {
+    while (previews.length > 0 && previews[previews.length - 1].date < messageItem.date) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const previewItem = previews.pop()!;
       if (filter(previewItem)) {

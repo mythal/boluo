@@ -1,4 +1,3 @@
-import { ChannelWithRelated } from '@/api/channels';
 import { Message } from '@/api/messages';
 import { ChannelEvent } from '@/api/events';
 import { Id } from '@/utils/id';
@@ -9,12 +8,7 @@ import { connect as apiConnect } from '@/api/connect';
 import { ChatState } from '@/reducers/chat';
 import { Map } from 'immutable';
 import { initialChatItemSet } from '@/states/chat-item-set';
-
-export interface LoadChat {
-  type: 'LOAD_CHAT';
-  channelWithRelated: ChannelWithRelated;
-  connection: WebSocket;
-}
+import { showError } from '@/actions/information';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';
@@ -37,14 +31,36 @@ export interface ChatLoaded {
   chat: ChatState;
 }
 
+export interface ChatUpdate {
+  type: 'CHAT_UPDATE';
+  id: Id;
+  chat: Partial<ChatState>;
+}
+
+let retry = 500;
+let retryTimestamp = new Date().getTime();
+
 function connect(dispatch: Dispatch, id: Id, eventAfter: number): WebSocket {
   const connection = apiConnect(id, 'CHANNEL', eventAfter);
   connection.onmessage = (wsMsg) => {
     const event = JSON.parse(wsMsg.data) as ChannelEvent;
+    retryTimestamp = event.timestamp;
     dispatch({ type: 'CHANNEL_EVENT_RECEIVED', event });
+  };
+  connection.onopen = () => {
+    retry = 500;
   };
   connection.onerror = (e) => {
     console.warn(e);
+  };
+  connection.onclose = (e) => {
+    console.warn(e);
+    dispatch(showError(`连接出现错误，${retry / 1000} 秒后尝试重新连接`));
+    setTimeout(() => {
+      console.log(retry);
+      retry *= 2;
+      dispatch({ type: 'CHAT_UPDATE', id, chat: { connection: connect(dispatch, id, retryTimestamp) } });
+    }, retry);
   };
   return connection;
 }

@@ -3,7 +3,14 @@ import { Map } from 'immutable';
 import { Message } from '@/api/messages';
 import { Preview } from '@/api/events';
 import { Action } from '@/actions';
-import { ChannelEventReceived, CloseChat, LoadMessages, StartEditMessage, StopEditMessage } from '@/actions/chat';
+import {
+  ChannelEventReceived,
+  ChatUpdate,
+  CloseChat,
+  LoadMessages,
+  StartEditMessage,
+  StopEditMessage,
+} from '@/actions/chat';
 import { DEBUG } from '@/settings';
 import { Id } from '@/utils/id';
 import { addItem, ChatItem, ChatItemSet, deleteMessage, editMessage, makeMessageItem } from '@/states/chat-item-set';
@@ -40,7 +47,18 @@ const loadChat = (prevState: ChatState | undefined, nextState: ChatState): ChatS
   return nextState;
 };
 
+const updateChat = (state: ChatState, { id, chat }: ChatUpdate): ChatState => {
+  if (id !== state.channel.id) {
+    return state;
+  }
+  return { ...state, ...chat };
+};
+
 export const closeChat = (state: ChatState, { id }: CloseChat): ChatState | undefined => {
+  state.connection.onclose = null;
+  state.connection.onerror = null;
+  state.connection.onmessage = null;
+  state.connection.onopen = null;
   return state.channel.id === id ? undefined : state;
 };
 
@@ -199,6 +217,8 @@ export const chatReducer = (
     return undefined;
   }
   switch (action.type) {
+    case 'CHAT_UPDATE':
+      return updateChat(state, action);
     case 'CLOSE_CHAT':
       return closeChat(state, action);
     case 'LOAD_MESSAGES':

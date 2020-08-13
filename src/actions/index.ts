@@ -14,8 +14,8 @@ import {
   ChannelEventReceived,
   ChatFilter,
   ChatLoaded,
+  ChatUpdate,
   CloseChat,
-  LoadChat,
   LoadMessages,
   StartEditMessage,
   StopEditMessage,
@@ -35,9 +35,9 @@ export type Action =
   | JoinedChannel
   | LeftChannel
   | ChannelMemberEdited
-  | LoadChat
   | ChatLoaded
   | CloseChat
+  | ChatUpdate
   | LoadMessages
   | ChannelEventReceived
   | SwitchExploreSpace

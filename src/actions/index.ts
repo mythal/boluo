@@ -1,4 +1,3 @@
-import { DismissInformation, Information } from './information';
 import {
   ChannelMemberEdited,
   JoinedChannel,
@@ -22,10 +21,9 @@ import {
   ToggleMemberList,
 } from './chat';
 import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from '@/actions/ui';
+import { DismissFlash, ShowFlash } from '@/actions/flash';
 
 export type Action =
-  | Information
-  | DismissInformation
   | LoggedIn
   | LoggedOut
   | UserEdited
@@ -49,4 +47,6 @@ export type Action =
   | ChatFilter
   | ToggleMemberList
   | StartEditMessage
-  | StopEditMessage;
+  | StopEditMessage
+  | ShowFlash
+  | DismissFlash;

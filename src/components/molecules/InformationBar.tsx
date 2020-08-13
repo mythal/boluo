@@ -4,7 +4,7 @@ import { lighten } from 'polished';
 import styled from '@emotion/styled';
 import { errorColor, infoColor, roundedPx, spacingN, successColor, textLg, uiShadow, warnColor } from '@/styles/atoms';
 import CloseButton from './CloseButton';
-import { InformationLevel } from '@/actions/information';
+import { InformationLevel } from '@/information';
 
 interface Props {
   variant: InformationLevel;

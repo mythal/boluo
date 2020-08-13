@@ -8,7 +8,7 @@ import { connect as apiConnect } from '@/api/connect';
 import { ChatState } from '@/reducers/chat';
 import { Map } from 'immutable';
 import { initialChatItemSet } from '@/states/chat-item-set';
-import { showError } from '@/actions/information';
+import { showFlash } from '@/actions/flash';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';
@@ -55,7 +55,7 @@ function connect(dispatch: Dispatch, id: Id, eventAfter: number): WebSocket {
   };
   connection.onclose = (e) => {
     console.warn(e);
-    dispatch(showError(`连接出现错误，${retry / 1000} 秒后尝试重新连接`));
+    dispatch(showFlash('ERROR', `连接出现错误，${retry / 1000} 秒后尝试重新连接`));
     setTimeout(() => {
       console.log(retry);
       retry *= 2;

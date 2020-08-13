@@ -13,8 +13,8 @@ export const App: React.FC = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   useGetMe(dispatch, () => setLoading(false));
-  const information = useSelector(
-    (state) => state.information,
+  const flashState = useSelector(
+    (state) => state.flash,
     (a, b) => a.equals(b)
   );
   if (loading) {
@@ -26,7 +26,7 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <Router />
         </BrowserRouter>
-        {information.size !== 0 && <Flash information={information} />}
+        {flashState.size !== 0 && <Flash flashState={flashState} />}
       </Suspense>
     </PageError>
   );

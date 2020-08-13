@@ -21,7 +21,7 @@ interface Params {
 
 const Container = styled.div`
   display: grid;
-  height: 100vh;
+  height: var(--window-height, 100vh);
   overflow: hidden;
   grid-template-rows: 3rem 1fr auto;
   grid-template-columns: auto 1fr auto;

@@ -4,7 +4,7 @@ import { useSelector } from '@/store';
 import { bgColor, pY } from '@/styles/atoms';
 import LoadMoreButton from '@/components/molecules/LoadMoreButton';
 import styled from '@emotion/styled';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useContext, useEffect, useRef } from 'react';
 import { ChatItem, ChatItemSet, MessageItem, PreviewItem } from '@/states/chat-item-set';
 import ChatPreviewCompose from '../molecules/ChatPreviewCompose';
 import { ChatState } from '@/reducers/chat';
@@ -127,6 +127,12 @@ const genItemList = (itemSet: ChatItemSet, filterType: ChatState['filter']): Rea
   return itemList;
 };
 
+const ChatListContext = React.createContext<React.RefObject<HTMLDivElement | null>>(React.createRef());
+
+export function useChatList(): React.RefObject<HTMLDivElement | null> {
+  return useContext(ChatListContext);
+}
+
 function ChatList() {
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const initialized = useSelector((state) => state.chat!.initialized);
@@ -154,13 +160,15 @@ function ChatList() {
   const itemList = genItemList(itemSet, filterType);
   return (
     <div css={container} ref={chatListRef} onScroll={onScroll}>
-      <LoadMoreContainer>
-        <LoadMoreButton />
-      </LoadMoreContainer>
-      <ItemLayout>
-        {itemList}
-        {myId && <ChatPreviewCompose key={myId} preview={undefined} />}
-      </ItemLayout>
+      <ChatListContext.Provider value={chatListRef}>
+        <LoadMoreContainer>
+          <LoadMoreButton />
+        </LoadMoreContainer>
+        <ItemLayout>
+          {itemList}
+          {myId && <ChatPreviewCompose key={myId} preview={undefined} />}
+        </ItemLayout>
+      </ChatListContext.Provider>
     </div>
   );
 }

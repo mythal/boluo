@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Id, newId } from '@/utils/id';
 import styled from '@emotion/styled';
-import { bgColor, mR, p, previewStyle, pX, pY, roundedPx, spacingN, textBase, textColor } from '@/styles/atoms';
+import { bgColor, p, previewStyle, pX, pY, roundedPx, spacingN, textBase, textColor } from '@/styles/atoms';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from '@/store';
+import { useSelector } from '@/store';
 import { Env as ParseEnv, parse, ParseResult } from '@/interpreter/parser';
 import { getDiceFace } from '@/utils/game';
 import { useSend } from '@/hooks';
@@ -11,20 +11,13 @@ import { Preview, PreviewPost } from '@/api/events';
 import { patch, post } from '@/api/request';
 import ChatItemTime from '@/components/atoms/ChatItemTime';
 import { darken, lighten } from 'polished';
-import mask from '../../assets/icons/theater-masks.svg';
-import running from '../../assets/icons/running.svg';
-import broadcastTower from '../../assets/icons/broadcast-tower.svg';
-import paperPlane from '../../assets/icons/paper-plane.svg';
-import editIcon from '../../assets/icons/edit.svg';
-import cancelIcon from '../../assets/icons/cancel.svg';
 import { css } from '@emotion/core';
 import ChatItemContent from '@/components/molecules/ChatItemContent';
 import { Message } from '@/api/messages';
 import { nameColWidth, timeColWidth } from '@/components/atoms/ChatItemContainer';
 import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
-import ChatItemToolbar from '@/components/molecules/ChatItemToolbar';
-import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 import ChatItemName from '@/components/atoms/ChatItemName';
+import ChatComposeToolbar from '@/components/molecules/ChatComposeToolbar';
 
 interface Props {
   preview: Preview | undefined;
@@ -34,6 +27,7 @@ interface Props {
 export const Container = styled.div`
   display: grid;
   ${[pX(2), pY(2), previewStyle]};
+  z-index: 10;
   border-top: 1px solid ${lighten(0.1, bgColor)};
   border-bottom: 1px solid ${lighten(0.1, bgColor)};
   position: sticky;
@@ -137,7 +131,7 @@ function useToggle(
 
 function ChatPreviewCompose({ preview, editTo }: Props) {
   const messageId = useRef(preview?.id ?? editTo?.id ?? newId());
-  const dispatch = useDispatch();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const channelId = useSelector((state) => state.chat!.channel.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
@@ -149,7 +143,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const [inGame, setInGame] = useState(() => preview?.inGame || editTo?.inGame || false);
   const [broadcast, setBroadcast] = useState(true);
   const [isAction, setIsAction] = useState(() => preview?.isAction || editTo?.isAction || false);
-
+  const [toolbarState, setToolbarState] = useState<'bottom' | 'top' | null>(null);
   const postPreview = useSendPreview(nickname, editTo?.modified);
   const shouldPostPreview = useRef(false);
 
@@ -228,20 +222,32 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     setDraft('');
     setIsAction(false);
   };
-  const cancelEdit = () => {
-    if (editTo !== undefined) {
-      const messageId = editTo.id;
-      patch('/messages/edit', { messageId }).then();
-      dispatch({ type: 'STOP_EDIT_MESSAGE', messageId, editFor: editTo.modified });
-    }
-  };
   const onEditName: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
     setName(value.substr(0, 32));
   };
   const chatItemName = <ChatItemName action={true} master={myMember.isMaster} name={name} userId={myMember.userId} />;
+
+  const handleMouseEnter = () => {
+    if (containerRef.current === null) {
+      return;
+    }
+    const rect = containerRef.current.getBoundingClientRect();
+    console.log(rect);
+    if (rect.top < 100) {
+      setToolbarState('bottom');
+    } else {
+      setToolbarState('top');
+    }
+  };
+  const handleMouseLeave = () => setToolbarState(null);
   return (
-    <Container data-edit={editTo !== undefined}>
+    <Container
+      data-edit={editTo !== undefined}
+      ref={containerRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <ChatItemTime timestamp={preview?.start || new Date().getTime()} />
       {inGame && (
         <Naming>
@@ -255,28 +261,21 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       </ChatItemContentContainer>
 
       <Compose value={draft} placeholder={inGame ? '书写独一无二的冒险吧' : '尽情聊天吧'} onChange={handleChange} />
-      <ChatItemToolbar>
-        <ChatItemToolbarButton css={mR(1)} on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" />
-
-        <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleAction} sprite={running} title="描述动作" />
-
-        <ChatItemToolbarButton
-          css={mR(4)}
-          sprite={broadcastTower}
-          on={broadcast}
-          onClick={toggleBroadcast}
-          title="输入中广播"
+      {toolbarState !== null && (
+        <ChatComposeToolbar
+          inGame={inGame}
+          toggleInGame={toggleInGame}
+          isAction={isAction}
+          toggleAction={toggleAction}
+          broadcast={broadcast}
+          toggleBroadcast={toggleBroadcast}
+          toolbarPosition={toolbarState}
+          send={onSend}
+          editId={editTo?.id}
         />
-
-        {editTo && <ChatItemToolbarButton css={mR(1)} sprite={cancelIcon} onClick={cancelEdit} title="取消" />}
-        <ChatItemToolbarButton
-          sprite={editTo ? editIcon : paperPlane}
-          onClick={onSend}
-          title={editTo ? '提交修改' : '发送'}
-        />
-      </ChatItemToolbar>
+      )}
     </Container>
   );
 }
 
-export default ChatPreviewCompose;
+export default React.memo(ChatPreviewCompose);

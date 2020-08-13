@@ -14,6 +14,12 @@ const Container = styled.div`
   right: 0;
   transform: translateY(-75%);
   ${[pX(6), pY(2)]};
+
+  &[data-position='bottom'] {
+    top: unset;
+    bottom: 0;
+    transform: translateY(80%);
+  }
 `;
 
 const Toolbar = styled.div`
@@ -24,11 +30,12 @@ const Toolbar = styled.div`
 export interface Props {
   className?: string;
   children: React.ReactNode;
+  position?: 'bottom' | 'top';
 }
 
-export function ChatItemToolbar({ children, className }: Props) {
+export function ChatItemToolbar({ children, className, position = 'top' }: Props) {
   return (
-    <Container className={className}>
+    <Container className={className} data-position={position}>
       <Toolbar>{children}</Toolbar>
     </Container>
   );

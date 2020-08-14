@@ -11,6 +11,7 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
+const REMOTE_BACKEND = false;
 
 module.exports = {
   entry: './src/index.tsx',
@@ -46,11 +47,13 @@ module.exports = {
   devServer: {
     contentBase: path.resolve(rootPath, 'public'),
     hot: true,
+    compress: true,
     historyApiFallback: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: REMOTE_BACKEND ? 'https://boluo.chat' : 'http://127.0.0.1:3000',
         ws: true,
+        secure: false,
       },
     },
   },

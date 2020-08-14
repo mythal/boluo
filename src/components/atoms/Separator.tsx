@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { lineColor } from '@/styles/atoms';
+import { lineColor } from '@/styles/colors';
 
 const Separator = styled.hr`
   border: none;

@@ -3,6 +3,11 @@ import styled from '@emotion/styled';
 import Title from '@/components/atoms/Title';
 import Text from '@/components/atoms/Text';
 import Button from '@/components/atoms/Button';
+import { fontMono, mX, mY, pX, pY, roundedSm, textSm } from '@/styles/atoms';
+import Icon from '@/components/atoms/Icon';
+import rotateIcon from '@/assets/icons/rotate-cw.svg';
+import mushroomCloud from '../../assets/icons/mushroom-cloud.svg';
+import { gray } from '@/styles/colors';
 
 interface Props {}
 
@@ -24,6 +29,16 @@ const Mask = styled.div`
   z-index: 1000;
 `;
 
+const Container = styled.div`
+  max-width: 30rem;
+  margin: 0 auto;
+`;
+
+const ErrorCode = styled.code`
+  background-color: ${gray['800']};
+  ${[roundedSm, textSm, fontMono, pX(2), pY(1)]};
+`;
+
 class PageError extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -36,20 +51,30 @@ class PageError extends React.Component<Props, State> {
   onClick() {
     document.location.reload();
   }
+  componentDidMount() {
+    document.title = '菠萝出错啦';
+  }
+
   render() {
     if (this.state.error !== undefined) {
       return (
         <Mask>
-          <div>
-            <Title>发生未知错误</Title>
-            <Text>
-              可能是页面载入出错。请{' '}
-              <Button data-small onClick={this.onClick}>
+          <Container>
+            <Title>
+              <Icon sprite={mushroomCloud} /> 哎哟！
+            </Title>
+            <Text css={mY(1)}>
+              发生未知错误。这通常是网络原因导致页面载入出错。请
+              <Button css={[mX(1)]} data-small onClick={this.onClick}>
+                <Icon sprite={rotateIcon} />
                 刷新
-              </Button>{' '}
-              重试，如果依然错误请联系网站管理员。错误详情：<code>{String(this.state.error)}</code>
+              </Button>
+              重试，如果依然错误请联系网站管理员。
             </Text>
-          </div>
+            <Text css={mY(4)}>
+              详情：<ErrorCode>{String(this.state.error)}</ErrorCode>
+            </Text>
+          </Container>
         </Mask>
       );
     }

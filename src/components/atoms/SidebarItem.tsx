@@ -1,7 +1,8 @@
 import styled from '@emotion/styled';
 import { NavLink } from 'react-router-dom';
-import { pL, pR, primaryColor, pY, sidebarWidth, spacingN, textColor } from '@/styles/atoms';
+import { pL, pR, pY, sidebarWidth, spacingN } from '@/styles/atoms';
 import { darken } from 'polished';
+import { primaryColor, textColor } from '@/styles/colors';
 
 export const sidebarItemColor = darken(0.1, textColor);
 

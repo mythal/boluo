@@ -13,7 +13,6 @@ import {
   mR,
   pR,
   textBase,
-  textColor,
   textLg,
 } from '@/styles/atoms';
 import ChannelMemberButton from './ChannelMemberButton';
@@ -26,6 +25,7 @@ import { darken } from 'polished';
 import ChatFilter from '@/components/organisms/ChatFilter';
 import { useTitle } from '@/hooks';
 import MemberListButton from '@/components/molecules/MemberListButton';
+import { textColor } from '@/styles/colors';
 
 const Topic = styled.div`
   display: none;

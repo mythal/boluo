@@ -10,9 +10,10 @@ import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import { useDispatch, useSelector } from '@/store';
 import { loadSpace } from '@/actions/ui';
-import { errLoading } from '@/api/error';
+import { errLoading, LOADING } from '@/api/error';
 import { AppResult } from '@/api/request';
 import { SpaceWithRelated } from '@/api/spaces';
+import PageLoading from '@/components/molecules/PageLoading';
 
 interface Params {
   spaceId: string;
@@ -24,7 +25,7 @@ const Container = styled.div`
   height: var(--window-height, 100vh);
   overflow: hidden;
   grid-template-rows: 3rem 1fr auto;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(260px, 1fr) auto;
   grid-template-areas:
     'sidebar-header header header'
     'sidebar-body list members'
@@ -41,17 +42,24 @@ function Chat() {
   }, [spaceId, dispatch]);
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
+    if (result.value.code === LOADING) {
+      return <PageLoading text="loading space data" />;
+    }
     return (
       <BasePage>
         <RenderError error={result.value} more404 />
       </BasePage>
     );
   }
-  const { channels, space } = result.value;
+  const { channels, space, members } = result.value;
   return (
     <Container>
       <ChatSidebar space={space} channels={channels} />
-      {channelId ? <ChannelChat spaceId={spaceId} channelId={channelId} /> : <ChatHome space={space} />}
+      {channelId ? (
+        <ChannelChat spaceId={spaceId} channelId={channelId} />
+      ) : (
+        <ChatHome members={members} channels={channels} space={space} />
+      )}
     </Container>
   );
 }

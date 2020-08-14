@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { color, floatRight, link, listStyleSquare, mT, mX, mY, p, sm, textColor, textXl } from '@/styles/atoms';
+import { color, floatRight, link, listStyleSquare, mT, mX, mY, p, sm, textXl } from '@/styles/atoms';
 import logo from '@/assets/logo.svg';
 import { darken } from 'polished';
 import Title from '../atoms/Title';
 import { OutlineButtonLink } from '@/components/atoms/OutlineButton';
+import { textColor } from '@/styles/colors';
 
 function GuestHome() {
   return (

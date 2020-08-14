@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { css, keyframes } from '@emotion/core';
-import { menuBgColor, roundedPx, spacingN, uiShadow } from '@/styles/atoms';
+import { roundedMd, spacingN } from '@/styles/atoms';
+import { menuBgColor } from '@/styles/colors';
 
 interface Props {
   children: React.ReactNode;
@@ -13,18 +14,18 @@ const menuEnter = keyframes`
   }
   100% {
     opacity: 100%;
-    transform: translateY(0);
+    transform: translateY(-0.25rem);
   }
 `;
 
 const menuStyle = css`
   background-color: ${menuBgColor};
-  padding: ${spacingN(4)} ${spacingN(2)};
+  padding: ${spacingN(2)} ${spacingN(2)};
   width: ${spacingN(48)};
-  ${roundedPx};
+  ${roundedMd};
   opacity: 0;
   transform: translateY(-1rem);
-  ${uiShadow};
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   animation: ${menuEnter} 0.1s ease-in forwards;
 `;
 

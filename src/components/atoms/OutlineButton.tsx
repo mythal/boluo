@@ -2,17 +2,14 @@ import { css } from '@emotion/core';
 import {
   baseLineHeight,
   controlRounded,
-  dangerColor,
   disabled,
   focusShadow,
   onDisabled,
   onHover,
-  primaryColor,
   pX,
   pY,
   spacingN,
   textBase,
-  textColor,
   textLg,
   textSm,
   uiShadow,
@@ -21,6 +18,7 @@ import {
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
+import { dangerColor, primaryColor, textColor } from '@/styles/colors';
 
 const btnColor = (color: string) => css`
   background-color: ${color};

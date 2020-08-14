@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { textColor, textSm } from '@/styles/atoms';
+import { textSm } from '@/styles/atoms';
 import { darken } from 'polished';
+import { textColor } from '@/styles/colors';
 
 interface Props {
   timestamp: number;

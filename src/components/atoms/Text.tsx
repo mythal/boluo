@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
-import { textBase, textColor } from '@/styles/atoms';
+import { textBase } from '@/styles/atoms';
+import { textColor } from '@/styles/colors';
 
 export const Text = styled.p`
   color: ${textColor};

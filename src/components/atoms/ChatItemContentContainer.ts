@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
-import { textBase, textColor, textLg } from '@/styles/atoms';
+import { textBase, textLg } from '@/styles/atoms';
 import { darken } from 'polished';
+import { textColor } from '@/styles/colors';
 
 export const ChatItemContentContainer = styled.div`
   grid-area: content;

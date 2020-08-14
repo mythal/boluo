@@ -1,18 +1,7 @@
-import {
-  controlRounded,
-  disabled,
-  duration200,
-  errorColor,
-  focusShadow,
-  inputBgColor,
-  spacingN,
-  textColor,
-  textLg,
-  uiShadow,
-  widthFull,
-} from '@/styles/atoms';
+import { disabled, roundedSm, spacingN, textLg, widthFull } from '@/styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
+import { errorColor, gray, inputBgColor, textColor } from '@/styles/colors';
 
 interface DataAttributes {
   'data-variant'?: 'error' | 'normal';
@@ -20,17 +9,19 @@ interface DataAttributes {
 
 export const inputStyle = css`
   background-color: ${inputBgColor};
-  border: none;
   padding: ${spacingN(2)};
   color: ${textColor};
   ${textLg};
-  ${uiShadow};
-  transition-property: all;
-  ${duration200};
-  ${controlRounded};
+  transition: all 100ms;
+  ${roundedSm};
   ${widthFull};
+  border: 1px solid ${gray['700']};
+  &:hover {
+    border-color: ${gray['400']};
+  }
   &:focus {
-    ${focusShadow};
+    outline: none;
+    border-color: ${gray['500']};
   }
   &:disabled {
     ${disabled};

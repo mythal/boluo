@@ -1,18 +1,10 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import {
-  bgColor,
-  breakpoint,
-  headerTransition,
-  mediaQuery,
-  primaryColor,
-  roundedPx,
-  spacingN,
-  textColor,
-} from '@/styles/atoms';
+import { breakpoint, headerTransition, mediaQuery, roundedPx, spacingN, textSm } from '@/styles/atoms';
 import { NavLink } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { darken, lighten } from 'polished';
+import { darken } from 'polished';
+import { bgColor, headerBgColor, textColor } from '@/styles/colors';
 
 interface Props {
   to: string;
@@ -23,10 +15,11 @@ interface Props {
 
 export const headerLinkStyle = css`
   color: ${textColor};
+  ${textSm};
   cursor: pointer;
   text-decoration: none;
-  padding: ${spacingN(2)} ${spacingN(3)};
-  background-color: ${bgColor};
+  padding: ${spacingN(1.5)} ${spacingN(2)};
+  background-color: ${darken(0.05, headerBgColor)};
   max-width: 8rem;
   ${roundedPx};
   ${mediaQuery(breakpoint.sm)} {
@@ -43,15 +36,13 @@ export const headerLinkStyle = css`
   text-overflow: ellipsis;
   ${headerTransition};
   &.active {
-    background-color: ${darken(0.03, bgColor)};
-    box-shadow: 0 -2px 0 0 ${primaryColor} inset;
+    background-color: ${bgColor};
   }
   &:hover {
-    background-color: ${lighten(0.1, bgColor)};
-    box-shadow: 0 -2px 0 0 ${primaryColor} inset;
+    background-color: ${darken(0.1, headerBgColor)};
   }
   &:active {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: ${darken(0.15, headerBgColor)};
   }
   &:focus {
     outline: none;

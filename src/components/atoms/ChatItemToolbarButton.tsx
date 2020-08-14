@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { p, textColor } from '@/styles/atoms';
+import { p } from '@/styles/atoms';
 import { toolbarRadius } from '@/components/molecules/ChatItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { SpriteSymbol } from '*.svg';
 import Icon from '@/components/atoms/Icon';
 import Tooltip from '@/components/atoms/Tooltip';
+import { textColor } from '@/styles/colors';
 
 const style = css`
   border: none;

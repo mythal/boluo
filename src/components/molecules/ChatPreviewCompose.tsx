@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { newId } from '@/utils/id';
 import styled from '@emotion/styled';
-import { bgColor, previewStyle, pX, pY, spacingN } from '@/styles/atoms';
+import { previewStyle, pX, pY, spacingN } from '@/styles/atoms';
 import { useSelector } from '@/store';
 import { ParseResult } from '@/interpreter/parser';
 import { useSend } from '@/hooks';
@@ -18,6 +18,7 @@ import ChatItemName from '@/components/atoms/ChatItemName';
 import ChatComposeToolbar from '@/components/molecules/ChatComposeToolbar';
 import ChatPreviewComposeInput from '@/components/molecules/ChatPreviewComposeInput';
 import ChatPreviewComposeNameInput from '@/components/molecules/ChatPreviewComposeNameInput';
+import { bgColor } from '@/styles/colors';
 
 interface Props {
   preview: Preview | undefined;
@@ -41,6 +42,9 @@ export const Container = styled.div`
   gap: ${spacingN(1)} ${spacingN(2)};
   &[data-edit='true'] {
     position: relative;
+  }
+  &:hover {
+    z-index: 20;
   }
 `;
 

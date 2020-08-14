@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
-import { bgColor, pX, pY, spacingN } from '@/styles/atoms';
+import { pX, pY, spacingN } from '@/styles/atoms';
 import { darken, lighten } from 'polished';
+import { bgColor } from '@/styles/colors';
 
 export const timeColWidth = '2.5rem';
 export const nameColWidth = '8rem';

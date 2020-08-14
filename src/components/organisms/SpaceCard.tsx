@@ -2,11 +2,12 @@ import * as React from 'react';
 import { Space } from '@/api/spaces';
 import { Link } from 'react-router-dom';
 import { css } from '@emotion/core';
-import { bgColor, m, mT, p, pX, pY, roundedPx, textColor, textXl, uiShadow } from '@/styles/atoms';
+import { fontNormal, m, mT, p, pX, pY, roundedMd, textXl, uiShadow } from '@/styles/atoms';
 import { lighten } from 'polished';
 import { encodeUuid } from '@/utils/id';
 import styled from '@emotion/styled';
 import nightSky from '../../assets/space-card-background.svg';
+import { bgColor, textColor } from '@/styles/colors';
 
 interface Props {
   space: Space;
@@ -21,7 +22,7 @@ const cardStyle = css`
   text-shadow: 0 1px 1px #000;
   min-height: 8rem;
   ${uiShadow};
-  ${roundedPx};
+  ${roundedMd};
   ${pY(5)};
   ${pX(3)};
   text-decoration: none;
@@ -32,7 +33,7 @@ const cardStyle = css`
   }
 `;
 
-const SpaceName = styled.h2(textXl, p(0), m(0));
+const SpaceName = styled.h2(textXl, p(0), m(0), fontNormal);
 
 function truncate(description: string): string {
   const length = 32;

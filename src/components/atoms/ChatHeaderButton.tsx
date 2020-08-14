@@ -1,7 +1,8 @@
 import styled from '@emotion/styled';
-import { breakpoint, headerTransition, mediaQuery, primaryColor, roundedPx, spacingN, textColor } from '@/styles/atoms';
+import { breakpoint, headerTransition, mB, mediaQuery, roundedPx, spacingN, textLg } from '@/styles/atoms';
 import { css } from '@emotion/core';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import { gray, textColor } from '@/styles/colors';
 
 export const chatHeaderButtonStyle = css`
   color: ${textColor};
@@ -14,16 +15,15 @@ export const chatHeaderButtonStyle = css`
   text-overflow: ellipsis;
   border: none;
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: ${gray['700']};
   ${headerTransition};
   &:hover {
     background-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 -2px 0 0 ${primaryColor} inset;
   }
+  &.active,
   &[data-active='true'],
   &:active {
-    background-color: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 -2px 0 0 ${primaryColor} inset;
+    background-color: ${gray['900']};
   }
   &:focus {
     outline: none;
@@ -36,8 +36,19 @@ export const chatHeaderButtonStyle = css`
   }
 `;
 
+export const sidebarIconButton = css`
+  ${[textLg, mB(1)]};
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+`;
+
 export const ChatHeaderButton = styled.button(chatHeaderButtonStyle);
 
 export const ChatHeaderButtonLink = styled(Link)(chatHeaderButtonStyle);
+
+export const ChatHeaderButtonNavLink = styled(NavLink)(chatHeaderButtonStyle);
 
 export default ChatHeaderButton;

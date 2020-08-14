@@ -1,6 +1,7 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { composeInputStyle, p } from '@/styles/atoms';
+import { alignRight, p, textSm } from '@/styles/atoms';
+import Input from '@/components/atoms/Input';
 
 interface Props {
   value: string;
@@ -14,13 +15,6 @@ const Naming = styled.div`
   justify-content: flex-end;
 `;
 
-const NameInput = styled.input`
-  ${[p(1), composeInputStyle]};
-  text-align: right;
-  width: 100%;
-  height: 2em;
-`;
-
 function ChatPreviewComposeNameInput({ value, onChange }: Props) {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
@@ -29,7 +23,7 @@ function ChatPreviewComposeNameInput({ value, onChange }: Props) {
 
   return (
     <Naming>
-      <NameInput value={value} onChange={handleChange} placeholder="写下你的名字" />
+      <Input css={[textSm, p(1), alignRight]} value={value} onChange={handleChange} placeholder="写下你的名字" />
     </Naming>
   );
 }

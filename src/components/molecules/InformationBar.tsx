@@ -2,9 +2,15 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
-import { errorColor, infoColor, roundedPx, spacingN, successColor, textLg, uiShadow, warnColor } from '@/styles/atoms';
+import { roundedSm, spacingN, textBase, textXl, uiShadow } from '@/styles/atoms';
 import CloseButton from './CloseButton';
 import { InformationLevel } from '@/information';
+import {
+  informationErrorColor,
+  informationInfoColor,
+  informationSuccessColor,
+  informationWarnColor,
+} from '@/styles/colors';
 
 interface Props {
   variant: InformationLevel;
@@ -15,9 +21,10 @@ interface Props {
 
 const colorStyle = (color: string) => css`
   background-color: ${color};
+  border: 1px solid ${lighten(0.15, color)};
 
   &:hover {
-    background-color: ${lighten(0.1, color)};
+    border-color: ${lighten(0.3, color)};
   }
 `;
 
@@ -30,21 +37,21 @@ const style = css`
   align-items: center;
   grid-template-columns: 1fr auto;
   padding: ${spacingN(1)};
-  ${textLg};
-  ${roundedPx};
+  ${textBase};
+  ${roundedSm};
 
   ${uiShadow};
   &[data-variant='INFO'] {
-    ${colorStyle(infoColor)};
+    ${colorStyle(informationInfoColor)};
   }
   &[data-variant='ERROR'] {
-    ${colorStyle(errorColor)};
+    ${colorStyle(informationErrorColor)};
   }
   &[data-variant='SUCCESS'] {
-    ${colorStyle(warnColor)};
+    ${colorStyle(informationWarnColor)};
   }
   &[data-variant='WARNING'] {
-    ${colorStyle(successColor)};
+    ${colorStyle(informationSuccessColor)};
   }
 `;
 
@@ -52,7 +59,7 @@ function InformationBar({ variant, className, dismiss, children }: Props) {
   return (
     <div css={style} data-variant={variant} className={className}>
       <Container>{children}</Container>
-      {dismiss && <CloseButton onClick={dismiss} />}
+      {dismiss && <CloseButton css={textXl} onClick={dismiss} />}
     </div>
   );
 }

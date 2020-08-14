@@ -2,20 +2,10 @@ import * as React from 'react';
 import { useCallback, useEffect } from 'react';
 import { css } from '@emotion/core';
 import Button from '../atoms/Button';
-import {
-  breakpoint,
-  dialogBgColor,
-  dialogTitleColor,
-  mediaQuery,
-  pX,
-  pY,
-  roundedPx,
-  spacingN,
-  textXl,
-  uiShadow,
-} from '@/styles/atoms';
+import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '@/styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
+import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '@/styles/colors';
 
 interface Props {
   children: React.ReactNode;
@@ -28,8 +18,8 @@ interface Props {
 
 const style = css`
   background-color: ${dialogBgColor};
-  ${roundedPx};
-  ${uiShadow};
+  ${roundedMd};
+  box-shadow: 0 0 0 ${spacingN(2)} ${dialogShadowColor};
   transform: translate(-50%, -50%);
   min-width: 18em;
 

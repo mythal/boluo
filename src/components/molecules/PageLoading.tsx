@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Loading from '@/components/molecules/Loading';
 import styled from '@emotion/styled';
+import { css } from '@emotion/core';
 
 const Mask = styled.div`
   width: 100vw;
@@ -14,6 +15,8 @@ const Mask = styled.div`
   align-items: center;
 `;
 
+const spinnerContainer = css``;
+
 interface Props {
   text?: string;
 }
@@ -21,7 +24,7 @@ interface Props {
 function PageLoading({ text }: Props) {
   return (
     <Mask>
-      <div css={{ width: '40%' }}>
+      <div css={spinnerContainer}>
         <Loading css={{ display: 'block' }} text={text} />
       </div>
     </Mask>

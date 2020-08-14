@@ -1,0 +1,45 @@
+import * as React from 'react';
+import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from '@/components/atoms/ChatHeaderButton';
+import { Space } from '@/api/spaces';
+import Icon from '@/components/atoms/Icon';
+import nightSky from '../../assets/icons/night-sky.svg';
+import { useRef, useState } from 'react';
+import Menu from '@/components/atoms/Menu';
+import { MenuItemLink } from '@/components/atoms/MenuItem';
+import { Channel } from '@/api/channels';
+import Overlay from '@/components/atoms/Overlay';
+import { chatPath } from '@/utils/path';
+
+interface Props {
+  space: Space;
+  channels: Channel[];
+}
+
+function SidebarFoldedItems({ space, channels }: Props) {
+  const [channelMenu, setChannelMenu] = useState(false);
+  const channelButton = useRef<HTMLButtonElement>(null);
+  const dismissMenu = () => setChannelMenu(false);
+  return (
+    <React.Fragment>
+      <ChatHeaderButtonNavLink activeClassName="active" exact css={sidebarIconButton} to={chatPath(space.id)}>
+        <Icon sprite={nightSky} />
+      </ChatHeaderButtonNavLink>
+      <ChatHeaderButton ref={channelButton} css={sidebarIconButton} onClick={() => setChannelMenu(true)}>
+        #
+      </ChatHeaderButton>
+      {channelMenu && (
+        <Overlay anchor={channelButton} x={1} y={-1} selfY={1} onOuter={dismissMenu}>
+          <Menu dismiss={dismissMenu}>
+            {channels.map((channel) => (
+              <MenuItemLink key={channel.id} to={chatPath(space.id, channel.id)}>
+                {channel.name}
+              </MenuItemLink>
+            ))}
+          </Menu>
+        </Overlay>
+      )}
+    </React.Fragment>
+  );
+}
+
+export default SidebarFoldedItems;

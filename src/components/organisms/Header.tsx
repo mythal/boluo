@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { css } from '@emotion/core';
-import { headerBgColor, headerHeight, headerShadow, mainP, mainWidth, mR } from '@/styles/atoms';
+import { headerHeight, headerShadow, mainP, mainWidth, mR } from '@/styles/atoms';
 import HeaderLink, { HeaderButton, headerLinkStyle } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
 import logo from '@/assets/logo.svg';
@@ -16,6 +16,7 @@ import logoutIcon from '@/assets/icons/logout.svg';
 import { useIsLoggedIn } from '@/hooks';
 import { useSelector } from '@/store';
 import { MenuItemLink } from '@/components/atoms/MenuItem';
+import { headerBgColor } from '@/styles/colors';
 
 export const headerStyle = css`
   display: flex;
@@ -55,7 +56,6 @@ function Guest() {
           <Icon css={mR(1)} sprite={logo} />
           菠萝
         </HeaderLink>
-        <ForumLink />
         <HeaderLink to="/space/explore">探索位面</HeaderLink>
       </Nav>
       <Nav>
@@ -82,7 +82,6 @@ function User() {
           <Icon css={mR(1)} sprite={logo} />
           我的
         </HeaderLink>
-        <ForumLink />
         <HeaderLink css={mR(1)} to="/space/explore">
           探索位面
         </HeaderLink>

@@ -1,9 +1,10 @@
 import * as React from 'react';
-import styled from '@emotion/styled';
-import { composeInputStyle, p } from '@/styles/atoms';
+import { textBase } from '@/styles/atoms';
 import { useRef, useState } from 'react';
 import { ParseResult } from '@/interpreter/parser';
 import { useParse } from '@/hooks';
+import TextArea from '@/components/atoms/TextArea';
+import { css } from '@emotion/core';
 
 interface Props {
   inGame: boolean;
@@ -11,13 +12,9 @@ interface Props {
   onChange: (parsed: ParseResult) => void;
 }
 
-const Compose = styled.textarea`
-  ${[p(2), composeInputStyle]};
+const compose = css`
   grid-area: compose;
-  resize: none;
-  &:focus {
-    outline: none;
-  }
+  ${textBase};
 `;
 
 function ChatPreviewComposeInput({ inGame, initialValue, onChange }: Props) {
@@ -38,7 +35,8 @@ function ChatPreviewComposeInput({ inGame, initialValue, onChange }: Props) {
     }, 200);
   };
   return (
-    <Compose
+    <TextArea
+      css={compose}
       value={value}
       placeholder={placeholder}
       onCompositionStart={() => (composing.current = true)}

@@ -2,15 +2,17 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '@/api/channels';
-import { chatHeaderPadding, chatSidebarColor, headerBgColor, mR, sidebarWidth, textLg } from '@/styles/atoms';
+import { chatHeaderPadding, mR, pY, sidebarWidth, textLg } from '@/styles/atoms';
 import ChatHeaderButton, { ChatHeaderButtonLink } from '@/components/atoms/ChatHeaderButton';
-import sidebarFold from '../../assets/icons/sidebar-fold.svg';
-import sidebarExpand from '../../assets/icons/sidebar-expand.svg';
 import logo from '../../assets/logo.svg';
+import bars from '../../assets/icons/bars.svg';
 import Icon from '@/components/atoms/Icon';
 import { darken } from 'polished';
 import { Space } from '@/api/spaces';
 import SidebarExpandItems from '@/components/molecules/SidebarExpandItems';
+import { chatSidebarColor, headerBgColor } from '@/styles/colors';
+import { Transition } from 'react-transition-group';
+import SidebarFoldedItems from '@/components/molecules/SidebarFoldedItems';
 
 interface Props {
   space: Space;
@@ -22,9 +24,16 @@ const sidebarBody = css`
   grid-area: sidebar-body;
   border-right: 1px solid ${darken(0.04, chatSidebarColor)};
   min-width: 0;
-  transition: all 100ms ease-in-out;
+  display: flex;
+  flex-direction: column;
+  transition: all 300ms ease-in-out;
   &[data-expand='true'] {
     ${sidebarWidth};
+  }
+  &[data-expand='false'] {
+    ${pY(4)};
+    text-align: center;
+    align-items: center;
   }
 `;
 
@@ -69,20 +78,27 @@ function ChatSidebar({ space, channels }: Props) {
     });
   return (
     <React.Fragment>
-      <div css={sidebarHeader}>
-        <ChatHeaderButton onClick={toggle} css={[textLg]}>
-          <Icon sprite={expand ? sidebarFold : sidebarExpand} />
-        </ChatHeaderButton>
-        {expand && (
-          <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
-            <Icon sprite={logo} />
-            菠萝
-          </ChatHeaderButtonLink>
+      <Transition in={expand} timeout={300}>
+        {(state) => (
+          <React.Fragment>
+            <div css={sidebarHeader}>
+              <ChatHeaderButton onClick={toggle} css={[textLg]} data-active={expand}>
+                <Icon sprite={bars} />
+              </ChatHeaderButton>
+              {state === 'entered' && (
+                <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
+                  <Icon sprite={logo} />
+                  菠萝
+                </ChatHeaderButtonLink>
+              )}
+            </div>
+            <div css={sidebarBody} data-expand={expand}>
+              {state === 'entered' && <SidebarExpandItems space={space} channels={channels} />}
+              {state === 'exited' && <SidebarFoldedItems space={space} channels={channels} />}
+            </div>
+          </React.Fragment>
         )}
-      </div>
-      <div css={sidebarBody} data-expand={expand}>
-        {expand && <SidebarExpandItems space={space} channels={channels} />}
-      </div>
+      </Transition>
     </React.Fragment>
   );
 }

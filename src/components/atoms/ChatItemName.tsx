@@ -3,7 +3,7 @@ import Prando from 'prando';
 import { encodeUuid, Id } from '@/utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { alignRight, floatLeft, fontBold, mR } from '@/styles/atoms';
+import { alignRight, fontBold, mR } from '@/styles/atoms';
 import { hsl } from 'polished';
 import Icon from '@/components/atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';

@@ -1,6 +1,16 @@
 import { css, Interpolation, keyframes } from '@emotion/core';
 import { darken, lighten, mix, transparentize } from 'polished';
 import { Theme } from 'react-select';
+import {
+  bgColor,
+  focusOutlineColor,
+  headerBgColor,
+  linkColor,
+  primaryColor,
+  red,
+  textColor,
+  uiShadowColor,
+} from '@/styles/colors';
 
 export const onDisabled = (...styles: Interpolation[]) =>
   css`
@@ -64,6 +74,14 @@ export const roundedPx = css`
   border-radius: 1px;
 `;
 
+export const roundedMd = css`
+  border-radius: 5px;
+`;
+
+export const roundedSm = css`
+  border-radius: 3px;
+`;
+
 export const disabled = css`
   filter: grayscale(80%) brightness(80%) contrast(30%);
   cursor: not-allowed;
@@ -84,11 +102,6 @@ export const border = (color: string, width = '1px') => css`
 
 export const spacing = '0.25rem';
 export const spacingN = (n: number): string => `calc(${spacing} * ${n})`;
-export const bgColor = '#292929';
-export const textColor = '#dddddd';
-export const minorTextColor = darken(0.2, textColor);
-export const darkTextColor = '#242424';
-export const uiShadowColor = '#000000';
 export const textBase = css`
   font-size: 1rem;
 `;
@@ -121,34 +134,11 @@ export const fontSerif = css`
 export const fontMono = css`
   font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 `;
-export const infoColor = '#45675e';
-export const warnColor = '#307830';
-export const errorColor = '#711518';
-export const normalColor = '#555555';
-export const successColor = '#2F855A';
-export const lineColor = lighten(0.15, bgColor);
-export const primaryColor = '#B18139';
-export const dangerColor = '#9a4444';
-export const inputBgColor = lighten(0.1, bgColor);
-export const inputBorderColor = '#555555';
-export const headerBgColor = '#333333';
-export const linkColor = lighten(0.2, primaryColor);
-export const headerHeight = spacingN(14);
+export const headerHeight = spacingN(12);
 export const sidebarMinWidth = spacingN(48);
 export const sidebarMaxWidth = '20%';
-export const menuBgColor = '#000000';
-export const menuShadowColor = 'rgba(0,0,0,0.56)';
-export const menuItemHoverColor = darken(0.1, primaryColor);
-export const closeButtonHoverColor = 'rgba(255,255,255,0.2)';
-export const closeButtonActiveColor = 'rgba(255,255,255,0.4)';
 export const overlayZIndex = 20;
 export const modalZIndex = 40;
-export const modalMaskColor = 'rgba(0,0,0,0.5)';
-export const dialogBgColor = '#343434';
-export const dialogTitleColor = darken(0.3, textColor);
-export const dialogHeaderBgColor = darken(0.075, dialogBgColor);
-export const focusOutlineColor = 'rgba(255, 255, 255, 0.4)';
-export const chatSidebarColor = darken(0.03, headerBgColor);
 
 export const mainWidth = css`
   max-width: 50em;
@@ -252,6 +242,10 @@ export const mB = (n: number) =>
   css`
     margin-bottom: ${spacingN(n)};
   `;
+export const gap = (n: number) =>
+  css`
+    gap: ${spacingN(n)};
+  `;
 
 export const listItemSquare = css`
   list-style-type: square;
@@ -260,9 +254,7 @@ export const listItemSquare = css`
 export const hidden = css`
   display: none;
 `;
-export const flex = css`
-  display: flex;
-`;
+
 export const inline = css`
   display: inline;
 `;
@@ -271,6 +263,19 @@ export const block = css`
 `;
 export const inlineBlock = css`
   display: inline-block;
+`;
+export const flex = css`
+  display: flex;
+`;
+export const flexCol = css`
+  display: flex;
+  flex-direction: column;
+`;
+export const flexGrow = css`
+  flex-grow: 1;
+`;
+export const flex1 = css`
+  flex: 1 1;
 `;
 export const grid = css`
   display: grid;
@@ -292,6 +297,9 @@ export const alignLeft = css`
 export const fontBold = css`
   font-weight: bold;
 `;
+export const fontNormal = css`
+  font-weight: normal;
+`;
 
 export const floatLeft = css`
   float: left;
@@ -304,10 +312,6 @@ export const mainP = [pX(6), pY(4)];
 
 export const listStyleSquare = css`
   list-style-type: square;
-`;
-
-export const flex1 = css`
-  flex: 1 1;
 `;
 
 export const widthFull = css`
@@ -367,7 +371,7 @@ export const link = css`
 
 export const baseStyle = css`
   html {
-    font-size: 14px;
+    font-size: 16px;
     ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
@@ -375,18 +379,9 @@ export const baseStyle = css`
   }
 `;
 
-export const flexCol = css`
-  display: flex;
-  flex-direction: column;
-`;
-
 export const chatRight = css`
   grid-column: header-start / header-end;
   grid-row: header-start / compose-end;
-`;
-
-export const flexGrow = css`
-  flex-grow: 1;
 `;
 
 export const outlineButton = css`
@@ -429,15 +424,15 @@ export const chatHeaderStyle = css`
   justify-content: space-between;
 `;
 export const selectTheme = (theme: Theme): Theme => ({
-  borderRadius: 1,
+  borderRadius: 3,
   spacing: theme.spacing,
   colors: {
     primary: primaryColor,
     primary75: darken(0.3, primaryColor),
     primary50: darken(0.25, primaryColor),
     primary25: darken(0.2, primaryColor),
-    danger: dangerColor,
-    dangerLight: darken(0.2, dangerColor),
+    danger: red['800'],
+    dangerLight: red['600'],
     neutral0: bgColor,
     neutral5: mix(0.9, bgColor, textColor),
     neutral10: mix(0.8, bgColor, textColor),

@@ -1,8 +1,8 @@
-import { bgColor, pX, pY, uiShadow } from '@/styles/atoms';
+import { pX, pY, uiShadow } from '@/styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 import React from 'react';
-import { darken } from 'polished';
+import { gray } from '@/styles/colors';
 
 export const toolbarRadius = css`
   border-radius: 4px;
@@ -23,7 +23,7 @@ const Container = styled.div`
 `;
 
 const Toolbar = styled.div`
-  background-color: ${darken(0.05, bgColor)};
+  background-color: ${gray['800']};
   ${[uiShadow, pY(2), pX(2), toolbarRadius]};
 `;
 

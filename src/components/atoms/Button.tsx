@@ -1,36 +1,38 @@
 import { css } from '@emotion/core';
 import {
   baseLineHeight,
-  controlRounded,
-  dangerColor,
   disabled,
-  focusShadow,
-  normalColor,
   onDisabled,
   onHover,
-  primaryColor,
   pX,
   pY,
+  roundedSm,
   spacingN,
   textBase,
+  textLg,
   textSm,
-  uiShadow,
 } from '@/styles/atoms';
-import { lighten } from 'polished';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
+import { buttonColor, buttonDangerColor, buttonDarkColor, buttonPrimaryColor, textColor } from '@/styles/colors';
 
-const btnTextShadow = '0 1px 0 rgba(0, 0, 0, 0.125)';
+export const buttonShadowColor = 'rgba(255, 255, 255, 0.15)';
+
+export const focusShadowColor = 'rgba(255, 255, 255, 0.3)';
+
+export const focusShadow = `0 0 0 1px ${focusShadowColor} inset`;
+
+export const buttonShadow = `0 1px 0 0 ${buttonShadowColor}`;
 
 const btnColor = (color: string) => css`
   background-color: ${color};
-  border-color: ${lighten(0.075, color)};
 `;
 
 interface DataAttributes {
   'data-variant'?: 'normal' | 'danger' | 'primary' | 'dark';
   'data-icon'?: boolean;
   'data-small'?: boolean;
+  'data-size'?: 'large' | 'normal' | 'small';
 }
 
 export const buttonStyle = css`
@@ -38,58 +40,63 @@ export const buttonStyle = css`
   display: inline-flex;
   justify-content: space-around;
   align-items: center;
+  min-height: 2em;
   min-width: 5em;
   user-select: none;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
-  border: 1px solid;
-  color: white;
-  text-shadow: ${btnTextShadow};
+  color: ${textColor};
   text-decoration: none;
   transition-property: all;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-in;
-  ${[uiShadow, controlRounded, textBase]};
+  transition-duration: 100ms;
+  box-shadow: ${buttonShadow};
+  transition-timing-function: ease-in-out;
 
-  & svg {
-    filter: drop-shadow(${btnTextShadow});
-  }
+  ${[textBase]};
 
   &:hover {
-    filter: brightness(110%);
+    filter: brightness(90%);
   }
 
   &:active,
   &:focus:active {
     filter: brightness(80%);
     transform: translateY(1px);
+    box-shadow: 0 0 0 0 ${buttonShadowColor};
   }
 
   &:focus {
-    ${focusShadow};
+    outline: none;
+    box-shadow: ${buttonShadow} ${focusShadow};
   }
 
   padding: ${spacingN(2)} ${spacingN(3)};
 
-  ${btnColor(normalColor)};
+  ${btnColor(buttonColor)};
 
   &[data-variant='primary'] {
-    ${btnColor(primaryColor)};
+    ${btnColor(buttonPrimaryColor)};
   }
 
   &[data-variant='danger'] {
-    ${btnColor(dangerColor)};
+    ${btnColor(buttonDangerColor)};
   }
 
   &[data-variant='dark'] {
-    ${btnColor('#1d1d1d')};
+    ${btnColor(buttonDarkColor)};
   }
 
   &[data-icon='true'] {
     min-width: unset;
   }
 
+  &[data-size='small'],
   &[data-small='true'] {
-    ${[textSm, pX(1.75), pY(1.25)]};
+    ${[textSm, pX(1.75), pY(1.25), roundedSm]};
+  }
+  &[data-size='large'] {
+    ${textLg};
   }
 
   ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import { useSelector } from '@/store';
-import { bgColor, pY } from '@/styles/atoms';
+import { pY } from '@/styles/atoms';
 import LoadMoreButton from '@/components/molecules/LoadMoreButton';
 import styled from '@emotion/styled';
 import { useCallback, useContext, useEffect, useRef } from 'react';
@@ -11,6 +11,7 @@ import { ChatState } from '@/reducers/chat';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import ChatMessageItem from '@/components/molecules/ChatMessageItem';
 import Loading from '@/components/molecules/Loading';
+import { bgColor } from '@/styles/colors';
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>): (() => void) => {
   const scrollEnd = useRef<number>(0);
@@ -46,7 +47,7 @@ const LoadMoreContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  ${pY(2)};
+  ${pY(6)};
 `;
 
 const ItemLayout = styled.div``;

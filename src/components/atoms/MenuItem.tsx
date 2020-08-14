@@ -1,11 +1,12 @@
 import { SpriteSymbol } from '*.svg';
 import { css } from '@emotion/core';
-import { menuItemHoverColor, roundedPx, spacingN, textColor } from '@/styles/atoms';
+import { roundedSm, spacingN } from '@/styles/atoms';
 import { lighten } from 'polished';
 import TextIcon from '@/components/atoms/Icon';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import styled from '@emotion/styled';
+import { menuItemHoverColor, textColor } from '@/styles/colors';
 
 export interface IMenuItem {
   children: React.ReactNode;
@@ -24,7 +25,7 @@ const menuItemStyle = css`
   transition-property: background-color;
   transition-timing-function: ease-out;
   transition-duration: 100ms;
-  ${roundedPx}
+  ${roundedSm}
   &:hover {
     background-color: ${menuItemHoverColor};
   }

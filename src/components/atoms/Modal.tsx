@@ -3,8 +3,9 @@ import { Suspense } from 'react';
 import { Portal } from './Portal';
 import { css, keyframes } from '@emotion/core';
 import styled from '@emotion/styled';
-import { modalMaskColor, modalZIndex } from '@/styles/atoms';
+import { modalZIndex } from '@/styles/atoms';
 import Loading from '@/components/molecules/Loading';
+import { modalMaskColor } from '@/styles/colors';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   mask?: boolean;

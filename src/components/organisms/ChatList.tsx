@@ -1,40 +1,14 @@
 import * as React from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { css } from '@emotion/core';
 import { useSelector } from '@/store';
-import { pY } from '@/styles/atoms';
 import LoadMoreButton from '@/components/molecules/LoadMoreButton';
 import styled from '@emotion/styled';
-import { useCallback, useContext, useEffect, useRef } from 'react';
-import { ChatItem, ChatItemSet, MessageItem, PreviewItem } from '@/states/chat-item-set';
-import ChatPreviewCompose from '../molecules/ChatPreviewCompose';
-import { ChatState } from '@/reducers/chat';
-import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
-import ChatMessageItem from '@/components/molecules/ChatMessageItem';
 import Loading from '@/components/molecules/Loading';
 import { bgColor } from '@/styles/colors';
-
-const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>): (() => void) => {
-  const scrollEnd = useRef<number>(0);
-
-  useEffect(() => {
-    if (!chatListRef.current) {
-      return;
-    }
-    const chatList = chatListRef.current;
-    const lockSpan = chatList.clientHeight >> 1;
-    if (chatList.scrollTop < lockSpan || scrollEnd.current < lockSpan) {
-      chatList.scrollTo(0, chatList.scrollHeight - chatList.clientHeight - scrollEnd.current);
-    }
-  });
-
-  return useCallback(() => {
-    if (chatListRef.current === null) {
-      return;
-    }
-    const chatList = chatListRef.current;
-    scrollEnd.current = chatList.scrollHeight - chatList.scrollTop - chatList.clientHeight;
-  }, [chatListRef]);
-};
+import { AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer, ScrollParams } from 'react-virtualized';
+import { pY } from '@/styles/atoms';
+import ChatListItem from '@/components/molecules/ChatListItem';
 
 const container = css`
   grid-area: list;
@@ -44,89 +18,12 @@ const container = css`
 `;
 
 const LoadMoreContainer = styled.div`
+  background-color: ${bgColor};
   display: flex;
+  ${pY(2)};
   align-items: center;
   justify-content: center;
-  ${pY(6)};
 `;
-
-const ItemLayout = styled.div``;
-
-const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
-  if (type === 'NONE') {
-    return true;
-  }
-  const inGame = type === 'IN_GAME';
-  if (item.type === 'MESSAGE') {
-    return inGame === item.message.inGame;
-  } else if (item.type === 'PREVIEW' && item.preview) {
-    return inGame === item.preview.inGame;
-  } else if (item.type === 'EDIT') {
-    if (item.preview) {
-      return inGame === item.preview.inGame;
-    }
-  }
-  return true;
-};
-
-export const itemCompare = (a: ChatItem, b: ChatItem) => {
-  return a.date - b.date;
-};
-
-const makePreview = (item: PreviewItem) => {
-  if (item.mine) {
-    return <ChatPreviewCompose key={item.id} preview={item.preview} />;
-  } else {
-    return <ChatPreviewItem key={item.id} preview={item.preview} />;
-  }
-};
-
-const makeMessage = (item: MessageItem) => {
-  return <ChatMessageItem key={item.id} message={item.message} mine={item.mine} />;
-};
-
-const genItemList = (itemSet: ChatItemSet, filterType: ChatState['filter']): React.ReactNodeArray => {
-  const itemList: React.ReactNodeArray = [];
-  const previews = [...itemSet.previews.values()].sort(itemCompare);
-  const filter = itemFilter(filterType);
-
-  for (const messageItem of itemSet.messages) {
-    const { message } = messageItem;
-    while (previews.length > 0 && previews[previews.length - 1].date < messageItem.date) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const previewItem = previews.pop()!;
-      if (filter(previewItem)) {
-        itemList.push(makePreview(previewItem));
-      }
-    }
-    if (!filter(messageItem)) {
-      continue;
-    }
-    const editItem = itemSet.editions.get(messageItem.id);
-    if (editItem) {
-      if (editItem.mine) {
-        itemList.push(<ChatPreviewCompose key={editItem.id} preview={editItem.preview} editTo={message} />);
-      } else if (
-        editItem.preview &&
-        message.modified === editItem.preview.editFor && // correct edit target
-        editItem.preview.senderId === message.senderId // same user
-      ) {
-        itemList.push(<ChatPreviewItem key={editItem.id} preview={editItem.preview} />);
-      } else {
-        itemList.push(makeMessage(messageItem));
-      }
-    } else {
-      itemList.push(makeMessage(messageItem));
-    }
-  }
-
-  for (const previewItem of previews) {
-    if (filter(previewItem)) {
-      itemList.push(makePreview(previewItem));
-    }
-  }
-  return itemList;
-};
 
 const ChatListContext = React.createContext<React.RefObject<HTMLDivElement | null>>(React.createRef());
 
@@ -134,41 +31,126 @@ export function useChatList(): React.RefObject<HTMLDivElement | null> {
   return useContext(ChatListContext);
 }
 
+const defaultHeight = 60;
+const cache = new CellMeasurerCache({
+  defaultHeight,
+  fixedWidth: true,
+});
+
+function useClearCache() {
+  const timeout = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    const onResize = () => {
+      if (timeout.current) {
+        window.clearTimeout(timeout.current);
+      }
+      timeout.current = window.setTimeout(() => cache.clearAll(), 100);
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.clearTimeout(timeout.current);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+}
+
 function ChatList() {
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const initialized = useSelector((state) => state.chat!.initialized);
-  const filterType = useSelector((state) => state.chat!.filter);
-  const itemSet = useSelector((state) => state.chat!.itemSet);
+  const messagesLength = useSelector((state) => state.chat!.itemSet.messages.size);
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
-  const chatListRef = useRef(null);
-  const onScroll = useAutoScroll(chatListRef);
-
-  // If shouldn't display dummy preview, `myId` is undefended.
+  const chatListRef = useRef<HTMLDivElement>(null);
+  const virtualizedList = useRef<List>(null);
+  // If shouldn't display compose dummy preview, `myId` is undefended.
   const myId = useSelector((state) => {
     if (!state.profile || !state.chat) {
-      return false;
+      return undefined;
     }
     const myId = state.profile.user.id;
     const member = state.profile.channels.get(state.chat.channel.id);
     const preview = state.chat.itemSet.previews.get(myId);
     return member && !preview ? myId : undefined;
   });
+  const scrollToBottom = useRef<boolean>(true);
+
+  useClearCache();
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (scrollToBottom) {
+        virtualizedList.current?.scrollToRow(messagesLength - 1);
+      }
+    }, 500);
+  });
 
   if (!initialized) {
     return <Loading />;
   }
 
-  const itemList = genItemList(itemSet, filterType);
+  type RegisterChild = ((element: Element | null) => void) | undefined;
+
+  const renderer: ListRowRenderer = ({ index, key, style, parent }) => {
+    return (
+      <CellMeasurer cache={cache} columnIndex={0} key={key} parent={parent} rowIndex={index}>
+        {({ registerChild, measure }) => {
+          return (
+            <div key={key} ref={registerChild as RegisterChild} style={style}>
+              {index === 0 && (
+                <LoadMoreContainer>
+                  <LoadMoreButton />
+                </LoadMoreContainer>
+              )}
+              <ChatListItem
+                messageIndex={index}
+                measure={measure}
+                shouldShowComposePreview={index === messagesLength - 1 ? myId : undefined}
+              />
+            </div>
+          );
+        }}
+      </CellMeasurer>
+    );
+  };
   return (
-    <div css={container} ref={chatListRef} onScroll={onScroll}>
+    <div css={container} ref={chatListRef}>
       <ChatListContext.Provider value={chatListRef}>
-        <LoadMoreContainer>
-          <LoadMoreButton />
-        </LoadMoreContainer>
-        <ItemLayout>
-          {itemList}
-          {myId && <ChatPreviewCompose key={myId} preview={undefined} />}
-        </ItemLayout>
+        <AutoSizer>
+          {({ height, width }) => {
+            return (
+              <List
+                height={height}
+                overscanRowCount={2}
+                rowCount={messagesLength}
+                deferredMeasurementCache={cache}
+                estimatedRowSize={defaultHeight}
+                rowHeight={cache.rowHeight}
+                rowRenderer={renderer}
+                width={width}
+                scrollToAlignment="start"
+                onScroll={({ clientHeight, scrollHeight, scrollTop }: ScrollParams) => {
+                  // https://stackoverflow.com/a/33189270/1137004
+                  const lockSpan = clientHeight >> 1;
+                  const scrollEnd = scrollHeight - scrollTop - clientHeight;
+                  scrollToBottom.current = scrollTop < lockSpan || scrollEnd < lockSpan;
+                }}
+                // onScroll={({clientHeight, scrollHeight, scrollTop}: ScrollParams) => {
+                //     // https://stackoverflow.com/a/33189270/1137004
+                //
+                //     // console.log(scrollToBottom);
+                //     const lockSpan = clientHeight >> 1;
+                //
+                //     const scrollEnd = scrollHeight - scrollTop - clientHeight;
+                //     if (scrollTop > 10 && scrollEnd > 10 && scrollToBottom) {
+                //       console.log(scrollToBottom);
+                //       setScrollToBottom(false);
+                //     }
+                //   //   canScrollToEnd.current = scrollEnd < lockSpan;
+                // }}
+                ref={virtualizedList}
+              />
+            );
+          }}
+        </AutoSizer>
       </ChatListContext.Provider>
     </div>
   );

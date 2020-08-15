@@ -13,10 +13,10 @@ import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 interface Props {
   message: Message;
   mine?: boolean;
-  successive?: boolean;
+  style?: React.CSSProperties;
 }
 
-function ChatMessageItem({ message, mine = false, successive = false }: Props) {
+function ChatMessageItem({ message, mine = false, style }: Props) {
   const dispatch = useDispatch();
   const startEdit = () => {
     dispatch({ type: 'START_EDIT_MESSAGE', message: message });
@@ -25,7 +25,7 @@ function ChatMessageItem({ message, mine = false, successive = false }: Props) {
     <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
   );
   return (
-    <ChatItemContainer data-in-game={message.inGame}>
+    <ChatItemContainer style={style} data-in-game={message.inGame}>
       <ChatItemTime timestamp={message.created} />
       {!message.isAction && name}
       <ChatItemContentContainer data-in-game={message.inGame} data-action={message.isAction}>

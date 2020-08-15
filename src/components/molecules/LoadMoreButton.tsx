@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from '@/store';
 import { get } from '@/api/request';
 import { LoadMessages } from '@/actions/chat';
@@ -17,9 +17,9 @@ function LoadMoreButton() {
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    button.current?.click();
-  }, []);
+  // useEffect(() => {
+  //   button.current?.click();
+  // }, []);
 
   if (finished) {
     return null;
@@ -28,7 +28,6 @@ function LoadMoreButton() {
     const limit = 128;
     setLoading(true);
     const result = await get('/messages/by_channel', { channelId, before, limit });
-    setLoading(false);
     if (!result.isOk) {
       console.error(result.value);
       return;

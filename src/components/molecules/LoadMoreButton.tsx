@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from '@/store';
 import { get } from '@/api/request';
 import { LoadMessages } from '@/actions/chat';
@@ -17,9 +17,10 @@ function LoadMoreButton() {
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   button.current?.click();
-  // }, []);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => button.current?.click(), 1000);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   if (finished) {
     return null;

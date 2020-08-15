@@ -107,6 +107,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       entities,
     };
     send({ type: 'PREVIEW', preview });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editTo?.modified, inGame, isAction, name, text, send]);
   const handleChange = (next: ParseResult) => {
     setParsed(next);
@@ -143,7 +144,9 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     });
     messageId.current = newId();
   };
-  const chatItemName = <ChatItemName action={true} master={myMember.isMaster} name={name} userId={myMember.userId} />;
+  const chatItemName = (
+    <ChatItemName action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
+  );
 
   const handleMouseEnter = () => {
     if (containerRef.current === null) {

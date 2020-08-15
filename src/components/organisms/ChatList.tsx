@@ -6,7 +6,7 @@ import LoadMoreButton from '@/components/molecules/LoadMoreButton';
 import styled from '@emotion/styled';
 import Loading from '@/components/molecules/Loading';
 import { bgColor } from '@/styles/colors';
-import { AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer, ScrollParams } from 'react-virtualized';
+import { AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer } from 'react-virtualized';
 import { pY } from '@/styles/atoms';
 import ChatListItem from '@/components/molecules/ChatListItem';
 
@@ -61,27 +61,10 @@ function ChatList() {
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
   const chatListRef = useRef<HTMLDivElement>(null);
   const virtualizedList = useRef<List>(null);
-  // If shouldn't display compose dummy preview, `myId` is undefended.
-  const myId = useSelector((state) => {
-    if (!state.profile || !state.chat) {
-      return undefined;
-    }
-    const myId = state.profile.user.id;
-    const member = state.profile.channels.get(state.chat.channel.id);
-    const preview = state.chat.itemSet.previews.get(myId);
-    return member && !preview ? myId : undefined;
-  });
-  const scrollToBottom = useRef<boolean>(true);
+  const reverseStopIndex = useRef<number>(0);
+  const stopState = useRef<'END' | 'TO_END' | 'FLOAT'>('TO_END');
 
   useClearCache();
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (scrollToBottom) {
-        virtualizedList.current?.scrollToRow(messagesLength - 1);
-      }
-    }, 500);
-  });
 
   if (!initialized) {
     return <Loading />;
@@ -103,7 +86,7 @@ function ChatList() {
               <ChatListItem
                 messageIndex={index}
                 measure={measure}
-                shouldShowComposePreview={index === messagesLength - 1 ? myId : undefined}
+                listRefOnlyIfLast={index === messagesLength - 1 ? virtualizedList : undefined}
               />
             </div>
           );
@@ -126,26 +109,21 @@ function ChatList() {
                 rowHeight={cache.rowHeight}
                 rowRenderer={renderer}
                 width={width}
+                style={{ outline: 'none' }}
                 scrollToAlignment="start"
-                onScroll={({ clientHeight, scrollHeight, scrollTop }: ScrollParams) => {
-                  // https://stackoverflow.com/a/33189270/1137004
-                  const lockSpan = clientHeight >> 1;
-                  const scrollEnd = scrollHeight - scrollTop - clientHeight;
-                  scrollToBottom.current = scrollTop < lockSpan || scrollEnd < lockSpan;
+                onRowsRendered={({ stopIndex }) => {
+                  if (stopState.current === 'TO_END') {
+                    if (stopIndex !== messagesLength - 1) {
+                      virtualizedList.current?.scrollToRow(stopIndex + 1);
+                    } else {
+                      reverseStopIndex.current = 0;
+                      stopState.current = 'END';
+                    }
+                    return;
+                  } else {
+                    reverseStopIndex.current = messagesLength - 1 - stopIndex;
+                  }
                 }}
-                // onScroll={({clientHeight, scrollHeight, scrollTop}: ScrollParams) => {
-                //     // https://stackoverflow.com/a/33189270/1137004
-                //
-                //     // console.log(scrollToBottom);
-                //     const lockSpan = clientHeight >> 1;
-                //
-                //     const scrollEnd = scrollHeight - scrollTop - clientHeight;
-                //     if (scrollTop > 10 && scrollEnd > 10 && scrollToBottom) {
-                //       console.log(scrollToBottom);
-                //       setScrollToBottom(false);
-                //     }
-                //   //   canScrollToEnd.current = scrollEnd < lockSpan;
-                // }}
                 ref={virtualizedList}
               />
             );

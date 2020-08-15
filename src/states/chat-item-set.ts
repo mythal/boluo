@@ -1,4 +1,4 @@
-import { Id } from '@/utils/id';
+import { Id, newId } from '@/utils/id';
 import { Message } from '@/api/messages';
 import { Preview } from '@/api/events';
 import { List, Map } from 'immutable';
@@ -54,7 +54,34 @@ const insertMessage = (messages: List<MessageItem>, newItem: MessageItem): List<
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'MESSAGE') {
     messages = insertMessage(messages, item);
-    previews = previews.remove(item.message.senderId);
+    const previewItem = previews.get(item.message.senderId);
+    if (previewItem && previewItem.date <= item.date) {
+      const { preview, mine, type } = previewItem;
+      if (mine) {
+        const now = new Date().getTime();
+        const nextPreview: Preview = {
+          ...preview,
+          id: newId(),
+          parentMessageId: null,
+          mediaId: null,
+          text: '',
+          whisperToUsers: null,
+          entities: [],
+          start: now,
+          editFor: null,
+        };
+        const nextItem: PreviewItem = {
+          preview: nextPreview,
+          mine: true,
+          type,
+          id: preview.senderId,
+          date: now,
+        };
+        previews = previews.set(preview.senderId, nextItem);
+      } else {
+        previews = previews.remove(item.message.senderId);
+      }
+    }
   } else if (item.type === 'PREVIEW') {
     if (!item.mine && item.preview.text === '') {
       previews = previews.remove(item.id);

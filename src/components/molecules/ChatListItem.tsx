@@ -1,17 +1,18 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 import ChatMessageItem from '@/components/molecules/ChatMessageItem';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import ChatPreviewCompose from './ChatPreviewCompose';
 import { ChatItem, PreviewItem } from '@/states/chat-item-set';
 import { useSelector } from '@/store';
 import { ChatState } from '@/reducers/chat';
-import { Id } from '@/utils/id';
+import { List } from 'react-virtualized';
+import { Id, newId } from '@/utils/id';
 
 interface Props {
   messageIndex: number;
   measure: () => void;
-  shouldShowComposePreview?: Id;
+  listRefOnlyIfLast?: RefObject<List>;
 }
 export const itemCompare = (a: ChatItem, b: ChatItem) => {
   return a.date - b.date;
@@ -31,7 +32,7 @@ const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
   const inGame = type === 'IN_GAME';
   if (item.type === 'MESSAGE') {
     return inGame === item.message.inGame;
-  } else if (item.type === 'PREVIEW' && item.preview) {
+  } else if (item.type === 'PREVIEW' && item.preview && !item.mine) {
     return inGame === item.preview.inGame;
   } else if (item.type === 'EDIT') {
     if (item.preview) {
@@ -41,7 +42,7 @@ const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
   return true;
 };
 
-function ChatListItem({ messageIndex, measure, shouldShowComposePreview }: Props) {
+function ChatListItem({ messageIndex, measure, listRefOnlyIfLast }: Props) {
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const messageItem = useSelector((state) => state.chat!.itemSet.messages.get(messageIndex)!);
   const { message } = messageItem;
@@ -49,15 +50,27 @@ function ChatListItem({ messageIndex, measure, shouldShowComposePreview }: Props
   const editItem = useSelector((state) => state.chat!.itemSet.editions.get(message.id));
   const previewSet = useSelector(
     (state) =>
-      state.chat!.itemSet.previews.filter(
-        (preview) => preview.date >= messageItem.date && (!next || preview.date < next.date)
-      ),
+      state.chat!.itemSet.previews.filter((preview) => {
+        return !(preview.date < messageItem.date || (next && preview.date >= next.date));
+      }),
     (a, b) => a.equals(b)
   );
   const filterTag = useSelector((state) => state.chat!.filter);
+  const myId = useSelector((state) => {
+    if (!listRefOnlyIfLast || !state.profile || !state.chat) {
+      return undefined;
+    }
+    return state.profile.channels.get(state.chat.channel.id)?.member.userId;
+  });
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  const dummyKey = useRef<Id>(newId());
   const filter = itemFilter(filterTag);
-  useEffect(() => measure());
+  useEffect(() => {
+    measure();
+    if (listRefOnlyIfLast && listRefOnlyIfLast.current) {
+      listRefOnlyIfLast.current.scrollToRow(messageIndex);
+    }
+  });
   let itemNode: React.ReactNode = null;
   // start editing
   if (editItem !== undefined && editItem.preview === undefined && editItem.mine) {
@@ -77,8 +90,8 @@ function ChatListItem({ messageIndex, measure, shouldShowComposePreview }: Props
     itemNode = <ChatPreviewItem preview={editItem.preview} />;
   }
   const previews = [...previewSet.values()].filter(filter).sort(itemCompare).map(makePreview);
-  if (shouldShowComposePreview) {
-    previews.push(<ChatPreviewCompose key={shouldShowComposePreview} preview={undefined} />);
+  if (myId && !previewSet.has(myId)) {
+    previews.push(<ChatPreviewCompose key={dummyKey.current} preview={undefined} />);
   }
 
   return (

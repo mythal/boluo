@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect } from 'react';
 import ChatMessageItem from '@/components/molecules/ChatMessageItem';
 import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
 import ChatPreviewCompose from './ChatPreviewCompose';
@@ -7,7 +7,6 @@ import { ChatItem, PreviewItem } from '@/states/chat-item-set';
 import { useSelector } from '@/store';
 import { ChatState } from '@/reducers/chat';
 import { List } from 'react-virtualized';
-import { Id, newId } from '@/utils/id';
 
 interface Props {
   messageIndex: number;
@@ -42,7 +41,7 @@ const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
   return true;
 };
 
-function ChatListItem({ messageIndex, measure, listRefOnlyIfLast }: Props) {
+function Items({ messageIndex, measure, listRefOnlyIfLast }: Props) {
   /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const messageItem = useSelector((state) => state.chat!.itemSet.messages.get(messageIndex)!);
   const { message } = messageItem;
@@ -63,7 +62,6 @@ function ChatListItem({ messageIndex, measure, listRefOnlyIfLast }: Props) {
     return state.profile.channels.get(state.chat.channel.id)?.member.userId;
   });
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
-  const dummyKey = useRef<Id>(newId());
   const filter = itemFilter(filterTag);
   useEffect(() => {
     measure();
@@ -91,7 +89,7 @@ function ChatListItem({ messageIndex, measure, listRefOnlyIfLast }: Props) {
   }
   const previews = [...previewSet.values()].filter(filter).sort(itemCompare).map(makePreview);
   if (myId && !previewSet.has(myId)) {
-    previews.push(<ChatPreviewCompose key={dummyKey.current} preview={undefined} />);
+    previews.push(<ChatPreviewCompose key={myId} preview={undefined} />);
   }
 
   return (
@@ -102,4 +100,26 @@ function ChatListItem({ messageIndex, measure, listRefOnlyIfLast }: Props) {
   );
 }
 
-export default React.memo(ChatListItem);
+export const ChatItems = React.memo(Items);
+
+export function NoMessages() {
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
+  const previewSet = useSelector(
+    (state) => state.chat!.itemSet.previews,
+    (a, b) => a.equals(b)
+  );
+  const filterTag = useSelector((state) => state.chat!.filter);
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  const filter = itemFilter(filterTag);
+  const myId = useSelector((state) => {
+    if (!state.profile || !state.chat) {
+      return undefined;
+    }
+    return state.profile.channels.get(state.chat.channel.id)?.member.userId;
+  });
+  const previews = [...previewSet.values()].filter(filter).sort(itemCompare).map(makePreview);
+  if (myId && !previewSet.has(myId)) {
+    previews.push(<ChatPreviewCompose key={myId} preview={undefined} />);
+  }
+  return <React.Fragment>{previews}</React.Fragment>;
+}

@@ -2,27 +2,17 @@ import * as React from 'react';
 import { useContext, useEffect, useRef } from 'react';
 import { css } from '@emotion/core';
 import { useSelector } from '@/store';
-import LoadMoreButton from '@/components/molecules/LoadMoreButton';
-import styled from '@emotion/styled';
+import LoadMoreButton, { LoadMoreContainer } from '@/components/molecules/LoadMoreButton';
 import Loading from '@/components/molecules/Loading';
 import { bgColor } from '@/styles/colors';
 import { AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer } from 'react-virtualized';
-import { pY } from '@/styles/atoms';
-import ChatListItem from '@/components/molecules/ChatListItem';
+import { ChatItems, NoMessages } from '@/components/molecules/ChatListItem';
 
 const container = css`
   grid-area: list;
   background-color: ${bgColor};
   overflow-x: hidden;
   overflow-y: scroll;
-`;
-
-const LoadMoreContainer = styled.div`
-  background-color: ${bgColor};
-  display: flex;
-  ${pY(2)};
-  align-items: center;
-  justify-content: center;
 `;
 
 const ChatListContext = React.createContext<React.RefObject<HTMLDivElement | null>>(React.createRef());
@@ -36,6 +26,14 @@ const cache = new CellMeasurerCache({
   defaultHeight,
   fixedWidth: true,
 });
+
+function loadMore() {
+  return (
+    <LoadMoreContainer>
+      <LoadMoreButton />
+    </LoadMoreContainer>
+  );
+}
 
 function useClearCache() {
   const timeout = useRef<number | undefined>(undefined);
@@ -69,6 +67,14 @@ function ChatList() {
   if (!initialized) {
     return <Loading />;
   }
+  if (messagesLength === 0) {
+    return (
+      <div css={container}>
+        {loadMore()}
+        <NoMessages />
+      </div>
+    );
+  }
 
   type RegisterChild = ((element: Element | null) => void) | undefined;
 
@@ -78,12 +84,8 @@ function ChatList() {
         {({ registerChild, measure }) => {
           return (
             <div key={key} ref={registerChild as RegisterChild} style={style}>
-              {index === 0 && (
-                <LoadMoreContainer>
-                  <LoadMoreButton />
-                </LoadMoreContainer>
-              )}
-              <ChatListItem
+              {index === 0 && loadMore()}
+              <ChatItems
                 messageIndex={index}
                 measure={measure}
                 listRefOnlyIfLast={index === messagesLength - 1 ? virtualizedList : undefined}

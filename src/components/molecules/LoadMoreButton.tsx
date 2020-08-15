@@ -6,6 +6,17 @@ import { LoadMessages } from '@/actions/chat';
 import Button from '@/components/atoms/Button';
 import Icon from '../atoms/Icon';
 import rotateIcon from '@/assets/icons/rotate-cw.svg';
+import styled from '@emotion/styled';
+import { bgColor } from '@/styles/colors';
+import { pY } from '@/styles/atoms';
+
+export const LoadMoreContainer = styled.div`
+  background-color: ${bgColor};
+  display: flex;
+  ${pY(2)};
+  align-items: center;
+  justify-content: center;
+`;
 
 function LoadMoreButton() {
   /* eslint-disable @typescript-eslint/no-non-null-assertion */

@@ -7,6 +7,7 @@ import { SpriteSymbol } from '*.svg';
 import Icon from '@/components/atoms/Icon';
 import Tooltip from '@/components/atoms/Tooltip';
 import { textColor } from '@/styles/colors';
+import rotateIcon from '../../assets/icons/rotate-cw.svg';
 
 const style = css`
   border: none;
@@ -22,6 +23,12 @@ const style = css`
   }
   &:focus {
     outline: none;
+  }
+  &:disabled {
+    &:hover {
+      background-color: transparent;
+      filter: brightness(80%);
+    }
   }
 
   &[data-on='true'] {
@@ -49,6 +56,7 @@ interface Props {
   onClick: () => void;
   sprite: SpriteSymbol;
   title: string;
+  loading?: boolean;
 }
 
 const container = css`
@@ -62,12 +70,12 @@ const container = css`
   }
 `;
 
-function ChatItemToolbarButton({ onClick, sprite, className, on, title }: Props) {
+function ChatItemToolbarButton({ onClick, sprite, className, on, title, loading = false }: Props) {
   return (
     <div css={container}>
       <Tooltip className="tooltip">{title}</Tooltip>
-      <button css={style} data-on={on} className={className} onClick={onClick}>
-        <Icon sprite={sprite} />
+      <button css={style} data-on={on} className={className} onClick={onClick} disabled={loading}>
+        <Icon spin={loading} sprite={loading ? rotateIcon : sprite} />
       </button>
     </div>
   );

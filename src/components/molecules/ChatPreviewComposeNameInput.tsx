@@ -28,4 +28,4 @@ function ChatPreviewComposeNameInput({ value, onChange }: Props) {
   );
 }
 
-export default ChatPreviewComposeNameInput;
+export default React.memo(ChatPreviewComposeNameInput);

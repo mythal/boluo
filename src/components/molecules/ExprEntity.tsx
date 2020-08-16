@@ -4,7 +4,7 @@ import { EvaluatedExprNode, ExprNode, RollResult } from '@/interpreter/entities'
 import D20Icon from '../../assets/icons/d20.svg';
 import { evaluate, TOO_MUCH_LAYER } from '@/interpreter/eval';
 import Icon from '@/components/atoms/Icon';
-import { inlineBlock, pX, pY, roundedPx, textLg, textSm } from '@/styles/atoms';
+import { inlineBlock, mY, pX, roundedPx, textLg, textSm } from '@/styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { minorTextColor, textColor } from '@/styles/colors';
@@ -24,7 +24,7 @@ const Num = styled.span`
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 
 const Roll = styled.span`
-  ${[pX(1), pY(0.5), inlineBlock, roundedPx]};
+  ${[pX(1), mY(0.25), textSm, inlineBlock, roundedPx]};
   cursor: pointer;
   background-color: ${darken(0.7, textColor)};
   border: 1px solid ${darken(0.6, textColor)};

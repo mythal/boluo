@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
 import { chatHeaderStyle, fontBold, mL, mY, p, pX, pY, textLg } from '@/styles/atoms';
@@ -9,7 +10,6 @@ import Icon from '@/components/atoms/Icon';
 import ChatHeaderButton from '@/components/atoms/ChatHeaderButton';
 import Badge from '@/components/atoms/Badge';
 import userCog from '@/assets/icons/user-cog.svg';
-import { useState } from 'react';
 import ManageSpace from '@/components/organisms/ManageSpace';
 import { Channel } from '@/api/channels';
 import JoinSpaceButton from '@/components/molecules/JoinSpaceButton';
@@ -30,6 +30,8 @@ const Title = styled.div`
 
 const SpaceName = styled.span`
   ${[textLg, fontBold, p(0)]};
+  white-space: nowrap;
+  overflow: hidden;
 `;
 
 const Description = styled.div`

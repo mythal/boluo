@@ -52,8 +52,8 @@ class PageError extends React.Component<Props, State> {
     document.location.reload();
   }
   render() {
-    document.title = '菠萝出错啦';
     if (this.state.error !== undefined) {
+      document.title = '菠萝出错啦';
       return (
         <Mask>
           <Container>

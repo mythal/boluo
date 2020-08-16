@@ -71,6 +71,13 @@ export const spin = css`
   animation: ${spinFrames} 1.5s linear infinite;
 `;
 
+export const relative = css`
+  position: relative;
+`;
+export const abusolute = css`
+  position: absolute;
+`;
+
 export const roundedPx = css`
   border-radius: 1px;
 `;
@@ -130,7 +137,7 @@ export const fontSans = css`
 `;
 export const fontBase = fontSans;
 export const fontSerif = css`
-  font-family: Georgia, Cambria, 'Times New Roman', Times, serif;
+  font-family: system-ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 `;
 export const fontMono = css`
   font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;

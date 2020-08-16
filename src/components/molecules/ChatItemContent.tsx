@@ -4,6 +4,8 @@ import { fontMono, link } from '@/styles/atoms';
 import Prando from 'prando';
 import { Entity } from '@/interpreter/entities';
 import { ExprEntity } from './ExprEntity';
+import { white } from '@/styles/colors';
+import ExternalLink from '@/components/atoms/ExternalLink';
 
 interface Props {
   text: string;
@@ -32,10 +34,7 @@ const Strong = styled.strong`
 
 const Emphasis = styled.em`
   white-space: pre-wrap;
-`;
-
-const MessageLink = styled.a`
-  ${link};
+  color: ${white};
 `;
 
 const Expr = styled.span`
@@ -59,9 +58,9 @@ function ChatItemContent({ text, entities, seed }: Props) {
       content.push(<Text key={key}>{text.substr(entity.start, entity.offset)}</Text>);
     } else if (entity.type === 'Link') {
       content.push(
-        <MessageLink key={key} href={entity.href}>
+        <ExternalLink css={link} key={key} to={entity.href}>
           {text.substr(entity.start, entity.offset)}
-        </MessageLink>
+        </ExternalLink>
       );
     } else if (entity.type === 'Strong') {
       content.push(<Strong key={key}>{text.substr(entity.start, entity.offset)}</Strong>);

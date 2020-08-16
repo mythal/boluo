@@ -23,11 +23,15 @@ const Toolbar = styled.div`
 function ChatComposeToolbar({ inGame, toggleInGame, isAction, toggleAction, broadcast, toggleBroadcast }: Props) {
   return (
     <Toolbar>
-      <ChatItemToolbarButton css={mR(1)} on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" />
-
+      <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" />
       <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleAction} sprite={running} title="描述动作" />
-
-      <ChatItemToolbarButton sprite={broadcastTower} on={broadcast} onClick={toggleBroadcast} title="输入中广播" />
+      <ChatItemToolbarButton
+        css={mR(1)}
+        sprite={broadcastTower}
+        on={broadcast}
+        onClick={toggleBroadcast}
+        title="输入中广播"
+      />
     </Toolbar>
   );
 }

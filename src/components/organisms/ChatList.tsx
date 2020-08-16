@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 import { css } from '@emotion/core';
 import { useSelector } from '@/store';
 import LoadMoreButton, { LoadMoreContainer } from '@/components/molecules/LoadMoreButton';
@@ -11,8 +11,7 @@ import { ChatItems, NoMessages } from '@/components/molecules/ChatListItem';
 const container = css`
   grid-area: list;
   background-color: ${bgColor};
-  overflow-x: hidden;
-  overflow-y: scroll;
+  overflow: hidden;
 `;
 
 const defaultHeight = 60;
@@ -29,22 +28,36 @@ function loadMore() {
   );
 }
 
-function useClearCache() {
+function useClearCache(virtualList: RefObject<List>) {
   const timeout = useRef<number | undefined>(undefined);
   useEffect(() => {
     const onResize = () => {
       if (timeout.current) {
         window.clearTimeout(timeout.current);
       }
-      timeout.current = window.setTimeout(() => cache.clearAll(), 100);
+      timeout.current = window.setTimeout(() => {
+        cache.clearAll();
+        virtualList.current?.recomputeRowHeights();
+      }, 200);
     };
     window.addEventListener('resize', onResize);
     return () => {
       window.clearTimeout(timeout.current);
       window.removeEventListener('resize', onResize);
     };
-  }, []);
+  }, [virtualList]);
 }
+
+const chatListStyle = css`
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    /* WebKit */
+    width: 0;
+    height: 0;
+  }
+`;
 
 function ChatList() {
   const initialized = useSelector((state) => state.chat!.initialized);
@@ -59,7 +72,7 @@ function ChatList() {
     shouldScrollToStopIndex.current = true;
   }
 
-  useClearCache();
+  useClearCache(virtualizedList);
 
   if (!initialized) {
     return <Loading text="initialize channel" />;
@@ -99,6 +112,7 @@ function ChatList() {
         {({ height, width }) => {
           return (
             <List
+              css={chatListStyle}
               height={height}
               overscanRowCount={4}
               rowCount={messagesLength}

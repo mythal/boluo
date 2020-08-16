@@ -28,10 +28,11 @@ const sidebarBody = css`
   display: flex;
   flex-direction: column;
   transition: all 300ms ease-in-out;
-  &[data-expand='true'] {
+  &[data-state='entering'],
+  &[data-state='entered'] {
     ${sidebarWidth};
   }
-  &[data-expand='false'] {
+  &[data-state='exited'] {
     ${pY(4)};
     text-align: center;
     align-items: center;
@@ -93,7 +94,7 @@ function ChatSidebar({ space, channels }: Props) {
                 </ChatHeaderButtonLink>
               )}
             </div>
-            <div css={sidebarBody} data-state={expand}>
+            <div css={sidebarBody} data-state={state}>
               {state === 'entered' && <SidebarExpandItems space={space} channels={channels} />}
               {state === 'exited' && <SidebarFoldedItems space={space} channels={channels} />}
             </div>

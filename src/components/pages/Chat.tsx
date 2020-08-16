@@ -43,7 +43,7 @@ function Chat() {
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
     if (result.value.code === LOADING) {
-      return <PageLoading text="loading space data" />;
+      return <PageLoading text="load space data" />;
     }
     return (
       <BasePage>

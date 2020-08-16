@@ -10,6 +10,7 @@ export const toolbarRadius = css`
 
 const Container = styled.div`
   position: absolute;
+  z-index: 20;
   top: 0;
   right: 0;
   transform: translateY(-75%);
@@ -20,22 +21,27 @@ const Container = styled.div`
     bottom: 0;
     transform: translateY(80%);
   }
+  &[data-x='left'] {
+    right: unset;
+    left: 0;
+  }
 `;
 
 const Toolbar = styled.div`
   background-color: ${gray['800']};
-  ${[uiShadow, pY(2), pX(2), toolbarRadius]};
+  ${[uiShadow, pY(1), pX(1), toolbarRadius]};
 `;
 
 export interface Props {
   className?: string;
   children: React.ReactNode;
   position?: 'bottom' | 'top';
+  x?: 'left' | 'right';
 }
 
-export function ChatItemToolbar({ children, className, position = 'top' }: Props) {
+export function ChatItemToolbar({ children, className, position = 'top', x = 'right' }: Props) {
   return (
-    <Container className={className} data-position={position}>
+    <Container className={className} data-position={position} data-x={x}>
       <Toolbar>{children}</Toolbar>
     </Container>
   );

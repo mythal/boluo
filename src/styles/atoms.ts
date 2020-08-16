@@ -4,6 +4,7 @@ import { Theme } from 'react-select';
 import {
   bgColor,
   focusOutlineColor,
+  gray,
   headerBgColor,
   linkColor,
   primaryColor,
@@ -271,6 +272,10 @@ export const flexCol = css`
   display: flex;
   flex-direction: column;
 `;
+export const flexRowReverse = css`
+  display: flex;
+  flex-direction: row-reverse;
+`;
 export const flexGrow = css`
   flex-grow: 1;
 `;
@@ -446,9 +451,9 @@ export const selectTheme = (theme: Theme): Theme => ({
     neutral90: textColor,
   },
 });
-const colorA = 'rgba(48, 48, 48, 0.9)';
-const colorB = 'rgba(52, 52, 52, 0.9)';
-const previewStripWidth = 4;
+const colorA = gray['900'];
+const colorB = darken(0.15, gray['900']);
+const previewStripWidth = 3;
 export const previewStyle = css`
   background: repeating-linear-gradient(
     45deg,

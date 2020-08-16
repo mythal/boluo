@@ -13,6 +13,7 @@ import SidebarExpandItems from '@/components/molecules/SidebarExpandItems';
 import { chatSidebarColor, headerBgColor } from '@/styles/colors';
 import { Transition } from 'react-transition-group';
 import SidebarFoldedItems from '@/components/molecules/SidebarFoldedItems';
+import { cache } from '@/components/organisms/ChatList';
 
 interface Props {
   space: Space;
@@ -78,7 +79,7 @@ function ChatSidebar({ space, channels }: Props) {
     });
   return (
     <React.Fragment>
-      <Transition in={expand} timeout={300}>
+      <Transition in={expand} timeout={300} onEntered={() => cache.clearAll()} onExited={() => cache.clearAll()}>
         {(state) => (
           <React.Fragment>
             <div css={sidebarHeader}>
@@ -92,7 +93,7 @@ function ChatSidebar({ space, channels }: Props) {
                 </ChatHeaderButtonLink>
               )}
             </div>
-            <div css={sidebarBody} data-expand={expand}>
+            <div css={sidebarBody} data-state={expand}>
               {state === 'entered' && <SidebarExpandItems space={space} channels={channels} />}
               {state === 'exited' && <SidebarFoldedItems space={space} channels={channels} />}
             </div>

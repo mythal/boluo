@@ -31,7 +31,7 @@ function ChannelChat({ channelId }: Props) {
   if (loading) {
     return (
       <div css={chatRight}>
-        <Loading />
+        <Loading text="load channel data" />
       </div>
     );
   }

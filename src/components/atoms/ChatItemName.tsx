@@ -7,6 +7,8 @@ import { alignRight, fontBold, mR } from '@/styles/atoms';
 import { hsl } from 'polished';
 import Icon from '@/components/atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
+import { css } from '@emotion/core';
+import { gray } from '@/styles/colors';
 
 interface Props {
   name: string;
@@ -30,6 +32,11 @@ function genColor(rng: Prando): string {
   return hsl(rng.next(0, 365), rng.next(), rng.next(0.5, 0.8));
 }
 
+const masterIconStyle = css`
+  ${[mR(1)]};
+  color: ${gray['500']};
+`;
+
 function ChatItemName({ name, userId, master, action }: Props) {
   if (!colorMap[name]) {
     const rng = new Prando(name);
@@ -38,7 +45,7 @@ function ChatItemName({ name, userId, master, action }: Props) {
   const color = colorMap[name];
   return (
     <Container>
-      {master && <Icon css={mR(1)} sprite={masterIcon} />}
+      {master && <Icon css={masterIconStyle} sprite={masterIcon} />}
       <NameLink css={{ color }} to={`/profile/${encodeUuid(userId)}`}>
         {name}
       </NameLink>

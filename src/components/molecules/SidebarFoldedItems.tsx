@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { useRef, useState } from 'react';
 import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from '@/components/atoms/ChatHeaderButton';
 import { Space } from '@/api/spaces';
 import Icon from '@/components/atoms/Icon';
 import nightSky from '../../assets/icons/night-sky.svg';
-import { useRef, useState } from 'react';
 import Menu from '@/components/atoms/Menu';
 import { MenuItemLink } from '@/components/atoms/MenuItem';
 import { Channel } from '@/api/channels';
@@ -18,13 +18,14 @@ interface Props {
 function SidebarFoldedItems({ space, channels }: Props) {
   const [channelMenu, setChannelMenu] = useState(false);
   const channelButton = useRef<HTMLButtonElement>(null);
+  const toggleMenu = () => setChannelMenu((value) => !value);
   const dismissMenu = () => setChannelMenu(false);
   return (
     <React.Fragment>
       <ChatHeaderButtonNavLink activeClassName="active" exact css={sidebarIconButton} to={chatPath(space.id)}>
         <Icon sprite={nightSky} />
       </ChatHeaderButtonNavLink>
-      <ChatHeaderButton ref={channelButton} css={sidebarIconButton} onClick={() => setChannelMenu(true)}>
+      <ChatHeaderButton ref={channelButton} css={sidebarIconButton} onClick={toggleMenu}>
         #
       </ChatHeaderButton>
       {channelMenu && (

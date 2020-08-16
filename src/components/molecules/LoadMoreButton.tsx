@@ -19,11 +19,9 @@ export const LoadMoreContainer = styled.div`
 `;
 
 function LoadMoreButton() {
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const channelId = useSelector((state) => state.chat!.channel.id);
   const before = useSelector((state) => state.chat!.messageBefore);
   const finished = useSelector((state) => state.chat!.finished);
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,9 +35,10 @@ function LoadMoreButton() {
     return null;
   }
   const loadMore = async () => {
-    const limit = 128;
+    const limit = 64;
     setLoading(true);
     const result = await get('/messages/by_channel', { channelId, before, limit });
+    setLoading(false);
     if (!result.isOk) {
       console.error(result.value);
       return;

@@ -22,7 +22,7 @@ export const App: React.FC = () => {
   }
   return (
     <PageError>
-      <Suspense fallback={<PageLoading text="load module" />}>
+      <Suspense fallback={<PageLoading text="load modules" />}>
         <BrowserRouter>
           <Router />
         </BrowserRouter>

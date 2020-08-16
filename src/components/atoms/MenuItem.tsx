@@ -1,10 +1,10 @@
 import { SpriteSymbol } from '*.svg';
 import { css } from '@emotion/core';
-import { roundedSm, spacingN } from '@/styles/atoms';
-import { lighten } from 'polished';
+import { mY, roundedSm, spacingN } from '@/styles/atoms';
+import { darken } from 'polished';
 import TextIcon from '@/components/atoms/Icon';
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { menuItemHoverColor, textColor } from '@/styles/colors';
 
@@ -19,7 +19,8 @@ const menuItemStyle = css`
   text-decoration: none;
   color: ${textColor};
   justify-content: space-between;
-  padding: ${spacingN(2.5)} ${spacingN(2.5)};
+  padding: ${spacingN(2)} ${spacingN(2.5)};
+  ${mY(1)};
   cursor: pointer;
   user-select: none;
   transition-property: background-color;
@@ -29,8 +30,9 @@ const menuItemStyle = css`
   &:hover {
     background-color: ${menuItemHoverColor};
   }
+  &.active,
   &:active {
-    background-color: ${lighten(0.15, menuItemHoverColor)};
+    background-color: ${darken(0.15, menuItemHoverColor)};
   }
   &[data-disabled='true'] {
     cursor: not-allowed;
@@ -42,7 +44,7 @@ const menuItemStyle = css`
   }
 `;
 
-export const MenuItemLinkContainer = styled(Link)(menuItemStyle);
+export const MenuItemLinkContainer = styled(NavLink)(menuItemStyle);
 
 export const MenuItemContainer = styled.div(menuItemStyle);
 
@@ -59,11 +61,12 @@ export interface IMenuItemLink {
   children: React.ReactNode;
   icon?: SpriteSymbol;
   to: string;
+  exact?: boolean;
 }
 
-export function MenuItemLink({ children, icon, to }: IMenuItemLink) {
+export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
   return (
-    <MenuItemLinkContainer to={to}>
+    <MenuItemLinkContainer to={to} exact={exact} activeClassName="active">
       <div>{children}</div>
       {icon && <TextIcon sprite={icon} />}
     </MenuItemLinkContainer>

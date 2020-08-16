@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useContext, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { css } from '@emotion/core';
 import { useSelector } from '@/store';
 import LoadMoreButton, { LoadMoreContainer } from '@/components/molecules/LoadMoreButton';
@@ -15,14 +15,8 @@ const container = css`
   overflow-y: scroll;
 `;
 
-const ChatListContext = React.createContext<React.RefObject<HTMLDivElement | null>>(React.createRef());
-
-export function useChatList(): React.RefObject<HTMLDivElement | null> {
-  return useContext(ChatListContext);
-}
-
 const defaultHeight = 60;
-const cache = new CellMeasurerCache({
+export const cache = new CellMeasurerCache({
   defaultHeight,
   fixedWidth: true,
 });
@@ -53,19 +47,22 @@ function useClearCache() {
 }
 
 function ChatList() {
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const initialized = useSelector((state) => state.chat!.initialized);
   const messagesLength = useSelector((state) => state.chat!.itemSet.messages.size);
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
   const chatListRef = useRef<HTMLDivElement>(null);
   const virtualizedList = useRef<List>(null);
   const reverseStopIndex = useRef<number>(0);
-  const stopState = useRef<'END' | 'TO_END' | 'FLOAT'>('TO_END');
+  const previousMessageLength = useRef<number>(messagesLength);
+  const shouldScrollToStopIndex = useRef(false);
+
+  if (previousMessageLength.current !== messagesLength && messagesLength > 0) {
+    shouldScrollToStopIndex.current = true;
+  }
 
   useClearCache();
 
   if (!initialized) {
-    return <Loading />;
+    return <Loading text="initialize channel" />;
   }
   if (messagesLength === 0) {
     return (
@@ -98,40 +95,40 @@ function ChatList() {
   };
   return (
     <div css={container} ref={chatListRef}>
-      <ChatListContext.Provider value={chatListRef}>
-        <AutoSizer>
-          {({ height, width }) => {
-            return (
-              <List
-                height={height}
-                overscanRowCount={2}
-                rowCount={messagesLength}
-                deferredMeasurementCache={cache}
-                estimatedRowSize={defaultHeight}
-                rowHeight={cache.rowHeight}
-                rowRenderer={renderer}
-                width={width}
-                style={{ outline: 'none' }}
-                scrollToAlignment="start"
-                onRowsRendered={({ stopIndex }) => {
-                  if (stopState.current === 'TO_END') {
-                    if (stopIndex !== messagesLength - 1) {
-                      virtualizedList.current?.scrollToRow(stopIndex + 1);
-                    } else {
-                      reverseStopIndex.current = 0;
-                      stopState.current = 'END';
-                    }
-                    return;
+      <AutoSizer>
+        {({ height, width }) => {
+          return (
+            <List
+              height={height}
+              overscanRowCount={4}
+              rowCount={messagesLength}
+              deferredMeasurementCache={cache}
+              estimatedRowSize={defaultHeight}
+              rowHeight={cache.rowHeight}
+              rowRenderer={renderer}
+              width={width}
+              style={{ outline: 'none' }}
+              scrollToAlignment="end"
+              onRowsRendered={({ stopIndex }) => {
+                if (shouldScrollToStopIndex.current) {
+                  const currentReverseStopIndex = messagesLength - 1 - stopIndex;
+                  if (currentReverseStopIndex !== reverseStopIndex.current) {
+                    setTimeout(() =>
+                      virtualizedList.current?.scrollToRow(messagesLength - 1 - reverseStopIndex.current)
+                    );
                   } else {
-                    reverseStopIndex.current = messagesLength - 1 - stopIndex;
+                    shouldScrollToStopIndex.current = false;
                   }
-                }}
-                ref={virtualizedList}
-              />
-            );
-          }}
-        </AutoSizer>
-      </ChatListContext.Provider>
+                  return;
+                } else {
+                  reverseStopIndex.current = messagesLength - 1 - stopIndex;
+                }
+              }}
+              ref={virtualizedList}
+            />
+          );
+        }}
+      </AutoSizer>
     </div>
   );
 }

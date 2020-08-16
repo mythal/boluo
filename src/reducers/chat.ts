@@ -68,12 +68,13 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
     return { ...chat, finished };
   }
   const makeItem = makeMessageItem(myId);
+  messages = messages.reverse();
   const itemSet: ChatItemSet = {
     ...chat.itemSet,
     messages: chat.itemSet.messages.unshift(...messages.map(makeItem)),
   };
 
-  const messageBefore = Math.min(messages[len - 1].orderDate, chat.messageBefore);
+  const messageBefore = Math.min(messages[0].orderDate, chat.messageBefore);
   return { ...chat, messageBefore, finished, itemSet };
 };
 
@@ -159,7 +160,11 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, my
 
   let messageBefore = chat.messageBefore;
   if (DEBUG) {
-    console.log('Channel Event: ', body.type, body);
+    if (body.type === 'HEARTBEAT_MAP') {
+      console.debug(body);
+    } else {
+      console.log('Channel Event: ', body.type, body);
+    }
   }
   switch (body.type) {
     case 'NEW_MESSAGE':

@@ -13,7 +13,6 @@ import SidebarExpandItems from '../../components/molecules/SidebarExpandItems';
 import { chatSidebarColor, headerBgColor } from '../../styles/colors';
 import { Transition } from 'react-transition-group';
 import SidebarFoldedItems from '../../components/molecules/SidebarFoldedItems';
-import { cache } from './ChatList';
 
 interface Props {
   space: Space;
@@ -80,7 +79,7 @@ function ChatSidebar({ space, channels }: Props) {
     });
   return (
     <React.Fragment>
-      <Transition in={expand} timeout={300} onEntered={() => cache.clearAll()} onExited={() => cache.clearAll()}>
+      <Transition in={expand} timeout={300}>
         {(state) => (
           <React.Fragment>
             <div css={sidebarHeader}>

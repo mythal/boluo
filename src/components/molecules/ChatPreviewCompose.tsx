@@ -73,6 +73,7 @@ interface ComposeState {
   isAction: boolean;
   parsed: ParseResult | undefined;
   inputName: string;
+  initial: boolean;
 }
 
 export type ComposeDispatch = React.Dispatch<Partial<ComposeState>>;
@@ -89,10 +90,10 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     if (update.parsed !== undefined && update.parsed.text === '' && editTo === undefined) {
       messageId.current = newId();
     }
-    return { ...state, ...update };
+    return { ...state, ...update, initial: false };
   };
 
-  const [{ sending, inGame, broadcast, isAction, inputName, parsed }, composeDispatch] = useReducer(
+  const [{ sending, inGame, broadcast, isAction, inputName, parsed, initial }, composeDispatch] = useReducer(
     composeReducer,
     undefined,
     () => {
@@ -111,6 +112,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         isAction: preview?.isAction || editTo?.isAction || false,
         parsed: undefined,
         inputName: name,
+        initial: true,
       };
     }
   );
@@ -133,6 +135,9 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     }
   }, [editTo, dispatch]);
   useEffect(() => {
+    if (initial) {
+      return;
+    }
     const preview: PreviewPost = {
       id: messageId.current,
       name,

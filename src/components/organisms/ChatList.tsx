@@ -6,7 +6,7 @@ import LoadMoreButton, { LoadMoreContainer } from '@/components/molecules/LoadMo
 import Loading from '@/components/molecules/Loading';
 import { bgColor } from '@/styles/colors';
 import { AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer } from 'react-virtualized';
-import { ChatItems, NoMessages } from '@/components/molecules/ChatListItem';
+import { ChatListItems } from '@/components/molecules/ChatListItem';
 
 const container = css`
   grid-area: list;
@@ -61,7 +61,17 @@ const chatListStyle = css`
 
 function ChatList() {
   const initialized = useSelector((state) => state.chat!.initialized);
-  const messagesLength = useSelector((state) => state.chat!.itemSet.messages.size);
+  const displayNewPreviewCompose = useSelector((state) => {
+    if (!state.profile || !state.chat) {
+      return false;
+    }
+    const userId = state.profile.channels.get(state.chat.channel.id)?.member.userId;
+    return userId !== undefined && !state.chat.itemSet.previews.has(userId);
+  });
+  let messagesLength = useSelector((state) => state.chat!.itemSet.messages.size);
+  if (displayNewPreviewCompose) {
+    messagesLength += 1;
+  }
   const chatListRef = useRef<HTMLDivElement>(null);
   const virtualizedList = useRef<List>(null);
   const reverseStopIndex = useRef<number>(0);
@@ -77,13 +87,8 @@ function ChatList() {
   if (!initialized) {
     return <Loading text="initialize channel" />;
   }
-  if (messagesLength === 0) {
-    return (
-      <div css={container}>
-        {loadMore()}
-        <NoMessages />
-      </div>
-    );
+  if (messagesLength === 0 && !displayNewPreviewCompose) {
+    return <div css={container}>{loadMore()}</div>;
   }
 
   type RegisterChild = ((element: Element | null) => void) | undefined;
@@ -95,11 +100,7 @@ function ChatList() {
           return (
             <div key={key} ref={registerChild as RegisterChild} style={style}>
               {index === 0 && loadMore()}
-              <ChatItems
-                messageIndex={index}
-                measure={measure}
-                listRefOnlyIfLast={index === messagesLength - 1 ? virtualizedList : undefined}
-              />
+              <ChatListItems itemIndex={index} measure={measure} />
             </div>
           );
         }}
@@ -114,7 +115,7 @@ function ChatList() {
             <List
               css={chatListStyle}
               height={height}
-              overscanRowCount={4}
+              overscanRowCount={8}
               rowCount={messagesLength}
               deferredMeasurementCache={cache}
               estimatedRowSize={defaultHeight}

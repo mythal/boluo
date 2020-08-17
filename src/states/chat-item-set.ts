@@ -1,4 +1,4 @@
-import { Id, newId } from '@/utils/id';
+import { Id } from '@/utils/id';
 import { Message } from '@/api/messages';
 import { Preview } from '@/api/events';
 import { List, Map } from 'immutable';
@@ -35,7 +35,7 @@ export interface EditItem extends ChatNode {
 export type ChatItem = MessageItem | PreviewItem | EditItem;
 
 export interface ChatItemSet {
-  messages: List<MessageItem>;
+  messages: List<MessageItem | PreviewItem>;
   previews: Map<Id, PreviewItem>;
   editions: Map<Id, EditItem>;
 }
@@ -46,47 +46,38 @@ export const initialChatItemSet: ChatItemSet = {
   editions: Map(),
 };
 
-const insertMessage = (messages: List<MessageItem>, newItem: MessageItem): List<MessageItem> => {
+const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | PreviewItem): ChatItemSet['messages'] => {
   const index = messages.findLastIndex((item) => item.date < newItem.date);
   return messages.insert(index + 1, newItem);
 };
 
+const removeItem = (messages: ChatItemSet['messages'], id: Id): ChatItemSet['messages'] => {
+  const index = messages.findLastIndex((item) => item.id === id);
+  if (index !== -1) {
+    return messages.remove(index);
+  } else {
+    return messages;
+  }
+};
+
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'MESSAGE') {
-    messages = insertMessage(messages, item);
+    messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && previewItem.date <= item.date) {
-      const { preview, mine, type } = previewItem;
-      if (mine) {
-        const now = new Date().getTime();
-        const nextPreview: Preview = {
-          ...preview,
-          id: newId(),
-          parentMessageId: null,
-          mediaId: null,
-          text: '',
-          whisperToUsers: null,
-          entities: [],
-          start: now,
-          editFor: null,
-        };
-        const nextItem: PreviewItem = {
-          preview: nextPreview,
-          mine: true,
-          type,
-          id: preview.senderId,
-          date: now,
-        };
-        previews = previews.set(preview.senderId, nextItem);
-      } else {
-        previews = previews.remove(item.message.senderId);
-      }
+      previews = previews.remove(item.message.senderId);
+      messages = removeItem(messages, item.message.senderId);
     }
   } else if (item.type === 'PREVIEW') {
+    const hasPrevPreview = previews.has(item.id);
+    if (hasPrevPreview) {
+      messages = removeItem(messages, item.id);
+    }
     if (!item.mine && item.preview.text === '') {
       previews = previews.remove(item.id);
     } else {
       previews = previews.set(item.id, item);
+      messages = insertItem(messages, item);
     }
   } else if (item.type === 'EDIT') {
     if (!item.mine && item.preview?.text === '') {
@@ -108,19 +99,18 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
   return { ...itemSet, messages };
 };
 
-export const editMessage = (itemSet: ChatItemSet, editItem: MessageItem): ChatItemSet => {
-  const index = itemSet.messages.findLastIndex((item) => item.id === editItem.id);
-  const editions = itemSet.editions.remove(editItem.id);
+export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): ChatItemSet => {
+  let { messages } = itemSet;
+  const editions = itemSet.editions.remove(editedItem.id);
+  const index = messages.findLastIndex((item) => item.id === editedItem.id);
   if (index === -1) {
     return { ...itemSet, editions };
   }
-  let { messages } = itemSet;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const target = messages.get(index)!;
-  if (target.date === editItem.date) {
-    messages = messages.set(index, editItem);
+  if (target.date === editedItem.date) {
+    messages = messages.set(index, editedItem);
   } else {
-    messages = insertMessage(messages.remove(index), editItem);
+    messages = insertItem(messages.remove(index), editedItem);
   }
   return { ...itemSet, editions, messages };
 };

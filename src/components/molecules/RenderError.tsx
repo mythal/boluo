@@ -1,9 +1,9 @@
-import { AppError, BAD_REQUEST, ErrorCode, errorText, LOADING, NOT_FOUND } from '@/api/error';
+import { AppError, BAD_REQUEST, ErrorCode, errorText, LOADING, NOT_FOUND } from '../../api/error';
 import Loading from './Loading';
 import NotFound from '../pages/NotFound';
 import InformationBar from './InformationBar';
 import * as React from 'react';
-import { mY, pY, textSm } from '@/styles/atoms';
+import { mY, pY, textSm } from '../../styles/atoms';
 import Title from '../atoms/Title';
 
 interface Props {

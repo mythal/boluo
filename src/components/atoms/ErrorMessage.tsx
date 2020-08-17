@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
-import { textSm } from '@/styles/atoms';
+import { textSm } from '../../styles/atoms';
 import { lighten } from 'polished';
-import { errorColor } from '@/styles/colors';
+import { errorColor } from '../../styles/colors';
 
 export const ErrorMessage = styled.p`
   margin: 0;

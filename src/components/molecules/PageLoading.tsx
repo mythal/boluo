@@ -1,8 +1,8 @@
 import * as React from 'react';
-import Loading from '@/components/molecules/Loading';
+import Loading from '../../components/molecules/Loading';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
-import { heightScreen } from '@/styles/atoms';
+import { heightScreen } from '../../styles/atoms';
 
 const Mask = styled.div`
   width: 100vw;

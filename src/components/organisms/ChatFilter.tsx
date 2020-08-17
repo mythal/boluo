@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import Icon from '@/components/atoms/Icon';
-import filterIcon from '@/assets/icons/filter.svg';
-import circle from '@/assets/icons/circle.svg';
-import dotCircle from '@/assets/icons/dot-circle.svg';
-import ChatHeaderButton from '@/components/atoms/ChatHeaderButton';
-import Overlay from '@/components/atoms/Overlay';
-import Menu from '@/components/atoms/Menu';
-import { MenuItem } from '@/components/atoms/MenuItem';
-import { useDispatch, useSelector } from '@/store';
-import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '@/actions/chat';
+import Icon from '../../components/atoms/Icon';
+import filterIcon from '../../assets/icons/filter.svg';
+import circle from '../../assets/icons/circle.svg';
+import dotCircle from '../../assets/icons/dot-circle.svg';
+import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
+import Overlay from '../../components/atoms/Overlay';
+import Menu from '../../components/atoms/Menu';
+import { MenuItem } from '../atoms/MenuItem';
+import { useDispatch, useSelector } from '../../store';
+import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions/chat';
 
 interface Props {
   className?: string;

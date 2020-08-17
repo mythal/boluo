@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { RefObject, useEffect, useRef } from 'react';
 import { css } from '@emotion/core';
-import { useSelector } from '@/store';
-import LoadMoreButton, { LoadMoreContainer } from '@/components/molecules/LoadMoreButton';
-import Loading from '@/components/molecules/Loading';
-import { bgColor } from '@/styles/colors';
+import { useSelector } from '../../store';
+import LoadMoreButton, { LoadMoreContainer } from '../../components/molecules/LoadMoreButton';
+import Loading from '../../components/molecules/Loading';
+import { bgColor } from '../../styles/colors';
 import { AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer } from 'react-virtualized';
-import { ChatListItems } from '@/components/molecules/ChatListItem';
+import { ChatListItems } from '../molecules/ChatListItem';
 
 const container = css`
   grid-area: list;

@@ -14,13 +14,13 @@ import {
   textLg,
   textSm,
   textXl,
-} from '@/styles/atoms';
-import logo from '@/assets/logo.svg';
-import { OutlineButtonLink } from '@/components/atoms/OutlineButton';
-import { gray } from '@/styles/colors';
+} from '../../styles/atoms';
+import logo from '../../assets/logo.svg';
+import { OutlineButtonLink } from '../atoms/OutlineButton';
+import { gray } from '../../styles/colors';
 import styled from '@emotion/styled';
-import Text from '@/components/atoms/Text';
-import ExternalLink from '@/components/atoms/ExternalLink';
+import Text from '../../components/atoms/Text';
+import ExternalLink from '../../components/atoms/ExternalLink';
 
 const Title = styled.h1`
   ${[text3Xl, fontNormal]};

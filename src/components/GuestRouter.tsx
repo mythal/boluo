@@ -1,12 +1,12 @@
-import BasePage from '@/components/templates/BasePage';
+import BasePage from '../components/templates/BasePage';
 import { Route, Switch } from 'react-router-dom';
-import Login from '@/components/pages/Login';
-import SignUp from '@/components/pages/SignUp';
-import Profile from '@/components/pages/Profile';
-import ExploreSpace from '@/components/pages/ExploreSpace';
-import SpacePage from '@/components/pages/SpacePage';
-import GuestHome from '@/components/pages/GuestHome';
-import NotFound from '@/components/pages/NotFound';
+import Login from '../components/pages/Login';
+import SignUp from '../components/pages/SignUp';
+import Profile from '../components/pages/Profile';
+import ExploreSpace from '../components/pages/ExploreSpace';
+import SpacePage from '../components/pages/SpacePage';
+import GuestHome from '../components/pages/GuestHome';
+import NotFound from '../components/pages/NotFound';
 import React from 'react';
 
 export function GuestRouter() {

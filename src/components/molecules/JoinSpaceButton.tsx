@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Icon from '../atoms/Icon';
-import rocket from '@/assets/icons/rocket.svg';
-import { Id } from '@/utils/id';
-import { post } from '@/api/request';
-import { useDispatch, useSelector } from '@/store';
-import { useIsLoggedIn } from '@/hooks';
+import rocket from '../../assets/icons/rocket.svg';
+import { Id } from '../../utils/id';
+import { post } from '../../api/request';
+import { useDispatch, useSelector } from '../../store';
+import { useIsLoggedIn } from '../../hooks';
 
 interface Props {
   id: Id;

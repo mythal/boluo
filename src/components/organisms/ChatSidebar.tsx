@@ -1,19 +1,19 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
-import { Channel } from '@/api/channels';
-import { chatHeaderPadding, mR, pY, sidebarWidth, textLg } from '@/styles/atoms';
-import ChatHeaderButton, { ChatHeaderButtonLink } from '@/components/atoms/ChatHeaderButton';
+import { Channel } from '../../api/channels';
+import { chatHeaderPadding, mR, pY, sidebarWidth, textLg } from '../../styles/atoms';
+import ChatHeaderButton, { ChatHeaderButtonLink } from '../../components/atoms/ChatHeaderButton';
 import logo from '../../assets/logo.svg';
 import bars from '../../assets/icons/bars.svg';
-import Icon from '@/components/atoms/Icon';
+import Icon from '../../components/atoms/Icon';
 import { darken } from 'polished';
-import { Space } from '@/api/spaces';
-import SidebarExpandItems from '@/components/molecules/SidebarExpandItems';
-import { chatSidebarColor, headerBgColor } from '@/styles/colors';
+import { Space } from '../../api/spaces';
+import SidebarExpandItems from '../../components/molecules/SidebarExpandItems';
+import { chatSidebarColor, headerBgColor } from '../../styles/colors';
 import { Transition } from 'react-transition-group';
-import SidebarFoldedItems from '@/components/molecules/SidebarFoldedItems';
-import { cache } from '@/components/organisms/ChatList';
+import SidebarFoldedItems from '../../components/molecules/SidebarFoldedItems';
+import { cache } from './ChatList';
 
 interface Props {
   space: Space;

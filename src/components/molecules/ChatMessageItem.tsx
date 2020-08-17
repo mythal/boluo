@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Message } from '@/api/messages';
-import { ChatItemContainer } from '@/components/atoms/ChatItemContainer';
-import ChatItemTime from '@/components/atoms/ChatItemTime';
-import ChatItemName from '@/components/atoms/ChatItemName';
-import ChatItemContent from '@/components/molecules/ChatItemContent';
-import { useDispatch } from '@/store';
-import { ChatItemContentContainer } from '@/components/atoms/ChatItemContentContainer';
-import ChatItemToolbar from '@/components/molecules/ChatItemToolbar';
+import { Message } from '../../api/messages';
+import { ChatItemContainer } from '../atoms/ChatItemContainer';
+import ChatItemTime from '../../components/atoms/ChatItemTime';
+import ChatItemName from '../../components/atoms/ChatItemName';
+import ChatItemContent from '../../components/molecules/ChatItemContent';
+import { useDispatch } from '../../store';
+import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
+import ChatItemToolbar from '../../components/molecules/ChatItemToolbar';
 import editIcon from '../../assets/icons/edit.svg';
 import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 

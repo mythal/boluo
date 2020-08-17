@@ -11,10 +11,10 @@ import {
   textBase,
   textLg,
   textSm,
-} from '@/styles/atoms';
+} from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { buttonColor, buttonDangerColor, buttonDarkColor, buttonPrimaryColor, textColor } from '@/styles/colors';
+import { buttonColor, buttonDangerColor, buttonDarkColor, buttonPrimaryColor, textColor } from '../../styles/colors';
 
 export const buttonShadowColor = 'rgba(255, 255, 255, 0.15)';
 

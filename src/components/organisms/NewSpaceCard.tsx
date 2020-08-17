@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import { Link } from 'react-router-dom';
-import { flex, pY, roundedPx, text3Xl } from '@/styles/atoms';
+import { flex, pY, roundedPx, text3Xl } from '../../styles/atoms';
 import { darken, lighten } from 'polished';
-import plus from '@/assets/icons/plus-circle.svg';
+import plus from '../../assets/icons/plus-circle.svg';
 import Icon from '../atoms/Icon';
-import { bgColor, textColor } from '@/styles/colors';
+import { bgColor, textColor } from '../../styles/colors';
 
 const style = css`
   ${[flex, roundedPx, pY(4), text3Xl]};

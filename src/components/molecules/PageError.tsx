@@ -1,13 +1,13 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import Title from '@/components/atoms/Title';
-import Text from '@/components/atoms/Text';
-import Button from '@/components/atoms/Button';
-import { fontMono, heightScreen, mX, mY, pX, pY, roundedSm, textSm } from '@/styles/atoms';
-import Icon from '@/components/atoms/Icon';
-import rotateIcon from '@/assets/icons/rotate-cw.svg';
+import Title from '../../components/atoms/Title';
+import Text from '../../components/atoms/Text';
+import Button from '../../components/atoms/Button';
+import { fontMono, heightScreen, mX, mY, pX, pY, roundedSm, textSm } from '../../styles/atoms';
+import Icon from '../../components/atoms/Icon';
+import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import mushroomCloud from '../../assets/icons/mushroom-cloud.svg';
-import { gray } from '@/styles/colors';
+import { gray } from '../../styles/colors';
 
 interface Props {}
 

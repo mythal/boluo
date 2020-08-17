@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { fontBase, fontNormal, p, textXs } from '@/styles/atoms';
-import { toolbarRadius } from '@/components/molecules/ChatItemToolbar';
+import { fontBase, fontNormal, p, textXs } from '../../styles/atoms';
+import { toolbarRadius } from '../molecules/ChatItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { SpriteSymbol } from '*.svg';
-import Icon from '@/components/atoms/Icon';
-import Tooltip, { TooltipProps } from '@/components/atoms/Tooltip';
-import { textColor } from '@/styles/colors';
+import Icon from '../../components/atoms/Icon';
+import Tooltip, { TooltipProps } from '../../components/atoms/Tooltip';
+import { textColor } from '../../styles/colors';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
-import { isMobile } from '@/utils/browser';
+import { isMobile } from '../../utils/browser';
 
 const style = css`
   border: none;

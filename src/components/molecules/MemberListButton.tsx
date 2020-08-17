@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from '@/store';
-import { toggleMemberList } from '@/actions/chat';
-import Icon from '@/components/atoms/Icon';
-import members from '@/assets/icons/members.svg';
-import ChatHeaderButton from '@/components/atoms/ChatHeaderButton';
-import { HEARTBEAT_INTERVAL } from '@/settings';
-import { useSend } from '@/hooks';
-import { Id } from '@/utils/id';
-import { isOnline } from '@/utils/profile';
+import { useDispatch, useSelector } from '../../store';
+import { toggleMemberList } from '../../actions/chat';
+import Icon from '../../components/atoms/Icon';
+import members from '../../assets/icons/members.svg';
+import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
+import { HEARTBEAT_INTERVAL } from '../../settings';
+import { useSend } from '../../hooks';
+import { Id } from '../../utils/id';
+import { isOnline } from '../../utils/profile';
 
 interface Props {
   className?: string;

@@ -1,7 +1,7 @@
-import { Information, InformationLevel } from '@/information';
+import { Information, InformationLevel } from '../information';
 import { ReactNode } from 'react';
-import { Dispatch } from '@/store';
-import { Id, newId } from '@/utils/id';
+import { Dispatch } from '../store';
+import { Id, newId } from '../utils/id';
 
 export interface ShowFlash {
   type: 'SHOW_FLASH';

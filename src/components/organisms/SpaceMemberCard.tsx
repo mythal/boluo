@@ -1,19 +1,19 @@
 import * as React from 'react';
-import { Space, SpaceMember } from '@/api/spaces';
-import { AppResult } from '@/api/request';
+import { useEffect } from 'react';
+import { Space, SpaceMember } from '../../api/spaces';
+import { AppResult } from '../../api/request';
 import SpaceRoleTag from '../molecules/SpaceRoleTag';
 import Badge from '../atoms/Badge';
 import { css } from '@emotion/core';
-import { mR, mT, pX, pY, roundedPx, textLg, uiShadow } from '@/styles/atoms';
+import { mR, mT, pX, pY, roundedPx, textLg, uiShadow } from '../../styles/atoms';
 import { darken } from 'polished';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
-import { useDispatch, useSelector } from '@/store';
-import { useEffect } from 'react';
-import { loadUser } from '@/actions/ui';
-import { errLoading } from '@/api/error';
-import { User } from '@/api/users';
-import { bgColor } from '@/styles/colors';
+import { useDispatch, useSelector } from '../../store';
+import { loadUser } from '../../actions/ui';
+import { errLoading } from '../../api/error';
+import { User } from '../../api/users';
+import { bgColor } from '../../styles/colors';
 
 interface Props {
   member: SpaceMember;

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { alignRight, p, textSm } from '@/styles/atoms';
-import Input from '@/components/atoms/Input';
-import { ComposeDispatch } from '@/components/molecules/ChatPreviewCompose';
+import { alignRight, p, textSm } from '../../styles/atoms';
+import Input from '../../components/atoms/Input';
+import { ComposeDispatch } from './ChatPreviewCompose';
 
 interface Props {
   value: string;

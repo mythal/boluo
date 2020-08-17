@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { useEffect } from 'react';
 import Title from '../atoms/Title';
-import { Space } from '@/api/spaces';
+import { Space } from '../../api/spaces';
 import SpaceCard from '../organisms/SpaceCard';
 import { SpaceGrid } from '../atoms/SpaceGrid';
 import NewSpaceCard from '../organisms/NewSpaceCard';
-import spaceIcon from '@/assets/icons/star-sattelites.svg';
+import spaceIcon from '../../assets/icons/star-sattelites.svg';
 import Icon from '../atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
-import { useDispatch, useSelector } from '@/store';
-import { loadExploreSpace, resetUi } from '@/actions/ui';
+import { useDispatch, useSelector } from '../../store';
+import { loadExploreSpace, resetUi } from '../../actions/ui';
 
 function ExploreSpace() {
   const isLoggedIn = useSelector((state) => state.profile !== undefined);

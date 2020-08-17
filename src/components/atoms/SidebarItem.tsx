@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { NavLink } from 'react-router-dom';
-import { pL, pR, pY, sidebarWidth, spacingN } from '@/styles/atoms';
-import { primaryColor, sidebarItemActiveBgColor, sidebarItemColor, sidebarItemHoverBgColor } from '@/styles/colors';
+import { pL, pR, pY, sidebarWidth, spacingN } from '../../styles/atoms';
+import { primaryColor, sidebarItemActiveBgColor, sidebarItemColor, sidebarItemHoverBgColor } from '../../styles/colors';
 
 export const SidebarItemLink = styled(NavLink)`
   display: block;

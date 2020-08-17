@@ -1,14 +1,14 @@
-import { Message } from '@/api/messages';
-import { ChannelEvent } from '@/api/events';
-import { Id } from '@/utils/id';
-import { Dispatch } from '@/store';
-import { get } from '@/api/request';
-import { throwErr } from '@/utils/errors';
-import { connect as apiConnect } from '@/api/connect';
-import { ChatState } from '@/reducers/chat';
+import { Message } from '../api/messages';
+import { ChannelEvent } from '../api/events';
+import { Id } from '../utils/id';
+import { Dispatch } from '../store';
+import { get } from '../api/request';
+import { throwErr } from '../utils/errors';
+import { connect as apiConnect } from '../api/connect';
+import { ChatState } from '../reducers/chat';
 import { Map } from 'immutable';
-import { initialChatItemSet } from '@/states/chat-item-set';
-import { showFlash } from '@/actions/flash';
+import { initialChatItemSet } from '../states/chat-item-set';
+import { showFlash } from './flash';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';

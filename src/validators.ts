@@ -1,6 +1,6 @@
 import { ValidationRules } from 'react-hook-form';
 import { get } from './api/request';
-import { Id } from '@/utils/id';
+import { Id } from './utils/id';
 
 export const required = '必须填写这个字段';
 export const emailValidation: ValidationRules = {

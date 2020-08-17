@@ -3,18 +3,18 @@ import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import ChatSidebar from '../organisms/ChatSidebar';
-import { decodeUuid, Id } from '@/utils/id';
+import { decodeUuid, Id } from '../../utils/id';
 import ChannelChat from '../organisms/ChannelChat';
 import ChatHome from '../organisms/ChatHome';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
-import { useDispatch, useSelector } from '@/store';
-import { loadSpace } from '@/actions/ui';
-import { errLoading, LOADING } from '@/api/error';
-import { AppResult } from '@/api/request';
-import { SpaceWithRelated } from '@/api/spaces';
-import PageLoading from '@/components/molecules/PageLoading';
-import { heightScreen } from '@/styles/atoms';
+import { useDispatch, useSelector } from '../../store';
+import { loadSpace } from '../../actions/ui';
+import { errLoading, LOADING } from '../../api/error';
+import { AppResult } from '../../api/request';
+import { SpaceWithRelated } from '../../api/spaces';
+import PageLoading from '../../components/molecules/PageLoading';
+import { heightScreen } from '../../styles/atoms';
 
 interface Params {
   spaceId: string;

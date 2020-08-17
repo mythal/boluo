@@ -3,14 +3,14 @@ import Title from '../atoms/Title';
 import SpaceCard from '../organisms/SpaceCard';
 import { SpaceGrid } from '../atoms/SpaceGrid';
 import NewSpaceCard from '../organisms/NewSpaceCard';
-import planetConquest from '@/assets/icons/planet-conquest.svg';
+import planetConquest from '../../assets/icons/planet-conquest.svg';
 import newspaper from '../../assets/icons/newspaper.svg';
 import Icon from '../atoms/Icon';
-import { useSelector } from '@/store';
+import { useSelector } from '../../store';
 import styled from '@emotion/styled';
-import { link, spacingN } from '@/styles/atoms';
+import { link, spacingN } from '../../styles/atoms';
 import { News } from '../atoms/News';
-import ExternalLink from '@/components/atoms/ExternalLink';
+import ExternalLink from '../../components/atoms/ExternalLink';
 
 const Container = styled.div`
   display: grid;

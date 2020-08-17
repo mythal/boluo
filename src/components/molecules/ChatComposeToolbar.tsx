@@ -1,12 +1,12 @@
 import * as React from 'react';
-import ChatItemToolbarButton from '@/components/atoms/ChatItemToolbarButton';
-import { flexRowReverse, mR } from '@/styles/atoms';
-import mask from '@/assets/icons/theater-masks.svg';
-import running from '@/assets/icons/running.svg';
-import broadcastTower from '@/assets/icons/broadcast-tower.svg';
+import ChatItemToolbarButton from '../../components/atoms/ChatItemToolbarButton';
+import { flexRowReverse, mR } from '../../styles/atoms';
+import mask from '../../assets/icons/theater-masks.svg';
+import running from '../../assets/icons/running.svg';
+import broadcastTower from '../../assets/icons/broadcast-tower.svg';
 import styled from '@emotion/styled';
-import { ComposeDispatch } from '@/components/molecules/ChatPreviewCompose';
-import { isMac } from '@/utils/browser';
+import { ComposeDispatch } from './ChatPreviewCompose';
+import { isMac } from '../../utils/browser';
 
 interface Props {
   composeDispatch: ComposeDispatch;

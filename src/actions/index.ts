@@ -20,8 +20,8 @@ import {
   StopEditMessage,
   ToggleMemberList,
 } from './chat';
-import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from '@/actions/ui';
-import { DismissFlash, ShowFlash } from '@/actions/flash';
+import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from './ui';
+import { DismissFlash, ShowFlash } from './flash';
 
 export type Action =
   | LoggedIn

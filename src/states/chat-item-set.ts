@@ -1,6 +1,6 @@
-import { Id, newId } from '@/utils/id';
-import { Message } from '@/api/messages';
-import { Preview } from '@/api/events';
+import { Id, newId } from '../utils/id';
+import { Message } from '../api/messages';
+import { Preview } from '../api/events';
 import { List, Map } from 'immutable';
 
 export interface ChatNode {

@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { Preview } from '@/api/events';
-import { ChatItemContainer } from '@/components/atoms/ChatItemContainer';
-import ChatItemTime from '@/components/atoms/ChatItemTime';
-import ChatItemName from '@/components/atoms/ChatItemName';
-import { previewStyle } from '@/styles/atoms';
-import ChatItemContent from '@/components/molecules/ChatItemContent';
-import { ChatItemContentContainer } from '@/components/atoms/ChatItemContentContainer';
+import { Preview } from '../../api/events';
+import { ChatItemContainer } from '../atoms/ChatItemContainer';
+import ChatItemTime from '../../components/atoms/ChatItemTime';
+import ChatItemName from '../../components/atoms/ChatItemName';
+import { previewStyle } from '../../styles/atoms';
+import ChatItemContent from '../../components/molecules/ChatItemContent';
+import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
 
 interface Props {
   preview: Preview;

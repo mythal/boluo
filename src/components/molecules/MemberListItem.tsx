@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Member } from '@/api/channels';
+import { Member } from '../../api/channels';
 import styled from '@emotion/styled';
-import { pL, pX, pY, spacingN, textSm } from '@/styles/atoms';
-import { isOnline } from '@/utils/profile';
-import { primaryColor } from '@/styles/colors';
+import { pL, pX, pY, spacingN, textSm } from '../../styles/atoms';
+import { isOnline } from '../../utils/profile';
+import { primaryColor } from '../../styles/colors';
 
 interface Props {
   member: Member;

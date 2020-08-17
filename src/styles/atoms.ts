@@ -11,7 +11,7 @@ import {
   red,
   textColor,
   uiShadowColor,
-} from '@/styles/colors';
+} from './colors';
 
 export const onDisabled = (...styles: Interpolation[]) =>
   css`

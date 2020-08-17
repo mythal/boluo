@@ -14,11 +14,11 @@ import {
   textSm,
   uiShadow,
   uiShadowValue,
-} from '@/styles/atoms';
+} from '../../styles/atoms';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { dangerColor, primaryColor, textColor } from '@/styles/colors';
+import { dangerColor, primaryColor, textColor } from '../../styles/colors';
 
 const btnColor = (color: string) => css`
   background-color: ${color};

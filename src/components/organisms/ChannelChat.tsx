@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import { Id } from '@/utils/id';
+import { Id } from '../../utils/id';
 import ChatHeader from './ChatHeader';
 import ChatList from './ChatList';
 import Loading from '../molecules/Loading';
-import { chatRight } from '@/styles/atoms';
-import { useDispatch, useSelector } from '@/store';
-import { CloseChat, loadChat } from '@/actions/chat';
-import ChatMemberList from '@/components/organisms/ChatMemberList';
+import { chatRight } from '../../styles/atoms';
+import { useDispatch, useSelector } from '../../store';
+import { CloseChat, loadChat } from '../../actions/chat';
+import ChatMemberList from '../../components/organisms/ChatMemberList';
 
 export const useLoadChat = (id: Id) => {
   const dispatch = useDispatch();

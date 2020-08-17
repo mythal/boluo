@@ -1,8 +1,8 @@
-import { Space, SpaceWithRelated } from '@/api/spaces';
-import { AppResult, get } from '@/api/request';
-import { Dispatch } from '@/store';
-import { Id } from '@/utils/id';
-import { User } from '@/api/users';
+import { Space, SpaceWithRelated } from '../api/spaces';
+import { AppResult, get } from '../api/request';
+import { Dispatch } from '../store';
+import { Id } from '../utils/id';
+import { User } from '../api/users';
 
 export const SWITCH_EXPLORE_SPACE = 'SWITCH_EXPLORE_SPACE';
 

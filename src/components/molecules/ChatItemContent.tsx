@@ -1,11 +1,11 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { fontMono, link } from '@/styles/atoms';
+import { fontMono, link } from '../../styles/atoms';
 import Prando from 'prando';
-import { Entity } from '@/interpreter/entities';
+import { Entity } from '../../interpreter/entities';
 import { ExprEntity } from './ExprEntity';
-import { white } from '@/styles/colors';
-import ExternalLink from '@/components/atoms/ExternalLink';
+import { white } from '../../styles/colors';
+import ExternalLink from '../../components/atoms/ExternalLink';
 
 interface Props {
   text: string;

@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Channel } from '@/api/channels';
+import { Channel } from '../../api/channels';
 import { Link } from 'react-router-dom';
-import { chatPath } from '@/utils/path';
+import { chatPath } from '../../utils/path';
 import { css } from '@emotion/core';
-import { textColor } from '@/styles/colors';
+import { textColor } from '../../styles/colors';
 
 interface Props {
   channel: Channel;
@@ -23,5 +23,3 @@ function ChatSidebarItem({ channel }: Props) {
     </li>
   );
 }
-
-export default ChatSidebarItem;

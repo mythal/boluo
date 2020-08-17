@@ -1,10 +1,10 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { useSelector } from '@/store';
-import { fontBold, pX, pY } from '@/styles/atoms';
+import { useSelector } from '../../store';
+import { fontBold, pX, pY } from '../../styles/atoms';
 import { darken } from 'polished';
-import MemberListItem from '@/components/molecules/MemberListItem';
-import { bgColor } from '@/styles/colors';
+import MemberListItem from '../../components/molecules/MemberListItem';
+import { bgColor } from '../../styles/colors';
 
 const Container = styled.div`
   width: 10rem;

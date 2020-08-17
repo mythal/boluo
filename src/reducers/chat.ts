@@ -1,8 +1,8 @@
-import { Channel, Member } from '@/api/channels';
+import { Channel, Member } from '../api/channels';
 import { Map } from 'immutable';
-import { Message } from '@/api/messages';
-import { Preview } from '@/api/events';
-import { Action } from '@/actions';
+import { Message } from '../api/messages';
+import { Preview } from '../api/events';
+import { Action } from '../actions';
 import {
   ChannelEventReceived,
   ChatUpdate,
@@ -10,10 +10,10 @@ import {
   LoadMessages,
   StartEditMessage,
   StopEditMessage,
-} from '@/actions/chat';
-import { DEBUG } from '@/settings';
-import { Id } from '@/utils/id';
-import { addItem, ChatItem, ChatItemSet, deleteMessage, editMessage, makeMessageItem } from '@/states/chat-item-set';
+} from '../actions/chat';
+import { DEBUG } from '../settings';
+import { Id } from '../utils/id';
+import { addItem, ChatItem, ChatItemSet, deleteMessage, editMessage, makeMessageItem } from '../states/chat-item-set';
 
 export interface ChatState {
   connection: WebSocket;

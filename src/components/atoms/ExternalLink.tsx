@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Icon from '@/components/atoms/Icon';
+import Icon from '../../components/atoms/Icon';
 import icon from '../../assets/icons/external-link.svg';
 
 interface Props {

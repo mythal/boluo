@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from '@/store';
-import { get } from '@/api/request';
-import { LoadMessages } from '@/actions/chat';
-import Button from '@/components/atoms/Button';
+import { useDispatch, useSelector } from '../../store';
+import { get } from '../../api/request';
+import { LoadMessages } from '../../actions/chat';
+import Button from '../../components/atoms/Button';
 import Icon from '../atoms/Icon';
-import rotateIcon from '@/assets/icons/rotate-cw.svg';
+import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import styled from '@emotion/styled';
-import { bgColor } from '@/styles/colors';
-import { pY } from '@/styles/atoms';
+import { bgColor } from '../../styles/colors';
+import { pY } from '../../styles/atoms';
 
 export const LoadMoreContainer = styled.div`
   background-color: ${bgColor};

@@ -5,17 +5,17 @@ import 'sanitize.css/typography.css';
 import { css, Global } from '@emotion/core';
 import styled from '@emotion/styled';
 import Button from '../atoms/Button';
-import fan from '@/assets/icons/fan.svg';
-import close from '@/assets/icons/x-circle.svg';
-import chevronDown from '@/assets/icons/chevron-down.svg';
+import fan from '../../assets/icons/fan.svg';
+import close from '../../assets/icons/x-circle.svg';
+import chevronDown from '../../assets/icons/chevron-down.svg';
 import Input from '../atoms/Input';
 import UiMessage from '../molecules/InformationBar';
 import Overlay from '../atoms/Overlay';
 import Menu from '../atoms/Menu';
 import Dialog from '../molecules/Dialog';
 import Panel from '../molecules/Panel';
-import { baseStyle, flex, flexCol, gap, mY, spacingN } from '@/styles/atoms';
-import { MenuItem, MenuItemDisabled } from '@/components/atoms/MenuItem';
+import { baseStyle, flex, flexCol, gap, mY, spacingN } from '../../styles/atoms';
+import { MenuItem, MenuItemDisabled } from '../atoms/MenuItem';
 
 function BaseStyle() {
   return <Global styles={baseStyle} />;

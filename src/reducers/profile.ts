@@ -1,8 +1,8 @@
-import { User } from '@/api/users';
+import { User } from '../api/users';
 import { OrderedMap } from 'immutable';
-import { SpaceWithMember, SpaceWithRelated } from '@/api/spaces';
-import { ChannelWithMember } from '@/api/channels';
-import { Action } from '@/actions';
+import { SpaceWithMember, SpaceWithRelated } from '../api/spaces';
+import { ChannelWithMember } from '../api/channels';
+import { Action } from '../actions';
 import {
   ChannelMemberEdited,
   JoinedChannel,
@@ -11,10 +11,10 @@ import {
   LeftSpace,
   LoggedIn,
   UserEdited,
-} from '@/actions/profile';
-import { ChannelEdited, PushMembers } from '@/api/events';
-import { Id } from '@/utils/id';
-import { ChatState } from '@/reducers/chat';
+} from '../actions/profile';
+import { ChannelEdited, PushMembers } from '../api/events';
+import { Id } from '../utils/id';
+import { ChatState } from './chat';
 
 export type MySpaces = OrderedMap<Id, SpaceWithMember>;
 export type MyChannels = OrderedMap<Id, ChannelWithMember>;

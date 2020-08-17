@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { controlHeight, controlRounded } from '@/styles/atoms';
+import { controlHeight, controlRounded } from '../../styles/atoms';
 
 interface Props {
   id: string;

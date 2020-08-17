@@ -1,7 +1,7 @@
-import { disabled, roundedSm, spacingN, textLg, widthFull } from '@/styles/atoms';
+import { disabled, roundedSm, spacingN, textLg, widthFull } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
-import { errorColor, gray, inputBgColor, textColor } from '@/styles/colors';
+import { errorColor, gray, inputBgColor, textColor } from '../../styles/colors';
 
 interface DataAttributes {
   'data-variant'?: 'error' | 'normal';

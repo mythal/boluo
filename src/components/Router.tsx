@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Switch } from 'react-router-dom';
-import { useIsLoggedIn } from '@/hooks';
+import { useIsLoggedIn } from '../hooks';
 
 interface Props {}
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { css, keyframes } from '@emotion/core';
-import { roundedMd, spacingN } from '@/styles/atoms';
-import { menuBgColor } from '@/styles/colors';
+import { roundedMd, spacingN } from '../../styles/atoms';
+import { menuBgColor } from '../../styles/colors';
 
 interface Props {
   children: React.ReactNode;

@@ -1,7 +1,7 @@
 import { Message } from './messages';
-import { Entity } from '@/interpreter/entities';
+import { Entity } from '../interpreter/entities';
 import { Channel, Member } from './channels';
-import { Id } from '@/utils/id';
+import { Id } from '../utils/id';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;

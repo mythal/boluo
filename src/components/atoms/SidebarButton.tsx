@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
-import { focusShadow, roundedPx, spacingN } from '@/styles/atoms';
-import { textColor } from '@/styles/colors';
+import { focusShadow, roundedPx, spacingN } from '../../styles/atoms';
+import { textColor } from '../../styles/colors';
 
 export const SidebarButton = styled.button`
   color: ${textColor};

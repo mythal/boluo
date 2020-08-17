@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { encodeUuid, Id } from '@/utils/id';
-import Icon from '@/components/atoms/Icon';
-import teleport from '@/assets/icons/teleport.svg';
-import binoculars from '@/assets/icons/binoculars.svg';
-import { ButtonLink } from '@/components/atoms/Button';
+import { encodeUuid, Id } from '../../utils/id';
+import Icon from '../../components/atoms/Icon';
+import teleport from '../../assets/icons/teleport.svg';
+import binoculars from '../../assets/icons/binoculars.svg';
+import { ButtonLink } from '../atoms/Button';
 
 interface Props {
   isMember: boolean;

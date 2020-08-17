@@ -1,8 +1,8 @@
 import styled from '@emotion/styled';
-import { breakpoint, headerTransition, mB, mediaQuery, roundedPx, spacingN, textLg } from '@/styles/atoms';
+import { breakpoint, headerTransition, mB, mediaQuery, roundedPx, spacingN, textLg } from '../../styles/atoms';
 import { css } from '@emotion/core';
 import { Link, NavLink } from 'react-router-dom';
-import { gray, textColor } from '@/styles/colors';
+import { gray, textColor } from '../../styles/colors';
 
 export const chatHeaderButtonStyle = css`
   color: ${textColor};

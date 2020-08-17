@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import ChatMessageItem from '@/components/molecules/ChatMessageItem';
-import ChatPreviewItem from '@/components/molecules/ChatPreviewItem';
+import ChatMessageItem from '../../components/molecules/ChatMessageItem';
+import ChatPreviewItem from '../../components/molecules/ChatPreviewItem';
 import ChatPreviewCompose from './ChatPreviewCompose';
-import { ChatItem } from '@/states/chat-item-set';
-import { useSelector } from '@/store';
-import { ChatState } from '@/reducers/chat';
+import { ChatItem } from '../../states/chat-item-set';
+import { useSelector } from '../../store';
+import { ChatState } from '../../reducers/chat';
 
 interface Props {
   itemIndex: number;

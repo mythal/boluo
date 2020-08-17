@@ -1,22 +1,22 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { css } from '@emotion/core';
-import { headerHeight, headerShadow, mainP, mainWidth, mR } from '@/styles/atoms';
+import { headerHeight, headerShadow, mainP, mainWidth, mR } from '../../styles/atoms';
 import HeaderLink, { HeaderButton, headerLinkStyle } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
-import logo from '@/assets/logo.svg';
+import logo from '../../assets/logo.svg';
 import styled from '@emotion/styled';
-import plus from '@/assets/icons/plus-circle.svg';
-import cog from '@/assets/icons/cog.svg';
-import chevronDown from '@/assets/icons/chevron-down.svg';
-import chevronUp from '@/assets/icons/chevron-up.svg';
+import plus from '../../assets/icons/plus-circle.svg';
+import cog from '../../assets/icons/cog.svg';
+import chevronDown from '../../assets/icons/chevron-down.svg';
+import chevronUp from '../../assets/icons/chevron-up.svg';
 import Menu from '../atoms/Menu';
 import Overlay from '../atoms/Overlay';
-import logoutIcon from '@/assets/icons/logout.svg';
-import { useIsLoggedIn } from '@/hooks';
-import { useSelector } from '@/store';
-import { MenuItemLink } from '@/components/atoms/MenuItem';
-import { headerBgColor } from '@/styles/colors';
+import logoutIcon from '../../assets/icons/logout.svg';
+import { useIsLoggedIn } from '../../hooks';
+import { useSelector } from '../../store';
+import { MenuItemLink } from '../atoms/MenuItem';
+import { headerBgColor } from '../../styles/colors';
 
 export const headerStyle = css`
   display: flex;
@@ -39,14 +39,6 @@ const Nav = styled.nav`
   display: flex;
   align-items: center;
 `;
-
-function ForumLink() {
-  return (
-    <a css={[headerLinkStyle, mR(1)]} href="https://forum.boluo.chat/" rel="noopener noreferrer" target="_blank">
-      讨论版
-    </a>
-  );
-}
 
 function Guest() {
   return (

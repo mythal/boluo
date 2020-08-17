@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { pX, pY, textXs } from '@/styles/atoms';
+import { pX, pY, textXs } from '../../styles/atoms';
 import { lighten } from 'polished';
 
 interface Props {

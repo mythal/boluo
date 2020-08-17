@@ -1,5 +1,5 @@
-import { AppResult } from '@/api/request';
-import { Err } from '@/utils/result';
+import { AppResult } from './request';
+import { Err } from '../utils/result';
 
 export type ErrorCode =
   | UNAUTHENTICATED

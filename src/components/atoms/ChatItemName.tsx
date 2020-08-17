@@ -1,14 +1,14 @@
 import * as React from 'react';
 import Prando from 'prando';
-import { encodeUuid, Id } from '@/utils/id';
+import { encodeUuid, Id } from '../../utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { alignRight, fontBold, mR } from '@/styles/atoms';
+import { alignRight, fontBold, mR } from '../../styles/atoms';
 import { hsl } from 'polished';
-import Icon from '@/components/atoms/Icon';
+import Icon from '../../components/atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
 import { css } from '@emotion/core';
-import { gray } from '@/styles/colors';
+import { gray } from '../../styles/colors';
 
 interface Props {
   name: string;

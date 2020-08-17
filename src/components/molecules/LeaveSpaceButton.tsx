@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { Id } from '@/utils/id';
-import { post } from '@/api/request';
-import doorOpen from '@/assets/icons/door-open.svg';
+import { Id } from '../../utils/id';
+import { post } from '../../api/request';
+import doorOpen from '../../assets/icons/door-open.svg';
 import Icon from '../atoms/Icon';
-import { useDispatch, useSelector } from '@/store';
+import { useDispatch, useSelector } from '../../store';
 import Text from '../atoms/Text';
-import Dialog from '@/components/molecules/Dialog';
+import Dialog from '../../components/molecules/Dialog';
 
 interface Props {
   id: Id;

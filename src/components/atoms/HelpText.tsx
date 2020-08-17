@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
-import { block, spacingN, textSm } from '@/styles/atoms';
-import { minorTextColor } from '@/styles/colors';
+import { block, spacingN, textSm } from '../../styles/atoms';
+import { minorTextColor } from '../../styles/colors';
 
 export const HelpText = styled.small`
   ${[textSm, block]};

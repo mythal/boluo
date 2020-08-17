@@ -1,8 +1,8 @@
-import { pL, pR, pX, pY, uiShadow } from '@/styles/atoms';
+import { pL, pR, pX, pY, uiShadow } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 import React from 'react';
-import { gray } from '@/styles/colors';
+import { gray } from '../../styles/colors';
 
 export const toolbarRadius = css`
   border-radius: 4px;

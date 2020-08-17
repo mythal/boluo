@@ -1,13 +1,13 @@
-import { Space, SpaceWithRelated } from '@/api/spaces';
-import { Action } from '@/actions';
-import { AppResult } from '@/api/request';
-import { errLoading } from '@/api/error';
-import { JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '@/actions/profile';
-import { Id } from '@/utils/id';
+import { Space, SpaceWithRelated } from '../api/spaces';
+import { Action } from '../actions';
+import { AppResult } from '../api/request';
+import { errLoading } from '../api/error';
+import { JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '../actions/profile';
+import { Id } from '../utils/id';
 import { Map } from 'immutable';
-import { User } from '@/api/users';
-import { Ok } from '@/utils/result';
-import { Channel } from '@/api/channels';
+import { User } from '../api/users';
+import { Ok } from '../utils/result';
+import { Channel } from '../api/channels';
 
 export interface UiState {
   exploreSpaceList: AppResult<Space[]>;

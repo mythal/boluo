@@ -4,7 +4,7 @@ import { App } from './components/App';
 import { getRoot, isMobile, setRealHeight } from './utils/browser';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { baseStyle } from '@/styles/atoms';
+import { baseStyle } from './styles/atoms';
 import { Global } from '@emotion/core';
 
 ReactDOM.render(

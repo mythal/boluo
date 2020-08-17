@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { breakpoint, headerTransition, mediaQuery, roundedPx, spacingN, textSm } from '@/styles/atoms';
+import { breakpoint, headerTransition, mediaQuery, roundedPx, spacingN, textSm } from '../../styles/atoms';
 import { NavLink } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
-import { bgColor, headerBgColor, textColor } from '@/styles/colors';
+import { bgColor, headerBgColor, textColor } from '../../styles/colors';
 
 interface Props {
   to: string;

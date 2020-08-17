@@ -1,24 +1,24 @@
 import * as React from 'react';
-import { EditSpace, Space, SpaceMember } from '@/api/spaces';
-import { Channel } from '@/api/channels';
-import { breakpoint, flexCol, largeInput, mediaQuery, mY, spacingN, widthFull } from '@/styles/atoms';
+import { useState } from 'react';
+import { EditSpace, Space, SpaceMember } from '../../api/spaces';
+import { Channel } from '../../api/channels';
+import { breakpoint, flexCol, largeInput, mediaQuery, mY, spacingN, widthFull } from '../../styles/atoms';
 import { PanelTitle } from '../atoms/PanelTitle';
 import { css } from '@emotion/core';
 import Panel from '../molecules/Panel';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
-import { AppError } from '@/api/error';
+import { AppError } from '../../api/error';
 import { RenderError } from '../molecules/RenderError';
 import { Label } from '../atoms/Label';
 import Input from '../atoms/Input';
-import { descriptionValidation, required, spaceNameValidation } from '@/validators';
+import { descriptionValidation, required, spaceNameValidation } from '../../validators';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';
 import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
 import TextArea from '../atoms/TextArea';
 import Button from '../atoms/Button';
-import { post } from '@/api/request';
-import { useDispatch } from '@/store';
+import { post } from '../../api/request';
+import { useDispatch } from '../../store';
 
 interface Props {
   space: Space;

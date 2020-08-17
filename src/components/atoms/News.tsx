@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
-import { p, roundedSm } from '@/styles/atoms';
-import { blue } from '@/styles/colors';
+import { p, roundedSm } from '../../styles/atoms';
+import { blue } from '../../styles/colors';
 
 export const News = styled.div`
   ${[roundedSm, p(2)]};

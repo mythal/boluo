@@ -1,12 +1,12 @@
 import { SpriteSymbol } from '*.svg';
 import { css } from '@emotion/core';
-import { mY, roundedSm, spacingN } from '@/styles/atoms';
+import { mY, roundedSm, spacingN } from '../../styles/atoms';
 import { darken } from 'polished';
-import TextIcon from '@/components/atoms/Icon';
+import TextIcon from '../../components/atoms/Icon';
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { menuItemHoverColor, textColor } from '@/styles/colors';
+import { menuItemHoverColor, textColor } from '../../styles/colors';
 
 export interface IMenuItem {
   children: React.ReactNode;

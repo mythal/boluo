@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import { textBase } from '@/styles/atoms';
-import { useParse } from '@/hooks';
-import TextArea from '@/components/atoms/TextArea';
+import { textBase } from '../../styles/atoms';
+import { useParse } from '../../hooks';
+import TextArea from '../../components/atoms/TextArea';
 import { css } from '@emotion/core';
-import { ComposeDispatch } from '@/components/molecules/ChatPreviewCompose';
+import { ComposeDispatch } from './ChatPreviewCompose';
 
 interface Props {
   inGame: boolean;

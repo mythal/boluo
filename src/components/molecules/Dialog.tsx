@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useCallback, useEffect } from 'react';
 import { css } from '@emotion/core';
 import Button from '../atoms/Button';
-import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '@/styles/atoms';
+import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../../styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
-import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '@/styles/colors';
+import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '../../styles/colors';
 
 interface Props {
   children: React.ReactNode;

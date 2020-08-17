@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Props as SelectProps } from 'react-select';
-import { selectTheme, uiShadow } from '@/styles/atoms';
+import { selectTheme, uiShadow } from '../../styles/atoms';
 
 const Select = React.lazy(() => import('react-select'));
 

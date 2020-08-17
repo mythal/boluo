@@ -2,11 +2,11 @@ import * as React from 'react';
 import { Portal } from '../atoms/Portal';
 import InformationBar from '../molecules/InformationBar';
 import { css } from '@emotion/core';
-import { useDispatch } from '@/store';
-import { mY, textSm } from '@/styles/atoms';
-import { Information } from '@/information';
-import { FlashState } from '@/reducers/flash';
-import { dismissFlash } from '@/actions/flash';
+import { useDispatch } from '../../store';
+import { mY, textSm } from '../../styles/atoms';
+import { Information } from '../../information';
+import { FlashState } from '../../reducers/flash';
+import { dismissFlash } from '../../actions/flash';
 
 interface Props {
   flashState: FlashState;

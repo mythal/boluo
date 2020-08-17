@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
-import { useSelector } from '@/store';
+import { useSelector } from '../../store';
 import {
   breakpoint,
   chatHeaderStyle,
@@ -14,18 +14,18 @@ import {
   pR,
   textBase,
   textLg,
-} from '@/styles/atoms';
+} from '../../styles/atoms';
 import ChannelMemberButton from './ChannelMemberButton';
-import sliders from '@/assets/icons/sliders.svg';
-import ChatHeaderButton from '@/components/atoms/ChatHeaderButton';
-import Icon from '@/components/atoms/Icon';
-import ManageChannel from '@/components/organisms/ManageChannel';
+import sliders from '../../assets/icons/sliders.svg';
+import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
+import Icon from '../../components/atoms/Icon';
+import ManageChannel from '../../components/organisms/ManageChannel';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
-import ChatFilter from '@/components/organisms/ChatFilter';
-import { useTitle } from '@/hooks';
-import MemberListButton from '@/components/molecules/MemberListButton';
-import { textColor } from '@/styles/colors';
+import ChatFilter from '../../components/organisms/ChatFilter';
+import { useTitle } from '../../hooks';
+import MemberListButton from '../../components/molecules/MemberListButton';
+import { textColor } from '../../styles/colors';
 
 const Topic = styled.div`
   display: none;

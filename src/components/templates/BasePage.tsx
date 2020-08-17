@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { css } from '@emotion/core';
-import { mainWidth, margin0Auto, pX, pY } from '@/styles/atoms';
-import Header from '../organisms/Header';
 import { Suspense } from 'react';
-import Loading from '@/components/molecules/Loading';
+import { css } from '@emotion/core';
+import { mainWidth, margin0Auto, pX, pY } from '../../styles/atoms';
+import Header from '../organisms/Header';
+import Loading from '../../components/molecules/Loading';
 
 interface Props {
   children: React.ReactNode;

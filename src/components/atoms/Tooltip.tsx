@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { p, roundedSm, spacingN } from '@/styles/atoms';
-import { black } from '@/styles/colors';
+import { p, roundedSm, spacingN } from '../../styles/atoms';
+import { black } from '../../styles/colors';
 
 export interface TooltipProps {
   children: React.ReactNode;

@@ -2,15 +2,15 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { lighten } from 'polished';
 import styled from '@emotion/styled';
-import { roundedSm, spacingN, textBase, textXl, uiShadow } from '@/styles/atoms';
+import { roundedSm, spacingN, textBase, textXl, uiShadow } from '../../styles/atoms';
 import CloseButton from './CloseButton';
-import { InformationLevel } from '@/information';
+import { InformationLevel } from '../../information';
 import {
   informationErrorColor,
   informationInfoColor,
   informationSuccessColor,
   informationWarnColor,
-} from '@/styles/colors';
+} from '../../styles/colors';
 
 interface Props {
   variant: InformationLevel;

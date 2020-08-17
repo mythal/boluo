@@ -6,9 +6,9 @@ import { clearCsrfToken } from './api/csrf';
 import { LoggedOut } from './actions/profile';
 import { useHistory } from 'react-router-dom';
 import { Dispatch, useDispatch, useSelector } from './store';
-import { ClientEvent } from '@/api/events';
-import { parse, ParseResult } from '@/interpreter/parser';
-import { getDiceFace } from '@/utils/game';
+import { ClientEvent } from './api/events';
+import { parse, ParseResult } from './interpreter/parser';
+import { getDiceFace } from './utils/game';
 
 export function useOutside(
   callback: (() => void) | undefined,

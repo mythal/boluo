@@ -10,10 +10,9 @@ import { chatPath } from '@/utils/path';
 import Icon from '@/components/atoms/Icon';
 import plus from '@/assets/icons/plus-circle.svg';
 import { SidebarButton } from '@/components/atoms/SidebarButton';
-import { darken } from 'polished';
 import CreateChannel from '@/components/organisms/CreateChannel';
 import { useSelector } from '@/store';
-import { gray, textColor } from '@/styles/colors';
+import { gray, sidebarItemActiveBgColor, sidebarItemHoverBgColor, textColor } from '@/styles/colors';
 import { NavLink } from 'react-router-dom';
 import { css } from '@emotion/core';
 
@@ -48,12 +47,12 @@ const sidebarTitle = css`
   align-items: center;
 
   &:hover {
-    background-color: ${gray['700']};
+    background-color: ${sidebarItemHoverBgColor};
   }
 
   &.active,
   &:active {
-    background-color: ${darken(0.1, gray['700'])};
+    background-color: ${sidebarItemActiveBgColor};
   }
 `;
 

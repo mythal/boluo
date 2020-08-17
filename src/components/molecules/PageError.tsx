@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import Title from '@/components/atoms/Title';
 import Text from '@/components/atoms/Text';
 import Button from '@/components/atoms/Button';
-import { fontMono, mX, mY, pX, pY, roundedSm, textSm } from '@/styles/atoms';
+import { fontMono, heightScreen, mX, mY, pX, pY, roundedSm, textSm } from '@/styles/atoms';
 import Icon from '@/components/atoms/Icon';
 import rotateIcon from '@/assets/icons/rotate-cw.svg';
 import mushroomCloud from '../../assets/icons/mushroom-cloud.svg';
@@ -17,7 +17,7 @@ interface State {
 
 const Mask = styled.div`
   width: 100vw;
-  height: 100vh;
+  height: ${heightScreen};
   backdrop-filter: brightness(30%);
   display: flex;
   align-items: center;

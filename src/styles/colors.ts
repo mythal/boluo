@@ -124,3 +124,7 @@ export const inputBgColor = gray['800'];
 export const menuBgColor = '#000000';
 export const menuShadowColor = 'rgba(100, 100, 100, 0.2)';
 export const menuItemHoverColor = primary['700'];
+
+export const sidebarItemColor = darken(0.1, textColor);
+export const sidebarItemHoverBgColor = 'rgba(0, 0, 0, 0.1)';
+export const sidebarItemActiveBgColor = 'rgba(0, 0, 0, 0.2)';

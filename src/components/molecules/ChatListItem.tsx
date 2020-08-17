@@ -32,10 +32,10 @@ const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
 function Items({ itemIndex, measure }: Props) {
   const item = useSelector((state) => state.chat!.itemSet.messages.get(itemIndex));
   const myId = useSelector((state) => {
-    if (state.profile === undefined || state.chat === undefined || itemIndex !== state.chat.itemSet.messages.size) {
+    if (state.profile === undefined || state.chat === undefined) {
       return undefined;
     } else {
-      return state.profile.user.id;
+      return state.profile.channels.get(state.chat!.channel.id)?.member.userId;
     }
   });
   const editItem = useSelector((state) => {
@@ -59,7 +59,7 @@ function Items({ itemIndex, measure }: Props) {
     return <ChatPreviewCompose preview={undefined} key={myId} />;
   } else if (item.type === 'MESSAGE') {
     const { message } = item;
-    if (editItem !== undefined && editItem.preview === undefined && editItem.mine) {
+    if (editItem !== undefined && editItem.preview === undefined && editItem.mine && myId) {
       // start editing
       return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
     } else if (
@@ -71,13 +71,13 @@ function Items({ itemIndex, measure }: Props) {
       if (filter(item)) {
         return <ChatMessageItem message={message} mine={item.mine} />;
       }
-    } else if (editItem.mine && filter(editItem)) {
+    } else if (editItem.mine && filter(editItem) && myId) {
       return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
     } else if (filter(editItem)) {
       return <ChatPreviewItem preview={editItem.preview} />;
     }
   } else if (item.type === 'PREVIEW') {
-    if (item.mine) {
+    if (item.mine && myId) {
       return <ChatPreviewCompose key={item.id} preview={item.preview} />;
     } else {
       return <ChatPreviewItem key={item.id} preview={item.preview} />;

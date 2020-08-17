@@ -2,10 +2,11 @@ import * as React from 'react';
 import Loading from '@/components/molecules/Loading';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
+import { heightScreen } from '@/styles/atoms';
 
 const Mask = styled.div`
   width: 100vw;
-  height: 100vh;
+  height: ${heightScreen};
   position: fixed;
   top: 0;
   left: 0;

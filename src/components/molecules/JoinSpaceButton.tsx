@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useState } from 'react';
-import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import rocket from '@/assets/icons/rocket.svg';
 import { Id } from '@/utils/id';
@@ -35,9 +34,9 @@ function JoinSpaceButton({ id, ...props }: Props) {
   };
 
   return (
-    <Button onClick={join} {...props} data-variant="primary" disabled={loading}>
+    <button onClick={join} {...props} data-variant="primary" disabled={loading}>
       <Icon sprite={rocket} loading={loading} /> 加入位面
-    </Button>
+    </button>
   );
 }
 

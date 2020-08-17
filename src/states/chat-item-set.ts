@@ -1,4 +1,4 @@
-import { Id } from '@/utils/id';
+import { Id, newId } from '@/utils/id';
 import { Message } from '@/api/messages';
 import { Preview } from '@/api/events';
 import { List, Map } from 'immutable';
@@ -60,13 +60,52 @@ const removeItem = (messages: ChatItemSet['messages'], id: Id): ChatItemSet['mes
   }
 };
 
+const dummyPreview = ({ senderId, mailbox, mailboxType, name, inGame, isAction, isMaster }: Preview): PreviewItem => {
+  const now = new Date().getTime();
+
+  const preview: Preview = {
+    id: newId(),
+    mailbox,
+    mailboxType,
+    name,
+    inGame,
+    isAction,
+    isMaster,
+    parentMessageId: null,
+    mediaId: null,
+    text: '',
+    whisperToUsers: null,
+    entities: [],
+    start: now,
+    editFor: null,
+    senderId,
+  };
+  return {
+    type: 'PREVIEW',
+    preview,
+    date: now,
+    mine: true,
+    id: senderId,
+  };
+};
+
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'MESSAGE') {
     messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && previewItem.date <= item.date) {
-      previews = previews.remove(item.message.senderId);
-      messages = removeItem(messages, item.message.senderId);
+      if (previewItem.date === item.date && previewItem.mine) {
+        const newPreviewItem = dummyPreview(previewItem.preview);
+        previews = previews.set(newPreviewItem.id, newPreviewItem);
+        const index = messages.findLastIndex((item) => item.id === newPreviewItem.id);
+        if (index === -1) {
+          throw new Error('unexpected');
+        }
+        messages = messages.set(index, newPreviewItem);
+      } else {
+        previews = previews.remove(item.message.senderId);
+        messages = removeItem(messages, item.message.senderId);
+      }
     }
   } else if (item.type === 'PREVIEW') {
     const hasPrevPreview = previews.has(item.id);

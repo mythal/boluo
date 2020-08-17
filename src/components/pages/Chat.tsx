@@ -14,6 +14,7 @@ import { errLoading, LOADING } from '@/api/error';
 import { AppResult } from '@/api/request';
 import { SpaceWithRelated } from '@/api/spaces';
 import PageLoading from '@/components/molecules/PageLoading';
+import { heightScreen } from '@/styles/atoms';
 
 interface Params {
   spaceId: string;
@@ -22,7 +23,7 @@ interface Params {
 
 const Container = styled.div`
   display: grid;
-  height: var(--window-height, 100vh);
+  height: ${heightScreen};
   overflow: hidden;
   grid-template-rows: 3rem 1fr auto;
   grid-template-columns: auto minmax(260px, 1fr) auto;

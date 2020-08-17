@@ -486,3 +486,5 @@ export const composeInputStyle = css`
     filter: contrast(60%);
   }
 `;
+
+export const heightScreen = 'var(--window-height, 100vh)';

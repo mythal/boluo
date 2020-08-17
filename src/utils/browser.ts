@@ -7,9 +7,6 @@ export const setRealHeight = () => {
   document.documentElement.style.setProperty('--window-height', `${window.innerHeight}px`);
 };
 
-export const ifMobile = (then: () => void) => {
-  // https://stackoverflow.com/a/24600597
-  if (/Mobi|Android/i.test(navigator.userAgent)) {
-    then();
-  }
-};
+export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+export const isMac = navigator.userAgent.indexOf('Mac OS X') != -1;

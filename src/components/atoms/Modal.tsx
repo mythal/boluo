@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { Portal } from './Portal';
 import { css, keyframes } from '@emotion/core';
 import styled from '@emotion/styled';
-import { modalZIndex } from '@/styles/atoms';
+import { heightScreen, modalZIndex } from '@/styles/atoms';
 import Loading from '@/components/molecules/Loading';
 import { modalMaskColor } from '@/styles/colors';
 
@@ -31,7 +31,7 @@ const Mask = styled.div`
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: ${heightScreen};
   background-color: ${modalMaskColor};
   z-index: ${modalZIndex - 1};
   opacity: 0;

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { Id } from '@/utils/id';
-import Button from '../atoms/Button';
 import { post } from '@/api/request';
 import doorOpen from '@/assets/icons/door-open.svg';
 import Icon from '../atoms/Icon';
@@ -36,10 +35,10 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
 
   return (
     <>
-      <Button data-variant="danger" onClick={() => setConfirmDialog(true)} disabled={leaving} {...props}>
+      <button data-variant="danger" onClick={() => setConfirmDialog(true)} disabled={leaving} {...props}>
         <Icon sprite={doorOpen} loading={leaving} />
         退出
-      </Button>
+      </button>
       {confirmDialog && (
         <Dialog confirm={leave} dismiss={() => setConfirmDialog(false)} mask title="退出位面">
           <Text>确认要退出「{name}」位面吗？</Text>

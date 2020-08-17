@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTitleWithResult } from '@/hooks';
 import Badge from '../atoms/Badge';
-import Button from '../atoms/Button';
+import Button, { buttonStyle } from '../atoms/Button';
 import { alignItemCenter, flex, inlineBlock, m, mB, mL, mR, mT, p, preLine, text3Xl } from '@/styles/atoms';
 import userCog from '@/assets/icons/user-cog.svg';
 import Icon from '../atoms/Icon';
@@ -69,8 +69,8 @@ function SpacePage() {
             <Icon sprite={userCog} /> 管理
           </Button>
         )}
-        <JoinSpaceButton data-small id={space.id} />
-        <LeaveSpaceButton data-small id={space.id} name={space.name} />
+        <JoinSpaceButton css={buttonStyle} data-small id={space.id} />
+        <LeaveSpaceButton css={buttonStyle} data-small id={space.id} name={space.name} />
       </OperatorBar>
       {managing && myMember && (
         <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />

@@ -1,15 +1,16 @@
 import * as React from 'react';
-import { textBase } from '@/styles/atoms';
 import { useRef, useState } from 'react';
-import { ParseResult } from '@/interpreter/parser';
+import { textBase } from '@/styles/atoms';
 import { useParse } from '@/hooks';
 import TextArea from '@/components/atoms/TextArea';
 import { css } from '@emotion/core';
+import { ComposeDispatch } from '@/components/molecules/ChatPreviewCompose';
 
 interface Props {
   inGame: boolean;
   initialValue: string;
-  onChange: (parsed: ParseResult) => void;
+  composeDispatch: ComposeDispatch;
+  autoFocus?: boolean;
 }
 
 const compose = css`
@@ -17,7 +18,7 @@ const compose = css`
   ${textBase};
 `;
 
-function ChatPreviewComposeInput({ inGame, initialValue, onChange }: Props) {
+function ChatPreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus = false }: Props) {
   const [value, setValue] = useState(initialValue);
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   const timeout = useRef<number | undefined>(undefined);
@@ -27,10 +28,12 @@ function ChatPreviewComposeInput({ inGame, initialValue, onChange }: Props) {
     setValue(nextValue);
     window.clearTimeout(timeout.current);
     timeout.current = window.setTimeout(() => {
-      onChange(parse(nextValue.trim()));
+      composeDispatch({ parsed: parse(nextValue.trim()) });
     }, 250);
   };
-  return <TextArea css={compose} value={value} placeholder={placeholder} onChange={handleChange} />;
+  return (
+    <TextArea css={compose} value={value} placeholder={placeholder} autoFocus={autoFocus} onChange={handleChange} />
+  );
 }
 
 export default React.memo(ChatPreviewComposeInput);

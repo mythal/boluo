@@ -86,6 +86,7 @@ function ChannelMemberButton({ className }: Props) {
   const channelId = useSelector((state) => state.chat!.channel.id);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const channelName = useSelector((state) => state.chat!.channel.name);
+  const spaceMember = useSelector((state) => state.profile?.spaces.get(state.chat!.channel.spaceId)?.member);
   const member = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const nickname = useSelector((state) => state.profile?.user.nickname);
   const name = chatName(member?.characterName, nickname);
@@ -130,7 +131,7 @@ function ChannelMemberButton({ className }: Props) {
     </div>
   );
 
-  if (!nickname) {
+  if (!nickname || !spaceMember) {
     return null;
   } else if (!member) {
     return (

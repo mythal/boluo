@@ -1,13 +1,14 @@
 import * as React from 'react';
-import { p } from '@/styles/atoms';
+import { fontBase, fontNormal, p, textXs } from '@/styles/atoms';
 import { toolbarRadius } from '@/components/molecules/ChatItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { SpriteSymbol } from '*.svg';
 import Icon from '@/components/atoms/Icon';
-import Tooltip from '@/components/atoms/Tooltip';
+import Tooltip, { TooltipProps } from '@/components/atoms/Tooltip';
 import { textColor } from '@/styles/colors';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
+import { isMobile } from '@/utils/browser';
 
 const style = css`
   border: none;
@@ -25,6 +26,8 @@ const style = css`
     outline: none;
   }
   &:disabled {
+    background-color: transparent;
+    filter: brightness(80%);
     &:hover {
       background-color: transparent;
       filter: brightness(80%);
@@ -56,10 +59,14 @@ interface Props {
   onClick: () => void;
   sprite: SpriteSymbol;
   title: string;
+  disabled?: boolean;
   loading?: boolean;
+  info?: string;
+  x?: TooltipProps['x'];
 }
 
 const container = css`
+  ${[fontNormal, fontBase]};
   display: inline-block;
   position: relative;
   & .tooltip {
@@ -70,11 +77,26 @@ const container = css`
   }
 `;
 
-function ChatItemToolbarButton({ onClick, sprite, className, on, title, loading = false }: Props) {
+function ChatItemToolbarButton({
+  onClick,
+  sprite,
+  className,
+  on,
+  title,
+  info,
+  x,
+  loading = false,
+  disabled = false,
+}: Props) {
   return (
-    <div css={container}>
-      <Tooltip className="tooltip">{title}</Tooltip>
-      <button css={style} data-on={on} className={className} onClick={onClick} disabled={loading}>
+    <div css={container} className={className}>
+      {!isMobile && (
+        <Tooltip className="tooltip" x={x}>
+          <div>{title}</div>
+          {info && <div css={[textXs]}>{info}</div>}
+        </Tooltip>
+      )}
+      <button css={style} data-on={on} onClick={onClick} disabled={loading || disabled}>
         <Icon spin={loading} sprite={loading ? rotateIcon : sprite} />
       </button>
     </div>

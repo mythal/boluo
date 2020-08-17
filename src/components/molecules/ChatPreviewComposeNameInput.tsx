@@ -2,10 +2,11 @@ import * as React from 'react';
 import styled from '@emotion/styled';
 import { alignRight, p, textSm } from '@/styles/atoms';
 import Input from '@/components/atoms/Input';
+import { ComposeDispatch } from '@/components/molecules/ChatPreviewCompose';
 
 interface Props {
   value: string;
-  onChange: (value: string) => void;
+  composeDispatch: ComposeDispatch;
 }
 
 const Naming = styled.div`
@@ -15,10 +16,10 @@ const Naming = styled.div`
   justify-content: flex-end;
 `;
 
-function ChatPreviewComposeNameInput({ value, onChange }: Props) {
+function ChatPreviewComposeNameInput({ value, composeDispatch }: Props) {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
-    onChange(value.trim().substr(0, 32));
+    composeDispatch({ inputName: value.trim().substr(0, 32) });
   };
 
   return (

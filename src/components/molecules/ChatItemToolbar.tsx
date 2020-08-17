@@ -1,4 +1,4 @@
-import { pX, pY, uiShadow } from '@/styles/atoms';
+import { pL, pR, pX, pY, uiShadow } from '@/styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 import React from 'react';
@@ -14,7 +14,7 @@ const Container = styled.div`
   top: 0;
   right: 0;
   transform: translateY(-75%);
-  ${[pX(6), pY(2)]};
+  ${[pR(2), pL(12), pY(2)]};
 
   &[data-position='bottom'] {
     top: unset;

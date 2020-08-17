@@ -2,12 +2,12 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
-import { chatHeaderStyle, fontBold, mL, mY, p, pX, pY, textLg } from '@/styles/atoms';
+import { chatHeaderStyle, fontBold, mL, p, pX, pY, textLg } from '@/styles/atoms';
 import { Space, SpaceMember } from '@/api/spaces';
 import { useTitle } from '@/hooks';
 import { useSelector } from '@/store';
 import Icon from '@/components/atoms/Icon';
-import ChatHeaderButton from '@/components/atoms/ChatHeaderButton';
+import ChatHeaderButton, { chatHeaderButtonStyle } from '@/components/atoms/ChatHeaderButton';
 import Badge from '@/components/atoms/Badge';
 import userCog from '@/assets/icons/user-cog.svg';
 import ManageSpace from '@/components/organisms/ManageSpace';
@@ -71,14 +71,12 @@ function ChatHome({ space, members, channels }: Props) {
               <Icon sprite={userCog} /> 管理
             </ChatHeaderButton>
           )}
+          <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />
+          <LeaveSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} name={space.name} />
         </Buttons>
       </Header>
       <div css={container}>
         <Description>{space.description}</Description>
-        <div css={[mY(4)]}>
-          <JoinSpaceButton data-small id={space.id} />
-          <LeaveSpaceButton data-small id={space.id} name={space.name} />
-        </div>
       </div>
       {managing && myMember && (
         <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />

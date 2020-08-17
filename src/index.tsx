@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from './components/App';
-import { getRoot, ifMobile, setRealHeight } from './utils/dom';
+import { getRoot, isMobile, setRealHeight } from './utils/browser';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { baseStyle } from '@/styles/atoms';
@@ -15,7 +15,7 @@ ReactDOM.render(
   getRoot()
 );
 
-ifMobile(() => {
+if (isMobile) {
   setRealHeight();
   window.addEventListener('resize', setRealHeight);
-});
+}

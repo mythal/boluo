@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 import { newId } from '@/utils/id';
 import styled from '@emotion/styled';
 import { floatRight, mL, mR, mT, pX, pY, spacingN } from '@/styles/atoms';
@@ -25,6 +25,7 @@ import paperPlane from '@/assets/icons/paper-plane.svg';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { throwErr } from '@/utils/errors';
+import { isMac } from '@/utils/browser';
 
 interface Props {
   preview: Preview | undefined;
@@ -65,11 +66,16 @@ export const Container = styled.div`
   }
 `;
 
-function useToggle(setState: React.Dispatch<React.SetStateAction<boolean>>) {
-  return useCallback(() => {
-    setState((value) => !value);
-  }, [setState]);
+interface ComposeState {
+  sending: boolean;
+  inGame: boolean;
+  broadcast: boolean;
+  isAction: boolean;
+  parsed: ParseResult | undefined;
+  inputName: string;
 }
+
+export type ComposeDispatch = React.Dispatch<Partial<ComposeState>>;
 
 function ChatPreviewCompose({ preview, editTo }: Props) {
   const dispatch = useDispatch();
@@ -79,36 +85,44 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
 
-  const [sending, setSending] = useState(false);
-  const [inGame, setInGame] = useState(() => preview?.inGame || editTo?.inGame || false);
-  const [broadcast, setBroadcast] = useState(true);
-  const [isAction, setIsAction] = useState(() => preview?.isAction || editTo?.isAction || false);
-  const [parsed, setParsed] = useState<ParseResult | undefined>(undefined);
+  const composeReducer = (state: ComposeState, update: Partial<ComposeState>): ComposeState => {
+    if (update.parsed !== undefined && update.parsed.text === '' && editTo === undefined) {
+      messageId.current = newId();
+    }
+    return { ...state, ...update };
+  };
+
+  const [{ sending, inGame, broadcast, isAction, inputName, parsed }, composeDispatch] = useReducer(
+    composeReducer,
+    undefined,
+    () => {
+      let name = '';
+      if (preview && preview.inGame) {
+        name = preview.name;
+      } else if (editTo?.name) {
+        name = editTo.name;
+      } else {
+        name = myMember.characterName;
+      }
+      return {
+        sending: false,
+        inGame: preview?.inGame || editTo?.inGame || false,
+        broadcast: true,
+        isAction: preview?.isAction || editTo?.isAction || false,
+        parsed: undefined,
+        inputName: name,
+      };
+    }
+  );
+
+  useLayoutEffect(() => {
+    composeDispatch({ inputName: myMember.characterName });
+  }, [myMember.characterName]);
   const initialDraft = preview?.text || editTo?.text || '';
   const text = parsed?.text ?? initialDraft;
   const entities = parsed?.entities ?? preview?.entities ?? editTo?.entities ?? [];
 
-  const [inputName, setName] = useState<string>(() => {
-    if (preview && preview.inGame) {
-      return preview.name;
-    } else if (editTo?.name) {
-      return editTo.name;
-    } else if (myMember) {
-      return myMember.characterName;
-    } else {
-      return '';
-    }
-  });
-  useEffect(() => {
-    if (myMember) {
-      setName(myMember.characterName);
-    }
-  }, [myMember]);
   const name = inGame ? inputName : nickname;
-
-  const toggleInGame = useToggle(setInGame);
-  const toggleAction = useToggle(setIsAction);
-  const toggleBroadcast = useToggle(setBroadcast);
 
   const send = useSend();
   const cancelEdit = useCallback(() => {
@@ -132,21 +146,12 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     send({ type: 'PREVIEW', preview });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editTo?.modified, inGame, isAction, name, text, send]);
-  const handleChange = useCallback(
-    (next: ParseResult) => {
-      setParsed(next);
-      if (next.text === '' && editTo === undefined) {
-        messageId.current = newId();
-      }
-    },
-    [editTo]
-  );
   const canNotSend = text === '' || (inGame && inputName === '');
   const onSend = async () => {
     if (canNotSend) {
       return;
     }
-    setSending(true);
+    composeDispatch({ sending: true });
     let result: AppResult<Message>;
     if (editTo) {
       result = await patch('/messages/edit', {
@@ -172,7 +177,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     }
     if (!result.isOk) {
       throwErr(dispatch)(result.value);
-      setSending(false);
+      composeDispatch({ sending: false });
       return;
     } else {
       messageId.current = newId();
@@ -181,10 +186,19 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const chatItemName = (
     <ChatItemName action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
   );
+  const handleKeyDown: React.KeyboardEventHandler = async (e) => {
+    if (e.metaKey && e.key === 'Enter') {
+      e.preventDefault();
+      await onSend();
+    } else if (e.key === 'Control') {
+      e.preventDefault();
+      composeDispatch({ inGame: !inGame });
+    }
+  };
   return (
-    <Container data-edit={editTo !== undefined} ref={containerRef}>
+    <Container data-edit={editTo !== undefined} ref={containerRef} onKeyDown={handleKeyDown}>
       <ChatItemTime timestamp={editTo?.created || preview?.start || new Date().getTime()} />
-      {inGame && <ChatPreviewComposeNameInput value={inputName} onChange={setName} />}
+      {inGame && <ChatPreviewComposeNameInput value={inputName} composeDispatch={composeDispatch} />}
       {!inGame && !isAction && chatItemName}
       <ChatItemContentContainer data-action={isAction} data-in-game={inGame}>
         {isAction && chatItemName}
@@ -195,20 +209,16 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
             loading={sending}
             sprite={editTo ? editIcon : paperPlane}
             onClick={onSend}
-            title={editTo ? '提交' : '发送'}
+            title={editTo ? '提交更改' : '发送'}
+            info={isMac ? '⌘ + ↩' : 'Ctrl + ↩'}
+            disabled={canNotSend}
+            x="left"
           />
         </div>
       </ChatItemContentContainer>
 
-      <ChatPreviewComposeInput inGame={inGame} onChange={handleChange} initialValue={initialDraft} />
-      <ChatComposeToolbar
-        inGame={inGame}
-        toggleInGame={toggleInGame}
-        isAction={isAction}
-        toggleAction={toggleAction}
-        broadcast={broadcast}
-        toggleBroadcast={toggleBroadcast}
-      />
+      <ChatPreviewComposeInput inGame={inGame} composeDispatch={composeDispatch} initialValue={initialDraft} />
+      <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
     </Container>
   );
 }

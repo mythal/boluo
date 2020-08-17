@@ -5,7 +5,6 @@ import styled from '@emotion/styled';
 import { floatRight, mL, mR, mT, pX, pY, spacingN } from '../../styles/atoms';
 import { useDispatch, useSelector } from '../../store';
 import { ParseResult } from '../../interpreter/parser';
-import { useSend } from '../../hooks';
 import { Preview, PreviewPost } from '../../api/events';
 import { AppResult, patch, post } from '../../api/request';
 import ChatItemTime from '../../components/atoms/ChatItemTime';
@@ -26,6 +25,7 @@ import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { throwErr } from '../../utils/errors';
 import { isMac } from '../../utils/browser';
+import { useSend } from '../../hooks/useSend';
 
 interface Props {
   preview: Preview | undefined;

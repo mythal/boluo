@@ -5,13 +5,13 @@ import Avatar from '../molecules/Avatar';
 import { floatRight } from '../../styles/atoms';
 import { AppResult, mediaUrl } from '../../api/request';
 import { useParams } from 'react-router-dom';
-import { useTitleWithResult } from '../../hooks';
 import { User } from '../../api/users';
 import { RenderError } from '../molecules/RenderError';
 import { decodeUuid } from '../../utils/id';
 import { useDispatch, useSelector } from '../../store';
 import { loadUser } from '../../actions/ui';
 import { errLoading, notFound } from '../../api/error';
+import { useTitleWithResult } from '../../hooks/useTitle';
 
 interface Params {
   id?: string;

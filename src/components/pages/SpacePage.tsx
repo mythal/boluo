@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTitleWithResult } from '../../hooks';
 import Badge from '../atoms/Badge';
 import Button, { buttonStyle } from '../atoms/Button';
 import { alignItemCenter, flex, inlineBlock, m, mB, mL, mR, mT, p, preLine, text3Xl } from '../../styles/atoms';
@@ -19,6 +18,7 @@ import GotoSpaceLink from '../../components/molecules/GotoSpaceLink';
 import { AppResult } from '../../api/request';
 import { errLoading } from '../../api/error';
 import styled from '@emotion/styled';
+import { useTitleWithResult } from '../../hooks/useTitle';
 
 interface Params {
   id: string;

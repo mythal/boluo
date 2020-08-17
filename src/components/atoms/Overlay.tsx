@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Portal } from './Portal';
-import { useForceUpdate, useOutside } from '../../hooks';
 import { overlayZIndex } from '../../styles/atoms';
+import { useOutside } from '../../hooks/useOutside';
+import { useForceUpdate } from '../../hooks/useForceUpdate';
 
 function useRerenderWhenResize() {
   const forceUpdate = useForceUpdate();

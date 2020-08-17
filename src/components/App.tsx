@@ -4,10 +4,10 @@ import Flash from './organisms/Flash';
 import { useDispatch, useSelector } from '../store';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
-import { useGetMe } from '../hooks';
 import { Router } from './Router';
 import PageLoading from '../components/molecules/PageLoading';
 import PageError from '../components/molecules/PageError';
+import { useGetMe } from '../hooks/useGetMe';
 
 export const App: React.FC = () => {
   const dispatch = useDispatch();

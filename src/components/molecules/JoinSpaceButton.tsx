@@ -5,7 +5,7 @@ import rocket from '../../assets/icons/rocket.svg';
 import { Id } from '../../utils/id';
 import { post } from '../../api/request';
 import { useDispatch, useSelector } from '../../store';
-import { useIsLoggedIn } from '../../hooks';
+import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 
 interface Props {
   id: Id;

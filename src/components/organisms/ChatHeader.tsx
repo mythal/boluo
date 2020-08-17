@@ -23,9 +23,9 @@ import ManageChannel from '../../components/organisms/ManageChannel';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import ChatFilter from '../../components/organisms/ChatFilter';
-import { useTitle } from '../../hooks';
 import MemberListButton from '../../components/molecules/MemberListButton';
 import { textColor } from '../../styles/colors';
+import { useTitle } from '../../hooks/useTitle';
 
 const Topic = styled.div`
   display: none;

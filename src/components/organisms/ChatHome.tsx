@@ -4,7 +4,6 @@ import { css } from '@emotion/core';
 import styled from '@emotion/styled';
 import { chatHeaderStyle, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
 import { Space, SpaceMember } from '../../api/spaces';
-import { useTitle } from '../../hooks';
 import { useSelector } from '../../store';
 import Icon from '../../components/atoms/Icon';
 import ChatHeaderButton, { chatHeaderButtonStyle } from '../../components/atoms/ChatHeaderButton';
@@ -14,6 +13,7 @@ import ManageSpace from '../../components/organisms/ManageSpace';
 import { Channel } from '../../api/channels';
 import JoinSpaceButton from '../../components/molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../../components/molecules/LeaveSpaceButton';
+import { useTitle } from '../../hooks/useTitle';
 
 const Header = styled.div(chatHeaderStyle);
 

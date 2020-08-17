@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
 import { AppError } from '../../api/error';
 import { useForm } from 'react-hook-form';
 import { CreateSpace } from '../../api/spaces';
@@ -24,6 +23,7 @@ import { RenderError } from '../molecules/RenderError';
 import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
 import { encodeUuid } from '../../utils/id';
 import TextArea from '../atoms/TextArea';
+import { useTitle } from '../../hooks/useTitle';
 
 export const fieldsLayout = css`
   display: grid;

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
 import { css } from '@emotion/core';
 import {
   alignRight,
@@ -32,6 +31,7 @@ import { HelpText } from '../atoms/HelpText';
 import { emailValidation, nicknameValidation, passwordValidation, usernameValidation } from '../../validators';
 import signUpIcon from '../../assets/icons/sign-up.svg';
 import Icon from '../../components/atoms/Icon';
+import { useTitle } from '../../hooks/useTitle';
 
 interface FormData extends RegisterData {
   passwordRepeat: string;

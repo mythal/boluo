@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
-import { useTitle } from '../../hooks';
 import Input from '../atoms/Input';
 import { alignRight, flex, flex1, largeInput, mR, mT, mY, sm, textLg } from '../../styles/atoms';
 import Button from '../atoms/Button';
@@ -18,6 +17,7 @@ import { clearCsrfToken } from '../../api/csrf';
 import loginIcon from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
+import { useTitle } from '../../hooks/useTitle';
 
 interface State {
   next?: string;

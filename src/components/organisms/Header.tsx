@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useRef, useState } from 'react';
 import { css } from '@emotion/core';
 import { headerHeight, headerShadow, mainP, mainWidth, mR } from '../../styles/atoms';
-import HeaderLink, { HeaderButton, headerLinkStyle } from '../atoms/HeaderLink';
+import HeaderLink, { HeaderButton } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
 import logo from '../../assets/logo.svg';
 import styled from '@emotion/styled';
@@ -13,10 +13,10 @@ import chevronUp from '../../assets/icons/chevron-up.svg';
 import Menu from '../atoms/Menu';
 import Overlay from '../atoms/Overlay';
 import logoutIcon from '../../assets/icons/logout.svg';
-import { useIsLoggedIn } from '../../hooks';
 import { useSelector } from '../../store';
 import { MenuItemLink } from '../atoms/MenuItem';
 import { headerBgColor } from '../../styles/colors';
+import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 
 export const headerStyle = css`
   display: flex;

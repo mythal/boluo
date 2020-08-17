@@ -6,9 +6,9 @@ import Icon from '../../components/atoms/Icon';
 import members from '../../assets/icons/members.svg';
 import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
 import { HEARTBEAT_INTERVAL } from '../../settings';
-import { useSend } from '../../hooks';
 import { Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';
+import { useSend } from '../../hooks/useSend';
 
 interface Props {
   className?: string;

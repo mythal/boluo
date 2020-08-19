@@ -6,17 +6,20 @@ import { List, Map } from 'immutable';
 export interface ChatNode {
   id: Id;
   date: number;
+  offset: number;
   mine: boolean;
 }
 
 export interface MessageItem extends ChatNode {
   type: 'MESSAGE';
   message: Message;
+  moving?: boolean;
 }
 
 export const makeMessageItem = (myId?: Id) => (message: Message): MessageItem => ({
   id: message.id,
   date: message.orderDate,
+  offset: message.orderOffset,
   mine: message.senderId === myId,
   type: 'MESSAGE',
   message,
@@ -47,7 +50,15 @@ export const initialChatItemSet: ChatItemSet = {
 };
 
 const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | PreviewItem): ChatItemSet['messages'] => {
-  const index = messages.findLastIndex((item) => item.date < newItem.date);
+  const index = messages.findLastIndex((item) => {
+    if (item.date < newItem.date) {
+      return true;
+    } else if (item.date === newItem.date) {
+      return item.offset < newItem.offset;
+    } else {
+      return false;
+    }
+  });
   return messages.insert(index + 1, newItem);
 };
 
@@ -86,6 +97,7 @@ const dummyPreview = ({ senderId, mailbox, mailboxType, name, inGame, isAction, 
     date: now,
     mine: true,
     id: senderId,
+    offset: 0,
   };
 };
 
@@ -94,7 +106,7 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && previewItem.date <= item.date) {
-      if (previewItem.date === item.date && previewItem.mine) {
+      if (previewItem.date === item.date && previewItem.offset === item.offset && previewItem.mine) {
         const newPreviewItem = dummyPreview(previewItem.preview);
         previews = previews.set(newPreviewItem.id, newPreviewItem);
         const index = messages.findLastIndex((item) => item.id === newPreviewItem.id);
@@ -145,11 +157,65 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): Chat
   if (index === -1) {
     return { ...itemSet, editions };
   }
-  const target = messages.get(index)!;
-  if (target.date === editedItem.date) {
+  const target = messages.get(index);
+  if (target === undefined || target.type !== 'MESSAGE') {
+    throw new Error('unexpected item type');
+  }
+  if (
+    target.message.orderDate === editedItem.message.orderDate &&
+    target.message.orderOffset === editedItem.message.orderOffset
+  ) {
     messages = messages.set(index, editedItem);
   } else {
     messages = insertItem(messages.remove(index), editedItem);
   }
   return { ...itemSet, editions, messages };
+};
+
+export const markMessageMoving = (itemSet: ChatItemSet, index: number, insertToIndex: number): ChatItemSet => {
+  const messageItem = itemSet.messages.get(index);
+  if (messageItem === undefined || messageItem.type !== 'MESSAGE') {
+    console.warn("can't found item to move");
+    return itemSet;
+  }
+  if (insertToIndex >= itemSet.messages.size) {
+    const lastItem: PreviewItem | MessageItem | undefined = itemSet.messages.last();
+    if (lastItem === undefined) {
+      return itemSet;
+    }
+    const newMessageItem: MessageItem = {
+      ...messageItem,
+      moving: true,
+      date: lastItem.date,
+      offset: lastItem.offset + 1,
+    };
+    const messages = itemSet.messages.remove(index).push(newMessageItem);
+    return { ...itemSet, messages };
+  }
+  const targetItem = itemSet.messages.get(insertToIndex)!;
+  const date = targetItem.date;
+  const offset = targetItem.offset - 0.5;
+  const newMessageItem: MessageItem = { ...messageItem, moving: true, date, offset };
+  const messages = insertItem(itemSet.messages.remove(index), newMessageItem);
+  return { ...itemSet, messages };
+};
+
+export const resetMovingMessage = (itemSet: ChatItemSet, id: Id): ChatItemSet => {
+  const index = itemSet.messages.findLastIndex((item) => item.id === id);
+  if (index === undefined) {
+    return itemSet;
+  }
+  const messageItem = itemSet.messages.get(index);
+  if (messageItem === undefined || messageItem.type !== 'MESSAGE' || messageItem.moving !== true) {
+    console.warn('unexpected message when reset moving message');
+    return itemSet;
+  }
+  const { orderOffset, orderDate } = messageItem.message;
+  const messages = insertItem(itemSet.messages.remove(index), {
+    ...messageItem,
+    moving: undefined,
+    date: orderDate,
+    offset: orderOffset,
+  });
+  return { ...itemSet, messages };
 };

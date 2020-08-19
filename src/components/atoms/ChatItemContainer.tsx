@@ -3,7 +3,7 @@ import { pX, pY, spacingN } from '../../styles/atoms';
 import { darken, lighten } from 'polished';
 import { bgColor } from '../../styles/colors';
 
-export const timeColWidth = '2.5rem';
+export const timeColWidth = '3.5rem';
 export const nameColWidth = '8rem';
 
 export const ChatItemContainer = styled.div`
@@ -21,6 +21,23 @@ export const ChatItemContainer = styled.div`
     &:hover {
       background-color: ${darken(0.015, bgColor)};
     }
+  }
+
+  & .handle {
+    opacity: 30%;
+  }
+
+  &:hover {
+    .time {
+      filter: brightness(150%);
+    }
+    .handle {
+      opacity: 100%;
+    }
+  }
+
+  &[data-moving='true'] {
+    filter: blur(2px);
   }
 
   & .show-on-hover {

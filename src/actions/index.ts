@@ -16,6 +16,8 @@ import {
   ChatUpdate,
   CloseChat,
   LoadMessages,
+  MovingMessage,
+  ResetMessageMoving,
   StartEditMessage,
   StopEditMessage,
   ToggleMemberList,
@@ -48,5 +50,7 @@ export type Action =
   | ToggleMemberList
   | StartEditMessage
   | StopEditMessage
+  | MovingMessage
+  | ResetMessageMoving
   | ShowFlash
   | DismissFlash;

@@ -19,7 +19,7 @@ export const applicationReducer = (
   return {
     profile: profileReducer(state.profile, action),
     ui: uiReducer(state.ui, action, userId),
-    chat: chatReducer(state.chat, action, state.profile?.user.id),
+    chat: chatReducer(state.chat, action, userId),
     flash: flashReducer(state.flash, action),
   };
 };

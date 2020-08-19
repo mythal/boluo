@@ -9,14 +9,17 @@ import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
 import ChatItemToolbar from '../../components/molecules/ChatItemToolbar';
 import editIcon from '../../assets/icons/edit.svg';
 import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
+import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 
 interface Props {
   message: Message;
   mine?: boolean;
   style?: React.CSSProperties;
+  handleProps?: DraggableProvidedDragHandleProps;
+  moving?: boolean;
 }
 
-function ChatMessageItem({ message, mine = false, style }: Props) {
+function ChatMessageItem({ message, mine = false, style, handleProps, moving = false }: Props) {
   const dispatch = useDispatch();
   const startEdit = () => {
     dispatch({ type: 'START_EDIT_MESSAGE', message: message });
@@ -25,8 +28,8 @@ function ChatMessageItem({ message, mine = false, style }: Props) {
     <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
   );
   return (
-    <ChatItemContainer style={style} data-in-game={message.inGame}>
-      <ChatItemTime timestamp={message.created} />
+    <ChatItemContainer style={style} data-in-game={message.inGame} data-moving={moving}>
+      <ChatItemTime timestamp={message.created} handleProps={handleProps} />
       {!message.isAction && name}
       <ChatItemContentContainer data-in-game={message.inGame} data-action={message.isAction}>
         {message.isAction && name}

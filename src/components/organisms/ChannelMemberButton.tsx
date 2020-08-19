@@ -111,7 +111,6 @@ function ChannelMemberButton({ className }: Props) {
     setDialog(false);
   };
   const onSubmitEdit = async ({ characterName }: FormData) => {
-    console.log(characterName);
     edit(characterName).then(dismissDialog);
   };
 

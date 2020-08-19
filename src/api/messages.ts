@@ -50,3 +50,9 @@ export interface ByChannel {
   before?: number;
   limit?: number;
 }
+
+export interface MoveMessage {
+  messageId: Id;
+  targetId: Id;
+  mode: 'EARLIER' | 'LATER' | 'SWAP';
+}

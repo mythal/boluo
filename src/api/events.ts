@@ -15,6 +15,9 @@ export type MESSAGE_EDITED = typeof MESSAGE_EDITED;
 export const MESSAGE_PREVIEW = 'MESSAGE_PREVIEW';
 export type MESSAGE_PREVIEW = typeof MESSAGE_PREVIEW;
 
+export const MESSAGES_MOVED = 'MESSAGES_MOVED';
+export type MESSAGES_MOVED = typeof MESSAGES_MOVED;
+
 export const CHANNEL_DELETED = 'CHANNEL_DELETED';
 export type CHANNEL_DELETED = typeof CHANNEL_DELETED;
 
@@ -47,7 +50,8 @@ export type ChannelEvent =
   | Event<ChannelDeleted>
   | Event<PushMembers>
   | Event<Initialized>
-  | Event<HeartbeatMap>;
+  | Event<HeartbeatMap>
+  | Event<MessagesMoved>;
 
 export interface Initialized {
   type: INITIALIZED;
@@ -100,6 +104,11 @@ export interface PreviewPost {
 export interface MessagePreview {
   type: MESSAGE_PREVIEW;
   preview: Preview;
+}
+
+export interface MessagesMoved {
+  type: MESSAGES_MOVED;
+  messages: Message[];
 }
 
 export interface ChannelEdited {

@@ -8,12 +8,23 @@ import {
   ChatUpdate,
   CloseChat,
   LoadMessages,
+  MovingMessage,
+  ResetMessageMoving,
   StartEditMessage,
   StopEditMessage,
 } from '../actions/chat';
 import { DEBUG } from '../settings';
 import { Id } from '../utils/id';
-import { addItem, ChatItem, ChatItemSet, deleteMessage, editMessage, makeMessageItem } from '../states/chat-item-set';
+import {
+  addItem,
+  ChatItem,
+  ChatItemSet,
+  deleteMessage,
+  editMessage,
+  makeMessageItem,
+  markMessageMoving,
+  resetMovingMessage,
+} from '../states/chat-item-set';
 
 export interface ChatState {
   connection: WebSocket;
@@ -95,6 +106,7 @@ const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined
       id: preview.id,
       date: preview.start,
       mine: preview.senderId === myId,
+      offset: 0,
       preview,
     };
   } else {
@@ -104,6 +116,7 @@ const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined
       date: preview.start,
       mine: preview.senderId === myId,
       preview,
+      offset: 0,
     };
   }
   return addItem(itemSet, item);
@@ -127,6 +140,7 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
     id: message.id,
     mine: true,
     date: message.orderDate,
+    offset: 0,
   });
   return { ...state, itemSet };
 };
@@ -135,6 +149,20 @@ const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage)
   const editions = state.itemSet.editions.remove(messageId);
   const itemSet = { ...state.itemSet, editions };
   return { ...state, itemSet };
+};
+
+const handleMessageMoving = (state: ChatState, { messageIndex, insertToIndex }: MovingMessage): ChatState => {
+  const itemSet = markMessageMoving(state.itemSet, messageIndex, insertToIndex);
+  return { ...state, itemSet };
+};
+
+const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageMoving): ChatState => {
+  const itemSet = resetMovingMessage(state.itemSet, messageId);
+  return { ...state, itemSet };
+};
+const handleMessagesMoved = (itemSet: ChatItemSet, messages: Message[], myId?: Id): ChatItemSet => {
+  const makeItem = makeMessageItem(myId);
+  return messages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message)), itemSet);
 };
 
 const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
@@ -177,6 +205,10 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, my
     case 'MESSAGE_DELETED':
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
+    case 'MESSAGES_MOVED':
+      itemSet = handleMessagesMoved(itemSet, body.messages, myId);
+      break;
+
     case 'MESSAGE_EDITED':
       itemSet = handleEditMessage(itemSet, body.message, myId);
       break;
@@ -210,11 +242,7 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, my
   };
 };
 
-export const chatReducer = (
-  state: ChatState | undefined,
-  action: Action,
-  myId: Id | undefined
-): ChatState | undefined => {
+export const chatReducer = (state: ChatState | undefined, action: Action, myId?: Id): ChatState | undefined => {
   if (action.type === 'CHAT_LOADED') {
     return loadChat(state, action.chat);
   }
@@ -228,6 +256,10 @@ export const chatReducer = (
       return closeChat(state, action);
     case 'LOAD_MESSAGES':
       return loadMessages(state, action, myId);
+    case 'MOVING_MESSAGE':
+      return handleMessageMoving(state, action);
+    case 'RESET_MESSAGE_MOVING':
+      return handleResetMessageMoving(state, action);
     case 'CHAT_FILTER':
       return { ...state, filter: action.filter };
     case 'TOGGLE_MEMBER_LIST':

@@ -1,44 +1,35 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
-import ChatMessageItem from '../../components/molecules/ChatMessageItem';
-import ChatPreviewItem from '../../components/molecules/ChatPreviewItem';
-import ChatPreviewCompose from './ChatPreviewCompose';
-import { ChatItem } from '../../states/chat-item-set';
 import { useSelector } from '../../store';
-import { ChatState } from '../../reducers/chat';
 import LoadMoreButton, { LoadMoreContainer } from './LoadMoreButton';
+import { Draggable, DraggableProvided } from 'react-beautiful-dnd';
+import ItemSwitch from './ItemSwitch';
+import { css } from '@emotion/core';
+import { black } from '../../styles/colors';
 
 interface Props {
   itemIndex: number;
   measure?: (rect: DOMRect) => void;
+  provided?: DraggableProvided;
+  float?: boolean;
+  isDragging?: boolean;
 }
 
-const itemFilter = (type: ChatState['filter']) => (item: ChatItem): boolean => {
-  if (type === 'NONE') {
-    return true;
-  }
-  const inGame = type === 'IN_GAME';
-  if (item.type === 'MESSAGE') {
-    return inGame === item.message.inGame;
-  } else if (item.type === 'PREVIEW' && item.preview && !item.mine) {
-    return inGame === item.preview.inGame;
-  } else if (item.type === 'EDIT') {
-    if (item.preview) {
-      return inGame === item.preview.inGame;
-    }
-  }
-  return true;
-};
+const dragging = css`
+  filter: brightness(200%);
+  box-shadow: 1px 1px 2px ${black};
+`;
 
-function Items({ itemIndex, measure }: Props) {
+function ChatListItem({ itemIndex, measure, provided, float = false, isDragging = false }: Props) {
   const item = useSelector((state) => state.chat!.itemSet.messages.get(itemIndex));
-  const myId = useSelector((state) => {
+  const myMember = useSelector((state) => {
     if (state.profile === undefined || state.chat === undefined) {
       return undefined;
     } else {
-      return state.profile.channels.get(state.chat!.channel.id)?.member.userId;
+      return state.profile.channels.get(state.chat!.channel.id)?.member;
     }
   });
+  const myId = myMember?.userId;
   const editItem = useSelector((state) => {
     if (item !== undefined && item.type === 'MESSAGE') {
       return state.chat!.itemSet.editions.get(item.message.id);
@@ -46,57 +37,49 @@ function Items({ itemIndex, measure }: Props) {
       return undefined;
     }
   });
-  const filterTag = useSelector((state) => state.chat!.filter);
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (containerRef.current && measure) {
       measure(containerRef.current.getBoundingClientRect());
     }
   });
-  const filter = itemFilter(filterTag);
-
-  let itemNode: React.ReactNode = null;
-  if (item === undefined) {
-    if (myId === undefined) {
-      throw new Error(`unexpected item index.`);
-    }
-    itemNode = <ChatPreviewCompose preview={undefined} key={myId} />;
-  } else if (item.type === 'MESSAGE') {
-    const { message } = item;
-    if (editItem !== undefined && editItem.preview === undefined && editItem.mine && myId) {
-      // start editing
-      itemNode = <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
-    } else if (
-      // normal message
-      editItem === undefined ||
-      editItem.preview === undefined ||
-      editItem.preview.editFor !== message.modified
-    ) {
-      if (filter(item)) {
-        itemNode = <ChatMessageItem message={message} mine={item.mine} />;
-      }
-    } else if (editItem.mine && filter(editItem) && myId) {
-      itemNode = <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
-    } else if (filter(editItem)) {
-      itemNode = <ChatPreviewItem preview={editItem.preview} />;
-    }
-  } else if (item.type === 'PREVIEW') {
-    if (item.mine && myId) {
-      itemNode = <ChatPreviewCompose key={item.id} preview={item.preview} />;
-    } else {
-      itemNode = <ChatPreviewItem key={item.id} preview={item.preview} />;
-    }
+  if (float) {
+    return (
+      <div ref={containerRef}>
+        <ItemSwitch item={item} myId={myId} />
+      </div>
+    );
   }
+  const isDraggable =
+    item &&
+    item.type === 'MESSAGE' &&
+    myId !== undefined &&
+    editItem === undefined &&
+    (item.mine || myMember?.isMaster);
+  const renderer = (provided: DraggableProvided) => {
+    return (
+      <div ref={provided.innerRef} {...provided.draggableProps}>
+        <div ref={containerRef} css={isDragging ? dragging : undefined}>
+          {itemIndex === 0 && (
+            <LoadMoreContainer>
+              <LoadMoreButton />
+            </LoadMoreContainer>
+          )}
+          <ItemSwitch myId={myId} item={item} editItem={editItem} handleProps={provided.dragHandleProps} />
+        </div>
+      </div>
+    );
+  };
+  if (provided) {
+    return renderer(provided);
+  }
+  const id = item?.id || myId || '';
+  // https://github.com/atlassian/react-beautiful-dnd/issues/1767#issuecomment-670680418
   return (
-    <div ref={containerRef}>
-      {itemIndex === 0 && (
-        <LoadMoreContainer>
-          <LoadMoreButton />
-        </LoadMoreContainer>
-      )}
-      {itemNode}
-    </div>
+    <Draggable key={id} draggableId={id} index={itemIndex} isDragDisabled={!isDraggable}>
+      {renderer}
+    </Draggable>
   );
 }
 
-export const ChatListItems = React.memo(Items);
+export default ChatListItem;

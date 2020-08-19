@@ -119,3 +119,14 @@ export interface StopEditMessage {
   messageId: Id;
   editFor: number;
 }
+
+export interface MovingMessage {
+  type: 'MOVING_MESSAGE';
+  messageIndex: number;
+  insertToIndex: number;
+}
+
+export interface ResetMessageMoving {
+  type: 'RESET_MESSAGE_MOVING';
+  messageId: Id;
+}

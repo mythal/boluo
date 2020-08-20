@@ -15,9 +15,10 @@ export const applicationReducer = (
   state: ApplicationState = initApplicationState,
   action: Action
 ): ApplicationState => {
-  const userId = state.profile?.user.id;
+  const profile = profileReducer(state.profile, action);
+  const userId = profile?.user.id;
   return {
-    profile: profileReducer(state.profile, action),
+    profile,
     ui: uiReducer(state.ui, action, userId),
     chat: chatReducer(state.chat, action, userId),
     flash: flashReducer(state.flash, action),

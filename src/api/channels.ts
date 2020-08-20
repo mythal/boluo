@@ -50,6 +50,7 @@ export interface ChannelWithRelated {
   space: Space;
   colorList: Record<Id, string>;
   heartbeatMap: Record<Id, number>;
+  encodedEvents: string[];
 }
 
 export interface EditChannel {

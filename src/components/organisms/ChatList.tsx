@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
 import store, { useDispatch, useSelector } from '../../store';
-import Loading from '../../components/molecules/Loading';
 import { Id } from '../../utils/id';
 import { DragDropContext, DragDropContextProps } from 'react-beautiful-dnd';
 import ChatVirtualList from './ChatVirtualList';
@@ -11,7 +10,6 @@ import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
 
 function ChatList() {
-  const initialized = useSelector((state) => state.chat!.initialized);
   const channelId = useSelector((state) => state.chat!.channel.id);
   const dispatch = useDispatch();
   const myId: Id | undefined = useSelector(
@@ -69,10 +67,6 @@ function ChatList() {
   const onDragStart = useCallback(() => {
     dispatch({ type: 'START_MOVE_MESSAGE' });
   }, [dispatch]);
-
-  if (!initialized) {
-    return <Loading text="initialize channel" />;
-  }
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>

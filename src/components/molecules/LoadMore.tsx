@@ -24,13 +24,16 @@ function LoadMore() {
   const before = useSelector((state) => state.chat!.messageBefore);
   const finished = useSelector((state) => state.chat!.finished);
   const moving = useSelector((state) => state.chat!.moving);
+  const messageLength = useSelector((state) => state.chat!.itemSet.messages.size);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    button.current?.click();
-  }, []);
+    if (messageLength < 4) {
+      button.current?.click();
+    }
+  }, [messageLength]);
 
   if (finished) {
     return null;

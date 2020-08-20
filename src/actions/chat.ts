@@ -29,6 +29,7 @@ export interface ChannelEventReceived {
 export interface ChatLoaded {
   type: 'CHAT_LOADED';
   chat: ChatState;
+  initialEvents: ChannelEvent[];
 }
 
 export interface ChatUpdate {
@@ -71,7 +72,7 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     throwErr(dispatch)(result.value);
     return;
   }
-  const { channel, members, colorList, heartbeatMap } = result.value;
+  const { channel, members, colorList, heartbeatMap, encodedEvents } = result.value;
   const messageBefore = new Date().getTime();
   const eventAfter = messageBefore - 24 * 60 * 60 * 1000;
   const connection = connect(dispatch, channel.id, eventAfter);
@@ -85,13 +86,13 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     channel,
     connection,
     members,
-    initialized: false,
     filter: 'NONE',
     memberList: false,
     moving: false,
     postponed: List(),
   };
-  dispatch({ type: 'CHAT_LOADED', chat });
+  const initialEvents: ChannelEvent[] = encodedEvents.map((encoded) => JSON.parse(encoded));
+  dispatch({ type: 'CHAT_LOADED', chat, initialEvents });
 };
 
 export interface ChatFilter {

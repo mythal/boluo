@@ -10,3 +10,15 @@ export const setRealHeight = () => {
 export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
 export const isMac = navigator.userAgent.indexOf('Mac OS X') != -1;
+
+const preventDefault = (e: TouchEvent) => {
+  e.preventDefault();
+};
+
+export function disableScroll() {
+  document.body.addEventListener('touchmove', preventDefault, { passive: false });
+}
+
+export function enableScroll() {
+  document.body.removeEventListener('touchmove', preventDefault);
+}

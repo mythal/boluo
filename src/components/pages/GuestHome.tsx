@@ -44,9 +44,9 @@ function GuestHome() {
         </ruby>
         、微酸香甜。
       </SubTitle>
-      <text>
+      <Text>
         <OutlineButtonLink to="/sign-up">立即加入</OutlineButtonLink>
-      </text>
+      </Text>
       <Text css={[textSm, mY(2)]}>
         已经<del css={color(gray['600'])}>菠萝菠萝哒</del>有账号了？
         <Link css={link} to="/login">

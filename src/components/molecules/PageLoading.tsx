@@ -2,14 +2,10 @@ import * as React from 'react';
 import Loading from '../../components/molecules/Loading';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
-import { heightScreen } from '../../styles/atoms';
+import { mask } from '../../styles/atoms';
 
 const Mask = styled.div`
-  width: 100vw;
-  height: ${heightScreen};
-  position: fixed;
-  top: 0;
-  left: 0;
+  ${mask};
   z-index: 1000;
   display: flex;
   justify-content: center;

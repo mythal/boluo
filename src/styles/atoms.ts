@@ -7,6 +7,7 @@ import {
   gray,
   headerBgColor,
   linkColor,
+  modalMaskColor,
   primaryColor,
   red,
   textColor,
@@ -487,4 +488,14 @@ export const composeInputStyle = css`
   }
 `;
 
-export const heightScreen = 'var(--window-height, 100vh)';
+export const heightScreen = 'calc(100vh - calc(100vh - 100%))';
+
+export const mask = css`
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: ${modalMaskColor};
+  z-index: ${modalZIndex - 1};
+  width: 100%;
+  height: 100%;
+`;

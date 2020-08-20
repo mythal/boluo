@@ -14,16 +14,26 @@ import { errLoading, LOADING } from '../../api/error';
 import { AppResult } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
 import PageLoading from '../../components/molecules/PageLoading';
-import { heightScreen } from '../../styles/atoms';
+import { css } from '@emotion/core';
+import { Global } from '@emotion/core';
 
 interface Params {
   spaceId: string;
   channelId?: string;
 }
 
+const viewHeight = css`
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow-y: hidden;
+  }
+`;
+
 const Container = styled.div`
   display: grid;
-  height: ${heightScreen};
+  height: 100%;
   overflow: hidden;
   grid-template-rows: 3rem 1fr auto;
   grid-template-columns: auto minmax(260px, 1fr) auto;
@@ -55,6 +65,7 @@ function Chat() {
   const { channels, space, members } = result.value;
   return (
     <Container>
+      <Global styles={viewHeight} />
       <ChatSidebar space={space} channels={channels} />
       {channelId ? (
         <ChannelChat spaceId={spaceId} channelId={channelId} />

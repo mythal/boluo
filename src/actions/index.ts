@@ -15,10 +15,12 @@ import {
   ChatLoaded,
   ChatUpdate,
   CloseChat,
+  FinishMoveMessage,
   LoadMessages,
   MovingMessage,
   ResetMessageMoving,
   StartEditMessage,
+  StartMoveMessage,
   StopEditMessage,
   ToggleMemberList,
 } from './chat';
@@ -50,6 +52,8 @@ export type Action =
   | ToggleMemberList
   | StartEditMessage
   | StopEditMessage
+  | StartMoveMessage
+  | FinishMoveMessage
   | MovingMessage
   | ResetMessageMoving
   | ShowFlash

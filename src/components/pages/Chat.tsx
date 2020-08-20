@@ -22,12 +22,13 @@ interface Params {
   channelId?: string;
 }
 
+// noinspection CssInvalidPropertyValue
 const viewHeight = css`
   html,
   body,
   #root {
     height: 100%;
-    overflow-y: hidden;
+    scroll-behavior: none;
   }
 `;
 

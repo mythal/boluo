@@ -6,7 +6,7 @@ import { get } from '../api/request';
 import { throwErr } from '../utils/errors';
 import { connect as apiConnect } from '../api/connect';
 import { ChatState } from '../reducers/chat';
-import { Map } from 'immutable';
+import { List, Map } from 'immutable';
 import { initialChatItemSet } from '../states/chat-item-set';
 import { showFlash } from './flash';
 
@@ -88,6 +88,8 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     initialized: false,
     filter: 'NONE',
     memberList: false,
+    moving: false,
+    postponed: List(),
   };
   dispatch({ type: 'CHAT_LOADED', chat });
 };
@@ -118,6 +120,14 @@ export interface StopEditMessage {
   type: 'STOP_EDIT_MESSAGE';
   messageId: Id;
   editFor: number;
+}
+
+export interface StartMoveMessage {
+  type: 'START_MOVE_MESSAGE';
+}
+
+export interface FinishMoveMessage {
+  type: 'FINISH_MOVE_MESSAGE';
 }
 
 export interface MovingMessage {

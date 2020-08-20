@@ -1,5 +1,5 @@
 import { Channel, Member } from '../api/channels';
-import { Map } from 'immutable';
+import { List, Map } from 'immutable';
 import { Message } from '../api/messages';
 import { Preview } from '../api/events';
 import { Action } from '../actions';
@@ -39,6 +39,8 @@ export interface ChatState {
   initialized: boolean;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
   memberList: boolean;
+  moving: boolean;
+  postponed: List<Action>;
 }
 
 export const initChatState = undefined;
@@ -252,6 +254,12 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, my
   };
 };
 
+export const handleMoveFinish = (state: ChatState, action: Action, myId?: Id): ChatState | undefined => {
+  const actions = state.postponed;
+  state = { ...state, postponed: List(), moving: false };
+  return actions.reduce<ChatState | undefined>((state, action) => chatReducer(state, action, myId), state);
+};
+
 export const chatReducer = (state: ChatState | undefined, action: Action, myId?: Id): ChatState | undefined => {
   if (action.type === 'CHAT_LOADED') {
     return loadChat(state, action.chat);
@@ -259,7 +267,12 @@ export const chatReducer = (state: ChatState | undefined, action: Action, myId?:
   if (state === undefined) {
     return undefined;
   }
+  if (state.moving && action.type !== 'FINISH_MOVE_MESSAGE') {
+    return { ...state, postponed: state.postponed.push(action) };
+  }
   switch (action.type) {
+    case 'FINISH_MOVE_MESSAGE':
+      return handleMoveFinish(state, action, myId);
     case 'CHAT_UPDATE':
       return updateChat(state, action);
     case 'CLOSE_CHAT':
@@ -268,6 +281,8 @@ export const chatReducer = (state: ChatState | undefined, action: Action, myId?:
       return loadMessages(state, action, myId);
     case 'MOVING_MESSAGE':
       return handleMessageMoving(state, action);
+    case 'START_MOVE_MESSAGE':
+      return { ...state, moving: true };
     case 'RESET_MESSAGE_MOVING':
       return handleResetMessageMoving(state, action);
     case 'CHAT_FILTER':

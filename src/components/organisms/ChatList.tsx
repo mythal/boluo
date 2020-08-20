@@ -30,6 +30,7 @@ function ChatList() {
 
   const onDragEnd: DragDropContextProps['onDragEnd'] = useCallback(
     async ({ draggableId, source, destination }) => {
+      dispatch({ type: 'FINISH_MOVE_MESSAGE' });
       const messageId = draggableId;
       if (!destination || source.index === destination.index) {
         return;
@@ -65,12 +66,16 @@ function ChatList() {
     [dispatch]
   );
 
+  const onDragStart = useCallback(() => {
+    dispatch({ type: 'START_MOVE_MESSAGE' });
+  }, [dispatch]);
+
   if (!initialized) {
     return <Loading text="initialize channel" />;
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
       <ChatVirtualList myId={myId} previewIndex={previewIndex} channelId={channelId} />
     </DragDropContext>
   );

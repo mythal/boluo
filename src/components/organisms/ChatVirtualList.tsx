@@ -5,7 +5,7 @@ import { useVirtual } from '../../hooks/useVirtual';
 import ChatListItem from '../molecules/ChatListItem';
 import { css } from '@emotion/core';
 import { bgColor } from '../../styles/colors';
-import LoadMoreButton, { LoadMoreContainer } from '../molecules/LoadMoreButton';
+import LoadMore, { loadMoreHeight } from '../molecules/LoadMore';
 import { Id } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
 
@@ -21,15 +21,11 @@ const container = css`
   overflow-y: scroll;
 `;
 
-function loadMore() {
-  return (
-    <LoadMoreContainer>
-      <LoadMoreButton />
-    </LoadMoreContainer>
-  );
-}
-
 function estimateSize(index: number, width = 800): number {
+  if (index === 0) {
+    return loadMoreHeight;
+  }
+  index += 1;
   width -= 200;
   const item = store.getState().chat?.itemSet.messages.get(index);
   let inGame = true;
@@ -62,7 +58,7 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
   const prevMessagesLen = useRef<number>(messagesLength);
   const { start, end, totalSize, scrollToIndex, virtualItems } = useVirtual({
-    size: messagesLength,
+    size: messagesLength + 1, // + 1 for "load more" button
     parentRef,
     estimateSize,
     overscan: 6,
@@ -86,7 +82,11 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
     prevEnd.current = end;
   }, [start, end, scrollToIndex, messagesLength]);
   if (messagesLength === 0 && !displayNewPreviewCompose) {
-    return <div css={container}>{loadMore()}</div>;
+    return (
+      <div css={container}>
+        <LoadMore />
+      </div>
+    );
   }
 
   const items = virtualItems.map(({ index, measure, size, start }) => {
@@ -102,7 +102,7 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
           transform: `translateY(${start}px)`,
         }}
       >
-        <ChatListItem measure={measure} itemIndex={index} />
+        {index === 0 ? <LoadMore /> : <ChatListItem measure={measure} itemIndex={index - 1} />}
       </div>
     );
   });

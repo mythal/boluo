@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { useSelector } from '../../store';
-import LoadMoreButton, { LoadMoreContainer } from './LoadMoreButton';
 import { Draggable, DraggableProvided } from 'react-beautiful-dnd';
 import ItemSwitch from './ItemSwitch';
 import { css } from '@emotion/core';
@@ -60,11 +59,6 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
     return (
       <div ref={provided.innerRef} {...provided.draggableProps}>
         <div ref={containerRef} css={isDragging ? dragging : undefined}>
-          {itemIndex === 0 && (
-            <LoadMoreContainer>
-              <LoadMoreButton />
-            </LoadMoreContainer>
-          )}
           <ItemSwitch myId={myId} item={item} editItem={editItem} handleProps={provided.dragHandleProps} />
         </div>
       </div>

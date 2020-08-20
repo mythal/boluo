@@ -89,9 +89,14 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
   return { ...chat, messageBefore, finished, itemSet };
 };
 
-const handleEditMessage = (itemSet: ChatItemSet, message: Message, myId: Id | undefined): ChatItemSet => {
+const handleEditMessage = (
+  itemSet: ChatItemSet,
+  message: Message,
+  messageBefore: number,
+  myId: Id | undefined
+): ChatItemSet => {
   const item = makeMessageItem(myId)(message);
-  return editMessage(itemSet, item);
+  return editMessage(itemSet, item, messageBefore);
 };
 
 const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet => {
@@ -160,9 +165,14 @@ const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageM
   const itemSet = resetMovingMessage(state.itemSet, messageId);
   return { ...state, itemSet };
 };
-const handleMessagesMoved = (itemSet: ChatItemSet, messages: Message[], myId?: Id): ChatItemSet => {
+const handleMessagesMoved = (
+  itemSet: ChatItemSet,
+  messages: Message[],
+  messageBefore: number,
+  myId?: Id
+): ChatItemSet => {
   const makeItem = makeMessageItem(myId);
-  return messages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message)), itemSet);
+  return messages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message), messageBefore), itemSet);
 };
 
 const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
@@ -206,11 +216,11 @@ const handleChannelEvent = (chat: ChatState, { event }: ChannelEventReceived, my
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
     case 'MESSAGES_MOVED':
-      itemSet = handleMessagesMoved(itemSet, body.messages, myId);
+      itemSet = handleMessagesMoved(itemSet, body.messages, messageBefore, myId);
       break;
 
     case 'MESSAGE_EDITED':
-      itemSet = handleEditMessage(itemSet, body.message, myId);
+      itemSet = handleEditMessage(itemSet, body.message, messageBefore, myId);
       break;
     case 'CHANNEL_EDITED':
       if (channel.id === body.channel.id) {

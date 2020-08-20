@@ -111,7 +111,7 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
         previews = previews.set(newPreviewItem.id, newPreviewItem);
         const index = messages.findLastIndex((item) => item.id === newPreviewItem.id);
         if (index === -1) {
-          throw new Error('unexpected');
+          throw new Error('unexpected: preview not found');
         }
         messages = messages.set(index, newPreviewItem);
       } else {
@@ -150,7 +150,7 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
   return { ...itemSet, messages };
 };
 
-export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): ChatItemSet => {
+export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messageBefore: number): ChatItemSet => {
   let { messages } = itemSet;
   const editions = itemSet.editions.remove(editedItem.id);
   const index = messages.findLastIndex((item) => item.id === editedItem.id);
@@ -161,7 +161,9 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): Chat
   if (target === undefined || target.type !== 'MESSAGE') {
     throw new Error('unexpected item type');
   }
-  if (
+  if (editedItem.date < messageBefore) {
+    messages = messages.remove(index);
+  } else if (
     target.message.orderDate === editedItem.message.orderDate &&
     target.message.orderOffset === editedItem.message.orderOffset
   ) {

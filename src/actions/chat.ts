@@ -73,8 +73,10 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     return;
   }
   const { channel, members, colorList, heartbeatMap, encodedEvents } = result.value;
-  const messageBefore = new Date().getTime();
-  const eventAfter = messageBefore - 24 * 60 * 60 * 1000;
+  const initialEvents: ChannelEvent[] = encodedEvents.map((encoded) => JSON.parse(encoded));
+  const now = new Date().getTime();
+  const eventAfter = initialEvents.length > 0 ? initialEvents[initialEvents.length - 1].timestamp : now;
+  const messageBefore = now;
   const connection = connect(dispatch, channel.id, eventAfter);
   const chat: ChatState = {
     colorMap: Map<Id, string>(Object.entries(colorList)),
@@ -91,7 +93,6 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     moving: false,
     postponed: List(),
   };
-  const initialEvents: ChannelEvent[] = encodedEvents.map((encoded) => JSON.parse(encoded));
   dispatch({ type: 'CHAT_LOADED', chat, initialEvents });
 };
 

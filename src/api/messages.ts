@@ -24,6 +24,12 @@ export interface Message {
   orderOffset: number;
 }
 
+export interface MessageOrder {
+  id: string;
+  orderDate: number;
+  orderOffset: number;
+}
+
 export interface NewMessage {
   messageId: Id;
   channelId: Id;
@@ -51,13 +57,14 @@ export interface ByChannel {
   limit?: number;
 }
 
-export interface MoveMessage {
-  messageId: Id;
-  targetId: Id;
-  mode: 'EARLIER' | 'LATER' | 'SWAP';
+export interface SwapMessage {
+  a: Id;
+  b: Id;
 }
 
 export interface MoveTo {
   messageId: Id;
   orderDate: number;
+  orderOffset: number;
+  mode: 'TOP' | 'BOTTOM';
 }

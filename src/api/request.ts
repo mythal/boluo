@@ -23,7 +23,7 @@ import {
   EditChannelMember,
   JoinChannel,
 } from './channels';
-import { ByChannel, EditMessage, Message, MoveMessage, MoveTo, NewMessage } from './messages';
+import { ByChannel, EditMessage, Message, SwapMessage, MoveTo, NewMessage } from './messages';
 import { Id } from '../utils/id';
 import { Media } from './media';
 
@@ -119,8 +119,8 @@ export function post(path: '/channels/delete', payload: {}, query: IdQuery): Pro
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
 export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
 export function post(path: '/messages/toggle_fold', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
-export function post(path: '/messages/move', payload: MoveMessage): Promise<AppResult<true>>;
-export function post(path: '/messages/move-to', payload: MoveTo): Promise<AppResult<true>>;
+export function post(path: '/messages/swap', payload: {}, query: SwapMessage): Promise<AppResult<true>>;
+export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<true>>;
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,

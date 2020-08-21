@@ -1,6 +1,6 @@
 import { Channel, Member } from '../api/channels';
 import { List, Map } from 'immutable';
-import { Message } from '../api/messages';
+import { Message, MessageOrder } from '../api/messages';
 import { ChannelEvent, Preview } from '../api/events';
 import { Action } from '../actions';
 import {
@@ -24,7 +24,9 @@ import {
   makeMessageItem,
   markMessageMoving,
   resetMovingMessage,
+  updateMessagesOrder,
 } from '../states/chat-item-set';
+import Prando from 'prando';
 
 export interface ChatState {
   connection: WebSocket;
@@ -109,7 +111,8 @@ const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet =
 
 const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined): ChatItemSet => {
   let item: ChatItem;
-  const offset = Number.MAX_SAFE_INTEGER;
+  const rng = new Prando(preview.id);
+  const offset = rng.nextInt(-65526, 65526);
   if (preview.editFor) {
     item = {
       type: 'EDIT',
@@ -164,13 +167,14 @@ const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageM
 };
 const handleMessagesMoved = (
   itemSet: ChatItemSet,
-  messages: Message[],
+  movedMessages: Message[],
+  orderChanges: MessageOrder[],
   messageBefore: number,
   myId?: Id
 ): ChatItemSet => {
+  itemSet = updateMessagesOrder(itemSet, orderChanges);
   const makeItem = makeMessageItem(myId);
-  console.log('move', messages);
-  return messages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message), messageBefore), itemSet);
+  return movedMessages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message), messageBefore), itemSet);
 };
 
 const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
@@ -214,7 +218,7 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
     case 'MESSAGES_MOVED':
-      itemSet = handleMessagesMoved(itemSet, body.messages, messageBefore, myId);
+      itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, messageBefore, myId);
       break;
     case 'MESSAGE_EDITED':
       itemSet = handleEditMessage(itemSet, body.message, messageBefore, myId);

@@ -1,4 +1,4 @@
-import { Message } from './messages';
+import { Message, MessageOrder } from './messages';
 import { Entity } from '../interpreter/entities';
 import { Channel, Member } from './channels';
 import { Id } from '../utils/id';
@@ -108,7 +108,8 @@ export interface MessagePreview {
 
 export interface MessagesMoved {
   type: MESSAGES_MOVED;
-  messages: Message[];
+  movedMessages: Message[];
+  orderChanges: MessageOrder[];
 }
 
 export interface ChannelEdited {

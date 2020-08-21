@@ -1,5 +1,5 @@
 import { Id, newId } from '../utils/id';
-import { Message } from '../api/messages';
+import { Message, MessageOrder } from '../api/messages';
 import { Preview } from '../api/events';
 import { List, Map } from 'immutable';
 
@@ -148,6 +148,25 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
   }
   const messages = itemSet.messages.remove(index);
   return { ...itemSet, messages };
+};
+
+export const updateMessagesOrder = (itemSet: ChatItemSet, orderChanges: MessageOrder[]): ChatItemSet => {
+  return orderChanges.reduce((itemSet, change) => {
+    const index = itemSet.messages.findLastIndex((item) => item.id === change.id);
+    if (index === -1) {
+      return itemSet;
+    } else {
+      const messages = itemSet.messages.update(index, (item) => {
+        if (item.type !== 'MESSAGE') {
+          return { ...item, date: change.orderDate, offset: change.orderOffset };
+        } else {
+          const message: Message = { ...item.message, ...change };
+          return { ...item, message, date: change.orderDate, offset: change.orderOffset };
+        }
+      });
+      return { ...itemSet, messages };
+    }
+  }, itemSet);
 };
 
 export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messageBefore: number): ChatItemSet => {

@@ -52,18 +52,14 @@ const loadChat = (
   const reducer = (chat: ChatState, event: ChannelEvent): ChatState => {
     return handleChannelEvent(chat, event, myId);
   };
-  if (!prevState) {
-    return initialEvents.reduce(reducer, chat);
-  }
-  // if (prevState.colorMap.equals(nextState.colorMap)) {
-  //   nextState.colorMap = prevState.colorMap;
-  // }
-  if (prevState.channel.id === chat.channel.id) {
+  if (prevState?.channel.id === chat.channel.id) {
     // reload
     const { channel, members, colorMap, connection } = chat;
     return { ...prevState, channel, members, colorMap, connection };
   }
-  return initialEvents.reduce(reducer, chat);
+  const state = initialEvents.reduce(reducer, chat);
+  console.debug('initialize finished');
+  return state;
 };
 
 const updateChat = (state: ChatState, { id, chat }: ChatUpdate): ChatState => {
@@ -113,13 +109,14 @@ const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet =
 
 const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined): ChatItemSet => {
   let item: ChatItem;
+  const offset = Number.MAX_SAFE_INTEGER;
   if (preview.editFor) {
     item = {
       type: 'EDIT',
       id: preview.id,
       date: preview.start,
       mine: preview.senderId === myId,
-      offset: 0,
+      offset,
       preview,
     };
   } else {
@@ -129,7 +126,7 @@ const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined
       date: preview.start,
       mine: preview.senderId === myId,
       preview,
-      offset: 0,
+      offset,
     };
   }
   return addItem(itemSet, item);
@@ -172,6 +169,7 @@ const handleMessagesMoved = (
   myId?: Id
 ): ChatItemSet => {
   const makeItem = makeMessageItem(myId);
+  console.log('move', messages);
   return messages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message), messageBefore), itemSet);
 };
 
@@ -218,7 +216,6 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
     case 'MESSAGES_MOVED':
       itemSet = handleMessagesMoved(itemSet, body.messages, messageBefore, myId);
       break;
-
     case 'MESSAGE_EDITED':
       itemSet = handleEditMessage(itemSet, body.message, messageBefore, myId);
       break;

@@ -21,6 +21,13 @@ const container = css`
   overflow-y: scroll;
 `;
 
+const virtualItemStyle = css`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+`;
+
 function estimateSize(index: number, width = 800): number {
   if (index === 0) {
     return loadMoreHeight;
@@ -93,11 +100,8 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
     return (
       <div
         key={index}
+        css={virtualItemStyle}
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
           height: `${size}px`,
           transform: `translateY(${start}px)`,
         }}

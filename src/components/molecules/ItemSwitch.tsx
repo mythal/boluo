@@ -43,10 +43,10 @@ function ItemSwitch({ item, myId, editItem, handleProps }: Props) {
     // preview
     if (item.mine && myId) {
       return <ChatPreviewCompose key={item.id} preview={item.preview} />;
-    } else if ((inGame && item.preview.inGame) || (outGame && !item.preview.inGame)) {
-      return <ChatPreviewItem key={item.id} preview={item.preview} />;
-    } else {
+    } else if ((inGame && !item.preview.inGame) || (outGame && item.preview.inGame)) {
       return null;
+    } else {
+      return <ChatPreviewItem key={item.id} preview={item.preview} />;
     }
   }
 }

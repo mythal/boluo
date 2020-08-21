@@ -4,7 +4,7 @@ import store, { useDispatch, useSelector } from '../../store';
 import { Id } from '../../utils/id';
 import { DragDropContext, DragDropContextProps } from 'react-beautiful-dnd';
 import ChatVirtualList from './ChatVirtualList';
-import { post } from '../../api/request';
+import { AppResult, post } from '../../api/request';
 import { MoveMessage } from '../../api/messages';
 import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
@@ -41,17 +41,24 @@ function ChatList() {
         mode = 'EARLIER';
       }
       const targetItem = store.getState().chat?.itemSet.messages.get(index);
-      if (!targetItem || targetItem.type !== 'MESSAGE') {
-        return;
-      }
-      const targetId = targetItem.id;
       const action: MovingMessage = {
         type: 'MOVING_MESSAGE',
         messageIndex: source.index,
         insertToIndex: source.index > destination.index ? destination.index : destination.index + 1,
       };
       dispatch(action);
-      const result = await post('/messages/move', { targetId, messageId, mode });
+
+      let result: AppResult<true>;
+      if (!targetItem || targetItem.type !== 'MESSAGE') {
+        let orderDate = targetItem ? targetItem.date : new Date().getTime();
+        if (source.index < destination.index) {
+          orderDate += 1;
+        }
+        result = await post('/messages/move-to', { messageId, orderDate });
+      } else {
+        const targetId = targetItem.id;
+        result = await post('/messages/move', { targetId, messageId, mode });
+      }
       if (!result.isOk) {
         const reset: ResetMessageMoving = {
           type: 'RESET_MESSAGE_MOVING',

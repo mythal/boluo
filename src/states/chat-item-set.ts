@@ -155,7 +155,11 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messa
   const editions = itemSet.editions.remove(editedItem.id);
   const index = messages.findLastIndex((item) => item.id === editedItem.id);
   if (index === -1) {
-    return { ...itemSet, editions };
+    if (editedItem.date < messageBefore) {
+      return { ...itemSet, editions };
+    } else {
+      return addItem(itemSet, editedItem);
+    }
   }
   const target = messages.get(index);
   if (target === undefined || target.type !== 'MESSAGE') {

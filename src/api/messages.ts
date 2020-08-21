@@ -56,3 +56,8 @@ export interface MoveMessage {
   targetId: Id;
   mode: 'EARLIER' | 'LATER' | 'SWAP';
 }
+
+export interface MoveTo {
+  messageId: Id;
+  orderDate: number;
+}

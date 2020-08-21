@@ -196,8 +196,8 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
     return chat;
   }
   const body = event.body;
-  let { itemSet, channel, colorMap, members, heartbeatMap } = chat;
-
+  let { itemSet, channel, colorMap, members, eventAfter, heartbeatMap } = chat;
+  eventAfter = Math.max(eventAfter, event.timestamp);
   let messageBefore = chat.messageBefore;
   if (DEBUG) {
     if (body.type === 'HEARTBEAT_MAP') {
@@ -242,7 +242,7 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
     members,
     colorMap,
     itemSet,
-    eventAfter: event.timestamp,
+    eventAfter,
     messageBefore,
     heartbeatMap,
   };

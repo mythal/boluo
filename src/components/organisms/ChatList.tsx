@@ -42,7 +42,7 @@ function ChatList() {
       dispatch(action);
 
       let result: AppResult<true>;
-      if (Math.abs(source.index - destination.index) === 1 && targetItem !== undefined) {
+      if (Math.abs(source.index - destination.index) === 1 && targetItem?.type === 'MESSAGE') {
         result = await post('/messages/swap', {}, { a: messageId, b: targetItem.id });
       } else {
         const orderDate = targetItem ? targetItem.date : new Date().getTime();

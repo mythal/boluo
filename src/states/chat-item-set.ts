@@ -106,14 +106,10 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && previewItem.date <= item.date) {
-      if (previewItem.date === item.date && previewItem.offset === item.offset && previewItem.mine) {
+      if (previewItem.date === item.date && previewItem.preview.id === item.message.id && previewItem.mine) {
         const newPreviewItem = dummyPreview(previewItem.preview);
         previews = previews.set(newPreviewItem.id, newPreviewItem);
-        const index = messages.findLastIndex((item) => item.id === newPreviewItem.id);
-        if (index === -1) {
-          throw new Error('unexpected: preview not found');
-        }
-        messages = messages.set(index, newPreviewItem);
+        messages = removeItem(messages, item.message.senderId).push(newPreviewItem);
       } else {
         previews = previews.remove(item.message.senderId);
         messages = removeItem(messages, item.message.senderId);

@@ -58,7 +58,6 @@ function connect(dispatch: Dispatch, id: Id, eventAfter: number): WebSocket {
     console.warn(e);
     dispatch(showFlash('ERROR', `连接出现错误，${retry / 1000} 秒后尝试重新连接`));
     setTimeout(() => {
-      console.log(retry);
       retry *= 2;
       dispatch({ type: 'CHAT_UPDATE', id, chat: { connection: connect(dispatch, id, retryTimestamp) } });
     }, retry);
@@ -75,7 +74,7 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
   const { channel, members, colorList, heartbeatMap, encodedEvents } = result.value;
   const initialEvents: ChannelEvent[] = encodedEvents.map((encoded) => JSON.parse(encoded));
   const now = new Date().getTime();
-  const eventAfter = initialEvents.length > 0 ? initialEvents[initialEvents.length - 1].timestamp : now;
+  const eventAfter = initialEvents.length > 0 ? Math.max(...initialEvents.map((event) => event.timestamp)) : now;
   const messageBefore = now;
   const connection = connect(dispatch, channel.id, eventAfter);
   const chat: ChatState = {

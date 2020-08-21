@@ -150,7 +150,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     };
     send({ type: 'PREVIEW', preview });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editTo?.modified, inGame, isAction, name, text, send]);
+  }, [editTo, inGame, isAction, name, parsed, send]);
   const canNotSend = text === '' || (inGame && inputName === '');
   const onSend = async () => {
     if (canNotSend) {
@@ -215,7 +215,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
             sprite={editTo ? editIcon : paperPlane}
             onClick={onSend}
             title={editTo ? '提交更改' : '发送'}
-            info={isMac ? '⌘ + ↩' : 'Ctrl + ↩'}
+            info={isMac ? '⌘ + ⏎' : 'Ctrl + ⏎'}
             disabled={canNotSend}
             x="left"
           />

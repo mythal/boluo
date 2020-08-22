@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Preview } from '../../api/events';
-import { ChatItemContainer } from '../atoms/ChatItemContainer';
+import { chatItemContainer } from '../atoms/ChatItemContainer';
 import ChatItemTime from '../../components/atoms/ChatItemTime';
 import ChatItemName from '../../components/atoms/ChatItemName';
 import { previewStyle } from '../../styles/atoms';
@@ -27,14 +27,14 @@ function ChatPreviewItem({ preview }: Props) {
   );
 
   return (
-    <ChatItemContainer css={[previewStyle]}>
+    <div css={[chatItemContainer, previewStyle]}>
       <ChatItemTime timestamp={preview.start} />
       {!isAction && name}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
         {isAction && name}
         <ChatItemContent entities={preview.entities} text={text} />
       </ChatItemContentContainer>
-    </ChatItemContainer>
+    </div>
   );
 }
 

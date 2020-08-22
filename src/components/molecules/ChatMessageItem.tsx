@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Message } from '../../api/messages';
-import { ChatItemContainer } from '../atoms/ChatItemContainer';
+import { chatItemContainer } from '../atoms/ChatItemContainer';
 import ChatItemTime from '../../components/atoms/ChatItemTime';
 import ChatItemName from '../../components/atoms/ChatItemName';
 import ChatItemContent from '../../components/molecules/ChatItemContent';
@@ -28,7 +28,7 @@ function ChatMessageItem({ message, mine = false, style, handleProps, moving = f
     <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
   );
   return (
-    <ChatItemContainer style={style} data-in-game={message.inGame} data-moving={moving}>
+    <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
       <ChatItemTime timestamp={message.created} handleProps={handleProps} />
       {!message.isAction && name}
       <ChatItemContentContainer data-in-game={message.inGame} data-action={message.isAction}>
@@ -40,7 +40,7 @@ function ChatMessageItem({ message, mine = false, style, handleProps, moving = f
           <ChatItemToolbarButton onClick={startEdit} sprite={editIcon} title="编辑" />
         </ChatItemToolbar>
       )}
-    </ChatItemContainer>
+    </div>
   );
 }
 

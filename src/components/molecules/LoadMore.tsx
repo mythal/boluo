@@ -19,7 +19,11 @@ export const LoadMoreContainer = styled.div`
   justify-content: center;
 `;
 
-function LoadMore() {
+interface Props {
+  shift: (offset: number) => void;
+}
+
+function LoadMore({ shift }: Props) {
   const channelId = useSelector((state) => state.chat!.channel.id);
   const before = useSelector((state) => state.chat!.messageBefore);
   const finished = useSelector((state) => state.chat!.finished);
@@ -53,6 +57,7 @@ function LoadMore() {
       messages.pop();
       finished = false;
     }
+    shift(messages.length);
     dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished });
   };
   return (

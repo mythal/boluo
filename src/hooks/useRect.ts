@@ -2,8 +2,6 @@
 // source: https://github.com/tannerlinsley/react-virtual/blob/master/src/useRect.js
 import React, { useLayoutEffect, useRef } from 'react';
 
-import observeRect from '@reach/observe-rect';
-
 export function useRect<T extends Element>(nodeRef: React.RefObject<T>): DOMRect | null {
   const [element, setElement] = React.useState(nodeRef.current);
   const [rect, dispatch] = React.useReducer(rectReducer, null);
@@ -29,18 +27,19 @@ export function useRect<T extends Element>(nodeRef: React.RefObject<T>): DOMRect
     if (!element) {
       return;
     }
-
-    const observer = observeRect(element, (rect) => {
-      window.clearTimeout(timeout.current);
-      timeout.current = window.setTimeout(() => {
-        dispatch({ rect });
-      }, 200);
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        window.clearTimeout(timeout.current);
+        timeout.current = window.setTimeout(() => {
+          dispatch({ rect: entry.contentRect });
+        }, 200);
+      }
     });
 
-    observer.observe();
+    observer.observe(element);
 
     return () => {
-      observer.unobserve();
+      observer.unobserve(element);
       window.clearTimeout(timeout.current);
     };
   }, [element]);

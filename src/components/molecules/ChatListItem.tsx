@@ -8,7 +8,7 @@ import { black } from '../../styles/colors';
 
 interface Props {
   itemIndex: number;
-  measure?: (rect: DOMRect) => void;
+  measure?: (rect: DOMRect, index: number) => void;
   provided?: DraggableProvided;
   float?: boolean;
   isDragging?: boolean;
@@ -39,7 +39,7 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (containerRef.current && measure) {
-      measure(containerRef.current.getBoundingClientRect());
+      measure(containerRef.current.getBoundingClientRect(), itemIndex + 1 /* load more button */);
     }
   });
   if (float) {

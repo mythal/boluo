@@ -22,3 +22,12 @@ export function disableScroll() {
 export function enableScroll() {
   document.body.removeEventListener('touchmove', preventDefault);
 }
+
+export function delay(callback: () => void, timeout?: number) {
+  if (window.requestIdleCallback) {
+    const options = timeout ? { timeout } : undefined;
+    window.requestIdleCallback(callback, options);
+  } else {
+    window.setTimeout(callback, timeout);
+  }
+}

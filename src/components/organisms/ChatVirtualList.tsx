@@ -8,6 +8,7 @@ import { bgColor } from '../../styles/colors';
 import LoadMore, { loadMoreHeight } from '../molecules/LoadMore';
 import { Id } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
+import { delay } from '../../utils/browser';
 
 interface Props {
   channelId: Id;
@@ -64,39 +65,46 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
   }
   const parentRef = useRef<HTMLDivElement>(null);
   const prevMessagesLen = useRef<number>(messagesLength);
-  const { start, end, totalSize, scrollToIndex, virtualItems } = useVirtual({
+  const { viewportStart, viewportEnd, totalSize, scrollToIndex, virtualItems, measure, cacheShift } = useVirtual({
     size: messagesLength + 1, // + 1 for "load more" button
     parentRef,
     estimateSize,
-    overscan: 6,
+    renderThreshold: 4,
+    overscan: 10,
   });
-
-  const prevEnd = useRef(end);
+  //
+  const prevEnd = useRef(viewportEnd);
   useLayoutEffect(() => {
     const prevLen = prevMessagesLen.current;
     if (messagesLength > prevLen) {
       const delta = messagesLength - prevLen;
       prevMessagesLen.current = messagesLength;
       let align: 'start' | 'end' = 'start';
-      let toIndex: number = start + delta - 1;
+      let toIndex: number = viewportStart + delta;
       if (prevMessagesLen.current - prevEnd.current < 4) {
         align = 'end';
-        toIndex = end + delta;
+        toIndex = viewportEnd + delta;
       }
-      scrollToIndex(toIndex, { align });
-      window.setTimeout(() => scrollToIndex(toIndex, { align }), 160);
+      const scroll = () => scrollToIndex(toIndex, { align });
+      delay(scroll);
+      delay(scroll, 200);
+      delay(scroll, 400);
     }
-    prevEnd.current = end;
-  }, [start, end, scrollToIndex, messagesLength]);
+    prevEnd.current = viewportEnd;
+  }, [viewportStart, viewportEnd, scrollToIndex, messagesLength]);
   if (messagesLength === 0 && !displayNewPreviewCompose) {
     return (
       <div css={container}>
-        <LoadMore />
+        <LoadMore shift={cacheShift} />
       </div>
     );
   }
 
-  const items = virtualItems.map(({ index, measure, size, start }) => {
+  const renderStickyCompose = previewIndex && (previewIndex + 1 < viewportStart || previewIndex + 1 > viewportEnd);
+  const items = virtualItems.map(({ index, size, start }) => {
+    if ((index === messagesLength || index - 1 === previewIndex) && renderStickyCompose) {
+      return null;
+    }
     return (
       <div
         key={index}
@@ -106,11 +114,11 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
           transform: `translateY(${start}px)`,
         }}
       >
-        {index === 0 ? <LoadMore /> : <ChatListItem measure={measure} itemIndex={index - 1} />}
+        {index === 0 ? <LoadMore shift={cacheShift} /> : <ChatListItem measure={measure} itemIndex={index - 1} />}
       </div>
     );
   });
-  if (previewIndex && (previewIndex < start || previewIndex > end)) {
+  if (renderStickyCompose) {
     const parent = parentRef.current;
     if (parent !== null) {
       const rect = parent.getBoundingClientRect();
@@ -118,12 +126,12 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
         position: 'fixed',
         width: rect.width,
       };
-      if (previewIndex > end) {
+      if (previewIndex === undefined || previewIndex + 1 > viewportEnd) {
         style.bottom = 0;
       }
       items.push(
-        <div key={previewIndex} style={style}>
-          <ChatListItem itemIndex={previewIndex} />
+        <div key={previewIndex ? previewIndex + 1 : messagesLength} style={style}>
+          <ChatListItem itemIndex={previewIndex || messagesLength + 1} />
         </div>
       );
     }

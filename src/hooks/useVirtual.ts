@@ -1,5 +1,5 @@
-import React, { useLayoutEffect } from 'react';
-
+import React, { useCallback, useLayoutEffect } from 'react';
+import { Map } from 'immutable';
 import { useRect } from './useRect';
 
 const defaultEstimateSize = () => 50;
@@ -19,6 +19,7 @@ export interface VirtualOptions<T> {
   parentRef: React.RefObject<T>;
   estimateSize?: (index: number, crossSize?: number) => number;
   overscan?: number;
+  renderThreshold?: number;
   horizontal?: boolean;
   scrollToFn?: (offset: number, defaultScrollToFn?: (offset: number) => void) => void;
   paddingStart?: number;
@@ -32,10 +33,7 @@ interface Measurement {
   end: number;
 }
 
-export interface VirtualItem extends Measurement {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  measure: (rect: DOMRect) => void;
-}
+export interface VirtualItem extends Measurement {}
 
 interface Latest {
   overscan: number;
@@ -45,13 +43,13 @@ interface Latest {
   scrollOffset: number;
 }
 
-export interface VirtualResult {
+export interface VirtualResult extends Range {
   virtualItems: VirtualItem[];
   totalSize: number;
+  measure: (rect: DOMRect, index: number) => void;
   scrollToOffset: (index: number, options?: ScrollToOffsetOptions) => void;
   scrollToIndex: (index: number, options?: ScrollToIndexOptions) => void;
-  start: number;
-  end: number;
+  cacheShift: (offset: number) => void;
 }
 export function useVirtual<T extends Element>({
   size = 0,
@@ -59,6 +57,7 @@ export function useVirtual<T extends Element>({
   overscan = 0,
   paddingStart = 0,
   paddingEnd = 0,
+  renderThreshold = 0,
   parentRef,
   horizontal,
   scrollToFn,
@@ -66,7 +65,6 @@ export function useVirtual<T extends Element>({
   const sizeKey = horizontal ? 'width' : 'height';
   const crossKey = !horizontal ? 'width' : 'height';
   const scrollKey = horizontal ? 'scrollLeft' : 'scrollTop';
-  const latestRef = React.useRef<Partial<Latest>>({});
 
   const { [sizeKey]: outerSize, [crossKey]: crossSize } = useRect(parentRef) || {
     [sizeKey]: 0,
@@ -93,21 +91,33 @@ export function useVirtual<T extends Element>({
     [defaultScrollToFn, scrollToFn]
   );
 
-  const [measuredCache, setMeasuredCache] = React.useState<Record<number, number | undefined>>({});
+  const [measuredCache, setMeasuredCache] = React.useState<Map<number, number>>(Map());
 
+  useLayoutEffect(() => {
+    setMeasuredCache(Map());
+  }, [estimateSize]);
   const measurements: Measurement[] = React.useMemo(() => {
     const measurements: Measurement[] = [];
+    let prevEnd = paddingStart;
     for (let i = 0; i < size; i++) {
-      const measuredSize = measuredCache[i];
-      const start = measurements[i - 1] ? measurements[i - 1].end : paddingStart;
+      const measuredSize = measuredCache.get(i);
+      const start = prevEnd;
       const size = measuredSize !== undefined ? measuredSize : estimateSize(i, crossSize);
       const end = start + size;
-      measurements[i] = { index: i, start, size, end };
+      prevEnd = end;
+      measurements.push({ index: i, start, size, end });
     }
     return measurements;
-  }, [estimateSize, measuredCache, paddingStart, size, crossSize]);
+  }, [estimateSize, measuredCache, paddingStart, size, crossSize /* width change */]);
 
   const totalSize = (measurements[size - 1]?.end || 0) + paddingEnd;
+  const latestRef = React.useRef<Latest>({
+    overscan,
+    measurements,
+    outerSize,
+    totalSize,
+    scrollOffset: 0,
+  });
 
   Object.assign(latestRef.current, {
     overscan,
@@ -116,7 +126,7 @@ export function useVirtual<T extends Element>({
     totalSize,
   });
 
-  const [range, setRange] = React.useState<Range>({ start: 0, end: 0 });
+  const [range, setRange] = React.useState<Range>({ start: 0, end: 0, viewportStart: 0, viewportEnd: 0 });
 
   useLayoutEffect(() => {
     const element = parentRef.current;
@@ -126,8 +136,19 @@ export function useVirtual<T extends Element>({
     }
     const onScroll = () => {
       latestRef.current.scrollOffset = element[scrollKey];
-      setRange((prevRange) => {
-        return calculateRange(latestRef.current as Latest, prevRange);
+      const delay = window.requestIdleCallback || setTimeout;
+      delay(() => {
+        setRange((prevRange) => {
+          const range = calculateRange(latestRef.current, prevRange);
+          if (
+            (prevRange.start > 0 && range.viewportStart - prevRange.start < renderThreshold) ||
+            (prevRange.end < size - 1 && prevRange.end - range.viewportEnd < renderThreshold)
+          ) {
+            return range;
+          } else {
+            return { ...prevRange, viewportStart: range.viewportStart, viewportEnd: range.viewportEnd };
+          }
+        });
       });
     };
 
@@ -143,49 +164,38 @@ export function useVirtual<T extends Element>({
       element.removeEventListener('scroll', onScroll);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parentRef, parentRef.current, scrollKey, size /* required */]);
+  }, [parentRef, parentRef.current, size, renderThreshold, scrollKey /* required */]);
+
+  const measure = useCallback(
+    (rect: DOMRect, index: number) => {
+      const { [sizeKey]: measuredSize } = rect;
+      const measurement = measurements[index];
+      if (measuredSize !== measurement.size) {
+        setMeasuredCache((old) => old.set(index, measuredSize));
+      }
+    },
+    [measurements, sizeKey]
+  );
 
   const virtualItems: VirtualItem[] = React.useMemo(() => {
-    const virtualItems = [];
+    return measurements.slice(range.start, range.end + 1);
+  }, [range.start, range.end, measurements]);
 
-    for (let i = range.start; i <= range.end; i++) {
-      const measurement = measurements[i];
-
-      const item: VirtualItem = {
-        ...measurement,
-        measure: (rect: DOMRect) => {
-          const { scrollOffset } = latestRef.current as Latest;
-          const { [sizeKey]: measuredSize } = rect;
-
-          if (measuredSize !== item.size) {
-            if (item.start < scrollOffset) {
-              defaultScrollToFn(scrollOffset + (measuredSize - item.size));
-            }
-
-            setMeasuredCache((old) => ({
-              ...old,
-              [i]: measuredSize,
-            }));
-          }
-        },
-      };
-
-      virtualItems.push(item);
-    }
-
-    return virtualItems;
-  }, [range.start, range.end, measurements, sizeKey, defaultScrollToFn]);
-
-  const mountedRef = React.useRef<boolean | undefined>();
-
-  useLayoutEffect(() => {
-    if (mountedRef.current) {
-      if (estimateSize || size) {
-        setMeasuredCache({});
+  const cacheShift = useCallback(
+    (offset?: number) => {
+      setMeasuredCache(Map());
+      if (offset === undefined) {
+        setMeasuredCache(Map());
+        return;
       }
-    }
-    mountedRef.current = true;
-  }, [estimateSize, size]);
+      let shifted: Map<number, number> = Map();
+      for (const [key, value] of measuredCache.entries()) {
+        shifted = shifted.set(key + offset, value);
+      }
+      setMeasuredCache(shifted);
+    },
+    [measuredCache]
+  );
 
   const scrollToOffset = React.useCallback(
     (toOffset: number, { align }: ScrollToOffsetOptions = { align: 'start' }) => {
@@ -265,14 +275,17 @@ export function useVirtual<T extends Element>({
     totalSize,
     scrollToOffset,
     scrollToIndex,
-    start: range.start,
-    end: range.end,
+    measure,
+    cacheShift,
+    ...range,
   };
 }
 
 export interface Range {
   start: number;
   end: number;
+  viewportStart: number;
+  viewportEnd: number;
 }
 
 function calculateRange({ overscan, measurements, outerSize, scrollOffset }: Latest, prevRange: Range): Range {
@@ -285,13 +298,15 @@ function calculateRange({ overscan, measurements, outerSize, scrollOffset }: Lat
   while (end < total - 1 && measurements[end].start <= scrollOffset + outerSize) {
     end += 1;
   }
+  const viewportStart = start;
+  const viewportEnd = end;
 
   // Always add at least one overscan item, so focus will work
   start = Math.max(start - overscan, 0);
   end = Math.min(end + overscan, total - 1);
 
   if (!prevRange || prevRange.start !== start || prevRange.end !== end) {
-    return { start, end };
+    return { start, end, viewportStart, viewportEnd };
   }
 
   return prevRange;

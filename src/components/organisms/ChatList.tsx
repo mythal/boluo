@@ -7,6 +7,7 @@ import ChatVirtualList from './ChatVirtualList';
 import { AppResult, post } from '../../api/request';
 import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
+import { batch } from 'react-redux';
 
 function ChatList() {
   const channelId = useSelector((state) => state.chat!.channel.id);
@@ -38,8 +39,10 @@ function ChatList() {
         messageIndex: source.index,
         insertToIndex: source.index > destination.index ? destination.index : destination.index + 1,
       };
-      dispatch({ type: 'FINISH_MOVE_MESSAGE' });
-      dispatch(action);
+      batch(() => {
+        dispatch({ type: 'FINISH_MOVE_MESSAGE' });
+        dispatch(action);
+      });
 
       let result: AppResult<true>;
       if (Math.abs(source.index - destination.index) === 1 && targetItem?.type === 'MESSAGE') {

@@ -2,11 +2,12 @@ import styled from '@emotion/styled';
 import { pX, pY, spacingN } from '../../styles/atoms';
 import { darken, lighten } from 'polished';
 import { bgColor } from '../../styles/colors';
+import { css } from '@emotion/core';
 
 export const timeColWidth = '3.5rem';
 export const nameColWidth = '8rem';
 
-export const ChatItemContainer = styled.div`
+export const chatItemContainer = css`
   display: grid;
   position: relative;
   ${[pX(2), pY(2)]};

@@ -33,13 +33,6 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
     }
   });
   const myId = myMember?.userId;
-  const editItem = useSelector((state) => {
-    if (item !== undefined && item.type === 'MESSAGE') {
-      return state.chat!.itemSet.editions.get(item.message.id);
-    } else {
-      return undefined;
-    }
-  });
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (containerRef.current && measure) {
@@ -50,7 +43,7 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setRender(true);
-    }, rng.nextInt(0, 300));
+    }, rng.nextInt(0, 200));
     return () => window.clearTimeout(timeout);
   }, []);
   if (!isRender) {
@@ -59,22 +52,17 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
   if (float) {
     return (
       <div ref={containerRef}>
-        <ItemSwitch item={item} myId={myId} />
+        <ItemSwitch item={item} myMember={myMember} />
       </div>
     );
   }
   const isDraggable =
-    isRender &&
-    item &&
-    item.type === 'MESSAGE' &&
-    myId !== undefined &&
-    editItem === undefined &&
-    (item.mine || myMember?.isMaster);
+    isRender && item && item.type === 'MESSAGE' && myId !== undefined && (item.mine || myMember?.isMaster);
   const renderer = (provided: DraggableProvided) => {
     return (
       <div ref={provided.innerRef} {...provided.draggableProps}>
         <div ref={containerRef} css={isDragging ? dragging : undefined}>
-          <ItemSwitch myId={myId} item={item} editItem={editItem} handleProps={provided.dragHandleProps} />
+          <ItemSwitch myMember={myMember} item={item} handleProps={provided.dragHandleProps} />
         </div>
       </div>
     );

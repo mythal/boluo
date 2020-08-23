@@ -18,4 +18,8 @@ export const ChatItemContentContainer = styled.div`
     ${textBase};
     color: ${darken(0.1, textColor)};
   }
+  &[data-folded='true'] {
+    text-decoration: line-through;
+    filter: grayscale(50%) brightness(50%);
+  }
 `;

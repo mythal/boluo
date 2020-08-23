@@ -4,26 +4,27 @@ import { chatItemContainer } from '../atoms/ChatItemContainer';
 import ChatItemTime from '../../components/atoms/ChatItemTime';
 import ChatItemName from '../../components/atoms/ChatItemName';
 import ChatItemContent from '../../components/molecules/ChatItemContent';
-import { useDispatch } from '../../store';
 import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
-import ChatItemToolbar from '../../components/molecules/ChatItemToolbar';
-import editIcon from '../../assets/icons/edit.svg';
-import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
+import { ChannelMember } from '../../api/channels';
+import ChatMessageToolbar from './ChatMessageToolbar';
+import { useEffect, useState } from 'react';
 
 interface Props {
   message: Message;
   mine?: boolean;
+  myMember?: ChannelMember;
   style?: React.CSSProperties;
   handleProps?: DraggableProvidedDragHandleProps;
   moving?: boolean;
 }
 
-function ChatMessageItem({ message, mine = false, style, handleProps, moving = false }: Props) {
-  const dispatch = useDispatch();
-  const startEdit = () => {
-    dispatch({ type: 'START_EDIT_MESSAGE', message: message });
-  };
+function ChatMessageItem({ message, mine = false, style, handleProps, myMember, moving = false }: Props) {
+  const [lazy, setLazy] = useState(true);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setLazy(false), 200);
+    return () => window.clearTimeout(timeout);
+  }, []);
   const name = (
     <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
   );
@@ -31,15 +32,15 @@ function ChatMessageItem({ message, mine = false, style, handleProps, moving = f
     <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
       <ChatItemTime timestamp={message.created} handleProps={handleProps} />
       {!message.isAction && name}
-      <ChatItemContentContainer data-in-game={message.inGame} data-action={message.isAction}>
+      <ChatItemContentContainer
+        data-in-game={message.inGame}
+        data-action={message.isAction}
+        data-folded={message.folded}
+      >
         {message.isAction && name}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
       </ChatItemContentContainer>
-      {mine && (
-        <ChatItemToolbar className="show-on-hover">
-          <ChatItemToolbarButton onClick={startEdit} sprite={editIcon} title="编辑" />
-        </ChatItemToolbar>
-      )}
+      {myMember && !lazy && <ChatMessageToolbar mine={mine} message={message} myMember={myMember} />}
     </div>
   );
 }

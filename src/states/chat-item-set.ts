@@ -191,10 +191,19 @@ const dummyPreview = ({ senderId, mailbox, mailboxType, name, inGame, isAction, 
 };
 
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
+  if (item.type === 'EDIT') {
+    if (!item.mine && item.preview?.text === '') {
+      editions = editions.remove(item.id);
+    } else {
+      editions = editions.set(item.id, item);
+    }
+    return { messages, previews, editions };
+  }
   const oldest = messages.first(undefined);
   if (oldest && (item.date < oldest.date || (item.date === oldest.date && item.offset < oldest.offset))) {
     return { messages, previews, editions };
   }
+
   if (item.type === 'MESSAGE') {
     messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
@@ -218,12 +227,6 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     } else {
       previews = previews.set(item.id, item);
       messages = insertItem(messages, item);
-    }
-  } else if (item.type === 'EDIT') {
-    if (!item.mine && item.preview?.text === '') {
-      editions = editions.remove(item.id);
-    } else {
-      editions = editions.set(item.id, item);
     }
   }
 
@@ -282,12 +285,11 @@ export const moveMessages = (
 
 export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messageBefore: number): ChatItemSet => {
   let { messages } = itemSet;
-  const editions = itemSet.editions.remove(editedItem.id);
   // item order shouldn't changed.
   const index = findItem(itemSet.messages, editedItem.id, [editedItem.date, editedItem.offset]);
   if (index === -1) {
     if (editedItem.date < messageBefore) {
-      return { ...itemSet, editions };
+      return itemSet;
     } else {
       return addItem(itemSet, editedItem);
     }
@@ -306,7 +308,7 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messa
   } else {
     messages = insertItem(messages.remove(index), editedItem);
   }
-  return { ...itemSet, editions, messages };
+  return { ...itemSet, messages };
 };
 
 export const markMessageMoving = (itemSet: ChatItemSet, index: number, insertToIndex: number): ChatItemSet => {

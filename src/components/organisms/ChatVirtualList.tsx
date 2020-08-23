@@ -69,8 +69,8 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
     size: messagesLength + 1, // + 1 for "load more" button
     parentRef,
     estimateSize,
-    renderThreshold: 8,
-    overscan: 32,
+    renderThreshold: 6,
+    overscan: 10,
   });
   const prevEnd = useRef(viewportEnd);
   useLayoutEffect(() => {

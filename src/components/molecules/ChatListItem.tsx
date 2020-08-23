@@ -1,10 +1,12 @@
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from '../../store';
 import { Draggable, DraggableProvided } from 'react-beautiful-dnd';
 import ItemSwitch from './ItemSwitch';
 import { css } from '@emotion/core';
 import { black } from '../../styles/colors';
+import ChatListItemPlaceholder from './ChatListItemPlaceholder';
+import Prando from 'prando';
 
 interface Props {
   itemIndex: number;
@@ -18,6 +20,8 @@ const dragging = css`
   filter: brightness(200%);
   box-shadow: 1px 1px 2px ${black};
 `;
+
+const rng = new Prando();
 
 function ChatListItem({ itemIndex, measure, provided, float = false, isDragging = false }: Props) {
   const item = useSelector((state) => state.chat!.itemSet.messages.get(itemIndex));
@@ -42,6 +46,16 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
       measure(containerRef.current.getBoundingClientRect(), itemIndex + 1 /* load more button */);
     }
   });
+  const [isRender, setRender] = useState(item === undefined || (item.type === 'PREVIEW' && item.mine));
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setRender(true);
+    }, rng.nextInt(0, 300));
+    return () => window.clearTimeout(timeout);
+  }, []);
+  if (!isRender) {
+    return <ChatListItemPlaceholder />;
+  }
   if (float) {
     return (
       <div ref={containerRef}>
@@ -50,6 +64,7 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
     );
   }
   const isDraggable =
+    isRender &&
     item &&
     item.type === 'MESSAGE' &&
     myId !== undefined &&

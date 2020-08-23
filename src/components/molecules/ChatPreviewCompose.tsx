@@ -151,7 +151,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     send({ type: 'PREVIEW', preview });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editTo, inGame, isAction, name, parsed, send]);
-  const canNotSend = text === '' || (inGame && inputName === '');
+  const canNotSend = text === '' || (inGame && inputName === '') || sending;
   const onSend = async () => {
     if (canNotSend) {
       return;
@@ -195,7 +195,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     if (e.metaKey && e.key === 'Enter') {
       e.preventDefault();
       await onSend();
-    } else if (e.key === 'Control') {
+    } else if (e.key === 'Alt') {
       e.preventDefault();
       composeDispatch({ inGame: !inGame });
     }
@@ -222,7 +222,12 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         </div>
       </ChatItemContentContainer>
 
-      <ChatPreviewComposeInput inGame={inGame} composeDispatch={composeDispatch} initialValue={initialDraft} />
+      <ChatPreviewComposeInput
+        inGame={inGame}
+        composeDispatch={composeDispatch}
+        autoFocus={!editTo}
+        initialValue={initialDraft}
+      />
       <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
     </Container>
   );

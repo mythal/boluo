@@ -70,9 +70,8 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
     parentRef,
     estimateSize,
     renderThreshold: 4,
-    overscan: 10,
+    overscan: 16,
   });
-  //
   const prevEnd = useRef(viewportEnd);
   useLayoutEffect(() => {
     const prevLen = prevMessagesLen.current;
@@ -131,7 +130,7 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
       }
       items.push(
         <div key={previewIndex ? previewIndex + 1 : messagesLength} style={style}>
-          <ChatListItem itemIndex={previewIndex || messagesLength + 1} />
+          <ChatListItem float itemIndex={previewIndex || messagesLength + 1} />
         </div>
       );
     }

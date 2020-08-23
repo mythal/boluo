@@ -22,7 +22,6 @@ export const initUiState: UiState = {
 };
 
 const handleJoinSpace = ({ spaceSet, ...state }: UiState, action: JoinedSpace): UiState => {
-  console.log(spaceSet.toJS());
   spaceSet = spaceSet.update(action.space.id, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
       members = members.filter((member) => member.userId !== action.member.userId);

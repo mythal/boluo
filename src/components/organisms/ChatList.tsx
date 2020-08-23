@@ -8,6 +8,7 @@ import { AppResult, post } from '../../api/request';
 import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
 import { batch } from 'react-redux';
+import { showFlash } from '../../actions/flash';
 
 function ChatList() {
   const channelId = useSelector((state) => state.chat!.channel.id);
@@ -51,6 +52,19 @@ function ChatList() {
         const orderDate = targetItem ? targetItem.date : new Date().getTime();
         const orderOffset = targetItem ? targetItem.offset : 42;
         const mode: 'TOP' | 'BOTTOM' = source.index > destination.index ? 'TOP' : 'BOTTOM';
+
+        if (!Number.isInteger(orderOffset)) {
+          batch(() => {
+            dispatch(showFlash('WARNING', '还有消息正在拖动中'));
+
+            const reset: ResetMessageMoving = {
+              type: 'RESET_MESSAGE_MOVING',
+              messageId,
+            };
+            dispatch(reset);
+          });
+          return;
+        }
         result = await post('/messages/move_to', { messageId, orderDate, orderOffset, mode });
       }
       if (!result.isOk) {

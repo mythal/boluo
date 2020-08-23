@@ -31,7 +31,7 @@ function ChatComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Pr
         onClick={toggleInGame}
         sprite={mask}
         title="游戏内"
-        info={isMac ? 'Control' : 'Ctrl'}
+        info={isMac ? 'Option' : 'Alt'}
       />
       <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleIsAction} sprite={running} title="描述动作" />
       <ChatItemToolbarButton

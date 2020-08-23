@@ -23,6 +23,7 @@ import {
   editMessage,
   makeMessageItem,
   markMessageMoving,
+  moveMessages,
   resetMovingMessage,
   updateMessagesOrder,
 } from '../states/chat-item-set';
@@ -76,6 +77,7 @@ export const closeChat = (state: ChatState, { id }: CloseChat): ChatState | unde
   state.connection.onerror = null;
   state.connection.onmessage = null;
   state.connection.onopen = null;
+  state.connection.close();
   return state.channel.id === id ? undefined : state;
 };
 
@@ -85,13 +87,15 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
     return { ...chat, finished };
   }
   const makeItem = makeMessageItem(myId);
+  if (messages[0].orderDate >= chat.messageBefore) {
+    throw new Error('Incorrect messages order');
+  }
   messages = messages.reverse();
   const itemSet: ChatItemSet = {
     ...chat.itemSet,
     messages: chat.itemSet.messages.unshift(...messages.map(makeItem)),
   };
-
-  const messageBefore = Math.min(messages[0].orderDate, chat.messageBefore);
+  const messageBefore = messages[0].orderDate;
   return { ...chat, messageBefore, finished, itemSet };
 };
 
@@ -174,7 +178,8 @@ const handleMessagesMoved = (
 ): ChatItemSet => {
   itemSet = updateMessagesOrder(itemSet, orderChanges);
   const makeItem = makeMessageItem(myId);
-  return movedMessages.reduce((itemSet, message) => editMessage(itemSet, makeItem(message), messageBefore), itemSet);
+  const messages = moveMessages(itemSet.messages, movedMessages.map(makeItem), messageBefore);
+  return { ...itemSet, messages };
 };
 
 const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
@@ -197,8 +202,8 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
   }
   const body = event.body;
   let { itemSet, channel, colorMap, members, eventAfter, heartbeatMap } = chat;
+  const { messageBefore } = chat;
   eventAfter = Math.max(eventAfter, event.timestamp);
-  let messageBefore = chat.messageBefore;
   if (DEBUG) {
     if (body.type === 'HEARTBEAT_MAP') {
       console.debug(body);
@@ -209,7 +214,6 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
   switch (body.type) {
     case 'NEW_MESSAGE':
       itemSet = newMessage(itemSet, body.message, myId);
-      messageBefore = Math.min(body.message.orderDate, messageBefore);
       break;
     case 'MESSAGE_PREVIEW':
       itemSet = newPreview(itemSet, body.preview, myId);
@@ -236,6 +240,9 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
       heartbeatMap = Map(body.heartbeatMap);
       break;
   }
+  if (DEBUG) {
+    checkMessagesOrder(itemSet);
+  }
   return {
     ...chat,
     channel,
@@ -243,7 +250,7 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
     colorMap,
     itemSet,
     eventAfter,
-    messageBefore,
+    messageBefore: itemSet.messages.first(undefined)?.date ?? new Date().getTime(),
     heartbeatMap,
   };
 };
@@ -252,6 +259,23 @@ export const handleMoveFinish = (state: ChatState, action: Action, myId?: Id): C
   const actions = state.postponed;
   state = { ...state, postponed: List(), moving: false };
   return actions.reduce<ChatState | undefined>((state, action) => chatReducer(state, action, myId), state);
+};
+
+export const checkMessagesOrder = (itemSet: ChatItemSet) => {
+  let prev: ChatItem | undefined = undefined;
+  let prevDate = 0;
+  let prevOffset = Number.MIN_SAFE_INTEGER;
+  for (const item of itemSet.messages) {
+    if (item.date < prevDate || (item.date === prevDate && item.offset <= prevOffset)) {
+      console.error('Incorrect order', item);
+      console.debug(prev);
+      console.debug(item);
+      console.debug(itemSet.messages);
+    }
+    prevDate = item.date;
+    prevOffset = item.offset;
+    prev = item;
+  }
 };
 
 export const chatReducer = (
@@ -265,8 +289,9 @@ export const chatReducer = (
   if (state === undefined) {
     return undefined;
   }
-  if (state.moving && action.type !== 'FINISH_MOVE_MESSAGE') {
-    return { ...state, postponed: state.postponed.push(action) };
+
+  if (DEBUG) {
+    checkMessagesOrder(state.itemSet);
   }
   switch (action.type) {
     case 'FINISH_MOVE_MESSAGE':

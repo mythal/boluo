@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import { pX, pY, spacingN } from '../../styles/atoms';
 import { darken, lighten } from 'polished';
 import { bgColor } from '../../styles/colors';
@@ -39,6 +38,7 @@ export const chatItemContainer = css`
 
   &[data-moving='true'] {
     filter: blur(2px);
+    pointer-events: none;
   }
 
   & .show-on-hover {

@@ -28,22 +28,23 @@ function LoadMore({ shift }: Props) {
   const before = useSelector((state) => state.chat!.messageBefore);
   const finished = useSelector((state) => state.chat!.finished);
   const moving = useSelector((state) => state.chat!.moving);
-  const messageLength = useSelector((state) => state.chat!.itemSet.messages.size);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (messageLength < 4) {
+    let timeout: number | undefined = undefined;
+    timeout = window.setTimeout(() => {
       button.current?.click();
-    }
-  }, [messageLength]);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   if (finished) {
     return null;
   }
   const loadMore = async () => {
-    const limit = 64;
+    const limit = 16;
     setLoading(true);
     const result = await get('/messages/by_channel', { channelId, before, limit });
     setLoading(false);

@@ -199,7 +199,7 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     }
     return { messages, previews, editions };
   }
-  const oldest = messages.first(undefined);
+  const oldest = messages.find((item) => item.type === 'MESSAGE');
   if (oldest && (item.date < oldest.date || (item.date === oldest.date && item.offset < oldest.offset))) {
     return { messages, previews, editions };
   }

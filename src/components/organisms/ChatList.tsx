@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
 import store, { useDispatch, useSelector } from '../../store';
-import { Id } from '../../utils/id';
 import { DragDropContext, DragDropContextProps } from 'react-beautiful-dnd';
 import ChatVirtualList from './ChatVirtualList';
 import { AppResult, post } from '../../api/request';
@@ -13,18 +12,12 @@ import { showFlash } from '../../actions/flash';
 function ChatList() {
   const channelId = useSelector((state) => state.chat!.channel.id);
   const dispatch = useDispatch();
-  const myId: Id | undefined = useSelector(
-    (state) => state.profile?.channels.get(state.chat!.channel.id)?.member.userId
-  );
-  const previewIndex: number | undefined = useSelector((state) => {
-    if (myId === undefined) {
-      return;
+  const myMember = useSelector((state) => {
+    if (state.profile === undefined || state.chat === undefined) {
+      return undefined;
+    } else {
+      return state.profile.channels.get(state.chat!.channel.id)?.member;
     }
-    const previewItem = state.chat!.itemSet.previews.get(myId);
-    if (previewItem === undefined) {
-      return;
-    }
-    return state.chat!.itemSet.messages.findLastIndex((item) => item.id === myId);
   });
 
   const onDragEnd: DragDropContextProps['onDragEnd'] = useCallback(
@@ -85,7 +78,7 @@ function ChatList() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <ChatVirtualList myId={myId} previewIndex={previewIndex} channelId={channelId} />
+      <ChatVirtualList myMember={myMember} channelId={channelId} />
     </DragDropContext>
   );
 }

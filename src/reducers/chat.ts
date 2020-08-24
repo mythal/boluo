@@ -47,22 +47,13 @@ export interface ChatState {
 
 export const initChatState = undefined;
 
-const loadChat = (
-  prevState: ChatState | undefined,
-  { chat, initialEvents }: ChatLoaded,
-  myId: Id | undefined
-): ChatState => {
-  const reducer = (chat: ChatState, event: ChannelEvent): ChatState => {
-    return handleChannelEvent(chat, event, myId);
-  };
+const loadChat = (prevState: ChatState | undefined, { chat }: ChatLoaded): ChatState => {
   if (prevState?.channel.id === chat.channel.id) {
     // reload
     const { channel, members, colorMap, connection } = chat;
     return { ...prevState, channel, members, colorMap, connection };
   }
-  const state = initialEvents.reduce(reducer, chat);
-  console.debug('initialize finished');
-  return state;
+  return chat;
 };
 
 const updateChat = (state: ChatState, { id, chat }: ChatUpdate): ChatState => {
@@ -284,7 +275,7 @@ export const chatReducer = (
   myId: Id | undefined
 ): ChatState | undefined => {
   if (action.type === 'CHAT_LOADED') {
-    return loadChat(state, action, myId);
+    return loadChat(state, action);
   }
   if (state === undefined) {
     return undefined;

@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect } from 'react';
+import React, { useCallback, useLayoutEffect, useRef } from 'react';
 import { Map } from 'immutable';
 import { useRect } from './useRect';
 
@@ -98,19 +98,19 @@ export function useVirtual<T extends Element>({
   }, [estimateSize]);
   const measurements: Measurement[] = React.useMemo(() => {
     const measurements: Measurement[] = [];
-    let prevEnd = paddingStart;
-    for (let i = 0; i < size; i++) {
+    let prevStart = paddingEnd;
+    for (let i = size - 1; i >= 0; i--) {
       const measuredSize = measuredCache.get(i);
-      const start = prevEnd;
+      const end = prevStart;
       const size = measuredSize !== undefined ? measuredSize : estimateSize(i, crossSize);
-      const end = start + size;
-      prevEnd = end;
-      measurements.push({ index: i, start, size, end });
+      const start = end + size;
+      prevStart = start;
+      measurements[i] = { index: i, start, size, end };
     }
     return measurements;
-  }, [estimateSize, measuredCache, paddingStart, size, crossSize /* width change */]);
+  }, [estimateSize, measuredCache, paddingEnd, size, crossSize /* width change */]);
 
-  const totalSize = (measurements[size - 1]?.end || 0) + paddingEnd;
+  const totalSize = (measurements[0]?.start || 0) + paddingStart;
   const latestRef = React.useRef<Latest>({
     overscan,
     measurements,
@@ -128,6 +128,7 @@ export function useVirtual<T extends Element>({
 
   const [range, setRange] = React.useState<Range>({ start: 0, end: 0, viewportStart: 0, viewportEnd: 0 });
 
+  const shiftOffset = useRef(0);
   useLayoutEffect(() => {
     const element = parentRef.current;
 
@@ -136,19 +137,23 @@ export function useVirtual<T extends Element>({
     }
     const onScroll = () => {
       latestRef.current.scrollOffset = element[scrollKey];
-      const delay = window.requestIdleCallback || setTimeout;
-      delay(() => {
-        setRange((prevRange) => {
-          const range = calculateRange(latestRef.current, prevRange);
-          if (
-            (prevRange.start > 0 && range.viewportStart - prevRange.start < renderThreshold) ||
-            (prevRange.end < size - 1 && prevRange.end - range.viewportEnd < renderThreshold)
-          ) {
-            return range;
-          } else {
-            return { ...prevRange, viewportStart: range.viewportStart, viewportEnd: range.viewportEnd };
+
+      setRange((prevRange) => {
+        if (shiftOffset.current !== 0) {
+          const offset = shiftOffset.current;
+          shiftOffset.current = 0;
+          const { totalSize, outerSize } = latestRef.current;
+          if (totalSize < outerSize) {
+            return calculateRange(latestRef.current, prevRange);
           }
-        });
+          return {
+            start: prevRange.start + offset,
+            end: prevRange.end + offset,
+            viewportStart: prevRange.viewportStart + offset,
+            viewportEnd: prevRange.viewportEnd + offset,
+          };
+        }
+        return calculateRange(latestRef.current, prevRange);
       });
     };
 
@@ -183,7 +188,6 @@ export function useVirtual<T extends Element>({
 
   const cacheShift = useCallback(
     (offset?: number) => {
-      setMeasuredCache(Map());
       if (offset === undefined) {
         setMeasuredCache(Map());
         return;
@@ -192,6 +196,7 @@ export function useVirtual<T extends Element>({
       for (const [key, value] of measuredCache.entries()) {
         shifted = shifted.set(key + offset, value);
       }
+      shiftOffset.current = offset;
       setMeasuredCache(shifted);
     },
     [measuredCache]
@@ -225,7 +230,7 @@ export function useVirtual<T extends Element>({
 
   const tryScrollToIndex = React.useCallback(
     (index: number, { align = 'auto', ...rest } = {}) => {
-      const { measurements, scrollOffset, outerSize } = latestRef.current as Latest;
+      const { measurements, scrollOffset, totalSize, outerSize } = latestRef.current as Latest;
 
       const measurement = measurements[Math.max(0, Math.min(index, size - 1))];
 
@@ -234,15 +239,14 @@ export function useVirtual<T extends Element>({
       }
 
       if (align === 'auto') {
-        if (measurement.end >= scrollOffset + outerSize) {
+        if (measurement.end <= totalSize - scrollOffset - outerSize) {
           align = 'end';
-        } else if (measurement.start <= scrollOffset) {
+        } else if (measurement.start >= totalSize - scrollOffset) {
           align = 'start';
         } else {
           return;
         }
       }
-
       const toOffset =
         align === 'center'
           ? measurement.start + measurement.size / 2
@@ -250,7 +254,7 @@ export function useVirtual<T extends Element>({
           ? measurement.end
           : measurement.start;
 
-      scrollToOffset(toOffset, { align, ...rest });
+      scrollToOffset(totalSize - toOffset, { align, ...rest });
     },
     [scrollToOffset, size]
   );
@@ -288,14 +292,21 @@ export interface Range {
   viewportEnd: number;
 }
 
-function calculateRange({ overscan, measurements, outerSize, scrollOffset }: Latest, prevRange: Range): Range {
-  const total = measurements.length;
-  let start = total - 1;
-  while (start > 0 && measurements[start].end >= scrollOffset) {
+function calculateRange(
+  { overscan, measurements, outerSize, totalSize, scrollOffset }: Latest,
+  prevRange: Range
+): Range {
+  const len = measurements.length;
+
+  if (totalSize < outerSize) {
+    return { start: 0, end: len - 1, viewportStart: 0, viewportEnd: len - 1 };
+  }
+  let start = len - 1;
+  while (start > 0 && totalSize - measurements[start].end >= scrollOffset) {
     start -= 1;
   }
   let end = 0;
-  while (end < total - 1 && measurements[end].start <= scrollOffset + outerSize) {
+  while (end < len - 1 && totalSize - measurements[end].start <= scrollOffset + outerSize) {
     end += 1;
   }
   const viewportStart = start;
@@ -303,7 +314,7 @@ function calculateRange({ overscan, measurements, outerSize, scrollOffset }: Lat
 
   // Always add at least one overscan item, so focus will work
   start = Math.max(start - overscan, 0);
-  end = Math.min(end + overscan, total - 1);
+  end = Math.min(end + overscan, len - 1);
 
   if (!prevRange || prevRange.start !== start || prevRange.end !== end) {
     return { start, end, viewportStart, viewportEnd };

@@ -9,6 +9,7 @@ import { ChatState } from '../reducers/chat';
 import { List, Map } from 'immutable';
 import { initialChatItemSet } from '../states/chat-item-set';
 import { showFlash } from './flash';
+import { batch } from 'react-redux';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';
@@ -29,7 +30,6 @@ export interface ChannelEventReceived {
 export interface ChatLoaded {
   type: 'CHAT_LOADED';
   chat: ChatState;
-  initialEvents: ChannelEvent[];
 }
 
 export interface ChatUpdate {
@@ -92,7 +92,12 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     moving: false,
     postponed: List(),
   };
-  dispatch({ type: 'CHAT_LOADED', chat, initialEvents });
+  batch(() => {
+    dispatch({ type: 'CHAT_LOADED', chat, initialEvents: [] });
+    for (const event of initialEvents) {
+      dispatch<ChannelEventReceived>({ type: 'CHANNEL_EVENT_RECEIVED', event });
+    }
+  });
 };
 
 export interface ChatFilter {

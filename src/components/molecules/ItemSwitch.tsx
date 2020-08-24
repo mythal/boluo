@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import ChatPreviewCompose from './ChatPreviewCompose';
 import ChatMessageItem from './ChatMessageItem';
 import ChatPreviewItem from './ChatPreviewItem';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { useSelector } from '../../store';
 import { ChannelMember } from '../../api/channels';
+import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 
 interface Props {
-  item: PreviewItem | MessageItem | undefined;
+  item: MessageItem | PreviewItem | undefined;
   myMember?: ChannelMember;
   handleProps?: DraggableProvidedDragHandleProps;
 }

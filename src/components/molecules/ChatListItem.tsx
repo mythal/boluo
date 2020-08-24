@@ -10,7 +10,7 @@ import Prando from 'prando';
 
 interface Props {
   itemIndex: number;
-  measure?: (rect: DOMRect, index: number) => void;
+  observerRef?: React.RefObject<ResizeObserver>;
   provided?: DraggableProvided;
   float?: boolean;
   isDragging?: boolean;
@@ -23,7 +23,7 @@ const dragging = css`
 
 const rng = new Prando();
 
-function ChatListItem({ itemIndex, measure, provided, float = false, isDragging = false }: Props) {
+function ChatListItem({ itemIndex, observerRef, provided, float = false, isDragging = false }: Props) {
   const item = useSelector((state) => state.chat!.itemSet.messages.get(itemIndex));
   const myMember = useSelector((state) => {
     if (state.profile === undefined || state.chat === undefined) {
@@ -35,10 +35,14 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
   const myId = myMember?.userId;
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (containerRef.current && measure) {
-      measure(containerRef.current.getBoundingClientRect(), itemIndex + 1 /* load more button */);
+    if (containerRef.current && observerRef && observerRef.current) {
+      const observer = observerRef.current;
+      const container = containerRef.current;
+      observer.observe(container, {});
+      return () => observer.unobserve(container);
     }
-  });
+  }, [containerRef.current, observerRef]);
+
   const [isRender, setRender] = useState(item === undefined || (item.type === 'PREVIEW' && item.mine));
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -61,7 +65,7 @@ function ChatListItem({ itemIndex, measure, provided, float = false, isDragging 
   const renderer = (provided: DraggableProvided) => {
     return (
       <div ref={provided.innerRef} {...provided.draggableProps}>
-        <div ref={containerRef} css={isDragging ? dragging : undefined}>
+        <div ref={containerRef} data-index={itemIndex + 1} css={isDragging ? dragging : undefined}>
           <ItemSwitch myMember={myMember} item={item} handleProps={provided.dragHandleProps} />
         </div>
       </div>

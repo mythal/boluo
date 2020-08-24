@@ -170,7 +170,7 @@ export function useVirtual<T extends Element>({
     (rect: DOMRect, index: number) => {
       const { [sizeKey]: measuredSize } = rect;
       const measurement = measurements[index];
-      if (measuredSize !== measurement.size) {
+      if (measurement === undefined || measuredSize !== measurement.size) {
         setMeasuredCache((old) => old.set(index, measuredSize));
       }
     },

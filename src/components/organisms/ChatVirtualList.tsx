@@ -92,6 +92,18 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
     }
     prevEnd.current = viewportEnd;
   }, [viewportStart, viewportEnd, scrollToIndex, messagesLength]);
+
+  const resizeObserver = useRef<ResizeObserver>(
+    new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const index = entry.target.getAttribute('data-index');
+        if (index !== null) {
+          measure(entry.contentRect, parseInt(index));
+        }
+      }
+    })
+  );
+
   if (messagesLength === 0 && !displayNewPreviewCompose) {
     return (
       <div css={container}>
@@ -114,7 +126,11 @@ function ChatVirtualList({ previewIndex, myId, channelId }: Props) {
           transform: `translateY(${start}px)`,
         }}
       >
-        {index === 0 ? <LoadMore shift={cacheShift} /> : <ChatListItem measure={measure} itemIndex={index - 1} />}
+        {index === 0 ? (
+          <LoadMore shift={cacheShift} />
+        ) : (
+          <ChatListItem observerRef={resizeObserver} itemIndex={index - 1} />
+        )}
       </div>
     );
   });

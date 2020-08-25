@@ -316,7 +316,13 @@ function calculateRange(
   start = Math.max(start - overscan, 0);
   end = Math.min(end + overscan, len - 1);
 
-  if (!prevRange || prevRange.start !== start || prevRange.end !== end) {
+  if (
+    !prevRange ||
+    prevRange.start !== start ||
+    prevRange.end !== end ||
+    prevRange.start !== viewportStart ||
+    prevRange.viewportEnd !== viewportEnd
+  ) {
     return { start, end, viewportStart, viewportEnd };
   }
 

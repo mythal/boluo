@@ -53,7 +53,7 @@ const style = css`
   }
 `;
 
-interface Props {
+export interface ToolbarButtonProps {
   className?: string;
   on?: boolean;
   onClick: () => void;
@@ -87,7 +87,7 @@ function ChatItemToolbarButton({
   x,
   loading = false,
   disabled = false,
-}: Props) {
+}: ToolbarButtonProps) {
   return (
     <div css={container} className={className}>
       {!isMobile && (

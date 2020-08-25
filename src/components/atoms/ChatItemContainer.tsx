@@ -6,6 +6,24 @@ import { css } from '@emotion/core';
 export const timeColWidth = '3.5rem';
 export const nameColWidth = '8rem';
 
+export const chatItemBgColor = bgColor;
+export const chatItemHoverBgColor = lighten(0.025, bgColor);
+export const chatItemOutGameBgColor = darken(0.035, bgColor);
+export const chatItemOutGameHoverBgColor = darken(0.015, bgColor);
+
+export const chatItemPlaceHolder = css`
+  background-color: ${chatItemBgColor};
+  &:hover {
+    background-color: ${chatItemHoverBgColor};
+  }
+  &[data-in-game='false'] {
+    background-color: ${chatItemOutGameBgColor};
+    &:hover {
+      background-color: ${chatItemOutGameHoverBgColor};
+    }
+  }
+`;
+
 export const chatItemContainer = css`
   display: grid;
   position: relative;
@@ -14,12 +32,12 @@ export const chatItemContainer = css`
   grid-template-rows: auto 1fr;
   grid-template-areas: 'time name content';
   gap: ${spacingN(1)} ${spacingN(2)};
-  background-color: ${bgColor};
+  background-color: ${chatItemBgColor};
 
   &[data-in-game='false'] {
-    background-color: ${darken(0.035, bgColor)};
+    background-color: ${chatItemOutGameBgColor};
     &:hover {
-      background-color: ${darken(0.015, bgColor)};
+      background-color: ${chatItemOutGameHoverBgColor};
     }
   }
 
@@ -49,6 +67,6 @@ export const chatItemContainer = css`
   }
 
   &:hover {
-    background-color: ${lighten(0.025, bgColor)};
+    background-color: ${chatItemHoverBgColor};
   }
 `;

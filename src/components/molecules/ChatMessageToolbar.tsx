@@ -6,8 +6,8 @@ import editIcon from '../../assets/icons/edit.svg';
 import trashIcon from '../../assets/icons/trash.svg';
 import foldIcon from '../../assets/icons/fold.svg';
 import unfoldIcon from '../../assets/icons/unfold.svg';
-import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
-import { ReactNodeArray, useState } from 'react';
+import ChatItemToolbarButton, { ToolbarButtonProps } from '../atoms/ChatItemToolbarButton';
+import { useState } from 'react';
 import Dialog from './Dialog';
 import { Text } from '../atoms/Text';
 import { post } from '../../api/request';
@@ -54,49 +54,47 @@ function ChatMessageToolbar({ myMember, mine, message }: Props) {
   const startEdit = () => {
     dispatch({ type: 'START_EDIT_MESSAGE', message: message });
   };
-  const buttons: ReactNodeArray = [];
+  const buttonsProps: Array<ToolbarButtonProps> = [];
   if (isAdmin || mine) {
-    buttons.push(
-      <ChatItemToolbarButton
-        key="delete"
-        onClick={() => showDeleteDialog(true)}
-        disabled={loading}
-        sprite={trashIcon}
-        title="删除"
-      />
-    );
+    buttonsProps.push({
+      onClick: () => showDeleteDialog(true),
+      disabled: loading,
+      sprite: trashIcon,
+      title: '删除',
+    });
   }
   if (myMember?.isMaster) {
     if (message.folded) {
-      buttons.push(
-        <ChatItemToolbarButton
-          key="toggle-fold"
-          onClick={toggleFold}
-          disabled={loading}
-          sprite={unfoldIcon}
-          title="取消折叠"
-        />
-      );
+      buttonsProps.push({
+        onClick: toggleFold,
+        disabled: loading,
+        sprite: unfoldIcon,
+        title: '取消折叠',
+      });
     } else {
-      buttons.push(
-        <ChatItemToolbarButton
-          key="toggle-fold"
-          onClick={toggleFold}
-          disabled={loading}
-          sprite={foldIcon}
-          title="标为折叠"
-        />
-      );
+      buttonsProps.push({
+        onClick: toggleFold,
+        disabled: loading,
+        sprite: foldIcon,
+        title: '标记折叠',
+      });
     }
   }
   if (mine) {
-    buttons.push(
-      <ChatItemToolbarButton key="edit" onClick={startEdit} disabled={loading} sprite={editIcon} title="编辑" />
-    );
+    buttonsProps.push({
+      onClick: startEdit,
+      disabled: loading,
+      sprite: editIcon,
+      title: '编辑',
+    });
   }
-  if (buttons.length === 0) {
+
+  if (buttonsProps.length === 0) {
     return null;
   }
+  buttonsProps[buttonsProps.length - 1].x = 'left';
+  const buttons = buttonsProps.map((props) => <ChatItemToolbarButton key={props.title} {...props} />);
+
   return (
     <React.Fragment>
       <ChatItemToolbar className="show-on-hover">{buttons}</ChatItemToolbar>

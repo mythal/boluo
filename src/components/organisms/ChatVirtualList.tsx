@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useLayoutEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useSelector } from '../../store';
 import { useVirtual } from '../../hooks/useVirtual';
 import { css } from '@emotion/core';
@@ -83,26 +83,8 @@ function ChatVirtualList({ myMember, channelId }: Props) {
     parentRef,
     estimateSize,
     renderThreshold: 0,
-    overscan: 16,
+    overscan: 12,
   });
-
-  const prevTotalSize = useRef(0);
-  const integral = useRef(0);
-
-  useLayoutEffect(() => {
-    if (parentRef.current) {
-      const parent = parentRef.current;
-      const delta = totalSize - prevTotalSize.current;
-      // why negative delta?
-      integral.current += delta;
-      if (delta > 0) {
-        const top = parent.scrollTop + integral.current;
-        integral.current = 0;
-        parent.scrollTo({ top });
-      }
-    }
-    prevTotalSize.current = totalSize;
-  }, [totalSize]);
 
   const resizeObserver = useRef<ResizeObserver>(
     new ResizeObserver((entries) => {

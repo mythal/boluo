@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from '../../store';
 import { get } from '../../api/request';
 import { LoadMessages } from '../../actions/chat';
@@ -32,19 +32,19 @@ function LoadMore({ shift }: Props) {
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let timeout: number | undefined = undefined;
-    timeout = window.setTimeout(() => {
-      button.current?.click();
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, []);
+  // useEffect(() => {
+  //   let timeout: number | undefined = undefined;
+  //   timeout = window.setTimeout(() => {
+  //     button.current?.click();
+  //   }, 0);
+  //   return () => window.clearTimeout(timeout);
+  // }, []);
 
   if (finished) {
     return null;
   }
   const loadMore = async () => {
-    const limit = 16;
+    const limit = 64;
     setLoading(true);
     const result = await get('/messages/by_channel', { channelId, before, limit });
     setLoading(false);

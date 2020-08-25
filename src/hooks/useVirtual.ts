@@ -273,7 +273,23 @@ export function useVirtual<T extends Element>({
     },
     [tryScrollToIndex]
   );
+  const prevTotalSize = useRef(0);
+  const integral = useRef(0);
 
+  useLayoutEffect(() => {
+    if (parentRef.current) {
+      const parent = parentRef.current;
+      const delta = totalSize - prevTotalSize.current;
+      // why negative delta?
+      integral.current += delta;
+      if (delta > 0) {
+        const top = parent.scrollTop + integral.current;
+        integral.current = 0;
+        parent.scrollTo({ top });
+      }
+    }
+    prevTotalSize.current = totalSize;
+  }, [parentRef, totalSize]);
   return {
     virtualItems,
     totalSize,

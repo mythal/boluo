@@ -5,6 +5,7 @@ import LoadMore from './LoadMore';
 import { ChannelMember } from '../../api/channels';
 import ChatDraggableItem from './ChatDraggableItem';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
+import { chatItemPlaceHolder } from '../atoms/ChatItemContainer';
 
 interface Props {
   index: number;
@@ -51,11 +52,13 @@ export function ChatVirtualListItem({
     }
     if (deferred) {
       if (order === 0) {
-        setDeferred(false);
+        timeout = window.setTimeout(() => {
+          setDeferred(false);
+        }, Math.random() * 150);
       } else {
         timeout = window.setTimeout(() => {
           setDeferred(false);
-        }, order * 20);
+        }, order * 20 + 150);
       }
     } else if (containerRef.current !== null) {
       const container = containerRef.current;
@@ -97,7 +100,7 @@ export function ChatVirtualListItem({
   };
 
   if (deferred) {
-    return <div {...containerProps} />;
+    return <div {...containerProps} css={chatItemPlaceHolder} />;
   }
 
   if (index === 0) {

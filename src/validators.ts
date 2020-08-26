@@ -2,6 +2,14 @@ import { ValidationRules } from 'react-hook-form';
 import { get } from './api/request';
 import { Id } from './utils/id';
 
+export const formatIsNotSupported = '不支持的文件格式';
+export const allowImageType = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+export const imageFormatIsNotSupported = '图片只支持 GIF、PNG、JPEG 和 WebP 格式';
+export const maxFileSize = 1024 * 1024 * 16;
+export const fileSizeExceeded = '文件最大只能 16MiB';
+export const maxImageFileSize = 1024 * 1024 * 6;
+export const imageSizeExceeded = '图片大小最大只能 6MiB';
+
 export const required = '必须填写这个字段';
 export const emailValidation: ValidationRules = {
   required,

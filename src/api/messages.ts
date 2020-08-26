@@ -49,6 +49,7 @@ export interface EditMessage {
   entities?: Entity[];
   inGame?: boolean;
   isAction?: boolean;
+  mediaId?: Id | null;
 }
 
 export interface ByChannel {

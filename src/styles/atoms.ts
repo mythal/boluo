@@ -320,6 +320,12 @@ export const floatLeft = css`
 export const floatRight = css`
   float: right;
 `;
+export const clearLeft = css`
+  clear: left;
+`;
+export const clearRight = css`
+  clear: right;
+`;
 
 export const mainP = [pX(6), pY(4)];
 

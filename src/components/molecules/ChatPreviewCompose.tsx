@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 import { newId } from '../../utils/id';
 import styled from '@emotion/styled';
-import { floatRight, mL, mR, mT, pX, pY, spacingN } from '../../styles/atoms';
+import { clearRight, floatRight, mL, mR, mT, pX, pY, spacingN } from '../../styles/atoms';
 import { useDispatch, useSelector } from '../../store';
 import { ParseResult } from '../../interpreter/parser';
 import { Preview, PreviewPost } from '../../api/events';
-import { AppResult, patch, post } from '../../api/request';
+import { AppResult, patch, post, upload } from '../../api/request';
 import ChatItemTime from '../../components/atoms/ChatItemTime';
 import ChatItemContent from '../../components/molecules/ChatItemContent';
 import { Message } from '../../api/messages';
@@ -16,7 +16,7 @@ import ChatItemName from '../../components/atoms/ChatItemName';
 import ChatComposeToolbar from '../../components/molecules/ChatComposeToolbar';
 import ChatPreviewComposeInput from '../../components/molecules/ChatPreviewComposeInput';
 import ChatPreviewComposeNameInput from '../../components/molecules/ChatPreviewComposeNameInput';
-import { gray } from '../../styles/colors';
+import { blue, gray } from '../../styles/colors';
 import ChatItemToolbarButton from '../../components/atoms/ChatItemToolbarButton';
 import cancelIcon from '../../assets/icons/cancel.svg';
 import editIcon from '../../assets/icons/edit.svg';
@@ -26,6 +26,17 @@ import { css } from '@emotion/core';
 import { throwErr } from '../../utils/errors';
 import { isMac } from '../../utils/browser';
 import { useSend } from '../../hooks/useSend';
+import { useDropzone } from 'react-dropzone';
+import MessageMedia from './MessageMedia';
+import {
+  allowImageType,
+  imageSizeExceeded,
+  imageFormatIsNotSupported,
+  maxImageFileSize,
+  formatIsNotSupported,
+  fileSizeExceeded,
+} from '../../validators';
+import { showFlash } from '../../actions/flash';
 
 interface Props {
   preview: Preview | undefined;
@@ -58,11 +69,24 @@ export const Container = styled.div`
     '   time    name content content'
     'toolbar toolbar compose compose';
   gap: ${spacingN(1)} ${spacingN(2)};
-  &:hover {
-    ${previewStyle(darken(0.05, gray['900']), darken(0.175, gray['900']))};
-  }
   &[data-edit='true'] {
     position: relative;
+  }
+  &[data-dragging='true']::after {
+    content: '拖放文件';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 50%;
+    left: 0;
+    top: 0;
+    background-color: ${blue['900']};
+  }
+  &:focus {
+    outline: none;
   }
 `;
 
@@ -74,6 +98,7 @@ interface ComposeState {
   parsed: ParseResult | undefined;
   inputName: string;
   initial: boolean;
+  media: File | undefined;
 }
 
 export type ComposeDispatch = React.Dispatch<Partial<ComposeState>>;
@@ -93,7 +118,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     return { ...state, ...update, initial: false };
   };
 
-  const [{ sending, inGame, broadcast, isAction, inputName, parsed, initial }, composeDispatch] = useReducer(
+  const [{ sending, inGame, broadcast, isAction, inputName, parsed, initial, media }, composeDispatch] = useReducer(
     composeReducer,
     undefined,
     () => {
@@ -113,6 +138,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         parsed: undefined,
         inputName: name,
         initial: true,
+        media: undefined,
       };
     }
   );
@@ -157,6 +183,15 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       return;
     }
     composeDispatch({ sending: true });
+    let mediaId = null;
+    if (media) {
+      const result = await upload(media, media.name, media.type);
+      if (!result.isOk) {
+        throwErr(dispatch)(result.value);
+        return;
+      }
+      mediaId = result.value.id;
+    }
     let result: AppResult<Message>;
     if (editTo) {
       result = await patch('/messages/edit', {
@@ -166,12 +201,13 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         isAction,
         text,
         entities,
+        mediaId,
       });
     } else {
       result = await post('/messages/send', {
         messageId: messageId.current,
         channelId,
-        mediaId: null,
+        mediaId,
         name: inGame ? inputName : nickname,
         inGame,
         isAction,
@@ -200,15 +236,44 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       composeDispatch({ inGame: !inGame });
     }
   };
+  const onDrop = (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.size > maxImageFileSize) {
+        dispatch(showFlash('WARNING', fileSizeExceeded));
+        return;
+      } else if (file.type.startsWith('image')) {
+        if (allowImageType.includes(file.type)) {
+          if (file.size > maxImageFileSize) {
+            dispatch(showFlash('WARNING', imageSizeExceeded));
+            return;
+          }
+          composeDispatch({ media: file });
+        } else {
+          dispatch(showFlash('WARNING', imageFormatIsNotSupported));
+        }
+      } else {
+        dispatch(showFlash('WARNING', formatIsNotSupported));
+      }
+    }
+  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ noClick: true, onDrop });
   return (
-    <Container data-edit={editTo !== undefined} ref={containerRef} onKeyDown={handleKeyDown}>
+    <Container
+      {...getRootProps()}
+      data-edit={editTo !== undefined}
+      data-dragging={isDragActive}
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+    >
       <ChatItemTime timestamp={editTo?.created || preview?.start || new Date().getTime()} />
       {inGame && <ChatPreviewComposeNameInput value={inputName} composeDispatch={composeDispatch} />}
       {!inGame && !isAction && chatItemName}
       <ChatItemContentContainer data-action={isAction} data-in-game={inGame}>
+        <MessageMedia mediaId={editTo?.mediaId} file={media} />
         {isAction && chatItemName}
         <ChatItemContent entities={entities} text={text} />
-        <div css={[mL(2), mT(2), floatRight]}>
+        <div css={[mL(2), mT(2), floatRight, clearRight]}>
           {editTo && <ChatItemToolbarButton css={mR(1)} sprite={cancelIcon} onClick={cancelEdit} title="取消" />}
           <ChatItemToolbarButton
             loading={sending}
@@ -229,6 +294,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         initialValue={initialDraft}
       />
       <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
+      <input {...getInputProps()} />
     </Container>
   );
 }

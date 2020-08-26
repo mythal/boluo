@@ -98,7 +98,7 @@ function ChatVirtualList({ myMember, channelId }: Props) {
   );
 
   let renderedPreview = false;
-  let renderAtTop = true;
+  let renderAtTop = myPreview !== undefined;
 
   const items = virtualItems.map(({ index, size, start, end }) => {
     const item = index === 0 ? undefined : messages.get(index - 1);

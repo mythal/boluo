@@ -5,24 +5,18 @@ import ChatPreviewItem from './ChatPreviewItem';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { useSelector } from '../../store';
 import { ChannelMember } from '../../api/channels';
-import { MessageItem, PreviewItem } from '../../states/chat-item-set';
+import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
 
 interface Props {
   item: MessageItem | PreviewItem | undefined;
+  editItem?: EditItem;
   myMember?: ChannelMember;
   handleProps?: DraggableProvidedDragHandleProps;
 }
 
-function ItemSwitch({ item, myMember, handleProps }: Props) {
+function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
   const myId = myMember?.userId;
   const filter = useSelector((state) => state.chat!.filter);
-  const editItem = useSelector((state) => {
-    if (item !== undefined && item.type === 'MESSAGE') {
-      return state.chat!.itemSet.editions.get(item.message.id);
-    } else {
-      return undefined;
-    }
-  });
   const inGame = filter === 'IN_GAME';
   const outGame = filter === 'OUT_GAME';
 
@@ -38,10 +32,8 @@ function ItemSwitch({ item, myMember, handleProps }: Props) {
     }
     if (editItem !== undefined) {
       if (editItem.mine && myId) {
-        if (editItem.preview === undefined || editItem.preview.editFor === message.modified) {
-          return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
-        }
-      } else if (editItem.preview !== undefined && editItem.preview.editFor === message.modified) {
+        return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
+      } else if (editItem.preview !== undefined) {
         return <ChatPreviewItem preview={editItem.preview} />;
       }
     }

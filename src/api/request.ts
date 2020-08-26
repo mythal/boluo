@@ -177,5 +177,12 @@ export function upload(
 }
 
 export function mediaUrl(id: string, download = false): string {
-  return makeUri('/media/get', { id, download });
+  return makeUri('/media/get', { download, id });
+}
+
+export function mediaHead(id: string): Promise<Response> {
+  return fetch(`/api/media/get?id=${id}`, {
+    method: 'HEAD',
+    credentials: 'include',
+  });
 }

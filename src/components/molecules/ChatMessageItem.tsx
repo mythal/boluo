@@ -9,6 +9,7 @@ import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { ChannelMember } from '../../api/channels';
 import ChatMessageToolbar from './ChatMessageToolbar';
 import { useEffect, useState } from 'react';
+import MessageMedia from './MessageMedia';
 
 interface Props {
   message: Message;
@@ -37,6 +38,7 @@ function ChatMessageItem({ message, mine = false, style, handleProps, myMember, 
         data-action={message.isAction}
         data-folded={message.folded}
       >
+        <MessageMedia mediaId={message.mediaId} />
         {message.isAction && name}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
       </ChatItemContentContainer>

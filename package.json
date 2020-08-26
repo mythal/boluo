@@ -12,6 +12,7 @@
     "react": "^16.13",
     "react-beautiful-dnd": "^13.0.0",
     "react-dom": "^16.13",
+    "react-dropzone": "^11.0.3",
     "react-hook-form": "^6.4.1",
     "react-redux": "^7.2.1",
     "react-router-dom": "^5.2.0",

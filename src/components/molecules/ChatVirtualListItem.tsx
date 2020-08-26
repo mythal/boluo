@@ -80,6 +80,8 @@ export function ChatVirtualListItem({
       if (resizeObserverRef.current) {
         const observer = resizeObserverRef.current;
         const container = containerRef.current;
+        const rect = container.getBoundingClientRect();
+        measure(rect, index);
         observer.observe(container, {});
         return () => observer.unobserve(container);
       }

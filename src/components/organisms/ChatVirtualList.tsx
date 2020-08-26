@@ -86,12 +86,21 @@ function ChatVirtualList({ myMember, channelId }: Props) {
     overscan: 12,
   });
 
+  const sizeRecord = useRef<Record<string, DOMRect>>({});
+  const submitSizeChange = useRef<number | undefined>(undefined);
+
   const resizeObserver = useRef<ResizeObserver>(
     new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const index = entry.target.getAttribute('data-index');
+        const index: string | null = entry.target.getAttribute('data-index');
         if (index !== null) {
-          measure(entry.contentRect, parseInt(index));
+          sizeRecord.current[index] = entry.contentRect;
+          window.clearTimeout(submitSizeChange.current);
+          submitSizeChange.current = window.setTimeout(() => {
+            for (const [index, rect] of Object.entries(sizeRecord.current)) {
+              measure(rect, parseInt(index));
+            }
+          }, 100);
         }
       }
     })

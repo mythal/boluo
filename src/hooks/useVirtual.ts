@@ -102,13 +102,13 @@ export function useVirtual<T extends Element>({
     for (let i = size - 1; i >= 0; i--) {
       const measuredSize = measuredCache.get(i);
       const end = prevStart;
-      const size = measuredSize !== undefined ? measuredSize : estimateSize(i, crossSize);
+      const size = measuredSize !== undefined ? measuredSize : estimateSize(i);
       const start = end + size;
       prevStart = start;
       measurements[i] = { index: i, start, size, end };
     }
     return measurements;
-  }, [estimateSize, measuredCache, paddingEnd, size, crossSize /* width change */]);
+  }, [estimateSize, measuredCache, paddingEnd, size]);
 
   const totalSize = (measurements[0]?.start || 0) + paddingStart;
   const latestRef = React.useRef<Latest>({

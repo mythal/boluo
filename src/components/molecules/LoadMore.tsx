@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from '../../store';
 import { get } from '../../api/request';
 import { LoadMessages } from '../../actions/chat';
@@ -28,17 +28,20 @@ function LoadMore({ shift }: Props) {
   const before = useSelector((state) => state.chat!.messageBefore);
   const finished = useSelector((state) => state.chat!.finished);
   const moving = useSelector((state) => state.chat!.moving);
+  const messageLength = useSelector((state) => state.chat!.itemSet.messages.size);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   let timeout: number | undefined = undefined;
-  //   timeout = window.setTimeout(() => {
-  //     button.current?.click();
-  //   }, 0);
-  //   return () => window.clearTimeout(timeout);
-  // }, []);
+  useEffect(() => {
+    let timeout: number | undefined = undefined;
+    if (messageLength < 32) {
+      timeout = window.setTimeout(() => {
+        button.current?.click();
+      }, 0);
+    }
+    return () => window.clearTimeout(timeout);
+  }, [messageLength]);
 
   if (finished) {
     return null;

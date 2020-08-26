@@ -34,7 +34,6 @@ export function ChatVirtualListItem({
   measure,
   viewportStart,
   viewportEnd,
-  rangeEnd,
   myMember,
   resizeObserverRef,
   placeholder,
@@ -52,13 +51,11 @@ export function ChatVirtualListItem({
     }
     if (deferred) {
       if (order === 0) {
-        timeout = window.setTimeout(() => {
-          setDeferred(false);
-        }, Math.random() * 150);
+        setDeferred(false);
       } else {
         timeout = window.setTimeout(() => {
           setDeferred(false);
-        }, order * 20 + 150);
+        }, order * 20 + 50);
       }
     } else if (containerRef.current !== null) {
       const container = containerRef.current;
@@ -80,14 +77,14 @@ export function ChatVirtualListItem({
       if (resizeObserverRef.current) {
         const observer = resizeObserverRef.current;
         const container = containerRef.current;
-        const rect = container.getBoundingClientRect();
-        measure(rect, index);
+        // const rect = container.getBoundingClientRect();
+        // measure(rect, index);
         observer.observe(container, {});
         return () => observer.unobserve(container);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef.current, rangeEnd, deferred, resizeObserverRef, measure, index]);
+  }, [containerRef.current, deferred, resizeObserverRef.current, measure, index]);
 
   const style: React.CSSProperties = {
     height: size,
@@ -113,8 +110,8 @@ export function ChatVirtualListItem({
     );
   }
   return (
-    <div {...containerProps} data-index={index}>
-      <div ref={containerRef}>
+    <div {...containerProps}>
+      <div ref={containerRef} data-index={index}>
         <ChatDraggableItem item={item} myMember={myMember} index={index} placeholder={placeholder} />
       </div>
     </div>

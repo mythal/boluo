@@ -11,7 +11,6 @@ interface Props {
   index: number;
   item: PreviewItem | MessageItem | undefined;
   myMember: ChannelMember | undefined;
-  placeholder?: boolean;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
 }
@@ -21,7 +20,7 @@ const dragging = css`
   box-shadow: 1px 1px 2px ${black};
 `;
 
-function ChatDraggableItem({ index, item, myMember, provided, snapshot, placeholder = false }: Props) {
+function ChatDraggableItem({ index, item, myMember, provided, snapshot }: Props) {
   const itemIndex = index - 1;
 
   const editItem = useSelector((state) => {
@@ -45,11 +44,7 @@ function ChatDraggableItem({ index, item, myMember, provided, snapshot, placehol
     const style = snapshot?.isDragging ? dragging : {};
     return (
       <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
-        {placeholder ? (
-          <div style={{ height: 120 }} />
-        ) : (
-          <ItemSwitch item={item} editItem={editItem} myMember={myMember} handleProps={provided.dragHandleProps} />
-        )}
+        <ItemSwitch item={item} editItem={editItem} myMember={myMember} handleProps={provided.dragHandleProps} />
       </div>
     );
   };

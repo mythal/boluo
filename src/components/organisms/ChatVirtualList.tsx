@@ -12,7 +12,6 @@ import { ChatVirtualListItem } from '../molecules/ChatVirtualListItem';
 import ChatDraggableItem from '../molecules/ChatDraggableItem';
 import { PreviewItem } from '../../states/chat-item-set';
 import { Preview } from '../../api/events';
-import ItemSwitch from '../molecules/ItemSwitch';
 
 interface Props {
   channelId: Id;
@@ -83,7 +82,7 @@ function ChatVirtualList({ myMember, channelId }: Props) {
     parentRef,
     estimateSize,
     renderThreshold: 0,
-    overscan: 12,
+    overscan: 16,
   });
 
   const sizeRecord = useRef<Record<string, DOMRect>>({});
@@ -106,23 +105,8 @@ function ChatVirtualList({ myMember, channelId }: Props) {
     })
   );
 
-  let renderedPreview = false;
-  let renderAtTop = myPreview !== undefined;
-
   const items = virtualItems.map(({ index, size, start, end }) => {
     const item = index === 0 ? undefined : messages.get(index - 1);
-    let placeholder = false;
-    const visible = viewportStart <= index && index <= viewportEnd;
-    if (item && item.type === 'PREVIEW' && myMember && item.mine) {
-      if (viewportStart <= index && index <= viewportEnd) {
-        renderedPreview = true;
-      } else {
-        placeholder = true;
-      }
-    }
-    if (item && visible && myPreview && item.date <= myPreview.date) {
-      renderAtTop = false;
-    }
     return (
       <ChatVirtualListItem
         myMember={myMember}
@@ -132,7 +116,6 @@ function ChatVirtualList({ myMember, channelId }: Props) {
         size={size}
         end={end}
         start={start}
-        placeholder={placeholder}
         rangeStart={rangeStart}
         rangeEnd={rangeEnd}
         viewportStart={viewportStart}
@@ -143,24 +126,6 @@ function ChatVirtualList({ myMember, channelId }: Props) {
       />
     );
   });
-  if (!renderedPreview && myMember) {
-    const parent = parentRef.current;
-    if (parent !== null) {
-      const rect = parent.getBoundingClientRect();
-      const style: React.CSSProperties = {
-        position: 'fixed',
-        width: rect.width,
-      };
-      if (!renderAtTop) {
-        style.bottom = 0;
-      }
-      items.push(
-        <div style={style} key="preview">
-          <ItemSwitch myMember={myMember} item={myPreview} />
-        </div>
-      );
-    }
-  }
   return (
     <div css={container} ref={parentRef}>
       <Droppable

@@ -12,7 +12,6 @@ interface Props {
   size: number;
   start: number;
   end: number;
-  placeholder: boolean;
   item: PreviewItem | MessageItem | undefined;
   myMember: ChannelMember | undefined;
   resizeObserverRef: React.RefObject<ResizeObserver>;
@@ -36,7 +35,6 @@ export function ChatVirtualListItem({
   viewportEnd,
   myMember,
   resizeObserverRef,
-  placeholder,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [deferred, setDeferred] = useState(index < viewportStart || index > viewportEnd);
@@ -57,17 +55,6 @@ export function ChatVirtualListItem({
           setDeferred(false);
         }, order * 20 + 50);
       }
-    } else if (containerRef.current !== null) {
-      const container = containerRef.current;
-      if (order === 0) {
-        const rect = container.getBoundingClientRect();
-        measure(rect, index);
-      } else {
-        timeout = window.setTimeout(() => {
-          const rect = container.getBoundingClientRect();
-          measure(rect, index);
-        }, order * 30);
-      }
     }
     return () => window.clearTimeout(timeout);
   }, [viewportEnd, viewportStart, index, deferred, measure]);
@@ -77,8 +64,8 @@ export function ChatVirtualListItem({
       if (resizeObserverRef.current) {
         const observer = resizeObserverRef.current;
         const container = containerRef.current;
-        // const rect = container.getBoundingClientRect();
-        // measure(rect, index);
+        const rect = container.getBoundingClientRect();
+        measure(rect, index);
         observer.observe(container, {});
         return () => observer.unobserve(container);
       }
@@ -109,10 +96,11 @@ export function ChatVirtualListItem({
       </div>
     );
   }
+
   return (
     <div {...containerProps}>
       <div ref={containerRef} data-index={index}>
-        <ChatDraggableItem item={item} myMember={myMember} index={index} placeholder={placeholder} />
+        <ChatDraggableItem item={item} myMember={myMember} index={index} />
       </div>
     </div>
   );

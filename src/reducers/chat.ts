@@ -30,6 +30,7 @@ import {
 import Prando from 'prando';
 
 export interface ChatState {
+  pane: number;
   connection: WebSocket;
   channel: Channel;
   members: Member[];

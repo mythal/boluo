@@ -5,6 +5,7 @@ import { fontBold, pX, pY } from '../../styles/atoms';
 import { darken } from 'polished';
 import MemberListItem from '../../components/molecules/MemberListItem';
 import { bgColor } from '../../styles/colors';
+import { usePane } from '../../hooks/usePane';
 
 const Container = styled.div`
   width: 10rem;
@@ -18,11 +19,10 @@ const Title = styled.div`
 `;
 
 function ChatMemberList() {
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
-  const open = useSelector((state) => state.chat!.memberList);
-  const members = useSelector((state) => state.chat!.members) || [];
-  const heartbeatMap = useSelector((state) => state.chat!.heartbeatMap);
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  const pane = usePane();
+  const open = useSelector((state) => state.chatPane[pane]!.memberList);
+  const members = useSelector((state) => state.chatPane[pane]!.members) || [];
+  const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
 
   if (!open) {
     return null;

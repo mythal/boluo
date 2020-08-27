@@ -19,9 +19,11 @@ import {
   LoadMessages,
   MovingMessage,
   ResetMessageMoving,
+  SplitPane,
   StartEditMessage,
   StartMoveMessage,
   StopEditMessage,
+  SwitchActivePane,
   ToggleMemberList,
 } from './chat';
 import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from './ui';
@@ -57,4 +59,6 @@ export type Action =
   | MovingMessage
   | ResetMessageMoving
   | ShowFlash
-  | DismissFlash;
+  | DismissFlash
+  | SwitchActivePane
+  | SplitPane;

@@ -36,6 +36,7 @@ import {
 } from '../../validators';
 import { showFlash } from '../../actions/flash';
 import ChatImageUploadButton from './ChatImageUploadButton';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   preview: Preview | undefined;
@@ -93,7 +94,8 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const dispatch = useDispatch();
   const messageId = useRef(preview?.id ?? editTo?.id ?? newId());
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const channelId = useSelector((state) => state.chat!.channel.id);
+  const pane = usePane();
+  const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
 
@@ -164,9 +166,9 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     if (editTo !== undefined) {
       const messageId = editTo.id;
       patch('/messages/edit', { messageId }).then();
-      dispatch({ type: 'STOP_EDIT_MESSAGE', editFor: editTo.modified, messageId: editTo.id });
+      dispatch({ type: 'STOP_EDIT_MESSAGE', editFor: editTo.modified, messageId: editTo.id, pane });
     }
-  }, [editTo, dispatch]);
+  }, [editTo, dispatch, pane]);
   useEffect(() => {
     if (initial) {
       return;

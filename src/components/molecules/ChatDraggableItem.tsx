@@ -6,6 +6,7 @@ import { css } from '@emotion/core';
 import { black } from '../../styles/colors';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { useSelector } from '../../store';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   index: number;
@@ -23,9 +24,10 @@ const dragging = css`
 function ChatDraggableItem({ index, item, myMember, provided, snapshot }: Props) {
   const itemIndex = index - 1;
 
+  const pane = usePane();
   const editItem = useSelector((state) => {
     if (item !== undefined && item.type === 'MESSAGE') {
-      const editItem = state.chat!.itemSet.editions.get(item.message.id);
+      const editItem = state.chatPane[pane]!.itemSet.editions.get(item.message.id);
       if (
         editItem !== undefined &&
         (editItem.preview === undefined || editItem.preview.editFor === item.message.modified)

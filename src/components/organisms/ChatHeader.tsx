@@ -1,22 +1,11 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { css } from '@emotion/core';
-import { useSelector } from '../../store';
-import {
-  breakpoint,
-  chatHeaderStyle,
-  flex,
-  fontBold,
-  fontMono,
-  mediaQuery,
-  mL,
-  mR,
-  pR,
-  textBase,
-  textLg,
-} from '../../styles/atoms';
+import { useDispatch, useSelector } from '../../store';
+import { chatHeaderStyle, flex, fontBold, fontMono, mL, mR, pR, textBase, textLg } from '../../styles/atoms';
 import ChannelMemberButton from './ChannelMemberButton';
 import sliders from '../../assets/icons/sliders.svg';
+import columns from '../../assets/icons/columns.svg';
 import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
 import Icon from '../../components/atoms/Icon';
 import ManageChannel from '../../components/organisms/ManageChannel';
@@ -26,65 +15,32 @@ import ChatFilter from '../../components/organisms/ChatFilter';
 import MemberListButton from '../../components/molecules/MemberListButton';
 import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
+import { usePane } from '../../hooks/usePane';
 
 const Topic = styled.div`
-  display: none;
+  display: inline-block;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  flex-shrink: 1;
+  grid-area: topic;
   color: ${darken(0.2, textColor)};
-
-  ${mediaQuery(breakpoint.md)} {
-    display: inline-block;
-    width: 14em;
-  }
-
-  ${mediaQuery(breakpoint.lg)} {
-    width: 24em;
-  }
-
-  ${mediaQuery(breakpoint.xl)} {
-    width: 32em;
-  }
 `;
 
-const leftPart = css`
-  ${[flex]};
-  flex-shrink: 1;
-  align-items: center;
-  min-width: 0;
-`;
-
-const rightPart = css`
+const toolbar = css`
   ${[flex, mL(2)]};
   align-items: stretch;
+  grid-area: toolbar;
 `;
 
 const ChannelName = styled.div`
   ${[textBase, fontBold, textLg]};
   color: ${textColor};
-  display: none;
   ${pR(1)};
   ${mR(1)};
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   max-width: 6em;
-
-  ${mediaQuery(breakpoint.sm)} {
-    display: inline-block;
-    max-width: 6em;
-  }
-  ${mediaQuery(breakpoint.md)} {
-    max-width: 12em;
-  }
-  ${mediaQuery(breakpoint.lg)} {
-    max-width: 16em;
-  }
-  ${mediaQuery(breakpoint.xl)} {
-    max-width: 24em;
-  }
 
   &::before {
     content: '#';
@@ -95,20 +51,24 @@ const ChannelName = styled.div`
 `;
 
 function ChatHeader() {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const channel = useSelector((state) => state.chat!.channel);
+  const pane = usePane();
+  const channel = useSelector((state) => state.chatPane[pane]!.channel);
+  const isPaneSplit = useSelector((state) => state.splitPane);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
   const [managePanel, setManagePanel] = useState(false);
+  const dispatch = useDispatch();
+  const toggleSplit = useCallback(() => dispatch({ type: 'SPLIT_PANE', split: !isPaneSplit }), [isPaneSplit, dispatch]);
   useTitle(channel.name);
   return (
     <div css={chatHeaderStyle}>
-      <div css={leftPart}>
-        <ChannelName>{channel.name}</ChannelName>
-        <Topic>{channel.topic}</Topic>
-      </div>
-      <div css={rightPart}>
+      <ChannelName>{channel.name}</ChannelName>
+      <Topic>{channel.topic}</Topic>
+      <div css={toolbar}>
+        <ChatHeaderButton css={[mL(1)]} data-active={isPaneSplit} onClick={toggleSplit}>
+          <Icon sprite={columns} />
+        </ChatHeaderButton>
         {isSpaceAdmin && (
-          <ChatHeaderButton onClick={() => setManagePanel(true)}>
+          <ChatHeaderButton css={[mL(1)]} onClick={() => setManagePanel(true)}>
             <Icon sprite={sliders} />
           </ChatHeaderButton>
         )}

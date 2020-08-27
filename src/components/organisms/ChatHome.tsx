@@ -2,9 +2,9 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
-import { chatHeaderStyle, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
+import { chatHeaderStyle, chatHeaderToolbar, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
 import { Space, SpaceMember } from '../../api/spaces';
-import { useSelector } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import Icon from '../../components/atoms/Icon';
 import ChatHeaderButton, { chatHeaderButtonStyle } from '../../components/atoms/ChatHeaderButton';
 import Badge from '../../components/atoms/Badge';
@@ -14,18 +14,26 @@ import { Channel } from '../../api/channels';
 import JoinSpaceButton from '../../components/molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../../components/molecules/LeaveSpaceButton';
 import { useTitle } from '../../hooks/useTitle';
+import { usePane } from '../../hooks/usePane';
+import { chatPath } from '../../utils/path';
+import { useHistory } from 'react-router-dom';
+import { blue, gray } from '../../styles/colors';
 
 const Header = styled.div(chatHeaderStyle);
 
 const container = css`
-  grid-column: list-start / list-end;
   grid-row: list-start / compose-end;
   ${[pX(4), pY(4)]};
+
+  border: 1px solid ${gray['900']};
+
+  &[data-active='true'] {
+    border-color: ${blue['800']};
+  }
 `;
 
 const Title = styled.div`
-  display: flex;
-  align-items: center;
+  grid-area: title;
 `;
 
 const SpaceName = styled.span`
@@ -46,12 +54,22 @@ interface Props {
 }
 
 const Buttons = styled.div`
-  display: flex;
-  align-items: stretch;
+  ${chatHeaderToolbar};
 `;
 
 function ChatHome({ space, members, channels }: Props) {
   useTitle(space.name);
+
+  const pane = usePane();
+  const dispatch = useDispatch();
+  const history = useHistory();
+  const activePane = useSelector((state) => pane === state.activePane);
+  const setActive = () => {
+    if (!activePane) {
+      dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+      history.replace(chatPath(space.id));
+    }
+  };
   const [managing, setManaging] = useState(false);
   const myMember = useSelector((state) => state.profile?.spaces.get(space.id)?.member);
   const startManage = () => setManaging(true);
@@ -75,7 +93,7 @@ function ChatHome({ space, members, channels }: Props) {
           <LeaveSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} name={space.name} />
         </Buttons>
       </Header>
-      <div css={container}>
+      <div css={container} onClick={setActive} data-active={activePane}>
         <Description>{space.description}</Description>
       </div>
       {managing && myMember && (

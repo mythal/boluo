@@ -21,6 +21,7 @@ import { post } from '../../api/request';
 import Text from '../../components/atoms/Text';
 import Select, { ValueType } from 'react-select';
 import { Set } from 'immutable';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   channel: Channel;
@@ -54,7 +55,8 @@ function ManageChannel({ channel, dismiss }: Props) {
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
-  const members = useSelector((state) => state.chat?.members) || [];
+  const pane = usePane();
+  const members = useSelector((state) => state.chatPane[pane]?.members) || [];
   const spaceMember = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member);
   const currentMaster = members.filter((member) => member.channel.isMaster).map(makeMemberOption);
   const [selectedMember, setSelectedMember] = useState<MemberOption[]>(currentMaster);

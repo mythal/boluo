@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useRef } from 'react';
-import { useSelector } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import { useVirtual } from '../../hooks/useVirtual';
 import { css } from '@emotion/core';
-import { bgColor } from '../../styles/colors';
+import { bgColor, blue, gray } from '../../styles/colors';
 import { loadMoreHeight } from '../molecules/LoadMore';
 import { Id, newId } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
@@ -12,6 +12,9 @@ import { ChatVirtualListItem } from '../molecules/ChatVirtualListItem';
 import ChatDraggableItem from '../molecules/ChatDraggableItem';
 import { PreviewItem } from '../../states/chat-item-set';
 import { Preview } from '../../api/events';
+import { usePane } from '../../hooks/usePane';
+import { useHistory } from 'react-router-dom';
+import { chatPath } from '../../utils/path';
 
 interface Props {
   channelId: Id;
@@ -19,10 +22,20 @@ interface Props {
 }
 
 const container = css`
-  grid-area: list;
+  grid-row: list-start / list-end;
   background-color: ${bgColor};
   overflow-y: scroll;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+
+  border: 1px solid ${gray['900']};
+
+  &[data-active='true'] {
+    border-color: ${blue['800']};
+  }
 `;
 
 function estimateSize(index: number): number {
@@ -59,10 +72,15 @@ const dummyPreview = (member: ChannelMember): PreviewItem => {
 };
 
 function ChatVirtualList({ myMember, channelId }: Props) {
+  const pane = usePane();
+  const dispatch = useDispatch();
+  const history = useHistory();
+  const spaceId = useSelector((state) => state.chatPane[pane]!.channel.spaceId);
+  const activePane = useSelector((state) => pane === state.activePane);
   const myPreview = useSelector((state) => {
-    return myMember === undefined ? undefined : state.chat!.itemSet.previews.get(myMember.userId);
+    return myMember === undefined ? undefined : state.chatPane[pane]!.itemSet.previews.get(myMember.userId);
   });
-  let messages = useSelector((state) => state.chat!.itemSet.messages);
+  let messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
   if (myMember !== undefined && myPreview === undefined) {
     messages = messages.push(dummyPreview(myMember));
   }
@@ -126,8 +144,14 @@ function ChatVirtualList({ myMember, channelId }: Props) {
       />
     );
   });
+  const setActive = () => {
+    if (!activePane) {
+      dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+      history.replace(chatPath(spaceId, channelId));
+    }
+  };
   return (
-    <div css={container} ref={parentRef}>
+    <div css={container} ref={parentRef} data-active={activePane} onClick={setActive}>
       <Droppable
         droppableId={channelId}
         type="CHANNEL"

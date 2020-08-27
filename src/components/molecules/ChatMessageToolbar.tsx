@@ -17,6 +17,7 @@ import { css } from '@emotion/core';
 import { fontMono, pL, spacingN, textSm } from '../../styles/atoms';
 import { primary } from '../../styles/colors';
 import { Message } from '../../api/messages';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   myMember?: ChannelMember;
@@ -31,6 +32,7 @@ const quoteStyle = css`
 
 function ChatMessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
+  const pane = usePane();
   const isAdmin = useIsAdmin();
   const [deleteDialog, showDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ function ChatMessageToolbar({ myMember, mine, message }: Props) {
     setLoading(false);
   };
   const startEdit = () => {
-    dispatch({ type: 'START_EDIT_MESSAGE', message: message });
+    dispatch({ type: 'START_EDIT_MESSAGE', message, pane });
   };
   const buttonsProps: Array<ToolbarButtonProps> = [];
   if (isAdmin || mine) {

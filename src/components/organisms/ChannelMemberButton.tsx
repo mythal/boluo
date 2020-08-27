@@ -26,6 +26,7 @@ import cog from '../../assets/icons/cog.svg';
 import Overlay from '../../components/atoms/Overlay';
 import Menu from '../../components/atoms/Menu';
 import { MenuItem, MenuItemLink } from '../atoms/MenuItem';
+import { usePane } from '../../hooks/usePane';
 
 const buttonBarStyle = css`
   ${[mT(4)]};
@@ -83,12 +84,11 @@ interface Props {
 type FormData = Pick<EditChannelMember, 'characterName'>;
 
 function ChannelMemberButton({ className }: Props) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const channelId = useSelector((state) => state.chat!.channel.id);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const pane = usePane();
+  const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
   const user = useSelector((state) => state.profile?.user);
-  const channelName = useSelector((state) => state.chat!.channel.name);
-  const spaceMember = useSelector((state) => state.profile?.spaces.get(state.chat!.channel.spaceId)?.member);
+  const channelName = useSelector((state) => state.chatPane[pane]!.channel.name);
+  const spaceMember = useSelector((state) => state.profile?.spaces.get(state.chatPane[pane]!.channel.spaceId)?.member);
   const member = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const nickname = user?.nickname;
   const name = chatName(member?.characterName, nickname);

@@ -9,6 +9,7 @@ import { HEARTBEAT_INTERVAL } from '../../settings';
 import { Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';
 import { useSend } from '../../hooks/useSend';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   className?: string;
@@ -16,11 +17,10 @@ interface Props {
 }
 
 function MemberListButton({ className, channelId }: Props) {
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
-  const channelMembers = useSelector((state) => state.chat!.members);
-  const open = useSelector((state) => state.chat!.memberList);
-  const heartbeatMap = useSelector((state) => state.chat!.heartbeatMap);
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  const pane = usePane();
+  const channelMembers = useSelector((state) => state.chatPane[pane]!.members);
+  const open = useSelector((state) => state.chatPane[pane]!.memberList);
+  const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const dispatch = useDispatch();
   const send = useSend();
@@ -36,7 +36,7 @@ function MemberListButton({ className, channelId }: Props) {
   const now = new Date().getTime();
   const onlineCount = heartbeatMap.filter((time) => isOnline(time, now)).count();
   return (
-    <ChatHeaderButton data-active={open} onClick={() => dispatch(toggleMemberList)} className={className}>
+    <ChatHeaderButton data-active={open} onClick={() => dispatch(toggleMemberList(pane))} className={className}>
       <Icon sprite={members} /> {onlineCount}
       <small>/{channelMembers.length}</small>
     </ChatHeaderButton>

@@ -13,6 +13,7 @@ import { batch } from 'react-redux';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';
+  pane: number;
   id: Id;
 }
 
@@ -20,33 +21,37 @@ export interface LoadMessages {
   type: 'LOAD_MESSAGES';
   messages: Message[];
   finished: boolean;
+  pane: number;
 }
 
 export interface ChannelEventReceived {
   type: 'CHANNEL_EVENT_RECEIVED';
   event: ChannelEvent;
+  pane: number;
 }
 
 export interface ChatLoaded {
   type: 'CHAT_LOADED';
   chat: ChatState;
+  pane: number;
 }
 
 export interface ChatUpdate {
   type: 'CHAT_UPDATE';
   id: Id;
   chat: Partial<ChatState>;
+  pane: number;
 }
 
 let retry = 500;
 let retryTimestamp = new Date().getTime();
 
-function connect(dispatch: Dispatch, id: Id, eventAfter: number): WebSocket {
+function connect(dispatch: Dispatch, id: Id, eventAfter: number, pane: number): WebSocket {
   const connection = apiConnect(id, 'CHANNEL', eventAfter);
   connection.onmessage = (wsMsg) => {
     const event = JSON.parse(wsMsg.data) as ChannelEvent;
     retryTimestamp = event.timestamp;
-    dispatch({ type: 'CHANNEL_EVENT_RECEIVED', event });
+    dispatch({ type: 'CHANNEL_EVENT_RECEIVED', event, pane });
   };
   connection.onopen = () => {
     retry = 500;
@@ -59,13 +64,13 @@ function connect(dispatch: Dispatch, id: Id, eventAfter: number): WebSocket {
     dispatch(showFlash('ERROR', `连接出现错误，${retry / 1000} 秒后尝试重新连接`));
     setTimeout(() => {
       retry *= 2;
-      dispatch({ type: 'CHAT_UPDATE', id, chat: { connection: connect(dispatch, id, retryTimestamp) } });
+      dispatch({ type: 'CHAT_UPDATE', id, chat: { connection: connect(dispatch, id, retryTimestamp, pane) }, pane });
     }, retry);
   };
   return connection;
 }
 
-export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
+export const loadChat = (id: Id, pane: number) => async (dispatch: Dispatch) => {
   const result = await get('/channels/query_with_related', { id });
   if (result.isErr) {
     throwErr(dispatch)(result.value);
@@ -76,7 +81,7 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
   const now = new Date().getTime();
   const eventAfter = initialEvents.length > 0 ? Math.max(...initialEvents.map((event) => event.timestamp)) : now;
   const messageBefore = now;
-  const connection = connect(dispatch, channel.id, eventAfter);
+  const connection = connect(dispatch, channel.id, eventAfter, pane);
   const chat: ChatState = {
     colorMap: Map<Id, string>(Object.entries(colorList)),
     itemSet: initialChatItemSet,
@@ -91,58 +96,77 @@ export const loadChat = (id: Id) => async (dispatch: Dispatch) => {
     memberList: false,
     moving: false,
     postponed: List(),
+    pane,
   };
   batch(() => {
-    dispatch({ type: 'CHAT_LOADED', chat, initialEvents: [] });
+    dispatch({ type: 'CHAT_LOADED', chat, initialEvents: [], pane });
     for (const event of initialEvents) {
-      dispatch<ChannelEventReceived>({ type: 'CHANNEL_EVENT_RECEIVED', event });
+      dispatch<ChannelEventReceived>({ type: 'CHANNEL_EVENT_RECEIVED', event, pane });
     }
   });
 };
 
 export interface ChatFilter {
   type: 'CHAT_FILTER';
+  pane: number;
   filter: ChatState['filter'];
 }
 
-export const chatNoneFilter: ChatFilter = { type: 'CHAT_FILTER', filter: 'NONE' };
+export const chatNoneFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'NONE', pane });
 
-export const chatInGameFilter: ChatFilter = { type: 'CHAT_FILTER', filter: 'IN_GAME' };
+export const chatInGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'IN_GAME', pane });
 
-export const chatOutGameFilter: ChatFilter = { type: 'CHAT_FILTER', filter: 'OUT_GAME' };
+export const chatOutGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'OUT_GAME', pane });
 
 export interface ToggleMemberList {
   type: 'TOGGLE_MEMBER_LIST';
+  pane: number;
 }
 
-export const toggleMemberList: ToggleMemberList = { type: 'TOGGLE_MEMBER_LIST' };
+export const toggleMemberList = (pane: number): ToggleMemberList => ({ type: 'TOGGLE_MEMBER_LIST', pane });
 
 export interface StartEditMessage {
   type: 'START_EDIT_MESSAGE';
   message: Message;
+  pane: number;
 }
 
 export interface StopEditMessage {
   type: 'STOP_EDIT_MESSAGE';
   messageId: Id;
+  pane: number;
   editFor: number;
 }
 
 export interface StartMoveMessage {
   type: 'START_MOVE_MESSAGE';
+  pane: number;
 }
 
 export interface FinishMoveMessage {
   type: 'FINISH_MOVE_MESSAGE';
+  pane: number;
 }
 
 export interface MovingMessage {
   type: 'MOVING_MESSAGE';
   messageIndex: number;
   insertToIndex: number;
+  pane: number;
 }
 
 export interface ResetMessageMoving {
   type: 'RESET_MESSAGE_MOVING';
   messageId: Id;
+  pane: number;
+}
+
+export interface SwitchActivePane {
+  type: 'SWITCH_ACTIVE_PANE';
+  pane: number;
+}
+
+export interface SplitPane {
+  type: 'SPLIT_PANE';
+  split: boolean;
 }

@@ -399,7 +399,6 @@ export const baseStyle = css`
 `;
 
 export const chatRight = css`
-  grid-column: header-start / header-end;
   grid-row: header-start / compose-end;
 `;
 
@@ -435,13 +434,23 @@ export const sidebarWidth = css`
 export const chatHeaderStyle = css`
   background-color: ${headerBgColor};
   ${[chatHeaderPadding]};
-  grid-area: header;
+  grid-row: header-start / header-end;
   z-index: 6;
   ${headerShadow};
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
+  display: grid;
+  height: 100%;
+  column-gap: ${spacingN(1)};
+  align-items: center;
+  justify-content: stretch;
+  grid-template-columns: minmax(4rem, 10rem) 1fr auto;
+  grid-template-areas: 'title topic toolbar';
 `;
+
+export const chatHeaderToolbar = css`
+  height: 100%;
+  grid-area: toolbar;
+`;
+
 export const selectTheme = (theme: Theme): Theme => ({
   borderRadius: 3,
   spacing: theme.spacing,

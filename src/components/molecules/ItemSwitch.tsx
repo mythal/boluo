@@ -6,6 +6,7 @@ import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { useSelector } from '../../store';
 import { ChannelMember } from '../../api/channels';
 import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   item: MessageItem | PreviewItem | undefined;
@@ -16,7 +17,8 @@ interface Props {
 
 function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
   const myId = myMember?.userId;
-  const filter = useSelector((state) => state.chat!.filter);
+  const pane = usePane();
+  const filter = useSelector((state) => state.chatPane[pane]!.filter);
   const inGame = filter === 'IN_GAME';
   const outGame = filter === 'OUT_GAME';
 

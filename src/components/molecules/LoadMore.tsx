@@ -8,6 +8,7 @@ import Icon from '../atoms/Icon';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import styled from '@emotion/styled';
 import { bgColor } from '../../styles/colors';
+import { usePane } from '../../hooks/usePane';
 
 export const loadMoreHeight = 60;
 
@@ -24,11 +25,12 @@ interface Props {
 }
 
 function LoadMore({ shift }: Props) {
-  const channelId = useSelector((state) => state.chat!.channel.id);
-  const before = useSelector((state) => state.chat!.messageBefore);
-  const finished = useSelector((state) => state.chat!.finished);
-  const moving = useSelector((state) => state.chat!.moving);
-  const messageLength = useSelector((state) => state.chat!.itemSet.messages.size);
+  const pane = usePane();
+  const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
+  const before = useSelector((state) => state.chatPane[pane]!.messageBefore);
+  const finished = useSelector((state) => state.chatPane[pane]!.finished);
+  const moving = useSelector((state) => state.chatPane[pane]!.moving);
+  const messageLength = useSelector((state) => state.chatPane[pane]!.itemSet.messages.size);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ function LoadMore({ shift }: Props) {
       finished = false;
     }
     shift(messages.length);
-    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished });
+    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, pane });
   };
   return (
     <LoadMoreContainer>

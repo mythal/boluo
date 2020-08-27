@@ -1,14 +1,16 @@
 import { initProfileState, profileReducer, ProfileState } from './profile';
 import { Action } from '../actions';
 import { initUiState, uiReducer, UiState } from './ui';
-import { chatReducer, ChatState, initChatState } from './chat';
+import { chatReducer, ChatState } from './chat';
 import { flashReducer, FlashState, initFlashState } from './flash';
 
 export interface ApplicationState {
   profile: ProfileState | undefined;
   flash: FlashState;
   ui: UiState;
-  chat: ChatState | undefined;
+  chatPane: Array<ChatState | undefined>;
+  activePane: number;
+  splitPane: boolean;
 }
 
 export const applicationReducer = (
@@ -17,17 +19,34 @@ export const applicationReducer = (
 ): ApplicationState => {
   const profile = profileReducer(state.profile, action);
   const userId = profile?.user.id;
+  let chatPane = [...state.chatPane];
+  if ('pane' in action) {
+    chatPane[action.pane] = chatReducer(chatPane[action.pane], action, userId);
+  } else {
+    chatPane = state.chatPane.map((chat) => chatReducer(chat, action, userId));
+  }
+  let { activePane, splitPane } = state;
+  if (action.type === 'SWITCH_ACTIVE_PANE') {
+    activePane = action.pane;
+  } else if (action.type === 'SPLIT_PANE') {
+    splitPane = action.split;
+  }
+
   return {
     profile,
     ui: uiReducer(state.ui, action, userId),
-    chat: chatReducer(state.chat, action, userId),
     flash: flashReducer(state.flash, action),
+    chatPane,
+    activePane,
+    splitPane,
   };
 };
 
 export const initApplicationState: ApplicationState = {
   profile: initProfileState,
-  chat: initChatState,
   ui: initUiState,
   flash: initFlashState,
+  chatPane: [undefined, undefined],
+  activePane: 0,
+  splitPane: false,
 };

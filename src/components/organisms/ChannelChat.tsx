@@ -7,27 +7,27 @@ import Loading from '../molecules/Loading';
 import { chatRight } from '../../styles/atoms';
 import { useDispatch, useSelector } from '../../store';
 import { CloseChat, loadChat } from '../../actions/chat';
-import ChatMemberList from '../../components/organisms/ChatMemberList';
 
-export const useLoadChat = (id: Id) => {
+export const useLoadChat = (id: Id, pane: number) => {
   const dispatch = useDispatch();
   useEffect(() => {
-    const closeChat: CloseChat = { type: 'CLOSE_CHAT', id };
-    dispatch(loadChat(id)).catch(console.error);
+    const closeChat: CloseChat = { type: 'CLOSE_CHAT', id, pane };
+    dispatch(loadChat(id, pane)).catch(console.error);
     return () => {
       dispatch(closeChat);
     };
-  }, [id, dispatch]);
+  }, [id, dispatch, pane]);
 };
 
 interface Props {
   spaceId: Id;
   channelId: Id;
+  pane: number;
 }
 
-function ChannelChat({ channelId }: Props) {
-  useLoadChat(channelId);
-  const loading = useSelector((state) => state.chat === undefined);
+function ChannelChat({ channelId, pane }: Props) {
+  useLoadChat(channelId, pane);
+  const loading = useSelector((state) => state.chatPane[pane] === undefined);
   if (loading) {
     return (
       <div css={chatRight}>
@@ -40,7 +40,7 @@ function ChannelChat({ channelId }: Props) {
     <>
       <ChatHeader />
       <ChatList />
-      <ChatMemberList />
+      {/*<ChatMemberList />*/}
     </>
   );
 }

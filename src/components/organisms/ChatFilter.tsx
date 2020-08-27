@@ -10,13 +10,15 @@ import Menu from '../../components/atoms/Menu';
 import { MenuItem } from '../atoms/MenuItem';
 import { useDispatch, useSelector } from '../../store';
 import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions/chat';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   className?: string;
 }
 
 function ChatFilter({ className }: Props) {
-  const filter = useSelector((state) => state.chat!.filter);
+  const pane = usePane();
+  const filter = useSelector((state) => state.chatPane[pane]!.filter);
   const button = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
@@ -29,13 +31,16 @@ function ChatFilter({ className }: Props) {
       {open && (
         <Overlay x={1} y={1} selfX={-1} anchor={button} onOuter={dismiss}>
           <Menu dismiss={dismiss}>
-            <MenuItem onClick={() => dispatch(chatInGameFilter)} icon={filter === 'IN_GAME' ? dotCircle : circle}>
+            <MenuItem onClick={() => dispatch(chatInGameFilter(pane))} icon={filter === 'IN_GAME' ? dotCircle : circle}>
               游戏内消息
             </MenuItem>
-            <MenuItem onClick={() => dispatch(chatOutGameFilter)} icon={filter === 'OUT_GAME' ? dotCircle : circle}>
+            <MenuItem
+              onClick={() => dispatch(chatOutGameFilter(pane))}
+              icon={filter === 'OUT_GAME' ? dotCircle : circle}
+            >
               游戏外消息
             </MenuItem>
-            <MenuItem onClick={() => dispatch(chatNoneFilter)} icon={filter === 'NONE' ? dotCircle : circle}>
+            <MenuItem onClick={() => dispatch(chatNoneFilter(pane))} icon={filter === 'NONE' ? dotCircle : circle}>
               所有消息
             </MenuItem>
           </Menu>

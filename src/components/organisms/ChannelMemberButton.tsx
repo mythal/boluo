@@ -10,9 +10,9 @@ import Dialog from '../../components/molecules/Dialog';
 import { chatName } from '../../utils/game';
 import Button from '../../components/atoms/Button';
 import Text from '../atoms/Text';
-import { alignRight, mR, mT } from '../../styles/atoms';
+import { alignRight, mL, mR, mT } from '../../styles/atoms';
 import { css } from '@emotion/core';
-import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
+import ChatHeaderButton, { ChatHeaderButtonLink } from '../../components/atoms/ChatHeaderButton';
 import { useForm } from 'react-hook-form';
 import { EditChannelMember } from '../../api/channels';
 import { ErrorMessage } from '../atoms/ErrorMessage';
@@ -22,9 +22,10 @@ import ninja from '../../assets/icons/ninja.svg';
 import Icon from '../../components/atoms/Icon';
 import doorOpen from '../../assets/icons/door-open.svg';
 import editIcon from '../../assets/icons/edit.svg';
+import cog from '../../assets/icons/cog.svg';
 import Overlay from '../../components/atoms/Overlay';
 import Menu from '../../components/atoms/Menu';
-import { MenuItem } from '../atoms/MenuItem';
+import { MenuItem, MenuItemLink } from '../atoms/MenuItem';
 
 const buttonBarStyle = css`
   ${[mT(4)]};
@@ -85,10 +86,11 @@ function ChannelMemberButton({ className }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const channelId = useSelector((state) => state.chat!.channel.id);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = useSelector((state) => state.profile?.user);
   const channelName = useSelector((state) => state.chat!.channel.name);
   const spaceMember = useSelector((state) => state.profile?.spaces.get(state.chat!.channel.spaceId)?.member);
   const member = useSelector((state) => state.profile?.channels.get(channelId)?.member);
-  const nickname = useSelector((state) => state.profile?.user.nickname);
+  const nickname = user?.nickname;
   const name = chatName(member?.characterName, nickname);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [menu, setMenu] = useState(false);
@@ -130,7 +132,13 @@ function ChannelMemberButton({ className }: Props) {
     </div>
   );
 
-  if (!nickname || !spaceMember) {
+  if (user === undefined) {
+    return (
+      <ChatHeaderButtonLink css={[mL(1)]} to="/login">
+        登录
+      </ChatHeaderButtonLink>
+    );
+  } else if (!nickname || !spaceMember) {
     return null;
   } else if (!member) {
     return (
@@ -165,6 +173,9 @@ function ChannelMemberButton({ className }: Props) {
             <MenuItem icon={editIcon} onClick={openDialog}>
               编辑频道身份
             </MenuItem>
+            <MenuItemLink to="/settings" icon={cog}>
+              设置
+            </MenuItemLink>
             <MenuItem icon={doorOpen} onClick={() => setLeaveConfirmDialog(true)}>
               退出频道
             </MenuItem>
@@ -198,4 +209,4 @@ function ChannelMemberButton({ className }: Props) {
   );
 }
 
-export default ChannelMemberButton;
+export default React.memo(ChannelMemberButton);

@@ -17,7 +17,7 @@ const tooltip = css`
   z-index: 100;
   transform: translate(-50%, -100%);
   border: 1px solid ${black};
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(100, 100, 100, 0.5);
   backdrop-filter: blur(2px);
 
   &[data-x='left'] {

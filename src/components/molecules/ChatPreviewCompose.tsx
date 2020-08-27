@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 import { newId } from '../../utils/id';
-import styled from '@emotion/styled';
 import { clearRight, floatRight, mL, mR, mT, pX, pY, spacingN } from '../../styles/atoms';
 import { useDispatch, useSelector } from '../../store';
 import { ParseResult } from '../../interpreter/parser';
@@ -16,7 +15,7 @@ import ChatItemName from '../../components/atoms/ChatItemName';
 import ChatComposeToolbar from '../../components/molecules/ChatComposeToolbar';
 import ChatPreviewComposeInput from '../../components/molecules/ChatPreviewComposeInput';
 import ChatPreviewComposeNameInput from '../../components/molecules/ChatPreviewComposeNameInput';
-import { blue, gray } from '../../styles/colors';
+import { gray } from '../../styles/colors';
 import ChatItemToolbarButton from '../../components/atoms/ChatItemToolbarButton';
 import cancelIcon from '../../assets/icons/cancel.svg';
 import editIcon from '../../assets/icons/edit.svg';
@@ -26,17 +25,17 @@ import { css } from '@emotion/core';
 import { throwErr } from '../../utils/errors';
 import { isMac } from '../../utils/browser';
 import { useSend } from '../../hooks/useSend';
-import { useDropzone } from 'react-dropzone';
 import MessageMedia from './MessageMedia';
 import {
   allowImageType,
-  imageSizeExceeded,
-  imageFormatIsNotSupported,
-  maxImageFileSize,
-  formatIsNotSupported,
   fileSizeExceeded,
+  formatIsNotSupported,
+  imageFormatIsNotSupported,
+  imageSizeExceeded,
+  maxImageFileSize,
 } from '../../validators';
 import { showFlash } from '../../actions/flash';
+import ChatImageUploadButton from './ChatImageUploadButton';
 
 interface Props {
   preview: Preview | undefined;
@@ -55,7 +54,7 @@ export const previewStyle = (colorA: string, colorB: string) => css`
   );
 `;
 
-export const Container = styled.div`
+export const container = css`
   display: grid;
   ${[pX(2), pY(2), previewStyle(gray['900'], darken(0.15, gray['900']))]};
   border-top: 1px solid ${gray['900']};
@@ -71,19 +70,6 @@ export const Container = styled.div`
   gap: ${spacingN(1)} ${spacingN(2)};
   &[data-edit='true'] {
     position: relative;
-  }
-  &[data-dragging='true']::after {
-    content: '拖放文件';
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 50%;
-    left: 0;
-    top: 0;
-    background-color: ${blue['900']};
   }
   &:focus {
     outline: none;
@@ -112,6 +98,27 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
 
   const composeReducer = (state: ComposeState, update: Partial<ComposeState>): ComposeState => {
+    if (update.media) {
+      const file = update.media;
+      if (file.size > maxImageFileSize) {
+        dispatch(showFlash('WARNING', fileSizeExceeded));
+        return state;
+      } else if (file.type.startsWith('image')) {
+        if (allowImageType.includes(file.type)) {
+          if (file.size > maxImageFileSize) {
+            dispatch(showFlash('WARNING', imageSizeExceeded));
+            return state;
+          }
+        } else {
+          dispatch(showFlash('WARNING', imageFormatIsNotSupported));
+          return state;
+        }
+      } else {
+        dispatch(showFlash('WARNING', formatIsNotSupported));
+        return state;
+      }
+    }
+
     if (update.parsed !== undefined && update.parsed.text === '' && editTo === undefined) {
       messageId.current = newId();
     }
@@ -236,36 +243,8 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       composeDispatch({ inGame: !inGame });
     }
   };
-  const onDrop = (files: File[]) => {
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.size > maxImageFileSize) {
-        dispatch(showFlash('WARNING', fileSizeExceeded));
-        return;
-      } else if (file.type.startsWith('image')) {
-        if (allowImageType.includes(file.type)) {
-          if (file.size > maxImageFileSize) {
-            dispatch(showFlash('WARNING', imageSizeExceeded));
-            return;
-          }
-          composeDispatch({ media: file });
-        } else {
-          dispatch(showFlash('WARNING', imageFormatIsNotSupported));
-        }
-      } else {
-        dispatch(showFlash('WARNING', formatIsNotSupported));
-      }
-    }
-  };
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ noClick: true, onDrop });
   return (
-    <Container
-      {...getRootProps()}
-      data-edit={editTo !== undefined}
-      data-dragging={isDragActive}
-      ref={containerRef}
-      onKeyDown={handleKeyDown}
-    >
+    <div css={container} data-edit={editTo !== undefined} ref={containerRef} onKeyDown={handleKeyDown}>
       <ChatItemTime timestamp={editTo?.created || preview?.start || new Date().getTime()} />
       {inGame && <ChatPreviewComposeNameInput value={inputName} composeDispatch={composeDispatch} />}
       {!inGame && !isAction && chatItemName}
@@ -274,6 +253,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         {isAction && chatItemName}
         <ChatItemContent entities={entities} text={text} />
         <div css={[mL(2), mT(2), floatRight, clearRight]}>
+          <ChatImageUploadButton hasImage={media !== undefined} composeDispatch={composeDispatch} css={[mR(1)]} />
           {editTo && <ChatItemToolbarButton css={mR(1)} sprite={cancelIcon} onClick={cancelEdit} title="取消" />}
           <ChatItemToolbarButton
             loading={sending}
@@ -294,8 +274,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
         initialValue={initialDraft}
       />
       <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
-      <input {...getInputProps()} />
-    </Container>
+    </div>
   );
 }
 

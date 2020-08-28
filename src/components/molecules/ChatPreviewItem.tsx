@@ -12,13 +12,14 @@ interface Props {
 }
 
 function ChatPreviewItem({ preview }: Props) {
-  let { text, isAction } = preview;
+  let { text, isAction, entities } = preview;
 
   if (text === '') {
     return null;
   }
   if (text === null) {
-    text = '输入中…';
+    text = '……（预览广播已关闭）……';
+    entities = [{ type: 'Text', start: 0, offset: text.length }];
     isAction = true;
   }
 
@@ -32,7 +33,7 @@ function ChatPreviewItem({ preview }: Props) {
       {!isAction && name}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
         {isAction && name}
-        <ChatItemContent entities={preview.entities} text={text} />
+        <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>
     </div>
   );

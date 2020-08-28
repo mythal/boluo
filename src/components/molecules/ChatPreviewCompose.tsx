@@ -180,12 +180,12 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
       isAction,
       mediaId: null,
       editFor: editTo?.modified,
-      text,
-      entities,
+      text: broadcast || text === '' ? text : null,
+      entities: broadcast ? entities : [],
     };
     send({ type: 'PREVIEW', preview });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editTo, inGame, isAction, name, parsed, send]);
+  }, [editTo, inGame, isAction, broadcast, name, parsed, send]);
   const canNotSend = text === '' || (inGame && inputName === '') || sending;
   const onSend = async () => {
     if (canNotSend) {

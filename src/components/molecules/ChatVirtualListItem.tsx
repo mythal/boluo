@@ -49,11 +49,13 @@ export function ChatVirtualListItem({
     }
     if (deferred) {
       if (order === 0) {
-        setDeferred(false);
+        timeout = window.setTimeout(() => {
+          setDeferred(false);
+        }, Math.random() * 64);
       } else {
         timeout = window.setTimeout(() => {
           setDeferred(false);
-        }, order * 20 + 50);
+        }, order * 20 + 64);
       }
     }
     return () => window.clearTimeout(timeout);

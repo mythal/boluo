@@ -30,23 +30,20 @@ function LoadMore({ shift }: Props) {
   const before = useSelector((state) => state.chatPane[pane]!.messageBefore);
   const finished = useSelector((state) => state.chatPane[pane]!.finished);
   const moving = useSelector((state) => state.chatPane[pane]!.moving);
-  const messageLength = useSelector((state) => state.chatPane[pane]!.itemSet.messages.size);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let timeout: number | undefined = undefined;
-    if (messageLength < 32) {
-      timeout = window.setTimeout(() => {
-        button.current?.click();
-      }, 0);
-    }
+    timeout = window.setTimeout(() => {
+      button.current?.click();
+    }, 0);
     return () => window.clearTimeout(timeout);
-  }, [messageLength]);
+  }, []);
 
   if (finished) {
-    return null;
+    return <LoadMoreContainer>Ω</LoadMoreContainer>;
   }
   const loadMore = async () => {
     const limit = 64;

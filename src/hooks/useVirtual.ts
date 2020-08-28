@@ -55,7 +55,6 @@ export function useVirtual<T extends Element>({
   size = 0,
   estimateSize = defaultEstimateSize,
   overscan = 0,
-  paddingStart = 0,
   paddingEnd = 0,
   renderThreshold = 0,
   parentRef,
@@ -110,7 +109,7 @@ export function useVirtual<T extends Element>({
     return measurements;
   }, [estimateSize, measuredCache, paddingEnd, size]);
 
-  const totalSize = (measurements[0]?.start || 0) + paddingStart;
+  const totalSize = size * 1000;
   const latestRef = React.useRef<Latest>({
     overscan,
     measurements,
@@ -274,22 +273,18 @@ export function useVirtual<T extends Element>({
     [tryScrollToIndex]
   );
   const prevTotalSize = useRef(0);
-  const integral = useRef(0);
-
   useLayoutEffect(() => {
-    if (parentRef.current) {
-      const parent = parentRef.current;
-      const delta = totalSize - prevTotalSize.current;
-      // why negative delta?
-      integral.current += delta;
-      if (delta > 0) {
-        const top = parent.scrollTop + integral.current;
-        integral.current = 0;
-        parent.scrollTo({ top });
-      }
+    if (!parentRef.current) {
+      return;
     }
+    const delta = totalSize - prevTotalSize.current;
+    if (delta < 0) {
+      return;
+    }
+    parentRef.current.scrollTo({ top: latestRef.current.scrollOffset + delta });
     prevTotalSize.current = totalSize;
   }, [parentRef, totalSize]);
+
   return {
     virtualItems,
     totalSize,

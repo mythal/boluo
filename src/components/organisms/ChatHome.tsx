@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
-import { chatHeaderStyle, chatHeaderToolbar, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
+import { chatHeaderStyle, chatHeaderToolbar, flex, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
 import { Space, SpaceMember } from '../../api/spaces';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../../components/atoms/Icon';
@@ -54,7 +54,7 @@ interface Props {
 }
 
 const Buttons = styled.div`
-  ${chatHeaderToolbar};
+  ${[chatHeaderToolbar, flex]};
 `;
 
 function ChatHome({ space, members, channels }: Props) {

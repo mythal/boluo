@@ -237,7 +237,7 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
     <ChatItemName action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
   );
   const handleKeyDown: React.KeyboardEventHandler = async (e) => {
-    if (e.metaKey && e.key === 'Enter') {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       await onSend();
     } else if (e.key === 'Alt') {

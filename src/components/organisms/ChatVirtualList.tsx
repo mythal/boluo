@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useRef } from 'react';
+import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { useDispatch, useSelector } from '../../store';
 import { useVirtual } from '../../hooks/useVirtual';
 import { css } from '@emotion/core';
@@ -15,6 +16,8 @@ import { Preview } from '../../api/events';
 import { usePane } from '../../hooks/usePane';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
+
+const ResizeObserver = window.ResizeObserver || Polyfill;
 
 interface Props {
   channelId: Id;

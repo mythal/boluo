@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Icon from '../../components/atoms/Icon';
 import icon from '../../assets/icons/external-link.svg';
+import { p } from '../../styles/atoms';
 
 interface Props {
   to: string;
@@ -12,7 +13,7 @@ function ExternalLink({ to, children, className }: Props) {
   return (
     <a href={to} rel="noopener noreferrer" className={className} target="_blank">
       {children}
-      <Icon sprite={icon} />
+      <Icon css={p(0.5)} sprite={icon} />
     </a>
   );
 }

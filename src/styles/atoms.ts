@@ -366,7 +366,6 @@ export const spaceGrid = [
 ];
 
 export const link = css`
-  ${inlineBlock};
   color: ${linkColor};
   text-decoration: none;
 

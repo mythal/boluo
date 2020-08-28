@@ -1,5 +1,4 @@
 import styled from '@emotion/styled';
-import { textBase, textLg } from '../../styles/atoms';
 import { darken } from 'polished';
 import { textColor } from '../../styles/colors';
 
@@ -11,11 +10,7 @@ export const ChatItemContentContainer = styled.div`
     font-style: italic;
   }
 
-  &[data-in-game='true'] {
-    ${textLg};
-  }
   &[data-in-game='false'] {
-    ${textBase};
     color: ${darken(0.1, textColor)};
   }
   &[data-folded='true'] {

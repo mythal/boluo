@@ -1,4 +1,4 @@
-import { pX, pY, spacingN } from '../../styles/atoms';
+import { pX, pY, spacingN, textLg, textSm } from '../../styles/atoms';
 import { darken, lighten } from 'polished';
 import { bgColor } from '../../styles/colors';
 import { css } from '@emotion/core';
@@ -8,7 +8,7 @@ export const nameColWidth = '8rem';
 
 export const chatItemBgColor = bgColor;
 export const chatItemHoverBgColor = lighten(0.025, bgColor);
-export const chatItemOutGameBgColor = darken(0.035, bgColor);
+export const chatItemOutGameBgColor = darken(0.05, bgColor);
 export const chatItemOutGameHoverBgColor = darken(0.015, bgColor);
 
 export const chatItemPlaceHolder = css`
@@ -33,9 +33,13 @@ export const chatItemContainer = css`
   grid-template-areas: 'time name content';
   gap: ${spacingN(1)} ${spacingN(2)};
   background-color: ${chatItemBgColor};
+  &[data-in-game='true'] {
+    ${textLg};
+  }
 
   &[data-in-game='false'] {
     background-color: ${chatItemOutGameBgColor};
+    ${textSm};
     &:hover {
       background-color: ${chatItemOutGameHoverBgColor};
     }

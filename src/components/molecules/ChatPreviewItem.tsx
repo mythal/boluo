@@ -28,7 +28,7 @@ function ChatPreviewItem({ preview }: Props) {
   );
 
   return (
-    <div css={[chatItemContainer, previewStyle]}>
+    <div css={[chatItemContainer, previewStyle]} data-in-game={preview.inGame}>
       <ChatItemTime timestamp={preview.start} />
       {!isAction && name}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>

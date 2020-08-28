@@ -3,6 +3,7 @@ import { darken, lighten, mix, transparentize } from 'polished';
 import { Theme } from 'react-select';
 import {
   bgColor,
+  blue,
   focusOutlineColor,
   gray,
   headerBgColor,
@@ -474,9 +475,10 @@ export const selectTheme = (theme: Theme): Theme => ({
   },
 });
 const colorA = gray['900'];
-const colorB = darken(0.15, gray['900']);
+const colorB = darken(0.3, gray['900']);
 const previewStripWidth = 3;
 export const previewStyle = css`
+  box-shadow: ${spacingN(1)} 0 0 0 ${blue['700']} inset;
   background: repeating-linear-gradient(
     45deg,
     ${colorA},

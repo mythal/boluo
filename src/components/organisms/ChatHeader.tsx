@@ -2,7 +2,18 @@ import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { css } from '@emotion/core';
 import { useDispatch, useSelector } from '../../store';
-import { chatHeaderStyle, flex, fontBold, fontMono, mL, mR, pR, textBase, textLg } from '../../styles/atoms';
+import {
+  chatHeaderStyle,
+  chatHeaderToolbar,
+  flex,
+  fontBold,
+  fontMono,
+  mL,
+  mR,
+  pR,
+  textBase,
+  textLg,
+} from '../../styles/atoms';
 import ChannelMemberButton from './ChannelMemberButton';
 import sliders from '../../assets/icons/sliders.svg';
 import columns from '../../assets/icons/columns.svg';
@@ -27,9 +38,8 @@ const Topic = styled.div`
 `;
 
 const toolbar = css`
-  ${[flex, mL(2)]};
+  ${[flex, chatHeaderToolbar]};
   align-items: stretch;
-  grid-area: toolbar;
 `;
 
 const ChannelName = styled.div`

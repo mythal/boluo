@@ -41,12 +41,9 @@ export interface ChatState {
   messageBefore: number;
   eventAfter: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
-  memberList: boolean;
   moving: boolean;
   postponed: List<Action>;
 }
-
-export const initChatState = undefined;
 
 const loadChat = (prevState: ChatState | undefined, { chat }: ChatLoaded): ChatState => {
   if (prevState?.channel.id === chat.channel.id) {
@@ -302,8 +299,6 @@ export const chatReducer = (
       return handleResetMessageMoving(state, action);
     case 'CHAT_FILTER':
       return { ...state, filter: action.filter };
-    case 'TOGGLE_MEMBER_LIST':
-      return { ...state, memberList: !state.memberList };
     case 'START_EDIT_MESSAGE':
       return handleStartEditMessage(state, action);
     case 'STOP_EDIT_MESSAGE':

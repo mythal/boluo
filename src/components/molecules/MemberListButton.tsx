@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from '../../store';
-import { toggleMemberList } from '../../actions/chat';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSelector } from '../../store';
 import Icon from '../../components/atoms/Icon';
 import members from '../../assets/icons/members.svg';
 import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
@@ -10,6 +9,8 @@ import { Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';
 import { useSend } from '../../hooks/useSend';
 import { usePane } from '../../hooks/usePane';
+import Overlay from '../atoms/Overlay';
+import ChatMemberList from '../organisms/ChatMemberList';
 
 interface Props {
   className?: string;
@@ -19,10 +20,10 @@ interface Props {
 function MemberListButton({ className, channelId }: Props) {
   const pane = usePane();
   const channelMembers = useSelector((state) => state.chatPane[pane]!.members);
-  const open = useSelector((state) => state.chatPane[pane]!.memberList);
+  const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
-  const dispatch = useDispatch();
   const send = useSend();
   useEffect(() => {
     const pulse = window.setInterval(() => {
@@ -35,12 +36,20 @@ function MemberListButton({ className, channelId }: Props) {
 
   const now = new Date().getTime();
   const onlineCount = heartbeatMap.filter((time) => isOnline(time, now)).count();
+  const toggle = useCallback(() => setOpen((value) => !value), []);
   return (
-    <ChatHeaderButton data-active={open} onClick={() => dispatch(toggleMemberList(pane))} className={className}>
-      <Icon sprite={members} /> {onlineCount}
-      <small>/{channelMembers.length}</small>
-    </ChatHeaderButton>
+    <React.Fragment>
+      <ChatHeaderButton data-active={open} onClick={toggle} className={className} ref={buttonRef}>
+        <Icon sprite={members} /> {onlineCount}
+        <small>/{channelMembers.length}</small>
+      </ChatHeaderButton>
+      {open && (
+        <Overlay x={1} selfX={-1} y={1} anchor={buttonRef}>
+          <ChatMemberList />
+        </Overlay>
+      )}
+    </React.Fragment>
   );
 }
 
-export default MemberListButton;
+export default React.memo(MemberListButton);

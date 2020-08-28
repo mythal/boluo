@@ -24,7 +24,6 @@ import {
   StartMoveMessage,
   StopEditMessage,
   SwitchActivePane,
-  ToggleMemberList,
 } from './chat';
 import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from './ui';
 import { DismissFlash, ShowFlash } from './flash';
@@ -51,7 +50,6 @@ export type Action =
   | SpaceLoaded
   | UserLoaded
   | ChatFilter
-  | ToggleMemberList
   | StartEditMessage
   | StopEditMessage
   | StartMoveMessage

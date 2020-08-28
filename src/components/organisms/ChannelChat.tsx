@@ -37,11 +37,10 @@ function ChannelChat({ channelId, pane }: Props) {
   }
 
   return (
-    <>
+    <React.Fragment>
       <ChatHeader />
       <ChatList />
-      {/*<ChatMemberList />*/}
-    </>
+    </React.Fragment>
   );
 }
 

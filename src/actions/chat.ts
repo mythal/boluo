@@ -93,7 +93,6 @@ export const loadChat = (id: Id, pane: number) => async (dispatch: Dispatch) => 
     connection,
     members,
     filter: 'NONE',
-    memberList: false,
     moving: false,
     postponed: List(),
     pane,
@@ -117,13 +116,6 @@ export const chatNoneFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTE
 export const chatInGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'IN_GAME', pane });
 
 export const chatOutGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'OUT_GAME', pane });
-
-export interface ToggleMemberList {
-  type: 'TOGGLE_MEMBER_LIST';
-  pane: number;
-}
-
-export const toggleMemberList = (pane: number): ToggleMemberList => ({ type: 'TOGGLE_MEMBER_LIST', pane });
 
 export interface StartEditMessage {
   type: 'START_EDIT_MESSAGE';

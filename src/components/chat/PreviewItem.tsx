@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { Preview } from '../../api/events';
 import { chatItemContainer } from '../atoms/ChatItemContainer';
-import ChatItemTime from '../../components/atoms/ChatItemTime';
-import ChatItemName from '../../components/atoms/ChatItemName';
+import ChatItemTime from '../atoms/ChatItemTime';
+import ChatItemName from '../atoms/ChatItemName';
 import { previewStyle } from '../../styles/atoms';
-import ChatItemContent from '../../components/molecules/ChatItemContent';
+import ChatItemContent from './ItemContent';
 import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
 
 interface Props {
   preview: Preview;
 }
 
-function ChatPreviewItem({ preview }: Props) {
+function PreviewItem({ preview }: Props) {
   let { text, isAction, entities } = preview;
 
   if (text === '') {
@@ -39,4 +39,4 @@ function ChatPreviewItem({ preview }: Props) {
   );
 }
 
-export default React.memo(ChatPreviewItem);
+export default React.memo(PreviewItem);

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect } from 'react';
 import { Id } from '../../utils/id';
-import ChatHeader from './ChatHeader';
+import Header from './Header';
 import ChatList from './ChatList';
 import Loading from '../molecules/Loading';
 import { chatRight } from '../../styles/atoms';
@@ -38,7 +38,7 @@ function ChannelChat({ channelId, pane }: Props) {
 
   return (
     <React.Fragment>
-      <ChatHeader />
+      <Header />
       <ChatList />
     </React.Fragment>
   );

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from '../../store';
 import { get } from '../../api/request';
 import { LoadMessages } from '../../actions/chat';
-import Button from '../../components/atoms/Button';
+import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import styled from '@emotion/styled';

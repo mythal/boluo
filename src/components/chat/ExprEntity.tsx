@@ -3,7 +3,7 @@ import Prando from 'prando';
 import { EvaluatedExprNode, ExprNode, RollResult } from '../../interpreter/entities';
 import D20Icon from '../../assets/icons/d20.svg';
 import { evaluate, TOO_MUCH_LAYER } from '../../interpreter/eval';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import { inlineBlock, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';

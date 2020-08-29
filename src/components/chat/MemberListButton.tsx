@@ -1,16 +1,16 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from '../../store';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import members from '../../assets/icons/members.svg';
-import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
+import ChatHeaderButton from '../atoms/ChatHeaderButton';
 import { HEARTBEAT_INTERVAL } from '../../settings';
 import { Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';
 import { useSend } from '../../hooks/useSend';
 import { usePane } from '../../hooks/usePane';
 import Overlay from '../atoms/Overlay';
-import ChatMemberList from '../organisms/ChatMemberList';
+import ChatMemberList from './MemberList';
 
 interface Props {
   className?: string;

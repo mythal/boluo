@@ -1,11 +1,11 @@
 import * as React from 'react';
-import ChatItemToolbarButton from '../../components/atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 import { flexRowReverse, mR } from '../../styles/atoms';
 import mask from '../../assets/icons/theater-masks.svg';
 import running from '../../assets/icons/running.svg';
 import broadcastTower from '../../assets/icons/broadcast-tower.svg';
 import styled from '@emotion/styled';
-import { ComposeDispatch } from './ChatPreviewCompose';
+import { ComposeDispatch } from './PreviewCompose';
 import { isMac } from '../../utils/browser';
 
 interface Props {
@@ -20,7 +20,7 @@ const Toolbar = styled.div`
   grid-area: toolbar;
 `;
 
-function ChatComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Props) {
+function ComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Props) {
   const toggleInGame = () => composeDispatch({ inGame: !inGame });
   const toggleIsAction = () => composeDispatch({ isAction: !isAction });
   const toggleBroadcast = () => composeDispatch({ broadcast: !broadcast });
@@ -45,4 +45,4 @@ function ChatComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Pr
   );
 }
 
-export default React.memo(ChatComposeToolbar);
+export default React.memo(ComposeToolbar);

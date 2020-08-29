@@ -5,14 +5,14 @@ import styled from '@emotion/styled';
 import { chatHeaderStyle, chatHeaderToolbar, flex, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
 import { Space, SpaceMember } from '../../api/spaces';
 import { useDispatch, useSelector } from '../../store';
-import Icon from '../../components/atoms/Icon';
-import ChatHeaderButton, { chatHeaderButtonStyle } from '../../components/atoms/ChatHeaderButton';
-import Badge from '../../components/atoms/Badge';
+import Icon from '../atoms/Icon';
+import ChatHeaderButton, { chatHeaderButtonStyle } from '../atoms/ChatHeaderButton';
+import Badge from '../atoms/Badge';
 import userCog from '../../assets/icons/user-cog.svg';
-import ManageSpace from '../../components/organisms/ManageSpace';
+import ManageSpace from '../organisms/ManageSpace';
 import { Channel } from '../../api/channels';
-import JoinSpaceButton from '../../components/molecules/JoinSpaceButton';
-import LeaveSpaceButton from '../../components/molecules/LeaveSpaceButton';
+import JoinSpaceButton from '../molecules/JoinSpaceButton';
+import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { useTitle } from '../../hooks/useTitle';
 import { usePane } from '../../hooks/usePane';
 import { chatPath } from '../../utils/path';
@@ -57,7 +57,7 @@ const Buttons = styled.div`
   ${[chatHeaderToolbar, flex]};
 `;
 
-function ChatHome({ space, members, channels }: Props) {
+function Home({ space, members, channels }: Props) {
   useTitle(space.name);
 
   const pane = usePane();
@@ -103,4 +103,4 @@ function ChatHome({ space, members, channels }: Props) {
   );
 }
 
-export default ChatHome;
+export default Home;

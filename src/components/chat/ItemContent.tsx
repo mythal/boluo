@@ -5,7 +5,7 @@ import Prando from 'prando';
 import { Entity } from '../../interpreter/entities';
 import { ExprEntity } from './ExprEntity';
 import { white } from '../../styles/colors';
-import ExternalLink from '../../components/atoms/ExternalLink';
+import ExternalLink from '../atoms/ExternalLink';
 
 interface Props {
   text: string;
@@ -41,7 +41,7 @@ const Expr = styled.span`
   ${fontMono};
 `;
 
-function ChatItemContent({ text, entities, seed }: Props) {
+function ItemContent({ text, entities, seed }: Props) {
   const content = [];
   let rng: Prando | undefined = undefined;
 
@@ -71,4 +71,4 @@ function ChatItemContent({ text, entities, seed }: Props) {
   return <React.Fragment>{content}</React.Fragment>;
 }
 
-export default React.memo(ChatItemContent);
+export default React.memo(ItemContent);

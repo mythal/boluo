@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Route, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
-import ChatSidebar from '../organisms/ChatSidebar';
+import Sidebar from '../chat/Sidebar';
 import { decodeUuid, Id } from '../../utils/id';
-import ChannelChat from '../organisms/ChannelChat';
-import ChatHome from '../organisms/ChatHome';
+import ChannelChat from '../chat/ChannelChat';
+import Home from '../chat/Home';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import { useDispatch, useSelector } from '../../store';
@@ -105,14 +105,14 @@ function Chat() {
   return (
     <Container data-split={isSplit}>
       <Global styles={viewHeight} />
-      <ChatSidebar space={space} channels={channels} />
+      <Sidebar space={space} channels={channels} />
       <Route path={activePane === 0 ? chatPath(spaceId, channelId) : chatPath(spaceId)}>
         <PaneContext.Provider value={0}>
           {(isSplit || activePane === 0) &&
             (left ? (
               <ChannelChat spaceId={spaceId} channelId={left} pane={0} />
             ) : (
-              <ChatHome members={members} channels={channels} space={space} />
+              <Home members={members} channels={channels} space={space} />
             ))}
         </PaneContext.Provider>
       </Route>
@@ -123,7 +123,7 @@ function Chat() {
             (right ? (
               <ChannelChat spaceId={spaceId} channelId={right} pane={1} />
             ) : (
-              <ChatHome members={members} channels={channels} space={space} />
+              <Home members={members} channels={channels} space={space} />
             ))}
         </PaneContext.Provider>
       </Route>

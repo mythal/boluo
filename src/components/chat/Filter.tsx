@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import filterIcon from '../../assets/icons/filter.svg';
 import circle from '../../assets/icons/circle.svg';
 import dotCircle from '../../assets/icons/dot-circle.svg';
-import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
-import Overlay from '../../components/atoms/Overlay';
-import Menu from '../../components/atoms/Menu';
+import ChatHeaderButton from '../atoms/ChatHeaderButton';
+import Overlay from '../atoms/Overlay';
+import Menu from '../atoms/Menu';
 import { MenuItem } from '../atoms/MenuItem';
 import { useDispatch, useSelector } from '../../store';
 import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions/chat';
@@ -16,7 +16,7 @@ interface Props {
   className?: string;
 }
 
-function ChatFilter({ className }: Props) {
+function Filter({ className }: Props) {
   const pane = usePane();
   const filter = useSelector((state) => state.chatPane[pane]!.filter);
   const button = useRef<HTMLButtonElement | null>(null);
@@ -50,4 +50,4 @@ function ChatFilter({ className }: Props) {
   );
 }
 
-export default ChatFilter;
+export default Filter;

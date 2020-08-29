@@ -7,10 +7,10 @@ import { fontBold, fontMono, mB, mT, pR, pX, pY, textBase, textSm } from '../../
 import { SidebarItemLink } from '../atoms/SidebarItem';
 import { encodeUuid } from '../../utils/id';
 import { chatPath } from '../../utils/path';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import plus from '../../assets/icons/plus-circle.svg';
 import { SidebarButton } from '../atoms/SidebarButton';
-import CreateChannel from '../../components/organisms/CreateChannel';
+import CreateChannel from '../organisms/CreateChannel';
 import { useSelector } from '../../store';
 import { gray, sidebarItemActiveBgColor, sidebarItemHoverBgColor, textColor } from '../../styles/colors';
 import { NavLink } from 'react-router-dom';

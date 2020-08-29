@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { fontBase, fontNormal, p, textXs } from '../../styles/atoms';
-import { toolbarRadius } from '../molecules/ChatItemToolbar';
+import { toolbarRadius } from '../chat/ItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { SpriteSymbol } from '*.svg';

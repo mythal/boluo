@@ -3,16 +3,16 @@ import { useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '../../api/channels';
 import { chatHeaderPadding, mR, pY, sidebarWidth, textLg } from '../../styles/atoms';
-import ChatHeaderButton, { ChatHeaderButtonLink } from '../../components/atoms/ChatHeaderButton';
+import ChatHeaderButton, { ChatHeaderButtonLink } from '../atoms/ChatHeaderButton';
 import logo from '../../assets/logo.svg';
 import bars from '../../assets/icons/bars.svg';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import { darken } from 'polished';
 import { Space } from '../../api/spaces';
-import SidebarExpandItems from '../../components/molecules/SidebarExpandItems';
+import SidebarExpandItems from './SidebarExpandItems';
 import { chatSidebarColor, headerBgColor } from '../../styles/colors';
 import { Transition } from 'react-transition-group';
-import SidebarFoldedItems from '../../components/molecules/SidebarFoldedItems';
+import SidebarFoldedItems from './SidebarFoldedItems';
 
 interface Props {
   space: Space;
@@ -66,7 +66,7 @@ function sidebarState(): boolean {
   }
 }
 
-function ChatSidebar({ space, channels }: Props) {
+function Sidebar({ space, channels }: Props) {
   const [expand, setExpand] = useState(sidebarState());
   const toggle = () =>
     setExpand((value) => {
@@ -104,4 +104,4 @@ function ChatSidebar({ space, channels }: Props) {
   );
 }
 
-export default ChatSidebar;
+export default Sidebar;

@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 import fileImage from '../../assets/icons/file-image.svg';
 import removeFileImage from '../../assets/icons/remove-file-image.svg';
 import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
-import { ComposeDispatch } from './ChatPreviewCompose';
+import { ComposeDispatch } from './PreviewCompose';
 
 interface Props {
   composeDispatch: ComposeDispatch;
@@ -11,7 +11,7 @@ interface Props {
   className?: string;
 }
 
-function ChatImageUploadButton({ composeDispatch, hasImage, className }: Props) {
+function ImageUploadButton({ composeDispatch, hasImage, className }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const removeMedia = useCallback(() => composeDispatch({ media: undefined }), [composeDispatch]);
@@ -33,4 +33,4 @@ function ChatImageUploadButton({ composeDispatch, hasImage, className }: Props) 
   );
 }
 
-export default React.memo(ChatImageUploadButton);
+export default React.memo(ImageUploadButton);

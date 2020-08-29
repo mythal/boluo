@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from '../../components/atoms/ChatHeaderButton';
+import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from '../atoms/ChatHeaderButton';
 import { Space } from '../../api/spaces';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import nightSky from '../../assets/icons/night-sky.svg';
-import Menu from '../../components/atoms/Menu';
+import Menu from '../atoms/Menu';
 import { MenuItemLink } from '../atoms/MenuItem';
 import { Channel } from '../../api/channels';
-import Overlay from '../../components/atoms/Overlay';
+import Overlay from '../atoms/Overlay';
 import { chatPath } from '../../utils/path';
 
 interface Props {

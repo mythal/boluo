@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ChatItemToolbar from './ChatItemToolbar';
+import ItemToolbar from './ItemToolbar';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import { ChannelMember } from '../../api/channels';
 import editIcon from '../../assets/icons/edit.svg';
@@ -8,7 +8,7 @@ import foldIcon from '../../assets/icons/fold.svg';
 import unfoldIcon from '../../assets/icons/unfold.svg';
 import ChatItemToolbarButton, { ToolbarButtonProps } from '../atoms/ChatItemToolbarButton';
 import { useState } from 'react';
-import Dialog from './Dialog';
+import Dialog from '../molecules/Dialog';
 import { Text } from '../atoms/Text';
 import { post } from '../../api/request';
 import { throwErr } from '../../utils/errors';
@@ -30,7 +30,7 @@ const quoteStyle = css`
   border-left: ${spacingN(1)} solid ${primary['700']};
 `;
 
-function ChatMessageToolbar({ myMember, mine, message }: Props) {
+function MessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
   const pane = usePane();
   const isAdmin = useIsAdmin();
@@ -99,7 +99,7 @@ function ChatMessageToolbar({ myMember, mine, message }: Props) {
 
   return (
     <React.Fragment>
-      <ChatItemToolbar className="show-on-hover">{buttons}</ChatItemToolbar>
+      <ItemToolbar className="show-on-hover">{buttons}</ItemToolbar>
       {deleteDialog && (
         <Dialog
           title="删除消息"
@@ -116,4 +116,4 @@ function ChatMessageToolbar({ myMember, mine, message }: Props) {
   );
 }
 
-export default React.memo(ChatMessageToolbar);
+export default React.memo(MessageToolbar);

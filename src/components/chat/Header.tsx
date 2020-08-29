@@ -17,13 +17,13 @@ import {
 import ChannelMemberButton from './ChannelMemberButton';
 import sliders from '../../assets/icons/sliders.svg';
 import columns from '../../assets/icons/columns.svg';
-import ChatHeaderButton from '../../components/atoms/ChatHeaderButton';
-import Icon from '../../components/atoms/Icon';
-import ManageChannel from '../../components/organisms/ManageChannel';
+import ChatHeaderButton from '../atoms/ChatHeaderButton';
+import Icon from '../atoms/Icon';
+import ManageChannel from '../organisms/ManageChannel';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
-import ChatFilter from '../../components/organisms/ChatFilter';
-import MemberListButton from '../../components/molecules/MemberListButton';
+import Filter from './Filter';
+import MemberListButton from './MemberListButton';
 import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
 import { usePane } from '../../hooks/usePane';
@@ -60,7 +60,7 @@ const ChannelName = styled.div`
   }
 `;
 
-function ChatHeader() {
+function Header() {
   const pane = usePane();
   const channel = useSelector((state) => state.chatPane[pane]!.channel);
   const isPaneSplit = useSelector((state) => state.splitPane);
@@ -82,7 +82,7 @@ function ChatHeader() {
             <Icon sprite={sliders} />
           </ChatHeaderButton>
         )}
-        <ChatFilter css={[mL(1)]} />
+        <Filter css={[mL(1)]} />
         <MemberListButton channelId={channel.id} css={[mL(1)]} />
         <ChannelMemberButton css={mL(1)} />
       </div>
@@ -91,4 +91,4 @@ function ChatHeader() {
   );
 }
 
-export default ChatHeader;
+export default Header;

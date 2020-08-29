@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { VirtualResult } from '../../hooks/useVirtual';
 import LoadMore from './LoadMore';
 import { ChannelMember } from '../../api/channels';
-import ChatDraggableItem from './ChatDraggableItem';
+import ChatDraggableItem from './DraggableItem';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { chatItemPlaceHolder } from '../atoms/ChatItemContainer';
 
@@ -24,7 +24,7 @@ interface Props {
   dragging?: boolean;
 }
 
-export function ChatVirtualListItem({
+export function VirtualListItem({
   index,
   item,
   size,

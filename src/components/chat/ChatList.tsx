@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useCallback } from 'react';
 import store, { useDispatch, useSelector } from '../../store';
 import { DragDropContext, DragDropContextProps } from 'react-beautiful-dnd';
-import ChatVirtualList from './ChatVirtualList';
+import ChatVirtualList from './VirtualList';
 import { AppResult, post } from '../../api/request';
 import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';

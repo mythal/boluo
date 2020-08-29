@@ -1,7 +1,7 @@
 import * as React from 'react';
-import ChatPreviewCompose from './ChatPreviewCompose';
-import ChatMessageItem from './ChatMessageItem';
-import ChatPreviewItem from './ChatPreviewItem';
+import ChatPreviewCompose from './PreviewCompose';
+import ChatMessageItem from './MessageItem';
+import ChatPreviewItem from './PreviewItem';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { useSelector } from '../../store';
 import { ChannelMember } from '../../api/channels';

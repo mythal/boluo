@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { textBase } from '../../styles/atoms';
-import TextArea from '../../components/atoms/TextArea';
+import TextArea from '../atoms/TextArea';
 import { css } from '@emotion/core';
-import { ComposeDispatch } from './ChatPreviewCompose';
+import { ComposeDispatch } from './PreviewCompose';
 import { useParse } from '../../hooks/useParse';
 import { blue } from '../../styles/colors';
 
@@ -23,7 +23,7 @@ const compose = css`
   }
 `;
 
-function ChatPreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus = false }: Props) {
+function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus = false }: Props) {
   const [value, setValue] = useState(initialValue);
   const [dragging, setDragging] = useState(false);
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
@@ -76,4 +76,4 @@ function ChatPreviewComposeInput({ inGame, initialValue, composeDispatch, autoFo
   );
 }
 
-export default React.memo(ChatPreviewComposeInput);
+export default React.memo(PreviewComposeInput);

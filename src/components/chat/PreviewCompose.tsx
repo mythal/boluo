@@ -6,17 +6,17 @@ import { useDispatch, useSelector } from '../../store';
 import { ParseResult } from '../../interpreter/parser';
 import { Preview, PreviewPost } from '../../api/events';
 import { AppResult, patch, post, upload } from '../../api/request';
-import ChatItemTime from '../../components/atoms/ChatItemTime';
-import ChatItemContent from '../../components/molecules/ChatItemContent';
+import ChatItemTime from '../atoms/ChatItemTime';
+import ChatItemContent from './ItemContent';
 import { Message } from '../../api/messages';
 import { nameColWidth, timeColWidth } from '../atoms/ChatItemContainer';
 import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
-import ChatItemName from '../../components/atoms/ChatItemName';
-import ChatComposeToolbar from '../../components/molecules/ChatComposeToolbar';
-import ChatPreviewComposeInput from '../../components/molecules/ChatPreviewComposeInput';
-import ChatPreviewComposeNameInput from '../../components/molecules/ChatPreviewComposeNameInput';
+import ChatItemName from '../atoms/ChatItemName';
+import ChatComposeToolbar from './ComposeToolbar';
+import ChatPreviewComposeInput from './PreviewComposeInput';
+import ChatPreviewComposeNameInput from './PreviewComposeNameInput';
 import { gray } from '../../styles/colors';
-import ChatItemToolbarButton from '../../components/atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
 import cancelIcon from '../../assets/icons/cancel.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import paperPlane from '../../assets/icons/paper-plane.svg';
@@ -35,7 +35,7 @@ import {
   maxImageFileSize,
 } from '../../validators';
 import { showFlash } from '../../actions/flash';
-import ChatImageUploadButton from './ChatImageUploadButton';
+import ChatImageUploadButton from './ImageUploadButton';
 import { usePane } from '../../hooks/usePane';
 
 interface Props {
@@ -90,7 +90,7 @@ interface ComposeState {
 
 export type ComposeDispatch = React.Dispatch<Partial<ComposeState>>;
 
-function ChatPreviewCompose({ preview, editTo }: Props) {
+function PreviewCompose({ preview, editTo }: Props) {
   const dispatch = useDispatch();
   const messageId = useRef(preview?.id ?? editTo?.id ?? newId());
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -280,4 +280,4 @@ function ChatPreviewCompose({ preview, editTo }: Props) {
   );
 }
 
-export default React.memo(ChatPreviewCompose);
+export default React.memo(PreviewCompose);

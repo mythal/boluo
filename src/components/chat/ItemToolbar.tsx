@@ -39,7 +39,7 @@ export interface Props {
   x?: 'left' | 'right';
 }
 
-export function ChatItemToolbar({ children, className, position = 'top', x = 'right' }: Props) {
+export function ItemToolbar({ children, className, position = 'top', x = 'right' }: Props) {
   return (
     <Container className={className} data-position={position} data-x={x}>
       <Toolbar>{children}</Toolbar>
@@ -47,4 +47,4 @@ export function ChatItemToolbar({ children, className, position = 'top', x = 'ri
   );
 }
 
-export default ChatItemToolbar;
+export default ItemToolbar;

@@ -6,8 +6,8 @@ const style = css`
   height: 100%;
 `;
 
-function ChatListItemPlaceholder() {
+function ListItemPlaceholder() {
   return <div css={style} />;
 }
 
-export default ChatListItemPlaceholder;
+export default ListItemPlaceholder;

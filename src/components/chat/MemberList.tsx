@@ -2,7 +2,7 @@ import * as React from 'react';
 import styled from '@emotion/styled';
 import { useSelector } from '../../store';
 import { roundedSm, spacingN, uiShadow } from '../../styles/atoms';
-import MemberListItem from '../../components/molecules/MemberListItem';
+import MemberListItem from './MemberListItem';
 import { blue } from '../../styles/colors';
 import { usePane } from '../../hooks/usePane';
 
@@ -14,7 +14,7 @@ const Container = styled.div`
   ${uiShadow};
 `;
 
-function ChatMemberList() {
+function MemberList() {
   const pane = usePane();
   const members = useSelector((state) => state.chatPane[pane]!.members);
   const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
@@ -28,4 +28,4 @@ function ChatMemberList() {
   );
 }
 
-export default React.memo(ChatMemberList);
+export default React.memo(MemberList);

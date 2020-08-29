@@ -1,8 +1,8 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
 import { alignRight, p, textSm } from '../../styles/atoms';
-import Input from '../../components/atoms/Input';
-import { ComposeDispatch } from './ChatPreviewCompose';
+import Input from '../atoms/Input';
+import { ComposeDispatch } from './PreviewCompose';
 
 interface Props {
   value: string;
@@ -16,7 +16,7 @@ const Naming = styled.div`
   justify-content: flex-end;
 `;
 
-function ChatPreviewComposeNameInput({ value, composeDispatch }: Props) {
+function PreviewComposeNameInput({ value, composeDispatch }: Props) {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
     composeDispatch({ inputName: value.trim().substr(0, 32) });
@@ -29,4 +29,4 @@ function ChatPreviewComposeNameInput({ value, composeDispatch }: Props) {
   );
 }
 
-export default React.memo(ChatPreviewComposeNameInput);
+export default React.memo(PreviewComposeNameInput);

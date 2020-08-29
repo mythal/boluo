@@ -21,7 +21,7 @@ const dragging = css`
   box-shadow: 1px 1px 2px ${black};
 `;
 
-function ChatDraggableItem({ index, item, myMember, provided, snapshot }: Props) {
+function DraggableItem({ index, item, myMember, provided, snapshot }: Props) {
   const itemIndex = index - 1;
 
   const pane = usePane();
@@ -60,4 +60,4 @@ function ChatDraggableItem({ index, item, myMember, provided, snapshot }: Props)
   );
 }
 
-export default React.memo(ChatDraggableItem);
+export default React.memo(DraggableItem);

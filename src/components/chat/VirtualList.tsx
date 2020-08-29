@@ -5,12 +5,12 @@ import { useDispatch, useSelector } from '../../store';
 import { useVirtual } from '../../hooks/useVirtual';
 import { css } from '@emotion/core';
 import { bgColor, blue, gray } from '../../styles/colors';
-import { loadMoreHeight } from '../molecules/LoadMore';
+import { loadMoreHeight } from './LoadMore';
 import { Id, newId } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
 import { ChannelMember } from '../../api/channels';
-import { ChatVirtualListItem } from '../molecules/ChatVirtualListItem';
-import ChatDraggableItem from '../molecules/ChatDraggableItem';
+import { VirtualListItem } from './VirtualListItem';
+import ChatDraggableItem from './DraggableItem';
 import { PreviewItem } from '../../states/chat-item-set';
 import { Preview } from '../../api/events';
 import { usePane } from '../../hooks/usePane';
@@ -74,7 +74,7 @@ const dummyPreview = (member: ChannelMember): PreviewItem => {
   return { type: 'PREVIEW', preview, id: member.userId, date, mine, offset };
 };
 
-function ChatVirtualList({ myMember, channelId }: Props) {
+function VirtualList({ myMember, channelId }: Props) {
   const pane = usePane();
   const dispatch = useDispatch();
   const history = useHistory();
@@ -129,7 +129,7 @@ function ChatVirtualList({ myMember, channelId }: Props) {
   const items = virtualItems.map(({ index, size, start, end }) => {
     const item = index === 0 ? undefined : messages.get(index - 1);
     return (
-      <ChatVirtualListItem
+      <VirtualListItem
         myMember={myMember}
         key={item?.id || index}
         item={item}
@@ -191,4 +191,4 @@ function ChatVirtualList({ myMember, channelId }: Props) {
   );
 }
 
-export default React.memo(ChatVirtualList);
+export default React.memo(VirtualList);

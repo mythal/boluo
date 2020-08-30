@@ -1,31 +1,30 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import { textBase } from '../../styles/atoms';
-import TextArea from '../atoms/TextArea';
+import { useParse } from '../../../hooks/useParse';
+import { ComposeDispatch, update } from './reducer';
 import { css } from '@emotion/core';
-import { ComposeDispatch } from './PreviewCompose';
-import { useParse } from '../../hooks/useParse';
-import { blue } from '../../styles/colors';
+import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 interface Props {
   inGame: boolean;
   initialValue: string;
   composeDispatch: ComposeDispatch;
   autoFocus?: boolean;
+  className?: string;
 }
 
-const compose = css`
-  grid-area: compose;
-  ${textBase};
-
+const style = css`
   &[data-dragging='true'] {
-    background-color: ${blue['900']};
+    filter: blur(1px);
   }
 `;
 
-function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus = false }: Props) {
+function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus = false, className }: Props) {
   const [value, setValue] = useState(initialValue);
   const [dragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  useAutoHeight(value, inputRef);
+
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
@@ -34,7 +33,8 @@ function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus 
     setValue(nextValue);
     window.clearTimeout(timeout.current);
     timeout.current = window.setTimeout(() => {
-      composeDispatch({ parsed: parse(nextValue.trim()) });
+      const { text, entities } = parse(nextValue.trim());
+      composeDispatch(update({ text, entities }));
     }, 250);
   };
 
@@ -44,7 +44,7 @@ function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus 
     const { files } = event.dataTransfer;
     if (files.length > 0) {
       const media = files[0];
-      composeDispatch({ media });
+      composeDispatch(update({ media }));
     }
   };
   const onDragOver: React.DragEventHandler = (event) => {
@@ -56,17 +56,19 @@ function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus 
   const onPaste: React.ClipboardEventHandler<HTMLTextAreaElement> = (e) => {
     if (e.clipboardData.files.length > 0) {
       e.preventDefault();
-      composeDispatch({ media: e.clipboardData.files[0] });
+      composeDispatch(update({ media: e.clipboardData.files[0] }));
     }
   };
   const onDragLeave = () => setDragging(false);
   return (
-    <TextArea
+    <textarea
       onPaste={onPaste}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      css={compose}
+      ref={inputRef}
+      css={style}
+      className={className}
       value={value}
       placeholder={placeholder}
       autoFocus={autoFocus}

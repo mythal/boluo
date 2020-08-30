@@ -65,7 +65,7 @@ export function useVirtual<T extends Element>({
   const crossKey = !horizontal ? 'width' : 'height';
   const scrollKey = horizontal ? 'scrollLeft' : 'scrollTop';
 
-  const { [sizeKey]: outerSize, [crossKey]: crossSize } = useRect(parentRef) || {
+  const { [sizeKey]: outerSize } = useRect(parentRef) || {
     [sizeKey]: 0,
     [crossKey]: 0,
   };
@@ -281,9 +281,23 @@ export function useVirtual<T extends Element>({
     if (delta < 0) {
       return;
     }
-    parentRef.current.scrollTo({ top: latestRef.current.scrollOffset + delta });
+    const top = latestRef.current.scrollOffset + delta;
+    parentRef.current.scrollTo({ top });
+    latestRef.current.scrollOffset = top;
     prevTotalSize.current = totalSize;
   }, [parentRef, totalSize]);
+
+  const prevOuterSize = useRef(latestRef.current.outerSize);
+  useLayoutEffect(() => {
+    const delta = latestRef.current.outerSize - prevOuterSize.current;
+    prevOuterSize.current = latestRef.current.outerSize;
+    if (delta >= 0 || !parentRef.current) {
+      return;
+    }
+    const top = latestRef.current.scrollOffset - delta;
+    parentRef.current.scrollTo({ top, behavior: 'smooth' });
+    latestRef.current.scrollOffset = top;
+  });
 
   return {
     virtualItems,

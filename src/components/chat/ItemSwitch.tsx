@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ChatPreviewCompose from './PreviewCompose';
+import ChatPreviewCompose from './compose/PreviewCompose';
 import ChatMessageItem from './MessageItem';
 import ChatPreviewItem from './PreviewItem';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
@@ -9,7 +9,7 @@ import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { usePane } from '../../hooks/usePane';
 
 interface Props {
-  item: MessageItem | PreviewItem | undefined;
+  item: MessageItem | PreviewItem;
   editItem?: EditItem;
   myMember?: ChannelMember;
   handleProps?: DraggableProvidedDragHandleProps;
@@ -22,12 +22,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
   const inGame = filter === 'IN_GAME';
   const outGame = filter === 'OUT_GAME';
 
-  if (item === undefined) {
-    if (myId === undefined) {
-      throw new Error(`unexpected item index.`);
-    }
-    return <ChatPreviewCompose preview={undefined} key={myId} />;
-  } else if (item.type === 'MESSAGE') {
+  if (item.type === 'MESSAGE') {
     const { message } = item;
     if ((inGame && !message.inGame) || (outGame && message.inGame)) {
       return null;
@@ -50,9 +45,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
     );
   } else {
     // preview
-    if (item.mine && myId) {
-      return <ChatPreviewCompose key={item.id} preview={item.preview} />;
-    } else if ((inGame && !item.preview.inGame) || (outGame && item.preview.inGame)) {
+    if ((inGame && !item.preview.inGame) || (outGame && item.preview.inGame)) {
       return null;
     } else {
       return <ChatPreviewItem key={item.id} preview={item.preview} />;

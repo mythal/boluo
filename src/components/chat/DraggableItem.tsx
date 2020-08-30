@@ -10,7 +10,7 @@ import { usePane } from '../../hooks/usePane';
 
 interface Props {
   index: number;
-  item: PreviewItem | MessageItem | undefined;
+  item: PreviewItem | MessageItem;
   myMember: ChannelMember | undefined;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;

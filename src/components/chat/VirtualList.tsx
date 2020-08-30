@@ -37,7 +37,7 @@ const container = css`
   border: 1px solid ${gray['900']};
 
   &[data-active='true'] {
-    border-color: ${blue['800']};
+    border-color: ${blue['700']};
   }
 `;
 
@@ -80,13 +80,8 @@ function VirtualList({ myMember, channelId }: Props) {
   const history = useHistory();
   const spaceId = useSelector((state) => state.chatPane[pane]!.channel.spaceId);
   const activePane = useSelector((state) => pane === state.activePane);
-  const myPreview = useSelector((state) => {
-    return myMember === undefined ? undefined : state.chatPane[pane]!.itemSet.previews.get(myMember.userId);
-  });
-  let messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
-  if (myMember !== undefined && myPreview === undefined) {
-    messages = messages.push(dummyPreview(myMember));
-  }
+  const messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
+
   const listSize = messages.size + 1; // + 1 for "load more" button
   const parentRef = useRef<HTMLDivElement>(null);
   const {
@@ -102,6 +97,7 @@ function VirtualList({ myMember, channelId }: Props) {
     size: listSize,
     parentRef,
     estimateSize,
+    paddingEnd: 24,
     renderThreshold: 0,
     overscan: 16,
   });
@@ -127,7 +123,7 @@ function VirtualList({ myMember, channelId }: Props) {
   );
 
   const items = virtualItems.map(({ index, size, start, end }) => {
-    const item = index === 0 ? undefined : messages.get(index - 1);
+    const item = index === 0 ? undefined : messages.get(index - 1)!;
     return (
       <VirtualListItem
         myMember={myMember}
@@ -161,7 +157,7 @@ function VirtualList({ myMember, channelId }: Props) {
         mode="virtual"
         renderClone={(provided: DraggableProvided, snapshot: DraggableStateSnapshot, rubric: DraggableRubric) => {
           const index = rubric.source.index;
-          const item = messages.get(index);
+          const item = messages.get(index)!;
           return (
             <ChatDraggableItem
               index={index + 1}

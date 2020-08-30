@@ -1,8 +1,8 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { alignRight, p, textSm } from '../../styles/atoms';
-import Input from '../atoms/Input';
-import { ComposeDispatch } from './PreviewCompose';
+import { alignRight, p, textSm } from '../../../styles/atoms';
+import Input from '../../atoms/Input';
+import { ComposeDispatch, update } from './reducer';
 
 interface Props {
   value: string;
@@ -19,7 +19,7 @@ const Naming = styled.div`
 function PreviewComposeNameInput({ value, composeDispatch }: Props) {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
-    composeDispatch({ inputName: value.trim().substr(0, 32) });
+    composeDispatch(update({ inputName: value.trim().substr(0, 32) }));
   };
 
   return (

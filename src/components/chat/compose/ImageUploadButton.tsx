@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useCallback, useRef } from 'react';
-import fileImage from '../../assets/icons/file-image.svg';
-import removeFileImage from '../../assets/icons/remove-file-image.svg';
-import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
-import { ComposeDispatch } from './PreviewCompose';
+import fileImage from '../../../assets/icons/file-image.svg';
+import removeFileImage from '../../../assets/icons/remove-file-image.svg';
+import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import { ComposeDispatch, update } from './reducer';
 
 interface Props {
   composeDispatch: ComposeDispatch;
@@ -14,11 +14,11 @@ interface Props {
 function ImageUploadButton({ composeDispatch, hasImage, className }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const removeMedia = useCallback(() => composeDispatch({ media: undefined }), [composeDispatch]);
+  const removeMedia = useCallback(() => composeDispatch(update({ media: undefined })), [composeDispatch]);
   const startUpload = useCallback(() => fileInputRef.current?.click(), []);
   const onFileChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     if (event.target.files && event.target.files.length > 0) {
-      composeDispatch({ media: event.target.files[0] });
+      composeDispatch(update({ media: event.target.files[0] }));
     }
   };
   return (

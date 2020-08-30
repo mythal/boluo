@@ -91,7 +91,7 @@ export function VirtualListItem({
     return <div {...containerProps} css={chatItemPlaceHolder} />;
   }
 
-  if (index === 0) {
+  if (index === 0 || item === undefined) {
     return (
       <div {...containerProps}>
         <LoadMore shift={shift} />

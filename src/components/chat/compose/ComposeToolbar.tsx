@@ -1,12 +1,12 @@
 import * as React from 'react';
-import ChatItemToolbarButton from '../atoms/ChatItemToolbarButton';
-import { flexRowReverse, mR } from '../../styles/atoms';
-import mask from '../../assets/icons/theater-masks.svg';
-import running from '../../assets/icons/running.svg';
-import broadcastTower from '../../assets/icons/broadcast-tower.svg';
+import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import { flexRowReverse, mR } from '../../../styles/atoms';
+import mask from '../../../assets/icons/theater-masks.svg';
+import running from '../../../assets/icons/running.svg';
+import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
 import styled from '@emotion/styled';
-import { ComposeDispatch } from './PreviewCompose';
-import { isMac } from '../../utils/browser';
+import { isMac } from '../../../utils/browser';
+import { ComposeDispatch, update } from './reducer';
 
 interface Props {
   composeDispatch: ComposeDispatch;
@@ -21,9 +21,9 @@ const Toolbar = styled.div`
 `;
 
 function ComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Props) {
-  const toggleInGame = () => composeDispatch({ inGame: !inGame });
-  const toggleIsAction = () => composeDispatch({ isAction: !isAction });
-  const toggleBroadcast = () => composeDispatch({ broadcast: !broadcast });
+  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
+  const toggleIsAction = () => composeDispatch(update({ isAction: !isAction }));
+  const toggleBroadcast = () => composeDispatch(update({ broadcast: !broadcast }));
   return (
     <Toolbar>
       <ChatItemToolbarButton

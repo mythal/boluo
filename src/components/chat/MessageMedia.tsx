@@ -1,11 +1,12 @@
 import * as React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/core';
 import { roundedSm } from '../../styles/atoms';
-import { useEffect, useState } from 'react';
 import Modal from '../atoms/Modal';
 import { Id } from '../../utils/id';
 import { mediaHead, mediaUrl } from '../../api/request';
 import { allowImageType } from '../../validators';
+import { gray } from '../../styles/colors';
 
 interface Props {
   className?: string;
@@ -18,6 +19,14 @@ export const inlineImg = css`
   max-height: 3rem;
   max-width: 6rem;
   ${roundedSm};
+`;
+
+export const placeHolder = css`
+  float: right;
+  width: 3rem;
+  height: 3rem;
+  ${roundedSm};
+  background-color: ${gray['700']};
 `;
 
 export const largeImg = css`
@@ -36,15 +45,24 @@ function MessageMedia({ className, mediaId, file }: Props) {
   const [lightBox, setLightBox] = useState(false);
   const [type, setType] = useState<string | undefined | null>(file?.type);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (mediaId) {
-      mediaHead(mediaId).then((response) => {
-        if (response.ok) {
-          setType(response.headers.get('content-type'));
-        }
-      });
+    if (!mediaId || !mounted.current) {
+      return;
     }
+    (async () => {
+      const response = await mediaHead(mediaId);
+      if (response.ok && mounted.current) {
+        setType(response.headers.get('content-type'));
+      }
+    })();
   }, [mediaId]);
 
   useEffect(() => {
@@ -62,8 +80,10 @@ function MessageMedia({ className, mediaId, file }: Props) {
     }
   }, [file]);
 
-  if ((!mediaId && !file) || !type) {
+  if (!mediaId && !file) {
     return null;
+  } else if (!type) {
+    return <div css={placeHolder} />;
   }
 
   if (allowImageType.includes(type)) {

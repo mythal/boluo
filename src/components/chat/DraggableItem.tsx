@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import { ChannelMember } from '../../api/channels';
 import { Draggable, DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import ItemSwitch from './ItemSwitch';
@@ -14,6 +15,7 @@ interface Props {
   myMember: ChannelMember | undefined;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
+  measure?: (rect: DOMRect, index: number) => void;
 }
 
 const dragging = css`
@@ -21,10 +23,11 @@ const dragging = css`
   box-shadow: 1px 1px 2px ${black};
 `;
 
-function DraggableItem({ index, item, myMember, provided, snapshot }: Props) {
+function DraggableItem({ index, item, myMember, provided, snapshot, measure }: Props) {
   const itemIndex = index - 1;
 
   const pane = usePane();
+  const innerRef = useRef<HTMLDivElement>(null);
   const editItem = useSelector((state) => {
     if (item !== undefined && item.type === 'MESSAGE') {
       const editItem = state.chatPane[pane]!.itemSet.editions.get(item.message.id);
@@ -40,13 +43,32 @@ function DraggableItem({ index, item, myMember, provided, snapshot }: Props) {
       return undefined;
     }
   });
+
+  const itemMeasure = useCallback(() => {
+    if (innerRef.current && measure) {
+      const rect = innerRef.current.getBoundingClientRect();
+      measure(rect, index);
+    }
+  }, [measure, index]);
+  useLayoutEffect(() => {
+    itemMeasure();
+  });
+
   const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';
   const renderer = (provided: DraggableProvided, snapshot?: DraggableStateSnapshot) => {
     const style = snapshot?.isDragging ? dragging : {};
     return (
-      <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
-        <ItemSwitch item={item} editItem={editItem} myMember={myMember} handleProps={provided.dragHandleProps} />
+      <div ref={innerRef}>
+        <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
+          <ItemSwitch
+            measure={itemMeasure}
+            item={item}
+            editItem={editItem}
+            myMember={myMember}
+            handleProps={provided.dragHandleProps}
+          />
+        </div>
       </div>
     );
   };

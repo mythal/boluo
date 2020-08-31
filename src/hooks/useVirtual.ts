@@ -1,6 +1,8 @@
-import React, { useCallback, useLayoutEffect, useRef } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { Map } from 'immutable';
-import { useRect } from './useRect';
+import { ResizeObserver as Polyfill } from '@juggle/resize-observer/lib/ResizeObserver';
+
+const ResizeObserver = window.ResizeObserver || Polyfill;
 
 const defaultEstimateSize = () => 50;
 
@@ -62,13 +64,29 @@ export function useVirtual<T extends Element>({
   scrollToFn,
 }: VirtualOptions<T>): VirtualResult {
   const sizeKey = horizontal ? 'width' : 'height';
-  const crossKey = !horizontal ? 'width' : 'height';
   const scrollKey = horizontal ? 'scrollLeft' : 'scrollTop';
 
-  const { [sizeKey]: outerSize } = useRect(parentRef) || {
-    [sizeKey]: 0,
-    [crossKey]: 0,
-  };
+  const [outerSize, setOuterSize] = useState(0);
+  const [crossSize, setCrossSize] = useState(0);
+
+  useLayoutEffect(() => {
+    if (parentRef.current === null) {
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      if (entries.length === 0) {
+        return;
+      }
+      const entry = entries[0];
+      setOuterSize(entry.contentRect.height);
+      setCrossSize(entry.contentRect.width);
+    });
+    observer.observe(parentRef.current);
+    return () => {
+      observer.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parentRef.current]);
 
   const defaultScrollToFn: (offset: number) => void = React.useCallback(
     (offset) => {
@@ -94,7 +112,7 @@ export function useVirtual<T extends Element>({
 
   useLayoutEffect(() => {
     setMeasuredCache(Map());
-  }, [estimateSize]);
+  }, [estimateSize, crossSize]);
   const measurements: Measurement[] = React.useMemo(() => {
     const measurements: Measurement[] = [];
     let prevStart = paddingEnd;
@@ -124,7 +142,17 @@ export function useVirtual<T extends Element>({
     outerSize,
     totalSize,
   });
-
+  const prevOuterSize = useRef(outerSize);
+  useLayoutEffect(() => {
+    if (parentRef.current === null) {
+      return;
+    }
+    prevOuterSize.current = outerSize;
+    const { totalSize, scrollOffset } = latestRef.current;
+    const height = parentRef.current.clientHeight;
+    const top = totalSize - scrollOffset - height;
+    parentRef.current.scrollTo({ top });
+  });
   const [range, setRange] = React.useState<Range>({ start: 0, end: 0, viewportStart: 0, viewportEnd: 0 });
 
   const shiftOffset = useRef(0);
@@ -135,7 +163,7 @@ export function useVirtual<T extends Element>({
       return;
     }
     const onScroll = () => {
-      latestRef.current.scrollOffset = element[scrollKey];
+      latestRef.current.scrollOffset = latestRef.current.totalSize - element.scrollTop - element.clientHeight;
 
       setRange((prevRange) => {
         if (shiftOffset.current !== 0) {
@@ -272,32 +300,6 @@ export function useVirtual<T extends Element>({
     },
     [tryScrollToIndex]
   );
-  const prevTotalSize = useRef(0);
-  useLayoutEffect(() => {
-    if (!parentRef.current) {
-      return;
-    }
-    const delta = totalSize - prevTotalSize.current;
-    if (delta < 0) {
-      return;
-    }
-    const top = latestRef.current.scrollOffset + delta;
-    parentRef.current.scrollTo({ top });
-    latestRef.current.scrollOffset = top;
-    prevTotalSize.current = totalSize;
-  }, [parentRef, totalSize]);
-
-  const prevOuterSize = useRef(latestRef.current.outerSize);
-  useLayoutEffect(() => {
-    const delta = latestRef.current.outerSize - prevOuterSize.current;
-    prevOuterSize.current = latestRef.current.outerSize;
-    if (delta >= 0 || !parentRef.current) {
-      return;
-    }
-    const top = latestRef.current.scrollOffset - delta;
-    parentRef.current.scrollTo({ top, behavior: 'smooth' });
-    latestRef.current.scrollOffset = top;
-  });
 
   return {
     virtualItems,
@@ -327,11 +329,11 @@ function calculateRange(
     return { start: 0, end: len - 1, viewportStart: 0, viewportEnd: len - 1 };
   }
   let start = len - 1;
-  while (start > 0 && totalSize - measurements[start].end >= scrollOffset) {
+  while (start > 0 && measurements[start].end <= scrollOffset + outerSize) {
     start -= 1;
   }
   let end = 0;
-  while (end < len - 1 && totalSize - measurements[end].start <= scrollOffset + outerSize) {
+  while (end < len - 1 && measurements[end].start >= scrollOffset) {
     end += 1;
   }
   const viewportStart = start;

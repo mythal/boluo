@@ -13,9 +13,10 @@ interface Props {
   editItem?: EditItem;
   myMember?: ChannelMember;
   handleProps?: DraggableProvidedDragHandleProps;
+  measure: () => void;
 }
 
-function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
+function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
   const myId = myMember?.userId;
   const pane = usePane();
   const filter = useSelector((state) => state.chatPane[pane]!.filter);
@@ -29,7 +30,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
     }
     if (editItem !== undefined) {
       if (editItem.mine && myId) {
-        return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
+        return <ChatPreviewCompose preview={editItem.preview} editTo={message} measure={measure} />;
       } else if (editItem.preview !== undefined) {
         return <ChatPreviewItem preview={editItem.preview} />;
       }

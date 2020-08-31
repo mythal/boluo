@@ -11,6 +11,7 @@ interface Props {
   composeDispatch: ComposeDispatch;
   autoFocus?: boolean;
   className?: string;
+  autoSize?: boolean;
 }
 
 const style = css`
@@ -19,12 +20,18 @@ const style = css`
   }
 `;
 
-function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus = false, className }: Props) {
+function ComposeInput({
+  inGame,
+  initialValue,
+  composeDispatch,
+  autoFocus = false,
+  className,
+  autoSize = false,
+}: Props) {
   const [value, setValue] = useState(initialValue);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  useAutoHeight(value, inputRef);
-
+  useAutoHeight(autoSize, value, inputRef);
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
@@ -78,4 +85,4 @@ function PreviewComposeInput({ inGame, initialValue, composeDispatch, autoFocus 
   );
 }
 
-export default React.memo(PreviewComposeInput);
+export default React.memo(ComposeInput);

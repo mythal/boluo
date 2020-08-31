@@ -32,6 +32,7 @@ function LoadMore({ shift }: Props) {
   const moving = useSelector((state) => state.chatPane[pane]!.moving);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
+  const mounted = useRef(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,7 +40,10 @@ function LoadMore({ shift }: Props) {
     timeout = window.setTimeout(() => {
       button.current?.click();
     }, 0);
-    return () => window.clearTimeout(timeout);
+    return () => {
+      mounted.current = false;
+      window.clearTimeout(timeout);
+    };
   }, []);
 
   if (finished) {
@@ -47,9 +51,13 @@ function LoadMore({ shift }: Props) {
   }
   const loadMore = async () => {
     const limit = 64;
-    setLoading(true);
+    if (mounted.current) {
+      setLoading(true);
+    }
     const result = await get('/messages/by_channel', { channelId, before, limit });
-    setLoading(false);
+    if (mounted.current) {
+      setLoading(false);
+    }
     if (!result.isOk) {
       console.error(result.value);
       return;

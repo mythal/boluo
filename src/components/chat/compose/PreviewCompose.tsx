@@ -12,7 +12,7 @@ import { nameColWidth, timeColWidth } from '../../atoms/ChatItemContainer';
 import { ChatItemContentContainer } from '../../atoms/ChatItemContentContainer';
 import ChatItemName from '../../atoms/ChatItemName';
 import ChatComposeToolbar from './ComposeToolbar';
-import ChatPreviewComposeInput from './PreviewComposeInput';
+import ChatPreviewComposeInput from './ComposeInput';
 import ChatPreviewComposeNameInput from './PreviewComposeNameInput';
 import { gray } from '../../../styles/colors';
 import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
@@ -35,6 +35,7 @@ import { inputStyle } from '../../atoms/Input';
 interface Props {
   preview: Preview | undefined;
   editTo?: Message;
+  measure: () => void;
 }
 
 const previewStripWidth = 3;
@@ -76,7 +77,7 @@ export const container = css`
   }
 `;
 
-function PreviewCompose({ preview, editTo }: Props) {
+function PreviewCompose({ preview, editTo, measure }: Props) {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pane = usePane();
@@ -85,8 +86,12 @@ function PreviewCompose({ preview, editTo }: Props) {
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
   const sendEvent = useSend();
 
+  useLayoutEffect(() => {
+    measure();
+  });
+
   const [
-    { sending, inGame, broadcast, isAction, inputName, media, messageId, text, entities, canSubmit },
+    { inGame, broadcast, isAction, inputName, media, messageId, text, entities, canSubmit },
     composeDispatch,
   ] = useReducer(composeReducer, undefined, () => {
     let name = '';
@@ -110,8 +115,9 @@ function PreviewCompose({ preview, editTo }: Props) {
       editFor: editTo?.modified,
       appDispatch: dispatch,
       messageId: preview?.id ?? editTo?.id ?? newId(),
-      text: preview?.text || editTo?.text || '',
+      text: preview?.text ?? editTo?.text ?? '',
       entities: preview?.entities ?? editTo?.entities ?? [],
+      clear: false,
     };
   });
 
@@ -124,8 +130,7 @@ function PreviewCompose({ preview, editTo }: Props) {
 
   const cancelEdit = useCallback(() => {
     if (editTo !== undefined) {
-      const messageId = editTo.id;
-      patch('/messages/edit', { messageId }).then();
+      composeDispatch(update({ text: '', entities: [], clear: true }));
       dispatch({ type: 'STOP_EDIT_MESSAGE', editFor: editTo.modified, messageId: editTo.id, pane });
     }
   }, [editTo, dispatch, pane]);

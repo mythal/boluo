@@ -1,4 +1,4 @@
-import { Id, newId } from '../utils/id';
+import { Id } from '../utils/id';
 import { Message, MessageOrder } from '../api/messages';
 import { Preview } from '../api/events';
 import { List, Map } from 'immutable';
@@ -160,39 +160,9 @@ const findItem = (messages: ChatItemSet['messages'], id: Id, order?: [number, nu
   }
 };
 
-const dummyPreview = ({ senderId, mailbox, mailboxType, name, inGame, isAction, isMaster }: Preview): PreviewItem => {
-  const now = new Date().getTime();
-
-  const preview: Preview = {
-    id: newId(),
-    mailbox,
-    mailboxType,
-    name,
-    inGame,
-    isAction,
-    isMaster,
-    parentMessageId: null,
-    mediaId: null,
-    text: '',
-    whisperToUsers: null,
-    entities: [],
-    start: now,
-    editFor: null,
-    senderId,
-  };
-  return {
-    type: 'PREVIEW',
-    preview,
-    date: now,
-    mine: true,
-    id: senderId,
-    offset: 0,
-  };
-};
-
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'EDIT') {
-    if (!item.mine && item.preview?.text === '') {
+    if (item.preview?.clear || (!item.mine && item.preview?.text === '')) {
       editions = editions.remove(item.id);
     } else {
       editions = editions.set(item.id, item);
@@ -208,14 +178,8 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && item.message.id === previewItem.preview.id) {
-      if (previewItem.date === item.date && previewItem.mine) {
-        const newPreviewItem = dummyPreview(previewItem.preview);
-        previews = previews.set(newPreviewItem.id, newPreviewItem);
-        messages = removeItem(messages, previewItem.id, [previewItem.date, previewItem.offset]).push(newPreviewItem);
-      } else {
-        previews = previews.remove(previewItem.id);
-        messages = removeItem(messages, previewItem.id, [previewItem.date, previewItem.offset]);
-      }
+      previews = previews.remove(previewItem.id);
+      messages = removeItem(messages, previewItem.id, [previewItem.date, previewItem.offset]);
     }
   } else if (item.type === 'PREVIEW') {
     const prevPreview = previews.get(item.id);

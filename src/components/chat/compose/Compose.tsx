@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
-import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { blue, textColor } from '../../../styles/colors';
 import {
   flex,
@@ -30,12 +29,12 @@ import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
 import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
-import { composeReducer, update } from './reducer';
+import { composeReducer, ComposeState, update } from './reducer';
 import InGameSwitch from './InGameSwitch';
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
-import PreviewComposeInput from './PreviewComposeInput';
+import PreviewComposeInput from './ComposeInput';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -97,13 +96,12 @@ interface Props {
 }
 
 function Compose({ preview, channelId, member }: Props) {
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const dispatch = useDispatch();
   const sendEvent = useSend();
-  const makeInitState = () => ({
+  const makeInitState = (): ComposeState => ({
     sending: false,
     inGame: preview?.inGame || false,
     broadcast: true,
@@ -118,13 +116,13 @@ function Compose({ preview, channelId, member }: Props) {
     messageId: preview?.id || newId(),
     text: preview?.text || '',
     entities: preview?.entities || [],
+    clear: false,
   });
   const [
     { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit },
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
-  useAutoHeight(text, inputRef);
   useAutoWidth(name, nameInputRef);
   const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     composeDispatch(update({ inputName: e.target.value }));
@@ -183,6 +181,7 @@ function Compose({ preview, channelId, member }: Props) {
       <PreviewComposeInput
         key={messageId}
         autoFocus
+        autoSize
         css={[mR(1), input]}
         initialValue={text}
         composeDispatch={composeDispatch}

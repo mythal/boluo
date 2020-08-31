@@ -83,6 +83,7 @@ export interface Preview {
   inGame: boolean;
   isAction: boolean;
   isMaster: boolean;
+  clear: boolean;
   text: string | null;
   whisperToUsers: Id[] | null;
   entities: Entity[];
@@ -98,6 +99,7 @@ export interface PreviewPost {
   isAction: boolean;
   text: string | null;
   entities: Entity[];
+  clear: boolean;
   editFor?: number | null;
 }
 

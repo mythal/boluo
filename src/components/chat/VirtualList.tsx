@@ -1,23 +1,17 @@
 import * as React from 'react';
 import { useRef } from 'react';
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
 import { useDispatch, useSelector } from '../../store';
 import { useVirtual } from '../../hooks/useVirtual';
 import { css } from '@emotion/core';
 import { bgColor, blue, gray } from '../../styles/colors';
-import { loadMoreHeight } from './LoadMore';
-import { Id, newId } from '../../utils/id';
+import LoadMore, { loadMoreHeight } from './LoadMore';
+import { Id } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
 import { ChannelMember } from '../../api/channels';
-import { VirtualListItem } from './VirtualListItem';
 import ChatDraggableItem from './DraggableItem';
-import { PreviewItem } from '../../states/chat-item-set';
-import { Preview } from '../../api/events';
 import { usePane } from '../../hooks/usePane';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
-
-const ResizeObserver = window.ResizeObserver || Polyfill;
 
 interface Props {
   channelId: Id;
@@ -29,10 +23,10 @@ const container = css`
   background-color: ${bgColor};
   overflow-y: scroll;
   overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-  &::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-  }
+  // scrollbar-width: none; /* Firefox */
+  // &::-webkit-scrollbar {
+  //   display: none; /* Safari and Chrome */
+  // }
 
   border: 1px solid ${gray['900']};
 
@@ -49,31 +43,6 @@ function estimateSize(index: number): number {
   }
 }
 
-const dummyPreview = (member: ChannelMember): PreviewItem => {
-  const date = new Date().getTime();
-  const offset = 42;
-  const mine = true;
-  const id = newId();
-  const preview: Preview = {
-    id,
-    senderId: member.userId,
-    mailbox: member.channelId,
-    mailboxType: 'CHANNEL',
-    parentMessageId: null,
-    name: member.characterName,
-    inGame: true,
-    isAction: false,
-    isMaster: member.isMaster,
-    mediaId: null,
-    text: '',
-    whisperToUsers: null,
-    entities: [],
-    start: date,
-    editFor: null,
-  };
-  return { type: 'PREVIEW', preview, id: member.userId, date, mine, offset };
-};
-
 function VirtualList({ myMember, channelId }: Props) {
   const pane = usePane();
   const dispatch = useDispatch();
@@ -84,16 +53,7 @@ function VirtualList({ myMember, channelId }: Props) {
 
   const listSize = messages.size + 1; // + 1 for "load more" button
   const parentRef = useRef<HTMLDivElement>(null);
-  const {
-    start: rangeStart,
-    end: rangeEnd,
-    viewportStart,
-    viewportEnd,
-    totalSize,
-    virtualItems,
-    measure,
-    cacheShift,
-  } = useVirtual({
+  const { totalSize, virtualItems, measure, cacheShift } = useVirtual({
     size: listSize,
     parentRef,
     estimateSize,
@@ -102,45 +62,29 @@ function VirtualList({ myMember, channelId }: Props) {
     overscan: 16,
   });
 
-  const sizeRecord = useRef<Record<string, DOMRect>>({});
-  const submitSizeChange = useRef<number | undefined>(undefined);
+  const items = virtualItems.map(({ index, size, end }) => {
+    const style: React.CSSProperties = {
+      height: size,
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      width: '100%',
+      transform: `translateY(-${end}px)`,
+    };
 
-  const resizeObserver = useRef<ResizeObserver>(
-    new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const index: string | null = entry.target.getAttribute('data-index');
-        if (index !== null) {
-          sizeRecord.current[index] = entry.contentRect;
-          window.clearTimeout(submitSizeChange.current);
-          submitSizeChange.current = window.setTimeout(() => {
-            for (const [index, rect] of Object.entries(sizeRecord.current)) {
-              measure(rect, parseInt(index));
-            }
-          }, 100);
-        }
-      }
-    })
-  );
+    if (index === 0) {
+      return (
+        <div key="load-more" style={style}>
+          <LoadMore shift={cacheShift} />
+        </div>
+      );
+    }
 
-  const items = virtualItems.map(({ index, size, start, end }) => {
-    const item = index === 0 ? undefined : messages.get(index - 1)!;
+    const item = messages.get(index - 1)!;
     return (
-      <VirtualListItem
-        myMember={myMember}
-        key={item?.id || index}
-        item={item}
-        index={index}
-        size={size}
-        end={end}
-        start={start}
-        rangeStart={rangeStart}
-        rangeEnd={rangeEnd}
-        viewportStart={viewportStart}
-        viewportEnd={viewportEnd}
-        resizeObserverRef={resizeObserver}
-        measure={measure}
-        shift={cacheShift}
-      />
+      <div key={item.id} style={style}>
+        <ChatDraggableItem item={item} myMember={myMember} index={index} measure={measure} />
+      </div>
     );
   });
   const setActive = () => {

@@ -25,6 +25,7 @@ export interface ComposeState {
   text: string;
   entities: Entity[];
   inputName: string;
+  clear: boolean;
   initial: boolean;
   media: File | undefined;
   canSubmit?: boolean;
@@ -78,7 +79,7 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
     next.messageId = newId();
   }
   const nextState = { ...state, ...next, initial: false };
-  const { inGame, isAction, editFor, broadcast, text, inputName, entities, sending, nickname } = nextState;
+  const { inGame, isAction, editFor, broadcast, text, inputName, entities, sending, nickname, clear } = nextState;
   const name = inGame ? inputName : nickname;
   const preview: PreviewPost = {
     id: nextState.messageId,
@@ -87,6 +88,7 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
     isAction,
     mediaId: null,
     editFor,
+    clear,
     text: broadcast || text === '' ? text : null,
     entities: broadcast ? entities : [],
   };

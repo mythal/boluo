@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ComposeDispatch, update } from './reducer';
 import mask from '../../../assets/icons/theater-masks.svg';
 import { isMac } from '../../../utils/browser';
-import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
 
 interface Props {
   inGame: boolean;

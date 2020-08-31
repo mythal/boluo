@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from '../atoms/ChatHeaderButton';
+import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from './ChatHeaderButton';
 import { Space } from '../../api/spaces';
 import Icon from '../atoms/Icon';
 import nightSky from '../../assets/icons/night-sky.svg';

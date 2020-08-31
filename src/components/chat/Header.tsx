@@ -17,7 +17,7 @@ import {
 import ChannelMemberButton from './ChannelMemberButton';
 import sliders from '../../assets/icons/sliders.svg';
 import columns from '../../assets/icons/columns.svg';
-import ChatHeaderButton from '../atoms/ChatHeaderButton';
+import ChatHeaderButton from './ChatHeaderButton';
 import Icon from '../atoms/Icon';
 import ManageChannel from '../organisms/ManageChannel';
 import styled from '@emotion/styled';

@@ -6,7 +6,7 @@ import { chatHeaderStyle, chatHeaderToolbar, flex, fontBold, mL, p, pX, pY, text
 import { Space, SpaceMember } from '../../api/spaces';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../atoms/Icon';
-import ChatHeaderButton, { chatHeaderButtonStyle } from '../atoms/ChatHeaderButton';
+import ChatHeaderButton, { chatHeaderButtonStyle } from './ChatHeaderButton';
 import Badge from '../atoms/Badge';
 import userCog from '../../assets/icons/user-cog.svg';
 import ManageSpace from '../organisms/ManageSpace';

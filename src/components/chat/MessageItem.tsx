@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Message } from '../../api/messages';
-import { chatItemContainer } from '../atoms/ChatItemContainer';
-import ChatItemTime from '../atoms/ChatItemTime';
-import ChatItemName from '../atoms/ChatItemName';
+import { chatItemContainer } from './ChatItemContainer';
+import ChatItemTime from './ChatItemTime';
+import ChatItemName from './ChatItemName';
 import ChatItemContent from './ItemContent';
-import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
+import { ChatItemContentContainer } from './ChatItemContentContainer';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { ChannelMember } from '../../api/channels';
 import ChatMessageToolbar from './MessageToolbar';
@@ -27,7 +27,13 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
     return () => window.clearTimeout(timeout);
   }, []);
   const name = (
-    <ChatItemName action={message.isAction} master={message.isMaster} name={message.name} userId={message.senderId} />
+    <ChatItemName
+      inGame={message.inGame}
+      action={message.isAction}
+      master={message.isMaster}
+      name={message.name}
+      userId={message.senderId}
+    />
   );
   return (
     <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>

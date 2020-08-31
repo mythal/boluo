@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Preview } from '../../api/events';
-import { chatItemContainer } from '../atoms/ChatItemContainer';
-import ChatItemTime from '../atoms/ChatItemTime';
-import ChatItemName from '../atoms/ChatItemName';
+import { chatItemContainer } from './ChatItemContainer';
+import ChatItemTime from './ChatItemTime';
+import ChatItemName from './ChatItemName';
 import { previewStyle } from '../../styles/atoms';
 import ChatItemContent from './ItemContent';
-import { ChatItemContentContainer } from '../atoms/ChatItemContentContainer';
+import { ChatItemContentContainer } from './ChatItemContentContainer';
 
 interface Props {
   preview: Preview;
@@ -24,7 +24,13 @@ function PreviewItem({ preview }: Props) {
   }
 
   const name = (
-    <ChatItemName action={isAction} master={preview.isMaster} name={preview.name} userId={preview.senderId} />
+    <ChatItemName
+      inGame={preview.inGame}
+      action={isAction}
+      master={preview.isMaster}
+      name={preview.name}
+      userId={preview.senderId}
+    />
   );
 
   return (

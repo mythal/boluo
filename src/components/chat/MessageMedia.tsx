@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/core';
-import { roundedSm } from '../../styles/atoms';
+import { mB, mL, roundedSm } from '../../styles/atoms';
 import Modal from '../atoms/Modal';
 import { Id } from '../../utils/id';
 import { mediaHead, mediaUrl } from '../../api/request';
@@ -36,6 +36,7 @@ export const largeImg = css`
 
 export const inlineImgLink = css`
   float: right;
+  ${[mL(1), mB(1)]}
   &:hover {
     filter: brightness(50%);
   }

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { fontBase, fontNormal, p, textXs } from '../../styles/atoms';
-import { toolbarRadius } from '../chat/ItemToolbar';
+import { toolbarRadius } from './ItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
 import { SpriteSymbol } from '*.svg';
-import Icon from '../../components/atoms/Icon';
-import Tooltip, { TooltipProps } from '../../components/atoms/Tooltip';
+import Icon from '../atoms/Icon';
+import Tooltip, { TooltipProps } from '../atoms/Tooltip';
 import { textColor } from '../../styles/colors';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import { isMobile } from '../../utils/browser';

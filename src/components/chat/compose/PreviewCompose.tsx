@@ -5,17 +5,17 @@ import { clearRight, floatRight, mL, mR, mT, pX, pY, spacingN } from '../../../s
 import { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
 import { AppResult, patch, post } from '../../../api/request';
-import ChatItemTime from '../../atoms/ChatItemTime';
+import ChatItemTime from '../ChatItemTime';
 import ChatItemContent from '../ItemContent';
 import { Message } from '../../../api/messages';
-import { nameColWidth, timeColWidth } from '../../atoms/ChatItemContainer';
-import { ChatItemContentContainer } from '../../atoms/ChatItemContentContainer';
-import ChatItemName from '../../atoms/ChatItemName';
+import { nameColWidth, timeColWidth } from '../ChatItemContainer';
+import { ChatItemContentContainer } from '../ChatItemContentContainer';
+import ChatItemName from '../ChatItemName';
 import ChatComposeToolbar from './ComposeToolbar';
 import ChatPreviewComposeInput from './ComposeInput';
 import ChatPreviewComposeNameInput from './PreviewComposeNameInput';
 import { gray } from '../../../styles/colors';
-import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import cancelIcon from '../../../assets/icons/cancel.svg';
 import saveIcon from '../../../assets/icons/save.svg';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
@@ -174,7 +174,7 @@ function PreviewCompose({ preview, editTo, measure }: Props) {
     }
   };
   const chatItemName = (
-    <ChatItemName action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
+    <ChatItemName inGame={inGame} action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
   );
   const handleKeyDown: React.KeyboardEventHandler = async (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {

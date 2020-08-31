@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from '../../store';
 import Icon from '../atoms/Icon';
 import members from '../../assets/icons/members.svg';
-import ChatHeaderButton from '../atoms/ChatHeaderButton';
+import ChatHeaderButton from './ChatHeaderButton';
 import { HEARTBEAT_INTERVAL } from '../../settings';
 import { Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '../../api/channels';
 import { chatHeaderPadding, mR, pY, sidebarWidth, textLg } from '../../styles/atoms';
-import ChatHeaderButton, { ChatHeaderButtonLink } from '../atoms/ChatHeaderButton';
+import ChatHeaderButton, { ChatHeaderButtonLink } from './ChatHeaderButton';
 import logo from '../../assets/logo.svg';
 import bars from '../../assets/icons/bars.svg';
 import Icon from '../atoms/Icon';

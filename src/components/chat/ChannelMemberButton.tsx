@@ -12,7 +12,7 @@ import Button from '../atoms/Button';
 import Text from '../atoms/Text';
 import { alignRight, mL, mR, mT } from '../../styles/atoms';
 import { css } from '@emotion/core';
-import ChatHeaderButton, { ChatHeaderButtonLink } from '../atoms/ChatHeaderButton';
+import ChatHeaderButton, { ChatHeaderButtonLink } from './ChatHeaderButton';
 import { useForm } from 'react-hook-form';
 import { EditChannelMember } from '../../api/channels';
 import { ErrorMessage } from '../atoms/ErrorMessage';

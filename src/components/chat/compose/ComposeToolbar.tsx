@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { flexRowReverse, mR } from '../../../styles/atoms';
 import mask from '../../../assets/icons/theater-masks.svg';
 import running from '../../../assets/icons/running.svg';

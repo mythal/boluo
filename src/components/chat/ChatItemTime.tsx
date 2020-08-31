@@ -4,7 +4,7 @@ import { textXs } from '../../styles/atoms';
 import { darken } from 'polished';
 import { textColor } from '../../styles/colors';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-import Icon from './Icon';
+import Icon from '../atoms/Icon';
 import handle from '../../assets/icons/handle.svg';
 
 interface Props {

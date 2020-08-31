@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useCallback, useRef } from 'react';
 import fileImage from '../../../assets/icons/file-image.svg';
 import removeFileImage from '../../../assets/icons/remove-file-image.svg';
-import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { ComposeDispatch, update } from './reducer';
 
 interface Props {

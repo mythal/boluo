@@ -6,8 +6,8 @@ import { css } from '@emotion/core';
 export const timeColWidth = '3.5rem';
 export const nameColWidth = '8rem';
 
-export const chatItemBgColor = bgColor;
-export const chatItemHoverBgColor = lighten(0.025, bgColor);
+export const chatItemBgColor = lighten(0.03, bgColor);
+export const chatItemHoverBgColor = lighten(0.05, bgColor);
 export const chatItemOutGameBgColor = darken(0.05, bgColor);
 export const chatItemOutGameHoverBgColor = darken(0.015, bgColor);
 

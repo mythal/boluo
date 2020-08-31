@@ -4,7 +4,7 @@ import Icon from '../atoms/Icon';
 import filterIcon from '../../assets/icons/filter.svg';
 import circle from '../../assets/icons/circle.svg';
 import dotCircle from '../../assets/icons/dot-circle.svg';
-import ChatHeaderButton from '../atoms/ChatHeaderButton';
+import ChatHeaderButton from './ChatHeaderButton';
 import Overlay from '../atoms/Overlay';
 import Menu from '../atoms/Menu';
 import { MenuItem } from '../atoms/MenuItem';

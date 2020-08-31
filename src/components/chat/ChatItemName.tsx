@@ -3,26 +3,32 @@ import Prando from 'prando';
 import { encodeUuid, Id } from '../../utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { alignRight, fontBold, mR } from '../../styles/atoms';
+import { alignRight, fontBold, mR, relative, textSm } from '../../styles/atoms';
 import { hsl } from 'polished';
-import Icon from '../../components/atoms/Icon';
+import Icon from '../atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
 import { css } from '@emotion/core';
 import { gray } from '../../styles/colors';
+import { chatContentLineHeight } from './styles';
+import { useRef } from 'react';
+import Tooltip from '../atoms/Tooltip';
+import { useSelector } from '../../store';
+import { usePane } from '../../hooks/usePane';
 
 interface Props {
   name: string;
   master: boolean;
   action: boolean;
+  inGame: boolean;
   userId: Id;
 }
 
 const Container = styled.span`
-  ${[mR(1), alignRight]};
+  ${[mR(1), alignRight, chatContentLineHeight]};
 `;
 
 const NameLink = styled(Link)`
-  ${[fontBold]};
+  ${[fontBold, relative]};
   text-decoration: none;
 `;
 
@@ -37,7 +43,16 @@ const masterIconStyle = css`
   color: ${gray['500']};
 `;
 
-function ChatItemName({ name, userId, master, action }: Props) {
+const nicknameStyle = css`
+  ${textSm}
+`;
+
+function ChatItemName({ name, userId, master, action, inGame }: Props) {
+  const pane = usePane();
+  const nickname = useSelector(
+    (state) => state.chatPane[pane]!.members.find((member) => member.user.id === userId)?.user.nickname
+  );
+  const linkRef = useRef<HTMLAnchorElement>(null);
   if (!colorMap[name]) {
     const rng = new Prando(name);
     colorMap[name] = genColor(rng);
@@ -46,8 +61,13 @@ function ChatItemName({ name, userId, master, action }: Props) {
   return (
     <Container>
       {master && <Icon css={masterIconStyle} sprite={masterIcon} />}
-      <NameLink css={{ color }} to={`/profile/${encodeUuid(userId)}`}>
+      <NameLink ref={linkRef} css={{ color }} to={`/profile/${encodeUuid(userId)}`}>
         {name}
+        {nickname && inGame && (
+          <Tooltip css={nicknameStyle} className="show-on-hover">
+            {nickname}
+          </Tooltip>
+        )}
       </NameLink>
       {!action && ':'}
     </Container>

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import running from '../../../assets/icons/running.svg';
-import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { ComposeDispatch, update } from './reducer';
 
 interface Props {

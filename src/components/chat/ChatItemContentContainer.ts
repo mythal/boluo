@@ -1,10 +1,11 @@
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { textColor } from '../../styles/colors';
+import { chatContentLineHeight } from './styles';
 
 export const ChatItemContentContainer = styled.div`
   grid-area: content;
-  line-height: 1.6em;
+  ${chatContentLineHeight};
 
   &[data-action='true'] {
     font-style: italic;

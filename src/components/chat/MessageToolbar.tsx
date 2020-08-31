@@ -6,7 +6,7 @@ import editIcon from '../../assets/icons/edit.svg';
 import trashIcon from '../../assets/icons/trash.svg';
 import foldIcon from '../../assets/icons/fold.svg';
 import unfoldIcon from '../../assets/icons/unfold.svg';
-import ChatItemToolbarButton, { ToolbarButtonProps } from '../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton, { ToolbarButtonProps } from './ChatItemToolbarButton';
 import { useState } from 'react';
 import Dialog from '../molecules/Dialog';
 import { Text } from '../atoms/Text';

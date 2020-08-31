@@ -15,7 +15,7 @@ import {
   textSm,
   uiShadow,
 } from '../../../styles/atoms';
-import ChatItemToolbarButton from '../../atoms/ChatItemToolbarButton';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import historyIcon from '../../../assets/icons/history.svg';
 import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
@@ -34,7 +34,7 @@ import InGameSwitch from './InGameSwitch';
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
-import PreviewComposeInput from './ComposeInput';
+import ComposeInput from './ComposeInput';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -52,6 +52,7 @@ const input = css`
   flex: 1 1;
   resize: none;
   border: none;
+  height: 1.5rem;
   align-self: center;
   color: ${textColor};
   ${textBase};
@@ -178,7 +179,7 @@ function Compose({ preview, channelId, member }: Props) {
           <Icon sprite={historyIcon} />
         </div>
       </div>
-      <PreviewComposeInput
+      <ComposeInput
         key={messageId}
         autoFocus
         autoSize

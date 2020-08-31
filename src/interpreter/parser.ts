@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/no-use-before-define */
-import { Binary, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, SubExpr, Text } from './entities';
+import { Binary, Emphasis, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, SubExpr, Text } from './entities';
 
 interface State {
   text: string;
@@ -143,17 +143,31 @@ const regex = (pattern: RegExp): P<RegExpMatchArray> =>
 
 // Parsers
 
+const EM_REGEX = /^\*(.+?)\*/;
+
+const emphasis = (): P<Entity> =>
+  regex(EM_REGEX).then(([match, { text, rest }]) => {
+    const [entire, content] = match;
+    const entity: Emphasis = {
+      type: 'Emphasis',
+      start: text.length + entire.indexOf(content),
+      offset: content.length,
+    };
+    text += entire;
+    return [entity, { text, rest }];
+  });
+
 const STRONG_REGEX = /^\*\*(.+?)\*\*/;
 
 const strong = (): P<Entity> =>
   regex(STRONG_REGEX).then(([match, { text, rest }]) => {
-    const content = match[1];
+    const [entire, content] = match;
     const entity: Strong = {
       type: 'Strong',
-      start: text.length,
+      start: text.length + entire.indexOf(content),
       offset: content.length,
     };
-    text += content;
+    text += entire;
     return [entity, { text, rest }];
   });
 
@@ -193,14 +207,14 @@ const span = (): P<Text> =>
 const LINK_REGEX = /^\[(.+)]\((.+)\)/;
 const link = (): P<Entity> =>
   regex(LINK_REGEX).then(([match, { text, rest }]) => {
-    const [, content, url] = match;
+    const [entire, content, url] = match;
     const entity: Link = {
       type: 'Link',
-      start: text.length,
+      start: text.length + entire.indexOf(content),
       offset: content.length,
       href: url,
     };
-    text += content;
+    text += entire;
     return [entity, { text, rest }];
   });
 
@@ -380,7 +394,7 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   let state: State = { text: '', rest: source };
   const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
 
-  const entity = choice<Entity>([strong(), link(), autoUrl(), maybeParseExpr, span()]);
+  const entity = choice<Entity>([emphasis(), strong(), link(), autoUrl(), maybeParseExpr, span()]);
 
   const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   const result = message.run(state, env);

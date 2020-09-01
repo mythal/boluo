@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChannelMember } from '../../api/channels';
 import { Draggable, DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import ItemSwitch from './ItemSwitch';
@@ -23,9 +23,12 @@ const dragging = css`
   box-shadow: 1px 1px 2px ${black};
 `;
 
-function DraggableItem({ index, item, myMember, provided, snapshot, measure }: Props) {
+function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Props) {
   const itemIndex = index - 1;
-
+  const [deferred, setDefer] = useState<number>(() => {
+    const timeout = Math.random() * 160;
+    return timeout < 20 ? 0 : Math.floor(timeout) - 20;
+  });
   const pane = usePane();
   const innerRef = useRef<HTMLDivElement>(null);
   const editItem = useSelector((state) => {
@@ -44,15 +47,30 @@ function DraggableItem({ index, item, myMember, provided, snapshot, measure }: P
     }
   });
 
+  useEffect(() => {
+    if (deferred === 0) {
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      setDefer(0);
+    }, deferred);
+    return () => window.clearTimeout(handle);
+  }, [deferred]);
+
   const itemMeasure = useCallback(() => {
     if (innerRef.current && measure) {
       const rect = innerRef.current.getBoundingClientRect();
-      measure(rect, index);
+      if (rect.height > 0) {
+        measure(rect, index);
+      }
     }
   }, [measure, index]);
   useLayoutEffect(() => {
     itemMeasure();
   });
+  if (deferred > 0) {
+    return null;
+  }
 
   const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';
@@ -76,10 +94,10 @@ function DraggableItem({ index, item, myMember, provided, snapshot, measure }: P
     return renderer(provided, snapshot);
   }
   return (
-    <Draggable draggableId={id} index={itemIndex} key={id} isDragDisabled={!draggable}>
+    <Draggable draggableId={id} index={itemIndex} isDragDisabled={!draggable}>
       {renderer}
     </Draggable>
   );
 }
 
-export default React.memo(DraggableItem);
+export default React.memo(VirtualItem);

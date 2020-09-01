@@ -8,7 +8,7 @@ import LoadMore, { loadMoreHeight } from './LoadMore';
 import { Id } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
 import { ChannelMember } from '../../api/channels';
-import ChatDraggableItem from './DraggableItem';
+import ChatDraggableItem from './VirtualItem';
 import { usePane } from '../../hooks/usePane';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
@@ -59,7 +59,7 @@ function VirtualList({ myMember, channelId }: Props) {
     estimateSize,
     paddingEnd: 24,
     renderThreshold: 0,
-    overscan: 16,
+    overscan: 10,
   });
 
   const items = virtualItems.map(({ index, size, end }) => {

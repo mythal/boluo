@@ -13,7 +13,7 @@ const tooltip = css`
   ${[p(2), roundedSm, textBase]};
   position: absolute;
   left: 50%;
-  top: ${spacingN(-2)};
+  top: ${spacingN(1)};
   z-index: 100;
   transform: translate(-50%, -100%);
   border: 1px solid ${black};

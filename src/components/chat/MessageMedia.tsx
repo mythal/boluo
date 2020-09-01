@@ -85,6 +85,8 @@ function MessageMedia({ className, mediaId, file, measure }: Props) {
         false
       );
       reader.readAsDataURL(file);
+    } else {
+      setDataUrl(null);
     }
   }, [file]);
 

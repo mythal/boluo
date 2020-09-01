@@ -27,6 +27,7 @@ import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
 import { itemImage, nameContainer, previewInGame, previewOutGame, textInGame, textOutGame } from '../styles';
 import { isMac } from '../../../utils/browser';
+import { handleKeyDown } from '../key';
 
 interface Props {
   preview?: Preview;
@@ -36,7 +37,7 @@ interface Props {
 
 const compose = css`
   grid-area: compose;
-  ${inputStyle};
+  ${[inputStyle, mB(1)]};
   resize: none;
   height: 4rem;
 `;
@@ -156,17 +157,9 @@ function EditCompose({ preview, editTo, measure }: Props) {
   const chatItemName = (
     <ChatItemName inGame={inGame} action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
   );
-  const handleKeyDown: React.KeyboardEventHandler = async (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      await onSend();
-    } else if (e.key === 'Alt') {
-      e.preventDefault();
-      composeDispatch(update({ inGame: !inGame }));
-    }
-  };
+  const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame);
   return (
-    <div css={container} data-edit={true} ref={containerRef} onKeyDown={handleKeyDown} data-in-game={inGame}>
+    <div css={container} data-edit={true} ref={containerRef} onKeyDown={onKeyDown} data-in-game={inGame}>
       <ChatItemTime timestamp={editTo.created} />
       <div css={nameContainer}>
         {inGame && <ChatPreviewComposeNameInput value={inputName} composeDispatch={composeDispatch} />}
@@ -174,7 +167,11 @@ function EditCompose({ preview, editTo, measure }: Props) {
       </div>
       <ChatItemContentContainer data-action={isAction} data-in-game={inGame}>
         <div css={[mL(2), mB(2), floatRight]}>
-          <ChatImageUploadButton hasImage={media !== undefined} composeDispatch={composeDispatch} css={[mR(1)]} />
+          <ChatImageUploadButton
+            hasImage={Boolean(media || preview?.mediaId)}
+            composeDispatch={composeDispatch}
+            css={[mR(1)]}
+          />
           <ChatItemToolbarButton css={mR(1)} sprite={cancelIcon} onClick={cancelEdit} title="取消" />
           <ChatItemToolbarButton
             loading={sending}

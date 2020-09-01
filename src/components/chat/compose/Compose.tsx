@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
-import { blue, gray, textColor } from '../../../styles/colors';
-import { alignRight, mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
+import { blue, gray, textColor, white } from '../../../styles/colors';
+import { mR, mT, p, pX, pY, relative, roundedSm, spacingN, textBase, textXs } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
@@ -15,11 +15,15 @@ import { ChannelMember } from '../../../api/channels';
 import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
 import { composeReducer, ComposeState, update } from './reducer';
-import InGameSwitch from './InGameSwitch';
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
 import ComposeInput from './ComposeInput';
+import MessageMedia from '../MessageMedia';
+import ChatImageUploadButton from './ImageUploadButton';
+import { handleKeyDown } from '../key';
+import Tooltip from '../../atoms/Tooltip';
+import mask from '../../../assets/icons/theater-masks.svg';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -55,14 +59,26 @@ const input = css`
   }
 `;
 
+const inGameContainer = css`
+  ${[relative]};
+
+  & .tooltip {
+    visibility: hidden;
+  }
+
+  &:hover .tooltip {
+    visibility: visible;
+  }
+`;
+
 const nameInput = css`
-  flex: 1 1;
-  border: none;
+  border: 1px solid ${gray['800']};
   color: ${textColor};
-  ${[textBase, pY(1.5), pX(1.5), alignRight, roundedSm]};
-  width: 0;
-  background-color: ${darken(0.1, blue['900'])};
+  ${[textBase, pY(1.5), pX(1.5), roundedSm]};
+  width: 8rem;
+  background-color: ${gray['900']};
   &:focus {
+    border-color: ${gray['700']};
     outline: none;
   }
 `;
@@ -73,12 +89,12 @@ const sendContainer = css`
 `;
 
 const mediaContainer = css`
-  grid-area: media;
-`;
-
-const nameContainer = css`
-  grid-area: name;
-  display: flex;
+  position: absolute;
+  top: 0;
+  right: 4rem;
+  ${[roundedSm]};
+  border: 1px solid ${white};
+  transform: translateY(-90%) rotate(25deg);
 `;
 
 interface Props {
@@ -151,19 +167,27 @@ function Compose({ preview, channelId, member }: Props) {
       );
     }
   };
+  const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame);
+  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
+
   return (
-    <div css={container} ref={containerRef}>
+    <div css={container} ref={containerRef} onKeyDown={onKeyDown}>
       <div css={toolbar}>
         <BroadcastSwitch size="large" broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
         <ActionSwitch size="large" isAction={isAction} composeDispatch={composeDispatch} css={[mR(1)]} />
-        <InGameSwitch size="large" inGame={inGame} composeDispatch={composeDispatch} />
+        <div css={inGameContainer}>
+          <Tooltip className="tooltip">
+            <div>游戏内</div>
+            <div css={[textXs]}>{isMac ? 'Option' : 'Alt'}</div>
+            {inGame && (
+              <div css={[mT(1)]}>
+                <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="角色名" />
+              </div>
+            )}
+          </Tooltip>
+          <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} size="large" />
+        </div>
       </div>
-      {/*{inGame && (*/}
-      {/*  <div css={nameContainer} data-show={inGame}>*/}
-      {/*    <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="角色名" />*/}
-      {/*    /!*<Icon sprite={historyIcon} />*!/*/}
-      {/*  </div>*/}
-      {/*)}*/}
       <ComposeInput
         key={messageId}
         autoFocus
@@ -173,10 +197,18 @@ function Compose({ preview, channelId, member }: Props) {
         composeDispatch={composeDispatch}
         inGame={inGame}
       />
-      {/*<div css={mediaContainer}>*/}
-      {/*  <MessageMedia file={media} />*/}
-      {/*</div>*/}
+      {media && (
+        <div css={mediaContainer}>
+          <MessageMedia file={media} />
+        </div>
+      )}
       <div css={sendContainer}>
+        <ChatImageUploadButton
+          size="large"
+          hasImage={media !== undefined}
+          composeDispatch={composeDispatch}
+          css={[mR(1)]}
+        />
         <ChatItemToolbarButton
           loading={sending}
           sprite={paperPlane}

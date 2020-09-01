@@ -70,7 +70,7 @@ export interface ToolbarButtonProps {
   on?: boolean;
   onClick: () => void;
   sprite: SpriteSymbol;
-  title: string;
+  title?: string;
   size?: 'normal' | 'large';
   disabled?: boolean;
   loading?: boolean;
@@ -95,7 +95,7 @@ function ChatItemToolbarButton({
   sprite,
   className,
   on,
-  title,
+  title = '',
   info,
   x,
   loading = false,
@@ -104,7 +104,7 @@ function ChatItemToolbarButton({
 }: ToolbarButtonProps) {
   return (
     <div css={container} className={className}>
-      {!isMobile && (
+      {!isMobile && title.length > 0 && (
         <Tooltip className="tooltip" x={x}>
           <div>{title}</div>
           {info && <div css={[textXs]}>{info}</div>}

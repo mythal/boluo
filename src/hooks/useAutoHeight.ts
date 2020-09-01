@@ -11,6 +11,8 @@ export const useAutoHeight = (
       return;
     }
     const scrollHeight = inputRef.current.scrollHeight;
-    inputRef.current.style.height = `${Math.min(maxHeight, scrollHeight)}px`;
+    if (scrollHeight > 50) {
+      inputRef.current.style.height = `${Math.min(maxHeight, scrollHeight)}px`;
+    }
   }, [inputRef, maxHeight, text, enable]);
 };

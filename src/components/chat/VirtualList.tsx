@@ -23,10 +23,10 @@ const container = css`
   background-color: ${bgColor};
   overflow-y: scroll;
   overflow-x: hidden;
-  // scrollbar-width: none; /* Firefox */
-  // &::-webkit-scrollbar {
-  //   display: none; /* Safari and Chrome */
-  // }
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
 
   border: 1px solid ${gray['900']};
 

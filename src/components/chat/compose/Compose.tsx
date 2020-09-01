@@ -1,26 +1,11 @@
 import * as React from 'react';
 import { useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
-import { blue, textColor } from '../../../styles/colors';
-import {
-  flex,
-  inlineBlock,
-  mR,
-  p,
-  pX,
-  pY,
-  relative,
-  roundedSm,
-  textBase,
-  textSm,
-  uiShadow,
-} from '../../../styles/atoms';
+import { blue, gray, textColor } from '../../../styles/colors';
+import { alignRight, mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import historyIcon from '../../../assets/icons/history.svg';
 import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
-import { useAutoWidth } from '../../../hooks/useAutoWidth';
-import Icon from '../../atoms/Icon';
 import { darken } from 'polished';
 import BroadcastSwitch from './BroadcastSwitch';
 import ActionSwitch from './ActionSwitch';
@@ -38,7 +23,10 @@ import ComposeInput from './ComposeInput';
 
 const container = css`
   grid-row: compose-start / compose-end;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'toolbar input  send';
+  gap: ${spacingN(2)};
   align-items: flex-end;
   background-color: ${darken(0.05, blue['900'])};
   ${pX(2)} ${pY(2)};
@@ -48,46 +36,49 @@ const container = css`
   }
 `;
 
+const toolbar = css`
+  grid-area: toolbar;
+  display: flex;
+`;
+
 const input = css`
-  flex: 1 1;
+  grid-area: input;
   resize: none;
-  border: none;
-  height: 1.5rem;
-  align-self: center;
+  height: 2.5rem;
+  min-height: 100%;
   color: ${textColor};
-  ${textBase};
-  background-color: transparent;
+  ${[textBase, p(2), roundedSm]};
+  background-color: ${gray['900']};
+  border: none;
   &:focus {
     outline: none;
   }
 `;
 
 const nameInput = css`
+  flex: 1 1;
   border: none;
   color: ${textColor};
-  ${[textSm, pY(1)]};
-  background-color: transparent;
-
+  ${[textBase, pY(1.5), pX(1.5), alignRight, roundedSm]};
+  width: 0;
+  background-color: ${darken(0.1, blue['900'])};
   &:focus {
     outline: none;
   }
 `;
 
+const sendContainer = css`
+  grid-area: send;
+  text-align: right;
+`;
+
+const mediaContainer = css`
+  grid-area: media;
+`;
+
 const nameContainer = css`
-  ${[roundedSm, p(2), uiShadow, flex]};
-  position: absolute;
-  width: max-content;
-  top: 0;
-  left: 0;
-  transform: translate(0, -100%);
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(1px);
-
-  visibility: hidden;
-
-  &[data-show='true'] {
-    visibility: visible;
-  }
+  grid-area: name;
+  display: flex;
 `;
 
 interface Props {
@@ -97,7 +88,6 @@ interface Props {
 }
 
 function Compose({ preview, channelId, member }: Props) {
-  const nameInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const dispatch = useDispatch();
@@ -107,7 +97,7 @@ function Compose({ preview, channelId, member }: Props) {
     inGame: preview?.inGame || false,
     broadcast: true,
     isAction: preview?.isAction || false,
-    inputName: preview?.name || member.characterName,
+    inputName: (preview?.inGame && preview.name) || member.characterName,
     nickname,
     initial: true,
     media: undefined,
@@ -124,7 +114,6 @@ function Compose({ preview, channelId, member }: Props) {
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
-  useAutoWidth(name, nameInputRef);
   const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     composeDispatch(update({ inputName: e.target.value }));
   };
@@ -164,38 +153,40 @@ function Compose({ preview, channelId, member }: Props) {
   };
   return (
     <div css={container} ref={containerRef}>
-      <BroadcastSwitch broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
-      <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} css={[mR(1)]} />
-      <div css={[inlineBlock, relative, mR(2)]}>
-        <InGameSwitch inGame={inGame} composeDispatch={composeDispatch} />
-        <div css={nameContainer} data-show={inGame}>
-          <input
-            value={inputName}
-            ref={nameInputRef}
-            css={nameInput}
-            onChange={handleNameChange}
-            placeholder="角色名"
-          />
-          <Icon sprite={historyIcon} />
-        </div>
+      <div css={toolbar}>
+        <BroadcastSwitch size="large" broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
+        <ActionSwitch size="large" isAction={isAction} composeDispatch={composeDispatch} css={[mR(1)]} />
+        <InGameSwitch size="large" inGame={inGame} composeDispatch={composeDispatch} />
       </div>
+      {/*{inGame && (*/}
+      {/*  <div css={nameContainer} data-show={inGame}>*/}
+      {/*    <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="角色名" />*/}
+      {/*    /!*<Icon sprite={historyIcon} />*!/*/}
+      {/*  </div>*/}
+      {/*)}*/}
       <ComposeInput
         key={messageId}
         autoFocus
         autoSize
-        css={[mR(1), input]}
+        css={[input]}
         initialValue={text}
         composeDispatch={composeDispatch}
         inGame={inGame}
       />
-      <ChatItemToolbarButton
-        loading={sending}
-        sprite={paperPlane}
-        onClick={onSend}
-        title="发送"
-        info={isMac ? '⌘ + ⏎' : 'Ctrl + ⏎'}
-        x="left"
-      />
+      {/*<div css={mediaContainer}>*/}
+      {/*  <MessageMedia file={media} />*/}
+      {/*</div>*/}
+      <div css={sendContainer}>
+        <ChatItemToolbarButton
+          loading={sending}
+          sprite={paperPlane}
+          onClick={onSend}
+          title="发送"
+          size="large"
+          info={isMac ? '⌘ + ⏎' : 'Ctrl + ⏎'}
+          x="left"
+        />
+      </div>
     </div>
   );
 }

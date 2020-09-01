@@ -3,12 +3,13 @@ import { Preview } from '../../api/events';
 import { chatItemContainer } from './ChatItemContainer';
 import ChatItemTime from './ChatItemTime';
 import ChatItemName from './ChatItemName';
-import { previewStyle } from '../../styles/atoms';
 import ChatItemContent from './ItemContent';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
+import { nameContainer, previewInGame, previewOutGame } from './styles';
 
 interface Props {
   preview: Preview;
+  measure: () => void;
 }
 
 function PreviewItem({ preview }: Props) {
@@ -34,9 +35,9 @@ function PreviewItem({ preview }: Props) {
   );
 
   return (
-    <div css={[chatItemContainer, previewStyle]} data-in-game={preview.inGame}>
+    <div css={[chatItemContainer, preview.inGame ? previewInGame : previewOutGame]} data-in-game={preview.inGame}>
       <ChatItemTime timestamp={preview.start} />
-      {!isAction && name}
+      {!isAction && <div css={nameContainer}>{name}</div>}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
         {isAction && name}
         <ChatItemContent entities={entities} text={text} />

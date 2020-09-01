@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/core';
-import { mB, mL, roundedSm } from '../../styles/atoms';
+import { roundedSm } from '../../styles/atoms';
 import Modal from '../atoms/Modal';
 import { Id } from '../../utils/id';
 import { mediaHead, mediaUrl } from '../../api/request';
@@ -12,13 +12,12 @@ interface Props {
   className?: string;
   mediaId?: Id | null;
   file?: File;
+  measure?: () => void;
 }
 
 export const inlineImg = css`
-  float: right;
-  max-height: 3rem;
-  max-width: 6rem;
   ${roundedSm};
+  height: 100%;
 `;
 
 export const placeHolder = css`
@@ -35,14 +34,16 @@ export const largeImg = css`
 `;
 
 export const inlineImgLink = css`
+  display: block;
   float: right;
-  ${[mL(1), mB(1)]}
+  height: 3rem;
+  max-width: 8rem;
   &:hover {
     filter: brightness(50%);
   }
 `;
 
-function MessageMedia({ className, mediaId, file }: Props) {
+function MessageMedia({ className, mediaId, file, measure }: Props) {
   const [lightBox, setLightBox] = useState(false);
   const [type, setType] = useState<string | undefined | null>(file?.type);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -53,6 +54,12 @@ function MessageMedia({ className, mediaId, file }: Props) {
       mounted.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (measure) {
+      measure();
+    }
+  }, [type, dataUrl, measure]);
 
   useEffect(() => {
     if (!mediaId || !mounted.current) {
@@ -83,8 +90,9 @@ function MessageMedia({ className, mediaId, file }: Props) {
 
   if (!mediaId && !file) {
     return null;
-  } else if (!type) {
-    return <div css={placeHolder} />;
+  }
+  if (!type) {
+    return <div css={placeHolder} className={className} />;
   }
 
   if (allowImageType.includes(type)) {

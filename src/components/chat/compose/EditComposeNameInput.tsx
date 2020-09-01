@@ -16,7 +16,7 @@ const Naming = styled.div`
   justify-content: flex-end;
 `;
 
-function PreviewComposeNameInput({ value, composeDispatch }: Props) {
+function EditComposeNameInput({ value, composeDispatch }: Props) {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
     composeDispatch(update({ inputName: value.trim().substr(0, 32) }));
@@ -29,4 +29,4 @@ function PreviewComposeNameInput({ value, composeDispatch }: Props) {
   );
 }
 
-export default React.memo(PreviewComposeNameInput);
+export default React.memo(EditComposeNameInput);

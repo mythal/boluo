@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ChatPreviewCompose from './compose/PreviewCompose';
+import ChatPreviewCompose from './compose/EditCompose';
 import ChatMessageItem from './MessageItem';
 import ChatPreviewItem from './PreviewItem';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
@@ -32,7 +32,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
       if (editItem.mine && myId) {
         return <ChatPreviewCompose preview={editItem.preview} editTo={message} measure={measure} />;
       } else if (editItem.preview !== undefined) {
-        return <ChatPreviewItem preview={editItem.preview} />;
+        return <ChatPreviewItem preview={editItem.preview} measure={measure} />;
       }
     }
     return (
@@ -42,6 +42,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
         myMember={myMember}
         handleProps={handleProps}
         moving={item.moving}
+        measure={measure}
       />
     );
   } else {
@@ -49,7 +50,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
     if ((inGame && !item.preview.inGame) || (outGame && item.preview.inGame)) {
       return null;
     } else {
-      return <ChatPreviewItem key={item.id} preview={item.preview} />;
+      return <ChatPreviewItem key={item.id} preview={item.preview} measure={measure} />;
     }
   }
 }

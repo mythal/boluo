@@ -8,9 +8,10 @@ interface Props {
   inGame: boolean;
   composeDispatch: ComposeDispatch;
   className?: string;
+  size?: 'normal' | 'large';
 }
 
-function InGameSwitch({ inGame, composeDispatch, className }: Props) {
+function InGameSwitch({ inGame, composeDispatch, className, size }: Props) {
   const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
   return (
     <ChatItemToolbarButton
@@ -19,6 +20,7 @@ function InGameSwitch({ inGame, composeDispatch, className }: Props) {
       onClick={toggleInGame}
       sprite={mask}
       title="游戏内"
+      size={size}
       info={isMac ? 'Option' : 'Alt'}
     />
   );

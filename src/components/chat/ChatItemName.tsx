@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useRef } from 'react';
 import Prando from 'prando';
 import { encodeUuid, Id } from '../../utils/id';
 import styled from '@emotion/styled';
@@ -10,7 +11,6 @@ import masterIcon from '../../assets/icons/gamemaster.svg';
 import { css } from '@emotion/core';
 import { gray } from '../../styles/colors';
 import { chatContentLineHeight } from './styles';
-import { useRef } from 'react';
 import Tooltip from '../atoms/Tooltip';
 import { useSelector } from '../../store';
 import { usePane } from '../../hooks/usePane';
@@ -44,7 +44,8 @@ const masterIconStyle = css`
 `;
 
 const nicknameStyle = css`
-  ${textSm}
+  ${textSm};
+  user-select: none;
 `;
 
 function ChatItemName({ name, userId, master, action, inGame }: Props) {

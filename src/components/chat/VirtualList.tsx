@@ -39,7 +39,7 @@ function estimateSize(index: number): number {
   if (index === 0) {
     return loadMoreHeight;
   } else {
-    return 45;
+    return 42;
   }
 }
 

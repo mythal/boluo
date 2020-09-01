@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fontBase, fontNormal, p, textXs } from '../../styles/atoms';
+import { fontBase, fontNormal, p, textBase, textLg, textXs } from '../../styles/atoms';
 import { toolbarRadius } from './ItemToolbar';
 import { darken } from 'polished';
 import { css } from '@emotion/core';
@@ -14,7 +14,7 @@ const style = css`
   border: none;
   background-color: transparent;
   color: ${textColor};
-  ${[p(2), toolbarRadius]};
+  ${[p(0), toolbarRadius]};
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.2);
@@ -32,6 +32,18 @@ const style = css`
       background-color: transparent;
       filter: brightness(80%);
     }
+  }
+
+  &[data-size='normal'] {
+    ${textBase};
+    width: 2rem;
+    height: 2rem;
+  }
+
+  &[data-size='large'] {
+    ${textLg};
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   &[data-on='true'] {
@@ -59,6 +71,7 @@ export interface ToolbarButtonProps {
   onClick: () => void;
   sprite: SpriteSymbol;
   title: string;
+  size?: 'normal' | 'large';
   disabled?: boolean;
   loading?: boolean;
   info?: string;
@@ -87,6 +100,7 @@ function ChatItemToolbarButton({
   x,
   loading = false,
   disabled = false,
+  size = 'normal',
 }: ToolbarButtonProps) {
   return (
     <div css={container} className={className}>
@@ -96,7 +110,7 @@ function ChatItemToolbarButton({
           {info && <div css={[textXs]}>{info}</div>}
         </Tooltip>
       )}
-      <button css={style} data-on={on} onClick={onClick} disabled={loading || disabled}>
+      <button css={style} data-size={size} data-on={on} onClick={onClick} disabled={loading || disabled}>
         <Icon spin={loading} sprite={loading ? rotateIcon : sprite} />
       </button>
     </div>

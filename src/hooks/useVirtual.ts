@@ -69,6 +69,7 @@ export function useVirtual<T extends Element>({
   const [outerSize, setOuterSize] = useState(0);
   const [crossSize, setCrossSize] = useState(0);
 
+  const timeout = useRef<number | undefined>(undefined);
   useLayoutEffect(() => {
     if (parentRef.current === null) {
       return;
@@ -78,8 +79,11 @@ export function useVirtual<T extends Element>({
         return;
       }
       const entry = entries[0];
-      setOuterSize(entry.contentRect.height);
-      setCrossSize(entry.contentRect.width);
+      window.clearTimeout(timeout.current);
+      timeout.current = window.setTimeout(() => {
+        setOuterSize(entry.contentRect.height);
+        setCrossSize(entry.contentRect.width);
+      }, 80);
     });
     observer.observe(parentRef.current);
     return () => {

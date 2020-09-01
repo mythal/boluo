@@ -3,9 +3,7 @@ import { darken, lighten, mix, transparentize } from 'polished';
 import { Theme } from 'react-select';
 import {
   bgColor,
-  blue,
   focusOutlineColor,
-  gray,
   headerBgColor,
   linkColor,
   modalMaskColor,
@@ -474,19 +472,6 @@ export const selectTheme = (theme: Theme): Theme => ({
     neutral90: textColor,
   },
 });
-const colorA = gray['900'];
-const colorB = darken(0.3, gray['900']);
-const previewStripWidth = 3;
-export const previewStyle = css`
-  box-shadow: ${spacingN(1)} 0 0 0 ${blue['700']} inset;
-  background: repeating-linear-gradient(
-    45deg,
-    ${colorA},
-    ${colorA} ${previewStripWidth}px,
-    ${colorB} ${previewStripWidth}px,
-    ${colorB} ${previewStripWidth * 2}px
-  );
-`;
 export const composeInputStyle = css`
   ${[roundedPx, textBase]};
   background-color: ${darken(0.05, bgColor)};

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { p, roundedSm, spacingN } from '../../styles/atoms';
+import { p, roundedSm, spacingN, textBase } from '../../styles/atoms';
 import { black } from '../../styles/colors';
 
 export interface TooltipProps {
@@ -10,7 +10,7 @@ export interface TooltipProps {
 }
 
 const tooltip = css`
-  ${[p(2), roundedSm]};
+  ${[p(2), roundedSm, textBase]};
   position: absolute;
   left: 50%;
   top: ${spacingN(-2)};

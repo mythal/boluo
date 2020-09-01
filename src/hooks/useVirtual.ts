@@ -74,6 +74,7 @@ export function useVirtual<T extends Element>({
     if (parentRef.current === null) {
       return;
     }
+    setOuterSize(parentRef.current.clientHeight);
     const observer = new ResizeObserver((entries) => {
       if (entries.length === 0) {
         return;
@@ -227,7 +228,6 @@ export function useVirtual<T extends Element>({
       for (const [key, value] of measuredCache.entries()) {
         shifted = shifted.set(key + offset, value);
       }
-      shiftOffset.current = offset;
       setMeasuredCache(shifted);
     },
     [measuredCache]

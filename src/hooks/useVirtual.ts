@@ -132,7 +132,7 @@ export function useVirtual<T extends Element>({
     return measurements;
   }, [estimateSize, measuredCache, paddingEnd, size]);
 
-  const totalSize = size * 1000;
+  const totalSize = 10000000;
   const latestRef = React.useRef<Latest>({
     overscan,
     measurements,
@@ -168,6 +168,7 @@ export function useVirtual<T extends Element>({
       return;
     }
     const onScroll = () => {
+      console.trace('on scroll');
       latestRef.current.scrollOffset = latestRef.current.totalSize - element.scrollTop - element.clientHeight;
 
       setRange((prevRange) => {

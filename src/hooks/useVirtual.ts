@@ -206,12 +206,12 @@ export function useVirtual<T extends Element>({
   const measure = useCallback(
     (rect: DOMRect, index: number) => {
       const { [sizeKey]: measuredSize } = rect;
-      const measurement = measurements[index];
+      const measurement = latestRef.current.measurements[index];
       if (measurement === undefined || measuredSize !== measurement.size) {
         setMeasuredCache((old) => old.set(index, measuredSize));
       }
     },
-    [measurements, sizeKey]
+    [sizeKey]
   );
 
   const virtualItems: VirtualItem[] = React.useMemo(() => {

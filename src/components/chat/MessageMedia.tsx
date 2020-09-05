@@ -12,7 +12,6 @@ interface Props {
   className?: string;
   mediaId?: Id | null;
   file?: File;
-  measure?: () => void;
 }
 
 export const inlineImg = css`
@@ -43,7 +42,7 @@ export const inlineImgLink = css`
   }
 `;
 
-function MessageMedia({ className, mediaId, file, measure }: Props) {
+function MessageMedia({ className, mediaId, file }: Props) {
   const [lightBox, setLightBox] = useState(false);
   const [type, setType] = useState<string | undefined | null>(file?.type);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -54,12 +53,6 @@ function MessageMedia({ className, mediaId, file, measure }: Props) {
       mounted.current = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (measure) {
-      measure();
-    }
-  }, [type, dataUrl, measure]);
 
   useEffect(() => {
     if (!mediaId || !mounted.current) {

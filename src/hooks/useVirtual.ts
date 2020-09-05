@@ -67,7 +67,6 @@ export function useVirtual<T extends Element>({
   const scrollKey = horizontal ? 'scrollLeft' : 'scrollTop';
 
   const [outerSize, setOuterSize] = useState(0);
-  const [crossSize, setCrossSize] = useState(0);
 
   const timeout = useRef<number | undefined>(undefined);
   useLayoutEffect(() => {
@@ -83,7 +82,6 @@ export function useVirtual<T extends Element>({
       window.clearTimeout(timeout.current);
       timeout.current = window.setTimeout(() => {
         setOuterSize(entry.contentRect.height);
-        setCrossSize(entry.contentRect.width);
       }, 80);
     });
     observer.observe(parentRef.current);
@@ -117,7 +115,7 @@ export function useVirtual<T extends Element>({
 
   useLayoutEffect(() => {
     setMeasuredCache(Map());
-  }, [estimateSize, crossSize]);
+  }, [estimateSize]);
   const measurements: Measurement[] = React.useMemo(() => {
     const measurements: Measurement[] = [];
     let prevStart = paddingEnd;

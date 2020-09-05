@@ -32,7 +32,6 @@ import { handleKeyDown } from '../key';
 interface Props {
   preview?: Preview;
   editTo: Message;
-  measure: () => void;
 }
 
 const compose = css`
@@ -74,7 +73,7 @@ export const container = css`
   }
 `;
 
-function EditCompose({ preview, editTo, measure }: Props) {
+function EditCompose({ preview, editTo }: Props) {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pane = usePane();
@@ -82,10 +81,6 @@ function EditCompose({ preview, editTo, measure }: Props) {
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
   const sendEvent = useSend();
-
-  useLayoutEffect(() => {
-    measure();
-  });
 
   const [
     { inGame, broadcast, isAction, inputName, media, text, entities, canSubmit, sending },
@@ -189,7 +184,7 @@ function EditCompose({ preview, editTo, measure }: Props) {
             x="left"
           />
         </div>
-        <MessageMedia css={itemImage} mediaId={editTo.mediaId} file={media} measure={measure} />
+        <MessageMedia css={itemImage} mediaId={editTo.mediaId} file={media} />
 
         {isAction && chatItemName}
         <ChatItemContent entities={entities} text={text} />

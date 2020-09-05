@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChannelMember } from '../../api/channels';
 import { Draggable, DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import ItemSwitch from './ItemSwitch';
@@ -15,6 +15,7 @@ interface Props {
   myMember: ChannelMember | undefined;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
+  resizeObserver?: React.RefObject<ResizeObserver>;
   measure?: (rect: DOMRect, index: number) => void;
 }
 
@@ -23,7 +24,7 @@ const dragging = css`
   box-shadow: 1px 1px 2px ${black};
 `;
 
-function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Props) {
+function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver, measure }: Props) {
   const itemIndex = index - 1;
   const [deferred, setDefer] = useState<number>(() => {
     const timeout = Math.random() * 160;
@@ -57,35 +58,27 @@ function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Pro
     return () => window.clearTimeout(handle);
   }, [deferred]);
 
-  const itemMeasure = useCallback(() => {
-    if (wrapper.current && measure) {
-      const rect = wrapper.current.getBoundingClientRect();
-      if (rect.height > 0) {
-        measure(rect, index);
-      }
-    }
-  }, [measure, index]);
   useLayoutEffect(() => {
-    itemMeasure();
-  });
-  if (deferred > 0) {
-    return <div ref={wrapper} />;
-  }
+    if (deferred > 0 || wrapper.current === null) {
+      return;
+    }
+    if (measure) {
+      measure(wrapper.current.getBoundingClientRect(), index);
+    }
+    resizeObserver?.current?.observe(wrapper.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deferred, wrapper.current, index, resizeObserver]);
 
   const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';
   const renderer = (provided: DraggableProvided, snapshot?: DraggableStateSnapshot) => {
     const style = snapshot?.isDragging ? dragging : {};
     return (
-      <div ref={wrapper}>
+      <div ref={wrapper} data-index={index}>
         <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
-          <ItemSwitch
-            measure={itemMeasure}
-            item={item}
-            editItem={editItem}
-            myMember={myMember}
-            handleProps={provided.dragHandleProps}
-          />
+          {deferred <= 0 && (
+            <ItemSwitch item={item} editItem={editItem} myMember={myMember} handleProps={provided.dragHandleProps} />
+          )}
         </div>
       </div>
     );
@@ -94,7 +87,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Pro
     return renderer(provided, snapshot);
   }
   return (
-    <Draggable draggableId={id} index={itemIndex} isDragDisabled={!draggable}>
+    <Draggable draggableId={id} index={itemIndex} isDragDisabled={!draggable || deferred > 0}>
       {renderer}
     </Draggable>
   );

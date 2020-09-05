@@ -9,7 +9,6 @@ import { nameContainer, previewInGame, previewOutGame } from './styles';
 
 interface Props {
   preview: Preview;
-  measure: () => void;
 }
 
 function PreviewItem({ preview }: Props) {

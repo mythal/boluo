@@ -13,10 +13,9 @@ interface Props {
   editItem?: EditItem;
   myMember?: ChannelMember;
   handleProps?: DraggableProvidedDragHandleProps;
-  measure: () => void;
 }
 
-function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
+function ItemSwitch({ item, myMember, editItem, handleProps }: Props) {
   const myId = myMember?.userId;
   const pane = usePane();
   const filter = useSelector((state) => state.chatPane[pane]!.filter);
@@ -30,9 +29,9 @@ function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
     }
     if (editItem !== undefined) {
       if (editItem.mine && myId) {
-        return <ChatPreviewCompose preview={editItem.preview} editTo={message} measure={measure} />;
+        return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
       } else if (editItem.preview !== undefined) {
-        return <ChatPreviewItem preview={editItem.preview} measure={measure} />;
+        return <ChatPreviewItem preview={editItem.preview} />;
       }
     }
     return (
@@ -42,7 +41,6 @@ function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
         myMember={myMember}
         handleProps={handleProps}
         moving={item.moving}
-        measure={measure}
       />
     );
   } else {
@@ -50,7 +48,7 @@ function ItemSwitch({ item, myMember, editItem, handleProps, measure }: Props) {
     if ((inGame && !item.preview.inGame) || (outGame && item.preview.inGame)) {
       return null;
     } else {
-      return <ChatPreviewItem key={item.id} preview={item.preview} measure={measure} />;
+      return <ChatPreviewItem key={item.id} preview={item.preview} />;
     }
   }
 }

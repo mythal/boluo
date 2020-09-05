@@ -12,6 +12,8 @@ import ChatDraggableItem from './VirtualItem';
 import { usePane } from '../../hooks/usePane';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
+import { ResizeObserver as Polyfill } from '@juggle/resize-observer/lib/ResizeObserver';
+const ResizeObserver = window.ResizeObserver || Polyfill;
 
 interface Props {
   channelId: Id;
@@ -62,6 +64,27 @@ function VirtualList({ myMember, channelId }: Props) {
     overscan: 10,
   });
 
+  const submitTimeOut = useRef<number | undefined>(undefined);
+  const sizeRecord = useRef<Record<string, DOMRect>>({});
+  const resizeObserver = useRef(
+    new ResizeObserver((entries) => {
+      window.clearTimeout(submitTimeOut.current);
+      for (const entry of entries) {
+        const indexAttr = entry.target.getAttribute('data-index');
+        if (entry.contentRect.height === 0 || indexAttr === null) {
+          continue;
+        }
+        sizeRecord.current[indexAttr] = entry.contentRect;
+      }
+      submitTimeOut.current = window.setTimeout(() => {
+        for (const [indexAttr, rect] of Object.entries(sizeRecord.current)) {
+          measure(rect, parseInt(indexAttr));
+        }
+        sizeRecord.current = {};
+      }, 10);
+    })
+  );
+
   const items = virtualItems.map(({ index, size, end }) => {
     const style: React.CSSProperties = {
       height: size,
@@ -83,7 +106,13 @@ function VirtualList({ myMember, channelId }: Props) {
     const item = messages.get(index - 1)!;
     return (
       <div key={item.id} style={style}>
-        <ChatDraggableItem item={item} myMember={myMember} index={index} measure={measure} />
+        <ChatDraggableItem
+          item={item}
+          myMember={myMember}
+          index={index}
+          resizeObserver={resizeObserver}
+          measure={measure}
+        />
       </div>
     );
   });

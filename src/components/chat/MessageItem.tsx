@@ -19,10 +19,9 @@ interface Props {
   style?: React.CSSProperties;
   handleProps?: DraggableProvidedDragHandleProps;
   moving?: boolean;
-  measure: () => void;
 }
 
-function MessageItem({ message, mine = false, style, handleProps, myMember, moving = false, measure }: Props) {
+function MessageItem({ message, mine = false, style, handleProps, myMember, moving = false }: Props) {
   const [lazy, setLazy] = useState(true);
   useEffect(() => {
     const timeout = window.setTimeout(() => setLazy(false), 200);
@@ -46,7 +45,7 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
         data-action={message.isAction}
         data-folded={message.folded}
       >
-        <MessageMedia css={itemImage} mediaId={message.mediaId} measure={measure} />
+        <MessageMedia css={itemImage} mediaId={message.mediaId} />
         {message.isAction && name}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
       </ChatItemContentContainer>

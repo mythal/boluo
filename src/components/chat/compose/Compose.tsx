@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useReducer, useRef } from 'react';
+import { useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
 import { mR, mT, p, pX, pY, relative, roundedSm, spacingN, textBase, textXs } from '../../../styles/atoms';
@@ -108,6 +108,8 @@ function Compose({ preview, channelId, member }: Props) {
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const dispatch = useDispatch();
   const sendEvent = useSend();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialText = useMemo(() => preview?.text || '', []);
   const makeInitState = (): ComposeState => ({
     sending: false,
     inGame: preview?.inGame || false,
@@ -121,7 +123,7 @@ function Compose({ preview, channelId, member }: Props) {
     editFor: undefined,
     appDispatch: dispatch,
     messageId: preview?.id || newId(),
-    text: preview?.text || '',
+    text: initialText,
     entities: preview?.entities || [],
     clear: false,
   });
@@ -193,7 +195,7 @@ function Compose({ preview, channelId, member }: Props) {
         autoFocus
         autoSize
         css={[input]}
-        initialValue={text}
+        initialValue={initialText}
         composeDispatch={composeDispatch}
         inGame={inGame}
       />

@@ -35,10 +35,11 @@ function ComposeInput({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setValue('');
+    setValue(initialValue);
     if (inputRef.current) {
       inputRef.current.style.height = '';
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   useAutoHeight(autoSize, value, inputRef);
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';

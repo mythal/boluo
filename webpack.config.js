@@ -11,7 +11,7 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
-const REMOTE_BACKEND = false;
+const REMOTE_BACKEND = Boolean(process.env.REMOTE_BACKEND) || false;
 
 module.exports = {
   entry: './src/index.tsx',

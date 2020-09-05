@@ -30,7 +30,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Pro
     return timeout < 20 ? 0 : Math.floor(timeout) - 20;
   });
   const pane = usePane();
-  const innerRef = useRef<HTMLDivElement>(null);
+  const wrapper = useRef<HTMLDivElement>(null);
   const editItem = useSelector((state) => {
     if (item !== undefined && item.type === 'MESSAGE') {
       const editItem = state.chatPane[pane]!.itemSet.editions.get(item.message.id);
@@ -58,8 +58,8 @@ function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Pro
   }, [deferred]);
 
   const itemMeasure = useCallback(() => {
-    if (innerRef.current && measure) {
-      const rect = innerRef.current.getBoundingClientRect();
+    if (wrapper.current && measure) {
+      const rect = wrapper.current.getBoundingClientRect();
       if (rect.height > 0) {
         measure(rect, index);
       }
@@ -69,7 +69,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Pro
     itemMeasure();
   });
   if (deferred > 0) {
-    return null;
+    return <div ref={wrapper} />;
   }
 
   const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster) && !editItem;
@@ -77,7 +77,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, measure }: Pro
   const renderer = (provided: DraggableProvided, snapshot?: DraggableStateSnapshot) => {
     const style = snapshot?.isDragging ? dragging : {};
     return (
-      <div ref={innerRef}>
+      <div ref={wrapper}>
         <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
           <ItemSwitch
             measure={itemMeasure}

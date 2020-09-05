@@ -15,9 +15,6 @@ interface Props {
 function PreviewItem({ preview }: Props) {
   let { text, isAction, entities } = preview;
 
-  if (text === '') {
-    return null;
-  }
   if (text === null) {
     text = '……（预览广播已关闭）……';
     entities = [{ type: 'Text', start: 0, offset: text.length }];

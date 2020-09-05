@@ -186,7 +186,7 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     if (prevPreview) {
       messages = removeItem(messages, item.id, [prevPreview.date, prevPreview.offset]);
     }
-    if (!item.mine && item.preview.text === '') {
+    if (item.preview.text === '') {
       previews = previews.remove(item.id);
     } else {
       previews = previews.set(item.id, item);

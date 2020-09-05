@@ -189,7 +189,7 @@ function Compose({ preview, channelId, member }: Props) {
         </div>
       </div>
       <ComposeInput
-        key={messageId}
+        id={messageId}
         autoFocus
         autoSize
         css={[input]}

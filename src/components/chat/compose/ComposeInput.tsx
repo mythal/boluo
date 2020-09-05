@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParse } from '../../../hooks/useParse';
 import { ComposeDispatch, update } from './reducer';
 import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 interface Props {
+  id: string;
   inGame: boolean;
   initialValue: string;
   composeDispatch: ComposeDispatch;
@@ -21,6 +22,7 @@ const style = css`
 `;
 
 function ComposeInput({
+  id,
   inGame,
   initialValue,
   composeDispatch,
@@ -31,10 +33,18 @@ function ComposeInput({
   const [value, setValue] = useState(initialValue);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setValue('');
+    if (inputRef.current) {
+      inputRef.current.style.height = '';
+    }
+  }, [id]);
   useAutoHeight(autoSize, value, inputRef);
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
+
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const nextValue = e.target.value;
     setValue(nextValue);

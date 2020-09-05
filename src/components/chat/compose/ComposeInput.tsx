@@ -34,11 +34,16 @@ function ComposeInput({
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // reset
   useEffect(() => {
-    setValue(initialValue);
-    if (inputRef.current) {
-      inputRef.current.style.height = '';
-    }
+    const input = inputRef.current;
+    return () => {
+      setValue('');
+      setDragging(false);
+      if (input) {
+        input.style.height = '';
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   useAutoHeight(autoSize, value, inputRef);

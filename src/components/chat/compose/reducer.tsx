@@ -79,21 +79,37 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
     next.messageId = newId();
   }
   const nextState = { ...state, ...next, initial: false };
-  const { inGame, isAction, editFor, broadcast, text, inputName, entities, sending, nickname, clear } = nextState;
-  const name = inGame ? inputName : nickname;
-  const preview: PreviewPost = {
-    id: nextState.messageId,
-    name,
-    inGame,
-    isAction,
-    mediaId: null,
-    editFor,
-    clear,
-    text: broadcast || text === '' ? text : null,
-    entities: broadcast ? entities : [],
-  };
-  nextState.canSubmit = text !== '' && (!inGame || inputName !== '') && !sending;
-  nextState.sendEvent({ type: 'PREVIEW', preview });
+  if (
+    [
+      next.appDispatch,
+      next.sendEvent,
+      next.nickname,
+      next.inputName,
+      next.inGame,
+      next.isAction,
+      next.editFor,
+      next.broadcast,
+      next.text,
+      next.entities,
+      next.clear,
+    ].some((value) => value !== undefined)
+  ) {
+    const { inGame, isAction, editFor, broadcast, text, inputName, entities, sending, nickname, clear } = nextState;
+    const name = inGame ? inputName : nickname;
+    const preview: PreviewPost = {
+      id: nextState.messageId,
+      name,
+      inGame,
+      isAction,
+      mediaId: null,
+      editFor,
+      clear,
+      text: broadcast || text === '' ? text : null,
+      entities: broadcast ? entities : [],
+    };
+    nextState.canSubmit = text !== '' && (!inGame || inputName !== '') && !sending;
+    nextState.sendEvent({ type: 'PREVIEW', preview });
+  }
 
   return nextState;
 };

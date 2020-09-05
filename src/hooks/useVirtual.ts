@@ -168,7 +168,6 @@ export function useVirtual<T extends Element>({
       return;
     }
     const onScroll = () => {
-      console.trace('on scroll');
       latestRef.current.scrollOffset = latestRef.current.totalSize - element.scrollTop - element.clientHeight;
 
       setRange((prevRange) => {

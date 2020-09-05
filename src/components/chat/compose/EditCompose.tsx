@@ -95,7 +95,7 @@ function EditCompose({ preview, editTo, measure }: Props) {
     let inputName = '';
     if (inGame) {
       if (preview) {
-        inputName = preview?.name;
+        inputName = preview.name;
       } else if (editTo.inGame) {
         inputName = editTo.name;
       } else {
@@ -122,7 +122,10 @@ function EditCompose({ preview, editTo, measure }: Props) {
   });
 
   useLayoutEffect(() => {
-    composeDispatch(update({ inputName: myMember.characterName }));
+    if (inputName !== myMember.characterName) {
+      composeDispatch(update({ inputName: myMember.characterName }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myMember.characterName]);
   const initialDraft = preview?.text || editTo?.text || '';
 

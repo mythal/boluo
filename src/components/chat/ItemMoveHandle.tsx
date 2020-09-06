@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
-import { p, roundedMd, textXs } from '../../styles/atoms';
+import { p, pY, roundedMd, textXs } from '../../styles/atoms';
 import { darken } from 'polished';
 import { textColor } from '../../styles/colors';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
@@ -12,15 +12,19 @@ interface Props {
   handleProps: DraggableProvidedDragHandleProps;
 }
 
-export const handleStyle = css`
+export const handleContainerStyle = css`
   grid-area: time;
   color: ${darken(0.6, textColor)};
   display: flex;
-  flex-direction: row-reverse;
-  justify-content: center;
-  align-items: center;
-  ${[textXs, roundedMd, p(1)]};
+  justify-content: stretch;
+  align-items: stretch;
+  ${[textXs, roundedMd, pY(1)]};
+`;
 
+const handleStyle = css`
+  ${[p(1), roundedMd]};
+  display: flex;
+  align-items: center;
   &:hover {
     background-color: rgba(255, 255, 255, 0.05);
   }
@@ -39,10 +43,10 @@ function ItemMoveHandle({ timestamp, handleProps }: Props) {
     time.getHours()
   )}:${num(time.getMinutes())}`;
   return (
-    <time className="time" dateTime={time.toISOString()} css={handleStyle} title={dateText} {...handleProps}>
-      <span>
+    <time dateTime={time.toISOString()} css={handleContainerStyle} title={dateText}>
+      <div css={handleStyle} {...handleProps}>
         <Icon className="handle" sprite={handle} />
-      </span>
+      </div>
     </time>
   );
 }

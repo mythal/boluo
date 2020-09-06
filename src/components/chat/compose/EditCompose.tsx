@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback, useLayoutEffect, useReducer, useRef } from 'react';
-import { floatRight, mB, mL, mR, pX, pY, spacingN } from '../../../styles/atoms';
+import { clearRight, floatRight, mL, mR, mT, pX, textSm } from '../../../styles/atoms';
 import { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
 import { AppResult, patch } from '../../../api/request';
@@ -24,7 +24,15 @@ import { usePane } from '../../../hooks/usePane';
 import { composeReducer, update } from './reducer';
 import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
-import { itemImage, nameContainer, previewInGame, previewOutGame, textInGame, textOutGame } from '../styles';
+import {
+  chatSplitLine,
+  itemImage,
+  nameContainer,
+  previewInGame,
+  previewOutGame,
+  textInGame,
+  textOutGame,
+} from '../styles';
 import { isMac } from '../../../utils/browser';
 import { handleKeyDown } from '../key';
 
@@ -33,16 +41,20 @@ interface Props {
   editTo: Message;
 }
 
-const compose = css`
+const composeWrapper = css`
   grid-area: compose;
-  ${[inputStyle, mB(1)]};
+  ${[pX(3), mL(2), chatSplitLine]};
+`;
+
+const compose = css`
+  ${[inputStyle, textSm]};
   resize: none;
   height: 4rem;
 `;
 
 export const container = css`
   display: grid;
-  ${[pX(2), pY(1), previewInGame]};
+  ${[pX(2), previewInGame]};
   position: relative;
   top: 0;
   bottom: 0;
@@ -51,7 +63,6 @@ export const container = css`
   grid-template-areas:
     '   time    name content content'
     'toolbar toolbar compose compose';
-  gap: ${spacingN(1)} ${spacingN(2)};
   &[data-edit='true'] {
     position: relative;
   }
@@ -162,7 +173,8 @@ function EditCompose({ preview, editTo }: Props) {
         {!inGame && !isAction && chatItemName}
       </div>
       <ChatItemContentContainer data-action={isAction} data-in-game={inGame}>
-        <div css={[mL(2), mB(2), floatRight]}>
+        <MessageMedia css={itemImage} mediaId={editTo.mediaId} file={media} />
+        <div css={[mL(2), mT(2), floatRight, clearRight]}>
           <ChatImageUploadButton
             hasImage={Boolean(media || preview?.mediaId)}
             composeDispatch={composeDispatch}
@@ -182,19 +194,19 @@ function EditCompose({ preview, editTo }: Props) {
             x="left"
           />
         </div>
-        <MessageMedia css={itemImage} mediaId={editTo.mediaId} file={media} />
 
         {isAction && chatItemName}
         <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>
-
-      <ComposeInput
-        id={editTo.id}
-        css={compose}
-        inGame={inGame}
-        composeDispatch={composeDispatch}
-        initialValue={initialDraft}
-      />
+      <div css={composeWrapper}>
+        <ComposeInput
+          id={editTo.id}
+          css={compose}
+          inGame={inGame}
+          composeDispatch={composeDispatch}
+          initialValue={initialDraft}
+        />
+      </div>
       <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
     </div>
   );

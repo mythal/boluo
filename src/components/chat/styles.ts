@@ -2,6 +2,7 @@ import { css } from '@emotion/core';
 import { alignRight, mB, mL, pY, textLg, textSm } from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
+import { gray } from '../../styles/colors';
 
 export const chatContentLineHeight = css`
   line-height: 1.6rem;
@@ -32,5 +33,9 @@ export const previewOutGame = previewStyle(chatItemOutGameBgColor, darken(0.15, 
 
 export const nameContainer = css`
   grid-area: name;
-  ${[pY(1), alignRight]};
+  ${[pY(2), alignRight]};
+`;
+
+export const chatSplitLine = css`
+  border-left: 1px solid ${gray['700']};
 `;

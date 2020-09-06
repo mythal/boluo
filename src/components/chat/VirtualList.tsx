@@ -59,7 +59,6 @@ function VirtualList({ myMember, channelId }: Props) {
     size: listSize,
     parentRef,
     estimateSize,
-    paddingEnd: 24,
     renderThreshold: 0,
     overscan: 10,
   });

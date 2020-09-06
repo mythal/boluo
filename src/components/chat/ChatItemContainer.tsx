@@ -1,14 +1,14 @@
-import { pX, pY, textLg, textSm } from '../../styles/atoms';
-import { darken, lighten } from 'polished';
-import { bgColor } from '../../styles/colors';
+import { pX, textLg, textSm } from '../../styles/atoms';
+import { darken } from 'polished';
+import { bgColor, gray } from '../../styles/colors';
 import { css } from '@emotion/core';
 
 export const timeColWidth = '1.5rem';
 export const nameColWidth = '9rem';
 
-export const chatItemBgColor = lighten(0.03, bgColor);
-export const chatItemHoverBgColor = lighten(0.05, bgColor);
-export const chatItemOutGameBgColor = darken(0.05, bgColor);
+export const chatItemBgColor = gray['800'];
+export const chatItemHoverBgColor = darken(0.05, gray['800']);
+export const chatItemOutGameBgColor = bgColor;
 export const chatItemOutGameHoverBgColor = darken(0.015, bgColor);
 
 export const chatItemPlaceHolder = css`
@@ -29,14 +29,13 @@ export const itemMinHeight = 42;
 export const chatItemContainer = css`
   display: grid;
   position: relative;
-  ${[pX(2), pY(1)]};
+  ${[pX(2)]};
   min-height: ${itemMinHeight}px;
   grid-template-columns: ${timeColWidth} ${nameColWidth} 1fr;
-  grid-template-rows: auto 1fr;
   grid-template-areas: 'time name content';
   background-color: ${chatItemBgColor};
   &[data-in-game='true'] {
-    ${textLg};
+    ${[textLg]};
   }
 
   &[data-in-game='false'] {

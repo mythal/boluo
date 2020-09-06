@@ -9,19 +9,40 @@ export interface TooltipProps {
   x?: 'left' | 'center' | 'right';
 }
 
+const arrowSize = '0.5rem';
+
 const tooltip = css`
   ${[p(2), roundedSm, textBase]};
   position: absolute;
   left: 50%;
-  top: ${spacingN(1)};
+  top: ${spacingN(-1)};
   z-index: 100;
   transform: translate(-50%, -100%);
   border: 1px solid ${black};
   background-color: ${black};
 
+  &::after {
+    content: '';
+    position: absolute;
+    display: block;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-top: ${arrowSize} solid ${black};
+    border-left: ${arrowSize} solid transparent;
+    border-right: ${arrowSize} solid transparent;
+    border-bottom: ${arrowSize} solid transparent;
+  }
   &[data-x='left'] {
     left: 100%;
     transform: translate(-100%, -100%);
+
+    &::after {
+      left: unset;
+      right: 0;
+    }
   }
 `;
 

@@ -3,7 +3,7 @@ import { darken, lighten } from 'polished';
 import { bgColor } from '../../styles/colors';
 import { css } from '@emotion/core';
 
-export const timeColWidth = '4rem';
+export const timeColWidth = '1.5rem';
 export const nameColWidth = '9rem';
 
 export const chatItemBgColor = lighten(0.03, bgColor);
@@ -52,9 +52,6 @@ export const chatItemContainer = css`
   }
 
   &:hover {
-    .time {
-      filter: brightness(150%);
-    }
     .handle {
       opacity: 100%;
     }

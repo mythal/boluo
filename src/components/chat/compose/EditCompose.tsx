@@ -4,7 +4,6 @@ import { floatRight, mB, mL, mR, pX, pY, spacingN } from '../../../styles/atoms'
 import { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
 import { AppResult, patch } from '../../../api/request';
-import ChatItemTime from '../ChatItemTime';
 import ChatItemContent from '../ItemContent';
 import { Message } from '../../../api/messages';
 import { nameColWidth, timeColWidth } from '../ChatItemContainer';
@@ -158,7 +157,6 @@ function EditCompose({ preview, editTo }: Props) {
   const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame);
   return (
     <div css={container} data-edit={true} ref={containerRef} onKeyDown={onKeyDown} data-in-game={inGame}>
-      <ChatItemTime timestamp={editTo.created} />
       <div css={nameContainer}>
         {inGame && <ChatPreviewComposeNameInput value={inputName} composeDispatch={composeDispatch} />}
         {!inGame && !isAction && chatItemName}

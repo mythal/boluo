@@ -25,14 +25,15 @@ function MemberListButton({ className, channelId }: Props) {
   const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const send = useSend();
+  const loggedIn = myMember !== undefined;
   useEffect(() => {
     const pulse = window.setInterval(() => {
-      if (document.visibilityState === 'visible' && myMember) {
+      if (document.visibilityState === 'visible' && loggedIn) {
         send({ type: 'HEARTBEAT' });
       }
     }, HEARTBEAT_INTERVAL);
     return () => window.clearInterval(pulse);
-  }, [send, myMember]);
+  }, [send, loggedIn]);
 
   const now = new Date().getTime();
   const onlineCount = heartbeatMap.filter((time) => isOnline(time, now)).count();

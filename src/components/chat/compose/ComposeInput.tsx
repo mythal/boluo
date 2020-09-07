@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { Ref, useEffect, useRef, useState } from 'react';
 import { useParse } from '../../../hooks/useParse';
 import { ComposeDispatch, update } from './reducer';
 import { css } from '@emotion/core';
-import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 interface Props {
-  id: string;
+  prevSubmit?: number;
   inGame: boolean;
   initialValue: string;
   composeDispatch: ComposeDispatch;
@@ -21,35 +20,22 @@ const style = css`
   }
 `;
 
-function ComposeInput({
-  id,
-  inGame,
-  initialValue,
-  composeDispatch,
-  autoFocus = false,
-  className,
-  autoSize = false,
-}: Props) {
+function ComposeInput(
+  { prevSubmit, inGame, initialValue, composeDispatch, autoFocus = false, className }: Props,
+  inputRef: Ref<HTMLTextAreaElement>
+) {
   const [value, setValue] = useState(initialValue);
   const [dragging, setDragging] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // reset
-  useEffect(() => {
-    const input = inputRef.current;
-    return () => {
-      setValue('');
-      setDragging(false);
-      if (input) {
-        input.style.height = '';
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-  useAutoHeight(autoSize, value, inputRef);
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
+
+  useEffect(() => {
+    return () => {
+      setValue('');
+    };
+  }, [prevSubmit]);
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const nextValue = e.target.value;
@@ -101,4 +87,4 @@ function ComposeInput({
   );
 }
 
-export default React.memo(ComposeInput);
+export default React.memo(React.forwardRef<HTMLTextAreaElement, Props>(ComposeInput));

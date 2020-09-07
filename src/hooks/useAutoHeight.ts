@@ -1,18 +1,27 @@
-import { RefObject, useLayoutEffect } from 'react';
+import { RefObject, useEffect } from 'react';
 
-export const useAutoHeight = (
-  enable: boolean,
-  text: string,
-  inputRef: RefObject<HTMLTextAreaElement>,
-  maxHeight = 128
-) => {
-  useLayoutEffect(() => {
-    if (!inputRef.current || !enable) {
+export const useAutoHeight = (inputRef: RefObject<HTMLTextAreaElement>, maxHeight = 128) => {
+  useEffect(() => {
+    if (inputRef.current === null) {
       return;
     }
-    const scrollHeight = inputRef.current.scrollHeight;
-    if (scrollHeight > 50) {
-      inputRef.current.style.height = `${Math.min(maxHeight, scrollHeight)}px`;
-    }
-  }, [inputRef, maxHeight, text, enable]);
+    const input = inputRef.current;
+    const changeHeight = () => {
+      if (input.value === '') {
+        input.style.height = '';
+        return;
+      }
+      const scrollHeight = input.scrollHeight;
+      if (scrollHeight > 50) {
+        input.style.height = `${Math.min(maxHeight, scrollHeight)}px`;
+      }
+    };
+    changeHeight();
+    input.addEventListener('keyup', changeHeight);
+    input.addEventListener('change', changeHeight);
+    return () => {
+      input.removeEventListener('keyup', changeHeight);
+      input.removeEventListener('change', changeHeight);
+    };
+  }, [maxHeight, inputRef]);
 };

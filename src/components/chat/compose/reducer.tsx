@@ -28,7 +28,8 @@ export interface ComposeState {
   clear: boolean;
   initial: boolean;
   media: File | undefined;
-  canSubmit?: boolean;
+  canSubmit: boolean;
+  prevSubmit?: number;
 }
 
 export interface Update {
@@ -75,8 +76,10 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
     }
   }
 
-  if (next.text === '' && !state.editFor) {
-    next.messageId = newId();
+  if (!state.editFor) {
+    if (state.text === '' && next.text !== '') {
+      next.messageId = newId();
+    }
   }
   const nextState = { ...state, ...next, initial: false };
   if (
@@ -107,12 +110,15 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
       text: broadcast || text === '' ? text : null,
       entities: broadcast ? entities : [],
     };
-    nextState.canSubmit = text !== '' && (!inGame || inputName !== '') && !sending;
+    nextState.canSubmit = calculateCanSubmit(text, inGame, inputName) && !sending;
     nextState.sendEvent({ type: 'PREVIEW', preview });
   }
 
   return nextState;
 };
+
+export const calculateCanSubmit = (text: string, inGame: boolean, inputName: string): boolean =>
+  text !== '' && (!inGame || inputName !== '');
 
 export const composeReducer: ComposeReducer = (state, action) => {
   if (action.type === 'UPDATE') {

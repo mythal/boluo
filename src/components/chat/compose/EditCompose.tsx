@@ -122,6 +122,7 @@ function EditCompose({ preview, editTo }: Props) {
       messageId: editTo.id,
       text: preview?.text ?? editTo?.text ?? '',
       entities: preview?.entities ?? editTo?.entities ?? [],
+      canSubmit: true,
       clear: false,
     };
   });
@@ -199,13 +200,7 @@ function EditCompose({ preview, editTo }: Props) {
         <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>
       <div css={composeWrapper}>
-        <ComposeInput
-          id={editTo.id}
-          css={compose}
-          inGame={inGame}
-          composeDispatch={composeDispatch}
-          initialValue={initialDraft}
-        />
+        <ComposeInput css={compose} inGame={inGame} composeDispatch={composeDispatch} initialValue={initialDraft} />
       </div>
       <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
     </div>

@@ -144,6 +144,8 @@ export const profileReducer = (state: ProfileState | undefined, action: Action):
       return leaveSpace(state, action);
     case 'JOINED_CHANNEL':
       return joinChannel(state, action);
+    case 'SPACE_UPDATED':
+      return updateSpace(state, action.spaceWithRelated);
     case 'SPACE_LOADED':
       if (action.result.isOk) {
         return updateSpace(state, action.result.value);

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Route, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Sidebar from '../chat/Sidebar';
@@ -9,16 +9,17 @@ import Home from '../chat/Home';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import { useDispatch, useSelector } from '../../store';
-import { loadSpace } from '../../actions/ui';
+import { loadSpace, SpaceUpdated } from '../../actions/ui';
 import { errLoading, LOADING } from '../../api/error';
 import { AppResult } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
 import PageLoading from '../../components/molecules/PageLoading';
-import { css } from '@emotion/core';
-import { Global } from '@emotion/core';
+import { css, Global } from '@emotion/core';
 import { PaneContext } from '../../hooks/usePane';
 import { chatPath } from '../../utils/path';
 import { breakpoint, mediaQuery } from '../../styles/atoms';
+import { connect } from '../../api/connect';
+import { SpaceEvent } from '../../api/events';
 
 interface Params {
   spaceId: string;
@@ -68,6 +69,37 @@ const Container = styled.div`
   }
 `;
 
+function useSpaceMailbox(spaceId: Id) {
+  const dispatch = useDispatch();
+  const connection = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    const conn = () => {
+      connection.current = connect(spaceId, 'SPACE', 0);
+      connection.current.onmessage = (wsMsg) => {
+        const event = JSON.parse(wsMsg.data) as SpaceEvent;
+        const { body } = event;
+        if (body.type === 'SPACE_UPDATED') {
+          const { spaceWithRelated } = body;
+          const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
+          dispatch(action);
+        }
+      };
+      connection.current.onclose = () => {
+        window.setTimeout(conn, 5000);
+      };
+    };
+    conn();
+    return () => {
+      if (connection.current) {
+        connection.current.onerror = null;
+        connection.current.onclose = null;
+        connection.current.close();
+      }
+    };
+  }, [spaceId, dispatch]);
+}
+
 function Chat() {
   const params = useParams<Params>();
   const activePane = useSelector((state) => state.activePane);
@@ -88,6 +120,9 @@ function Chat() {
   useEffect(() => {
     dispatch(loadSpace(spaceId));
   }, [spaceId, dispatch]);
+
+  useSpaceMailbox(spaceId);
+
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
     if (result.value.code === LOADING) {

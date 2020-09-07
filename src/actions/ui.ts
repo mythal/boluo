@@ -35,6 +35,11 @@ export interface SpaceLoaded {
   result: AppResult<SpaceWithRelated>;
 }
 
+export interface SpaceUpdated {
+  type: 'SPACE_UPDATED';
+  spaceWithRelated: SpaceWithRelated;
+}
+
 export const loadSpace = (id: Id) => (dispatch: Dispatch) => {
   get('/spaces/query_with_related', { id }).then((result) => {
     const action: SpaceLoaded = { type: 'SPACE_LOADED', result, spaceId: id };

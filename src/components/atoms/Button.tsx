@@ -16,7 +16,7 @@ import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
 import { buttonColor, buttonDangerColor, buttonDarkColor, buttonPrimaryColor, textColor } from '../../styles/colors';
 
-export const buttonShadowColor = 'rgba(255, 255, 255, 0.15)';
+export const buttonShadowColor = 'rgba(0, 0, 0, 0.2)';
 
 export const focusShadowColor = 'rgba(255, 255, 255, 0.3)';
 

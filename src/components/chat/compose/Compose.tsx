@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useMemo, useReducer, useRef } from 'react';
+import { RefObject, useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
 import { mR, mT, p, pX, pY, relative, roundedSm, spacingN, textBase, textXs } from '../../../styles/atoms';
@@ -14,7 +14,7 @@ import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
 import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
-import { composeReducer, ComposeState, update } from './reducer';
+import { calculateCanSubmit, composeReducer, ComposeState, update } from './reducer';
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
@@ -24,6 +24,7 @@ import ChatImageUploadButton from './ImageUploadButton';
 import { handleKeyDown } from '../key';
 import Tooltip from '../../atoms/Tooltip';
 import mask from '../../../assets/icons/theater-masks.svg';
+import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -103,32 +104,46 @@ interface Props {
   preview: Preview | undefined;
 }
 
+function resetInput(inputRef: RefObject<HTMLTextAreaElement>) {
+  if (inputRef.current === null) {
+    return;
+  }
+  inputRef.current.value = '';
+}
+
 function Compose({ preview, channelId, member }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  useAutoHeight(inputRef);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const dispatch = useDispatch();
   const sendEvent = useSend();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const initialText = useMemo(() => preview?.text || '', []);
-  const makeInitState = (): ComposeState => ({
-    sending: false,
-    inGame: preview?.inGame || false,
-    broadcast: true,
-    isAction: preview?.isAction || false,
-    inputName: (preview?.inGame && preview.name) || member.characterName,
-    nickname,
-    initial: true,
-    media: undefined,
-    sendEvent,
-    editFor: undefined,
-    appDispatch: dispatch,
-    messageId: preview?.id || newId(),
-    text: initialText,
-    entities: preview?.entities || [],
-    clear: false,
-  });
+  const makeInitState = (): ComposeState => {
+    const inGame = preview?.inGame || false;
+    const inputName = (preview?.inGame && preview.name) || member.characterName;
+    return {
+      sending: false,
+      inGame,
+      broadcast: true,
+      isAction: preview?.isAction || false,
+      inputName,
+      nickname,
+      initial: true,
+      media: undefined,
+      sendEvent,
+      editFor: undefined,
+      appDispatch: dispatch,
+      messageId: preview?.id || newId(),
+      text: initialText,
+      entities: preview?.entities || [],
+      clear: false,
+      canSubmit: calculateCanSubmit(initialText, inGame, inputName),
+    };
+  };
   const [
-    { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit },
+    { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit, prevSubmit },
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
@@ -136,7 +151,7 @@ function Compose({ preview, channelId, member }: Props) {
     composeDispatch(update({ inputName: e.target.value }));
   };
   const onSend = async () => {
-    if (!canSubmit) {
+    if (!canSubmit || !messageId) {
       return;
     }
     composeDispatch(update({ sending: true }));
@@ -157,6 +172,7 @@ function Compose({ preview, channelId, member }: Props) {
       composeDispatch(update({ sending: false }));
       return;
     } else {
+      resetInput(inputRef);
       composeDispatch(
         update({
           messageId: newId(),
@@ -165,6 +181,7 @@ function Compose({ preview, channelId, member }: Props) {
           initial: true,
           media: undefined,
           sending: false,
+          prevSubmit: new Date().getTime(),
         })
       );
     }
@@ -191,7 +208,8 @@ function Compose({ preview, channelId, member }: Props) {
         </div>
       </div>
       <ComposeInput
-        id={messageId}
+        ref={inputRef}
+        prevSubmit={prevSubmit}
         autoFocus
         autoSize
         css={[input]}
@@ -215,6 +233,7 @@ function Compose({ preview, channelId, member }: Props) {
           loading={sending}
           sprite={paperPlane}
           onClick={onSend}
+          disabled={!canSubmit}
           title="发送"
           size="large"
           info={isMac ? '⌘ + ⏎' : 'Ctrl + ⏎'}

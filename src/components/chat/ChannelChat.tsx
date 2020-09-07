@@ -8,6 +8,7 @@ import { chatRight } from '../../styles/atoms';
 import { useDispatch, useSelector } from '../../store';
 import { CloseChat, loadChat } from '../../actions/chat';
 import Compose from './compose/Compose';
+import Heartbeat from './Heartbeat';
 
 export const useLoadChat = (id: Id, pane: number) => {
   const dispatch = useDispatch();
@@ -34,8 +35,9 @@ function ChannelChat({ channelId, pane }: Props) {
     if (myMember === undefined) {
       return undefined;
     }
-    return state.chatPane[pane]?.itemSet.previews.get(myMember.userId);
+    return state.chatPane[pane]?.itemSet.previews.get(myMember!.userId);
   });
+
   if (loading) {
     return (
       <div css={chatRight}>
@@ -49,6 +51,7 @@ function ChannelChat({ channelId, pane }: Props) {
       <Header />
       <ChatList />
       {myMember && <Compose channelId={channelId} member={myMember} preview={myPreview?.preview} />}
+      {myMember && <Heartbeat />}
     </React.Fragment>
   );
 }

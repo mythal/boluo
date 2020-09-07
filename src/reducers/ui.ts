@@ -77,12 +77,20 @@ const handleUserEdited = ({ userSet, ...state }: UiState, { user }: UserEdited):
   return { ...state, userSet };
 };
 
+const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppResult<SpaceWithRelated>): UiState => {
+  let { spaceSet } = state;
+  spaceSet = spaceSet.set(spaceId, result);
+  return { ...state, spaceSet };
+};
+
 export function uiReducer(state: UiState = initUiState, action: Action, userId: Id | undefined): UiState {
   switch (action.type) {
     case 'EXPLORE_SPACE_LOADED':
       return { ...state, exploreSpaceList: action.spaces };
     case 'SPACE_LOADED':
-      return { ...state, spaceSet: state.spaceSet.set(action.spaceId, action.result) };
+      return handleSpaceWithRelatedResult(state, action.spaceId, action.result);
+    case 'SPACE_UPDATED':
+      return handleSpaceWithRelatedResult(state, action.spaceWithRelated.space.id, new Ok(action.spaceWithRelated));
     case 'USER_LOADED':
       return { ...state, userSet: state.userSet.set(action.userId, action.result) };
     case 'LOGGED_IN':

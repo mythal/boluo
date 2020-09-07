@@ -1,12 +1,12 @@
 import styled from '@emotion/styled';
 import { darken } from 'polished';
-import { textColor } from '../../styles/colors';
-import { chatContentLineHeight } from './styles';
-import { mL, pY } from '../../styles/atoms';
+import { gray, textColor } from '../../styles/colors';
+import { chatContentLineHeight, chatSplitLine } from './styles';
+import { mL, pX, pY } from '../../styles/atoms';
 
 export const ChatItemContentContainer = styled.div`
   grid-area: content;
-  ${[chatContentLineHeight, pY(1), mL(2)]};
+  ${[chatContentLineHeight, pY(2), pX(3), mL(2), chatSplitLine]};
 
   &[data-action='true'] {
     font-style: italic;
@@ -17,6 +17,6 @@ export const ChatItemContentContainer = styled.div`
   }
   &[data-folded='true'] {
     text-decoration: line-through;
-    filter: grayscale(50%) brightness(50%);
+    color: ${gray['600']};
   }
 `;

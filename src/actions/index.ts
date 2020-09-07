@@ -25,7 +25,15 @@ import {
   StopEditMessage,
   SwitchActivePane,
 } from './chat';
-import { ExploreSpaceLoaded, ResetUi, SpaceLoaded, SwitchChat, SwitchExploreSpace, UserLoaded } from './ui';
+import {
+  ExploreSpaceLoaded,
+  ResetUi,
+  SpaceLoaded,
+  SpaceUpdated,
+  SwitchChat,
+  SwitchExploreSpace,
+  UserLoaded,
+} from './ui';
 import { DismissFlash, ShowFlash } from './flash';
 
 export type Action =
@@ -34,6 +42,7 @@ export type Action =
   | UserEdited
   | JoinedSpace
   | SpaceEdited
+  | SpaceUpdated
   | LeftSpace
   | JoinedChannel
   | LeftChannel

@@ -2,6 +2,7 @@ import { Message, MessageOrder } from './messages';
 import { Entity } from '../interpreter/entities';
 import { Channel, Member } from './channels';
 import { Id } from '../utils/id';
+import { SpaceWithRelated } from './spaces';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;
@@ -27,7 +28,7 @@ export type CHANNEL_EDITED = typeof CHANNEL_EDITED;
 export type INITIALIZED = typeof INITIALIZED;
 export const INITIALIZED = 'INITIALIZED';
 
-export type MailboxType = 'CHANNEL';
+export type MailboxType = 'CHANNEL' | 'SPACE';
 
 export interface EventQuery {
   mailbox: Id;
@@ -41,6 +42,8 @@ export interface Event<B> {
   body: B;
 }
 
+export type SpaceEvent = Event<SpaceUpdated>;
+
 export type ChannelEvent =
   | Event<NewMessage>
   | Event<MessageDeleted>
@@ -52,6 +55,11 @@ export type ChannelEvent =
   | Event<Initialized>
   | Event<HeartbeatMap>
   | Event<MessagesMoved>;
+
+export interface SpaceUpdated {
+  type: 'SPACE_UPDATED';
+  spaceWithRelated: SpaceWithRelated;
+}
 
 export interface Initialized {
   type: INITIALIZED;

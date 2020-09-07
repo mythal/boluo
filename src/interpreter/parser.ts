@@ -347,25 +347,46 @@ const expr2 = (): P<ExprNode> =>
 const expr = (): P<ExprNode> =>
   chainl1<ExprNode, Operator>(operator1(), expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
 
+const EXPRESSION = /^\/(.+?)\//;
 const expression = (): P<Entity> =>
-  new P((state, env) => {
-    const exprResult = expr().run(state, env);
+  regex(EXPRESSION).then(([match, { text, rest }], env) => {
+    const [entire, content] = match;
+    const exprResult = expr().run({ text: '', rest: content }, env);
     if (!exprResult) {
       return null;
     }
-    const [node, { text, rest }] = exprResult;
-    if (node.type === 'Num') {
-      // A number isn't a expression.
+    const [node, exprState] = exprResult;
+    if (exprState.rest !== '') {
       return null;
     }
-    const consumed = state.rest.substr(0, state.rest.length - rest.length);
     const entity: Expr = {
       type: 'Expr',
       start: text.length,
-      offset: consumed.length,
+      offset: entire.length,
       node,
     };
-    return [entity, { text: text + consumed, rest }];
+    return [entity, { text: text + entire, rest }];
+  });
+
+const atomExpression = (): P<Entity> =>
+  new P((state, env) => {
+    if (!state.rest.startsWith('/')) {
+      return null;
+    }
+    const atomResult = atom().run({ text: '', rest: state.rest.substr(1) }, env);
+    if (atomResult === null) {
+      return null;
+    }
+    const [node, next] = atomResult;
+    const offset = state.rest.length - next.rest.length;
+    const consumed = state.rest.substr(offset);
+    const entity: Expr = {
+      type: 'Expr',
+      start: state.text.length,
+      offset,
+      node,
+    };
+    return [entity, { text: state.text + consumed, rest: next.rest }];
   });
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
@@ -394,7 +415,7 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   let state: State = { text: '', rest: source };
   const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
 
-  const entity = choice<Entity>([emphasis(), strong(), link(), autoUrl(), maybeParseExpr, span()]);
+  const entity = choice<Entity>([emphasis(), strong(), link(), autoUrl(), maybeParseExpr, atomExpression(), span()]);
 
   const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   const result = message.run(state, env);

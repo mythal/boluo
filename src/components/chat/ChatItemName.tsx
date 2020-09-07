@@ -56,7 +56,7 @@ const nicknameStyle = css`
   user-select: none;
 `;
 
-function ChatItemName({ name, userId, master, action }: Props) {
+function ChatItemName({ name, userId, master }: Props) {
   const pane = usePane();
   const nickname = useSelector(
     (state) => state.chatPane[pane]!.members.find((member) => member.user.id === userId)?.user.nickname
@@ -80,7 +80,6 @@ function ChatItemName({ name, userId, master, action }: Props) {
           </Tooltip>
         )}
       </div>
-      {!action && ':'}
     </Container>
   );
 }

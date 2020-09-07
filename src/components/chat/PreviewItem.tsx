@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Preview } from '../../api/events';
 import { chatItemContainer } from './ChatItemContainer';
-import ChatItemTime from './ChatItemTime';
 import ChatItemName from './ChatItemName';
 import ChatItemContent from './ItemContent';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
@@ -25,14 +24,13 @@ function PreviewItem({ preview }: Props) {
       inGame={preview.inGame}
       action={isAction}
       master={preview.isMaster}
-      name={preview.name}
+      name={preview.name || '无名氏'}
       userId={preview.senderId}
     />
   );
 
   return (
     <div css={[chatItemContainer, preview.inGame ? previewInGame : previewOutGame]} data-in-game={preview.inGame}>
-      <ChatItemTime timestamp={preview.start} />
       {!isAction && <div css={nameContainer}>{name}</div>}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
         {isAction && name}

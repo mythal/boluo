@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Message } from '../../api/messages';
 import { chatItemContainer } from './ChatItemContainer';
-import ChatItemTime from './ChatItemTime';
+import Handle from './ItemMoveHandle';
 import ChatItemName from './ChatItemName';
 import ChatItemContent from './ItemContent';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
@@ -38,7 +38,7 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
   );
   return (
     <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
-      <ChatItemTime timestamp={message.created} handleProps={handleProps} />
+      {handleProps !== undefined && <Handle timestamp={message.created} handleProps={handleProps} />}
       {!message.isAction && <div css={nameContainer}>{name}</div>}
       <ChatItemContentContainer
         data-in-game={message.inGame}

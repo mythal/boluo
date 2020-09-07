@@ -9,6 +9,8 @@ import { MenuItemLink } from '../atoms/MenuItem';
 import { Channel } from '../../api/channels';
 import Overlay from '../atoms/Overlay';
 import { chatPath } from '../../utils/path';
+import Help from './Help';
+import help from '../../assets/icons/help.svg';
 
 interface Props {
   space: Space;
@@ -17,6 +19,7 @@ interface Props {
 
 function SidebarFoldedItems({ space, channels }: Props) {
   const [channelMenu, setChannelMenu] = useState(false);
+  const [helpDialog, setHelpDialog] = useState(false);
   const channelButton = useRef<HTMLButtonElement>(null);
   const toggleMenu = () => setChannelMenu((value) => !value);
   const dismissMenu = () => setChannelMenu(false);
@@ -27,6 +30,9 @@ function SidebarFoldedItems({ space, channels }: Props) {
       </ChatHeaderButtonNavLink>
       <ChatHeaderButton ref={channelButton} css={sidebarIconButton} onClick={toggleMenu}>
         #
+      </ChatHeaderButton>
+      <ChatHeaderButton onClick={() => setHelpDialog(true)} css={sidebarIconButton}>
+        <Icon sprite={help} />
       </ChatHeaderButton>
       {channelMenu && (
         <Overlay anchor={channelButton} x={1} y={-1} selfY={1} onOuter={dismissMenu}>
@@ -39,6 +45,7 @@ function SidebarFoldedItems({ space, channels }: Props) {
           </Menu>
         </Overlay>
       )}
+      {helpDialog && <Help dismiss={() => setHelpDialog(false)} />}
     </React.Fragment>
   );
 }

@@ -3,18 +3,21 @@ import { useState } from 'react';
 import { Space } from '../../api/spaces';
 import { Channel } from '../../api/channels';
 import styled from '@emotion/styled';
-import { fontBold, fontMono, mB, mT, pR, pX, pY, textBase, textSm } from '../../styles/atoms';
+import { fontBold, fontMono, mB, mT, p, pR, pX, pY, textBase, textSm } from '../../styles/atoms';
 import { SidebarItemLink } from '../atoms/SidebarItem';
 import { encodeUuid } from '../../utils/id';
 import { chatPath } from '../../utils/path';
 import Icon from '../atoms/Icon';
 import plus from '../../assets/icons/plus-circle.svg';
+import help from '../../assets/icons/help.svg';
 import { SidebarButton } from '../atoms/SidebarButton';
 import CreateChannel from '../organisms/CreateChannel';
 import { useSelector } from '../../store';
 import { gray, sidebarItemActiveBgColor, sidebarItemHoverBgColor, textColor } from '../../styles/colors';
 import { NavLink } from 'react-router-dom';
 import { css } from '@emotion/core';
+import ChatHeaderButton from './ChatHeaderButton';
+import Help from './Help';
 
 interface Props {
   space: Space;
@@ -58,8 +61,17 @@ const sidebarTitle = css`
 
 const SpaceName = styled.span``;
 
+const footer = css`
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: right;
+  ${p(2)};
+`;
+
 function SidebarExpandItems({ space, channels }: Props) {
   const [createChannel, setCreateChannel] = useState(false);
+  const [helpDialog, setHelpDialog] = useState(false);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(space.id)?.member.isAdmin);
   return (
     <React.Fragment>
@@ -79,8 +91,14 @@ function SidebarExpandItems({ space, channels }: Props) {
           <ChannelName>{channel.name}</ChannelName>
         </SidebarItemLink>
       ))}
+      <div css={footer}>
+        <ChatHeaderButton onClick={() => setHelpDialog(true)}>
+          <Icon sprite={help} /> 帮助
+        </ChatHeaderButton>
+      </div>
 
       {createChannel && <CreateChannel space={space} dismiss={() => setCreateChannel(false)} />}
+      {helpDialog && <Help dismiss={() => setHelpDialog(false)} />}
     </React.Fragment>
   );
 }

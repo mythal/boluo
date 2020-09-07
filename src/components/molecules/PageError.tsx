@@ -3,11 +3,11 @@ import styled from '@emotion/styled';
 import Title from '../../components/atoms/Title';
 import Text from '../../components/atoms/Text';
 import Button from '../../components/atoms/Button';
-import { fontMono, mask, mX, mY, pX, pY, roundedSm, textSm } from '../../styles/atoms';
+import { mask, mX, mY } from '../../styles/atoms';
 import Icon from '../../components/atoms/Icon';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import mushroomCloud from '../../assets/icons/mushroom-cloud.svg';
-import { gray } from '../../styles/colors';
+import { Code } from '../atoms/Code';
 
 interface Props {}
 
@@ -28,11 +28,6 @@ const Mask = styled.div`
 const Container = styled.div`
   max-width: 30rem;
   margin: 0 auto;
-`;
-
-const ErrorCode = styled.code`
-  background-color: ${gray['800']};
-  ${[roundedSm, textSm, fontMono, pX(2), pY(1)]};
 `;
 
 class PageError extends React.Component<Props, State> {
@@ -65,7 +60,7 @@ class PageError extends React.Component<Props, State> {
               重试，如果依然错误请联系网站管理员。
             </Text>
             <Text css={mY(4)}>
-              详情：<ErrorCode>{String(this.state.error)}</ErrorCode>
+              详情：<Code>{String(this.state.error)}</Code>
             </Text>
           </Container>
         </Mask>

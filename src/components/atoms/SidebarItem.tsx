@@ -1,17 +1,21 @@
 import styled from '@emotion/styled';
 import { NavLink } from 'react-router-dom';
-import { pL, pR, pY, sidebarWidth, spacingN } from '../../styles/atoms';
+import { pL, pR, sidebarWidth, spacingN } from '../../styles/atoms';
 import { primaryColor, sidebarItemActiveBgColor, sidebarItemColor, sidebarItemHoverBgColor } from '../../styles/colors';
 
 export const SidebarItemLink = styled(NavLink)`
-  display: block;
+  display: flex;
+  flex-shrink: 0;
+  flex-grow: 0;
+  height: 2.5rem;
+  align-items: center;
   color: ${sidebarItemColor};
   text-decoration: none;
   white-space: nowrap;
   word-break: break-all;
   overflow: hidden;
   text-overflow: ellipsis;
-  ${[pL(8), pR(4), pY(2), sidebarWidth]};
+  ${[pL(8), pR(4), sidebarWidth]};
 
   &:hover {
     background-color: ${sidebarItemHoverBgColor};

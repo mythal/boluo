@@ -19,7 +19,7 @@ import sliders from '../../assets/icons/sliders.svg';
 import columns from '../../assets/icons/columns.svg';
 import ChatHeaderButton from './ChatHeaderButton';
 import Icon from '../atoms/Icon';
-import ManageChannel from '../organisms/ManageChannel';
+import ManageChannel from './ManageChannel';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Filter from './Filter';

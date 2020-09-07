@@ -1,32 +1,50 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
-import { breakpoint, largeInput, mediaQuery, mT, selectTheme, spacingN, widthFull } from '../../styles/atoms';
+import {
+  breakpoint,
+  largeInput,
+  mediaQuery,
+  mR,
+  mT,
+  selectTheme,
+  spacingN,
+  textSm,
+  widthFull,
+} from '../../styles/atoms';
 import { Channel, EditChannel, Member } from '../../api/channels';
 import { useForm } from 'react-hook-form';
 import { AppError } from '../../api/error';
-import DiceSelect, { DiceOption } from '../../components/molecules/DiceSelect';
-import { useSelector } from '../../store';
+import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
+import { useDispatch, useSelector } from '../../store';
 import { PanelTitle } from '../atoms/PanelTitle';
-import Panel from '../../components/molecules/Panel';
+import Panel from '../molecules/Panel';
 import { RenderError } from '../molecules/RenderError';
 import { Label } from '../atoms/Label';
-import Input from '../../components/atoms/Input';
+import Input from '../atoms/Input';
 import { channelNameValidation, channelTopicValidation } from '../../validators';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';
-import TextArea from '../../components/atoms/TextArea';
-import Button from '../../components/atoms/Button';
+import TextArea from '../atoms/TextArea';
+import Button from '../atoms/Button';
 import { post } from '../../api/request';
-import Text from '../../components/atoms/Text';
+import Text from '../atoms/Text';
 import Select, { ValueType } from 'react-select';
 import { Set } from 'immutable';
 import { usePane } from '../../hooks/usePane';
+import Dialog from '../molecules/Dialog';
+import { useHistory } from 'react-router-dom';
+import { chatPath } from '../../utils/path';
+import { showFlash } from '../../actions/flash';
 
 interface Props {
   channel: Channel;
   dismiss: () => void;
 }
+
+const buttons = css`
+  display: flex;
+`;
 
 const panelStyle = css`
   width: ${spacingN(64)};
@@ -55,6 +73,9 @@ function ManageChannel({ channel, dismiss }: Props) {
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const history = useHistory();
+  const dispatch = useDispatch();
   const pane = usePane();
   const members = useSelector((state) => state.chatPane[pane]?.members) || [];
   const spaceMember = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member);
@@ -69,6 +90,8 @@ function ManageChannel({ channel, dismiss }: Props) {
       </Panel>
     );
   }
+  const openDeleteDialog = () => setDeleteDialog(true);
+  const dismissDeleteDialog = () => setDeleteDialog(false);
 
   const onSubmit = async ({ name, topic }: FormData) => {
     const defaultDiceType = defaultDice?.value;
@@ -85,6 +108,14 @@ function ManageChannel({ channel, dismiss }: Props) {
       return;
     }
     dismiss();
+  };
+  const deleteChannel = async () => {
+    const result = await post('/channels/delete', {}, { id: channelId });
+    if (result.isOk) {
+      history.push(chatPath(channel.spaceId));
+    } else {
+      dispatch(showFlash('ERROR', '删除频道失败'));
+    }
   };
   const handleChange = (value: ValueType<MemberOption>) => {
     const values = (value || []) as MemberOption[];
@@ -135,10 +166,26 @@ function ManageChannel({ channel, dismiss }: Props) {
           <Label>游戏主持人</Label>
           <Select isMulti value={selectedMember} onChange={handleChange} options={memberOptions} theme={selectTheme} />
         </div>
-        <Button css={[mT(4), widthFull]} data-variant="primary" disabled={submitting} type="submit">
-          提交修改
-        </Button>
+        <div css={[buttons, mT(4)]}>
+          <Button
+            css={[textSm, mR(2)]}
+            data-variant="danger"
+            disabled={submitting}
+            onClick={openDeleteDialog}
+            type="button"
+          >
+            删除
+          </Button>
+          <Button css={[widthFull]} data-variant="primary" disabled={submitting} type="submit">
+            提交修改
+          </Button>
+        </div>
       </form>
+      {deleteDialog && (
+        <Dialog title="删除频道" confirmText="删除" dismiss={dismissDeleteDialog} confirm={deleteChannel}>
+          <Text>真的要删除频道「{channel.name}」吗？此操作不可撤销！</Text>
+        </Dialog>
+      )}
     </Panel>
   );
 }

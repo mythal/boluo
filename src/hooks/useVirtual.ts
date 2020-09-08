@@ -153,8 +153,7 @@ export function useVirtual<T extends Element>({
     prevOuterSize.current = outerSize;
     const { totalSize, scrollOffset } = latestRef.current;
     const height = parentRef.current.clientHeight;
-    const top = totalSize - scrollOffset - height;
-    parentRef.current.scrollTo({ top });
+    parentRef.current.scrollTop = totalSize - scrollOffset - height;
   });
   const [range, setRange] = React.useState<Range>({ start: 0, end: 0, viewportStart: 0, viewportEnd: 0 });
 

@@ -416,7 +416,7 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   let state: State = { text: '', rest: source };
   const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
 
-  const entity = choice<Entity>([emphasis(), strong(), link(), autoUrl(), maybeParseExpr, atomExpression(), span()]);
+  const entity = choice<Entity>([strong(), emphasis(), link(), autoUrl(), maybeParseExpr, atomExpression(), span()]);
 
   const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   const result = message.run(state, env);

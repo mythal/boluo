@@ -8,9 +8,11 @@ import newspaper from '../../assets/icons/newspaper.svg';
 import Icon from '../atoms/Icon';
 import { useSelector } from '../../store';
 import styled from '@emotion/styled';
-import { link, spacingN } from '../../styles/atoms';
+import { link, mB, spacingN } from '../../styles/atoms';
 import { News } from '../atoms/News';
 import ExternalLink from '../../components/atoms/ExternalLink';
+import { Link } from 'react-router-dom';
+import Text from '../atoms/Text';
 
 const Container = styled.div`
   display: grid;
@@ -36,12 +38,29 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>
+          <Text>
+            可以到
+            <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
+              沙盒位面
+            </Link>
+            去测试功能。
+          </Text>
+        </News>
         <News>
-          菠萝上线啦！现在是早期测试阶段，请到
-          <ExternalLink to="https://forum.boluo.chat/" css={link}>
-            讨论版
-          </ExternalLink>
-          多多提出意见和建议。
+          <Text>
+            菠萝上线啦！现在是早期测试阶段，请到
+            <ExternalLink to="https://forum.boluo.chat/" css={link}>
+              讨论版
+            </ExternalLink>
+            提出意见和建议。
+          </Text>
+          <Text>
+            <ExternalLink css={link} to="https://forum.boluo.chat/d/3">
+              查看教程和常见问题
+            </ExternalLink>
+            。
+          </Text>
         </News>
       </div>
     </Container>

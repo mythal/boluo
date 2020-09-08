@@ -6,6 +6,7 @@ export const Text = styled.p`
   color: ${textColor};
   font-size: ${textBase};
   margin: 0;
+  line-height: 1.75rem;
   padding: ${spacingN(1)} 0;
 `;
 

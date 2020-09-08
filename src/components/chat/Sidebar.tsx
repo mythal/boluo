@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '../../api/channels';
-import { chatHeaderPadding, mR, pY, sidebarWidth, textLg } from '../../styles/atoms';
+import { chatHeaderPadding, mR, pT, sidebarWidth, textLg } from '../../styles/atoms';
 import ChatHeaderButton, { ChatHeaderButtonLink } from './ChatHeaderButton';
 import logo from '../../assets/logo.svg';
 import bars from '../../assets/icons/bars.svg';
@@ -32,7 +32,7 @@ const sidebarBody = css`
     ${sidebarWidth};
   }
   &[data-state='exited'] {
-    ${pY(4)};
+    ${pT(4)};
     text-align: center;
     align-items: center;
   }

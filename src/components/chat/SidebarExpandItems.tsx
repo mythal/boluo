@@ -62,10 +62,11 @@ const sidebarTitle = css`
 const SpaceName = styled.span``;
 
 const footer = css`
-  height: 100%;
+  flex: 1 1 100%;
+  width: 100%;
   display: flex;
   align-items: flex-end;
-  justify-content: right;
+  justify-content: flex-end;
   ${p(2)};
 `;
 
@@ -92,7 +93,7 @@ function SidebarExpandItems({ space, channels }: Props) {
         </SidebarItemLink>
       ))}
       <div css={footer}>
-        <ChatHeaderButton onClick={() => setHelpDialog(true)}>
+        <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>
           <Icon sprite={help} /> 帮助
         </ChatHeaderButton>
       </div>

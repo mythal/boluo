@@ -11,11 +11,21 @@ import Overlay from '../atoms/Overlay';
 import { chatPath } from '../../utils/path';
 import Help from './Help';
 import help from '../../assets/icons/help.svg';
+import { css } from '@emotion/core';
+import { mB, pY } from '../../styles/atoms';
 
 interface Props {
   space: Space;
   channels: Channel[];
 }
+
+const footer = css`
+  flex: 1 1 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  ${[pY(2)]};
+`;
 
 function SidebarFoldedItems({ space, channels }: Props) {
   const [channelMenu, setChannelMenu] = useState(false);
@@ -25,15 +35,17 @@ function SidebarFoldedItems({ space, channels }: Props) {
   const dismissMenu = () => setChannelMenu(false);
   return (
     <React.Fragment>
-      <ChatHeaderButtonNavLink activeClassName="active" exact css={sidebarIconButton} to={chatPath(space.id)}>
+      <ChatHeaderButtonNavLink activeClassName="active" exact css={[mB(1), sidebarIconButton]} to={chatPath(space.id)}>
         <Icon sprite={nightSky} />
       </ChatHeaderButtonNavLink>
-      <ChatHeaderButton ref={channelButton} css={sidebarIconButton} onClick={toggleMenu}>
+      <ChatHeaderButton ref={channelButton} css={[mB(1), sidebarIconButton]} onClick={toggleMenu}>
         #
       </ChatHeaderButton>
-      <ChatHeaderButton onClick={() => setHelpDialog(true)} css={sidebarIconButton}>
-        <Icon sprite={help} />
-      </ChatHeaderButton>
+      <div css={footer}>
+        <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton]}>
+          <Icon sprite={help} />
+        </ChatHeaderButton>
+      </div>
       {channelMenu && (
         <Overlay anchor={channelButton} x={1} y={-1} selfY={1} onOuter={dismissMenu}>
           <Menu dismiss={dismissMenu}>

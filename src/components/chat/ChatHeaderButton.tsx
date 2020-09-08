@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { breakpoint, headerTransition, mB, mediaQuery, roundedPx, spacingN, textLg } from '../../styles/atoms';
+import { breakpoint, headerTransition, mediaQuery, roundedPx, spacingN, textLg } from '../../styles/atoms';
 import { css } from '@emotion/core';
 import { Link, NavLink } from 'react-router-dom';
 import { gray, textColor } from '../../styles/colors';
@@ -7,6 +7,7 @@ import { gray, textColor } from '../../styles/colors';
 export const chatHeaderButtonStyle = css`
   color: ${textColor};
   cursor: pointer;
+  flex-shrink: 0;
   ${roundedPx};
   padding: ${spacingN(1.5)} ${spacingN(2)};
   max-width: 6rem;
@@ -37,7 +38,7 @@ export const chatHeaderButtonStyle = css`
 `;
 
 export const sidebarIconButton = css`
-  ${[textLg, mB(1)]};
+  ${[textLg]};
   display: inline-flex;
   justify-content: center;
   align-items: center;

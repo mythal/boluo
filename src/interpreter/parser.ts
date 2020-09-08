@@ -189,7 +189,7 @@ const autoUrl = (): P<Entity> =>
 // \d+ match digits and stop.
 // \s(?=\S) match single space and stop.
 // [^...]: stop characters.
-const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*@[(（#\s]*\s*/;
+const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*@[(/（#\s]*\s*/;
 
 const span = (): P<Text> =>
   regex(TEXT_REGEX).then(([match, { text, rest }]) => {
@@ -379,7 +379,8 @@ const atomExpression = (): P<Entity> =>
     }
     const [node, next] = atomResult;
     const offset = state.rest.length - next.rest.length;
-    const consumed = state.rest.substr(offset);
+    console.log(state.rest, next.rest, offset);
+    const consumed = state.rest.substr(0, offset);
     const entity: Expr = {
       type: 'Expr',
       start: state.text.length,

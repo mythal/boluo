@@ -38,7 +38,7 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
   );
   return (
     <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
-      {handleProps?.draggable && <Handle timestamp={message.created} handleProps={handleProps} />}
+      {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
       {!message.isAction && <div css={nameContainer}>{name}</div>}
       <ChatItemContentContainer
         data-in-game={message.inGame}

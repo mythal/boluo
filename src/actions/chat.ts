@@ -43,7 +43,9 @@ export interface ChatUpdate {
   pane: number;
 }
 
-let retry = 500;
+const initialRetry = 500;
+const maxRetry = 8000;
+let retry = initialRetry;
 let retryTimestamp = new Date().getTime();
 
 function connect(dispatch: Dispatch, id: Id, eventAfter: number, pane: number): WebSocket {
@@ -54,7 +56,10 @@ function connect(dispatch: Dispatch, id: Id, eventAfter: number, pane: number): 
     dispatch({ type: 'CHANNEL_EVENT_RECEIVED', event, pane });
   };
   connection.onopen = () => {
-    retry = 500;
+    if (retry !== initialRetry) {
+      dispatch(showFlash('SUCCESS', '已重新连接上频道'));
+    }
+    retry = initialRetry;
   };
   connection.onerror = (e) => {
     console.warn(e);
@@ -64,6 +69,9 @@ function connect(dispatch: Dispatch, id: Id, eventAfter: number, pane: number): 
     dispatch(showFlash('ERROR', `连接出现错误，${retry / 1000} 秒后尝试重新连接`));
     setTimeout(() => {
       retry *= 2;
+      if (retry > maxRetry) {
+        retry = maxRetry;
+      }
       dispatch({ type: 'CHAT_UPDATE', id, chat: { connection: connect(dispatch, id, retryTimestamp, pane) }, pane });
     }, retry);
   };

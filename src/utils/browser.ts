@@ -11,6 +11,10 @@ export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
 export const isMac = navigator.userAgent.indexOf('Mac OS X') != -1;
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+export const isIe = document.documentMode !== undefined;
+
 const preventDefault = (e: TouchEvent) => {
   e.preventDefault();
 };

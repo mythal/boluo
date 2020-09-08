@@ -32,14 +32,14 @@ function LoadMore({ shift }: Props) {
   const moving = useSelector((state) => state.chatPane[pane]!.moving);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
-  const mounted = useRef(false);
+  const mounted = useRef(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let timeout: number | undefined = undefined;
     timeout = window.setTimeout(() => {
       button.current?.click();
-    }, 0);
+    }, 500);
     return () => {
       mounted.current = false;
       window.clearTimeout(timeout);

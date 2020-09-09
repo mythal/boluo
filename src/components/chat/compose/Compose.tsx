@@ -110,6 +110,7 @@ function Compose({ preview, channelId, member }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(inputRef);
   const nickname = useSelector((state) => state.profile!.user.nickname);
+  const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const dispatch = useDispatch();
   const sendEvent = useSend();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,7 +169,11 @@ function Compose({ preview, channelId, member }: Props) {
   } else if (inGame && characterName === '') {
     whyCannotSend = '角色名为空';
   }
-  const sendButtonInfo = whyCannotSend || isMac ? '⌘ + ⏎' : 'Ctrl + ⏎';
+  let sendButtonInfo = isMac ? '⌘ + ⏎' : 'Ctrl + ⏎';
+  if (enterSend) {
+    sendButtonInfo = '⏎';
+  }
+  sendButtonInfo = whyCannotSend || sendButtonInfo;
 
   const onSend = async () => {
     if (!canSubmit) {
@@ -206,7 +211,7 @@ function Compose({ preview, channelId, member }: Props) {
       );
     }
   };
-  const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame);
+  const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame, enterSend);
   const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
 
   return (

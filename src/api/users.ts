@@ -14,6 +14,7 @@ export interface User {
 
 export interface GetMe {
   user: User;
+  settings: Settings;
   mySpaces: SpaceWithMember[];
   myChannels: ChannelWithMember[];
 }
@@ -46,4 +47,8 @@ export interface CheckEmail {
 
 export interface CheckUsername {
   username: string;
+}
+
+export interface Settings {
+  enterSend?: boolean;
 }

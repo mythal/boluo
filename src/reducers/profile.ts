@@ -1,4 +1,4 @@
-import { User } from '../api/users';
+import { Settings, User } from '../api/users';
 import { OrderedMap } from 'immutable';
 import { SpaceWithMember, SpaceWithRelated } from '../api/spaces';
 import { ChannelWithMember } from '../api/channels';
@@ -10,6 +10,7 @@ import {
   LeftChannel,
   LeftSpace,
   LoggedIn,
+  SettingsUpdated,
   UserEdited,
 } from '../actions/profile';
 import { ChannelEdited, PushMembers } from '../api/events';
@@ -23,10 +24,11 @@ export interface ProfileState {
   user: User;
   spaces: MySpaces;
   channels: MyChannels;
+  settings: Settings;
 }
 
 const login = (state: ProfileState | undefined, action: LoggedIn): ProfileState => {
-  const { user } = action;
+  const { user, settings } = action;
   let spaces: OrderedMap<Id, SpaceWithMember> = OrderedMap();
   let channels: OrderedMap<Id, ChannelWithMember> = OrderedMap();
   for (const s of action.mySpaces) {
@@ -36,11 +38,11 @@ const login = (state: ProfileState | undefined, action: LoggedIn): ProfileState 
     channels = channels.set(c.channel.id, c);
   }
 
-  return { user, channels, spaces };
+  return { user, channels, spaces, settings };
 };
 
-const editUser = ({ channels, spaces }: ProfileState, { user }: UserEdited): ProfileState => {
-  return { user, channels, spaces };
+const editUser = ({ channels, spaces, settings }: ProfileState, { user }: UserEdited): ProfileState => {
+  return { user, channels, spaces, settings };
 };
 
 const joinSpace = (state: ProfileState, { space, member }: JoinedSpace) => {
@@ -73,6 +75,7 @@ const editChannelMember = (state: ProfileState, { channelId, member }: ChannelMe
 };
 
 const editChannelMemberByList = (state: ProfileState, channelId: Id, event: PushMembers): ProfileState => {
+  const { settings } = state;
   const member = event.members.find((member) => member.user.id === state.user.id);
   if (!member) {
     return state;
@@ -87,7 +90,7 @@ const editChannelMemberByList = (state: ProfileState, channelId: Id, event: Push
   if (spaceWithMember !== undefined) {
     spaces = spaces.set(member.space.spaceId, { ...spaceWithMember, member: member.space });
   }
-  return { channels, spaces, user };
+  return { channels, spaces, user, settings };
 };
 
 export const editChannel = (state: ProfileState, { channel }: ChannelEdited): ProfileState => {
@@ -107,6 +110,10 @@ function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated):
     return { ...state, spaces };
   }
   return state;
+}
+
+function updateSettings(state: ProfileState, { settings }: SettingsUpdated): ProfileState {
+  return { ...state, settings };
 }
 
 function updateChannel(state: ProfileState, chat: ChatState): ProfileState {
@@ -157,6 +164,8 @@ export const profileReducer = (state: ProfileState | undefined, action: Action):
       return leaveChannel(state, action);
     case 'CHANNEL_MEMBER_EDITED':
       return editChannelMember(state, action);
+    case 'SETTINGS_UPDATED':
+      return updateSettings(state, action);
     case 'CHANNEL_EVENT_RECEIVED':
       switch (action.event.body.type) {
         case 'CHANNEL_EDITED':

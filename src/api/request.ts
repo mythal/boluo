@@ -2,7 +2,17 @@
 import { Err, Ok, Result } from '../utils/result';
 import { AppError, notJson } from './error';
 import { getCsrfToken } from './csrf';
-import { CheckEmail, CheckUsername, EditUser, GetMe, LoginData, LoginResult, RegisterData, User } from './users';
+import {
+  CheckEmail,
+  CheckUsername,
+  EditUser,
+  GetMe,
+  LoginData,
+  LoginResult,
+  RegisterData,
+  Settings,
+  User,
+} from './users';
 import {
   CheckSpaceName,
   CreateSpace,
@@ -105,6 +115,7 @@ interface IdQuery {
 export function post(path: '/users/login', payload: LoginData): Promise<AppResult<LoginResult>>;
 export function post(path: '/users/register', payload: RegisterData): Promise<AppResult<User>>;
 export function post(path: '/users/edit', payload: EditUser): Promise<AppResult<User>>;
+export function post(path: '/users/update_settings', payload: Settings): Promise<AppResult<Settings>>;
 export function post(path: '/spaces/create', payload: CreateSpace): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/edit', payload: EditSpace): Promise<AppResult<Space>>;
 export function post(path: '/spaces/join', payload: {}, query: IdQuery): Promise<AppResult<SpaceWithMember>>;

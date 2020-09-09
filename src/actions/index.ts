@@ -6,6 +6,7 @@ import {
   LeftSpace,
   LoggedIn,
   LoggedOut,
+  SettingsUpdated,
   SpaceEdited,
   UserEdited,
 } from './profile';
@@ -40,6 +41,7 @@ export type Action =
   | LoggedIn
   | LoggedOut
   | UserEdited
+  | SettingsUpdated
   | JoinedSpace
   | SpaceEdited
   | SpaceUpdated

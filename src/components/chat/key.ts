@@ -11,10 +11,14 @@ const submitKey = (callback: () => void) => {
 export const handleKeyDown = (
   composeDispatch: ComposeDispatch,
   onSend: () => void,
-  inGame: boolean
+  inGame: boolean,
+  enterSend: boolean | undefined
 ): React.KeyboardEventHandler => {
   return (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    if (enterSend && e.key === 'Enter') {
+      e.preventDefault();
+      submitKey(async () => await onSend());
+    } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       submitKey(async () => await onSend());
     } else if (e.key === 'Alt') {

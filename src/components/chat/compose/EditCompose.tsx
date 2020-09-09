@@ -90,6 +90,7 @@ function EditCompose({ preview, editTo }: Props) {
   const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
+  const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const sendEvent = useSend();
 
   const [
@@ -167,7 +168,7 @@ function EditCompose({ preview, editTo }: Props) {
   const chatItemName = (
     <ChatItemName inGame={inGame} action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />
   );
-  const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame);
+  const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame, enterSend);
   return (
     <div css={container} data-edit={true} ref={containerRef} onKeyDown={onKeyDown} data-in-game={inGame}>
       <div css={nameContainer}>

@@ -1,4 +1,4 @@
-import { User } from '../api/users';
+import { Settings, User } from '../api/users';
 import { Space, SpaceMember, SpaceWithMember } from '../api/spaces';
 import { Channel, ChannelMember, ChannelWithMember } from '../api/channels';
 import { Id } from '../utils/id';
@@ -6,8 +6,14 @@ import { Id } from '../utils/id';
 export interface LoggedIn {
   type: 'LOGGED_IN';
   user: User;
+  settings: Settings;
   mySpaces: SpaceWithMember[];
   myChannels: ChannelWithMember[];
+}
+
+export interface SettingsUpdated {
+  type: 'SETTINGS_UPDATED';
+  settings: Settings;
 }
 
 export interface UserEdited {

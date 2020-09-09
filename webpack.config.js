@@ -17,7 +17,7 @@ module.exports = {
   entry: './src/index.tsx',
 
   // https://webpack.js.org/configuration/devtool/
-  devtool: PRODUCTION ? 'eval-cheap-module-source-map' : 'source-map',
+  devtool: PRODUCTION ? 'source-map' : 'eval-cheap-module-source-map',
   mode: PRODUCTION ? 'production' : 'development',
 
   output: {
@@ -66,7 +66,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: [{ loader: 'babel-loader' }, { loader: 'ts-loader' }],
+        use: [{ loader: 'babel-loader' }],
       },
       {
         test: /\.css$/,

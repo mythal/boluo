@@ -440,7 +440,7 @@ export const chatHeaderStyle = css`
   column-gap: ${spacingN(1)};
   align-items: center;
   justify-content: stretch;
-  grid-template-columns: minmax(4rem, 10rem) 1fr auto;
+  grid-template-columns: minmax(2rem, 10rem) 1fr auto;
   grid-template-areas: 'title topic toolbar';
 `;
 

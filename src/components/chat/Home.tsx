@@ -34,6 +34,8 @@ const container = css`
 
 const Title = styled.div`
   grid-area: title;
+  align-self: center;
+  white-space: nowrap;
 `;
 
 const SpaceName = styled.span`

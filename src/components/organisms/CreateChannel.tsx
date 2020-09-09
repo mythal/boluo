@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import { alignRight, breakpoint, largeInput, mediaQuery, mT, spacingN } from '../../styles/atoms';
-import { CreateChannel } from '../../api/channels';
+import { CreateChannel as CreateChannelData } from '../../api/channels';
 import { useForm } from 'react-hook-form';
 import { AppError } from '../../api/error';
 import DiceSelect, { DiceOption } from '../../components/molecules/DiceSelect';
@@ -53,7 +53,7 @@ function CreateChannel({ space, dismiss }: Props) {
   }
   const onSubmit = async ({ name, characterName }: FormData) => {
     const defaultDiceType = defaultDice?.value;
-    const payload: CreateChannel = { name, spaceId, defaultDiceType, characterName };
+    const payload: CreateChannelData = { name, spaceId, defaultDiceType, characterName };
     setSubmitting(true);
     const result = await post('/channels/create', payload);
     setSubmitting(false);

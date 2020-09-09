@@ -124,6 +124,7 @@ function EditCompose({ preview, editTo }: Props) {
       entities: preview?.entities ?? editTo?.entities ?? [],
       canSubmit: true,
       clear: false,
+      characterName: myMember.characterName,
     };
   });
 

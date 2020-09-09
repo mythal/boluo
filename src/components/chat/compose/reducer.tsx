@@ -25,6 +25,7 @@ export interface ComposeState {
   text: string;
   entities: Entity[];
   inputName: string;
+  characterName: string;
   clear: boolean;
   initial: boolean;
   media: File | undefined;
@@ -97,8 +98,20 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
       next.clear,
     ].some((value) => value !== undefined)
   ) {
-    const { inGame, isAction, editFor, broadcast, text, inputName, entities, sending, nickname, clear } = nextState;
-    const name = inGame ? inputName : nickname;
+    const {
+      inGame,
+      isAction,
+      editFor,
+      broadcast,
+      text,
+      inputName,
+      entities,
+      sending,
+      nickname,
+      clear,
+      characterName,
+    } = nextState;
+    const name = inGame ? inputName || characterName : nickname;
     const preview: PreviewPost = {
       id: nextState.messageId,
       name,
@@ -110,15 +123,15 @@ const handleUpdate: ComposeReducer<Update> = (state, action) => {
       text: broadcast || text === '' ? text : null,
       entities: broadcast ? entities : [],
     };
-    nextState.canSubmit = calculateCanSubmit(text, inGame, inputName) && !sending;
+    nextState.canSubmit = calculateCanSubmit(text, inGame, characterName) && !sending;
     nextState.sendEvent({ type: 'PREVIEW', preview });
   }
 
   return nextState;
 };
 
-export const calculateCanSubmit = (text: string, inGame: boolean, inputName: string): boolean =>
-  text !== '' && (!inGame || inputName !== '');
+export const calculateCanSubmit = (text: string, inGame: boolean, characterName: string): boolean =>
+  text !== '' && (!inGame || characterName !== '');
 
 export const composeReducer: ComposeReducer = (state, action) => {
   if (action.type === 'UPDATE') {

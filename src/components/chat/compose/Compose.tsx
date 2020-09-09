@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RefObject, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
 import { mR, mT, p, pX, pY, relative, roundedSm, spacingN, textBase, textXs } from '../../../styles/atoms';
@@ -25,6 +25,7 @@ import { handleKeyDown } from '../key';
 import Tooltip from '../../atoms/Tooltip';
 import mask from '../../../assets/icons/theater-masks.svg';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
+import { showFlash } from '../../../actions/flash';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -104,13 +105,6 @@ interface Props {
   preview: Preview | undefined;
 }
 
-function resetInput(inputRef: RefObject<HTMLTextAreaElement>) {
-  if (inputRef.current === null) {
-    return;
-  }
-  inputRef.current.value = '';
-}
-
 function Compose({ preview, channelId, member }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -122,13 +116,12 @@ function Compose({ preview, channelId, member }: Props) {
   const initialText = useMemo(() => preview?.text || '', []);
   const makeInitState = (): ComposeState => {
     const inGame = preview?.inGame || false;
-    const inputName = (preview?.inGame && preview.name) || member.characterName;
     return {
       sending: false,
       inGame,
       broadcast: true,
       isAction: preview?.isAction || false,
-      inputName,
+      inputName: '',
       nickname,
       initial: true,
       media: undefined,
@@ -139,19 +132,47 @@ function Compose({ preview, channelId, member }: Props) {
       text: initialText,
       entities: preview?.entities || [],
       clear: false,
-      canSubmit: calculateCanSubmit(initialText, inGame, inputName),
+      characterName: member.characterName,
+      canSubmit: calculateCanSubmit(initialText, inGame, member.characterName),
     };
   };
   const [
-    { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit, prevSubmit },
+    {
+      messageId,
+      text,
+      broadcast,
+      isAction,
+      inGame,
+      sending,
+      inputName,
+      media,
+      entities,
+      canSubmit,
+      prevSubmit,
+      characterName,
+    },
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
   const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     composeDispatch(update({ inputName: e.target.value }));
   };
+  useEffect(() => {
+    composeDispatch(update({ characterName: member.characterName }));
+  }, [member.characterName]);
+
+  let whyCannotSend: string | null = null;
+
+  if (text === '') {
+    whyCannotSend = '消息不能为空';
+  } else if (inGame && characterName === '') {
+    whyCannotSend = '角色名为空';
+  }
+  const sendButtonInfo = whyCannotSend || isMac ? '⌘ + ⏎' : 'Ctrl + ⏎';
+
   const onSend = async () => {
-    if (!canSubmit || !messageId) {
+    if (!canSubmit) {
+      dispatch(showFlash('WARNING', whyCannotSend));
       return;
     }
     composeDispatch(update({ sending: true }));
@@ -160,7 +181,7 @@ function Compose({ preview, channelId, member }: Props) {
       messageId,
       channelId,
       mediaId,
-      name: inGame ? inputName : nickname,
+      name: inGame ? inputName || characterName : nickname,
       inGame,
       isAction,
       orderDate: null,
@@ -172,7 +193,6 @@ function Compose({ preview, channelId, member }: Props) {
       composeDispatch(update({ sending: false }));
       return;
     } else {
-      resetInput(inputRef);
       composeDispatch(
         update({
           messageId: newId(),
@@ -200,7 +220,7 @@ function Compose({ preview, channelId, member }: Props) {
             <div css={[textXs]}>{isMac ? 'Option' : 'Alt'}</div>
             {inGame && (
               <div css={[mT(1)]}>
-                <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="角色名" />
+                <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="临时角色名" />
               </div>
             )}
           </Tooltip>
@@ -236,7 +256,7 @@ function Compose({ preview, channelId, member }: Props) {
           disabled={!canSubmit}
           title="发送"
           size="large"
-          info={isMac ? '⌘ + ⏎' : 'Ctrl + ⏎'}
+          info={sendButtonInfo}
           x="left"
         />
       </div>

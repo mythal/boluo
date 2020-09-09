@@ -17,7 +17,7 @@ module.exports = {
   entry: './src/index.tsx',
 
   // https://webpack.js.org/configuration/devtool/
-  devtool: PRODUCTION ? 'source-map' : 'eval-cheap-source-map',
+  devtool: PRODUCTION ? 'eval-cheap-module-source-map' : 'source-map',
   mode: PRODUCTION ? 'production' : 'development',
 
   output: {

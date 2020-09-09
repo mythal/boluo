@@ -26,10 +26,10 @@ function Help({ dismiss }: Props) {
           <Code>挥起长剑招呼过去 /1d100 + (1d20 - 1d6)/ 劈砍伤害</Code>
         </Text>
         <Text>
-          用两个斜杠（<Code>/.../</Code>）将你的指令括起来，可以数学运算、嵌套以及加括号。
+          用两个斜杠（<Code>/.../</Code>）将你的指令括起来，两个斜杠内部可以数学运算、嵌套以及加括号。
         </Text>
         <Text>
-          简单的投骰子可以像这样简写：<Code>/1d20</Code>。
+          简单的投骰子可以像这样简写：<Code>我 roll 一个d20：/1d20 再 roll 一个 d100 /d100。</Code>。
         </Text>
         <Text>
           简写的 <Code>/1d20</Code> 中的「1」和「20」也可以省略，用 <Code>/d</Code>{' '}

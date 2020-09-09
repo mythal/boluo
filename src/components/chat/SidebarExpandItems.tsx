@@ -94,7 +94,7 @@ function SidebarExpandItems({ space, channels }: Props) {
       ))}
       <div css={footer}>
         <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>
-          <Icon sprite={help} /> 帮助
+          <Icon sprite={help} /> 格式
         </ChatHeaderButton>
       </div>
 

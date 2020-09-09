@@ -52,6 +52,7 @@ function VirtualList({ myMember, channelId }: Props) {
   const spaceId = useSelector((state) => state.chatPane[pane]!.channel.spaceId);
   const activePane = useSelector((state) => pane === state.activePane);
   const messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
+  const filter = useSelector((state) => state.chatPane[pane]!.filter);
 
   const listSize = messages.size + 1; // + 1 for "load more" button
   const parentRef = useRef<HTMLDivElement>(null);
@@ -111,6 +112,7 @@ function VirtualList({ myMember, channelId }: Props) {
           index={index}
           resizeObserver={resizeObserver}
           measure={measure}
+          filter={filter}
         />
       </div>
     );

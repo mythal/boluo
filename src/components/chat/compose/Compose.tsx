@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
-import { mR, mT, p, pX, pY, relative, roundedSm, spacingN, textBase, textXs } from '../../../styles/atoms';
+import { mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
@@ -22,10 +22,9 @@ import ComposeInput from './ComposeInput';
 import MessageMedia from '../MessageMedia';
 import ChatImageUploadButton from './ImageUploadButton';
 import { handleKeyDown } from '../key';
-import Tooltip from '../../atoms/Tooltip';
-import mask from '../../../assets/icons/theater-masks.svg';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { showFlash } from '../../../actions/flash';
+import InGameButton from './InGameButton';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -57,30 +56,6 @@ const input = css`
   background-color: ${gray['900']};
   border: none;
   &:focus {
-    outline: none;
-  }
-`;
-
-const inGameContainer = css`
-  ${[relative]};
-
-  & .tooltip {
-    visibility: hidden;
-  }
-
-  &:hover .tooltip {
-    visibility: visible;
-  }
-`;
-
-const nameInput = css`
-  border: 1px solid ${gray['800']};
-  color: ${textColor};
-  ${[textBase, pY(1.5), pX(1.5), roundedSm]};
-  width: 8rem;
-  background-color: ${gray['900']};
-  &:focus {
-    border-color: ${gray['700']};
     outline: none;
   }
 `;
@@ -155,9 +130,6 @@ function Compose({ preview, channelId, member }: Props) {
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
-  const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    composeDispatch(update({ inputName: e.target.value }));
-  };
   useEffect(() => {
     composeDispatch(update({ characterName: member.characterName }));
   }, [member.characterName]);
@@ -212,25 +184,13 @@ function Compose({ preview, channelId, member }: Props) {
     }
   };
   const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame, enterSend);
-  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
 
   return (
     <div css={container} ref={containerRef} onKeyDown={onKeyDown}>
       <div css={toolbar}>
         <BroadcastSwitch size="large" broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
         <ActionSwitch size="large" isAction={isAction} composeDispatch={composeDispatch} css={[mR(1)]} />
-        <div css={inGameContainer}>
-          <Tooltip className="tooltip">
-            <div>游戏内</div>
-            <div css={[textXs]}>{isMac ? 'Option' : 'Alt'}</div>
-            {inGame && (
-              <div css={[mT(1)]}>
-                <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="临时角色名" />
-              </div>
-            )}
-          </Tooltip>
-          <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} size="large" />
-        </div>
+        <InGameButton inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} />
       </div>
       <ComposeInput
         ref={inputRef}

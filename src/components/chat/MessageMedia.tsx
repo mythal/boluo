@@ -120,4 +120,4 @@ function MessageMedia({ className, mediaId, file }: Props) {
   return null;
 }
 
-export default MessageMedia;
+export default React.memo(MessageMedia);

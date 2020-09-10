@@ -15,7 +15,7 @@ export const handleKeyDown = (
   enterSend: boolean | undefined
 ): React.KeyboardEventHandler => {
   return (e) => {
-    if (enterSend && e.key === 'Enter') {
+    if (enterSend && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       submitKey(async () => await onSend());
     } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {

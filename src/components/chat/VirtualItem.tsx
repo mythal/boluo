@@ -111,7 +111,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver
   }, [deferred]);
 
   useLayoutEffect(() => {
-    if (deferred > 0 || wrapper.current === null) {
+    if (wrapper.current === null) {
       return;
     }
     if (measure) {

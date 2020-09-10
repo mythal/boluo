@@ -70,6 +70,9 @@ function Settings() {
     if (data.enterSend === true || data.enterSend === false) {
       settings.enterSend = data.enterSend;
     }
+    if (data.expandDice === true || data.expandDice === false) {
+      settings.expandDice = data.expandDice;
+    }
     if (Object.keys(settings).length > 0) {
       setSubmitting(true);
       const result = await post('/users/update_settings', settings);
@@ -115,6 +118,19 @@ function Settings() {
               css={[mR(1)]}
             />
             使用回车键发送消息
+          </Label>
+        </div>
+        <div>
+          <Label>
+            <input
+              type="checkbox"
+              name="expandDice"
+              id="expandDice"
+              defaultChecked={Boolean(settings.expandDice)}
+              ref={register}
+              css={[mR(1)]}
+            />
+            默认展开每个骰子
           </Label>
         </div>
         <div css={[alignRight, mT(2)]}>

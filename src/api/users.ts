@@ -51,4 +51,5 @@ export interface CheckUsername {
 
 export interface Settings {
   enterSend?: boolean;
+  expandDice?: boolean;
 }

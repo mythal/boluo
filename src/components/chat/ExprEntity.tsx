@@ -8,6 +8,9 @@ import { inlineBlock, mY, pX, roundedPx, textLg, textSm } from '../../styles/ato
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { minorTextColor, textColor } from '../../styles/colors';
+import { createSelector } from 'reselect';
+import { ApplicationState } from '../../reducers';
+import { useSelector } from '../../store';
 
 interface Props {
   node: ExprNode;
@@ -35,8 +38,14 @@ const Roll = styled.span`
   }
 `;
 
+const getExpandDice = createSelector(
+  (state: ApplicationState): boolean | undefined => state.profile?.settings.expandDice,
+  (isExpand) => isExpand ?? false
+);
+
 const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
-  const [expand, setExpand] = useState(false);
+  const defaultExpand = useSelector(getExpandDice);
+  const [expand, setExpand] = useState(defaultExpand);
 
   const handleMouse: MouseEventHandler = (e) => {
     e.preventDefault();

@@ -201,6 +201,7 @@ function Compose({ preview, channelId, member }: Props) {
         initialValue={initialText}
         composeDispatch={composeDispatch}
         inGame={inGame}
+        isAction={isAction}
       />
       {media && (
         <div css={mediaContainer}>

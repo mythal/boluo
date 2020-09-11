@@ -202,7 +202,13 @@ function EditCompose({ preview, editTo }: Props) {
         <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>
       <div css={composeWrapper}>
-        <ComposeInput css={compose} inGame={inGame} composeDispatch={composeDispatch} initialValue={initialDraft} />
+        <ComposeInput
+          css={compose}
+          inGame={inGame}
+          composeDispatch={composeDispatch}
+          initialValue={initialDraft}
+          isAction={isAction}
+        />
       </div>
       <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
     </div>

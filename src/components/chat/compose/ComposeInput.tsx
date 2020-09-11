@@ -12,6 +12,7 @@ interface Props {
   autoFocus?: boolean;
   className?: string;
   autoSize?: boolean;
+  isAction: boolean;
 }
 
 const style = css`
@@ -20,8 +21,11 @@ const style = css`
   }
 `;
 
+const actionCommand = '.me ';
+const ACTION_COMMAND = /[.。]me\s*/;
+
 function ComposeInput(
-  { prevSubmit, inGame, initialValue, composeDispatch, autoFocus = false, className }: Props,
+  { prevSubmit, inGame, initialValue, composeDispatch, autoFocus = false, className, isAction }: Props,
   inputRef: Ref<HTMLTextAreaElement>
 ) {
   const [value, setValue] = useState(initialValue);
@@ -32,10 +36,33 @@ function ComposeInput(
   const parse = useParse();
 
   useEffect(() => {
+    const matchActionCommand = value.match(ACTION_COMMAND);
+    if (isAction && matchActionCommand === null) {
+      setValue(actionCommand + value);
+    } else if (!isAction && matchActionCommand) {
+      setValue(value.substr(matchActionCommand[0].length));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAction]);
+
+  useEffect(() => {
     return () => {
       setValue('');
     };
   }, [prevSubmit]);
+
+  useEffect(() => {
+    if (value.match(ACTION_COMMAND)) {
+      if (!isAction) {
+        composeDispatch(update({ isAction: true }));
+      }
+    } else {
+      if (isAction) {
+        composeDispatch(update({ isAction: false }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [composeDispatch, value]);
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const nextValue = e.target.value;

@@ -412,8 +412,18 @@ export interface ParseResult {
   entities: Entity[];
 }
 
+const SKIP_HEAD = /^[.。]me\s*/;
+
+const initState = (source: string): State => {
+  const skipHead = source.match(SKIP_HEAD);
+  if (skipHead) {
+    return { text: skipHead[0], rest: source.substr(skipHead[0].length) };
+  }
+  return { text: '', rest: source };
+};
+
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
-  let state: State = { text: '', rest: source };
+  let state: State = initState(source);
   const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
 
   const entity = choice<Entity>([strong(), emphasis(), link(), autoUrl(), maybeParseExpr, atomExpression(), span()]);

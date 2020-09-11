@@ -145,91 +145,85 @@ const regex = (pattern: RegExp): P<RegExpMatchArray> =>
 
 const EM_REGEX = /^\*(.+?)\*/;
 
-const emphasis = (): P<Entity> =>
-  regex(EM_REGEX).then(([match, { text, rest }]) => {
-    const [entire, content] = match;
-    const entity: Emphasis = {
-      type: 'Emphasis',
-      start: text.length + entire.indexOf(content),
-      offset: content.length,
-    };
-    text += entire;
-    return [entity, { text, rest }];
-  });
+const emphasis: P<Entity> = regex(EM_REGEX).then(([match, { text, rest }]) => {
+  const [entire, content] = match;
+  const entity: Emphasis = {
+    type: 'Emphasis',
+    start: text.length + entire.indexOf(content),
+    offset: content.length,
+  };
+  text += entire;
+  return [entity, { text, rest }];
+});
 
 const STRONG_REGEX = /^\*\*(.+?)\*\*/;
 
-const strong = (): P<Entity> =>
-  regex(STRONG_REGEX).then(([match, { text, rest }]) => {
-    const [entire, content] = match;
-    const entity: Strong = {
-      type: 'Strong',
-      start: text.length + entire.indexOf(content),
-      offset: content.length,
-    };
-    text += entire;
-    return [entity, { text, rest }];
-  });
+const strong: P<Entity> = regex(STRONG_REGEX).then(([match, { text, rest }]) => {
+  const [entire, content] = match;
+  const entity: Strong = {
+    type: 'Strong',
+    start: text.length + entire.indexOf(content),
+    offset: content.length,
+  };
+  text += entire;
+  return [entity, { text, rest }];
+});
 
 const URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/;
 
-const autoUrl = (): P<Entity> =>
-  regex(URL_REGEX).then(([match, { text, rest }]) => {
-    const [content] = match;
-    const entity: Link = {
-      type: 'Link',
-      href: content,
-      start: text.length,
-      offset: content.length,
-    };
-    text += content;
-    return [entity, { text, rest }];
-  });
+const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
+  const [content] = match;
+  const entity: Link = {
+    type: 'Link',
+    href: content,
+    start: text.length,
+    offset: content.length,
+  };
+  text += content;
+  return [entity, { text, rest }];
+});
 
 // \d+ match digits and stop.
 // \s(?=\S) match single space and stop.
 // [^...]: stop characters.
 const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*@[(/（#\s]*\s*/;
 
-const span = (): P<Text> =>
-  regex(TEXT_REGEX).then(([match, { text, rest }]) => {
-    const [content] = match;
-    const offset = content.length;
-    const entity: Text = {
-      type: 'Text',
-      start: text.length,
-      offset,
-    };
-    text += content;
-    return [entity, { text, rest }];
-  });
+const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
+  const [content] = match;
+  const offset = content.length;
+  const entity: Text = {
+    type: 'Text',
+    start: text.length,
+    offset,
+  };
+  text += content;
+  return [entity, { text, rest }];
+});
 
 const LINK_REGEX = /^\[(.+)]\((.+)\)/;
-const link = (): P<Entity> =>
-  regex(LINK_REGEX).then(([match, { text, rest }]) => {
-    const [entire, content, url] = match;
-    const entity: Link = {
-      type: 'Link',
-      start: text.length + entire.indexOf(content),
-      offset: content.length,
-      href: url,
-    };
-    text += entire;
-    return [entity, { text, rest }];
-  });
+const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
+  const [entire, content, url] = match;
+  const entity: Link = {
+    type: 'Link',
+    start: text.length + entire.indexOf(content),
+    offset: content.length,
+    href: url,
+  };
+  text += entire;
+  return [entity, { text, rest }];
+});
 
-const spaces = (): P<null> => regex(/^\s*/).map(() => null);
+const spaces: P<null> = regex(/^\s*/).map(() => null);
 
-const roll = (): P<ExprNode> =>
-  regex(/^(\d{0,3})[dD](?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
-    const [, before, after] = match;
-    const node: Roll = {
-      type: 'Roll',
-      counter: before === '' ? 1 : Number(before),
-      face: after === '' ? env.defaultDiceFace : Number(after),
-    };
-    return [node, state];
-  });
+const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
+  const [, before, after] = match;
+  const node: Roll = {
+    type: 'Roll',
+    counter: before === '' ? 1 : Number(before),
+    face: after === '' ? env.defaultDiceFace : Number(after),
+  };
+  return [node, state];
+});
 
 const str = (s: string, appendText = false): P<string> =>
   new P(({ text, rest }) => {
@@ -243,41 +237,37 @@ const str = (s: string, appendText = false): P<string> =>
     return [s, { text, rest }];
   });
 
-const operator1 = (): P<Operator> =>
-  regex(/^[-+]/).map(
-    ([op]): Operator => {
-      if (op === '+') {
-        return '+';
-      } else if (op === '-') {
-        return '-';
-      }
-      throw Error('unreachable');
+const operator1: P<Operator> = regex(/^[-+]/).map(
+  ([op]): Operator => {
+    if (op === '+') {
+      return '+';
+    } else if (op === '-') {
+      return '-';
     }
-  );
+    throw Error('unreachable');
+  }
+);
 
-const operator2 = (): P<Operator> =>
-  regex(/^[*/×÷]/).map(
-    ([op]): Operator => {
-      if (op === '×' || op === '*') {
-        return '×';
-      } else if (op === '÷' || op === '/') {
-        return '÷';
-      }
-      throw Error('unreachable');
+const operator2: P<Operator> = regex(/^[*/×÷]/).map(
+  ([op]): Operator => {
+    if (op === '×' || op === '*') {
+      return '×';
+    } else if (op === '÷' || op === '/') {
+      return '÷';
     }
-  );
+    throw Error('unreachable');
+  }
+);
 
-const num = (): P<ExprNode> => regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
+const num: P<ExprNode> = regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
 
 const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T): P<T> =>
   new P((state, env) => {
     const rest = (l: T): P<T> =>
       new P((state, env) => {
-        const restExpr: P<T> = spaces()
-          .with(op.skip(spaces()).and(p()))
-          .then(([[op, r], state], env) => {
-            return rest(cons(op, l, r)).run(state, env);
-          });
+        const restExpr: P<T> = spaces.with(op.skip(spaces).and(p())).then(([[op, r], state], env) => {
+          return rest(cons(op, l, r)).run(state, env);
+        });
         return maybe(restExpr)
           .map((node) => node ?? l)
           .run(state, env);
@@ -313,17 +303,13 @@ const ExprMinMax = (node: ExprNode, type: 'Min' | 'Max'): ExprNode => {
   }
 };
 
-const min = (): P<ExprNode> => {
-  return regex(/^[Mm][Ii][Nn]\s*/)
-    .then(([_, state], env) => atom().run(state, env))
-    .map((node) => ExprMinMax(node, 'Min'));
-};
+const min: P<ExprNode> = regex(/^[Mm][Ii][Nn]\s*/)
+  .then(([_, state], env) => atom().run(state, env))
+  .map((node) => ExprMinMax(node, 'Min'));
 
-const max = (): P<ExprNode> => {
-  return regex(/^[Mm][Aa][Xx]\s*/)
-    .then(([_, state], env) => atom().run(state, env))
-    .map((node) => ExprMinMax(node, 'Max'));
-};
+const max: P<ExprNode> = regex(/^[Mm][Aa][Xx]\s*/)
+  .then(([_, state], env) => atom().run(state, env))
+  .map((node) => ExprMinMax(node, 'Max'));
 
 const subExprMapper = (node: ExprNode): SubExpr => (node.type === 'SubExpr' ? node : { type: 'SubExpr', node });
 
@@ -339,56 +325,72 @@ const atom = (): P<ExprNode> => {
       .skip(regex(/^\s*]/))
       .map(subExprMapper), // match [...]
   ]);
-  return choice([roll(), num(), subExpr, max(), min()]);
+  return choice([roll, num, subExpr, max, min]);
+};
+
+const logResult = <T>(result: T): T => {
+  console.log(result);
+  return result;
 };
 
 const expr2 = (): P<ExprNode> =>
-  chainl1<ExprNode, Operator>(operator2(), atom, (op, l, r) => ({ type: 'Binary', l, r, op }));
+  chainl1<ExprNode, Operator>(operator2, atom, (op, l, r) => ({ type: 'Binary', l, r, op }));
 const expr = (): P<ExprNode> =>
-  chainl1<ExprNode, Operator>(operator1(), expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
+  chainl1<ExprNode, Operator>(operator1, expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
 
 const EXPRESSION = /^\/(.+?)\//;
-const expression = (): P<Entity> =>
-  regex(EXPRESSION).then(([match, { text, rest }], env) => {
-    const [entire, content] = match;
-    const exprResult = expr().run({ text: '', rest: content }, env);
-    if (!exprResult) {
-      return null;
-    }
-    const [node, exprState] = exprResult;
-    if (exprState.rest !== '') {
-      return null;
-    }
-    const entity: Expr = {
-      type: 'Expr',
-      start: text.length,
-      offset: entire.length,
-      node,
-    };
-    return [entity, { text: text + entire, rest }];
-  });
+const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], env) => {
+  const [entire, content] = match;
+  const exprResult = expr().run({ text: '', rest: content }, env);
+  if (!exprResult) {
+    return null;
+  }
+  const [node, exprState] = exprResult;
+  if (exprState.rest !== '') {
+    return null;
+  }
+  const entity: Expr = {
+    type: 'Expr',
+    start: text.length,
+    offset: entire.length,
+    node,
+  };
+  return [entity, { text: text + entire, rest }];
+});
 
-const atomExpression = (): P<Entity> =>
-  new P((state, env) => {
-    if (!state.rest.startsWith('/')) {
-      return null;
-    }
-    const atomResult = atom().run({ text: '', rest: state.rest.substr(1) }, env);
-    if (atomResult === null) {
-      return null;
-    }
-    const [node, next] = atomResult;
-    const offset = state.rest.length - next.rest.length;
-    console.log(state.rest, next.rest, offset);
-    const consumed = state.rest.substr(0, offset);
-    const entity: Expr = {
-      type: 'Expr',
-      start: state.text.length,
-      offset,
-      node,
-    };
-    return [entity, { text: state.text + consumed, rest: next.rest }];
-  });
+const exprNodeToEntity = (state: State) => ([node, next]: [ExprNode, State]): [Entity, State] => {
+  const offset = state.rest.length - next.rest.length;
+  const consumed = state.rest.substr(0, offset);
+  const entity: Expr = {
+    type: 'Expr',
+    start: state.text.length,
+    offset,
+    node,
+  };
+  return [entity, { text: state.text + consumed, rest: next.rest }];
+};
+
+const atomExpression: P<Entity> = new P((state, env) => {
+  return str('/').with(atom()).then(exprNodeToEntity(state)).run(state, env);
+});
+
+const ROLL_COMMAND = /^[.。]r\s*/;
+
+const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, atomExpression, span]);
+
+const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
+
+const rollCommand: P<Entity[]> = new P((state, env) => {
+  const prefix = state.rest.match(ROLL_COMMAND);
+  if (!prefix) {
+    return null;
+  }
+  const next: State = { text: '.r ', rest: state.rest.substr(prefix[0].length) };
+  const exprEntity = expr().then(exprNodeToEntity(state));
+  const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, atomExpression, exprEntity, span]);
+  const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
+  return message.run(next, env);
+});
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   if (entity.type !== 'Text') {
@@ -424,12 +426,9 @@ const initState = (source: string): State => {
 
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
   let state: State = initState(source);
-  const maybeParseExpr = parseExpr ? expression() : fail<Entity>();
+  const parser: P<Entity[]> = choice([rollCommand, message]);
 
-  const entity = choice<Entity>([strong(), emphasis(), link(), autoUrl(), maybeParseExpr, atomExpression(), span()]);
-
-  const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
-  const result = message.run(state, env);
+  const result = parser.run(state, env);
 
   if (!result) {
     throw Error('Failed to parse the source: ' + source);

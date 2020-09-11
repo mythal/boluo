@@ -80,6 +80,7 @@ function Settings() {
       if (!result.isOk) {
         setAppError(result.value);
       } else {
+        dispatch({ type: 'SETTINGS_UPDATED', settings: result.value });
       }
     }
   };

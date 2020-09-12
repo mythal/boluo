@@ -13,6 +13,7 @@ import Help from './Help';
 import help from '../../assets/icons/help.svg';
 import { css } from '@emotion/core';
 import { mB, pY } from '../../styles/atoms';
+import { sidebarButtonPrimary } from './styles';
 
 interface Props {
   space: Space;
@@ -42,7 +43,7 @@ function SidebarFoldedItems({ space, channels }: Props) {
         #
       </ChatHeaderButton>
       <div css={footer}>
-        <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton]}>
+        <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton, sidebarButtonPrimary]}>
           <Icon sprite={help} />
         </ChatHeaderButton>
       </div>

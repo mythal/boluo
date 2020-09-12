@@ -43,6 +43,7 @@ export interface Roll {
   type: 'Roll';
   face: number;
   counter: number;
+  filter?: ['LOW' | 'HIGH', number];
 }
 
 export interface Num {
@@ -78,6 +79,7 @@ export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr;
 
 export interface RollResult extends Roll {
   values: number[];
+  filtered?: number[];
   value: number;
 }
 

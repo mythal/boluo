@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Dialog from '../molecules/Dialog';
 import Text from '../atoms/Text';
-import { fontBold, mY, textLg } from '../../styles/atoms';
+import { fontBold, mY, textLg, textXs } from '../../styles/atoms';
 import { Code } from '../atoms/Code';
 import { css } from '@emotion/core';
 
@@ -19,27 +19,35 @@ const helpTitle = css`
 
 function Help({ dismiss }: Props) {
   return (
-    <Dialog dismiss={dismiss} confirm={dismiss} confirmText="知道了" title="帮助">
+    <Dialog dismiss={dismiss} confirm={dismiss} confirmText="知道了" title="格式帮助">
       <div css={dialogStyle}>
         <Text css={[helpTitle]}>投骰子</Text>
         <Text>
-          <Code>挥起长剑招呼过去 /1d100 + (1d20 - 1d6)/ 劈砍伤害</Code>
+          <Code>.r 挥起长剑招呼过去 1d100 + (1d20 - 1d6) 劈砍伤害</Code>
         </Text>
         <Text>
-          用两个斜杠（<Code>/.../</Code>）将你的指令括起来，两个斜杠内部可以数学运算、嵌套以及加括号。
+          在消息的开头加上<Code>.r</Code>，就会自动识别消息中的骰子指令了，可以数学运算、嵌套以及加括号。
         </Text>
         <Text>
-          简单的投骰子可以像这样简写：<Code>我 roll 一个d20：/1d20 再 roll 一个 d100 /d100。</Code>。
+          也可以选择不用 <Code>.r</Code> 命令，而是在普通的消息中嵌入指令，在花括号或者方括号中写下骰子指令就可以了：
+          <Code>{'{4d20h2 - 3}'} 或者 【4d20h2 - 3】</Code>。
         </Text>
         <Text>
-          简写的 <Code>/1d20</Code> 中的「1」和「20」也可以省略，用 <Code>/d</Code>{' '}
-          就可以了。管理员可以在频道设置中修改默认的骰子面数。
+          <Code>1d20</Code> 这样的骰子中的「1」和「20」可以省略，用一个字母 <Code>d</Code>{' '}
+          就可以表示了。管理员可以在频道设置中修改默认的骰子面数。
         </Text>
 
-        <Text css={[helpTitle]}>最大/最小值</Text>
+        <Text css={[helpTitle]}>过滤最大最小的骰子</Text>
         <Text>
-          投掷多个骰子的时候，可以用 max 或 min 指令来获取这些骰子的最大/最小值：<Code>/max 4d20/</Code>
-          。也可以和别的指令组合在一起：<Code>…/max(4d20) + 1d4 * 2/…</Code>。
+          <Code>我有一个优势 {'{2d20h1}'}</Code> 像这样用跟在骰子后面的 <Code>h[N]</Code> 来取最大的 N 个骰子。（
+          <Code>h</Code> 也可以用 <Code>k</Code> 表示）
+        </Text>
+        <Text>
+          最小也差不多，在骰子后面加 <Code>l[N]</Code> 就可以得到最小的 N 个骰子了：
+          <Code>这次我是劣势了 {'2d20l1'}</Code>。
+        </Text>
+        <Text css={[textXs]}>
+          其中 <Code>h</Code> 代表 highest；<Code>k</Code>代表 keep；<Code>l</Code> 代表 lowest。
         </Text>
       </div>
     </Dialog>

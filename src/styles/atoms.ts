@@ -311,6 +311,7 @@ export const fontBold = css`
 `;
 export const fontNormal = css`
   font-weight: normal;
+  font-style: normal;
 `;
 
 export const floatLeft = css`

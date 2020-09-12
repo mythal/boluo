@@ -4,12 +4,10 @@ import { EvaluatedExprNode, ExprNode, RollResult } from '../../interpreter/entit
 import D20Icon from '../../assets/icons/d20.svg';
 import { evaluate, TOO_MUCH_LAYER } from '../../interpreter/eval';
 import Icon from '../atoms/Icon';
-import { inlineBlock, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
+import { fontNormal, inlineBlock, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { minorTextColor, textColor } from '../../styles/colors';
-import { createSelector } from 'reselect';
-import { ApplicationState } from '../../reducers';
 import { useSelector } from '../../store';
 
 interface Props {
@@ -27,7 +25,7 @@ const Num = styled.span`
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 
 const Roll = styled.span`
-  ${[pX(1), mY(0.25), textSm, inlineBlock, roundedPx]};
+  ${[pX(1), mX(1), mY(0.25), textSm, inlineBlock, roundedPx, fontNormal]};
   cursor: pointer;
   background-color: ${darken(0.7, textColor)};
   border: 1px solid ${darken(0.6, textColor)};
@@ -38,13 +36,8 @@ const Roll = styled.span`
   }
 `;
 
-const getExpandDice = createSelector(
-  (state: ApplicationState): boolean | undefined => state.profile?.settings.expandDice,
-  (isExpand) => isExpand ?? false
-);
-
 const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
-  const defaultExpand = useSelector(getExpandDice);
+  const defaultExpand = useSelector((state) => Boolean(state.profile?.settings.expandDice));
   const [expand, setExpand] = useState(defaultExpand);
 
   const handleMouse: MouseEventHandler = (e) => {
@@ -54,14 +47,30 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
   };
 
   const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
+  let filteredList: React.ReactNode = null;
+  if (node.filtered && node.filtered.length > 1) {
+    filteredList = <span>=[{node.filtered.join(', ')}]</span>;
+  }
+  let filter: React.ReactNode = null;
+  if (node.filter) {
+    const [type, counter] = node.filter;
+    filter = (
+      <span>
+        {' '}
+        {type} {counter}
+      </span>
+    );
+  }
 
   return (
     <Roll onMouseDown={handleMouse}>
       <Icon sprite={D20Icon} />
       {node.counter}D{node.face}
+      {filter}
       {expand && (
         <React.Fragment>
-          {resultList}={node.value}
+          {resultList}
+          {filteredList}={node.value}
         </React.Fragment>
       )}
     </Roll>

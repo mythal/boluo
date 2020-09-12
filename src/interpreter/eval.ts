@@ -1,5 +1,6 @@
 import Prando from 'prando';
 import { EvaluatedExprNode, ExprNode } from './entities';
+import { compare } from '../utils/helper';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 
@@ -21,6 +22,17 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
         const x = rng.nextInt(1, node.face);
         values.push(x);
       }
+    }
+    if (node.filter) {
+      const [type, counter] = node.filter;
+      let filtered: number[];
+      if (type === 'HIGH') {
+        filtered = values.sort(compare).slice(0, counter);
+      } else {
+        filtered = values.sort(compare).slice(counter);
+      }
+      const value = filtered.reduce((a, b) => a + b, 0);
+      return { ...node, values, value, filtered };
     }
     const value = values.reduce((a, b) => a + b, 0);
     return { ...node, values, value };

@@ -186,7 +186,7 @@ const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
 // \d+ match digits and stop.
 // \s(?=\S) match single space and stop.
 // [^...]: stop characters.
-const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*@[(/（#\s]*\s*/;
+const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*{【@[(/（#\s]*\s*/;
 
 const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
@@ -215,15 +215,25 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
 
 const spaces: P<null> = regex(/^\s*/).map(() => null);
 
-const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](?![a-zA-Z])(\d{0,4})/).then(([match, state], env) => {
-  const [, before, after] = match;
-  const node: Roll = {
-    type: 'Roll',
-    counter: before === '' ? 1 : Number(before),
-    face: after === '' ? env.defaultDiceFace : Number(after),
-  };
-  return [node, state];
-});
+const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](\d{0,4})(?:([kKLlHh])(\d{1,3}))?(?![a-zA-Z])/).then(
+  ([match, state], env) => {
+    const [, before, after, filter, filterCounter] = match;
+    const node: Roll = {
+      type: 'Roll',
+      counter: before === '' ? 1 : Number(before),
+      face: after === '' ? env.defaultDiceFace : Number(after),
+    };
+    if (filter && filterCounter) {
+      let type: 'LOW' | 'HIGH' = 'HIGH';
+      if (filter === 'l' || filter === 'L') {
+        type = 'LOW';
+      }
+      const counter = parseInt(filterCounter);
+      node.filter = [type, counter];
+    }
+    return [node, state];
+  }
+);
 
 const str = (s: string, appendText = false): P<string> =>
   new P(({ text, rest }) => {
@@ -338,9 +348,13 @@ const expr2 = (): P<ExprNode> =>
 const expr = (): P<ExprNode> =>
   chainl1<ExprNode, Operator>(operator1, expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
 
-const EXPRESSION = /^\/(.+?)\//;
+const EXPRESSION = /^{(.+?)}|^【(.+?)】/;
 const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], env) => {
-  const [entire, content] = match;
+  const [entire, a, b] = match;
+  const content = a || b;
+  if (!content) {
+    return null;
+  }
   const exprResult = expr().run({ text: '', rest: content }, env);
   if (!exprResult) {
     return null;
@@ -370,13 +384,9 @@ const exprNodeToEntity = (state: State) => ([node, next]: [ExprNode, State]): [E
   return [entity, { text: state.text + consumed, rest: next.rest }];
 };
 
-const atomExpression: P<Entity> = new P((state, env) => {
-  return str('/').with(atom()).then(exprNodeToEntity(state)).run(state, env);
-});
-
 const ROLL_COMMAND = /^[.。]r\s*/;
 
-const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, atomExpression, span]);
+const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, span]);
 
 const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
 
@@ -387,7 +397,7 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
   }
   const next: State = { text: '.r ', rest: state.rest.substr(prefix[0].length) };
   const exprEntity = expr().then(exprNodeToEntity(state));
-  const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, atomExpression, exprEntity, span]);
+  const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, exprEntity, span]);
   const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   return message.run(next, env);
 });

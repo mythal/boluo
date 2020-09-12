@@ -8,11 +8,14 @@ import newspaper from '../../assets/icons/newspaper.svg';
 import Icon from '../atoms/Icon';
 import { useSelector } from '../../store';
 import styled from '@emotion/styled';
-import { link, mB, spacingN } from '../../styles/atoms';
+import { alignRight, link, mB, mT, spacingN } from '../../styles/atoms';
 import { News } from '../atoms/News';
 import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
+import Button from '../atoms/Button';
+import { useState } from 'react';
+import Help from '../chat/Help';
 
 const Container = styled.div`
   display: grid;
@@ -23,6 +26,7 @@ const Container = styled.div`
 function My() {
   const spaces = useSelector((state) => state.profile!.spaces);
   const cards = spaces.valueSeq().map(({ space }) => <SpaceCard key={space.id} space={space} />);
+  const [showHelp, setHelp] = useState(false);
   return (
     <Container>
       <div>
@@ -38,6 +42,14 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>
+          <Text>菠萝改动了骰子语法。</Text>
+          <div css={[alignRight, mT(2)]}>
+            <Button data-small data-variant="primary" onClick={() => setHelp(true)}>
+              查看新语法
+            </Button>
+          </div>
+        </News>
         <News css={[mB(2)]}>
           <Text>
             可以到
@@ -63,6 +75,7 @@ function My() {
           </Text>
         </News>
       </div>
+      {showHelp && <Help dismiss={() => setHelp(false)} />}
     </Container>
   );
 }

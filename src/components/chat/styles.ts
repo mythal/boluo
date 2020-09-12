@@ -2,7 +2,7 @@ import { css } from '@emotion/core';
 import { alignRight, mB, mL, pY, textLg, textSm } from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
-import { gray } from '../../styles/colors';
+import { gray, primary } from '../../styles/colors';
 
 export const chatContentLineHeight = css`
   line-height: 1.6rem;
@@ -38,4 +38,13 @@ export const nameContainer = css`
 
 export const chatSplitLine = css`
   border-left: 1px solid ${gray['700']};
+`;
+export const sidebarButtonPrimary = css`
+  background-color: ${primary['600']};
+  &:hover {
+    background-color: ${primary['500']};
+  }
+  &:active {
+    background-color: ${primary['700']};
+  }
 `;

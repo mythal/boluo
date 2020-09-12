@@ -21,7 +21,7 @@ import { useSend } from '../../../hooks/useSend';
 import MessageMedia from '../MessageMedia';
 import ChatImageUploadButton from './ImageUploadButton';
 import { usePane } from '../../../hooks/usePane';
-import { composeReducer, update } from './reducer';
+import { composeReducerMaker, update } from './reducer';
 import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
 import {
@@ -96,38 +96,42 @@ function EditCompose({ preview, editTo }: Props) {
   const [
     { inGame, broadcast, isAction, inputName, media, text, entities, canSubmit, sending },
     composeDispatch,
-  ] = useReducer(composeReducer, undefined, () => {
-    const inGame = preview?.inGame || editTo.inGame;
-    let inputName = '';
-    if (inGame) {
-      if (preview) {
-        inputName = preview.name;
-      } else if (editTo.inGame) {
-        inputName = editTo.name;
-      } else {
-        inputName = myMember.characterName;
+  ] = useReducer(
+    composeReducerMaker({ sendEvent, dispatch, nickname, characterName: myMember.characterName }),
+    undefined,
+    () => {
+      const inGame = preview?.inGame || editTo.inGame;
+      let inputName = '';
+      if (inGame) {
+        if (preview) {
+          inputName = preview.name;
+        } else if (editTo.inGame) {
+          inputName = editTo.name;
+        } else {
+          inputName = myMember.characterName;
+        }
       }
+      return {
+        sending: false,
+        inGame,
+        broadcast: true,
+        isAction: preview?.isAction || editTo.isAction,
+        inputName,
+        initial: true,
+        media: undefined,
+        nickname,
+        sendEvent,
+        editFor: editTo.modified,
+        appDispatch: dispatch,
+        messageId: editTo.id,
+        text: preview?.text ?? editTo?.text ?? '',
+        entities: preview?.entities ?? editTo?.entities ?? [],
+        canSubmit: true,
+        clear: false,
+        characterName: myMember.characterName,
+      };
     }
-    return {
-      sending: false,
-      inGame,
-      broadcast: true,
-      isAction: preview?.isAction || editTo.isAction,
-      inputName,
-      initial: true,
-      media: undefined,
-      nickname,
-      sendEvent,
-      editFor: editTo.modified,
-      appDispatch: dispatch,
-      messageId: editTo.id,
-      text: preview?.text ?? editTo?.text ?? '',
-      entities: preview?.entities ?? editTo?.entities ?? [],
-      canSubmit: true,
-      clear: false,
-      characterName: myMember.characterName,
-    };
-  });
+  );
 
   useLayoutEffect(() => {
     if (inputName !== myMember.characterName) {

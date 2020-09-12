@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
 import { mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
@@ -14,7 +14,7 @@ import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
 import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
-import { calculateCanSubmit, composeReducer, ComposeState, update } from './reducer';
+import { calculateCanSubmit, composeReducerMaker, ComposeState, update } from './reducer';
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
@@ -90,6 +90,7 @@ function Compose({ preview, channelId, member }: Props) {
   const sendEvent = useSend();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const initialText = useMemo(() => preview?.text || '', []);
+  const characterName = member.characterName;
   const makeInitState = (): ComposeState => {
     const inGame = preview?.inGame || false;
     return {
@@ -98,41 +99,20 @@ function Compose({ preview, channelId, member }: Props) {
       broadcast: true,
       isAction: preview?.isAction || false,
       inputName: '',
-      nickname,
       initial: true,
       media: undefined,
-      sendEvent,
       editFor: undefined,
-      appDispatch: dispatch,
       messageId: preview?.id || newId(),
       text: initialText,
       entities: preview?.entities || [],
       clear: false,
-      characterName: member.characterName,
-      canSubmit: calculateCanSubmit(initialText, inGame, member.characterName),
+      canSubmit: calculateCanSubmit(initialText, inGame, characterName),
     };
   };
   const [
-    {
-      messageId,
-      text,
-      broadcast,
-      isAction,
-      inGame,
-      sending,
-      inputName,
-      media,
-      entities,
-      canSubmit,
-      prevSubmit,
-      characterName,
-    },
+    { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit, prevSubmit },
     composeDispatch,
-  ] = useReducer(composeReducer, undefined, makeInitState);
-
-  useEffect(() => {
-    composeDispatch(update({ characterName: member.characterName }));
-  }, [member.characterName]);
+  ] = useReducer(composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), undefined, makeInitState);
 
   let whyCannotSend: string | null = null;
 

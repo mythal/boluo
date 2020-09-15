@@ -121,7 +121,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deferred, wrapper.current, index, resizeObserver]);
 
-  const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster);
+  const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';
   const renderer = (provided: DraggableProvided, snapshot?: DraggableStateSnapshot) => {
     const style = snapshot?.isDragging ? dragging : {};
@@ -131,13 +131,13 @@ function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver
           {deferred <= 0 ? (
             itemSwitch(item, editItem, filter, myMember, provided.dragHandleProps)
           ) : item.type === 'PREVIEW' ? (
-            <div css={chatItemContainer} data-in-game={item.preview.inGame}>
+            <div css={chatItemContainer} data-in-game={item.preview.inGame} {...provided.dragHandleProps}>
               <ChatItemContentContainer data-in-game={item.preview.inGame}>
                 {item.preview.text}
               </ChatItemContentContainer>
             </div>
           ) : (
-            <div css={chatItemContainer} data-in-game={item.message.inGame}>
+            <div css={chatItemContainer} data-in-game={item.message.inGame} {...provided.dragHandleProps}>
               <ChatItemContentContainer data-in-game={item.message.inGame}>
                 {item.message.text}
               </ChatItemContentContainer>
@@ -151,7 +151,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver
     return renderer(provided, snapshot);
   }
   return (
-    <Draggable draggableId={id} index={itemIndex} isDragDisabled={!draggable || deferred > 0}>
+    <Draggable draggableId={id} index={itemIndex} isDragDisabled={!draggable}>
       {renderer}
     </Draggable>
   );

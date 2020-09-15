@@ -43,10 +43,15 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
-          <Text>菠萝改动了骰子语法。</Text>
+          <Text>
+            菠萝改动了骰子语法。增加了 CoC 骰子指令。
+            <ExternalLink css={link} to="https://forum.boluo.chat/d/3">
+              格式详情
+            </ExternalLink>
+          </Text>
           <div css={[alignRight, mT(2)]}>
             <Button data-small data-variant="primary" onClick={() => setHelp(true)}>
-              查看新语法
+              查看快速参考
             </Button>
           </div>
         </News>

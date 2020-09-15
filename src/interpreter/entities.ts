@@ -46,6 +46,12 @@ export interface Roll {
   filter?: ['LOW' | 'HIGH', number];
 }
 
+export interface CocRoll {
+  type: 'CocRoll';
+  subType: 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENALTY_2';
+  target?: ExprNode;
+}
+
 export interface Num {
   type: 'Num';
   value: number;
@@ -75,12 +81,19 @@ export interface SubExpr {
   node: ExprNode;
 }
 
-export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr;
+export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll;
 
 export interface RollResult extends Roll {
   values: number[];
   filtered?: number[];
   value: number;
+}
+
+export interface CocRollResult extends CocRoll {
+  targetValue?: number;
+  value: number;
+  rolled: number;
+  modifiers: number[];
 }
 
 export interface BinaryResult extends Binary {
@@ -104,4 +117,4 @@ export interface SubExprResult extends SubExpr {
   value: number;
 }
 
-export type EvaluatedExprNode = RollResult | BinaryResult | Num | MaxResult | MinResult | SubExprResult;
+export type EvaluatedExprNode = RollResult | BinaryResult | Num | MaxResult | MinResult | SubExprResult | CocRollResult;

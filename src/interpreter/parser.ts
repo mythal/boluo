@@ -1,5 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/no-use-before-define */
-import { Binary, Emphasis, Entity, Expr, ExprNode, Link, Num, Operator, Roll, Strong, SubExpr, Text } from './entities';
+import {
+  Binary,
+  CocRoll,
+  Emphasis,
+  Entity,
+  Expr,
+  ExprNode,
+  Link,
+  Num,
+  Operator,
+  Roll,
+  Strong,
+  SubExpr,
+  Text,
+} from './entities';
 
 interface State {
   text: string;
@@ -186,7 +200,7 @@ const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
 // \d+ match digits and stop.
 // \s(?=\S) match single space and stop.
 // [^...]: stop characters.
-const TEXT_REGEX = /\d+|\s(?=\S)|[\s\S][^\d*{【@[(/（#\s]*\s*/;
+const TEXT_REGEX = /\d+|\s(?=\S)|[，。、)）」】\]：！？]+\s*|[\s\S][^\d*{【@[(/（#\s，。、）)」】\]：！？]*\s*/;
 
 const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
@@ -214,6 +228,36 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
 });
 
 const spaces: P<null> = regex(/^\s*/).map(() => null);
+
+const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then(([[entire, modifier], state], env) => {
+  modifier = (modifier || '').toLowerCase();
+  let subType: CocRoll['subType'] = 'NORMAL';
+  switch (modifier) {
+    case 'p':
+      subType = 'PENALTY';
+      break;
+    case 'pp':
+      subType = 'PENALTY_2';
+      break;
+    case 'b':
+      subType = 'BONUS';
+      break;
+    case 'bb':
+      subType = 'BONUS_2';
+      break;
+  }
+  const node: CocRoll = {
+    type: 'CocRoll',
+    subType,
+  };
+  const right = atom().run(state, env);
+  if (right) {
+    const [target, state] = right;
+    node.target = target;
+    return [node, state];
+  }
+  return [node, state];
+});
 
 const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](\d{0,4})(?:([kKLlHh])(\d{1,3}))?(?![a-zA-Z])/).then(
   ([match, state], env) => {
@@ -335,7 +379,7 @@ const atom = (): P<ExprNode> => {
       .skip(regex(/^\s*]/))
       .map(subExprMapper), // match [...]
   ]);
-  return choice([roll, num, subExpr, max, min]);
+  return choice([roll, cocRoll, num, subExpr, max, min]);
 };
 
 const logResult = <T>(result: T): T => {

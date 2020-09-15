@@ -3,6 +3,7 @@ import { EvaluatedExprNode, ExprNode } from './entities';
 import { compare } from '../utils/helper';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
+export const MAX_DICE_COUNTER = 64;
 
 export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprNode => {
   if (layer > 64) {
@@ -11,7 +12,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   if (node.type === 'Num') {
     return node;
   } else if (node.type === 'Roll') {
-    if (node.counter > 64 || node.face > 121072) {
+    if (node.counter > MAX_DICE_COUNTER || node.face > 121072) {
       return { ...node, value: 0, values: [] };
     }
     const values: number[] = [];
@@ -36,6 +37,55 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     }
     const value = values.reduce((a, b) => a + b, 0);
     return { ...node, values, value };
+  } else if (node.type === 'CocRoll') {
+    const ones = rng.nextInt(0, 9);
+    const tens = rng.nextInt(0, 9) * 10;
+    let rolled = tens + ones;
+    let value = rolled;
+    let modifier: number = rng.nextInt(0, 9) * 10;
+    const modifiers: number[] = [modifier];
+    switch (node.subType) {
+      case 'NORMAL':
+        modifiers.pop();
+        break;
+      case 'BONUS_2':
+        if (modifier < tens) {
+          value = modifier + ones;
+        }
+        modifier = rng.nextInt(0, 9) * 10;
+        modifiers.push(modifier);
+      // eslint-disable-next-line no-fallthrough
+      case 'BONUS':
+        if (modifier < tens) {
+          value = modifier + ones;
+        }
+        break;
+      case 'PENALTY_2':
+        if (modifier > tens) {
+          value = modifier + ones;
+        }
+        modifier = rng.nextInt(0, 9) * 10;
+        modifiers.push(modifier);
+      // eslint-disable-next-line no-fallthrough
+      case 'PENALTY':
+        if (modifier > tens) {
+          value = modifier + ones;
+        }
+        break;
+    }
+    if (value === 0) {
+      value = 100;
+    }
+    if (rolled === 0) {
+      rolled = 100;
+    }
+    let targetValue: number | undefined = undefined;
+    if (node.target) {
+      const inner = evaluate(node.target, rng, layer + 1);
+      targetValue = inner.value;
+    }
+
+    return { ...node, rolled, modifiers, value, targetValue };
   } else if (node.type === 'Binary') {
     const l = evaluate(node.l, rng, layer + 1);
     const r = evaluate(node.r, rng, layer + 1);

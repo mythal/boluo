@@ -1,10 +1,11 @@
 import React, { MouseEventHandler, useState } from 'react';
 import Prando from 'prando';
-import { EvaluatedExprNode, ExprNode, RollResult } from '../../interpreter/entities';
+import { CocRollResult, EvaluatedExprNode, ExprNode, RollResult } from '../../interpreter/entities';
 import D20Icon from '../../assets/icons/d20.svg';
-import { evaluate, TOO_MUCH_LAYER } from '../../interpreter/eval';
+import elderSign from '../../assets/icons/elder-sign.svg';
+import { evaluate, MAX_DICE_COUNTER, TOO_MUCH_LAYER } from '../../interpreter/eval';
 import Icon from '../atoms/Icon';
-import { fontNormal, inlineBlock, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
+import { fontNormal, inlineBlock, mL, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { minorTextColor, textColor } from '../../styles/colors';
@@ -36,6 +37,57 @@ const Roll = styled.span`
   }
 `;
 
+const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
+  const defaultExpand = useSelector((state) => Boolean(state.profile?.settings.expandDice));
+  const [expand, setExpand] = useState(defaultExpand);
+
+  const handleMouse: MouseEventHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpand(!expand);
+  };
+  const { value, subType, targetValue } = node;
+  let modifierName: React.ReactNode = null;
+  if (subType === 'BONUS') {
+    modifierName = '奖';
+  } else if (subType === 'BONUS_2') {
+    modifierName = '奖²';
+  } else if (subType === 'PENALTY') {
+    modifierName = '罚';
+  } else if (subType === 'PENALTY_2') {
+    modifierName = '罚²';
+  }
+
+  let successName: string | null = null;
+  if (targetValue === undefined) {
+    successName = null;
+  } else if (value === 100 || (targetValue < 50 && value > 95)) {
+    successName = '大失败';
+  } else if (value === 1) {
+    successName = '大成功';
+  } else if (value >= targetValue) {
+    successName = '失败';
+  } else if (value < targetValue / 5) {
+    successName = '极难成功';
+  } else if (value < targetValue << 1) {
+    successName = '困难成功';
+  } else if (value < targetValue) {
+    successName = '成功';
+  }
+
+  return (
+    <Roll onMouseDown={handleMouse}>
+      <Icon sprite={elderSign} />
+      {node.value}
+      {expand && <span> = {node.rolled}</span>}
+      {modifierName && <span css={[mL(1)]}>{modifierName}</span>}
+      {expand && node.modifiers.length > 0 && <span css={[mL(1)]}>[{node.modifiers.join(', ')}]</span>}
+      {successName && <span css={[mL(1)]}>{successName}</span>}
+      {expand && node.targetValue && <span>({targetValue})</span>}
+    </Roll>
+  );
+};
+
 const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
   const defaultExpand = useSelector((state) => Boolean(state.profile?.settings.expandDice));
   const [expand, setExpand] = useState(defaultExpand);
@@ -45,6 +97,10 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
     e.stopPropagation();
     setExpand(!expand);
   };
+
+  if (node.counter > MAX_DICE_COUNTER) {
+    return <Roll>骰子过多</Roll>;
+  }
 
   const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
   let filteredList: React.ReactNode = null;
@@ -70,9 +126,10 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
       {expand && (
         <React.Fragment>
           {resultList}
-          {filteredList}={node.value}
+          {filteredList}
         </React.Fragment>
       )}
+      ={node.value}
     </Roll>
   );
 };
@@ -82,6 +139,8 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
     return <Num>{node.value}</Num>;
   } else if (node.type === 'Roll') {
     return <RollNode node={node} />;
+  } else if (node.type === 'CocRoll') {
+    return <CocRollNode node={node} />;
   } else if (node.type === 'Binary') {
     return (
       <React.Fragment>
@@ -113,17 +172,16 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
 
 export const ExprEntity = React.memo<Props>(({ node, rng }) => {
   try {
+    const showEvaluated = (rng && node.type === 'SubExpr') || node.type === 'Binary';
     const evaluated = evaluate(node, rng ?? fakeRng);
     return (
       <React.Fragment>
         <Node node={evaluated} />
-        {rng ? (
+        {showEvaluated && (
           <span>
             {' '}
             = <Num>{evaluated.value}</Num>
           </span>
-        ) : (
-          <span css={[textSm]}>(预览)</span>
         )}
       </React.Fragment>
     );

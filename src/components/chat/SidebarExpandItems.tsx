@@ -18,7 +18,6 @@ import { NavLink } from 'react-router-dom';
 import { css } from '@emotion/core';
 import ChatHeaderButton from './ChatHeaderButton';
 import Help from './Help';
-import { sidebarButtonPrimary } from './styles';
 
 interface Props {
   space: Space;
@@ -94,8 +93,8 @@ function SidebarExpandItems({ space, channels }: Props) {
         </SidebarItemLink>
       ))}
       <div css={footer}>
-        <ChatHeaderButton css={[textBase, sidebarButtonPrimary]} onClick={() => setHelpDialog(true)}>
-          <Icon sprite={help} /> 新格式
+        <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>
+          <Icon sprite={help} /> 格式速查
         </ChatHeaderButton>
       </div>
 

@@ -116,10 +116,12 @@ function Compose({ preview, channelId, member }: Props) {
 
   let whyCannotSend: string | null = null;
 
-  if (text === '') {
-    whyCannotSend = '消息不能为空';
-  } else if (inGame && characterName === '') {
-    whyCannotSend = '角色名为空';
+  if (!canSubmit) {
+    if (text === '') {
+      whyCannotSend = '消息不能为空';
+    } else if (inGame && characterName === '') {
+      whyCannotSend = '角色名为空';
+    }
   }
   let sendButtonInfo = isMac ? '⌘ + ⏎' : 'Ctrl + ⏎';
   if (enterSend) {

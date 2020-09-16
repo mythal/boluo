@@ -115,7 +115,7 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       text: broadcast || text === '' ? text : null,
       entities: broadcast ? entities : [],
     };
-    nextState.canSubmit = calculateCanSubmit(text, inGame, characterName) && !sending;
+    nextState.canSubmit = calculateCanSubmit(text, inGame, inputName || characterName) && !sending;
     sendEvent({ type: 'PREVIEW', preview });
   }
 

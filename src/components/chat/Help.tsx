@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Dialog from '../molecules/Dialog';
 import Text from '../atoms/Text';
-import { fontBold, link, mY, textLg } from '../../styles/atoms';
+import { link } from '../../styles/atoms';
 import { Code } from '../atoms/Code';
 import { css } from '@emotion/core';
 import ExternalLink from '../atoms/ExternalLink';
@@ -47,7 +47,7 @@ function Help({ dismiss }: Props) {
           <Code>.r 计算成功等级 coc 42 ← 技能值 cocb (43 - 1) ← 可运算</Code>
         </Text>
         <Text>
-          <Code>.r fate FATE规则骰子</Code>
+          <Code>.r fate FATE规则骰子，{'{dF}'} 也可以</Code>
         </Text>
       </div>
     </Dialog>

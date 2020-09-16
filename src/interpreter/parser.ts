@@ -230,7 +230,7 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
 
 const spaces: P<null> = regex(/^\s*/).map(() => null);
 
-const fateRoll: P<FateRoll> = regex(/^[Ff][Aa][Tt][Ee]\s*/).map(() => {
+const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
   return { type: 'FateRoll' };
 });
 

@@ -44,25 +44,21 @@ function My() {
         </Title>
         <News css={[mB(2)]}>
           <Text>
-            菠萝改动了骰子语法。增加了 CoC 骰子指令。
-            <ExternalLink css={link} to="https://forum.boluo.chat/d/3">
-              格式详情
+            管理员能够以 JSON 格式导出频道消息了{' '}
+            <ExternalLink css={link} to="https://forum.boluo.chat/d/5">
+              说明文档
             </ExternalLink>
+            。
           </Text>
+          <Text>「探索位面」只会显示那些在位面的设置中勾选了「在『探索位面』中列出」的位面。</Text>
+        </News>
+        <News css={[mB(2)]}>
+          <Text>菠萝改动了骰子语法。增加了 CoC 和 FATE 骰子指令。</Text>
           <div css={[alignRight, mT(2)]}>
             <Button data-small data-variant="primary" onClick={() => setHelp(true)}>
               查看快速参考
             </Button>
           </div>
-        </News>
-        <News css={[mB(2)]}>
-          <Text>
-            可以到
-            <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
-              沙盒位面
-            </Link>
-            去测试功能。
-          </Text>
         </News>
         <News>
           <Text>
@@ -72,11 +68,13 @@ function My() {
             </ExternalLink>
             提出意见和建议。
           </Text>
+
           <Text>
-            <ExternalLink css={link} to="https://forum.boluo.chat/d/3">
-              查看教程和常见问题
-            </ExternalLink>
-            。
+            可以到
+            <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
+              沙盒位面
+            </Link>
+            去测试功能。
           </Text>
         </News>
       </div>

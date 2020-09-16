@@ -1,9 +1,23 @@
 import Prando from 'prando';
-import { EvaluatedExprNode, ExprNode } from './entities';
+import { EvaluatedExprNode, ExprNode, FateResult } from './entities';
 import { compare } from '../utils/helper';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 export const MAX_DICE_COUNTER = 64;
+
+export const d6ToFateDice = (d6: number): number => {
+  if (d6 >= 5) {
+    return 1;
+  } else if (d6 >= 3) {
+    return 0;
+  } else {
+    return -1;
+  }
+};
+
+export const fateDice = (rng: Prando): number => {
+  return d6ToFateDice(rng.nextInt(1, 6));
+};
 
 export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprNode => {
   if (layer > 64) {
@@ -37,6 +51,10 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     }
     const value = values.reduce((a, b) => a + b, 0);
     return { ...node, values, value };
+  } else if (node.type === 'FateRoll') {
+    const values: FateResult['values'] = [fateDice(rng), fateDice(rng), fateDice(rng), fateDice(rng)];
+    const value = values.reduce((a: number, b: number) => a + b, 0);
+    return { type: 'FateRoll', value, values };
   } else if (node.type === 'CocRoll') {
     const ones = rng.nextInt(0, 9);
     const tens = rng.nextInt(0, 9) * 10;
@@ -120,7 +138,8 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     return { type: 'Min', node: inner, value: Math.min(...inner.values) };
   } else if (node.type === 'SubExpr') {
     const inner = evaluate(node.node, rng, layer + 1);
-    return { ...node, node: inner, value: inner.value };
+    return { ...node, evaluatedNode: inner, value: inner.value };
+  } else {
+    return { type: 'Unknown', value: 0 };
   }
-  throw Error('unexpected');
 };

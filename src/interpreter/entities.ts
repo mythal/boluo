@@ -39,6 +39,10 @@ export interface Mention extends BaseEntity {
 
 export type Entity = Text | Link | Expr | Strong | Emphasis | Mention;
 
+export interface Unknown {
+  type: 'Unknown';
+}
+
 export interface Roll {
   type: 'Roll';
   face: number;
@@ -50,6 +54,10 @@ export interface CocRoll {
   type: 'CocRoll';
   subType: 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENALTY_2';
   target?: ExprNode;
+}
+
+export interface FateRoll {
+  type: 'FateRoll';
 }
 
 export interface Num {
@@ -81,7 +89,7 @@ export interface SubExpr {
   node: ExprNode;
 }
 
-export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll;
+export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll | FateRoll | Unknown;
 
 export interface RollResult extends Roll {
   values: number[];
@@ -94,6 +102,11 @@ export interface CocRollResult extends CocRoll {
   value: number;
   rolled: number;
   modifiers: number[];
+}
+
+export interface FateResult extends FateRoll {
+  value: number;
+  values: [number, number, number, number];
 }
 
 export interface BinaryResult extends Binary {
@@ -113,8 +126,21 @@ export interface MinResult extends Min {
 }
 
 export interface SubExprResult extends SubExpr {
-  node: EvaluatedExprNode;
+  evaluatedNode: EvaluatedExprNode;
   value: number;
 }
 
-export type EvaluatedExprNode = RollResult | BinaryResult | Num | MaxResult | MinResult | SubExprResult | CocRollResult;
+export interface UnknownResult extends Unknown {
+  value: number;
+}
+
+export type EvaluatedExprNode =
+  | RollResult
+  | BinaryResult
+  | Num
+  | MaxResult
+  | MinResult
+  | SubExprResult
+  | CocRollResult
+  | FateResult
+  | UnknownResult;

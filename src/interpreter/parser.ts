@@ -6,6 +6,7 @@ import {
   Entity,
   Expr,
   ExprNode,
+  FateRoll,
   Link,
   Num,
   Operator,
@@ -229,6 +230,10 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
 
 const spaces: P<null> = regex(/^\s*/).map(() => null);
 
+const fateRoll: P<FateRoll> = regex(/^[Ff][Aa][Tt][Ee]\s*/).map(() => {
+  return { type: 'FateRoll' };
+});
+
 const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then(([[entire, modifier], state], env) => {
   modifier = (modifier || '').toLowerCase();
   let subType: CocRoll['subType'] = 'NORMAL';
@@ -379,7 +384,7 @@ const atom = (): P<ExprNode> => {
       .skip(regex(/^\s*]/))
       .map(subExprMapper), // match [...]
   ]);
-  return choice([roll, cocRoll, num, subExpr, max, min]);
+  return choice([roll, cocRoll, fateRoll, num, subExpr, max, min]);
 };
 
 const logResult = <T>(result: T): T => {

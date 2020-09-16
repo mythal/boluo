@@ -14,10 +14,6 @@ const dialogStyle = css`
   width: 30rem;
 `;
 
-const helpTitle = css`
-  ${[textLg, fontBold, mY(2)]};
-`;
-
 function Help({ dismiss }: Props) {
   return (
     <Dialog dismiss={dismiss} confirm={dismiss} confirmText="知道了" title="格式帮助">
@@ -38,20 +34,20 @@ function Help({ dismiss }: Props) {
         <Text>
           <Code>.r d = 1d20 = 1d = d20 默认面数可设置</Code> <Code>.rd</Code>
         </Text>
-
-        <Text css={[helpTitle]}>过滤最大最小的骰子</Text>
         <Text>
           <Code>.r 取最高三个 4d20h3 = 4d20k3</Code>
         </Text>
         <Text>
           <Code>取最低两个 {'{3d20l2}'}</Code>
         </Text>
-        <Text css={[helpTitle]}>CoC</Text>
         <Text>
           <Code>.r 普通：coc 奖励骰：cocb、cocbb 惩罚骰：cocp、cocpp</Code>
         </Text>
         <Text>
           <Code>.r 计算成功等级 coc 42 ← 技能值 cocb (43 - 1) ← 可运算</Code>
+        </Text>
+        <Text>
+          <Code>.r fate FATE规则骰子</Code>
         </Text>
       </div>
     </Dialog>

@@ -1,15 +1,16 @@
 import React, { MouseEventHandler, useState } from 'react';
 import Prando from 'prando';
-import { CocRollResult, EvaluatedExprNode, ExprNode, RollResult } from '../../interpreter/entities';
+import { CocRollResult, EvaluatedExprNode, ExprNode, FateResult, RollResult } from '../../interpreter/entities';
 import D20Icon from '../../assets/icons/d20.svg';
 import elderSign from '../../assets/icons/elder-sign.svg';
 import { evaluate, MAX_DICE_COUNTER, TOO_MUCH_LAYER } from '../../interpreter/eval';
 import Icon from '../atoms/Icon';
-import { fontNormal, inlineBlock, mL, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
+import { fontMono, fontNormal, mL, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
-import { minorTextColor, textColor } from '../../styles/colors';
+import { blue, minorTextColor, textColor } from '../../styles/colors';
 import { useSelector } from '../../store';
+import { css } from '@emotion/core';
 
 interface Props {
   node: ExprNode;
@@ -26,8 +27,11 @@ const Num = styled.span`
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 
 const Roll = styled.span`
-  ${[pX(1), mX(1), mY(0.25), textSm, inlineBlock, roundedPx, fontNormal]};
+  ${[pX(1), mX(1), mY(0.25), textSm, roundedPx, fontNormal]};
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: ${darken(0.7, textColor)};
   border: 1px solid ${darken(0.6, textColor)};
 
@@ -36,6 +40,37 @@ const Roll = styled.span`
     border-color: ${darken(0.5, textColor)};
   }
 `;
+
+const fateDiceStyle = css`
+  ${[fontMono, mX(0.5), mY(0.5)]};
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  align-items: center;
+  justify-content: center;
+  background-color: ${blue['600']};
+  box-shadow: 0 0 1px 0 #000;
+  border-radius: 1px;
+`;
+
+const fateDiceMapper = (value: number): React.ReactNode => {
+  if (value === 0) {
+    return <span css={fateDiceStyle}> </span>;
+  } else if (value === 1) {
+    return <span css={fateDiceStyle}>+</span>;
+  } else {
+    return <span css={fateDiceStyle}>-</span>;
+  }
+};
+
+const FateRollNode: React.FC<{ node: FateResult }> = ({ node }) => {
+  return (
+    <Roll>
+      {node.values.map(fateDiceMapper)}
+      <span css={mL(1)}>{node.value}</span>
+    </Roll>
+  );
+};
 
 const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
   const defaultExpand = useSelector((state) => Boolean(state.profile?.settings.expandDice));
@@ -164,7 +199,9 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
       </React.Fragment>
     );
   } else if (node.type === 'SubExpr') {
-    return <React.Fragment>({<Node node={node.node} />})</React.Fragment>;
+    return <React.Fragment>({<Node node={node.evaluatedNode} />})</React.Fragment>;
+  } else if (node.type === 'FateRoll') {
+    return <FateRollNode node={node} />;
   }
 
   return <Unsupported />;
@@ -172,7 +209,7 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
 
 export const ExprEntity = React.memo<Props>(({ node, rng }) => {
   try {
-    const showEvaluated = (rng && node.type === 'SubExpr') || node.type === 'Binary';
+    const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
     const evaluated = evaluate(node, rng ?? fakeRng);
     return (
       <React.Fragment>

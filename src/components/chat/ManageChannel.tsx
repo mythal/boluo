@@ -7,6 +7,7 @@ import {
   mediaQuery,
   mR,
   mT,
+  mY,
   selectTheme,
   spacingN,
   textSm,
@@ -36,6 +37,7 @@ import Dialog from '../molecules/Dialog';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
 import { showFlash } from '../../actions/flash';
+import ExportButton from './ExportButton';
 
 interface Props {
   channel: Channel;
@@ -166,16 +168,13 @@ function ManageChannel({ channel, dismiss }: Props) {
           <Label>游戏主持人</Label>
           <Select isMulti value={selectedMember} onChange={handleChange} options={memberOptions} theme={selectTheme} />
         </div>
-        <div css={[buttons, mT(4)]}>
-          <Button
-            css={[textSm, mR(2)]}
-            data-variant="danger"
-            disabled={submitting}
-            onClick={openDeleteDialog}
-            type="button"
-          >
+        <div css={[mY(2), buttons]}>
+          <ExportButton css={[widthFull, mR(2)]} channelId={channelId} channelName={channel.name} />
+          <Button css={[textSm]} data-variant="danger" disabled={submitting} onClick={openDeleteDialog} type="button">
             删除
           </Button>
+        </div>
+        <div css={[buttons, mT(4)]}>
           <Button css={[widthFull]} data-variant="primary" disabled={submitting} type="submit">
             提交修改
           </Button>

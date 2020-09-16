@@ -255,7 +255,7 @@ const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then
     type: 'CocRoll',
     subType,
   };
-  const right = atom().run(state, env);
+  const right = atom(true).run(state, env);
   if (right) {
     const [target, state] = right;
     node.target = target;
@@ -372,7 +372,7 @@ const max: P<ExprNode> = regex(/^[Mm][Aa][Xx]\s*/)
 
 const subExprMapper = (node: ExprNode): SubExpr => (node.type === 'SubExpr' ? node : { type: 'SubExpr', node });
 
-const atom = (): P<ExprNode> => {
+const atom = (disableRoll = false): P<ExprNode> => {
   const subExpr = choice([
     regex(/^\(\s*/)
       .with(expr())
@@ -384,6 +384,9 @@ const atom = (): P<ExprNode> => {
       .skip(regex(/^\s*]/))
       .map(subExprMapper), // match [...]
   ]);
+  if (disableRoll) {
+    return choice([num, subExpr, max, min]);
+  }
   return choice([roll, cocRoll, fateRoll, num, subExpr, max, min]);
 };
 
@@ -445,7 +448,13 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
     return null;
   }
   const next: State = { text: '.r ', rest: state.rest.substr(prefix[0].length) };
-  const exprEntity = expr().then(exprNodeToEntity(state));
+  const exprEntity = new P((state, env) => {
+    const result = expr().run(state, env);
+    if (result === null) {
+      return null;
+    }
+    return exprNodeToEntity(state)(result);
+  });
   const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, exprEntity, span]);
   const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   return message.run(next, env);

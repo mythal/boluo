@@ -6,23 +6,13 @@ import { Entity } from '../../interpreter/entities';
 import { ExprEntity } from './ExprEntity';
 import { white } from '../../styles/colors';
 import ExternalLink from '../atoms/ExternalLink';
+import { makeRng } from '../../interpreter/eval';
 
 interface Props {
   text: string;
   entities: Entity[];
   seed?: number[];
 }
-
-const makeRng = (seed?: number[]): Prando | undefined => {
-  if (seed === undefined || seed.length !== 4) {
-    return undefined;
-  }
-  let a = 0;
-  for (const i of seed) {
-    a = a * 256 + i;
-  }
-  return new Prando(a);
-};
 
 const Text = styled.span`
   white-space: pre-wrap;

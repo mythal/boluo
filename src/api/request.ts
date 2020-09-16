@@ -166,6 +166,7 @@ export function get(path: '/channels/query_with_related', query: IdQuery): Promi
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;
 export function get(path: '/channels/members', query: IdQuery): Promise<AppResult<ChannelMember[]>>;
 export function get(path: '/channels/check_name', query: CheckChannelName): Promise<AppResult<boolean>>;
+export function get(path: '/channels/export', query: IdQuery): Promise<AppResult<Message[]>>;
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
 

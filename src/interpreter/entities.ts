@@ -144,3 +144,12 @@ export type EvaluatedExprNode =
   | CocRollResult
   | FateResult
   | UnknownResult;
+
+export interface ExportExpr extends BaseEntity {
+  type: 'Expr';
+  node: EvaluatedExprNode;
+  text: string;
+  exprText: string;
+}
+
+export type ExportEntity = ((Text | Link | Strong | Emphasis | Mention) & { text: string }) | ExportExpr;

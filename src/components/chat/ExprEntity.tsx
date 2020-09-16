@@ -3,7 +3,13 @@ import Prando from 'prando';
 import { CocRollResult, EvaluatedExprNode, ExprNode, FateResult, RollResult } from '../../interpreter/entities';
 import D20Icon from '../../assets/icons/d20.svg';
 import elderSign from '../../assets/icons/elder-sign.svg';
-import { evaluate, MAX_DICE_COUNTER, TOO_MUCH_LAYER } from '../../interpreter/eval';
+import {
+  cocRollSubTypeDisplay,
+  cocSuccessLevelDisplay,
+  evaluate,
+  MAX_DICE_COUNTER,
+  TOO_MUCH_LAYER,
+} from '../../interpreter/eval';
 import Icon from '../atoms/Icon';
 import { fontMono, fontNormal, mL, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
@@ -81,33 +87,14 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
     e.stopPropagation();
     setExpand(!expand);
   };
-  const { value, subType, targetValue } = node;
-  let modifierName: React.ReactNode = null;
-  if (subType === 'BONUS') {
-    modifierName = '奖';
-  } else if (subType === 'BONUS_2') {
-    modifierName = '奖²';
-  } else if (subType === 'PENALTY') {
-    modifierName = '罚';
-  } else if (subType === 'PENALTY_2') {
-    modifierName = '罚²';
-  }
+  const { value, targetValue } = node;
+  const modifierName: React.ReactNode = cocRollSubTypeDisplay(node.subType);
 
-  let successName: string | null = null;
+  let successName: string | null;
   if (targetValue === undefined) {
     successName = null;
-  } else if (value === 100 || (targetValue < 50 && value > 95)) {
-    successName = '大失败';
-  } else if (value === 1) {
-    successName = '大成功';
-  } else if (value > targetValue) {
-    successName = '失败';
-  } else if (value <= Math.floor(targetValue / 5)) {
-    successName = '极难成功';
-  } else if (value <= targetValue >> 1) {
-    successName = '困难成功';
-  } else if (value <= targetValue) {
-    successName = '成功';
+  } else {
+    successName = cocSuccessLevelDisplay(value, targetValue);
   }
 
   return (

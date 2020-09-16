@@ -11,7 +11,7 @@ import {
   TOO_MUCH_LAYER,
 } from '../../interpreter/eval';
 import Icon from '../atoms/Icon';
-import { fontMono, fontNormal, mL, mX, mY, pX, roundedPx, textLg, textSm } from '../../styles/atoms';
+import { fontMono, fontNormal, mL, mX, mY, pX, pY, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { blue, minorTextColor, textColor } from '../../styles/colors';
@@ -33,13 +33,13 @@ const Num = styled.span`
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 
 const Roll = styled.span`
-  ${[pX(1), mX(1), mY(0.25), textSm, roundedPx, fontNormal]};
+  ${[pX(1), pY(0.75), mX(1), mY(0.25), textSm, roundedPx, fontNormal]};
   cursor: pointer;
-  display: inline-flex;
   align-items: center;
   justify-content: center;
   background-color: ${darken(0.7, textColor)};
-  border: 1px solid ${darken(0.6, textColor)};
+  box-decoration-break: clone;
+  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 50%);
 
   &:hover {
     background-color: ${darken(0.65, textColor)};
@@ -48,24 +48,32 @@ const Roll = styled.span`
 `;
 
 const fateDiceStyle = css`
-  ${[fontMono, mX(0.5), mY(0.5)]};
-  display: inline-flex;
-  width: 1rem;
-  height: 1rem;
-  align-items: center;
-  justify-content: center;
+  ${[fontMono, pX(1)]};
+  vertical-align: center;
   background-color: ${blue['600']};
   box-shadow: 0 0 1px 0 #000;
   border-radius: 1px;
 `;
 
-const fateDiceMapper = (value: number): React.ReactNode => {
+const fateDiceMapper = (value: number, index: number): React.ReactNode => {
   if (value === 0) {
-    return <span css={fateDiceStyle}> </span>;
+    return (
+      <span key={index} css={fateDiceStyle}>
+        {' '}
+      </span>
+    );
   } else if (value === 1) {
-    return <span css={fateDiceStyle}>+</span>;
+    return (
+      <span key={index} css={fateDiceStyle}>
+        +
+      </span>
+    );
   } else {
-    return <span css={fateDiceStyle}>-</span>;
+    return (
+      <span key={index} css={fateDiceStyle}>
+        -
+      </span>
+    );
   }
 };
 

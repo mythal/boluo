@@ -102,7 +102,14 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       next.clear,
     ].some((value) => value !== undefined)
   ) {
-    const { inGame, isAction, editFor, broadcast, text, inputName, entities, sending, clear } = nextState;
+    let text: string | null = nextState.text;
+    const { inGame, isAction, editFor, broadcast, inputName, entities, sending, clear } = nextState;
+    if (!broadcast && text !== '') {
+      text = null;
+    }
+    if (!broadcast && entities.length === 0) {
+      text = '';
+    }
     const name = inGame ? inputName || characterName : nickname;
     const preview: PreviewPost = {
       id: nextState.messageId,
@@ -112,10 +119,10 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       mediaId: null,
       editFor,
       clear,
-      text: broadcast || text === '' ? text : null,
+      text,
       entities: broadcast ? entities : [],
     };
-    nextState.canSubmit = calculateCanSubmit(text, inGame, inputName || characterName) && !sending;
+    nextState.canSubmit = calculateCanSubmit(nextState.text, inGame, inputName || characterName) && !sending;
     sendEvent({ type: 'PREVIEW', preview });
   }
 

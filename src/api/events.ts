@@ -151,3 +151,6 @@ export interface SendHeartbeat {
 }
 
 export type ClientEvent = SendPreview | SendHeartbeat;
+
+export const isEmptyPreview = (preview: Preview): boolean =>
+  preview.text === '' || (preview.text !== null && preview.entities.length === 0);

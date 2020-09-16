@@ -1,6 +1,6 @@
 import { Id } from '../utils/id';
 import { Message, MessageOrder } from '../api/messages';
-import { Preview } from '../api/events';
+import { isEmptyPreview, Preview } from '../api/events';
 import { List, Map } from 'immutable';
 import { DEBUG } from '../settings';
 
@@ -162,7 +162,7 @@ const findItem = (messages: ChatItemSet['messages'], id: Id, order?: [number, nu
 
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'EDIT') {
-    if (item.preview?.clear || (!item.mine && item.preview?.text === '')) {
+    if (item.preview?.clear || (!item.mine && (!item.preview || isEmptyPreview(item.preview)))) {
       editions = editions.remove(item.id);
     } else {
       editions = editions.set(item.id, item);
@@ -186,7 +186,7 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     if (prevPreview) {
       messages = removeItem(messages, item.id, [prevPreview.date, prevPreview.offset]);
     }
-    if (item.preview.text === '') {
+    if (isEmptyPreview(item.preview)) {
       previews = previews.remove(item.id);
     } else {
       previews = previews.set(item.id, item);

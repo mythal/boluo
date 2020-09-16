@@ -215,7 +215,7 @@ const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   return [entity, { text, rest }];
 });
 
-const LINK_REGEX = /^\[(.+)]\((.+)\)/;
+const LINK_REGEX = /^\[(.+?)]\((.+?)\)/;
 const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
   const [entire, content, url] = match;
   const entity: Link = {

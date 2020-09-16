@@ -31,7 +31,9 @@ function DiceSelect({ defaultDiceType, ...rest }: Props) {
       options={[
         { value: 'd20', label: 'D20' },
         { value: 'd100', label: 'D100' },
+        { value: 'd10', label: 'D10' },
         { value: 'd6', label: 'D6' },
+        { value: 'd4', label: 'D4' },
       ]}
       theme={selectTheme}
       {...rest}

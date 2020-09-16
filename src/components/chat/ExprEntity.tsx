@@ -100,13 +100,13 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
     successName = '大失败';
   } else if (value === 1) {
     successName = '大成功';
-  } else if (value >= targetValue) {
+  } else if (value > targetValue) {
     successName = '失败';
-  } else if (value < targetValue / 5) {
+  } else if (value <= Math.floor(targetValue / 5)) {
     successName = '极难成功';
-  } else if (value < targetValue << 1) {
+  } else if (value <= targetValue >> 1) {
     successName = '困难成功';
-  } else if (value < targetValue) {
+  } else if (value <= targetValue) {
     successName = '成功';
   }
 

@@ -98,6 +98,12 @@ function ManageSpace({ space, my, dismiss }: Props) {
           <HelpText>简要描述一下这个位面。</HelpText>
           {errors.description && <ErrorMessage>{errors.description.message}</ErrorMessage>}
         </div>
+        <div css={[mY(2)]}>
+          <Label>
+            <input type="checkbox" defaultChecked={space.explorable} ref={register} name="explorable" id="explorable" />{' '}
+            是否在「探索位面」中列出
+          </Label>
+        </div>
         <Button data-variant="primary" disabled={submitting} css={widthFull} type="submit">
           提交修改
         </Button>

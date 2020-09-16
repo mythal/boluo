@@ -11,6 +11,7 @@ export interface Space {
   isPublic: boolean;
   language: string;
   defaultDiceType: string;
+  explorable: boolean;
 }
 
 export interface SpaceMember {
@@ -37,6 +38,7 @@ export interface EditSpace {
   name?: string;
   description?: string;
   defaultDiceType: string | undefined;
+  explorable?: boolean;
 }
 
 export interface SpaceWithRelated {

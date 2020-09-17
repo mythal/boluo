@@ -32,6 +32,8 @@ function DiceSelect({ defaultDiceType, ...rest }: Props) {
         { value: 'd20', label: 'D20' },
         { value: 'd100', label: 'D100' },
         { value: 'd10', label: 'D10' },
+        { value: 'd12', label: 'D12' },
+        { value: 'd8', label: 'D8' },
         { value: 'd6', label: 'D6' },
         { value: 'd4', label: 'D4' },
       ]}

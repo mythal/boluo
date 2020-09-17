@@ -60,6 +60,17 @@ export interface FateRoll {
   type: 'FateRoll';
 }
 
+export interface DicePool {
+  type: 'DicePool';
+  counter: number;
+  face: number;
+  min: number;
+  addition: number;
+  // base: number;
+  // critical: number;
+  // fumble: number;
+}
+
 export interface Num {
   type: 'Num';
   value: number;
@@ -89,7 +100,7 @@ export interface SubExpr {
   node: ExprNode;
 }
 
-export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll | FateRoll | Unknown;
+export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll | FateRoll | DicePool | Unknown;
 
 export interface RollResult extends Roll {
   values: number[];
@@ -130,6 +141,11 @@ export interface SubExprResult extends SubExpr {
   value: number;
 }
 
+export interface DicePoolResult extends DicePool {
+  value: number;
+  values: number[];
+}
+
 export interface UnknownResult extends Unknown {
   value: number;
 }
@@ -143,6 +159,7 @@ export type EvaluatedExprNode =
   | SubExprResult
   | CocRollResult
   | FateResult
+  | DicePoolResult
   | UnknownResult;
 
 export interface ExportExpr extends BaseEntity {

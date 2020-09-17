@@ -49,6 +49,9 @@ function Help({ dismiss }: Props) {
         <Text>
           <Code>.r fate FATE规则骰子，{'{dF}'} 也可以</Code>
         </Text>
+        <Text>
+          <Code>.r w12 w20，WoD 骰池</Code>
+        </Text>
       </div>
     </Dialog>
   );

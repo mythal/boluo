@@ -1,7 +1,15 @@
 import React, { MouseEventHandler, useState } from 'react';
 import Prando from 'prando';
-import { CocRollResult, EvaluatedExprNode, ExprNode, FateResult, RollResult } from '../../interpreter/entities';
+import {
+  CocRollResult,
+  DicePoolResult,
+  EvaluatedExprNode,
+  ExprNode,
+  FateResult,
+  RollResult,
+} from '../../interpreter/entities';
 import D20Icon from '../../assets/icons/d20.svg';
+import dicePoolIcon from '../../assets/icons/cubes.svg';
 import elderSign from '../../assets/icons/elder-sign.svg';
 import {
   cocRollSubTypeDisplay,
@@ -75,6 +83,23 @@ const fateDiceMapper = (value: number, index: number): React.ReactNode => {
       </span>
     );
   }
+};
+
+const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
+  const defaultExpand = useSelector((state) => Boolean(state.profile?.settings.expandDice));
+  const [expand, setExpand] = useState(defaultExpand);
+
+  const handleMouse: MouseEventHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpand(!expand);
+  };
+  return (
+    <Roll onClick={handleMouse}>
+      <Icon sprite={dicePoolIcon} />
+      {node.counter}d{node.face} {expand && <span>[{node.values.join(', ')}]</span>} &gt; {node.min} ⇒ {node.value}
+    </Roll>
+  );
 };
 
 const FateRollNode: React.FC<{ node: FateResult }> = ({ node }) => {
@@ -171,6 +196,8 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
     return <RollNode node={node} />;
   } else if (node.type === 'CocRoll') {
     return <CocRollNode node={node} />;
+  } else if (node.type === 'DicePool') {
+    return <DicePoolNode node={node} />;
   } else if (node.type === 'Binary') {
     return (
       <React.Fragment>

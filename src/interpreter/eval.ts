@@ -55,6 +55,20 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     const values: FateResult['values'] = [fateDice(rng), fateDice(rng), fateDice(rng), fateDice(rng)];
     const value = values.reduce((a: number, b: number) => a + b, 0);
     return { type: 'FateRoll', value, values };
+  } else if (node.type === 'DicePool') {
+    const values: number[] = [];
+    let value = 0;
+    for (let i = 0; i < node.counter; i++) {
+      const x = rng.nextInt(1, node.face);
+      values.push(x);
+      if (x >= node.addition) {
+        i--;
+      }
+      if (x >= node.min) {
+        value++;
+      }
+    }
+    return { ...node, value, values };
   } else if (node.type === 'CocRoll') {
     const ones = rng.nextInt(0, 9);
     const tens = rng.nextInt(0, 9) * 10;
@@ -218,6 +232,8 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
     return `(${nodeToText(node.evaluatedNode)})=${node.value}`;
   } else if (node.type === 'FateRoll') {
     return `${node.values.map(fateDiceToText).join('')}=${node.value}`;
+  } else if (node.type === 'DicePool') {
+    return `${node.counter}d${node.face} [${node.values.join(', ')}] > ${node.min} ⇒ ${node.value}`;
   } else if (node.type === 'CocRoll') {
     const { subType } = node;
     const typeDisplay = cocRollSubTypeDisplay(subType) || '';

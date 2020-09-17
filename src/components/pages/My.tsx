@@ -53,7 +53,7 @@ function My() {
           <Text>「探索位面」只会显示那些在位面的设置中勾选了「在『探索位面』中列出」的位面。</Text>
         </News>
         <News css={[mB(2)]}>
-          <Text>菠萝改动了骰子语法。增加了 CoC 和 FATE 骰子指令。</Text>
+          <Text>菠萝改动了骰子语法。增加了 CoC、WoD 和 FATE 骰子指令。</Text>
           <div css={[alignRight, mT(2)]}>
             <Button data-small data-variant="primary" onClick={() => setHelp(true)}>
               查看快速参考

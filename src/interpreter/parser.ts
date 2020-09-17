@@ -2,6 +2,7 @@
 import {
   Binary,
   CocRoll,
+  DicePool,
   Emphasis,
   Entity,
   Expr,
@@ -234,6 +235,22 @@ const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
   return { type: 'FateRoll' };
 });
 
+const wodRoll: P<DicePool> = regex(/^[wW]\s*(\d{1,3})/).then(([match, state], env) => {
+  const counterStr = match[1];
+  if (!counterStr) {
+    return null;
+  }
+  const counter = parseInt(counterStr);
+  const node: DicePool = {
+    type: 'DicePool',
+    counter,
+    face: 10,
+    min: 8,
+    addition: 10,
+  };
+  return [node, state];
+});
+
 const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then(([[entire, modifier], state], env) => {
   modifier = (modifier || '').toLowerCase();
   let subType: CocRoll['subType'] = 'NORMAL';
@@ -387,7 +404,7 @@ const atom = (disableRoll = false): P<ExprNode> => {
   if (disableRoll) {
     return choice([num, subExpr, max, min]);
   }
-  return choice([roll, cocRoll, fateRoll, num, subExpr, max, min]);
+  return choice([roll, cocRoll, fateRoll, wodRoll, num, subExpr, max, min]);
 };
 
 const logResult = <T>(result: T): T => {

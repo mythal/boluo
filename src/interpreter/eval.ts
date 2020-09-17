@@ -68,25 +68,30 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
         break;
       case 'BONUS_2':
         if (modifier < tens) {
-          value = modifier + ones;
+          if (ones !== 0 && modifier !== 0) {
+            value = modifier + ones;
+          }
         }
         modifier = rng.nextInt(0, 9) * 10;
         modifiers.push(modifier);
       // eslint-disable-next-line no-fallthrough
       case 'BONUS':
         if (modifier < tens) {
+          if (ones !== 0 && modifier !== 0) {
+            value = modifier + ones;
+          }
           value = modifier + ones;
         }
         break;
       case 'PENALTY_2':
-        if (modifier > tens) {
+        if (modifier > tens || (modifier === 0 && ones === 0)) {
           value = modifier + ones;
         }
         modifier = rng.nextInt(0, 9) * 10;
         modifiers.push(modifier);
       // eslint-disable-next-line no-fallthrough
       case 'PENALTY':
-        if (modifier > tens) {
+        if (modifier > tens || (modifier === 0 && ones === 0)) {
           value = modifier + ones;
         }
         break;

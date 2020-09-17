@@ -50,7 +50,7 @@ function Help({ dismiss }: Props) {
           <Code>.r fate FATE规则骰子，{'{dF}'} 也可以</Code>
         </Text>
         <Text>
-          <Code>.r w12 w20，WoD 骰池</Code>
+          <Code>.r WoD 骰池：w 12 w 20 成功下限设为6：w_6 10</Code>
         </Text>
       </div>
     </Dialog>

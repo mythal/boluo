@@ -235,17 +235,19 @@ const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
   return { type: 'FateRoll' };
 });
 
-const wodRoll: P<DicePool> = regex(/^[wW]\s*(\d{1,3})/).then(([match, state], env) => {
-  const counterStr = match[1];
+const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s+(\d{1,3})\s*/).then(([match, state], env) => {
+  const minStr = match[1] || '8';
+  const counterStr = match[2];
   if (!counterStr) {
     return null;
   }
   const counter = parseInt(counterStr);
+  const min = parseInt(minStr);
   const node: DicePool = {
     type: 'DicePool',
     counter,
     face: 10,
-    min: 8,
+    min,
     addition: 10,
   };
   return [node, state];

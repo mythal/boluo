@@ -58,7 +58,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   } else if (node.type === 'DicePool') {
     const values: number[] = [];
     let value = 0;
-    for (let i = 0; i < node.counter; i++) {
+    for (let i = 0; i < node.counter && value < 1024; i++) {
       const x = rng.nextInt(1, node.face);
       values.push(x);
       if (x >= node.addition) {
@@ -238,7 +238,7 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
   } else if (node.type === 'FateRoll') {
     return `${node.values.map(fateDiceToText).join('')}=${node.value}`;
   } else if (node.type === 'DicePool') {
-    return `${node.counter}d${node.face} [${node.values.join(', ')}] > ${node.min} ⇒ ${node.value}`;
+    return `${node.counter}d${node.face} [${node.values.join(', ')}] ≥ ${node.min} ⇒ ${node.value}`;
   } else if (node.type === 'CocRoll') {
     const { subType } = node;
     const typeDisplay = cocRollSubTypeDisplay(subType) || '';

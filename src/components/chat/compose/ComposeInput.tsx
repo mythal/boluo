@@ -29,7 +29,7 @@ function ComposeInput(
   inputRef: Ref<HTMLTextAreaElement>
 ) {
   const [value, setValue] = useState(initialValue);
-  const [compositing, setCompositing] = useState(false);
+  const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);
 
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
@@ -97,7 +97,7 @@ function ComposeInput(
     }
   };
   const handleKeyDown: React.KeyboardEventHandler = (e) => {
-    if (e.key === 'Enter' && compositing) {
+    if (e.key === 'Enter' && compositing.current) {
       e.stopPropagation();
     }
   };
@@ -117,8 +117,8 @@ function ComposeInput(
       autoFocus={autoFocus}
       onChange={handleChange}
       data-dragging={dragging}
-      onCompositionStart={() => setCompositing(true)}
-      onCompositionEnd={() => setCompositing(false)}
+      onCompositionStart={() => (compositing.current = true)}
+      onCompositionEnd={() => (compositing.current = false)}
     />
   );
 }

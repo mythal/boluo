@@ -3,17 +3,20 @@ import { ApiResultObject } from './request';
 
 const CSRF_KEY = 'csrf-token';
 
-const isTimeout = (token: string): boolean => {
-  const matched = token.match(/\.(\d+)\./);
+const isInvalid = (token: string): boolean => {
+  const matched = token.match(/(.+)\.(\d+)\./);
   if (!matched) {
     return true;
   }
-  const expire = parseInt(matched[1], 10);
+  // const encodedSessionId = matched[1];
+  // const id = uuidStringify(Uint8Array.from(atob(encodedSessionId), c => c.charCodeAt(0)));
+  // const userId = store.getState().profile?.user.id || '00000000-0000-0000-0000-000000000000';
+  const expire = parseInt(matched[2], 10);
   const now = new Date().getTime() / 1000;
   return expire < now;
 };
 
-const refreshCsrfToken = async (): Promise<string> => {
+export const refreshCsrfToken = async (): Promise<string> => {
   const fetched = await fetch('/api/csrf-token', { credentials: 'include' });
   const csrfResult: ApiResultObject<string, AppError> = await fetched.json();
   if (csrfResult.isOk) {
@@ -24,9 +27,12 @@ const refreshCsrfToken = async (): Promise<string> => {
   }
 };
 
+let initial = true;
+
 export const getCsrfToken = async (): Promise<string> => {
   const csrfToken: string | null = localStorage.getItem(CSRF_KEY);
-  if (csrfToken == null || isTimeout(csrfToken)) {
+  if (csrfToken === null || initial || isInvalid(csrfToken)) {
+    initial = false;
     return refreshCsrfToken();
   }
   return csrfToken;

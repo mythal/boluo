@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { Err, Ok, Result } from '../utils/result';
-import { AppError, notJson } from './error';
-import { getCsrfToken } from './csrf';
+import { AppError, notJson, UNAUTHENTICATED } from './error';
+import { getCsrfToken, refreshCsrfToken } from './csrf';
 import {
   CheckEmail,
   CheckUsername,
@@ -79,7 +79,18 @@ export const request = async <T>(
     credentials: 'include',
   });
   try {
-    return toResult<T, AppError>(await result.json());
+    let appResult = toResult<T, AppError>(await result.json());
+    if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
+      await refreshCsrfToken();
+      const retryResult = await fetch(path, {
+        method,
+        headers,
+        body,
+        credentials: 'include',
+      });
+      appResult = toResult<T, AppError>(await retryResult.json());
+    }
+    return appResult;
   } catch (e) {
     return new Err(notJson);
   }

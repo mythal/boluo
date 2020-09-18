@@ -66,9 +66,8 @@ export interface DicePool {
   face: number;
   min: number;
   addition: number;
-  // base: number;
-  // critical: number;
-  // fumble: number;
+  critical?: number;
+  fumble?: number;
 }
 
 export interface Num {

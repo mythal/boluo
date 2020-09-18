@@ -52,6 +52,9 @@ function Help({ dismiss }: Props) {
         <Text>
           <Code>.r WoD 骰池：w 12 w 20 成功下限设为6：w_6 10</Code>
         </Text>
+        <Text>
+          <Code>.r sr 10 srp 10 shadowrun 骰池</Code>
+        </Text>
       </div>
     </Dialog>
   );

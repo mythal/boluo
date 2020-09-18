@@ -235,7 +235,28 @@ const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
   return { type: 'FateRoll' };
 });
 
-const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s+(\d{1,3})\s*/).then(([match, state], env) => {
+const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) => {
+  const push = Boolean(match[1]);
+  const counterStr = match[2];
+  if (!counterStr) {
+    return null;
+  }
+  const counter = parseInt(counterStr);
+  const node: DicePool = {
+    type: 'DicePool',
+    counter,
+    face: 6,
+    min: 5,
+    addition: 6,
+    fumble: 1,
+  };
+  if (push) {
+    node.critical = 6;
+  }
+  return [node, state];
+});
+
+const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
   const minStr = match[1] || '8';
   const counterStr = match[2];
   if (!counterStr) {
@@ -406,7 +427,7 @@ const atom = (disableRoll = false): P<ExprNode> => {
   if (disableRoll) {
     return choice([num, subExpr, max, min]);
   }
-  return choice([roll, cocRoll, fateRoll, wodRoll, num, subExpr, max, min]);
+  return choice([srRoll.then(logResult), roll, cocRoll, fateRoll, wodRoll, num, subExpr, max, min]);
 };
 
 const logResult = <T>(result: T): T => {

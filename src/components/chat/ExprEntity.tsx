@@ -11,6 +11,8 @@ import {
 import D20Icon from '../../assets/icons/d20.svg';
 import dicePoolIcon from '../../assets/icons/cubes.svg';
 import elderSign from '../../assets/icons/elder-sign.svg';
+import thumbUp from '../../assets/icons/thumb-up.svg';
+import thumbDown from '../../assets/icons/thumb-down.svg';
 import {
   cocRollSubTypeDisplay,
   cocSuccessLevelDisplay,
@@ -94,10 +96,45 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
     e.stopPropagation();
     setExpand(!expand);
   };
+  let additionCounter: React.ReactNode = null;
+  if (node.fumble || node.critical) {
+    const { fumble, critical } = node;
+    let fumbleCount = 0;
+    let criticalCount = 0;
+    for (let i = 0; i < node.values.length; i++) {
+      const v = node.values[i];
+      if (fumble && v <= fumble) {
+        fumbleCount++;
+      }
+      if (critical && v >= critical) {
+        criticalCount++;
+      }
+    }
+    additionCounter = (
+      <span css={mL(1)}>
+        (
+        {fumble && (
+          <React.Fragment>
+            <Icon title="大失败" sprite={thumbDown} />
+            {fumbleCount}{' '}
+          </React.Fragment>
+        )}
+        {critical && (
+          <React.Fragment>
+            <Icon sprite={thumbUp} title="大成功" />
+            {criticalCount}
+          </React.Fragment>
+        )}
+        )
+      </span>
+    );
+  }
   return (
     <Roll onClick={handleMouse}>
       <Icon sprite={dicePoolIcon} />
-      {node.counter}d{node.face} {expand && <span>[{node.values.join(', ')}]</span>} ≥ {node.min} ⇒ {node.value}
+      {node.counter}d{node.face} {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒{' '}
+      {node.value}
+      {additionCounter}
     </Roll>
   );
 };

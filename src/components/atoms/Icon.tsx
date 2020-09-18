@@ -7,6 +7,7 @@ import rotate from '../../assets/icons/rotate-cw.svg';
 
 interface Props {
   sprite: SpriteSymbol;
+  title?: string;
   className?: string;
   noStrut?: boolean;
   spin?: boolean;
@@ -30,13 +31,13 @@ const Strut = styled.span`
   padding: 0 ${spacingN(0.5)};
 `;
 
-function Icon({ sprite, className, noStrut, spin, loading }: Props) {
+function Icon({ sprite, className, noStrut, title, spin, loading }: Props) {
   if (loading) {
     spin = true;
     sprite = rotate;
   }
   return (
-    <Strut data-strut={!noStrut}>
+    <Strut data-strut={!noStrut} title={title}>
       <SpriteSvg
         css={[spin ? spinStyle : undefined]}
         sprite={sprite}

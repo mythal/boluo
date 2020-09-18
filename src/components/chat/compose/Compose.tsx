@@ -8,7 +8,6 @@ import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
 import { darken } from 'polished';
 import BroadcastSwitch from './BroadcastSwitch';
-import ActionSwitch from './ActionSwitch';
 import { Preview } from '../../../api/events';
 import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
@@ -25,6 +24,7 @@ import { handleKeyDown } from '../key';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { showFlash } from '../../../actions/flash';
 import InGameButton from './InGameButton';
+import MenuButton from './MenuButton';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -171,8 +171,8 @@ function Compose({ preview, channelId, member }: Props) {
     <div css={container} ref={containerRef} onKeyDown={onKeyDown}>
       <div css={toolbar}>
         <BroadcastSwitch size="large" broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
-        <ActionSwitch size="large" isAction={isAction} composeDispatch={composeDispatch} css={[mR(1)]} />
-        <InGameButton inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} />
+        <InGameButton inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} css={[mR(1)]} />
+        <MenuButton isAction={isAction} inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} />
       </div>
       <ComposeInput
         ref={inputRef}

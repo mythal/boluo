@@ -440,10 +440,10 @@ const expr2 = (): P<ExprNode> =>
 const expr = (): P<ExprNode> =>
   chainl1<ExprNode, Operator>(operator1, expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
 
-const EXPRESSION = /^{(.+?)}|^【(.+?)】/;
+const EXPRESSION = /^{(.+?)}|^【(.+?)】|^｛(.+?)｝/;
 const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], env) => {
-  const [entire, a, b] = match;
-  const content = a || b;
+  const [entire, a, b, c] = match;
+  const content = a || b || c;
   if (!content) {
     return null;
   }

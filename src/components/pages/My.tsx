@@ -43,17 +43,7 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
-          <Text>
-            管理员能够以 JSON 格式导出频道消息了{' '}
-            <ExternalLink css={link} to="https://forum.boluo.chat/d/5">
-              说明文档
-            </ExternalLink>
-            。
-          </Text>
-          <Text>「探索位面」只会显示那些在位面的设置中勾选了「在『探索位面』中列出」的位面。</Text>
-        </News>
-        <News css={[mB(2)]}>
-          <Text>菠萝改动了骰子语法。增加了 CoC、WoD 和 FATE 骰子指令。</Text>
+          <Text>菠萝改动了骰子语法。增加了 CoC、WoD、Shadowrun 和 FATE 骰子指令。</Text>
           <div css={[alignRight, mT(2)]}>
             <Button data-small data-variant="primary" onClick={() => setHelp(true)}>
               查看快速参考
@@ -76,6 +66,17 @@ function My() {
             </Link>
             去测试功能。
           </Text>
+        </News>
+
+        <News css={[mB(2)]}>
+          <Text>
+            管理员能够以 JSON 格式导出频道消息了{' '}
+            <ExternalLink css={link} to="https://forum.boluo.chat/d/5">
+              说明文档
+            </ExternalLink>
+            。
+          </Text>
+          <Text>「探索位面」只会显示那些在位面的设置中勾选了「在『探索位面』中列出」的位面。</Text>
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

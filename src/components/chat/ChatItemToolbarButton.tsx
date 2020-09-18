@@ -68,7 +68,7 @@ const style = css`
 export interface ToolbarButtonProps {
   className?: string;
   on?: boolean;
-  onClick: () => void;
+  onClick: React.MouseEventHandler;
   sprite: SpriteSymbol;
   title?: string;
   size?: 'normal' | 'large';

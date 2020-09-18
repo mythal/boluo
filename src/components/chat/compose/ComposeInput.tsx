@@ -45,12 +45,9 @@ function ComposeInput(
 
   const appendDice = useCallback(() => {
     setValue((value) => value + ' {1d}');
+    inputRef.current?.focus();
     window.setTimeout(() => {
       if (!inputRef.current) {
-        return;
-      }
-      const selection = window.getSelection();
-      if (!selection) {
         return;
       }
       const length = inputRef.current.value.length;
@@ -59,6 +56,7 @@ function ComposeInput(
       const { text, entities } = parse(inputRef.current.value.trim());
       window.clearTimeout(timeout.current);
       timeout.current = window.setTimeout(() => {
+        inputRef.current?.focus();
         composeDispatch(update({ text, entities }));
       }, 100);
     }, 10);

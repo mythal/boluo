@@ -70,8 +70,12 @@ function MenuButton({ inputName, composeDispatch, isAction, composeInputRef }: P
   const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     composeDispatch(update({ inputName: e.target.value }));
   };
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const appendDice = composeInputRef.current?.appendDice || (() => {});
+  const appendDice: React.MouseEventHandler = (e) => {
+    e.preventDefault();
+    if (composeInputRef.current) {
+      composeInputRef.current.appendDice();
+    }
+  };
   return (
     <div css={[inlineBlock, relative]} onKeyDown={onKeyDown}>
       <ChatItemToolbarButton on={menu} onClick={toggleMenu} sprite={ellipsis} size="large" />
@@ -80,8 +84,8 @@ function MenuButton({ inputName, composeDispatch, isAction, composeInputRef }: P
           <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="临时角色名" />
         </div>
         <div css={buttons}>
-          <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} />
-          <ChatItemToolbarButton onClick={appendDice} sprite={d20} />
+          <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} size="large" />
+          <ChatItemToolbarButton onClick={appendDice} sprite={d20} size="large" />
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Ref, useEffect, useRef, useState } from 'react';
+import { Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useParse } from '../../../hooks/useParse';
 import { ComposeDispatch, update } from './reducer';
 import { css } from '@emotion/core';
+import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 interface Props {
   prevSubmit?: number;
@@ -24,10 +25,16 @@ const style = css`
 const actionCommand = '.me ';
 const ACTION_COMMAND = /[.。]me\s*/;
 
+export interface ComposeInputAction {
+  appendDice: () => void;
+}
+
 function ComposeInput(
   { prevSubmit, inGame, initialValue, composeDispatch, autoFocus = false, className, isAction }: Props,
-  inputRef: Ref<HTMLTextAreaElement>
+  ref: Ref<ComposeInputAction>
 ) {
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  useAutoHeight(inputRef);
   const [value, setValue] = useState(initialValue);
   const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);
@@ -36,6 +43,36 @@ function ComposeInput(
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
 
+  const appendDice = useCallback(() => {
+    setValue((value) => value + ' {1d}');
+    window.setTimeout(() => {
+      if (!inputRef.current) {
+        return;
+      }
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+      const length = inputRef.current.value.length;
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(length - 3, length - 1);
+      const { text, entities } = parse(inputRef.current.value.trim());
+      window.clearTimeout(timeout.current);
+      timeout.current = window.setTimeout(() => {
+        composeDispatch(update({ text, entities }));
+      }, 100);
+    }, 10);
+  }, [composeDispatch, parse]);
+
+  useImperativeHandle<ComposeInputAction, ComposeInputAction>(
+    ref,
+    () => {
+      return {
+        appendDice,
+      };
+    },
+    [appendDice]
+  );
   useEffect(() => {
     const matchActionCommand = value.match(ACTION_COMMAND);
     if (isAction && matchActionCommand === null) {
@@ -123,4 +160,4 @@ function ComposeInput(
   );
 }
 
-export default React.memo(React.forwardRef<HTMLTextAreaElement, Props>(ComposeInput));
+export default React.memo(React.forwardRef<ComposeInputAction, Props>(ComposeInput));

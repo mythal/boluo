@@ -14,16 +14,19 @@ import {
 } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import ellipsis from '../../../assets/icons/ellipsis.svg';
+import d20 from '../../../assets/icons/d20.svg';
 import { css } from '@emotion/core';
 import { ComposeDispatch, update } from './reducer';
 import { gray, textColor } from '../../../styles/colors';
 import ActionSwitch from './ActionSwitch';
+import { ComposeInputAction } from './ComposeInput';
 
 interface Props {
   inGame: boolean;
   isAction: boolean;
   composeDispatch: ComposeDispatch;
   inputName: string;
+  composeInputRef: React.RefObject<ComposeInputAction>;
 }
 
 const menuStyle = css`
@@ -56,12 +59,19 @@ const nameInput = css`
 
 const onKeyDown: React.KeyboardEventHandler = (e) => e.stopPropagation();
 
-function MenuButton({ inputName, composeDispatch, isAction }: Props) {
+const buttons = css`
+  display: flex;
+  justify-content: space-between;
+`;
+
+function MenuButton({ inputName, composeDispatch, isAction, composeInputRef }: Props) {
   const [menu, showMenu] = useState(false);
   const toggleMenu = useCallback(() => showMenu((value) => !value), []);
   const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     composeDispatch(update({ inputName: e.target.value }));
   };
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const appendDice = composeInputRef.current?.appendDice || (() => {});
   return (
     <div css={[inlineBlock, relative]} onKeyDown={onKeyDown}>
       <ChatItemToolbarButton on={menu} onClick={toggleMenu} sprite={ellipsis} size="large" />
@@ -69,7 +79,10 @@ function MenuButton({ inputName, composeDispatch, isAction }: Props) {
         <div css={mB(1)}>
           <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="临时角色名" />
         </div>
-        <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} />
+        <div css={buttons}>
+          <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} />
+          <ChatItemToolbarButton onClick={appendDice} sprite={d20} />
+        </div>
       </div>
     </div>
   );

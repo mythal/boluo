@@ -17,11 +17,10 @@ import { calculateCanSubmit, composeReducerMaker, ComposeState, update } from '.
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
-import ComposeInput from './ComposeInput';
+import ComposeInput, { ComposeInputAction } from './ComposeInput';
 import MessageMedia from '../MessageMedia';
 import ChatImageUploadButton from './ImageUploadButton';
 import { handleKeyDown } from '../key';
-import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { showFlash } from '../../../actions/flash';
 import InGameButton from './InGameButton';
 import MenuButton from './MenuButton';
@@ -82,8 +81,7 @@ interface Props {
 
 function Compose({ preview, channelId, member }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  useAutoHeight(inputRef);
+  const inputRef = useRef<ComposeInputAction>(null);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const dispatch = useDispatch();
@@ -172,7 +170,13 @@ function Compose({ preview, channelId, member }: Props) {
       <div css={toolbar}>
         <BroadcastSwitch size="large" broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
         <InGameButton inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} css={[mR(1)]} />
-        <MenuButton isAction={isAction} inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} />
+        <MenuButton
+          isAction={isAction}
+          inGame={inGame}
+          composeDispatch={composeDispatch}
+          inputName={inputName}
+          composeInputRef={inputRef}
+        />
       </div>
       <ComposeInput
         ref={inputRef}

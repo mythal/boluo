@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import Title from '../atoms/Title';
 import SpaceCard from '../organisms/SpaceCard';
 import { SpaceGrid } from '../atoms/SpaceGrid';
@@ -8,13 +9,11 @@ import newspaper from '../../assets/icons/newspaper.svg';
 import Icon from '../atoms/Icon';
 import { useSelector } from '../../store';
 import styled from '@emotion/styled';
-import { alignRight, link, mB, mT, spacingN } from '../../styles/atoms';
+import { link, mB, spacingN } from '../../styles/atoms';
 import { News } from '../atoms/News';
 import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
-import Button from '../atoms/Button';
-import { useState } from 'react';
 import Help from '../chat/Help';
 
 const Container = styled.div`
@@ -43,14 +42,9 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
-          <Text>菠萝改动了骰子语法。增加了 CoC、WoD、Shadowrun 和 FATE 骰子指令。</Text>
-          <div css={[alignRight, mT(2)]}>
-            <Button data-small data-variant="primary" onClick={() => setHelp(true)}>
-              查看快速参考
-            </Button>
-          </div>
+          <Text>增加了悄悄话（也是暗骰）功能，点击输入框左侧的省略号打开面板来使用。</Text>
         </News>
-        <News>
+        <News css={[mB(2)]}>
           <Text>
             菠萝上线啦！现在是早期测试阶段，请到
             <ExternalLink to="https://forum.boluo.chat/" css={link}>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useCallback, useLayoutEffect, useReducer, useRef } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
 import { clearRight, floatRight, mL, mR, mT, pX, textSm } from '../../../styles/atoms';
 import { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
@@ -21,7 +21,7 @@ import { useSend } from '../../../hooks/useSend';
 import MessageMedia from '../MessageMedia';
 import ChatImageUploadButton from './ImageUploadButton';
 import { usePane } from '../../../hooks/usePane';
-import { composeReducerMaker, update, UserItem } from './reducer';
+import { composeReducerMaker, ComposeState, update, UserItem } from './reducer';
 import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
 import {
@@ -92,48 +92,49 @@ function EditCompose({ preview, editTo }: Props) {
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const sendEvent = useSend();
+  const characterName = myMember.characterName;
+
+  const makeInitState = (): ComposeState => {
+    const inGame = preview?.inGame || editTo.inGame;
+    let inputName = '';
+    if (inGame) {
+      if (preview) {
+        inputName = preview.name;
+      } else if (editTo.inGame) {
+        inputName = editTo.name;
+      } else {
+        inputName = myMember.characterName;
+      }
+    }
+    const whisperTo: UserItem[] | null | undefined = editTo.whisperToUsers?.map((value) => ({ value, label: '' }));
+    return {
+      sending: false,
+      inGame,
+      broadcast: true,
+      isAction: preview?.isAction || editTo.isAction,
+      inputName,
+      initial: true,
+      media: undefined,
+      editFor: editTo.modified,
+      messageId: editTo.id,
+      text: preview?.text ?? editTo?.text ?? '',
+      entities: preview?.entities ?? editTo?.entities ?? [],
+      canSubmit: true,
+      clear: false,
+      whisperTo,
+    };
+  };
+  const composeReducer = useMemo(() => composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), [
+    sendEvent,
+    dispatch,
+    nickname,
+    characterName,
+  ]);
 
   const [
     { inGame, broadcast, isAction, inputName, media, text, entities, canSubmit, sending },
     composeDispatch,
-  ] = useReducer(
-    composeReducerMaker({ sendEvent, dispatch, nickname, characterName: myMember.characterName }),
-    undefined,
-    () => {
-      const inGame = preview?.inGame || editTo.inGame;
-      let inputName = '';
-      if (inGame) {
-        if (preview) {
-          inputName = preview.name;
-        } else if (editTo.inGame) {
-          inputName = editTo.name;
-        } else {
-          inputName = myMember.characterName;
-        }
-      }
-      const whisperTo: UserItem[] | null | undefined = editTo.whisperToUsers?.map((value) => ({ value, label: '' }));
-      return {
-        sending: false,
-        inGame,
-        broadcast: true,
-        isAction: preview?.isAction || editTo.isAction,
-        inputName,
-        initial: true,
-        media: undefined,
-        nickname,
-        sendEvent,
-        editFor: editTo.modified,
-        appDispatch: dispatch,
-        messageId: editTo.id,
-        text: preview?.text ?? editTo?.text ?? '',
-        entities: preview?.entities ?? editTo?.entities ?? [],
-        canSubmit: true,
-        clear: false,
-        whisperTo,
-        characterName: myMember.characterName,
-      };
-    }
-  );
+  ] = useReducer(composeReducer, undefined, makeInitState);
 
   useLayoutEffect(() => {
     if (inputName !== myMember.characterName) {

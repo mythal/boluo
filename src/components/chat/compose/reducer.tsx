@@ -47,10 +47,12 @@ export interface Update {
   next: Partial<ComposeState>;
 }
 
-export const update = (next: Partial<ComposeState>): Update => ({
-  type: 'UPDATE',
-  next,
-});
+export const update = (next: Partial<ComposeState>): Update => {
+  return {
+    type: 'UPDATE',
+    next,
+  };
+};
 
 export interface Send {
   type: 'SEND';

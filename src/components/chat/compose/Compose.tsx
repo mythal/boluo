@@ -108,6 +108,12 @@ function Compose({ preview, channelId, member }: Props) {
       canSubmit: calculateCanSubmit(initialText, inGame, characterName),
     };
   };
+  const composeReducer = useMemo(() => composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), [
+    sendEvent,
+    dispatch,
+    nickname,
+    characterName,
+  ]);
   const [
     {
       messageId,
@@ -124,7 +130,7 @@ function Compose({ preview, channelId, member }: Props) {
       whisperTo,
     },
     composeDispatch,
-  ] = useReducer(composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), undefined, makeInitState);
+  ] = useReducer(composeReducer, undefined, makeInitState);
 
   let whyCannotSend: string | null = null;
 

@@ -428,7 +428,7 @@ const atom = (disableRoll = false): P<ExprNode> => {
   if (disableRoll) {
     return choice([num, subExpr, max, min]);
   }
-  return choice([srRoll.then(logResult), roll, cocRoll, fateRoll, wodRoll, num, subExpr, max, min]);
+  return choice([srRoll, roll, cocRoll, fateRoll, wodRoll, num, subExpr, max, min]);
 };
 
 const logResult = <T>(result: T): T => {

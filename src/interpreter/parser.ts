@@ -247,12 +247,10 @@ const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) =>
     counter,
     face: 6,
     min: 5,
-    addition: 6,
+    addition: push ? 6 : 0,
     fumble: 1,
+    critical: 6,
   };
-  if (push) {
-    node.critical = 6;
-  }
   return [node, state];
 });
 

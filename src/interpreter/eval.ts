@@ -58,10 +58,11 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   } else if (node.type === 'DicePool') {
     const values: number[] = [];
     let value = 0;
+    const doAdditionRoll = node.addition > 0 && node.addition < node.face;
     for (let i = 0; i < node.counter && value < 1024; i++) {
       const x = rng.nextInt(1, node.face);
       values.push(x);
-      if (x >= node.addition) {
+      if (doAdditionRoll && x >= node.addition) {
         i--;
       }
       if (x >= node.min) {

@@ -109,7 +109,7 @@ function MessageToolbar({ myMember, mine, message }: Props) {
           mask
         >
           <Text>是否要删除这条消息？</Text>
-          <Text css={quoteStyle}>{message.text}</Text>
+          {message.text && <Text css={quoteStyle}>{message.text}</Text>}
         </Dialog>
       )}
     </React.Fragment>

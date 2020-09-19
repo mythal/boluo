@@ -27,6 +27,10 @@ const whisperContentWrapper = css`
   width: 100%;
   ${[chatContentLineHeight, pX(3), mL(2), chatSplitLine, textSm]};
   color: ${gray['500']};
+
+  &[data-folded='true'] {
+    text-decoration: line-through;
+  }
 `;
 
 function MessageWhisperList({ myMember, message }: Props) {
@@ -60,7 +64,7 @@ function MessageWhisperList({ myMember, message }: Props) {
       );
     }
     return (
-      <div css={whisperContentWrapper}>
+      <div css={whisperContentWrapper} data-folded={message.folded}>
         <Button data-size="small" onClick={reveal} css={mR(2)}>
           查看 <Icon sprite={eye} />
         </Button>
@@ -69,7 +73,7 @@ function MessageWhisperList({ myMember, message }: Props) {
     );
   } else {
     return (
-      <div css={whisperContentWrapper}>
+      <div css={whisperContentWrapper} data-folded={message.folded}>
         <span>
           <Icon sprite={eyeSlash} css={mR(2)} />
           对别的人说悄悄话

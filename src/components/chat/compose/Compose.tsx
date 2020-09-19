@@ -24,6 +24,7 @@ import { handleKeyDown } from '../key';
 import { showFlash } from '../../../actions/flash';
 import InGameButton from './InGameButton';
 import MenuButton from './MenuButton';
+import { NewMessage } from '../../../api/messages';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -108,7 +109,20 @@ function Compose({ preview, channelId, member }: Props) {
     };
   };
   const [
-    { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit, prevSubmit },
+    {
+      messageId,
+      text,
+      broadcast,
+      isAction,
+      inGame,
+      sending,
+      inputName,
+      media,
+      entities,
+      canSubmit,
+      prevSubmit,
+      whisperTo,
+    },
     composeDispatch,
   ] = useReducer(composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), undefined, makeInitState);
 
@@ -134,7 +148,7 @@ function Compose({ preview, channelId, member }: Props) {
     }
     composeDispatch(update({ sending: true }));
     const mediaId = await uploadMedia(dispatch, media);
-    const result = await post('/messages/send', {
+    const newMessage: NewMessage = {
       messageId,
       channelId,
       mediaId,
@@ -144,7 +158,11 @@ function Compose({ preview, channelId, member }: Props) {
       orderDate: null,
       text,
       entities,
-    });
+    };
+    if (whisperTo !== null && whisperTo !== undefined) {
+      newMessage.whisperToUsers = whisperTo.map((item) => item.value);
+    }
+    const result = await post('/messages/send', newMessage);
     if (!result.isOk) {
       throwErr(dispatch)(result.value);
       composeDispatch(update({ sending: false }));
@@ -176,6 +194,7 @@ function Compose({ preview, channelId, member }: Props) {
           composeDispatch={composeDispatch}
           inputName={inputName}
           composeInputRef={inputRef}
+          whisperTo={whisperTo}
         />
       </div>
       <ComposeInput

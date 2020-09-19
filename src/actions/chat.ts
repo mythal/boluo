@@ -155,6 +155,11 @@ export interface MovingMessage {
   pane: number;
 }
 
+export interface RevealMessage {
+  type: 'REVEAL_MESSAGE';
+  message: Message;
+}
+
 export interface ResetMessageMoving {
   type: 'RESET_MESSAGE_MOVING';
   messageId: Id;

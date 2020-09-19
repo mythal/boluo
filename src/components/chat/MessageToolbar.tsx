@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import ItemToolbar from './ItemToolbar';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import { ChannelMember } from '../../api/channels';
@@ -7,7 +8,6 @@ import trashIcon from '../../assets/icons/trash.svg';
 import foldIcon from '../../assets/icons/fold.svg';
 import unfoldIcon from '../../assets/icons/unfold.svg';
 import ChatItemToolbarButton, { ToolbarButtonProps } from './ChatItemToolbarButton';
-import { useState } from 'react';
 import Dialog from '../molecules/Dialog';
 import { Text } from '../atoms/Text';
 import { post } from '../../api/request';
@@ -82,7 +82,7 @@ function MessageToolbar({ myMember, mine, message }: Props) {
       });
     }
   }
-  if (mine) {
+  if (mine && message.entities.length > 0) {
     buttonsProps.push({
       onClick: startEdit,
       disabled: loading,

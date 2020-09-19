@@ -40,6 +40,7 @@ export interface NewMessage {
   isAction: boolean;
   mediaId: string | null;
   orderDate: number | null;
+  whisperToUsers?: Id[];
 }
 
 export interface EditMessage {

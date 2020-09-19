@@ -11,6 +11,7 @@ import { ChannelMember } from '../../api/channels';
 import ChatMessageToolbar from './MessageToolbar';
 import MessageMedia from './MessageMedia';
 import { itemImage, nameContainer } from './styles';
+import MessageWhisperList from './MessageWhisperList';
 
 interface Props {
   message: Message;
@@ -36,10 +37,10 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
       userId={message.senderId}
     />
   );
-  return (
-    <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
-      {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
-      {!message.isAction && <div css={nameContainer}>{name}</div>}
+
+  let content: React.ReactNode;
+  if (message.whisperToUsers === null || message.entities.length > 0) {
+    content = (
       <ChatItemContentContainer
         data-in-game={message.inGame}
         data-action={message.isAction}
@@ -49,6 +50,15 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
         {message.isAction && name}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
       </ChatItemContentContainer>
+    );
+  } else {
+    content = <MessageWhisperList message={message} myMember={myMember} />;
+  }
+  return (
+    <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
+      {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
+      {!message.isAction && <div css={nameContainer}>{name}</div>}
+      {content}
       {myMember && !lazy && <ChatMessageToolbar mine={mine} message={message} myMember={myMember} />}
     </div>
   );

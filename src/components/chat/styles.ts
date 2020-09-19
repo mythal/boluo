@@ -1,5 +1,5 @@
 import { css } from '@emotion/core';
-import { alignRight, mB, mL, pY, textLg, textSm } from '../../styles/atoms';
+import { alignRight, mB, mL, pY, roundedSm, textLg, textSm, uiShadow } from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
 import { gray, primary } from '../../styles/colors';
@@ -47,4 +47,10 @@ export const sidebarButtonPrimary = css`
   &:active {
     background-color: ${primary['700']};
   }
+`;
+
+export const floatPanel = css`
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(1px);
+  ${[roundedSm, uiShadow]};
 `;

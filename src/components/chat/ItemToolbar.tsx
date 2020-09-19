@@ -1,8 +1,8 @@
-import { pL, pR, pX, pY, uiShadow } from '../../styles/atoms';
+import { pL, pR, pX, pY } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 import React from 'react';
-import { gray } from '../../styles/colors';
+import { floatPanel } from './styles';
 
 export const toolbarRadius = css`
   border-radius: 4px;
@@ -28,8 +28,7 @@ const Container = styled.div`
 `;
 
 const Toolbar = styled.div`
-  background-color: ${gray['800']};
-  ${[uiShadow, pY(1), pX(1), toolbarRadius]};
+  ${[pY(1), pX(1), floatPanel]};
 `;
 
 export interface Props {

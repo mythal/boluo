@@ -20,6 +20,7 @@ import {
   LoadMessages,
   MovingMessage,
   ResetMessageMoving,
+  RevealMessage,
   SplitPane,
   StartEditMessage,
   StartMoveMessage,
@@ -66,6 +67,7 @@ export type Action =
   | StartMoveMessage
   | FinishMoveMessage
   | MovingMessage
+  | RevealMessage
   | ResetMessageMoving
   | ShowFlash
   | DismissFlash

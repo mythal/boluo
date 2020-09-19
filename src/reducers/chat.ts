@@ -250,6 +250,11 @@ export const handleMoveFinish = (state: ChatState, action: Action, myId?: Id): C
   return actions.reduce<ChatState | undefined>((state, action) => chatReducer(state, action, myId), state);
 };
 
+export const handleRevealMessage = (state: ChatState, message: Message, myId?: Id): ChatState => {
+  const itemSet = handleEditMessage(state.itemSet, message, state.messageBefore, myId);
+  return { ...state, itemSet };
+};
+
 export const checkMessagesOrder = (itemSet: ChatItemSet) => {
   let prev: ChatItem | undefined = undefined;
   let prevDate = 0;
@@ -289,6 +294,8 @@ export const chatReducer = (
       return updateChat(state, action);
     case 'CLOSE_CHAT':
       return closeChat(state, action);
+    case 'REVEAL_MESSAGE':
+      return handleRevealMessage(state, action.message, myId);
     case 'LOAD_MESSAGES':
       return loadMessages(state, action, myId);
     case 'MOVING_MESSAGE':

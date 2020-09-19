@@ -12,6 +12,11 @@ import { Id, newId } from '../../../utils/id';
 import { ClientEvent, PreviewPost } from '../../../api/events';
 import { Entity } from '../../../interpreter/entities';
 
+export interface UserItem {
+  label: string;
+  value: string;
+}
+
 export interface ComposeState {
   messageId: Id;
   editFor?: number;
@@ -27,6 +32,7 @@ export interface ComposeState {
   media: File | undefined;
   canSubmit: boolean;
   prevSubmit?: number;
+  whisperTo?: UserItem[] | null;
 }
 
 export interface Context {
@@ -122,6 +128,10 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       text,
       entities: broadcast ? entities : [],
     };
+    if (nextState.whisperTo !== null && nextState.whisperTo !== undefined) {
+      preview.text = '';
+      preview.entities = [];
+    }
     nextState.canSubmit = calculateCanSubmit(nextState.text, inGame, inputName || characterName) && !sending;
     sendEvent({ type: 'PREVIEW', preview });
   }

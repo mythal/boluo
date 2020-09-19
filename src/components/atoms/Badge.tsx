@@ -2,9 +2,10 @@ import * as React from 'react';
 import { css } from '@emotion/core';
 import { pX, pY, textXs } from '../../styles/atoms';
 import { lighten } from 'polished';
+import { gray } from '../../styles/colors';
 
 interface Props {
-  color: string;
+  color?: string;
   children: React.ReactNode;
   className?: string;
 }
@@ -19,7 +20,7 @@ export const tagStyle = (color: string) => css`
   white-space: nowrap;
 `;
 
-function Badge({ color, children, className }: Props) {
+function Badge({ color = gray['700'], children, className }: Props) {
   return (
     <span css={tagStyle(color)} className={className}>
       {children}

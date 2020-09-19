@@ -116,7 +116,8 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
         {fumble && (
           <React.Fragment>
             <Icon title="大失败" sprite={thumbDown} />
-            {fumbleCount}{' '}
+            {fumbleCount}
+            {critical && ' '}
           </React.Fragment>
         )}
         {critical && (

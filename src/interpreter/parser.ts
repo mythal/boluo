@@ -242,6 +242,9 @@ const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) =>
     return null;
   }
   const counter = parseInt(counterStr);
+  if (counter === 0) {
+    return null;
+  }
   const node: DicePool = {
     type: 'DicePool',
     counter,

@@ -41,6 +41,7 @@ export interface ChatState {
   messageBefore: number;
   eventAfter: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
+  showFolded: boolean;
   moving: boolean;
   postponed: List<Action>;
 }
@@ -294,6 +295,8 @@ export const chatReducer = (
       return updateChat(state, action);
     case 'CLOSE_CHAT':
       return closeChat(state, action);
+    case 'TOGGLE_SHOW_FOLDED':
+      return { ...state, showFolded: !state.showFolded };
     case 'REVEAL_MESSAGE':
       return handleRevealMessage(state, action.message, myId);
     case 'LOAD_MESSAGES':

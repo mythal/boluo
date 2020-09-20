@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from '../../store';
 import { useVirtual } from '../../hooks/useVirtual';
 import { css } from '@emotion/core';
@@ -8,11 +8,13 @@ import LoadMore, { loadMoreHeight } from './LoadMore';
 import { Id } from '../../utils/id';
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot, Droppable } from 'react-beautiful-dnd';
 import { ChannelMember } from '../../api/channels';
-import ChatDraggableItem from './VirtualItem';
+import VirtualItem from './VirtualItem';
 import { usePane } from '../../hooks/usePane';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
 import { ResizeObserver as Polyfill } from '@juggle/resize-observer/lib/ResizeObserver';
+import { ChatState } from '../../reducers/chat';
+import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 const ResizeObserver = window.ResizeObserver || Polyfill;
 
 interface Props {
@@ -45,6 +47,34 @@ function estimateSize(index: number): number {
   }
 }
 
+const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
+  item: PreviewItem | MessageItem
+): boolean => {
+  const inGame = filter === 'IN_GAME';
+  const outGame = filter === 'OUT_GAME';
+  if (item.type === 'MESSAGE') {
+    const { message } = item;
+    if (inGame && !message.inGame) {
+      return false;
+    }
+    if (outGame && message.inGame) {
+      return false;
+    }
+    if (message.folded && !showFolded) {
+      return false;
+    }
+  } else if (item.type === 'PREVIEW') {
+    const { preview } = item;
+    if (inGame && !preview.inGame) {
+      return false;
+    }
+    if (outGame && preview.inGame) {
+      return false;
+    }
+  }
+  return true;
+};
+
 function VirtualList({ myMember, channelId }: Props) {
   const pane = usePane();
   const dispatch = useDispatch();
@@ -53,8 +83,13 @@ function VirtualList({ myMember, channelId }: Props) {
   const activePane = useSelector((state) => pane === state.activePane);
   const messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
   const filter = useSelector((state) => state.chatPane[pane]!.filter);
+  const showFolded = useSelector((state) => state.chatPane[pane]!.showFolded);
+  const filteredMessages = useMemo(() => {
+    const show = filterMessages(filter, showFolded);
+    return messages.filter(show);
+  }, [messages, filter, showFolded]);
 
-  const listSize = messages.size + 1; // + 1 for "load more" button
+  const listSize = filteredMessages.size + 1; // + 1 for "load more" button
   const parentRef = useRef<HTMLDivElement>(null);
   const { totalSize, virtualItems, measure, cacheShift } = useVirtual({
     size: listSize,
@@ -103,17 +138,10 @@ function VirtualList({ myMember, channelId }: Props) {
       );
     }
 
-    const item = messages.get(index - 1)!;
+    const item = filteredMessages.get(index - 1)!;
     return (
       <div key={item.id} style={style}>
-        <ChatDraggableItem
-          item={item}
-          myMember={myMember}
-          index={index}
-          resizeObserver={resizeObserver}
-          measure={measure}
-          filter={filter}
-        />
+        <VirtualItem item={item} myMember={myMember} index={index} resizeObserver={resizeObserver} measure={measure} />
       </div>
     );
   });
@@ -131,15 +159,9 @@ function VirtualList({ myMember, channelId }: Props) {
         mode="virtual"
         renderClone={(provided: DraggableProvided, snapshot: DraggableStateSnapshot, rubric: DraggableRubric) => {
           const index = rubric.source.index;
-          const item = messages.get(index)!;
+          const item = filteredMessages.get(index)!;
           return (
-            <ChatDraggableItem
-              index={index + 1}
-              item={item}
-              myMember={myMember}
-              provided={provided}
-              snapshot={snapshot}
-            />
+            <VirtualItem index={index + 1} item={item} myMember={myMember} provided={provided} snapshot={snapshot} />
           );
         }}
       >

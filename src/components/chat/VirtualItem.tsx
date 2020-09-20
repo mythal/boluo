@@ -12,7 +12,6 @@ import { black } from '../../styles/colors';
 import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { useSelector } from '../../store';
 import { usePane } from '../../hooks/usePane';
-import { ChatState } from '../../reducers/chat';
 import ChatPreviewCompose from './compose/EditCompose';
 import ChatPreviewItem from './PreviewItem';
 import ChatMessageItem from './MessageItem';
@@ -27,7 +26,6 @@ interface Props {
   snapshot?: DraggableStateSnapshot;
   resizeObserver?: React.RefObject<ResizeObserver>;
   measure?: (rect: DOMRect, index: number) => void;
-  filter?: ChatState['filter'];
 }
 
 const dragging = css`
@@ -38,18 +36,12 @@ const dragging = css`
 const itemSwitch = (
   item: PreviewItem | MessageItem,
   editItem: EditItem | undefined,
-  filter: ChatState['filter'],
   myMember?: ChannelMember,
   handleProps?: DraggableProvidedDragHandleProps
 ) => {
   const myId = myMember?.userId;
-  const inGame = filter === 'IN_GAME';
-  const outGame = filter === 'OUT_GAME';
   if (item.type === 'MESSAGE') {
     const { message } = item;
-    if ((inGame && !message.inGame) || (outGame && message.inGame)) {
-      return null;
-    }
     if (editItem !== undefined) {
       if (editItem.mine && myId) {
         return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
@@ -67,16 +59,11 @@ const itemSwitch = (
       />
     );
   } else {
-    // preview
-    if ((inGame && !item.preview.inGame) || (outGame && item.preview.inGame)) {
-      return null;
-    } else {
-      return <ChatPreviewItem key={item.id} preview={item.preview} />;
-    }
+    return <ChatPreviewItem key={item.id} preview={item.preview} />;
   }
 };
 
-function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver, measure, filter = 'NONE' }: Props) {
+function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver, measure }: Props) {
   const itemIndex = index - 1;
   const [deferred, setDefer] = useState<number>(() => {
     const timeout = Math.random() * 300;
@@ -129,7 +116,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver
       <div ref={wrapper} data-index={index}>
         <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
           {deferred <= 0 ? (
-            itemSwitch(item, editItem, filter, myMember, provided.dragHandleProps)
+            itemSwitch(item, editItem, myMember, provided.dragHandleProps)
           ) : item.type === 'PREVIEW' ? (
             <div css={chatItemContainer} data-in-game={item.preview.inGame} {...provided.dragHandleProps}>
               <ChatItemContentContainer data-in-game={item.preview.inGame}>

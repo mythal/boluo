@@ -102,6 +102,7 @@ export const loadChat = (id: Id, pane: number) => async (dispatch: Dispatch) => 
     members,
     filter: 'NONE',
     moving: false,
+    showFolded: true,
     postponed: List(),
     pane,
   };
@@ -124,6 +125,10 @@ export const chatNoneFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTE
 export const chatInGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'IN_GAME', pane });
 
 export const chatOutGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'OUT_GAME', pane });
+
+export interface ToggleShowFolded {
+  type: 'TOGGLE_SHOW_FOLDED';
+}
 
 export interface StartEditMessage {
   type: 'START_EDIT_MESSAGE';

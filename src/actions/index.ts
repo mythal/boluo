@@ -26,6 +26,7 @@ import {
   StartMoveMessage,
   StopEditMessage,
   SwitchActivePane,
+  ToggleShowFolded,
 } from './chat';
 import {
   ExploreSpaceLoaded,
@@ -72,4 +73,5 @@ export type Action =
   | ShowFlash
   | DismissFlash
   | SwitchActivePane
-  | SplitPane;
+  | SplitPane
+  | ToggleShowFolded;

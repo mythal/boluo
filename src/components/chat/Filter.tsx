@@ -4,6 +4,8 @@ import Icon from '../atoms/Icon';
 import filterIcon from '../../assets/icons/filter.svg';
 import circle from '../../assets/icons/circle.svg';
 import dotCircle from '../../assets/icons/dot-circle.svg';
+import check from '../../assets/icons/check.svg';
+import uncheck from '../../assets/icons/uncheck.svg';
 import ChatHeaderButton from './ChatHeaderButton';
 import Overlay from '../atoms/Overlay';
 import Menu from '../atoms/Menu';
@@ -19,6 +21,7 @@ interface Props {
 function Filter({ className }: Props) {
   const pane = usePane();
   const filter = useSelector((state) => state.chatPane[pane]!.filter);
+  const showFolded = useSelector((state) => state.chatPane[pane]!.showFolded);
   const button = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
@@ -42,6 +45,9 @@ function Filter({ className }: Props) {
             </MenuItem>
             <MenuItem onClick={() => dispatch(chatNoneFilter(pane))} icon={filter === 'NONE' ? dotCircle : circle}>
               所有消息
+            </MenuItem>
+            <MenuItem onClick={() => dispatch({ type: 'TOGGLE_SHOW_FOLDED' })} icon={showFolded ? check : uncheck}>
+              显示折叠的消息
             </MenuItem>
           </Menu>
         </Overlay>

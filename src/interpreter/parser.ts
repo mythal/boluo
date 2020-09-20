@@ -324,7 +324,7 @@ const oWodRoll: P<DicePool> = regex(/^[oO](?:_(\d))?\s*(\d{1,3})\s*/).then(([mat
   return [node, state];
 });
 
-const exaltedRoll: P<DicePool> = regex(/^[eE][xX](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
+const exaltedRoll: P<DicePool> = regex(/^ex(p?)\s*(\d+)\s*/).then(([match, state], env) => {
   const counterStr = match[2];
   if (!counterStr) {
     return null;

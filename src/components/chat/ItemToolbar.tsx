@@ -29,6 +29,7 @@ const Container = styled.div`
 `;
 
 const Toolbar = styled.div`
+  width: max-content;
   ${[pY(1), pX(1), floatPanel]};
 `;
 

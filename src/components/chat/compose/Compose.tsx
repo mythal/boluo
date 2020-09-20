@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
-import { mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
+import { breakpoint, mediaQuery, mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
@@ -29,8 +29,14 @@ import { NewMessage } from '../../../api/messages';
 const container = css`
   grid-row: compose-start / compose-end;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: 'toolbar input  send';
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'toolbar  send'
+    '  input input';
+  ${mediaQuery(breakpoint.md)} {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'toolbar input  send';
+  }
   gap: ${spacingN(2)};
   align-items: flex-end;
   background-color: ${darken(0.05, blue['900'])};

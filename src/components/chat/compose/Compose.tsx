@@ -92,6 +92,7 @@ function Compose({ preview, channelId, member }: Props) {
   const characterName = member.characterName;
   const makeInitState = (): ComposeState => {
     const inGame = preview?.inGame || false;
+    const entities = preview?.entities || [];
     return {
       sending: false,
       inGame,
@@ -103,9 +104,9 @@ function Compose({ preview, channelId, member }: Props) {
       editFor: undefined,
       messageId: preview?.id || newId(),
       text: initialText,
-      entities: preview?.entities || [],
+      entities: entities,
       clear: false,
-      canSubmit: calculateCanSubmit(initialText, inGame, characterName),
+      canSubmit: calculateCanSubmit(initialText, entities, inGame, characterName),
     };
   };
   const composeReducer = useMemo(() => composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), [
@@ -135,7 +136,7 @@ function Compose({ preview, channelId, member }: Props) {
   let whyCannotSend: string | null = null;
 
   if (!canSubmit) {
-    if (text === '') {
+    if (text === '' || entities.length === 0) {
       whyCannotSend = '消息不能为空';
     } else if (inGame && characterName === '') {
       whyCannotSend = '角色名为空';

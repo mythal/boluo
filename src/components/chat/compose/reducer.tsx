@@ -134,15 +134,16 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       preview.text = '';
       preview.entities = [];
     }
-    nextState.canSubmit = calculateCanSubmit(nextState.text, inGame, inputName || characterName) && !sending;
+    nextState.canSubmit =
+      calculateCanSubmit(nextState.text, nextState.entities, inGame, inputName || characterName) && !sending;
     sendEvent({ type: 'PREVIEW', preview });
   }
 
   return nextState;
 };
 
-export const calculateCanSubmit = (text: string, inGame: boolean, characterName: string): boolean =>
-  text !== '' && (!inGame || characterName !== '');
+export const calculateCanSubmit = (text: string, entities: Entity[], inGame: boolean, characterName: string): boolean =>
+  text !== '' && entities.length > 0 && (!inGame || characterName !== '');
 
 export const composeReducerMaker = (context: Context) => (state: ComposeState, action: ComposeAction) => {
   if (action.type === 'UPDATE') {

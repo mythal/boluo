@@ -317,8 +317,26 @@ const oWodRoll: P<DicePool> = regex(/^[oO](?:_(\d))?\s*(\d{1,3})\s*/).then(([mat
     face: 10,
     min,
     addition: 0,
+    reduction: 1,
     fumble: 1,
     critical: 10,
+  };
+  return [node, state];
+});
+
+const exaltedRoll: P<DicePool> = regex(/^[eE][xX](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
+  const counterStr = match[2];
+  if (!counterStr) {
+    return null;
+  }
+  const counter = parseInt(counterStr);
+  const node: DicePool = {
+    type: 'DicePool',
+    counter,
+    face: 10,
+    min: 7,
+    addition: 0,
+    fumble: 1,
   };
   return [node, state];
 });

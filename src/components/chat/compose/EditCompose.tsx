@@ -21,7 +21,7 @@ import { useSend } from '../../../hooks/useSend';
 import MessageMedia from '../MessageMedia';
 import ChatImageUploadButton from './ImageUploadButton';
 import { usePane } from '../../../hooks/usePane';
-import { composeReducerMaker, ComposeState, update, UserItem } from './reducer';
+import { calculateCanSubmit, composeReducerMaker, ComposeState, update, UserItem } from './reducer';
 import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
 import {
@@ -107,6 +107,8 @@ function EditCompose({ preview, editTo }: Props) {
       }
     }
     const whisperTo: UserItem[] | null | undefined = editTo.whisperToUsers?.map((value) => ({ value, label: '' }));
+    const text = preview?.text ?? editTo.text;
+    const entities = preview?.entities ?? editTo.entities;
     return {
       sending: false,
       inGame,
@@ -117,9 +119,9 @@ function EditCompose({ preview, editTo }: Props) {
       media: undefined,
       editFor: editTo.modified,
       messageId: editTo.id,
-      text: preview?.text ?? editTo?.text ?? '',
-      entities: preview?.entities ?? editTo?.entities ?? [],
-      canSubmit: true,
+      text,
+      entities,
+      canSubmit: calculateCanSubmit(text, entities, inGame, inputName),
       clear: false,
       whisperTo,
     };

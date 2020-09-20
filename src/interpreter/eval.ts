@@ -80,7 +80,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
           for (let i = 2; i < counter && i < node.counter; i++) {
             if(aux[i] - aux[i-1] === 1 && aux[i-1] - aux[i-2] === 1){
               if(auxFaces.length < 1 || aux[i] - auxNumber[auxNumber.length-1] + 1 === auxFaces[auxFaces.length-1]){
-                auxFaces.push(aux[i]);
+                auxFaces.push(aux[i]-2);
                 auxNumber.push(3);
               }else{
                 auxNumber[auxNumber.length-1]++;
@@ -90,7 +90,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
           //counting sequece, counting all in case of more needment
           if(auxFaces.length > 1){
             for (let i = auxFaces.length; i > 1; i--) {
-              if(((auxFaces[i]-auxNumber[i]+1)+auxFaces[i])*auxNumber[i] > ((auxFaces[i-1]-auxNumber[i-1]+1)+auxFaces[i-1])*auxNumber[i-1]) {
+              if(((auxFaces[i]+auxNumber[i]-1)+auxFaces[i])*auxNumber[i] > ((auxFaces[i-1]+auxNumber[i-1]-1)+auxFaces[i-1])*auxNumber[i-1]) {
                 auxFaces[i-1] = auxFaces[i];
                 auxNumber[i-1] = auxNumber[i];
               }

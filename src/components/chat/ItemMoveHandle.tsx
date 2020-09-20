@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const handleContainerStyle = css`
-  grid-area: time;
+  grid-area: handle;
   color: ${darken(0.6, textColor)};
   display: flex;
   justify-content: stretch;

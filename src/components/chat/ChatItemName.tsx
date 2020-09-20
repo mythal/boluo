@@ -4,7 +4,7 @@ import Prando from 'prando';
 import { encodeUuid, Id } from '../../utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { alignRight, fontBold, inline, mR, relative, textSm } from '../../styles/atoms';
+import { fontBold, inline, mR, relative, textSm } from '../../styles/atoms';
 import { hsl } from 'polished';
 import Icon from '../atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const Container = styled.span`
-  ${[mR(1), alignRight, chatContentLineHeight]};
+  ${[mR(1), chatContentLineHeight]};
 
   & .user-panel {
     visibility: hidden;

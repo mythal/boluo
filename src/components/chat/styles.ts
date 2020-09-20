@@ -1,18 +1,5 @@
 import { css } from '@emotion/core';
-import {
-  alignRight,
-  fontMono,
-  fontNormal,
-  m,
-  mB,
-  mL,
-  pX,
-  pY,
-  roundedSm,
-  textLg,
-  textSm,
-  uiShadow,
-} from '../../styles/atoms';
+import { fontMono, fontNormal, m, mB, mL, pX, pY, roundedSm, textLg, textSm, uiShadow } from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
 import { black, gray, primary } from '../../styles/colors';
@@ -46,11 +33,10 @@ export const previewOutGame = previewStyle(chatItemOutGameBgColor, darken(0.15, 
 
 export const nameContainer = css`
   grid-area: name;
-  ${[pY(2), alignRight]};
 `;
 
 export const chatSplitLine = css`
-  border-left: 1px solid ${gray['700']};
+  // border-left: 1px solid ${gray['700']};
 `;
 export const sidebarButtonPrimary = css`
   background-color: ${primary['600']};

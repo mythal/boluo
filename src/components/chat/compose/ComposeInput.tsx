@@ -30,11 +30,11 @@ export interface ComposeInputAction {
 }
 
 function ComposeInput(
-  { inGame, initialValue, composeDispatch, autoFocus = false, className, isAction }: Props,
+  { inGame, initialValue, composeDispatch, autoFocus = false, autoSize = false, className, isAction }: Props,
   ref: Ref<ComposeInputAction>
 ) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  useAutoHeight(inputRef);
+  useAutoHeight(autoSize, inputRef);
   const [value, setValue] = useState(initialValue);
   const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);

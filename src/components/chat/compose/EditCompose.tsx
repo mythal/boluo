@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
-import { clearRight, floatRight, mL, mR, mT, pX, textSm } from '../../../styles/atoms';
+import { mR, pX, textSm } from '../../../styles/atoms';
 import { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
 import { AppResult, patch } from '../../../api/request';
 import ChatItemContent from '../ItemContent';
 import { Message } from '../../../api/messages';
-import { nameColWidth, timeColWidth } from '../ChatItemContainer';
+import { chatItemContainer, nameColWidth, timeColWidth } from '../ChatItemContainer';
 import { ChatItemContentContainer } from '../ChatItemContentContainer';
 import ChatItemName from '../ChatItemName';
-import ChatComposeToolbar from './ComposeToolbar';
 import ComposeInput from './ComposeInput';
 import ChatPreviewComposeNameInput from './EditComposeNameInput';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -24,17 +23,13 @@ import { usePane } from '../../../hooks/usePane';
 import { calculateCanSubmit, composeReducerMaker, ComposeState, update, UserItem } from './reducer';
 import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
-import {
-  chatSplitLine,
-  itemImage,
-  nameContainer,
-  previewInGame,
-  previewOutGame,
-  textInGame,
-  textOutGame,
-} from '../styles';
+import { itemImage, nameContainer, previewInGame, previewOutGame, textInGame, textOutGame } from '../styles';
 import { isMac } from '../../../utils/browser';
 import { handleKeyDown } from '../key';
+import ItemToolbar from '../ItemToolbar';
+import mask from '../../../assets/icons/theater-masks.svg';
+import running from '../../../assets/icons/running.svg';
+import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
 
 interface Props {
   preview?: Preview;
@@ -42,8 +37,7 @@ interface Props {
 }
 
 const composeWrapper = css`
-  grid-area: compose;
-  ${[pX(3), mL(2), chatSplitLine]};
+  grid-column: 2 / -1;
 `;
 
 const compose = css`
@@ -144,6 +138,11 @@ function EditCompose({ preview, editTo }: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myMember.characterName]);
+
+  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
+  const toggleIsAction = () => composeDispatch(update({ isAction: !isAction }));
+  const toggleBroadcast = () => composeDispatch(update({ broadcast: !broadcast }));
+
   const initialDraft = preview?.text || editTo?.text || '';
 
   const name = inGame ? inputName : nickname;
@@ -179,14 +178,36 @@ function EditCompose({ preview, editTo }: Props) {
   );
   const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame, enterSend);
   return (
-    <div css={container} data-edit={true} ref={containerRef} onKeyDown={onKeyDown} data-in-game={inGame}>
+    <div
+      css={chatItemContainer}
+      data-no-name={!inGame && isAction}
+      ref={containerRef}
+      onKeyDown={onKeyDown}
+      data-in-game={inGame}
+    >
       <div css={nameContainer}>
         {inGame && <ChatPreviewComposeNameInput value={inputName} composeDispatch={composeDispatch} />}
         {!inGame && !isAction && chatItemName}
       </div>
       <ChatItemContentContainer data-action={isAction} data-in-game={inGame}>
         <MessageMedia css={itemImage} mediaId={editTo.mediaId} file={media} />
-        <div css={[mL(2), mT(2), floatRight, clearRight]}>
+        <ItemToolbar>
+          <ChatItemToolbarButton
+            on={inGame}
+            css={mR(1)}
+            onClick={toggleInGame}
+            sprite={mask}
+            title="游戏内"
+            info={isMac ? 'Option' : 'Alt'}
+          />
+          <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleIsAction} sprite={running} title="描述动作" />
+          <ChatItemToolbarButton
+            css={mR(2)}
+            sprite={broadcastTower}
+            on={broadcast}
+            onClick={toggleBroadcast}
+            title="输入中广播"
+          />
           <ChatImageUploadButton
             hasImage={Boolean(media || preview?.mediaId)}
             composeDispatch={composeDispatch}
@@ -203,10 +224,8 @@ function EditCompose({ preview, editTo }: Props) {
             title="提交更改"
             info={isMac ? '⌘ + ⏎' : 'Ctrl + ⏎'}
             disabled={!canSubmit}
-            x="left"
           />
-        </div>
-
+        </ItemToolbar>
         {isAction && chatItemName}
         <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>
@@ -219,7 +238,6 @@ function EditCompose({ preview, editTo }: Props) {
           isAction={isAction}
         />
       </div>
-      <ChatComposeToolbar inGame={inGame} isAction={isAction} broadcast={broadcast} composeDispatch={composeDispatch} />
     </div>
   );
 }

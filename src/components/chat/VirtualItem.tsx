@@ -26,6 +26,7 @@ interface Props {
   snapshot?: DraggableStateSnapshot;
   resizeObserver?: React.RefObject<ResizeObserver>;
   measure?: (rect: DOMRect, index: number) => void;
+  sameSender?: boolean;
 }
 
 const dragging = css`
@@ -36,6 +37,7 @@ const dragging = css`
 const itemSwitch = (
   item: PreviewItem | MessageItem,
   editItem: EditItem | undefined,
+  sameSender: boolean,
   myMember?: ChannelMember,
   handleProps?: DraggableProvidedDragHandleProps
 ) => {
@@ -56,6 +58,7 @@ const itemSwitch = (
         myMember={myMember}
         handleProps={handleProps}
         moving={item.moving}
+        sameSender={sameSender}
       />
     );
   } else {
@@ -63,7 +66,16 @@ const itemSwitch = (
   }
 };
 
-function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver, measure }: Props) {
+function VirtualItem({
+  index,
+  item,
+  myMember,
+  provided,
+  snapshot,
+  resizeObserver,
+  measure,
+  sameSender = false,
+}: Props) {
   const itemIndex = index - 1;
   const [deferred, setDefer] = useState<number>(() => {
     const timeout = Math.random() * 300;
@@ -116,7 +128,7 @@ function VirtualItem({ index, item, myMember, provided, snapshot, resizeObserver
       <div ref={wrapper} data-index={index}>
         <div ref={provided.innerRef} {...provided.draggableProps} css={style}>
           {deferred <= 0 ? (
-            itemSwitch(item, editItem, myMember, provided.dragHandleProps)
+            itemSwitch(item, editItem, sameSender, myMember, provided.dragHandleProps)
           ) : item.type === 'PREVIEW' ? (
             <div css={chatItemContainer} data-in-game={item.preview.inGame} {...provided.dragHandleProps}>
               <ChatItemContentContainer data-in-game={item.preview.inGame}>

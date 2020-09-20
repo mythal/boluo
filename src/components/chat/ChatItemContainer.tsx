@@ -1,4 +1,4 @@
-import { pX, textLg, textSm } from '../../styles/atoms';
+import { pX, pY, spacingN, textLg, textSm } from '../../styles/atoms';
 import { darken } from 'polished';
 import { bgColor, gray } from '../../styles/colors';
 import { css } from '@emotion/core';
@@ -29,11 +29,22 @@ export const itemMinHeight = 42;
 export const chatItemContainer = css`
   display: grid;
   position: relative;
-  ${[pX(2)]};
+  ${[pX(2), pY(2)]};
   min-height: ${itemMinHeight}px;
-  grid-template-columns: ${timeColWidth} ${nameColWidth} 1fr;
-  grid-template-areas: 'time name content';
   background-color: ${chatItemBgColor};
+
+  column-gap: ${spacingN(2)};
+  grid-template-columns: 1.5rem auto 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    'handle    name        .'
+    'handle content content';
+
+  &[data-no-name='true'] {
+    grid-template-rows: auto;
+    grid-template-areas: 'handle content content';
+  }
+
   &[data-in-game='true'] {
     ${[textLg]};
   }

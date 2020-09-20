@@ -5,7 +5,7 @@ export const dateFormat = (date: Date) => {
 };
 
 export const timeFormat = (date: Date) => {
-  return `${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+  return `${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
 };
 
 export const dateTimeFormat = (date: Date) => {

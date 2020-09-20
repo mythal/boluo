@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { css } from '@emotion/core';
 import { fontBase, fontNormal, p, roundedSm, spacingN, textBase } from '../../styles/atoms';
-import { black } from '../../styles/colors';
+import { black, white } from '../../styles/colors';
 
 export interface TooltipProps {
   children: React.ReactNode;
@@ -15,11 +15,13 @@ const tooltipBgColor = black;
 
 const tooltip = css`
   ${[p(2), roundedSm, textBase, fontBase, fontNormal]};
+  color: ${white};
   font-style: normal;
   position: absolute;
   left: 50%;
   top: ${spacingN(-1)};
   z-index: 100;
+  pointer-events: none;
   transform: translate(-50%, -100%);
   background-color: ${tooltipBgColor};
 

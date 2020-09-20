@@ -1,8 +1,8 @@
 import { RefObject, useEffect } from 'react';
 
-export const useAutoHeight = (inputRef: RefObject<HTMLTextAreaElement>, maxHeight = 128) => {
+export const useAutoHeight = (enable: boolean, inputRef: RefObject<HTMLTextAreaElement>, maxHeight = 128) => {
   useEffect(() => {
-    if (inputRef.current === null) {
+    if (inputRef.current === null || !enable) {
       return;
     }
     const input = inputRef.current;
@@ -23,5 +23,5 @@ export const useAutoHeight = (inputRef: RefObject<HTMLTextAreaElement>, maxHeigh
       input.removeEventListener('keyup', changeHeight);
       input.removeEventListener('change', changeHeight);
     };
-  }, [maxHeight, inputRef]);
+  }, [maxHeight, inputRef, enable]);
 };

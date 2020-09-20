@@ -2,8 +2,8 @@ import * as React from 'react';
 import { ChannelMember } from '../../api/channels';
 import { useDispatch, useSelector } from '../../store';
 import { css } from '@emotion/core';
-import { chatContentLineHeight, chatSplitLine } from './styles';
-import { mL, mR, pX, textSm } from '../../styles/atoms';
+import { chatContentLineHeight } from './styles';
+import { mR, textSm } from '../../styles/atoms';
 import { gray } from '../../styles/colors';
 import { get } from '../../api/request';
 import { throwErr } from '../../utils/errors';
@@ -25,7 +25,7 @@ const whisperContentWrapper = css`
   display: flex;
   align-items: center;
   width: 100%;
-  ${[chatContentLineHeight, pX(3), mL(2), chatSplitLine, textSm]};
+  ${[chatContentLineHeight, textSm]};
   color: ${gray['500']};
 
   &[data-folded='true'] {

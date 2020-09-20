@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { alignRight, p, textSm } from '../../../styles/atoms';
+import { p, textSm } from '../../../styles/atoms';
 import Input from '../../atoms/Input';
 import { ComposeDispatch, update } from './reducer';
 
@@ -12,8 +12,6 @@ interface Props {
 const Naming = styled.div`
   grid-area: name;
   display: flex;
-  align-items: start;
-  justify-content: flex-end;
 `;
 
 function EditComposeNameInput({ value, composeDispatch }: Props) {
@@ -24,7 +22,7 @@ function EditComposeNameInput({ value, composeDispatch }: Props) {
 
   return (
     <Naming>
-      <Input css={[textSm, p(1), alignRight]} value={value} onChange={handleChange} placeholder="写下你的名字" />
+      <Input css={[textSm, p(1)]} value={value} onChange={handleChange} placeholder="写下你的名字" />
     </Naming>
   );
 }

@@ -15,6 +15,7 @@ import { chatPath } from '../../utils/path';
 import { ResizeObserver as Polyfill } from '@juggle/resize-observer/lib/ResizeObserver';
 import { ChatState } from '../../reducers/chat';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
+
 const ResizeObserver = window.ResizeObserver || Polyfill;
 
 interface Props {
@@ -119,7 +120,8 @@ function VirtualList({ myMember, channelId }: Props) {
       }, 10);
     })
   );
-
+  let prevSenderId: Id | null = null;
+  let prevMessageName: string | null = null;
   const items = virtualItems.map(({ index, size, end }) => {
     const style: React.CSSProperties = {
       height: size,
@@ -139,9 +141,29 @@ function VirtualList({ myMember, channelId }: Props) {
     }
 
     const item = filteredMessages.get(index - 1)!;
+    let sameSender = false;
+    if (item.type === 'MESSAGE') {
+      const { senderId, name } = item.message;
+      if (senderId === prevSenderId && name === prevMessageName) {
+        sameSender = true;
+      } else {
+        prevMessageName = name;
+        prevSenderId = senderId;
+      }
+    } else {
+      prevMessageName = null;
+      prevSenderId = null;
+    }
     return (
       <div key={item.id} style={style}>
-        <VirtualItem item={item} myMember={myMember} index={index} resizeObserver={resizeObserver} measure={measure} />
+        <VirtualItem
+          item={item}
+          myMember={myMember}
+          index={index}
+          resizeObserver={resizeObserver}
+          measure={measure}
+          sameSender={sameSender}
+        />
       </div>
     );
   });

@@ -6,7 +6,6 @@ import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 interface Props {
-  prevSubmit?: number;
   inGame: boolean;
   initialValue: string;
   composeDispatch: ComposeDispatch;
@@ -27,10 +26,11 @@ const ACTION_COMMAND = /[.。]me\s*/;
 
 export interface ComposeInputAction {
   appendDice: () => void;
+  reset: () => void;
 }
 
 function ComposeInput(
-  { prevSubmit, inGame, initialValue, composeDispatch, autoFocus = false, className, isAction }: Props,
+  { inGame, initialValue, composeDispatch, autoFocus = false, className, isAction }: Props,
   ref: Ref<ComposeInputAction>
 ) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -42,6 +42,13 @@ function ComposeInput(
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
+
+  const reset = useCallback(() => {
+    setValue('');
+    if (inputRef.current) {
+      inputRef.current.style.height = '';
+    }
+  }, []);
 
   const appendDice = useCallback(() => {
     setValue((value) => value + ' {1d}');
@@ -79,16 +86,11 @@ function ComposeInput(
     () => {
       return {
         appendDice,
+        reset,
       };
     },
-    [appendDice]
+    [appendDice, reset]
   );
-
-  useEffect(() => {
-    return () => {
-      setValue('');
-    };
-  }, [prevSubmit]);
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const nextValue = e.target.value;

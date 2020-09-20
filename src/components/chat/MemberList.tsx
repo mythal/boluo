@@ -12,6 +12,8 @@ const Container = styled.div`
   width: 10rem;
   background-color: ${blue['900']};
   ${uiShadow};
+  max-height: 60vh;
+  overflow-y: scroll;
 `;
 
 function MemberList() {

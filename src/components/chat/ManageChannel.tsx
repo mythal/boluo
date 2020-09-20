@@ -169,7 +169,7 @@ function ManageChannel({ channel, dismiss }: Props) {
           <Select isMulti value={selectedMember} onChange={handleChange} options={memberOptions} theme={selectTheme} />
         </div>
         <div css={[mY(2), buttons]}>
-          <ExportButton css={[widthFull, mR(2)]} channelId={channelId} channelName={channel.name} />
+          <ExportButton css={[widthFull, mR(2)]} channel={channel} />
           <Button css={[textSm]} data-variant="danger" disabled={submitting} onClick={openDeleteDialog} type="button">
             删除
           </Button>

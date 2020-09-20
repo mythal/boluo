@@ -6,6 +6,7 @@ import { textColor } from '../../styles/colors';
 import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import Icon from '../atoms/Icon';
 import handle from '../../assets/icons/handle.svg';
+import { dateTimeFormat } from '../../utils/time';
 
 interface Props {
   timestamp: number;
@@ -35,15 +36,10 @@ const handleStyle = css`
   }
 `;
 
-const num = (n: number) => (n > 9 ? String(n) : `0${n}`);
-
 function ItemMoveHandle({ timestamp, handleProps }: Props) {
-  const time = new Date(timestamp);
-  const dateText = `${time.getFullYear()}-${num(time.getMonth() + 1)}-${num(time.getDate())} ${num(
-    time.getHours()
-  )}:${num(time.getMinutes())}`;
+  const now = new Date(timestamp);
   return (
-    <time dateTime={time.toISOString()} css={handleContainerStyle} title={dateText}>
+    <time dateTime={now.toISOString()} css={handleContainerStyle} title={dateTimeFormat(now)}>
       <div css={handleStyle} {...handleProps}>
         <Icon className="handle" sprite={handle} />
       </div>

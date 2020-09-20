@@ -16,7 +16,9 @@ interface Props {
 
 export const inlineImg = css`
   ${roundedSm};
+  width: 100%;
   height: 100%;
+  object-fit: cover;
 `;
 
 export const placeHolder = css`
@@ -28,15 +30,15 @@ export const placeHolder = css`
 `;
 
 export const largeImg = css`
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 80vw;
+  max-height: 80vh;
 `;
 
 export const inlineImgLink = css`
   display: block;
   float: right;
+  width: 3rem;
   height: 3rem;
-  max-width: 8rem;
   &:hover {
     filter: brightness(50%);
   }

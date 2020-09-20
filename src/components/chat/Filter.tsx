@@ -25,7 +25,7 @@ function Filter({ className }: Props) {
   const dismiss = () => setOpen(false);
   return (
     <React.Fragment>
-      <ChatHeaderButton onClick={() => setOpen((open) => !open)} ref={button} className={className}>
+      <ChatHeaderButton data-active={open} onClick={() => setOpen((open) => !open)} ref={button} className={className}>
         <Icon sprite={filterIcon} />
       </ChatHeaderButton>
       {open && (

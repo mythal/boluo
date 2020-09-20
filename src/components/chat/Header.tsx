@@ -3,11 +3,13 @@ import { useCallback, useState } from 'react';
 import { css } from '@emotion/core';
 import { useDispatch, useSelector } from '../../store';
 import {
+  breakpoint,
   chatHeaderStyle,
   chatHeaderToolbar,
   flex,
   fontBold,
   fontMono,
+  mediaQuery,
   mL,
   mR,
   pR,
@@ -60,6 +62,13 @@ const ChannelName = styled.div`
   }
 `;
 
+const showOnMd = css`
+  display: none;
+  ${mediaQuery(breakpoint.md)} {
+    display: unset;
+  }
+`;
+
 function Header() {
   const pane = usePane();
   const channel = useSelector((state) => state.chatPane[pane]!.channel);
@@ -74,7 +83,7 @@ function Header() {
       <ChannelName>{channel.name}</ChannelName>
       <Topic>{channel.topic}</Topic>
       <div css={toolbar}>
-        <ChatHeaderButton css={[mL(1)]} data-active={isPaneSplit} onClick={toggleSplit}>
+        <ChatHeaderButton css={[mL(1), showOnMd]} data-active={isPaneSplit} onClick={toggleSplit}>
           <Icon sprite={columns} />
         </ChatHeaderButton>
         {isSpaceAdmin && (

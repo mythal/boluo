@@ -116,20 +116,7 @@ function Compose({ preview, channelId, member }: Props) {
     characterName,
   ]);
   const [
-    {
-      messageId,
-      text,
-      broadcast,
-      isAction,
-      inGame,
-      sending,
-      inputName,
-      media,
-      entities,
-      canSubmit,
-      prevSubmit,
-      whisperTo,
-    },
+    { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit, whisperTo },
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
@@ -186,6 +173,7 @@ function Compose({ preview, channelId, member }: Props) {
           prevSubmit: new Date().getTime(),
         })
       );
+      inputRef.current?.reset();
     }
   };
   const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame, enterSend);
@@ -206,7 +194,6 @@ function Compose({ preview, channelId, member }: Props) {
       </div>
       <ComposeInput
         ref={inputRef}
-        prevSubmit={prevSubmit}
         autoFocus
         autoSize
         css={[input]}

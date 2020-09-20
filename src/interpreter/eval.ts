@@ -208,11 +208,11 @@ export const cocSuccessLevelDisplay = (value: number, targetValue: number): stri
   } else if (value > targetValue) {
     successName = '失败';
   } else if (value <= Math.floor(targetValue / 5)) {
-    successName = '极难成功';
+    successName = '⅕极难成功';
   } else if (value <= targetValue >> 1) {
-    successName = '困难成功';
+    successName = '½困难成功';
   } else {
-    successName = '成功';
+    successName = '常规成功';
   }
   return successName;
 };

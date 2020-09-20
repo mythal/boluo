@@ -335,7 +335,7 @@ const exaltedRoll: P<DicePool> = regex(/^ex(p?)\s*(\d+)\s*/).then(([match, state
     counter,
     face: 10,
     min: 7,
-    addition: 0,
+    duplication: 10,
     fumble: 1,
   };
   return [node, state];

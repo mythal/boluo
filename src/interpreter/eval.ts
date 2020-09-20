@@ -99,8 +99,8 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
           //let case 0 with biggest
           filtered = [];
           if (auxFaces.length >= 1){
-            for (let i = auxNumber[0]-1; i >= 0; i--) {
-              filtered.push(auxFaces[0]-i);
+            for (let i = 0; i < auxNumber[0]; i++) {
+              filtered.push(auxFaces[0]+i);
             } 
           }
         }

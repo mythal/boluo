@@ -102,7 +102,7 @@ export const loadChat = (id: Id, pane: number) => async (dispatch: Dispatch) => 
     members,
     filter: 'NONE',
     moving: false,
-    showFolded: true,
+    showFolded: false,
     postponed: List(),
     pane,
   };

@@ -1,8 +1,22 @@
 import { css } from '@emotion/core';
-import { fontMono, fontNormal, m, mB, mL, pX, pY, roundedSm, textLg, textSm, uiShadow } from '../../styles/atoms';
+import {
+  fontMono,
+  fontNormal,
+  headerShadow,
+  m,
+  mB,
+  mL,
+  pX,
+  pY,
+  roundedSm,
+  spacingN,
+  textLg,
+  textSm,
+  uiShadow,
+} from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
-import { black, gray, primary } from '../../styles/colors';
+import { black, gray, headerBgColor, primary } from '../../styles/colors';
 
 export const chatContentLineHeight = css`
   line-height: 1.6rem;
@@ -57,4 +71,32 @@ export const floatPanel = css`
 export const codeBlockStyle = css`
   background-color: ${black};
   ${[roundedSm, textSm, fontNormal, fontMono, pX(2), pY(1), m(0)]};
+`;
+export const chatRight = css`
+  grid-row: header-start / compose-end;
+`;
+export const chatHeaderPadding = css`
+  ${[pX(2), pY(1.5)]};
+`;
+export const sidebarWidth = css`
+  min-width: 200px;
+  max-width: 200px;
+`;
+export const chatHeaderStyle = css`
+  background-color: ${headerBgColor};
+  ${[chatHeaderPadding]};
+  grid-row: header-start / header-end;
+  z-index: 6;
+  ${headerShadow};
+  display: grid;
+  height: 100%;
+  column-gap: ${spacingN(1)};
+  align-items: center;
+  justify-content: stretch;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'title topic toolbar';
+`;
+export const chatHeaderToolbar = css`
+  height: 100%;
+  grid-area: toolbar;
 `;

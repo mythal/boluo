@@ -34,6 +34,7 @@ export const chatItemContainer = css`
   background-color: ${chatItemBgColor};
 
   column-gap: ${spacingN(2)};
+  row-gap: ${spacingN(1)};
   grid-template-columns: 1.5rem auto 1fr;
   grid-template-rows: auto auto;
   grid-template-areas:

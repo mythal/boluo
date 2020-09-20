@@ -142,7 +142,7 @@ function VirtualList({ myMember, channelId }: Props) {
 
     const item = filteredMessages.get(index - 1)!;
     let sameSender = false;
-    if (item.type === 'MESSAGE') {
+    if (item.type === 'MESSAGE' && !item.message.isAction) {
       const { senderId, name } = item.message;
       if (senderId === prevSenderId && name === prevMessageName) {
         sameSender = true;

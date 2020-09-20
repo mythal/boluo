@@ -43,6 +43,7 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
 
+        <News css={[mB(2)]}>测试新的消息列表，如果更喜欢原来的请告诉我</News>
         <News css={[mB(2)]}>
           <Text>
             增加了代码和代码块 Markdown 格式支持 <Code>`...这里写代码 {'{d20}'}...`</Code>

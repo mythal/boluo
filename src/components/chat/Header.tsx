@@ -4,17 +4,17 @@ import { css } from '@emotion/core';
 import { useDispatch, useSelector } from '../../store';
 import {
   breakpoint,
-  chatHeaderStyle,
-  chatHeaderToolbar,
   flex,
   fontBold,
   fontMono,
+  fontNormal,
   mediaQuery,
   mL,
   mR,
   pR,
   textBase,
   textLg,
+  textSm,
 } from '../../styles/atoms';
 import ChannelMemberButton from './ChannelMemberButton';
 import sliders from '../../assets/icons/sliders.svg';
@@ -29,13 +29,13 @@ import MemberListButton from './MemberListButton';
 import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
 import { usePane } from '../../hooks/usePane';
+import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 
-const Topic = styled.div`
-  display: inline-block;
+const Topic = styled.span`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  grid-area: topic;
+  ${[textSm, fontNormal, mL(1)]};
   color: ${darken(0.2, textColor)};
 `;
 
@@ -45,14 +45,14 @@ const toolbar = css`
 `;
 
 const ChannelName = styled.div`
-  ${[textBase, fontBold, textLg]};
+  ${[textSm]};
   color: ${textColor};
   ${pR(1)};
   ${mR(1)};
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  max-width: 6em;
+  color: ${darken(0.2, textColor)};
 
   &::before {
     content: '#';
@@ -60,6 +60,11 @@ const ChannelName = styled.div`
     color: ${darken(0.2, textColor)};
     ${[pR(1)]};
   }
+`;
+
+const name = css`
+  ${[textBase, fontBold, textLg]};
+  color: ${textColor};
 `;
 
 const showOnMd = css`
@@ -80,8 +85,10 @@ function Header() {
   useTitle(channel.name);
   return (
     <div css={chatHeaderStyle}>
-      <ChannelName>{channel.name}</ChannelName>
-      <Topic>{channel.topic}</Topic>
+      <ChannelName>
+        <span css={name}>{channel.name}</span>
+        <Topic>{channel.topic}</Topic>
+      </ChannelName>
       <div css={toolbar}>
         <ChatHeaderButton css={[mL(1), showOnMd]} data-active={isPaneSplit} onClick={toggleSplit}>
           <Icon sprite={columns} />

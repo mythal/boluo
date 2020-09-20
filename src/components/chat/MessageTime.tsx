@@ -10,7 +10,7 @@ interface Props {
 }
 
 const style = css`
-  ${[textXs, relative, mL(1), fontMono]};
+  ${[textXs, relative, mL(1), fontMono, fontNormal]};
   color: ${gray['600']};
   clear: right;
   float: right;

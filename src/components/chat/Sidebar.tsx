@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '../../api/channels';
-import { chatHeaderPadding, mR, pT, sidebarWidth, textLg } from '../../styles/atoms';
+import { mR, pT, textLg } from '../../styles/atoms';
 import ChatHeaderButton, { ChatHeaderButtonLink } from './ChatHeaderButton';
 import logo from '../../assets/logo.svg';
 import bars from '../../assets/icons/bars.svg';
@@ -13,6 +13,7 @@ import SidebarExpandItems from './SidebarExpandItems';
 import { chatSidebarColor, headerBgColor } from '../../styles/colors';
 import { Transition } from 'react-transition-group';
 import SidebarFoldedItems from './SidebarFoldedItems';
+import { chatHeaderPadding, sidebarWidth } from './styles';
 
 interface Props {
   space: Space;

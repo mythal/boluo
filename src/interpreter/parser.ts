@@ -284,6 +284,26 @@ const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) =>
 });
 
 const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
+  const addStr = match[1] || '10';
+  const counterStr = match[2];
+  if (!counterStr) {
+    return null;
+  }
+  const counter = parseInt(counterStr);
+  const addition = parseInt(addStr);
+  const node: DicePool = {
+    type: 'DicePool',
+    counter,
+    face: 10,
+    min: 8,
+    addition,
+    fumble: 1,
+    critical: 10,
+  };
+  return [node, state];
+});
+
+const oWodRoll: P<DicePool> = regex(/^[oO](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
   const minStr = match[1] || '8';
   const counterStr = match[2];
   if (!counterStr) {
@@ -296,7 +316,9 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([matc
     counter,
     face: 10,
     min,
-    addition: 10,
+    addition: 0,
+    fumble: 1,
+    critical: 10,
   };
   return [node, state];
 });

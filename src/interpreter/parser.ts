@@ -316,7 +316,6 @@ const oWodRoll: P<DicePool> = regex(/^[oO](?:_(\d))?\s*(\d{1,3})\s*/).then(([mat
     counter,
     face: 10,
     min,
-    addition: 0,
     reduction: 1,
     fumble: 1,
     critical: 10,

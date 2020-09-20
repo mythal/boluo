@@ -50,10 +50,16 @@ function Help({ dismiss }: Props) {
           <Code>.r fate FATE规则骰子，{'{dF}'} 也可以</Code>
         </Text>
         <Text>
-          <Code>.r WoD 骰池：w 12 w 20 成功下限设为6：w_6 10</Code>
+          <Code>.r nWoD 骰池：w 12 w 20 爆骰下限设为8：w_8 10</Code>
+        </Text>
+        <Text>
+          <Code>.r oWoD 骰池：o 12 o 20 成功下限设为6：o_6 10</Code>
         </Text>
         <Text>
           <Code>.r sr 10 srp 10 shadowrun 骰池</Code>
+        </Text>
+        <Text>
+          <Code>.r ex 10 exalted 骰池</Code>
         </Text>
       </div>
     </Dialog>

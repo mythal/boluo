@@ -304,7 +304,7 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([matc
 });
 
 const oWodRoll: P<DicePool> = regex(/^[oO](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
-  const minStr = match[1] || '8';
+  const minStr = match[1] || '6';
   const counterStr = match[2];
   if (!counterStr) {
     return null;

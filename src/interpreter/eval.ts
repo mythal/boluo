@@ -72,6 +72,11 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
       }
       if (x >= node.min) {
         value++;
+        if (x >= node.duplication) {
+          value++;
+        }
+      }else if (x <= node.reduction) {
+        value--;
       }
     }
     return { ...node, value, values };

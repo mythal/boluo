@@ -1,5 +1,18 @@
 import { css } from '@emotion/core';
-import { alignRight, fontMono, mB, mL, pX, pY, roundedSm, textLg, textSm, uiShadow } from '../../styles/atoms';
+import {
+  alignRight,
+  fontMono,
+  fontNormal,
+  m,
+  mB,
+  mL,
+  pX,
+  pY,
+  roundedSm,
+  textLg,
+  textSm,
+  uiShadow,
+} from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
 import { black, gray, primary } from '../../styles/colors';
@@ -57,5 +70,5 @@ export const floatPanel = css`
 
 export const codeBlockStyle = css`
   background-color: ${black};
-  ${[roundedSm, textSm, fontMono, pX(2), pY(1)]};
+  ${[roundedSm, textSm, fontNormal, fontMono, pX(2), pY(1), m(0)]};
 `;

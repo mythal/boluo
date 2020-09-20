@@ -97,7 +97,7 @@ function ComposeInput(
     timeout.current = window.setTimeout(() => {
       const { text, entities } = parse(nextValue.trim());
       const updater: Partial<ComposeState> = { text, entities };
-      if (value.match(ACTION_COMMAND)) {
+      if (nextValue.match(ACTION_COMMAND)) {
         if (!isAction) {
           updater.isAction = true;
         }

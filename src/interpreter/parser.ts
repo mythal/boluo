@@ -186,7 +186,7 @@ const code: P<Entity> = regex(CODE_REGEX).then(([match, { text, rest }]) => {
   return [entity, { text, rest }];
 });
 
-const CODE_BLOCK_REGEX = /^```\s?([\s\S]+?)\s?```/;
+const CODE_BLOCK_REGEX = /^```\n?([\s\S]*?)\n?```\s*/;
 const codeBlock: P<Entity> = regex(CODE_BLOCK_REGEX).then(([match, { text, rest }]) => {
   const [entire, content] = match;
   const entity: CodeBlock = {

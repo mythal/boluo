@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
 import { black, primary } from '../../styles/colors';
-import { fontMono, pX, pY, roundedSm, textSm } from '../../styles/atoms';
+import { fontMono, fontNormal, pX, pY, roundedSm, textSm } from '../../styles/atoms';
 import { css } from '@emotion/core';
 
 const style = css`
   background-color: ${black};
   cursor: pointer;
-  ${[roundedSm, textSm, fontMono, pX(2), pY(1)]};
+  ${[roundedSm, textSm, fontNormal, fontMono, pX(2), pY(1)]};
   &:hover {
     box-shadow: 0 0 0 1px ${primary['700']} inset;
   }

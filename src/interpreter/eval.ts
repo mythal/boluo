@@ -43,8 +43,67 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
       let filtered: number[];
       if (type === 'HIGH') {
         filtered = values.sort(compare).slice(0, counter);
-      } else {
+      } else if (type === 'LOW'){
         filtered = values.sort(compare).slice(counter);
+      } else {
+        let auxFaces: number[] = [];
+        let auxNumber: number[] = [];
+        const aux: number[] = values.sort(compare);
+        if (type === 'MATCH') {
+          for (let i = 1; i < counter && i < node.counter; i++) {
+            if(aux[i] - aux[i-1] === 0){
+              if(auxFaces.length < 1 || aux[i] === auxFaces[auxFaces.length-1]){
+                auxFaces.push(aux[i]);
+                auxNumber.push(2);
+              }else{
+                auxNumber[auxNumber.length-1]++;
+              }
+            }
+          }
+          //counting matched, counting all in case of more needment
+          if(auxFaces.length > 1){
+            for (let i = auxFaces.length; i > 1; i--) {
+              if(auxFaces[i]*auxNumber[i] > auxFaces[i-1]*auxNumber[i-1]) {
+                auxFaces[i-1] = auxFaces[i];
+                auxNumber[i-1] = auxNumber[i];
+              }
+            } 
+          }
+          //let case 0 with biggest
+          filtered = [];
+          if (auxFaces.length >= 1){
+            for (let i = 0; i < auxNumber[0]; i++) {
+              filtered.push(auxFaces[0]);
+            } 
+          }
+        }else{
+          for (let i = 2; i < counter && i < node.counter; i++) {
+            if(aux[i] - aux[i-1] === 1 && aux[i-1] - aux[i-2] === 1){
+              if(auxFaces.length < 1 || aux[i] - auxNumber[auxNumber.length-1] + 1 === auxFaces[auxFaces.length-1]){
+                auxFaces.push(aux[i]);
+                auxNumber.push(3);
+              }else{
+                auxNumber[auxNumber.length-1]++;
+              }
+            }
+          }
+          //counting sequece, counting all in case of more needment
+          if(auxFaces.length > 1){
+            for (let i = auxFaces.length; i > 1; i--) {
+              if(((auxFaces[i]-auxNumber[i]+1)+auxFaces[i])*auxNumber[i] > ((auxFaces[i-1]-auxNumber[i-1]+1)+auxFaces[i-1])*auxNumber[i-1]) {
+                auxFaces[i-1] = auxFaces[i];
+                auxNumber[i-1] = auxNumber[i];
+              }
+            } 
+          }
+          //let case 0 with biggest
+          filtered = [];
+          if (auxFaces.length >= 1){
+            for (let i = auxNumber[0]-1; i >= 0; i--) {
+              filtered.push(auxFaces[0]-i);
+            } 
+          }
+        }
       }
       const value = filtered.reduce((a, b) => a + b, 0);
       return { ...node, values, value, filtered };

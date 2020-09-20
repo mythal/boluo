@@ -7,6 +7,8 @@ import { ExprEntity } from './ExprEntity';
 import { white } from '../../styles/colors';
 import ExternalLink from '../atoms/ExternalLink';
 import { makeRng } from '../../interpreter/eval';
+import { Code } from '../atoms/Code';
+import { codeBlockStyle } from './styles';
 
 interface Props {
   text: string;
@@ -56,6 +58,14 @@ function ItemContent({ text, entities, seed }: Props) {
       content.push(<Strong key={key}>{text.substr(entity.start, entity.offset)}</Strong>);
     } else if (entity.type === 'Emphasis') {
       content.push(<Emphasis key={key}>{text.substr(entity.start, entity.offset)}</Emphasis>);
+    } else if (entity.type === 'Code') {
+      content.push(<Code key={key}>{text.substr(entity.start, entity.offset)}</Code>);
+    } else if (entity.type === 'CodeBlock') {
+      content.push(
+        <pre css={codeBlockStyle} key={key}>
+          {text.substr(entity.start, entity.offset)}
+        </pre>
+      );
     }
   }
   return <React.Fragment>{content}</React.Fragment>;

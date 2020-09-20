@@ -2,6 +2,8 @@
 import {
   Binary,
   CocRoll,
+  Code,
+  CodeBlock,
   DicePool,
   Emphasis,
   Entity,
@@ -165,6 +167,30 @@ const emphasis: P<Entity> = regex(EM_REGEX).then(([match, { text, rest }]) => {
   const [entire, content] = match;
   const entity: Emphasis = {
     type: 'Emphasis',
+    start: text.length + entire.indexOf(content),
+    offset: content.length,
+  };
+  text += entire;
+  return [entity, { text, rest }];
+});
+
+const CODE_REGEX = /^`(.+?)`/;
+const code: P<Entity> = regex(CODE_REGEX).then(([match, { text, rest }]) => {
+  const [entire, content] = match;
+  const entity: Code = {
+    type: 'Code',
+    start: text.length + entire.indexOf(content),
+    offset: content.length,
+  };
+  text += entire;
+  return [entity, { text, rest }];
+});
+
+const CODE_BLOCK_REGEX = /^```\s?([\s\S]+?)\s?```/;
+const codeBlock: P<Entity> = regex(CODE_BLOCK_REGEX).then(([match, { text, rest }]) => {
+  const [entire, content] = match;
+  const entity: CodeBlock = {
+    type: 'CodeBlock',
     start: text.length + entire.indexOf(content),
     offset: content.length,
   };
@@ -479,7 +505,7 @@ const exprNodeToEntity = (state: State) => ([node, next]: [ExprNode, State]): [E
 
 const ROLL_COMMAND = /^[.。]r\s*/;
 
-const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, span]);
+const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl, expression, span]);
 
 const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
 
@@ -496,7 +522,7 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
     }
     return exprNodeToEntity(state)(result);
   });
-  const entity = choice<Entity>([strong, emphasis, link, autoUrl, expression, exprEntity, span]);
+  const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl, expression, exprEntity, span]);
   const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   return message.run(next, env);
 });

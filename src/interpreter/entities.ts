@@ -18,6 +18,14 @@ export interface Expr extends BaseEntity {
   node: ExprNode;
 }
 
+export interface Code extends BaseEntity {
+  type: 'Code';
+}
+
+export interface CodeBlock extends BaseEntity {
+  type: 'CodeBlock';
+}
+
 export interface Strong extends BaseEntity {
   type: 'Strong';
 }
@@ -37,7 +45,7 @@ export interface Mention extends BaseEntity {
   self?: boolean;
 }
 
-export type Entity = Text | Link | Expr | Strong | Emphasis | Mention;
+export type Entity = Text | Link | Expr | Strong | Emphasis | Mention | Code | CodeBlock;
 
 export interface Unknown {
   type: 'Unknown';
@@ -168,4 +176,6 @@ export interface ExportExpr extends BaseEntity {
   exprText: string;
 }
 
-export type ExportEntity = ((Text | Link | Strong | Emphasis | Mention) & { text: string }) | ExportExpr;
+export type ExportEntity =
+  | ((Text | Link | Strong | Emphasis | Mention | Code | CodeBlock) & { text: string })
+  | ExportExpr;

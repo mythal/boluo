@@ -15,6 +15,7 @@ import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
+import { Code } from '../atoms/Code';
 
 const Container = styled.div`
   display: grid;
@@ -41,6 +42,16 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+
+        <News css={[mB(2)]}>
+          <Text>
+            增加了代码和代码块 Markdown 格式支持 <Code>`...这里写代码 {'{d20}'}...`</Code>
+          </Text>
+          <Text>
+            <Code>```代码块，文字地图可以写在这里面。```</Code>
+          </Text>
+        </News>
+
         <News css={[mB(2)]}>
           <Text>增加了悄悄话（也是暗骰）功能，点击输入框左侧的省略号打开面板来使用。</Text>
         </News>
@@ -60,17 +71,6 @@ function My() {
             </Link>
             去测试功能。
           </Text>
-        </News>
-
-        <News css={[mB(2)]}>
-          <Text>
-            管理员能够以 JSON 格式导出频道消息了{' '}
-            <ExternalLink css={link} to="https://forum.boluo.chat/d/5">
-              说明文档
-            </ExternalLink>
-            。
-          </Text>
-          <Text>「探索位面」只会显示那些在位面的设置中勾选了「在『探索位面』中列出」的位面。</Text>
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

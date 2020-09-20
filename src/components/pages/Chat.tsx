@@ -118,9 +118,21 @@ function Chat() {
   }, [channelId, activePane]);
 
   useEffect(() => {
+    if (isSplit) {
+      if (activePane === 0) {
+        setRightChannel(leftChannel);
+      } else if (activePane === 1) {
+        setLeftChannel(rightChannel);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSplit]);
+
+  useEffect(() => {
     dispatch(loadSpace(spaceId));
   }, [spaceId, dispatch]);
 
+  // maybe polling is more suitable?
   useSpaceMailbox(spaceId);
 
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));

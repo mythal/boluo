@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useParse } from '../../../hooks/useParse';
-import { ComposeDispatch, update } from './reducer';
+import { ComposeDispatch, ComposeState, update } from './reducer';
 import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
@@ -62,6 +62,18 @@ function ComposeInput(
     }, 10);
   }, [composeDispatch, parse]);
 
+  useEffect(() => {
+    setValue((value) => {
+      const matchActionCommand = value.match(ACTION_COMMAND);
+      if (isAction && matchActionCommand === null) {
+        return actionCommand + value;
+      } else if (!isAction && matchActionCommand) {
+        return value.substr(matchActionCommand[0].length);
+      }
+      return value;
+    });
+  }, [isAction]);
+
   useImperativeHandle<ComposeInputAction, ComposeInputAction>(
     ref,
     () => {
@@ -71,15 +83,6 @@ function ComposeInput(
     },
     [appendDice]
   );
-  useEffect(() => {
-    const matchActionCommand = value.match(ACTION_COMMAND);
-    if (isAction && matchActionCommand === null) {
-      setValue(actionCommand + value);
-    } else if (!isAction && matchActionCommand) {
-      setValue(value.substr(matchActionCommand[0].length));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAction]);
 
   useEffect(() => {
     return () => {
@@ -87,26 +90,23 @@ function ComposeInput(
     };
   }, [prevSubmit]);
 
-  useEffect(() => {
-    if (value.match(ACTION_COMMAND)) {
-      if (!isAction) {
-        composeDispatch(update({ isAction: true }));
-      }
-    } else {
-      if (isAction) {
-        composeDispatch(update({ isAction: false }));
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [composeDispatch, value]);
-
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const nextValue = e.target.value;
     setValue(nextValue);
     window.clearTimeout(timeout.current);
     timeout.current = window.setTimeout(() => {
       const { text, entities } = parse(nextValue.trim());
-      composeDispatch(update({ text, entities }));
+      const updater: Partial<ComposeState> = { text, entities };
+      if (value.match(ACTION_COMMAND)) {
+        if (!isAction) {
+          updater.isAction = true;
+        }
+      } else {
+        if (isAction) {
+          updater.isAction = false;
+        }
+      }
+      composeDispatch(update(updater));
     }, 250);
   };
 

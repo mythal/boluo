@@ -33,6 +33,10 @@ export interface CreateSpace {
   firstChannelName: string;
 }
 
+export interface SearchParams {
+  name: string;
+}
+
 export interface EditSpace {
   spaceId: Id;
   name?: string;

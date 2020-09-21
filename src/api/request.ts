@@ -17,6 +17,7 @@ import {
   CheckSpaceName,
   CreateSpace,
   EditSpace,
+  SearchParams,
   Space,
   SpaceMember,
   SpaceWithMember,
@@ -33,7 +34,7 @@ import {
   EditChannelMember,
   JoinChannel,
 } from './channels';
-import { ByChannel, EditMessage, Message, SwapMessage, MoveTo, NewMessage } from './messages';
+import { ByChannel, EditMessage, Message, MoveTo, NewMessage, SwapMessage } from './messages';
 import { Id } from '../utils/id';
 import { Media } from './media';
 
@@ -168,6 +169,7 @@ export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(path: '/users/check_username', query: CheckUsername): Promise<AppResult<boolean>>;
 export function get(path: '/users/check_email', query: CheckEmail): Promise<AppResult<boolean>>;
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
+export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMember[]>>;

@@ -43,19 +43,16 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
 
-        <News css={[mB(2)]}>测试新的消息列表，如果更喜欢原来的请告诉我</News>
+        <News css={[mB(2)]}>
+          <Text>现在可以搜索位面和删除位面了。</Text>
+        </News>
+        <News css={[mB(2)]}>测试新的消息列表，如果更喜欢原来的请告诉我。</News>
         <News css={[mB(2)]}>
           <Text>
-            增加了代码和代码块 Markdown 格式支持 <Code>`...这里写代码 {'{d20}'}...`</Code>
-          </Text>
-          <Text>
-            <Code>```代码块，文字地图可以写在这里面。```</Code>
+            增加了代码和代码块 Markdown 格式支持 <Code>`{'{d20}'}` ```代码块```</Code>
           </Text>
         </News>
 
-        <News css={[mB(2)]}>
-          <Text>增加了悄悄话（也是暗骰）功能，点击输入框左侧的省略号打开面板来使用。</Text>
-        </News>
         <News css={[mB(2)]}>
           <Text>
             菠萝上线啦！现在是早期测试阶段，请到

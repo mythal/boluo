@@ -22,7 +22,7 @@ const style = css`
 `;
 
 const actionCommand = '.me ';
-const ACTION_COMMAND = /[.。]me\s*/;
+const ACTION_COMMAND = /^[.。]me\s*/;
 
 export interface ComposeInputAction {
   appendDice: () => void;

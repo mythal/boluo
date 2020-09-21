@@ -31,6 +31,7 @@ import {
 import {
   ExploreSpaceLoaded,
   ResetUi,
+  SpaceDeleted,
   SpaceLoaded,
   SpaceUpdated,
   SwitchChat,
@@ -47,6 +48,7 @@ export type Action =
   | JoinedSpace
   | SpaceEdited
   | SpaceUpdated
+  | SpaceDeleted
   | LeftSpace
   | JoinedChannel
   | LeftChannel

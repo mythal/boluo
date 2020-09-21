@@ -112,6 +112,11 @@ function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated):
   return state;
 }
 
+function removeSpace(state: ProfileState, spaceId: Id): ProfileState {
+  const spaces = state.spaces.remove(spaceId);
+  return { ...state, spaces };
+}
+
 function updateSettings(state: ProfileState, { settings }: SettingsUpdated): ProfileState {
   return { ...state, settings };
 }
@@ -151,6 +156,8 @@ export const profileReducer = (state: ProfileState | undefined, action: Action):
       return leaveSpace(state, action);
     case 'JOINED_CHANNEL':
       return joinChannel(state, action);
+    case 'SPACE_DELETED':
+      return removeSpace(state, action.spaceId);
     case 'SPACE_UPDATED':
       return updateSpace(state, action.spaceWithRelated);
     case 'SPACE_LOADED':

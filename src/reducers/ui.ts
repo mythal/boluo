@@ -78,9 +78,28 @@ const handleUserEdited = ({ userSet, ...state }: UiState, { user }: UserEdited):
 };
 
 const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppResult<SpaceWithRelated>): UiState => {
-  let { spaceSet } = state;
+  let { spaceSet, exploreSpaceList } = state;
   spaceSet = spaceSet.set(spaceId, result);
-  return { ...state, spaceSet };
+  if (result.isOk) {
+    const newSpace = result.value.space;
+    exploreSpaceList = exploreSpaceList.map((spaces) =>
+      spaces.map((space) => {
+        if (space.id !== spaceId) {
+          return space;
+        } else {
+          return newSpace;
+        }
+      })
+    );
+  }
+  return { ...state, spaceSet, exploreSpaceList };
+};
+
+const removeSpace = (state: UiState, spaceId: Id): UiState => {
+  let { spaceSet, exploreSpaceList } = state;
+  spaceSet = spaceSet.remove(spaceId);
+  exploreSpaceList = exploreSpaceList.map((spaces) => spaces.filter((space) => space.id !== spaceId));
+  return { ...state, spaceSet, exploreSpaceList };
 };
 
 export function uiReducer(state: UiState = initUiState, action: Action, userId: Id | undefined): UiState {
@@ -91,6 +110,8 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
       return handleSpaceWithRelatedResult(state, action.spaceId, action.result);
     case 'SPACE_UPDATED':
       return handleSpaceWithRelatedResult(state, action.spaceWithRelated.space.id, new Ok(action.spaceWithRelated));
+    case 'SPACE_DELETED':
+      return removeSpace(state, action.spaceId);
     case 'USER_LOADED':
       return { ...state, userSet: state.userSet.set(action.userId, action.result) };
     case 'LOGGED_IN':

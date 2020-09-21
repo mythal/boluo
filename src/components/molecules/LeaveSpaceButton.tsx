@@ -40,8 +40,15 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
         退出
       </button>
       {confirmDialog && (
-        <Dialog confirm={leave} dismiss={() => setConfirmDialog(false)} mask title="退出位面">
-          <Text>确认要退出「{name}」位面吗？</Text>
+        <Dialog
+          confirm={leave}
+          dismiss={() => setConfirmDialog(false)}
+          mask
+          title="退出位面"
+          confirmText="退出"
+          confirmButtonVariant="danger"
+        >
+          <Text>确认要退出「{name}」位面吗？你将不再是位面的成员</Text>
         </Dialog>
       )}
     </>

@@ -181,7 +181,14 @@ function ManageChannel({ channel, dismiss }: Props) {
         </div>
       </form>
       {deleteDialog && (
-        <Dialog title="删除频道" confirmText="删除" dismiss={dismissDeleteDialog} confirm={deleteChannel}>
+        <Dialog
+          title="删除频道"
+          confirmText="删除频道"
+          dismiss={dismissDeleteDialog}
+          confirm={deleteChannel}
+          confirmButtonVariant="danger"
+          mask
+        >
           <Text>真的要删除频道「{channel.name}」吗？此操作不可撤销！</Text>
         </Dialog>
       )}

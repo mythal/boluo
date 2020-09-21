@@ -28,8 +28,10 @@ const btnColor = (color: string) => css`
   background-color: ${color};
 `;
 
+export type ButtonVariant = 'normal' | 'danger' | 'primary' | 'dark';
+
 interface DataAttributes {
-  'data-variant'?: 'normal' | 'danger' | 'primary' | 'dark';
+  'data-variant'?: ButtonVariant;
   'data-icon'?: boolean;
   'data-small'?: boolean;
   'data-size'?: 'large' | 'normal' | 'small';

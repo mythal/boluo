@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useCallback, useEffect } from 'react';
 import { css } from '@emotion/core';
-import Button from '../atoms/Button';
+import Button, { ButtonVariant } from '../atoms/Button';
 import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../../styles/atoms';
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
@@ -14,6 +14,7 @@ interface Props {
   dismiss?: () => void;
   confirm?: () => void;
   confirmText?: string;
+  confirmButtonVariant?: ButtonVariant;
 }
 
 const style = css`
@@ -49,7 +50,7 @@ const contentStyle = css`
   padding: ${spacingN(4)};
 `;
 
-function Dialog({ children, mask, dismiss, confirm, confirmText, title }: Props) {
+function Dialog({ children, mask, dismiss, confirm, confirmText, title, confirmButtonVariant = 'primary' }: Props) {
   confirmText = confirmText || '确定';
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
@@ -76,7 +77,7 @@ function Dialog({ children, mask, dismiss, confirm, confirmText, title }: Props)
       <div css={contentStyle}>{children}</div>
       {confirm && (
         <div css={buttonAreaStyle}>
-          <Button data-small autoFocus data-variant="primary" onClick={confirm}>
+          <Button data-small autoFocus data-variant={confirmButtonVariant} onClick={confirm}>
             {confirmText}
           </Button>
         </div>

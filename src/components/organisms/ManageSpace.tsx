@@ -83,13 +83,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
         <input readOnly value={space.id} name="spaceId" ref={register({ required })} hidden />
         <div>
           <Label htmlFor="name">位面名</Label>
-          <Input
-            css={largeInput}
-            id="name"
-            name="name"
-            defaultValue={space.name}
-            ref={register(spaceNameValidation(space.name))}
-          />
+          <Input css={largeInput} id="name" name="name" defaultValue={space.name} ref={register(spaceNameValidation)} />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
         <div>

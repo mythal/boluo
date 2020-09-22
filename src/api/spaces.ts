@@ -34,7 +34,7 @@ export interface CreateSpace {
 }
 
 export interface SearchParams {
-  name: string;
+  search: string;
 }
 
 export interface EditSpace {
@@ -49,8 +49,4 @@ export interface SpaceWithRelated {
   space: Space;
   members: SpaceMember[];
   channels: Channel[];
-}
-
-export interface CheckSpaceName {
-  name: string;
 }

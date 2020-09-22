@@ -65,7 +65,7 @@ function NewSpace() {
         <div css={[md(fieldsLayout)]}>
           <div css={[mY(2), gridColumn(1, 3)]}>
             <Label htmlFor="name">位面名</Label>
-            <Input css={largeInput} id="name" name="name" ref={register(spaceNameValidation())} />
+            <Input css={largeInput} id="name" name="name" ref={register(spaceNameValidation)} />
             {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
           </div>
           <div css={mY(2)}>

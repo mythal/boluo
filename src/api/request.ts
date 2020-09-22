@@ -13,16 +13,7 @@ import {
   Settings,
   User,
 } from './users';
-import {
-  CheckSpaceName,
-  CreateSpace,
-  EditSpace,
-  SearchParams,
-  Space,
-  SpaceMember,
-  SpaceWithMember,
-  SpaceWithRelated,
-} from './spaces';
+import { CreateSpace, EditSpace, SearchParams, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
 import {
   Channel,
   ChannelMember,
@@ -173,7 +164,6 @@ export function get(path: '/spaces/search', query: SearchParams): Promise<AppRes
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMember[]>>;
-export function get(path: '/spaces/check_name', query: CheckSpaceName): Promise<AppResult<boolean>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;

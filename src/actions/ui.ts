@@ -26,7 +26,7 @@ export const loadExploreSpace = () => (dispatch: Dispatch) => {
 };
 
 export const searchSpaces = (searchText: string) => (dispatch: Dispatch) => {
-  get('/spaces/search', { name: searchText }).then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
+  get('/spaces/search', { search: searchText }).then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
 };
 
 export interface SwitchChat {

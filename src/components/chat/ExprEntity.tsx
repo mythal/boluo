@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useEffect, useState } from 'react';
+import React, { MouseEventHandler, useState } from 'react';
 import Prando from 'prando';
 import {
   CocRollResult,
@@ -134,7 +134,7 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
     );
   }
   return (
-    <Roll onClick={handleMouse}>
+    <Roll onClick={handleMouse} className="roll">
       <Icon sprite={dicePoolIcon} />
       {node.counter}d{node.face} {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒{' '}
       {node.value}
@@ -145,7 +145,7 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
 
 const FateRollNode: React.FC<{ node: FateResult }> = ({ node }) => {
   return (
-    <Roll>
+    <Roll className="roll">
       {node.values.map(fateDiceMapper)}
       <span css={mL(1)}>{node.value}</span>
     </Roll>
@@ -172,7 +172,7 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
   }
 
   return (
-    <Roll onMouseDown={handleMouse}>
+    <Roll onMouseDown={handleMouse} className="roll">
       <Icon sprite={elderSign} />
       {node.value}
       {expand && <span> = {node.rolled}</span>}
@@ -215,7 +215,7 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
   }
 
   return (
-    <Roll onMouseDown={handleMouse}>
+    <Roll onMouseDown={handleMouse} className="roll">
       <Icon sprite={D20Icon} />
       {node.counter}D{node.face}
       {filter}
@@ -271,17 +271,6 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
 };
 
 export const ExprEntity = React.memo<Props>(({ node, rng }) => {
-  const [, setCounter] = useState(0);
-  useEffect(() => {
-    if (rng !== undefined) {
-      return;
-    }
-    const handler = window.setInterval(() => {
-      // force update
-      setCounter((count) => count + 1);
-    }, Math.floor(Math.random() * 500 + 1000));
-    return () => window.clearInterval(handler);
-  }, [rng]);
   try {
     const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
     const evaluated = evaluate(node, rng ?? fakeRng);

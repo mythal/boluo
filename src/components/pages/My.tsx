@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
 import { Code } from '../atoms/Code';
+import d20 from '../../assets/icons/d20.svg';
 
 const Container = styled.div`
   display: grid;
@@ -64,9 +65,12 @@ function My() {
           </Text>
         </News>
         <News css={[mB(2)]}>
-          <Text>现在可以搜索位面和删除位面了。</Text>
+          <Text>
+            可以在频道设置里面指定「
+            <Icon sprite={d20} /> 插入骰子」按钮插入的默认指令。
+          </Text>
+          <Text>可以搜索位面和删除位面了。</Text>
         </News>
-        <News css={[mB(2)]}>测试新的消息列表，如果更喜欢原来的请告诉我。</News>
         <News css={[mB(2)]}>
           <Text>
             增加了代码和代码块 Markdown 格式支持 <Code>`{'{d20}'}` ```代码块```</Code>

@@ -20,11 +20,7 @@ export const LoadMoreContainer = styled.div`
   justify-content: center;
 `;
 
-interface Props {
-  shift: (offset: number) => void;
-}
-
-function LoadMore({ shift }: Props) {
+function LoadMore() {
   const pane = usePane();
   const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
   const before = useSelector((state) => state.chatPane[pane]!.messageBefore);
@@ -36,14 +32,13 @@ function LoadMore({ shift }: Props) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let timeout: number | undefined = undefined;
-    timeout = window.setTimeout(() => {
+    const observer = new IntersectionObserver(() => {
       button.current?.click();
-    }, 500);
-    return () => {
-      mounted.current = false;
-      window.clearTimeout(timeout);
-    };
+    }, {});
+    if (button.current) {
+      observer.observe(button.current);
+    }
+    return () => observer.disconnect();
   }, []);
 
   if (finished) {
@@ -68,7 +63,6 @@ function LoadMore({ shift }: Props) {
       messages.pop();
       finished = false;
     }
-    shift(messages.length);
     dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, pane });
   };
   return (

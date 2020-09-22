@@ -82,4 +82,4 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
   );
 }
 
-export default ChatItem;
+export default React.memo(ChatItem);

@@ -21,7 +21,7 @@ import {
   TOO_MUCH_LAYER,
 } from '../../interpreter/eval';
 import Icon from '../atoms/Icon';
-import { fontMono, fontNormal, mL, mX, mY, pX, pY, roundedPx, textLg, textSm } from '../../styles/atoms';
+import { fontMono, fontNormal, mL, mY, pX, pY, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import { blue, minorTextColor, textColor } from '../../styles/colors';
@@ -46,7 +46,7 @@ const Num: React.FC = ({ children }) => {
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 
 const Roll = styled.span`
-  ${[pX(1), pY(0.75), mX(1), mY(0.25), textSm, roundedPx, fontNormal]};
+  ${[pX(1), pY(0.75), mY(0.25), textSm, roundedPx, fontNormal]};
   cursor: pointer;
   align-items: center;
   justify-content: center;

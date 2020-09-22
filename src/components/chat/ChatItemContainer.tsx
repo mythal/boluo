@@ -24,17 +24,14 @@ export const chatItemPlaceHolder = css`
   }
 `;
 
-export const itemMinHeight = 42;
-
 export const chatItemContainer = css`
   display: grid;
   position: relative;
   ${[pX(2), pY(2)]};
-  min-height: ${itemMinHeight}px;
   background-color: ${chatItemBgColor};
 
   column-gap: ${spacingN(2)};
-  row-gap: ${spacingN(1)};
+  row-gap: 0;
   grid-template-columns: 1.5rem auto 1fr;
   grid-template-rows: auto auto;
   grid-template-areas:
@@ -44,6 +41,8 @@ export const chatItemContainer = css`
   &[data-no-name='true'] {
     grid-template-rows: auto;
     grid-template-areas: 'handle content content';
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   &[data-in-game='true'] {

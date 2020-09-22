@@ -45,7 +45,7 @@ function LoadMore() {
     return <LoadMoreContainer>Ω</LoadMoreContainer>;
   }
   const loadMore = async () => {
-    const limit = 64;
+    const limit = 32;
     if (mounted.current) {
       setLoading(true);
     }

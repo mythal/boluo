@@ -3,7 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from '../../store';
 import { DragDropContext, DragDropContextProps, Droppable } from 'react-beautiful-dnd';
 import { AppResult, post } from '../../api/request';
-import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
+import { FinishMoveMessage, MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
 import { batch } from 'react-redux';
 import { showFlash } from '../../actions/flash';
@@ -13,6 +13,7 @@ import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import ChatItem from './ChatItem';
 import LoadMore from './LoadMore';
 import { css } from '@emotion/core';
+import { Id } from '../../utils/id';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem
@@ -96,8 +97,10 @@ function ChatList() {
   }, [messages, filter, showFolded]);
   const onDragEnd: DragDropContextProps['onDragEnd'] = useCallback(
     async ({ draggableId, source, destination }) => {
+      const finishMove: FinishMoveMessage = { type: 'FINISH_MOVE_MESSAGE', pane };
       const messageId = draggableId;
       if (!destination || source.index === destination.index) {
+        dispatch(finishMove);
         return;
       }
       const index = destination.index;
@@ -109,7 +112,7 @@ function ChatList() {
         pane,
       };
       batch(() => {
-        dispatch({ type: 'FINISH_MOVE_MESSAGE', pane });
+        dispatch(finishMove);
         dispatch(action);
       });
 
@@ -153,8 +156,20 @@ function ChatList() {
     dispatch({ type: 'START_MOVE_MESSAGE', pane });
   }, [dispatch, pane]);
 
+  let prevSender: Id | null = null;
+  let prevName: Id | null = null;
   const items = filteredMessages.map((item, index) => {
-    return <ChatItem key={item.id} item={item} myMember={myMember} index={index} />;
+    let sameSender = false;
+    if (item.type === 'MESSAGE' && item.message.senderId === prevSender && item.message.name === prevName) {
+      sameSender = true;
+    } else if (item.type === 'MESSAGE') {
+      prevSender = item.message.senderId;
+      prevName = item.message.name;
+    } else if (item.type === 'PREVIEW') {
+      prevSender = item.preview.senderId;
+      prevName = item.preview.name;
+    }
+    return <ChatItem key={item.id} item={item} myMember={myMember} index={index} sameSender={sameSender} />;
   });
 
   return (

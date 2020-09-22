@@ -230,13 +230,7 @@ export const moveMessages = (
   messageBefore: number
 ): ChatItemSet['messages'] => {
   for (const item of movedItems) {
-    if (item.date < messageBefore) {
-      messages = removeItem(messages, item.id);
-    }
-    const index = findItem(messages, item.id);
-    if (index !== -1) {
-      messages = messages.remove(index);
-    }
+    messages = removeItem(messages, item.id);
   }
   for (const item of movedItems) {
     if (item.date < messageBefore) {

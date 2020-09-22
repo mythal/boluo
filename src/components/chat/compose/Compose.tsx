@@ -61,11 +61,11 @@ const container = css`
     background-color: ${blue['900']};
   }
 
-  & .float-toolbar {
-    display: none;
-  }
   &:focus-within .float-toolbar {
-    display: block;
+    opacity: 100%;
+  }
+  & .float-toolbar {
+    opacity: 25%;
     position: absolute;
     top: 0;
     right: 0;
@@ -233,8 +233,8 @@ function Compose({ preview, channelId, member }: Props) {
       </div>
       <div css={inputContainer}>
         <div className="float-toolbar">
-          <ChatItemToolbarButton onClick={appendDice} sprite={d20} title="添加骰子" size="large" />
-          <ChatImageUploadButton size="large" hasImage={hasImage} composeDispatch={composeDispatch} css={[mL(1)]} />
+          <ChatItemToolbarButton onClick={appendDice} sprite={d20} title="添加骰子" css={mR(1)} />
+          <ChatImageUploadButton hasImage={hasImage} composeDispatch={composeDispatch} css={[mL(1)]} />
         </div>
         <ComposeInput
           ref={inputRef}

@@ -1,6 +1,18 @@
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { inlineBlock, mB, mR, pX, pY, relative, roundedSm, spacingN, textBase, widthFull } from '../../../styles/atoms';
+import {
+  inlineBlock,
+  mB,
+  mL,
+  mR,
+  pX,
+  pY,
+  relative,
+  roundedSm,
+  spacingN,
+  textBase,
+  widthFull,
+} from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import ellipsis from '../../../assets/icons/ellipsis.svg';
 import { css } from '@emotion/core';
@@ -10,6 +22,7 @@ import ActionSwitch from './ActionSwitch';
 import { ComposeInputAction } from './ComposeInput';
 import WhisperTo from './WhisperTo';
 import { floatPanel } from '../styles';
+import ChatImageUploadButton from './ImageUploadButton';
 
 interface Props {
   inGame: boolean;
@@ -54,7 +67,7 @@ const buttons = css`
   justify-content: space-between;
 `;
 
-function MenuButton({ inputName, composeDispatch, isAction, whisperTo, className }: Props) {
+function MenuButton({ inputName, composeDispatch, isAction, hasImage, whisperTo, className }: Props) {
   const [menu, showMenu] = useState(false);
   const toggleMenu = useCallback(() => showMenu((value) => !value), []);
   const handleNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -74,6 +87,7 @@ function MenuButton({ inputName, composeDispatch, isAction, whisperTo, className
           <div>
             <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} size="large" css={mR(1)} />
           </div>
+          <ChatImageUploadButton size="large" hasImage={hasImage} composeDispatch={composeDispatch} css={[mL(1)]} />
         </div>
       </div>
     </div>

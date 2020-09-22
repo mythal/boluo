@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useState } from 'react';
+import React, { MouseEventHandler, useEffect, useState } from 'react';
 import Prando from 'prando';
 import {
   CocRollResult,
@@ -271,6 +271,17 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
 };
 
 export const ExprEntity = React.memo<Props>(({ node, rng }) => {
+  const [, setCounter] = useState(0);
+  useEffect(() => {
+    if (rng !== undefined) {
+      return;
+    }
+    const handler = window.setInterval(() => {
+      // force update
+      setCounter((count) => count + 1);
+    }, Math.floor(Math.random() * 500 + 1000));
+    return () => window.clearInterval(handler);
+  }, [rng]);
   try {
     const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
     const evaluated = evaluate(node, rng ?? fakeRng);

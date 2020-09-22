@@ -1,6 +1,6 @@
 import Prando from 'prando';
 import { CocRoll, EvaluatedExprNode, ExprNode, FateResult } from './entities';
-import { compare } from '../utils/helper';
+import { compare, compareRev } from '../utils/helper';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 export const MAX_DICE_COUNTER = 64;
@@ -44,7 +44,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
       if (type === 'HIGH') {
         filtered = values.sort(compare).slice(0, counter);
       } else {
-        filtered = values.sort(compare).slice(counter);
+        filtered = values.sort(compareRev).slice(0, counter);
       }
       const value = filtered.reduce((a, b) => a + b, 0);
       return { ...node, values, value, filtered };

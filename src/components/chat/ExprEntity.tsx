@@ -36,9 +36,12 @@ interface Props {
 
 const fakeRng = new Prando();
 
-const Num = styled.span`
-  ${textLg};
-`;
+const Num: React.FC = ({ children }) => {
+  if (!Number.isSafeInteger(children)) {
+    children = '?';
+  }
+  return <span css={textLg}>{children}</span>;
+};
 
 const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
 

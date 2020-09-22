@@ -6,6 +6,7 @@ import {
   EvaluatedExprNode,
   ExprNode,
   FateResult,
+  RepeatResult,
   RollResult,
 } from '../../interpreter/entities';
 import D20Icon from '../../assets/icons/d20.svg';
@@ -24,7 +25,7 @@ import Icon from '../atoms/Icon';
 import { fontMono, fontNormal, mL, mY, pX, pY, roundedPx, textLg, textSm } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
-import { blue, minorTextColor, textColor } from '../../styles/colors';
+import { blue, red, textColor } from '../../styles/colors';
 import { useSelector } from '../../store';
 import { css } from '@emotion/core';
 
@@ -43,16 +44,24 @@ const Num: React.FC = ({ children }) => {
   return <span css={textLg}>{children}</span>;
 };
 
-const Unsupported = () => <span css={{ color: minorTextColor }}>[不支持]</span>;
+const entityShadow = css`
+  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 50%);
+`;
+
+const error = css`
+  ${[pX(1), pY(0.5), roundedPx, entityShadow]};
+  background-color: ${red['900']};
+`;
+
+const Unsupported = () => <span css={error}>不支持</span>;
 
 const Roll = styled.span`
-  ${[pX(1), pY(0.75), mY(0.25), textSm, roundedPx, fontNormal]};
+  ${[pX(1), pY(0.75), mY(0.25), textSm, roundedPx, entityShadow, fontNormal]};
   cursor: pointer;
   align-items: center;
   justify-content: center;
   background-color: ${darken(0.7, textColor)};
   box-decoration-break: clone;
-  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 50%);
 
   &:hover {
     background-color: ${darken(0.65, textColor)};
@@ -195,7 +204,7 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
   };
 
   if (node.counter > MAX_DICE_COUNTER) {
-    return <Roll>骰子过多</Roll>;
+    return <span css={error}>骰子过多</span>;
   }
 
   const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
@@ -228,6 +237,28 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
       ={node.value}
     </Roll>
   );
+};
+
+const Repeat: React.FC<{ node: RepeatResult }> = ({ node }) => {
+  const len = node.evaluated.length;
+  if (len === 0) {
+    return null;
+  }
+  const first = node.evaluated[0];
+  const nodeList: React.ReactNodeArray = [
+    <React.Fragment key={0}>
+      <Node node={first} /> = <Num>{first.value}</Num>
+    </React.Fragment>,
+  ];
+  for (let i = 1; i < node.evaluated.length; i++) {
+    const n = node.evaluated[i];
+    nodeList.push(
+      <React.Fragment key={i}>
+        , <Node key={i} node={n} /> = <Num>{n.value}</Num>
+      </React.Fragment>
+    );
+  }
+  return <React.Fragment>{nodeList}</React.Fragment>;
 };
 
 const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
@@ -265,6 +296,8 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
     return <React.Fragment>({<Node node={node.evaluatedNode} />})</React.Fragment>;
   } else if (node.type === 'FateRoll') {
     return <FateRollNode node={node} />;
+  } else if (node.type === 'Repeat') {
+    return <Repeat node={node} />;
   }
 
   return <Unsupported />;
@@ -287,7 +320,7 @@ export const ExprEntity = React.memo<Props>(({ node, rng }) => {
     );
   } catch (e) {
     if (e === TOO_MUCH_LAYER) {
-      return <React.Fragment>表达式嵌套太深</React.Fragment>;
+      return <span css={error}>表达式嵌套太深</span>;
     } else {
       throw e;
     }

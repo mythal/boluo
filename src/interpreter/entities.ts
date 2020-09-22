@@ -102,12 +102,18 @@ export interface Min {
   node: Roll;
 }
 
+export interface Repeat {
+  type: 'Repeat';
+  node: ExprNode;
+  count: number;
+}
+
 export interface SubExpr {
   type: 'SubExpr';
   node: ExprNode;
 }
 
-export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll | FateRoll | DicePool | Unknown;
+export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll | FateRoll | DicePool | Repeat | Unknown;
 
 export interface RollResult extends Roll {
   values: number[];
@@ -153,6 +159,11 @@ export interface DicePoolResult extends DicePool {
   values: number[];
 }
 
+export interface RepeatResult extends Repeat {
+  evaluated: EvaluatedExprNode[];
+  value: number;
+}
+
 export interface UnknownResult extends Unknown {
   value: number;
 }
@@ -167,6 +178,7 @@ export type EvaluatedExprNode =
   | CocRollResult
   | FateResult
   | DicePoolResult
+  | RepeatResult
   | UnknownResult;
 
 export interface ExportExpr extends BaseEntity {

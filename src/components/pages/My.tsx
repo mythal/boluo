@@ -17,6 +17,7 @@ import Text from '../atoms/Text';
 import Help from '../chat/Help';
 import { Code } from '../atoms/Code';
 import d20 from '../../assets/icons/d20.svg';
+import Button from '../atoms/Button';
 
 const Container = styled.div`
   display: grid;
@@ -63,6 +64,12 @@ function My() {
             </Link>
             。管理员将不定期删除没有实质内容的测试位面。
           </Text>
+        </News>
+        <News css={[mB(2)]}>
+          新的{' '}
+          <Button data-variant="primary" data-small onClick={() => setHelp(true)}>
+            帮助
+          </Button>
         </News>
         <News css={[mB(2)]}>
           <Text>

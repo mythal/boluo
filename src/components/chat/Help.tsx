@@ -1,10 +1,15 @@
 import * as React from 'react';
+import { useState } from 'react';
 import Dialog from '../molecules/Dialog';
 import Text from '../atoms/Text';
-import { link } from '../../styles/atoms';
+import { fontBold, mY, roundedSm, spacingN, textSm } from '../../styles/atoms';
 import { Code } from '../atoms/Code';
 import { css } from '@emotion/core';
-import ExternalLink from '../atoms/ExternalLink';
+import { black, blue, textColor } from '../../styles/colors';
+import { HelpText } from '../atoms/HelpText';
+import Icon from '../atoms/Icon';
+import d20 from '../../assets/icons/d20.svg';
+import rollExample from '../../assets/roll-example.png';
 
 interface Props {
   dismiss: () => void;
@@ -14,47 +19,222 @@ const dialogStyle = css`
   width: 30rem;
 `;
 
+const image = css`
+  width: 100%;
+  border: ${spacingN(2)} solid ${black};
+  ${[roundedSm, mY(2)]};
+  display: block;
+`;
+
+function Basic() {
+  return (
+    <div>
+      <Text>
+        <Code>.r ...1d20...</Code> 或 <Code>...{'{1d20}'}...</Code>
+      </Text>
+
+      <Text>
+        在消息开头输入 <Code>.r</Code>，才能接各种骰子指令。
+      </Text>
+
+      <img css={image} alt="投骰子例子" src={rollExample} />
+
+      <Text>
+        也可以不在开头加 <Code>.r</Code> 而是用 <Code>{'{}'}</Code> 或者 <Code>【】</Code> 将指令括起来：
+      </Text>
+
+      <Text>
+        <Code>爆裂魔法！ {'{4d20h2 - 3}'} 【4d20h2 - 3】</Code>
+      </Text>
+    </div>
+  );
+}
+
+function Advance() {
+  return (
+    <div>
+      <Text>
+        <Code>.r 1d20 = 1d = d20 = d</Code> 可以省略数字，频道可以设置骰子默认的面数。
+      </Text>
+
+      <Text>
+        按下「
+        <Icon sprite={d20} /> 插入骰子」按钮将自动插入骰子。频道可以设置默认插入什么指令。
+      </Text>
+
+      <Text>
+        <Code>.r 取最高三个 4d20h3</Code> 也可以用 k 来代替 h。
+      </Text>
+      <Text>
+        <Code>取最低两个 {'{3d20l2}'}</Code>
+      </Text>
+      <Text>
+        <Code>重复3次1d20+4 {'{3#1d20 + 4}'}</Code>
+      </Text>
+    </div>
+  );
+}
+
+function Format() {
+  return (
+    <div>
+      <Text>
+        <Code>**粗体内容**</Code> <Code>*斜体内容*</Code> <Code>`代码内容`</Code>
+      </Text>
+      <Text>
+        <Code>[链接文本](链接 URL)</Code>
+      </Text>
+      <Text>
+        <Code>```块状代码```</Code> 可以用来贴文字地图
+      </Text>
+    </div>
+  );
+}
+
+function Coc() {
+  return (
+    <div>
+      <Text>
+        <Code>.r coc</Code> 或 <Code>{'{coc}'}</Code>
+      </Text>
+      <Text>
+        <Code>.r 奖励骰：cocb、cocbb 42</Code>
+      </Text>
+      <Text>
+        <Code>.r 惩罚骰：cocp、cocpp 42</Code>
+      </Text>
+      <Text>
+        <Code>.r 计算成功等级 coc 42</Code>
+      </Text>
+    </div>
+  );
+}
+
+function Fate() {
+  return (
+    <div>
+      <Text>
+        <Code>.r fate</Code> 或 <Code>{'{dF}'} </Code>
+      </Text>
+    </div>
+  );
+}
+
+function ShadowRun() {
+  return (
+    <div>
+      <Text>
+        <Code>.r sr 10</Code> 无加骰
+      </Text>
+      <Text>
+        <Code>.r srp 10</Code> 自动加骰
+      </Text>
+    </div>
+  );
+}
+
+function Wod() {
+  return (
+    <div>
+      <Text css={fontBold}>nWoD</Text>
+      <Text>
+        <Code>.r w 12</Code> 12个骰子
+      </Text>
+      <Text>
+        <Code>.r w_8 10</Code> 10个骰子，加骰下限设为8
+      </Text>
+      <Text css={fontBold}>oWod</Text>
+      <Text>待添加</Text>
+    </div>
+  );
+}
+
+interface SwitchButtonProps {
+  page: string;
+  self: string;
+  setPage: (page: string) => void;
+}
+
+const switchButtonContainer = css`
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 1px 1px #000);
+  ${mY(4)};
+`;
+
+const switchButton = css`
+  min-width: 2rem;
+  height: 1.75rem;
+  border: none;
+  background-color: ${blue['800']};
+  color: ${textColor};
+  ${textSm};
+  &:first-of-type {
+    border-radius: 2px 0 0 2px;
+  }
+  &:last-of-type {
+    border-radius: 0 2px 2px 0;
+  }
+
+  &:hover {
+    background-color: ${blue['700']};
+  }
+
+  &[data-active='true'],
+  &:active {
+    background-color: ${blue['900']};
+    transform: translateY(1px);
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+const SwitchButton: React.FC<SwitchButtonProps> = ({ page, self, setPage, children }) => {
+  return (
+    <button css={switchButton} data-active={page === self} onClick={() => setPage(self)}>
+      {children}
+    </button>
+  );
+};
+
 function Help({ dismiss }: Props) {
+  const [page, setPage] = useState('basic');
   return (
     <Dialog dismiss={dismiss} confirm={dismiss} confirmText="知道了" title="格式帮助">
       <div css={dialogStyle}>
-        <Text>
-          这里是骰子格式的速查，均可复制到输入框尝试。
-          <ExternalLink css={link} to="https://forum.boluo.chat/d/3">
-            查阅详细说明请点击此处
-          </ExternalLink>
-          。
-        </Text>
-        <Text>
-          <Code>.r 挥起长剑招呼过去命中 1d20 + 4</Code>
-        </Text>
-        <Text>
-          <Code>爆裂魔法！ {'{4d20h2 - 3}'} =【4d20h2 - 3】</Code> 无前置 <Code>.r</Code>
-        </Text>
-        <Text>
-          <Code>.r d = 1d20 = 1d = d20 默认面数可设置</Code> <Code>.rd</Code>
-        </Text>
-        <Text>
-          <Code>.r 取最高三个 4d20h3 = 4d20k3</Code>
-        </Text>
-        <Text>
-          <Code>取最低两个 {'{3d20l2}'}</Code>
-        </Text>
-        <Text>
-          <Code>.r 普通：coc 奖励骰：cocb、cocbb 惩罚骰：cocp、cocpp</Code>
-        </Text>
-        <Text>
-          <Code>.r 计算成功等级 coc 42 ← 技能值 cocb (43 - 1) ← 可运算</Code>
-        </Text>
-        <Text>
-          <Code>.r fate FATE规则骰子，{'{dF}'} 也可以</Code>
-        </Text>
-        <Text>
-          <Code>.r nWoD 骰池：w 12 w 20 爆骰下限设为8：w_8 10</Code>
-        </Text>
-        <Text>
-          <Code>.r sr 10 srp 10 shadowrun 骰池</Code>
-        </Text>
+        <HelpText>点击代码即复制，粘贴到输入框看结果。</HelpText>
+        <div css={switchButtonContainer}>
+          <SwitchButton setPage={setPage} page={page} self="format">
+            文本
+          </SwitchButton>
+          <SwitchButton setPage={setPage} page={page} self="basic">
+            基本
+          </SwitchButton>
+          <SwitchButton setPage={setPage} page={page} self="advance">
+            高级
+          </SwitchButton>
+          <SwitchButton setPage={setPage} page={page} self="coc">
+            CoC
+          </SwitchButton>
+          <SwitchButton setPage={setPage} page={page} self="fate">
+            FATE
+          </SwitchButton>
+          <SwitchButton setPage={setPage} page={page} self="shadowrun">
+            Shadowrun
+          </SwitchButton>
+          <SwitchButton setPage={setPage} page={page} self="wod">
+            WoD
+          </SwitchButton>
+        </div>
+        {page === 'format' && <Format />}
+        {page === 'basic' && <Basic />}
+        {page === 'advance' && <Advance />}
+        {page === 'coc' && <Coc />}
+        {page === 'fate' && <Fate />}
+        {page === 'shadowrun' && <ShadowRun />}
+        {page === 'wod' && <Wod />}
       </div>
     </Dialog>
   );

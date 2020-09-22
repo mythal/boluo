@@ -28,6 +28,7 @@ import {
 import { ByChannel, EditMessage, Message, MoveTo, NewMessage, SwapMessage } from './messages';
 import { Id } from '../utils/id';
 import { Media } from './media';
+import { DEBUG } from '../settings';
 
 export type AppResult<T> = Result<T, AppError>;
 
@@ -63,6 +64,9 @@ export const request = async <T>(
   });
   if (csrf) {
     headers.append('csrf-token', await getCsrfToken());
+  }
+  if (DEBUG) {
+    headers.append('development', '');
   }
   const result = await fetch(path, {
     method,

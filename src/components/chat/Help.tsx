@@ -82,7 +82,7 @@ function Format() {
         <Code>**粗体内容**</Code> <Code>*斜体内容*</Code> <Code>`代码内容`</Code>
       </Text>
       <Text>
-        <Code>[链接文本](链接 URL)</Code>
+        <Code>[链接文本](链接 URL)</Code> 也可以直接贴链接
       </Text>
       <Text>
         <Code>```块状代码```</Code> 可以用来贴文字地图
@@ -98,13 +98,13 @@ function Coc() {
         <Code>.r coc</Code> 或 <Code>{'{coc}'}</Code>
       </Text>
       <Text>
-        <Code>.r 奖励骰：cocb、cocbb 42</Code>
+        <Code>.r 奖励骰：cocb、cocbb</Code>
       </Text>
       <Text>
-        <Code>.r 惩罚骰：cocp、cocpp 42</Code>
+        <Code>.r 惩罚骰：cocp、cocpp</Code>
       </Text>
       <Text>
-        <Code>.r 计算成功等级 coc 42</Code>
+        <Code>.r 判断成功等级 coc 42 cocb 42</Code>
       </Text>
     </div>
   );
@@ -124,10 +124,10 @@ function ShadowRun() {
   return (
     <div>
       <Text>
-        <Code>.r sr 10</Code> 无加骰
+        <Code>.r sr 10</Code> 10 个 D6 无加骰
       </Text>
       <Text>
-        <Code>.r srp 10</Code> 自动加骰
+        <Code>.r srp 10</Code> 10 个 D6 自动加骰
       </Text>
     </div>
   );
@@ -143,7 +143,7 @@ function Wod() {
       <Text>
         <Code>.r w_8 10</Code> 10个骰子，加骰下限设为8
       </Text>
-      <Text css={fontBold}>oWod</Text>
+      <Text css={fontBold}>oWoD</Text>
       <Text>待添加</Text>
     </div>
   );

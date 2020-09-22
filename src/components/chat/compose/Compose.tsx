@@ -5,12 +5,12 @@ import { blue, gray, textColor, white } from '../../../styles/colors';
 import {
   breakpoint,
   mediaQuery,
-  mL,
   mR,
   p,
   pX,
   pY,
   roundedSm,
+  spacing,
   spacingN,
   textBase,
   uiShadow,
@@ -38,16 +38,15 @@ import MenuButton from './MenuButton';
 import { NewMessage } from '../../../api/messages';
 import { usePane } from '../../../hooks/usePane';
 import d20 from '../../../assets/icons/d20.svg';
-import ChatImageUploadButton from './ImageUploadButton';
 import { floatPanel } from '../styles';
 
 const container = css`
   grid-row: compose-start / compose-end;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr auto auto;
   grid-template-areas:
-    'toolbar  send'
-    '  input input';
+    '    . toolbar  send'
+    'input   input input';
   ${mediaQuery(breakpoint.md)} {
     grid-template-columns: auto 1fr auto;
     grid-template-areas: 'toolbar input  send';
@@ -68,9 +67,13 @@ const container = css`
     opacity: 25%;
     position: absolute;
     top: 0;
-    right: 0;
-    transform: translateY(-110%);
-    ${[p(1), roundedSm, uiShadow, floatPanel]}
+    left: 0;
+    transform: translateY(calc(-100% - ${spacing} * 2));
+    ${[p(1), roundedSm, uiShadow, floatPanel]};
+    ${mediaQuery(breakpoint.md)} {
+      left: unset;
+      right: 0;
+    }
   }
 `;
 
@@ -233,8 +236,7 @@ function Compose({ preview, channelId, member }: Props) {
       </div>
       <div css={inputContainer}>
         <div className="float-toolbar">
-          <ChatItemToolbarButton onClick={appendDice} sprite={d20} title="添加骰子" css={mR(1)} />
-          <ChatImageUploadButton hasImage={hasImage} composeDispatch={composeDispatch} css={[mL(1)]} />
+          <ChatItemToolbarButton onClick={appendDice} sprite={d20} title="添加骰子" />
         </div>
         <ComposeInput
           ref={inputRef}

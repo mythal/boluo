@@ -2,7 +2,19 @@ import * as React from 'react';
 import { useMemo, useReducer, useRef } from 'react';
 import { css } from '@emotion/core';
 import { blue, gray, textColor, white } from '../../../styles/colors';
-import { breakpoint, mediaQuery, mR, p, pX, pY, roundedSm, spacingN, textBase } from '../../../styles/atoms';
+import {
+  breakpoint,
+  mediaQuery,
+  mL,
+  mR,
+  p,
+  pX,
+  pY,
+  roundedSm,
+  spacingN,
+  textBase,
+  uiShadow,
+} from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { isMac } from '../../../utils/browser';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
@@ -19,12 +31,15 @@ import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
 import ComposeInput, { ComposeInputAction } from './ComposeInput';
 import MessageMedia from '../MessageMedia';
-import ChatImageUploadButton from './ImageUploadButton';
 import { handleKeyDown } from '../key';
 import { showFlash } from '../../../actions/flash';
 import InGameButton from './InGameButton';
 import MenuButton from './MenuButton';
 import { NewMessage } from '../../../api/messages';
+import { usePane } from '../../../hooks/usePane';
+import d20 from '../../../assets/icons/d20.svg';
+import ChatImageUploadButton from './ImageUploadButton';
+import { floatPanel } from '../styles';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -45,6 +60,18 @@ const container = css`
   &:focus-within {
     background-color: ${blue['900']};
   }
+
+  & .float-toolbar {
+    display: none;
+  }
+  &:focus-within .float-toolbar {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translateY(-110%);
+    ${[p(1), roundedSm, uiShadow, floatPanel]}
+  }
 `;
 
 const toolbar = css`
@@ -52,10 +79,17 @@ const toolbar = css`
   display: flex;
 `;
 
-const input = css`
+const inputContainer = css`
+  width: 100%;
+  display: flex;
   grid-area: input;
+  position: relative;
+`;
+
+const input = css`
   resize: none;
   height: 2.5rem;
+  width: 100%;
   min-height: 100%;
   color: ${textColor};
   ${[textBase, p(2), roundedSm]};
@@ -68,7 +102,6 @@ const input = css`
 
 const sendContainer = css`
   grid-area: send;
-  text-align: right;
 `;
 
 const mediaContainer = css`
@@ -91,6 +124,8 @@ function Compose({ preview, channelId, member }: Props) {
   const inputRef = useRef<ComposeInputAction>(null);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
+  const pane = usePane();
+  const rollCommand = useSelector((state) => state.chatPane[pane]!.channel.defaultRollCommand);
   const dispatch = useDispatch();
   const sendEvent = useSend();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -183,42 +218,49 @@ function Compose({ preview, channelId, member }: Props) {
     }
   };
   const onKeyDown: React.KeyboardEventHandler = handleKeyDown(composeDispatch, onSend, inGame, enterSend);
-
+  const appendDice: React.MouseEventHandler = (e) => {
+    e.preventDefault();
+    if (inputRef.current) {
+      inputRef.current.appendDice(rollCommand);
+    }
+  };
+  const hasImage = media !== undefined;
   return (
     <div css={container} ref={containerRef} onKeyDown={onKeyDown}>
       <div css={toolbar}>
         <BroadcastSwitch size="large" broadcast={broadcast} composeDispatch={composeDispatch} css={[mR(1)]} />
         <InGameButton inGame={inGame} composeDispatch={composeDispatch} inputName={inputName} css={[mR(1)]} />
-        <MenuButton
-          isAction={isAction}
-          inGame={inGame}
+      </div>
+      <div css={inputContainer}>
+        <div className="float-toolbar">
+          <ChatItemToolbarButton onClick={appendDice} sprite={d20} title="添加骰子" size="large" />
+          <ChatImageUploadButton size="large" hasImage={hasImage} composeDispatch={composeDispatch} css={[mL(1)]} />
+        </div>
+        <ComposeInput
+          ref={inputRef}
+          autoFocus
+          autoSize
+          css={[input]}
+          initialValue={initialText}
           composeDispatch={composeDispatch}
-          inputName={inputName}
-          composeInputRef={inputRef}
-          whisperTo={whisperTo}
+          inGame={inGame}
+          isAction={isAction}
         />
       </div>
-      <ComposeInput
-        ref={inputRef}
-        autoFocus
-        autoSize
-        css={[input]}
-        initialValue={initialText}
-        composeDispatch={composeDispatch}
-        inGame={inGame}
-        isAction={isAction}
-      />
       {media && (
         <div css={mediaContainer}>
           <MessageMedia file={media} />
         </div>
       )}
       <div css={sendContainer}>
-        <ChatImageUploadButton
-          size="large"
-          hasImage={media !== undefined}
+        <MenuButton
+          isAction={isAction}
+          inGame={inGame}
           composeDispatch={composeDispatch}
-          css={[mR(1)]}
+          inputName={inputName}
+          composeInputRef={inputRef}
+          hasImage={hasImage}
+          whisperTo={whisperTo}
         />
         <ChatItemToolbarButton
           loading={sending}

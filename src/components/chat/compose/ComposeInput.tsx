@@ -25,7 +25,7 @@ const actionCommand = '.me ';
 const ACTION_COMMAND = /^[.。]me\s*/;
 
 export interface ComposeInputAction {
-  appendDice: () => void;
+  appendDice: (command: string) => void;
   reset: () => void;
 }
 
@@ -50,24 +50,28 @@ function ComposeInput(
     }
   }, []);
 
-  const appendDice = useCallback(() => {
-    setValue((value) => value + ' {1d}');
-    inputRef.current?.focus();
-    window.setTimeout(() => {
-      if (!inputRef.current) {
-        return;
-      }
-      const length = inputRef.current.value.length;
-      inputRef.current.focus();
-      inputRef.current.setSelectionRange(length - 3, length - 1);
-      const { text, entities } = parse(inputRef.current.value.trim());
-      window.clearTimeout(timeout.current);
-      timeout.current = window.setTimeout(() => {
-        inputRef.current?.focus();
-        composeDispatch(update({ text, entities }));
-      }, 100);
-    }, 10);
-  }, [composeDispatch, parse]);
+  const appendDice = useCallback(
+    (command: string) => {
+      const insertStr = ` {${command}}`;
+      setValue((value) => value + insertStr);
+      inputRef.current?.focus();
+      window.setTimeout(() => {
+        if (!inputRef.current) {
+          return;
+        }
+        const length = inputRef.current.value.length;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(length - (command.length + 1), length - 1);
+        const { text, entities } = parse(inputRef.current.value.trim());
+        window.clearTimeout(timeout.current);
+        timeout.current = window.setTimeout(() => {
+          inputRef.current?.focus();
+          composeDispatch(update({ text, entities }));
+        }, 100);
+      }, 10);
+    },
+    [composeDispatch, parse]
+  );
 
   useEffect(() => {
     setValue((value) => {

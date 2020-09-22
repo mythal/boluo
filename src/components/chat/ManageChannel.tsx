@@ -58,6 +58,7 @@ const panelStyle = css`
 interface FormData {
   name: string;
   topic: string;
+  defaultRollCommand: string;
 }
 
 interface MemberOption {
@@ -95,13 +96,21 @@ function ManageChannel({ channel, dismiss }: Props) {
   const openDeleteDialog = () => setDeleteDialog(true);
   const dismissDeleteDialog = () => setDeleteDialog(false);
 
-  const onSubmit = async ({ name, topic }: FormData) => {
+  const onSubmit = async ({ name, topic, defaultRollCommand }: FormData) => {
     const defaultDiceType = defaultDice?.value;
     const current = Set(currentMaster.map((member) => member.value));
     const selected = Set(selectedMember.map((member) => member.value));
     const grantMasters = selected.subtract(current).toArray();
     const removeMasters = current.subtract(selected).toArray();
-    const editChannel: EditChannel = { name, topic, channelId, defaultDiceType, grantMasters, removeMasters };
+    const editChannel: EditChannel = {
+      name,
+      topic,
+      channelId,
+      defaultDiceType,
+      grantMasters,
+      removeMasters,
+      defaultRollCommand,
+    };
     setSubmitting(true);
     const result = await post('/channels/edit', editChannel);
     setSubmitting(false);
@@ -151,6 +160,17 @@ function ManageChannel({ channel, dismiss }: Props) {
           <HelpText>
             当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
           </HelpText>
+        </div>
+        <div>
+          <Label htmlFor="defaultRollCommand">默认投骰子指令</Label>
+          <Input
+            css={largeInput}
+            id="defaultRollCommand"
+            name="defaultRollCommand"
+            defaultValue={channel.defaultRollCommand}
+            ref={register}
+          />
+          <HelpText>「插入骰子」按钮自动插入的指令</HelpText>
         </div>
         <div>
           <Label>话题</Label>

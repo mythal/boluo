@@ -42,7 +42,27 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>
+          <Text>
+            菠萝上线啦！现在是早期测试阶段，请到
+            <ExternalLink to="https://forum.boluo.chat/" css={link}>
+              讨论版
+            </ExternalLink>
+            或「
+            <Link to="/space/sKPHfPhpEeqCXBcv8xDXgA" css={link}>
+              菠萝讨论
+            </Link>
+            」位面提出你的意见和建议。
+          </Text>
 
+          <Text>
+            功能测试可以到
+            <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
+              沙盒位面
+            </Link>
+            。管理员将不定期删除没有实质内容的测试位面。
+          </Text>
+        </News>
         <News css={[mB(2)]}>
           <Text>现在可以搜索位面和删除位面了。</Text>
         </News>
@@ -50,24 +70,6 @@ function My() {
         <News css={[mB(2)]}>
           <Text>
             增加了代码和代码块 Markdown 格式支持 <Code>`{'{d20}'}` ```代码块```</Code>
-          </Text>
-        </News>
-
-        <News css={[mB(2)]}>
-          <Text>
-            菠萝上线啦！现在是早期测试阶段，请到
-            <ExternalLink to="https://forum.boluo.chat/" css={link}>
-              讨论版
-            </ExternalLink>
-            提出意见和建议。
-          </Text>
-
-          <Text>
-            可以到
-            <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
-              沙盒位面
-            </Link>
-            去测试功能。
           </Text>
         </News>
       </div>

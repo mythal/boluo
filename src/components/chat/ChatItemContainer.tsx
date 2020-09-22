@@ -1,4 +1,4 @@
-import { pX, pY, spacingN, textLg, textSm } from '../../styles/atoms';
+import { pX, pY, spacingN, textBase, textSm } from '../../styles/atoms';
 import { darken } from 'polished';
 import { bgColor, gray } from '../../styles/colors';
 import { css } from '@emotion/core';
@@ -27,7 +27,7 @@ export const chatItemPlaceHolder = css`
 export const chatItemContainer = css`
   display: grid;
   position: relative;
-  ${[pX(2), pY(2)]};
+  ${[pX(2), pY(1)]};
   background-color: ${chatItemBgColor};
 
   column-gap: ${spacingN(2)};
@@ -41,12 +41,10 @@ export const chatItemContainer = css`
   &[data-no-name='true'] {
     grid-template-rows: auto;
     grid-template-areas: 'handle content content';
-    padding-top: 0;
-    padding-bottom: 0;
   }
 
   &[data-in-game='true'] {
-    ${[textLg]};
+    ${[textBase]};
   }
 
   &[data-in-game='false'] {

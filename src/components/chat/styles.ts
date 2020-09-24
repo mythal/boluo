@@ -15,7 +15,7 @@ import {
 } from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
-import { black, gray, headerBgColor, primary } from '../../styles/colors';
+import { black, gray, green, headerBgColor, primary } from '../../styles/colors';
 
 export const chatContentLineHeight = css`
   line-height: 1.6rem;
@@ -69,6 +69,7 @@ export const floatPanel = css`
 
 export const codeBlockStyle = css`
   background-color: ${black};
+  color: ${green['500']};
   font-family: 'DinkieBitmap-Mono', 'DinkieBitmap', monospace;
   ${[roundedSm, textSm, fontNormal, pX(2), pY(1), m(0)]};
 `;

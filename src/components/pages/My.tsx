@@ -15,9 +15,9 @@ import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
-import { Code } from '../atoms/Code';
 import d20 from '../../assets/icons/d20.svg';
 import Button from '../atoms/Button';
+import { codeBlockStyle } from '../chat/styles';
 
 const Container = styled.div`
   display: grid;
@@ -80,7 +80,7 @@ function My() {
         </News>
         <News css={[mB(2)]}>
           <Text>
-            增加了代码和代码块 Markdown 格式支持 <Code>`{'{d20}'}` ```代码块```</Code>
+            <pre css={codeBlockStyle}>{'代码块 想使用\n现在是 格式是\n很酷的 ```内\n像素体 容```'}</pre>
           </Text>
         </News>
       </div>

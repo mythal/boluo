@@ -150,8 +150,8 @@ const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage)
   return { ...state, itemSet };
 };
 
-const handleMessageMoving = (state: ChatState, { messageIndex, insertToIndex }: MovingMessage): ChatState => {
-  const itemSet = markMessageMoving(state.itemSet, messageIndex, insertToIndex);
+const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMessage): ChatState => {
+  const itemSet = markMessageMoving(state.itemSet, message, targetItem);
   return { ...state, itemSet };
 };
 

@@ -111,11 +111,15 @@ function ChatList() {
         return;
       }
       const index = destination.index;
+      const sourceItem = filteredMessages.get(source.index);
+      if (sourceItem?.type !== 'MESSAGE') {
+        return;
+      }
       const targetItem = filteredMessages.get(index);
       const action: MovingMessage = {
         type: 'MOVING_MESSAGE',
-        messageIndex: source.index,
-        insertToIndex: source.index > destination.index ? destination.index : destination.index + 1,
+        message: sourceItem,
+        targetItem,
         pane,
       };
       batch(() => {

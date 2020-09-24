@@ -7,7 +7,7 @@ import { throwErr } from '../utils/errors';
 import { connect as apiConnect } from '../api/connect';
 import { ChatState } from '../reducers/chat';
 import { List, Map } from 'immutable';
-import { initialChatItemSet } from '../states/chat-item-set';
+import { initialChatItemSet, MessageItem, PreviewItem } from '../states/chat-item-set';
 import { showFlash } from './flash';
 import { batch } from 'react-redux';
 
@@ -155,8 +155,8 @@ export interface FinishMoveMessage {
 
 export interface MovingMessage {
   type: 'MOVING_MESSAGE';
-  messageIndex: number;
-  insertToIndex: number;
+  message: MessageItem;
+  targetItem: MessageItem | PreviewItem | undefined;
   pane: number;
 }
 

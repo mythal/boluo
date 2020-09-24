@@ -1,6 +1,5 @@
 import { css } from '@emotion/core';
 import {
-  fontMono,
   fontNormal,
   headerShadow,
   m,
@@ -70,7 +69,8 @@ export const floatPanel = css`
 
 export const codeBlockStyle = css`
   background-color: ${black};
-  ${[roundedSm, textSm, fontNormal, fontMono, pX(2), pY(1), m(0)]};
+  font-family: 'DinkieBitmap-Mono', 'DinkieBitmap', monospace;
+  ${[roundedSm, textSm, fontNormal, pX(2), pY(1), m(0)]};
 `;
 export const chatRight = css`
   grid-row: header-start / compose-end;

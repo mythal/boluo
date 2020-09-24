@@ -394,6 +394,14 @@ export const baseStyle = css`
     color: ${textColor};
     ${baseLineHeight};
   }
+  @font-face {
+    font-family: 'DinkieBitmap';
+    src: url('https://boluo.chat/static/DinkieBitmap-9px.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'DinkieBitmap-Mono';
+    src: url('https://boluo.chat/static/DinkieBitmap-9pxCode.woff2') format('woff2');
+  }
 `;
 
 export const outlineButton = css`

@@ -14,6 +14,7 @@ import ChatItem from './ChatItem';
 import LoadMore from './LoadMore';
 import { css } from '@emotion/core';
 import { Id } from '../../utils/id';
+import { blue } from '../../styles/colors';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem
@@ -46,6 +47,11 @@ const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
 const listWrapperStyle = css`
   overflow-y: scroll;
   overflow-x: hidden;
+
+  border: 1px solid ${blue['900']};
+  &[data-active='true'] {
+    border: 1px solid ${blue['700']};
+  }
 `;
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
@@ -77,6 +83,7 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
 
 function ChatList() {
   const pane = usePane();
+  const activePane = useSelector((state) => state.activePane);
   const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
   const dispatch = useDispatch();
   const myMember = useSelector((state) => {
@@ -172,9 +179,13 @@ function ChatList() {
     return <ChatItem key={item.id} item={item} myMember={myMember} index={index} sameSender={sameSender} />;
   });
 
+  const onClick = () => {
+    dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+  };
+
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <div ref={wrapperRef} css={listWrapperStyle}>
+      <div ref={wrapperRef} css={listWrapperStyle} data-active={pane === activePane} onClick={onClick}>
         <Droppable droppableId={channelId} type="CHANNEL">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>

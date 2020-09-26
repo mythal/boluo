@@ -45,7 +45,7 @@ function EditAvatar({ className, mediaId, selectFile, size }: Props) {
     }
   };
 
-  const uri = previewUrl || (mediaId ? mediaUrl(mediaId) : null);
+  const uri = previewUrl || (mediaId ? mediaUrl(mediaId) : undefined);
 
   return (
     <>
@@ -57,7 +57,7 @@ function EditAvatar({ className, mediaId, selectFile, size }: Props) {
         ref={input}
         hidden
       />
-      <Avatar source={uri} size={size} onClick={onClick} css={avatarStyle} className={className} />
+      <Avatar id={null} src={uri} size={size} onClick={onClick} css={avatarStyle} className={className} />
     </>
   );
 }

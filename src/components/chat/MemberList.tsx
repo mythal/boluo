@@ -18,13 +18,23 @@ const Container = styled.div`
 
 function MemberList() {
   const pane = usePane();
+  const myId = useSelector((state) => state.profile?.user.id);
   const members = useSelector((state) => state.chatPane[pane]!.members);
   const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
+  const myMember = myId ? members.find((member) => member.user.id === myId) : undefined;
+  const imAdmin = Boolean(myMember && myMember.space.isAdmin);
 
   return (
     <Container>
-      {members.map((member) => (
-        <MemberListItem key={member.user.id} timestamp={heartbeatMap.get(member.user.id)} member={member} />
+      {members.map(({ user, space, channel }) => (
+        <MemberListItem
+          key={user.id}
+          timestamp={heartbeatMap.get(user.id)}
+          user={user}
+          spaceMember={space}
+          channelMember={channel}
+          imAdmin={imAdmin}
+        />
       ))}
     </Container>
   );

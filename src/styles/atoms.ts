@@ -99,10 +99,6 @@ export const focused = css`
   outline: none;
 `;
 
-export const baseLineHeight = css`
-  line-height: 1.5em;
-`;
-
 export const border = (color: string, width = '1px') => css`
   border: ${width} solid ${color};
 `;
@@ -392,7 +388,6 @@ export const baseStyle = css`
     ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
-    ${baseLineHeight};
   }
   @font-face {
     font-family: 'DinkieBitmap';

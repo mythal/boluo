@@ -48,7 +48,8 @@ function NewSpace() {
     setSubmitting(false);
     if (result.isOk) {
       const { space, member } = result.value;
-      dispatch<JoinedSpace>({ type: 'JOINED_SPACE', space, member });
+      const action: JoinedSpace = { type: 'JOINED_SPACE', space, member };
+      dispatch<JoinedSpace>(action);
       history.push(`/space/${encodeUuid(space.id)}`);
     } else {
       setCreationError(result.value);

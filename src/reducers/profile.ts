@@ -104,9 +104,12 @@ export const editChannel = (state: ProfileState, { channel }: ChannelEdited): Pr
 };
 
 function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated): ProfileState {
-  const member = members.find((member) => member.userId === state.user.id);
+  const member = members.find((member) => member.user.id === state.user.id);
   if (member) {
-    const spaces = state.spaces.set(space.id, { space, member });
+    const spaces = state.spaces.set(space.id, { space, member: member.space });
+    return { ...state, spaces };
+  } else if (state.spaces.get(space.id)) {
+    const spaces = state.spaces.remove(space.id);
     return { ...state, spaces };
   }
   return state;

@@ -13,7 +13,16 @@ import {
   Settings,
   User,
 } from './users';
-import { CreateSpace, EditSpace, SearchParams, Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './spaces';
+import {
+  CreateSpace,
+  EditSpace,
+  Kick,
+  SearchParams,
+  Space,
+  SpaceMemberWithUser,
+  SpaceWithMember,
+  SpaceWithRelated,
+} from './spaces';
 import {
   Channel,
   ChannelMember,
@@ -127,6 +136,7 @@ export function post(path: '/spaces/create', payload: CreateSpace): Promise<AppR
 export function post(path: '/spaces/edit', payload: EditSpace): Promise<AppResult<Space>>;
 export function post(path: '/spaces/join', payload: {}, query: IdQuery): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
+export function post(path: '/spaces/kick', payload: {}, query: Kick): Promise<AppResult<true>>;
 export function post(path: '/spaces/delete', payload: {}, query: IdQuery): Promise<AppResult<Space>>;
 export function post(path: '/channels/create', payload: CreateChannel): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<Channel>>;
@@ -167,7 +177,7 @@ export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;
-export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMember[]>>;
+export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMemberWithUser[]>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;

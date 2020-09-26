@@ -21,11 +21,17 @@ export const initUiState: UiState = {
   userSet: Map(),
 };
 
-const handleJoinSpace = ({ spaceSet, ...state }: UiState, action: JoinedSpace): UiState => {
+const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
+  let { spaceSet } = state;
+  const userResult = state.userSet.get(action.member.userId);
+  if (!userResult || userResult.isErr) {
+    return state;
+  }
+  const user = userResult.value;
   spaceSet = spaceSet.update(action.space.id, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
-      members = members.filter((member) => member.userId !== action.member.userId);
-      members.push(action.member);
+      members = members.filter((member) => member.user.id !== action.member.userId);
+      members.push({ space: action.member, user });
       return { ...rest, members };
     })
   );
@@ -35,7 +41,7 @@ const handleJoinSpace = ({ spaceSet, ...state }: UiState, action: JoinedSpace): 
 const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, userId: Id | undefined): UiState => {
   spaceSet = spaceSet.update(action.spaceId, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
-      members = members.filter((member) => member.userId !== userId);
+      members = members.filter((member) => member.user.id !== userId);
       return { ...rest, members };
     })
   );
@@ -78,7 +84,7 @@ const handleUserEdited = ({ userSet, ...state }: UiState, { user }: UserEdited):
 };
 
 const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppResult<SpaceWithRelated>): UiState => {
-  let { spaceSet, exploreSpaceList } = state;
+  let { spaceSet, exploreSpaceList, userSet } = state;
   spaceSet = spaceSet.set(spaceId, result);
   if (result.isOk) {
     const newSpace = result.value.space;
@@ -91,8 +97,11 @@ const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppRe
         }
       })
     );
+    for (const member of result.value.members) {
+      userSet = userSet.set(member.user.id, new Ok(member.user));
+    }
   }
-  return { ...state, spaceSet, exploreSpaceList };
+  return { ...state, spaceSet, exploreSpaceList, userSet };
 };
 
 const removeSpace = (state: UiState, spaceId: Id): UiState => {

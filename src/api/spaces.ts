@@ -1,5 +1,6 @@
 import { Channel } from './channels';
 import { Id } from '../utils/id';
+import { User } from './users';
 
 export interface Space {
   id: Id;
@@ -47,6 +48,16 @@ export interface EditSpace {
 
 export interface SpaceWithRelated {
   space: Space;
-  members: SpaceMember[];
+  members: SpaceMemberWithUser[];
   channels: Channel[];
+}
+
+export interface SpaceMemberWithUser {
+  space: SpaceMember;
+  user: User;
+}
+
+export interface Kick {
+  spaceId: Id;
+  userId: Id;
 }

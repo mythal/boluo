@@ -1,6 +1,5 @@
 import { css } from '@emotion/core';
 import {
-  baseLineHeight,
   disabled,
   onDisabled,
   onHover,
@@ -38,7 +37,6 @@ interface DataAttributes {
 }
 
 export const buttonStyle = css`
-  ${baseLineHeight};
   display: inline-flex;
   justify-content: space-around;
   align-items: center;

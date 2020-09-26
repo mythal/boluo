@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
 import { flex, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
-import { Space, SpaceMember } from '../../api/spaces';
+import { Space, SpaceMemberWithUser } from '../../api/spaces';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../atoms/Icon';
 import ChatHeaderButton, { chatHeaderButtonStyle } from './ChatHeaderButton';
@@ -19,18 +19,28 @@ import { chatPath } from '../../utils/path';
 import { useHistory } from 'react-router-dom';
 import { blue, gray } from '../../styles/colors';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
+import { mix } from 'polished';
+import MemberListItem from './MemberListItem';
 
 const Header = styled.div(chatHeaderStyle);
 
 const container = css`
   grid-row: list-start / compose-end;
-  ${[pX(4), pY(4)]};
+  display: flex;
+  justify-content: space-between;
 
   border: 1px solid ${gray['900']};
 
   &[data-active='true'] {
     border-color: ${blue['800']};
   }
+`;
+
+const memberList = css`
+  flex: 0 1 20rem;
+  max-width: 20rem;
+  background-color: ${mix(0.5, gray['900'], gray['800'])};
+  overflow-y: scroll;
 `;
 
 const Title = styled.div`
@@ -48,11 +58,12 @@ const SpaceName = styled.span`
 const Description = styled.div`
   max-width: 30em;
   white-space: pre-line;
+  ${[pX(4), pY(2)]}
 `;
 
 interface Props {
   space: Space;
-  members: SpaceMember[];
+  members: SpaceMemberWithUser[];
   channels: Channel[];
 }
 
@@ -98,6 +109,14 @@ function Home({ space, members, channels }: Props) {
       </Header>
       <div css={container} onClick={setActive} data-active={activePane}>
         <Description>{space.description}</Description>
+        <div css={memberList}>
+          {members.map((member) => {
+            const { user, space } = member;
+            return (
+              <MemberListItem key={user.id} user={user} spaceMember={space} imAdmin={myMember?.isAdmin ?? false} />
+            );
+          })}
+        </div>
       </div>
       {managing && myMember && (
         <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />

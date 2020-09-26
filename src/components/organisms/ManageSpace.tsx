@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { EditSpace, Space, SpaceMember } from '../../api/spaces';
+import { EditSpace, Space, SpaceMember, SpaceMemberWithUser } from '../../api/spaces';
 import { Channel } from '../../api/channels';
 import { alignRight, breakpoint, flexCol, largeInput, mediaQuery, mY, spacingN, widthFull } from '../../styles/atoms';
 import { PanelTitle } from '../atoms/PanelTitle';
@@ -28,7 +28,7 @@ import Dialog from '../molecules/Dialog';
 interface Props {
   space: Space;
   channels: Channel[];
-  members: SpaceMember[];
+  members: SpaceMemberWithUser[];
   my: SpaceMember;
   dismiss: () => void;
 }

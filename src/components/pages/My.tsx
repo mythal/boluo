@@ -79,9 +79,7 @@ function My() {
           <Text>可以搜索位面和删除位面了。</Text>
         </News>
         <News css={[mB(2)]}>
-          <Text>
-            <pre css={codeBlockStyle}>{'代码块 想使用\n现在是 格式是\n很酷的 ```内\n像素体 容```'}</pre>
-          </Text>
+          <pre css={codeBlockStyle}>{'代码块 想使用\n现在是 格式是\n很酷的 ```内\n像素体 容```'}</pre>
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

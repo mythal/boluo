@@ -11,11 +11,12 @@ import {
   spacingN,
   textLg,
   textSm,
+  textXs,
   uiShadow,
 } from '../../styles/atoms';
 import { darken } from 'polished';
 import { chatItemBgColor, chatItemOutGameBgColor } from './ChatItemContainer';
-import { black, gray, green, headerBgColor, primary } from '../../styles/colors';
+import { black, gray, green, headerBgColor, primary, purple } from '../../styles/colors';
 
 export const chatContentLineHeight = css`
   line-height: 1.6rem;
@@ -101,3 +102,14 @@ export const chatHeaderToolbar = css`
   height: 100%;
   grid-area: toolbar;
 `;
+
+export const tag = (color: string) => css`
+  display: inline-block;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  ${[pX(1), pY(0.5), roundedSm, textXs]};
+  background-color: ${color};
+`;
+
+export const adminTag = tag(primary['800']);
+export const masterTag = tag(purple['800']);

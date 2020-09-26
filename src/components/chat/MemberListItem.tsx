@@ -2,14 +2,15 @@ import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { ChannelMember } from '../../api/channels';
 import styled from '@emotion/styled';
-import { mX, mY, pX, roundedPx, roundedSm, textSm } from '../../styles/atoms';
+import { mR, mX, mY, pX, pY, roundedPx, roundedSm, textSm } from '../../styles/atoms';
 import { isOnline } from '../../utils/profile';
-import { gray } from '../../styles/colors';
+import { blue, gray } from '../../styles/colors';
 import { User } from '../../api/users';
 import { SpaceMember } from '../../api/spaces';
 import Avatar from '../molecules/Avatar';
 import { css } from '@emotion/core';
 import MemberDialog from './MemberDialog';
+import { adminTag, masterTag } from './styles';
 
 interface Props {
   user: User;
@@ -23,17 +24,20 @@ const Container = styled.div`
   user-select: none;
   display: flex;
   align-items: center;
-  height: 3rem;
-  min-width: 10rem;
+  min-width: 14rem;
   position: relative;
-  ${[pX(1), mY(1), mX(2), roundedSm]}
+  ${[pX(2), pY(2), mY(1), mX(1), roundedSm]}
   &:hover {
-    background-color: ${gray['700']};
+    background-color: ${gray['800']};
   }
-`;
 
-const nameStyle = css`
-  line-height: 1rem;
+  &[data-online='true'] {
+    background-color: ${blue['800']};
+
+    &:hover {
+      background-color: ${blue['700']};
+    }
+  }
 `;
 
 const usernameStyle = css`
@@ -53,7 +57,11 @@ function MemberListItem({ user, channelMember, spaceMember, timestamp, imAdmin }
       <Container ref={containerRef} data-online={isOnline(timestamp)} onClick={() => showCard(true)}>
         <Avatar css={roundedPx} size="2.5rem" id={user.avatarId} />
         <div css={[mX(2)]}>
-          <div css={nameStyle}>{user.nickname}</div>
+          <div>
+            <span css={mR(1)}>{channelMember?.characterName || user.nickname}</span>
+            {spaceMember.isAdmin && <span css={[adminTag, mR(1)]}>管理</span>}
+            {channelMember?.isMaster && <span css={masterTag}>主持</span>}
+          </div>
           <div css={usernameStyle}>{user.username}</div>
         </div>
       </Container>

@@ -64,7 +64,7 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
       return undefined;
     }
   });
-  const draggable = item?.type === 'MESSAGE' && (item.mine || myMember?.isMaster) && !editItem;
+  const draggable = myMember && item?.type === 'MESSAGE' && (item.mine || myMember.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';
   const renderer = (provided: DraggableProvided) => {
     return (

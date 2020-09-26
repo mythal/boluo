@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { User } from '../../api/users';
 import { css } from '@emotion/core';
 import { gray, primary } from '../../styles/colors';
-import { color, flex, fontBold, mB, mR, mT, pX, pY, roundedSm, textXl, textXs } from '../../styles/atoms';
+import { color, flex, fontBold, mB, mR, mT, pX, roundedSm, textXl } from '../../styles/atoms';
 import { Link } from 'react-router-dom';
 import { encodeUuid } from '../../utils/id';
 import Avatar from '../molecules/Avatar';
@@ -16,6 +16,7 @@ import { post } from '../../api/request';
 import { SpaceMember } from '../../api/spaces';
 import { useDispatch } from '../../store';
 import { throwErr } from '../../utils/errors';
+import { adminTag } from './styles';
 
 interface Props {
   user: User;
@@ -43,12 +44,6 @@ const bio = css`
   line-height: 1.4em;
 `;
 
-const tag = css`
-  display: inline-block;
-  ${[pX(1), pY(0.5), roundedSm, textXs]};
-  background-color: ${primary['700']};
-`;
-
 function MemberDialog({ user, dismiss, imAdmin, spaceMember }: Props) {
   const [kickDialog, showKickDialog] = useState(false);
   const dispatch = useDispatch();
@@ -68,7 +63,7 @@ function MemberDialog({ user, dismiss, imAdmin, spaceMember }: Props) {
               <Link to={`/profile/${encodeUuid(user.id)}`} css={[nameLink]}>
                 {user.nickname}
               </Link>
-              {spaceMember.isAdmin && <span css={tag}>管理</span>}
+              {spaceMember.isAdmin && <span css={adminTag}>管理</span>}
             </div>
             <div css={[color(gray['500'])]}>{user.username}</div>
           </div>

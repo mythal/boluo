@@ -399,6 +399,10 @@ export const baseStyle = css`
   }
 `;
 
+export const overflowYAuto = css`
+  overflow-y: auto;
+`;
+
 export const outlineButton = css`
   display: inline-block;
   color: ${textColor};

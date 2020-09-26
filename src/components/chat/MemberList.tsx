@@ -1,19 +1,17 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
 import { useSelector } from '../../store';
-import { roundedSm, spacingN, uiShadow } from '../../styles/atoms';
+import { roundedSm, uiShadow } from '../../styles/atoms';
 import MemberListItem from './MemberListItem';
 import { blue } from '../../styles/colors';
 import { usePane } from '../../hooks/usePane';
 
 const Container = styled.div`
-  padding: ${spacingN(2)} 0;
   ${roundedSm};
-  width: 10rem;
   background-color: ${blue['900']};
   ${uiShadow};
   max-height: 60vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 `;
 
 function MemberList() {

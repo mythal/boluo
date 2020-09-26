@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
-import { flex, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
+import { breakpoint, flex, fontBold, mediaQuery, mL, p, pX, pY, textLg } from '../../styles/atoms';
 import { Space, SpaceMemberWithUser } from '../../api/spaces';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../atoms/Icon';
@@ -27,8 +27,14 @@ const Header = styled.div(chatHeaderStyle);
 const container = css`
   grid-row: list-start / compose-end;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
 
+  ${mediaQuery(breakpoint.md)} {
+    flex-direction: row;
+  }
+
+  justify-content: space-between;
+  overflow-y: auto;
   border: 1px solid ${gray['900']};
 
   &[data-active='true'] {
@@ -37,10 +43,15 @@ const container = css`
 `;
 
 const memberList = css`
-  flex: 0 1 20rem;
-  max-width: 20rem;
+  flex: 1 1 16rem;
+  min-width: 12rem;
+
+  ${mediaQuery(breakpoint.md)} {
+    max-width: 16rem;
+  }
   background-color: ${mix(0.5, gray['900'], gray['800'])};
-  overflow-y: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const Title = styled.div`

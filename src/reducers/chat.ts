@@ -286,7 +286,15 @@ const handleSpaceUpdate = (state: ChatState, spaceWithRelated: SpaceWithRelated)
   for (const member of spaceWithRelated.members) {
     memberMap[member.user.id] = member;
   }
-  const members = state.members.filter((member) => memberMap[member.user.id] !== undefined);
+  const members: Member[] = [];
+  for (const member of state.members) {
+    const spaceMemberWithUser = memberMap[member.user.id];
+    if (spaceMemberWithUser) {
+      const { space, user } = spaceMemberWithUser;
+      const { channel } = member;
+      members.push({ space, user, channel });
+    }
+  }
   return { ...state, channel, members };
 };
 

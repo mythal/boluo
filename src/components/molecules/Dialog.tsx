@@ -23,6 +23,9 @@ const style = css`
   box-shadow: 0 0 0 ${spacingN(2)} ${dialogShadowColor};
   transform: translate(-50%, -50%);
   min-width: 18em;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
 
   ${mediaQuery(breakpoint.md)} {
     min-width: 24em;
@@ -48,6 +51,8 @@ const titleStyle = css`
 
 const contentStyle = css`
   padding: ${spacingN(4)};
+  height: 100%;
+  overflow-y: auto;
 `;
 
 function Dialog({ children, mask, dismiss, confirm, confirmText, title, confirmButtonVariant = 'primary' }: Props) {

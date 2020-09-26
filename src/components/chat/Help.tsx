@@ -15,8 +15,9 @@ interface Props {
   dismiss: () => void;
 }
 
-const dialogStyle = css`
+const contentStyle = css`
   width: 30rem;
+  min-height: 20rem;
 `;
 
 const image = css`
@@ -158,7 +159,7 @@ interface SwitchButtonProps {
 const switchButtonContainer = css`
   display: flex;
   justify-content: center;
-  filter: drop-shadow(0 1px 1px #000);
+  filter: drop-shadow(0 0 1px #1d1d1d);
   ${mY(4)};
 `;
 
@@ -183,7 +184,6 @@ const switchButton = css`
   &[data-active='true'],
   &:active {
     background-color: ${blue['900']};
-    transform: translateY(1px);
   }
 
   &:focus {
@@ -203,7 +203,7 @@ function Help({ dismiss }: Props) {
   const [page, setPage] = useState('basic');
   return (
     <Dialog dismiss={dismiss} confirm={dismiss} confirmText="知道了" title="格式帮助">
-      <div css={dialogStyle}>
+      <div css={contentStyle}>
         <HelpText>点击代码即复制，粘贴到输入框看结果。</HelpText>
         <div css={switchButtonContainer}>
           <SwitchButton setPage={setPage} page={page} self="format">

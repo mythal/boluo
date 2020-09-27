@@ -71,6 +71,7 @@ export const floatPanel = css`
 export const codeBlockStyle = css`
   background-color: ${black};
   color: ${green['500']};
+  line-height: 1em;
   font-family: 'DinkieBitmap-Mono', 'DinkieBitmap', monospace;
   ${[roundedSm, textSm, fontNormal, pX(2), pY(1), m(0)]};
 `;

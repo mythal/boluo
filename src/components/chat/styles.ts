@@ -72,7 +72,9 @@ export const codeBlockStyle = css`
   background-color: ${black};
   color: ${green['500']};
   line-height: 1em;
-  overflow-x: auto;
+  overflow: auto;
+  word-break: keep-all;
+  white-space: pre;
   font-family: 'DinkieBitmap-Mono', 'DinkieBitmap', monospace;
   ${[roundedSm, textSm, fontNormal, pX(2), pY(1), m(0)]};
 `;

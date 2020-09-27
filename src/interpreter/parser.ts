@@ -269,7 +269,7 @@ const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) =>
     return null;
   }
   const counter = parseInt(counterStr);
-  if (counter === 0) {
+  if (counter < 1) {
     return null;
   }
   const node: DicePool = {
@@ -292,6 +292,9 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([matc
   }
   const counter = parseInt(counterStr);
   const addition = parseInt(addStr);
+  if (counter < 1 || addition < 4) {
+    return null;
+  }
   const node: DicePool = {
     type: 'DicePool',
     counter,
@@ -337,10 +340,18 @@ const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then
 const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](\d{0,4})(?:([kKLlHh])(\d{1,3}))?(?![a-zA-Z])/).then(
   ([match, state], env) => {
     const [, before, after, filter, filterCounter] = match;
+    let counter = before === '' ? 1 : Number(before);
+    if (counter < 1) {
+      counter = 1;
+    }
+    let face = after === '' ? env.defaultDiceFace : Number(after);
+    if (face < 1) {
+      face = env.defaultDiceFace;
+    }
     const node: Roll = {
       type: 'Roll',
-      counter: before === '' ? 1 : Number(before),
-      face: after === '' ? env.defaultDiceFace : Number(after),
+      counter,
+      face,
     };
     if (filter && filterCounter) {
       let type: 'LOW' | 'HIGH' = 'HIGH';

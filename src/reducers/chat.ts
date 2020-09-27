@@ -83,6 +83,14 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
   if (messages[0].orderDate >= chat.messageBefore) {
     throw new Error('Incorrect messages order');
   }
+
+  messages.sort((a, b) => {
+    if (a.orderDate === b.orderDate) {
+      return b.orderOffset - a.orderOffset;
+    } else {
+      return b.orderDate - a.orderDate;
+    }
+  });
   messages = messages.reverse();
   const itemSet: ChatItemSet = {
     ...chat.itemSet,

@@ -2,11 +2,13 @@ import * as React from 'react';
 import { Space } from '../../api/spaces';
 import { Link } from 'react-router-dom';
 import { css } from '@emotion/core';
-import { fontNormal, m, mT, p, pX, pY, roundedPx, textXl, uiShadow } from '../../styles/atoms';
+import { fontNormal, m, mR, mT, p, pX, pY, roundedPx, textXl, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
 import { encodeUuid } from '../../utils/id';
 import styled from '@emotion/styled';
 import { bgColor, textColor } from '../../styles/colors';
+import Icon from '../atoms/Icon';
+import lockIcon from '../../assets/icons/lock.svg';
 
 interface Props {
   space: Space;
@@ -45,7 +47,10 @@ function truncate(description: string): string {
 function SpaceCard({ space }: Props) {
   return (
     <Link css={cardStyle} to={`/space/${encodeUuid(space.id)}`}>
-      <SpaceName>{space.name}</SpaceName>
+      <SpaceName>
+        {!space.isPublic && <Icon css={mR(1)} sprite={lockIcon} />}
+        {space.name}
+      </SpaceName>
       <div css={[mT(2)]}>
         <small>{truncate(space.description)}</small>
       </div>

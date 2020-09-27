@@ -25,7 +25,7 @@ function JoinSpaceButton({ id, ...props }: Props) {
 
   const join = async () => {
     setLoading(true);
-    const result = await post('/spaces/join', {}, { id });
+    const result = await post('/spaces/join', {}, { spaceId: id });
     setLoading(false);
     if (result.isOk) {
       const { space, member } = result.value;

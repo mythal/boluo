@@ -121,12 +121,15 @@ function Home({ space, members, channels }: Props) {
       <div css={container} onClick={setActive} data-active={activePane}>
         <Description>{space.description}</Description>
         <div css={memberList}>
-          {members.map((member) => {
-            const { user, space } = member;
-            return (
-              <MemberListItem key={user.id} user={user} spaceMember={space} imAdmin={myMember?.isAdmin ?? false} />
-            );
-          })}
+          {members.map((member) => (
+            <MemberListItem
+              key={member.user.id}
+              user={member.user}
+              spaceMember={member.space}
+              imAdmin={myMember?.isAdmin ?? false}
+              spaceOwnerId={space.ownerId}
+            />
+          ))}
         </div>
       </div>
       {managing && myMember && (

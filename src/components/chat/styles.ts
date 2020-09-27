@@ -112,5 +112,5 @@ export const tag = (color: string) => css`
   background-color: ${color};
 `;
 
-export const adminTag = tag(primary['800']);
+export const adminTag = tag(primary['700']);
 export const masterTag = tag(purple['800']);

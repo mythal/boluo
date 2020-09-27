@@ -5,7 +5,7 @@ import { css } from '@emotion/core';
 import { gray, primary } from '../../styles/colors';
 import { color, flex, fontBold, mB, mR, mT, pX, roundedSm, textXl } from '../../styles/atoms';
 import { Link } from 'react-router-dom';
-import { encodeUuid } from '../../utils/id';
+import { encodeUuid, Id } from '../../utils/id';
 import Avatar from '../molecules/Avatar';
 import Dialog from '../molecules/Dialog';
 import Button from '../atoms/Button';
@@ -16,11 +16,14 @@ import { post } from '../../api/request';
 import { SpaceMember } from '../../api/spaces';
 import { useDispatch } from '../../store';
 import { throwErr } from '../../utils/errors';
-import { adminTag } from './styles';
+import { ChannelMember } from '../../api/channels';
+import MemberTags from './MemberTags';
 
 interface Props {
   user: User;
   spaceMember: SpaceMember;
+  channelMember?: ChannelMember;
+  spaceOwnerId?: Id;
   className?: string;
   dismiss: () => void;
   imAdmin: boolean;
@@ -44,7 +47,7 @@ const bio = css`
   line-height: 1.4em;
 `;
 
-function MemberDialog({ user, dismiss, imAdmin, spaceMember }: Props) {
+function MemberDialog({ user, dismiss, imAdmin, spaceMember, channelMember, spaceOwnerId }: Props) {
   const [kickDialog, showKickDialog] = useState(false);
   const dispatch = useDispatch();
   const kick = async () => {
@@ -63,7 +66,7 @@ function MemberDialog({ user, dismiss, imAdmin, spaceMember }: Props) {
               <Link to={`/profile/${encodeUuid(user.id)}`} css={[nameLink]}>
                 {user.nickname}
               </Link>
-              {spaceMember.isAdmin && <span css={adminTag}>管理</span>}
+              <MemberTags spaceMember={spaceMember} channelMember={channelMember} spaceOwnerId={spaceOwnerId} />
             </div>
             <div css={[color(gray['500'])]}>{user.username}</div>
           </div>

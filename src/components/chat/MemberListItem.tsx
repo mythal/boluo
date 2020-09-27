@@ -10,7 +10,7 @@ import { SpaceMember } from '../../api/spaces';
 import Avatar from '../molecules/Avatar';
 import { css } from '@emotion/core';
 import MemberDialog from './MemberDialog';
-import { adminTag, masterTag } from './styles';
+import MemberTags from './MemberTags';
 
 interface Props {
   user: User;
@@ -18,6 +18,7 @@ interface Props {
   spaceMember: SpaceMember;
   timestamp?: number;
   imAdmin: boolean;
+  spaceOwnerId?: string;
 }
 
 const Container = styled.div`
@@ -46,7 +47,7 @@ const usernameStyle = css`
   line-height: 1rem;
 `;
 
-function MemberListItem({ user, channelMember, spaceMember, timestamp, imAdmin }: Props) {
+function MemberListItem({ user, channelMember, spaceOwnerId, spaceMember, timestamp, imAdmin }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isShowCard, showCard] = useState(false);
   const dismiss = useCallback(() => {
@@ -59,13 +60,21 @@ function MemberListItem({ user, channelMember, spaceMember, timestamp, imAdmin }
         <div css={[mX(2)]}>
           <div>
             <span css={mR(1)}>{channelMember?.characterName || user.nickname}</span>
-            {spaceMember.isAdmin && <span css={[adminTag, mR(1)]}>管理</span>}
-            {channelMember?.isMaster && <span css={masterTag}>主持</span>}
+            <MemberTags spaceMember={spaceMember} channelMember={channelMember} spaceOwnerId={spaceOwnerId} />
           </div>
           <div css={usernameStyle}>{user.username}</div>
         </div>
       </Container>
-      {isShowCard && <MemberDialog spaceMember={spaceMember} user={user} dismiss={dismiss} imAdmin={imAdmin} />}
+      {isShowCard && (
+        <MemberDialog
+          spaceMember={spaceMember}
+          user={user}
+          dismiss={dismiss}
+          imAdmin={imAdmin}
+          channelMember={channelMember}
+          spaceOwnerId={spaceOwnerId}
+        />
+      )}
     </React.Fragment>
   );
 }

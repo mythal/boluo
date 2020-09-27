@@ -19,6 +19,14 @@ function MemberList() {
   const myId = useSelector((state) => state.profile?.user.id);
   const members = useSelector((state) => state.chatPane[pane]!.members);
   const heartbeatMap = useSelector((state) => state.chatPane[pane]!.heartbeatMap);
+  const spaceOwnerId = useSelector((state) => {
+    const spaceResult = state.ui.spaceSet.get(state.chatPane[pane]!.channel.spaceId);
+    if (spaceResult === undefined || spaceResult.isErr) {
+      return undefined;
+    } else {
+      return spaceResult.value.space.ownerId;
+    }
+  });
   const myMember = myId ? members.find((member) => member.user.id === myId) : undefined;
   const imAdmin = Boolean(myMember && myMember.space.isAdmin);
 
@@ -32,6 +40,7 @@ function MemberList() {
           spaceMember={space}
           channelMember={channel}
           imAdmin={imAdmin}
+          spaceOwnerId={spaceOwnerId}
         />
       ))}
     </Container>

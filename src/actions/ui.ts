@@ -49,8 +49,8 @@ export interface SpaceDeleted {
   spaceId: Id;
 }
 
-export const loadSpace = (id: Id) => (dispatch: Dispatch) => {
-  get('/spaces/query_with_related', { id }).then((result) => {
+export const loadSpace = (id: Id, token?: string) => (dispatch: Dispatch) => {
+  get('/spaces/query_with_related', { id, token }).then((result) => {
     const action: SpaceLoaded = { type: 'SPACE_LOADED', result, spaceId: id };
     dispatch(action);
   });

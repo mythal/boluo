@@ -11,9 +11,10 @@ interface Props {
   id: Id;
   className?: string;
   'data-small'?: boolean;
+  token?: string;
 }
 
-function JoinSpaceButton({ id, ...props }: Props) {
+function JoinSpaceButton({ id, token, ...props }: Props) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useIsLoggedIn();
@@ -25,7 +26,7 @@ function JoinSpaceButton({ id, ...props }: Props) {
 
   const join = async () => {
     setLoading(true);
-    const result = await post('/spaces/join', {}, { spaceId: id });
+    const result = await post('/spaces/join', {}, { spaceId: id, token });
     setLoading(false);
     if (result.isOk) {
       const { space, member } = result.value;

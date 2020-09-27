@@ -2,7 +2,17 @@ import * as React from 'react';
 import { useState } from 'react';
 import { EditSpace, Space, SpaceMember, SpaceMemberWithUser } from '../../api/spaces';
 import { Channel } from '../../api/channels';
-import { alignRight, breakpoint, flexCol, largeInput, mediaQuery, mY, spacingN, widthFull } from '../../styles/atoms';
+import {
+  alignRight,
+  breakpoint,
+  flexCol,
+  largeInput,
+  mediaQuery,
+  mY,
+  pB,
+  spacingN,
+  widthFull,
+} from '../../styles/atoms';
 import { PanelTitle } from '../atoms/PanelTitle';
 import { css } from '@emotion/core';
 import Panel from '../molecules/Panel';
@@ -114,6 +124,25 @@ function ManageSpace({ space, my, dismiss }: Props) {
           <Label>
             <input type="checkbox" defaultChecked={space.explorable} ref={register} name="explorable" id="explorable" />{' '}
             在「探索位面」中列出
+          </Label>
+        </div>
+        <div css={[mY(2)]}>
+          <Label css={pB(0)}>
+            <input type="checkbox" defaultChecked={space.isPublic} ref={register} name="isPublic" id="isPublic" />{' '}
+            公开位面
+          </Label>
+          <HelpText>非公开位面只能通过邀请链接来加入</HelpText>
+        </div>
+        <div css={[mY(2)]}>
+          <Label>
+            <input
+              type="checkbox"
+              defaultChecked={space.allowSpectator}
+              ref={register}
+              name="allowSpectator"
+              id="allowSpectator"
+            />{' '}
+            允许旁观者
           </Label>
         </div>
         <div css={[mY(4), alignRight]}>

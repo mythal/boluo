@@ -13,6 +13,7 @@ export interface Space {
   language: string;
   defaultDiceType: string;
   explorable: boolean;
+  allowSpectator: boolean;
 }
 
 export interface SpaceMember {

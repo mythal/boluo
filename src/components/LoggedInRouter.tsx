@@ -36,6 +36,9 @@ function LoggedInRouter() {
         <Route path="/space/:id">
           <SpacePage />
         </Route>
+        <Route path="/join/space/:id/:token">
+          <SpacePage />
+        </Route>
         <Route path="/settings">
           <Settings />
         </Route>

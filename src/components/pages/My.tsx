@@ -16,7 +16,6 @@ import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
 import d20 from '../../assets/icons/d20.svg';
-import Button from '../atoms/Button';
 import { codeBlockStyle } from '../chat/styles';
 
 const Container = styled.div`
@@ -65,12 +64,7 @@ function My() {
             。管理员将不定期删除没有实质内容的测试位面。
           </Text>
         </News>
-        <News css={[mB(2)]}>
-          新的{' '}
-          <Button data-variant="primary" data-small onClick={() => setHelp(true)}>
-            帮助
-          </Button>
-        </News>
+        <News css={[mB(2)]}>新增非公开位面，只能通过邀请链接加入。请在位面设置中设定。</News>
         <News css={[mB(2)]}>
           <Text>
             可以在频道设置里面指定「

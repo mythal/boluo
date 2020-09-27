@@ -114,7 +114,7 @@ function Home({ space, members, channels }: Props) {
               <Icon sprite={userCog} /> 管理
             </ChatHeaderButton>
           )}
-          <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />
+          {space.isPublic && <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />}
           <LeaveSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} name={space.name} />
         </Buttons>
       </Header>

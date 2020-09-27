@@ -33,12 +33,23 @@ function LoadMore() {
 
   useEffect(() => {
     const observer = new IntersectionObserver(() => {
-      button.current?.click();
+      window.setTimeout(() => {
+        if (!button.current) {
+          return;
+        }
+        const node = button.current;
+        if (node.getBoundingClientRect().top >= 0) {
+          node.click();
+        }
+      }, 50);
     }, {});
     if (button.current) {
       observer.observe(button.current);
     }
-    return () => observer.disconnect();
+    return () => {
+      mounted.current = false;
+      observer.disconnect();
+    };
   }, []);
 
   if (finished) {

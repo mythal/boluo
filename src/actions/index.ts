@@ -26,10 +26,12 @@ import {
   StartMoveMessage,
   StopEditMessage,
   SwitchActivePane,
+  ToggleShowFolded,
 } from './chat';
 import {
   ExploreSpaceLoaded,
   ResetUi,
+  SpaceDeleted,
   SpaceLoaded,
   SpaceUpdated,
   SwitchChat,
@@ -46,6 +48,7 @@ export type Action =
   | JoinedSpace
   | SpaceEdited
   | SpaceUpdated
+  | SpaceDeleted
   | LeftSpace
   | JoinedChannel
   | LeftChannel
@@ -72,4 +75,5 @@ export type Action =
   | ShowFlash
   | DismissFlash
   | SwitchActivePane
-  | SplitPane;
+  | SplitPane
+  | ToggleShowFolded;

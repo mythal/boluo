@@ -104,12 +104,20 @@ export const editChannel = (state: ProfileState, { channel }: ChannelEdited): Pr
 };
 
 function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated): ProfileState {
-  const member = members.find((member) => member.userId === state.user.id);
+  const member = members.find((member) => member.user.id === state.user.id);
   if (member) {
-    const spaces = state.spaces.set(space.id, { space, member });
+    const spaces = state.spaces.set(space.id, { space, member: member.space });
+    return { ...state, spaces };
+  } else if (state.spaces.get(space.id)) {
+    const spaces = state.spaces.remove(space.id);
     return { ...state, spaces };
   }
   return state;
+}
+
+function removeSpace(state: ProfileState, spaceId: Id): ProfileState {
+  const spaces = state.spaces.remove(spaceId);
+  return { ...state, spaces };
 }
 
 function updateSettings(state: ProfileState, { settings }: SettingsUpdated): ProfileState {
@@ -151,6 +159,8 @@ export const profileReducer = (state: ProfileState | undefined, action: Action):
       return leaveSpace(state, action);
     case 'JOINED_CHANNEL':
       return joinChannel(state, action);
+    case 'SPACE_DELETED':
+      return removeSpace(state, action.spaceId);
     case 'SPACE_UPDATED':
       return updateSpace(state, action.spaceWithRelated);
     case 'SPACE_LOADED':

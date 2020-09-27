@@ -12,6 +12,7 @@ import ChatMessageToolbar from './MessageToolbar';
 import MessageMedia from './MessageMedia';
 import { itemImage, nameContainer } from './styles';
 import MessageWhisperList from './MessageWhisperList';
+import MessageTime from './MessageTime';
 
 interface Props {
   message: Message;
@@ -20,9 +21,18 @@ interface Props {
   style?: React.CSSProperties;
   handleProps?: DraggableProvidedDragHandleProps;
   moving?: boolean;
+  sameSender?: boolean;
 }
 
-function MessageItem({ message, mine = false, style, handleProps, myMember, moving = false }: Props) {
+function MessageItem({
+  message,
+  mine = false,
+  style,
+  handleProps,
+  myMember,
+  moving = false,
+  sameSender = false,
+}: Props) {
   const [lazy, setLazy] = useState(true);
   useEffect(() => {
     const timeout = window.setTimeout(() => setLazy(false), 200);
@@ -49,15 +59,23 @@ function MessageItem({ message, mine = false, style, handleProps, myMember, movi
         <MessageMedia css={itemImage} mediaId={message.mediaId} />
         {message.isAction && name}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
+        <MessageTime created={message.created} modified={message.modified} />
       </ChatItemContentContainer>
     );
   } else {
     content = <MessageWhisperList message={message} myMember={myMember} />;
   }
+  const renderName = !message.isAction && !sameSender;
   return (
-    <div css={chatItemContainer} style={style} data-in-game={message.inGame} data-moving={moving}>
+    <div
+      css={chatItemContainer}
+      style={style}
+      data-no-name={!renderName}
+      data-in-game={message.inGame}
+      data-moving={moving}
+    >
       {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
-      {!message.isAction && <div css={nameContainer}>{name}</div>}
+      {renderName && <div css={nameContainer}>{name}</div>}
       {content}
       {myMember && !lazy && <ChatMessageToolbar mine={mine} message={message} myMember={myMember} />}
     </div>

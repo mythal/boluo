@@ -1,8 +1,18 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { EditSpace, Space, SpaceMember } from '../../api/spaces';
+import { EditSpace, Space, SpaceMember, SpaceMemberWithUser } from '../../api/spaces';
 import { Channel } from '../../api/channels';
-import { breakpoint, flexCol, largeInput, mediaQuery, mY, spacingN, widthFull } from '../../styles/atoms';
+import {
+  alignRight,
+  breakpoint,
+  flexCol,
+  largeInput,
+  mediaQuery,
+  mY,
+  pB,
+  spacingN,
+  widthFull,
+} from '../../styles/atoms';
 import { PanelTitle } from '../atoms/PanelTitle';
 import { css } from '@emotion/core';
 import Panel from '../molecules/Panel';
@@ -19,11 +29,16 @@ import TextArea from '../atoms/TextArea';
 import Button from '../atoms/Button';
 import { post } from '../../api/request';
 import { useDispatch } from '../../store';
+import { useHistory } from 'react-router-dom';
+import deleteSpaceIcon from '../../assets/icons/earth-crack.svg';
+import Text from '../atoms/Text';
+import Icon from '../atoms/Icon';
+import Dialog from '../molecules/Dialog';
 
 interface Props {
   space: Space;
   channels: Channel[];
-  members: SpaceMember[];
+  members: SpaceMemberWithUser[];
   my: SpaceMember;
   dismiss: () => void;
 }
@@ -39,7 +54,8 @@ function ManageSpace({ space, my, dismiss }: Props) {
   const { register, handleSubmit, errors } = useForm<EditSpace>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
-
+  const [deleteDialog, showDeleteDialog] = useState(false);
+  const history = useHistory();
   const [submitting, setSubmitting] = useState(false);
   const dispatch = useDispatch();
   if (space.ownerId !== my.userId && !my.isAdmin) {
@@ -57,6 +73,18 @@ function ManageSpace({ space, my, dismiss }: Props) {
     dispatch({ type: 'SPACE_EDITED', space: result.value });
     dismiss();
   };
+
+  const deleteSpace = async () => {
+    setSubmitting(true);
+    const result = await post('/spaces/delete', {}, { id: space.id });
+    if (!result.isOk) {
+      setEditError(result.value);
+      return;
+    }
+    dispatch({ type: 'SPACE_DELETED', spaceId: space.id });
+    history.push('/');
+  };
+
   return (
     <Panel css={panelStyle} dismiss={dismiss} mask>
       <PanelTitle>管理位面</PanelTitle>
@@ -65,13 +93,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
         <input readOnly value={space.id} name="spaceId" ref={register({ required })} hidden />
         <div>
           <Label htmlFor="name">位面名</Label>
-          <Input
-            css={largeInput}
-            id="name"
-            name="name"
-            defaultValue={space.name}
-            ref={register(spaceNameValidation(space.name))}
-          />
+          <Input css={largeInput} id="name" name="name" defaultValue={space.name} ref={register(spaceNameValidation)} />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
         <div>
@@ -104,10 +126,46 @@ function ManageSpace({ space, my, dismiss }: Props) {
             在「探索位面」中列出
           </Label>
         </div>
+        <div css={[mY(2)]}>
+          <Label css={pB(0)}>
+            <input type="checkbox" defaultChecked={space.isPublic} ref={register} name="isPublic" id="isPublic" />{' '}
+            公开位面
+          </Label>
+          <HelpText>非公开位面只能通过邀请链接来加入</HelpText>
+        </div>
+        <div css={[mY(2)]}>
+          <Label>
+            <input
+              type="checkbox"
+              defaultChecked={space.allowSpectator}
+              ref={register}
+              name="allowSpectator"
+              id="allowSpectator"
+            />{' '}
+            允许旁观者
+          </Label>
+        </div>
+        <div css={[mY(4), alignRight]}>
+          <Button data-variant="danger" disabled={submitting} type="button" onClick={() => showDeleteDialog(true)}>
+            <Icon sprite={deleteSpaceIcon} /> 摧毁位面
+          </Button>
+        </div>
         <Button data-variant="primary" disabled={submitting} css={widthFull} type="submit">
           提交修改
         </Button>
       </form>
+      {deleteDialog && (
+        <Dialog
+          title="摧毁位面"
+          confirmText="我确定，要摧毁"
+          dismiss={() => showDeleteDialog(false)}
+          confirm={deleteSpace}
+          confirmButtonVariant="danger"
+          mask
+        >
+          <Text>真的要毁灭位面「{space.name}」吗？此操作不可撤销。</Text>
+        </Dialog>
+      )}
     </Panel>
   );
 }

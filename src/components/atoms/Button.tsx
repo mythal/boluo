@@ -1,6 +1,5 @@
 import { css } from '@emotion/core';
 import {
-  baseLineHeight,
   disabled,
   onDisabled,
   onHover,
@@ -28,15 +27,16 @@ const btnColor = (color: string) => css`
   background-color: ${color};
 `;
 
+export type ButtonVariant = 'normal' | 'danger' | 'primary' | 'dark';
+
 interface DataAttributes {
-  'data-variant'?: 'normal' | 'danger' | 'primary' | 'dark';
+  'data-variant'?: ButtonVariant;
   'data-icon'?: boolean;
   'data-small'?: boolean;
   'data-size'?: 'large' | 'normal' | 'small';
 }
 
 export const buttonStyle = css`
-  ${baseLineHeight};
   display: inline-flex;
   justify-content: space-around;
   align-items: center;

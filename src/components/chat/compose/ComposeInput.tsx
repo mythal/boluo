@@ -6,7 +6,6 @@ import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 
 interface Props {
-  prevSubmit?: number;
   inGame: boolean;
   initialValue: string;
   composeDispatch: ComposeDispatch;
@@ -23,18 +22,19 @@ const style = css`
 `;
 
 const actionCommand = '.me ';
-const ACTION_COMMAND = /[.。]me\s*/;
+const ACTION_COMMAND = /^[.。]me\s*/;
 
 export interface ComposeInputAction {
-  appendDice: () => void;
+  appendDice: (command: string) => void;
+  reset: () => void;
 }
 
 function ComposeInput(
-  { prevSubmit, inGame, initialValue, composeDispatch, autoFocus = false, className, isAction }: Props,
+  { inGame, initialValue, composeDispatch, autoFocus = false, autoSize = false, className, isAction }: Props,
   ref: Ref<ComposeInputAction>
 ) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  useAutoHeight(inputRef);
+  useAutoHeight(autoSize, inputRef);
   const [value, setValue] = useState(initialValue);
   const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);
@@ -43,24 +43,35 @@ function ComposeInput(
   const timeout = useRef<number | undefined>(undefined);
   const parse = useParse();
 
-  const appendDice = useCallback(() => {
-    setValue((value) => value + ' {1d}');
-    inputRef.current?.focus();
-    window.setTimeout(() => {
-      if (!inputRef.current) {
-        return;
-      }
-      const length = inputRef.current.value.length;
-      inputRef.current.focus();
-      inputRef.current.setSelectionRange(length - 3, length - 1);
-      const { text, entities } = parse(inputRef.current.value.trim());
-      window.clearTimeout(timeout.current);
-      timeout.current = window.setTimeout(() => {
-        inputRef.current?.focus();
-        composeDispatch(update({ text, entities }));
-      }, 100);
-    }, 10);
-  }, [composeDispatch, parse]);
+  const reset = useCallback(() => {
+    setValue('');
+    if (inputRef.current) {
+      inputRef.current.style.height = '';
+    }
+  }, []);
+
+  const appendDice = useCallback(
+    (command: string) => {
+      const insertStr = ` {${command}}`;
+      setValue((value) => value + insertStr);
+      inputRef.current?.focus();
+      window.setTimeout(() => {
+        if (!inputRef.current) {
+          return;
+        }
+        const length = inputRef.current.value.length;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(length - (command.length + 1), length - 1);
+        const { text, entities } = parse(inputRef.current.value.trim());
+        window.clearTimeout(timeout.current);
+        timeout.current = window.setTimeout(() => {
+          inputRef.current?.focus();
+          composeDispatch(update({ text, entities }));
+        }, 100);
+      }, 10);
+    },
+    [composeDispatch, parse]
+  );
 
   useEffect(() => {
     setValue((value) => {
@@ -79,16 +90,11 @@ function ComposeInput(
     () => {
       return {
         appendDice,
+        reset,
       };
     },
-    [appendDice]
+    [appendDice, reset]
   );
-
-  useEffect(() => {
-    return () => {
-      setValue('');
-    };
-  }, [prevSubmit]);
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const nextValue = e.target.value;

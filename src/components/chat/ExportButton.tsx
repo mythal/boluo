@@ -8,10 +8,13 @@ import { throwErr } from '../../utils/errors';
 import { Message } from '../../api/messages';
 import { ExportEntity } from '../../interpreter/entities';
 import { evaluate, makeRng, nodeToText } from '../../interpreter/eval';
+import { Channel } from '../../api/channels';
+import Icon from '../atoms/Icon';
+import exportIcon from '../../assets/icons/file-export.svg';
+import { dateTimeFormat } from '../../utils/time';
 
 interface Props {
-  channelId: Id;
-  channelName: string;
+  channel: Channel;
   className?: string;
 }
 
@@ -81,13 +84,13 @@ function exportMessage(message: Message): ExportMessage {
   };
 }
 
-function ExportButton({ channelId, channelName, className }: Props) {
+function ExportButton({ channel, className }: Props) {
   const [loading, setLoading] = useState(false);
   const linkRef = useRef<HTMLAnchorElement>(null);
   const dispatch = useDispatch();
   const handleClick = async () => {
     setLoading(true);
-    const result = await get('/channels/export', { id: channelId });
+    const result = await get('/channels/export', { id: channel.id });
     if (!result.isOk) {
       throwErr(dispatch)(result.value);
       return;
@@ -100,12 +103,16 @@ function ExportButton({ channelId, channelName, className }: Props) {
     URL.revokeObjectURL(href);
     setLoading(false);
   };
+  const now = new Date();
+  const filename = `${dateTimeFormat(now)}-${channel.name}.json`;
   return (
     <React.Fragment>
       <Button className={className} disabled={loading} onClick={handleClick}>
-        导出
+        <span>
+          <Icon sprite={exportIcon} /> 导出
+        </span>
       </Button>
-      <a hidden href="#" ref={linkRef} download={`${channelName}.json`} />
+      <a hidden href="#" ref={linkRef} download={filename} />
     </React.Fragment>
   );
 }

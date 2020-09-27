@@ -1,30 +1,73 @@
 import * as React from 'react';
-import { Member } from '../../api/channels';
+import { useCallback, useRef, useState } from 'react';
+import { ChannelMember } from '../../api/channels';
 import styled from '@emotion/styled';
-import { pL, pX, pY, spacingN, textSm } from '../../styles/atoms';
+import { mR, mX, mY, pX, pY, roundedPx, roundedSm, textSm } from '../../styles/atoms';
 import { isOnline } from '../../utils/profile';
-import { primaryColor } from '../../styles/colors';
+import { blue, gray } from '../../styles/colors';
+import { User } from '../../api/users';
+import { SpaceMember } from '../../api/spaces';
+import Avatar from '../molecules/Avatar';
+import { css } from '@emotion/core';
+import MemberDialog from './MemberDialog';
+import { adminTag, masterTag } from './styles';
 
 interface Props {
-  member: Member;
-  timestamp: number | undefined;
+  user: User;
+  channelMember?: ChannelMember;
+  spaceMember: SpaceMember;
+  timestamp?: number;
+  imAdmin: boolean;
 }
 
 const Container = styled.div`
-  ${[pX(4), pY(1), textSm]};
-
-  &[data-online='true'] {
-    ${pL(3)};
-    border-left: ${spacingN(1)} solid ${primaryColor};
+  user-select: none;
+  display: flex;
+  align-items: center;
+  min-width: 14rem;
+  position: relative;
+  ${[pX(2), pY(2), mY(1), mX(1), roundedSm]}
+  &:hover {
+    background-color: ${gray['800']};
   }
 
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+  &[data-online='true'] {
+    background-color: ${blue['800']};
+
+    &:hover {
+      background-color: ${blue['700']};
+    }
   }
 `;
 
-function MemberListItem({ member, timestamp }: Props) {
-  return <Container data-online={isOnline(timestamp)}>{member.user.nickname}</Container>;
+const usernameStyle = css`
+  color: ${gray['500']};
+  ${[textSm]};
+  line-height: 1rem;
+`;
+
+function MemberListItem({ user, channelMember, spaceMember, timestamp, imAdmin }: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isShowCard, showCard] = useState(false);
+  const dismiss = useCallback(() => {
+    showCard(false);
+  }, []);
+  return (
+    <React.Fragment>
+      <Container ref={containerRef} data-online={isOnline(timestamp)} onClick={() => showCard(true)}>
+        <Avatar css={roundedPx} size="2.5rem" id={user.avatarId} />
+        <div css={[mX(2)]}>
+          <div>
+            <span css={mR(1)}>{channelMember?.characterName || user.nickname}</span>
+            {spaceMember.isAdmin && <span css={[adminTag, mR(1)]}>管理</span>}
+            {channelMember?.isMaster && <span css={masterTag}>主持</span>}
+          </div>
+          <div css={usernameStyle}>{user.username}</div>
+        </div>
+      </Container>
+      {isShowCard && <MemberDialog spaceMember={spaceMember} user={user} dismiss={dismiss} imAdmin={imAdmin} />}
+    </React.Fragment>
+  );
 }
 
-export default React.memo(MemberListItem);
+export default MemberListItem;

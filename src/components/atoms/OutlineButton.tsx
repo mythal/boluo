@@ -1,6 +1,5 @@
 import { css } from '@emotion/core';
 import {
-  baseLineHeight,
   controlRounded,
   disabled,
   focusShadow,
@@ -32,7 +31,6 @@ interface DataAttributes {
 }
 
 export const outlineButtonStyle = css`
-  ${baseLineHeight};
   background-color: rgba(255, 255, 255, 0.05);
   color: ${textColor};
   display: inline-flex;

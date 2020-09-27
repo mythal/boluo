@@ -4,11 +4,11 @@ import { Id } from '../../utils/id';
 import Header from './Header';
 import ChatList from './ChatList';
 import Loading from '../molecules/Loading';
-import { chatRight } from '../../styles/atoms';
 import { useDispatch, useSelector } from '../../store';
 import { CloseChat, loadChat } from '../../actions/chat';
 import Compose from './compose/Compose';
 import Heartbeat from './Heartbeat';
+import { chatRight } from './styles';
 
 export const useLoadChat = (id: Id, pane: number) => {
   const dispatch = useDispatch();

@@ -62,12 +62,18 @@ const sidebarTitle = css`
 const SpaceName = styled.span``;
 
 const footer = css`
-  flex: 1 1 100%;
+  flex: 1 1;
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   ${p(2)};
+`;
+
+const channelList = css`
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
 `;
 
 function SidebarExpandItems({ space, channels }: Props) {
@@ -87,14 +93,16 @@ function SidebarExpandItems({ space, channels }: Props) {
           </SidebarButton>
         )}
       </SidebarSectionTitle>
-      {channels.map((channel) => (
-        <SidebarItemLink key={channel.id} to={chatPath(channel.spaceId, channel.id)}>
-          <ChannelName>{channel.name}</ChannelName>
-        </SidebarItemLink>
-      ))}
+      <div css={channelList}>
+        {channels.map((channel) => (
+          <SidebarItemLink key={channel.id} to={chatPath(channel.spaceId, channel.id)}>
+            <ChannelName>{channel.name}</ChannelName>
+          </SidebarItemLink>
+        ))}
+      </div>
       <div css={footer}>
         <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>
-          <Icon sprite={help} /> 格式速查
+          <Icon sprite={help} /> 格式
         </ChatHeaderButton>
       </div>
 

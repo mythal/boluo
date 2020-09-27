@@ -17,6 +17,7 @@ export interface Channel {
   created: number;
   isPublic: boolean;
   defaultDiceType: string;
+  defaultRollCommand: string;
 }
 
 export interface ChannelMember {
@@ -58,6 +59,7 @@ export interface EditChannel {
   name: string | null;
   topic: string | null;
   defaultDiceType?: string;
+  defaultRollCommand?: string;
   grantMasters?: Id[];
   removeMasters?: Id[];
 }

@@ -15,7 +15,8 @@ import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
-import { Code } from '../atoms/Code';
+import d20 from '../../assets/icons/d20.svg';
+import { codeBlockStyle } from '../chat/styles';
 
 const Container = styled.div`
   display: grid;
@@ -42,35 +43,37 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
-
-        <News css={[mB(2)]}>
-          <Text>
-            增加了代码和代码块 Markdown 格式支持 <Code>`...这里写代码 {'{d20}'}...`</Code>
-          </Text>
-          <Text>
-            <Code>```代码块，文字地图可以写在这里面。```</Code>
-          </Text>
-        </News>
-
-        <News css={[mB(2)]}>
-          <Text>增加了悄悄话（也是暗骰）功能，点击输入框左侧的省略号打开面板来使用。</Text>
-        </News>
         <News css={[mB(2)]}>
           <Text>
             菠萝上线啦！现在是早期测试阶段，请到
             <ExternalLink to="https://forum.boluo.chat/" css={link}>
               讨论版
             </ExternalLink>
-            提出意见和建议。
+            或「
+            <Link to="/space/sKPHfPhpEeqCXBcv8xDXgA" css={link}>
+              菠萝讨论
+            </Link>
+            」位面提出你的意见和建议。
           </Text>
 
           <Text>
-            可以到
+            功能测试可以到
             <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
               沙盒位面
             </Link>
-            去测试功能。
+            。管理员将不定期删除没有实质内容的测试位面。
           </Text>
+        </News>
+        <News css={[mB(2)]}>新增非公开位面，只能通过邀请链接加入。请在位面设置中设定。</News>
+        <News css={[mB(2)]}>
+          <Text>
+            可以在频道设置里面指定「
+            <Icon sprite={d20} /> 插入骰子」按钮插入的默认指令。
+          </Text>
+          <Text>可以搜索位面和删除位面了。</Text>
+        </News>
+        <News css={[mB(2)]}>
+          <pre css={codeBlockStyle}>{'代码块 想使用\n现在是 格式是\n很酷的 ```内\n像素体 容```'}</pre>
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

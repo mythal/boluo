@@ -1,5 +1,6 @@
 import { Channel } from './channels';
 import { Id } from '../utils/id';
+import { User } from './users';
 
 export interface Space {
   id: Id;
@@ -12,6 +13,7 @@ export interface Space {
   language: string;
   defaultDiceType: string;
   explorable: boolean;
+  allowSpectator: boolean;
 }
 
 export interface SpaceMember {
@@ -33,6 +35,10 @@ export interface CreateSpace {
   firstChannelName: string;
 }
 
+export interface SearchParams {
+  search: string;
+}
+
 export interface EditSpace {
   spaceId: Id;
   name?: string;
@@ -43,10 +49,16 @@ export interface EditSpace {
 
 export interface SpaceWithRelated {
   space: Space;
-  members: SpaceMember[];
+  members: SpaceMemberWithUser[];
   channels: Channel[];
 }
 
-export interface CheckSpaceName {
-  name: string;
+export interface SpaceMemberWithUser {
+  space: SpaceMember;
+  user: User;
+}
+
+export interface Kick {
+  spaceId: Id;
+  userId: Id;
 }

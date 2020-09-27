@@ -1,17 +1,89 @@
 import * as React from 'react';
-import { useCallback } from 'react';
-import store, { useDispatch, useSelector } from '../../store';
-import { DragDropContext, DragDropContextProps } from 'react-beautiful-dnd';
-import ChatVirtualList from './VirtualList';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useDispatch, useSelector } from '../../store';
+import { DragDropContext, DragDropContextProps, Droppable } from 'react-beautiful-dnd';
 import { AppResult, post } from '../../api/request';
-import { MovingMessage, ResetMessageMoving } from '../../actions/chat';
+import { FinishMoveMessage, MovingMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
 import { batch } from 'react-redux';
 import { showFlash } from '../../actions/flash';
 import { usePane } from '../../hooks/usePane';
+import { ChatState } from '../../reducers/chat';
+import { MessageItem, PreviewItem } from '../../states/chat-item-set';
+import ChatItem from './ChatItem';
+import LoadMore from './LoadMore';
+import { css } from '@emotion/core';
+import { Id } from '../../utils/id';
+import { blue } from '../../styles/colors';
+
+const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
+  item: PreviewItem | MessageItem
+): boolean => {
+  const inGame = filter === 'IN_GAME';
+  const outGame = filter === 'OUT_GAME';
+  if (item.type === 'MESSAGE') {
+    const { message } = item;
+    if (inGame && !message.inGame) {
+      return false;
+    }
+    if (outGame && message.inGame) {
+      return false;
+    }
+    if (message.folded && !showFolded) {
+      return false;
+    }
+  } else if (item.type === 'PREVIEW') {
+    const { preview } = item;
+    if (inGame && !preview.inGame) {
+      return false;
+    }
+    if (outGame && preview.inGame) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const listWrapperStyle = css`
+  overflow-y: scroll;
+  overflow-x: hidden;
+
+  border: 1px solid ${blue['900']};
+  &[data-active='true'] {
+    border: 1px solid ${blue['700']};
+  }
+`;
+
+const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
+  const scrollEnd = useRef<number>(0);
+
+  useLayoutEffect(() => {
+    if (!chatListRef.current) {
+      return;
+    }
+    const chatList = chatListRef.current;
+    const lockSpan = chatList.clientHeight >> 1;
+    if (chatList.scrollTop < lockSpan || scrollEnd.current < lockSpan) {
+      chatList.scrollTo(0, chatList.scrollHeight - chatList.clientHeight - scrollEnd.current);
+    }
+  });
+
+  useEffect(() => {
+    if (chatListRef.current === null) {
+      return;
+    }
+    const chatList = chatListRef.current;
+
+    const compute = () => {
+      scrollEnd.current = chatList.scrollHeight - chatList.scrollTop - chatList.clientHeight;
+    };
+    chatList.addEventListener('scroll', compute, { capture: false, passive: true });
+  }, [chatListRef]);
+};
 
 function ChatList() {
   const pane = usePane();
+  const activePane = useSelector((state) => state.activePane);
   const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
   const dispatch = useDispatch();
   const myMember = useSelector((state) => {
@@ -21,23 +93,37 @@ function ChatList() {
       return state.profile.channels.get(state.chatPane[pane]!.channel.id)?.member;
     }
   });
-
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  useAutoScroll(wrapperRef);
+  const filter = useSelector((state) => state.chatPane[pane]!.filter);
+  const showFolded = useSelector((state) => state.chatPane[pane]!.showFolded);
+  const messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
+  const filteredMessages = useMemo(() => {
+    const show = filterMessages(filter, showFolded);
+    return messages.filter(show);
+  }, [messages, filter, showFolded]);
   const onDragEnd: DragDropContextProps['onDragEnd'] = useCallback(
     async ({ draggableId, source, destination }) => {
+      const finishMove: FinishMoveMessage = { type: 'FINISH_MOVE_MESSAGE', pane };
       const messageId = draggableId;
       if (!destination || source.index === destination.index) {
+        dispatch(finishMove);
         return;
       }
       const index = destination.index;
-      const targetItem = store.getState().chatPane[pane]?.itemSet.messages.get(index);
+      const sourceItem = filteredMessages.get(source.index);
+      if (sourceItem?.type !== 'MESSAGE') {
+        return;
+      }
+      const targetItem = filteredMessages.get(index);
       const action: MovingMessage = {
         type: 'MOVING_MESSAGE',
-        messageIndex: source.index,
-        insertToIndex: source.index > destination.index ? destination.index : destination.index + 1,
+        message: sourceItem,
+        targetItem,
         pane,
       };
       batch(() => {
-        dispatch({ type: 'FINISH_MOVE_MESSAGE', pane });
+        dispatch(finishMove);
         dispatch(action);
       });
 
@@ -74,16 +160,46 @@ function ChatList() {
         throwErr(dispatch)(result.value);
       }
     },
-    [dispatch, pane]
+    [dispatch, pane, filteredMessages]
   );
 
   const onDragStart = useCallback(() => {
     dispatch({ type: 'START_MOVE_MESSAGE', pane });
   }, [dispatch, pane]);
 
+  let prevSender: Id | null = null;
+  let prevName: Id | null = null;
+  const items = filteredMessages.map((item, index) => {
+    let sameSender = false;
+    if (item.type === 'MESSAGE' && item.message.senderId === prevSender && item.message.name === prevName) {
+      sameSender = true;
+    } else if (item.type === 'MESSAGE') {
+      prevSender = item.message.senderId;
+      prevName = item.message.name;
+    } else if (item.type === 'PREVIEW') {
+      prevSender = item.preview.senderId;
+      prevName = item.preview.name;
+    }
+    return <ChatItem key={item.id} item={item} myMember={myMember} index={index} sameSender={sameSender} />;
+  });
+
+  const onClick = () => {
+    dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+  };
+
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <ChatVirtualList myMember={myMember} channelId={channelId} />
+      <div ref={wrapperRef} css={listWrapperStyle} data-active={pane === activePane} onClick={onClick}>
+        <Droppable droppableId={channelId} type="CHANNEL">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              <LoadMore />
+              {items}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </div>
     </DragDropContext>
   );
 }

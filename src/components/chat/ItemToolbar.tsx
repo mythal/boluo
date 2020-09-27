@@ -1,4 +1,4 @@
-import { pL, pR, pX, pY } from '../../styles/atoms';
+import { pX, pY } from '../../styles/atoms';
 import styled from '@emotion/styled';
 import { css } from '@emotion/core';
 import React from 'react';
@@ -10,11 +10,12 @@ export const toolbarRadius = css`
 
 const Container = styled.div`
   position: absolute;
+  width: max-content;
   z-index: 20;
   top: 0;
-  right: 0;
-  transform: translateY(-75%);
-  ${[pR(2), pL(12), pY(2)]};
+  right: 50%;
+  transform: translateY(-65%) translateX(50%);
+  ${[pY(2), pX(4)]};
 
   &[data-position='bottom'] {
     top: unset;
@@ -28,6 +29,7 @@ const Container = styled.div`
 `;
 
 const Toolbar = styled.div`
+  width: max-content;
   ${[pY(1), pX(1), floatPanel]};
 `;
 

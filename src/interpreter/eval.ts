@@ -1,6 +1,6 @@
 import Prando from 'prando';
 import { CocRoll, EvaluatedExprNode, ExprNode, FateResult } from './entities';
-import { compare } from '../utils/helper';
+import { compare, compareRev } from '../utils/helper';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 export const MAX_DICE_COUNTER = 64;
@@ -233,6 +233,15 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   } else if (node.type === 'SubExpr') {
     const inner = evaluate(node.node, rng, layer + 1);
     return { ...node, evaluatedNode: inner, value: inner.value };
+  } else if (node.type === 'Repeat') {
+    const evaluated = [];
+    let value = 0;
+    for (let i = 0; i < node.count; i++) {
+      const result = evaluate(node.node, rng, layer + 1);
+      value += result.value;
+      evaluated.push(result);
+    }
+    return { ...node, evaluated, value };
   } else {
     return { type: 'Unknown', value: 0 };
   }

@@ -25,6 +25,10 @@ export const loadExploreSpace = () => (dispatch: Dispatch) => {
   get('/spaces/list').then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
 };
 
+export const searchSpaces = (searchText: string) => (dispatch: Dispatch) => {
+  get('/spaces/search', { search: searchText }).then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
+};
+
 export interface SwitchChat {
   type: 'SWITCH_CHAT';
 }
@@ -40,8 +44,13 @@ export interface SpaceUpdated {
   spaceWithRelated: SpaceWithRelated;
 }
 
-export const loadSpace = (id: Id) => (dispatch: Dispatch) => {
-  get('/spaces/query_with_related', { id }).then((result) => {
+export interface SpaceDeleted {
+  type: 'SPACE_DELETED';
+  spaceId: Id;
+}
+
+export const loadSpace = (id: Id, token?: string) => (dispatch: Dispatch) => {
+  get('/spaces/query_with_related', { id, token }).then((result) => {
     const action: SpaceLoaded = { type: 'SPACE_LOADED', result, spaceId: id };
     dispatch(action);
   });

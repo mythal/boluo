@@ -2,11 +2,10 @@ import * as React from 'react';
 import { Space } from '../../api/spaces';
 import { Link } from 'react-router-dom';
 import { css } from '@emotion/core';
-import { fontNormal, m, mT, p, pX, pY, roundedMd, textXl, uiShadow } from '../../styles/atoms';
+import { fontNormal, m, mT, p, pX, pY, roundedPx, textXl, uiShadow } from '../../styles/atoms';
 import { lighten } from 'polished';
 import { encodeUuid } from '../../utils/id';
 import styled from '@emotion/styled';
-import nightSky from '../../assets/space-card-background.svg';
 import { bgColor, textColor } from '../../styles/colors';
 
 interface Props {
@@ -15,14 +14,13 @@ interface Props {
 
 const cardStyle = css`
   background-color: ${lighten(0.05, bgColor)};
-  background-image: url(${nightSky.url});
   background-position: right bottom;
   background-size: 60%;
   background-repeat: no-repeat;
   text-shadow: 0 1px 1px #000;
   min-height: 8rem;
   ${uiShadow};
-  ${roundedMd};
+  ${roundedPx};
   ${pY(5)};
   ${pX(3)};
   text-decoration: none;

@@ -2,8 +2,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
-import { chatHeaderStyle, chatHeaderToolbar, flex, fontBold, mL, p, pX, pY, textLg } from '../../styles/atoms';
-import { Space, SpaceMember } from '../../api/spaces';
+import { breakpoint, flex, fontBold, mediaQuery, mL, p, pX, pY, textLg } from '../../styles/atoms';
+import { Space, SpaceMemberWithUser } from '../../api/spaces';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../atoms/Icon';
 import ChatHeaderButton, { chatHeaderButtonStyle } from './ChatHeaderButton';
@@ -18,18 +18,40 @@ import { usePane } from '../../hooks/usePane';
 import { chatPath } from '../../utils/path';
 import { useHistory } from 'react-router-dom';
 import { blue, gray } from '../../styles/colors';
+import { chatHeaderStyle, chatHeaderToolbar } from './styles';
+import { mix } from 'polished';
+import MemberListItem from './MemberListItem';
 
 const Header = styled.div(chatHeaderStyle);
 
 const container = css`
   grid-row: list-start / compose-end;
-  ${[pX(4), pY(4)]};
+  display: flex;
+  flex-direction: column;
 
+  ${mediaQuery(breakpoint.md)} {
+    flex-direction: row;
+  }
+
+  justify-content: space-between;
+  overflow-y: auto;
   border: 1px solid ${gray['900']};
 
   &[data-active='true'] {
     border-color: ${blue['800']};
   }
+`;
+
+const memberList = css`
+  flex: 1 1 16rem;
+  min-width: 12rem;
+
+  ${mediaQuery(breakpoint.md)} {
+    max-width: 16rem;
+  }
+  background-color: ${mix(0.5, gray['900'], gray['800'])};
+  overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const Title = styled.div`
@@ -47,11 +69,12 @@ const SpaceName = styled.span`
 const Description = styled.div`
   max-width: 30em;
   white-space: pre-line;
+  ${[pX(4), pY(2)]}
 `;
 
 interface Props {
   space: Space;
-  members: SpaceMember[];
+  members: SpaceMemberWithUser[];
   channels: Channel[];
 }
 
@@ -91,12 +114,20 @@ function Home({ space, members, channels }: Props) {
               <Icon sprite={userCog} /> 管理
             </ChatHeaderButton>
           )}
-          <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />
+          {space.isPublic && <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />}
           <LeaveSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} name={space.name} />
         </Buttons>
       </Header>
       <div css={container} onClick={setActive} data-active={activePane}>
         <Description>{space.description}</Description>
+        <div css={memberList}>
+          {members.map((member) => {
+            const { user, space } = member;
+            return (
+              <MemberListItem key={user.id} user={user} spaceMember={space} imAdmin={myMember?.isAdmin ?? false} />
+            );
+          })}
+        </div>
       </div>
       {managing && myMember && (
         <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />

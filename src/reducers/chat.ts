@@ -6,7 +6,6 @@ import { Action } from '../actions';
 import {
   ChatLoaded,
   ChatUpdate,
-  CloseChat,
   LoadMessages,
   MovingMessage,
   ResetMessageMoving,
@@ -28,6 +27,7 @@ import {
   updateMessagesOrder,
 } from '../states/chat-item-set';
 import Prando from 'prando';
+import { SpaceMemberWithUser, SpaceWithRelated } from '../api/spaces';
 
 export interface ChatState {
   pane: number;
@@ -41,6 +41,7 @@ export interface ChatState {
   messageBefore: number;
   eventAfter: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
+  showFolded: boolean;
   moving: boolean;
   postponed: List<Action>;
 }
@@ -61,13 +62,16 @@ const updateChat = (state: ChatState, { id, chat }: ChatUpdate): ChatState => {
   return { ...state, ...chat };
 };
 
-export const closeChat = (state: ChatState, { id }: CloseChat): ChatState | undefined => {
+export const closeChat = (state: ChatState, channelId: Id): ChatState | undefined => {
+  if (channelId !== state.channel.id) {
+    return state;
+  }
   state.connection.onclose = null;
   state.connection.onerror = null;
   state.connection.onmessage = null;
   state.connection.onopen = null;
   state.connection.close();
-  return state.channel.id === id ? undefined : state;
+  return undefined;
 };
 
 const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myId: Id | undefined): ChatState => {
@@ -149,8 +153,8 @@ const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage)
   return { ...state, itemSet };
 };
 
-const handleMessageMoving = (state: ChatState, { messageIndex, insertToIndex }: MovingMessage): ChatState => {
-  const itemSet = markMessageMoving(state.itemSet, messageIndex, insertToIndex);
+const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMessage): ChatState => {
+  const itemSet = markMessageMoving(state.itemSet, message, targetItem);
   return { ...state, itemSet };
 };
 
@@ -272,6 +276,28 @@ export const checkMessagesOrder = (itemSet: ChatItemSet) => {
   }
 };
 
+const handleSpaceUpdate = (state: ChatState, spaceWithRelated: SpaceWithRelated): ChatState | undefined => {
+  const { channels } = spaceWithRelated;
+  const channel = channels.find((channel) => state.channel.id === channel.id);
+  if (!channel) {
+    return undefined;
+  }
+  const memberMap: Record<Id, SpaceMemberWithUser | undefined> = {};
+  for (const member of spaceWithRelated.members) {
+    memberMap[member.user.id] = member;
+  }
+  const members: Member[] = [];
+  for (const member of state.members) {
+    const spaceMemberWithUser = memberMap[member.user.id];
+    if (spaceMemberWithUser) {
+      const { space, user } = spaceMemberWithUser;
+      const { channel } = member;
+      members.push({ space, user, channel });
+    }
+  }
+  return { ...state, channel, members };
+};
+
 export const chatReducer = (
   state: ChatState | undefined,
   action: Action,
@@ -290,10 +316,19 @@ export const chatReducer = (
   switch (action.type) {
     case 'FINISH_MOVE_MESSAGE':
       return handleMoveFinish(state, action, myId);
+    case 'SPACE_UPDATED':
+      return handleSpaceUpdate(state, action.spaceWithRelated);
+    case 'SPACE_DELETED':
+      if (state.channel.spaceId === action.spaceId) {
+        return closeChat(state, state.channel.id);
+      }
+      break;
     case 'CHAT_UPDATE':
       return updateChat(state, action);
     case 'CLOSE_CHAT':
-      return closeChat(state, action);
+      return closeChat(state, action.id);
+    case 'TOGGLE_SHOW_FOLDED':
+      return { ...state, showFolded: !state.showFolded };
     case 'REVEAL_MESSAGE':
       return handleRevealMessage(state, action.message, myId);
     case 'LOAD_MESSAGES':

@@ -2,6 +2,15 @@
 
 A chat tool made for play RPG.
 
+## Run with remote API
+
+```
+git clone https://github.com/mythal/boluo
+cd boluo
+yarn build
+REMOTE_BACKEND=1 yarn start
+```
+
 [Server Code](https://github.com/mythal/boluo-server)
 
 ## Licenses

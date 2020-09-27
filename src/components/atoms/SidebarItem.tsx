@@ -1,7 +1,8 @@
 import styled from '@emotion/styled';
 import { NavLink } from 'react-router-dom';
-import { pL, pR, sidebarWidth, spacingN } from '../../styles/atoms';
+import { pL, pR, spacingN } from '../../styles/atoms';
 import { primaryColor, sidebarItemActiveBgColor, sidebarItemColor, sidebarItemHoverBgColor } from '../../styles/colors';
+import { sidebarWidth } from '../chat/styles';
 
 export const SidebarItemLink = styled(NavLink)`
   display: flex;

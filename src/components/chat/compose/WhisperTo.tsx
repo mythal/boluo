@@ -5,7 +5,7 @@ import Button from '../../atoms/Button';
 import WhisperToSelect from './WhisperToSelect';
 
 interface Props {
-  whisperTo: UserItem[];
+  whisperTo: UserItem[] | undefined | null;
   composeDispatch: ComposeDispatch;
   className?: string;
 }
@@ -14,7 +14,11 @@ function WhisperTo({ whisperTo, composeDispatch, className }: Props) {
   return (
     <div className={className}>
       <Button data-variant="normal" data-size="small" onClick={() => setDialog(true)}>
-        悄悄说给 ({whisperTo.length}人)...
+        {whisperTo === null || whisperTo === undefined ? (
+          <span>悄悄话（关）...</span>
+        ) : (
+          <span>悄悄说给 ({whisperTo.length}人)...</span>
+        )}
       </Button>
       {dialog && (
         <WhisperToSelect whisperTo={whisperTo} composeDispatch={composeDispatch} dismiss={() => setDialog(false)} />

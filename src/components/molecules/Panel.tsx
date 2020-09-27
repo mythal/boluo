@@ -25,6 +25,7 @@ const slideIn = keyframes`
 const style = css`
   position: fixed;
   height: 100%;
+  overflow-y: auto;
   left: unset;
   transform: unset;
   right: 0;

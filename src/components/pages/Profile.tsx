@@ -2,8 +2,8 @@ import * as React from 'react';
 import { useEffect } from 'react';
 import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
-import { floatRight } from '../../styles/atoms';
-import { AppResult, mediaUrl } from '../../api/request';
+import { floatRight, roundedSm } from '../../styles/atoms';
+import { AppResult } from '../../api/request';
 import { useParams } from 'react-router-dom';
 import { User } from '../../api/users';
 import { RenderError } from '../molecules/RenderError';
@@ -42,10 +42,9 @@ function Profile() {
   const user = result.value;
 
   const { avatarId } = user;
-  const avatarUri = avatarId ? mediaUrl(avatarId) : null;
   return (
     <>
-      <Avatar source={avatarUri} css={[floatRight]} size="8rem" />
+      <Avatar id={avatarId} css={[floatRight, roundedSm]} size="8rem" />
       <div>
         <Title>{user.nickname}</Title>
       </div>

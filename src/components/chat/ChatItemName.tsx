@@ -4,7 +4,7 @@ import Prando from 'prando';
 import { encodeUuid, Id } from '../../utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { alignRight, fontBold, inline, mR, relative, textSm } from '../../styles/atoms';
+import { fontBold, inline, mL, mR, relative, textSm } from '../../styles/atoms';
 import { hsl } from 'polished';
 import Icon from '../atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const Container = styled.span`
-  ${[mR(1), alignRight, chatContentLineHeight]};
+  ${[mR(1), chatContentLineHeight]};
 
   & .user-panel {
     visibility: hidden;
@@ -47,7 +47,7 @@ function genColor(rng: Prando): string {
 }
 
 const masterIconStyle = css`
-  ${[mR(1)]};
+  ${[mL(0.5)]};
   color: ${gray['500']};
 `;
 
@@ -69,7 +69,6 @@ function ChatItemName({ name, userId, master }: Props) {
   const color = colorMap[name];
   return (
     <Container>
-      {master && <Icon css={masterIconStyle} sprite={masterIcon} />}
       <div css={[relative, inline]}>
         <NameLink ref={linkRef} css={{ color }} to={`/profile/${encodeUuid(userId)}`}>
           {name}
@@ -80,6 +79,7 @@ function ChatItemName({ name, userId, master }: Props) {
           </Tooltip>
         )}
       </div>
+      {master && <Icon css={masterIconStyle} sprite={masterIcon} />}
     </Container>
   );
 }

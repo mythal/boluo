@@ -230,13 +230,7 @@ export const moveMessages = (
   messageBefore: number
 ): ChatItemSet['messages'] => {
   for (const item of movedItems) {
-    if (item.date < messageBefore) {
-      messages = removeItem(messages, item.id);
-    }
-    const index = findItem(messages, item.id);
-    if (index !== -1) {
-      messages = messages.remove(index);
-    }
+    messages = removeItem(messages, item.id);
   }
   for (const item of movedItems) {
     if (item.date < messageBefore) {
@@ -275,13 +269,13 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messa
   return { ...itemSet, messages };
 };
 
-export const markMessageMoving = (itemSet: ChatItemSet, index: number, insertToIndex: number): ChatItemSet => {
-  const messageItem = itemSet.messages.get(index);
-  if (messageItem === undefined || messageItem.type !== 'MESSAGE') {
-    console.warn("can't found item to move");
-    return itemSet;
-  }
-  if (insertToIndex >= itemSet.messages.size) {
+export const markMessageMoving = (
+  itemSet: ChatItemSet,
+  messageItem: MessageItem,
+  targetItem: PreviewItem | MessageItem | undefined
+): ChatItemSet => {
+  const index = findItem(itemSet.messages, messageItem.id, [messageItem.date, messageItem.offset]);
+  if (targetItem === undefined) {
     const lastItem: PreviewItem | MessageItem | undefined = itemSet.messages.last();
     if (lastItem === undefined) {
       return itemSet;
@@ -295,7 +289,10 @@ export const markMessageMoving = (itemSet: ChatItemSet, index: number, insertToI
     const messages = itemSet.messages.remove(index).push(newMessageItem);
     return { ...itemSet, messages };
   }
-  const targetItem = itemSet.messages.get(insertToIndex)!;
+  let insertToIndex = findItem(itemSet.messages, targetItem.id, [targetItem.date, targetItem.offset]);
+  if (index < insertToIndex) {
+    insertToIndex += 1;
+  }
   let date: number;
   let offset: number;
   if (insertToIndex === 0) {

@@ -14,11 +14,12 @@ import {
   User,
 } from './users';
 import {
-  CheckSpaceName,
   CreateSpace,
   EditSpace,
+  Kick,
+  SearchParams,
   Space,
-  SpaceMember,
+  SpaceMemberWithUser,
   SpaceWithMember,
   SpaceWithRelated,
 } from './spaces';
@@ -33,9 +34,10 @@ import {
   EditChannelMember,
   JoinChannel,
 } from './channels';
-import { ByChannel, EditMessage, Message, SwapMessage, MoveTo, NewMessage } from './messages';
+import { ByChannel, EditMessage, Message, MoveTo, NewMessage, SwapMessage } from './messages';
 import { Id } from '../utils/id';
 import { Media } from './media';
+import { DEBUG } from '../settings';
 
 export type AppResult<T> = Result<T, AppError>;
 
@@ -71,6 +73,9 @@ export const request = async <T>(
   });
   if (csrf) {
     headers.append('csrf-token', await getCsrfToken());
+  }
+  if (DEBUG) {
+    headers.append('development', '');
   }
   const result = await fetch(path, {
     method,
@@ -129,8 +134,13 @@ export function post(path: '/users/edit', payload: EditUser): Promise<AppResult<
 export function post(path: '/users/update_settings', payload: Settings): Promise<AppResult<Settings>>;
 export function post(path: '/spaces/create', payload: CreateSpace): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/edit', payload: EditSpace): Promise<AppResult<Space>>;
-export function post(path: '/spaces/join', payload: {}, query: IdQuery): Promise<AppResult<SpaceWithMember>>;
+export function post(
+  path: '/spaces/join',
+  payload: {},
+  query: { spaceId: Id; token?: string }
+): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
+export function post(path: '/spaces/kick', payload: {}, query: Kick): Promise<AppResult<true>>;
 export function post(path: '/spaces/delete', payload: {}, query: IdQuery): Promise<AppResult<Space>>;
 export function post(path: '/channels/create', payload: CreateChannel): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<Channel>>;
@@ -168,10 +178,14 @@ export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(path: '/users/check_username', query: CheckUsername): Promise<AppResult<boolean>>;
 export function get(path: '/users/check_email', query: CheckEmail): Promise<AppResult<boolean>>;
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
+export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
-export function get(path: '/spaces/query_with_related', query: IdQuery): Promise<AppResult<SpaceWithRelated>>;
-export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMember[]>>;
-export function get(path: '/spaces/check_name', query: CheckSpaceName): Promise<AppResult<boolean>>;
+export function get(
+  path: '/spaces/query_with_related',
+  query: { id: Id; token?: string }
+): Promise<AppResult<SpaceWithRelated>>;
+export function get(path: '/spaces/token', query: { id: Id }): Promise<AppResult<string>>;
+export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMemberWithUser[]>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;

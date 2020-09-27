@@ -4,7 +4,6 @@ import { Theme } from 'react-select';
 import {
   bgColor,
   focusOutlineColor,
-  headerBgColor,
   linkColor,
   modalMaskColor,
   primaryColor,
@@ -98,10 +97,6 @@ export const disabled = css`
 
 export const focused = css`
   outline: none;
-`;
-
-export const baseLineHeight = css`
-  line-height: 1.5em;
 `;
 
 export const border = (color: string, width = '1px') => css`
@@ -393,12 +388,19 @@ export const baseStyle = css`
     ${fontBase};
     background-color: ${bgColor};
     color: ${textColor};
-    ${baseLineHeight};
+  }
+  @font-face {
+    font-family: 'DinkieBitmap';
+    src: url('https://boluo.chat/static/DinkieBitmap-9px.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'DinkieBitmap-Mono';
+    src: url('https://boluo.chat/static/DinkieBitmap-9pxCode.woff2') format('woff2');
   }
 `;
 
-export const chatRight = css`
-  grid-row: header-start / compose-end;
+export const overflowYAuto = css`
+  overflow-y: auto;
 `;
 
 export const outlineButton = css`
@@ -420,34 +422,6 @@ export const outlineButton = css`
 
 export const headerTransition = css`
   transition: all 120ms ease-in-out;
-`;
-
-export const chatHeaderPadding = css`
-  ${[pX(2), pY(1.5)]};
-`;
-export const sidebarWidth = css`
-  min-width: 200px;
-  max-width: 200px;
-`;
-
-export const chatHeaderStyle = css`
-  background-color: ${headerBgColor};
-  ${[chatHeaderPadding]};
-  grid-row: header-start / header-end;
-  z-index: 6;
-  ${headerShadow};
-  display: grid;
-  height: 100%;
-  column-gap: ${spacingN(1)};
-  align-items: center;
-  justify-content: stretch;
-  grid-template-columns: minmax(2rem, 10rem) 1fr auto;
-  grid-template-areas: 'title topic toolbar';
-`;
-
-export const chatHeaderToolbar = css`
-  height: 100%;
-  grid-area: toolbar;
 `;
 
 export const selectTheme = (theme: Theme): Theme => ({

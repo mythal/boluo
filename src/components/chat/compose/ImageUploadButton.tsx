@@ -46,6 +46,7 @@ function ImageUploadButton({ composeDispatch, hasImage, className, size }: Props
           sprite={fileImage}
           size={size}
           title="上传图片"
+          info="也可以拖放或粘贴"
         />
       )}
       <input type="file" ref={fileInputRef} onChange={onFileChange} hidden />

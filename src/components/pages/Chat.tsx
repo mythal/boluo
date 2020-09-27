@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Route, useParams } from 'react-router-dom';
+import { Route, useHistory, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Sidebar from '../chat/Sidebar';
-import { decodeUuid, Id } from '../../utils/id';
+import { decodeUuid, encodeUuid, Id } from '../../utils/id';
 import ChannelChat from '../chat/ChannelChat';
 import Home from '../chat/Home';
 import { RenderError } from '../molecules/RenderError';
@@ -106,6 +106,8 @@ function Chat() {
   const isSplit = useSelector((state) => state.splitPane);
   const spaceId: Id = decodeUuid(params.spaceId);
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
+  const myId: Id | undefined = useSelector((state) => state.profile?.user.id);
+  const history = useHistory();
   const dispatch = useDispatch();
   const [leftChannel, setLeftChannel] = useState<Id | undefined>(channelId);
   const [rightChannel, setRightChannel] = useState<Id | undefined>(channelId);
@@ -118,9 +120,21 @@ function Chat() {
   }, [channelId, activePane]);
 
   useEffect(() => {
+    if (isSplit) {
+      if (activePane === 0) {
+        setRightChannel(leftChannel);
+      } else if (activePane === 1) {
+        setLeftChannel(rightChannel);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSplit]);
+
+  useEffect(() => {
     dispatch(loadSpace(spaceId));
   }, [spaceId, dispatch]);
 
+  // maybe polling is more suitable?
   useSpaceMailbox(spaceId);
 
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
@@ -135,6 +149,10 @@ function Chat() {
     );
   }
   const { channels, space, members } = result.value;
+
+  if (!space.allowSpectator && members.findIndex((member) => member.user.id === myId) === -1) {
+    history.replace(`/space/${encodeUuid(spaceId)}`);
+  }
   const left = activePane === 0 ? channelId : leftChannel;
   const right = activePane === 1 ? channelId : rightChannel;
   return (

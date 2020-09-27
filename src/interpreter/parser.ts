@@ -13,6 +13,7 @@ import {
   Link,
   Num,
   Operator,
+  Repeat,
   Roll,
   Strong,
   SubExpr,
@@ -310,7 +311,7 @@ const oWodRoll: P<DicePool> = regex(/^[oO](?:_(\d))?\s*(\d{1,3})\s*/).then(([mat
     return null;
   }
   const counter = parseInt(counterStr);
-  const min = parseInt(minStr);
+  const addition = parseInt(addStr);
   const node: DicePool = {
     type: 'DicePool',
     counter,
@@ -491,10 +492,31 @@ const atom = (disableRoll = false): P<ExprNode> => {
       .map(subExprMapper), // match [...]
   ]);
   if (disableRoll) {
-    return choice([num, subExpr, max, min]);
+    return choice([num, subExpr]);
   }
-  return choice([srRoll, roll, cocRoll, fateRoll, wodRoll, num, subExpr, max, min]);
+  return choice([srRoll, roll, cocRoll, fateRoll, wodRoll, repeat(), num, subExpr]);
 };
+
+const repeat = (): P<ExprNode> =>
+  regex(/^(\d{1,2})#/).then(([match, state], env) => {
+    const count = parseInt(match[1]);
+    if (count === 0) {
+      return null;
+    }
+    const result = expr().run(state, env);
+    if (result === null) {
+      return null;
+    }
+    const [node, next] = result;
+    return [
+      {
+        type: 'Repeat',
+        node,
+        count,
+      },
+      next,
+    ];
+  });
 
 const logResult = <T>(result: T): T => {
   console.log(result);

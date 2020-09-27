@@ -1,5 +1,5 @@
 import BasePage from '../components/templates/BasePage';
-import { Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import Login from '../components/pages/Login';
 import SignUp from '../components/pages/SignUp';
 import Profile from '../components/pages/Profile';
@@ -27,6 +27,9 @@ export function GuestRouter() {
         </Route>
         <Route path="/space/:id">
           <SpacePage />
+        </Route>
+        <Route path="/join/space/:id/:token">
+          <Redirect to="/login" />
         </Route>
         <Route path="/" exact>
           <GuestHome />

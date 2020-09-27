@@ -5,10 +5,19 @@ import ChatItemName from './ChatItemName';
 import ChatItemContent from './ItemContent';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
 import { nameContainer, previewInGame, previewOutGame } from './styles';
+import { css } from '@emotion/core';
+import { textXs } from '../../styles/atoms';
 
 interface Props {
   preview: Preview;
 }
+
+const previewChatItem = css`
+  & .roll::before {
+    content: '未定';
+    ${textXs}
+  }
+`;
 
 function PreviewItem({ preview }: Props) {
   let { text, isAction, entities } = preview;
@@ -30,7 +39,10 @@ function PreviewItem({ preview }: Props) {
   );
 
   return (
-    <div css={[chatItemContainer, preview.inGame ? previewInGame : previewOutGame]} data-in-game={preview.inGame}>
+    <div
+      css={[chatItemContainer, previewChatItem, preview.inGame ? previewInGame : previewOutGame]}
+      data-in-game={preview.inGame}
+    >
       {!isAction && <div css={nameContainer}>{name}</div>}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
         {isAction && name}

@@ -7,7 +7,7 @@ import { throwErr } from '../utils/errors';
 import { connect as apiConnect } from '../api/connect';
 import { ChatState } from '../reducers/chat';
 import { List, Map } from 'immutable';
-import { initialChatItemSet } from '../states/chat-item-set';
+import { initialChatItemSet, MessageItem, PreviewItem } from '../states/chat-item-set';
 import { showFlash } from './flash';
 import { batch } from 'react-redux';
 
@@ -102,6 +102,7 @@ export const loadChat = (id: Id, pane: number) => async (dispatch: Dispatch) => 
     members,
     filter: 'NONE',
     moving: false,
+    showFolded: false,
     postponed: List(),
     pane,
   };
@@ -124,6 +125,10 @@ export const chatNoneFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTE
 export const chatInGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'IN_GAME', pane });
 
 export const chatOutGameFilter = (pane: number): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'OUT_GAME', pane });
+
+export interface ToggleShowFolded {
+  type: 'TOGGLE_SHOW_FOLDED';
+}
 
 export interface StartEditMessage {
   type: 'START_EDIT_MESSAGE';
@@ -150,8 +155,8 @@ export interface FinishMoveMessage {
 
 export interface MovingMessage {
   type: 'MOVING_MESSAGE';
-  messageIndex: number;
-  insertToIndex: number;
+  message: MessageItem;
+  targetItem: MessageItem | PreviewItem | undefined;
   pane: number;
 }
 

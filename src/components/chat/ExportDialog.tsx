@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import Dialog from '../molecules/Dialog';
-import { mT, selectTheme, uiShadow, widthFull } from '../../styles/atoms';
+import { mB, mT, selectTheme, uiShadow, widthFull } from '../../styles/atoms';
 import { Label } from '../atoms/Label';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
@@ -156,6 +156,8 @@ function ExportDialog({ dismiss, channel }: Props) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const [loading, setLoading] = useState(false);
   const [format, setFormat] = useState<Option>(options[0]);
+  const [filterOutGame, setFilterOutGame] = useState(false);
+  const [filterFolded, setFilterFolded] = useState(false);
   const dispatch = useDispatch();
   const now = new Date();
   let filename = `${dateTimeFormat(now)}-${channel.name}`;
@@ -172,7 +174,9 @@ function ExportDialog({ dismiss, channel }: Props) {
       throwErr(dispatch)(result.value);
       return;
     }
-    const messages = result.value.map(exportMessage);
+    const messages = result.value.map(exportMessage).filter((message) => {
+      return !((filterFolded && message.folded) || (filterOutGame && !message.inGame));
+    });
     let blob: Blob | null = null;
     if (format.value === 'JSON') {
       blob = jsonBlob(messages);
@@ -190,16 +194,23 @@ function ExportDialog({ dismiss, channel }: Props) {
   };
   return (
     <Dialog title="导出频道数据" dismiss={dismiss} noOverflow mask>
-      <Label>导出格式</Label>
+      <Label htmlFor="export-format">导出格式</Label>
       <Select
         value={format}
         onChange={setFormat}
-        css={[uiShadow]}
+        css={[uiShadow, mB(2)]}
         options={options}
         theme={selectTheme}
         placeholder="选择导出格式…"
       />
-
+      <Label>
+        <input checked={filterOutGame} onChange={(e) => setFilterOutGame(e.target.checked)} type="checkbox" />{' '}
+        过滤游戏外消息
+      </Label>
+      <Label>
+        <input checked={filterFolded} onChange={(e) => setFilterFolded(e.target.checked)} type="checkbox" />{' '}
+        过滤已折叠消息
+      </Label>
       <a hidden href="#" ref={linkRef} download={filename} />
       <Button css={[widthFull, mT(4)]} data-variant="primary" onClick={exportData} disabled={loading}>
         <span>

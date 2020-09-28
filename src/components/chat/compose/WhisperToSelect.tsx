@@ -43,7 +43,7 @@ function WhisperToSelect({ whisperTo, composeDispatch, dismiss }: Props) {
     }
   };
   return (
-    <Dialog title="悄悄话" confirmText="设定" confirm={onSubmit} dismiss={dismiss}>
+    <Dialog title="悄悄话" confirmText="设定" confirm={onSubmit} dismiss={dismiss} noOverflow>
       <Text>
         <label>
           <input checked={isWhisper} onChange={toggleIsWhisper} type="checkbox" /> 是否说悄悄话？

@@ -29,6 +29,11 @@ export interface ChannelMember {
   textColor: string | null;
 }
 
+export interface ChannelMemberWithUser {
+  member: ChannelMember;
+  user: User;
+}
+
 export interface ChannelWithMember {
   channel: Channel;
   member: ChannelMember;

@@ -7,7 +7,7 @@ import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import exportIcon from '../../assets/icons/file-export.svg';
 import { dateTimeFormat } from '../../utils/time';
-import { Channel } from '../../api/channels';
+import { Channel, ChannelMemberWithUser } from '../../api/channels';
 import { useDispatch } from '../../store';
 import { get, mediaUrl } from '../../api/request';
 import { throwErr } from '../../utils/errors';
@@ -31,58 +31,72 @@ interface ExportMessage {
   modified: number;
   text: string;
   entities: ExportEntity[];
+  whisperTo: null | ChannelMemberWithUser[];
 }
 
-function exportMessage(message: Message): ExportMessage {
-  const {
-    id,
-    senderId,
-    name,
-    mediaId,
-    inGame,
-    isAction,
-    isMaster,
-    folded,
-    created,
-    modified,
-    text,
-    entities,
-    seed,
-  } = message;
-  const rng = makeRng(seed);
-  const exportEntities: ExportEntity[] = !rng
-    ? []
-    : entities.map((entity) => {
-        if (entity.type === 'Expr') {
-          const { type, start, offset } = entity;
-          const node = evaluate(entity.node, rng);
-          return {
-            type,
-            start,
-            offset,
-            node,
-            exprText: nodeToText(node),
-            text: text.substr(start, offset).trimRight(),
-          };
-        } else {
-          return { ...entity, text: text.substr(entity.start, entity.offset) };
-        }
-      });
-  return {
-    id,
-    senderId,
-    name,
-    mediaId,
-    inGame,
-    isAction,
-    isMaster,
-    folded,
-    created,
-    modified,
-    text,
-    entities: exportEntities,
+const exportMessage = (members: ChannelMemberWithUser[]) => {
+  const memberMap: Record<Id, ChannelMemberWithUser | undefined> = {};
+  for (const member of members) {
+    memberMap[member.user.id] = member;
+  }
+  return (message: Message): ExportMessage => {
+    const {
+      id,
+      senderId,
+      name,
+      mediaId,
+      inGame,
+      isAction,
+      isMaster,
+      folded,
+      created,
+      modified,
+      text,
+      entities,
+      seed,
+    } = message;
+    const rng = makeRng(seed);
+    const exportEntities: ExportEntity[] = !rng
+      ? []
+      : entities.map((entity) => {
+          if (entity.type === 'Expr') {
+            const { type, start, offset } = entity;
+            const node = evaluate(entity.node, rng);
+            return {
+              type,
+              start,
+              offset,
+              node,
+              exprText: nodeToText(node),
+              text: text.substr(start, offset).trimRight(),
+            };
+          } else {
+            return { ...entity, text: text.substr(entity.start, entity.offset) };
+          }
+        });
+    let whisperTo: ExportMessage['whisperTo'] = null;
+    if (message.whisperToUsers) {
+      whisperTo = message.whisperToUsers
+        .map((id) => memberMap[id])
+        .filter((member) => member !== undefined) as ExportMessage['whisperTo'];
+    }
+    return {
+      id,
+      senderId,
+      name,
+      mediaId,
+      inGame,
+      isAction,
+      isMaster,
+      folded,
+      created,
+      modified,
+      text,
+      entities: exportEntities,
+      whisperTo,
+    };
   };
-}
+};
 
 interface Props {
   dismiss: () => void;
@@ -113,6 +127,25 @@ function txtBlob(messages: ExportMessage[]): Blob {
       text += '[主持]';
     }
     text += `[${message.name}]`;
+    if (message.whisperTo) {
+      if (message.whisperTo.length > 0) {
+        const nameList = message.whisperTo
+          .map(({ member, user }) => {
+            if (message.inGame) {
+              return member.characterName || user.nickname;
+            } else {
+              return user.nickname;
+            }
+          })
+          .join(', ');
+        text += `[对 ${nameList} 悄悄话]`;
+      } else {
+        text += `[对主持人悄悄话]`;
+      }
+      if (message.entities.length === 0) {
+        text += '内容已隐藏，需要主持人导出';
+      }
+    }
     if (message.isAction) {
       text += '[动作]';
     }
@@ -169,12 +202,18 @@ function ExportDialog({ dismiss, channel }: Props) {
 
   const exportData = async () => {
     setLoading(true);
+    const membersResult = await get('/channels/all_members', { id: channel.id });
+    if (membersResult.isErr) {
+      throwErr(dispatch)(membersResult.value);
+      return;
+    }
+    const members = membersResult.value;
     const result = await get('/channels/export', { id: channel.id });
     if (!result.isOk) {
       throwErr(dispatch)(result.value);
       return;
     }
-    const messages = result.value.map(exportMessage).filter((message) => {
+    const messages = result.value.map(exportMessage(members)).filter((message) => {
       return !((filterFolded && message.folded) || (filterOutGame && !message.inGame));
     });
     let blob: Blob | null = null;

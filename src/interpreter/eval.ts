@@ -261,8 +261,11 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
     const successLevel =
       node.targetValue === undefined
         ? ''
-        : `: (目标${node.targetValue})${cocSuccessLevelDisplay(node.value, node.targetValue)}`;
+        : `: (基准${node.targetValue})${cocSuccessLevelDisplay(node.value, node.targetValue)}`;
     return `${node.value}${modifier}${successLevel}`;
+  } else if (node.type === 'Repeat') {
+    const textList: string[] = node.evaluated.map(nodeToText);
+    return textList.join(', ');
   }
   return '[未知]';
 };

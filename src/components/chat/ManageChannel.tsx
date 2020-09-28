@@ -5,7 +5,6 @@ import {
   breakpoint,
   largeInput,
   mediaQuery,
-  mR,
   mT,
   mY,
   selectTheme,
@@ -37,7 +36,6 @@ import Dialog from '../molecules/Dialog';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
 import { showFlash } from '../../actions/flash';
-import ExportButton from './ExportButton';
 
 interface Props {
   channel: Channel;
@@ -189,7 +187,6 @@ function ManageChannel({ channel, dismiss }: Props) {
           <Select isMulti value={selectedMember} onChange={handleChange} options={memberOptions} theme={selectTheme} />
         </div>
         <div css={[mY(2), buttons]}>
-          <ExportButton css={[widthFull, mR(2)]} channel={channel} />
           <Button css={[textSm]} data-variant="danger" disabled={submitting} onClick={openDeleteDialog} type="button">
             删除
           </Button>

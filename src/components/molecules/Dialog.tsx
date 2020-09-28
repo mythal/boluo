@@ -14,6 +14,7 @@ interface Props {
   dismiss?: () => void;
   confirm?: () => void;
   confirmText?: string;
+  noOverflow?: boolean;
   confirmButtonVariant?: ButtonVariant;
 }
 
@@ -52,10 +53,21 @@ const titleStyle = css`
 const contentStyle = css`
   padding: ${spacingN(4)};
   height: 100%;
-  overflow-y: auto;
+  &[data-no-overflow='false'] {
+    overflow-y: auto;
+  }
 `;
 
-function Dialog({ children, mask, dismiss, confirm, confirmText, title, confirmButtonVariant = 'primary' }: Props) {
+function Dialog({
+  children,
+  mask,
+  dismiss,
+  confirm,
+  confirmText,
+  title,
+  noOverflow = false,
+  confirmButtonVariant = 'primary',
+}: Props) {
   confirmText = confirmText || '确定';
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
@@ -79,7 +91,9 @@ function Dialog({ children, mask, dismiss, confirm, confirmText, title, confirmB
           {dismiss && <CloseButton onClick={dismiss} />}
         </div>
       )}
-      <div css={contentStyle}>{children}</div>
+      <div css={contentStyle} data-no-overflow={noOverflow}>
+        {children}
+      </div>
       {confirm && (
         <div css={buttonAreaStyle}>
           <Button data-small autoFocus data-variant={confirmButtonVariant} onClick={confirm}>

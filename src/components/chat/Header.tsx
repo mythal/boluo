@@ -30,6 +30,8 @@ import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
 import { usePane } from '../../hooks/usePane';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
+import exportIcon from '../../assets/icons/file-export.svg';
+import ExportDialog from './ExportDialog';
 
 const Topic = styled.span`
   overflow: hidden;
@@ -79,7 +81,9 @@ function Header() {
   const channel = useSelector((state) => state.chatPane[pane]!.channel);
   const isPaneSplit = useSelector((state) => state.splitPane);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
+  const myMember = useSelector((state) => state.profile?.channels.get(channel.id)?.member);
   const [managePanel, setManagePanel] = useState(false);
+  const [exportDialog, showExportDialog] = useState(false);
   const dispatch = useDispatch();
   const toggleSplit = useCallback(() => dispatch({ type: 'SPLIT_PANE', split: !isPaneSplit }), [isPaneSplit, dispatch]);
   useTitle(channel.name);
@@ -98,11 +102,17 @@ function Header() {
             <Icon sprite={sliders} />
           </ChatHeaderButton>
         )}
+        {(isSpaceAdmin || myMember?.isMaster) && (
+          <ChatHeaderButton css={[mL(1)]} onClick={() => showExportDialog(true)}>
+            <Icon sprite={exportIcon} />
+          </ChatHeaderButton>
+        )}
         <Filter css={[mL(1)]} />
         <MemberListButton channelId={channel.id} css={[mL(1)]} />
         <ChannelMemberButton css={mL(1)} />
       </div>
       {managePanel && <ManageChannel channel={channel} dismiss={() => setManagePanel(false)} />}
+      {exportDialog && <ExportDialog channel={channel} dismiss={() => showExportDialog(false)} />}
     </div>
   );
 }

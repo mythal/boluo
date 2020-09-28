@@ -64,6 +64,7 @@ function My() {
             。管理员将不定期删除没有实质内容的测试位面。
           </Text>
         </News>
+        <News css={[mB(2)]}>可以导出 txt 了，更多导出格式和选项还在制作中。</News>
         <News css={[mB(2)]}>新增非公开位面，只能通过邀请链接加入。请在位面设置中设定。</News>
         <News css={[mB(2)]}>
           <Text>

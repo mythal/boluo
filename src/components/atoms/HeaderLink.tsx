@@ -11,6 +11,7 @@ interface Props {
   exact?: boolean;
   className?: string;
   children: React.ReactNode;
+  onClick?: () => void;
 }
 
 export const headerLinkStyle = css`

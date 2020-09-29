@@ -9,7 +9,7 @@ import { LoginData } from '../../api/users';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { post } from '../../api/request';
 import { AppError, NO_PERMISSION } from '../../api/error';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useDispatch } from '../../store';
 import { LoggedIn } from '../../actions/profile';
 import { Label } from '../atoms/Label';
@@ -18,10 +18,7 @@ import loginIcon from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
 import { useTitle } from '../../hooks/useTitle';
-
-interface State {
-  next?: string;
-}
+import { popNext } from '../../utils/browser';
 
 const required = '必须填写这个字段';
 
@@ -32,9 +29,7 @@ const errorRewrite = {
 function Login() {
   useTitle('登录');
   const dispatch = useDispatch();
-  const location = useLocation<State | null>();
   const history = useHistory();
-  const next = (location.state && location.state.next) || '/';
   const [loginError, setLoginError] = useState<AppError | null>(null);
   const { register, handleSubmit, errors } = useForm<LoginData>();
   const [loggingIn, setLoggingIn] = useState(false);
@@ -45,6 +40,7 @@ function Login() {
     clearCsrfToken();
     if (result.isOk) {
       dispatch<LoggedIn>({ type: 'LOGGED_IN', ...result.value.me });
+      const next = popNext() || '/';
       history.replace(next);
     } else {
       setLoginError(result.value);

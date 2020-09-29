@@ -27,6 +27,7 @@ import Overlay from '../atoms/Overlay';
 import Menu from '../atoms/Menu';
 import { MenuItem, MenuItemLink } from '../atoms/MenuItem';
 import { usePane } from '../../hooks/usePane';
+import { recordNext } from '../../utils/browser';
 
 const buttonBarStyle = css`
   ${[mT(4)]};
@@ -134,7 +135,7 @@ function ChannelMemberButton({ className }: Props) {
 
   if (user === undefined) {
     return (
-      <ChatHeaderButtonLink css={[mL(1)]} to="/login">
+      <ChatHeaderButtonLink css={[mL(1)]} to="/login" onClick={recordNext}>
         登录
       </ChatHeaderButtonLink>
     );

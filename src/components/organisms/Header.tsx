@@ -17,6 +17,7 @@ import { useSelector } from '../../store';
 import { MenuItemLink } from '../atoms/MenuItem';
 import { headerBgColor } from '../../styles/colors';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
+import { recordNext } from '../../utils/browser';
 
 export const headerStyle = css`
   display: flex;
@@ -51,10 +52,12 @@ function Guest() {
         <HeaderLink to="/space/explore">探索位面</HeaderLink>
       </Nav>
       <Nav>
-        <HeaderLink css={mR(1)} to="/login">
+        <HeaderLink css={mR(1)} to="/login" onClick={recordNext}>
           登录
         </HeaderLink>
-        <HeaderLink to="/sign-up">注册</HeaderLink>
+        <HeaderLink to="/sign-up" onClick={recordNext}>
+          注册
+        </HeaderLink>
       </Nav>
     </HeaderInner>
   );

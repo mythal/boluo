@@ -11,7 +11,7 @@ import { Channel } from '../../api/channels';
 import { useDispatch } from '../../store';
 import { get } from '../../api/request';
 import { throwErr } from '../../utils/errors';
-import { csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';
+import { bbCodeTextBlob, csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';
 
 const Select = React.lazy(() => import('react-select'));
 
@@ -65,9 +65,9 @@ function ExportDialog({ dismiss, channel }: Props) {
     if (format.value === 'JSON') {
       blob = jsonBlob(messages);
     } else if (format.value === 'TXT') {
-      blob = txtBlob(messages, false, simple);
+      blob = txtBlob(messages, simple);
     } else if (format.value === 'BBCODE') {
-      blob = txtBlob(messages, true, simple);
+      blob = bbCodeTextBlob(messages, simple);
     } else if (format.value === 'CSV') {
       blob = csvBlob(messages);
     }

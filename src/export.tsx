@@ -138,46 +138,42 @@ function whisperToText(whisperTo: ExportMember[], inGame: boolean): string {
   }
 }
 
-function entityText(entity: ExportEntity, bbCode = false, color = '#000000'): string {
+function entityBbCode(entity: ExportEntity, color: string): string {
   switch (entity.type) {
     case 'Code':
-      if (bbCode) {
-        return `[tt]${entity.text}[/tt]`;
-      } else {
-        return `\`${entity.text}\``;
-      }
+      return `[tt]${entity.text}[/tt]`;
     case 'CodeBlock':
-      if (bbCode) {
-        return `[/color]\n[code]${entity.text}[/code]\n[color=${color}]`;
-      } else {
-        return `\n\`\`\`\n${entity.text}\n\`\`\`\n`;
-      }
+      return `[/color]\n[code]${entity.text}[/code]\n[color=${color}]`;
     case 'Emphasis':
-      if (bbCode) {
-        return `[i]${entity.text}[/i]`;
-      } else {
-        return `*${entity.text}*`;
-      }
+      return `[i]${entity.text}[/i]`;
     case 'Link':
-      if (bbCode) {
-        return `[url=${entity.href}]${entity.title}[/url]`;
-      } else {
-        return `[${entity.title}](${entity.href})`;
-      }
+      return `[url=${entity.href}]${entity.title}[/url]`;
     case 'Strong':
-      if (bbCode) {
-        return `[b]${entity.text}[/b]`;
-      } else {
-        return `**${entity.text}**`;
-      }
+      return `[b]${entity.text}[/b]`;
     case 'Text':
       return entity.text;
     case 'Expr':
-      if (bbCode) {
-        return `[tt]{${entity.exprText}}[/tt]`;
-      } else {
-        return `{${entity.exprText}}`;
-      }
+      return `[tt]{${entity.exprText}}[/tt]`;
+    default:
+      return `[不支持 (${entity.text})]`;
+  }
+}
+function entityMarkdown(entity: ExportEntity): string {
+  switch (entity.type) {
+    case 'Code':
+      return `\`${entity.text}\``;
+    case 'CodeBlock':
+      return `\n\`\`\`\n${entity.text}\n\`\`\`\n`;
+    case 'Emphasis':
+      return `*${entity.text}*`;
+    case 'Link':
+      return `[${entity.title}](${entity.href})`;
+    case 'Strong':
+      return `**${entity.text}**`;
+    case 'Text':
+      return entity.text;
+    case 'Expr':
+      return `{${entity.exprText}}`;
     default:
       return `[不支持 (${entity.text})]`;
   }
@@ -198,7 +194,7 @@ export function csvBlob(messages: ExportMessage[]): Blob {
       booleanToText(isMaster),
       booleanToText(isAction),
       booleanToText(inGame),
-      entities.map((entity) => entityText(entity)).join(''),
+      entities.map(entityMarkdown).join(''),
       whisperTo === null ? '否' : whisperToText(whisperTo, inGame),
       mediaUrl || '',
       booleanToText(folded),
@@ -211,66 +207,85 @@ export function csvBlob(messages: ExportMessage[]): Blob {
   return new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
 }
 
-export function txtBlob(messages: ExportMessage[], bbCode: boolean, simple: boolean): Blob {
+function messageName(message: ExportMessage): string {
+  if (message.inGame) {
+    return `${message.name}|${message.sender.nickname}`;
+  } else {
+    return `${message.sender.nickname}|游戏外`;
+  }
+}
+
+function messageMetaDataText(message: ExportMessage): string {
+  let span = '';
+  if (message.folded) {
+    span += '[已折叠]';
+  }
+  if (message.whisperTo) {
+    span += `[对 ${whisperToText(message.whisperTo, message.inGame)} 悄悄话]`;
+    if (message.entities.length === 0) {
+      span += ' 内容已隐藏，需要主持人导出';
+    }
+  }
+  return span;
+}
+
+export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean): Blob {
   let text = '';
   for (const message of messages) {
-    let line = '';
-    if (bbCode) {
-      line += '[color=silver]';
-    }
+    let line = '[color=silver]';
     if (!simple) {
-      const dateTime = dateTimeFormat(new Date(message.created));
-      if (bbCode) {
-        line += dateTime;
-      } else {
-        line += `[${dateTime}]`;
-      }
+      line += dateTimeFormat(new Date(message.created));
     }
-    let name: string;
-    if (message.inGame) {
-      name = `${message.name}|${message.sender.nickname}`;
-    } else {
-      name = `${message.sender.nickname}|游戏外`;
-    }
+    const name = messageName(message);
     if (!message.isAction) {
       line += ` <${name}>`;
     }
-    if (bbCode) {
-      line += '[/color]';
+    line += '[/color]';
+    if (!simple) {
+      line += ' ' + messageMetaDataText(message);
     }
-
-    if (message.folded && !simple) {
-      line += ' [已折叠]';
-    }
-    if (message.whisperTo && !simple) {
-      line += ` [对 ${whisperToText(message.whisperTo, message.inGame)} 悄悄话`;
-      if (message.entities.length === 0) {
-        line += ' 内容已隐藏，需要主持人导出';
-        text += line + '\n';
-        continue;
-      }
-    }
-    line += ' ';
-    if (bbCode) {
-      line += `[color=${message.sender.color}]`;
-    }
+    line += ` [color=${message.sender.color}]`;
     if (message.isAction) {
       line += `* ${name} `;
     }
     for (const entity of message.entities) {
-      line += entityText(entity, bbCode, message.sender.color);
+      line += entityBbCode(entity, message.sender.color);
     }
-    if (message.mediaUrl && !bbCode && !simple) {
+    text += line + '[/color]\n';
+    if (message.mediaUrl && !simple) {
+      text += `[img]${message.mediaUrl}[/img]\n`;
+    }
+  }
+  return new Blob([text], { type: 'text/plain;charset=utf-8;' });
+}
+
+export function txtBlob(messages: ExportMessage[], simple: boolean): Blob {
+  let text = '';
+  for (const message of messages) {
+    let line = '';
+    if (!simple) {
+      const dateTime = dateTimeFormat(new Date(message.created));
+      line += `[${dateTime}]`;
+    }
+    const name = messageName(message);
+    if (!message.isAction) {
+      line += ` <${name}>`;
+    }
+    if (!simple) {
+      line += ' ' + messageMetaDataText(message);
+    }
+    line += ' ';
+    if (message.isAction) {
+      line += `* ${name} `;
+    }
+    for (const entity of message.entities) {
+      line += entityMarkdown(entity);
+    }
+    if (message.mediaUrl && !simple) {
       line += ` $ [附件](${message.mediaUrl})`;
     }
     text += line;
-    if (bbCode) {
-      text += '[/color]';
-    }
     text += '\n';
-    if (message.mediaUrl && bbCode && !simple) {
-      text += `[img]${message.mediaUrl}[/img]\n`;
-    }
   }
   return new Blob([text], { type: 'text/plain;charset=utf-8;' });
 }

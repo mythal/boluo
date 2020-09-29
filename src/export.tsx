@@ -204,6 +204,7 @@ export function csvBlob(messages: ExportMessage[]): Blob {
     csv += row.join(',') + '\n';
   }
 
+  // https://stackoverflow.com/a/18925211/1137004
   return new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
 }
 

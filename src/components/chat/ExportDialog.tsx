@@ -15,14 +15,32 @@ import { Id } from '../../utils/id';
 import { ExportEntity } from '../../interpreter/entities';
 import { Message } from '../../api/messages';
 import { evaluate, makeRng, nodeToText } from '../../interpreter/eval';
+import { genColor } from '../../utils/game';
+import Prando from 'prando';
 
 const Select = React.lazy(() => import('react-select'));
 
+interface ExportMember {
+  userId: Id;
+  nickname: string;
+  characterName: string;
+  isMaster: boolean;
+  color: string;
+}
+
+const defaultMember: ExportMember = {
+  userId: '',
+  nickname: '未知用户',
+  characterName: '无名氏',
+  isMaster: false,
+  color: '#CCCCCC',
+};
+
 interface ExportMessage {
   id: Id;
-  senderId: Id;
+  sender: ExportMember;
   name: string;
-  mediaId: Id | null;
+  mediaUrl: string | null;
   inGame: boolean;
   isAction: boolean;
   isMaster: boolean;
@@ -31,13 +49,21 @@ interface ExportMessage {
   modified: number;
   text: string;
   entities: ExportEntity[];
-  whisperTo: null | ChannelMemberWithUser[];
+  whisperTo: null | ExportMember[];
 }
 
 const exportMessage = (members: ChannelMemberWithUser[]) => {
-  const memberMap: Record<Id, ChannelMemberWithUser | undefined> = {};
+  const memberMap: Record<Id, ExportMember | undefined> = {};
   for (const member of members) {
-    memberMap[member.user.id] = member;
+    const userId = member.user.id;
+    const { isMaster, characterName } = member.member;
+    memberMap[userId] = {
+      userId,
+      nickname: member.user.nickname,
+      characterName,
+      isMaster,
+      color: genColor(new Prando(userId)),
+    };
   }
   return (message: Message): ExportMessage => {
     const {
@@ -80,11 +106,16 @@ const exportMessage = (members: ChannelMemberWithUser[]) => {
         .map((id) => memberMap[id])
         .filter((member) => member !== undefined) as ExportMessage['whisperTo'];
     }
+    const sender = memberMap[senderId] || defaultMember;
+    let media: string | null = null;
+    if (mediaId) {
+      media = `${location.origin}${mediaUrl(mediaId, false)}`;
+    }
     return {
       id,
-      senderId,
+      sender,
       name,
-      mediaId,
+      mediaUrl: media,
       inGame,
       isAction,
       isMaster,
@@ -105,6 +136,8 @@ interface Props {
 
 const options = [
   { value: 'TXT', label: '文本 (txt)' },
+  { value: 'BBCODE', label: '论坛代码 (BBCode)' },
+  { value: 'CSV', label: '电子表格 (csv)' },
   { value: 'JSON', label: 'JSON' },
 ];
 
@@ -114,75 +147,132 @@ function jsonBlob(messages: ExportMessage[]): Blob {
   return new Blob([JSON.stringify(messages)], { type: 'text/json' });
 }
 
-function txtBlob(messages: ExportMessage[]): Blob {
+function txtBlob(messages: ExportMessage[], bbCode: boolean, simple: boolean): Blob {
   let text = '';
   for (const message of messages) {
-    text += `[${dateTimeFormat(new Date(message.created))}]`;
-    if (message.folded) {
-      text += '[已折叠]';
+    let line = '';
+    if (bbCode) {
+      line += '[color=silver]';
     }
-    if (!message.inGame) {
-      text += '[游戏外]';
-    } else if (message.isMaster) {
-      text += '[主持]';
+    if (!simple) {
+      const dateTime = dateTimeFormat(new Date(message.created));
+      if (bbCode) {
+        line += dateTime;
+      } else {
+        line += `[${dateTime}]`;
+      }
     }
-    text += `[${message.name}]`;
-    if (message.whisperTo) {
+    let name: string;
+    if (message.inGame) {
+      name = `${message.name}|${message.sender.nickname}`;
+    } else {
+      name = `${message.sender.nickname}|游戏外`;
+    }
+    if (!message.isAction) {
+      line += ` <${name}>`;
+    }
+    if (bbCode) {
+      line += '[/color]';
+    }
+
+    if (message.folded && !simple) {
+      line += ' [已折叠]';
+    }
+    if (message.whisperTo && !simple) {
       if (message.whisperTo.length > 0) {
         const nameList = message.whisperTo
-          .map(({ member, user }) => {
+          .map((member) => {
             if (message.inGame) {
-              return member.characterName || user.nickname;
+              return member.characterName || member.nickname;
             } else {
-              return user.nickname;
+              return member.nickname;
             }
           })
           .join(', ');
-        text += `[对 ${nameList} 悄悄话]`;
+        line += ` [对 ${nameList} 悄悄话]`;
       } else {
-        text += `[对主持人悄悄话]`;
+        line += ` [对主持人悄悄话]`;
       }
       if (message.entities.length === 0) {
-        text += '内容已隐藏，需要主持人导出';
+        line += ' 内容已隐藏，需要主持人导出';
+        text += line + '\n';
+        continue;
       }
     }
+    line += ' ';
+    let colorTag = '';
+    if (bbCode) {
+      colorTag = `[color=${message.sender.color}]`;
+      line += colorTag;
+    }
     if (message.isAction) {
-      text += '[动作]';
+      line += `* ${name} `;
     }
     for (const entity of message.entities) {
       switch (entity.type) {
         case 'Code':
-          text += `\`${entity.text}\``;
+          if (bbCode) {
+            line += `[tt]${entity.text}[/tt]`;
+          } else {
+            line += `\`${entity.text}\``;
+          }
           break;
         case 'CodeBlock':
-          text += `\n\`\`\`\n${entity.text}\n\`\`\`\n`;
+          if (bbCode) {
+            line += `[/color]\n[code]${entity.text}[/code]\n${colorTag}`;
+          } else {
+            line += `\n\`\`\`\n${entity.text}\n\`\`\`\n`;
+          }
           break;
         case 'Emphasis':
-          text += `*${entity.text}*`;
+          if (bbCode) {
+            line += `[i]${entity.text}[/i]`;
+          } else {
+            line += `*${entity.text}*`;
+          }
           break;
         case 'Link':
-          text += `[${entity.title}](${entity.href})`;
+          if (bbCode) {
+            line += `[url=${entity.href}]${entity.title}[/url]`;
+          } else {
+            line += `[${entity.title}](${entity.href})`;
+          }
           break;
         case 'Strong':
-          text += `**${entity.text}**`;
+          if (bbCode) {
+            line += `[b]${entity.text}[/b]`;
+          } else {
+            line += `**${entity.text}**`;
+          }
           break;
         case 'Text':
-          text += entity.text;
+          line += entity.text;
           break;
         case 'Expr':
-          text += `{${entity.exprText}}`;
+          if (bbCode) {
+            line += `[tt]{${entity.exprText}}[/tt]`;
+          } else {
+            line += `{${entity.exprText}}`;
+          }
           break;
         default:
-          text += `[不支持 (${entity.text})]`;
+          line += `[不支持 (${entity.text})]`;
           break;
       }
     }
-    if (message.mediaId) {
-      text += ` $ [附件](${location.origin}${mediaUrl(message.mediaId, true)})`;
+    if (message.mediaUrl && !bbCode && !simple) {
+      line += ` $ [附件](${message.mediaUrl})`;
+    }
+    text += line;
+    if (bbCode) {
+      text += '[/color]';
     }
     text += '\n';
+    if (message.mediaUrl && bbCode && !simple) {
+      text += `[img]${message.mediaUrl}[/img]\n`;
+    }
   }
-  return new Blob([text], { type: 'text/plain' });
+  return new Blob([text], { type: 'text/plain;charset=utf-8;' });
 }
 
 function ExportDialog({ dismiss, channel }: Props) {
@@ -191,6 +281,7 @@ function ExportDialog({ dismiss, channel }: Props) {
   const [format, setFormat] = useState<Option>(options[0]);
   const [filterOutGame, setFilterOutGame] = useState(false);
   const [filterFolded, setFilterFolded] = useState(false);
+  const [simple, setSimple] = useState(false);
   const dispatch = useDispatch();
   const now = new Date();
   let filename = `${dateTimeFormat(now)}-${channel.name}`;
@@ -220,7 +311,9 @@ function ExportDialog({ dismiss, channel }: Props) {
     if (format.value === 'JSON') {
       blob = jsonBlob(messages);
     } else if (format.value === 'TXT') {
-      blob = txtBlob(messages);
+      blob = txtBlob(messages, false, simple);
+    } else if (format.value === 'BBCODE') {
+      blob = txtBlob(messages, true, simple);
     }
     if (blob === null) {
       return;
@@ -250,6 +343,12 @@ function ExportDialog({ dismiss, channel }: Props) {
         <input checked={filterFolded} onChange={(e) => setFilterFolded(e.target.checked)} type="checkbox" />{' '}
         过滤已折叠消息
       </Label>
+      {(format.value === 'TXT' || format.value === 'BBCODE') && (
+        <Label>
+          <input checked={simple} onChange={(e) => setSimple(e.target.checked)} type="checkbox" />{' '}
+          只导出基本的名字和内容
+        </Label>
+      )}
       <a hidden href="#" ref={linkRef} download={filename} />
       <Button css={[widthFull, mT(4)]} data-variant="primary" onClick={exportData} disabled={loading}>
         <span>

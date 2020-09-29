@@ -1,3 +1,6 @@
+import Prando from 'prando';
+import { hsl } from 'polished';
+
 export const getDiceFace = (diceType: string): number => {
   const pattern = /^[dD](\d{1,3})$/;
   const match = diceType.match(pattern);
@@ -14,3 +17,7 @@ export const chatName = (characterName: string | undefined | null, nickname?: st
   }
   return nickname;
 };
+
+export function genColor(rng: Prando): string {
+  return hsl(rng.next(0, 365), rng.next(), rng.next(0.5, 0.8));
+}

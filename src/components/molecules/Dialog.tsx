@@ -24,10 +24,12 @@ const style = css`
   box-shadow: 0 0 0 ${spacingN(2)} ${dialogShadowColor};
   transform: translate(-50%, -50%);
   min-width: 18em;
-  max-height: 80vh;
   display: flex;
   flex-direction: column;
 
+  &[data-no-overflow='false'] {
+    max-height: 80vh;
+  }
   ${mediaQuery(breakpoint.md)} {
     min-width: 24em;
   }
@@ -84,7 +86,7 @@ function Dialog({
   }, [handleKey]);
 
   return (
-    <Modal css={style} mask={mask} onClickMask={dismiss}>
+    <Modal css={style} mask={mask} data-no-overflow={noOverflow} onClickMask={dismiss}>
       {title && (
         <div css={headerStyle}>
           <span css={titleStyle}>{title}</span>

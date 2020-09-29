@@ -5,7 +5,6 @@ import { encodeUuid, Id } from '../../utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
 import { fontBold, inline, mL, mR, relative, textSm } from '../../styles/atoms';
-import { hsl } from 'polished';
 import Icon from '../atoms/Icon';
 import masterIcon from '../../assets/icons/gamemaster.svg';
 import { css } from '@emotion/core';
@@ -14,6 +13,7 @@ import { chatContentLineHeight } from './styles';
 import Tooltip from '../atoms/Tooltip';
 import { useSelector } from '../../store';
 import { usePane } from '../../hooks/usePane';
+import { genColor } from '../../utils/game';
 
 interface Props {
   name: string;
@@ -41,10 +41,6 @@ const NameLink = styled(Link)`
 `;
 
 const colorMap: Record<string, string> = {};
-
-function genColor(rng: Prando): string {
-  return hsl(rng.next(0, 365), rng.next(), rng.next(0.5, 0.8));
-}
 
 const masterIconStyle = css`
   ${[mL(0.5)]};

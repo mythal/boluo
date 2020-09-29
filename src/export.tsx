@@ -207,10 +207,16 @@ export function csvBlob(messages: ExportMessage[]): Blob {
   return new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
 }
 
-function messageName(message: ExportMessage): string {
+function messageName(message: ExportMessage, simple: boolean): string {
   if (message.inGame) {
+    if (simple) {
+      return message.name;
+    }
     return `${message.name}|${message.sender.nickname}`;
   } else {
+    if (simple) {
+      return message.sender.nickname;
+    }
     return `${message.sender.nickname}|游戏外`;
   }
 }
@@ -232,19 +238,23 @@ function messageMetaDataText(message: ExportMessage): string {
 export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean): Blob {
   let text = '';
   for (const message of messages) {
-    let line = '[color=silver]';
-    if (!simple) {
-      line += dateTimeFormat(new Date(message.created));
+    const name = messageName(message, simple);
+    const { isAction } = message;
+    let line = '';
+    if (!simple || !isAction) {
+      line = '[color=silver]';
+      if (!simple) {
+        line += dateTimeFormat(new Date(message.created)) + ' ';
+      }
+      if (!isAction) {
+        line += `<${name}>`;
+      }
+      line += '[/color] ';
+      if (!simple) {
+        line += ' ' + messageMetaDataText(message);
+      }
     }
-    const name = messageName(message);
-    if (!message.isAction) {
-      line += ` <${name}>`;
-    }
-    line += '[/color]';
-    if (!simple) {
-      line += ' ' + messageMetaDataText(message);
-    }
-    line += ` [color=${message.sender.color}]`;
+    line += `[color=${message.sender.color}]`;
     if (message.isAction) {
       line += `* ${name} `;
     }
@@ -262,19 +272,22 @@ export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean): Blob
 export function txtBlob(messages: ExportMessage[], simple: boolean): Blob {
   let text = '';
   for (const message of messages) {
+    const name = messageName(message, simple);
+    const { isAction } = message;
     let line = '';
-    if (!simple) {
-      const dateTime = dateTimeFormat(new Date(message.created));
-      line += `[${dateTime}]`;
+    if (!simple || !isAction) {
+      if (!simple) {
+        const dateTime = dateTimeFormat(new Date(message.created));
+        line += `[${dateTime}] `;
+      }
+      if (!isAction) {
+        line += `<${name}>`;
+      }
+      if (!simple) {
+        line += ' ' + messageMetaDataText(message);
+      }
+      line += ' ';
     }
-    const name = messageName(message);
-    if (!message.isAction) {
-      line += ` <${name}>`;
-    }
-    if (!simple) {
-      line += ' ' + messageMetaDataText(message);
-    }
-    line += ' ';
     if (message.isAction) {
       line += `* ${name} `;
     }

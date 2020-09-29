@@ -11,3 +11,7 @@ export const timeFormat = (date: Date) => {
 export const dateTimeFormat = (date: Date) => {
   return `${dateFormat(date)} ${timeFormat(date)}`;
 };
+
+export const fileNameDateTimeFormat = (date: Date) => {
+  return `${dateFormat(date)}_${timeFormat(date).replace(':', '-')}`;
+};

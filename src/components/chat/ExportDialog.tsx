@@ -6,7 +6,7 @@ import { Label } from '../atoms/Label';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import exportIcon from '../../assets/icons/file-export.svg';
-import { dateTimeFormat } from '../../utils/time';
+import { fileNameDateTimeFormat } from '../../utils/time';
 import { Channel } from '../../api/channels';
 import { useDispatch } from '../../store';
 import { get } from '../../api/request';
@@ -38,11 +38,15 @@ function ExportDialog({ dismiss, channel }: Props) {
   const [simple, setSimple] = useState(false);
   const dispatch = useDispatch();
   const now = new Date();
-  let filename = `${dateTimeFormat(now)}-${channel.name}`;
+  let filename = `${fileNameDateTimeFormat(now)}_${channel.name}`;
   if (format.value === 'JSON') {
     filename += '.json';
   } else if (format.value === 'TXT') {
     filename += '.txt';
+  } else if (format.value === 'CSV') {
+    filename += '.csv';
+  } else if (format.value === 'BBCODE') {
+    filename += '.bbcode.txt';
   }
 
   const exportData = async () => {

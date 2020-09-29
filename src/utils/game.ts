@@ -18,6 +18,6 @@ export const chatName = (characterName: string | undefined | null, nickname?: st
   return nickname;
 };
 
-export function genColor(rng: Prando): string {
-  return hsl(rng.next(0, 365), rng.next(), rng.next(0.5, 0.8));
+export function genColor(rng: Prando, lightnessDelta = 0.0): string {
+  return hsl(rng.next(0, 365), rng.next(), rng.next(0.5, 0.8) + lightnessDelta);
 }

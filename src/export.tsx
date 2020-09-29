@@ -50,7 +50,7 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
       nickname: member.user.nickname,
       characterName,
       isMaster,
-      color: genColor(new Prando(userId)),
+      color: genColor(new Prando(userId), -0.3),
     };
   }
   return (message: Message): ExportMessage => {

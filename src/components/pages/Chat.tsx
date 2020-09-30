@@ -111,6 +111,7 @@ function Chat() {
   const dispatch = useDispatch();
   const [leftChannel, setLeftChannel] = useState<Id | undefined>(channelId);
   const [rightChannel, setRightChannel] = useState<Id | undefined>(channelId);
+  // sync active
   useEffect(() => {
     if (activePane === 0) {
       setLeftChannel(channelId);
@@ -119,6 +120,7 @@ function Chat() {
     }
   }, [channelId, activePane]);
 
+  // set split pane
   useEffect(() => {
     if (isSplit) {
       if (activePane === 0) {

@@ -15,6 +15,8 @@ import LoadMore from './LoadMore';
 import { css } from '@emotion/core';
 import { Id } from '../../utils/id';
 import { blue } from '../../styles/colors';
+import { chatPath } from '../../utils/path';
+import { useHistory } from 'react-router-dom';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem
@@ -85,6 +87,8 @@ function ChatList() {
   const pane = usePane();
   const activePane = useSelector((state) => state.activePane);
   const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
+  const spaceId = useSelector((state) => state.chatPane[pane]!.channel.spaceId);
+  const history = useHistory();
   const dispatch = useDispatch();
   const myMember = useSelector((state) => {
     if (state.profile === undefined || state.chatPane[pane] === undefined) {
@@ -183,13 +187,15 @@ function ChatList() {
     return <ChatItem key={item.id} item={item} myMember={myMember} index={index} sameSender={sameSender} />;
   });
 
-  const onClick = () => {
-    dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+  const setActive = () => {
+    if (activePane !== pane) {
+      dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+      history.replace(chatPath(spaceId, channelId));
+    }
   };
-
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <div ref={wrapperRef} css={listWrapperStyle} data-active={pane === activePane} onClick={onClick}>
+      <div ref={wrapperRef} css={listWrapperStyle} data-active={pane === activePane} onClick={setActive}>
         <Droppable droppableId={channelId} type="CHANNEL">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>

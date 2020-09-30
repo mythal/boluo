@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useCallback, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useMemo, useReducer, useRef } from 'react';
 import { mR, pX, textSm } from '../../../styles/atoms';
 import { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
@@ -42,7 +42,7 @@ const composeWrapper = css`
 
 const compose = css`
   ${[inputStyle, textSm]};
-  resize: none;
+  resize: vertical;
   height: 4rem;
 `;
 
@@ -132,13 +132,6 @@ function EditCompose({ preview, editTo }: Props) {
     composeDispatch,
   ] = useReducer(composeReducer, undefined, makeInitState);
 
-  useLayoutEffect(() => {
-    if (inputName !== myMember.characterName) {
-      composeDispatch(update({ inputName: myMember.characterName }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myMember.characterName]);
-
   const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
   const toggleIsAction = () => composeDispatch(update({ isAction: !isAction }));
   const toggleBroadcast = () => composeDispatch(update({ broadcast: !broadcast }));
@@ -172,6 +165,8 @@ function EditCompose({ preview, editTo }: Props) {
       composeDispatch(update({ sending: false }));
       return;
     }
+    composeDispatch(update({ text: '', entities: [], clear: true }));
+    dispatch({ type: 'STOP_EDIT_MESSAGE', editFor: editTo.modified, messageId: editTo.id, pane });
   };
   const chatItemName = (
     <ChatItemName inGame={inGame} action={isAction} master={myMember.isMaster} name={name} userId={myMember.userId} />

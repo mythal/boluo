@@ -74,7 +74,7 @@ function LoadMore() {
       messages.pop();
       finished = false;
     }
-    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, pane });
+    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, before, pane });
   };
   return (
     <LoadMoreContainer>

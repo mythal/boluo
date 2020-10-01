@@ -20,6 +20,7 @@ export interface CloseChat {
 export interface LoadMessages {
   type: 'LOAD_MESSAGES';
   messages: Message[];
+  before: number;
   finished: boolean;
   pane: number;
 }
@@ -102,6 +103,7 @@ export const loadChat = (id: Id, pane: number) => async (dispatch: Dispatch) => 
     members,
     filter: 'NONE',
     moving: false,
+    lastLoadBefore: Number.MAX_SAFE_INTEGER,
     showFolded: false,
     postponed: List(),
     pane,

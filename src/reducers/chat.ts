@@ -40,6 +40,7 @@ export interface ChatState {
   finished: boolean;
   messageBefore: number;
   eventAfter: number;
+  lastLoadBefore: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
   showFolded: boolean;
   moving: boolean;
@@ -74,7 +75,11 @@ export const closeChat = (state: ChatState, channelId: Id): ChatState | undefine
   return undefined;
 };
 
-const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myId: Id | undefined): ChatState => {
+const loadMessages = (
+  chat: ChatState,
+  { messages, finished, before }: LoadMessages,
+  myId: Id | undefined
+): ChatState => {
   const len = messages.length;
   if (len === 0) {
     return { ...chat, finished };
@@ -83,7 +88,9 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
   if (messages[0].orderDate >= chat.messageBefore) {
     throw new Error('Incorrect messages order');
   }
-
+  if (before >= chat.lastLoadBefore) {
+    return chat;
+  }
   messages.sort((a, b) => {
     if (a.orderDate === b.orderDate) {
       return b.orderOffset - a.orderOffset;
@@ -97,7 +104,7 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
     messages: chat.itemSet.messages.unshift(...messages.map(makeItem)),
   };
   const messageBefore = messages[0].orderDate;
-  return { ...chat, messageBefore, finished, itemSet };
+  return { ...chat, messageBefore, finished, itemSet, lastLoadBefore: before };
 };
 
 const handleEditMessage = (

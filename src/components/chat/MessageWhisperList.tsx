@@ -50,7 +50,7 @@ function MessageWhisperList({ myMember, message }: Props) {
       dispatch(showFlash('WARNING', '没有找到消息，可能已经删除'));
       return;
     }
-    dispatch({ type: 'REVEAL_MESSAGE', message: result.value });
+    dispatch({ type: 'REVEAL_MESSAGE', message: result.value, pane });
   };
   if (canAccess) {
     const canAccessMembers = members.filter((member) => whisperToUsers!.indexOf(member.user.id) !== -1);

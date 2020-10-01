@@ -165,6 +165,7 @@ export interface MovingMessage {
 export interface RevealMessage {
   type: 'REVEAL_MESSAGE';
   message: Message;
+  pane: number;
 }
 
 export interface ResetMessageMoving {

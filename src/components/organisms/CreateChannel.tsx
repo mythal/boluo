@@ -34,6 +34,7 @@ const panelStyle = css`
 interface FormData {
   name: string;
   characterName: string;
+  isPrivate: boolean;
 }
 
 function CreateChannel({ space, dismiss }: Props) {
@@ -51,9 +52,9 @@ function CreateChannel({ space, dismiss }: Props) {
       </Dialog>
     );
   }
-  const onSubmit = async ({ name, characterName }: FormData) => {
+  const onSubmit = async ({ name, characterName, isPrivate }: FormData) => {
     const defaultDiceType = defaultDice?.value;
-    const payload: CreateChannelData = { name, spaceId, defaultDiceType, characterName };
+    const payload: CreateChannelData = { name, spaceId, defaultDiceType, characterName, isPublic: !isPrivate };
     setSubmitting(true);
     const result = await post('/channels/create', payload);
     setSubmitting(false);
@@ -96,6 +97,12 @@ function CreateChannel({ space, dismiss }: Props) {
             ref={register(characterNameValidation)}
           />
           {errors.characterName && <ErrorMessage>{errors.characterName.message}</ErrorMessage>}
+        </div>
+        <div>
+          <Label>
+            <input name="isPrivate" id="isPrivate" defaultChecked={false} ref={register} type="checkbox" /> 秘密频道
+          </Label>
+          <HelpText>秘密频道通过邀请进入。</HelpText>
         </div>
         <div css={[mT(4), alignRight]}>
           <Button data-variant="primary" disabled={submitting} type="submit">

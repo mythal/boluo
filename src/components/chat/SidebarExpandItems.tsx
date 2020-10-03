@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Space } from '../../api/spaces';
 import { Channel } from '../../api/channels';
 import styled from '@emotion/styled';
-import { fontBold, fontMono, mB, mT, p, pR, pX, pY, textBase, textSm } from '../../styles/atoms';
+import { fontBold, fontMono, mB, mR, mT, p, pR, pX, pY, textBase, textSm } from '../../styles/atoms';
 import { SidebarItemLink } from '../atoms/SidebarItem';
 import { encodeUuid } from '../../utils/id';
 import { chatPath } from '../../utils/path';
@@ -18,6 +18,7 @@ import { NavLink } from 'react-router-dom';
 import { css } from '@emotion/core';
 import ChatHeaderButton from './ChatHeaderButton';
 import Help from './Help';
+import lockIcon from '../../assets/icons/lock.svg';
 
 interface Props {
   space: Space;
@@ -96,7 +97,10 @@ function SidebarExpandItems({ space, channels }: Props) {
       <div css={channelList}>
         {channels.map((channel) => (
           <SidebarItemLink key={channel.id} to={chatPath(channel.spaceId, channel.id)}>
-            <ChannelName>{channel.name}</ChannelName>
+            <ChannelName>
+              {!channel.isPublic && <Icon css={mR(1)} sprite={lockIcon} />}
+              {channel.name}
+            </ChannelName>
           </SidebarItemLink>
         ))}
       </div>

@@ -4,6 +4,7 @@ import { css } from '@emotion/core';
 import {
   breakpoint,
   largeInput,
+  mB,
   mediaQuery,
   mT,
   mY,
@@ -46,6 +47,10 @@ const buttons = css`
   display: flex;
 `;
 
+const field = css`
+  ${[mB(2)]};
+`;
+
 const panelStyle = css`
   width: ${spacingN(64)};
   ${mediaQuery(breakpoint.md)} {
@@ -57,6 +62,7 @@ interface FormData {
   name: string;
   topic: string;
   defaultRollCommand: string;
+  isPrivate: boolean;
 }
 
 interface MemberOption {
@@ -94,7 +100,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const openDeleteDialog = () => setDeleteDialog(true);
   const dismissDeleteDialog = () => setDeleteDialog(false);
 
-  const onSubmit = async ({ name, topic, defaultRollCommand }: FormData) => {
+  const onSubmit = async ({ name, topic, defaultRollCommand, isPrivate }: FormData) => {
     const defaultDiceType = defaultDice?.value;
     const current = Set(currentMaster.map((member) => member.value));
     const selected = Set(selectedMember.map((member) => member.value));
@@ -108,6 +114,7 @@ function ManageChannel({ channel, dismiss }: Props) {
       grantMasters,
       removeMasters,
       defaultRollCommand,
+      isPublic: !isPrivate,
     };
     setSubmitting(true);
     const result = await post('/channels/edit', editChannel);
@@ -135,7 +142,7 @@ function ManageChannel({ channel, dismiss }: Props) {
       <PanelTitle>管理频道</PanelTitle>
       {editError && <RenderError error={editError} variant="component" />}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div>
+        <div css={field}>
           <Label htmlFor="name">频道名</Label>
           <Input
             css={largeInput}
@@ -146,7 +153,7 @@ function ManageChannel({ channel, dismiss }: Props) {
           />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
-        <div>
+        <div css={field}>
           <Label htmlFor="defaultDiceType">默认骰子</Label>
           <DiceSelect
             id="defaultDiceType"
@@ -159,7 +166,7 @@ function ManageChannel({ channel, dismiss }: Props) {
             当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
           </HelpText>
         </div>
-        <div>
+        <div css={field}>
           <Label htmlFor="defaultRollCommand">默认投骰子指令</Label>
           <Input
             css={largeInput}
@@ -170,7 +177,7 @@ function ManageChannel({ channel, dismiss }: Props) {
           />
           <HelpText>「插入骰子」按钮自动插入的指令</HelpText>
         </div>
-        <div>
+        <div css={field}>
           <Label>话题</Label>
           <TextArea
             id="topic"
@@ -182,13 +189,20 @@ function ManageChannel({ channel, dismiss }: Props) {
           <HelpText>话题可以用来记录和提醒你们当前专注于什么。</HelpText>
           {errors.topic && <ErrorMessage>{errors.topic.message}</ErrorMessage>}
         </div>
-        <div>
+        <div css={field}>
           <Label>游戏主持人</Label>
           <Select isMulti value={selectedMember} onChange={handleChange} options={memberOptions} theme={selectTheme} />
         </div>
+        <div css={field}>
+          <Label>
+            <input name="isPrivate" id="isPrivate" defaultChecked={!channel.isPublic} ref={register} type="checkbox" />{' '}
+            秘密频道
+          </Label>
+          <HelpText>秘密频道通过邀请进入。</HelpText>
+        </div>
         <div css={[mY(2), buttons]}>
           <Button css={[textSm]} data-variant="danger" disabled={submitting} onClick={openDeleteDialog} type="button">
-            删除
+            删除频道
           </Button>
         </div>
         <div css={[buttons, mT(4)]}>

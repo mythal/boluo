@@ -31,6 +31,7 @@ import { useTitle } from '../../hooks/useTitle';
 import { usePane } from '../../hooks/usePane';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 import exportIcon from '../../assets/icons/file-export.svg';
+import lockIcon from '../../assets/icons/lock.svg';
 import ExportDialog from './ExportDialog';
 
 const Topic = styled.span`
@@ -90,6 +91,7 @@ function Header() {
   return (
     <div css={chatHeaderStyle}>
       <ChannelName>
+        {!channel.isPublic && <Icon sprite={lockIcon} css={mR(1)} />}
         <span css={name}>{channel.name}</span>
         <Topic>{channel.topic}</Topic>
       </ChannelName>

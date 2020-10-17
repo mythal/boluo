@@ -24,6 +24,7 @@ import {
   SpaceWithRelated,
 } from './spaces';
 import {
+  AddMember,
   Channel,
   ChannelMember,
   ChannelMemberWithUser,
@@ -147,6 +148,7 @@ export function post(path: '/channels/create', payload: CreateChannel): Promise<
 export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<Channel>>;
 export function post(path: '/channels/edit_member', payload: EditChannelMember): Promise<AppResult<ChannelMember>>;
 export function post(path: '/channels/join', payload: JoinChannel): Promise<AppResult<ChannelWithMember>>;
+export function post(path: '/channels/add_member', payload: AddMember): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(path: '/channels/delete', payload: {}, query: IdQuery): Promise<AppResult<Channel>>;
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;

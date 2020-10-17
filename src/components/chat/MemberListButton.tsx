@@ -46,7 +46,7 @@ function MemberListButton({ className, channelId }: Props) {
       </ChatHeaderButton>
       {open && (
         <Overlay x={1} selfX={-1} y={1} anchor={buttonRef}>
-          <ChatMemberList />
+          <ChatMemberList channelId={channelId} />
         </Overlay>
       )}
     </React.Fragment>

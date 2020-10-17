@@ -30,13 +30,16 @@ import TextArea from '../atoms/TextArea';
 import Button from '../atoms/Button';
 import { post } from '../../api/request';
 import Text from '../atoms/Text';
-import Select, { ValueType } from 'react-select';
+import { ValueType } from 'react-select';
 import { Set } from 'immutable';
 import { usePane } from '../../hooks/usePane';
 import Dialog from '../molecules/Dialog';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
 import { showFlash } from '../../actions/flash';
+import { Id } from '../../utils/id';
+
+const Select = React.lazy(() => import('react-select'));
 
 interface Props {
   channel: Channel;
@@ -65,12 +68,12 @@ interface FormData {
   isPrivate: boolean;
 }
 
-interface MemberOption {
+export interface MemberOption {
   label: string;
-  value: string;
+  value: Id;
 }
 
-function makeMemberOption({ user }: Member): MemberOption {
+export function makeMemberOption({ user }: Member): MemberOption {
   return { label: user.nickname, value: user.id };
 }
 

@@ -51,6 +51,11 @@ export interface JoinChannel {
   characterName?: string;
 }
 
+export interface AddMember {
+  channelId: Id;
+  userId: Id;
+}
+
 export interface ChannelWithRelated {
   channel: Channel;
   members: Member[];

@@ -6,6 +6,8 @@ import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../
 import CloseButton from './CloseButton';
 import Modal from '../atoms/Modal';
 import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '../../styles/colors';
+import Icon from '../atoms/Icon';
+import rotateIcon from '../../assets/icons/rotate-cw.svg';
 
 interface Props {
   children: React.ReactNode;
@@ -15,6 +17,7 @@ interface Props {
   confirm?: () => void;
   confirmText?: string;
   noOverflow?: boolean;
+  loading?: boolean;
   confirmButtonVariant?: ButtonVariant;
 }
 
@@ -54,8 +57,8 @@ const titleStyle = css`
 
 const contentStyle = css`
   padding: ${spacingN(4)};
-  height: 100%;
   &[data-no-overflow='false'] {
+    height: 100%;
     overflow-y: auto;
   }
 `;
@@ -68,6 +71,7 @@ function Dialog({
   confirmText,
   title,
   noOverflow = false,
+  loading = false,
   confirmButtonVariant = 'primary',
 }: Props) {
   confirmText = confirmText || '确定';
@@ -98,7 +102,8 @@ function Dialog({
       </div>
       {confirm && (
         <div css={buttonAreaStyle}>
-          <Button data-small autoFocus data-variant={confirmButtonVariant} onClick={confirm}>
+          <Button data-small autoFocus disabled={loading} data-variant={confirmButtonVariant} onClick={confirm}>
+            {loading && <Icon sprite={rotateIcon} spin />}
             {confirmText}
           </Button>
         </div>

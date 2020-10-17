@@ -15,8 +15,6 @@ import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
-import d20 from '../../assets/icons/d20.svg';
-import { codeBlockStyle } from '../chat/styles';
 
 const Container = styled.div`
   display: grid;
@@ -64,18 +62,11 @@ function My() {
             。管理员将不定期删除没有实质内容的测试位面。
           </Text>
         </News>
+        <News css={[mB(2)]}>
+          <Text>新增秘密频道，只有频道成员可以查看内容。在设置中开启。</Text>
+          <Text>使用频道成员列表中的「添加成员」按钮邀请新成员。</Text>
+        </News>
         <News css={[mB(2)]}>可以导出 txt、json、csv 和论坛代码（BBCode）了。</News>
-        <News css={[mB(2)]}>新增非公开位面，只能通过邀请链接加入。请在位面设置中设定。</News>
-        <News css={[mB(2)]}>
-          <Text>
-            可以在频道设置里面指定「
-            <Icon sprite={d20} /> 插入骰子」按钮插入的默认指令。
-          </Text>
-          <Text>可以搜索位面和删除位面了。</Text>
-        </News>
-        <News css={[mB(2)]}>
-          <pre css={codeBlockStyle}>{'代码块 想使用\n现在是 格式是\n很酷的 ```内\n像素体 容```'}</pre>
-        </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}
     </Container>

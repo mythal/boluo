@@ -63,8 +63,10 @@ function My() {
           </Text>
         </News>
         <News css={[mB(2)]}>
-          <Text>新增秘密频道，只有频道成员可以查看内容。在设置中开启。</Text>
-          <Text>使用频道成员列表中的「添加成员」按钮邀请新成员。</Text>
+          <Text>新增秘密频道，在设置中开启。</Text>
+          <Text>
+            一个秘密频道，只有频道成员才能查看其内容。频道成员可以使用位于成员列表中的「添加成员」按钮邀请新成员。
+          </Text>
         </News>
         <News css={[mB(2)]}>可以导出 txt、json、csv 和论坛代码（BBCode）了。</News>
       </div>

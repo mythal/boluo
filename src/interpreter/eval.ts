@@ -79,6 +79,9 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     const ones = rng.nextInt(0, 9);
     const tens = rng.nextInt(0, 9) * 10;
     let rolled = tens + ones;
+    if (rolled === 0) {
+      rolled = 100;
+    }
     let value = rolled;
     let modifier: number = rng.nextInt(0, 9) * 10;
     const modifiers: number[] = [modifier];
@@ -87,10 +90,8 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
         modifiers.pop();
         break;
       case 'BONUS_2':
-        if (modifier < tens) {
-          if (ones !== 0 || modifier !== 0) {
-            value = modifier + ones;
-          }
+        if (modifier + ones !== 0 && modifier + ones < value) {
+          value = modifier + ones;
         }
         modifier = rng.nextInt(0, 9) * 10;
         modifiers.push(modifier);
@@ -99,15 +100,16 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
         }
       // eslint-disable-next-line no-fallthrough
       case 'BONUS':
-        if (modifier < tens) {
-          if (ones !== 0 || modifier !== 0) {
-            value = modifier + ones;
-          }
+        if (modifier + ones !== 0 && modifier + ones < value) {
+          value = modifier + ones;
         }
         break;
       case 'PENALTY_2':
         if (modifier > tens || (modifier === 0 && ones === 0)) {
           value = modifier + ones;
+          if (value === 0) {
+            value = 100;
+          }
         }
         modifier = rng.nextInt(0, 9) * 10;
         modifiers.push(modifier);
@@ -116,16 +118,13 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
         }
       // eslint-disable-next-line no-fallthrough
       case 'PENALTY':
-        if (modifier > tens) {
+        if (modifier > tens || (modifier === 0 && ones === 0)) {
           value = modifier + ones;
+          if (value === 0) {
+            value = 100;
+          }
         }
         break;
-    }
-    if (value === 0) {
-      value = 100;
-    }
-    if (rolled === 0) {
-      rolled = 100;
     }
     let targetValue: number | undefined = undefined;
     if (node.target) {

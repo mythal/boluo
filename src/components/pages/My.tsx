@@ -42,6 +42,9 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
+          2020年10月26日由于上游主机商的问题服务器下线了一段时间，迁移到新的服务器。中间有数据异常（丢了两天）现在已经恢复，如果遇到数据问题请反馈。
+        </News>
+        <News css={[mB(2)]}>
           <Text>
             菠萝上线啦！现在是早期测试阶段，请到
             <ExternalLink to="https://forum.boluo.chat/" css={link}>

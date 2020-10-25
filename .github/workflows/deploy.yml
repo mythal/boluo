@@ -22,7 +22,7 @@ jobs:
         with:
           switches: -avzr --delete
           path: dist/
-          remote_path: /var/www/boluo/
+          remote_path: /elpis/web/boluo/master/
           remote_host: boluo.chat
           remote_user: boluo
           remote_key: ${{ secrets.BOLUO_KEY }}

@@ -23,6 +23,6 @@ jobs:
           switches: -avzr --delete
           path: dist/
           remote_path: /var/www/boluo/frontend/
-          remote_host: 34.96.214.244
+          remote_host: boluo.chat
           remote_user: boluo-frontend
           remote_key: ${{ secrets.BOLUO_DEPLOY }}

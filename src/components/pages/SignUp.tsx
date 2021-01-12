@@ -19,7 +19,7 @@ import {
 } from '../../styles/atoms';
 import Input from '../atoms/Input';
 import Button from '../atoms/Button';
-import { useForm, ValidationRules } from 'react-hook-form';
+import { useForm, RegisterOptions as ValidationRules } from 'react-hook-form';
 import { post } from '../../api/request';
 import { AppError, errorText } from '../../api/error';
 import InformationBar from '../molecules/InformationBar';

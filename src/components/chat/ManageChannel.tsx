@@ -136,7 +136,7 @@ function ManageChannel({ channel, dismiss }: Props) {
       dispatch(showFlash('ERROR', '删除频道失败'));
     }
   };
-  const handleChange = (value: ValueType<MemberOption>) => {
+  const handleChange = (value: ValueType<MemberOption, false>) => {
     const values = (value || []) as MemberOption[];
     setSelectedMember(values);
   };

@@ -42,7 +42,7 @@ function InviteChannelMemberDialog({ channelId, members, dismiss }: Props) {
     }
     dismiss();
   };
-  const handleChange = (value: ValueType<MemberOption>) => {
+  const handleChange = (value: ValueType<MemberOption, false>) => {
     const values = (value || []) as MemberOption[];
     setMembersToInvite(values);
   };

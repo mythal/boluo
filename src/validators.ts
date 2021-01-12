@@ -1,4 +1,4 @@
-import { ValidationRules } from 'react-hook-form';
+import { RegisterOptions as ValidationRules } from 'react-hook-form';
 import { get } from './api/request';
 import { Id } from './utils/id';
 

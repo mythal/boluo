@@ -15,6 +15,7 @@ import ExternalLink from '../../components/atoms/ExternalLink';
 import { Link } from 'react-router-dom';
 import Text from '../atoms/Text';
 import Help from '../chat/Help';
+import { Code } from '../atoms/Code';
 
 const Container = styled.div`
   display: grid;
@@ -41,7 +42,10 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
-        <News css={[mB(2)]}>近期主要在试验各种主机商的网络质量，如果有网络不安定的情况欢迎反馈。</News>
+        <News css={[mB(2)]}>
+          开发者之前忙出国的事情一直没维护，现在重新开始工作。讨论版已修复，QQ 群为
+          1107382038。增加了网络连不上时候的备用线路 <Code>https://bck.boluo.chat/</Code>。
+        </News>
         <News css={[mB(2)]}>
           <Text>
             菠萝上线啦！现在是早期测试阶段，请到

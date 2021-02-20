@@ -5,7 +5,7 @@ on:
       - master
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -18,22 +18,9 @@ jobs:
         env:
           CI: true
 
-      - name: Archive
-        run: cd dist/ && zip -r ../build.zip *
-
       - name: Upload to B2
         uses: wei/rclone@v1
         env:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
         with:
           args: sync ./dist/ b2:boluo-backup/dist/
-
-      # - name: rsync deployments
-      #   uses: burnett01/rsync-deployments@4.1
-      #   with:
-      #     switches: -avzr
-      #     path: dist/
-      #     remote_path: /srv/www/boluo.chat/frontend/
-      #     remote_host: boluo.chat
-      #     remote_user: boluo-frontend
-      #     remote_key: ${{ secrets.BOLUO_DEPLOY }}

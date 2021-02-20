@@ -1,8 +1,5 @@
 name: Deploy
-on:
-  workflow_dispatch:
-    branches:
-      - master
+on: workflow_dispatch
 
 jobs:
   deploy:

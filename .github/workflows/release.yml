@@ -1,4 +1,4 @@
-name: Deploy
+name: Release
 on:
   push:
     branches:
@@ -28,12 +28,12 @@ jobs:
         with:
           args: sync ./dist/ b2:boluo-backup/dist/
 
-      - name: rsync deployments
-        uses: burnett01/rsync-deployments@4.1
-        with:
-          switches: -avzr
-          path: dist/
-          remote_path: /srv/www/boluo.chat/frontend/
-          remote_host: boluo.chat
-          remote_user: boluo-frontend
-          remote_key: ${{ secrets.BOLUO_DEPLOY }}
+      # - name: rsync deployments
+      #   uses: burnett01/rsync-deployments@4.1
+      #   with:
+      #     switches: -avzr
+      #     path: dist/
+      #     remote_path: /srv/www/boluo.chat/frontend/
+      #     remote_host: boluo.chat
+      #     remote_user: boluo-frontend
+      #     remote_key: ${{ secrets.BOLUO_DEPLOY }}

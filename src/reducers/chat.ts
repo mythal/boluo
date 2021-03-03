@@ -28,6 +28,7 @@ import {
 } from '../states/chat-item-set';
 import Prando from 'prando';
 import { SpaceMemberWithUser, SpaceWithRelated } from '../api/spaces';
+import * as O from 'optics-ts';
 
 export interface ChatState {
   pane: number;
@@ -46,6 +47,8 @@ export interface ChatState {
   moving: boolean;
   postponed: List<Action>;
 }
+
+const focusItemSet = O.optic<ChatState>().prop('itemSet');
 
 const loadChat = (prevState: ChatState | undefined, { chat }: ChatLoaded): ChatState => {
   if (prevState?.channel.id === chat.channel.id) {
@@ -159,18 +162,16 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
     date: message.orderDate,
     offset: 0,
   });
-  return { ...state, itemSet };
+  return O.set(focusItemSet)(itemSet)(state);
 };
 
+const modifyEditions = O.modify(focusItemSet.prop('editions'));
 const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage): ChatState => {
-  const editions = state.itemSet.editions.remove(messageId);
-  const itemSet = { ...state.itemSet, editions };
-  return { ...state, itemSet };
+  return modifyEditions((editions) => editions.remove(messageId))(state);
 };
 
 const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMessage): ChatState => {
-  const itemSet = markMessageMoving(state.itemSet, message, targetItem);
-  return { ...state, itemSet };
+  return O.modify(focusItemSet)((itemSet) => markMessageMoving(itemSet, message, targetItem))(state);
 };
 
 const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageMoving): ChatState => {

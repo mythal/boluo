@@ -86,3 +86,8 @@ export interface CheckChannelName {
   spaceId: Id;
   name: string;
 }
+
+export interface Export {
+  channelId: Id;
+  after?: number;
+}

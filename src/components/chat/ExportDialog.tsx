@@ -7,7 +7,7 @@ import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import exportIcon from '../../assets/icons/file-export.svg';
 import { fileNameDateTimeFormat } from '../../utils/time';
-import { Channel } from '../../api/channels';
+import { Channel, Export } from '../../api/channels';
 import { useDispatch } from '../../store';
 import { get } from '../../api/request';
 import { throwErr } from '../../utils/errors';
@@ -29,10 +29,21 @@ const options = [
 
 type Option = { value: string; label: string };
 
+const daysOptions: DaysOption[] = [
+  { value: undefined, label: '所有' },
+  { value: 1, label: '1天' },
+  { value: 3, label: '3天' },
+  { value: 7, label: '7天' },
+  { value: 30, label: '30天' },
+];
+
+type DaysOption = { label: string; value: number | undefined };
+
 function ExportDialog({ dismiss, channel }: Props) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const [loading, setLoading] = useState(false);
   const [format, setFormat] = useState<Option>(options[0]);
+  const [afterDays, setAfterDays] = useState<DaysOption>(daysOptions[0]);
   const [filterOutGame, setFilterOutGame] = useState(false);
   const [filterFolded, setFilterFolded] = useState(false);
   const [simple, setSimple] = useState(false);
@@ -57,7 +68,14 @@ function ExportDialog({ dismiss, channel }: Props) {
       return;
     }
     const members = membersResult.value;
-    const result = await get('/channels/export', { id: channel.id });
+    const exportGet: Export = { channelId: channel.id };
+    if (afterDays.value) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      now.setDate(now.getDate() - afterDays.value);
+      exportGet.after = now.getTime();
+    }
+    const result = await get('/channels/export', exportGet);
     if (!result.isOk) {
       throwErr(dispatch)(result.value);
       return;
@@ -86,15 +104,29 @@ function ExportDialog({ dismiss, channel }: Props) {
   };
   return (
     <Dialog title="导出频道数据" dismiss={dismiss} noOverflow mask>
-      <Label htmlFor="export-format">导出格式</Label>
-      <Select
-        value={format}
-        onChange={setFormat}
-        css={[uiShadow, mB(2)]}
-        options={options}
-        theme={selectTheme}
-        placeholder="选择导出格式…"
-      />
+      <div>
+        <Label htmlFor="export-format">导出格式</Label>
+        <Select
+          id="export-format"
+          value={format}
+          onChange={setFormat}
+          css={[uiShadow, mB(2)]}
+          options={options}
+          theme={selectTheme}
+          placeholder="选择导出格式…"
+        />
+      </div>
+      <div>
+        <Label htmlFor="export-after">导出距今多久的记录？</Label>
+        <Select
+          id="export-after"
+          value={afterDays}
+          onChange={setAfterDays}
+          css={[uiShadow, mB(2)]}
+          options={daysOptions}
+          theme={selectTheme}
+        />
+      </div>
       <Label>
         <input checked={filterOutGame} onChange={(e) => setFilterOutGame(e.target.checked)} type="checkbox" />{' '}
         过滤游戏外消息

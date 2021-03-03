@@ -16,12 +16,14 @@ export const handleKeyDown = (
 ): React.KeyboardEventHandler => {
   return (e) => {
     if (enterSend && e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      submitKey(async () => await onSend());
+      if (!e.ctrlKey) {
+        e.preventDefault();
+        submitKey(async () => await onSend());
+      }
     } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       submitKey(async () => await onSend());
-    } else if (e.key === 'Alt') {
+    } else if (e.key === 'Escape') {
       e.preventDefault();
       submitKey(() => composeDispatch(update({ inGame: !inGame })));
     }

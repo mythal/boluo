@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { ComposeDispatch, update } from './reducer';
 import mask from '../../../assets/icons/theater-masks.svg';
-import { isMac } from '../../../utils/browser';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 
 interface Props {
@@ -21,7 +20,7 @@ function InGameSwitch({ inGame, composeDispatch, className, size }: Props) {
       sprite={mask}
       title="游戏内"
       size={size}
-      info={isMac ? 'Option' : 'Alt'}
+      info="Esc"
     />
   );
 }

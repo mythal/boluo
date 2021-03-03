@@ -5,7 +5,6 @@ import mask from '../../../assets/icons/theater-masks.svg';
 import running from '../../../assets/icons/running.svg';
 import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
 import styled from '@emotion/styled';
-import { isMac } from '../../../utils/browser';
 import { ComposeDispatch, update } from './reducer';
 
 interface Props {
@@ -26,13 +25,7 @@ function ComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Props)
   const toggleBroadcast = () => composeDispatch(update({ broadcast: !broadcast }));
   return (
     <Toolbar>
-      <ChatItemToolbarButton
-        on={inGame}
-        onClick={toggleInGame}
-        sprite={mask}
-        title="游戏内"
-        info={isMac ? 'Option' : 'Alt'}
-      />
+      <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" info="Esc" />
       <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleIsAction} sprite={running} title="描述动作" />
       <ChatItemToolbarButton
         css={mR(1)}

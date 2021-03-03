@@ -395,7 +395,7 @@ export const baseStyle = css`
   }
   @font-face {
     font-family: 'DinkieBitmap-Mono';
-    src: url('https://boluo.chat/static/DinkieBitmap-9pxCode.woff2') format('woff2');
+    src: url('https://boluo.chat/static/DinkieBitmap-9pxCodeHalf.woff2') format('woff2');
   }
 `;
 

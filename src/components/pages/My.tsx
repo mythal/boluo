@@ -42,6 +42,7 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>导出功能现在可以选择时间，导出最近的消息了。</News>
         <News css={[mB(2)]}>
           开发者之前忙出国的事情一直没维护，现在重新开始工作。讨论版已修复，QQ 群为
           1107382038。增加了网络连不上时候的备用线路 <Code>https://bck.boluo.chat/</Code>。
@@ -67,13 +68,6 @@ function My() {
             。管理员将不定期删除没有实质内容的测试位面。
           </Text>
         </News>
-        <News css={[mB(2)]}>
-          <Text>新增秘密频道，在设置中开启。</Text>
-          <Text>
-            一个秘密频道，只有频道成员才能查看其内容。频道成员可以使用位于成员列表中的「添加成员」按钮邀请新成员。
-          </Text>
-        </News>
-        <News css={[mB(2)]}>可以导出 txt、json、csv 和论坛代码（BBCode）了。</News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}
     </Container>

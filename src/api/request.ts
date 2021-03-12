@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { Err, Ok, Result } from '../utils/result';
 import { AppError, notJson, UNAUTHENTICATED } from './error';
-import { getCsrfToken, refreshCsrfToken } from './csrf';
 import {
   CheckEmail,
   CheckUsername,
@@ -68,15 +67,11 @@ export const request = async <T>(
   path: string,
   method: string,
   body: RequestInit['body'],
-  csrf = true,
   contentType = 'application/json'
 ): Promise<AppResult<T>> => {
   const headers = new Headers({
     'Content-Type': contentType,
   });
-  if (csrf) {
-    headers.append('csrf-token', await getCsrfToken());
-  }
   if (DEBUG) {
     headers.append('development', '');
   }
@@ -89,7 +84,6 @@ export const request = async <T>(
   try {
     let appResult = toResult<T, AppError>(await result.json());
     if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
-      await refreshCsrfToken();
       const retryResult = await fetch(path, {
         method,
         headers,
@@ -160,20 +154,18 @@ export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppRes
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,
-  query?: Q,
-  csrf = true
+  query?: Q
 ): Promise<AppResult<T>> {
-  return request(makeUri(path, query), 'POST', JSON.stringify(payload), csrf);
+  return request(makeUri(path, query), 'POST', JSON.stringify(payload));
 }
 
 export function patch(path: '/messages/edit', payload: EditMessage): Promise<AppResult<Message>>;
 export function patch<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,
-  query?: Q,
-  csrf = true
+  query?: Q
 ): Promise<AppResult<T>> {
-  return request(makeUri(path, query), 'PATCH', JSON.stringify(payload), csrf);
+  return request(makeUri(path, query), 'PATCH', JSON.stringify(payload));
 }
 
 export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User>>;
@@ -200,12 +192,12 @@ export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
 
 export function get<Q extends object, T>(path: string, query?: Q): Promise<AppResult<T>> {
-  return request(makeUri(path, query), 'GET', null, false);
+  return request(makeUri(path, query), 'GET', null);
 }
 
 export function editAvatar(file: Blob, filename: string, mimeType: string): Promise<AppResult<User>> {
   const path = '/users/edit_avatar';
-  return request(makeUri(path, { filename, mimeType }), 'POST', file, true, mimeType);
+  return request(makeUri(path, { filename, mimeType }), 'POST', file, mimeType);
 }
 
 export function upload(
@@ -214,7 +206,7 @@ export function upload(
   mimeType: string,
   path = '/media/upload'
 ): Promise<AppResult<Media>> {
-  return request(makeUri(path, { filename, mimeType }), 'POST', file, true, mimeType);
+  return request(makeUri(path, { filename, mimeType }), 'POST', file, mimeType);
 }
 
 export function mediaUrl(id: string, download = false): string {

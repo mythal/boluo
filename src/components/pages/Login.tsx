@@ -13,7 +13,6 @@ import { useHistory } from 'react-router-dom';
 import { useDispatch } from '../../store';
 import { LoggedIn } from '../../actions/profile';
 import { Label } from '../atoms/Label';
-import { clearCsrfToken } from '../../api/csrf';
 import loginIcon from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
@@ -37,7 +36,6 @@ function Login() {
     setLoggingIn(true);
     const result = await post('/users/login', data);
     setLoggingIn(false);
-    clearCsrfToken();
     if (result.isOk) {
       dispatch<LoggedIn>({ type: 'LOGGED_IN', ...result.value.me });
       const next = popNext() || '/';

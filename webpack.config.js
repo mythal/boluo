@@ -51,7 +51,7 @@ module.exports = {
     historyApiFallback: true,
     proxy: {
       '/api': {
-        target: REMOTE_BACKEND ? 'https://boluo.chat' : 'http://127.0.0.1:3000',
+        target: REMOTE_BACKEND ? 'https://coc.holger.net.cn' : 'http://127.0.0.1:3000',
         ws: true,
         secure: false,
       },

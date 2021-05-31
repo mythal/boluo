@@ -79,6 +79,7 @@ module.exports = {
         options: {
           extract: true,
           spriteFilename: '[hash].svg',
+          esModule: false,
         },
       },
     ],

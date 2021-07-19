@@ -17,10 +17,10 @@ jobs:
         run: yarn install && yarn build
         env:
           CI: true
+          NODE_ENV: production
 
-      - name: Upload to B2
-        uses: wei/rclone@v1
-        env:
-          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
-          args: sync ./dist/ b2:boluo-backup/dist/
+          name: boluo-web
+          path: build/

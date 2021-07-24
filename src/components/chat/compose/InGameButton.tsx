@@ -32,7 +32,7 @@ function InGameButton({ inGame, composeDispatch, className }: Props) {
     <div css={inGameContainer} className={className}>
       <Tooltip className="tooltip">
         <div>游戏内</div>
-        <div css={[textXs]}>{isMac ? 'Option' : 'Alt'}</div>
+        <div css={[textXs]}>Esc</div>
       </Tooltip>
       <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} size="large" />
     </div>

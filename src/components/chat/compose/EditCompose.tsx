@@ -193,7 +193,7 @@ function EditCompose({ preview, editTo }: Props) {
             onClick={toggleInGame}
             sprite={mask}
             title="游戏内"
-            info={isMac ? 'Option' : 'Alt'}
+            info="Esc"
           />
           <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleIsAction} sprite={running} title="描述动作" />
           <ChatItemToolbarButton

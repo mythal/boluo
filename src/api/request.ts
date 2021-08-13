@@ -84,13 +84,7 @@ export const request = async <T>(
   try {
     let appResult = toResult<T, AppError>(await result.json());
     if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
-      const retryResult = await fetch(path, {
-        method,
-        headers,
-        body,
-        credentials: 'include',
-      });
-      appResult = toResult<T, AppError>(await retryResult.json());
+      location.replace('/login');
     }
     return appResult;
   } catch (e) {

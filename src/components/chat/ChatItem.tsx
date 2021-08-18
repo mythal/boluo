@@ -50,8 +50,8 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
   const pane = usePane();
 
   const editItem = useSelector((state) => {
-    if (item !== undefined && item.type === 'MESSAGE') {
-      const editItem = state.chatPane[pane]!.itemSet.editions.get(item.message.id);
+    if (pane && item !== undefined && item.type === 'MESSAGE') {
+      const editItem = state.chatStates.get(pane)!.itemSet.editions.get(item.message.id);
       if (
         editItem !== undefined &&
         (editItem.preview === undefined || editItem.preview.editFor === item.message.modified)

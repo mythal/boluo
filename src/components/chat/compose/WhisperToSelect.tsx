@@ -18,7 +18,7 @@ interface Props {
 
 function WhisperToSelect({ whisperTo, composeDispatch, dismiss }: Props) {
   const pane = usePane();
-  const channelMembers = useSelector((state) => state.chatPane[pane]!.members);
+  const channelMembers = useSelector((state) => state.chatStates.get(pane)!.members);
   const [values, setValues] = useState<UserItem[] | undefined | null>(whisperTo);
   const options: UserItem[] = channelMembers.map((member) => {
     let label = member.user.nickname;

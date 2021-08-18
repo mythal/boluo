@@ -38,6 +38,7 @@ export interface ComposeState {
 export interface Context {
   sendEvent: (event: ClientEvent) => void;
   dispatch: Dispatch;
+  channelId: Id;
   nickname: string;
   characterName: string;
 }
@@ -69,7 +70,7 @@ export type ComposeReducer<A extends ComposeAction = ComposeAction> = (
 ) => ComposeState;
 
 const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
-  const { dispatch, characterName, nickname, sendEvent } = context;
+  const { dispatch, characterName, nickname, sendEvent, channelId } = context;
   const { next } = action;
   if (next.media) {
     const file = next.media;
@@ -127,6 +128,7 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       mediaId: null,
       editFor,
       clear,
+      channelId,
       text,
       entities: broadcast ? entities : [],
     };

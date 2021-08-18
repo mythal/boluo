@@ -15,7 +15,7 @@ import {
 } from '../actions/profile';
 import { ChannelEdited, PushMembers } from '../api/events';
 import { Id } from '../utils/id';
-import { ChatState } from './chat';
+import { ChatState } from './chatState';
 
 export type MySpaces = OrderedMap<Id, SpaceWithMember>;
 export type MyChannels = OrderedMap<Id, ChannelWithMember>;
@@ -29,8 +29,8 @@ export interface ProfileState {
 
 const login = (state: ProfileState | undefined, action: LoggedIn): ProfileState => {
   const { user, settings } = action;
-  let spaces: OrderedMap<Id, SpaceWithMember> = OrderedMap();
-  let channels: OrderedMap<Id, ChannelWithMember> = OrderedMap();
+  let spaces: OrderedMap<Id, SpaceWithMember> = OrderedMap<Id, SpaceWithMember>();
+  let channels: OrderedMap<Id, ChannelWithMember> = OrderedMap<Id, ChannelWithMember>();
   for (const s of action.mySpaces) {
     spaces = spaces.set(s.space.id, s);
   }
@@ -104,7 +104,7 @@ export const editChannel = (state: ProfileState, { channel }: ChannelEdited): Pr
 };
 
 function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated): ProfileState {
-  const member = members.find((member) => member.user.id === state.user.id);
+  const member = members[state.user.id];
   if (member) {
     const spaces = state.spaces.set(space.id, { space, member: member.space });
     return { ...state, spaces };
@@ -176,7 +176,7 @@ export const profileReducer = (state: ProfileState | undefined, action: Action):
       return editChannelMember(state, action);
     case 'SETTINGS_UPDATED':
       return updateSettings(state, action);
-    case 'CHANNEL_EVENT_RECEIVED':
+    case 'EVENT_RECEIVED':
       switch (action.event.body.type) {
         case 'CHANNEL_EDITED':
           return editChannel(state, action.event.body);

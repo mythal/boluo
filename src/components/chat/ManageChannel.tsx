@@ -87,7 +87,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const history = useHistory();
   const dispatch = useDispatch();
   const pane = usePane();
-  const members = useSelector((state) => state.chatPane[pane]?.members) || [];
+  const members = useSelector((state) => state.chatStates.get(pane)?.members) || [];
   const spaceMember = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member);
   const currentMaster = members.filter((member) => member.channel.isMaster).map(makeMemberOption);
   const [selectedMember, setSelectedMember] = useState<MemberOption[]>(currentMaster);

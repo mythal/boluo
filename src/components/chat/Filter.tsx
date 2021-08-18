@@ -19,9 +19,9 @@ interface Props {
 }
 
 function Filter({ className }: Props) {
-  const pane = usePane();
-  const filter = useSelector((state) => state.chatPane[pane]!.filter);
-  const showFolded = useSelector((state) => state.chatPane[pane]!.showFolded);
+  const pane = usePane()!;
+  const filter = useSelector((state) => state.chatStates.get(pane)!.filter);
+  const showFolded = useSelector((state) => state.chatStates.get(pane)!.showFolded);
   const button = useRef<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();

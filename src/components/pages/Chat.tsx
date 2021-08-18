@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Route, useHistory, useParams } from 'react-router-dom';
+import { Route, Switch, useHistory, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Sidebar from '../chat/Sidebar';
 import { decodeUuid, encodeUuid, Id } from '../../utils/id';
@@ -9,7 +9,7 @@ import Home from '../chat/Home';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import { useDispatch, useSelector } from '../../store';
-import { loadSpace, SpaceUpdated } from '../../actions/ui';
+import { connectSpace, loadSpace, SpaceUpdated } from '../../actions/ui';
 import { errLoading, LOADING } from '../../api/error';
 import { AppResult } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
@@ -19,7 +19,8 @@ import { PaneContext } from '../../hooks/usePane';
 import { chatPath } from '../../utils/path';
 import { breakpoint, mediaQuery } from '../../styles/atoms';
 import { connect } from '../../api/connect';
-import { SpaceEvent } from '../../api/events';
+import { Events } from '../../api/events';
+import { showFlash } from '../../actions/flash';
 
 interface Params {
   spaceId: string;
@@ -46,12 +47,17 @@ const Container = styled.div`
   height: 100%;
   // overflow: hidden;
   grid-template-rows: 3rem 1fr auto;
-  grid-template-columns: auto 1fr 1fr;
-  grid-template-areas:
-    'sidebar-header header header'
-    'sidebar-body list list'
-    'sidebar-body compose compose';
+  // grid-template-columns: auto 1fr 1fr;
+  // grid-template-areas:
+  //   'sidebar-header header header'
+  //   'sidebar-body list list'
+  //   'sidebar-body compose compose';
 
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'sidebar-header header'
+    'sidebar-body list'
+    'sidebar-body compose';
   &[data-split='false'] {
     grid-template-columns: auto 1fr;
     grid-template-areas:
@@ -69,76 +75,98 @@ const Container = styled.div`
   }
 `;
 
-function useSpaceMailbox(spaceId: Id) {
+function useLoadSpace(spaceId: Id) {
   const dispatch = useDispatch();
-  const connection = useRef<WebSocket | null>(null);
-
   useEffect(() => {
-    const conn = () => {
-      connection.current = connect(spaceId, 'SPACE', 0);
-      connection.current.onmessage = (wsMsg) => {
-        const event = JSON.parse(wsMsg.data) as SpaceEvent;
-        const { body } = event;
-        if (body.type === 'SPACE_UPDATED') {
-          const { spaceWithRelated } = body;
-          const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
-          dispatch(action);
-        }
-      };
-      connection.current.onclose = () => {
-        window.setTimeout(conn, 5000);
-      };
+    dispatch(loadSpace(spaceId));
+  }, [spaceId, dispatch]);
+}
+
+function useSpaceConnection() {
+  const dispatch = useDispatch();
+  const spaceId = useSelector((state) => state.ui.spaceId);
+
+  const after = useRef<number>(0);
+
+  const conn = (): WebSocket => {
+    if (!spaceId) {
+      throw new Error('unexpected');
+    }
+    const connection = connect(spaceId);
+    connection.onerror = (e) => {
+      console.warn(e);
     };
-    conn();
-    return () => {
-      if (connection.current) {
-        connection.current.onerror = null;
-        connection.current.onclose = null;
-        connection.current.close();
+
+    connection.onmessage = (wsMsg) => {
+      const last = after.current;
+      const event = JSON.parse(wsMsg.data) as Events;
+      // if (event.timestamp < last) {
+      //   return;
+      // }
+      after.current = event.timestamp;
+      const { body } = event;
+      if (body.type === 'SPACE_UPDATED') {
+        const { spaceWithRelated } = body;
+        const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
+        dispatch(action);
+      } else {
+        dispatch({ type: 'EVENT_RECEIVED', event });
       }
     };
+    // connection.onclose = (e) => {
+    //   console.warn(e);
+    //   window.setTimeout(() => {dispatch}, 5000);
+    // };
+    return connection;
+  };
+
+  useEffect(() => {
+    if (spaceId) {
+      const connection = conn();
+      dispatch(connectSpace(spaceId, connection));
+      return () => {
+        connection.onerror = null;
+        connection.onclose = null;
+        connection.close();
+      };
+    }
   }, [spaceId, dispatch]);
 }
 
 function Chat() {
   const params = useParams<Params>();
-  const activePane = useSelector((state) => state.activePane);
-  const isSplit = useSelector((state) => state.splitPane);
+  // const activePane = useSelector((state) => state.activePane);
   const spaceId: Id = decodeUuid(params.spaceId);
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
   const myId: Id | undefined = useSelector((state) => state.profile?.user.id);
   const history = useHistory();
   const dispatch = useDispatch();
-  const [leftChannel, setLeftChannel] = useState<Id | undefined>(channelId);
-  const [rightChannel, setRightChannel] = useState<Id | undefined>(channelId);
-  // sync active
-  useEffect(() => {
-    if (activePane === 0) {
-      setLeftChannel(channelId);
-    } else if (activePane === 1) {
-      setRightChannel(channelId);
-    }
-  }, [channelId, activePane]);
+  // const [leftChannel, setLeftChannel] = useState<Id | undefined>(channelId);
+  // const [rightChannel, setRightChannel] = useState<Id | undefined>(channelId);
+  // // sync active
+  // useEffect(() => {
+  //   if (activePane === 0) {
+  //     setLeftChannel(channelId);
+  //   } else if (activePane === 1) {
+  //     setRightChannel(channelId);
+  //   }
+  // }, [channelId, activePane]);
 
   // set split pane
-  useEffect(() => {
-    if (isSplit) {
-      if (activePane === 0) {
-        setRightChannel(leftChannel);
-      } else if (activePane === 1) {
-        setLeftChannel(rightChannel);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSplit]);
-
-  useEffect(() => {
-    dispatch(loadSpace(spaceId));
-  }, [spaceId, dispatch]);
+  // useEffect(() => {
+  //   if (isSplit) {
+  //     if (activePane === 0) {
+  //       setRightChannel(leftChannel);
+  //     } else if (activePane === 1) {
+  //       setLeftChannel(rightChannel);
+  //     }
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [isSplit]);
 
   // maybe polling is more suitable?
-  useSpaceMailbox(spaceId);
-
+  useLoadSpace(spaceId);
+  useSpaceConnection();
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
     if (result.value.code === LOADING) {
@@ -152,36 +180,38 @@ function Chat() {
   }
   const { channels, space, members } = result.value;
 
-  if (!space.allowSpectator && members.findIndex((member) => member.user.id === myId) === -1) {
+  if (!space.allowSpectator && (!myId || !members[myId])) {
     history.replace(`/space/${encodeUuid(spaceId)}`);
   }
-  const left = activePane === 0 ? channelId : leftChannel;
-  const right = activePane === 1 ? channelId : rightChannel;
+  // const left = activePane === 0 ? channelId : leftChannel;
+  // const right = activePane === 1 ? channelId : rightChannel;
   return (
-    <Container data-split={isSplit}>
+    <Container>
       <Global styles={viewHeight} />
       <Sidebar space={space} channels={channels} />
-      <Route path={activePane === 0 ? chatPath(spaceId, channelId) : chatPath(spaceId)}>
-        <PaneContext.Provider value={0}>
-          {(isSplit || activePane === 0) &&
-            (left ? (
-              <ChannelChat spaceId={spaceId} channelId={left} pane={0} />
-            ) : (
-              <Home members={members} channels={channels} space={space} />
-            ))}
-        </PaneContext.Provider>
-      </Route>
+      <Switch>
+        {channelId && (
+          <Route path={chatPath(spaceId, channelId)}>
+            <PaneContext.Provider value={channelId}>
+              <ChannelChat key={channelId} spaceId={spaceId} channelId={channelId} pane={channelId} />
+            </PaneContext.Provider>
+          </Route>
+        )}
+        <Route path={chatPath(spaceId)}>
+          <Home members={members} channels={channels} space={space} />
+        </Route>
+      </Switch>
 
-      <Route path={activePane === 1 ? chatPath(spaceId, channelId) : chatPath(spaceId)}>
-        <PaneContext.Provider value={1}>
-          {(isSplit || activePane === 1) &&
-            (right ? (
-              <ChannelChat spaceId={spaceId} channelId={right} pane={1} />
-            ) : (
-              <Home members={members} channels={channels} space={space} />
-            ))}
-        </PaneContext.Provider>
-      </Route>
+      {/*<Route path={activePane === 1 ? chatPath(spaceId, channelId) : chatPath(spaceId)}>*/}
+      {/*  <PaneContext.Provider value={1}>*/}
+      {/*    {(isSplit || activePane === 1) &&*/}
+      {/*      (right ? (*/}
+      {/*        <ChannelChat spaceId={spaceId} channelId={right} pane={1} />*/}
+      {/*      ) : (*/}
+      {/*        <Home members={members} channels={channels} space={space} />*/}
+      {/*      ))}*/}
+      {/*  </PaneContext.Provider>*/}
+      {/*</Route>*/}
     </Container>
   );
 }

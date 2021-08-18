@@ -22,10 +22,10 @@ export const LoadMoreContainer = styled.div`
 
 function LoadMore() {
   const pane = usePane();
-  const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
-  const before = useSelector((state) => state.chatPane[pane]!.messageBefore);
-  const finished = useSelector((state) => state.chatPane[pane]!.finished);
-  const moving = useSelector((state) => state.chatPane[pane]!.moving);
+  const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
+  const before = useSelector((state) => state.chatStates.get(pane)!.messageBefore);
+  const finished = useSelector((state) => state.chatStates.get(pane)!.finished);
+  const moving = useSelector((state) => state.chatStates.get(pane)!.moving);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
   const mounted = useRef(true);

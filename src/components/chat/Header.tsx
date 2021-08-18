@@ -33,6 +33,7 @@ import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 import exportIcon from '../../assets/icons/file-export.svg';
 import lockIcon from '../../assets/icons/lock.svg';
 import ExportDialog from './ExportDialog';
+import { useHeartbeat } from './Heartbeat';
 
 const Topic = styled.span`
   overflow: hidden;
@@ -79,14 +80,13 @@ const showOnMd = css`
 
 function Header() {
   const pane = usePane();
-  const channel = useSelector((state) => state.chatPane[pane]!.channel);
-  const isPaneSplit = useSelector((state) => state.splitPane);
+  const channel = useSelector((state) => state.chatStates.get(pane)!.channel);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
   const myMember = useSelector((state) => state.profile?.channels.get(channel.id)?.member);
   const [managePanel, setManagePanel] = useState(false);
   const [exportDialog, showExportDialog] = useState(false);
   const dispatch = useDispatch();
-  const toggleSplit = useCallback(() => dispatch({ type: 'SPLIT_PANE', split: !isPaneSplit }), [isPaneSplit, dispatch]);
+  useHeartbeat();
   useTitle(channel.name);
   return (
     <div css={chatHeaderStyle}>
@@ -96,9 +96,9 @@ function Header() {
         <Topic>{channel.topic}</Topic>
       </ChannelName>
       <div css={toolbar}>
-        <ChatHeaderButton css={[mL(1), showOnMd]} data-active={isPaneSplit} onClick={toggleSplit}>
-          <Icon sprite={columns} />
-        </ChatHeaderButton>
+        {/*<ChatHeaderButton css={[mL(1), showOnMd]} data-active={isPaneSplit} onClick={toggleSplit}>*/}
+        {/*  <Icon sprite={columns} />*/}
+        {/*</ChatHeaderButton>*/}
         {isSpaceAdmin && (
           <ChatHeaderButton css={[mL(1)]} onClick={() => setManagePanel(true)}>
             <Icon sprite={sliders} />

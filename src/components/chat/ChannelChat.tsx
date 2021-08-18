@@ -5,37 +5,24 @@ import Header from './Header';
 import ChatList from './ChatList';
 import Loading from '../molecules/Loading';
 import { useDispatch, useSelector } from '../../store';
-import { CloseChat, loadChat } from '../../actions/chat';
+import { CloseChat } from '../../actions/chat';
 import Compose from './compose/Compose';
-import Heartbeat from './Heartbeat';
 import { chatRight } from './styles';
-
-export const useLoadChat = (id: Id, pane: number) => {
-  const dispatch = useDispatch();
-  useEffect(() => {
-    const closeChat: CloseChat = { type: 'CLOSE_CHAT', id, pane };
-    dispatch(loadChat(id, pane)).catch(console.error);
-    return () => {
-      dispatch(closeChat);
-    };
-  }, [id, dispatch, pane]);
-};
 
 interface Props {
   spaceId: Id;
   channelId: Id;
-  pane: number;
+  pane: Id;
 }
 
 function ChannelChat({ channelId, pane }: Props) {
-  useLoadChat(channelId, pane);
-  const loading = useSelector((state) => state.chatPane[pane] === undefined);
+  const loading = useSelector((state) => state.chatStates.get(pane) === undefined);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const myPreview = useSelector((state) => {
     if (myMember === undefined) {
       return undefined;
     }
-    return state.chatPane[pane]?.itemSet.previews.get(myMember!.userId);
+    return state.chatStates.get(pane)?.itemSet.previews.get(myMember!.userId);
   });
 
   if (loading) {
@@ -51,7 +38,6 @@ function ChannelChat({ channelId, pane }: Props) {
       <Header />
       <ChatList />
       {myMember && <Compose channelId={channelId} member={myMember} preview={myPreview?.preview} />}
-      {myMember && <Heartbeat />}
     </React.Fragment>
   );
 }

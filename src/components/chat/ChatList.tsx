@@ -8,7 +8,7 @@ import { throwErr } from '../../utils/errors';
 import { batch } from 'react-redux';
 import { showFlash } from '../../actions/flash';
 import { usePane } from '../../hooks/usePane';
-import { ChatState } from '../../reducers/chat';
+import { ChatState } from '../../reducers/chatState';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import ChatItem from './ChatItem';
 import LoadMore from './LoadMore';
@@ -84,24 +84,23 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
 };
 
 function ChatList() {
-  const pane = usePane();
-  const activePane = useSelector((state) => state.activePane);
-  const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
-  const spaceId = useSelector((state) => state.chatPane[pane]!.channel.spaceId);
+  const pane = usePane()!;
+  const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
+  const spaceId = useSelector((state) => state.chatStates.get(pane)!.channel.spaceId);
   const history = useHistory();
   const dispatch = useDispatch();
   const myMember = useSelector((state) => {
-    if (state.profile === undefined || state.chatPane[pane] === undefined) {
+    if (state.profile === undefined || state.chatStates.get(pane) === undefined) {
       return undefined;
     } else {
-      return state.profile.channels.get(state.chatPane[pane]!.channel.id)?.member;
+      return state.profile.channels.get(state.chatStates.get(pane)!.channel.id)?.member;
     }
   });
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   useAutoScroll(wrapperRef);
-  const filter = useSelector((state) => state.chatPane[pane]!.filter);
-  const showFolded = useSelector((state) => state.chatPane[pane]!.showFolded);
-  const messages = useSelector((state) => state.chatPane[pane]!.itemSet.messages);
+  const filter = useSelector((state) => state.chatStates.get(pane)!.filter);
+  const showFolded = useSelector((state) => state.chatStates.get(pane)!.showFolded);
+  const messages = useSelector((state) => state.chatStates.get(pane)!.itemSet.messages);
   const filteredMessages = useMemo(() => {
     const show = filterMessages(filter, showFolded);
     return messages.filter(show);
@@ -187,15 +186,9 @@ function ChatList() {
     return <ChatItem key={item.id} item={item} myMember={myMember} index={index} sameSender={sameSender} />;
   });
 
-  const setActive = () => {
-    if (activePane !== pane) {
-      dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
-      history.replace(chatPath(spaceId, channelId));
-    }
-  };
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <div ref={wrapperRef} css={listWrapperStyle} data-active={pane === activePane} onClick={setActive}>
+      <div ref={wrapperRef} css={listWrapperStyle}>
         <Droppable droppableId={channelId} type="CHANNEL">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>

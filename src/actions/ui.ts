@@ -56,6 +56,20 @@ export const loadSpace = (id: Id, token?: string) => (dispatch: Dispatch) => {
   });
 };
 
+export interface ConnectSpace {
+  type: 'CONNECT_SPACE';
+  spaceId: Id;
+  connection: WebSocket;
+}
+
+export const connectSpace = (spaceId: Id, connection: WebSocket): ConnectSpace => {
+  return {
+    type: 'CONNECT_SPACE',
+    spaceId,
+    connection,
+  };
+};
+
 export interface UserLoaded {
   type: 'USER_LOADED';
   userId: Id;

@@ -81,7 +81,7 @@ function EditCompose({ preview, editTo }: Props) {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pane = usePane();
-  const channelId = useSelector((state) => state.chatPane[pane]!.channel.id);
+  const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
@@ -120,12 +120,10 @@ function EditCompose({ preview, editTo }: Props) {
       whisperTo,
     };
   };
-  const composeReducer = useMemo(() => composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), [
-    sendEvent,
-    dispatch,
-    nickname,
-    characterName,
-  ]);
+  const composeReducer = useMemo(
+    () => composeReducerMaker({ sendEvent, dispatch, nickname, characterName, channelId }),
+    [sendEvent, dispatch, nickname, characterName, channelId]
+  );
 
   const [
     { inGame, broadcast, isAction, inputName, media, text, entities, canSubmit, sending },

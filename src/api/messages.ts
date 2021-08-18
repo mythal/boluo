@@ -4,6 +4,7 @@ import { Id } from '../utils/id';
 export interface Message {
   id: string;
   senderId: Id;
+  channelId: Id;
   parentMessageId: Id | null;
   name: string;
   mediaId: Id | null;

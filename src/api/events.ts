@@ -2,7 +2,7 @@ import { Message, MessageOrder } from './messages';
 import { Entity } from '../interpreter/entities';
 import { Channel, Member } from './channels';
 import { Id } from '../utils/id';
-import { SpaceWithRelated } from './spaces';
+import { SpaceWithRelated, StatusKind, UserStatus } from './spaces';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;
@@ -35,16 +35,14 @@ export interface EventQuery {
   after: number;
 }
 
-export interface Event<B> {
+interface Event<B> {
   mailbox: Id;
   timestamp: number;
   mailboxType: MailboxType;
   body: B;
 }
 
-export type SpaceEvent = Event<SpaceUpdated>;
-
-export type ChannelEvent =
+export type Events =
   | Event<NewMessage>
   | Event<MessageDeleted>
   | Event<MessageEdited>
@@ -53,8 +51,9 @@ export type ChannelEvent =
   | Event<ChannelDeleted>
   | Event<PushMembers>
   | Event<Initialized>
-  | Event<HeartbeatMap>
-  | Event<MessagesMoved>;
+  | Event<MessagesMoved>
+  | Event<StatusMap>
+  | Event<SpaceUpdated>;
 
 export interface SpaceUpdated {
   type: 'SPACE_UPDATED';
@@ -73,18 +72,19 @@ export interface NewMessage {
 export interface MessageDeleted {
   type: MESSAGE_DELETED;
   messageId: Id;
+  channelId: Id;
 }
 
 export interface MessageEdited {
   type: MESSAGE_EDITED;
+  channelId: Id;
   message: Message;
 }
 
 export interface Preview {
   id: string;
   senderId: Id;
-  mailbox: Id;
-  mailboxType: MailboxType;
+  channelId: Id;
   parentMessageId: string | null;
   name: string;
   mediaId: Id | null;
@@ -103,6 +103,7 @@ export interface PreviewPost {
   id: string;
   name: string;
   mediaId: Id | null;
+  channelId: Id;
   inGame: boolean;
   isAction: boolean;
   text: string | null;
@@ -114,31 +115,36 @@ export interface PreviewPost {
 export interface MessagePreview {
   type: MESSAGE_PREVIEW;
   preview: Preview;
+  channelId: Id;
 }
 
 export interface MessagesMoved {
   type: MESSAGES_MOVED;
+  channelId: Id;
   movedMessages: Message[];
   orderChanges: MessageOrder[];
 }
 
 export interface ChannelEdited {
   type: CHANNEL_EDITED;
+  channelId: Id;
   channel: Channel;
 }
 
 export interface ChannelDeleted {
   type: CHANNEL_DELETED;
+  channelId: Id;
 }
 
 export interface PushMembers {
   type: 'MEMBERS';
+  channelId: Id;
   members: Member[];
 }
 
-export interface HeartbeatMap {
-  type: 'HEARTBEAT_MAP';
-  heartbeatMap: Record<Id, number>;
+export interface StatusMap {
+  type: 'STATUS_MAP';
+  statusMap: Record<Id, UserStatus>;
 }
 
 export interface SendPreview {
@@ -146,11 +152,13 @@ export interface SendPreview {
   preview: PreviewPost;
 }
 
-export interface SendHeartbeat {
-  type: 'HEARTBEAT';
+export interface SendStatus {
+  type: 'STATUS';
+  kind: StatusKind;
+  focus: Id[];
 }
 
-export type ClientEvent = SendPreview | SendHeartbeat;
+export type ClientEvent = SendPreview | SendStatus;
 
 export const isEmptyPreview = (preview: Preview): boolean =>
   preview.text === '' || (preview.text !== null && preview.entities.length === 0);

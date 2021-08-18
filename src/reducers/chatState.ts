@@ -1,7 +1,7 @@
-import { Channel, Member } from '../api/channels';
+import { Channel, ChannelMember, makeMembers, Member } from '../api/channels';
 import { List, Map } from 'immutable';
 import { Message, MessageOrder } from '../api/messages';
-import { ChannelEvent, Preview } from '../api/events';
+import { Events, Preview } from '../api/events';
 import { Action } from '../actions';
 import {
   ChatLoaded,
@@ -29,14 +29,13 @@ import {
 import Prando from 'prando';
 import { SpaceMemberWithUser, SpaceWithRelated } from '../api/spaces';
 import * as O from 'optics-ts';
+import { AppResult } from 'api/request';
 
 export interface ChatState {
-  pane: number;
-  connection: WebSocket;
   channel: Channel;
   members: Member[];
   colorMap: Map<Id, string>;
-  heartbeatMap: Map<Id, number>;
+  // heartbeatMap: Map<Id, number>;
   itemSet: ChatItemSet;
   finished: boolean;
   messageBefore: number;
@@ -53,8 +52,8 @@ const focusItemSet = O.optic<ChatState>().prop('itemSet');
 const loadChat = (prevState: ChatState | undefined, { chat }: ChatLoaded): ChatState => {
   if (prevState?.channel.id === chat.channel.id) {
     // reload
-    const { channel, members, colorMap, connection } = chat;
-    return { ...prevState, channel, members, colorMap, connection };
+    const { channel, members, colorMap } = chat;
+    return { ...prevState, channel, members, colorMap };
   }
   return chat;
 };
@@ -70,11 +69,6 @@ export const closeChat = (state: ChatState, channelId: Id): ChatState | undefine
   if (channelId !== state.channel.id) {
     return state;
   }
-  state.connection.onclose = null;
-  state.connection.onerror = null;
-  state.connection.onmessage = null;
-  state.connection.onopen = null;
-  state.connection.close();
   return undefined;
 };
 
@@ -205,20 +199,23 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
   return colorMap;
 };
 
-const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | undefined): ChatState => {
-  if (event.mailbox !== chat.channel.id) {
-    return chat;
-  }
-  const body = event.body;
-  let { itemSet, channel, colorMap, members, eventAfter, heartbeatMap } = chat;
-  const { messageBefore } = chat;
-  eventAfter = Math.max(eventAfter, event.timestamp);
-  if (DEBUG) {
-    if (body.type === 'HEARTBEAT_MAP') {
-      console.debug(body);
-    } else {
-      console.log('Channel Event: ', body.type, body);
+const updateMessageBefore = (prevValue: number, messages: ChatItemSet['messages']): number => {
+  let messageBefore = prevValue;
+  for (const message of messages) {
+    if (message.type === 'MESSAGE') {
+      messageBefore = message.date;
+      break;
     }
+  }
+  return messageBefore;
+};
+
+const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
+  const body = event.body;
+  let { itemSet, channel, colorMap, members, eventAfter } = chat;
+  const { messageBefore } = chat;
+  if ('channelId' in body && body.channelId !== channel.id) {
+    return chat;
   }
   switch (body.type) {
     case 'NEW_MESSAGE':
@@ -231,27 +228,24 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
     case 'MESSAGES_MOVED':
+      console.log(body);
       itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, messageBefore, myId);
       break;
     case 'MESSAGE_EDITED':
       itemSet = handleEditMessage(itemSet, body.message, messageBefore, myId);
       break;
     case 'CHANNEL_EDITED':
-      if (channel.id === body.channel.id) {
-        channel = body.channel;
-      }
+      channel = body.channel;
       break;
     case 'MEMBERS':
       members = body.members;
       colorMap = updateColorMap(members, colorMap);
       break;
-    case 'HEARTBEAT_MAP':
-      heartbeatMap = Map(body.heartbeatMap);
-      break;
   }
   if (DEBUG) {
     checkMessagesOrder(itemSet);
   }
+  eventAfter = Math.max(eventAfter, event.timestamp);
   return {
     ...chat,
     channel,
@@ -259,8 +253,7 @@ const handleChannelEvent = (chat: ChatState, event: ChannelEvent, myId: Id | und
     colorMap,
     itemSet,
     eventAfter,
-    messageBefore: itemSet.messages.first(undefined)?.date ?? new Date().getTime(),
-    heartbeatMap,
+    messageBefore: updateMessageBefore(messageBefore, itemSet.messages),
   };
 };
 
@@ -298,19 +291,8 @@ const handleSpaceUpdate = (state: ChatState, spaceWithRelated: SpaceWithRelated)
   if (!channel) {
     return undefined;
   }
-  const memberMap: Record<Id, SpaceMemberWithUser | undefined> = {};
-  for (const member of spaceWithRelated.members) {
-    memberMap[member.user.id] = member;
-  }
-  const members: Member[] = [];
-  for (const member of state.members) {
-    const spaceMemberWithUser = memberMap[member.user.id];
-    if (spaceMemberWithUser) {
-      const { space, user } = spaceMemberWithUser;
-      const { channel } = member;
-      members.push({ space, user, channel });
-    }
-  }
+  const members = makeMembers(state.channel.id, spaceWithRelated.members, spaceWithRelated.channelMembers);
+
   return { ...state, channel, members };
 };
 
@@ -319,9 +301,6 @@ export const chatReducer = (
   action: Action,
   myId: Id | undefined
 ): ChatState | undefined => {
-  if (action.type === 'CHAT_LOADED') {
-    return loadChat(state, action);
-  }
   if (state === undefined) {
     return undefined;
   }
@@ -361,7 +340,7 @@ export const chatReducer = (
       return handleStartEditMessage(state, action);
     case 'STOP_EDIT_MESSAGE':
       return handleStopEditMessage(state, action);
-    case 'CHANNEL_EVENT_RECEIVED':
+    case 'EVENT_RECEIVED':
       return handleChannelEvent(state, action.event, myId);
   }
   return state;

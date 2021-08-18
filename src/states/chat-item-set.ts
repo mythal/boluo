@@ -46,8 +46,8 @@ export interface ChatItemSet {
 
 export const initialChatItemSet: ChatItemSet = {
   messages: List(),
-  previews: Map(),
-  editions: Map(),
+  previews: Map<Id, PreviewItem>(),
+  editions: Map<Id, EditItem>(),
 };
 
 const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | PreviewItem): ChatItemSet['messages'] => {
@@ -212,6 +212,9 @@ export const updateMessagesOrder = (itemSet: ChatItemSet, orderChanges: MessageO
     const index = findItem(messages, change.id);
     if (index !== -1) {
       messages = messages.update(index, (item) => {
+        if (!item) {
+          throw new Error('item is empty');
+        }
         if (item.type !== 'MESSAGE') {
           return { ...item, date: change.orderDate, offset: change.orderOffset };
         } else {
@@ -275,41 +278,42 @@ export const markMessageMoving = (
   targetItem: PreviewItem | MessageItem | undefined
 ): ChatItemSet => {
   const index = findItem(itemSet.messages, messageItem.id, [messageItem.date, messageItem.offset]);
-  if (targetItem === undefined) {
-    const lastItem: PreviewItem | MessageItem | undefined = itemSet.messages.last();
-    if (lastItem === undefined) {
-      return itemSet;
-    }
-    const newMessageItem: MessageItem = {
-      ...messageItem,
-      moving: true,
-      date: lastItem.date,
-      offset: lastItem.offset + 0.5,
-    };
-    const messages = itemSet.messages.remove(index).push(newMessageItem);
-    return { ...itemSet, messages };
-  }
-  let insertToIndex = findItem(itemSet.messages, targetItem.id, [targetItem.date, targetItem.offset]);
-  if (index < insertToIndex) {
-    insertToIndex += 1;
-  }
-  let date: number;
-  let offset: number;
-  if (insertToIndex === 0) {
-    date = targetItem.date;
-    offset = targetItem.offset - 0.5;
-  } else {
-    const targetLeft = itemSet.messages.get(insertToIndex - 1)!;
-    if (targetLeft.date === targetItem.date) {
-      date = targetItem.date;
-      offset = (targetLeft.offset + targetItem.offset) / 2;
-    } else {
-      date = targetItem.date;
-      offset = targetItem.offset - 0.5;
-    }
-  }
-  const newMessageItem: MessageItem = { ...messageItem, moving: true, date, offset };
-  const messages = insertItem(itemSet.messages.remove(index), newMessageItem);
+  // if (targetItem === undefined) {
+  //   const lastItem: PreviewItem | MessageItem | undefined = itemSet.messages.last();
+  //   if (lastItem === undefined) {
+  //     return itemSet;
+  //   }
+  //   const newMessageItem: MessageItem = {
+  //     ...messageItem,
+  //     moving: true,
+  //     date: lastItem.date,
+  //     offset: lastItem.offset + 0.5,
+  //   };
+  //   const messages = itemSet.messages.remove(index).push(newMessageItem);
+  //   return { ...itemSet, messages };
+  // }
+  // let insertToIndex = findItem(itemSet.messages, targetItem.id, [targetItem.date, targetItem.offset]);
+  // if (index < insertToIndex) {
+  //   insertToIndex += 1;
+  // }
+  // let date: number;
+  // let offset: number;
+  // if (insertToIndex === 0) {
+  //   date = targetItem.date;
+  //   offset = targetItem.offset - 0.5;
+  // } else {
+  //   const targetLeft = itemSet.messages.get(insertToIndex - 1)!;
+  //   if (targetLeft.date === targetItem.date) {
+  //     date = targetItem.date;
+  //     offset = (targetLeft.offset + targetItem.offset) / 2;
+  //   } else {
+  //     date = targetItem.date;
+  //     offset = targetItem.offset - 0.5;
+  //   }
+  // }
+  // const newMessageItem: MessageItem = { ...messageItem, moving: true, date, offset };
+  // const messages = insertItem(itemSet.messages.remove(index), newMessageItem);
+  const messages = itemSet.messages.remove(index);
   return { ...itemSet, messages };
 };
 

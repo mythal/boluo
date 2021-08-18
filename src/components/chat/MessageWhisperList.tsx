@@ -36,7 +36,7 @@ const whisperContentWrapper = css`
 function MessageWhisperList({ myMember, message }: Props) {
   const dispatch = useDispatch();
   const pane = usePane();
-  const members = useSelector((state) => state.chatPane[pane]!.members);
+  const members = useSelector((state) => state.chatStates.get(pane)!.members);
   const { whisperToUsers } = message;
 
   const canAccess =

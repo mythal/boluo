@@ -111,10 +111,10 @@ export function useVirtual<T extends Element>({
     [defaultScrollToFn, scrollToFn]
   );
 
-  const [measuredCache, setMeasuredCache] = React.useState<Map<number, number>>(Map());
+  const [measuredCache, setMeasuredCache] = React.useState<Map<number, number>>(Map<number, number>());
 
   useLayoutEffect(() => {
-    setMeasuredCache(Map());
+    setMeasuredCache(Map<number, number>());
   }, [estimateSize]);
   const measurements: Measurement[] = React.useMemo(() => {
     const measurements: Measurement[] = [];
@@ -218,10 +218,10 @@ export function useVirtual<T extends Element>({
   const cacheShift = useCallback(
     (offset?: number) => {
       if (offset === undefined) {
-        setMeasuredCache(Map());
+        setMeasuredCache(Map<number, number>());
         return;
       }
-      let shifted: Map<number, number> = Map();
+      let shifted: Map<number, number> = Map<number, number>();
       for (const [key, value] of measuredCache.entries()) {
         shifted = shifted.set(key + offset, value);
       }

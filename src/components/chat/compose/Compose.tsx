@@ -128,7 +128,7 @@ function Compose({ preview, channelId, member }: Props) {
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const pane = usePane();
-  const rollCommand = useSelector((state) => state.chatPane[pane]!.channel.defaultRollCommand);
+  const rollCommand = useSelector((state) => state.chatStates.get(pane)!.channel.defaultRollCommand);
   const dispatch = useDispatch();
   const sendEvent = useSend();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,12 +153,10 @@ function Compose({ preview, channelId, member }: Props) {
       canSubmit: calculateCanSubmit(initialText, entities, inGame, characterName),
     };
   };
-  const composeReducer = useMemo(() => composeReducerMaker({ sendEvent, dispatch, nickname, characterName }), [
-    sendEvent,
-    dispatch,
-    nickname,
-    characterName,
-  ]);
+  const composeReducer = useMemo(
+    () => composeReducerMaker({ sendEvent, dispatch, nickname, channelId, characterName }),
+    [sendEvent, dispatch, nickname, characterName, channelId]
+  );
   const [
     { messageId, text, broadcast, isAction, inGame, sending, inputName, media, entities, canSubmit, whisperTo },
     composeDispatch,

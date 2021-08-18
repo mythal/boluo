@@ -1,34 +1,33 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import { useSelector } from '../../store';
+import store, { useSelector } from '../../store';
 import { usePane } from '../../hooks/usePane';
 import { useSend } from '../../hooks/useSend';
 import { HEARTBEAT_INTERVAL } from '../../settings';
+import { StatusKind } from 'api/spaces';
+import { SendStatus } from 'api/events';
 
-function Heartbeat() {
-  const pane = usePane();
-  const shouldSend = useSelector((state) => {
-    const chatState = state.chatPane[pane];
-    if (chatState === undefined || state.profile === undefined) {
-      return false;
-    }
-    const member = state.profile.channels.get(chatState.channel.id);
-    return member !== undefined;
-  });
+export function useHeartbeat() {
   const send = useSend();
-
+  const focus = [usePane()];
+  const onlineStatus: SendStatus = { type: 'STATUS', kind: 'ONLINE', focus };
+  const leaveStates: SendStatus = { type: 'STATUS', kind: 'LEAVE', focus };
   useEffect(() => {
-    if (!shouldSend) {
-      return;
-    }
     const pulse = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
-        send({ type: 'HEARTBEAT' });
+        send(onlineStatus);
       }
     }, HEARTBEAT_INTERVAL);
+    const visibilityListener = () => {
+      const state = document.visibilityState;
+      if (state === 'visible') {
+        send(onlineStatus);
+      } else if (state === 'hidden') {
+        send(leaveStates);
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityListener);
     return () => window.clearInterval(pulse);
-  }, [send, shouldSend]);
+  }, [send, focus]);
   return null;
 }
-
-export default React.memo(Heartbeat);

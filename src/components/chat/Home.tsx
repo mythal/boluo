@@ -21,6 +21,7 @@ import { blue, gray } from '../../styles/colors';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 import { mix } from 'polished';
 import MemberListItem from './MemberListItem';
+import { Id } from '../../utils/id';
 
 const Header = styled.div(chatHeaderStyle);
 
@@ -74,7 +75,7 @@ const Description = styled.div`
 
 interface Props {
   space: Space;
-  members: SpaceMemberWithUser[];
+  members: Record<Id, SpaceMemberWithUser | undefined>;
   channels: Channel[];
 }
 
@@ -85,16 +86,14 @@ const Buttons = styled.div`
 function Home({ space, members, channels }: Props) {
   useTitle(space.name);
 
-  const pane = usePane();
   const dispatch = useDispatch();
   const history = useHistory();
-  const activePane = useSelector((state) => pane === state.activePane);
-  const setActive = () => {
-    if (!activePane) {
-      dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
-      history.replace(chatPath(space.id));
-    }
-  };
+  // const setActive = () => {
+  //   if (!activePane) {
+  //     dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });
+  //     history.replace(chatPath(space.id));
+  //   }
+  // };
   const [managing, setManaging] = useState(false);
   const myMember = useSelector((state) => state.profile?.spaces.get(space.id)?.member);
   const startManage = () => setManaging(true);
@@ -118,19 +117,19 @@ function Home({ space, members, channels }: Props) {
           <LeaveSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} name={space.name} />
         </Buttons>
       </Header>
-      <div css={container} onClick={setActive} data-active={activePane}>
+      <div css={container}>
         <Description>{space.description}</Description>
-        <div css={memberList}>
-          {members.map((member) => (
-            <MemberListItem
-              key={member.user.id}
-              user={member.user}
-              spaceMember={member.space}
-              imAdmin={myMember?.isAdmin ?? false}
-              spaceOwnerId={space.ownerId}
-            />
-          ))}
-        </div>
+        {/*<div css={memberList}>*/}
+        {/*  {members.map((member) => (*/}
+        {/*    <MemberListItem*/}
+        {/*      key={member.user.id}*/}
+        {/*      user={member.user}*/}
+        {/*      spaceMember={member.space}*/}
+        {/*      imAdmin={myMember?.isAdmin ?? false}*/}
+        {/*      spaceOwnerId={space.ownerId}*/}
+        {/*    />*/}
+        {/*  ))}*/}
+        {/*</div*/}
       </div>
       {managing && myMember && (
         <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />

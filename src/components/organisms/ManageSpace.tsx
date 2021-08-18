@@ -34,11 +34,12 @@ import deleteSpaceIcon from '../../assets/icons/earth-crack.svg';
 import Text from '../atoms/Text';
 import Icon from '../atoms/Icon';
 import Dialog from '../molecules/Dialog';
+import { Id } from '../../utils/id';
 
 interface Props {
   space: Space;
   channels: Channel[];
-  members: SpaceMemberWithUser[];
+  members: Record<Id, SpaceMemberWithUser | undefined>;
   my: SpaceMember;
   dismiss: () => void;
 }

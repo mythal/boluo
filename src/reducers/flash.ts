@@ -5,7 +5,7 @@ import { Action } from '../actions';
 
 export type FlashState = OrderedMap<Id, Information>;
 
-export const initFlashState: FlashState = OrderedMap();
+export const initFlashState: FlashState = OrderedMap<Id, Information>();
 
 export const flashReducer = (state: FlashState, action: Action): FlashState => {
   switch (action.type) {

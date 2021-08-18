@@ -13,12 +13,16 @@ export interface UiState {
   exploreSpaceList: AppResult<Space[]>;
   spaceSet: Map<Id, AppResult<SpaceWithRelated>>;
   userSet: Map<Id, AppResult<User>>;
+  connection: WebSocket | null;
+  spaceId: Id | undefined;
 }
 
 export const initUiState: UiState = {
+  spaceId: undefined,
   exploreSpaceList: errLoading(),
-  spaceSet: Map(),
-  userSet: Map(),
+  spaceSet: Map<Id, AppResult<SpaceWithRelated>>(),
+  userSet: Map<Id, AppResult<User>>(),
+  connection: null,
 };
 
 const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
@@ -30,8 +34,7 @@ const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
   const user = userResult.value;
   spaceSet = spaceSet.update(action.space.id, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
-      members = members.filter((member) => member.user.id !== action.member.userId);
-      members.push({ space: action.member, user });
+      members = { ...members, [user.id]: { space: action.member, user } };
       return { ...rest, members };
     })
   );
@@ -41,8 +44,11 @@ const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
 const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, userId: Id | undefined): UiState => {
   spaceSet = spaceSet.update(action.spaceId, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
-      members = members.filter((member) => member.user.id !== userId);
-      return { ...rest, members };
+      if (!userId) {
+        return { ...rest, members };
+      }
+      const { [userId]: _, ...restMembers } = members;
+      return { ...rest, members: restMembers };
     })
   );
   return { ...state, spaceSet };
@@ -97,11 +103,14 @@ const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppRe
         }
       })
     );
-    for (const member of result.value.members) {
+    for (const member of Object.values(result.value.members)) {
+      if (!member) {
+        continue;
+      }
       userSet = userSet.set(member.user.id, new Ok(member.user));
     }
   }
-  return { ...state, spaceSet, exploreSpaceList, userSet };
+  return { ...state, spaceSet, spaceId, exploreSpaceList, userSet };
 };
 
 const removeSpace = (state: UiState, spaceId: Id): UiState => {
@@ -135,7 +144,9 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
       return handleLeftSpace(state, action, userId);
     case 'SPACE_EDITED':
       return handleSpaceEdited(state, action);
-    case 'CHANNEL_EVENT_RECEIVED':
+    case 'CONNECT_SPACE':
+      return { ...state, connection: action.connection };
+    case 'EVENT_RECEIVED':
       switch (action.event.body.type) {
         case 'CHANNEL_EDITED':
           return handleChannel(state, action.event.body.channel);

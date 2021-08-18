@@ -1,4 +1,4 @@
-import { Channel } from './channels';
+import { Channel, ChannelMember } from './channels';
 import { Id } from '../utils/id';
 import { User } from './users';
 
@@ -47,10 +47,19 @@ export interface EditSpace {
   explorable?: boolean;
 }
 
+export type StatusKind = 'OFFLINE' | 'LEAVE' | 'ONLINE';
+
+export interface UserStatus {
+  timestamp: number;
+  kind: StatusKind;
+}
+
 export interface SpaceWithRelated {
   space: Space;
-  members: SpaceMemberWithUser[];
+  members: Record<Id, SpaceMemberWithUser | undefined>;
   channels: Channel[];
+  channelMembers: Record<Id, ChannelMember | undefined>;
+  usersStatus: Record<Id, UserStatus>;
 }
 
 export interface SpaceMemberWithUser {

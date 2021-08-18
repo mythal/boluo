@@ -4,7 +4,7 @@ import { usePane } from './usePane';
 export function useIsAdmin(): boolean {
   const pane = usePane();
   return useSelector((state) => {
-    const chat = state.chatPane[pane];
+    const chat = state.chatStates.get(pane);
     if (state.profile === undefined || chat === undefined) {
       return false;
     }

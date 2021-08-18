@@ -11,7 +11,7 @@ import {
   UserEdited,
 } from './profile';
 import {
-  ChannelEventReceived,
+  EventReceived,
   ChatFilter,
   ChatLoaded,
   ChatUpdate,
@@ -29,6 +29,7 @@ import {
   ToggleShowFolded,
 } from './chat';
 import {
+  ConnectSpace,
   ExploreSpaceLoaded,
   ResetUi,
   SpaceDeleted,
@@ -57,7 +58,7 @@ export type Action =
   | CloseChat
   | ChatUpdate
   | LoadMessages
-  | ChannelEventReceived
+  | EventReceived
   | SwitchExploreSpace
   | ExploreSpaceLoaded
   | SwitchChat
@@ -76,4 +77,5 @@ export type Action =
   | DismissFlash
   | SwitchActivePane
   | SplitPane
-  | ToggleShowFolded;
+  | ToggleShowFolded
+  | ConnectSpace;

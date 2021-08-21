@@ -31,26 +31,26 @@ function LoadMore() {
   const mounted = useRef(true);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(() => {
-      window.setTimeout(() => {
-        if (!button.current) {
-          return;
-        }
-        const node = button.current;
-        if (node.getBoundingClientRect().top >= 0) {
-          node.click();
-        }
-      }, 50);
-    }, {});
-    if (button.current) {
-      observer.observe(button.current);
-    }
-    return () => {
-      mounted.current = false;
-      observer.disconnect();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const observer = new IntersectionObserver(() => {
+  //     window.setTimeout(() => {
+  //       if (!button.current) {
+  //         return;
+  //       }
+  //       const node = button.current;
+  //       if (node.getBoundingClientRect().top >= 0) {
+  //         node.click();
+  //       }
+  //     }, 50);
+  //   }, {});
+  //   if (button.current) {
+  //     observer.observe(button.current);
+  //   }
+  //   return () => {
+  //     mounted.current = false;
+  //     observer.disconnect();
+  //   };
+  // }, []);
 
   if (finished) {
     return <LoadMoreContainer>Ω</LoadMoreContainer>;

@@ -82,7 +82,7 @@ export const request = async <T>(
     credentials: 'include',
   });
   try {
-    let appResult = toResult<T, AppError>(await result.json());
+    const appResult = toResult<T, AppError>(await result.json());
     if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
       location.replace('/login');
     }
@@ -174,7 +174,7 @@ export function get(
   path: '/spaces/query_with_related',
   query: { id: Id; token?: string }
 ): Promise<AppResult<SpaceWithRelated>>;
-export function get(path: '/spaces/token', query: { id: Id }): Promise<AppResult<string>>;
+export function get(path: '/spaces/token', query: IdQuery): Promise<AppResult<string>>;
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMemberWithUser[]>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
@@ -184,6 +184,7 @@ export function get(path: '/channels/check_name', query: CheckChannelName): Prom
 export function get(path: '/channels/export', query: Export): Promise<AppResult<Message[]>>;
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
+export function get(path: '/events/token', query: IdQuery): Promise<AppResult<{ token: string | null }>>;
 
 export function get<Q extends object, T>(path: string, query?: Q): Promise<AppResult<T>> {
   return request(makeUri(path, query), 'GET', null);

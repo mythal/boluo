@@ -47,7 +47,7 @@ export interface EditSpace {
   explorable?: boolean;
 }
 
-export type StatusKind = 'OFFLINE' | 'LEAVE' | 'ONLINE';
+export type StatusKind = 'OFFLINE' | 'AWAY' | 'ONLINE';
 
 export interface UserStatus {
   timestamp: number;

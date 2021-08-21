@@ -110,7 +110,6 @@ function Header() {
           </ChatHeaderButton>
         )}
         <Filter css={[mL(1)]} />
-        <MemberListButton channelId={channel.id} css={[mL(1)]} />
         <ChannelMemberButton css={mL(1)} />
       </div>
       {managePanel && <ManageChannel channel={channel} dismiss={() => setManagePanel(false)} />}

@@ -88,11 +88,11 @@ function useSpaceConnection() {
 
   const after = useRef<number>(0);
 
-  const conn = (): WebSocket => {
+  const conn = async (): Promise<WebSocket> => {
     if (!spaceId) {
       throw new Error('unexpected');
     }
-    const connection = connect(spaceId);
+    const connection = await connect(spaceId);
     connection.onerror = (e) => {
       console.warn(e);
     };
@@ -122,13 +122,15 @@ function useSpaceConnection() {
 
   useEffect(() => {
     if (spaceId) {
-      const connection = conn();
-      dispatch(connectSpace(spaceId, connection));
-      return () => {
-        connection.onerror = null;
-        connection.onclose = null;
-        connection.close();
-      };
+      (async () => {
+        const connection = await conn();
+        dispatch(connectSpace(spaceId, connection));
+        return () => {
+          connection.onerror = null;
+          connection.onclose = null;
+          connection.close();
+        };
+      })();
     }
   }, [spaceId, dispatch]);
 }

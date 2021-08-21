@@ -1,4 +1,4 @@
-import { Space, SpaceWithRelated } from '../api/spaces';
+import { Space, SpaceWithRelated, UserStatus } from '../api/spaces';
 import { Action } from '../actions';
 import { AppResult } from '../api/request';
 import { errLoading } from '../api/error';
@@ -8,6 +8,7 @@ import { Map } from 'immutable';
 import { User } from '../api/users';
 import { Ok } from '../utils/result';
 import { Channel } from '../api/channels';
+import { StatusMap } from '../api/events';
 
 export interface UiState {
   exploreSpaceList: AppResult<Space[]>;
@@ -89,6 +90,17 @@ const handleUserEdited = ({ userSet, ...state }: UiState, { user }: UserEdited):
   return { ...state, userSet };
 };
 
+const handleUpdateSpaceUserStatus = (state: UiState, action: StatusMap): UiState => {
+  const spaceResult = state.spaceSet.get(action.spaceId);
+  if (!spaceResult?.isOk) {
+    return state;
+  }
+  const space = spaceResult.value;
+  const usersStatus = action.statusMap;
+  const spaceSet = state.spaceSet.set(action.spaceId, new Ok({ ...space, usersStatus }));
+  return { ...state, spaceSet };
+};
+
 const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppResult<SpaceWithRelated>): UiState => {
   let { spaceSet, exploreSpaceList, userSet } = state;
   spaceSet = spaceSet.set(spaceId, result);
@@ -150,6 +162,8 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
       switch (action.event.body.type) {
         case 'CHANNEL_EDITED':
           return handleChannel(state, action.event.body.channel);
+        case 'STATUS_MAP':
+          return handleUpdateSpaceUserStatus(state, action.event.body);
       }
   }
   return state;

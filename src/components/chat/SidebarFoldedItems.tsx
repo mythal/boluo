@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from './ChatHeaderButton';
 import { Space } from '../../api/spaces';
 import Icon from '../atoms/Icon';
@@ -13,6 +13,7 @@ import Help from './Help';
 import help from '../../assets/icons/help.svg';
 import { css } from '@emotion/core';
 import { mB, pY } from '../../styles/atoms';
+import UserStatusButton from './UserStatusButton';
 
 interface Props {
   space: Space;
@@ -30,8 +31,10 @@ const footer = css`
 function SidebarFoldedItems({ space, channels }: Props) {
   const [channelMenu, setChannelMenu] = useState(false);
   const [helpDialog, setHelpDialog] = useState(false);
+  const [memberList, setMemberList] = useState(false);
   const channelButton = useRef<HTMLButtonElement>(null);
   const toggleMenu = () => setChannelMenu((value) => !value);
+  const toggleMemberList = useCallback(() => setMemberList((memberList) => !memberList), []);
   const dismissMenu = () => setChannelMenu(false);
   return (
     <React.Fragment>
@@ -41,6 +44,7 @@ function SidebarFoldedItems({ space, channels }: Props) {
       <ChatHeaderButton ref={channelButton} css={[mB(1), sidebarIconButton]} onClick={toggleMenu}>
         #
       </ChatHeaderButton>
+      <UserStatusButton spaceId={space.id} folded css={[sidebarIconButton]} active={false} toggle={toggleMemberList} />
       <div css={footer}>
         <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton]}>
           <Icon sprite={help} />

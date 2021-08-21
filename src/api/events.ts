@@ -145,6 +145,7 @@ export interface PushMembers {
 export interface StatusMap {
   type: 'STATUS_MAP';
   statusMap: Record<Id, UserStatus>;
+  spaceId: Id;
 }
 
 export interface SendPreview {

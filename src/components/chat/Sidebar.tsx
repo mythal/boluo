@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '../../api/channels';
 import { mR, pT, textLg } from '../../styles/atoms';
@@ -14,6 +14,7 @@ import { chatSidebarColor, headerBgColor } from '../../styles/colors';
 import { Transition } from 'react-transition-group';
 import SidebarFoldedItems from './SidebarFoldedItems';
 import { chatHeaderPadding, sidebarWidth } from './styles';
+import UserStatusButton from './UserStatusButton';
 
 interface Props {
   space: Space;
@@ -69,6 +70,7 @@ function sidebarState(): boolean {
 
 function Sidebar({ space, channels }: Props) {
   const [expand, setExpand] = useState(sidebarState());
+  const [showMember, setShowMember] = useState(false);
   const toggle = () =>
     setExpand((value) => {
       if (value) {
@@ -78,6 +80,9 @@ function Sidebar({ space, channels }: Props) {
       }
       return !value;
     });
+  const toggleShowMember = useCallback(() => {
+    setShowMember((showMember) => !showMember);
+  }, []);
   return (
     <React.Fragment>
       <Transition in={expand} timeout={300}>
@@ -88,10 +93,13 @@ function Sidebar({ space, channels }: Props) {
                 <Icon sprite={bars} />
               </ChatHeaderButton>
               {state === 'entered' && (
-                <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
-                  <Icon sprite={logo} />
-                  菠萝
-                </ChatHeaderButtonLink>
+                <Fragment>
+                  <UserStatusButton spaceId={space.id} active={showMember} toggle={toggleShowMember} />
+                  <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
+                    <Icon sprite={logo} />
+                    菠萝
+                  </ChatHeaderButtonLink>
+                </Fragment>
               )}
             </div>
             <div css={sidebarBody} data-state={state}>

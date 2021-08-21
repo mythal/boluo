@@ -228,7 +228,6 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
     case 'MESSAGES_MOVED':
-      console.log(body);
       itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, messageBefore, myId);
       break;
     case 'MESSAGE_EDITED':

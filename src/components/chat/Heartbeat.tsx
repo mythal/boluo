@@ -11,7 +11,7 @@ export function useHeartbeat() {
   const send = useSend();
   const focus = [usePane()];
   const onlineStatus: SendStatus = { type: 'STATUS', kind: 'ONLINE', focus };
-  const leaveStates: SendStatus = { type: 'STATUS', kind: 'LEAVE', focus };
+  const leaveStates: SendStatus = { type: 'STATUS', kind: 'AWAY', focus };
   useEffect(() => {
     const pulse = window.setInterval(() => {
       if (document.visibilityState === 'visible') {

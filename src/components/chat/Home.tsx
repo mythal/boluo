@@ -103,9 +103,6 @@ function Home({ space, members, channels }: Props) {
       <Header>
         <Title>
           <SpaceName>{space.name}</SpaceName>
-          <Badge css={mL(2)} color={'#375942'}>
-            {members.length} 名成员
-          </Badge>
         </Title>
         <Buttons>
           {myMember?.isAdmin && (

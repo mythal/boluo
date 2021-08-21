@@ -65,16 +65,6 @@ function MemberListItem({ user, channelMember, spaceOwnerId, spaceMember, timest
           <div css={usernameStyle}>{user.username}</div>
         </div>
       </Container>
-      {isShowCard && (
-        <MemberDialog
-          spaceMember={spaceMember}
-          user={user}
-          dismiss={dismiss}
-          imAdmin={imAdmin}
-          channelMember={channelMember}
-          spaceOwnerId={spaceOwnerId}
-        />
-      )}
     </React.Fragment>
   );
 }

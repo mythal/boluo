@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { Route, Switch, useHistory, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Sidebar from '../chat/Sidebar';
@@ -9,7 +9,7 @@ import Home from '../chat/Home';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import { useDispatch, useSelector } from '../../store';
-import { connectSpace, loadSpace, SpaceUpdated } from '../../actions/ui';
+import { loadSpace } from '../../actions/ui';
 import { errLoading, LOADING } from '../../api/error';
 import { AppResult } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
@@ -18,9 +18,11 @@ import { css, Global } from '@emotion/core';
 import { PaneContext } from '../../hooks/usePane';
 import { chatPath } from '../../utils/path';
 import { breakpoint, mediaQuery } from '../../styles/atoms';
-import { connect } from '../../api/connect';
-import { Events } from '../../api/events';
-import { showFlash } from '../../actions/flash';
+import { useSpaceConnection } from '../../hooks/useSpaceConnection';
+import { useHeartbeat } from '../chat/Heartbeat';
+import { useAtom } from 'jotai';
+import { userDialogAtom } from '../../states/userDialog';
+import MemberDialog from '../chat/MemberDialog';
 
 interface Params {
   spaceId: string;
@@ -82,67 +84,16 @@ function useLoadSpace(spaceId: Id) {
   }, [spaceId, dispatch]);
 }
 
-function useSpaceConnection() {
-  const dispatch = useDispatch();
-  const spaceId = useSelector((state) => state.ui.spaceId);
-
-  const after = useRef<number>(0);
-
-  const conn = async (): Promise<WebSocket> => {
-    if (!spaceId) {
-      throw new Error('unexpected');
-    }
-    const connection = await connect(spaceId);
-    connection.onerror = (e) => {
-      console.warn(e);
-    };
-
-    connection.onmessage = (wsMsg) => {
-      const last = after.current;
-      const event = JSON.parse(wsMsg.data) as Events;
-      // if (event.timestamp < last) {
-      //   return;
-      // }
-      after.current = event.timestamp;
-      const { body } = event;
-      if (body.type === 'SPACE_UPDATED') {
-        const { spaceWithRelated } = body;
-        const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
-        dispatch(action);
-      } else {
-        dispatch({ type: 'EVENT_RECEIVED', event });
-      }
-    };
-    // connection.onclose = (e) => {
-    //   console.warn(e);
-    //   window.setTimeout(() => {dispatch}, 5000);
-    // };
-    return connection;
-  };
-
-  useEffect(() => {
-    if (spaceId) {
-      (async () => {
-        const connection = await conn();
-        dispatch(connectSpace(spaceId, connection));
-        return () => {
-          connection.onerror = null;
-          connection.onclose = null;
-          connection.close();
-        };
-      })();
-    }
-  }, [spaceId, dispatch]);
-}
-
 function Chat() {
   const params = useParams<Params>();
   // const activePane = useSelector((state) => state.activePane);
+  const [userDialog, setUserDialog] = useAtom(userDialogAtom);
   const spaceId: Id = decodeUuid(params.spaceId);
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
   const myId: Id | undefined = useSelector((state) => state.profile?.user.id);
   const history = useHistory();
   const dispatch = useDispatch();
+  useHeartbeat();
   // const [leftChannel, setLeftChannel] = useState<Id | undefined>(channelId);
   // const [rightChannel, setRightChannel] = useState<Id | undefined>(channelId);
   // // sync active
@@ -214,6 +165,7 @@ function Chat() {
       {/*      ))}*/}
       {/*  </PaneContext.Provider>*/}
       {/*</Route>*/}
+      {userDialog && <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />}
     </Container>
   );
 }

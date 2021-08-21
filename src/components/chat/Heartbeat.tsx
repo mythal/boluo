@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import store, { useSelector } from '../../store';
-import { usePane } from '../../hooks/usePane';
 import { useSend } from '../../hooks/useSend';
 import { HEARTBEAT_INTERVAL } from '../../settings';
-import { StatusKind } from 'api/spaces';
 import { SendStatus } from 'api/events';
+import { useAtom } from 'jotai';
+import { focusChannelAtom } from '../../states/focusChannel';
 
 export function useHeartbeat() {
   const send = useSend();
-  const focus = [usePane()];
+  const [focusChannelSet] = useAtom(focusChannelAtom);
+  const focus = focusChannelSet.toArray();
   const onlineStatus: SendStatus = { type: 'STATUS', kind: 'ONLINE', focus };
   const leaveStates: SendStatus = { type: 'STATUS', kind: 'AWAY', focus };
   useEffect(() => {

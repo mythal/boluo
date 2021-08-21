@@ -35,6 +35,8 @@ import lockIcon from '../../assets/icons/lock.svg';
 import ExportDialog from './ExportDialog';
 import { useHeartbeat } from './Heartbeat';
 import { useNotify } from '../../states/notify';
+import userPlusIcon from '../../assets/icons/user-plus.svg';
+import InviteChannelMemberDialog from './InviteChannelMemberDialog';
 
 const Topic = styled.span`
   overflow: hidden;
@@ -86,8 +88,8 @@ function Header() {
   const myMember = useSelector((state) => state.profile?.channels.get(channel.id)?.member);
   const [managePanel, setManagePanel] = useState(false);
   const [exportDialog, showExportDialog] = useState(false);
+  const [inviteDialog, showInviteDialog] = useState(false);
   const dispatch = useDispatch();
-  useHeartbeat();
   useNotify();
   useTitle(channel.name);
   return (
@@ -111,11 +113,24 @@ function Header() {
             <Icon sprite={exportIcon} />
           </ChatHeaderButton>
         )}
+
         <Filter css={[mL(1)]} />
+        {(isSpaceAdmin || myMember?.isMaster) && (
+          <ChatHeaderButton css={[mL(1)]} onClick={() => showInviteDialog(true)}>
+            <Icon sprite={userPlusIcon} />
+          </ChatHeaderButton>
+        )}
         <ChannelMemberButton css={mL(1)} />
       </div>
       {managePanel && <ManageChannel channel={channel} dismiss={() => setManagePanel(false)} />}
       {exportDialog && <ExportDialog channel={channel} dismiss={() => showExportDialog(false)} />}
+      {inviteDialog && (
+        <InviteChannelMemberDialog
+          channelId={channel.id}
+          spaceId={channel.spaceId}
+          dismiss={() => showInviteDialog(false)}
+        />
+      )}
     </div>
   );
 }

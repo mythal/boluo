@@ -6,7 +6,7 @@ import { ValueType } from 'react-select';
 import { User } from '../../api/users';
 import { Id } from '../../utils/id';
 import { post } from '../../api/request';
-import { useDispatch } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import { throwErr } from '../../utils/errors';
 
 const Select = React.lazy(() => import('react-select'));
@@ -21,13 +21,21 @@ export function makeMemberOption(user: User): MemberOption {
 }
 
 interface Props {
-  members: User[];
   dismiss: () => void;
   channelId: Id;
+  spaceId: Id;
 }
 
-function InviteChannelMemberDialog({ channelId, members, dismiss }: Props) {
+function InviteChannelMemberDialog({ channelId, dismiss, spaceId }: Props) {
   const dispatch = useDispatch();
+  const spaceMembers = useSelector((state) => {
+    const spaceResult = state.ui.spaceSet.get(spaceId);
+    if (spaceResult?.isOk) {
+      return spaceResult.value.members;
+    } else {
+      return {};
+    }
+  });
   const [membersToInvite, setMembersToInvite] = useState<MemberOption[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +54,13 @@ function InviteChannelMemberDialog({ channelId, members, dismiss }: Props) {
     const values = (value || []) as MemberOption[];
     setMembersToInvite(values);
   };
-  const memberOptions = members.map(makeMemberOption);
+  const memberOptions: MemberOption[] = [];
+  for (const member of Object.values(spaceMembers)) {
+    if (!member) {
+      continue;
+    }
+    memberOptions.push(makeMemberOption(member.user));
+  }
   return (
     <Dialog
       noOverflow

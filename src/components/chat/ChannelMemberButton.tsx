@@ -88,7 +88,7 @@ function ChannelMemberButton({ className }: Props) {
   const pane = usePane()!;
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const user = useSelector((state) => state.profile?.user);
-  const channelName = useSelector((state) => state.chatStates.get(pane)!!.channel.name);
+  const channelName = useSelector((state) => state.chatStates.get(pane)!.channel.name);
   const spaceMember = useSelector(
     (state) => state.profile?.spaces.get(state.chatStates.get(pane)!.channel.spaceId)?.member
   );

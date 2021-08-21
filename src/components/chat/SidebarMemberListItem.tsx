@@ -3,10 +3,12 @@ import React from 'react';
 import { css } from '@emotion/core';
 import { color, pL, pX, pY } from '../../styles/atoms';
 import { gray, green } from '../../styles/colors';
+import { Id } from '../../utils/id';
 
 interface Props {
   member: SpaceMemberWithUser;
   online: boolean;
+  onClick: (userId: Id) => void;
 }
 
 const itemStyle = css`
@@ -31,11 +33,14 @@ const itemStyle = css`
   &[data-online='false'] {
     ${color(gray['700'])};
   }
+  &:hover {
+    background-color: ${gray['800']};
+  }
 `;
 
-export const SidebarMemberListItem = ({ member, online }: Props) => {
+export const SidebarMemberListItem = ({ member, online, onClick }: Props) => {
   return (
-    <div css={itemStyle} data-online={String(online)}>
+    <div css={itemStyle} data-online={String(online)} onClick={() => onClick(member.user.id)}>
       {member.user.username}
     </div>
   );

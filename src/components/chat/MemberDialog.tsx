@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from '../../api/users';
 import { css } from '@emotion/core';
 import { gray, primary } from '../../styles/colors';
@@ -14,19 +14,16 @@ import Icon from '../atoms/Icon';
 import Text from '../atoms/Text';
 import { post } from '../../api/request';
 import { SpaceMember } from '../../api/spaces';
-import { useDispatch } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import { throwErr } from '../../utils/errors';
 import { ChannelMember } from '../../api/channels';
 import MemberTags from './MemberTags';
 
 interface Props {
-  user: User;
-  spaceMember: SpaceMember;
-  channelMember?: ChannelMember;
-  spaceOwnerId?: Id;
+  userId: Id;
+  spaceId: Id;
   className?: string;
   dismiss: () => void;
-  imAdmin: boolean;
 }
 
 const nameLink = css`
@@ -47,9 +44,43 @@ const bio = css`
   line-height: 1.4em;
 `;
 
-function MemberDialog({ user, dismiss, imAdmin, spaceMember, channelMember, spaceOwnerId }: Props) {
+function MemberDialog({ userId, spaceId, dismiss }: Props) {
+  const myId = useSelector((state) => state.profile?.user.id);
+
+  const spaceOwnerId = useSelector((state) => {
+    const spaceResult = state.ui.spaceSet.get(spaceId);
+    if (spaceResult?.isOk) {
+      return spaceResult.value.space.ownerId;
+    } else {
+      return null;
+    }
+  });
+  const members = useSelector((state) => {
+    const spaceResult = state.ui.spaceSet.get(spaceId);
+    if (spaceResult?.isOk) {
+      return spaceResult.value.members;
+    }
+    return null;
+  });
   const [kickDialog, showKickDialog] = useState(false);
   const dispatch = useDispatch();
+  if (!members) {
+    return null;
+  }
+  const member = members[userId];
+  let imAdmin = false;
+  if (myId) {
+    const myMember = members[myId];
+    if (myMember) {
+      imAdmin = myMember.space.isAdmin;
+    }
+  }
+
+  if (!member) {
+    return null;
+  }
+  const spaceMember = member.space;
+  const user = member.user;
   const kick = async () => {
     const result = await post('/spaces/kick', {}, { userId: user.id, spaceId: spaceMember.spaceId });
     if (result.isErr) {
@@ -66,7 +97,7 @@ function MemberDialog({ user, dismiss, imAdmin, spaceMember, channelMember, spac
               <Link to={`/profile/${encodeUuid(user.id)}`} css={[nameLink]}>
                 {user.nickname}
               </Link>
-              <MemberTags spaceMember={spaceMember} channelMember={channelMember} spaceOwnerId={spaceOwnerId} />
+              <MemberTags spaceMember={spaceMember} spaceOwnerId={spaceOwnerId} />
             </div>
             <div css={[color(gray['500'])]}>{user.username}</div>
           </div>

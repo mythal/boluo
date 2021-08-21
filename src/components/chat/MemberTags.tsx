@@ -7,8 +7,8 @@ import { mR } from '../../styles/atoms';
 
 interface Props {
   spaceMember: SpaceMember;
-  channelMember?: ChannelMember;
-  spaceOwnerId?: Id;
+  channelMember?: ChannelMember | null;
+  spaceOwnerId?: Id | null;
 }
 
 function MemberTags({ spaceMember, channelMember, spaceOwnerId }: Props) {

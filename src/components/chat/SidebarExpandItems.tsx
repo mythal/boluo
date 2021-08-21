@@ -18,7 +18,12 @@ import { NavLink } from 'react-router-dom';
 import { css } from '@emotion/core';
 import ChatHeaderButton from './ChatHeaderButton';
 import Help from './Help';
-import lockIcon from '../../assets/icons/lock.svg';
+import bellIcon from '../../assets/icons/bell-solid.svg';
+import bellSlashIcon from '../../assets/icons/bell-slash-solid.svg';
+import { SidebarChannelItem } from './SidebarChannelItem';
+import { showFlash } from '../../actions/flash';
+import { useAtom } from 'jotai';
+import { canNotifyAtom, useNotificationSwitch } from '../../states/notify';
 
 interface Props {
   space: Space;
@@ -29,18 +34,6 @@ const SidebarSectionTitle = styled.h3`
   ${[textBase, textSm, fontBold, mT(2), mB(2), pX(8), pR(2)]};
   display: flex;
   justify-content: space-between;
-`;
-
-const ChannelName = styled.span`
-  position: relative;
-  &::before {
-    content: '#';
-    ${fontMono};
-    position: absolute;
-    left: -1em;
-
-    color: ${gray['500']};
-  }
 `;
 
 const sidebarTitle = css`
@@ -81,6 +74,7 @@ function SidebarExpandItems({ space, channels }: Props) {
   const [createChannel, setCreateChannel] = useState(false);
   const [helpDialog, setHelpDialog] = useState(false);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(space.id)?.member.isAdmin);
+  const { canNotify, stopNotify, startNotify } = useNotificationSwitch();
   return (
     <React.Fragment>
       <NavLink css={sidebarTitle} exact activeClassName="active" to={`/chat/${encodeUuid(space.id)}`}>
@@ -88,20 +82,20 @@ function SidebarExpandItems({ space, channels }: Props) {
       </NavLink>
       <SidebarSectionTitle>
         <span>频道</span>
-        {isSpaceAdmin && (
-          <SidebarButton onClick={() => setCreateChannel(true)}>
-            <Icon sprite={plus} />
+        <div>
+          <SidebarButton data-active={canNotify} onClick={canNotify ? stopNotify : startNotify}>
+            <Icon sprite={canNotify ? bellIcon : bellSlashIcon} />
           </SidebarButton>
-        )}
+          {isSpaceAdmin && (
+            <SidebarButton onClick={() => setCreateChannel(true)}>
+              <Icon sprite={plus} />
+            </SidebarButton>
+          )}
+        </div>
       </SidebarSectionTitle>
       <div css={channelList}>
         {channels.map((channel) => (
-          <SidebarItemLink key={channel.id} to={chatPath(channel.spaceId, channel.id)}>
-            <ChannelName>
-              {!channel.isPublic && <Icon css={mR(1)} sprite={lockIcon} />}
-              {channel.name}
-            </ChannelName>
-          </SidebarItemLink>
+          <SidebarChannelItem channel={channel} key={channel.id} />
         ))}
       </div>
       <div css={footer}>

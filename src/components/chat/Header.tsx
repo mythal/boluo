@@ -34,6 +34,7 @@ import exportIcon from '../../assets/icons/file-export.svg';
 import lockIcon from '../../assets/icons/lock.svg';
 import ExportDialog from './ExportDialog';
 import { useHeartbeat } from './Heartbeat';
+import { useNotify } from '../../states/notify';
 
 const Topic = styled.span`
   overflow: hidden;
@@ -87,6 +88,7 @@ function Header() {
   const [exportDialog, showExportDialog] = useState(false);
   const dispatch = useDispatch();
   useHeartbeat();
+  useNotify();
   useTitle(channel.name);
   return (
     <div css={chatHeaderStyle}>

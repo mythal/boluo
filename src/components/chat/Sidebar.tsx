@@ -15,6 +15,7 @@ import { Transition } from 'react-transition-group';
 import SidebarFoldedItems from './SidebarFoldedItems';
 import { chatHeaderPadding, sidebarWidth } from './styles';
 import UserStatusButton from './UserStatusButton';
+import { SidebarMemberList } from './SidebarMemberList';
 
 interface Props {
   space: Space;
@@ -103,7 +104,12 @@ function Sidebar({ space, channels }: Props) {
               )}
             </div>
             <div css={sidebarBody} data-state={state}>
-              {state === 'entered' && <SidebarExpandItems space={space} channels={channels} />}
+              {state === 'entered' &&
+                (showMember ? (
+                  <SidebarMemberList spaceId={space.id} />
+                ) : (
+                  <SidebarExpandItems space={space} channels={channels} />
+                ))}
               {state === 'exited' && <SidebarFoldedItems space={space} channels={channels} />}
             </div>
           </React.Fragment>

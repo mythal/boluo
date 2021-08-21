@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from '../../store';
 import { CloseChat } from '../../actions/chat';
 import Compose from './compose/Compose';
 import { chatRight } from './styles';
+import { useAtom } from 'jotai/esm';
+import { focusChannelAtom } from '../../states/focusChannel';
 
 interface Props {
   spaceId: Id;
@@ -24,6 +26,10 @@ function ChannelChat({ channelId, pane }: Props) {
     }
     return state.chatStates.get(pane)?.itemSet.previews.get(myMember!.userId);
   });
+  const [, setFocusChannel] = useAtom(focusChannelAtom);
+  useEffect(() => {
+    setFocusChannel((prev) => prev.add(channelId));
+  }, [channelId, setFocusChannel]);
 
   if (loading) {
     return (

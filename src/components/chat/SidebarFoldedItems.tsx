@@ -14,6 +14,9 @@ import help from '../../assets/icons/help.svg';
 import { css } from '@emotion/core';
 import { mB, pY } from '../../styles/atoms';
 import UserStatusButton from './UserStatusButton';
+import bellIcon from '../../assets/icons/bell-solid.svg';
+import bellSlashIcon from '../../assets/icons/bell-slash-solid.svg';
+import { useNotificationSwitch } from '../../states/notify';
 
 interface Props {
   space: Space;
@@ -32,6 +35,7 @@ function SidebarFoldedItems({ space, channels }: Props) {
   const [channelMenu, setChannelMenu] = useState(false);
   const [helpDialog, setHelpDialog] = useState(false);
   const [memberList, setMemberList] = useState(false);
+  const { stopNotify, startNotify, canNotify } = useNotificationSwitch();
   const channelButton = useRef<HTMLButtonElement>(null);
   const toggleMenu = () => setChannelMenu((value) => !value);
   const toggleMemberList = useCallback(() => setMemberList((memberList) => !memberList), []);
@@ -44,7 +48,20 @@ function SidebarFoldedItems({ space, channels }: Props) {
       <ChatHeaderButton ref={channelButton} css={[mB(1), sidebarIconButton]} onClick={toggleMenu}>
         #
       </ChatHeaderButton>
-      <UserStatusButton spaceId={space.id} folded css={[sidebarIconButton]} active={false} toggle={toggleMemberList} />
+      <UserStatusButton
+        spaceId={space.id}
+        folded
+        css={[sidebarIconButton, mB(1)]}
+        active={false}
+        toggle={toggleMemberList}
+      />
+      <ChatHeaderButton
+        data-active={canNotify}
+        css={[sidebarIconButton]}
+        onClick={canNotify ? stopNotify : startNotify}
+      >
+        <Icon sprite={canNotify ? bellIcon : bellSlashIcon} />
+      </ChatHeaderButton>
       <div css={footer}>
         <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton]}>
           <Icon sprite={help} />

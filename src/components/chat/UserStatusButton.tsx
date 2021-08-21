@@ -21,7 +21,10 @@ interface Props {
   toggle: () => void;
 }
 
-export function isOnline(status: UserStatus): boolean {
+export function isOnline(status: UserStatus | undefined | null): boolean {
+  if (!status) {
+    return false;
+  }
   if (status.kind !== 'ONLINE') {
     return false;
   }

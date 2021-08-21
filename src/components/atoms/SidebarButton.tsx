@@ -13,7 +13,8 @@ export const SidebarButton = styled.button`
   &:hover {
     background-color: rgba(255, 255, 255, 0.25);
   }
-  &:active {
+  &:active,
+  &[data-active='true'] {
     background-color: rgba(255, 255, 255, 0.15);
   }
   &:focus {

@@ -29,6 +29,7 @@ function ChannelChat({ channelId, pane }: Props) {
   const [, setFocusChannel] = useAtom(focusChannelAtom);
   useEffect(() => {
     setFocusChannel((prev) => prev.add(channelId));
+    return () => setFocusChannel((prev) => prev.remove(channelId));
   }, [channelId, setFocusChannel]);
 
   if (loading) {

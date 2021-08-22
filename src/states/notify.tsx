@@ -8,16 +8,23 @@ import { MessageItem, PreviewItem } from './chat-item-set';
 import { Map } from 'immutable';
 import { focusChannelAtom } from './focusChannel';
 
-export const canNotifyAtom = atom(Notification.permission === 'granted');
+export const isNotificationSupported = 'Notification' in window;
+
+export const canNotifyAtom = atom(isNotificationSupported && Notification.permission === 'granted');
 
 export const useNotificationSwitch = (): { canNotify: boolean; startNotify: () => void; stopNotify: () => void } => {
   const [canNotify, setCanNotify] = useAtom(canNotifyAtom);
 
   const startNotify = async () => {
+    if (!isNotificationSupported) {
+      showFlash('WARNING', <span>您的设备不支持发送通知</span>);
+      return;
+    }
     if (Notification.permission !== 'granted') {
       const result = await Notification.requestPermission();
       if (result === 'denied') {
         showFlash('WARNING', <span>你拒绝了通知权限，无法显示通知</span>);
+        return;
       }
     }
     setCanNotify(Notification.permission === 'granted');
@@ -43,6 +50,9 @@ export const useNotify = () => {
     (a, b) => a.equals(b)
   );
   const [focusChannelSet] = useAtom(focusChannelAtom);
+  if (!isNotificationSupported) {
+    return;
+  }
   for (const [key, item] of latestMap.entries()) {
     if (focusChannelSet.has(key)) {
       continue;

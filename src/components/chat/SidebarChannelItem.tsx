@@ -1,7 +1,7 @@
 import { Channel } from '../../api/channels';
 import { chatPath } from '../../utils/path';
 import Icon from '../atoms/Icon';
-import { flexCol, fontMono, mR, pY, textSm } from '../../styles/atoms';
+import { fontMono, mR, pY, textSm } from '../../styles/atoms';
 import lockIcon from '../../assets/icons/lock.svg';
 import { SidebarItemLink } from '../atoms/SidebarItem';
 import * as React from 'react';
@@ -66,7 +66,7 @@ export function SidebarChannelItem({ channel }: Props) {
         {!channel.isPublic && <Icon css={mR(1)} sprite={lockIcon} />}
         {channel.name}
       </ChannelName>
-      {name && text && (
+      {channel.isPublic && name && text && (
         <LatestText>
           <NameText>{name}:</NameText> {text}
         </LatestText>

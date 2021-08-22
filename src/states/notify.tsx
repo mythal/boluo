@@ -49,18 +49,23 @@ export const useNotify = () => {
     },
     (a, b) => a.equals(b)
   );
+  const myChannel = useSelector((state) => state.profile?.channels);
   const [focusChannelSet] = useAtom(focusChannelAtom);
-  if (!isNotificationSupported) {
+  const [canNotify] = useAtom(canNotifyAtom);
+  if (!isNotificationSupported || !myChannel || !canNotify) {
     return;
   }
-  for (const [key, item] of latestMap.entries()) {
-    if (focusChannelSet.has(key)) {
+  for (const [channelId, item] of latestMap.entries()) {
+    if (!myChannel.has(channelId)) {
+      continue;
+    }
+    if (focusChannelSet.has(channelId)) {
       continue;
     }
     if (!item || item.type !== 'MESSAGE') {
       continue;
     }
-    const storageKey = `channel:${key}:latest`;
+    const storageKey = `channel:${channelId}:latest`;
     const storagePrev = localStorage.getItem(storageKey);
     const prev = storagePrev ? Number(storagePrev) : null;
     if (prev === null) {

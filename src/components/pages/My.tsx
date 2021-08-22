@@ -43,11 +43,11 @@ function My() {
           <Icon sprite={newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
-          导出功能现在可以选择时间，导出最近的消息了。切换游戏内外的按键改为<code>Esc</code>键。
+          增加了消息通知功能，底层改动比较大，现在可能会有一些 Bug，可以到QQ群（1107382038）反馈。
         </News>
         <News css={[mB(2)]}>
-          开发者之前忙出国的事情一直没维护，现在重新开始工作。讨论版已修复，QQ 群为
-          1107382038。增加了网络连不上时候的备用线路 <Code>https://cdn.boluo.chat/</Code>。
+          导出功能现在可以选择时间，导出最近的消息了。切换游戏内外的按键改为<code>Esc</code>键。
+          增加了网络连不上时候的备用线路 <Code>https://cdn.boluo.chat/</Code>。
         </News>
         <News css={[mB(2)]}>
           <Text>

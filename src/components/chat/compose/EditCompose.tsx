@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useCallback, useMemo, useReducer, useRef } from 'react';
 import { mR, pX, textSm } from '../../../styles/atoms';
-import { useDispatch, useSelector } from '../../../store';
+import store, { useDispatch, useSelector } from '../../../store';
 import { Preview } from '../../../api/events';
 import { AppResult, patch } from '../../../api/request';
 import ChatItemContent from '../ItemContent';
@@ -118,6 +118,7 @@ function EditCompose({ preview, editTo }: Props) {
       canSubmit: calculateCanSubmit(text, entities, inGame, inputName),
       clear: false,
       whisperTo,
+      pos: store.getState().chatStates.get(channelId)?.itemSet.messages.last()?.pos ?? 42.0,
     };
   };
   const composeReducer = useMemo(

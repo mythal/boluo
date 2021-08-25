@@ -21,8 +21,7 @@ export interface Message {
   entities: Entity[];
   created: number;
   modified: number;
-  orderDate: number;
-  orderOffset: number;
+  pos: number;
 }
 
 export interface MessageOrder {
@@ -66,8 +65,14 @@ export interface SwapMessage {
 }
 
 export interface MoveTo {
+  channelId: Id;
   messageId: Id;
-  orderDate: number;
-  orderOffset: number;
+  targetId: Id;
   mode: 'TOP' | 'BOTTOM';
+}
+
+export interface MoveBetween {
+  channelId: Id;
+  messageId: Id;
+  range: [number | null, number | null];
 }

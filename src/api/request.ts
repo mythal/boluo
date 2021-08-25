@@ -18,6 +18,7 @@ import {
   Kick,
   SearchParams,
   Space,
+  SpaceIdWithToken,
   SpaceMemberWithUser,
   SpaceWithMember,
   SpaceWithRelated,
@@ -36,7 +37,7 @@ import {
   Export,
   JoinChannel,
 } from './channels';
-import { ByChannel, EditMessage, Message, MoveTo, NewMessage, SwapMessage } from './messages';
+import { ByChannel, EditMessage, Message, MoveTo, MoveBetween, NewMessage, SwapMessage } from './messages';
 import { Id } from '../utils/id';
 import { Media } from './media';
 import { DEBUG } from '../settings';
@@ -119,17 +120,18 @@ interface IdQuery {
   id: Id;
 }
 
+interface IdWithToken {
+  id: Id;
+  token?: string;
+}
+
 export function post(path: '/users/login', payload: LoginData): Promise<AppResult<LoginResult>>;
 export function post(path: '/users/register', payload: RegisterData): Promise<AppResult<User>>;
 export function post(path: '/users/edit', payload: EditUser): Promise<AppResult<User>>;
 export function post(path: '/users/update_settings', payload: Settings): Promise<AppResult<Settings>>;
 export function post(path: '/spaces/create', payload: CreateSpace): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/edit', payload: EditSpace): Promise<AppResult<Space>>;
-export function post(
-  path: '/spaces/join',
-  payload: {},
-  query: { spaceId: Id; token?: string }
-): Promise<AppResult<SpaceWithMember>>;
+export function post(path: '/spaces/join', payload: {}, query: SpaceIdWithToken): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(path: '/spaces/kick', payload: {}, query: Kick): Promise<AppResult<true>>;
 export function post(path: '/spaces/delete', payload: {}, query: IdQuery): Promise<AppResult<Space>>;
@@ -143,8 +145,8 @@ export function post(path: '/channels/delete', payload: {}, query: IdQuery): Pro
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
 export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
 export function post(path: '/messages/toggle_fold', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
-export function post(path: '/messages/swap', payload: {}, query: SwapMessage): Promise<AppResult<true>>;
-export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<true>>;
+export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<Message>>;
+export function post(path: '/messages/move_between', payload: MoveBetween): Promise<AppResult<Message>>;
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,
@@ -170,10 +172,7 @@ export function get(path: '/users/check_email', query: CheckEmail): Promise<AppR
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
-export function get(
-  path: '/spaces/query_with_related',
-  query: { id: Id; token?: string }
-): Promise<AppResult<SpaceWithRelated>>;
+export function get(path: '/spaces/query_with_related', query: IdWithToken): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/token', query: IdQuery): Promise<AppResult<string>>;
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMemberWithUser[]>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;

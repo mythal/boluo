@@ -17,6 +17,8 @@ import { Id } from '../../utils/id';
 import { blue } from '../../styles/colors';
 import { chatPath } from '../../utils/path';
 import { useHistory } from 'react-router-dom';
+import { List } from 'immutable';
+import { Message } from '../../api/messages';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem
@@ -83,6 +85,57 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
   }, [chatListRef]);
 };
 
+function useOnDragEnd(
+  channelId: Id,
+  filteredMessages: List<MessageItem | PreviewItem>
+): DragDropContextProps['onDragEnd'] {
+  const dispatch = useDispatch();
+
+  return useCallback(
+    async ({ draggableId, source, destination }) => {
+      const finishMove: FinishMoveMessage = { type: 'FINISH_MOVE_MESSAGE', pane: channelId };
+      const messageId = draggableId;
+      if (!destination || source.index === destination.index) {
+        dispatch(finishMove);
+        return;
+      }
+      const sourceItem = filteredMessages.get(source.index);
+      if (sourceItem?.type !== 'MESSAGE') {
+        return;
+      }
+      let a: number | null = null;
+      let b: number | null = null;
+      if (source.index > destination.index) {
+        if (destination.index > 0) {
+          a = filteredMessages.get(destination.index - 1, null)?.pos ?? null;
+        }
+        b = filteredMessages.get(destination.index, null)?.pos ?? null;
+      } else {
+        a = filteredMessages.get(destination.index, null)?.pos ?? null;
+        b = filteredMessages.get(destination.index + 1, null)?.pos ?? null;
+      }
+      dispatch(finishMove);
+
+      if (a === undefined && b === undefined) {
+        console.warn('no target item');
+        return;
+      }
+
+      const result = await post('/messages/move_between', { messageId, channelId, range: [a, b] });
+      if (!result.isOk) {
+        const reset: ResetMessageMoving = {
+          type: 'RESET_MESSAGE_MOVING',
+          messageId,
+          pane: channelId,
+        };
+        dispatch(reset);
+        throwErr(dispatch)(result.value);
+      }
+    },
+    [channelId, dispatch, filteredMessages]
+  );
+}
+
 function ChatList() {
   const pane = usePane()!;
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
@@ -105,66 +158,7 @@ function ChatList() {
     const show = filterMessages(filter, showFolded);
     return messages.filter(show);
   }, [messages, filter, showFolded]);
-  const onDragEnd: DragDropContextProps['onDragEnd'] = useCallback(
-    async ({ draggableId, source, destination }) => {
-      const finishMove: FinishMoveMessage = { type: 'FINISH_MOVE_MESSAGE', pane };
-      const messageId = draggableId;
-      if (!destination || source.index === destination.index) {
-        dispatch(finishMove);
-        return;
-      }
-      const index = destination.index;
-      const sourceItem = filteredMessages.get(source.index);
-      if (sourceItem?.type !== 'MESSAGE') {
-        return;
-      }
-      const targetItem = filteredMessages.get(index);
-      const action: MovingMessage = {
-        type: 'MOVING_MESSAGE',
-        message: sourceItem,
-        targetItem,
-        pane,
-      };
-      batch(() => {
-        dispatch(finishMove);
-        dispatch(action);
-      });
-
-      let result: AppResult<true>;
-      if (Math.abs(source.index - destination.index) === 1 && targetItem?.type === 'MESSAGE') {
-        result = await post('/messages/swap', {}, { a: messageId, b: targetItem.id });
-      } else {
-        const orderDate = targetItem ? targetItem.date : new Date().getTime();
-        const orderOffset = targetItem ? targetItem.offset : 42;
-        const mode: 'TOP' | 'BOTTOM' = source.index > destination.index ? 'TOP' : 'BOTTOM';
-
-        if (!Number.isInteger(orderOffset)) {
-          batch(() => {
-            dispatch(showFlash('WARNING', '还有消息正在拖动中'));
-
-            const reset: ResetMessageMoving = {
-              type: 'RESET_MESSAGE_MOVING',
-              messageId,
-              pane,
-            };
-            dispatch(reset);
-          });
-          return;
-        }
-        result = await post('/messages/move_to', { messageId, orderDate, orderOffset, mode });
-      }
-      if (!result.isOk) {
-        const reset: ResetMessageMoving = {
-          type: 'RESET_MESSAGE_MOVING',
-          messageId,
-          pane,
-        };
-        dispatch(reset);
-        throwErr(dispatch)(result.value);
-      }
-    },
-    [dispatch, pane, filteredMessages]
-  );
+  const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(channelId, filteredMessages);
 
   const onDragStart = useCallback(() => {
     dispatch({ type: 'START_MOVE_MESSAGE', pane });

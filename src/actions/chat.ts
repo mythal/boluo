@@ -20,7 +20,6 @@ export interface CloseChat {
 export interface LoadMessages {
   type: 'LOAD_MESSAGES';
   messages: Message[];
-  before: number;
   finished: boolean;
   pane: Id;
 }

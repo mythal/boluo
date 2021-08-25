@@ -1,10 +1,9 @@
 import { useSelector } from '../store';
-import { usePane } from './usePane';
+import { Id } from '../utils/id';
 
-export function useIsAdmin(): boolean {
-  const pane = usePane();
+export function useIsAdmin(channelId: Id): boolean {
   return useSelector((state) => {
-    const chat = state.chatStates.get(pane);
+    const chat = state.chatStates.get(channelId);
     if (state.profile === undefined || chat === undefined) {
       return false;
     }

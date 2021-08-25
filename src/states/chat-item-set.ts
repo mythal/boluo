@@ -2,12 +2,10 @@ import { Id } from '../utils/id';
 import { Message, MessageOrder } from '../api/messages';
 import { isEmptyPreview, Preview } from '../api/events';
 import { List, Map } from 'immutable';
-import { DEBUG } from '../settings';
 
 export interface ChatNode {
   id: Id;
-  date: number;
-  offset: number;
+  pos: number;
   mine: boolean;
 }
 
@@ -19,8 +17,7 @@ export interface MessageItem extends ChatNode {
 
 export const makeMessageItem = (myId?: Id) => (message: Message): MessageItem => ({
   id: message.id,
-  date: message.orderDate,
-  offset: message.orderOffset,
+  pos: message.pos,
   mine: message.senderId === myId,
   type: 'MESSAGE',
   message,
@@ -53,61 +50,28 @@ export const initialChatItemSet: ChatItemSet = {
 const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | PreviewItem): ChatItemSet['messages'] => {
   if (messages.size === 0) {
     return messages.push(newItem);
-  } else if (newItem.date < messages.first(undefined)!.date) {
+  }
+  const { pos } = newItem;
+  const first = messages.first()!;
+  if (pos < first.pos) {
     return messages.unshift(newItem);
   }
-  const last = messages.last(undefined)!;
-  const first = messages.first(undefined)!;
-  if (newItem.date < first.date || (newItem.date === first.date && newItem.offset < first.offset)) {
-    return messages.unshift(newItem);
-  }
-  if (last.date < newItem.date || (last.date === newItem.date && last.offset < newItem.offset)) {
+  const last = messages.last()!;
+  if (pos > last.pos) {
     return messages.push(newItem);
   }
-
-  let i = -1;
-  let m = 0;
-  let n = messages.size - 1;
-  // [0 1 2 3 4]
-  //   0 1 2 3
-  while (m < n) {
-    const mid = m + ((n - m) >> 1);
-    const pivotA = messages.get(mid);
-    const pivotB = messages.get(mid + 1);
-    if (pivotA === undefined || pivotB === undefined) {
-      throw new Error('unexpected error: pivot cannot be found');
-    }
-    if (pivotB.date < newItem.date || (pivotB.date === newItem.date && pivotB.offset < newItem.offset)) {
-      m = mid + 1;
-    } else if (newItem.date < pivotA.date || (pivotA.date === newItem.date && newItem.offset < pivotA.offset)) {
-      n = mid;
-    } else {
-      i = mid + 1;
-      break;
-    }
-  }
-  if (DEBUG) {
-    const index =
-      messages.findLastIndex((item) => {
-        if (item.date < newItem.date) {
-          return true;
-        } else if (item.date === newItem.date) {
-          return item.offset < newItem.offset;
-        } else {
-          return false;
-        }
-      }) + 1;
-    if (i !== index) {
-      // eslint-disable-next-line no-debugger
-      debugger;
+  for (let i = messages.size - 1; i >= 1; i--) {
+    if (pos > messages.get(i)!.pos) {
+      return messages.insert(i + 1, newItem);
     }
   }
 
-  return messages.insert(i, newItem);
+  console.error("Can't find the insertion position");
+  return messages;
 };
 
-const removeItem = (messages: ChatItemSet['messages'], id: Id, order?: [number, number]): ChatItemSet['messages'] => {
-  const index = findItem(messages, id, order);
+const removeItem = (messages: ChatItemSet['messages'], id: Id): ChatItemSet['messages'] => {
+  const index = findItem(messages, id);
   if (index !== -1) {
     return messages.remove(index);
   } else {
@@ -115,49 +79,14 @@ const removeItem = (messages: ChatItemSet['messages'], id: Id, order?: [number, 
   }
 };
 
-const findItem = (messages: ChatItemSet['messages'], id: Id, order?: [number, number]): number => {
+const findItem = (messages: ChatItemSet['messages'], id: Id): number => {
   if (messages.isEmpty()) {
     return -1;
   }
-  let index = -1;
-  if (order !== undefined) {
-    const [date, offset] = order;
-    if (date > messages.last(undefined)!.date) {
-      return -1;
-    } else if (date < messages.first(undefined)!.date) {
-      return -1;
-    }
 
-    let m = 0;
-    let n = messages.size;
-
-    while (m < n) {
-      const mid = m + ((n - m) >> 1);
-      const pivot = messages.get(mid)!;
-      if (pivot.date < date || (pivot.date === date && pivot.offset < offset)) {
-        m = mid + 1;
-      } else if (date < pivot.date || (pivot.date === date && offset < pivot.offset)) {
-        n = mid;
-      } else {
-        if (pivot.id !== id) {
-          index = -1;
-        } else {
-          index = mid;
-        }
-        break;
-      }
-    }
-  }
-  if (index === -1) {
-    if (order !== undefined) {
-      console.warn('find index degenerated');
-    }
-    return messages.findLastIndex((item) => {
-      return item.id === id;
-    });
-  } else {
-    return index;
-  }
+  return messages.findLastIndex((item) => {
+    return item.id === id;
+  });
 };
 
 export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
@@ -169,8 +98,14 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     }
     return { messages, previews, editions };
   }
-  const oldest = messages.find((item) => item.type === 'MESSAGE');
-  if (oldest && (item.date < oldest.date || (item.date === oldest.date && item.offset < oldest.offset))) {
+  const undermost = messages.last();
+
+  // on messages list empty
+  if (undermost === undefined) {
+    messages = messages.push(item);
+    if (item.type === 'PREVIEW') {
+      previews.set(item.id, item);
+    }
     return { messages, previews, editions };
   }
 
@@ -179,12 +114,14 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && item.message.id === previewItem.preview.id) {
       previews = previews.remove(previewItem.id);
-      messages = removeItem(messages, previewItem.id, [previewItem.date, previewItem.offset]);
     }
-  } else if (item.type === 'PREVIEW') {
+    editions = editions.remove(item.id);
+  }
+
+  if (item.type === 'PREVIEW') {
     const prevPreview = previews.get(item.id);
     if (prevPreview) {
-      messages = removeItem(messages, item.id, [prevPreview.date, prevPreview.offset]);
+      messages = removeItem(messages, item.id);
     }
     if (isEmptyPreview(item.preview)) {
       previews = previews.remove(item.id);
@@ -227,47 +164,30 @@ export const updateMessagesOrder = (itemSet: ChatItemSet, orderChanges: MessageO
   return { ...itemSet, messages };
 };
 
-export const moveMessages = (
-  messages: ChatItemSet['messages'],
-  movedItems: MessageItem[],
-  messageBefore: number
-): ChatItemSet['messages'] => {
-  for (const item of movedItems) {
-    messages = removeItem(messages, item.id);
-  }
-  for (const item of movedItems) {
-    if (item.date < messageBefore) {
-      continue;
-    }
-    messages = insertItem(messages, item);
-  }
+export const moveMessages = (messages: ChatItemSet['messages'], movedItems: MessageItem[]): ChatItemSet['messages'] => {
   return messages;
 };
 
-export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, messageBefore: number): ChatItemSet => {
+export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): ChatItemSet => {
   let { messages } = itemSet;
-  // item order shouldn't changed.
-  const index = findItem(itemSet.messages, editedItem.id, [editedItem.date, editedItem.offset]);
+  const top = messages.first();
+  if (top === undefined) {
+    return itemSet;
+  }
+  const index = findItem(itemSet.messages, editedItem.id);
   if (index === -1) {
-    if (editedItem.date < messageBefore) {
-      return itemSet;
-    } else {
-      return addItem(itemSet, editedItem);
-    }
+    return itemSet;
   }
   const target = messages.get(index);
   if (target === undefined || target.type !== 'MESSAGE') {
     throw new Error('unexpected item type');
   }
-  if (editedItem.date < messageBefore) {
+  if (editedItem.pos < top.pos) {
     messages = messages.remove(index);
-  } else if (
-    target.message.orderDate === editedItem.message.orderDate &&
-    target.message.orderOffset === editedItem.message.orderOffset
-  ) {
+  } else if (target.pos === editedItem.pos) {
     messages = messages.set(index, editedItem);
   } else {
-    messages = insertItem(messages.remove(index), editedItem);
+    return addItem({ ...itemSet, messages: messages.remove(index) }, editedItem);
   }
   return { ...itemSet, messages };
 };
@@ -277,42 +197,7 @@ export const markMessageMoving = (
   messageItem: MessageItem,
   targetItem: PreviewItem | MessageItem | undefined
 ): ChatItemSet => {
-  const index = findItem(itemSet.messages, messageItem.id, [messageItem.date, messageItem.offset]);
-  // if (targetItem === undefined) {
-  //   const lastItem: PreviewItem | MessageItem | undefined = itemSet.messages.last();
-  //   if (lastItem === undefined) {
-  //     return itemSet;
-  //   }
-  //   const newMessageItem: MessageItem = {
-  //     ...messageItem,
-  //     moving: true,
-  //     date: lastItem.date,
-  //     offset: lastItem.offset + 0.5,
-  //   };
-  //   const messages = itemSet.messages.remove(index).push(newMessageItem);
-  //   return { ...itemSet, messages };
-  // }
-  // let insertToIndex = findItem(itemSet.messages, targetItem.id, [targetItem.date, targetItem.offset]);
-  // if (index < insertToIndex) {
-  //   insertToIndex += 1;
-  // }
-  // let date: number;
-  // let offset: number;
-  // if (insertToIndex === 0) {
-  //   date = targetItem.date;
-  //   offset = targetItem.offset - 0.5;
-  // } else {
-  //   const targetLeft = itemSet.messages.get(insertToIndex - 1)!;
-  //   if (targetLeft.date === targetItem.date) {
-  //     date = targetItem.date;
-  //     offset = (targetLeft.offset + targetItem.offset) / 2;
-  //   } else {
-  //     date = targetItem.date;
-  //     offset = targetItem.offset - 0.5;
-  //   }
-  // }
-  // const newMessageItem: MessageItem = { ...messageItem, moving: true, date, offset };
-  // const messages = insertItem(itemSet.messages.remove(index), newMessageItem);
+  const index = findItem(itemSet.messages, messageItem.id);
   const messages = itemSet.messages.remove(index);
   return { ...itemSet, messages };
 };
@@ -326,12 +211,9 @@ export const resetMovingMessage = (itemSet: ChatItemSet, id: Id): ChatItemSet =>
   if (messageItem === undefined || messageItem.type !== 'MESSAGE' || messageItem.moving !== true) {
     throw new Error('unexpected message when reset moving message');
   }
-  const { orderOffset, orderDate } = messageItem.message;
   const messages = insertItem(itemSet.messages.remove(index), {
     ...messageItem,
     moving: undefined,
-    date: orderDate,
-    offset: orderOffset,
   });
   return { ...itemSet, messages };
 };

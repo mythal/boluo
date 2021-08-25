@@ -23,7 +23,7 @@ import BroadcastSwitch from './BroadcastSwitch';
 import { Preview } from '../../../api/events';
 import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
-import { useDispatch, useSelector } from '../../../store';
+import store, { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
 import { calculateCanSubmit, composeReducerMaker, ComposeState, update } from './reducer';
 import { post } from '../../../api/request';
@@ -151,6 +151,7 @@ function Compose({ preview, channelId, member }: Props) {
       entities: entities,
       clear: false,
       canSubmit: calculateCanSubmit(initialText, entities, inGame, characterName),
+      pos: store.getState().chatStates.get(channelId)!.itemSet.messages.last()?.pos ?? 42.0,
     };
   };
   const composeReducer = useMemo(

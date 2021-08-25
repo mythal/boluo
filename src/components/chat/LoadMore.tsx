@@ -23,7 +23,7 @@ export const LoadMoreContainer = styled.div`
 function LoadMore() {
   const pane = usePane();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
-  const before = useSelector((state) => state.chatStates.get(pane)!.messageBefore);
+  const before = useSelector((state) => state.chatStates.get(pane)?.itemSet.messages.first()?.pos);
   const finished = useSelector((state) => state.chatStates.get(pane)!.finished);
   const moving = useSelector((state) => state.chatStates.get(pane)!.moving);
   const dispatch = useDispatch();
@@ -74,7 +74,7 @@ function LoadMore() {
       messages.pop();
       finished = false;
     }
-    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, before, pane });
+    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, pane });
   };
   return (
     <LoadMoreContainer>

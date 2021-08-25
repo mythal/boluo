@@ -32,6 +32,7 @@ export interface ComposeState {
   media: File | undefined;
   canSubmit: boolean;
   prevSubmit?: number;
+  pos: number;
   whisperTo?: UserItem[] | null;
 }
 
@@ -112,7 +113,7 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
     ].some((value) => value !== undefined)
   ) {
     let text: string | null = nextState.text;
-    const { inGame, isAction, editFor, broadcast, inputName, entities, sending, clear } = nextState;
+    const { inGame, isAction, editFor, broadcast, inputName, entities, sending, clear, pos } = nextState;
     if (!broadcast && text !== '') {
       text = null;
     }
@@ -131,6 +132,7 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       channelId,
       text,
       entities: broadcast ? entities : [],
+      pos,
     };
     if (nextState.whisperTo !== null && nextState.whisperTo !== undefined) {
       preview.text = '';

@@ -33,7 +33,7 @@ const quoteStyle = css`
 function MessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
   const pane = usePane();
-  const isAdmin = useIsAdmin();
+  const isAdmin = useIsAdmin(pane);
   const [deleteDialog, showDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const throwE = throwErr(dispatch);

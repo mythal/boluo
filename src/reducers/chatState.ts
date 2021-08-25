@@ -38,7 +38,6 @@ export interface ChatState {
   // heartbeatMap: Map<Id, number>;
   itemSet: ChatItemSet;
   finished: boolean;
-  messageBefore: number;
   eventAfter: number;
   lastLoadBefore: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
@@ -72,46 +71,30 @@ export const closeChat = (state: ChatState, channelId: Id): ChatState | undefine
   return undefined;
 };
 
-const loadMessages = (
-  chat: ChatState,
-  { messages, finished, before }: LoadMessages,
-  myId: Id | undefined
-): ChatState => {
+const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myId: Id | undefined): ChatState => {
   const len = messages.length;
   if (len === 0) {
     return { ...chat, finished };
   }
   const makeItem = makeMessageItem(myId);
-  if (messages[0].orderDate >= chat.messageBefore) {
+  const top = chat.itemSet.messages.first();
+  if (top && messages[0].pos >= top.pos) {
     throw new Error('Incorrect messages order');
   }
-  if (before >= chat.lastLoadBefore) {
-    return chat;
-  }
   messages.sort((a, b) => {
-    if (a.orderDate === b.orderDate) {
-      return b.orderOffset - a.orderOffset;
-    } else {
-      return b.orderDate - a.orderDate;
-    }
+    return b.pos - a.pos;
   });
   messages = messages.reverse();
   const itemSet: ChatItemSet = {
     ...chat.itemSet,
     messages: chat.itemSet.messages.unshift(...messages.map(makeItem)),
   };
-  const messageBefore = messages[0].orderDate;
-  return { ...chat, messageBefore, finished, itemSet, lastLoadBefore: before };
+  return { ...chat, finished, itemSet };
 };
 
-const handleEditMessage = (
-  itemSet: ChatItemSet,
-  message: Message,
-  messageBefore: number,
-  myId: Id | undefined
-): ChatItemSet => {
+const handleEditMessage = (itemSet: ChatItemSet, message: Message, myId: Id | undefined): ChatItemSet => {
   const item = makeMessageItem(myId)(message);
-  return editMessage(itemSet, item, messageBefore);
+  return editMessage(itemSet, item);
 };
 
 const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet => {
@@ -126,19 +109,17 @@ const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined
     item = {
       type: 'EDIT',
       id: preview.id,
-      date: preview.start,
       mine: preview.senderId === myId,
-      offset,
       preview,
+      pos: preview.pos,
     };
   } else {
     item = {
       type: 'PREVIEW',
       id: preview.senderId,
-      date: preview.start,
       mine: preview.senderId === myId,
+      pos: preview.pos,
       preview,
-      offset,
     };
   }
   return addItem(itemSet, item);
@@ -153,8 +134,7 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
     type: 'EDIT',
     id: message.id,
     mine: true,
-    date: message.orderDate,
-    offset: 0,
+    pos: message.pos,
   });
   return O.set(focusItemSet)(itemSet)(state);
 };
@@ -176,12 +156,11 @@ const handleMessagesMoved = (
   itemSet: ChatItemSet,
   movedMessages: Message[],
   orderChanges: MessageOrder[],
-  messageBefore: number,
   myId?: Id
 ): ChatItemSet => {
   itemSet = updateMessagesOrder(itemSet, orderChanges);
   const makeItem = makeMessageItem(myId);
-  const messages = moveMessages(itemSet.messages, movedMessages.map(makeItem), messageBefore);
+  const messages = moveMessages(itemSet.messages, movedMessages.map(makeItem));
   return { ...itemSet, messages };
 };
 
@@ -199,21 +178,9 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
   return colorMap;
 };
 
-const updateMessageBefore = (prevValue: number, messages: ChatItemSet['messages']): number => {
-  let messageBefore = prevValue;
-  for (const message of messages) {
-    if (message.type === 'MESSAGE') {
-      messageBefore = message.date;
-      break;
-    }
-  }
-  return messageBefore;
-};
-
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
   let { itemSet, channel, colorMap, members, eventAfter } = chat;
-  const { messageBefore } = chat;
   if ('channelId' in body && body.channelId !== channel.id) {
     return chat;
   }
@@ -228,10 +195,10 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
     case 'MESSAGES_MOVED':
-      itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, messageBefore, myId);
+      itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, myId);
       break;
     case 'MESSAGE_EDITED':
-      itemSet = handleEditMessage(itemSet, body.message, messageBefore, myId);
+      itemSet = handleEditMessage(itemSet, body.message, myId);
       break;
     case 'CHANNEL_EDITED':
       channel = body.channel;
@@ -252,7 +219,6 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
     colorMap,
     itemSet,
     eventAfter,
-    messageBefore: updateMessageBefore(messageBefore, itemSet.messages),
   };
 };
 
@@ -263,24 +229,17 @@ export const handleMoveFinish = (state: ChatState, action: Action, myId?: Id): C
 };
 
 export const handleRevealMessage = (state: ChatState, message: Message, myId?: Id): ChatState => {
-  const itemSet = handleEditMessage(state.itemSet, message, state.messageBefore, myId);
+  const itemSet = handleEditMessage(state.itemSet, message, myId);
   return { ...state, itemSet };
 };
 
 export const checkMessagesOrder = (itemSet: ChatItemSet) => {
-  let prev: ChatItem | undefined = undefined;
-  let prevDate = 0;
-  let prevOffset = Number.MIN_SAFE_INTEGER;
+  let prevPos = -1.0;
   for (const item of itemSet.messages) {
-    if (item.date < prevDate || (item.date === prevDate && item.offset <= prevOffset)) {
-      console.error('Incorrect order', item);
-      console.debug(prev);
-      console.debug(item);
-      console.debug(itemSet.messages);
+    if (item.pos <= prevPos) {
+      console.warn('incorrect messages order');
     }
-    prevDate = item.date;
-    prevOffset = item.offset;
-    prev = item;
+    prevPos = item.pos;
   }
 };
 

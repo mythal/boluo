@@ -26,7 +26,6 @@ const initChatState = (
     finished: false,
     eventAfter: 0,
     itemSet: initialChatItemSet,
-    messageBefore: new Date().getTime(),
     lastLoadBefore: Number.MAX_SAFE_INTEGER,
   };
 };

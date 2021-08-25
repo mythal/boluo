@@ -2,6 +2,11 @@ import { Channel, ChannelMember } from './channels';
 import { Id } from '../utils/id';
 import { User } from './users';
 
+export interface SpaceIdWithToken {
+  spaceId: Id;
+  token?: string;
+}
+
 export interface Space {
   id: Id;
   name: string;

@@ -23,6 +23,7 @@ import { useHeartbeat } from '../chat/Heartbeat';
 import { useAtom } from 'jotai';
 import { userDialogAtom } from '../../states/userDialog';
 import MemberDialog from '../chat/MemberDialog';
+import { useMyId } from '../../hooks/useMyId';
 
 interface Params {
   spaceId: string;
@@ -47,13 +48,7 @@ const viewHeight = css`
 const Container = styled.div`
   display: grid;
   height: 100%;
-  // overflow: hidden;
   grid-template-rows: 3rem 1fr auto;
-  // grid-template-columns: auto 1fr 1fr;
-  // grid-template-areas:
-  //   'sidebar-header header header'
-  //   'sidebar-body list list'
-  //   'sidebar-body compose compose';
 
   grid-template-columns: auto 1fr;
   grid-template-areas:
@@ -86,38 +81,12 @@ function useLoadSpace(spaceId: Id) {
 
 function Chat() {
   const params = useParams<Params>();
-  // const activePane = useSelector((state) => state.activePane);
   const [userDialog, setUserDialog] = useAtom(userDialogAtom);
   const spaceId: Id = decodeUuid(params.spaceId);
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
-  const myId: Id | undefined = useSelector((state) => state.profile?.user.id);
+  const myId: Id | undefined = useMyId();
   const history = useHistory();
-  const dispatch = useDispatch();
   useHeartbeat();
-  // const [leftChannel, setLeftChannel] = useState<Id | undefined>(channelId);
-  // const [rightChannel, setRightChannel] = useState<Id | undefined>(channelId);
-  // // sync active
-  // useEffect(() => {
-  //   if (activePane === 0) {
-  //     setLeftChannel(channelId);
-  //   } else if (activePane === 1) {
-  //     setRightChannel(channelId);
-  //   }
-  // }, [channelId, activePane]);
-
-  // set split pane
-  // useEffect(() => {
-  //   if (isSplit) {
-  //     if (activePane === 0) {
-  //       setRightChannel(leftChannel);
-  //     } else if (activePane === 1) {
-  //       setLeftChannel(rightChannel);
-  //     }
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [isSplit]);
-
-  // maybe polling is more suitable?
   useLoadSpace(spaceId);
   useSpaceConnection();
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
@@ -133,11 +102,9 @@ function Chat() {
   }
   const { channels, space, members } = result.value;
 
-  if (!space.allowSpectator && (!myId || !members[myId])) {
+  if (!space.allowSpectator && !(myId && members[myId])) {
     history.replace(`/space/${encodeUuid(spaceId)}`);
   }
-  // const left = activePane === 0 ? channelId : leftChannel;
-  // const right = activePane === 1 ? channelId : rightChannel;
   return (
     <Container>
       <Global styles={viewHeight} />
@@ -155,16 +122,6 @@ function Chat() {
         </Route>
       </Switch>
 
-      {/*<Route path={activePane === 1 ? chatPath(spaceId, channelId) : chatPath(spaceId)}>*/}
-      {/*  <PaneContext.Provider value={1}>*/}
-      {/*    {(isSplit || activePane === 1) &&*/}
-      {/*      (right ? (*/}
-      {/*        <ChannelChat spaceId={spaceId} channelId={right} pane={1} />*/}
-      {/*      ) : (*/}
-      {/*        <Home members={members} channels={channels} space={space} />*/}
-      {/*      ))}*/}
-      {/*  </PaneContext.Provider>*/}
-      {/*</Route>*/}
       {userDialog && <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />}
     </Container>
   );

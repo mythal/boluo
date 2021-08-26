@@ -35,11 +35,6 @@ function MemberListButton({ className, channelId }: Props) {
         <Icon sprite={members} /> {onlineCount}
         <small>/{channelMembers.length}</small>
       </ChatHeaderButton>
-      {/*{open && (*/}
-      {/*  <Overlay x={1} selfX={-1} y={1} anchor={buttonRef}>*/}
-      {/*    <ChatMemberList channelId={channelId} />*/}
-      {/*  </Overlay>*/}
-      {/*)}*/}
     </React.Fragment>
   );
 }

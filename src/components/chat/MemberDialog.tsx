@@ -18,6 +18,8 @@ import { useDispatch, useSelector } from '../../store';
 import { throwErr } from '../../utils/errors';
 import { ChannelMember } from '../../api/channels';
 import MemberTags from './MemberTags';
+import { useAtom } from 'jotai';
+import { userDialogAtom } from '../../states/userDialog';
 
 interface Props {
   userId: Id;
@@ -55,6 +57,7 @@ function MemberDialog({ userId, spaceId, dismiss }: Props) {
       return null;
     }
   });
+  const [, setUserDialog] = useAtom(userDialogAtom);
   const members = useSelector((state) => {
     const spaceResult = state.ui.spaceSet.get(spaceId);
     if (spaceResult?.isOk) {
@@ -86,6 +89,8 @@ function MemberDialog({ userId, spaceId, dismiss }: Props) {
     if (result.isErr) {
       throwErr(dispatch)(result.value);
     }
+    showKickDialog(false);
+    setUserDialog(null);
   };
   return (
     <React.Fragment>

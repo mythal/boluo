@@ -1,4 +1,4 @@
-import { SpaceMemberWithUser, SpaceWithRelated } from '../api/spaces';
+import { SpaceMemberWithUser } from '../api/spaces';
 import { List, Map } from 'immutable';
 import { Id } from '../utils/id';
 import { chatReducer, ChatState } from './chatState';
@@ -13,7 +13,6 @@ const initChatState = (
   channelMembers: Record<Id, ChannelMember | undefined>,
   spaceMembers: Record<Id, SpaceMemberWithUser | undefined>
 ): ChatState => {
-  const channelId = channel.id;
   const members = makeMembers(channel.id, spaceMembers, channelMembers);
   return {
     channel,
@@ -32,9 +31,9 @@ const initChatState = (
 };
 export const handleSpaceUpdate = (state: ChatStateMap, action: SpaceUpdated): ChatStateMap => {
   const spaceWithRelated = action.spaceWithRelated;
-  let chatStates = Map<Id, ChatState>();
+  let chatStates = Map<Id, ChatState | undefined>();
   for (const channel of spaceWithRelated.channels) {
-    chatStates = chatStates.update(channel.id, (prevChatState) => {
+    chatStates = state.update(channel.id, (prevChatState) => {
       if (prevChatState === undefined) {
         return initChatState(channel, spaceWithRelated.channelMembers, spaceWithRelated.members);
       } else {

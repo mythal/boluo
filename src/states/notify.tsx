@@ -72,7 +72,7 @@ export const useNotify = () => {
       localStorage.setItem(storageKey, String(item.message.created));
       continue;
     }
-    if (prev === null || prev < item.message.created) {
+    if (prev < item.message.created) {
       const name = item.message.name;
       const text = item.message.text;
       new Notification('菠萝 的新消息', { body: `${name}: ${text}` });

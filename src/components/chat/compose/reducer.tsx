@@ -1,4 +1,4 @@
-import { Dispatch } from '../../../store';
+import store, { Dispatch } from '../../../store';
 import {
   allowImageType,
   fileSizeExceeded,
@@ -32,7 +32,7 @@ export interface ComposeState {
   media: File | undefined;
   canSubmit: boolean;
   prevSubmit?: number;
-  pos: number;
+  pos?: number;
   whisperTo?: UserItem[] | null;
 }
 
@@ -113,7 +113,10 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
     ].some((value) => value !== undefined)
   ) {
     let text: string | null = nextState.text;
-    const { inGame, isAction, editFor, broadcast, inputName, entities, sending, clear, pos } = nextState;
+    const { inGame, isAction, editFor, broadcast, inputName, entities, sending, clear } = nextState;
+    const pos =
+      nextState.pos ?? (store.getState().chatStates.get(channelId)?.itemSet.messages.last()?.pos ?? 41.0) + 1.0;
+    nextState.pos = pos;
     if (!broadcast && text !== '') {
       text = null;
     }
@@ -121,6 +124,7 @@ const handleUpdate: ComposeReducer<Update> = (context, state, action) => {
       text = '';
     }
     const name = inGame ? inputName || characterName : nickname;
+
     const preview: PreviewPost = {
       id: nextState.messageId,
       name,

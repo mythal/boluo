@@ -35,6 +35,7 @@ export interface ChatState {
   channel: Channel;
   members: Member[];
   colorMap: Map<Id, string>;
+  initialized: boolean;
   // heartbeatMap: Map<Id, number>;
   itemSet: ChatItemSet;
   finished: boolean;
@@ -180,7 +181,7 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
 
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
-  let { itemSet, channel, colorMap, members, eventAfter } = chat;
+  let { itemSet, channel, colorMap, members, eventAfter, initialized } = chat;
   if ('channelId' in body && body.channelId !== channel.id) {
     return chat;
   }
@@ -207,6 +208,9 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       members = body.members;
       colorMap = updateColorMap(members, colorMap);
       break;
+    case 'INITIALIZED':
+      initialized = true;
+      break;
   }
   if (DEBUG) {
     checkMessagesOrder(itemSet);
@@ -218,6 +222,7 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
     members,
     colorMap,
     itemSet,
+    initialized,
     eventAfter,
   };
 };

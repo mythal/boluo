@@ -24,6 +24,7 @@ const initChatState = (
     showFolded: false,
     filter: 'NONE',
     finished: false,
+    initialized: false,
     eventAfter: 0,
     itemSet: initialChatItemSet,
     lastLoadBefore: Number.MAX_SAFE_INTEGER,

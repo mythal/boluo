@@ -60,8 +60,18 @@ const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | Pr
   if (pos > last.pos) {
     return messages.push(newItem);
   }
-  for (let i = messages.size - 1; i >= 1; i--) {
-    if (pos > messages.get(i)!.pos) {
+  for (let i = messages.size - 1; i >= 0; i--) {
+    const current = messages.get(i);
+    if (current === undefined) {
+      throw new Error('unexpected undefined item in messages');
+    }
+    if (current.pos === pos) {
+      if (current.type === 'MESSAGE') {
+        return messages;
+      } else {
+        return messages.set(i, newItem);
+      }
+    } else if (pos > current.pos) {
       return messages.insert(i + 1, newItem);
     }
   }
@@ -98,23 +108,13 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     }
     return { messages, previews, editions };
   }
-  const undermost = messages.last();
-
-  // on messages list empty
-  if (undermost === undefined) {
-    messages = messages.push(item);
-    if (item.type === 'PREVIEW') {
-      previews.set(item.id, item);
-    }
-    return { messages, previews, editions };
-  }
-
   if (item.type === 'MESSAGE') {
-    messages = insertItem(messages, item);
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && item.message.id === previewItem.preview.id) {
+      messages = removeItem(messages, item.message.senderId);
       previews = previews.remove(previewItem.id);
     }
+    messages = insertItem(messages, item);
     editions = editions.remove(item.id);
   }
 
@@ -125,6 +125,7 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
     }
     if (isEmptyPreview(item.preview)) {
       previews = previews.remove(item.id);
+      messages = removeItem(messages, item.id);
     } else {
       previews = previews.set(item.id, item);
       messages = insertItem(messages, item);
@@ -176,7 +177,10 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): Chat
   }
   const index = findItem(itemSet.messages, editedItem.id);
   if (index === -1) {
-    return itemSet;
+    if (editedItem.pos < top.pos) {
+      return itemSet;
+    }
+    return addItem(itemSet, editedItem);
   }
   const target = messages.get(index);
   if (target === undefined || target.type !== 'MESSAGE') {

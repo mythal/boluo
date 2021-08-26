@@ -30,27 +30,30 @@ function LoadMore() {
   const button = useRef<HTMLButtonElement | null>(null);
   const mounted = useRef(true);
   const [loading, setLoading] = useState(false);
+  const initialized = useSelector((state) => state.chatStates.get(pane)!.initialized);
 
-  // useEffect(() => {
-  //   const observer = new IntersectionObserver(() => {
-  //     window.setTimeout(() => {
-  //       if (!button.current) {
-  //         return;
-  //       }
-  //       const node = button.current;
-  //       if (node.getBoundingClientRect().top >= 0) {
-  //         node.click();
-  //       }
-  //     }, 50);
-  //   }, {});
-  //   if (button.current) {
-  //     observer.observe(button.current);
-  //   }
-  //   return () => {
-  //     mounted.current = false;
-  //     observer.disconnect();
-  //   };
-  // }, []);
+  useEffect(() => {
+    if (initialized) {
+      const observer = new IntersectionObserver(() => {
+        window.setTimeout(() => {
+          if (!button.current) {
+            return;
+          }
+          const node = button.current;
+          if (node.getBoundingClientRect().top >= 0) {
+            node.click();
+          }
+        }, 50);
+      }, {});
+      if (button.current) {
+        observer.observe(button.current);
+      }
+      return () => {
+        mounted.current = false;
+        observer.disconnect();
+      };
+    }
+  }, [initialized]);
 
   if (finished) {
     return <LoadMoreContainer>Ω</LoadMoreContainer>;

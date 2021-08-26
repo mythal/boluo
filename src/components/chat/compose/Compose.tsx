@@ -151,7 +151,6 @@ function Compose({ preview, channelId, member }: Props) {
       entities: entities,
       clear: false,
       canSubmit: calculateCanSubmit(initialText, entities, inGame, characterName),
-      pos: store.getState().chatStates.get(channelId)!.itemSet.messages.last()?.pos ?? 42.0,
     };
   };
   const composeReducer = useMemo(
@@ -214,6 +213,7 @@ function Compose({ preview, channelId, member }: Props) {
           media: undefined,
           sending: false,
           prevSubmit: new Date().getTime(),
+          pos: undefined,
         })
       );
       inputRef.current?.reset();

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
-import { p, textSm } from '../../../styles/atoms';
+import { p, pY, textSm } from '../../../styles/atoms';
 import Input from '../../atoms/Input';
 import { ComposeDispatch, update } from './reducer';
 
@@ -21,7 +21,7 @@ function EditComposeNameInput({ value, composeDispatch }: Props) {
   };
 
   return (
-    <Naming>
+    <Naming css={pY(1)}>
       <Input css={[textSm, p(1)]} value={value} onChange={handleChange} placeholder="写下你的名字" />
     </Naming>
   );

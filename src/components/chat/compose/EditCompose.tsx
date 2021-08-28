@@ -90,7 +90,7 @@ function EditCompose({ preview, editTo }: Props) {
 
   const makeInitState = (): ComposeState => {
     const inGame = preview?.inGame || editTo.inGame;
-    let inputName = '';
+    let inputName = myMember.characterName;
     if (inGame) {
       if (preview) {
         inputName = preview.name;

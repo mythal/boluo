@@ -68,8 +68,10 @@ const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | Pr
     if (current.pos === pos) {
       if (current.type === 'MESSAGE') {
         return messages;
-      } else {
+      } else if (current.type === 'PREVIEW' && newItem.type === 'MESSAGE') {
         return messages.set(i, newItem);
+      } else {
+        return messages.insert(i + 1, newItem);
       }
     } else if (pos > current.pos) {
       return messages.insert(i + 1, newItem);

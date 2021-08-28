@@ -7,6 +7,7 @@ import { useSelector } from '../store';
 import { MessageItem, PreviewItem } from './chat-item-set';
 import { Map } from 'immutable';
 import { focusChannelAtom } from './focusChannel';
+import { useMyId } from '../hooks/useMyId';
 
 export const isNotificationSupported = 'Notification' in window;
 
@@ -49,6 +50,7 @@ export const useNotify = () => {
     },
     (a, b) => a.equals(b)
   );
+  const myId = useMyId();
   const myChannel = useSelector((state) => state.profile?.channels);
   const [focusChannelSet] = useAtom(focusChannelAtom);
   const [canNotify] = useAtom(canNotifyAtom);
@@ -59,10 +61,13 @@ export const useNotify = () => {
     if (!myChannel.has(channelId)) {
       continue;
     }
-    if (focusChannelSet.has(channelId)) {
+    if (focusChannelSet.has(channelId) && document.visibilityState === 'visible') {
       continue;
     }
     if (!item || item.type !== 'MESSAGE') {
+      continue;
+    }
+    if (item.message.senderId === myId) {
       continue;
     }
     const storageKey = `channel:${channelId}:latest`;

@@ -1,11 +1,7 @@
 import { atom, useAtom } from 'jotai';
 import { showFlash } from '../actions/flash';
 import * as React from 'react';
-import { useRef } from 'react';
-import { Id } from '../utils/id';
 import { useSelector } from '../store';
-import { MessageItem, PreviewItem } from './chat-item-set';
-import { Map } from 'immutable';
 import { focusChannelAtom } from './focusChannel';
 import { useMyId } from '../hooks/useMyId';
 
@@ -61,13 +57,7 @@ export const useNotify = () => {
     if (!myChannel.has(channelId)) {
       continue;
     }
-    if (focusChannelSet.has(channelId) && document.visibilityState === 'visible') {
-      continue;
-    }
     if (!item || item.type !== 'MESSAGE') {
-      continue;
-    }
-    if (item.message.senderId === myId) {
       continue;
     }
     const storageKey = `channel:${channelId}:latest`;
@@ -78,10 +68,16 @@ export const useNotify = () => {
       continue;
     }
     if (prev < item.message.created) {
+      localStorage.setItem(storageKey, String(item.message.created));
+      if (
+        (focusChannelSet.has(channelId) && document.visibilityState === 'visible') ||
+        item.message.senderId === myId
+      ) {
+        continue;
+      }
       const name = item.message.name;
       const text = item.message.text;
       new Notification('菠萝 的新消息', { body: `${name}: ${text}` });
-      localStorage.setItem(storageKey, String(item.message.created));
     }
   }
 };

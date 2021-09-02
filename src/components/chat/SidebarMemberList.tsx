@@ -1,6 +1,6 @@
 import { Id } from '../../utils/id';
 import { useSelector } from '../../store';
-import React, { Fragment, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { SidebarMemberListItem } from './SidebarMemberListItem';
 import { overflowYAuto } from '../../styles/atoms';
 import { isOnline } from './UserStatusButton';
@@ -11,7 +11,7 @@ interface Props {
   spaceId: Id;
 }
 
-export const SidebarMemberList = ({ spaceId }: Props) => {
+function SidebarMemberList({ spaceId }: Props) {
   const spaceResult = useSelector((state) => state.ui.spaceSet.get(spaceId));
   const [, setUserDialog] = useAtom(userDialogAtom);
   const handleClick = useCallback((userId) => setUserDialog(userId), [setUserDialog]);
@@ -33,4 +33,6 @@ export const SidebarMemberList = ({ spaceId }: Props) => {
     );
   }
   return <div css={overflowYAuto}>{memberList}</div>;
-};
+}
+
+export default React.memo(SidebarMemberList);

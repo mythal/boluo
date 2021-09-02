@@ -15,7 +15,7 @@ import { Transition } from 'react-transition-group';
 import SidebarFoldedItems from './SidebarFoldedItems';
 import { chatHeaderPadding, sidebarWidth } from './styles';
 import UserStatusButton from './UserStatusButton';
-import { SidebarMemberList } from './SidebarMemberList';
+import SidebarMemberList from './SidebarMemberList';
 
 interface Props {
   space: Space;

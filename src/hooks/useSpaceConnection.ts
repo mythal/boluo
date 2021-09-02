@@ -4,9 +4,12 @@ import { connect } from '../api/connect';
 import { Events } from '../api/events';
 import { connectSpace, SpaceUpdated } from '../actions/ui';
 import { showFlash } from '../actions/flash';
+import { get } from '../api/request';
+import { useMyId } from './useMyId';
 
 export function useSpaceConnection() {
   const dispatch = useDispatch();
+  const myId = useMyId();
   const spaceId = useSelector((state) => state.ui.spaceId);
 
   const after = useRef<number>(0);
@@ -16,7 +19,16 @@ export function useSpaceConnection() {
     if (!spaceId) {
       throw new Error('unexpected');
     }
-    const connection = await connect(spaceId);
+    let token: string | null = null;
+    if (myId) {
+      const tokenResult = await get('/events/token', { id: spaceId });
+      if (!tokenResult.isOk || !tokenResult.value.token) {
+        window.location.href = `${window.location.origin}/login`;
+        throw new Error('unreachable');
+      }
+      token = tokenResult.value.token;
+    }
+    const connection = await connect(spaceId, token);
     connection.onerror = (e) => {
       console.warn(e);
     };

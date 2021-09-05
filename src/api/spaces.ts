@@ -63,7 +63,7 @@ export interface SpaceWithRelated {
   space: Space;
   members: Record<Id, SpaceMemberWithUser | undefined>;
   channels: Channel[];
-  channelMembers: Record<Id, ChannelMember | undefined>;
+  channelMembers: Record<Id, ChannelMember[] | undefined>;
   usersStatus: Record<Id, UserStatus>;
 }
 

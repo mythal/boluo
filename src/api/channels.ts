@@ -95,11 +95,15 @@ export interface Export {
 export const makeMembers = (
   channelId: Id,
   spaceMemberMap: Record<Id, SpaceMemberWithUser | undefined>,
-  channelMemberMap: Record<Id, ChannelMember | undefined>
+  channelMemberMap: Record<Id, ChannelMember[] | undefined>
 ): Member[] => {
   const members = [];
-  for (const channelMember of Object.values(channelMemberMap)) {
-    if (channelMember?.channelId !== channelId) {
+  const channelMemberList = channelMemberMap[channelId];
+  if (!channelMemberList) {
+    return [];
+  }
+  for (const channelMember of channelMemberList) {
+    if (channelMember.channelId !== channelId) {
       continue;
     }
     const spaceMemberWithUser = spaceMemberMap[channelMember.userId];

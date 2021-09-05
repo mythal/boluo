@@ -10,7 +10,7 @@ import { Action } from '../actions';
 export type ChatStateMap = Map<Id, ChatState | undefined>;
 const initChatState = (
   channel: Channel,
-  channelMembers: Record<Id, ChannelMember | undefined>,
+  channelMembers: Record<Id, ChannelMember[] | undefined>,
   spaceMembers: Record<Id, SpaceMemberWithUser | undefined>
 ): ChatState => {
   const members = makeMembers(channel.id, spaceMembers, channelMembers);

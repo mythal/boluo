@@ -32,7 +32,6 @@ import { post } from '../../api/request';
 import Text from '../atoms/Text';
 import { ValueType } from 'react-select';
 import { Set } from 'immutable';
-import { usePane } from '../../hooks/usePane';
 import Dialog from '../molecules/Dialog';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
@@ -86,10 +85,10 @@ function ManageChannel({ channel, dismiss }: Props) {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const history = useHistory();
   const dispatch = useDispatch();
-  const pane = usePane();
-  const members = useSelector((state) => state.chatStates.get(pane)?.members) || [];
+  const members = useSelector((state) => state.chatStates.get(channelId)?.members) || [];
   const spaceMember = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member);
   const currentMaster = members.filter((member) => member.channel.isMaster).map(makeMemberOption);
+  console.log(members);
   const [selectedMember, setSelectedMember] = useState<MemberOption[]>(currentMaster);
   const memberOptions = members.map(makeMemberOption);
   if (!spaceMember || !spaceMember.isAdmin) {

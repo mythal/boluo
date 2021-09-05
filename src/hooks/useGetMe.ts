@@ -4,7 +4,7 @@ import { get } from '../api/request';
 
 export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
   useEffect(() => {
-    (async () => {
+    const loadMe = async () => {
       const me = await get('/users/get_me');
       if (me.isOk && me.value !== null) {
         const { user, mySpaces, myChannels, settings } = me.value;
@@ -12,8 +12,9 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
       } else {
         dispatch({ type: 'LOGGED_OUT' });
       }
-      finish();
-    })();
+    };
+    loadMe().then(() => finish());
+    setInterval(loadMe, 10 * 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };

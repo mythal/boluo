@@ -113,7 +113,7 @@ function Chat() {
         {channelId && (
           <Route path={chatPath(spaceId, channelId)}>
             <PaneContext.Provider value={channelId}>
-              <ChannelChat key={channelId} spaceId={spaceId} channelId={channelId} pane={channelId} />
+              <ChannelChat key={channelId} spaceId={spaceId} channelId={channelId} />
             </PaneContext.Provider>
           </Route>
         )}

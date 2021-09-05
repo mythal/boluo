@@ -70,17 +70,17 @@ function sidebarState(): boolean {
   }
 }
 
-const useVisibleChannels = (channels: Channel[]): Channel[] => {
+const useVisibleChannels = (channels: Channel[], imAdmin: boolean): Channel[] => {
   const myMembers = useSelector((state) => state.profile?.channels);
   return useMemo(() => {
     const channelList: typeof channels = [];
     for (const channel of channels) {
-      if (channel.isPublic || (myMembers && myMembers.has(channel.id))) {
+      if (channel.isPublic || (myMembers && myMembers.has(channel.id)) || imAdmin) {
         channelList.push(channel);
       }
     }
     return channelList;
-  }, [myMembers, channels]);
+  }, [channels, myMembers, imAdmin]);
 };
 
 function Sidebar({ space, channels }: Props) {
@@ -98,7 +98,18 @@ function Sidebar({ space, channels }: Props) {
   const toggleShowMember = useCallback(() => {
     setShowMember((showMember) => !showMember);
   }, []);
-  const channelList = useVisibleChannels(channels);
+  const imAdmin = useSelector((state) => {
+    const profile = state.profile;
+    if (!profile) {
+      return false;
+    }
+    const spaceWithMember = profile.spaces.get(space.id);
+    if (!spaceWithMember) {
+      return false;
+    }
+    return spaceWithMember.member.isAdmin;
+  });
+  const channelList = useVisibleChannels(channels, imAdmin);
   return (
     <React.Fragment>
       <Transition in={expand} timeout={300}>

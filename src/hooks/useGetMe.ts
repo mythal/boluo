@@ -14,7 +14,7 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
       }
     };
     loadMe().then(() => finish());
-    setInterval(loadMe, 10 * 1000);
+    setInterval(loadMe, 20 * 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Fragment, useCallback, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import { css } from '@emotion/core';
 import { Channel } from '../../api/channels';
 import { mR, pT, textLg } from '../../styles/atoms';
@@ -16,6 +16,7 @@ import SidebarFoldedItems from './SidebarFoldedItems';
 import { chatHeaderPadding, sidebarWidth } from './styles';
 import UserStatusButton from './UserStatusButton';
 import SidebarMemberList from './SidebarMemberList';
+import { useSelector } from '../../store';
 
 interface Props {
   space: Space;
@@ -69,6 +70,19 @@ function sidebarState(): boolean {
   }
 }
 
+const useVisibleChannels = (channels: Channel[]): Channel[] => {
+  const myMembers = useSelector((state) => state.profile?.channels);
+  return useMemo(() => {
+    const channelList: typeof channels = [];
+    for (const channel of channels) {
+      if (channel.isPublic || (myMembers && myMembers.has(channel.id))) {
+        channelList.push(channel);
+      }
+    }
+    return channelList;
+  }, [myMembers, channels]);
+};
+
 function Sidebar({ space, channels }: Props) {
   const [expand, setExpand] = useState(sidebarState());
   const [showMember, setShowMember] = useState(false);
@@ -84,6 +98,7 @@ function Sidebar({ space, channels }: Props) {
   const toggleShowMember = useCallback(() => {
     setShowMember((showMember) => !showMember);
   }, []);
+  const channelList = useVisibleChannels(channels);
   return (
     <React.Fragment>
       <Transition in={expand} timeout={300}>
@@ -108,9 +123,9 @@ function Sidebar({ space, channels }: Props) {
                 (showMember ? (
                   <SidebarMemberList spaceId={space.id} />
                 ) : (
-                  <SidebarExpandItems space={space} channels={channels} />
+                  <SidebarExpandItems space={space} channels={channelList} />
                 ))}
-              {state === 'exited' && <SidebarFoldedItems space={space} channels={channels} />}
+              {state === 'exited' && <SidebarFoldedItems space={space} channels={channelList} />}
             </div>
           </React.Fragment>
         )}

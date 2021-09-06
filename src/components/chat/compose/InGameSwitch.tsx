@@ -1,17 +1,18 @@
 import * as React from 'react';
-import { ComposeDispatch, update } from './reducer';
 import mask from '../../../assets/icons/theater-masks.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
+import { useAtom } from 'jotai';
+import { inGameAtom } from './state';
+import { useCallback } from 'react';
 
 interface Props {
-  inGame: boolean;
-  composeDispatch: ComposeDispatch;
   className?: string;
   size?: 'normal' | 'large';
 }
 
-function InGameSwitch({ inGame, composeDispatch, className, size }: Props) {
-  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
+function InGameSwitch({ className, size }: Props) {
+  const [inGame, setInGame] = useAtom(inGameAtom);
+  const toggleInGame = useCallback(() => setInGame((inGame) => !inGame), [setInGame]);
   return (
     <ChatItemToolbarButton
       on={inGame}

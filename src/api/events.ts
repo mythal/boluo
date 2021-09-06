@@ -28,6 +28,9 @@ export type CHANNEL_EDITED = typeof CHANNEL_EDITED;
 export type INITIALIZED = typeof INITIALIZED;
 export const INITIALIZED = 'INITIALIZED';
 
+export const APP_UPDATED = 'APP_UPDATED';
+export type APP_UPDATED = typeof APP_UPDATED;
+
 export type MailboxType = 'CHANNEL' | 'SPACE';
 
 export interface EventQuery {
@@ -53,7 +56,8 @@ export type Events =
   | Event<Initialized>
   | Event<MessagesMoved>
   | Event<StatusMap>
-  | Event<SpaceUpdated>;
+  | Event<SpaceUpdated>
+  | Event<AppUpdated>;
 
 export interface SpaceUpdated {
   type: 'SPACE_UPDATED';
@@ -116,6 +120,10 @@ export interface MessagePreview {
   type: MESSAGE_PREVIEW;
   preview: Preview;
   channelId: Id;
+}
+
+export interface AppUpdated {
+  type: APP_UPDATED;
 }
 
 export interface MessagesMoved {

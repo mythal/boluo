@@ -1,23 +1,24 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { ComposeDispatch, update, UserItem } from './reducer';
+import { UserItem } from './reducer';
 import { useSelector } from '../../../store';
 import { usePane } from '../../../hooks/usePane';
 import { mB, selectTheme } from '../../../styles/atoms';
 import Dialog from '../../molecules/Dialog';
 import { HelpText } from '../../atoms/HelpText';
 import Text from '../../atoms/Text';
+import { useAtom } from 'jotai';
+import { whisperToAtom } from './state';
 
 const Select = React.lazy(() => import('react-select'));
 
 interface Props {
-  whisperTo: UserItem[] | undefined | null;
-  composeDispatch: ComposeDispatch;
   dismiss: () => void;
 }
 
-function WhisperToSelect({ whisperTo, composeDispatch, dismiss }: Props) {
+function WhisperToSelect({ dismiss }: Props) {
   const pane = usePane();
+  const [whisperTo, setWhisperTo] = useAtom(whisperToAtom);
   const channelMembers = useSelector((state) => state.chatStates.get(pane)!.members);
   const [values, setValues] = useState<UserItem[] | undefined | null>(whisperTo);
   const options: UserItem[] = channelMembers.map((member) => {
@@ -31,7 +32,7 @@ function WhisperToSelect({ whisperTo, composeDispatch, dismiss }: Props) {
     };
   });
   const onSubmit = () => {
-    composeDispatch(update({ whisperTo: values }));
+    setWhisperTo(values);
     dismiss();
   };
   const isWhisper = values !== undefined && values !== null;

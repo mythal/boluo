@@ -81,11 +81,11 @@ function MenuButton({ inputName, composeDispatch, isAction, hasImage, whisperTo,
           <input value={inputName} css={nameInput} onChange={handleNameChange} placeholder="临时角色名" />
         </div>
         <div css={mB(2)}>
-          <WhisperTo whisperTo={whisperTo} composeDispatch={composeDispatch} />
+          <WhisperTo />
         </div>
         <div css={buttons}>
           <div>
-            <ActionSwitch isAction={isAction} composeDispatch={composeDispatch} size="large" css={mR(1)} />
+            <ActionSwitch size="large" css={mR(1)} />
           </div>
           <ChatImageUploadButton size="large" hasImage={hasImage} composeDispatch={composeDispatch} css={[mL(1)]} />
         </div>

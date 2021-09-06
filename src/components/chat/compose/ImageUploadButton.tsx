@@ -3,35 +3,36 @@ import { useCallback, useEffect, useRef } from 'react';
 import fileImage from '../../../assets/icons/file-image.svg';
 import removeFileImage from '../../../assets/icons/remove-file-image.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import { ComposeDispatch, update } from './reducer';
+import { update } from './reducer';
+import { useAtom } from 'jotai';
+import { mediaAtom } from './state';
 
 interface Props {
-  composeDispatch: ComposeDispatch;
-  hasImage: boolean;
   className?: string;
   size?: 'normal' | 'large';
 }
 
-function ImageUploadButton({ composeDispatch, hasImage, className, size }: Props) {
+function ImageUploadButton({ className, size }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [media, updateMedia] = useAtom(mediaAtom);
 
-  const removeMedia = useCallback(() => composeDispatch(update({ media: undefined })), [composeDispatch]);
+  const removeMedia = useCallback(() => updateMedia(undefined), [updateMedia]);
   const startUpload = useCallback(() => fileInputRef.current?.click(), []);
 
   useEffect(() => {
-    if (!hasImage && fileInputRef.current) {
+    if (!media && fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [hasImage]);
+  }, [media]);
 
   const onFileChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     if (event.target.files && event.target.files.length > 0) {
-      composeDispatch(update({ media: event.target.files[0] }));
+      updateMedia(event.target.files[0]);
     }
   };
   return (
     <React.Fragment>
-      {hasImage ? (
+      {media ? (
         <ChatItemToolbarButton
           className={className}
           onClick={removeMedia}

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import Tooltip from '../../atoms/Tooltip';
 import { relative, textXs } from '../../../styles/atoms';
-import { isMac } from '../../../utils/browser';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import mask from '../../../assets/icons/theater-masks.svg';
 import { css } from '@emotion/core';

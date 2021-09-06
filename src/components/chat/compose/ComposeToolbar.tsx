@@ -5,24 +5,24 @@ import mask from '../../../assets/icons/theater-masks.svg';
 import running from '../../../assets/icons/running.svg';
 import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
 import styled from '@emotion/styled';
-import { ComposeDispatch, update } from './reducer';
+import { broadcastAtom, inGameAtom, isActionAtom } from './state';
+import { useCallback } from 'react';
+import { useAtom } from 'jotai';
 
-interface Props {
-  composeDispatch: ComposeDispatch;
-  inGame: boolean;
-  isAction: boolean;
-  broadcast: boolean;
-}
+interface Props {}
 
 const Toolbar = styled.div`
   ${[flexRowReverse]};
   grid-area: toolbar;
 `;
 
-function ComposeToolbar({ composeDispatch, inGame, isAction, broadcast }: Props) {
-  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
-  const toggleIsAction = () => composeDispatch(update({ isAction: !isAction }));
-  const toggleBroadcast = () => composeDispatch(update({ broadcast: !broadcast }));
+function ComposeToolbar(props: Props) {
+  const [isAction, updateAction] = useAtom(isActionAtom);
+  const [broadcast, updateBroadcast] = useAtom(broadcastAtom);
+  const [inGame, updateInGame] = useAtom(inGameAtom);
+  const toggleIsAction = useCallback(() => updateAction((isAction) => !isAction), [updateAction]);
+  const toggleBroadcast = useCallback(() => updateBroadcast((broadcast) => !broadcast), [updateBroadcast]);
+  const toggleInGame = useCallback(() => updateInGame((inGame) => !inGame), [updateInGame]);
   return (
     <Toolbar>
       <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" info="Esc" />

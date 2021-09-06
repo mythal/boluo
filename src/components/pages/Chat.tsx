@@ -86,9 +86,9 @@ function Chat() {
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
   const myId: Id | undefined = useMyId();
   const history = useHistory();
-  useHeartbeat();
   useLoadSpace(spaceId);
   useSpaceConnection();
+  useHeartbeat();
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
     if (result.value.code === LOADING) {

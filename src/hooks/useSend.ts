@@ -9,7 +9,6 @@ export const useSend = (): ((event: ClientEvent) => void) => {
     (event: ClientEvent) => {
       // TODO: queued events.
       if (!connection) {
-        console.log('Calling the send interface without loading the chat.');
         return;
       }
       if (connection.readyState === WebSocket.OPEN) {

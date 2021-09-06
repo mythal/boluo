@@ -2,12 +2,9 @@ import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from '../../store';
 import { DragDropContext, DragDropContextProps, Droppable } from 'react-beautiful-dnd';
-import { AppResult, post } from '../../api/request';
-import { FinishMoveMessage, MovingMessage, ResetMessageMoving } from '../../actions/chat';
+import { post } from '../../api/request';
+import { FinishMoveMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
-import { batch } from 'react-redux';
-import { showFlash } from '../../actions/flash';
-import { usePane } from '../../hooks/usePane';
 import { ChatState } from '../../reducers/chatState';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import ChatItem from './ChatItem';
@@ -15,10 +12,7 @@ import LoadMore from './LoadMore';
 import { css } from '@emotion/core';
 import { Id } from '../../utils/id';
 import { blue } from '../../styles/colors';
-import { chatPath } from '../../utils/path';
-import { useHistory } from 'react-router-dom';
 import { List } from 'immutable';
-import { Message } from '../../api/messages';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem
@@ -136,24 +130,24 @@ function useOnDragEnd(
   );
 }
 
-function ChatList() {
-  const pane = usePane()!;
-  const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
-  const spaceId = useSelector((state) => state.chatStates.get(pane)!.channel.spaceId);
-  const history = useHistory();
+interface Props {
+  channelId: Id;
+}
+
+function ChatList({ channelId }: Props) {
   const dispatch = useDispatch();
   const myMember = useSelector((state) => {
-    if (state.profile === undefined || state.chatStates.get(pane) === undefined) {
+    if (state.profile === undefined || state.chatStates.get(channelId) === undefined) {
       return undefined;
     } else {
-      return state.profile.channels.get(state.chatStates.get(pane)!.channel.id)?.member;
+      return state.profile.channels.get(state.chatStates.get(channelId)!.channel.id)?.member;
     }
   });
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   useAutoScroll(wrapperRef);
-  const filter = useSelector((state) => state.chatStates.get(pane)!.filter);
-  const showFolded = useSelector((state) => state.chatStates.get(pane)!.showFolded);
-  const messages = useSelector((state) => state.chatStates.get(pane)!.itemSet.messages);
+  const filter = useSelector((state) => state.chatStates.get(channelId)!.filter);
+  const showFolded = useSelector((state) => state.chatStates.get(channelId)!.showFolded);
+  const messages = useSelector((state) => state.chatStates.get(channelId)!.itemSet.messages);
   const filteredMessages = useMemo(() => {
     const show = filterMessages(filter, showFolded);
     return messages.filter(show);
@@ -161,8 +155,8 @@ function ChatList() {
   const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(channelId, filteredMessages);
 
   const onDragStart = useCallback(() => {
-    dispatch({ type: 'START_MOVE_MESSAGE', pane });
-  }, [dispatch, pane]);
+    dispatch({ type: 'START_MOVE_MESSAGE', pane: channelId });
+  }, [dispatch, channelId]);
 
   let prevSender: Id | null = null;
   let prevName: Id | null = null;

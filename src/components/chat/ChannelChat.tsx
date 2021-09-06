@@ -17,29 +17,20 @@ interface Props {
 }
 
 function ChannelChat({ channelId }: Props) {
-  const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
   const loading = useSelector((state) => state.chatStates.get(channelId) === undefined);
+  const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const myPreview = useSelector((state) => {
-    if (myMember === undefined) {
+    if (!myMember) {
       return undefined;
     }
-    return state.chatStates.get(channelId)?.itemSet.previews.get(myMember!.userId);
+    return state.chatStates.get(channelId)?.itemSet.previews.get(myMember.userId);
   });
   const [, setFocusChannel] = useAtom(focusChannelAtom);
   useEffect(() => {
     setFocusChannel((prev) => prev.add(channelId));
     return () => setFocusChannel((prev) => prev.remove(channelId));
   }, [channelId, setFocusChannel]);
-
-  if (!isPublic && !myMember) {
-    return (
-      <React.Fragment>
-        <Header />
-        <PrivateChat />
-      </React.Fragment>
-    );
-  }
 
   if (loading) {
     return (
@@ -49,10 +40,18 @@ function ChannelChat({ channelId }: Props) {
     );
   }
 
+  if (!isPublic && !myMember) {
+    return (
+      <React.Fragment>
+        <Header />
+        <PrivateChat />
+      </React.Fragment>
+    );
+  }
   return (
     <React.Fragment>
       <Header />
-      <ChatList />
+      <ChatList channelId={channelId} />
       {myMember && <Compose channelId={channelId} member={myMember} preview={myPreview?.preview} />}
     </React.Fragment>
   );

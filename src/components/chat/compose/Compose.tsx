@@ -23,7 +23,7 @@ import BroadcastSwitch from './BroadcastSwitch';
 import { Preview } from '../../../api/events';
 import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
-import store, { useDispatch, useSelector } from '../../../store';
+import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
 import { calculateCanSubmit, composeReducerMaker, ComposeState, update } from './reducer';
 import { post } from '../../../api/request';
@@ -127,8 +127,7 @@ function Compose({ preview, channelId, member }: Props) {
   const inputRef = useRef<ComposeInputAction>(null);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
-  const pane = usePane();
-  const rollCommand = useSelector((state) => state.chatStates.get(pane)!.channel.defaultRollCommand);
+  const rollCommand = useSelector((state) => state.chatStates.get(channelId)!.channel.defaultRollCommand);
   const dispatch = useDispatch();
   const sendEvent = useSend();
   // eslint-disable-next-line react-hooks/exhaustive-deps

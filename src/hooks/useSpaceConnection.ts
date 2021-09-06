@@ -46,6 +46,9 @@ export function useSpaceConnection() {
       // }
       after.current = event.timestamp;
       const { body } = event;
+      if (body.type === 'APP_UPDATED') {
+        location.reload();
+      }
       if (body.type === 'SPACE_UPDATED') {
         const { spaceWithRelated } = body;
         const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };

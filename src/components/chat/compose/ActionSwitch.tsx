@@ -1,22 +1,23 @@
 import * as React from 'react';
 import running from '../../../assets/icons/running.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import { ComposeDispatch, update } from './reducer';
+import { useAtom } from 'jotai';
+import { isActionAtom } from './state';
+import { useCallback } from 'react';
 
 interface Props {
-  isAction: boolean;
   size?: 'normal' | 'large';
   className?: string;
-  composeDispatch: ComposeDispatch;
 }
 
-function ActionSwitch({ isAction, className, composeDispatch, size }: Props) {
-  const toggleAction = () => composeDispatch(update({ isAction: !isAction }));
+function ActionSwitch({ className, size }: Props) {
+  const [isAction, setIsAction] = useAtom(isActionAtom);
+  const toggle = useCallback(() => setIsAction((isAction) => !isAction), [setIsAction]);
   return (
     <ChatItemToolbarButton
       on={isAction}
       className={className}
-      onClick={toggleAction}
+      onClick={toggle}
       sprite={running}
       title="描述动作"
       size={size}

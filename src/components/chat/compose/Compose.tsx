@@ -23,7 +23,7 @@ import BroadcastSwitch from './BroadcastSwitch';
 import { Preview } from '../../../api/events';
 import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
-import store, { useDispatch, useSelector } from '../../../store';
+import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
 import { calculateCanSubmit, composeReducerMaker, ComposeState, update } from './reducer';
 import { post } from '../../../api/request';
@@ -146,7 +146,7 @@ function Compose({ preview, channelId, member }: Props) {
       initial: true,
       media: undefined,
       editFor: undefined,
-      messageId: preview?.id || newId(),
+      messageId: newId(),
       text: initialText,
       entities: entities,
       clear: false,
@@ -198,6 +198,7 @@ function Compose({ preview, channelId, member }: Props) {
     if (whisperTo !== null && whisperTo !== undefined) {
       newMessage.whisperToUsers = whisperTo.map((item) => item.value);
     }
+    composeDispatch(update({ messageId: newId() }));
     const result = await post('/messages/send', newMessage);
     if (!result.isOk) {
       throwErr(dispatch)(result.value);

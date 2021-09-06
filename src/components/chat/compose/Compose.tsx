@@ -25,7 +25,7 @@ import { Id, newId } from '../../../utils/id';
 import { ChannelMember } from '../../../api/channels';
 import { useDispatch, useSelector } from '../../../store';
 import { useSend } from '../../../hooks/useSend';
-import { calculateCanSubmit, composeReducerMaker, ComposeState, update } from './reducer';
+import { composeReducerMaker, ComposeState, update } from './reducer';
 import { post } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { uploadMedia } from './helper';
@@ -131,8 +131,6 @@ function Compose({ preview, channelId, member }: Props) {
   const rollCommand = useSelector((state) => state.chatStates.get(pane)!.channel.defaultRollCommand);
   const dispatch = useDispatch();
   const sendEvent = useSend();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const initialText = useMemo(() => preview?.text || '', []);
   const characterName = member.characterName;
   const makeInitState = (): ComposeState => {
     const inGame = preview?.inGame || false;
@@ -147,10 +145,10 @@ function Compose({ preview, channelId, member }: Props) {
       media: undefined,
       editFor: undefined,
       messageId: newId(),
-      text: initialText,
+      text: '',
       entities: entities,
       clear: false,
-      canSubmit: calculateCanSubmit(initialText, entities, inGame, characterName),
+      canSubmit: false,
     };
   };
   const composeReducer = useMemo(
@@ -243,8 +241,8 @@ function Compose({ preview, channelId, member }: Props) {
           autoFocus
           autoSize
           css={[input]}
-          initialValue={initialText}
           composeDispatch={composeDispatch}
+          initialValue=""
           inGame={inGame}
           isAction={isAction}
         />

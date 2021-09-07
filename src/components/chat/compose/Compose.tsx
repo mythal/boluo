@@ -196,8 +196,9 @@ function Compose({ preview, channelId, member }: Props) {
     if (whisperTo !== null && whisperTo !== undefined) {
       newMessage.whisperToUsers = whisperTo.map((item) => item.value);
     }
+    const resultPromise = post('/messages/send', newMessage);
     composeDispatch(update({ messageId: newId() }));
-    const result = await post('/messages/send', newMessage);
+    const result = await resultPromise;
     if (!result.isOk) {
       throwErr(dispatch)(result.value);
       composeDispatch(update({ sending: false }));

@@ -26,7 +26,7 @@ import cog from '../../assets/icons/cog.svg';
 import Overlay from '../atoms/Overlay';
 import Menu from '../atoms/Menu';
 import { MenuItem, MenuItemLink } from '../atoms/MenuItem';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import { recordNext } from '../../utils/browser';
 
 const buttonBarStyle = css`
@@ -85,7 +85,7 @@ interface Props {
 type FormData = Pick<EditChannelMember, 'characterName'>;
 
 function ChannelMemberButton({ className }: Props) {
-  const pane = usePane()!;
+  const pane = useChannelId()!;
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const user = useSelector((state) => state.profile?.user);
   const channelName = useSelector((state) => state.chatStates.get(pane)!.channel.name);

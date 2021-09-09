@@ -6,6 +6,7 @@ import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { update } from './reducer';
 import { useAtom } from 'jotai';
 import { mediaAtom } from './state';
+import { useChannelId } from '../../../hooks/useChannelId';
 
 interface Props {
   className?: string;
@@ -14,7 +15,7 @@ interface Props {
 
 function ImageUploadButton({ className, size }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [media, updateMedia] = useAtom(mediaAtom);
+  const [media, updateMedia] = useAtom(mediaAtom, useChannelId());
 
   const removeMedia = useCallback(() => updateMedia(undefined), [updateMedia]);
   const startUpload = useCallback(() => fileInputRef.current?.click(), []);

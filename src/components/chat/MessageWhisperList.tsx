@@ -13,7 +13,7 @@ import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import eye from '../../assets/icons/eye.svg';
 import eyeSlash from '../../assets/icons/eye-slash.svg';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 
 interface Props {
   myMember?: ChannelMember;
@@ -35,7 +35,7 @@ const whisperContentWrapper = css`
 
 function MessageWhisperList({ myMember, message }: Props) {
   const dispatch = useDispatch();
-  const pane = usePane();
+  const pane = useChannelId();
   const members = useSelector((state) => state.chatStates.get(pane)!.members);
   const { whisperToUsers } = message;
 

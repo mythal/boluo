@@ -4,6 +4,7 @@ import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { useAtom } from 'jotai';
 import { isActionAtom } from './state';
 import { useCallback } from 'react';
+import { useChannelId } from '../../../hooks/useChannelId';
 
 interface Props {
   size?: 'normal' | 'large';
@@ -11,8 +12,8 @@ interface Props {
 }
 
 function ActionSwitch({ className, size }: Props) {
-  const [isAction, setIsAction] = useAtom(isActionAtom);
-  const toggle = useCallback(() => setIsAction((isAction) => !isAction), [setIsAction]);
+  const [isAction, setIsAction] = useAtom(isActionAtom, useChannelId());
+  const toggle = useCallback(() => setIsAction('toggle'), [setIsAction]);
   return (
     <ChatItemToolbarButton
       on={isAction}

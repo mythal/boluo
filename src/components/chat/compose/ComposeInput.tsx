@@ -1,18 +1,17 @@
 import * as React from 'react';
-import { Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useParse } from '../../../hooks/useParse';
-import { ComposeDispatch, ComposeState, update } from './reducer';
+import { Ref, useCallback, useRef, useState } from 'react';
 import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
+import { useAtom } from 'jotai';
+import { inGameAtom, mediaAtom, sourceAtom } from './state';
+import { useChannelId } from '../../../hooks/useChannelId';
+import { useSendPreview } from './useSendPreview';
 
 interface Props {
-  inGame: boolean;
-  initialValue: string;
-  composeDispatch: ComposeDispatch;
+  initialValue?: string;
   autoFocus?: boolean;
   className?: string;
   autoSize?: boolean;
-  isAction: boolean;
 }
 
 const style = css`
@@ -21,99 +20,48 @@ const style = css`
   }
 `;
 
-const actionCommand = '.me ';
-const ACTION_COMMAND = /^[.。]me\s*/;
-
 export interface ComposeInputAction {
   appendDice: (command: string) => void;
   reset: () => void;
 }
 
-function ComposeInput(
-  { inGame, initialValue, composeDispatch, autoFocus = false, autoSize = false, className, isAction }: Props,
-  ref: Ref<ComposeInputAction>
-) {
+function ComposeInput({ autoFocus = false, autoSize = false, className }: Props, ref: Ref<ComposeInputAction>) {
+  const channelId = useChannelId();
+  const [inGame] = useAtom(inGameAtom, channelId);
+  const [media, setMedia] = useAtom(mediaAtom, channelId);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(autoSize, inputRef);
-  const [value, setValue] = useState(initialValue);
+  const [source, setSource] = useAtom(sourceAtom, channelId);
   const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);
 
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
-  const timeout = useRef<number | undefined>(undefined);
-  const parse = useParse();
 
-  const reset = useCallback(() => {
-    setValue('');
-    if (inputRef.current) {
-      inputRef.current.style.height = '';
-    }
-  }, []);
-
-  const appendDice = useCallback(
-    (command: string) => {
-      const insertStr = ` {${command}}`;
-      setValue((value) => value + insertStr);
-      inputRef.current?.focus();
-      window.setTimeout(() => {
-        if (!inputRef.current) {
-          return;
-        }
-        const length = inputRef.current.value.length;
-        inputRef.current.focus();
-        inputRef.current.setSelectionRange(length - (command.length + 1), length - 1);
-        const { text, entities } = parse(inputRef.current.value.trim());
-        window.clearTimeout(timeout.current);
-        timeout.current = window.setTimeout(() => {
-          inputRef.current?.focus();
-          composeDispatch(update({ text, entities }));
-        }, 100);
-      }, 10);
-    },
-    [composeDispatch, parse]
-  );
-
-  useEffect(() => {
-    setValue((value) => {
-      const matchActionCommand = value.match(ACTION_COMMAND);
-      if (isAction && matchActionCommand === null) {
-        return actionCommand + value;
-      } else if (!isAction && matchActionCommand) {
-        return value.substr(matchActionCommand[0].length);
-      }
-      return value;
-    });
-  }, [isAction]);
-
-  useImperativeHandle<ComposeInputAction, ComposeInputAction>(
-    ref,
-    () => {
-      return {
-        appendDice,
-        reset,
-      };
-    },
-    [appendDice, reset]
-  );
+  // const appendDice = useCallback(
+  //   (command: string) => {
+  //     const insertStr = ` {${command}}`;
+  //     setValue((value) => value + insertStr);
+  //     inputRef.current?.focus();
+  //     window.setTimeout(() => {
+  //       if (!inputRef.current) {
+  //         return;
+  //       }
+  //       const length = inputRef.current.value.length;
+  //       inputRef.current.focus();
+  //       inputRef.current.setSelectionRange(length - (command.length + 1), length - 1);
+  //       const { text, entities } = parse(inputRef.current.value.trim());
+  //       window.clearTimeout(timeout.current);
+  //       timeout.current = window.setTimeout(() => {
+  //         inputRef.current?.focus();
+  //         composeDispatch(update({ text, entities }));
+  //       }, 100);
+  //     }, 10);
+  //   },
+  //   [composeDispatch, parse]
+  // );
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-    const nextValue = e.target.value;
-    setValue(nextValue);
-    window.clearTimeout(timeout.current);
-    timeout.current = window.setTimeout(() => {
-      const { text, entities } = parse(nextValue.trim());
-      const updater: Partial<ComposeState> = { text, entities };
-      if (nextValue.match(ACTION_COMMAND)) {
-        if (!isAction) {
-          updater.isAction = true;
-        }
-      } else {
-        if (isAction) {
-          updater.isAction = false;
-        }
-      }
-      composeDispatch(update(updater));
-    }, 250);
+    setSource(e.target.value);
   };
 
   const onDrop: React.DragEventHandler = (event) => {
@@ -121,22 +69,24 @@ function ComposeInput(
     setDragging(false);
     const { files } = event.dataTransfer;
     if (files.length > 0) {
-      const media = files[0];
-      composeDispatch(update({ media }));
+      setMedia(files[0]);
     }
   };
-  const onDragOver: React.DragEventHandler = (event) => {
+  const onDragOver: React.DragEventHandler = useCallback((event) => {
     setDragging(true);
     event.preventDefault();
     event.dataTransfer.effectAllowed = 'copy';
     event.dataTransfer.dropEffect = 'copy';
-  };
-  const onPaste: React.ClipboardEventHandler<HTMLTextAreaElement> = (e) => {
-    if (e.clipboardData.files.length > 0) {
-      e.preventDefault();
-      composeDispatch(update({ media: e.clipboardData.files[0] }));
-    }
-  };
+  }, []);
+  const onPaste: React.ClipboardEventHandler<HTMLTextAreaElement> = useCallback(
+    (e) => {
+      if (e.clipboardData.files.length > 0) {
+        e.preventDefault();
+        setMedia(e.clipboardData.files[0]);
+      }
+    },
+    [setMedia]
+  );
   const handleKeyDown: React.KeyboardEventHandler = (e) => {
     if (e.key === 'Enter' && compositing.current) {
       e.stopPropagation();
@@ -153,7 +103,7 @@ function ComposeInput(
       ref={inputRef}
       css={style}
       className={className}
-      value={value}
+      value={source}
       placeholder={placeholder}
       autoFocus={autoFocus}
       onChange={handleChange}
@@ -164,4 +114,4 @@ function ComposeInput(
   );
 }
 
-export default React.memo(React.forwardRef<ComposeInputAction, Props>(ComposeInput));
+export default ComposeInput;

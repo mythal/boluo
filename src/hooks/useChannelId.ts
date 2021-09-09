@@ -3,7 +3,7 @@ import { Id } from '../utils/id';
 
 export const PaneContext = React.createContext<Id | undefined>(undefined);
 
-export function usePane(): Id {
+export function useChannelId(): Id {
   const pane = useContext(PaneContext);
   if (pane === undefined) {
     throw new Error('use a uninitialized pane context');

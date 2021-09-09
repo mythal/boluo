@@ -28,7 +28,7 @@ import Filter from './Filter';
 import MemberListButton from './MemberListButton';
 import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 import exportIcon from '../../assets/icons/file-export.svg';
 import lockIcon from '../../assets/icons/lock.svg';
@@ -82,7 +82,7 @@ const showOnMd = css`
 `;
 
 function Header() {
-  const pane = usePane();
+  const pane = useChannelId();
   const channel = useSelector((state) => state.chatStates.get(pane)!.channel);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
   const myMember = useSelector((state) => state.profile?.channels.get(channel.id)?.member);

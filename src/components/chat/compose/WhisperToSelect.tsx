@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { UserItem } from './reducer';
 import { useSelector } from '../../../store';
-import { usePane } from '../../../hooks/usePane';
+import { useChannelId } from '../../../hooks/useChannelId';
 import { mB, selectTheme } from '../../../styles/atoms';
 import Dialog from '../../molecules/Dialog';
 import { HelpText } from '../../atoms/HelpText';
@@ -17,9 +17,9 @@ interface Props {
 }
 
 function WhisperToSelect({ dismiss }: Props) {
-  const pane = usePane();
-  const [whisperTo, setWhisperTo] = useAtom(whisperToAtom);
-  const channelMembers = useSelector((state) => state.chatStates.get(pane)!.members);
+  const channelId = useChannelId();
+  const [whisperTo, setWhisperTo] = useAtom(whisperToAtom, channelId);
+  const channelMembers = useSelector((state) => state.chatStates.get(channelId)!.members);
   const [values, setValues] = useState<UserItem[] | undefined | null>(whisperTo);
   const options: UserItem[] = channelMembers.map((member) => {
     let label = member.user.nickname;

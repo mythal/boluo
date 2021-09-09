@@ -19,7 +19,7 @@ import { throwErr } from '../../../utils/errors';
 import { useSend } from '../../../hooks/useSend';
 import MessageMedia from '../MessageMedia';
 import ChatImageUploadButton from './ImageUploadButton';
-import { usePane } from '../../../hooks/usePane';
+import { useChannelId } from '../../../hooks/useChannelId';
 import { calculateCanSubmit, composeReducerMaker, ComposeState, update, UserItem } from './reducer';
 import { uploadMedia } from './helper';
 import { inputStyle } from '../../atoms/Input';
@@ -80,7 +80,7 @@ export const container = css`
 function EditCompose({ preview, editTo }: Props) {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const pane = usePane();
+  const pane = useChannelId();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const myMember = useSelector((state) => state.profile!.channels.get(channelId)!.member);
@@ -202,11 +202,7 @@ function EditCompose({ preview, editTo }: Props) {
             onClick={toggleBroadcast}
             title="输入中广播"
           />
-          <ChatImageUploadButton
-            hasImage={Boolean(media || preview?.mediaId)}
-            composeDispatch={composeDispatch}
-            css={[mR(1)]}
-          />
+          <ChatImageUploadButton css={[mR(1)]} />
           <ChatItemToolbarButton css={mR(1)} sprite={cancelIcon} onClick={cancelEdit} title="取消" />
           <ChatItemToolbarButton
             loading={sending}
@@ -224,13 +220,7 @@ function EditCompose({ preview, editTo }: Props) {
         <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>
       <div css={composeWrapper}>
-        <ComposeInput
-          css={compose}
-          inGame={inGame}
-          composeDispatch={composeDispatch}
-          initialValue={initialDraft}
-          isAction={isAction}
-        />
+        <ComposeInput css={compose} initialValue={initialDraft} />
       </div>
     </div>
   );

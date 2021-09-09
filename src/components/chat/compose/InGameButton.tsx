@@ -4,12 +4,13 @@ import { relative, textXs } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import mask from '../../../assets/icons/theater-masks.svg';
 import { css } from '@emotion/core';
-import { ComposeDispatch, update } from './reducer';
+import { ComposeDispatch } from './reducer';
+import { useAtom } from 'jotai';
+import { inGameAtom } from './state';
+import { useCallback } from 'react';
+import { useChannelId } from '../../../hooks/useChannelId';
 
 interface Props {
-  inGame: boolean;
-  composeDispatch: ComposeDispatch;
-  inputName: string;
   className?: string;
 }
 
@@ -25,8 +26,9 @@ const inGameContainer = css`
   }
 `;
 
-function InGameButton({ inGame, composeDispatch, className }: Props) {
-  const toggleInGame = () => composeDispatch(update({ inGame: !inGame }));
+function InGameButton({ className }: Props) {
+  const [inGame, setInGame] = useAtom(inGameAtom, useChannelId());
+  const toggleInGame = useCallback(() => setInGame((inGame) => !inGame), [setInGame]);
   return (
     <div css={inGameContainer} className={className}>
       <Tooltip className="tooltip">

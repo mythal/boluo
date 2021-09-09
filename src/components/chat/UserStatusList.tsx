@@ -5,7 +5,7 @@ import { useSelector } from '../../store';
 import { roundedSm, textSm, uiShadow } from '../../styles/atoms';
 import MemberListItem from './MemberListItem';
 import { blue, gray } from '../../styles/colors';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import { css } from '@emotion/core';
 import userPlusIcon from '../../assets/icons/user-plus.svg';
 import Icon from '../atoms/Icon';

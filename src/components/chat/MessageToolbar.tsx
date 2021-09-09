@@ -17,7 +17,7 @@ import { css } from '@emotion/core';
 import { fontMono, pL, spacingN, textSm } from '../../styles/atoms';
 import { primary } from '../../styles/colors';
 import { Message } from '../../api/messages';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 
 interface Props {
   myMember?: ChannelMember;
@@ -32,7 +32,7 @@ const quoteStyle = css`
 
 function MessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
-  const pane = usePane();
+  const pane = useChannelId();
   const isAdmin = useIsAdmin(pane);
   const [deleteDialog, showDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);

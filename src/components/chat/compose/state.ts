@@ -2,8 +2,33 @@ import { atom } from 'jotai';
 import { UserItem } from './reducer';
 import { newId } from '../../../utils/id';
 import { Entity } from '../../../interpreter/entities';
+export const defaultDiceAtom = atom('d');
 
-export const isActionAtom = atom(false);
+const ACTION_COMMAND = /^[.。]me\s*/;
+export const isActionAtom = atom<boolean, boolean | 'toggle'>(
+  (get) => {
+    const sauce = get(sourceAtom);
+    return Boolean(sauce.match(ACTION_COMMAND));
+  },
+  (get, set, update) => {
+    const prev = get(isActionAtom);
+    if (prev === update) {
+      return;
+    }
+    if (update === 'toggle') {
+      update = !prev;
+    }
+    const source = get(sourceAtom);
+    if (update) {
+      set(sourceAtom, '.me ' + source);
+    } else {
+      const match = source.match(ACTION_COMMAND);
+      if (match) {
+        set(sourceAtom, source.substr(match[0].length));
+      }
+    }
+  }
+);
 
 export const broadcastAtom = atom(true);
 
@@ -11,7 +36,11 @@ export const inGameAtom = atom(false);
 
 export const whisperToAtom = atom<UserItem[] | null | undefined>(null);
 
-export const textAtom = atom('');
+export const sourceAtom = atom<string>('');
+
+// export const parsedAtom = atom<{ text: string, entities: Entity[] }>((read) => {
+//
+// });
 
 export const mediaAtom = atom<File | undefined>(undefined);
 

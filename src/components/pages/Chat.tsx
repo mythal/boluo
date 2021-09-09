@@ -15,7 +15,7 @@ import { AppResult } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
 import PageLoading from '../../components/molecules/PageLoading';
 import { css, Global } from '@emotion/core';
-import { PaneContext } from '../../hooks/usePane';
+import { PaneContext } from '../../hooks/useChannelId';
 import { chatPath } from '../../utils/path';
 import { breakpoint, mediaQuery } from '../../styles/atoms';
 import { useSpaceConnection } from '../../hooks/useSpaceConnection';

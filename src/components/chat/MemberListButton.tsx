@@ -8,7 +8,7 @@ import { HEARTBEAT_INTERVAL } from '../../settings';
 import { Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';
 import { useSend } from '../../hooks/useSend';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import Overlay from '../atoms/Overlay';
 import ChatMemberList from './MemberList';
 
@@ -18,7 +18,7 @@ interface Props {
 }
 
 function MemberListButton({ className, channelId }: Props) {
-  const pane = usePane();
+  const pane = useChannelId();
   const channelMembers = useSelector((state) => state.chatStates.get(pane)!.members);
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);

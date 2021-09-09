@@ -14,7 +14,7 @@ import { Channel } from '../../api/channels';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { useTitle } from '../../hooks/useTitle';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import { chatPath } from '../../utils/path';
 import { useHistory } from 'react-router-dom';
 import { blue, gray } from '../../styles/colors';

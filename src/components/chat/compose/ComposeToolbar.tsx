@@ -8,6 +8,7 @@ import styled from '@emotion/styled';
 import { broadcastAtom, inGameAtom, isActionAtom } from './state';
 import { useCallback } from 'react';
 import { useAtom } from 'jotai';
+import { useChannelId } from '../../../hooks/useChannelId';
 
 interface Props {}
 
@@ -17,10 +18,11 @@ const Toolbar = styled.div`
 `;
 
 function ComposeToolbar(props: Props) {
-  const [isAction, updateAction] = useAtom(isActionAtom);
-  const [broadcast, updateBroadcast] = useAtom(broadcastAtom);
-  const [inGame, updateInGame] = useAtom(inGameAtom);
-  const toggleIsAction = useCallback(() => updateAction((isAction) => !isAction), [updateAction]);
+  const channelId = useChannelId();
+  const [isAction, updateAction] = useAtom(isActionAtom, channelId);
+  const [broadcast, updateBroadcast] = useAtom(broadcastAtom, channelId);
+  const [inGame, updateInGame] = useAtom(inGameAtom, channelId);
+  const toggleIsAction = useCallback(() => updateAction('toggle'), [updateAction]);
   const toggleBroadcast = useCallback(() => updateBroadcast((broadcast) => !broadcast), [updateBroadcast]);
   const toggleInGame = useCallback(() => updateInGame((inGame) => !inGame), [updateInGame]);
   return (

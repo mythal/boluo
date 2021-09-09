@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { ChannelMember } from '../../api/channels';
@@ -7,6 +7,7 @@ import { Draggable, DraggableProvided, DraggableProvidedDragHandleProps } from '
 import ChatPreviewCompose from './compose/EditCompose';
 import ChatPreviewItem from './PreviewItem';
 import ChatMessageItem from './MessageItem';
+import MyPreview from './compose/MyPreview';
 
 interface Props {
   item: PreviewItem | MessageItem;
@@ -25,12 +26,8 @@ const itemSwitch = (
   const myId = myMember?.userId;
   if (item.type === 'MESSAGE') {
     const { message } = item;
-    if (editItem !== undefined) {
-      if (editItem.mine && myId) {
-        return <ChatPreviewCompose preview={editItem.preview} editTo={message} />;
-      } else if (editItem.preview !== undefined) {
-        return <ChatPreviewItem preview={editItem.preview} />;
-      }
+    if (editItem !== undefined && editItem.preview) {
+      return <ChatPreviewItem preview={editItem.preview} />;
     }
     return (
       <ChatMessageItem
@@ -42,12 +39,14 @@ const itemSwitch = (
         sameSender={sameSender}
       />
     );
+  } else if (myMember && item.preview.senderId === myMember.userId) {
+    return <MyPreview key={item.id} preview={item.preview} />;
   } else {
     return <ChatPreviewItem key={item.id} preview={item.preview} />;
   }
 };
 function ChatItem({ item, myMember, index, sameSender = false }: Props) {
-  const pane = usePane();
+  const pane = useChannelId();
 
   const editItem = useSelector((state) => {
     if (pane && item !== undefined && item.type === 'MESSAGE') {

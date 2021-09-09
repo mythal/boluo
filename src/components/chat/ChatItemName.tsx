@@ -12,7 +12,7 @@ import { gray } from '../../styles/colors';
 import { chatContentLineHeight } from './styles';
 import Tooltip from '../atoms/Tooltip';
 import { useSelector } from '../../store';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 import { genColor } from '../../utils/game';
 
 interface Props {
@@ -53,7 +53,7 @@ const nicknameStyle = css`
 `;
 
 function ChatItemName({ name, userId, master }: Props) {
-  const pane = usePane()!;
+  const pane = useChannelId()!;
   const nickname = useSelector(
     (state) => state.chatStates.get(pane)!.members.find((member) => member.user.id === userId)?.user.nickname
   );

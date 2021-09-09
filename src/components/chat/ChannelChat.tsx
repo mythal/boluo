@@ -7,9 +7,10 @@ import Loading from '../molecules/Loading';
 import { useSelector } from '../../store';
 import Compose from './compose/Compose';
 import { chatRight } from './styles';
-import { useAtom } from 'jotai/esm';
+import { useAtom } from 'jotai';
 import { focusChannelAtom } from '../../states/focusChannel';
 import { PrivateChat } from './PrivateChat';
+import { Provider } from 'jotai';
 
 interface Props {
   spaceId: Id;
@@ -19,6 +20,7 @@ interface Props {
 function ChannelChat({ channelId }: Props) {
   const loading = useSelector((state) => state.chatStates.get(channelId) === undefined);
   const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
+  const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const myPreview = useSelector((state) => {
     if (!myMember) {
@@ -49,11 +51,11 @@ function ChannelChat({ channelId }: Props) {
     );
   }
   return (
-    <React.Fragment>
+    <Provider scope={channelId}>
       <Header />
       <ChatList channelId={channelId} />
-      {myMember && <Compose channelId={channelId} member={myMember} preview={myPreview?.preview} />}
-    </React.Fragment>
+      {initialized && myMember && <Compose channelId={channelId} member={myMember} />}
+    </Provider>
   );
 }
 

@@ -12,14 +12,14 @@ import Menu from '../atoms/Menu';
 import { MenuItem } from '../atoms/MenuItem';
 import { useDispatch, useSelector } from '../../store';
 import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions/chat';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 
 interface Props {
   className?: string;
 }
 
 function Filter({ className }: Props) {
-  const pane = usePane()!;
+  const pane = useChannelId()!;
   const filter = useSelector((state) => state.chatStates.get(pane)!.filter);
   const showFolded = useSelector((state) => state.chatStates.get(pane)!.showFolded);
   const button = useRef<HTMLButtonElement | null>(null);

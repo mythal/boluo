@@ -8,7 +8,7 @@ import Icon from '../atoms/Icon';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import styled from '@emotion/styled';
 import { bgColor } from '../../styles/colors';
-import { usePane } from '../../hooks/usePane';
+import { useChannelId } from '../../hooks/useChannelId';
 
 export const loadMoreHeight = 60;
 
@@ -21,7 +21,7 @@ export const LoadMoreContainer = styled.div`
 `;
 
 function LoadMore() {
-  const pane = usePane();
+  const pane = useChannelId();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const before = useSelector((state) => state.chatStates.get(pane)?.itemSet.messages.first()?.pos);
   const finished = useSelector((state) => state.chatStates.get(pane)!.finished);

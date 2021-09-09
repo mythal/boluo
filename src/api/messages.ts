@@ -39,7 +39,6 @@ export interface NewMessage {
   inGame: boolean;
   isAction: boolean;
   mediaId: string | null;
-  orderDate: number | null;
   whisperToUsers?: Id[];
 }
 

@@ -4,6 +4,7 @@ import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import { useAtom } from 'jotai';
 import { inGameAtom } from './state';
 import { useCallback } from 'react';
+import { useChannelId } from '../../../hooks/useChannelId';
 
 interface Props {
   className?: string;
@@ -11,7 +12,8 @@ interface Props {
 }
 
 function InGameSwitch({ className, size }: Props) {
-  const [inGame, setInGame] = useAtom(inGameAtom);
+  const channelId = useChannelId();
+  const [inGame, setInGame] = useAtom(inGameAtom, channelId);
   const toggleInGame = useCallback(() => setInGame((inGame) => !inGame), [setInGame]);
   return (
     <ChatItemToolbarButton

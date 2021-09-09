@@ -1,19 +1,18 @@
 import * as React from 'react';
 import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import { ComposeDispatch } from './reducer';
 import { broadcastAtom } from './state';
 import { useCallback } from 'react';
 import { useAtom } from 'jotai';
+import { useChannelId } from '../../../hooks/useChannelId';
 
 interface Props {
-  composeDispatch: ComposeDispatch;
   size?: 'normal' | 'large';
   className?: string;
 }
 
 function BroadcastSwitch({ className, size }: Props) {
-  const [broadcast, update] = useAtom(broadcastAtom);
+  const [broadcast, update] = useAtom(broadcastAtom, useChannelId());
   const toggleBroadcast = useCallback(() => {
     update((isBroadcast) => !isBroadcast);
   }, [update]);

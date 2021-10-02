@@ -62,6 +62,7 @@ function WhisperToSelect({ dismiss }: Props) {
         />
       )}
       <HelpText>主持人能查看所有的悄悄话。</HelpText>
+      <HelpText>如果不选中自己，自己也无法看到自己消息内容，可以用作暗骰。</HelpText>
     </Dialog>
   );
 }

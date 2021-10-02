@@ -11,6 +11,7 @@ import { useAtom } from 'jotai';
 import { focusChannelAtom } from '../../states/focusChannel';
 import { PrivateChat } from './PrivateChat';
 import { Provider } from 'jotai';
+import { useInitializeCompose } from './compose/useInitializeCompose';
 
 interface Props {
   spaceId: Id;
@@ -20,15 +21,9 @@ interface Props {
 function ChannelChat({ channelId }: Props) {
   const loading = useSelector((state) => state.chatStates.get(channelId) === undefined);
   const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
-  const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
-  const myPreview = useSelector((state) => {
-    if (!myMember) {
-      return undefined;
-    }
-    return state.chatStates.get(channelId)?.itemSet.previews.get(myMember.userId);
-  });
   const [, setFocusChannel] = useAtom(focusChannelAtom);
+  const initialized = useInitializeCompose(channelId);
   useEffect(() => {
     setFocusChannel((prev) => prev.add(channelId));
     return () => setFocusChannel((prev) => prev.remove(channelId));
@@ -51,12 +46,12 @@ function ChannelChat({ channelId }: Props) {
     );
   }
   return (
-    <Provider scope={channelId}>
+    <React.Fragment>
       <Header />
       <ChatList channelId={channelId} />
       {initialized && myMember && <Compose channelId={channelId} member={myMember} />}
-    </Provider>
+    </React.Fragment>
   );
 }
 
-export default ChannelChat;
+export default React.memo(ChannelChat);

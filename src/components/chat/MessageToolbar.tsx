@@ -18,6 +18,8 @@ import { fontMono, pL, spacingN, textSm } from '../../styles/atoms';
 import { primary } from '../../styles/colors';
 import { Message } from '../../api/messages';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useAtomCallback } from 'jotai/utils';
+import { editForAtom, inputNameAtom, isActionAtom, messageIdAtom, sourceAtom } from './compose/state';
 
 interface Props {
   myMember?: ChannelMember;
@@ -32,11 +34,19 @@ const quoteStyle = css`
 
 function MessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
+  const channelId = useChannelId();
   const pane = useChannelId();
   const isAdmin = useIsAdmin(pane);
   const [deleteDialog, showDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const throwE = throwErr(dispatch);
+  const startEdit = useAtomCallback((get, set) => {
+    set(messageIdAtom, message.id);
+    set(editForAtom, message.modified);
+    set(isActionAtom, message.isAction);
+    set(inputNameAtom, message.name);
+    set(sourceAtom, message.text);
+  }, channelId);
   const deleteMessage = async () => {
     setLoading(true);
     const result = await post('/messages/delete', {}, { id: message.id });
@@ -52,9 +62,6 @@ function MessageToolbar({ myMember, mine, message }: Props) {
       throwE(result.value);
     }
     setLoading(false);
-  };
-  const startEdit = () => {
-    dispatch({ type: 'START_EDIT_MESSAGE', message, pane });
   };
   const buttonsProps: Array<ToolbarButtonProps> = [];
   if (isAdmin || mine) {

@@ -6,6 +6,8 @@ import { useChannelId } from '../../../hooks/useChannelId';
 import { useSelector } from '../../../store';
 import Button from '../../atoms/Button';
 import { mL } from '../../../styles/atoms';
+import ChatItemToolbarButton from '../ChatItemToolbarButton';
+import diceIcon from '../../../assets/icons/d20.svg';
 
 export const AddDiceButton = () => {
   const channelId = useChannelId();
@@ -13,11 +15,7 @@ export const AddDiceButton = () => {
 
   const setSource = useUpdateAtom(sourceAtom, channelId);
   const addDice = useCallback(() => {
-    setSource((source) => source + '{' + defaultDice + '}');
+    setSource((source) => source + ' {' + defaultDice + '}');
   }, [setSource]);
-  return (
-    <Button css={[mL(1)]} data-size="small" onClick={addDice}>
-      添加骰子
-    </Button>
-  );
+  return <ChatItemToolbarButton css={mL(1)} onClick={addDice} title="添加骰子" sprite={diceIcon} />;
 };

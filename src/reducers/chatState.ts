@@ -299,8 +299,8 @@ export const chatReducer = (
       return handleResetMessageMoving(state, action);
     case 'CHAT_FILTER':
       return { ...state, filter: action.filter };
-    case 'START_EDIT_MESSAGE':
-      return handleStartEditMessage(state, action);
+    // case 'START_EDIT_MESSAGE':
+    //   return handleStartEditMessage(state, action);
     case 'STOP_EDIT_MESSAGE':
       return handleStopEditMessage(state, action);
     case 'EVENT_RECEIVED':

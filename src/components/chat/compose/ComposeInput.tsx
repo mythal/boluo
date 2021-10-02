@@ -3,9 +3,10 @@ import { Ref, useCallback, useRef, useState } from 'react';
 import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { useAtom } from 'jotai';
-import { inGameAtom, mediaAtom, sourceAtom } from './state';
+import { editForAtom, inGameAtom, mediaAtom, messageIdAtom, sourceAtom } from './state';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { useSendPreview } from './useSendPreview';
+import { useAtomValue, useUpdateAtom } from 'jotai/utils';
+import { newId } from '../../../utils/id';
 
 interface Props {
   initialValue?: string;
@@ -32,36 +33,19 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(autoSize, inputRef);
   const [source, setSource] = useAtom(sourceAtom, channelId);
+  const editFor = useAtomValue(editForAtom);
+  const updateMessageId = useUpdateAtom(messageIdAtom, channelId);
   const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);
 
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
 
-  // const appendDice = useCallback(
-  //   (command: string) => {
-  //     const insertStr = ` {${command}}`;
-  //     setValue((value) => value + insertStr);
-  //     inputRef.current?.focus();
-  //     window.setTimeout(() => {
-  //       if (!inputRef.current) {
-  //         return;
-  //       }
-  //       const length = inputRef.current.value.length;
-  //       inputRef.current.focus();
-  //       inputRef.current.setSelectionRange(length - (command.length + 1), length - 1);
-  //       const { text, entities } = parse(inputRef.current.value.trim());
-  //       window.clearTimeout(timeout.current);
-  //       timeout.current = window.setTimeout(() => {
-  //         inputRef.current?.focus();
-  //         composeDispatch(update({ text, entities }));
-  //       }, 100);
-  //     }, 10);
-  //   },
-  //   [composeDispatch, parse]
-  // );
-
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-    setSource(e.target.value);
+    const value = e.target.value;
+    if (value.trim() === '' && !editFor) {
+      updateMessageId(newId());
+    }
+    setSource(value);
   };
 
   const onDrop: React.DragEventHandler = (event) => {
@@ -89,7 +73,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   );
   const handleKeyDown: React.KeyboardEventHandler = (e) => {
     if (e.key === 'Enter' && compositing.current) {
-      e.stopPropagation();
+      return;
     }
   };
   const onDragLeave = () => setDragging(false);

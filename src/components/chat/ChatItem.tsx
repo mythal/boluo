@@ -4,7 +4,6 @@ import { useSelector } from '../../store';
 import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { ChannelMember } from '../../api/channels';
 import { Draggable, DraggableProvided, DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
-import ChatPreviewCompose from './compose/EditCompose';
 import ChatPreviewItem from './PreviewItem';
 import ChatMessageItem from './MessageItem';
 import MyPreview from './compose/MyPreview';

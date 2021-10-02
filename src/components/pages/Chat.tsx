@@ -24,6 +24,14 @@ import { useAtom } from 'jotai';
 import { userDialogAtom } from '../../states/userDialog';
 import MemberDialog from '../chat/MemberDialog';
 import { useMyId } from '../../hooks/useMyId';
+import { Provider } from 'jotai';
+
+function foobar(a: unknown) {
+  if (typeof a !== 'object') {
+    throw Error('panic');
+  }
+  a;
+}
 
 interface Params {
   spaceId: string;
@@ -113,7 +121,9 @@ function Chat() {
         {channelId && (
           <Route path={chatPath(spaceId, channelId)}>
             <PaneContext.Provider value={channelId}>
-              <ChannelChat key={channelId} spaceId={spaceId} channelId={channelId} />
+              <Provider key={channelId} scope={channelId}>
+                <ChannelChat key={channelId} spaceId={spaceId} channelId={channelId} />
+              </Provider>
             </PaneContext.Provider>
           </Route>
         )}

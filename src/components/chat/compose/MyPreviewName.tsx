@@ -18,6 +18,7 @@ import { useAtomValue } from 'jotai/utils';
 import { inGameAtom, inputNameAtom, isActionAtom } from './state';
 import { useAtom } from 'jotai';
 import WhisperTo from './WhisperTo';
+import { InPreviewActionButton } from './InPreviewActionButton';
 
 interface Props {
   master: boolean;
@@ -60,7 +61,6 @@ function MyPreviewName() {
   const isMaster: boolean = useSelector((state) => state.profile?.channels.get(channelId)?.member.isMaster ?? false);
   const inGame = useAtomValue(inGameAtom, channelId);
   const [inputName, setInputName] = useAtom(inputNameAtom, channelId);
-  const [isAction, setAction] = useAtom(isActionAtom, channelId);
   let name = nickname;
   if (inGame) {
     if (inputName.length > 0) {
@@ -97,8 +97,6 @@ function MyPreviewName() {
         )}
       </div>
       {isMaster && <Icon css={masterIconStyle} sprite={masterIcon} />}
-      {!isAction && <button onClick={() => setAction('toggle')}>描述动作</button>}
-      <WhisperTo />
     </Container>
   );
 }

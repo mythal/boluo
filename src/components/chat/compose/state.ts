@@ -46,10 +46,12 @@ export const mediaAtom = atom<File | undefined>(undefined);
 
 export const messageIdAtom = atom(newId());
 
-export const editForAtom = atom<number | undefined>(undefined);
+export const editForAtom = atom<number | null>(null);
 
 export const sendingAtom = atom(false);
 
 export const entitiesAtom = atom<Entity[]>([]);
 
 export const inputNameAtom = atom('');
+
+export const initializedAtom = atom(false);

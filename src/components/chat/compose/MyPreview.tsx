@@ -6,14 +6,18 @@ import ChatItemContent from '../ItemContent';
 import { ChatItemContentContainer } from '../ChatItemContentContainer';
 import { nameContainer, previewInGame, previewOutGame } from '../styles';
 import { css } from '@emotion/core';
-import { mL, textXs } from '../../../styles/atoms';
+import { mL, mR, textXs } from '../../../styles/atoms';
 import MyPreviewName from './MyPreviewName';
-import { useUpdateAtom } from 'jotai/utils';
-import { sourceAtom } from './state';
-import { useCallback } from 'react';
+import { useAtomValue, useUpdateAtom } from 'jotai/utils';
+import { isActionAtom, sourceAtom } from './state';
+import { useCallback, useMemo } from 'react';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { AddDiceButton } from './AddDiceButton';
 import ChatImageUploadButton from './ImageUploadButton';
+import WhisperTo from './WhisperTo';
+import { InPreviewActionButton } from './InPreviewActionButton';
+import { BroadcastAreClosed } from './BroadcastAreClosed';
+import { useParse } from '../../../hooks/useParse';
 
 interface Props {
   preview: Preview;
@@ -27,14 +31,12 @@ const previewChatItem = css`
 `;
 
 function MyPreview({ preview }: Props) {
-  let { text, isAction, entities } = preview;
-  const enableBroadcast = text !== null;
-
-  if (!enableBroadcast) {
-    text = '[预览广播已关闭]';
-    entities = [{ type: 'Text', start: 0, offset: text.length }];
-    isAction = true;
-  }
+  const enableBroadcast = preview.text !== null;
+  const channelId = useChannelId();
+  const source = useAtomValue(sourceAtom, channelId);
+  const isAction = useAtomValue(isActionAtom, channelId);
+  const parse = useParse();
+  const { text, entities } = useMemo(() => parse(source), [source, parse]);
 
   const name = <MyPreviewName />;
 
@@ -46,9 +48,14 @@ function MyPreview({ preview }: Props) {
       {!isAction && <div css={nameContainer}>{name}</div>}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
         {isAction && name}
+        {!enableBroadcast && <BroadcastAreClosed css={mR(1)} />}
         {text && <ChatItemContent entities={entities} text={text} />}
         <AddDiceButton />
-        <ChatImageUploadButton css={[mL(1)]} />
+        <div>
+          <WhisperTo />
+          <InPreviewActionButton css={mL(1)} />
+          <ChatImageUploadButton css={[mL(1)]} />
+        </div>
       </ChatItemContentContainer>
     </div>
   );

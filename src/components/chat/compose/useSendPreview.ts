@@ -1,8 +1,9 @@
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useSend } from '../../../hooks/useSend';
-import { useAtomCallback, useAtomValue } from 'jotai/utils';
+import { useAtomValue } from 'jotai/utils';
 import {
   broadcastAtom,
+  editForAtom,
   inGameAtom,
   inputNameAtom,
   isActionAtom,
@@ -18,20 +19,24 @@ import { useSelector } from '../../../store';
 export const useSendPreview = () => {
   const channelId = useChannelId();
   const send = useSend();
+  const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized ?? false);
   const parse = useParse();
   const source = useAtomValue(sourceAtom, channelId);
   const whisperTo = useAtomValue(whisperToAtom, channelId);
   const broadcast = useAtomValue(broadcastAtom, channelId);
   const inGame = useAtomValue(inGameAtom, channelId);
   const id = useAtomValue(messageIdAtom, channelId);
+  const editFor = useAtomValue(editForAtom, channelId);
   const isAction = useAtomValue(isActionAtom, channelId);
   const inputName = useAtomValue(inputNameAtom, channelId);
-  const submitHandle = useRef<number | undefined>(undefined);
   const nickname = useSelector((state) => state.profile?.user.nickname)!;
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member)!;
 
   useEffect(() => {
-    submitHandle.current = window.setTimeout(async () => {
+    if (!initialized) {
+      return;
+    }
+    const handle = window.setTimeout(async () => {
       let name = nickname;
       if (inGame) {
         if (inputName) {
@@ -46,25 +51,29 @@ export const useSendPreview = () => {
         id,
         isAction,
         mediaId: null,
-        editFor: null,
+        editFor,
         clear: false,
         channelId,
         text: '',
         entities: [],
       };
-      if (!whisperTo && broadcast) {
+      if (!broadcast || whisperTo) {
+        preview.text = null;
+      } else {
         const { text, entities } = parse(source);
         preview.text = text;
         preview.entities = entities;
       }
+      console.log(preview);
       send({ type: 'PREVIEW', preview });
-    }, 100);
-    return () => window.clearTimeout(submitHandle.current);
+    }, 200);
+    return () => window.clearTimeout(handle);
   }, [
     broadcast,
     channelId,
     id,
     inGame,
+    initialized,
     inputName,
     isAction,
     myMember.characterName,

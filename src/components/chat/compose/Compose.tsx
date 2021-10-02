@@ -21,14 +21,17 @@ import { ChannelMember } from '../../../api/channels';
 import ComposeInput from './ComposeInput';
 import InGameButton from './InGameButton';
 import { floatPanel } from '../styles';
-import { Provider } from 'jotai';
 import { SendButton } from './SendButton';
+import MessageMedia from '../MessageMedia';
+import { useAtomValue } from 'jotai/utils';
+import { editForAtom, mediaAtom } from './state';
 
 const container = css`
   grid-row: compose-start / compose-end;
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-template-areas:
+    ' edit    edit  edit'
     '    . toolbar  send'
     'input   input input';
   ${mediaQuery(breakpoint.md)} {
@@ -100,39 +103,34 @@ const mediaContainer = css`
   transform: translateY(-90%) rotate(25deg);
 `;
 
+const editBar = css`
+  grid-area: edit;
+`;
+
 interface Props {
   channelId: Id;
   member: ChannelMember;
 }
 
 function Compose({ channelId, member }: Props) {
+  const media = useAtomValue(mediaAtom, channelId);
+  const editFor = useAtomValue(editForAtom, channelId);
   return (
     <div css={container}>
+      {editFor && <div css={editBar}>正在编辑</div>}
       <div css={toolbar}>
         <BroadcastSwitch size="large" css={[mR(1)]} />
         <InGameButton css={[mR(1)]} />
       </div>
       <div css={inputContainer}>
-        {/*<div className="float-toolbar">*/}
-        {/*  <ChatItemToolbarButton onClick={appendDice} sprite={d20} title="添加骰子" />*/}
-        {/*</div>*/}
         <ComposeInput autoFocus autoSize css={[input]} />
       </div>
-      {/*{media && (*/}
-      {/*  <div css={mediaContainer}>*/}
-      {/*    <MessageMedia file={media} />*/}
-      {/*  </div>*/}
-      {/*)}*/}
+      {media && (
+        <div css={mediaContainer}>
+          <MessageMedia file={media} />
+        </div>
+      )}
       <div css={sendContainer}>
-        {/*<MenuButton*/}
-        {/*  isAction={isAction}*/}
-        {/*  inGame={inGame}*/}
-        {/*  composeDispatch={composeDispatch}*/}
-        {/*  inputName={inputName}*/}
-        {/*  composeInputRef={inputRef}*/}
-        {/*  hasImage={hasImage}*/}
-        {/*  whisperTo={whisperTo}*/}
-        {/*/>*/}
         <SendButton />
       </div>
     </div>

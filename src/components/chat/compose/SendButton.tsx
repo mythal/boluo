@@ -17,8 +17,6 @@ import { useAtomValue } from 'jotai/utils';
 import { useSendPreview } from './useSendPreview';
 
 export const SendButton = () => {
-  useSendPreview();
-
   const channelId = useChannelId();
   const [source, setSource] = useAtom(sourceAtom, channelId);
 
@@ -26,7 +24,6 @@ export const SendButton = () => {
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const [messageId, setMessageId] = useAtom(messageIdAtom, channelId);
   const inputName = useAtomValue(inputNameAtom, channelId).trim();
-  console.log(inputName);
   const inGame = useAtomValue(inGameAtom, channelId);
   const [isAction, setAction] = useAtom(isActionAtom, channelId);
   const [sending, setSending] = useState(false);
@@ -35,6 +32,7 @@ export const SendButton = () => {
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member)!;
   let name = useSelector((state) => state.profile?.user.nickname)!;
   const parse = useParse();
+  useSendPreview();
   if (inGame) {
     if (inputName.length > 0) {
       name = inputName;

@@ -25,6 +25,7 @@ import { SendButton } from './SendButton';
 import MessageMedia from '../MessageMedia';
 import { useAtomValue } from 'jotai/utils';
 import { editForAtom, mediaAtom } from './state';
+import { useOnSend } from './useOnSend';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -112,9 +113,10 @@ interface Props {
   member: ChannelMember;
 }
 
-function Compose({ channelId, member }: Props) {
+function Compose({ channelId }: Props) {
   const media = useAtomValue(mediaAtom, channelId);
   const editFor = useAtomValue(editForAtom, channelId);
+  const onSend = useOnSend();
   return (
     <div css={container}>
       {editFor && <div css={editBar}>正在编辑</div>}
@@ -131,7 +133,7 @@ function Compose({ channelId, member }: Props) {
         </div>
       )}
       <div css={sendContainer}>
-        <SendButton />
+        <SendButton onSend={onSend} />
       </div>
     </div>
   );

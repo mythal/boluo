@@ -50,7 +50,7 @@ function ChannelChat({ channelId }: Props) {
   }
 
   return (
-    <React.Fragment>
+    <React.Fragment key={channelId}>
       <Header />
       <ChatList />
       {myMember && <Compose channelId={channelId} member={myMember} preview={myPreview?.preview} />}

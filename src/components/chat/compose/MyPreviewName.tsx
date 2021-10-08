@@ -73,11 +73,7 @@ function MyPreviewName() {
   const [inputName, setInputName] = useAtom(inputNameAtom, channelId);
   let name = nickname;
   if (inGame) {
-    if (inputName.length > 0) {
-      name = inputName;
-    } else {
-      name = characterName;
-    }
+    name = inputName;
   }
   const color = useMemo(() => {
     const rng = new Prando(myId);
@@ -85,22 +81,17 @@ function MyPreviewName() {
   }, [myId]);
   const handleNameInput: React.ChangeEventHandler<HTMLInputElement> = useCallback(
     (e) => {
-      const value = e.target.value.trim();
-      if (value === characterName) {
-        setInputName('');
-      } else {
-        setInputName(e.target.value.trim());
-      }
+      setInputName(e.target.value.trim());
     },
     [setInputName]
   );
   return (
     <Container>
       <div css={[relative, inline]}>
-        {inGame && <input css={nameInputStyle} value={name} onChange={handleNameInput} />}
+        {inGame && <input placeholder={characterName} css={nameInputStyle} value={name} onChange={handleNameInput} />}
         {!inGame && <span style={{ color }}>{nickname}</span>}
 
-        {name.length === 0 && inGame && (
+        {name.length === 0 && inGame && !characterName && (
           <Tooltip css={nicknameStyle} x={'right'} className="user-panel">
             需要一个名字
           </Tooltip>

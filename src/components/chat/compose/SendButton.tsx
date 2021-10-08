@@ -21,6 +21,7 @@ export const SendButton = ({ onSend, editing = false }: Props) => {
   const source = useAtomValue(sourceAtom, channelId);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const inputName = useAtomValue(inputNameAtom, channelId).trim();
+  const characterName = useSelector((state) => state.profile?.channels.get(channelId)?.member.characterName ?? '');
   const inGame = useAtomValue(inGameAtom, channelId);
   const [sending] = useAtom(sendingAtom, channelId);
   useSendPreview();
@@ -28,7 +29,11 @@ export const SendButton = ({ onSend, editing = false }: Props) => {
   if (enterSend) {
     sendButtonInfo = '⏎';
   }
-  const cannotSendReason = whyCannotSend(inGame, inputName, source);
+  let name = inputName;
+  if (inGame && !inputName) {
+    name = characterName;
+  }
+  const cannotSendReason = whyCannotSend(inGame, name, source);
   sendButtonInfo = cannotSendReason || sendButtonInfo;
   return (
     <ChatItemToolbarButton

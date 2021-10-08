@@ -64,7 +64,6 @@ export const useSendPreview = () => {
         preview.text = text;
         preview.entities = entities;
       }
-      console.log(preview);
       send({ type: 'PREVIEW', preview });
     }, 200);
     return () => window.clearTimeout(handle);
@@ -73,6 +72,7 @@ export const useSendPreview = () => {
     channelId,
     id,
     inGame,
+    editFor,
     initialized,
     inputName,
     isAction,

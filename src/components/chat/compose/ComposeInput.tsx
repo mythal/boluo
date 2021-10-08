@@ -26,6 +26,17 @@ export interface ComposeInputAction {
   reset: () => void;
 }
 
+function useAutoFocus(autoFocus: undefined | boolean, inputRef: React.RefObject<HTMLTextAreaElement>) {
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      const input = inputRef.current;
+      input.focus();
+      const max = 999999;
+      input.setSelectionRange(max, max);
+    }
+  }, [autoFocus, inputRef]);
+}
+
 function ComposeInput({ autoFocus = false, autoSize = false, className }: Props, ref: Ref<ComposeInputAction>) {
   const channelId = useChannelId();
   const [inGame] = useAtom(inGameAtom, channelId);
@@ -39,6 +50,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   const [dragging, setDragging] = useState(false);
 
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
+  useAutoFocus(autoFocus, inputRef);
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const value = e.target.value;

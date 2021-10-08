@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/core';
-import { useDispatch, useSelector } from '../../store';
+import { useSelector } from '../../store';
 import {
   breakpoint,
   flex,
@@ -18,14 +18,12 @@ import {
 } from '../../styles/atoms';
 import ChannelMemberButton from './ChannelMemberButton';
 import sliders from '../../assets/icons/sliders.svg';
-import columns from '../../assets/icons/columns.svg';
 import ChatHeaderButton from './ChatHeaderButton';
 import Icon from '../atoms/Icon';
 import ManageChannel from './ManageChannel';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Filter from './Filter';
-import MemberListButton from './MemberListButton';
 import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
 import { useChannelId } from '../../hooks/useChannelId';
@@ -33,7 +31,6 @@ import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 import exportIcon from '../../assets/icons/file-export.svg';
 import lockIcon from '../../assets/icons/lock.svg';
 import ExportDialog from './ExportDialog';
-import { useHeartbeat } from './Heartbeat';
 import { useNotify } from '../../states/notify';
 import userPlusIcon from '../../assets/icons/user-plus.svg';
 import InviteChannelMemberDialog from './InviteChannelMemberDialog';
@@ -89,7 +86,6 @@ function Header() {
   const [managePanel, setManagePanel] = useState(false);
   const [exportDialog, showExportDialog] = useState(false);
   const [inviteDialog, showInviteDialog] = useState(false);
-  const dispatch = useDispatch();
   useNotify();
   useTitle(channel.name);
   return (
@@ -135,4 +131,4 @@ function Header() {
   );
 }
 
-export default Header;
+export default React.memo(Header);

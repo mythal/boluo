@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import fileImage from '../../../assets/icons/file-image.svg';
 import removeFileImage from '../../../assets/icons/remove-file-image.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import { update } from './reducer';
 import { useAtom } from 'jotai';
 import { mediaAtom } from './state';
 import { useChannelId } from '../../../hooks/useChannelId';

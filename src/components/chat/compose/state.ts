@@ -1,9 +1,12 @@
 import { atom } from 'jotai';
-import { UserItem } from './reducer';
 import { newId } from '../../../utils/id';
 import { Entity } from '../../../interpreter/entities';
 export const defaultDiceAtom = atom('d');
 
+export interface UserItem {
+  label: string;
+  value: string;
+}
 const ACTION_COMMAND = /^[.。]me\s*/;
 export const isActionAtom = atom<boolean, boolean | 'toggle'>(
   (get) => {

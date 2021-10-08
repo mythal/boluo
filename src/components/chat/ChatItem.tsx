@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
-import { EditItem, MessageItem, PreviewItem } from '../../states/chat-item-set';
+import { MessageItem, PreviewItem } from '../../states/chat-item-set';
 import { ChannelMember } from '../../api/channels';
 import { Draggable, DraggableProvided, DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import ChatPreviewItem from './PreviewItem';
@@ -17,7 +17,7 @@ interface Props {
 
 const itemSwitch = (
   item: PreviewItem | MessageItem,
-  editItem: EditItem | undefined,
+  editItem: PreviewItem | undefined,
   sameSender: boolean,
   myMember?: ChannelMember,
   handleProps?: DraggableProvidedDragHandleProps
@@ -25,7 +25,10 @@ const itemSwitch = (
   const myId = myMember?.userId;
   if (item.type === 'MESSAGE') {
     const { message } = item;
-    if (editItem !== undefined && editItem.preview) {
+    if (editItem !== undefined) {
+      if (myId && editItem.preview.senderId === myId) {
+        return <MyPreview key={item.id} preview={editItem.preview} />;
+      }
       return <ChatPreviewItem preview={editItem.preview} />;
     }
     return (
@@ -48,19 +51,18 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
   const pane = useChannelId();
 
   const editItem = useSelector((state) => {
-    if (pane && item !== undefined && item.type === 'MESSAGE') {
-      const editItem = state.chatStates.get(pane)!.itemSet.editions.get(item.message.id);
-      if (
-        editItem !== undefined &&
-        (editItem.preview === undefined || editItem.preview.editFor === item.message.modified)
-      ) {
-        return editItem;
-      } else {
-        return undefined;
-      }
-    } else {
-      return undefined;
+    if (item === undefined || item.type !== 'MESSAGE') {
+      return;
     }
+    const previewItem = state.chatStates.get(pane)?.itemSet.previews.get(item.message.senderId);
+    if (!previewItem) {
+      return;
+    }
+    const preview = previewItem.preview;
+    if (preview.id !== item.message.id || preview.editFor !== item.message.modified) {
+      return;
+    }
+    return previewItem;
   });
   const draggable = myMember && item?.type === 'MESSAGE' && (item.mine || myMember.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';

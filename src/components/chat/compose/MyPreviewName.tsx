@@ -4,7 +4,7 @@ import Prando from 'prando';
 import { encodeUuid, Id } from '../../../utils/id';
 import styled from '@emotion/styled';
 import { Link } from 'react-router-dom';
-import { fontBold, inline, mL, mR, relative, textSm } from '../../../styles/atoms';
+import { fontBold, gap, inline, mL, mR, relative, spacingN, textSm } from '../../../styles/atoms';
 import Icon from '../../atoms/Icon';
 import masterIcon from '../../../assets/icons/gamemaster.svg';
 import { css } from '@emotion/core';
@@ -49,7 +49,17 @@ const nicknameStyle = css`
   user-select: none;
 `;
 
-const nameInputStyle = css``;
+const nameInputStyle = css`
+  color: ${gray['100']};
+  background-color: ${gray['700']};
+  border: 1px solid ${gray['600']};
+  padding: ${spacingN(1)};
+  border-radius: 2px;
+  &:focus {
+    outline: none;
+    border-color: ${gray['500']};
+  }
+`;
 
 function MyPreviewName() {
   const channelId = useChannelId()!;

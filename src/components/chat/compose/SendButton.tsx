@@ -1,6 +1,7 @@
 import React from 'react';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import paperPlane from '../../../assets/icons/paper-plane.svg';
+import save from '../../../assets/icons/save.svg';
 import { isMac } from '../../../utils/browser';
 import { useSelector } from '../../../store';
 import { inGameAtom, inputNameAtom, sendingAtom, sourceAtom } from './state';
@@ -12,9 +13,10 @@ import { whyCannotSend } from './useOnSend';
 
 interface Props {
   onSend: () => void;
+  editing?: boolean;
 }
 
-export const SendButton = ({ onSend }: Props) => {
+export const SendButton = ({ onSend, editing = false }: Props) => {
   const channelId = useChannelId();
   const source = useAtomValue(sourceAtom, channelId);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
@@ -31,10 +33,10 @@ export const SendButton = ({ onSend }: Props) => {
   return (
     <ChatItemToolbarButton
       loading={sending}
-      sprite={paperPlane}
+      sprite={editing ? save : paperPlane}
       onClick={onSend}
       disabled={cannotSendReason !== null}
-      title="发送"
+      title={editing ? '编辑' : '发送'}
       size="large"
       info={sendButtonInfo}
       x="left"

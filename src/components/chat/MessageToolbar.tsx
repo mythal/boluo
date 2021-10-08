@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import ItemToolbar from './ItemToolbar';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import { ChannelMember } from '../../api/channels';
@@ -12,14 +12,22 @@ import Dialog from '../molecules/Dialog';
 import { Text } from '../atoms/Text';
 import { post } from '../../api/request';
 import { throwErr } from '../../utils/errors';
-import { useDispatch } from '../../store';
+import store, { useDispatch } from '../../store';
 import { css } from '@emotion/core';
 import { fontMono, pL, spacingN, textSm } from '../../styles/atoms';
 import { primary } from '../../styles/colors';
 import { Message } from '../../api/messages';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useAtomCallback } from 'jotai/utils';
-import { editForAtom, inputNameAtom, isActionAtom, messageIdAtom, sourceAtom } from './compose/state';
+import {
+  editForAtom,
+  inGameAtom,
+  inputNameAtom,
+  isActionAtom,
+  messageIdAtom,
+  sourceAtom,
+  whisperToAtom,
+} from './compose/state';
 
 interface Props {
   myMember?: ChannelMember;
@@ -40,13 +48,38 @@ function MessageToolbar({ myMember, mine, message }: Props) {
   const [deleteDialog, showDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const throwE = throwErr(dispatch);
-  const startEdit = useAtomCallback((get, set) => {
-    set(messageIdAtom, message.id);
-    set(editForAtom, message.modified);
-    set(isActionAtom, message.isAction);
-    set(inputNameAtom, message.name);
-    set(sourceAtom, message.text);
-  }, channelId);
+  const startEdit = useAtomCallback(
+    useCallback(
+      (get, set) => {
+        set(messageIdAtom, message.id);
+        set(editForAtom, message.modified);
+        set(isActionAtom, message.isAction);
+        if (message.inGame) {
+          set(inputNameAtom, message.name);
+        }
+        set(sourceAtom, message.text);
+        set(inGameAtom, message.inGame);
+        if (message.whisperToUsers) {
+          const users = store.getState().ui.userSet;
+          set(
+            whisperToAtom,
+            message.whisperToUsers.map((id) => {
+              const userResult = users.get(id);
+              if (userResult && userResult.isOk) {
+                return { value: id, label: userResult.value.nickname };
+              } else {
+                return { value: id, label: '未知用户' };
+              }
+            })
+          );
+        } else {
+          set(whisperToAtom, null);
+        }
+      },
+      [message]
+    ),
+    channelId
+  );
   const deleteMessage = async () => {
     setLoading(true);
     const result = await post('/messages/delete', {}, { id: message.id });

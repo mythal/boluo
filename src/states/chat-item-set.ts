@@ -28,23 +28,16 @@ export interface PreviewItem extends ChatNode {
   preview: Preview;
 }
 
-export interface EditItem extends ChatNode {
-  type: 'EDIT';
-  preview?: Preview;
-}
-
-export type ChatItem = MessageItem | PreviewItem | EditItem;
+export type ChatItem = MessageItem | PreviewItem;
 
 export interface ChatItemSet {
   messages: List<MessageItem | PreviewItem>;
   previews: Map<Id, PreviewItem>;
-  editions: Map<Id, EditItem>;
 }
 
 export const initialChatItemSet: ChatItemSet = {
   messages: List(),
   previews: Map<Id, PreviewItem>(),
-  editions: Map<Id, EditItem>(),
 };
 
 const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | PreviewItem): ChatItemSet['messages'] => {
@@ -99,23 +92,14 @@ const findItem = (messages: ChatItemSet['messages'], id: Id): number => {
   });
 };
 
-export const addItem = ({ messages, previews, editions }: ChatItemSet, item: ChatItem): ChatItemSet => {
-  if (item.type === 'EDIT') {
-    if (item.preview?.clear || (!item.mine && (!item.preview || isEmptyPreview(item.preview)))) {
-      editions = editions.remove(item.id);
-    } else {
-      editions = editions.set(item.id, item);
-    }
-    return { messages, previews, editions };
-  }
+export const addItem = ({ messages, previews }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'MESSAGE') {
     const previewItem = previews.get(item.message.senderId);
     if (previewItem && item.message.id === previewItem.preview.id) {
       messages = removeItem(messages, item.message.senderId);
-      previews = previews.remove(previewItem.id);
+      previews = previews.remove(item.message.senderId);
     }
     messages = insertItem(messages, item);
-    editions = editions.remove(item.id);
   }
 
   if (item.type === 'PREVIEW') {
@@ -128,11 +112,13 @@ export const addItem = ({ messages, previews, editions }: ChatItemSet, item: Cha
       messages = removeItem(messages, item.id);
     } else {
       previews = previews.set(item.id, item);
-      messages = insertItem(messages, item);
+      if (!item.preview.editFor) {
+        messages = insertItem(messages, item);
+      }
     }
   }
 
-  return { messages, previews, editions };
+  return { messages, previews };
 };
 
 export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet => {

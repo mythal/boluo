@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { UserItem } from './reducer';
 import { useSelector } from '../../../store';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { mB, selectTheme } from '../../../styles/atoms';
@@ -8,7 +7,7 @@ import Dialog from '../../molecules/Dialog';
 import { HelpText } from '../../atoms/HelpText';
 import Text from '../../atoms/Text';
 import { useAtom } from 'jotai';
-import { whisperToAtom } from './state';
+import { UserItem, whisperToAtom } from './state';
 
 const Select = React.lazy(() => import('react-select'));
 

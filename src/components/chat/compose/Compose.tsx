@@ -28,18 +28,21 @@ import { editForAtom, inGameAtom, mediaAtom } from './state';
 import { useOnSend } from './useOnSend';
 import { handleKeyDown } from '../key';
 import { useSelector } from '../../../store';
+import { Editing } from './Editing';
 
 const container = css`
   grid-row: compose-start / compose-end;
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-template-areas:
-    ' edit    edit  edit'
-    '    . toolbar  send'
+    ' edit toolbar  send'
     'input   input input';
   ${mediaQuery(breakpoint.md)} {
+    gap: 0 ${spacingN(2)};
     grid-template-columns: auto 1fr auto;
-    grid-template-areas: 'toolbar input  send';
+    grid-template-areas:
+      '   edit  edit  edit'
+      'toolbar input  send';
   }
   gap: ${spacingN(2)};
   align-items: flex-end;
@@ -108,6 +111,7 @@ const mediaContainer = css`
 
 const editBar = css`
   grid-area: edit;
+  margin-bottom: 0.25em;
 `;
 
 interface Props {
@@ -123,7 +127,7 @@ function Compose({ channelId }: Props) {
   const enterSend = useSelector((state) => state.profile?.settings.enterSend);
   return (
     <div css={container}>
-      {editFor && <div css={editBar}>正在编辑</div>}
+      {editFor && <Editing css={editBar} />}
       <div css={toolbar}>
         <BroadcastSwitch size="large" css={[mR(1)]} />
         <InGameButton css={[mR(1)]} />
@@ -137,7 +141,7 @@ function Compose({ channelId }: Props) {
         </div>
       )}
       <div css={sendContainer}>
-        <SendButton onSend={onSend} />
+        <SendButton onSend={onSend} editing={Boolean(editFor)} />
       </div>
     </div>
   );

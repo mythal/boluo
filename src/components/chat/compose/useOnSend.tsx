@@ -2,6 +2,7 @@ import { useChannelId } from '../../../hooks/useChannelId';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
 import {
+  editForAtom,
   inGameAtom,
   inputNameAtom,
   isActionAtom,
@@ -16,8 +17,8 @@ import { showFlash } from '../../../actions/flash';
 import { uploadMedia } from './helper';
 import { getDiceFace } from '../../../utils/game';
 import { parse } from '../../../interpreter/parser';
-import { NewMessage } from '../../../api/messages';
-import { post } from '../../../api/request';
+import { EditMessage, Message, NewMessage } from '../../../api/messages';
+import { AppResult, patch, post } from '../../../api/request';
 import { newId } from '../../../utils/id';
 import { throwErr } from '../../../utils/errors';
 
@@ -67,13 +68,37 @@ export const useOnSend = () => {
           resolveUsername: () => null,
           defaultDiceFace,
         });
+        const messageId = get(messageIdAtom);
+        const isAction = get(isActionAtom);
+        if (get(editForAtom)) {
+          const editPayload: EditMessage = {
+            messageId,
+            name,
+            inGame,
+            isAction,
+            text,
+            entities,
+            mediaId,
+          };
+          const result: AppResult<Message> = await patch('/messages/edit', editPayload);
+          set(sendingAtom, false);
+
+          if (!result.isOk) {
+            throwErr(store.dispatch)(result.value);
+            return;
+          }
+          set(sourceAtom, '');
+          set(editForAtom, null);
+          set(mediaAtom, undefined);
+          return;
+        }
         const newMessage: NewMessage = {
-          messageId: get(messageIdAtom),
+          messageId,
           channelId,
           mediaId,
           name,
           inGame,
-          isAction: get(isActionAtom),
+          isAction,
           text,
           entities,
         };

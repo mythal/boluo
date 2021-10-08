@@ -4,7 +4,6 @@ import { relative, textXs } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import mask from '../../../assets/icons/theater-masks.svg';
 import { css } from '@emotion/core';
-import { ComposeDispatch } from './reducer';
 import { useAtom } from 'jotai';
 import { inGameAtom } from './state';
 import { useCallback } from 'react';

@@ -1,4 +1,4 @@
-import { Channel, ChannelMember, makeMembers, Member } from '../api/channels';
+import { Channel, makeMembers, Member } from '../api/channels';
 import { List, Map } from 'immutable';
 import { Message, MessageOrder } from '../api/messages';
 import { Events, Preview } from '../api/events';
@@ -26,10 +26,8 @@ import {
   resetMovingMessage,
   updateMessagesOrder,
 } from '../states/chat-item-set';
-import Prando from 'prando';
-import { SpaceMemberWithUser, SpaceWithRelated } from '../api/spaces';
+import { SpaceWithRelated } from '../api/spaces';
 import * as O from 'optics-ts';
-import { AppResult } from 'api/request';
 
 export interface ChatState {
   channel: Channel;
@@ -103,26 +101,13 @@ const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet =
 };
 
 const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined): ChatItemSet => {
-  let item: ChatItem;
-  const rng = new Prando(preview.id);
-  const offset = rng.nextInt(-65526, 65526);
-  if (preview.editFor) {
-    item = {
-      type: 'EDIT',
-      id: preview.id,
-      mine: preview.senderId === myId,
-      preview,
-      pos: preview.pos,
-    };
-  } else {
-    item = {
-      type: 'PREVIEW',
-      id: preview.senderId,
-      mine: preview.senderId === myId,
-      pos: preview.pos,
-      preview,
-    };
-  }
+  const item: ChatItem = {
+    type: 'PREVIEW',
+    id: preview.senderId,
+    mine: preview.senderId === myId,
+    pos: preview.pos,
+    preview,
+  };
   return addItem(itemSet, item);
 };
 
@@ -131,18 +116,11 @@ const newMessage = (itemSet: ChatItemSet, message: Message, myId: Id | undefined
 };
 
 const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage): ChatState => {
-  const itemSet = addItem(state.itemSet, {
-    type: 'EDIT',
-    id: message.id,
-    mine: true,
-    pos: message.pos,
-  });
-  return O.set(focusItemSet)(itemSet)(state);
+  return state;
 };
 
-const modifyEditions = O.modify(focusItemSet.prop('editions'));
 const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage): ChatState => {
-  return modifyEditions((editions) => editions.remove(messageId))(state);
+  return state;
 };
 
 const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMessage): ChatState => {

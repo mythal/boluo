@@ -7,6 +7,7 @@ import { editForAtom, inGameAtom, mediaAtom, messageIdAtom, sourceAtom } from '.
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useAtomValue, useUpdateAtom } from 'jotai/utils';
 import { newId } from '../../../utils/id';
+import { useResetEdit } from './Editing';
 
 interface Props {
   initialValue?: string;
@@ -44,15 +45,16 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(autoSize, inputRef);
   const [source, setSource] = useAtom(sourceAtom, channelId);
-  const editFor = useAtomValue(editForAtom);
+  const editFor = useAtomValue(editForAtom, channelId);
   const updateMessageId = useUpdateAtom(messageIdAtom, channelId);
   const compositing = useRef(false);
+  const resetEdit = useResetEdit();
   const [dragging, setDragging] = useState(false);
 
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   useAutoFocus(autoFocus, inputRef);
 
-  const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+  const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = async (e) => {
     const value = e.target.value;
     if (value.trim() === '' && !editFor) {
       updateMessageId(newId());

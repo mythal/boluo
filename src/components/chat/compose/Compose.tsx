@@ -23,9 +23,11 @@ import InGameButton from './InGameButton';
 import { floatPanel } from '../styles';
 import { SendButton } from './SendButton';
 import MessageMedia from '../MessageMedia';
-import { useAtomValue } from 'jotai/utils';
-import { editForAtom, mediaAtom } from './state';
+import { useAtomValue, useUpdateAtom } from 'jotai/utils';
+import { editForAtom, inGameAtom, mediaAtom } from './state';
 import { useOnSend } from './useOnSend';
+import { handleKeyDown } from '../key';
+import { useSelector } from '../../../store';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -117,6 +119,8 @@ function Compose({ channelId }: Props) {
   const media = useAtomValue(mediaAtom, channelId);
   const editFor = useAtomValue(editForAtom, channelId);
   const onSend = useOnSend();
+  const setInGame = useUpdateAtom(inGameAtom, channelId);
+  const enterSend = useSelector((state) => state.profile?.settings.enterSend);
   return (
     <div css={container}>
       {editFor && <div css={editBar}>正在编辑</div>}
@@ -124,7 +128,7 @@ function Compose({ channelId }: Props) {
         <BroadcastSwitch size="large" css={[mR(1)]} />
         <InGameButton css={[mR(1)]} />
       </div>
-      <div css={inputContainer}>
+      <div css={inputContainer} onKeyDown={handleKeyDown(onSend, () => setInGame((inGame) => !inGame), enterSend)}>
         <ComposeInput autoFocus autoSize css={[input]} />
       </div>
       {media && (

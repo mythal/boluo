@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { ComposeDispatch, update } from './compose/reducer';
 
 let submitKeyHandle: number | undefined = undefined;
 
@@ -9,23 +8,22 @@ const submitKey = (callback: () => void) => {
 };
 
 export const handleKeyDown = (
-  composeDispatch: ComposeDispatch,
   onSend: () => void,
-  inGame: boolean,
+  toggleInGame: () => void,
   enterSend: boolean | undefined
 ): React.KeyboardEventHandler => {
   return (e) => {
     if (enterSend && e.key === 'Enter' && !e.shiftKey) {
       if (!e.ctrlKey) {
         e.preventDefault();
-        submitKey(async () => await onSend());
+        submitKey(async () => onSend());
       }
     } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
-      submitKey(async () => await onSend());
+      submitKey(async () => onSend());
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      submitKey(() => composeDispatch(update({ inGame: !inGame })));
+      submitKey(() => toggleInGame());
     }
   };
 };

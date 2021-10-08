@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Ref, useCallback, useRef, useState } from 'react';
+import { Ref, useCallback, useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { useAtom } from 'jotai';
@@ -40,7 +40,7 @@ function useAutoFocus(autoFocus: undefined | boolean, inputRef: React.RefObject<
 function ComposeInput({ autoFocus = false, autoSize = false, className }: Props, ref: Ref<ComposeInputAction>) {
   const channelId = useChannelId();
   const [inGame] = useAtom(inGameAtom, channelId);
-  const [media, setMedia] = useAtom(mediaAtom, channelId);
+  const [, setMedia] = useAtom(mediaAtom, channelId);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(autoSize, inputRef);
   const [source, setSource] = useAtom(sourceAtom, channelId);
@@ -85,6 +85,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   );
   const handleKeyDown: React.KeyboardEventHandler = (e) => {
     if (e.key === 'Enter' && compositing.current) {
+      e.stopPropagation();
       return;
     }
   };
@@ -101,7 +102,6 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
       className={className}
       value={source}
       placeholder={placeholder}
-      autoFocus={autoFocus}
       onChange={handleChange}
       data-dragging={dragging}
       onCompositionStart={() => (compositing.current = true)}

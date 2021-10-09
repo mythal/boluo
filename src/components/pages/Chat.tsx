@@ -25,13 +25,7 @@ import { userDialogAtom } from '../../states/userDialog';
 import MemberDialog from '../chat/MemberDialog';
 import { useMyId } from '../../hooks/useMyId';
 import { Provider } from 'jotai';
-
-function foobar(a: unknown) {
-  if (typeof a !== 'object') {
-    throw Error('panic');
-  }
-  a;
-}
+import { Connector } from '../chat/Connector';
 
 interface Params {
   spaceId: string;
@@ -95,7 +89,6 @@ function Chat() {
   const myId: Id | undefined = useMyId();
   const history = useHistory();
   useLoadSpace(spaceId);
-  useSpaceConnection();
   useHeartbeat();
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
@@ -115,6 +108,7 @@ function Chat() {
   }
   return (
     <Container>
+      <Connector />
       <Global styles={viewHeight} />
       <Sidebar space={space} channels={channels} />
       <Switch>

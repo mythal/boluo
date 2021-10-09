@@ -1,49 +1,55 @@
 import { useDispatch, useSelector } from '../store';
-import { useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { connect } from '../api/connect';
 import { Events } from '../api/events';
 import { connectSpace, SpaceUpdated } from '../actions/ui';
-import { showFlash } from '../actions/flash';
 import { get } from '../api/request';
 import { useMyId } from './useMyId';
+import { Id } from '../utils/id';
+import { atom } from 'jotai';
+import { useUpdateAtom } from 'jotai/utils';
+
+export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
+
+export const connectStateAtom = atom<ConnectState>('CONNECTING');
+
+export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Promise<string | null> {
+  if (!myId) {
+    return null;
+  }
+  const tokenResult = await get('/events/token', { id: spaceId });
+  if (tokenResult.isOk) {
+    if (tokenResult.value.token) {
+      return tokenResult.value.token;
+    }
+  }
+  return null;
+}
 
 export function useSpaceConnection() {
   const dispatch = useDispatch();
   const myId = useMyId();
   const spaceId = useSelector((state) => state.ui.spaceId);
+  const setConnectState = useUpdateAtom(connectStateAtom);
 
   const after = useRef<number>(0);
   const retry = useRef<number>(0);
 
-  const conn = async (): Promise<WebSocket> => {
+  const conn = useCallback(async (): Promise<WebSocket> => {
     if (!spaceId) {
-      throw new Error('unexpected');
+      throw new Error('unexpected error: there is no space id');
     }
-    let token: string | null = null;
-    if (myId) {
-      const tokenResult = await get('/events/token', { id: spaceId });
-      if (!tokenResult.isOk || !tokenResult.value.token) {
-        window.location.href = `${window.location.origin}/login`;
-        throw new Error('unreachable');
-      }
-      token = tokenResult.value.token;
-    }
-    const connection = await connect(spaceId, token);
+    const connection = await connect(spaceId, await getConnectionToken(spaceId, myId));
     connection.onerror = (e) => {
       console.warn(e);
     };
     connection.onopen = () => {
-      if (retry.current > 1) {
-        dispatch(showFlash('SUCCESS', '已经重新连接上了菠萝'));
-      }
       retry.current = 0;
     };
 
     connection.onmessage = (wsMsg) => {
+      setConnectState('OPEN');
       const event = JSON.parse(wsMsg.data) as Events;
-      // if (event.timestamp < last) {
-      //   return;
-      // }
       after.current = event.timestamp;
       const { body } = event;
       if (body.type === 'APP_UPDATED') {
@@ -57,30 +63,17 @@ export function useSpaceConnection() {
         dispatch({ type: 'EVENT_RECEIVED', event });
       }
     };
-    connection.onclose = (e) => {
-      window.setTimeout(() => {
-        console.log('reconnecting');
-        if (retry.current > 1) {
-          dispatch(showFlash('WARNING', '连接已断开，正在尝试重连。'));
-        }
-        retry.current += 1;
-        conn().catch(console.error);
-      }, Math.floor(Math.random() * 5000));
+    connection.onerror = (e) => {
+      console.warn('connection error: ', e);
+      setConnectState('CLOSED');
     };
+    connection.onclose = (e) => {
+      console.warn('connection close: ', e);
+      setConnectState('CLOSED');
+    };
+    dispatch(connectSpace(spaceId, connection));
     return connection;
-  };
+  }, [dispatch, myId, setConnectState, spaceId]);
 
-  useEffect(() => {
-    if (spaceId) {
-      (async () => {
-        const connection = await conn();
-        dispatch(connectSpace(spaceId, connection));
-        return () => {
-          connection.onerror = null;
-          connection.onclose = null;
-          connection.close();
-        };
-      })();
-    }
-  }, [spaceId, dispatch]);
+  return conn;
 }

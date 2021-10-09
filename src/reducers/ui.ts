@@ -157,6 +157,11 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
     case 'SPACE_EDITED':
       return handleSpaceEdited(state, action);
     case 'CONNECT_SPACE':
+      if (state.connection) {
+        state.connection.onclose = null;
+        state.connection.onerror = null;
+        state.connection.close();
+      }
       return { ...state, connection: action.connection };
     case 'EVENT_RECEIVED':
       switch (action.event.body.type) {

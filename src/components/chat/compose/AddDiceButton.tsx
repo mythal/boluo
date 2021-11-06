@@ -11,7 +11,7 @@ import diceIcon from '../../../assets/icons/d20.svg';
 
 export const AddDiceButton = () => {
   const channelId = useChannelId();
-  const defaultDice = useSelector((state) => state.chatStates.get(channelId)?.channel.defaultDiceType ?? 'd');
+  const defaultDice = useSelector((state) => state.chatStates.get(channelId)?.channel.defaultRollCommand ?? 'd');
 
   const setSource = useUpdateAtom(sourceAtom, channelId);
   const addDice = useCallback(() => {

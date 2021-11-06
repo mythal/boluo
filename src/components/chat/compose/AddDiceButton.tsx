@@ -9,7 +9,12 @@ import { mL } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import diceIcon from '../../../assets/icons/d20.svg';
 
-export const AddDiceButton = () => {
+interface Props {
+  inCompose?: boolean;
+  className?: string;
+}
+
+export const AddDiceButton = ({ inCompose = false, className }: Props) => {
   const channelId = useChannelId();
   const defaultDice = useSelector((state) => state.chatStates.get(channelId)?.channel.defaultRollCommand ?? 'd');
 
@@ -17,5 +22,14 @@ export const AddDiceButton = () => {
   const addDice = useCallback(() => {
     setSource((source) => source + ' {' + defaultDice + '}');
   }, [setSource]);
-  return <ChatItemToolbarButton css={mL(1)} onClick={addDice} title="添加骰子" sprite={diceIcon} />;
+  return (
+    <ChatItemToolbarButton
+      className={className}
+      css={mL(1)}
+      size={inCompose ? 'large' : 'normal'}
+      onClick={addDice}
+      title="添加骰子"
+      sprite={diceIcon}
+    />
+  );
 };

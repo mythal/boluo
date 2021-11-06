@@ -29,6 +29,7 @@ import { useOnSend } from './useOnSend';
 import { handleKeyDown } from '../key';
 import { useSelector } from '../../../store';
 import { Editing } from './Editing';
+import { AddDiceButton } from './AddDiceButton';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -131,6 +132,7 @@ function Compose({ channelId }: Props) {
       <div css={toolbar}>
         <BroadcastSwitch size="large" css={[mR(1)]} />
         <InGameButton css={[mR(1)]} />
+        <AddDiceButton inCompose />
       </div>
       <div css={inputContainer} onKeyDown={handleKeyDown(onSend, () => setInGame((inGame) => !inGame), enterSend)}>
         <ComposeInput autoFocus autoSize css={[input]} />

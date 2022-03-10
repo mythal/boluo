@@ -9,6 +9,9 @@ import {
   LoginData,
   LoginResult,
   RegisterData,
+  ResetPassword,
+  ResetPasswordConfirm,
+  ResetPasswordTokenCheck,
   Settings,
   User,
 } from './users';
@@ -129,6 +132,8 @@ export function post(path: '/users/login', payload: LoginData): Promise<AppResul
 export function post(path: '/users/register', payload: RegisterData): Promise<AppResult<User>>;
 export function post(path: '/users/edit', payload: EditUser): Promise<AppResult<User>>;
 export function post(path: '/users/update_settings', payload: Settings): Promise<AppResult<Settings>>;
+export function post(path: '/users/reset_password', payload: ResetPassword): Promise<AppResult<null>>;
+export function post(path: '/users/reset_password_confirm', payload: ResetPasswordConfirm): Promise<AppResult<null>>;
 export function post(path: '/spaces/create', payload: CreateSpace): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/edit', payload: EditSpace): Promise<AppResult<Space>>;
 export function post(path: '/spaces/join', payload: {}, query: SpaceIdWithToken): Promise<AppResult<SpaceWithMember>>;
@@ -169,6 +174,10 @@ export function get(path: '/users/get_me'): Promise<AppResult<GetMe | null>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(path: '/users/check_username', query: CheckUsername): Promise<AppResult<boolean>>;
 export function get(path: '/users/check_email', query: CheckEmail): Promise<AppResult<boolean>>;
+export function get(
+  path: '/users/reset_password_token_check',
+  query: ResetPasswordTokenCheck
+): Promise<AppResult<boolean>>;
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;

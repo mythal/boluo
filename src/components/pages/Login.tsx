@@ -2,14 +2,14 @@ import * as React from 'react';
 import { useState } from 'react';
 import Title from '../atoms/Title';
 import Input from '../atoms/Input';
-import { alignRight, flex, flex1, largeInput, mR, mT, mY, sm, textLg } from '../../styles/atoms';
+import { alignRight, flex, flex1, largeInput, link, mR, mT, mY, sm, textLg } from '../../styles/atoms';
 import Button from '../atoms/Button';
 import { useForm } from 'react-hook-form';
 import { LoginData } from '../../api/users';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { post } from '../../api/request';
 import { AppError, NO_PERMISSION } from '../../api/error';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { useDispatch } from '../../store';
 import { LoggedIn } from '../../actions/profile';
 import { Label } from '../atoms/Label';
@@ -77,6 +77,9 @@ function Login() {
           </div>
         </div>
         <div css={alignRight}>
+          <Link to="/reset-password" css={[link, mR(2)]}>
+            忘记密码？
+          </Link>
           <Button css={[mT(4), textLg]} data-variant="primary" type="submit" disabled={loggingIn}>
             <Icon sprite={loginIcon} loading={loggingIn} />
             登录

@@ -8,6 +8,8 @@ import SpacePage from '../components/pages/SpacePage';
 import GuestHome from '../components/pages/GuestHome';
 import NotFound from '../components/pages/NotFound';
 import React from 'react';
+import ResetPassword from './pages/ResetPassword';
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 
 export function GuestRouter() {
   return (
@@ -15,6 +17,12 @@ export function GuestRouter() {
       <Switch>
         <Route path="/login">
           <Login />
+        </Route>
+        <Route path="/reset-password">
+          <ResetPassword />
+        </Route>
+        <Route path="/confirm-password-reset/:token">
+          <ResetPasswordConfirm />
         </Route>
         <Route path="/sign-up">
           <SignUp />

@@ -42,6 +42,7 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>能够找回密码了</News>
         <News css={[mB(2)]}>
           增加了消息通知功能，底层改动比较大，现在可能会有一些 Bug，可以到QQ群（1107382038）反馈。
         </News>

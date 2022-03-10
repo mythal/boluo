@@ -53,3 +53,16 @@ export interface Settings {
   enterSend?: boolean;
   expandDice?: boolean;
 }
+
+export interface ResetPassword {
+  email: string;
+}
+
+export interface ResetPasswordConfirm {
+  token: string;
+  password: string;
+}
+
+export interface ResetPasswordTokenCheck {
+  token: string;
+}

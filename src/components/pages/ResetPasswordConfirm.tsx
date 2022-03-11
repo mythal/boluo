@@ -68,7 +68,7 @@ function ResetPasswordConfirm() {
           </div>
           <div css={[alignRight]}>
             <Button css={[textLg, mT(2)]} disabled={state === 'loading'} data-variant="primary" type="submit">
-              发送密码重置邮件
+              重设密码
             </Button>
           </div>
         </div>

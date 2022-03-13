@@ -12,7 +12,8 @@ export type ErrorCode =
   | CONFLICT
   | FETCH_FAIL
   | LOADING
-  | METHOD_NOT_ALLOWED;
+  | METHOD_NOT_ALLOWED
+  | LIMIT_EXCEEDED;
 
 export const UNAUTHENTICATED = 'UNAUTHENTICATED';
 export type UNAUTHENTICATED = typeof UNAUTHENTICATED;
@@ -47,16 +48,19 @@ export type METHOD_NOT_ALLOWED = typeof METHOD_NOT_ALLOWED;
 export const LOADING = 'LOADING';
 export type LOADING = typeof LOADING;
 
+export const LIMIT_EXCEEDED = 'LIMIT_EXCEEDED';
+export type LIMIT_EXCEEDED = typeof LIMIT_EXCEEDED;
+
 export interface AppError {
   code: ErrorCode;
   message: string;
-  table: string | null;
+  context: string | null;
 }
 
 export const loading: AppError = {
   code: LOADING,
   message: '载入中',
-  table: null,
+  context: null,
 };
 
 export const errLoading = <T>(): AppResult<T> => {
@@ -70,13 +74,13 @@ export const notFound = <T>(message = ''): AppResult<T> => {
 export const notJson: AppError = {
   code: NOT_JSON,
   message: 'The response body is not JSON',
-  table: null,
+  context: null,
 };
 
 export const fetchFailed: AppError = {
   code: FETCH_FAIL,
   message: 'HTTP request failed',
-  table: null,
+  context: null,
 };
 
 export interface ErrorText {

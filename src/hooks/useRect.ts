@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // source: https://github.com/tannerlinsley/react-virtual/blob/master/src/useRect.js
 import React, { useLayoutEffect, useRef } from 'react';
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer';
-const ResizeObserver = window.ResizeObserver || Polyfill;
 
 export function useRect<T extends Element>(nodeRef: React.RefObject<T>): DOMRect | null {
   const [element, setElement] = React.useState(nodeRef.current);

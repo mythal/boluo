@@ -1,8 +1,5 @@
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { Map } from 'immutable';
-import { ResizeObserver as Polyfill } from '@juggle/resize-observer/lib/ResizeObserver';
-
-const ResizeObserver = window.ResizeObserver || Polyfill;
 
 const defaultEstimateSize = () => 50;
 

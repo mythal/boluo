@@ -7,7 +7,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
@@ -21,7 +21,7 @@ module.exports = {
   mode: PRODUCTION ? 'production' : 'development',
 
   output: {
-    filename: 'main.[hash].js',
+    filename: 'main.[contenthash].js',
     chunkFilename: '[id].[contenthash].js',
     path: path.resolve(rootPath, 'dist'),
     publicPath: '/',
@@ -37,15 +37,17 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
-      filename: '[name].[hash].css',
-      chunkFilename: '[id].[hash].css',
+      filename: '[name].[contenthash].css',
+      chunkFilename: '[id].[contenthash].css',
     }),
     new SpriteLoaderPlugin(),
     // new require('webpack-bundle-analyzer').BundleAnalyzerPlugin,
   ],
 
   devServer: {
-    contentBase: path.resolve(rootPath, 'public'),
+    static: {
+      directory: path.resolve(__dirname, 'public'),
+    },
     hot: true,
     compress: true,
     historyApiFallback: true,
@@ -79,7 +81,7 @@ module.exports = {
         loader: 'svg-sprite-loader',
         options: {
           extract: true,
-          spriteFilename: '[hash].svg',
+          spriteFilename: '[contenthash].svg',
           esModule: false,
         },
       },
@@ -99,6 +101,6 @@ module.exports = {
       chunks: 'all',
       minSize: 1000000,
     },
-    minimizer: [new TerserPlugin(), new OptimizeCSSAssetsPlugin({})],
+    minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
   },
 };

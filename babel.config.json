@@ -2,18 +2,14 @@
   "presets": [
     "@babel/env",
     "@babel/typescript",
-    "@babel/react",
+    ["@babel/preset-react", { "runtime": "automatic", "importSource": "@emotion/react" }],
     [
       "@emotion/babel-preset-css-prop",
       {
-        "autoLabel": true,
+        "autoLabel": "always",
         "labelFormat": "[local]"
       }
     ]
   ],
-  "plugins": [
-    ["emotion", { "sourceMap": true }],
-    "@babel/proposal-class-properties",
-    ["@babel/plugin-transform-runtime", { "regenerator": true }]
-  ]
+  "plugins": [["@emotion", { "sourceMap": true }]]
 }

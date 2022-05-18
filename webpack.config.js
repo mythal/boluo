@@ -88,12 +88,12 @@ module.exports = {
     ],
   },
 
-  externals: PRODUCTION
-    ? {
-        react: 'React',
-        'react-dom': 'ReactDOM',
-      }
-    : {},
+  // externals: PRODUCTION
+  //   ? {
+  //       react: 'React',
+  //       'react-dom': 'ReactDOM',
+  //     }
+  //   : {},
 
   optimization: {
     minimize: PRODUCTION,

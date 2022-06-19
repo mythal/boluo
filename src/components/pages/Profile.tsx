@@ -9,9 +9,9 @@ import { User } from '../../api/users';
 import { RenderError } from '../molecules/RenderError';
 import { decodeUuid } from '../../utils/id';
 import { useDispatch, useSelector } from '../../store';
-import { loadUser } from '../../actions/ui';
 import { errLoading, notFound } from '../../api/error';
 import { useTitleWithResult } from '../../hooks/useTitle';
+import { loadUser } from '../../actions';
 
 interface Params {
   id?: string;

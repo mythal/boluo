@@ -2,12 +2,12 @@ import { useDispatch, useSelector } from '../store';
 import { useCallback, useRef } from 'react';
 import { connect } from '../api/connect';
 import { Events } from '../api/events';
-import { connectSpace, SpaceUpdated } from '../actions/ui';
 import { get } from '../api/request';
 import { useMyId } from './useMyId';
 import { Id } from '../utils/id';
 import { atom } from 'jotai';
 import { useUpdateAtom } from 'jotai/utils';
+import { connectSpace, SpaceUpdated } from '../actions';
 
 export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
 

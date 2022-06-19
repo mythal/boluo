@@ -3,7 +3,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from '../../store';
 import { DragDropContext, DragDropContextProps, Droppable } from 'react-beautiful-dnd';
 import { post } from '../../api/request';
-import { FinishMoveMessage, ResetMessageMoving } from '../../actions/chat';
 import { throwErr } from '../../utils/errors';
 import { ChatState } from '../../reducers/chatState';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
@@ -13,6 +12,7 @@ import { css } from '@emotion/core';
 import { Id } from '../../utils/id';
 import { blue } from '../../styles/colors';
 import { List } from 'immutable';
+import { FinishMoveMessage, ResetMessageMoving } from '../../actions';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem

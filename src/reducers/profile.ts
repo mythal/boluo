@@ -2,8 +2,8 @@ import { Settings, User } from '../api/users';
 import { OrderedMap } from 'immutable';
 import { SpaceWithMember, SpaceWithRelated } from '../api/spaces';
 import { ChannelWithMember } from '../api/channels';
-import { Action } from '../actions';
 import {
+  Action,
   ChannelMemberEdited,
   JoinedChannel,
   JoinedSpace,
@@ -12,7 +12,7 @@ import {
   LoggedIn,
   SettingsUpdated,
   UserEdited,
-} from '../actions/profile';
+} from '../actions';
 import { ChannelEdited, PushMembers } from '../api/events';
 import { Id } from '../utils/id';
 import { ChatState } from './chatState';

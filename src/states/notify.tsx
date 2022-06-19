@@ -1,9 +1,9 @@
 import { atom, useAtom } from 'jotai';
-import { showFlash } from '../actions/flash';
 import * as React from 'react';
 import { useSelector } from '../store';
 import { focusChannelAtom } from './focusChannel';
 import { useMyId } from '../hooks/useMyId';
+import { showFlash } from '../actions';
 
 export const isNotificationSupported = 'Notification' in window;
 

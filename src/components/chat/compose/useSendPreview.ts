@@ -1,17 +1,6 @@
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useSend } from '../../../hooks/useSend';
-import { useAtomValue } from 'jotai/utils';
-import {
-  broadcastAtom,
-  editForAtom,
-  inGameAtom,
-  inputNameAtom,
-  isActionAtom,
-  messageIdAtom,
-  sourceAtom,
-  whisperToAtom,
-} from './state';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useParse } from '../../../hooks/useParse';
 import { PreviewPost } from '../../../api/events';
 import { useSelector } from '../../../store';
@@ -21,14 +10,9 @@ export const useSendPreview = () => {
   const send = useSend();
   const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized ?? false);
   const parse = useParse();
-  const source = useAtomValue(sourceAtom, channelId);
-  const whisperTo = useAtomValue(whisperToAtom, channelId);
-  const broadcast = useAtomValue(broadcastAtom, channelId);
-  const inGame = useAtomValue(inGameAtom, channelId);
-  const id = useAtomValue(messageIdAtom, channelId);
-  const editFor = useAtomValue(editForAtom, channelId);
-  const isAction = useAtomValue(isActionAtom, channelId);
-  const inputName = useAtomValue(inputNameAtom, channelId);
+  const compose = useSelector((state) => state.chatStates.get(channelId)!.compose);
+  const { source, whisperTo, broadcast, inGame, messageId, editFor, inputName, isAction } = compose;
+  const id = messageId;
   const nickname = useSelector((state) => state.profile?.user.nickname)!;
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member)!;
 

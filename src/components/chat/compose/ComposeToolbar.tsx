@@ -5,10 +5,9 @@ import mask from '../../../assets/icons/theater-masks.svg';
 import running from '../../../assets/icons/running.svg';
 import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
 import styled from '@emotion/styled';
-import { broadcastAtom, inGameAtom, isActionAtom } from './state';
 import { useCallback } from 'react';
-import { useAtom } from 'jotai';
 import { useChannelId } from '../../../hooks/useChannelId';
+import { useDispatch, useSelector } from '../../../store';
 
 interface Props {}
 
@@ -18,13 +17,21 @@ const Toolbar = styled.div`
 `;
 
 function ComposeToolbar(props: Props) {
+  const dispatch = useDispatch();
   const channelId = useChannelId();
-  const [isAction, updateAction] = useAtom(isActionAtom, channelId);
-  const [broadcast, updateBroadcast] = useAtom(broadcastAtom, channelId);
-  const [inGame, updateInGame] = useAtom(inGameAtom, channelId);
-  const toggleIsAction = useCallback(() => updateAction('toggle'), [updateAction]);
-  const toggleBroadcast = useCallback(() => updateBroadcast((broadcast) => !broadcast), [updateBroadcast]);
-  const toggleInGame = useCallback(() => updateInGame((inGame) => !inGame), [updateInGame]);
+  const pane = channelId;
+  const isAction = useSelector((state) => state.chatStates.get(channelId)!.compose.isAction);
+  const broadcast = useSelector((state) => state.chatStates.get(channelId)!.compose.broadcast);
+  const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
+  const toggleIsAction = useCallback(() => dispatch({ type: 'SET_IS_ACTION', pane, isAction: 'TOGGLE' }), [
+    dispatch,
+    pane,
+  ]);
+  const toggleBroadcast = useCallback(() => dispatch({ type: 'SET_BROADCAST', pane, broadcast: 'TOGGLE' }), [
+    dispatch,
+    pane,
+  ]);
+  const toggleInGame = useCallback(() => dispatch({ type: 'SET_IN_GAME', pane, inGame: 'TOGGLE' }), [dispatch, pane]);
   return (
     <Toolbar>
       <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" info="Esc" />

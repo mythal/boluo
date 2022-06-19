@@ -17,7 +17,6 @@ import { useForm } from 'react-hook-form';
 import { EditChannelMember } from '../../api/channels';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { characterNameValidation } from '../../validators';
-import { ChannelMemberEdited } from '../../actions/profile';
 import ninja from '../../assets/icons/ninja.svg';
 import Icon from '../atoms/Icon';
 import doorOpen from '../../assets/icons/door-open.svg';
@@ -28,6 +27,7 @@ import Menu from '../atoms/Menu';
 import { MenuItem, MenuItemLink } from '../atoms/MenuItem';
 import { useChannelId } from '../../hooks/useChannelId';
 import { recordNext } from '../../utils/browser';
+import { ChannelMemberEdited } from '../../actions';
 
 const buttonBarStyle = css`
   ${[mT(4)]};

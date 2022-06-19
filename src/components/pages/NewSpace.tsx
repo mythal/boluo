@@ -14,7 +14,6 @@ import { post } from '../../api/request';
 import Button from '../atoms/Button';
 import { useHistory } from 'react-router-dom';
 import { useDispatch } from '../../store';
-import { JoinedSpace } from '../../actions/profile';
 import implosion from '../../assets/icons/implosion.svg';
 import nightSky from '../../assets/icons/night-sky.svg';
 import Icon from '../atoms/Icon';
@@ -24,6 +23,7 @@ import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
 import { encodeUuid } from '../../utils/id';
 import TextArea from '../atoms/TextArea';
 import { useTitle } from '../../hooks/useTitle';
+import { JoinedSpace } from '../../actions';
 
 export const fieldsLayout = css`
   display: grid;

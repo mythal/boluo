@@ -1,11 +1,10 @@
 import { SpaceMemberWithUser } from '../api/spaces';
 import { List, Map } from 'immutable';
-import { Id } from '../utils/id';
+import { Id, newId } from '../utils/id';
 import { chatReducer, ChatState } from './chatState';
 import { Channel, ChannelMember, makeMembers } from '../api/channels';
-import { SpaceLoaded, SpaceUpdated } from '../actions/ui';
 import { initialChatItemSet } from '../states/chat-item-set';
-import { Action } from '../actions';
+import { Action, SpaceLoaded, SpaceUpdated } from '../actions';
 
 export type ChatStateMap = Map<Id, ChatState | undefined>;
 const initChatState = (
@@ -27,6 +26,20 @@ const initChatState = (
     eventAfter: 0,
     itemSet: initialChatItemSet,
     lastLoadBefore: Number.MAX_SAFE_INTEGER,
+    compose: {
+      initialized: false,
+      inputName: '',
+      entities: [],
+      sending: false,
+      editFor: null,
+      messageId: newId(),
+      media: undefined,
+      isAction: false,
+      source: '',
+      whisperTo: null,
+      inGame: false,
+      broadcast: true,
+    },
   };
 };
 export const handleSpaceUpdate = (state: ChatStateMap, action: SpaceUpdated): ChatStateMap => {

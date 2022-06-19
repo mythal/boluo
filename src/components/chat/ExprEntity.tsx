@@ -245,7 +245,7 @@ const Repeat: React.FC<{ node: RepeatResult }> = ({ node }) => {
     return null;
   }
   const first = node.evaluated[0];
-  const nodeList: React.ReactNodeArray = [
+  const nodeList: React.ReactNode[] = [
     <React.Fragment key={0}>
       <Node node={first} /> = <Num>{first.value}</Num>
     </React.Fragment>,

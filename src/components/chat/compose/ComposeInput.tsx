@@ -2,12 +2,9 @@ import * as React from 'react';
 import { Ref, useCallback, useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/core';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
-import { useAtom } from 'jotai';
-import { editForAtom, inGameAtom, mediaAtom, messageIdAtom, sourceAtom } from './state';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { useAtomValue, useUpdateAtom } from 'jotai/utils';
 import { newId } from '../../../utils/id';
-import { useResetEdit } from './Editing';
+import { useDispatch, useSelector } from '../../../store';
 
 interface Props {
   initialValue?: string;
@@ -39,17 +36,25 @@ function useAutoFocus(autoFocus: undefined | boolean, inputRef: React.RefObject<
 }
 
 function ComposeInput({ autoFocus = false, autoSize = false, className }: Props, ref: Ref<ComposeInputAction>) {
+  const dispatch = useDispatch();
   const channelId = useChannelId();
-  const [inGame] = useAtom(inGameAtom, channelId);
-  const [, setMedia] = useAtom(mediaAtom, channelId);
+  const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(autoSize, inputRef);
-  const [source, setSource] = useAtom(sourceAtom, channelId);
-  const editFor = useAtomValue(editForAtom, channelId);
-  const updateMessageId = useUpdateAtom(messageIdAtom, channelId);
+  const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
+  const setSource = useCallback(
+    (source: string) => {
+      dispatch({ type: 'SET_COMPOSE_SOURCE', pane: channelId, source });
+    },
+    [channelId, dispatch]
+  );
+  const editFor = useSelector((state) => state.chatStates.get(channelId)!.compose.editFor);
   const compositing = useRef(false);
-  const resetEdit = useResetEdit();
   const [dragging, setDragging] = useState(false);
+  const setMedia = useCallback(
+    (media: File | undefined) => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId, media }),
+    [channelId, dispatch]
+  );
 
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   useAutoFocus(autoFocus, inputRef);
@@ -57,7 +62,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = async (e) => {
     const value = e.target.value;
     if (value.trim() === '' && !editFor) {
-      updateMessageId(newId());
+      dispatch({ type: 'SET_COMPOSE_MESSAGE_ID', pane: channelId, id: newId() });
     }
     setSource(value);
   };

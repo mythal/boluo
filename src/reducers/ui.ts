@@ -1,8 +1,7 @@
 import { Space, SpaceWithRelated, UserStatus } from '../api/spaces';
-import { Action } from '../actions';
+import { Action, JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '../actions';
 import { AppResult } from '../api/request';
 import { errLoading } from '../api/error';
-import { JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '../actions/profile';
 import { Id } from '../utils/id';
 import { Map } from 'immutable';
 import { User } from '../api/users';

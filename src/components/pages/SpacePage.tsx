@@ -27,7 +27,6 @@ import { RenderError } from '../molecules/RenderError';
 import ManageSpace from '../organisms/ManageSpace';
 import { decodeUuid, encodeUuid } from '../../utils/id';
 import { useDispatch, useSelector } from '../../store';
-import { loadSpace } from '../../actions/ui';
 import { SpaceWithRelated } from '../../api/spaces';
 import GotoSpaceLink from '../../components/molecules/GotoSpaceLink';
 import { AppResult, get } from '../../api/request';
@@ -36,6 +35,7 @@ import styled from '@emotion/styled';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { throwErr } from '../../utils/errors';
 import Input from '../atoms/Input';
+import { loadSpace } from '../../actions';
 
 interface Params {
   id: string;

@@ -11,8 +11,8 @@ import Overlay from '../atoms/Overlay';
 import Menu from '../atoms/Menu';
 import { MenuItem } from '../atoms/MenuItem';
 import { useDispatch, useSelector } from '../../store';
-import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions/chat';
 import { useChannelId } from '../../hooks/useChannelId';
+import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions';
 
 interface Props {
   className?: string;

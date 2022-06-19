@@ -1,16 +1,13 @@
 import * as React from 'react';
 import { Preview } from '../../../api/events';
 import { chatItemContainer } from '../ChatItemContainer';
-import ChatItemName from '../ChatItemName';
 import ChatItemContent from '../ItemContent';
 import { ChatItemContentContainer } from '../ChatItemContentContainer';
 import { nameContainer, previewInGame, previewOutGame } from '../styles';
 import { css } from '@emotion/core';
 import { mL, mR, textXs } from '../../../styles/atoms';
 import MyPreviewName from './MyPreviewName';
-import { useAtomValue, useUpdateAtom } from 'jotai/utils';
-import { isActionAtom, sourceAtom } from './state';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { AddDiceButton } from './AddDiceButton';
 import ChatImageUploadButton from './ImageUploadButton';
@@ -18,6 +15,7 @@ import WhisperTo from './WhisperTo';
 import { InPreviewActionButton } from './InPreviewActionButton';
 import { BroadcastAreClosed } from './BroadcastAreClosed';
 import { useParse } from '../../../hooks/useParse';
+import { useSelector } from '../../../store';
 
 interface Props {
   preview: Preview;
@@ -33,8 +31,8 @@ const previewChatItem = css`
 function MyPreview({ preview }: Props) {
   const enableBroadcast = preview.text !== null;
   const channelId = useChannelId();
-  const source = useAtomValue(sourceAtom, channelId);
-  const isAction = useAtomValue(isActionAtom, channelId);
+  const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
+  const isAction = useSelector((state) => state.chatStates.get(channelId)!.compose.isAction);
   const parse = useParse();
   const { text, entities } = useMemo(() => parse(source), [source, parse]);
 

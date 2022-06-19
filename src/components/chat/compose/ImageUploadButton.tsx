@@ -3,9 +3,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import fileImage from '../../../assets/icons/file-image.svg';
 import removeFileImage from '../../../assets/icons/remove-file-image.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import { useAtom } from 'jotai';
-import { mediaAtom } from './state';
 import { useChannelId } from '../../../hooks/useChannelId';
+import { useDispatch, useSelector } from '../../../store';
 
 interface Props {
   className?: string;
@@ -14,9 +13,11 @@ interface Props {
 
 function ImageUploadButton({ className, size }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [media, updateMedia] = useAtom(mediaAtom, useChannelId());
+  const channelId = useChannelId();
+  const dispatch = useDispatch();
+  const media = useSelector((state) => state.chatStates.get(channelId)!.compose.media);
 
-  const removeMedia = useCallback(() => updateMedia(undefined), [updateMedia]);
+  const removeMedia = useCallback(() => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId }), []);
   const startUpload = useCallback(() => fileInputRef.current?.click(), []);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ function ImageUploadButton({ className, size }: Props) {
 
   const onFileChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     if (event.target.files && event.target.files.length > 0) {
-      updateMedia(event.target.files[0]);
+      dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId, media: event.target.files[0] });
     }
   };
   return (

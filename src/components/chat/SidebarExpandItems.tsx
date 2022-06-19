@@ -21,9 +21,7 @@ import Help from './Help';
 import bellIcon from '../../assets/icons/bell-solid.svg';
 import bellSlashIcon from '../../assets/icons/bell-slash-solid.svg';
 import { SidebarChannelItem } from './SidebarChannelItem';
-import { showFlash } from '../../actions/flash';
-import { useAtom } from 'jotai';
-import { canNotifyAtom, useNotificationSwitch } from '../../states/notify';
+import { useNotificationSwitch } from '../../states/notify';
 
 interface Props {
   space: Space;

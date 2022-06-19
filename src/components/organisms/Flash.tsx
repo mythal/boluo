@@ -6,7 +6,7 @@ import { useDispatch } from '../../store';
 import { mY, textSm } from '../../styles/atoms';
 import { Information } from '../../information';
 import { FlashState } from '../../reducers/flash';
-import { dismissFlash } from '../../actions/flash';
+import { dismissFlash } from '../../actions';
 
 interface Props {
   flashState: FlashState;

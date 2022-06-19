@@ -9,7 +9,6 @@ import Home from '../chat/Home';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import { useDispatch, useSelector } from '../../store';
-import { loadSpace } from '../../actions/ui';
 import { errLoading, LOADING } from '../../api/error';
 import { AppResult } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
@@ -18,7 +17,6 @@ import { css, Global } from '@emotion/core';
 import { PaneContext } from '../../hooks/useChannelId';
 import { chatPath } from '../../utils/path';
 import { breakpoint, mediaQuery } from '../../styles/atoms';
-import { useSpaceConnection } from '../../hooks/useSpaceConnection';
 import { useHeartbeat } from '../chat/Heartbeat';
 import { useAtom } from 'jotai';
 import { userDialogAtom } from '../../states/userDialog';
@@ -26,6 +24,7 @@ import MemberDialog from '../chat/MemberDialog';
 import { useMyId } from '../../hooks/useMyId';
 import { Provider } from 'jotai';
 import { Connector } from '../chat/Connector';
+import { loadSpace } from '../../actions';
 
 interface Params {
   spaceId: string;

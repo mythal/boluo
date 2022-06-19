@@ -16,8 +16,8 @@ import { HelpText } from '../atoms/HelpText';
 import Button from '../../components/atoms/Button';
 import { post } from '../../api/request';
 import { Space } from '../../api/spaces';
-import { JoinedChannel } from '../../actions/profile';
 import Dialog from '../../components/molecules/Dialog';
+import { JoinedChannel } from '../../actions';
 
 interface Props {
   space: Space;

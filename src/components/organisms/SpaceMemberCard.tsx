@@ -10,10 +10,10 @@ import { darken } from 'polished';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
 import { useDispatch, useSelector } from '../../store';
-import { loadUser } from '../../actions/ui';
 import { errLoading } from '../../api/error';
 import { User } from '../../api/users';
 import { bgColor } from '../../styles/colors';
+import { loadUser } from '../../actions';
 
 interface Props {
   member: SpaceMember;

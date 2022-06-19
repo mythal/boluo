@@ -4,10 +4,7 @@ import paperPlane from '../../../assets/icons/paper-plane.svg';
 import save from '../../../assets/icons/save.svg';
 import { isMac } from '../../../utils/browser';
 import { useSelector } from '../../../store';
-import { inGameAtom, inputNameAtom, sendingAtom, sourceAtom } from './state';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { useAtom } from 'jotai';
-import { useAtomValue } from 'jotai/utils';
 import { useSendPreview } from './useSendPreview';
 import { whyCannotSend } from './useOnSend';
 
@@ -18,12 +15,12 @@ interface Props {
 
 export const SendButton = ({ onSend, editing = false }: Props) => {
   const channelId = useChannelId();
-  const source = useAtomValue(sourceAtom, channelId);
+  const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
-  const inputName = useAtomValue(inputNameAtom, channelId).trim();
+  const inputName = useSelector((state) => state.chatStates.get(channelId)!.compose.inputName);
   const characterName = useSelector((state) => state.profile?.channels.get(channelId)?.member.characterName ?? '');
-  const inGame = useAtomValue(inGameAtom, channelId);
-  const [sending] = useAtom(sendingAtom, channelId);
+  const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
+  const sending = useSelector((state) => state.chatStates.get(channelId)!.compose.sending);
   useSendPreview();
   let sendButtonInfo = isMac ? '⌘ + ⏎' : 'Ctrl + ⏎';
   if (enterSend) {

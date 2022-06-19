@@ -2,13 +2,13 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from '../../store';
 import { get } from '../../api/request';
-import { LoadMessages } from '../../actions/chat';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import rotateIcon from '../../assets/icons/rotate-cw.svg';
 import styled from '@emotion/styled';
 import { bgColor } from '../../styles/colors';
 import { useChannelId } from '../../hooks/useChannelId';
+import { LoadMessages } from '../../actions';
 
 export const loadMoreHeight = 60;
 

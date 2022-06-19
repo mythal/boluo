@@ -2,18 +2,31 @@ import { Channel, makeMembers, Member } from '../api/channels';
 import { List, Map } from 'immutable';
 import { Message, MessageOrder } from '../api/messages';
 import { Events, Preview } from '../api/events';
-import { Action } from '../actions';
 import {
+  Action,
+  AddDice,
+  CancelEdit,
   ChatLoaded,
   ChatUpdate,
+  ComposeEditFailed,
+  ComposeSendFailed,
   LoadMessages,
   MovingMessage,
+  ResetComposeAfterSent,
   ResetMessageMoving,
+  SetBroadcast,
+  SetComposeMedia,
+  SetComposeMessageId,
+  SetComposeSource,
+  SetInGame,
+  SetInputName,
+  SetIsAction,
+  SetWhisperTo,
   StartEditMessage,
   StopEditMessage,
-} from '../actions/chat';
+} from '../actions';
 import { DEBUG } from '../settings';
-import { Id } from '../utils/id';
+import { Id, newId } from '../utils/id';
 import {
   addItem,
   ChatItem,
@@ -28,6 +41,27 @@ import {
 } from '../states/chat-item-set';
 import { SpaceWithRelated } from '../api/spaces';
 import * as O from 'optics-ts';
+import { Entity } from '../interpreter/entities';
+
+export interface UserItem {
+  label: string;
+  value: string;
+}
+
+export interface Compose {
+  initialized: boolean;
+  inputName: string;
+  isAction: boolean;
+  entities: Entity[];
+  sending: boolean;
+  editFor: number | null;
+  messageId: Id;
+  media: File | undefined;
+  source: string;
+  whisperTo: UserItem[] | null | undefined;
+  inGame: boolean;
+  broadcast: boolean;
+}
 
 export interface ChatState {
   channel: Channel;
@@ -43,6 +77,7 @@ export interface ChatState {
   showFolded: boolean;
   moving: boolean;
   postponed: List<Action>;
+  compose: Compose;
 }
 
 const focusItemSet = O.optic<ChatState>().prop('itemSet');
@@ -116,7 +151,23 @@ const newMessage = (itemSet: ChatItemSet, message: Message, myId: Id | undefined
 };
 
 const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage): ChatState => {
-  return state;
+  let whisperTo: Compose['whisperTo'] = null;
+  if (message.whisperToUsers) {
+    // FIXME: fetch user name.
+    whisperTo = message.whisperToUsers.map((user) => ({ label: user, value: user }));
+  }
+  const compose: Compose = {
+    ...state.compose,
+    messageId: message.id,
+    editFor: message.modified,
+    isAction: message.isAction,
+    inputName: message.inGame ? message.name : '',
+    inGame: message.inGame,
+    source: message.text,
+    whisperTo,
+  };
+
+  return { ...state, compose };
 };
 
 const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage): ChatState => {
@@ -157,9 +208,143 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
   return colorMap;
 };
 
+const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource): ChatState => {
+  return { ...state, compose: { ...state.compose, source } };
+};
+
+const ACTION_COMMAND = /^[.。]me\s*/;
+const handleSetIsAction = (state: ChatState, action: SetIsAction): ChatState => {
+  const oldIsAction = state.compose.isAction;
+  let source = state.compose.source;
+  let isAction: boolean;
+  if (action.isAction === 'TOGGLE') {
+    isAction = !oldIsAction;
+  } else {
+    isAction = action.isAction;
+  }
+  const match = source.match(ACTION_COMMAND);
+  if (isAction && !match) {
+    // add ".me" to source
+    source = `.me ${source}`;
+  } else if (!isAction && match) {
+    // remove ".me" from source
+    source = source.substring(match[0].length);
+  }
+  return { ...state, compose: { ...state.compose, isAction, source } };
+};
+
+const handleSetBroadcast = (state: ChatState, action: SetBroadcast): ChatState => {
+  const oldBroadcast = state.compose.broadcast;
+  let broadcast: boolean;
+  if (action.broadcast === 'TOGGLE') {
+    broadcast = !oldBroadcast;
+  } else {
+    broadcast = action.broadcast;
+  }
+  return { ...state, compose: { ...state.compose, broadcast } };
+};
+
+const handleSetInGame = (state: ChatState, action: SetInGame): ChatState => {
+  const oldInGame = state.compose.inGame;
+  let inGame: boolean;
+  if (action.inGame === 'TOGGLE') {
+    inGame = !oldInGame;
+  } else {
+    inGame = action.inGame;
+  }
+  return { ...state, compose: { ...state.compose, inGame } };
+};
+
+const handleSetInputName = (state: ChatState, { name }: SetInputName): ChatState => {
+  return { ...state, compose: { ...state.compose, inputName: name.trim() } };
+};
+
+const handleAddDice = (state: ChatState, { dice }: AddDice): ChatState => {
+  const source = `${state.compose.source} {${dice}}`;
+  return { ...state, compose: { ...state.compose, source } };
+};
+
+const handleSetComposeMedia = (state: ChatState, { media }: SetComposeMedia): ChatState => {
+  return { ...state, compose: { ...state.compose, media } };
+};
+
+const handleSetWhisperTo = (state: ChatState, { whisperTo }: SetWhisperTo): ChatState => {
+  return { ...state, compose: { ...state.compose, whisperTo } };
+};
+
+const handleChatInitialized = (myId: Id, channelId: Id, itemSet: ChatItemSet): Compose => {
+  const item = itemSet.previews.get(myId);
+  const compose: Compose = {
+    messageId: newId(),
+    initialized: true,
+    inputName: '',
+    entities: [],
+    sending: false,
+    editFor: null,
+    media: undefined,
+    source: '',
+    whisperTo: undefined,
+    inGame: true,
+    broadcast: true,
+    isAction: false,
+  };
+  if (!item) {
+    return compose;
+  }
+  const { preview } = item;
+  if (preview.text === '' || preview.text === null || preview.channelId !== channelId) {
+    return compose;
+  }
+  if (preview.editFor) {
+    compose.messageId = preview.id;
+    compose.editFor = preview.editFor;
+  }
+  compose.source = preview.text;
+  compose.inGame = preview.inGame;
+  if (compose.inGame && preview.name) {
+    compose.inputName = preview.name;
+  }
+  return compose;
+};
+
+const handleSetComposeMessageId = (state: ChatState, { id }: SetComposeMessageId): ChatState => {
+  return { ...state, compose: { ...state.compose, messageId: id } };
+};
+
+const handleComposeEditFailed = (state: ChatState, action: ComposeEditFailed): ChatState => {
+  return state;
+};
+
+const handleComposeSendFailed = (state: ChatState, action: ComposeSendFailed): ChatState => {
+  return state;
+};
+
+const handleResetComposeAfterSent = (state: ChatState, action: ResetComposeAfterSent): ChatState => {
+  const compose: Compose = {
+    ...state.compose,
+    isAction: false,
+    source: '',
+    media: undefined,
+  };
+  return { ...state, compose };
+};
+
+const handleCancelEdit = (state: ChatState, action: CancelEdit): ChatState => {
+  const compose: Compose = {
+    ...state.compose,
+    editFor: null,
+    messageId: newId(),
+    source: '',
+    inputName: '',
+    media: undefined,
+    whisperTo: null,
+  };
+  return { ...state, compose };
+};
+
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
-  let { itemSet, channel, colorMap, members, eventAfter, initialized } = chat;
+  let { itemSet, channel, colorMap, members, eventAfter, initialized, compose } = chat;
   if ('channelId' in body && body.channelId !== channel.id) {
     return chat;
   }
@@ -188,6 +373,9 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       break;
     case 'INITIALIZED':
       initialized = true;
+      if (myId) {
+        compose = handleChatInitialized(myId, channel.id, itemSet);
+      }
       break;
   }
   if (DEBUG) {
@@ -200,6 +388,7 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
     members,
     colorMap,
     itemSet,
+    compose,
     initialized,
     eventAfter,
   };
@@ -250,6 +439,36 @@ export const chatReducer = (
     checkMessagesOrder(state.itemSet);
   }
   switch (action.type) {
+    case 'SET_COMPOSE_SOURCE':
+      return handleSetComposeSource(state, action);
+    case 'SET_IS_ACTION':
+      return handleSetIsAction(state, action);
+    case 'SET_BROADCAST':
+      return handleSetBroadcast(state, action);
+    case 'SET_IN_GAME':
+      return handleSetInGame(state, action);
+    case 'ADD_DICE':
+      return handleAddDice(state, action);
+    case 'SET_INPUT_NAME':
+      return handleSetInputName(state, action);
+    case 'SET_COMPOSE_MEDIA':
+      return handleSetComposeMedia(state, action);
+    case 'SET_WHISPER_TO':
+      return handleSetWhisperTo(state, action);
+    case 'SET_COMPOSE_MESSAGE_ID':
+      return handleSetComposeMessageId(state, action);
+    case 'CANCEL_EDIT':
+      return handleCancelEdit(state, action);
+    case 'COMPOSE_SEND_FAILED':
+      return handleComposeSendFailed(state, action);
+    case 'COMPOSE_SENDING':
+      return { ...state, compose: { ...state.compose, sending: true } };
+    case 'COMPOSE_SENT':
+      return { ...state, compose: { ...state.compose, sending: false } };
+    case 'COMPOSE_EDIT_FAILED':
+      return handleComposeEditFailed(state, action);
+    case 'RESET_COMPOSE_AFTER_SENT':
+      return handleResetComposeAfterSent(state, action);
     case 'FINISH_MOVE_MESSAGE':
       return handleMoveFinish(state, action, myId);
     case 'SPACE_UPDATED':
@@ -277,8 +496,8 @@ export const chatReducer = (
       return handleResetMessageMoving(state, action);
     case 'CHAT_FILTER':
       return { ...state, filter: action.filter };
-    // case 'START_EDIT_MESSAGE':
-    //   return handleStartEditMessage(state, action);
+    case 'START_EDIT_MESSAGE':
+      return handleStartEditMessage(state, action);
     case 'STOP_EDIT_MESSAGE':
       return handleStopEditMessage(state, action);
     case 'EVENT_RECEIVED':

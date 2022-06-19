@@ -7,13 +7,13 @@ import { mR, textSm } from '../../styles/atoms';
 import { gray } from '../../styles/colors';
 import { get } from '../../api/request';
 import { throwErr } from '../../utils/errors';
-import { showFlash } from '../../actions/flash';
 import { Message } from '../../api/messages';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import eye from '../../assets/icons/eye.svg';
 import eyeSlash from '../../assets/icons/eye-slash.svg';
 import { useChannelId } from '../../hooks/useChannelId';
+import { showFlash } from '../../actions';
 
 interface Props {
   myMember?: ChannelMember;

@@ -1,10 +1,7 @@
 import * as React from 'react';
-import { useUpdateAtom } from 'jotai/utils';
-import { sourceAtom } from './state';
 import { useCallback } from 'react';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { useSelector } from '../../../store';
-import Button from '../../atoms/Button';
+import { useDispatch, useSelector } from '../../../store';
 import { mL } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import diceIcon from '../../../assets/icons/d20.svg';
@@ -16,12 +13,12 @@ interface Props {
 
 export const AddDiceButton = ({ inCompose = false, className }: Props) => {
   const channelId = useChannelId();
-  const defaultDice = useSelector((state) => state.chatStates.get(channelId)?.channel.defaultRollCommand ?? 'd');
+  const dispatch = useDispatch();
+  const dice = useSelector((state) => state.chatStates.get(channelId)?.channel.defaultRollCommand ?? 'd');
 
-  const setSource = useUpdateAtom(sourceAtom, channelId);
   const addDice = useCallback(() => {
-    setSource((source) => source + ' {' + defaultDice + '}');
-  }, [setSource]);
+    dispatch({ type: 'ADD_DICE', pane: channelId, dice });
+  }, [channelId, dice, dispatch]);
   return (
     <ChatItemToolbarButton
       className={className}

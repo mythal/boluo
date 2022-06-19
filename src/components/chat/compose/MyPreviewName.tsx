@@ -11,14 +11,9 @@ import { css } from '@emotion/core';
 import { gray } from '../../../styles/colors';
 import { chatContentLineHeight } from '../styles';
 import Tooltip from '../../atoms/Tooltip';
-import { useSelector } from '../../../store';
+import { useDispatch, useSelector } from '../../../store';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { genColor } from '../../../utils/game';
-import { useAtomValue } from 'jotai/utils';
-import { inGameAtom, inputNameAtom, isActionAtom } from './state';
-import { useAtom } from 'jotai';
-import WhisperTo from './WhisperTo';
-import { InPreviewActionButton } from './InPreviewActionButton';
 
 interface Props {
   master: boolean;
@@ -62,6 +57,7 @@ const nameInputStyle = css`
 `;
 
 function MyPreviewName() {
+  const dispatch = useDispatch();
   const channelId = useChannelId()!;
   const myId = useSelector((state) => state.profile!.user.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
@@ -69,8 +65,8 @@ function MyPreviewName() {
     (state) => state.profile?.channels.get(channelId)?.member.characterName ?? ''
   );
   const isMaster: boolean = useSelector((state) => state.profile?.channels.get(channelId)?.member.isMaster ?? false);
-  const inGame = useAtomValue(inGameAtom, channelId);
-  const [inputName, setInputName] = useAtom(inputNameAtom, channelId);
+  const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
+  const inputName = useSelector((state) => state.chatStates.get(channelId)!.compose.inputName);
   let name = nickname;
   if (inGame) {
     name = inputName;
@@ -81,9 +77,9 @@ function MyPreviewName() {
   }, [myId]);
   const handleNameInput: React.ChangeEventHandler<HTMLInputElement> = useCallback(
     (e) => {
-      setInputName(e.target.value.trim());
+      dispatch({ type: 'SET_INPUT_NAME', name: e.target.value.trim(), pane: channelId });
     },
-    [setInputName]
+    [channelId, dispatch]
   );
   return (
     <Container>

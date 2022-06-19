@@ -11,13 +11,13 @@ import { post } from '../../api/request';
 import { AppError, NO_PERMISSION } from '../../api/error';
 import { Link, useHistory } from 'react-router-dom';
 import { useDispatch } from '../../store';
-import { LoggedIn } from '../../actions/profile';
 import { Label } from '../atoms/Label';
 import loginIcon from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
 import { useTitle } from '../../hooks/useTitle';
 import { popNext } from '../../utils/browser';
+import { LoggedIn } from '../../actions';
 
 const required = '必须填写这个字段';
 

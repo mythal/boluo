@@ -9,9 +9,9 @@ import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { required } from '../../validators';
 import { post } from '../../api/request';
-import { showFlash } from '../../actions/flash';
 import { useDispatch } from '../../store';
 import Loading from '../molecules/Loading';
+import { showFlash } from '../../actions';
 
 interface FormData {
   email: string;

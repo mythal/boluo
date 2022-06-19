@@ -35,8 +35,8 @@ import { Set } from 'immutable';
 import Dialog from '../molecules/Dialog';
 import { useHistory } from 'react-router-dom';
 import { chatPath } from '../../utils/path';
-import { showFlash } from '../../actions/flash';
 import { Id } from '../../utils/id';
+import { showFlash } from '../../actions';
 
 const Select = React.lazy(() => import('react-select'));
 

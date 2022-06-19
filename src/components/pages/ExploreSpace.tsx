@@ -9,9 +9,9 @@ import spaceIcon from '../../assets/icons/star-sattelites.svg';
 import Icon from '../atoms/Icon';
 import { RenderError } from '../molecules/RenderError';
 import { useDispatch, useSelector } from '../../store';
-import { loadExploreSpace, searchSpaces } from '../../actions/ui';
 import SpaceSearchInput from '../SpaceSearchInput';
 import { mY } from '../../styles/atoms';
+import { loadExploreSpace, searchSpaces } from '../../actions';
 
 function ExploreSpace() {
   const isLoggedIn = useSelector((state) => state.profile !== undefined);

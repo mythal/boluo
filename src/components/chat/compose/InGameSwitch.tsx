@@ -1,10 +1,9 @@
 import * as React from 'react';
 import mask from '../../../assets/icons/theater-masks.svg';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-import { useAtom } from 'jotai';
-import { inGameAtom } from './state';
 import { useCallback } from 'react';
 import { useChannelId } from '../../../hooks/useChannelId';
+import { useDispatch, useSelector } from '../../../store';
 
 interface Props {
   className?: string;
@@ -13,8 +12,12 @@ interface Props {
 
 function InGameSwitch({ className, size }: Props) {
   const channelId = useChannelId();
-  const [inGame, setInGame] = useAtom(inGameAtom, channelId);
-  const toggleInGame = useCallback(() => setInGame((inGame) => !inGame), [setInGame]);
+  const dispatch = useDispatch();
+  const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
+  const toggleInGame = useCallback(() => dispatch({ type: 'SET_IN_GAME', pane: channelId, inGame: 'TOGGLE' }), [
+    channelId,
+    dispatch,
+  ]);
   return (
     <ChatItemToolbarButton
       on={inGame}

@@ -23,13 +23,12 @@ import InGameButton from './InGameButton';
 import { floatPanel } from '../styles';
 import { SendButton } from './SendButton';
 import MessageMedia from '../MessageMedia';
-import { useAtomValue, useUpdateAtom } from 'jotai/utils';
-import { editForAtom, inGameAtom, mediaAtom } from './state';
 import { useOnSend } from './useOnSend';
 import { handleKeyDown } from '../key';
-import { useSelector } from '../../../store';
+import { useDispatch, useSelector } from '../../../store';
 import { Editing } from './Editing';
 import { AddDiceButton } from './AddDiceButton';
+import { useCallback } from 'react';
 
 const container = css`
   grid-row: compose-start / compose-end;
@@ -121,10 +120,14 @@ interface Props {
 }
 
 function Compose({ channelId }: Props) {
-  const media = useAtomValue(mediaAtom, channelId);
-  const editFor = useAtomValue(editForAtom, channelId);
+  const media = useSelector((state) => state.chatStates.get(channelId)?.compose.media);
+  const editFor = useSelector((state) => state.chatStates.get(channelId)?.compose.editFor);
   const onSend = useOnSend();
-  const setInGame = useUpdateAtom(inGameAtom, channelId);
+  const dispatch = useDispatch();
+  const setInGame = useCallback(
+    (inGame: boolean | 'TOGGLE') => dispatch({ type: 'SET_IN_GAME', pane: channelId, inGame }),
+    [channelId, dispatch]
+  );
   const enterSend = useSelector((state) => state.profile?.settings.enterSend);
   return (
     <div css={container}>
@@ -134,7 +137,7 @@ function Compose({ channelId }: Props) {
         <InGameButton css={[mR(1)]} />
         <AddDiceButton inCompose />
       </div>
-      <div css={inputContainer} onKeyDown={handleKeyDown(onSend, () => setInGame((inGame) => !inGame), enterSend)}>
+      <div css={inputContainer} onKeyDown={handleKeyDown(onSend, () => setInGame('TOGGLE'), enterSend)}>
         <ComposeInput autoFocus autoSize css={[input]} />
       </div>
       {media && (

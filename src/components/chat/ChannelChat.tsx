@@ -10,8 +10,6 @@ import { chatRight } from './styles';
 import { useAtom } from 'jotai';
 import { focusChannelAtom } from '../../states/focusChannel';
 import { PrivateChat } from './PrivateChat';
-import { Provider } from 'jotai';
-import { useInitializeCompose } from './compose/useInitializeCompose';
 
 interface Props {
   spaceId: Id;
@@ -23,7 +21,7 @@ function ChannelChat({ channelId }: Props) {
   const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const [, setFocusChannel] = useAtom(focusChannelAtom);
-  const initialized = useInitializeCompose(channelId);
+  const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized);
   useEffect(() => {
     setFocusChannel((prev) => prev.add(channelId));
     return () => setFocusChannel((prev) => prev.remove(channelId));

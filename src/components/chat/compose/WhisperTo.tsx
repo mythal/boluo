@@ -2,15 +2,15 @@ import * as React from 'react';
 import { useState } from 'react';
 import Button from '../../atoms/Button';
 import WhisperToSelect from './WhisperToSelect';
-import { whisperToAtom } from './state';
-import { useAtomValue } from 'jotai/utils';
 import { useChannelId } from '../../../hooks/useChannelId';
+import { useSelector } from '../../../store';
 
 interface Props {
   className?: string;
 }
 function WhisperTo({ className }: Props) {
-  const whisperTo = useAtomValue(whisperToAtom, useChannelId());
+  const channelId = useChannelId();
+  const whisperTo = useSelector((state) => state.chatStates.get(channelId)!.compose.whisperTo);
   const [dialog, setDialog] = useState(false);
   return (
     <span className={className}>

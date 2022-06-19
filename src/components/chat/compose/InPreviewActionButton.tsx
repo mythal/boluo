@@ -1,12 +1,10 @@
-import { useUpdateAtom } from 'jotai/utils';
-import { isActionAtom } from './state';
 import * as React from 'react';
 import { useChannelId } from '../../../hooks/useChannelId';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 import actionIcon from '../../../assets/icons/running.svg';
 import sayIcon from '../../../assets/icons/comment-solid.svg';
 import { useCallback } from 'react';
-import { useAtom } from 'jotai';
+import { useDispatch, useSelector } from '../../../store';
 
 interface Props {
   className?: string;
@@ -14,8 +12,11 @@ interface Props {
 
 export const InPreviewActionButton = ({ className }: Props) => {
   const channelId = useChannelId();
-  const [isAction, setAction] = useAtom(isActionAtom, channelId);
-  const toggle = useCallback(() => setAction('toggle'), [setAction]);
+  const dispatch = useDispatch();
+  const isAction = useSelector((state) => state.chatStates.get(channelId)!.compose.isAction);
+  const toggle = useCallback(() => {
+    dispatch({ type: 'SET_IS_ACTION', pane: channelId, isAction: 'TOGGLE' });
+  }, [channelId, dispatch]);
 
   return (
     <ChatItemToolbarButton

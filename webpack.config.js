@@ -12,6 +12,9 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const rootPath = path.resolve(__dirname);
 const PRODUCTION = process.env.NODE_ENV === 'production';
 const BACKEND = process.env.BACKEND;
+if (!BACKEND) {
+  throw new Error('BACKEND environment variable is not set');
+}
 
 module.exports = {
   entry: './src/index.tsx',

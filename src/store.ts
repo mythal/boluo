@@ -3,7 +3,7 @@ import thunk, { ThunkDispatch } from 'redux-thunk';
 import { applicationReducer, ApplicationState, initApplicationState } from './reducers';
 import { Action } from './actions';
 import { useDispatch as useReduxDispatch, useSelector as useReduxSelector } from 'react-redux';
-import { composeWithDevTools } from 'redux-devtools-extension';
+import { composeWithDevTools } from '@redux-devtools/extension';
 
 export const store = createStore(applicationReducer, initApplicationState, composeWithDevTools(applyMiddleware(thunk)));
 

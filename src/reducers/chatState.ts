@@ -322,6 +322,8 @@ const handleComposeSendFailed = (state: ChatState, action: ComposeSendFailed): C
 const handleResetComposeAfterSent = (state: ChatState, action: ResetComposeAfterSent): ChatState => {
   const compose: Compose = {
     ...state.compose,
+    editFor: null,
+    sending: false,
     isAction: false,
     source: '',
     media: undefined,

@@ -1,7 +1,6 @@
 import { atom, useAtom } from 'jotai';
 import * as React from 'react';
 import { useSelector } from '../store';
-import { focusChannelAtom } from './focusChannel';
 import { useMyId } from '../hooks/useMyId';
 import { showFlash } from '../actions';
 
@@ -48,7 +47,7 @@ export const useNotify = () => {
   );
   const myId = useMyId();
   const myChannel = useSelector((state) => state.profile?.channels);
-  const [focusChannelSet] = useAtom(focusChannelAtom);
+  const focusChannelList = useSelector((state) => state.ui.focusChannelList);
   const [canNotify] = useAtom(canNotifyAtom);
   if (!isNotificationSupported || !myChannel || !canNotify) {
     return;
@@ -70,7 +69,7 @@ export const useNotify = () => {
     if (prev < item.message.created) {
       localStorage.setItem(storageKey, String(item.message.created));
       if (
-        (focusChannelSet.has(channelId) && document.visibilityState === 'visible') ||
+        (focusChannelList.includes(channelId) && document.visibilityState === 'visible') ||
         item.message.senderId === myId
       ) {
         continue;

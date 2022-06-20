@@ -1,5 +1,5 @@
 import { Space, SpaceWithRelated, UserStatus } from '../api/spaces';
-import { Action, JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '../actions';
+import { Action, FocusChannel, UnfocusChannel, JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '../actions';
 import { AppResult } from '../api/request';
 import { errLoading } from '../api/error';
 import { Id } from '../utils/id';
@@ -15,6 +15,7 @@ export interface UiState {
   userSet: Map<Id, AppResult<User>>;
   connection: WebSocket | null;
   spaceId: Id | undefined;
+  focusChannelList: Id[];
 }
 
 export const initUiState: UiState = {
@@ -23,6 +24,7 @@ export const initUiState: UiState = {
   spaceSet: Map<Id, AppResult<SpaceWithRelated>>(),
   userSet: Map<Id, AppResult<User>>(),
   connection: null,
+  focusChannelList: [],
 };
 
 const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
@@ -131,6 +133,19 @@ const removeSpace = (state: UiState, spaceId: Id): UiState => {
   return { ...state, spaceSet, exploreSpaceList };
 };
 
+const handleFocusChannel = (state: UiState, { pane }: FocusChannel): UiState => {
+  const { focusChannelList } = state;
+  if (focusChannelList.includes(pane)) {
+    return state;
+  } else {
+    return { ...state, focusChannelList: [...focusChannelList, pane] };
+  }
+};
+
+const handleUnfocusChannel = (state: UiState, { pane }: UnfocusChannel): UiState => {
+  const focusChannelList = state.focusChannelList.filter((id) => id !== pane);
+  return { ...state, focusChannelList };
+};
 export function uiReducer(state: UiState = initUiState, action: Action, userId: Id | undefined): UiState {
   switch (action.type) {
     case 'EXPLORE_SPACE_LOADED':
@@ -155,6 +170,10 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
       return handleLeftSpace(state, action, userId);
     case 'SPACE_EDITED':
       return handleSpaceEdited(state, action);
+    case 'FOCUS_CHANNEL':
+      return handleFocusChannel(state, action);
+    case 'UNFOCUS_CHANNEL':
+      return handleUnfocusChannel(state, action);
     case 'CONNECT_SPACE':
       if (state.connection) {
         state.connection.onclose = null;

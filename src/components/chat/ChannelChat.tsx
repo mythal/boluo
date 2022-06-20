@@ -4,11 +4,9 @@ import { Id } from '../../utils/id';
 import Header from './Header';
 import ChatList from './ChatList';
 import Loading from '../molecules/Loading';
-import { useSelector } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import Compose from './compose/Compose';
 import { chatRight } from './styles';
-import { useAtom } from 'jotai';
-import { focusChannelAtom } from '../../states/focusChannel';
 import { PrivateChat } from './PrivateChat';
 
 interface Props {
@@ -20,12 +18,14 @@ function ChannelChat({ channelId }: Props) {
   const loading = useSelector((state) => state.chatStates.get(channelId) === undefined);
   const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
-  const [, setFocusChannel] = useAtom(focusChannelAtom);
+  const dispatch = useDispatch();
   const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized);
   useEffect(() => {
-    setFocusChannel((prev) => prev.add(channelId));
-    return () => setFocusChannel((prev) => prev.remove(channelId));
-  }, [channelId, setFocusChannel]);
+    dispatch({ type: 'FOCUS_CHANNEL', pane: channelId });
+    return () => {
+      dispatch({ type: 'UNFOCUS_CHANNEL', pane: channelId });
+    };
+  }, [channelId, dispatch]);
 
   if (loading) {
     return (

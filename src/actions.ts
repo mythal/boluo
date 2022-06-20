@@ -368,6 +368,16 @@ export interface AddDice {
   dice: string;
 }
 
+export interface FocusChannel {
+  type: 'FOCUS_CHANNEL';
+  pane: Id;
+}
+
+export interface UnfocusChannel {
+  type: 'UNFOCUS_CHANNEL';
+  pane: Id;
+}
+
 export type Action =
   | CancelEdit
   | SetBroadcast
@@ -422,4 +432,6 @@ export type Action =
   | SwitchActivePane
   | SplitPane
   | ToggleShowFolded
+  | FocusChannel
+  | UnfocusChannel
   | ConnectSpace;

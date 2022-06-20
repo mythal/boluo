@@ -25,7 +25,7 @@ import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
 import ManageSpace from '../organisms/ManageSpace';
-import { decodeUuid, encodeUuid } from '../../utils/id';
+import { decodeUuid, encodeUuid, Id } from '../../utils/id';
 import { useDispatch, useSelector } from '../../store';
 import { SpaceWithRelated } from '../../api/spaces';
 import GotoSpaceLink from '../../components/molecules/GotoSpaceLink';
@@ -35,7 +35,7 @@ import styled from '@emotion/styled';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { throwErr } from '../../utils/errors';
 import Input from '../atoms/Input';
-import { loadSpace } from '../../actions';
+import useSWR from 'swr';
 
 interface Params {
   id: string;
@@ -72,14 +72,14 @@ function SpacePage() {
   const [managing, setManaging] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const inviteLinkInput = useRef<HTMLInputElement>(null);
-  const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(loadSpace(id, token));
-  }, [id, token, dispatch]);
-  const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(id, errLoading()));
+
+  const { data } = useSWR(['/spaces/query_with_related' as const, id], (path, id) => get(path, { id, token }));
+  const result: AppResult<SpaceWithRelated> = data ?? errLoading();
+
   useTitleWithResult<SpaceWithRelated>(result, ({ space }) => space.name);
   const myId = useSelector((state) => state.profile?.user.id);
   const myMember = useSelector((state) => state.profile?.spaces.get(id)?.member);
+  const dispatch = useDispatch();
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;
   }

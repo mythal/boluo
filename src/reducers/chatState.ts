@@ -210,7 +210,10 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
 
 const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource): ChatState => {
   let { messageId } = state.compose;
-  if (!state.compose.broadcast) {
+  const prevSource = state.compose.source;
+  if (prevSource.trim() === '' && source.trim() !== '') {
+    messageId = newId();
+  } else if (!state.compose.broadcast) {
     messageId = newId();
   }
   return { ...state, compose: { ...state.compose, source, messageId } };

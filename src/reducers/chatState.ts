@@ -209,7 +209,11 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
 };
 
 const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource): ChatState => {
-  return { ...state, compose: { ...state.compose, source } };
+  let { messageId } = state.compose;
+  if (!state.compose.broadcast) {
+    messageId = newId();
+  }
+  return { ...state, compose: { ...state.compose, source, messageId } };
 };
 
 const ACTION_COMMAND = /^[.。]me\s*/;
@@ -241,7 +245,11 @@ const handleSetBroadcast = (state: ChatState, action: SetBroadcast): ChatState =
   } else {
     broadcast = action.broadcast;
   }
-  return { ...state, compose: { ...state.compose, broadcast } };
+  let { messageId } = state.compose;
+  if (!broadcast) {
+    messageId = newId();
+  }
+  return { ...state, compose: { ...state.compose, broadcast, messageId } };
 };
 
 const handleSetInGame = (state: ChatState, action: SetInGame): ChatState => {

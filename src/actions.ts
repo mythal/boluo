@@ -7,7 +7,7 @@ import { Information, InformationLevel } from './information';
 import { Dispatch } from './store';
 import { AppResult, get } from './api/request';
 import { Settings, User } from './api/users';
-import { Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './api/spaces';
+import { Space, SpaceMember, SpaceWithMember, SpaceWithRelated, UserStatus } from './api/spaces';
 import { ReactNode } from 'react';
 import { Channel, ChannelMember, ChannelWithMember } from './api/channels';
 

@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from '../store';
+import store, { useDispatch, useSelector } from '../store';
 import { useCallback, useRef } from 'react';
 import { connect } from '../api/connect';
 import { Events } from '../api/events';
@@ -59,6 +59,22 @@ export function useSpaceConnection() {
         const { spaceWithRelated } = body;
         const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
         dispatch(action);
+      } else if (body.type === 'STATUS_MAP') {
+        const { statusMap, spaceId } = body;
+        const spaceResult = store.getState().ui.spaceSet.get(spaceId);
+        if (!spaceResult || spaceResult.isErr) {
+          return;
+        }
+        const { usersStatus } = spaceResult.value;
+        let shouldUpdate = false;
+        for (const [userId, status] of Object.entries(statusMap)) {
+          if (userId in usersStatus && usersStatus[userId].kind !== statusMap[userId].kind) {
+            shouldUpdate = true;
+          }
+        }
+        if (shouldUpdate) {
+          dispatch({ type: 'EVENT_RECEIVED', event });
+        }
       } else {
         dispatch({ type: 'EVENT_RECEIVED', event });
       }

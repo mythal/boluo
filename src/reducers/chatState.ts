@@ -16,7 +16,6 @@ import {
   ResetMessageMoving,
   SetBroadcast,
   SetComposeMedia,
-  SetComposeMessageId,
   SetComposeSource,
   SetInGame,
   SetInputName,
@@ -211,10 +210,12 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
 const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource): ChatState => {
   let { messageId } = state.compose;
   const prevSource = state.compose.source;
-  if (prevSource.trim() === '' && source.trim() !== '') {
-    messageId = newId();
-  } else if (!state.compose.broadcast) {
-    messageId = newId();
+  if (!state.compose.editFor) {
+    if (prevSource.trim() === '' && source.trim() !== '') {
+      messageId = newId();
+    } else if (!state.compose.broadcast) {
+      messageId = newId();
+    }
   }
   return { ...state, compose: { ...state.compose, source, messageId } };
 };
@@ -249,7 +250,7 @@ const handleSetBroadcast = (state: ChatState, action: SetBroadcast): ChatState =
     broadcast = action.broadcast;
   }
   let { messageId } = state.compose;
-  if (!broadcast) {
+  if (!broadcast && !state.compose.editFor) {
     messageId = newId();
   }
   return { ...state, compose: { ...state.compose, broadcast, messageId } };
@@ -316,10 +317,6 @@ const handleChatInitialized = (myId: Id, channelId: Id, itemSet: ChatItemSet): C
     compose.inputName = preview.name;
   }
   return compose;
-};
-
-const handleSetComposeMessageId = (state: ChatState, { id }: SetComposeMessageId): ChatState => {
-  return { ...state, compose: { ...state.compose, messageId: id } };
 };
 
 const handleComposeEditFailed = (state: ChatState, action: ComposeEditFailed): ChatState => {
@@ -468,8 +465,6 @@ export const chatReducer = (
       return handleSetComposeMedia(state, action);
     case 'SET_WHISPER_TO':
       return handleSetWhisperTo(state, action);
-    case 'SET_COMPOSE_MESSAGE_ID':
-      return handleSetComposeMessageId(state, action);
     case 'CANCEL_EDIT':
       return handleCancelEdit(state, action);
     case 'COMPOSE_SEND_FAILED':

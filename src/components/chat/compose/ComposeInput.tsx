@@ -61,9 +61,6 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
 
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = async (e) => {
     const value = e.target.value;
-    if (value.trim() === '' && !editFor) {
-      dispatch({ type: 'SET_COMPOSE_MESSAGE_ID', pane: channelId, id: newId() });
-    }
     setSource(value);
   };
 

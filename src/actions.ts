@@ -356,12 +356,6 @@ export interface ComposeEditFailed {
   pane: Id;
 }
 
-export interface SetComposeMessageId {
-  type: 'SET_COMPOSE_MESSAGE_ID';
-  pane: Id;
-  id: Id;
-}
-
 export interface AddDice {
   type: 'ADD_DICE';
   pane: Id;
@@ -394,7 +388,6 @@ export type Action =
   | ComposeEditFailed
   | ResetComposeAfterSent
   | ComposeSendFailed
-  | SetComposeMessageId
   | SetInputName
   | LoggedIn
   | LoggedOut

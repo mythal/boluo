@@ -76,7 +76,7 @@ export const useNotify = () => {
       }
       const name = item.message.name;
       const text = item.message.text;
-      new Notification('菠萝 的新消息', { body: `${name}: ${text}` });
+      new Notification('菠萝 的新消息', { body: `${name}: ${text}`, tag: channelId });
     }
   }
 };

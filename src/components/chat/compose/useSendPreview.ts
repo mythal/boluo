@@ -41,7 +41,9 @@ export const useSendPreview = () => {
         text: '',
         entities: [],
       };
-      if (!broadcast || whisperTo) {
+      if (!broadcast && source.trim() === '') {
+        // clear preview
+      } else if (!broadcast || whisperTo) {
         preview.text = null;
       } else {
         const { text, entities } = parse(source);

@@ -76,7 +76,17 @@ export const useNotify = () => {
       }
       const name = item.message.name;
       const text = item.message.text;
-      new Notification('菠萝 的新消息', { body: `${name}: ${text}`, tag: channelId });
+      const newNotification = new Notification('菠萝 的新消息', {
+        body: `${name}: ${text}`,
+        tag: channelId,
+        renotify: true,
+      });
+      const autoClouseTimeOut = 5000;
+      newNotification.onshow = () => {
+        setTimeout(() => {
+          newNotification.close();
+        }, autoClouseTimeOut);
+      };
     }
   }
 };

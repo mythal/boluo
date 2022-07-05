@@ -1,15 +1,16 @@
 import { useChannelId } from '../../../hooks/useChannelId';
 import React, { useCallback } from 'react';
-import store from '../../../store';
+import store, { Dispatch } from '../../../store';
 import { uploadMedia } from './helper';
 import { getDiceFace } from '../../../utils/game';
 import { parse } from '../../../interpreter/parser';
 import { EditMessage, Message, NewMessage } from '../../../api/messages';
 import { AppResult, patch, post } from '../../../api/request';
-import { newId } from '../../../utils/id';
+import { Id, newId } from '../../../utils/id';
 import { throwErr } from '../../../utils/errors';
 import { showFlash } from '../../../actions';
-import { errorText } from 'api/error';
+import Button from '../../../components/atoms/Button';
+import { Compose } from '../../../reducers/chatState';
 
 export const whyCannotSend = (inGame: boolean, characterName: string, source: string): null | string => {
   if (inGame && characterName.trim().length === 0) {
@@ -19,6 +20,25 @@ export const whyCannotSend = (inGame: boolean, characterName: string, source: st
     return '内容不能为空';
   }
   return null;
+};
+
+const onSendFailed = (pane: Id, compose: Compose, dispatch: Dispatch) => {
+  showFlash(
+    'ERROR',
+    <span>
+      消息发送失败，恢复之前的文本吗？{' '}
+      <Button
+        data-size="small"
+        data-variant="primary"
+        onClick={() => {
+          dispatch({ type: 'RESTORE_COMPOSE_STATE', compose, pane });
+        }}
+      >
+        恢复
+      </Button>
+    </span>,
+    10000
+  )(dispatch);
 };
 export const useOnSend = () => {
   const channelId = useChannelId();
@@ -54,7 +74,7 @@ export const useOnSend = () => {
     }
     const mediaId = await uploadMedia(store.dispatch, media);
     if (media && !mediaId) {
-      dispatch({ type: 'RESTORE_COMPOSE_STATE', compose, pane });
+      onSendFailed(pane, compose, dispatch);
       return;
     }
     const chatDiceType = channel.channel.defaultDiceType;
@@ -103,8 +123,7 @@ export const useOnSend = () => {
 
     const result = await resultPromise;
     if (!result.isOk) {
-      showFlash('ERROR', <span>消息发送失败，恢复之前的文本</span>)(dispatch);
-      dispatch({ type: 'RESTORE_COMPOSE_STATE', compose, pane });
+      onSendFailed(pane, compose, dispatch);
     }
   }, [channelId]);
 };

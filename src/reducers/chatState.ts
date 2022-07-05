@@ -14,6 +14,7 @@ import {
   MovingMessage,
   ResetComposeAfterSent,
   ResetMessageMoving,
+  RestoreComposeState,
   SetBroadcast,
   SetComposeMedia,
   SetComposeSource,
@@ -354,6 +355,10 @@ const handleCancelEdit = (state: ChatState, action: CancelEdit): ChatState => {
   return { ...state, compose };
 };
 
+const handleComposeRestore = (state: ChatState, { compose }: RestoreComposeState): ChatState => {
+  return { ...state, compose: { ...compose, messageId: newId() } };
+};
+
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
   let { itemSet, channel, colorMap, members, eventAfter, initialized, compose } = chat;
@@ -470,7 +475,7 @@ export const chatReducer = (
     case 'CANCEL_EDIT':
       return handleCancelEdit(state, action);
     case 'RESTORE_COMPOSE_STATE':
-      return { ...state, compose: action.compose };
+      return handleComposeRestore(state, action);
     case 'COMPOSE_SEND_FAILED':
       return handleComposeSendFailed(state, action);
     case 'COMPOSE_SENDING':

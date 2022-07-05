@@ -469,6 +469,8 @@ export const chatReducer = (
       return handleSetWhisperTo(state, action);
     case 'CANCEL_EDIT':
       return handleCancelEdit(state, action);
+    case 'RESTORE_COMPOSE_STATE':
+      return { ...state, compose: action.compose };
     case 'COMPOSE_SEND_FAILED':
       return handleComposeSendFailed(state, action);
     case 'COMPOSE_SENDING':

@@ -1,7 +1,6 @@
 import { ClientEvent } from '../api/events';
 import { useSelector } from '../store';
 import { useCallback } from 'react';
-import { useChannelId } from './useChannelId';
 
 export const useSend = (): ((event: ClientEvent) => void) => {
   const connection = useSelector((state) => state.ui.connection);

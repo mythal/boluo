@@ -1,6 +1,6 @@
 import { Message } from './api/messages';
 import { Id, newId } from './utils/id';
-import { ChatState, UserItem } from './reducers/chatState';
+import { ChatState, Compose, UserItem } from './reducers/chatState';
 import { MessageItem, PreviewItem } from './states/chat-item-set';
 import { Events } from './api/events';
 import { Information, InformationLevel } from './information';
@@ -346,6 +346,12 @@ export interface ResetComposeAfterSent {
   newId: Id;
 }
 
+export interface RestoreComposeState {
+  type: 'RESTORE_COMPOSE_STATE';
+  pane: Id;
+  compose: Compose;
+}
+
 export interface ComposeSendFailed {
   type: 'COMPOSE_SEND_FAILED';
   pane: Id;
@@ -387,6 +393,7 @@ export type Action =
   | ComposeInitialized
   | ComposeEditFailed
   | ResetComposeAfterSent
+  | RestoreComposeState
   | ComposeSendFailed
   | SetInputName
   | LoggedIn

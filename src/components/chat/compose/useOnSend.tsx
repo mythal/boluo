@@ -1,5 +1,5 @@
 import { useChannelId } from '../../../hooks/useChannelId';
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import store from '../../../store';
 import { uploadMedia } from './helper';
 import { getDiceFace } from '../../../utils/game';
@@ -9,6 +9,7 @@ import { AppResult, patch, post } from '../../../api/request';
 import { newId } from '../../../utils/id';
 import { throwErr } from '../../../utils/errors';
 import { showFlash } from '../../../actions';
+import { errorText } from 'api/error';
 
 export const whyCannotSend = (inGame: boolean, characterName: string, source: string): null | string => {
   if (inGame && characterName.trim().length === 0) {
@@ -22,6 +23,7 @@ export const whyCannotSend = (inGame: boolean, characterName: string, source: st
 export const useOnSend = () => {
   const channelId = useChannelId();
   return useCallback(async () => {
+    const pane = channelId;
     const state = store.getState();
     const dispatch = store.dispatch;
     const channel = state.chatStates.get(channelId);
@@ -32,7 +34,8 @@ export const useOnSend = () => {
     if (!profile) {
       return;
     }
-    const { inputName, inGame, source, media, messageId, editFor, whisperTo, isAction } = channel.compose;
+    const { compose } = channel;
+    const { inputName, inGame, source, media, messageId, editFor, whisperTo, isAction } = compose;
     const myMember = profile.channels.get(channelId)!.member;
     let name = profile.user.nickname;
     if (inGame) {
@@ -50,6 +53,10 @@ export const useOnSend = () => {
       dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
     }
     const mediaId = await uploadMedia(store.dispatch, media);
+    if (media && !mediaId) {
+      dispatch({ type: 'RESTORE_COMPOSE_STATE', compose, pane });
+      return;
+    }
     const chatDiceType = channel.channel.defaultDiceType;
     const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;
 
@@ -96,7 +103,8 @@ export const useOnSend = () => {
 
     const result = await resultPromise;
     if (!result.isOk) {
-      throwErr(store.dispatch)(result.value);
+      showFlash('ERROR', <span>消息发送失败，恢复之前的文本</span>)(dispatch);
+      dispatch({ type: 'RESTORE_COMPOSE_STATE', compose, pane });
     }
   }, [channelId]);
 };

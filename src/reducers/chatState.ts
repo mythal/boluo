@@ -207,9 +207,12 @@ const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, s
   return colorMap;
 };
 
+const ACTION_COMMAND = /^[.。]me\s*/;
+
 const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource): ChatState => {
   let { messageId } = state.compose;
   const prevSource = state.compose.source;
+  const isAction = ACTION_COMMAND.test(source);
   if (!state.compose.editFor) {
     if (prevSource.trim() === '' && source.trim() !== '') {
       messageId = newId();
@@ -217,10 +220,9 @@ const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource):
       messageId = newId();
     }
   }
-  return { ...state, compose: { ...state.compose, source, messageId } };
+  return { ...state, compose: { ...state.compose, source, messageId, isAction } };
 };
 
-const ACTION_COMMAND = /^[.。]me\s*/;
 const handleSetIsAction = (state: ChatState, action: SetIsAction): ChatState => {
   const oldIsAction = state.compose.isAction;
   let source = state.compose.source;

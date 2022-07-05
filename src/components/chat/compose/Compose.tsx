@@ -47,7 +47,8 @@ const container = css`
   gap: ${spacingN(2)};
   align-items: flex-end;
   background-color: ${darken(0.05, blue['900'])};
-  ${pX(2)} ${pY(2)};
+  ${pX(2)};
+  ${pY(2)};
   position: relative;
   &:focus-within {
     background-color: ${blue['900']};

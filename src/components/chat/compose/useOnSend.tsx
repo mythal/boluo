@@ -46,7 +46,9 @@ export const useOnSend = () => {
     if (reason !== null) {
       showFlash('ERROR', reason)(dispatch);
     }
-    dispatch({ type: 'COMPOSE_SENDING', pane: channelId });
+    if (!editFor) {
+      dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
+    }
     const mediaId = await uploadMedia(store.dispatch, media);
     const chatDiceType = channel.channel.defaultDiceType;
     const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;
@@ -92,14 +94,9 @@ export const useOnSend = () => {
     }
     const resultPromise = post('/messages/send', newMessage);
 
-    dispatch({ type: 'COMPOSE_SENT', pane: channelId });
     const result = await resultPromise;
     if (!result.isOk) {
       throwErr(store.dispatch)(result.value);
-      dispatch({ type: 'COMPOSE_SEND_FAILED', pane: channelId });
-      return;
-    } else {
-      dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
     }
   }, [channelId]);
 };

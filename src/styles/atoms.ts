@@ -390,12 +390,8 @@ export const baseStyle = css`
     color: ${textColor};
   }
   @font-face {
-    font-family: 'DinkieBitmap';
-    src: url('https://boluo.chat/static/DinkieBitmap-9px.woff2') format('woff2');
-  }
-  @font-face {
-    font-family: 'DinkieBitmap-Mono';
-    src: url('https://boluo.chat/static/DinkieBitmap-9pxCodeHalf.woff2') format('woff2');
+    font-family: 'Pixel';
+    src: url('/fusion-pixel.woff2') format('woff2');
   }
 `;
 

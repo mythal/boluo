@@ -75,7 +75,7 @@ export const codeBlockStyle = css`
   overflow: auto;
   word-break: keep-all;
   white-space: pre;
-  font-family: 'DinkieBitmap-Mono', 'DinkieBitmap', monospace;
+  font-family: 'Pixel', monospace;
   ${[roundedSm, textSm, fontNormal, pX(2), pY(1), m(0)]};
 `;
 export const chatRight = css`

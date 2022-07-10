@@ -78,7 +78,7 @@ module.exports = {
         test: /\.css$/,
         use: [PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }, { loader: 'css-loader' }],
       },
-      { test: /\.(png|jpe?g|gif)$/, use: ['file-loader'] },
+      { test: /\.(png|jpe?g|gif|woff2)$/, use: ['file-loader'] },
       {
         test: /\.svg$/,
         loader: 'svg-sprite-loader',

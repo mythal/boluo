@@ -11,6 +11,7 @@ import {
   textColor,
   uiShadowColor,
 } from './colors';
+import pixelFont from '../assets/fusion-pixel.woff2';
 
 export const onDisabled = (...styles: Interpolation[]) =>
   css`
@@ -391,7 +392,7 @@ export const baseStyle = css`
   }
   @font-face {
     font-family: 'Pixel';
-    src: url('/fusion-pixel.woff2') format('woff2');
+    src: url('${pixelFont}') format('woff2');
   }
 `;
 

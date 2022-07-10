@@ -39,3 +39,8 @@ declare module '*.svg' {
   const spriteSymbol: SpriteSymbol;
   export default spriteSymbol;
 }
+
+declare module '*.woff2' {
+  const path: string;
+  export default path;
+}

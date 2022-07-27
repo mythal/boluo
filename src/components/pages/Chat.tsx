@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useEffect } from 'react';
-import { Route, Switch, useHistory, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useHistory, useParams } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Sidebar from '../chat/Sidebar';
 import { decodeUuid, encodeUuid, Id } from '../../utils/id';
@@ -51,12 +51,12 @@ const Container = styled.div`
   height: 100%;
   grid-template-rows: 3rem 1fr auto;
 
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr 1fr;
   grid-template-areas:
     'sidebar-header header'
     'sidebar-body list'
     'sidebar-body compose';
-  &[data-split='false'] {
+  &[data-split='1'] {
     grid-template-columns: auto 1fr;
     grid-template-areas:
       'sidebar-header header'
@@ -64,12 +64,36 @@ const Container = styled.div`
       'sidebar-body compose';
   }
 
-  &[data-split='true'] {
+  &[data-split='2'] {
     grid-template-columns: auto 1fr 1fr;
     grid-template-areas:
       'sidebar-header header header'
       'sidebar-body list list'
       'sidebar-body compose compose';
+  }
+
+  &[data-split='3'] {
+    grid-template-columns: auto 1fr 1fr 1fr;
+    grid-template-areas:
+      'sidebar-header header header header'
+      'sidebar-body list list list'
+      'sidebar-body compose compose compose';
+  }
+
+  &[data-split='4'] {
+    grid-template-columns: auto 1fr 1fr 1fr 1fr;
+    grid-template-areas:
+      'sidebar-header header header header header'
+      'sidebar-body list list list list'
+      'sidebar-body compose compose compose compose';
+  }
+
+  &[data-split='5'] {
+    grid-template-columns: auto 1fr 1fr 1fr 1fr 1fr;
+    grid-template-areas:
+      'sidebar-header header header header header header'
+      'sidebar-body list list list list list'
+      'sidebar-body compose compose compose compose compose';
   }
 `;
 
@@ -85,10 +109,30 @@ function Chat() {
   const [userDialog, setUserDialog] = useAtom(userDialogAtom);
   const spaceId: Id = decodeUuid(params.spaceId);
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
+  const prevChannelId = useRef<typeof channelId>(channelId);
   const myId: Id | undefined = useMyId();
   const history = useHistory();
+  const [focused, setFocused] = useState(0);
+  const [paneList, setPaneList] = useState<Id[]>(channelId ? [channelId] : []);
   useLoadSpace(spaceId);
   useHeartbeat();
+  useEffect(() => {
+    if (!channelId || channelId === prevChannelId.current) {
+      return;
+    }
+    prevChannelId.current = channelId;
+    if (paneList.length <= 1) {
+      setPaneList([channelId]);
+      setFocused(0);
+    }
+    if (focused < paneList.length && channelId && paneList[focused] !== channelId) {
+      setPaneList((paneList) => {
+        const nextList = [...paneList];
+        nextList[focused] = channelId;
+        return nextList;
+      });
+    }
+  }, [channelId, focused, paneList]);
   const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
   if (!result.isOk) {
     if (result.value.code === LOADING) {
@@ -106,24 +150,53 @@ function Chat() {
     history.replace(`/space/${encodeUuid(spaceId)}`);
   }
   return (
-    <Container>
+    <Container data-split={paneList.length}>
       <Connector />
       <Global styles={viewHeight} />
       <Sidebar space={space} channels={channels} />
-      <Switch>
-        {channelId && (
-          <Route path={chatPath(spaceId, channelId)}>
-            <PaneContext.Provider value={channelId}>
-              <Provider key={channelId} scope={channelId}>
-                <ChannelChat key={channelId} spaceId={spaceId} channelId={channelId} />
+
+      {channelId ? (
+        paneList.map((paneId, index) => {
+          const focus = () => {
+            history.replace(chatPath(spaceId, paneId));
+            setFocused(index);
+          };
+
+          const split = () =>
+            setPaneList((panes) => {
+              const nextPanes = [...panes];
+              nextPanes.splice(index, 0, paneId);
+              return nextPanes;
+            });
+
+          const close =
+            paneList.length < 2
+              ? undefined
+              : () =>
+                  setPaneList((panes) => {
+                    const nextPanes = [...panes];
+                    nextPanes.splice(index, 1);
+                    return nextPanes;
+                  });
+          return (
+            <PaneContext.Provider
+              key={index}
+              value={{
+                id: paneId,
+                split,
+                close,
+                isFocused: index === focused,
+              }}
+            >
+              <Provider key={paneId} scope={paneId}>
+                <ChannelChat focus={focus} key={paneId} spaceId={spaceId} channelId={paneId} />
               </Provider>
             </PaneContext.Provider>
-          </Route>
-        )}
-        <Route path={chatPath(spaceId)}>
-          <Home members={members} channels={channels} space={space} />
-        </Route>
-      </Switch>
+          );
+        })
+      ) : (
+        <Home members={members} channels={channels} space={space} />
+      )}
 
       {userDialog && <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />}
     </Container>

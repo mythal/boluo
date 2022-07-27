@@ -13,6 +13,7 @@ import { Id } from '../../utils/id';
 import { blue } from '../../styles/colors';
 import { List } from 'immutable';
 import { FinishMoveMessage, ResetMessageMoving } from '../../actions';
+import { usePane } from '../../hooks/useChannelId';
 
 const filterMessages = (filter: ChatState['filter'], showFolded: boolean) => (
   item: PreviewItem | MessageItem
@@ -132,9 +133,10 @@ function useOnDragEnd(
 
 interface Props {
   channelId: Id;
+  focus: () => void;
 }
 
-function ChatList({ channelId }: Props) {
+function ChatList({ channelId, focus }: Props) {
   const dispatch = useDispatch();
   const myMember = useSelector((state) => {
     if (state.profile === undefined || state.chatStates.get(channelId) === undefined) {
@@ -145,6 +147,7 @@ function ChatList({ channelId }: Props) {
   });
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   useAutoScroll(wrapperRef);
+  const paneInfo = usePane();
   const filter = useSelector((state) => state.chatStates.get(channelId)!.filter);
   const showFolded = useSelector((state) => state.chatStates.get(channelId)!.showFolded);
   const messages = useSelector((state) => state.chatStates.get(channelId)!.itemSet.messages);
@@ -176,7 +179,7 @@ function ChatList({ channelId }: Props) {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <div ref={wrapperRef} css={listWrapperStyle}>
+      <div ref={wrapperRef} css={listWrapperStyle} onClick={focus} data-active={paneInfo.isFocused}>
         <Droppable droppableId={channelId} type="CHANNEL">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>

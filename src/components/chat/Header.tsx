@@ -26,13 +26,15 @@ import { darken } from 'polished';
 import Filter from './Filter';
 import { textColor } from '../../styles/colors';
 import { useTitle } from '../../hooks/useTitle';
-import { useChannelId } from '../../hooks/useChannelId';
+import { useChannelId, usePane } from '../../hooks/useChannelId';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 import exportIcon from '../../assets/icons/file-export.svg';
 import lockIcon from '../../assets/icons/lock.svg';
 import ExportDialog from './ExportDialog';
 import { useNotify } from '../../states/notify';
 import userPlusIcon from '../../assets/icons/user-plus.svg';
+import columnsIcon from '../../assets/icons/columns.svg';
+import closeIcon from '../../assets/icons/x-circle.svg';
 import InviteChannelMemberDialog from './InviteChannelMemberDialog';
 
 const Topic = styled.span`
@@ -78,7 +80,11 @@ const showOnMd = css`
   }
 `;
 
-function Header() {
+interface Props {
+  focus: () => void;
+}
+
+function Header({ focus }: Props) {
   const pane = useChannelId();
   const channel = useSelector((state) => state.chatStates.get(pane)!.channel);
   const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
@@ -86,10 +92,11 @@ function Header() {
   const [managePanel, setManagePanel] = useState(false);
   const [exportDialog, showExportDialog] = useState(false);
   const [inviteDialog, showInviteDialog] = useState(false);
+  const { split, close } = usePane();
   useNotify();
   useTitle(channel.name);
   return (
-    <div css={chatHeaderStyle}>
+    <div css={chatHeaderStyle} onClick={focus}>
       <ChannelName>
         {!channel.isPublic && <Icon sprite={lockIcon} css={mR(1)} />}
         <span css={name}>{channel.name}</span>
@@ -116,6 +123,17 @@ function Header() {
             <Icon sprite={userPlusIcon} />
           </ChatHeaderButton>
         )}
+
+        <ChatHeaderButton css={[mL(1)]} onClick={split}>
+          <Icon sprite={columnsIcon} />
+        </ChatHeaderButton>
+
+        {close && (
+          <ChatHeaderButton css={[mL(1)]} onClick={close}>
+            <Icon sprite={closeIcon} />
+          </ChatHeaderButton>
+        )}
+
         <ChannelMemberButton css={mL(1)} />
       </div>
       {managePanel && <ManageChannel channel={channel} dismiss={() => setManagePanel(false)} />}

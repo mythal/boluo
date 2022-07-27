@@ -8,13 +8,23 @@ import { useDispatch, useSelector } from '../../store';
 import Compose from './compose/Compose';
 import { chatRight } from './styles';
 import { PrivateChat } from './PrivateChat';
+import { css } from '@emotion/react';
 
 interface Props {
   spaceId: Id;
   channelId: Id;
+  focus: () => void;
 }
 
-function ChannelChat({ channelId }: Props) {
+const composePlaceHolder = css`
+  grid-row: compose-start / compose-end;
+  padding: 0.5em 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+function ChannelChat({ channelId, focus }: Props) {
   const loading = useSelector((state) => state.chatStates.get(channelId) === undefined);
   const isPublic = useSelector((state) => state.chatStates.get(channelId)?.channel.isPublic);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
@@ -38,16 +48,20 @@ function ChannelChat({ channelId }: Props) {
   if (!isPublic && !myMember) {
     return (
       <React.Fragment>
-        <Header />
+        <Header focus={focus} />
         <PrivateChat />
       </React.Fragment>
     );
   }
   return (
     <React.Fragment key={channelId}>
-      <Header />
-      <ChatList channelId={channelId} />
-      {initialized && myMember && <Compose channelId={channelId} member={myMember} />}
+      <Header focus={focus} />
+      <ChatList channelId={channelId} focus={focus} />
+      {initialized && myMember ? (
+        <Compose channelId={channelId} member={myMember} />
+      ) : (
+        <div css={composePlaceHolder}>你现在没有权限发言</div>
+      )}
     </React.Fragment>
   );
 }

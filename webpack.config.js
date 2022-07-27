@@ -1,6 +1,7 @@
 'use strict';
 // https://webpack.js.org/guides/
 
+require('dotenv').config();
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');

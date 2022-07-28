@@ -42,6 +42,7 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>加回了多窗格功能，抱歉迟了很久。</News>
         <News css={[mB(2)]}>能够找回密码了</News>
         <News css={[mB(2)]}>
           增加了消息通知功能，底层改动比较大，现在可能会有一些 Bug，可以到QQ群（1107382038）反馈。
@@ -49,27 +50,6 @@ function My() {
         <News css={[mB(2)]}>
           导出功能现在可以选择时间，导出最近的消息了。切换游戏内外的按键改为<code>Esc</code>键。
           增加了网络连不上时候的备用线路 <Code>https://cdn.boluo.chat/</Code>。
-        </News>
-        <News css={[mB(2)]}>
-          <Text>
-            菠萝上线啦！现在是早期测试阶段，请到
-            <ExternalLink to="https://forum.boluo.chat/" css={link}>
-              讨论版
-            </ExternalLink>
-            或「
-            <Link to="/space/sKPHfPhpEeqCXBcv8xDXgA" css={link}>
-              菠萝讨论
-            </Link>
-            」位面提出你的意见和建议。
-          </Text>
-
-          <Text>
-            功能测试可以到
-            <Link css={link} to="/space/j~E-cNonEeqMopvAttbC8g">
-              沙盒位面
-            </Link>
-            。管理员将不定期删除没有实质内容的测试位面。
-          </Text>
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

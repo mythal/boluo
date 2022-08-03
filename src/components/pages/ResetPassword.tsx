@@ -30,9 +30,9 @@ function ResetPassword() {
       if (result.isErr) {
         const error = result.value;
         if (error.code === 'LIMIT_EXCEEDED') {
-          dispatch(showFlash('ERROR', '超出请求限制'));
+          showFlash(dispatch, 'ERROR', '超出请求限制');
         } else {
-          dispatch(showFlash('ERROR', '未知错误'));
+          showFlash(dispatch, 'ERROR', '未知错误');
         }
         setState('error');
         return;

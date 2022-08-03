@@ -11,7 +11,6 @@ import { decodeUuid } from '../../utils/id';
 import { useDispatch, useSelector } from '../../store';
 import { errLoading, notFound } from '../../api/error';
 import { useTitleWithResult } from '../../hooks/useTitle';
-import { loadUser } from '../../actions';
 
 interface Params {
   id?: string;
@@ -27,7 +26,7 @@ function Profile() {
     if (!id) {
       return;
     }
-    dispatch(loadUser(id));
+    dispatch({ type: 'LOAD_USER', id });
   }, [id, dispatch]);
   const result: AppResult<User> = useSelector((state) => {
     if (!id) {

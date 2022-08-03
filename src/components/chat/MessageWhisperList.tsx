@@ -47,7 +47,7 @@ function MessageWhisperList({ myMember, message }: Props) {
       throwErr(dispatch)(result.value);
       return;
     } else if (result.value === null) {
-      dispatch(showFlash('WARNING', '没有找到消息，可能已经删除'));
+      showFlash(dispatch, 'WARNING', '没有找到消息，可能已经删除');
       return;
     }
     dispatch({ type: 'REVEAL_MESSAGE', message: result.value, pane });

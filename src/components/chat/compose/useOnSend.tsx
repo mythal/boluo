@@ -1,6 +1,6 @@
 import { useChannelId } from '../../../hooks/useChannelId';
 import React, { useCallback } from 'react';
-import store, { Dispatch } from '../../../store';
+import store, { AppDispatch } from '../../../store';
 import { uploadMedia } from './helper';
 import { getDiceFace } from '../../../utils/game';
 import { parse } from '../../../interpreter/parser';
@@ -22,8 +22,9 @@ export const whyCannotSend = (inGame: boolean, characterName: string, source: st
   return null;
 };
 
-const onSendFailed = (pane: Id, compose: Compose, dispatch: Dispatch) => {
+const onSendFailed = (pane: Id, compose: Compose, dispatch: AppDispatch) => {
   showFlash(
+    dispatch,
     'ERROR',
     <span>
       消息发送失败，恢复之前的文本吗？{' '}
@@ -38,7 +39,7 @@ const onSendFailed = (pane: Id, compose: Compose, dispatch: Dispatch) => {
       </Button>
     </span>,
     10000
-  )(dispatch);
+  );
 };
 export const useOnSend = () => {
   const channelId = useChannelId();
@@ -67,7 +68,7 @@ export const useOnSend = () => {
     }
     const reason = whyCannotSend(inGame, name, source);
     if (reason !== null) {
-      showFlash('ERROR', reason)(dispatch);
+      showFlash(dispatch, 'ERROR', reason);
     }
     if (!editFor) {
       dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });

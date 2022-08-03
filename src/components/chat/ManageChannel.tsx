@@ -132,7 +132,7 @@ function ManageChannel({ channel, dismiss }: Props) {
     if (result.isOk) {
       history.push(chatPath(channel.spaceId));
     } else {
-      dispatch(showFlash('ERROR', '删除频道失败'));
+      showFlash(dispatch, 'ERROR', '删除频道失败');
     }
   };
   const handleChange = (value: ValueType<MemberOption, false>) => {

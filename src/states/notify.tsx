@@ -1,6 +1,6 @@
 import { atom, useAtom } from 'jotai';
 import * as React from 'react';
-import { useSelector } from '../store';
+import { useDispatch, useSelector } from '../store';
 import { useMyId } from '../hooks/useMyId';
 import { showFlash } from '../actions';
 
@@ -9,17 +9,18 @@ export const isNotificationSupported = 'Notification' in window;
 export const canNotifyAtom = atom(isNotificationSupported && Notification.permission === 'granted');
 
 export const useNotificationSwitch = (): { canNotify: boolean; startNotify: () => void; stopNotify: () => void } => {
+  const dispatch = useDispatch();
   const [canNotify, setCanNotify] = useAtom(canNotifyAtom);
 
   const startNotify = async () => {
     if (!isNotificationSupported) {
-      showFlash('WARNING', <span>您的设备不支持发送通知</span>);
+      showFlash(dispatch, 'WARNING', <span>您的设备不支持发送通知</span>);
       return;
     }
     if (Notification.permission !== 'granted') {
       const result = await Notification.requestPermission();
       if (result === 'denied') {
-        showFlash('WARNING', <span>你拒绝了通知权限，无法显示通知</span>);
+        showFlash(dispatch, 'WARNING', <span>你拒绝了通知权限，无法显示通知</span>);
         return;
       }
     }

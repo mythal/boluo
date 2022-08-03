@@ -1,16 +1,23 @@
-import { applyMiddleware, createStore } from 'redux';
-import thunk, { ThunkDispatch } from 'redux-thunk';
+import { applyMiddleware, createStore, Dispatch } from 'redux';
 import { applicationReducer, ApplicationState, initApplicationState } from './reducers';
 import { Action } from './actions';
 import { useDispatch as useReduxDispatch, useSelector as useReduxSelector } from 'react-redux';
 import { composeWithDevTools } from '@redux-devtools/extension';
+import createSagaMiddleware from 'redux-saga';
+import { rootSaga } from './states/sagas';
 
-export const store = createStore(applicationReducer, initApplicationState, composeWithDevTools(applyMiddleware(thunk)));
+const sagaMiddleware = createSagaMiddleware();
 
-export type Dispatch = ThunkDispatch<ApplicationState, unknown, Action>;
+export const store = createStore(
+  applicationReducer,
+  initApplicationState,
+  composeWithDevTools(applyMiddleware(sagaMiddleware))
+);
+sagaMiddleware.run(rootSaga);
+export type AppDispatch = Dispatch<Action>;
 
-export const useDispatch = (): Dispatch => {
-  return useReduxDispatch<Dispatch>();
+export const useDispatch = (): AppDispatch => {
+  return useReduxDispatch<AppDispatch>();
 };
 
 export function useSelector<T>(mapper: (state: ApplicationState) => T, equalityFn?: (a: T, b: T) => boolean): T {

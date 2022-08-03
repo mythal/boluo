@@ -1,8 +1,8 @@
-import { Dispatch } from '../store';
+import { AppDispatch } from '../store';
 import { useEffect } from 'react';
 import { get } from '../api/request';
 
-export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
+export const useGetMe = (dispatch: AppDispatch, finish: () => void): void => {
   useEffect(() => {
     const loadMe = async () => {
       const me = await get('/users/get_me');

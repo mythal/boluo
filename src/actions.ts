@@ -4,16 +4,21 @@ import { ChatState, Compose, UserItem } from './reducers/chatState';
 import { MessageItem, PreviewItem } from './states/chat-item-set';
 import { Events } from './api/events';
 import { Information, InformationLevel } from './information';
-import { Dispatch } from './store';
+import { AppDispatch } from './store';
 import { AppResult, get } from './api/request';
 import { Settings, User } from './api/users';
-import { Space, SpaceMember, SpaceWithMember, SpaceWithRelated, UserStatus } from './api/spaces';
+import { Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './api/spaces';
 import { ReactNode } from 'react';
 import { Channel, ChannelMember, ChannelWithMember } from './api/channels';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';
   pane: Id;
+  id: Id;
+}
+
+export interface LoadUser {
+  type: 'LOAD_USER';
   id: Id;
 }
 
@@ -130,10 +135,19 @@ export interface ExploreSpaceLoaded {
   spaces: AppResult<Space[]>;
 }
 
-export const loadExploreSpace = () => (dispatch: Dispatch) => {
+export interface LoadExploreSpace {
+  type: 'LOAD_EXPLORE_SPACE';
+}
+
+export const loadExploreSpace = () => (dispatch: AppDispatch) => {
   get('/spaces/list').then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
 };
-export const searchSpaces = (searchText: string) => (dispatch: Dispatch) => {
+
+export interface SearchSpaces {
+  type: 'SEARCH_SPACES';
+  keyword: string;
+}
+export const searchSpaces = (searchText: string) => (dispatch: AppDispatch) => {
   get('/spaces/search', { search: searchText }).then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
 };
 
@@ -157,7 +171,13 @@ export interface SpaceDeleted {
   spaceId: Id;
 }
 
-export const loadSpace = (id: Id, token?: string) => (dispatch: Dispatch) => {
+export interface LoadSpace {
+  type: 'LOAD_SPACE';
+  spaceId: Id;
+  token?: string;
+}
+
+export const loadSpace = (id: Id, token?: string) => (dispatch: AppDispatch) => {
   get('/spaces/query_with_related', { id, token }).then((result) => {
     const action: SpaceLoaded = { type: 'SPACE_LOADED', result, spaceId: id };
     dispatch(action);
@@ -184,7 +204,7 @@ export interface UserLoaded {
   result: AppResult<User>;
 }
 
-export const loadUser = (id: Id) => (dispatch: Dispatch) => {
+export const loadUser = (id: Id) => (dispatch: AppDispatch) => {
   get('/users/query', { id }).then((result) => {
     const action: UserLoaded = { type: 'USER_LOADED', result, userId: id };
     dispatch(action);
@@ -200,8 +220,11 @@ export const dismissFlash = (id: Id): DismissFlash => ({
   type: 'DISMISS_FLASH',
   id,
 });
-export const showFlash = (level: InformationLevel, content: ReactNode, timeout: number | null = 5000) => (
-  dispatch: Dispatch
+export const showFlash = (
+  dispatch: AppDispatch,
+  level: InformationLevel,
+  content: ReactNode,
+  timeout: number | null = 5000
 ) => {
   const id = newId();
   dispatch({
@@ -434,4 +457,8 @@ export type Action =
   | ToggleShowFolded
   | FocusChannel
   | UnfocusChannel
-  | ConnectSpace;
+  | ConnectSpace
+  | LoadUser
+  | LoadSpace
+  | LoadExploreSpace
+  | SearchSpaces;

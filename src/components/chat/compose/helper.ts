@@ -1,9 +1,9 @@
-import { Dispatch } from '../../../store';
+import { AppDispatch } from '../../../store';
 import { upload } from '../../../api/request';
 import { throwErr } from '../../../utils/errors';
 import { Id } from '../../../utils/id';
 
-export const uploadMedia = async (dispatch: Dispatch, media: File | undefined): Promise<Id | null> => {
+export const uploadMedia = async (dispatch: AppDispatch, media: File | undefined): Promise<Id | null> => {
   if (!media) {
     return null;
   }

@@ -24,7 +24,6 @@ import MemberDialog from '../chat/MemberDialog';
 import { useMyId } from '../../hooks/useMyId';
 import { Provider } from 'jotai';
 import { Connector } from '../chat/Connector';
-import { loadSpace } from '../../actions';
 
 interface Params {
   spaceId: string;
@@ -100,7 +99,7 @@ const Container = styled.div`
 function useLoadSpace(spaceId: Id) {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(loadSpace(spaceId));
+    dispatch({ type: 'LOAD_SPACE', spaceId });
   }, [spaceId, dispatch]);
 }
 

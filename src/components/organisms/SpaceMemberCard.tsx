@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from '../../store';
 import { errLoading } from '../../api/error';
 import { User } from '../../api/users';
 import { bgColor } from '../../styles/colors';
-import { loadUser } from '../../actions';
 
 interface Props {
   member: SpaceMember;
@@ -26,7 +25,7 @@ function MemberCardContent({ member, space }: Props) {
   const self = useSelector((state) => state.profile?.user.id === id);
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(loadUser(id));
+    dispatch({ type: 'LOAD_USER', id });
   }, [id, dispatch]);
   const result: AppResult<User> = useSelector((state) => state.ui.userSet.get(id, errLoading()));
   if (!result.isOk) {

@@ -11,7 +11,6 @@ import { RenderError } from '../molecules/RenderError';
 import { useDispatch, useSelector } from '../../store';
 import SpaceSearchInput from '../SpaceSearchInput';
 import { mY } from '../../styles/atoms';
-import { loadExploreSpace, searchSpaces } from '../../actions';
 
 function ExploreSpace() {
   const isLoggedIn = useSelector((state) => state.profile !== undefined);
@@ -19,9 +18,9 @@ function ExploreSpace() {
   const [searchText, setSearchText] = useState('');
   useEffect(() => {
     if (searchText.trim() === '') {
-      dispatch(loadExploreSpace());
+      dispatch({ type: 'LOAD_EXPLORE_SPACE' });
     } else {
-      dispatch(searchSpaces(searchText));
+      dispatch({ type: 'SEARCH_SPACES', keyword: searchText });
     }
   }, [dispatch, searchText]);
   const result = useSelector((state) => state.ui.exploreSpaceList);

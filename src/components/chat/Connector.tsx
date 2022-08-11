@@ -129,7 +129,6 @@ export const Connector = ({ spaceId, myId }: Props) => {
         after.current = event.timestamp;
         handleEvent(dispatch, event);
       };
-      console.log(connection.readyState);
       dispatch(connectSpace(spaceId, connection));
     };
     if (state === 'CLOSED') {

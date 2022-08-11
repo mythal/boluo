@@ -151,7 +151,7 @@ function Chat() {
   }
   return (
     <Container data-split={paneList.length}>
-      <Connector />
+      <Connector key={spaceId} spaceId={spaceId} myId={myId} />
       <Global styles={viewHeight} />
       <Sidebar space={space} channels={channels} />
 

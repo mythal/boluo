@@ -389,9 +389,11 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       colorMap = updateColorMap(members, colorMap);
       break;
     case 'INITIALIZED':
-      initialized = true;
-      if (myId) {
-        compose = handleChatInitialized(myId, channel.id, itemSet);
+      if (!initialized) {
+        initialized = true;
+        if (myId) {
+          compose = handleChatInitialized(myId, channel.id, itemSet);
+        }
       }
       break;
   }

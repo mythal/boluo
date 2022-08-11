@@ -67,7 +67,7 @@ const handleEvent = (dispatch: Dispatch, event: Events) => {
 const Retry = ({ second }: { second: number }) => {
   const [sec, setSec] = useState(second);
   useEffect(() => {
-    const handle = window.setInterval(() => setSec((sec) => sec - 1), 1000);
+    const handle = window.setInterval(() => setSec((sec) => Math.max(sec - 1, 0)), 1000);
     return () => window.clearInterval(handle);
   }, []);
   return <div css={style}>链接出错，等待重连 ({sec})</div>;

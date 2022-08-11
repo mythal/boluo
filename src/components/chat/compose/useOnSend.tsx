@@ -119,10 +119,14 @@ export const useOnSend = () => {
     if (whisperTo) {
       newMessage.whisperToUsers = whisperTo.map((item) => item.value);
     }
-    const resultPromise = post('/messages/send', newMessage);
-
-    const result = await resultPromise;
-    if (!result.isOk) {
+    let sent: AppResult<Message>;
+    try {
+      sent = await post('/messages/send', newMessage);
+    } catch {
+      onSendFailed(pane, compose, dispatch);
+      return;
+    }
+    if (!sent.isOk) {
       onSendFailed(pane, compose, dispatch);
     }
   }, [channelId]);

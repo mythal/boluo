@@ -171,7 +171,15 @@ function ChannelMemberButton({ className }: Props) {
         {name}
       </ChatHeaderButton>
       {menu && (
-        <Overlay x={1} y={1} anchor={buttonRef} selfY={1} selfX={-1} onOuter={dismissMenu}>
+        <Overlay
+          x={1}
+          y={1}
+          anchor={buttonRef}
+          selfY={1}
+          selfX={-1}
+          onOuter={dismissMenu}
+          onClick={(e) => e.stopPropagation()}
+        >
           <Menu dismiss={dismissMenu}>
             <MenuItem icon={editIcon} onClick={openDialog}>
               编辑频道身份

@@ -56,7 +56,8 @@ const Container = styled.div`
     'sidebar-header header'
     'sidebar-body list'
     'sidebar-body compose';
-  &[data-split='1'] {
+  &[data-split='1'],
+  &[data-split='0'] {
     grid-template-columns: auto 1fr;
     grid-template-areas:
       'sidebar-header header'

@@ -362,6 +362,9 @@ const handleComposeRestore = (state: ChatState, { compose }: RestoreComposeState
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
   let { itemSet, channel, colorMap, members, eventAfter, initialized, compose } = chat;
+  if (event.timestamp < eventAfter) {
+    return chat;
+  }
   if ('channelId' in body && body.channelId !== channel.id) {
     return chat;
   }

@@ -19,8 +19,8 @@ export interface Message {
   text: string;
   whisperToUsers: Id[] | null;
   entities: Entity[];
-  created: number;
-  modified: number;
+  created: string;
+  modified: string;
   pos: number;
 }
 

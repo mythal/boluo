@@ -33,8 +33,8 @@ export interface ExportMessage {
   isAction: boolean;
   isMaster: boolean;
   folded: boolean;
-  created: number;
-  modified: number;
+  created: string;
+  modified: string;
   text: string;
   entities: ExportEntity[];
   whisperTo: null | ExportMember[];

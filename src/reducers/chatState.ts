@@ -54,7 +54,7 @@ export interface Compose {
   isAction: boolean;
   entities: Entity[];
   sending: boolean;
-  editFor: number | null;
+  editFor: string | null;
   messageId: Id;
   media: File | undefined;
   source: string;

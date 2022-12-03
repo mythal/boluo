@@ -100,7 +100,7 @@ export interface Preview {
   whisperToUsers: Id[] | null;
   entities: Entity[];
   pos: number;
-  editFor: number | null;
+  editFor: string | null;
 }
 
 export interface PreviewPost {
@@ -113,7 +113,7 @@ export interface PreviewPost {
   text: string | null;
   entities: Entity[];
   clear: boolean;
-  editFor?: number | null;
+  editFor?: string | null;
 }
 
 export interface MessagePreview {

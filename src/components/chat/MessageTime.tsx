@@ -3,10 +3,11 @@ import { css } from '@emotion/core';
 import { dateTimeFormat, timeFormat } from '../../utils/time';
 import { fontMono, fontNormal, mL, pX, pY, relative, roundedSm, textSm, textXs, uiShadow } from '../../styles/atoms';
 import { black, gray, white } from '../../styles/colors';
+import { parseDateString } from '../../utils/helper';
 
 interface Props {
-  created: number;
-  modified: number;
+  created: string;
+  modified: string;
 }
 
 const style = css`
@@ -36,8 +37,8 @@ const timeTooltip = css`
 `;
 
 function MessageTime(props: Props) {
-  const created = new Date(props.created);
-  const modified = new Date(props.modified);
+  const created = parseDateString(props.created);
+  const modified = parseDateString(props.modified);
   return (
     <time css={style}>
       <div css={timeTooltip} className="time-tooltip">

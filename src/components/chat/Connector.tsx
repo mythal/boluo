@@ -9,6 +9,9 @@ import { connect } from '../../api/connect';
 import { Events, SpaceUpdated } from '../../api/events';
 import { connectSpace } from '../../actions';
 
+export const PING = '♥';
+export const PONG = '♡';
+
 export const style = css`
   z-index: 999;
   position: fixed;
@@ -122,6 +125,11 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connection.onmessage = (onMessageEvent) => {
         retrySec.current = 0;
         setState('OPEN');
+        const received = onMessageEvent.data;
+        if (received === PING) {
+          connection.send(PONG);
+          return;
+        }
         const event: Events = JSON.parse(onMessageEvent.data);
         if (after.current >= event.timestamp) {
           return;

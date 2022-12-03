@@ -61,13 +61,13 @@ export const useNotify = () => {
     }
     const storageKey = `channel:${channelId}:latest`;
     const storagePrev = localStorage.getItem(storageKey);
-    const prev = storagePrev ? Number(storagePrev) : null;
+    const prev = storagePrev ? Date.parse(storagePrev) : null;
     if (prev === null) {
-      localStorage.setItem(storageKey, String(item.message.created));
+      localStorage.setItem(storageKey, item.message.created);
       continue;
     }
-    if (prev < item.message.created) {
-      localStorage.setItem(storageKey, String(item.message.created));
+    if (prev < Date.parse(item.message.created)) {
+      localStorage.setItem(storageKey, item.message.created);
       if (
         (focusChannelList.includes(channelId) && document.visibilityState === 'visible') ||
         item.message.senderId === myId

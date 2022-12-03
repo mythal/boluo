@@ -9,7 +9,7 @@ import handle from '../../assets/icons/handle.svg';
 import { dateTimeFormat } from '../../utils/time';
 
 interface Props {
-  timestamp: number;
+  timestamp: string;
   handleProps: DraggableProvidedDragHandleProps;
 }
 

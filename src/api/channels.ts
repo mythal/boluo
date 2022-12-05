@@ -89,7 +89,7 @@ export interface CheckChannelName {
 
 export interface Export {
   channelId: Id;
-  after?: number;
+  after?: string;
 }
 
 export const makeMembers = (

@@ -73,7 +73,9 @@ function ExportDialog({ dismiss, channel }: Props) {
       const now = new Date();
       now.setHours(0, 0, 0, 0);
       now.setDate(now.getDate() - afterDays.value);
-      exportGet.after = now.getTime();
+      const isoString = now.toISOString();
+      const after = isoString.substring(0, isoString.length - 1);
+      exportGet.after = after;
     }
     const result = await get('/channels/export', exportGet);
     if (!result.isOk) {

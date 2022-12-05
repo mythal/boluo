@@ -61,7 +61,13 @@ export const useNotify = () => {
     }
     const storageKey = `channel:${channelId}:latest`;
     const storagePrev = localStorage.getItem(storageKey);
-    const prev = storagePrev ? Date.parse(storagePrev) : null;
+    let prev: number | null = null;
+    if (storagePrev) {
+      const parsed = Date.parse(storagePrev);
+      if (!Number.isNaN(parsed)) {
+        prev = parsed;
+      }
+    }
     if (prev === null) {
       localStorage.setItem(storageKey, item.message.created);
       continue;

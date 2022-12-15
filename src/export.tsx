@@ -7,6 +7,7 @@ import { evaluate, makeRng, nodeToText } from './interpreter/eval';
 import { ExportEntity } from './interpreter/entities';
 import { mediaUrl } from './api/request';
 import { dateTimeFormat } from './utils/time';
+import { parseDateString } from './utils/helper';
 
 export interface ExportMember {
   userId: Id;
@@ -188,7 +189,7 @@ export function csvBlob(messages: ExportMessage[]): Blob {
   for (const message of messages) {
     const { created, name, sender, isMaster, isAction, inGame, entities, whisperTo, mediaUrl, folded } = message;
     const row: string[] = [
-      dateTimeFormat(new Date(created)),
+      dateTimeFormat(parseDateString(created)),
       name,
       sender.nickname,
       booleanToText(isMaster),
@@ -245,7 +246,7 @@ export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean): Blob
     if (!simple || !isAction) {
       line = '[color=silver]';
       if (!simple) {
-        line += dateTimeFormat(new Date(message.created)) + ' ';
+        line += dateTimeFormat(parseDateString(message.created)) + ' ';
       }
       if (!isAction) {
         line += `<${name}>`;
@@ -278,7 +279,7 @@ export function txtBlob(messages: ExportMessage[], simple: boolean): Blob {
     let line = '';
     if (!simple || !isAction) {
       if (!simple) {
-        const dateTime = dateTimeFormat(new Date(message.created));
+        const dateTime = dateTimeFormat(parseDateString(message.created));
         line += `[${dateTime}] `;
       }
       if (!isAction) {

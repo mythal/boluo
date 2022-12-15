@@ -7,6 +7,7 @@ import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import Icon from '../atoms/Icon';
 import handle from '../../assets/icons/handle.svg';
 import { dateTimeFormat } from '../../utils/time';
+import { parseDateString } from '../../utils/helper';
 
 interface Props {
   timestamp: string;
@@ -37,7 +38,7 @@ const handleStyle = css`
 `;
 
 function ItemMoveHandle({ timestamp, handleProps }: Props) {
-  const now = new Date(timestamp);
+  const now = parseDateString(timestamp);
   return (
     <time dateTime={now.toISOString()} css={handleContainerStyle} title={dateTimeFormat(now)}>
       <div css={handleStyle} {...handleProps}>

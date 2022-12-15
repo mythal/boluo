@@ -7,7 +7,7 @@ export function compareRev(a: number, b: number): number {
 }
 
 export function parseDateString(dateString: string): Date {
-  const timestamp = Date.parse(dateString + 'Z');
+  const timestamp = dateString.endsWith('Z') ? dateString : Date.parse(dateString + 'Z');
   const date = new Date(timestamp);
   return date;
 }

@@ -1,8 +1,9 @@
-name: Publish image
+name: Build Images
 on:
   push:
     branches:
       - master
+      - production
 jobs:
   push_to_registry:
     name: Push Docker image to GitHub Packages
@@ -24,4 +25,4 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:nightly
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}

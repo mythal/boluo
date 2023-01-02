@@ -40,10 +40,11 @@ import {
   Export,
   JoinChannel,
 } from './channels';
-import { ByChannel, EditMessage, Message, MoveTo, MoveBetween, NewMessage, SwapMessage } from './messages';
+import { ByChannel, EditMessage, Message, MoveTo, MoveBetween, NewMessage } from './messages';
 import { Id } from '../utils/id';
 import { Media } from './media';
 import { DEBUG } from '../settings';
+import store from '../store';
 
 export type AppResult<T> = Result<T, AppError>;
 
@@ -97,11 +98,13 @@ export const request = async <T>(
 };
 
 export const makeUri = (path: string, query?: object): string => {
+  const { baseUrl } = store.getState().ui;
   if (path[0] !== '/') {
     path = '/api/' + path;
   } else {
     path = '/api' + path;
   }
+  path = baseUrl + path;
   if (query === undefined) {
     return path;
   }

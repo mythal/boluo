@@ -4,10 +4,11 @@ import React from 'react';
 import { spacingN } from '../../styles/atoms';
 import { Id } from '../../utils/id';
 import { get } from '../../api/request';
-import store, { Dispatch, useDispatch } from '../../store';
+import store, { Dispatch, useDispatch, useSelector } from '../../store';
 import { connect } from '../../api/connect';
 import { Events, SpaceUpdated } from '../../api/events';
 import { connectSpace } from '../../actions';
+import { selectBestBaseUrl } from '../../base-url';
 
 export const PING = '♥';
 export const PONG = '♡';
@@ -85,11 +86,17 @@ const MAX_RETRY_WAIT_SEC = 7;
 
 export const Connector = ({ spaceId, myId }: Props) => {
   const dispatch = useDispatch();
+  const baseUrl = useSelector((state) => state.ui.baseUrl);
   const [state, setState] = useState<ConnectState>('CLOSED');
   const connectionRef = useRef<WebSocket | null>(null);
+  const baseUrlRef = useRef<string>(baseUrl);
 
   const retrySec = useRef(0);
   const after = useRef<number>(0);
+
+  useEffect(() => {
+    baseUrlRef.current = baseUrl;
+  }, [baseUrl]);
 
   useEffect(() => {
     const makeConnection = async () => {
@@ -109,11 +116,12 @@ export const Connector = ({ spaceId, myId }: Props) => {
         }
         return;
       }
-      const connection = connect(spaceId, token);
+      const connection = connect(baseUrlRef.current, spaceId, token);
       connectionRef.current = connection;
       connection.onclose = (event) => {
         console.log('Websocket connection closed', event);
         if (event.code !== 1000) {
+          selectBestBaseUrl(baseUrlRef.current).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
           setState('CLOSED');
           retrySec.current += 1;
         }

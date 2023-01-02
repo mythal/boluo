@@ -27,6 +27,7 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     'react/prop-types': 'off',
     'react/display-name': 'off',
+    'react/no-unknown-property': ['error', { ignore: ['css'] }],
     'no-empty': 'off',
   },
 };

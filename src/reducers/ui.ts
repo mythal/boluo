@@ -1,4 +1,4 @@
-import { Space, SpaceWithRelated, UserStatus } from '../api/spaces';
+import { Space, SpaceWithRelated } from '../api/spaces';
 import { Action, FocusChannel, UnfocusChannel, JoinedSpace, LeftSpace, SpaceEdited, UserEdited } from '../actions';
 import { AppResult } from '../api/request';
 import { errLoading } from '../api/error';
@@ -16,10 +16,12 @@ export interface UiState {
   connection: WebSocket | null;
   spaceId: Id | undefined;
   focusChannelList: Id[];
+  baseUrl: string;
 }
 
 export const initUiState: UiState = {
   spaceId: undefined,
+  baseUrl: 'https://boluo.chat',
   exploreSpaceList: errLoading(),
   spaceSet: Map<Id, AppResult<SpaceWithRelated>>(),
   userSet: Map<Id, AppResult<User>>(),
@@ -49,6 +51,7 @@ const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, use
       if (!userId) {
         return { ...rest, members };
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [userId]: _, ...restMembers } = members;
       return { ...rest, members: restMembers };
     })
@@ -187,7 +190,11 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
           return handleChannel(state, action.event.body.channel);
         case 'STATUS_MAP':
           return handleUpdateSpaceUserStatus(state, action.event.body);
+        default:
+          return state;
       }
+    case 'CHANGE_BASE_URL':
+      return { ...state, baseUrl: action.baseUrl };
   }
   return state;
 }

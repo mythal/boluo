@@ -8,6 +8,7 @@ import { Id } from '../utils/id';
 import { atom } from 'jotai';
 import { useUpdateAtom } from 'jotai/utils';
 import { connectSpace, SpaceUpdated } from '../actions';
+import { selectBestBaseUrl } from '../base-url';
 
 export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
 
@@ -28,6 +29,7 @@ export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Pro
 
 export function useSpaceConnection() {
   const dispatch = useDispatch();
+  const baseUrl = useSelector((state) => state.ui.baseUrl);
   const myId = useMyId();
   const spaceId = useSelector((state) => state.ui.spaceId);
   const setConnectState = useUpdateAtom(connectStateAtom);
@@ -39,7 +41,7 @@ export function useSpaceConnection() {
     if (!spaceId) {
       throw new Error('unexpected error: there is no space id');
     }
-    const connection = await connect(spaceId, await getConnectionToken(spaceId, myId));
+    const connection = await connect(baseUrl, spaceId, await getConnectionToken(spaceId, myId));
     connection.onerror = (e) => {
       console.warn(e);
     };
@@ -67,6 +69,7 @@ export function useSpaceConnection() {
         }
         const { usersStatus } = spaceResult.value;
         let shouldUpdate = false;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for (const [userId, status] of Object.entries(statusMap)) {
           if (userId in usersStatus && usersStatus[userId].kind !== statusMap[userId].kind) {
             shouldUpdate = true;
@@ -82,6 +85,7 @@ export function useSpaceConnection() {
     connection.onerror = (e) => {
       console.warn('connection error: ', e);
       setConnectState('CLOSED');
+      selectBestBaseUrl(baseUrl).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
     };
     connection.onclose = (e) => {
       console.warn('connection close: ', e);
@@ -89,7 +93,7 @@ export function useSpaceConnection() {
     };
     dispatch(connectSpace(spaceId, connection));
     return connection;
-  }, [dispatch, myId, setConnectState, spaceId]);
+  }, [baseUrl, dispatch, myId, setConnectState, spaceId]);
 
   return conn;
 }

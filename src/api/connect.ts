@@ -1,13 +1,14 @@
 import { Id } from '../utils/id';
 
-const DEBUG = process.env.NODE_ENV === 'development';
-
-export const connect = (id: Id, token: Id | null): WebSocket => {
-  const { host, protocol } = window.location;
-  const ws = protocol == 'http:' && DEBUG ? 'ws:' : 'wss:';
-  if (token) {
-    return new WebSocket(`${ws}//${host}/api/events/connect?mailbox=${id}&token=${token}`);
+export const connect = (baseUrl: string, id: Id, token: Id | null): WebSocket => {
+  if (baseUrl.startsWith('https://')) {
+    baseUrl = baseUrl.replace('https://', 'wss://');
   } else {
-    return new WebSocket(`${ws}//${host}/api/events/connect?mailbox=${id}`);
+    baseUrl = baseUrl.replace('http://', 'ws://');
+  }
+  if (token) {
+    return new WebSocket(`${baseUrl}/api/events/connect?mailbox=${id}&token=${token}`);
+  } else {
+    return new WebSocket(`${baseUrl}/api/events/connect?mailbox=${id}`);
   }
 };

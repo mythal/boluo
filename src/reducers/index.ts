@@ -2,10 +2,10 @@ import { initProfileState, profileReducer, ProfileState } from './profile';
 import { Action } from '../actions';
 import { initUiState, uiReducer, UiState } from './ui';
 import { Map } from 'immutable';
-import { chatReducer, ChatState } from './chatState';
+import { ChatState } from './chatState';
 import { flashReducer, FlashState, initFlashState } from './flash';
 import { Id } from '../utils/id';
-import { ChatStateMap, chatStateMapReducer, handleSpaceLoaded, handleSpaceUpdate } from './chatStateMap';
+import { ChatStateMap, chatStateMapReducer } from './chatStateMap';
 
 export interface ApplicationState {
   profile: ProfileState | undefined;

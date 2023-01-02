@@ -155,7 +155,7 @@ export const moveMessages = (messages: ChatItemSet['messages'], movedItems: Mess
   return messages;
 };
 
-export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): ChatItemSet => {
+export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, finished: boolean): ChatItemSet => {
   let { messages } = itemSet;
   const top = messages.first();
   if (top === undefined) {
@@ -174,12 +174,17 @@ export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem): Chat
   }
   if (editedItem.pos < top.pos) {
     messages = messages.remove(index);
+    let nextItemSet: ChatItemSet = { ...itemSet, messages };
+    if (finished) {
+      nextItemSet = addItem(nextItemSet, editedItem);
+    }
+    return nextItemSet;
   } else if (target.pos === editedItem.pos) {
     messages = messages.set(index, editedItem);
+    return { ...itemSet, messages };
   } else {
     return addItem({ ...itemSet, messages: messages.remove(index) }, editedItem);
   }
-  return { ...itemSet, messages };
 };
 
 export const markMessageMoving = (

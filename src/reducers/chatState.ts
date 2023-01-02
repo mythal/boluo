@@ -126,9 +126,10 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
   return { ...chat, finished, itemSet };
 };
 
-const handleEditMessage = (itemSet: ChatItemSet, message: Message, myId: Id | undefined): ChatItemSet => {
+const handleEditMessage = (chatState: ChatState, message: Message, myId: Id | undefined): ChatState => {
   const item = makeMessageItem(myId)(message);
-  return editMessage(itemSet, item);
+  const itemSet = editMessage(chatState.itemSet, item, chatState.finished);
+  return { ...chatState, itemSet };
 };
 
 const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet => {
@@ -382,8 +383,9 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, myId);
       break;
     case 'MESSAGE_EDITED':
-      itemSet = handleEditMessage(itemSet, body.message, myId);
-      break;
+      eventAfter = Math.max(eventAfter, event.timestamp);
+      chat = handleEditMessage(chat, body.message, myId);
+      return { ...chat, eventAfter };
     case 'CHANNEL_EDITED':
       channel = body.channel;
       break;
@@ -423,8 +425,7 @@ export const handleMoveFinish = (state: ChatState, action: Action, myId?: Id): C
 };
 
 export const handleRevealMessage = (state: ChatState, message: Message, myId?: Id): ChatState => {
-  const itemSet = handleEditMessage(state.itemSet, message, myId);
-  return { ...state, itemSet };
+  return handleEditMessage(state, message, myId);
 };
 
 export const checkMessagesOrder = (itemSet: ChatItemSet) => {

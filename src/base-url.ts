@@ -17,6 +17,8 @@ export const baseUrlList = (() => {
   return ['https://boluo.chat', 'https://raylet.boluo.chat', 'https://cloudflare.boluo.chat', 'https://gce.boluo.chat'];
 })();
 
+const FAILED = Number.MAX_SAFE_INTEGER;
+
 export const getDefaultBaseUrl = (): string => {
   const { host } = window.location;
   if (host.endsWith('stage.boluo.chat')) {
@@ -34,9 +36,12 @@ export const getDefaultBaseUrl = (): string => {
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
   const start = performance.now();
   try {
-    await fetch(baseUrl + '/api/users/get_me', { method: 'GET', credentials: 'include' });
+    const response = await fetch(baseUrl + '/api/users/get_me', { method: 'GET', credentials: 'include' });
+    if (response.status > 299) {
+      return FAILED;
+    }
   } catch {
-    return Number.MAX_SAFE_INTEGER;
+    return FAILED;
   }
   const end = performance.now();
   return end - start;

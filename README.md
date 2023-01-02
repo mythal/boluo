@@ -8,7 +8,7 @@ A chat tool made for play RPG.
 git clone https://github.com/mythal/boluo
 cd boluo
 yarn build
-BACKEND=https://boluo.chat/ yarn start
+yarn start
 ```
 
 [Server Code](https://github.com/mythal/boluo-server)

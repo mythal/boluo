@@ -8,6 +8,7 @@ import { User } from '../api/users';
 import { Ok } from '../utils/result';
 import { Channel } from '../api/channels';
 import { StatusMap } from '../api/events';
+import { getDefaultBaseUrl } from '../base-url';
 
 export interface UiState {
   exploreSpaceList: AppResult<Space[]>;
@@ -21,7 +22,7 @@ export interface UiState {
 
 export const initUiState: UiState = {
   spaceId: undefined,
-  baseUrl: 'https://boluo.chat',
+  baseUrl: getDefaultBaseUrl(),
   exploreSpaceList: errLoading(),
   spaceSet: Map<Id, AppResult<SpaceWithRelated>>(),
   userSet: Map<Id, AppResult<User>>(),

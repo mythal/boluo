@@ -1,0 +1,10 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+/inspectionProfiles/
+boluo.iml
+jsLibraryMappings.xml
+modules.xml
+vcs.xml

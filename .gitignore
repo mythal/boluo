@@ -31,3 +31,9 @@ yarn-error.log*
 
 # turbo
 .turbo
+
+# direnv
+.direnv/
+
+# corepack
+.bin/

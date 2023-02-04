@@ -14,12 +14,15 @@
   },
   "devDependencies": {
     "eslint-config-custom": "workspace:*",
-    "prettier": "latest",
-    "turbo": "latest"
+    "prettier": "^2.8.3",
+    "turbo": "^1.7.3"
   },
   "engines": {
     "node": ">=14.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dprint": "^0.34.4",
+    "typescript": "latest"
+  },
   "packageManager": "pnpm@7.25.0"
 }

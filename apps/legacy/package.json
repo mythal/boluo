@@ -1,5 +1,5 @@
 {
-  "name": "boluo-web",
+  "name": "legacy",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -27,8 +27,9 @@
     "uuid": "^8.2.0"
   },
   "scripts": {
-    "start": "webpack-dev-server --color --output-public-path / --progress",
-    "build": "NODE_ENV=production webpack --config webpack.config.js"
+    "dev": "webpack-dev-server --color --output-public-path / --progress",
+    "build": "NODE_ENV=production webpack --config webpack.config.js",
+    "lint": "eslint ./src"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",

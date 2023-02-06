@@ -17,7 +17,10 @@ function ImageUploadButton({ className, size }: Props) {
   const dispatch = useDispatch();
   const media = useSelector((state) => state.chatStates.get(channelId)!.compose.media);
 
-  const removeMedia = useCallback(() => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId }), []);
+  const removeMedia = useCallback(() => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId }), [
+    channelId,
+    dispatch,
+  ]);
   const startUpload = useCallback(() => fileInputRef.current?.click(), []);
 
   useEffect(() => {

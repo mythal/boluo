@@ -3,13 +3,15 @@
 // https://github.com/vercel/next.js/issues/40687#issuecomment-1264177674
 
 /**
-* @type {import('eslint').Linter.Config}
-*/
+ * @type {import('eslint').Linter.Config}
+ */
 module.exports = {
-  extends: ["next", "turbo", "prettier"],
+  extends: ['next', 'turbo', 'prettier'],
   rules: {
-    "@next/next/no-html-link-for-pages": "off",
-    "react/jsx-key": "off",
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'error',
+    '@next/next/no-html-link-for-pages': 'off',
+    'react/jsx-key': 'off',
   },
   parserOptions: {
     babelOptions: {

@@ -1,6 +1,11 @@
 // eslint-disable-next-line no-undef
 module.exports = {
   root: true,
+  settings: {
+    react: {
+      version: 'detect',
+    }
+  },
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'react-hooks'],
   extends: [

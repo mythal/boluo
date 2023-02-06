@@ -1,0 +1,32 @@
+name: Build
+
+on: [push]
+
+jobs:
+  legacy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install
+        run: npm install -g pnpm && pnpm install
+
+      - name: Check
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+        env:
+          CI: true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: boluo-legacy
+          path: apps/legacy/dist/

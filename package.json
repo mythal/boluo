@@ -7,13 +7,17 @@
     "packages/*"
   ],
   "scripts": {
+    "prepare": "husky install",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "dprint fmt"
+    "format": "dprint fmt",
+    "precommit": "lint-staged"
   },
   "devDependencies": {
     "eslint-config-custom": "workspace:*",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.0",
     "turbo": "^1.7.3"
   },
   "engines": {
@@ -23,5 +27,8 @@
     "dprint": "^0.34.4",
     "typescript": "latest"
   },
-  "packageManager": "pnpm@7.25.0"
+  "packageManager": "pnpm@7.25.0",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,md,toml,rs}": "dprint check"
+  }
 }

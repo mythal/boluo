@@ -6,6 +6,8 @@ importers:
     specifiers:
       dprint: ^0.34.4
       eslint-config-custom: workspace:*
+      husky: ^8.0.3
+      lint-staged: ^13.1.0
       turbo: ^1.7.3
       typescript: latest
     dependencies:
@@ -13,6 +15,8 @@ importers:
       typescript: 4.9.5
     devDependencies:
       eslint-config-custom: link:packages/eslint-config-custom
+      husky: 8.0.3
+      lint-staged: 13.1.0
       turbo: 1.7.3
 
   apps/legacy:
@@ -48,10 +52,8 @@ importers:
       eslint-plugin-react-hooks: ^4.6.0
       file-loader: ^6.2.0
       html-webpack-plugin: ^5.5.0
-      husky: '>=6'
       immutable: ^4.0.0-rc.12
       jotai: ^1.3.2
-      lint-staged: '>=10'
       mini-css-extract-plugin: ^2.6.0
       optics-ts: ^2.0.0
       polished: ^3.6.6
@@ -133,8 +135,6 @@ importers:
       eslint-plugin-react-hooks: 4.6.0_eslint@8.33.0
       file-loader: 6.2.0_webpack@5.75.0
       html-webpack-plugin: 5.5.0_webpack@5.75.0
-      husky: 8.0.3
-      lint-staged: 13.1.0
       mini-css-extract-plugin: 2.7.2_webpack@5.75.0
       prettier: 2.1.2
       source-map-loader: 3.0.2_webpack@5.75.0

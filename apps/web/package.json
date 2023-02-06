@@ -23,5 +23,8 @@
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
     "typescript": "^4.9.5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint --cache"
   }
 }

@@ -3,6 +3,34 @@ name: Build
 on: [push]
 
 jobs:
+  cache:
+    # https://github.com/cachix/install-nix-action/issues/56#issuecomment-1240991760
+    name: "Prepare Nix Cache"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache Nix Store
+        id: nix-cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/nixcache
+          key: nix-store-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+
+      - uses: cachix/install-nix-action@v18
+
+      - name: "Import Nix store cache"
+        if: "steps.nix-cache.outputs.cache-hit == 'true'"
+        run: "nix-store --import < /tmp/nixcache"
+
+      - name: "Enter nix develop"
+        run: "nix develop"
+
+      - name: "Export Nix store cache"
+        if: "steps.nix-cache.outputs.cache-hit != 'true'"
+        run: "nix-store --export $(find /nix/store -maxdepth 1 -name '*-*') > /tmp/nixcache"
+
   cargo:
     env:
       CI: true
@@ -24,7 +52,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Cache Nix Store
+        id: nix-cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/nixcache
+          key: nix-store-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+
       - uses: cachix/install-nix-action@v18
+
+      - name: "Import Nix store cache"
+        if: "steps.nix-cache.outputs.cache-hit == 'true'"
+        run: "nix-store --import < /tmp/nixcache"
 
       - uses: Swatinem/rust-cache@v2
 
@@ -52,22 +91,30 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Cache Nix Store
+        id: nix-cache
+        uses: actions/cache@v3
         with:
-          node-version: 16
+          path: /tmp/nixcache
+          key: nix-store-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+
+      - uses: cachix/install-nix-action@v18
+
+      - name: "Import Nix store cache"
+        if: "steps.nix-cache.outputs.cache-hit == 'true'"
+        run: "nix-store --import < /tmp/nixcache"
 
       - name: Install
-        run: npm install -g pnpm && pnpm install
+        run: nix develop --command bash -c "pnpm install"
 
       - name: Check
-        run: pnpm check
+        run: nix develop --command bash -c "pnpm check"
 
       - name: Lint
-        run: pnpm lint
+        run: nix develop --command bash -c "pnpm lint"
 
       - name: Build
-        run: pnpm build
+        run: nix develop --command bash -c "pnpm build"
         env:
           CI: true
 

@@ -19,10 +19,33 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build container image
+      - name: Build legacy image
         uses: docker/build-push-action@v2
         with:
           push: true
           file: apps/legacy/Dockerfile
           tags: |
             ghcr.io/${{ github.repository }}/legacy:${{ github.ref_name }}
+
+  server:
+    name: server
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build server image
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: apps/server/Dockerfile
+          tags: |
+            ghcr.io/${{ github.repository }}/server:${{ github.ref_name }}

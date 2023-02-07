@@ -6,7 +6,6 @@ on:
       - production
 jobs:
   legacy:
-    name: Push Docker image to GitHub Packages
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -26,4 +25,4 @@ jobs:
           push: true
           file: apps/legacy/Dockerfile
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/legacy:${{ github.ref_name }}

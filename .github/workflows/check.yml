@@ -1,4 +1,4 @@
-name: Build
+name: Check
 
 on: [push]
 
@@ -11,12 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache Nix Store
+      - name: Setup nix develop cache
         id: nix-cache
         uses: actions/cache@v3
         with:
           path: /tmp/nixcache
-          key: nix-store-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+          key: nix-develop-${{ hashFiles('flake.lock', 'flake.nix') }}
 
       - uses: cachix/install-nix-action@v18
 
@@ -52,12 +52,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache Nix Store
+      - name: Setup nix develop cache
         id: nix-cache
         uses: actions/cache@v3
         with:
           path: /tmp/nixcache
-          key: nix-store-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+          key: nix-develop-${{ hashFiles('flake.lock', 'flake.nix') }}
 
       - uses: cachix/install-nix-action@v18
 
@@ -65,12 +65,13 @@ jobs:
         if: "steps.nix-cache.outputs.cache-hit == 'true'"
         run: "nix-store --import < /tmp/nixcache"
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Build
         run: nix develop --command bash -c "cargo build"
 
-      - name: Init Database
+      - name: Init
         run: nix develop --command bash -c "cargo run -p manage-cli -- init"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
@@ -91,18 +92,34 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache Nix Store
+      - name: Setup nix develop cache
         id: nix-cache
         uses: actions/cache@v3
         with:
           path: /tmp/nixcache
-          key: nix-store-${{ runner.os }}-${{ hashFiles('flake.lock', 'flake.nix') }}
+          key: nix-develop-${{ hashFiles('flake.lock', 'flake.nix') }}
 
       - uses: cachix/install-nix-action@v18
 
       - name: "Import Nix store cache"
         if: "steps.nix-cache.outputs.cache-hit == 'true'"
         run: "nix-store --import < /tmp/nixcache"
+
+      # Cache pnpm store
+      # https://github.com/pnpm/action-setup
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(nix develop --command bash -c 'pnpm store path')" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install
         run: nix develop --command bash -c "pnpm install"

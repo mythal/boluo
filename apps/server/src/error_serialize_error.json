@@ -1,0 +1,9 @@
+{
+  "is_ok": false,
+  "ok": null,
+  "err": {
+    "code": "UNEXPECTED",
+    "message": "Unexpected serialize error",
+    "table": null
+  }
+}

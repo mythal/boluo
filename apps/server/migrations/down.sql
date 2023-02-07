@@ -1,0 +1,12 @@
+ALTER TABLE media ALTER COLUMN created TYPE timestamp;
+ALTER TABLE users ALTER COLUMN joined TYPE timestamp;
+ALTER TABLE spaces ALTER COLUMN created TYPE timestamp;
+ALTER TABLE spaces ALTER COLUMN modified TYPE timestamp;
+ALTER TABLE space_members ALTER COLUMN join_date TYPE timestamp;
+ALTER TABLE channels ALTER COLUMN created TYPE timestamp;
+ALTER TABLE channel_members ALTER COLUMN join_date TYPE timestamp;
+ALTER TABLE messages ALTER COLUMN created TYPE timestamp;
+ALTER TABLE messages ALTER COLUMN modified TYPE timestamp;
+ALTER TABLE messages ALTER COLUMN order_date TYPE timestamp;
+ALTER TABLE restrained_members ALTER COLUMN restrained_date TYPE timestamp;
+ALTER TABLE events ALTER COLUMN created TYPE timestamp;

@@ -1,5 +1,10 @@
 services:
-  site:
-    image: ghcr.io/mythal/boluo/legacy:nightly
+  legacy:
+    image: ghcr.io/mythal/boluo/legacy:master
     build:
       dockerfile: ./apps/legacy/Dockerfile
+
+  server:
+    image: ghcr.io/mythal/boluo/server:master
+    build:
+      dockerfile: ./apps/server/Dockerfile

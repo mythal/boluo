@@ -18,6 +18,9 @@ jobs:
         run: npm install -g pnpm && pnpm install
 
       - name: Check
+        run: pnpm check
+
+      - name: Lint
         run: pnpm lint
 
       - name: Build

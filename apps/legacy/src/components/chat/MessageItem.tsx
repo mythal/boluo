@@ -19,7 +19,7 @@ interface Props {
   mine?: boolean;
   myMember?: ChannelMember;
   style?: React.CSSProperties;
-  handleProps?: DraggableProvidedDragHandleProps;
+  handleProps?: DraggableProvidedDragHandleProps | null;
   moving?: boolean;
   sameSender?: boolean;
 }

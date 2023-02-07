@@ -20,7 +20,7 @@ const itemSwitch = (
   editItem: PreviewItem | undefined,
   sameSender: boolean,
   myMember?: ChannelMember,
-  handleProps?: DraggableProvidedDragHandleProps,
+  handleProps?: DraggableProvidedDragHandleProps | null,
 ) => {
   const myId = myMember?.userId;
   if (item.type === 'MESSAGE') {

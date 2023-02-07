@@ -14,7 +14,8 @@
   "toml": {},
   "dockerfile": {},
   "includes": [
-    "**/*.{toml,dockerfile,rs,json,md,ts,tsx,html}"
+    "**/Dockerfile",
+    "**/*.{toml,dockerfile,rs,json,md,js.cjs,mjs,ts,tsx,html}"
   ],
   "excludes": [
     "**/*-lock.json",

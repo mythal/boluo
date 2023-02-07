@@ -1,4 +1,5 @@
-import { css, Interpolation, keyframes } from '@emotion/react';
+import { css, keyframes } from '@emotion/react';
+import { CSSInterpolation as Interpolation } from '@emotion/serialize';
 import { darken, lighten, mix, transparentize } from 'polished';
 import { Theme } from 'react-select';
 import pixelFont from '../assets/fusion-pixel.woff2';

@@ -10,6 +10,7 @@
     "prepare": "husky install",
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "check": "turbo run check",
     "lint": "turbo run lint",
     "format": "dprint fmt",
     "precommit": "lint-staged"
@@ -25,7 +26,7 @@
   },
   "dependencies": {
     "dprint": "^0.34.4",
-    "typescript": "latest"
+    "typescript": "^4.9.5"
   },
   "packageManager": "pnpm@7.25.0",
   "lint-staged": {

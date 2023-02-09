@@ -1,0 +1,206 @@
+{
+  "+OyBM6": {
+    "message": "This email is already in use."
+  },
+  "/iUStU": {
+    "message": "e.g. Gandalf"
+  },
+  "2gujDD": {
+    "message": "These are the pages used to design and debug the components"
+  },
+  "39AHJm": {
+    "message": "Sign Up"
+  },
+  "3cc4Ct": {
+    "message": "Light"
+  },
+  "47FYwb": {
+    "message": "Cancel"
+  },
+  "5HUwAy": {
+    "message": "Only letters, numbers, and underscores are allowed."
+  },
+  "5sg7KC": {
+    "message": "Password"
+  },
+  "6JNvt/": {
+    "message": "Must be at least {min} characters."
+  },
+  "973Dls": {
+    "message": "Only invited people can join this space"
+  },
+  "AyGauy": {
+    "message": "Login"
+  },
+  "BzWmz8": {
+    "message": "Space Name"
+  },
+  "CoEsov": {
+    "message": "Username or Email"
+  },
+  "CuNepY": {
+    "message": "Create Channel"
+  },
+  "D3idYv": {
+    "message": "Settings"
+  },
+  "GMPXuF": {
+    "message": "Everyone can join this space"
+  },
+  "H2WXs6": {
+    "message": "Destroy Space"
+  },
+  "HpyhN3": {
+    "message": "Boluo"
+  },
+  "IvBid4": {
+    "message": "Use the {enter} key to send messages"
+  },
+  "JCIgkj": {
+    "message": "Username"
+  },
+  "K7AkdL": {
+    "message": "Show"
+  },
+  "LUrJwE": {
+    "message": "Channels"
+  },
+  "LqOJ8B": {
+    "message": "Is this a secret channel?"
+  },
+  "NigiUz": {
+    "message": "You have to enter a channel name."
+  },
+  "Pe0ogR": {
+    "message": "Theme"
+  },
+  "Q8Qw5B": {
+    "message": "Description"
+  },
+  "RoMEHB": {
+    "message": "Tip: Use {key} to make a line break."
+  },
+  "RraqCg": {
+    "message": "Username and password do not match"
+  },
+  "SBkvpf": {
+    "message": "Nickname"
+  },
+  "SENRqu": {
+    "message": "Help"
+  },
+  "Sf+ebw": {
+    "message": "Close pane"
+  },
+  "SqVNRz": {
+    "message": "Create a Space"
+  },
+  "VA/Z1S": {
+    "message": "Hide"
+  },
+  "VzzYJk": {
+    "message": "Create"
+  },
+  "X5rIjZ": {
+    "message": "Danger Zone"
+  },
+  "YELoe8": {
+    "message": "Tip: Use {key} to send messages."
+  },
+  "YtexzU": {
+    "message": "Close {paneName}"
+  },
+  "bGay8d": {
+    "message": "Space Settings"
+  },
+  "cCTI4h": {
+    "message": "Whether to allow everyone on the Internet to view this space"
+  },
+  "clpFBW": {
+    "message": "Space Publicity"
+  },
+  "dMEGZV": {
+    "message": "Split pane"
+  },
+  "dVoumD": {
+    "message": "My Character Name in the Channel (Optional)"
+  },
+  "fGwy5t": {
+    "message": "This channel name already exist."
+  },
+  "fNCCY7": {
+    "message": "Basic"
+  },
+  "hh0xW7": {
+    "message": "Channel Name"
+  },
+  "iFsDVR": {
+    "message": "Loading"
+  },
+  "kIUNDX": {
+    "message": "Default Dice"
+  },
+  "kMogDE": {
+    "message": "Must be a valid email address."
+  },
+  "nmSKJK": {
+    "message": "Can't be empty."
+  },
+  "oVARYX": {
+    "message": "Must be at most {max} characters."
+  },
+  "q7JBy1": {
+    "message": "Change Settings"
+  },
+  "qbB8pg": {
+    "message": "Space Description"
+  },
+  "qoUUiA": {
+    "message": "Allow Spectator"
+  },
+  "qvc9uM": {
+    "message": "This cannot be undone."
+  },
+  "rELDbB": {
+    "message": "Refresh"
+  },
+  "rK7cTy": {
+    "message": "Initial Channel Name"
+  },
+  "rYtHKT": {
+    "message": "Follow System"
+  },
+  "s+ixvA": {
+    "message": "Sure, Destroy {spaceName}"
+  },
+  "tOdNiY": {
+    "message": "Dark"
+  },
+  "uhu5aG": {
+    "message": "Public"
+  },
+  "viXE32": {
+    "message": "Private"
+  },
+  "wR2FW8": {
+    "message": "Settings of &quot;{spaceName}&quot; Space"
+  },
+  "wb3MSp": {
+    "message": "This username is already taken."
+  },
+  "x0pAb7": {
+    "message": "Open {paneName}"
+  },
+  "x32Fvf": {
+    "message": "Expand dice in the messages"
+  },
+  "y1Z3or": {
+    "message": "Language"
+  },
+  "y63e7m": {
+    "message": "EMail"
+  },
+  "zNnjeF": {
+    "message": "Are you sure you want to delete {spaceName}?"
+  }
+}

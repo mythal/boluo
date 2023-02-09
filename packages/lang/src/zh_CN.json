@@ -1,0 +1,185 @@
+{
+  "+OyBM6": {
+    "message": "这个邮箱地址已经被使用。"
+  },
+  "2gujDD": {
+    "message": "这些是用于设计和调试组件的页面"
+  },
+  "39AHJm": {
+    "message": "注册"
+  },
+  "3cc4Ct": {
+    "message": "亮色"
+  },
+  "47FYwb": {
+    "message": "取消"
+  },
+  "5HUwAy": {
+    "message": "只允许字母，数字和下划线。"
+  },
+  "5sg7KC": {
+    "message": "密码"
+  },
+  "6JNvt/": {
+    "message": "至少需要 {min} 个字符。"
+  },
+  "973Dls": {
+    "message": "只有接受邀请的人能够加入此位面"
+  },
+  "AyGauy": {
+    "message": "登录"
+  },
+  "BzWmz8": {
+    "message": "位面名"
+  },
+  "CoEsov": {
+    "message": "用户名或邮箱"
+  },
+  "D3idYv": {
+    "message": "设置"
+  },
+  "GMPXuF": {
+    "message": "每个人都可以加入这个位面"
+  },
+  "H2WXs6": {
+    "message": "摧毁位面"
+  },
+  "HpyhN3": {
+    "message": "菠萝"
+  },
+  "IvBid4": {
+    "message": "使用 {enter} 键发送消息"
+  },
+  "JCIgkj": {
+    "message": "用户名"
+  },
+  "K7AkdL": {
+    "message": "显示"
+  },
+  "Pe0ogR": {
+    "message": "主题"
+  },
+  "Q8Qw5B": {
+    "message": "描述"
+  },
+  "RoMEHB": {
+    "message": "提示：使用 {key} 换行。"
+  },
+  "RraqCg": {
+    "message": "帐号与密码不匹配"
+  },
+  "SBkvpf": {
+    "message": "昵称"
+  },
+  "SENRqu": {
+    "message": "帮助"
+  },
+  "SQoTBO": {
+    "message": "{spaceName} 的选项"
+  },
+  "Sf+ebw": {
+    "message": "关闭窗格"
+  },
+  "SqVNRz": {
+    "message": "创建位面"
+  },
+  "VA/Z1S": {
+    "message": "隐藏"
+  },
+  "VzzYJk": {
+    "message": "创建"
+  },
+  "X5rIjZ": {
+    "message": "危险操作"
+  },
+  "YELoe8": {
+    "message": "提示：使用 {key} 发送消息。"
+  },
+  "YtexzU": {
+    "message": "关闭 {paneName}"
+  },
+  "bGay8d": {
+    "message": "位面设置"
+  },
+  "cCTI4h": {
+    "message": "是否允许互联网上的任何人查看此位面"
+  },
+  "clpFBW": {
+    "message": "位面公开性"
+  },
+  "dMEGZV": {
+    "message": "分割窗格"
+  },
+  "fNCCY7": {
+    "message": "基本"
+  },
+  "iFsDVR": {
+    "message": "加载中"
+  },
+  "kIUNDX": {
+    "message": "默认使用的骰子"
+  },
+  "kMogDE": {
+    "message": "请输入合法的邮箱地址。"
+  },
+  "nmSKJK": {
+    "message": "不能为空。"
+  },
+  "oVARYX": {
+    "message": "至多 {max} 个字符。"
+  },
+  "q7JBy1": {
+    "message": "更改设置"
+  },
+  "qbB8pg": {
+    "message": "位面描述"
+  },
+  "qoUUiA": {
+    "message": "允许旁观者"
+  },
+  "qvc9uM": {
+    "message": "此操作不可撤销。"
+  },
+  "rELDbB": {
+    "message": "刷新"
+  },
+  "rK7cTy": {
+    "message": "初始频道名称"
+  },
+  "rYtHKT": {
+    "message": "依照系统设定"
+  },
+  "s+ixvA": {
+    "message": "确定，摧毁「{spaceName}」"
+  },
+  "tOdNiY": {
+    "message": "暗色"
+  },
+  "uhu5aG": {
+    "message": "公开"
+  },
+  "viXE32": {
+    "message": "非公开"
+  },
+  "wR2FW8": {
+    "message": "「{spaceName}」位面设置"
+  },
+  "wb3MSp": {
+    "message": "此用户名已被占用。"
+  },
+  "x0pAb7": {
+    "message": "打开 {paneName}"
+  },
+  "x32Fvf": {
+    "message": "自动展开消息中的骰子"
+  },
+  "y1Z3or": {
+    "message": "语言"
+  },
+  "y63e7m": {
+    "message": "邮箱"
+  },
+  "zNnjeF": {
+    "message": "确定要删除「{spaceName}」吗？"
+  }
+}

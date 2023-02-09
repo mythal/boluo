@@ -56,7 +56,6 @@ export class Ok<T> {
     return this.some;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   unwrapOr(other: T): T {
     return this.some;
   }
@@ -84,6 +83,7 @@ export type Result<T, E> = (Ok<T> | Err<E>) & {
   andThen<U>(f: (a: T) => Result<U, E>): Result<U, E>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const unwrap = <T>(result: Result<T, any>): T => {
   if (result.isOk) {
     return result.some;
@@ -92,6 +92,7 @@ export const unwrap = <T>(result: Result<T, any>): T => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const expect = (msg: string) => <T>(result: Result<T, any>): T => {
   if (result.isOk) {
     return result.some;

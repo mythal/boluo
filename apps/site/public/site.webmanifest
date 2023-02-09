@@ -1,0 +1,8 @@
+{
+  "name": "Boluo RPG",
+  "short_name": "Boluo",
+  "icons": [],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

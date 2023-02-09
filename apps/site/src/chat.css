@@ -1,0 +1,39 @@
+.chat-grid {
+  --pane-header-height: 3rem;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-auto-flow: column;
+}
+
+@media not all and (min-width: 768px) {
+  .chat-grid {
+    grid-template-rows: var(--pane-grid-rows, var(--pane-header-height) 1fr);
+    grid-template-columns: minmax(0, auto) 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .chat-grid {
+    grid-template-rows: var(--pane-header-height) 1fr;
+    grid-template-columns: minmax(0, auto) repeat(auto-fit, minmax(0, 1fr));
+  }
+}
+
+.danger-fade-in {
+  animation: danger-fade-in 1.5s ease-in-out forwards;
+}
+
+@keyframes danger-fade-in {
+  0% {
+    opacity: 0;
+    pointer-events: none;
+  }
+  99% {
+    pointer-events: none;
+  }
+  100% {
+    opacity: 100%;
+  }
+}

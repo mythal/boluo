@@ -7,6 +7,7 @@
  */
 module.exports = {
   extends: ['next', 'prettier'],
+  plugins: ['formatjs', 'import'],
   rules: {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'error',
@@ -14,8 +15,39 @@ module.exports = {
     'react/jsx-key': 'off',
   },
   parserOptions: {
+    ecmaVersion: 'latest',
     babelOptions: {
       presets: [require.resolve('next/babel')],
     },
   },
+
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+
+      extends: [
+        'plugin:@typescript-eslint/eslint-recommended',
+        'plugin:@typescript-eslint/recommended',
+        // https://typescript-eslint.io/docs/linting/type-linting
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
+        'plugin:import/typescript',
+      ],
+
+      parser: '@typescript-eslint/parser',
+      rules: {
+        // https://typescript-eslint.io/rules/
+        '@typescript-eslint/no-empty-interface': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-inferrable-types': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/consistent-type-imports': 'warn',
+        '@typescript-eslint/prefer-regexp-exec': 'warn',
+        '@typescript-eslint/prefer-includes': 'warn',
+        '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'warn',
+      },
+    },
+  ],
 };

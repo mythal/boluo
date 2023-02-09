@@ -9,7 +9,9 @@
     "graph": "nx graph"
   },
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "dprint": "^0.34.4"
+  },
   "devDependencies": {
     "nx": "15.6.3"
   },

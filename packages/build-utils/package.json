@@ -1,0 +1,16 @@
+{
+  "name": "build-utils",
+  "version": "0.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "homepage": "https://github.com/mythal/boluo",
+  "scripts": {
+    "build": "tsc --project tsconfig.json"
+  },
+  "license": "GPL-3.0",
+  "sideEffects": false,
+  "devDependencies": {
+    "tsconfig": "*",
+    "typescript": "^4.9.4"
+  }
+}

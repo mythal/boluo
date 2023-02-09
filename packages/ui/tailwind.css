@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: clamp(12px, 1.25vw, 15px);
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  html.switching,
+  html.switching * {
+    transition-duration: 200ms;
+    transition-timing-function: ease-in;
+    transition-property: background-color, border-bottom-color, border-top-color, border-left-color, border-right-color,
+      outline-color;
+  }
+  @font-face {
+    font-family: Fusion-Pixel-12;
+    src: url('./fonts/fusion-pixel.woff2');
+  }
+
+  #__next {
+    height: 100%;
+  }
+}
+
+@layer components {
+  .link {
+    @apply text-brand-700 no-underline hover:text-brand-600 active:text-brand-500;
+  }
+
+  .input {
+    @apply rounded border-[0.125rem] border-solid py-2
+      px-3 focus:outline-none focus:ring
+      disabled:cursor-not-allowed disabled:brightness-125 dark:disabled:brightness-75 disabled:contrast-50;
+  }
+
+  .input-default {
+    @apply border-surface-300 bg-lowest placeholder:text-surface-400
+      focus:border-surface-600 hover-enabled:border-surface-600 focus:ring-surface-300;
+  }
+
+  .input-error {
+    @apply border-error-300 bg-error-50 ring-error-100
+      placeholder:text-error-500 focus:border-error-500
+      hover-enabled:border-error-500;
+  }
+
+  .input-warning {
+    @apply border-warning-300 bg-warning-50 ring-warning-100
+      placeholder:text-warning-400 focus:border-warning-600
+      hover-enabled:border-warning-600;
+  }
+
+}
+
+@layer utilities {
+}

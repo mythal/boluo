@@ -152,6 +152,12 @@ importers:
       webpack-cli: 4.10.0_y7ttplitmkohdpgkllksfboxwa
       webpack-dev-server: 4.11.1_pda42hcaj7d62cr262fr632kue
 
+  apps/server/bindings:
+    specifiers:
+      typescript: ^4.9.4
+    devDependencies:
+      typescript: 4.9.5
+
   apps/web:
     specifiers:
       '@babel/core': ^7.20.12

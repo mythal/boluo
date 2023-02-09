@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "apps/*",
+    "apps/server/bindings",
     "packages/*"
   ],
   "scripts": {

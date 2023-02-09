@@ -1,0 +1,22 @@
+{
+  "name": "boluo-api",
+  "version": "0.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "homepage": "https://github.com/mythal/boluo",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "license": "GPL-3.0",
+  "dependencies": {
+    "boluo-utils": "*",
+    "server-bindings": "*",
+    "tsconfig": "*",
+    "tslib": "^2.4.1"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  }
+}

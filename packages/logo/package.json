@@ -1,0 +1,21 @@
+{
+  "name": "boluo-logo",
+  "version": "0.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "homepage": "https://github.com/mythal/boluo-mono",
+  "scripts": {
+    "build": "svgr --config-file svgr.config.js -- svg && tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "tsconfig": "*"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "@babel/core": "^7.20.7",
+    "@svgr/cli": "^6.5.1",
+    "@types/react": "^18.0.26",
+    "react": "^18.2.0",
+    "typescript": "^4.9.4"
+  }
+}

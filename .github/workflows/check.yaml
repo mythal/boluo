@@ -63,3 +63,54 @@ jobs:
         run: npm run build
         env:
           CI: true
+
+  cargo:
+    name: Cargo Workspace
+    env:
+      CI: true
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - "6379:6379"
+      postgres:
+        image: ghcr.io/mythal/boluo-postgres:latest
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: boluo
+        ports:
+          - "5432:5432"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build
+
+      - name: Clippy
+        run: cargo clippy
+
+      - name: Init test environment
+        run: cargo run -p manage-cli -- init
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+
+      - name: Test
+        run: cargo test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+          SECRET: SOME_SECRET
+          REDIS_URL: redis://localhost/
+          DEBUG: 1
+          PORT: 3000

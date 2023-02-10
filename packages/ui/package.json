@@ -20,7 +20,7 @@
     "@types/react-dom": "^18.0.10",
     "api": "*",
     "utils": "*",
-    "build-utils": "*",
+    "palette-tools": "*",
     "eslint": "^8.31.0",
     "eslint-config-custom": "*",
     "postcss": "^8.4.20",

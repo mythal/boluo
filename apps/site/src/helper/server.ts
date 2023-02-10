@@ -1,7 +1,7 @@
 import 'server-only';
 import type { IntlShape } from '@formatjs/intl';
 import { createIntl } from '@formatjs/intl';
-import type { GetMe } from 'boluo-api';
+import type { GetMe } from 'api';
 import en from 'lang/compiled/en.json';
 import ja from 'lang/compiled/ja_JP.json';
 import zh_CN from 'lang/compiled/zh_CN.json';

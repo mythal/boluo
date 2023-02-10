@@ -1,7 +1,7 @@
-import type { Channel } from 'boluo-api';
-import { Hash } from 'boluo-icons';
-import { makeId } from 'boluo-utils';
+import type { Channel } from 'api';
+import { Hash } from 'icons';
 import type { FC } from 'react';
+import { makeId } from 'utils';
 import { useChatPaneDispatch } from '../../../state/panes';
 import { SidebarItem } from './SidebarItem';
 

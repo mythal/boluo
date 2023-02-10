@@ -1,6 +1,6 @@
-import type { SpaceWithMember } from 'boluo-api';
-import { unwrap } from 'boluo-utils';
+import type { SpaceWithMember } from 'api';
 import useSWR from 'swr';
+import { unwrap } from 'utils';
 import { get } from '../api/browser';
 import { useMe } from './useMe';
 

@@ -1,8 +1,8 @@
-import type { Channel } from 'boluo-api';
-import { makeId } from 'boluo-utils';
+import type { Channel } from 'api';
 import type { Dispatch, FC } from 'react';
 import { useCallback } from 'react';
 import { createContext, useContext, useReducer } from 'react';
+import { makeId } from 'utils';
 import type { ChildrenProps } from '../helper/props';
 import { useChannelList } from '../hooks/useChannelList';
 import type { Pane } from '../types/ChatPane';

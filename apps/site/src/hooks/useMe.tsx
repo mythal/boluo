@@ -1,8 +1,8 @@
-import type { GetMe } from 'boluo-api';
-import { unwrap } from 'boluo-utils';
+import type { GetMe } from 'api';
 import type { FC, ReactNode } from 'react';
 import React, { useContext } from 'react';
 import useSWR from 'swr';
+import { unwrap } from 'utils';
 import { get } from '../api/browser';
 
 const MeContext = React.createContext<GetMe | null>(null);

@@ -1,7 +1,7 @@
-import logoDev from 'boluo-logo/png/logo-dev.png';
-import logo from 'boluo-logo/png/logo.png';
-import logoDevSvg from 'boluo-logo/svg/logo-dev.svg';
-import logoSvg from 'boluo-logo/svg/logo.svg';
+import logoDev from 'logo/png/logo-dev.png';
+import logo from 'logo/png/logo.png';
+import logoDevSvg from 'logo/svg/logo-dev.svg';
+import logoSvg from 'logo/svg/logo.svg';
 import { IS_DEVELOPMENT } from '../const';
 import { getIntlSync } from '../helper/server';
 

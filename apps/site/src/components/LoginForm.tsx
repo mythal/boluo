@@ -1,5 +1,5 @@
 'use client';
-import type { ApiError } from 'boluo-api';
+import type { ApiError } from 'api';
 import { useRouter } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';

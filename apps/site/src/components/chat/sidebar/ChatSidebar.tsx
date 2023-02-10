@@ -1,6 +1,6 @@
-import type { Space } from 'boluo-api';
-import { ChevronLeft, ChevronRight } from 'boluo-icons';
+import type { Space } from 'api';
 import clsx from 'clsx';
+import { ChevronLeft, ChevronRight } from 'icons';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';

@@ -1,9 +1,9 @@
-import { makeId } from 'boluo-utils';
 import type { FC } from 'react';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button, TextInput } from 'ui';
+import { makeId } from 'utils';
 import { post } from '../../api/browser';
 import { useChatPaneDispatch, useClosePane } from '../../state/panes';
 import type { ChannelPane } from '../../types/ChatPane';

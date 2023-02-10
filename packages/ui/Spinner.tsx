@@ -1,5 +1,5 @@
-import { CircleNotch } from 'boluo-icons';
 import clsx from 'clsx';
+import { CircleNotch } from 'icons';
 import React from 'react';
 import Icon from './Icon';
 

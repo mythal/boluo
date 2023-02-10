@@ -1,4 +1,3 @@
-import type { Id } from 'boluo-utils';
 import type { CreateSpace } from 'server-bindings/CreateSpace';
 import type { EditSpace } from 'server-bindings/EditSpace';
 import type { KickFromSpace } from 'server-bindings/KickFromSpace';
@@ -10,6 +9,7 @@ import type { SpaceWithMember } from 'server-bindings/SpaceWithMember';
 import type { SpaceWithRelated } from 'server-bindings/SpaceWithRelated';
 import type { StatusKind } from 'server-bindings/StatusKind';
 import type { UserStatus } from 'server-bindings/UserStatus';
+import type { Id } from 'utils';
 
 export interface SpaceIdWithToken {
   spaceId: Id;

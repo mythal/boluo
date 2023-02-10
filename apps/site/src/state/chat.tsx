@@ -1,4 +1,4 @@
-import type { Channel, Event } from 'boluo-api';
+import type { Channel, Event } from 'api';
 import type { FC } from 'react';
 import { createContext as createReactContext, useCallback, useContext, useReducer } from 'react';
 import { createContext as createSelectorContext, useContextUpdate } from 'use-context-selector';

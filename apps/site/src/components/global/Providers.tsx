@@ -1,7 +1,7 @@
 'use client';
 
 import type { OnErrorFn } from '@formatjs/intl';
-import type { GetMe } from 'boluo-api';
+import type { GetMe } from 'api';
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { IntlProvider } from 'react-intl';

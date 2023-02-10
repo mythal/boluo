@@ -1,5 +1,5 @@
 {
-  "name": "boluo-api",
+  "name": "api",
   "version": "0.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,7 +10,7 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "boluo-utils": "*",
+    "utils": "*",
     "server-bindings": "*",
     "tsconfig": "*",
     "tslib": "^2.4.1"

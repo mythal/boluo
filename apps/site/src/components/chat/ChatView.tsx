@@ -1,4 +1,4 @@
-import type { Space } from 'boluo-api';
+import type { Space } from 'api';
 import type { FC } from 'react';
 import { useCallback, useState } from 'react';
 import { useMemo } from 'react';

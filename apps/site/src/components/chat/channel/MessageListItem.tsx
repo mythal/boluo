@@ -1,4 +1,4 @@
-import type { Message } from 'boluo-api';
+import type { Message } from 'api';
 import type { FC } from 'react';
 
 interface Props {

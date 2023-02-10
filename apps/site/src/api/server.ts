@@ -1,8 +1,8 @@
 import 'server-only';
-import type { ApiError, Get, Post } from 'boluo-api';
-import { makeUri } from 'boluo-api';
-import type { Result } from 'boluo-utils';
+import type { ApiError, Get, Post } from 'api';
+import { makeUri } from 'api';
 import { cookies } from 'next/headers';
+import type { Result } from 'utils';
 import { BACKEND_URL } from '../const';
 import { appFetch } from './common';
 

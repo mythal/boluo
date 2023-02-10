@@ -1,4 +1,4 @@
-import { Settings } from 'boluo-icons';
+import { Settings } from 'icons';
 import type { FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';

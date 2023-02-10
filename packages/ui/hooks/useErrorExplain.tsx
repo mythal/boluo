@@ -1,4 +1,4 @@
-import { isApiError } from 'boluo-api';
+import { isApiError } from 'api';
 import { useIntl } from 'react-intl';
 
 export const useErrorExplain = (error: unknown): string => {

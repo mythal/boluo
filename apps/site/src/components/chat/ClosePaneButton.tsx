@@ -1,4 +1,4 @@
-import { Close } from 'boluo-icons';
+import { Close } from 'icons';
 import type { FC } from 'react';
 import { useTransition } from 'react';
 import { useIntl } from 'react-intl';

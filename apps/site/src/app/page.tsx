@@ -1,4 +1,4 @@
-import { Logo } from 'boluo-logo';
+import { Logo } from 'logo';
 import Link from 'next/link';
 import HomePage from './HomePage';
 

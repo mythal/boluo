@@ -1,5 +1,5 @@
-import type { EditSpace, Space } from 'boluo-api';
-import { Settings } from 'boluo-icons';
+import type { EditSpace, Space } from 'api';
+import { Settings } from 'icons';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { useId } from 'react';

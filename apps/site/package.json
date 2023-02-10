@@ -20,7 +20,7 @@
     "@formatjs/intl": "^2.6.3",
     "@next/mdx": "^13.1.1",
     "api": "*",
-    "boluo-icons": "*",
+    "icons": "*",
     "boluo-logo": "*",
     "boluo-utils": "*",
     "clsx": "^1.2.1",

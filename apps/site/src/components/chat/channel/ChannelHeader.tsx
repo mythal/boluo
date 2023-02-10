@@ -1,5 +1,5 @@
-import { Hash, SplitHorizontal } from 'boluo-icons';
 import { makeId } from 'boluo-utils';
+import { Hash, SplitHorizontal } from 'icons';
 import type { FC } from 'react';
 import { useTransition } from 'react';
 import { useIntl } from 'react-intl';

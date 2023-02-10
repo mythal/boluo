@@ -1,6 +1,6 @@
 import * as BaseSelect from '@radix-ui/react-select';
-import { Check, ChevronUp } from 'boluo-icons';
 import clsx from 'clsx';
+import { Check, ChevronUp } from 'icons';
 import type { FC } from 'react';
 import Icon from './Icon';
 

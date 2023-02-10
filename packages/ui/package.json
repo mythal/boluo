@@ -39,7 +39,7 @@
     "@radix-ui/react-select": "^1.1.2",
     "@radix-ui/react-switch": "^1.0.1",
     "@radix-ui/react-toggle-group": "^1.0.1",
-    "boluo-icons": "*",
+    "icons": "*",
     "clsx": "^1.2.1",
     "react-intl": "^6.2.5",
     "tslib": "^2.4.1"

@@ -1,4 +1,4 @@
-import { HelpCircle, Settings } from 'boluo-icons';
+import { HelpCircle, Settings } from 'icons';
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from 'ui/Button';

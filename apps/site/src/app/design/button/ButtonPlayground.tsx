@@ -1,6 +1,6 @@
 'use client';
 
-import { Fairy } from 'boluo-icons';
+import { Fairy } from 'icons';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';

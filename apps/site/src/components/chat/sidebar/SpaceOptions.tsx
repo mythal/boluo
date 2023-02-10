@@ -1,6 +1,6 @@
 import type { Space } from 'api';
-import { ChevronDown, ChevronUp, Settings } from 'boluo-icons';
 import clsx from 'clsx';
+import { ChevronDown, ChevronUp, Settings } from 'icons';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';

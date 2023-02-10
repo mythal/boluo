@@ -22,7 +22,7 @@
     "api": "*",
     "icons": "*",
     "boluo-logo": "*",
-    "boluo-utils": "*",
+    "utils": "*",
     "clsx": "^1.2.1",
     "lang": "*",
     "next": "^13.1.1",

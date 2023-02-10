@@ -1,9 +1,9 @@
-import { makeId } from 'boluo-utils';
 import { Hash, SplitHorizontal } from 'icons';
 import type { FC } from 'react';
 import { useTransition } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from 'ui';
+import { makeId } from 'utils';
 import { useChannel } from '../../../hooks/useChannel';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useChatPaneDispatch, usePaneId } from '../../../state/panes';

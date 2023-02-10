@@ -1,6 +1,6 @@
 import type { SpaceWithRelated } from 'api';
-import { unwrap } from 'boluo-utils';
 import useSWR, { useSWRConfig } from 'swr';
+import { unwrap } from 'utils';
 import { get } from '../api/browser';
 
 const options = { revalidate: false };

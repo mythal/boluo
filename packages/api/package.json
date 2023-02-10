@@ -10,7 +10,7 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "boluo-utils": "*",
+    "utils": "*",
     "server-bindings": "*",
     "tsconfig": "*",
     "tslib": "^2.4.1"

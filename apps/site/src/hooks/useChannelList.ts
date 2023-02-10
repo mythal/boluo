@@ -1,4 +1,4 @@
-import type { Channel } from 'boluo-api';
+import type { Channel } from 'api';
 import { unwrap } from 'boluo-utils';
 import useSWR, { useSWRConfig } from 'swr';
 import { get } from '../api/browser';

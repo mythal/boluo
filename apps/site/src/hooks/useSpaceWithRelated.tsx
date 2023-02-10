@@ -1,4 +1,4 @@
-import type { SpaceWithRelated } from 'boluo-api';
+import type { SpaceWithRelated } from 'api';
 import { unwrap } from 'boluo-utils';
 import useSWR, { useSWRConfig } from 'swr';
 import { get } from '../api/browser';

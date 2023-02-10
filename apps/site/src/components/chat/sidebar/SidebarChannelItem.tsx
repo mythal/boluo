@@ -1,4 +1,4 @@
-import type { Channel } from 'boluo-api';
+import type { Channel } from 'api';
 import { Hash } from 'boluo-icons';
 import { makeId } from 'boluo-utils';
 import type { FC } from 'react';

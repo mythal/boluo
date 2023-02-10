@@ -1,5 +1,5 @@
-import type { ApiError, Get, Patch, Post } from 'boluo-api';
-import { makeUri } from 'boluo-api';
+import type { ApiError, Get, Patch, Post } from 'api';
+import { makeUri } from 'api';
 import type { Result } from 'boluo-utils';
 import { BACKEND_URL } from '../const';
 import { appFetch } from './common';

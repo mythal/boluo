@@ -1,4 +1,4 @@
-import type { Message } from 'boluo-api';
+import type { Message } from 'api';
 import { ChevronsDown } from 'boluo-icons';
 import type { FC } from 'react';
 import { useRef } from 'react';

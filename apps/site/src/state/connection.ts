@@ -1,4 +1,4 @@
-import type { Event } from 'boluo-api';
+import type { Event } from 'api';
 import { createContext, useEffect, useReducer, useRef, useState } from 'react';
 import { BACKEND_HOST } from '../const';
 

@@ -1,4 +1,4 @@
-import type { EditSpace, Space } from 'boluo-api';
+import type { EditSpace, Space } from 'api';
 import { Settings } from 'boluo-icons';
 import type { FC } from 'react';
 import { useState } from 'react';

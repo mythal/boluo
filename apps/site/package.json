@@ -19,7 +19,7 @@
     "@dnd-kit/utilities": "^3.2.1",
     "@formatjs/intl": "^2.6.3",
     "@next/mdx": "^13.1.1",
-    "boluo-api": "*",
+    "api": "*",
     "boluo-icons": "*",
     "boluo-logo": "*",
     "boluo-utils": "*",

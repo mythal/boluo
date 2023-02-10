@@ -1,5 +1,5 @@
 'use client';
-import type { GetMe } from 'boluo-api';
+import type { GetMe } from 'api';
 import { useState } from 'react';
 import { post } from '../../../api/browser';
 import { useChannelId } from '../../../hooks/useChannelId';

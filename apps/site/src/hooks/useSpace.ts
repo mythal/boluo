@@ -1,4 +1,4 @@
-import type { Space } from 'boluo-api';
+import type { Space } from 'api';
 import { unwrap } from 'boluo-utils';
 import useSWR from 'swr';
 import { get } from '../api/browser';

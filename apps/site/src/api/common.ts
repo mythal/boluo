@@ -1,5 +1,5 @@
-import type { ApiError, FetchFailError, NotJsonError, UnexpectedError } from 'boluo-api';
-import { isAppResponse } from 'boluo-api';
+import type { ApiError, FetchFailError, NotJsonError, UnexpectedError } from 'api';
+import { isAppResponse } from 'api';
 import type { Result } from 'boluo-utils';
 import { Ok } from 'boluo-utils';
 import { Err } from 'boluo-utils';

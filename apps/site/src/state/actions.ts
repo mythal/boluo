@@ -1,4 +1,4 @@
-import type { Message, SpaceWithRelated } from 'boluo-api';
+import type { Message, SpaceWithRelated } from 'api';
 
 export interface ReceiveMessage {
   type: 'RECEIVE_MESSAGE';

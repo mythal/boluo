@@ -1,4 +1,4 @@
-import type { Channel } from 'boluo-api';
+import type { Channel } from 'api';
 import { makeId } from 'boluo-utils';
 import type { Dispatch, FC } from 'react';
 import { useCallback } from 'react';

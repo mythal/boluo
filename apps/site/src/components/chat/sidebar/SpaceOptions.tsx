@@ -1,4 +1,4 @@
-import type { Space } from 'boluo-api';
+import type { Space } from 'api';
 import { ChevronDown, ChevronUp, Settings } from 'boluo-icons';
 import clsx from 'clsx';
 import type { FC } from 'react';

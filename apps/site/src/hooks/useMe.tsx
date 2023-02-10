@@ -1,4 +1,4 @@
-import type { GetMe } from 'boluo-api';
+import type { GetMe } from 'api';
 import { unwrap } from 'boluo-utils';
 import type { FC, ReactNode } from 'react';
 import React, { useContext } from 'react';

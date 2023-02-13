@@ -19,6 +19,7 @@ struct Init {
 }
 
 fn main() -> Result<(), anyhow::Error> {
+    dotenv::dotenv().ok();
     let opts: Opts = Opts::parse();
 
     match opts.subcmd {

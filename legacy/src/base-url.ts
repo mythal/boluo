@@ -3,7 +3,7 @@ import { LOCAL_BACKEND } from './settings';
 const STAGING_BASE_URL = 'https://staging.boluo.chat';
 export const baseUrlList = (() => {
   const { host } = window.location;
-  if (host.endsWith('stage.boluo.chat')) {
+  if (host.endsWith('staging.boluo.chat')) {
     return [
       STAGING_BASE_URL,
     ];

@@ -4,7 +4,7 @@ export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 export const IS_BROWSER = process.browser;
 export const IS_SAFARI = IS_BROWSER && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 export const IS_DEBUG = parseBool(process.env.NEXT_PUBLIC_DEBUG);
-export const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://stage.boluo.chat/api';
+export const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://staging.boluo.chat/api';
 export const BACKEND_HOST: string = (() => {
   const httpsPrefix = 'https://';
   const httpPrefix = 'http://';

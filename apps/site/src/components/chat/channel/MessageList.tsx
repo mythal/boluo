@@ -1,6 +1,9 @@
 import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { selectAtom } from 'jotai/utils';
 import type { FC } from 'react';
+import { useMemo } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
@@ -9,10 +12,8 @@ import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import { Button } from 'ui';
-import { useContextSelector } from 'use-context-selector';
 import { get } from '../../../api/browser';
-import type { ChannelState } from '../../../state/channel';
-import { ChatContext, useChatDispatch } from '../../../state/chat';
+import { chatAtom } from '../../../state/chat';
 import { MessageListHeader } from './MessageListHeader';
 import { MessageListItem } from './MessageListItem';
 
@@ -25,7 +26,6 @@ interface ViewProps {
   channelId: string;
   messages: Message[];
   className: string;
-  state: ChannelState['state'];
 }
 
 const START_INDEX = Number.MAX_SAFE_INTEGER - 10000000;
@@ -33,7 +33,7 @@ const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
 const LOAD_MESSAGE_LIMIT = 51;
 
 const MessageListView: FC<ViewProps> = ({ channelId, messages, className }) => {
-  const dispatch = useChatDispatch();
+  const dispatch = useSetAtom(chatAtom);
   const [finished, setFinished] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const showButtonTimeoutRef = useRef<number | undefined>(undefined);
@@ -105,9 +105,15 @@ const MessageListView: FC<ViewProps> = ({ channelId, messages, className }) => {
 };
 
 export const MessageList: FC<Props> = ({ channelId, className }) => {
-  const messages = useContextSelector(ChatContext, (state) => state.channels[channelId]?.messages);
-  const state = useContextSelector(ChatContext, (state) => state.channels[channelId]?.state);
-  if (state !== 'INITIALIZED' || messages === undefined) {
+  const messages = useAtomValue(useMemo(() =>
+    selectAtom(chatAtom, chat => {
+      if (chat.type !== 'SPACE' || !chat.context.initialized) {
+        return undefined;
+      }
+      return chat.channels[channelId]?.messages ?? [];
+    }), [channelId]));
+
+  if (messages === undefined) {
     return (
       <div className={className}>
         <FormattedMessage defaultMessage="Loading" />
@@ -117,7 +123,6 @@ export const MessageList: FC<Props> = ({ channelId, className }) => {
   return (
     <MessageListView
       messages={messages}
-      state={state}
       channelId={channelId}
       className={className}
     />

@@ -22,4 +22,33 @@ export interface MessagesLoaded {
   channelId: string;
 }
 
-export type Action = ReceiveMessage | Initialized | MessagesLoaded | SpaceUpdated;
+export interface Connected {
+  type: 'CONNECTED';
+  connection: WebSocket;
+  mailboxId: string;
+}
+
+export interface Connecting {
+  type: 'CONNECTING';
+  mailboxId: string;
+}
+
+export interface ConnectionClosed {
+  type: 'CONNECTION_CLOSED';
+  mailboxId: string;
+}
+
+export interface EnterSpace {
+  type: 'ENTER_SPACE';
+  spaceId: string;
+}
+
+export type Action =
+  | ReceiveMessage
+  | Initialized
+  | MessagesLoaded
+  | SpaceUpdated
+  | Connected
+  | ConnectionClosed
+  | Connecting
+  | EnterSpace;

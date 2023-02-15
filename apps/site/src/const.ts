@@ -17,3 +17,6 @@ export const BACKEND_HOST: string = (() => {
     return BACKEND_URL;
   }
 })();
+
+export const PING = '♥';
+export const PONG = '♡';

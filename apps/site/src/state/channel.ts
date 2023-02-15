@@ -1,14 +1,14 @@
 import type { Message } from 'api';
 import type { Action, MessagesLoaded, ReceiveMessage } from './actions';
+import type { ChatReducerContext } from './chat';
 
 export interface ChannelState {
   id: string;
-  state: 'UNINITIALIZED' | 'INITIALIZED';
   messages: Message[];
 }
 
 export const makeInitialChannelState = (id: string): ChannelState => {
-  return { id, state: 'UNINITIALIZED', messages: [] };
+  return { id, messages: [] };
 };
 
 const handleNewMessage = (state: ChannelState, action: ReceiveMessage): ChannelState => {
@@ -17,9 +17,6 @@ const handleNewMessage = (state: ChannelState, action: ReceiveMessage): ChannelS
 };
 
 const handleMessageLoaded = (state: ChannelState, action: MessagesLoaded): ChannelState => {
-  if (state.state === 'UNINITIALIZED') {
-    return state;
-  }
   const newMessages = [...action.messages].reverse();
   if (newMessages.length === 0) {
     return state;
@@ -35,14 +32,19 @@ const handleMessageLoaded = (state: ChannelState, action: MessagesLoaded): Chann
   return { ...state, messages };
 };
 
-export const channelReducer = (state: ChannelState, action: Action): ChannelState => {
+export const channelReducer = (
+  state: ChannelState,
+  action: Action,
+  { initialized }: ChatReducerContext,
+): ChannelState => {
   switch (action.type) {
     case 'RECEIVE_MESSAGE':
       return handleNewMessage(state, action);
-    case 'INITIALIZED':
-      return { ...state, state: 'INITIALIZED' };
     case 'MESSAGES_LOADED':
-      return handleMessageLoaded(state, action);
+      // This action is triggered by the user
+      // and should be ignored if the chat state
+      // has not been initialized.
+      return initialized ? handleMessageLoaded(state, action) : state;
     default:
       return state;
   }

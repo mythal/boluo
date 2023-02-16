@@ -83,7 +83,7 @@ const makeChatState = (spaceId: string): ChatState => ({
   },
 });
 
-const reducer: Reducer<ChatState, AppAction> = (state: ChatState, action: AppAction) => {
+const reducer: Reducer<ChatState, AppAction> = (state: ChatState, action: AppAction): ChatState => {
   console.debug(`action: ${action.type}`, action);
   if (action.type === 'enterSpace') {
     if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {
@@ -99,7 +99,7 @@ const reducer: Reducer<ChatState, AppAction> = (state: ChatState, action: AppAct
   }
   const { context } = state;
   if (action.type === 'initialized') {
-    return { ...state, initialized: true };
+    return { ...state, context: { ...context, initialized: true } };
   }
 
   const { channels, connection, ...rest } = state;
@@ -147,6 +147,7 @@ function isEvent(object: unknown): object is Event {
 
 store.sub(chatAtom, () => {
   const chatState = store.get(chatAtom);
+  // console.log('state', chatState);
   if (chatState.type !== 'SPACE') return;
   if (chatState.connection.type === 'CLOSED') {
     console.debug('start new connection');

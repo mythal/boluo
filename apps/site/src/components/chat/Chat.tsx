@@ -1,10 +1,9 @@
-import { useSetAtom } from 'jotai';
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui';
 import { useSpace } from '../../hooks/useSpace';
-import { chatAtom } from '../../state/chat';
+import { useDispatch } from '../../state/chat';
 import { PaneProvider, usePanes } from '../../state/panes';
 import { ChatView } from './ChatView';
 
@@ -15,8 +14,8 @@ interface Props {
 const Chat: FC<Props> = ({ spaceId }) => {
   const space = useSpace(spaceId);
   const { panes, dispatch, focused } = usePanes(spaceId);
-  const chatDispatch = useSetAtom(chatAtom);
-  useEffect(() => chatDispatch({ type: 'ENTER_SPACE', spaceId }), [chatDispatch, spaceId]);
+  const chatDispatch = useDispatch();
+  useEffect(() => chatDispatch('enterSpace', { spaceId }), [chatDispatch, spaceId]);
 
   return (
     <Suspense fallback={<Loading />}>

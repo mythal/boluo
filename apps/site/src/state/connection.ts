@@ -1,4 +1,4 @@
-import type { Action } from './actions';
+import type { AppAction } from './actions';
 import type { ChatReducerContext } from './chat';
 
 export interface Connected {
@@ -25,17 +25,17 @@ export const initialConnectionState: ConnectionState = {
 
 export const connectionReducer = (
   state: ConnectionState,
-  action: Action,
+  action: AppAction,
   { spaceId: mailboxId }: ChatReducerContext,
 ): ConnectionState => {
-  if (action.type === 'CONNECTED') {
-    if (mailboxId && action.mailboxId !== mailboxId) {
+  if (action.type === 'connected') {
+    if (mailboxId && action.payload.mailboxId !== mailboxId) {
       return state;
     }
-    return { type: 'CONNECTED', connection: action.connection };
+    return { type: 'CONNECTED', connection: action.payload.connection };
   }
-  if (action.type === 'CONNECTING') {
-    if (mailboxId && action.mailboxId !== mailboxId) {
+  if (action.type === 'connecting') {
+    if (mailboxId && action.payload.mailboxId !== mailboxId) {
       return state;
     }
     let retry = 0;
@@ -44,8 +44,8 @@ export const connectionReducer = (
     }
     return { type: 'CONNECTING', retry };
   }
-  if (action.type === 'CONNECTION_CLOSED') {
-    if (mailboxId && action.mailboxId !== mailboxId) {
+  if (action.type === 'connectionClosed') {
+    if (mailboxId && action.payload.mailboxId !== mailboxId) {
       return state;
     }
     let retry = 0;

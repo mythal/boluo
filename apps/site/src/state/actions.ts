@@ -1,54 +1,31 @@
 import type { Message, SpaceWithRelated } from 'api';
+import type { Empty } from '../helper/type';
 
-export interface ReceiveMessage {
-  type: 'RECEIVE_MESSAGE';
-  channelId: string;
-  message: Message;
+export type ActionMap = {
+  receiveMessage: { channelId: string; message: Message };
+  initialized: Empty;
+  enterSpace: { spaceId: string };
+  spaceUpdated: SpaceWithRelated;
+  messagesLoaded: { messages: Message[]; before: number | null; channelId: string };
+  connected: { connection: WebSocket; mailboxId: string };
+  connecting: { mailboxId: string };
+  connectionClosed: { mailboxId: string };
+};
+
+type MakeAction<ActionName> = ActionName extends keyof ActionMap ? {
+    type: ActionName;
+    payload: ActionMap[ActionName];
+  }
+  : never;
+
+export type AppAction = MakeAction<keyof ActionMap>;
+
+export type Action<T extends keyof ActionMap> = MakeAction<T>;
+
+export function makeAction<A extends AppAction>(type: A['type'], payload: A['payload']): A {
+  const action = {
+    type,
+    payload,
+  } as A;
+  return action;
 }
-
-export interface Initialized {
-  type: 'INITIALIZED';
-}
-
-export interface SpaceUpdated {
-  type: 'SPACE_UPDATED';
-  spaceWithRelated: SpaceWithRelated;
-}
-
-export interface MessagesLoaded {
-  type: 'MESSAGES_LOADED';
-  messages: Message[];
-  before: number | null;
-  channelId: string;
-}
-
-export interface Connected {
-  type: 'CONNECTED';
-  connection: WebSocket;
-  mailboxId: string;
-}
-
-export interface Connecting {
-  type: 'CONNECTING';
-  mailboxId: string;
-}
-
-export interface ConnectionClosed {
-  type: 'CONNECTION_CLOSED';
-  mailboxId: string;
-}
-
-export interface EnterSpace {
-  type: 'ENTER_SPACE';
-  spaceId: string;
-}
-
-export type Action =
-  | ReceiveMessage
-  | Initialized
-  | MessagesLoaded
-  | SpaceUpdated
-  | Connected
-  | ConnectionClosed
-  | Connecting
-  | EnterSpace;

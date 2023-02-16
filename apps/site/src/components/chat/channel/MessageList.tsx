@@ -1,6 +1,6 @@
 import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import type { FC } from 'react';
 import { useMemo } from 'react';
@@ -13,7 +13,7 @@ import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import { Button } from 'ui';
 import { get } from '../../../api/browser';
-import { chatAtom } from '../../../state/chat';
+import { chatAtom, useDispatch } from '../../../state/chat';
 import { MessageListHeader } from './MessageListHeader';
 import { MessageListItem } from './MessageListItem';
 
@@ -33,7 +33,7 @@ const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
 const LOAD_MESSAGE_LIMIT = 51;
 
 const MessageListView: FC<ViewProps> = ({ channelId, messages, className }) => {
-  const dispatch = useSetAtom(chatAtom);
+  const dispatch = useDispatch();
   const [finished, setFinished] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const showButtonTimeoutRef = useRef<number | undefined>(undefined);
@@ -57,7 +57,7 @@ const MessageListView: FC<ViewProps> = ({ channelId, messages, className }) => {
       setFinished(true);
     }
     setFirstItemIndex(prevFirstItemIndex => prevFirstItemIndex - newMessages.length);
-    dispatch({ type: 'MESSAGES_LOADED', before, channelId, messages: newMessages });
+    dispatch('messagesLoaded', { before, channelId, messages: newMessages });
   }, [channelId, dispatch, finished, messages]);
 
   // load initial messages.

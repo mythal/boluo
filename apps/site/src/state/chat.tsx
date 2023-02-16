@@ -1,6 +1,6 @@
 import type { Event } from 'api';
 import { useSetAtom } from 'jotai';
-import { atomWithReducer } from 'jotai/utils';
+import { atomWithReducer, selectAtom } from 'jotai/utils';
 import type { Reducer } from 'react';
 import { BACKEND_HOST, PING, PONG } from '../const';
 import type { Action, AppAction } from './actions';
@@ -28,6 +28,10 @@ interface SpaceChatState {
 }
 
 export type ChatState = EmptyChatState | SpaceChatState;
+
+export function isInitializedSpaceChat(chat: ChatState): chat is SpaceChatState {
+  return chat.type === 'SPACE' && chat.context.initialized;
+}
 
 const channelsReducer = (
   channels: SpaceChatState['channels'],
@@ -84,7 +88,7 @@ const makeChatState = (spaceId: string): ChatState => ({
 });
 
 const reducer: Reducer<ChatState, AppAction> = (state: ChatState, action: AppAction): ChatState => {
-  console.debug(`action: ${action.type}`, action);
+  console.debug(`action: ${action.type}`, action.payload);
   if (action.type === 'enterSpace') {
     if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {
       return state;
@@ -124,6 +128,13 @@ const eventToAction = (e: Event): AppAction | null => {
 };
 
 export const chatAtom = atomWithReducer<ChatState, AppAction>({ type: 'EMPTY' }, reducer);
+
+export const channelsAtom = selectAtom(chatAtom, (chatState) => {
+  if (!isInitializedSpaceChat(chatState)) {
+    return undefined;
+  }
+  return chatState.channels;
+});
 
 export type Dispatch = <A extends AppAction>(type: A['type'], payload: A['payload']) => void;
 

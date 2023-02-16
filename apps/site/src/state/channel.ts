@@ -4,11 +4,12 @@ import type { ChatReducerContext } from './chat';
 
 export interface ChannelState {
   id: string;
+  fullLoaded: boolean;
   messages: Message[];
 }
 
 export const makeInitialChannelState = (id: string): ChannelState => {
-  return { id, messages: [] };
+  return { id, messages: [], fullLoaded: false };
 };
 
 const handleNewMessage = (state: ChannelState, { payload }: Action<'receiveMessage'>): ChannelState => {
@@ -17,7 +18,11 @@ const handleNewMessage = (state: ChannelState, { payload }: Action<'receiveMessa
 };
 
 const handleMessageLoaded = (state: ChannelState, { payload }: Action<'messagesLoaded'>): ChannelState => {
+  const { fullLoaded } = payload;
   const newMessages = [...payload.messages].reverse();
+  if (fullLoaded !== state.fullLoaded) {
+    state = { ...state, fullLoaded };
+  }
   if (newMessages.length === 0) {
     return state;
   }

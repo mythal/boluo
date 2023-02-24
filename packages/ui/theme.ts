@@ -15,6 +15,9 @@ export const toTheme = (value: string): Theme => {
 };
 
 export const getThemeFromDom = (): Theme => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_THEME;
+  }
   const classList = window.document.documentElement.classList;
   if (classList.contains('system')) {
     return 'system';

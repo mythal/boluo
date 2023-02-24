@@ -20,6 +20,9 @@ export default function DesignLayout({
           <li>
             <Link href="/design/form">Form</Link>
           </li>
+          <li>
+            <Link href="/design/loading">Loading</Link>
+          </li>
         </ul>
       </header>
       <div>{children}</div>

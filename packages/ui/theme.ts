@@ -16,7 +16,6 @@ export const toTheme = (value: string): Theme => {
 
 export const getThemeFromDom = (): Theme => {
   const classList = window.document.documentElement.classList;
-  console.log(classList);
   if (classList.contains('system')) {
     return 'system';
   }

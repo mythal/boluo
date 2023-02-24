@@ -2,7 +2,7 @@ const path = require('path');
 const withMDX = require('@next/mdx')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
-const BACKEND_URL = process.env.NEXT_BACKEND_URL;
+const BACKEND_URL = process.env.NEXT_BACKEND_URL || 'https://staging.boluo.chat/api';
 
 /** @type {import('next').NextConfig} */
 const config = {

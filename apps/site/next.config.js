@@ -2,7 +2,7 @@ const path = require('path');
 const withMDX = require('@next/mdx')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
-const BACKEND_URL = process.env.BACKEND_PROXY_URL || 'https://boluo.chat/api';
+const BACKEND_URL = process.env.NEXT_BACKEND_URL;
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -17,6 +17,9 @@ const config = {
   experimental: {
     appDir: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
+  },
+  env: {
+    backendUrl: BACKEND_URL,
   },
   async rewrites() {
     return [

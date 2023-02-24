@@ -1,10 +1,14 @@
 import { parseBool } from './helper/env';
 
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
-export const IS_BROWSER = process.browser;
+export const IS_BROWSER = typeof window !== 'undefined';
 export const IS_SAFARI = IS_BROWSER && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 export const IS_DEBUG = parseBool(process.env.NEXT_PUBLIC_DEBUG);
-export const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://staging.boluo.chat/api';
+
+if (!process.env.backendUrl) {
+  throw new Error("Missing 'backendUrl' environment variable");
+}
+export const BACKEND_URL = process.env.backendUrl || '';
 export const BACKEND_HOST: string = (() => {
   const httpsPrefix = 'https://';
   const httpPrefix = 'http://';

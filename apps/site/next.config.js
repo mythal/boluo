@@ -16,6 +16,7 @@ const config = {
   transpilePackages: ['ui'],
   experimental: {
     appDir: true,
+    typedRoutes: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
   env: {

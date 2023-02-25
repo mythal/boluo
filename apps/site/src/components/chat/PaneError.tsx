@@ -17,7 +17,10 @@ export class PaneError extends Component<Props, State> {
     this.state = { error: undefined };
   }
   override componentDidCatch(error: unknown, errorInfo: ErrorInfo) {
-    console.error(errorInfo);
+    if (error instanceof Error) {
+      console.error(error);
+    }
+    console.debug(errorInfo);
   }
 
   static getDerivedStateFromError(error: unknown) {

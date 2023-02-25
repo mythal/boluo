@@ -18,7 +18,13 @@ const Chat: FC<Props> = ({ spaceId }) => {
   useEffect(() => chatDispatch('enterSpace', { spaceId }), [chatDispatch, spaceId]);
 
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense
+      fallback={
+        <div className="w-screen h-screen">
+          <Loading />
+        </div>
+      }
+    >
       <PaneProvider dispatch={dispatch} focused={focused}>
         <ChatView space={space} panes={panes} focused={focused} />
       </PaneProvider>

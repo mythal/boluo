@@ -8,9 +8,9 @@ import { useCallback } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
+import type { StyleProps } from 'utils';
 import { get } from '../api/browser';
 import { Me } from '../components/Me';
-import type { StyleProps } from '../helper/props';
 import { useMe } from '../hooks/useMe';
 import { useMySpaces } from '../hooks/useMySpaces';
 

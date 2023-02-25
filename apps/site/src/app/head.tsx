@@ -3,7 +3,7 @@ import logo from 'logo/png/logo.png';
 import logoDevSvg from 'logo/svg/logo-dev.svg';
 import logoSvg from 'logo/svg/logo.svg';
 import { IS_DEVELOPMENT } from '../const';
-import { getIntlSync } from '../helper/server';
+import { getIntlSync } from '../server';
 
 export default function Head() {
   const intl = getIntlSync();

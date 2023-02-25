@@ -5,7 +5,7 @@ import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
-import { toggle } from '../../../helper/function';
+import { toggle } from 'utils';
 import type { Pane } from '../../../types/ChatPane';
 import { ChatSidebarFooter } from './ChatSidebarFooter';
 import { SidebarChannelList } from './SidebarChannelList';

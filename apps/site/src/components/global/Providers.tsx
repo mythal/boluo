@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { IntlProvider } from 'react-intl';
 import { SWRConfig } from 'swr';
 import { clearWatchSystemTheme, watchSystemTheme } from 'ui/theme';
-import type { ChildrenProps } from '../../helper/props';
+import type { ChildrenProps } from 'utils';
 import { MeProvider } from '../../hooks/useMe';
 import type { IntlMessages, Locale } from '../../locale';
 import { defaultLocale } from '../../locale';

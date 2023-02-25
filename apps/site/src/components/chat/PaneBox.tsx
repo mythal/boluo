@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { ChildrenProps } from '../../helper/props';
+import type { ChildrenProps } from 'utils';
 
 interface Props extends ChildrenProps {
 }

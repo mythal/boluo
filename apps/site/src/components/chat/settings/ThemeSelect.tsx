@@ -6,8 +6,8 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import type { Theme } from 'ui';
 import { Select, setThemeToDom, useTheme } from 'ui';
+import { identity } from 'utils';
 import { patch } from '../../../api/browser';
-import { identity } from '../../../helper/function';
 import { useMe } from '../../../hooks/useMe';
 import type { Settings } from '../../../settings';
 

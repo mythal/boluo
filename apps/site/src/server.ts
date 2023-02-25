@@ -9,12 +9,12 @@ import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
 import type { Theme } from 'ui';
 import { toTheme } from 'ui/theme';
-import { get } from '../api/server';
-import type { IntlMessages, Locale } from '../locale';
-import { defaultLocale } from '../locale';
-import { localeList } from '../locale';
-import { toLocale } from '../locale';
-import { toSettings } from '../settings';
+import { get } from './api/server';
+import type { IntlMessages, Locale } from './locale';
+import { defaultLocale } from './locale';
+import { localeList } from './locale';
+import { toLocale } from './locale';
+import { toSettings } from './settings';
 
 export const getMe = cache(async (): Promise<GetMe | null> => {
   return (await get('/users/get_me', null)).unwrapOr(null);

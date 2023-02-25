@@ -3,7 +3,7 @@ import type { Dispatch, FC } from 'react';
 import { useCallback } from 'react';
 import { createContext, useContext, useReducer } from 'react';
 import { makeId } from 'utils';
-import type { ChildrenProps } from '../helper/props';
+import type { ChildrenProps } from 'utils';
 import { useChannelList } from '../hooks/useChannelList';
 import type { Pane } from '../types/ChatPane';
 

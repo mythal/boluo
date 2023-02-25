@@ -78,8 +78,9 @@ const useInitialMessages = (messageCount: number) => {
   const isFullLoaded = useIsFullLoaded();
   const channelId = useChannelId();
   const dispatch = useDispatch();
+  const shouldFetch = messageCount === 0 && !isFullLoaded;
   return useSWRImmutable(
-    messageCount !== 0 || isFullLoaded ? null : 'loadmore',
+    shouldFetch ? ['/messages/by_channel', channelId] : null,
     async () => await fetchNewMessage(channelId),
     {
       onSuccess: (newMessages) => {

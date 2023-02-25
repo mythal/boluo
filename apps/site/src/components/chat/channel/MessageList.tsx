@@ -3,82 +3,148 @@ import { ChevronsDown } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import type { FC } from 'react';
-import { useMemo } from 'react';
+import { Suspense } from 'react';
+import React, { useMemo } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
-import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
-import { Button } from 'ui';
+import useSWRImmutable from 'swr/immutable';
+import { Button, Loading } from 'ui';
+import { unwrap } from 'utils';
 import { get } from '../../../api/browser';
+import { useChannelId } from '../../../hooks/useChannelId';
 import type { ChannelState } from '../../../state/channel';
 import { makeInitialChannelState } from '../../../state/channel';
 import type { ChatState } from '../../../state/chat';
 import { chatAtom, useDispatch } from '../../../state/chat';
-import { MessageListHeader } from './MessageListHeader';
 import { MessageListItem } from './MessageListItem';
 
 interface Props {
-  channelId: string;
   className: string;
 }
 
 interface ViewProps {
-  channelId: string;
-  messages?: Message[];
+  messages: Message[];
   className?: string;
-  fullLoaded?: boolean;
 }
 
 const START_INDEX = Number.MAX_SAFE_INTEGER - 10000000;
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
 const LOAD_MESSAGE_LIMIT = 51;
 
-const MessageListView: FC<ViewProps> = ({ channelId, messages = [], className = '', fullLoaded = false }) => {
+const MessagesListLoading = () => {
+  return (
+    <div className="w-full h-full">
+      <Loading />
+    </div>
+  );
+};
+
+export const MessageListHeader: FC = () => {
+  const isFullLoaded = useIsFullLoaded();
+  return (
+    <div className="h-12 flex items-center justify-center select-none not-sr-only text-surface-300">
+      {isFullLoaded ? 'Ω' : '...'}
+    </div>
+  );
+};
+
+const useMessages = (): Message[] | undefined => {
+  const channelId = useChannelId();
+  const maybeMessagesAtom = useMemo(
+    () => selectAtom(chatAtom, chat => getChannel(chat, channelId)?.messages),
+    [channelId],
+  );
+  return useAtomValue(maybeMessagesAtom);
+};
+
+const useIsFullLoaded = (): boolean => {
+  const channelId = useChannelId();
+  const isFullLoadAtom = useMemo(
+    () => selectAtom(chatAtom, chat => getChannel(chat, channelId)?.fullLoaded),
+    [channelId],
+  );
+  return useAtomValue(isFullLoadAtom) || false;
+};
+
+const fetchNewMessage = (channelId: string, before: number | null = null): Promise<Message[]> => {
+  return get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT }).then(unwrap);
+};
+
+const useInitialMessages = (messageCount: number) => {
+  const isFullLoaded = useIsFullLoaded();
+  const channelId = useChannelId();
   const dispatch = useDispatch();
-  const [showButton, setShowButton] = useState(false);
-  const showButtonTimeoutRef = useRef<number | undefined>(undefined);
-  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
-  const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-  const loadMore = useCallback(async () => {
-    let before: number | null = null;
-    if (messages.length > 0) {
-      before = messages[0]!.pos;
-    }
-    const result = await get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
-    if (result.isErr) {
-      // TODO: show error
-      return;
-    }
-    const newMessages = result.some;
-    setFirstItemIndex(prevFirstItemIndex => prevFirstItemIndex - newMessages.length);
+  return useSWRImmutable(
+    messageCount !== 0 || isFullLoaded ? null : 'loadmore',
+    async () => await fetchNewMessage(channelId),
+    {
+      onSuccess: (newMessages) => {
+        dispatch('messagesLoaded', {
+          before: null,
+          channelId,
+          messages: newMessages,
+          fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
+        });
+      },
+    },
+  );
+};
+
+type OnNewMessage = (newMessages: Message[]) => void;
+
+const useLoadMore = (before: number | null, onNewMessage: OnNewMessage) => {
+  const channelId = useChannelId();
+  const dispatch = useDispatch();
+  return useCallback(async () => {
+    const newMessages = await fetchNewMessage(channelId, before);
     dispatch('messagesLoaded', {
       before,
       channelId,
       messages: newMessages,
       fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
     });
-  }, [channelId, dispatch, messages]);
+    onNewMessage(newMessages);
+  }, [before, channelId, dispatch, onNewMessage]);
+};
 
-  // load initial messages.
-  useEffect(() => {
-    if (messages.length === 0 && !fullLoaded) {
-      void loadMore();
-    }
-  }, [fullLoaded, loadMore, messages.length]);
+interface UseScrollToBottom {
+  showButton: boolean;
+  handleBottomStateChange: (bottom: boolean) => void;
+}
 
+const useScrollToBottom = (): UseScrollToBottom => {
+  // ref: https://virtuoso.dev/stick-to-bottom/
+  const [showButton, setShowButton] = useState(false);
+  const showButtonTimeoutRef = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(showButtonTimeoutRef.current));
-
-  const handleBottomStateChange = (bottom: boolean) => {
+  const handleBottomStateChange = useCallback((bottom: boolean) => {
     window.clearTimeout(showButtonTimeoutRef.current);
     if (bottom) {
       setShowButton(false);
     } else {
       showButtonTimeoutRef.current = window.setTimeout(() => setShowButton(true), SHOW_BOTTOM_BUTTON_TIMEOUT);
     }
-  };
+  }, []);
+  return { showButton, handleBottomStateChange };
+};
+
+const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
+  const isFullLoaded = useIsFullLoaded();
+  const messagesCount = messages.length;
+  const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
+  useInitialMessages(messagesCount);
+  const { showButton, handleBottomStateChange } = useScrollToBottom();
+
+  const onNewMessage = useCallback(
+    (newMessages: Message[]) => setFirstItemIndex(prevIndex => prevIndex - newMessages.length),
+    [],
+  );
+  const loadMore = useLoadMore(messages[0]?.pos ?? null, onNewMessage);
 
   return (
     <div className={className}>
@@ -86,17 +152,17 @@ const MessageListView: FC<ViewProps> = ({ channelId, messages = [], className = 
         firstItemIndex={firstItemIndex}
         ref={virtuosoRef}
         components={{ Header: MessageListHeader }}
-        initialTopMostItemIndex={messages.length - 1}
+        initialTopMostItemIndex={messagesCount - 1}
         data={messages}
-        totalCount={messages.length}
-        startReached={fullLoaded ? undefined : loadMore}
+        totalCount={messagesCount}
+        startReached={isFullLoaded ? undefined : loadMore}
         followOutput="auto"
         itemContent={(_, message) => <MessageListItem message={message} className="py-2 px-4" />}
         atBottomStateChange={handleBottomStateChange}
       />
       {showButton && (
         <Button
-          onClick={() => virtuosoRef.current!.scrollToIndex({ index: messages.length - 1, behavior: 'smooth' })}
+          onClick={() => virtuosoRef.current!.scrollToIndex({ index: messagesCount - 1, behavior: 'smooth' })}
           className="absolute right-6 bottom-4 text-lg"
         >
           <ChevronsDown />
@@ -111,26 +177,13 @@ const getChannel = (chatState: ChatState, channelId: string): ChannelState | und
   return chatState.channels[channelId] ?? makeInitialChannelState(channelId);
 };
 
-export const MessageList: FC<Props> = ({ channelId, className }) => {
-  const messages = useAtomValue(
-    useMemo(() => selectAtom(chatAtom, chat => getChannel(chat, channelId)?.messages), [channelId]),
-  );
-  const fullLoaded = useAtomValue(
-    useMemo(() => selectAtom(chatAtom, chat => getChannel(chat, channelId)?.fullLoaded), [channelId]),
-  );
-  if (messages === undefined) {
-    return (
-      <div className={className}>
-        <FormattedMessage defaultMessage="Loading" />
-      </div>
-    );
-  }
+export const MessageList: FC<Props> = ({ className }) => {
+  const messages = useMessages();
+  const loading = <MessagesListLoading />;
+  if (!messages) return loading;
   return (
-    <MessageListView
-      messages={messages}
-      channelId={channelId}
-      className={className}
-      fullLoaded={fullLoaded}
-    />
+    <Suspense fallback={loading}>
+      <MessageListView className={className} messages={messages} />
+    </Suspense>
   );
 };

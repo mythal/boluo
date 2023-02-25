@@ -1,9 +1,9 @@
 import { Refresh } from 'icons';
 import type { ReactNode } from 'react';
 import { useCallback } from 'react';
+import type { StyleProps } from 'utils';
 import { Button } from './Button';
 import Icon from './Icon';
-import type { StyleProps } from './types';
 
 interface Props extends StyleProps {
   small?: boolean;

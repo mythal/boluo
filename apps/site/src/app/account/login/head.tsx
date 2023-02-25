@@ -1,4 +1,4 @@
-import { getIntlSync, title } from '../../../helper/server';
+import { getIntlSync, title } from '../../../server';
 
 export default function Head() {
   const intl = getIntlSync();

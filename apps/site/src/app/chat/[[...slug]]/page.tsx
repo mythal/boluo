@@ -1,4 +1,4 @@
-import { isUuid } from '../../../helper/id';
+import { isUuid } from 'utils';
 import type { ChatRoute } from './ChatPage';
 import { ChatPage } from './ChatPage';
 import '../../../chat.css';

@@ -1,5 +1,5 @@
 import type { Message, SpaceWithRelated } from 'api';
-import type { Empty } from '../helper/type';
+import type { Empty } from 'utils';
 
 export type ActionMap = {
   receiveMessage: { channelId: string; message: Message };

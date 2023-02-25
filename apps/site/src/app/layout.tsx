@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import 'ui/tailwind.css';
 import { ClientProviders } from '../components/global/Providers';
-import { getLocale, getMe, getMessages, getTheme } from '../helper/server';
+import { getLocale, getMe, getMessages, getTheme } from '../server';
 
 export default async function RootLayout({
   children,

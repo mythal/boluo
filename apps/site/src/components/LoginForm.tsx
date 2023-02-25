@@ -10,8 +10,8 @@ import { useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button, Label, Oops, TextInput } from 'ui';
+import type { StyleProps } from 'utils';
 import { post } from '../api/browser';
-import type { StyleProps } from '../helper/props';
 import { required } from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/

@@ -191,9 +191,10 @@ store.sub(chatAtom, () => {
         return;
       }
       const action = eventToAction(event);
-      if (action) {
-        store.set(chatAtom, action);
+      if (!action) {
+        return;
       }
+      store.set(chatAtom, action);
     };
   }
 });

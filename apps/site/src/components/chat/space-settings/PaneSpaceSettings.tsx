@@ -8,7 +8,7 @@ import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Button, HelpText, Spinner, TextArea, TextInput } from 'ui';
-import type { ChildrenProps } from 'ui/types';
+import type { ChildrenProps } from 'utils';
 import { post } from '../../../api/browser';
 import { useSpace } from '../../../hooks/useSpace';
 import { useClosePane } from '../../../state/panes';

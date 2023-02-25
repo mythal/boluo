@@ -6,18 +6,20 @@
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "watch": "tsc --project tsconfig.json --watch",
     "lint": "eslint ./src/*.ts"
   },
   "license": "GPL-3.0",
   "dependencies": {
+    "react": "^18.2.0",
     "uuid": "^9.0.0"
   },
   "sideEffects": false,
   "devDependencies": {
     "@types/uuid": "^9.0.0",
-    "tsconfig": "*",
-    "typescript": "^4.9.4",
     "eslint": "^8.33.0",
-    "eslint-config-custom": "*"
+    "eslint-config-custom": "*",
+    "tsconfig": "*",
+    "typescript": "^4.9.4"
   }
 }

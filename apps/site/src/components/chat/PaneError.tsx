@@ -1,7 +1,7 @@
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
 import { Oops } from 'ui';
-import type { ChildrenProps, StyleProps } from '../../helper/props';
+import type { ChildrenProps, StyleProps } from 'utils';
 import { PaneBox } from './PaneBox';
 
 interface Props extends ChildrenProps, StyleProps {

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { FC, ReactNode } from 'react';
-import { stopPropagation } from '../../helper/browser';
+import { stopPropagation } from 'utils';
 import { useFocusPane, useIsFocused } from '../../state/panes';
 
 interface Props {

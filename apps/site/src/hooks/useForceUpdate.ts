@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { not } from '../helper/function';
+import { not } from 'utils';
 
 export function useForceUpdate() {
   const [, trigger] = useState(false);

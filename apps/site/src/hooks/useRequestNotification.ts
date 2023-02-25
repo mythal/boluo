@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { empty } from '../helper/function';
 
 interface Result {
   permission: typeof Notification.permission;

@@ -1,7 +1,6 @@
 'use client';
 
 import type { GetMe, Space } from 'api';
-import type { NextPage } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
@@ -73,7 +72,7 @@ const MySpaceList: FC = () => {
   return <div>{items}</div>;
 };
 
-const Home: NextPage = () => {
+const Home = () => {
   const me = useMe();
   return (
     <>

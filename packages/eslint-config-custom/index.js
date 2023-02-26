@@ -45,7 +45,7 @@ module.exports = {
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
-        '@typescript-eslint/no-misused-promises': 'warn',
+        '@typescript-eslint/no-misused-promises': 'off',
         '@typescript-eslint/prefer-regexp-exec': 'warn',
         '@typescript-eslint/prefer-includes': 'warn',
         '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'warn',

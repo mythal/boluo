@@ -1,8 +1,10 @@
+import { DataRef, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Suspense } from 'react';
 import React, { useMemo } from 'react';
 import { useRef } from 'react';
@@ -133,6 +135,13 @@ const useScrollToBottom = (): UseScrollToBottom => {
   return { showButton, handleBottomStateChange };
 };
 
+interface SortableData {
+  message: Message;
+  sortable: {
+    index: number;
+  };
+}
+
 const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   const isFullLoaded = useIsFullLoaded();
   const messagesCount = messages.length;
@@ -147,28 +156,50 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   );
   const loadMore = useLoadMore(messages[0]?.pos ?? null, onNewMessage);
 
+  const [active, setActive] = useState<[number, Message] | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const data = event.active.data as DataRef<SortableData>;
+    if (!data.current) return;
+    const { message, sortable } = data.current;
+    setActive([sortable.index, message]);
+  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    console.log(event);
+    setActive(null);
+  };
+
   return (
     <div className={className}>
-      <Virtuoso
-        firstItemIndex={firstItemIndex}
-        ref={virtuosoRef}
-        components={{ Header: MessageListHeader }}
-        initialTopMostItemIndex={messagesCount - 1}
-        data={messages}
-        totalCount={messagesCount}
-        startReached={isFullLoaded ? undefined : loadMore}
-        followOutput="auto"
-        itemContent={(_, message) => <MessageListItem message={message} className="py-2 px-4" />}
-        atBottomStateChange={handleBottomStateChange}
-      />
-      {showButton && (
-        <Button
-          onClick={() => virtuosoRef.current!.scrollToIndex({ index: messagesCount - 1, behavior: 'smooth' })}
-          className="absolute right-6 bottom-4 text-lg"
-        >
-          <ChevronsDown />
-        </Button>
-      )}
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <SortableContext items={messages} strategy={verticalListSortingStrategy}>
+          <Virtuoso
+            firstItemIndex={firstItemIndex}
+            ref={virtuosoRef}
+            components={{ Header: MessageListHeader }}
+            initialTopMostItemIndex={messagesCount - 1}
+            data={messages}
+            totalCount={messagesCount}
+            startReached={isFullLoaded ? undefined : loadMore}
+            followOutput="auto"
+            itemContent={(virtualIndex, message) => {
+              return <MessageListItem message={message} className="py-2 px-4" />;
+            }}
+            atBottomStateChange={handleBottomStateChange}
+          />
+          {showButton && (
+            <Button
+              onClick={() => virtuosoRef.current!.scrollToIndex({ index: messagesCount - 1, behavior: 'smooth' })}
+              className="absolute right-6 bottom-4 text-lg"
+            >
+              <ChevronsDown />
+            </Button>
+          )}
+        </SortableContext>
+        <DragOverlay>
+          {active && <MessageListItem message={active[1]} className="py-2 px-4" />}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 };

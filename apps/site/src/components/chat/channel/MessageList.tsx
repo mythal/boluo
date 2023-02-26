@@ -4,7 +4,7 @@ import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import type { FC, ReactNode } from 'react';
+import type { Dispatch, FC, ReactNode, SetStateAction } from 'react';
 import { Suspense } from 'react';
 import React, { useMemo } from 'react';
 import { useRef } from 'react';
@@ -36,6 +36,7 @@ interface ViewProps {
 const START_INDEX = Number.MAX_SAFE_INTEGER - 10000000;
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
 const LOAD_MESSAGE_LIMIT = 51;
+const OPTIMISTIC_REORDER_TIMEOUT = 100000;
 
 const MessagesListLoading = () => {
   return (
@@ -142,6 +143,52 @@ interface SortableData {
   };
 }
 
+interface OptimisticItem {
+  realIndex: number;
+  optimisticIndex: number;
+  message: Message;
+}
+
+interface UseOptimisticReorderResult {
+  optimisticReorder: OptimisticItem | null;
+  optimisticMessages: Message[];
+  setOptimisticReorder: Dispatch<SetStateAction<OptimisticItem | null>>;
+}
+
+const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult => {
+  const [optimisticReorder, setOptimisticReorder] = useState<OptimisticItem | null>(null);
+
+  // Reset the optimistic reorder when messages changed
+  if (optimisticReorder !== null) {
+    const message = messages[optimisticReorder.realIndex];
+    if (!message || message.id !== optimisticReorder.message.id) {
+      // Directly set state to avoid re-render
+      // https://beta.reactjs.org/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+      setOptimisticReorder(null);
+    }
+  }
+
+  // Reset the optimistic reorder after timeout
+  useEffect(() => {
+    if (optimisticReorder === null) return;
+    const timeout = window.setTimeout(() => setOptimisticReorder(null), OPTIMISTIC_REORDER_TIMEOUT);
+    return () => window.clearTimeout(timeout);
+  }, [optimisticReorder]);
+
+  const optimisticMessages = useMemo(() => {
+    if (optimisticReorder === null) return messages;
+    const { realIndex, optimisticIndex } = optimisticReorder;
+    if (realIndex === optimisticIndex) return messages;
+    // In the future, we can use more efficient way to reorder the array
+    const newMessages = [...messages];
+    newMessages.splice(realIndex, 1);
+    newMessages.splice(optimisticIndex, 0, optimisticReorder.message);
+    return newMessages;
+  }, [optimisticReorder, messages]);
+
+  return { optimisticMessages, optimisticReorder, setOptimisticReorder };
+};
+
 const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   const isFullLoaded = useIsFullLoaded();
   const messagesCount = messages.length;
@@ -150,9 +197,13 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   useInitialMessages(messagesCount);
   const { showButton, handleBottomStateChange } = useScrollToBottom();
 
+  const { optimisticMessages, optimisticReorder, setOptimisticReorder } = useOptimisticReorder(messages);
   const onNewMessage = useCallback(
-    (newMessages: Message[]) => setFirstItemIndex(prevIndex => prevIndex - newMessages.length),
-    [],
+    (newMessages: Message[]) => {
+      setFirstItemIndex(prevIndex => prevIndex - newMessages.length);
+      setOptimisticReorder(null);
+    },
+    [setOptimisticReorder],
   );
   const loadMore = useLoadMore(messages[0]?.pos ?? null, onNewMessage);
 
@@ -163,27 +214,48 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
     if (!data.current) return;
     const { message, sortable } = data.current;
     setActive([sortable.index, message]);
+    setOptimisticReorder(null);
   };
   const handleDragEnd = (event: DragEndEvent) => {
-    console.log(event);
+    if (active === null) return;
+    if (!event.over) {
+      return;
+    }
+    const overData = event.over.data as DataRef<SortableData>;
+    if (!overData.current) return;
+    const { sortable } = overData.current;
+    const realIndex = active[0];
+    const targetIndex = sortable.index;
+    if (realIndex === targetIndex) return;
+    setOptimisticReorder({
+      message: active[1],
+      realIndex: active[0],
+      optimisticIndex: targetIndex,
+    });
     setActive(null);
   };
 
   return (
     <div className={className}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <SortableContext items={messages} strategy={verticalListSortingStrategy}>
+        <SortableContext items={optimisticMessages} strategy={verticalListSortingStrategy}>
           <Virtuoso
             firstItemIndex={firstItemIndex}
             ref={virtuosoRef}
             components={{ Header: MessageListHeader }}
             initialTopMostItemIndex={messagesCount - 1}
-            data={messages}
+            data={optimisticMessages}
             totalCount={messagesCount}
             startReached={isFullLoaded ? undefined : loadMore}
             followOutput="auto"
             itemContent={(virtualIndex, message) => {
-              return <MessageListItem message={message} className="py-2 px-4" />;
+              const realIndex = virtualIndex - firstItemIndex;
+              return (
+                <MessageListItem
+                  message={message}
+                  optimistic={optimisticReorder?.optimisticIndex === realIndex}
+                />
+              );
             }}
             atBottomStateChange={handleBottomStateChange}
           />

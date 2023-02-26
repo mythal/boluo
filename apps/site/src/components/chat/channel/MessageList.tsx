@@ -36,7 +36,7 @@ interface ViewProps {
 const START_INDEX = Number.MAX_SAFE_INTEGER - 10000000;
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
 const LOAD_MESSAGE_LIMIT = 51;
-const OPTIMISTIC_REORDER_TIMEOUT = 100000;
+const OPTIMISTIC_REORDER_TIMEOUT = 2000;
 
 const MessagesListLoading = () => {
   return (

@@ -16,7 +16,7 @@ import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import type { Dispatch, FC, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, FC, SetStateAction } from 'react';
 import { Suspense } from 'react';
 import React, { useMemo } from 'react';
 import { useRef } from 'react';
@@ -193,7 +193,6 @@ const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult =
     if (optimisticReorder === null) return messages;
     const { realIndex, optimisticIndex } = optimisticReorder;
     if (realIndex === optimisticIndex) return messages;
-    // In the future, we can use more efficient way to reorder the array
     const newMessages = [...messages];
     const message = newMessages.splice(realIndex, 1)[0]!;
     newMessages.splice(optimisticIndex, 0, message);
@@ -266,6 +265,8 @@ const useDragHandles = (messages: Message[], setOptimisticReorder: SetOptimistic
 
 const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   const isFullLoaded = useIsFullLoaded();
+  const dispatch = useDispatch();
+  const channelId = useChannelId();
   const messagesCount = messages.length;
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const mouseSensor = useSensor(MouseSensor);
@@ -320,7 +321,12 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
                 />
               );
             }}
-            atBottomStateChange={handleBottomStateChange}
+            atBottomStateChange={(bottom) => {
+              handleBottomStateChange(bottom);
+              if (bottom) {
+                dispatch('reachBottom', { channelId });
+              }
+            }}
           />
           {showButton && (
             <Button

@@ -11,6 +11,7 @@ export type ActionMap = {
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };
   connectionClosed: { mailboxId: string };
+  reachBottom: { channelId: string };
 };
 
 type MakeAction<ActionName> = ActionName extends keyof ActionMap ? {

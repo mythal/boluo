@@ -1,3 +1,4 @@
+import { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
 import { AppResponse, isAppResponse, makeUri } from './request';
 import type { Channel, ChannelMember, ChannelWithMember, CreateChannel } from './types/channels';
 import { GetMessagesByChannel, Message, NewMessage } from './types/messages';
@@ -32,6 +33,7 @@ export interface Post {
   '/spaces/delete': { payload: {}; query: { id: string }; result: Space };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
+  '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };
   // channels
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
 }

@@ -16,7 +16,7 @@ import { Virtuoso } from 'react-virtuoso';
 import useSWRImmutable from 'swr/immutable';
 import { Button, Loading } from 'ui';
 import { unwrap } from 'utils';
-import { get } from '../../../api/browser';
+import { get, post } from '../../../api/browser';
 import { useChannelId } from '../../../hooks/useChannelId';
 import type { ChannelState } from '../../../state/channel';
 import { makeInitialChannelState } from '../../../state/channel';
@@ -190,6 +190,7 @@ const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult =
 };
 
 const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
+  const channelId = useChannelId();
   const isFullLoaded = useIsFullLoaded();
   const messagesCount = messages.length;
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -216,23 +217,37 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
     setActive([sortable.index, message]);
     setOptimisticReorder(null);
   };
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (active === null) return;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    if (active === null || messagesCount < 2) return;
     if (!event.over) {
       return;
     }
     const overData = event.over.data as DataRef<SortableData>;
     if (!overData.current) return;
     const { sortable } = overData.current;
-    const realIndex = active[0];
+    const [realIndex, message] = active;
     const targetIndex = sortable.index;
     if (realIndex === targetIndex) return;
     setOptimisticReorder({
-      message: active[1],
-      realIndex: active[0],
+      message,
+      realIndex,
       optimisticIndex: targetIndex,
     });
     setActive(null);
+    let range: [number | null, number | null] | null = null;
+    if (realIndex < targetIndex) {
+      range = [messages[targetIndex]!.pos, null];
+    } else {
+      range = [null, messages[targetIndex]!.pos];
+    }
+    if (range) {
+      await post('/messages/move_between', null, {
+        channelId,
+        messageId: message.id,
+        range,
+      });
+    }
+    setOptimisticReorder(null);
   };
 
   return (

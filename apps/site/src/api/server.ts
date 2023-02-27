@@ -29,7 +29,7 @@ export async function get<P extends keyof Get>(
 
 export async function post<P extends keyof Post>(
   path: P,
-  payload: Post[P]['result'],
+  payload: Post[P]['payload'],
 ): Promise<Result<Post[P]['result'], ApiError>> {
   const url = BACKEND_URL + path;
 

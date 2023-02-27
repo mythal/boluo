@@ -7,6 +7,7 @@ export type ActionMap = {
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;
   messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
+  messageEdited: { message: Message; channelId: string };
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };
   connectionClosed: { mailboxId: string };

@@ -37,6 +37,14 @@ const handleMessageLoaded = (state: ChannelState, { payload }: Action<'messagesL
   return { ...state, messages };
 };
 
+const handleMessageEdited = (state: ChannelState, { payload }: Action<'messageEdited'>): ChannelState => {
+  const { message } = payload;
+  // TODO: Optimize this
+  const messages = state.messages.map((x) => (x.id === message.id ? message : x));
+  messages.sort((a, b) => a.pos - b.pos);
+  return { ...state, messages };
+};
+
 export const channelReducer = (
   state: ChannelState,
   action: AppAction,
@@ -45,6 +53,8 @@ export const channelReducer = (
   switch (action.type) {
     case 'receiveMessage':
       return handleNewMessage(state, action);
+    case 'messageEdited':
+      return handleMessageEdited(state, action);
     case 'messagesLoaded':
       // This action is triggered by the user
       // and should be ignored if the chat state

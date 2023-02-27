@@ -123,6 +123,8 @@ const eventToAction = (e: Event): AppAction | null => {
     return { 'type': 'initialized', payload: {} };
   } else if (e.body.type === 'SPACE_UPDATED') {
     return { 'type': 'spaceUpdated', payload: e.body.spaceWithRelated };
+  } else if (e.body.type === 'MESSAGE_EDITED') {
+    return { type: 'messageEdited', payload: e.body };
   }
   return null;
 };

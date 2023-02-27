@@ -1,4 +1,4 @@
-import { DataRef, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import { closestCenter, DataRef, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
@@ -15,7 +15,7 @@ import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import useSWRImmutable from 'swr/immutable';
 import { Button, Loading } from 'ui';
-import { unwrap } from 'utils';
+import { sleep, unwrap } from 'utils';
 import { get, post } from '../../../api/browser';
 import { useChannelId } from '../../../hooks/useChannelId';
 import type { ChannelState } from '../../../state/channel';
@@ -149,10 +149,12 @@ interface OptimisticItem {
   message: Message;
 }
 
+type SetOptimisticReorder = Dispatch<SetStateAction<OptimisticItem | null>>;
+
 interface UseOptimisticReorderResult {
   optimisticReorder: OptimisticItem | null;
   optimisticMessages: Message[];
-  setOptimisticReorder: Dispatch<SetStateAction<OptimisticItem | null>>;
+  setOptimisticReorder: SetOptimisticReorder;
 }
 
 const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult => {
@@ -181,16 +183,76 @@ const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult =
     if (realIndex === optimisticIndex) return messages;
     // In the future, we can use more efficient way to reorder the array
     const newMessages = [...messages];
-    newMessages.splice(realIndex, 1);
-    newMessages.splice(optimisticIndex, 0, optimisticReorder.message);
+    const message = newMessages.splice(realIndex, 1)[0]!;
+    newMessages.splice(optimisticIndex, 0, message);
     return newMessages;
   }, [optimisticReorder, messages]);
 
   return { optimisticMessages, optimisticReorder, setOptimisticReorder };
 };
 
-const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
+interface UseDragHandlesResult {
+  handleDragStart: (event: DragStartEvent) => void;
+  handleDragEnd: (event: DragEndEvent) => void;
+  active: [number, Message] | null;
+  clearActive: () => void;
+}
+
+const useDragHandles = (messages: Message[], setOptimisticReorder: SetOptimisticReorder): UseDragHandlesResult => {
   const channelId = useChannelId();
+  const [active, setActive] = useState<[number, Message] | null>(null);
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const data = event.active.data as DataRef<SortableData>;
+    if (!data.current) return;
+    const { message, sortable } = data.current;
+    setActive([sortable.index, message]);
+    setOptimisticReorder(null);
+  }, [setOptimisticReorder]);
+  const clearActive = useCallback(() => setActive(null), []);
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const messagesCount = messages.length;
+    if (active === null) return;
+    clearActive();
+    if (messagesCount < 2 || !event.over) {
+      return;
+    }
+    const overData = event.over.data as DataRef<SortableData>;
+    if (!overData.current) return;
+    const { sortable } = overData.current;
+    const [realIndex, message] = active;
+    const targetIndex = sortable.index;
+    if (realIndex === targetIndex) return;
+    clearActive();
+    setOptimisticReorder({
+      message,
+      realIndex,
+      optimisticIndex: targetIndex,
+    });
+    let range: [number | null, number | null] | null = null;
+    if (realIndex < targetIndex) {
+      range = [messages[targetIndex]!.pos, null];
+    } else {
+      range = [null, messages[targetIndex]!.pos];
+    }
+    if (range) {
+      const result = await post('/messages/move_between', null, {
+        channelId,
+        messageId: message.id,
+        range,
+      });
+      if (result.isErr) {
+        // TODO: handle error
+      }
+    }
+    setOptimisticReorder(null);
+  }, [messages, active, channelId, clearActive, setOptimisticReorder]);
+
+  return { handleDragStart, handleDragEnd, active, clearActive };
+};
+
+const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   const isFullLoaded = useIsFullLoaded();
   const messagesCount = messages.length;
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -208,51 +270,15 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   );
   const loadMore = useLoadMore(messages[0]?.pos ?? null, onNewMessage);
 
-  const [active, setActive] = useState<[number, Message] | null>(null);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const data = event.active.data as DataRef<SortableData>;
-    if (!data.current) return;
-    const { message, sortable } = data.current;
-    setActive([sortable.index, message]);
-    setOptimisticReorder(null);
-  };
-  const handleDragEnd = async (event: DragEndEvent) => {
-    if (active === null || messagesCount < 2) return;
-    if (!event.over) {
-      return;
-    }
-    const overData = event.over.data as DataRef<SortableData>;
-    if (!overData.current) return;
-    const { sortable } = overData.current;
-    const [realIndex, message] = active;
-    const targetIndex = sortable.index;
-    if (realIndex === targetIndex) return;
-    setOptimisticReorder({
-      message,
-      realIndex,
-      optimisticIndex: targetIndex,
-    });
-    setActive(null);
-    let range: [number | null, number | null] | null = null;
-    if (realIndex < targetIndex) {
-      range = [messages[targetIndex]!.pos, null];
-    } else {
-      range = [null, messages[targetIndex]!.pos];
-    }
-    if (range) {
-      await post('/messages/move_between', null, {
-        channelId,
-        messageId: message.id,
-        range,
-      });
-    }
-    setOptimisticReorder(null);
-  };
-
+  const { handleDragStart, handleDragEnd, active, clearActive } = useDragHandles(messages, setOptimisticReorder);
   return (
     <div className={className}>
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragCancel={clearActive}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <SortableContext items={optimisticMessages} strategy={verticalListSortingStrategy}>
           <Virtuoso
             firstItemIndex={firstItemIndex}
@@ -267,6 +293,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
               const realIndex = virtualIndex - firstItemIndex;
               return (
                 <MessageListItem
+                  key={message.id}
                   message={message}
                   optimistic={optimisticReorder?.optimisticIndex === realIndex}
                 />
@@ -283,7 +310,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
             </Button>
           )}
         </SortableContext>
-        <DragOverlay>
+        <DragOverlay zIndex={5}>
           {active && <MessageListItem message={active[1]} className="py-2 px-4" />}
         </DragOverlay>
       </DndContext>

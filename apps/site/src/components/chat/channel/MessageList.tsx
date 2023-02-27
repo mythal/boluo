@@ -1,4 +1,16 @@
-import { closestCenter, DataRef, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import {
+  closestCenter,
+  DataRef,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Message } from 'api';
 import { ChevronsDown } from 'icons';
@@ -256,6 +268,14 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   const isFullLoaded = useIsFullLoaded();
   const messagesCount = messages.length;
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+  const mouseSensor = useSensor(MouseSensor);
+  const touchSensor = useSensor(TouchSensor);
+  const keyboardSensor = useSensor(KeyboardSensor);
+  const sensors = useSensors(
+    mouseSensor,
+    touchSensor,
+    keyboardSensor,
+  );
   const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
   useInitialMessages(messagesCount);
   const { showButton, handleBottomStateChange } = useScrollToBottom();
@@ -274,6 +294,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
   return (
     <div className={className}>
       <DndContext
+        sensors={sensors}
         collisionDetection={closestCenter}
         onDragCancel={clearActive}
         onDragStart={handleDragStart}

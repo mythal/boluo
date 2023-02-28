@@ -27,21 +27,24 @@ import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import useSWRImmutable from 'swr/immutable';
 import { Button, Loading } from 'ui';
-import { sleep, unwrap } from 'utils';
+import { unwrap } from 'utils';
 import { get, post } from '../../../api/browser';
 import { useChannelId } from '../../../hooks/useChannelId';
 import type { ChannelState } from '../../../state/channel';
 import { makeInitialChannelState } from '../../../state/channel';
 import type { ChatState } from '../../../state/chat';
 import { chatAtom, useDispatch } from '../../../state/chat';
-import { MessageListItem } from './MessageListItem';
+import { chatListAtom } from '../../../state/chat-list';
+import { ChatItem } from '../../../types/chat-items';
+import { ChatItemMessage } from './ChatItemMessage';
+import { ChatItemSwitch } from './ChatItemSwitch';
 
 interface Props {
   className: string;
 }
 
 interface ViewProps {
-  messages: Message[];
+  chatList: ChatItem[];
   className?: string;
 }
 
@@ -50,7 +53,7 @@ const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
 const LOAD_MESSAGE_LIMIT = 51;
 const OPTIMISTIC_REORDER_TIMEOUT = 2000;
 
-const MessagesListLoading = () => {
+const ChatListLoading = () => {
   return (
     <div className="w-full h-full">
       <Loading />
@@ -58,7 +61,7 @@ const MessagesListLoading = () => {
   );
 };
 
-export const MessageListHeader: FC = () => {
+export const ChatListHeader: FC = () => {
   const isFullLoaded = useIsFullLoaded();
   return (
     <div className="h-12 flex items-center justify-center select-none not-sr-only text-surface-300">
@@ -67,13 +70,13 @@ export const MessageListHeader: FC = () => {
   );
 };
 
-const useMessages = (): Message[] | undefined => {
+const useChatList = (): ChatItem[] | undefined => {
   const channelId = useChannelId();
-  const maybeMessagesAtom = useMemo(
-    () => selectAtom(chatAtom, chat => getChannel(chat, channelId)?.messages),
+  const maybeChatListItem = useMemo(
+    () => selectAtom(chatListAtom, chatList => chatList[channelId]?.list),
     [channelId],
   );
-  return useAtomValue(maybeMessagesAtom);
+  return useAtomValue(maybeChatListItem);
 };
 
 const useIsFullLoaded = (): boolean => {
@@ -112,9 +115,17 @@ const useInitialMessages = (messageCount: number) => {
 
 type OnNewMessage = (newMessages: Message[]) => void;
 
-const useLoadMore = (before: number | null, onNewMessage: OnNewMessage) => {
+const useLoadMore = (chatList: ChatItem[], onNewMessage: OnNewMessage) => {
   const channelId = useChannelId();
   const dispatch = useDispatch();
+  const before: number | null = useMemo(() => {
+    for (const item of chatList) {
+      if (item.type === 'MESSAGE') {
+        return item.pos;
+      }
+    }
+    return null;
+  }, [chatList]);
   return useCallback(async () => {
     const newMessages = await fetchNewMessage(channelId, before);
     dispatch('messagesLoaded', {
@@ -165,17 +176,17 @@ type SetOptimisticReorder = Dispatch<SetStateAction<OptimisticItem | null>>;
 
 interface UseOptimisticReorderResult {
   optimisticReorder: OptimisticItem | null;
-  optimisticMessages: Message[];
+  optimisticChatList: ChatItem[];
   setOptimisticReorder: SetOptimisticReorder;
 }
 
-const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult => {
+const useOptimisticReorder = (chatList: ChatItem[]): UseOptimisticReorderResult => {
   const [optimisticReorder, setOptimisticReorder] = useState<OptimisticItem | null>(null);
 
   // Reset the optimistic reorder when messages changed
   if (optimisticReorder !== null) {
-    const message = messages[optimisticReorder.realIndex];
-    if (!message || message.id !== optimisticReorder.message.id) {
+    const item = chatList[optimisticReorder.realIndex];
+    if (!item || item.id !== optimisticReorder.message.id) {
       // Directly set state to avoid re-render
       // https://beta.reactjs.org/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
       setOptimisticReorder(null);
@@ -189,17 +200,17 @@ const useOptimisticReorder = (messages: Message[]): UseOptimisticReorderResult =
     return () => window.clearTimeout(timeout);
   }, [optimisticReorder]);
 
-  const optimisticMessages = useMemo(() => {
-    if (optimisticReorder === null) return messages;
+  const optimisticChatList = useMemo(() => {
+    if (optimisticReorder === null) return chatList;
     const { realIndex, optimisticIndex } = optimisticReorder;
-    if (realIndex === optimisticIndex) return messages;
-    const newMessages = [...messages];
+    if (realIndex === optimisticIndex) return chatList;
+    const newMessages = [...chatList];
     const message = newMessages.splice(realIndex, 1)[0]!;
     newMessages.splice(optimisticIndex, 0, message);
     return newMessages;
-  }, [optimisticReorder, messages]);
+  }, [optimisticReorder, chatList]);
 
-  return { optimisticMessages, optimisticReorder, setOptimisticReorder };
+  return { optimisticChatList, optimisticReorder, setOptimisticReorder };
 };
 
 interface UseDragHandlesResult {
@@ -209,7 +220,7 @@ interface UseDragHandlesResult {
   clearActive: () => void;
 }
 
-const useDragHandles = (messages: Message[], setOptimisticReorder: SetOptimisticReorder): UseDragHandlesResult => {
+const useDragHandles = (chatList: ChatItem[], setOptimisticReorder: SetOptimisticReorder): UseDragHandlesResult => {
   const channelId = useChannelId();
   const [active, setActive] = useState<[number, Message] | null>(null);
 
@@ -223,7 +234,7 @@ const useDragHandles = (messages: Message[], setOptimisticReorder: SetOptimistic
   const clearActive = useCallback(() => setActive(null), []);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const messagesCount = messages.length;
+    const messagesCount = chatList.length;
     if (active === null) return;
     clearActive();
     if (messagesCount < 2 || !event.over) {
@@ -243,9 +254,9 @@ const useDragHandles = (messages: Message[], setOptimisticReorder: SetOptimistic
     });
     let range: [number | null, number | null] | null = null;
     if (realIndex < targetIndex) {
-      range = [messages[targetIndex]!.pos, null];
+      range = [chatList[targetIndex]!.pos, null];
     } else {
-      range = [null, messages[targetIndex]!.pos];
+      range = [null, chatList[targetIndex]!.pos];
     }
     if (range) {
       const result = await post('/messages/move_between', null, {
@@ -258,16 +269,16 @@ const useDragHandles = (messages: Message[], setOptimisticReorder: SetOptimistic
       }
     }
     setOptimisticReorder(null);
-  }, [messages, active, channelId, clearActive, setOptimisticReorder]);
+  }, [chatList, active, channelId, clearActive, setOptimisticReorder]);
 
   return { handleDragStart, handleDragEnd, active, clearActive };
 };
 
-const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
+const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
   const isFullLoaded = useIsFullLoaded();
   const dispatch = useDispatch();
   const channelId = useChannelId();
-  const messagesCount = messages.length;
+  const totalCount = chatList.length;
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor);
@@ -278,10 +289,10 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
     keyboardSensor,
   );
   const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
-  useInitialMessages(messagesCount);
+  useInitialMessages(totalCount);
   const { showButton, handleBottomStateChange } = useScrollToBottom();
 
-  const { optimisticMessages, optimisticReorder, setOptimisticReorder } = useOptimisticReorder(messages);
+  const { optimisticChatList, optimisticReorder, setOptimisticReorder } = useOptimisticReorder(chatList);
   const onNewMessage = useCallback(
     (newMessages: Message[]) => {
       setFirstItemIndex(prevIndex => prevIndex - newMessages.length);
@@ -289,9 +300,9 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
     },
     [setOptimisticReorder],
   );
-  const loadMore = useLoadMore(messages[0]?.pos ?? null, onNewMessage);
+  const loadMore = useLoadMore(chatList, onNewMessage);
 
-  const { handleDragStart, handleDragEnd, active, clearActive } = useDragHandles(messages, setOptimisticReorder);
+  const { handleDragStart, handleDragEnd, active, clearActive } = useDragHandles(chatList, setOptimisticReorder);
   return (
     <div className={className}>
       <DndContext
@@ -301,23 +312,26 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={optimisticMessages} strategy={verticalListSortingStrategy}>
+        <SortableContext items={optimisticChatList} strategy={verticalListSortingStrategy}>
           <Virtuoso
             firstItemIndex={firstItemIndex}
             ref={virtuosoRef}
-            components={{ Header: MessageListHeader }}
-            initialTopMostItemIndex={messagesCount - 1}
-            data={optimisticMessages}
-            totalCount={messagesCount}
+            components={{ Header: ChatListHeader }}
+            initialTopMostItemIndex={totalCount - 1}
+            data={optimisticChatList}
+            totalCount={totalCount}
             startReached={isFullLoaded ? undefined : loadMore}
             followOutput="auto"
-            itemContent={(virtualIndex, message) => {
+            itemContent={(virtualIndex, chatItem) => {
               const realIndex = virtualIndex - firstItemIndex;
+              if (optimisticReorder?.optimisticIndex === realIndex) {
+                const { message } = optimisticReorder;
+                return <ChatItemMessage message={message} key={message.id} />;
+              }
               return (
-                <MessageListItem
-                  key={message.id}
-                  message={message}
-                  optimistic={optimisticReorder?.optimisticIndex === realIndex}
+                <ChatItemSwitch
+                  key={chatItem.id}
+                  chatItem={chatItem}
                 />
               );
             }}
@@ -330,15 +344,15 @@ const MessageListView: FC<ViewProps> = ({ className = '', messages }) => {
           />
           {showButton && (
             <Button
-              onClick={() => virtuosoRef.current!.scrollToIndex({ index: messagesCount - 1, behavior: 'smooth' })}
+              onClick={() => virtuosoRef.current!.scrollToIndex({ index: totalCount - 1, behavior: 'smooth' })}
               className="absolute right-6 bottom-4 text-lg"
             >
               <ChevronsDown />
             </Button>
           )}
         </SortableContext>
-        <DragOverlay zIndex={5}>
-          {active && <MessageListItem message={active[1]} className="py-2 px-4" />}
+        <DragOverlay zIndex={15}>
+          {active && <ChatItemMessage message={active[1]} className="py-2 px-4" />}
         </DragOverlay>
       </DndContext>
     </div>
@@ -350,13 +364,13 @@ const getChannel = (chatState: ChatState, channelId: string): ChannelState | und
   return chatState.channels[channelId] ?? makeInitialChannelState(channelId);
 };
 
-export const MessageList: FC<Props> = ({ className }) => {
-  const messages = useMessages();
-  const loading = <MessagesListLoading />;
-  if (!messages) return loading;
+export const ChatList: FC<Props> = ({ className }) => {
+  const chatList = useChatList();
+  const loading = <ChatListLoading />;
+  if (!chatList) return loading;
   return (
     <Suspense fallback={loading}>
-      <MessageListView className={className} messages={messages} />
+      <MessageListView className={className} chatList={chatList} />
     </Suspense>
   );
 };

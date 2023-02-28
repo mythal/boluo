@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
 import { useChannelList } from '../../../hooks/useChannelList';
 import { useChatPaneDispatch } from '../../../state/panes';
-import type { Pane } from '../../../types/ChatPane';
+import type { Pane } from '../../../types/chat-pane';
 import { SidebarChannelItem } from './SidebarChannelItem';
 
 interface Props {

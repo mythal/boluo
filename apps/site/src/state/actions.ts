@@ -1,33 +1,20 @@
-import type { Message, SpaceWithRelated } from 'api';
-import type { Empty } from 'utils';
-
-export type ActionMap = {
-  receiveMessage: { channelId: string; message: Message };
-  initialized: Empty;
-  enterSpace: { spaceId: string };
-  spaceUpdated: SpaceWithRelated;
-  messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
-  messageEdited: { message: Message; channelId: string };
-  connected: { connection: WebSocket; mailboxId: string };
-  connecting: { mailboxId: string };
-  connectionClosed: { mailboxId: string };
-  reachBottom: { channelId: string };
-};
-
-type MakeAction<ActionName> = ActionName extends keyof ActionMap ? {
+export type MakeAction<ActionMap extends Record<string, unknown>, ActionName, C = undefined> = ActionName extends
+  keyof ActionMap ? {
     type: ActionName;
     payload: ActionMap[ActionName];
+    context: C;
   }
   : never;
 
-export type AppAction = MakeAction<keyof ActionMap>;
-
-export type Action<T extends keyof ActionMap> = MakeAction<T>;
-
-export function makeAction<A extends AppAction>(type: A['type'], payload: A['payload']): A {
+export function makeAction<M extends Record<string, unknown>, A extends MakeAction<M, keyof M, C>, C>(
+  type: A['type'],
+  payload: A['payload'],
+  context: C,
+): A {
   const action = {
     type,
     payload,
+    context,
   } as A;
   return action;
 }

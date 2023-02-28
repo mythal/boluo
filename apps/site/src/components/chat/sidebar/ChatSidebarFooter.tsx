@@ -4,7 +4,7 @@ import { useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
 import { Indicator } from 'ui/Indicator';
 import { useChatPaneDispatch } from '../../../state/panes';
-import type { HelpPane, SettingsPane } from '../../../types/ChatPane';
+import type { HelpPane, SettingsPane } from '../../../types/chat-pane';
 
 interface Props {
   className?: string;

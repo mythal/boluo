@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useChatPaneDispatch } from '../../../state/panes';
-import type { Pane, SpaceSettingsPane } from '../../../types/ChatPane';
+import type { Pane, SpaceSettingsPane } from '../../../types/chat-pane';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {

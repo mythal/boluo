@@ -1,16 +1,17 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Message } from 'api';
+import { Message } from 'api';
 import clsx from 'clsx';
 import type { FC } from 'react';
 import { MessageReorderHandle } from './MessageReorderHandle';
+
 interface Props {
   message: Message;
   optimistic?: boolean;
   className?: string;
 }
 
-export const MessageListItem: FC<Props> = ({ message, className = '', optimistic = false }) => {
+export const ChatItemMessage: FC<Props> = ({ message, className = '', optimistic = false }) => {
   const {
     attributes,
     listeners,

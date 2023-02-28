@@ -5,7 +5,7 @@ import { createContext, useContext, useReducer } from 'react';
 import { makeId } from 'utils';
 import type { ChildrenProps } from 'utils';
 import { useChannelList } from '../hooks/useChannelList';
-import type { Pane } from '../types/ChatPane';
+import type { Pane } from '../types/chat-pane';
 
 export interface AddPane {
   type: 'ADD_PANE';

@@ -6,7 +6,7 @@ import { Compose } from '../compose/Compose';
 import { GuestCompose } from '../compose/GuestCompose';
 import { PaneBodyBox } from '../PaneBodyBox';
 import { ChannelHeader } from './ChannelHeader';
-import { MessageList } from './MessageList';
+import { ChatList } from './ChatList';
 
 interface Props {
 }
@@ -17,7 +17,7 @@ export const ChatPaneChannel: FC<Props> = memo(({}) => {
     <>
       <ChannelHeader />
       <PaneBodyBox className={clsx('flex-col justify-between flex')}>
-        <MessageList className="relative flex-grow" />
+        <ChatList className="relative flex-grow" />
         {me
           ? <Compose me={me} className={clsx('m-2 max-h-[8rem]')} />
           : <GuestCompose />}

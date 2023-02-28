@@ -32,7 +32,8 @@ pub struct Preview {
     pub edit_for: Option<DateTime<Utc>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviewPost {
     pub id: Uuid,
@@ -44,6 +45,7 @@ pub struct PreviewPost {
     pub text: Option<String>,
     #[serde(default)]
     pub clear: bool,
+    #[ts(type = "Array<unknown>")]
     pub entities: Vec<JsonValue>,
     #[serde(default)]
     pub edit_for: Option<DateTime<Utc>>,

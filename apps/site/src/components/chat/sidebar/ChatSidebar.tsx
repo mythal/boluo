@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
 import { toggle } from 'utils';
-import type { Pane } from '../../../types/ChatPane';
+import type { Pane } from '../../../types/chat-pane';
 import { ChatSidebarFooter } from './ChatSidebarFooter';
 import { SidebarChannelList } from './SidebarChannelList';
 import { SpaceOptions } from './SpaceOptions';

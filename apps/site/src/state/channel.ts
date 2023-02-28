@@ -1,29 +1,33 @@
-import type { Message } from 'api';
-import type { Action, AppAction } from './actions';
-import type { ChatReducerContext } from './chat';
+import { MessageItem, posCompare, PreviewItem } from '../types/chat-items';
+import type { ChatAction, ChatActionUnion, ChatReducerContext } from './chat';
 
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
-  messages: Message[];
+  messages: MessageItem[];
+  previewMap: Record<string, PreviewItem>; // Key: User ID
 }
 
 export const makeInitialChannelState = (id: string): ChannelState => {
-  return { id, messages: [], fullLoaded: false };
+  return { id, messages: [], fullLoaded: false, previewMap: {} };
 };
 
-const handleNewMessage = (state: ChannelState, { payload }: Action<'receiveMessage'>): ChannelState => {
-  const messages = state.messages.concat([payload.message]);
+const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
+  const messages = state.messages.concat([{ ...payload.message, type: 'MESSAGE' }]);
+  messages.sort(posCompare);
   return { ...state, messages };
 };
 
-const handleMessageLoaded = (state: ChannelState, { payload }: Action<'messagesLoaded'>): ChannelState => {
+const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
   const { fullLoaded } = payload;
-  const newMessages = [...payload.messages].reverse();
+  const newMessages: MessageItem[] = [...payload.messages]
+    .reverse()
+    .map(message => ({ ...message, type: 'MESSAGE' }));
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
   }
   if (newMessages.length === 0) {
+    console.log('Received empty messages list');
     return state;
   }
   if (state.messages.length === 0) {
@@ -31,26 +35,38 @@ const handleMessageLoaded = (state: ChannelState, { payload }: Action<'messagesL
   }
   const firstMessage = state.messages[0]!;
   if (firstMessage.pos <= newMessages[0]!.pos) {
+    console.warn('Received messages that are older than the ones already loaded');
     return state;
   }
   const messages = newMessages.concat(state.messages);
   return { ...state, messages };
 };
 
-const handleMessageEdited = (state: ChannelState, { payload }: Action<'messageEdited'>): ChannelState => {
-  const { message } = payload;
+const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
+  const message: MessageItem = { ...payload.message, type: 'MESSAGE' };
   // TODO: Optimize this
   const messages = state.messages.map((x) => (x.id === message.id ? message : x));
-  messages.sort((a, b) => a.pos - b.pos);
+  messages.sort(posCompare);
   return { ...state, messages };
+};
+
+const handleMessagePreview = (
+  state: ChannelState,
+  { payload: { preview } }: ChatAction<'messagePreview'>,
+): ChannelState => {
+  let { previewMap } = state;
+  previewMap = { ...previewMap, [preview.senderId]: { ...preview, type: 'PREVIEW' } };
+  return { ...state, previewMap };
 };
 
 export const channelReducer = (
   state: ChannelState,
-  action: AppAction,
+  action: ChatActionUnion,
   { initialized }: ChatReducerContext,
 ): ChannelState => {
   switch (action.type) {
+    case 'messagePreview':
+      return handleMessagePreview(state, action);
     case 'receiveMessage':
       return handleNewMessage(state, action);
     case 'messageEdited':
@@ -59,7 +75,7 @@ export const channelReducer = (
       // This action is triggered by the user
       // and should be ignored if the chat state
       // has not been initialized.
-      return initialized ? handleMessageLoaded(state, action) : state;
+      return initialized ? handleMessagesLoaded(state, action) : state;
     default:
       return state;
   }

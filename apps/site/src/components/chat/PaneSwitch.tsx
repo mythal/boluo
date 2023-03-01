@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { memo, Suspense } from 'react';
 import { ChannelIdContext } from '../../hooks/useChannelId';
 import { PaneIdProvider } from '../../state/panes';
-import type { Pane } from '../../types/ChatPane';
+import type { Pane } from '../../types/chat-pane';
 import { ChatPaneChannel } from './channel/ChannelPane';
 import { PaneCreateChannel } from './PaneCreateChannel';
 import { PaneEmpty } from './PaneEmpty';

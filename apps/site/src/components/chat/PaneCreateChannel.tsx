@@ -6,7 +6,7 @@ import { Button, TextInput } from 'ui';
 import { makeId } from 'utils';
 import { post } from '../../api/browser';
 import { useChatPaneDispatch, useClosePane } from '../../state/panes';
-import type { ChannelPane } from '../../types/ChatPane';
+import type { ChannelPane } from '../../types/chat-pane';
 import { DiceSelect } from '../DiceSelect';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBodyBox } from './PaneBodyBox';

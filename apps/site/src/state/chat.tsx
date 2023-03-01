@@ -1,15 +1,38 @@
-import type { Event } from 'api';
+import type { Event, Message, Preview, SpaceWithRelated } from 'api';
 import { useSetAtom } from 'jotai';
 import { atomWithReducer, selectAtom } from 'jotai/utils';
 import type { Reducer } from 'react';
+import { Empty } from 'utils';
 import { BACKEND_HOST, PING, PONG } from '../const';
-import type { Action, AppAction } from './actions';
-import { makeAction } from './actions';
+import { MakeAction, makeAction } from './actions';
 import type { ChannelState } from './channel';
 import { channelReducer, makeInitialChannelState } from './channel';
 import type { ConnectionState } from './connection';
 import { connectionReducer, initialConnectionState } from './connection';
 import { store } from './store';
+
+export type ChatActionMap = {
+  receiveMessage: { channelId: string; message: Message };
+  initialized: Empty;
+  enterSpace: { spaceId: string };
+  spaceUpdated: SpaceWithRelated;
+  messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
+  messageEdited: { message: Message; channelId: string };
+  connected: { connection: WebSocket; mailboxId: string };
+  connecting: { mailboxId: string };
+  connectionClosed: { mailboxId: string };
+  reachBottom: { channelId: string };
+  setComposeSource: { channelId: string; source: string };
+  messagePreview: { channelId: string; preview: Preview };
+};
+
+export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
+
+export type ChatAction<T extends keyof ChatActionMap> = MakeAction<ChatActionMap, T>;
+
+export const makeChatAction = <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => {
+  return makeAction<ChatActionMap, A, undefined>(type, payload, undefined);
+};
 
 export interface ChatReducerContext {
   spaceId: string;
@@ -35,7 +58,7 @@ export function isInitializedSpaceChat(chat: ChatState): chat is SpaceChatState 
 
 const channelsReducer = (
   channels: SpaceChatState['channels'],
-  action: AppAction,
+  action: ChatActionUnion,
   context: ChatReducerContext,
 ): SpaceChatState['channels'] => {
   if ('channelId' in action.payload) {
@@ -53,7 +76,7 @@ const channelsReducer = (
 
 const handleSpaceUpdated = (
   state: ChatState,
-  { payload: spaceWithRelated }: Action<'spaceUpdated'>,
+  { payload: spaceWithRelated }: ChatAction<'spaceUpdated'>,
 ): SpaceChatState => {
   if (state.type === 'EMPTY') {
     state = {
@@ -87,7 +110,7 @@ const makeChatState = (spaceId: string): ChatState => ({
   },
 });
 
-const reducer: Reducer<ChatState, AppAction> = (state: ChatState, action: AppAction): ChatState => {
+const reducer: Reducer<ChatState, ChatActionUnion> = (state: ChatState, action: ChatActionUnion): ChatState => {
   console.debug(`action: ${action.type}`, action.payload);
   if (action.type === 'enterSpace') {
     if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {
@@ -115,21 +138,24 @@ const reducer: Reducer<ChatState, AppAction> = (state: ChatState, action: AppAct
   };
 };
 
-const eventToAction = (e: Event): AppAction | null => {
-  if (e.body.type === 'NEW_MESSAGE') {
-    const { channelId, message } = e.body;
-    return { type: 'receiveMessage', payload: { channelId, message } };
-  } else if (e.body.type === 'INITIALIZED') {
-    return { 'type': 'initialized', payload: {} };
-  } else if (e.body.type === 'SPACE_UPDATED') {
-    return { 'type': 'spaceUpdated', payload: e.body.spaceWithRelated };
-  } else if (e.body.type === 'MESSAGE_EDITED') {
-    return { type: 'messageEdited', payload: e.body };
+const eventToAction = (e: Event): ChatActionUnion | null => {
+  switch (e.body.type) {
+    case 'NEW_MESSAGE':
+      return makeChatAction('receiveMessage', { channelId: e.body.channelId, message: e.body.message });
+    case 'INITIALIZED':
+      return makeChatAction('initialized', {});
+    case 'SPACE_UPDATED':
+      return makeChatAction('spaceUpdated', e.body.spaceWithRelated);
+    case 'MESSAGE_EDITED':
+      return makeChatAction('messageEdited', e.body);
+    case 'MESSAGE_PREVIEW':
+      return makeChatAction('messagePreview', e.body);
+    default:
+      return null;
   }
-  return null;
 };
 
-export const chatAtom = atomWithReducer<ChatState, AppAction>({ type: 'EMPTY' }, reducer);
+export const chatAtom = atomWithReducer<ChatState, ChatActionUnion>({ type: 'EMPTY' }, reducer);
 
 export const channelsAtom = selectAtom(chatAtom, (chatState) => {
   if (!isInitializedSpaceChat(chatState)) {
@@ -138,11 +164,11 @@ export const channelsAtom = selectAtom(chatAtom, (chatState) => {
   return chatState.channels;
 });
 
-export type Dispatch = <A extends AppAction>(type: A['type'], payload: A['payload']) => void;
+export type Dispatch = <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => void;
 
 export const useDispatch = (): Dispatch => {
   const set = useSetAtom(chatAtom);
-  return <A extends AppAction>(type: A['type'], payload: A['payload']) => set(makeAction(type, payload));
+  return <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => set(makeChatAction(type, payload));
 };
 
 const createMailboxConnection = (id: string): WebSocket => {
@@ -165,13 +191,13 @@ store.sub(chatAtom, () => {
   if (chatState.connection.type === 'CLOSED') {
     console.debug('start new connection');
     const mailboxId = chatState.context.spaceId;
-    store.set(chatAtom, makeAction('connecting', { mailboxId }));
+    store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
     const newConnection = createMailboxConnection(mailboxId);
     newConnection.onopen = (_) => {
-      store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }));
+      store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }, undefined));
     };
     newConnection.onclose = (_) => {
-      store.set(chatAtom, makeAction('connectionClosed', { mailboxId }));
+      store.set(chatAtom, makeAction('connectionClosed', { mailboxId }, undefined));
     };
     newConnection.onmessage = (message: MessageEvent<unknown>) => {
       const raw = message.data;

@@ -1,7 +1,7 @@
 import type { Space } from 'api';
 import type { FC } from 'react';
 import { useMemo } from 'react';
-import type { Pane } from '../../types/ChatPane';
+import type { Pane } from '../../types/chat-pane';
 import { PaneEmpty } from './PaneEmpty';
 import { ChatPaneSwitch } from './PaneSwitch';
 import { ChatSiderbar } from './sidebar/ChatSidebar';

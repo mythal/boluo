@@ -25,7 +25,8 @@ pub struct EventQuery {
     pub token: Option<Uuid>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, TS)]
+#[ts(export)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "type")]
 pub enum ClientEvent {
     #[serde(rename_all = "camelCase")]

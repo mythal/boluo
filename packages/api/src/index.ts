@@ -54,5 +54,6 @@ export * from './types/channels';
 export * from './types/events';
 export * from './types/id';
 export * from './types/messages';
+export * from './types/preview';
 export * from './types/spaces';
 export * from './types/users';

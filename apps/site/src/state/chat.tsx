@@ -1,72 +1,46 @@
-import type { Event, Message, Preview, SpaceWithRelated } from 'api';
-import { useSetAtom } from 'jotai';
-import { atomWithReducer, selectAtom } from 'jotai/utils';
 import type { Reducer } from 'react';
-import { Empty } from 'utils';
-import { BACKEND_HOST, PING, PONG } from '../const';
-import { MakeAction, makeAction } from './actions';
+import { ChatAction, ChatActionUnion, makeChatAction } from './actions/chat';
 import type { ChannelState } from './channel';
 import { channelReducer, makeInitialChannelState } from './channel';
 import type { ConnectionState } from './connection';
 import { connectionReducer, initialConnectionState } from './connection';
-import { store } from './store';
-
-export type ChatActionMap = {
-  receiveMessage: { channelId: string; message: Message };
-  initialized: Empty;
-  enterSpace: { spaceId: string };
-  spaceUpdated: SpaceWithRelated;
-  messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
-  messageEdited: { message: Message; channelId: string };
-  connected: { connection: WebSocket; mailboxId: string };
-  connecting: { mailboxId: string };
-  connectionClosed: { mailboxId: string };
-  reachBottom: { channelId: string };
-  setComposeSource: { channelId: string; source: string };
-  messagePreview: { channelId: string; preview: Preview };
-};
-
-export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
-
-export type ChatAction<T extends keyof ChatActionMap> = MakeAction<ChatActionMap, T>;
-
-export const makeChatAction = <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => {
-  return makeAction<ChatActionMap, A, undefined>(type, payload, undefined);
-};
 
 export interface ChatReducerContext {
   spaceId: string;
   initialized: boolean;
 }
 
-interface EmptyChatState {
-  type: 'EMPTY';
-}
-
-interface SpaceChatState {
+export interface ChatSpaceState {
   type: 'SPACE';
   connection: ConnectionState;
   channels: Record<string, ChannelState>;
   context: ChatReducerContext;
 }
 
-export type ChatState = EmptyChatState | SpaceChatState;
-
-export function isInitializedSpaceChat(chat: ChatState): chat is SpaceChatState {
-  return chat.type === 'SPACE' && chat.context.initialized;
-}
+export const initialChatState: ChatSpaceState = {
+  type: 'SPACE',
+  connection: {
+    type: 'CLOSED',
+    retry: 0,
+  },
+  channels: {},
+  context: {
+    spaceId: '',
+    initialized: false,
+  },
+};
 
 const channelsReducer = (
-  channels: SpaceChatState['channels'],
+  channels: ChatSpaceState['channels'],
   action: ChatActionUnion,
   context: ChatReducerContext,
-): SpaceChatState['channels'] => {
+): ChatSpaceState['channels'] => {
   if ('channelId' in action.payload) {
     const { channelId } = action.payload;
     const channelState = channelReducer(channels[channelId] ?? makeInitialChannelState(channelId), action, context);
     return { ...channels, [channelId]: channelState };
   } else {
-    const nextChannels: SpaceChatState['channels'] = {};
+    const nextChannels: ChatSpaceState['channels'] = {};
     for (const channelState of Object.values(channels)) {
       nextChannels[channelState.id] = channelReducer(channelState, action, context);
     }
@@ -75,19 +49,12 @@ const channelsReducer = (
 };
 
 const handleSpaceUpdated = (
-  state: ChatState,
+  state: ChatSpaceState,
   { payload: spaceWithRelated }: ChatAction<'spaceUpdated'>,
-): SpaceChatState => {
-  if (state.type === 'EMPTY') {
-    state = {
-      type: 'SPACE',
-      channels: {},
-      connection: initialConnectionState,
-      context: {
-        initialized: false,
-        spaceId: spaceWithRelated.space.id,
-      },
-    };
+): ChatSpaceState => {
+  const spaceId = spaceWithRelated.space.id;
+  if (state.context.spaceId !== spaceId) {
+    state = { ...initialChatState, context: { initialized: false, spaceId } };
   }
   const channels = { ...state.channels };
   for (const channel of spaceWithRelated.channels) {
@@ -100,7 +67,7 @@ const handleSpaceUpdated = (
   return { ...state, channels };
 };
 
-const makeChatState = (spaceId: string): ChatState => ({
+const makeChatState = (spaceId: string): ChatSpaceState => ({
   type: 'SPACE',
   channels: {},
   connection: initialConnectionState,
@@ -110,7 +77,10 @@ const makeChatState = (spaceId: string): ChatState => ({
   },
 });
 
-const reducer: Reducer<ChatState, ChatActionUnion> = (state: ChatState, action: ChatActionUnion): ChatState => {
+export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
+  state: ChatSpaceState,
+  action: ChatActionUnion,
+): ChatSpaceState => {
   console.debug(`action: ${action.type}`, action.payload);
   if (action.type === 'enterSpace') {
     if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {
@@ -120,9 +90,6 @@ const reducer: Reducer<ChatState, ChatActionUnion> = (state: ChatState, action: 
   }
   if (action.type === 'spaceUpdated') {
     return handleSpaceUpdated(state, action);
-  }
-  if (state.type === 'EMPTY') {
-    return state;
   }
   const { context } = state;
   if (action.type === 'initialized') {
@@ -137,92 +104,3 @@ const reducer: Reducer<ChatState, ChatActionUnion> = (state: ChatState, action: 
     ...rest,
   };
 };
-
-const eventToAction = (e: Event): ChatActionUnion | null => {
-  switch (e.body.type) {
-    case 'NEW_MESSAGE':
-      return makeChatAction('receiveMessage', { channelId: e.body.channelId, message: e.body.message });
-    case 'INITIALIZED':
-      return makeChatAction('initialized', {});
-    case 'SPACE_UPDATED':
-      return makeChatAction('spaceUpdated', e.body.spaceWithRelated);
-    case 'MESSAGE_EDITED':
-      return makeChatAction('messageEdited', e.body);
-    case 'MESSAGE_PREVIEW':
-      return makeChatAction('messagePreview', e.body);
-    default:
-      return null;
-  }
-};
-
-export const chatAtom = atomWithReducer<ChatState, ChatActionUnion>({ type: 'EMPTY' }, reducer);
-
-export const channelsAtom = selectAtom(chatAtom, (chatState) => {
-  if (!isInitializedSpaceChat(chatState)) {
-    return undefined;
-  }
-  return chatState.channels;
-});
-
-export type Dispatch = <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => void;
-
-export const useDispatch = (): Dispatch => {
-  const set = useSetAtom(chatAtom);
-  return <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => set(makeChatAction(type, payload));
-};
-
-const createMailboxConnection = (id: string): WebSocket => {
-  const protocol = window.location.protocol === 'http:' ? 'ws:' : 'wss:';
-
-  return new WebSocket(`${protocol}//${BACKEND_HOST}/events/connect?mailbox=${id}`);
-};
-
-function isEvent(object: unknown): object is Event {
-  if (typeof object !== 'object' || object === null) {
-    return false;
-  }
-  return 'mailbox' in object && 'body' in object;
-}
-
-store.sub(chatAtom, () => {
-  const chatState = store.get(chatAtom);
-  // console.log('state', chatState);
-  if (chatState.type !== 'SPACE') return;
-  if (chatState.connection.type === 'CLOSED') {
-    console.debug('start new connection');
-    const mailboxId = chatState.context.spaceId;
-    store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
-    const newConnection = createMailboxConnection(mailboxId);
-    newConnection.onopen = (_) => {
-      store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }, undefined));
-    };
-    newConnection.onclose = (_) => {
-      store.set(chatAtom, makeAction('connectionClosed', { mailboxId }, undefined));
-    };
-    newConnection.onmessage = (message: MessageEvent<unknown>) => {
-      const raw = message.data;
-      if (raw === PING) {
-        newConnection.send(PONG);
-        return;
-      }
-      if (!raw || typeof raw !== 'string' || raw === PONG) {
-        return;
-      }
-
-      let event: unknown = null;
-      try {
-        event = JSON.parse(raw);
-      } catch {
-        return;
-      }
-      if (!isEvent(event)) {
-        return;
-      }
-      const action = eventToAction(event);
-      if (!action) {
-        return;
-      }
-      store.set(chatAtom, action);
-    };
-  }
-});

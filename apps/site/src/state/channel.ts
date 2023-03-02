@@ -1,5 +1,6 @@
 import { MessageItem, posCompare, PreviewItem } from '../types/chat-items';
-import type { ChatAction, ChatActionUnion, ChatReducerContext } from './chat';
+import { ChatAction, ChatActionUnion } from './actions/chat';
+import type { ChatReducerContext } from './chat';
 
 export interface ChannelState {
   id: string;

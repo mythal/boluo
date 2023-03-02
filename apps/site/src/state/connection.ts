@@ -1,6 +1,6 @@
-import { Atom } from 'jotai';
-import { selectAtom } from 'jotai/utils';
-import { ChatActionUnion, chatAtom, ChatReducerContext } from './chat';
+import { ChatActionUnion } from './actions/chat';
+import { chatAtom } from './atoms/chat';
+import { ChatReducerContext } from './chat';
 import { store } from './store';
 
 export interface Connected {
@@ -61,9 +61,6 @@ export const connectionReducer = (
 
 export const getConnection = (): WebSocket | null => {
   const chatState = store.get(chatAtom);
-  if (chatState.type === 'EMPTY') {
-    return null;
-  }
   if (chatState.connection.type !== 'CONNECTED') {
     return null;
   }

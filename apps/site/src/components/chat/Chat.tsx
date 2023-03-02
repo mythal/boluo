@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui';
 import { useSpace } from '../../hooks/useSpace';
-import { useDispatch } from '../../state/chat';
+import { useChatDispatch } from '../../state/atoms/chat';
 import { PaneProvider, usePanes } from '../../state/panes';
 import { ChatView } from './ChatView';
 
@@ -14,7 +14,7 @@ interface Props {
 const Chat: FC<Props> = ({ spaceId }) => {
   const space = useSpace(spaceId);
   const { panes, dispatch, focused } = usePanes(spaceId);
-  const chatDispatch = useDispatch();
+  const chatDispatch = useChatDispatch();
   useEffect(() => chatDispatch('enterSpace', { spaceId }), [chatDispatch, spaceId]);
 
   return (

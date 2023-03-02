@@ -1,16 +1,12 @@
 'use client';
-import type { ClientEvent, GetMe, PreviewPost } from 'api';
+import type { GetMe } from 'api';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { makeId } from 'utils';
+import { useCallback, useMemo, useRef } from 'react';
 import { post } from '../../../api/browser';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { composeAtomFamily, makeComposeAction } from '../../../state/compose';
-import { getConnection } from '../../../state/connection';
-import { store } from '../../../state/store';
-
-const SEND_PREVIEW_TIMEOUT = 250;
+import { makeComposeAction } from '../../../state/actions/compose';
+import { composeAtomFamily } from '../../../state/atoms/compose';
 
 interface Props {
   me: GetMe;
@@ -24,37 +20,6 @@ export const Compose = ({ me, className }: Props) => {
   const sourceAtom = useMemo(() => selectAtom(composeAtom, compose => compose.source), [composeAtom]);
   const source = useAtomValue(sourceAtom);
   const isCompositionRef = useRef(false);
-  const sendPreviewTimeoutRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => {
-    return store.sub(composeAtom, () => {
-      window.clearTimeout(sendPreviewTimeoutRef.current);
-      sendPreviewTimeoutRef.current = window.setTimeout(() => {
-        const compose = store.get(composeAtom);
-        if (!compose) return;
-        if (isCompositionRef.current) return;
-
-        const { inGame, isAction, source, previewId } = compose;
-        const preview: PreviewPost = {
-          id: previewId || makeId(),
-          channelId,
-          name: 'koppa',
-          mediaId: null,
-          inGame,
-          isAction,
-          text: source,
-          clear: false,
-          entities: [],
-          editFor: null,
-        };
-        const clientEvent: ClientEvent = { type: 'PREVIEW', preview };
-        const connection = getConnection();
-        if (connection) {
-          connection.send(JSON.stringify(clientEvent));
-        }
-      }, SEND_PREVIEW_TIMEOUT);
-    });
-  }, [channelId, composeAtom]);
 
   const setSource = useCallback(
     (source: string) => dispatch(makeComposeAction('setSource', { channelId, source })),

@@ -30,11 +30,11 @@ import { Button, Loading } from 'ui';
 import { unwrap } from 'utils';
 import { get, post } from '../../../api/browser';
 import { useChannelId } from '../../../hooks/useChannelId';
+import { chatAtom, useChatDispatch } from '../../../state/atoms/chat';
+import { chatListAtomFamily } from '../../../state/atoms/chat-list';
 import type { ChannelState } from '../../../state/channel';
 import { makeInitialChannelState } from '../../../state/channel';
-import type { ChatState } from '../../../state/chat';
-import { chatAtom, useDispatch } from '../../../state/chat';
-import { chatListAtom } from '../../../state/chat-list';
+import type { ChatSpaceState } from '../../../state/chat';
 import { ChatItem } from '../../../types/chat-items';
 import { ChatItemMessage } from './ChatItemMessage';
 import { ChatItemSwitch } from './ChatItemSwitch';
@@ -72,11 +72,7 @@ export const ChatListHeader: FC = () => {
 
 const useChatList = (): ChatItem[] | undefined => {
   const channelId = useChannelId();
-  const maybeChatListItem = useMemo(
-    () => selectAtom(chatListAtom, chatList => chatList[channelId]?.list),
-    [channelId],
-  );
-  return useAtomValue(maybeChatListItem);
+  return useAtomValue(useMemo(() => chatListAtomFamily(channelId), [channelId]))?.itemList;
 };
 
 const useIsFullLoaded = (): boolean => {
@@ -95,7 +91,7 @@ const fetchNewMessage = (channelId: string, before: number | null = null): Promi
 const useInitialMessages = (messageCount: number) => {
   const isFullLoaded = useIsFullLoaded();
   const channelId = useChannelId();
-  const dispatch = useDispatch();
+  const dispatch = useChatDispatch();
   const shouldFetch = messageCount === 0 && !isFullLoaded;
   return useSWRImmutable(
     shouldFetch ? ['/messages/by_channel', channelId] : null,
@@ -117,7 +113,7 @@ type OnNewMessage = (newMessages: Message[]) => void;
 
 const useLoadMore = (chatList: ChatItem[], onNewMessage: OnNewMessage) => {
   const channelId = useChannelId();
-  const dispatch = useDispatch();
+  const dispatch = useChatDispatch();
   const before: number | null = useMemo(() => {
     for (const item of chatList) {
       if (item.type === 'MESSAGE') {
@@ -276,7 +272,7 @@ const useDragHandles = (chatList: ChatItem[], setOptimisticReorder: SetOptimisti
 
 const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
   const isFullLoaded = useIsFullLoaded();
-  const dispatch = useDispatch();
+  const dispatch = useChatDispatch();
   const channelId = useChannelId();
   const totalCount = chatList.length;
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -359,7 +355,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
   );
 };
 
-const getChannel = (chatState: ChatState, channelId: string): ChannelState | undefined => {
+const getChannel = (chatState: ChatSpaceState, channelId: string): ChannelState | undefined => {
   if (chatState.type !== 'SPACE' || !chatState.context.initialized) return undefined;
   return chatState.channels[channelId] ?? makeInitialChannelState(channelId);
 };
@@ -367,7 +363,7 @@ const getChannel = (chatState: ChatState, channelId: string): ChannelState | und
 export const ChatList: FC<Props> = ({ className }) => {
   const chatList = useChatList();
   const loading = <ChatListLoading />;
-  if (!chatList) return loading;
+  if (chatList === undefined) return loading;
   return (
     <Suspense fallback={loading}>
       <MessageListView className={className} chatList={chatList} />

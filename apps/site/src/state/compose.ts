@@ -1,19 +1,5 @@
-import { atomFamily, atomWithReducer } from 'jotai/utils';
 import { makeId } from 'utils';
-import { MakeAction, makeAction } from './actions';
-import { getConnection } from './connection';
-import { store } from './store';
-
-export type ComposeActionMap = {
-  setSource: { channelId: string; source: string };
-};
-
-export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;
-export type ComposeAction<T extends keyof ComposeActionMap> = MakeAction<ComposeActionMap, T>;
-
-export const makeComposeAction = <A extends ComposeActionUnion>(type: A['type'], payload: A['payload']) => {
-  return makeAction<ComposeActionMap, A, undefined>(type, payload, undefined);
-};
+import { ComposeAction, ComposeActionUnion } from './actions/compose';
 
 export interface ComposeState {
   inputedName: string;
@@ -52,12 +38,3 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return state;
   }
 };
-
-export const composeAtomFamily = atomFamily((channelId: string) => {
-  const composeAtom = atomWithReducer(initialComposeState, composeReducer);
-  store.sub(composeAtom, () => {
-    const composeState = store.get(composeAtom);
-    const connection = getConnection();
-  });
-  return composeAtom;
-});

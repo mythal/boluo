@@ -6,11 +6,10 @@ import type { FC } from 'react';
 
 interface Props {
   preview: Preview;
-  optimistic?: boolean;
   className?: string;
 }
 
-export const ChatItemPreview: FC<Props> = ({ preview, className = '', optimistic = false }) => {
+export const ChatItemPreview: FC<Props> = ({ preview, className = '' }) => {
   const {
     setNodeRef,
     transform,
@@ -25,7 +24,7 @@ export const ChatItemPreview: FC<Props> = ({ preview, className = '', optimistic
 
   return (
     <div
-      className={clsx('py-2 px-2 flex items-center group gap-2', isDragging && 'opacity-0')}
+      className={clsx('py-2 px-2 flex items-center group gap-2', isDragging && 'opacity-0', className)}
       ref={setNodeRef}
       style={style}
     >

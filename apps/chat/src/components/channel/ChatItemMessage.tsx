@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Message } from 'api';
 import clsx from 'clsx';
 import type { FC } from 'react';
+import { useMe } from '../../../hooks/useMe';
 import { MessageReorderHandle } from './MessageReorderHandle';
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export const ChatItemMessage: FC<Props> = ({ message, className = '', optimistic = false }) => {
+  const me = useMe();
+  const disableDrag = me === null || message.senderId !== me.user.id;
   const {
     attributes,
     listeners,
@@ -19,7 +22,7 @@ export const ChatItemMessage: FC<Props> = ({ message, className = '', optimistic
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: message.id, data: { message } });
+  } = useSortable({ id: message.id, data: { message }, disabled: disableDrag || optimistic });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -32,7 +35,9 @@ export const ChatItemMessage: FC<Props> = ({ message, className = '', optimistic
       ref={setNodeRef}
       style={style}
     >
-      <MessageReorderHandle attributes={attributes} listeners={listeners} loading={optimistic} />
+      {disableDrag
+        ? <div className="w-6 h-6" />
+        : <MessageReorderHandle attributes={attributes} listeners={listeners} loading={optimistic} />}
       <span className="font-bold">{message.name}</span>: {message.text}
     </div>
   );

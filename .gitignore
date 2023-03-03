@@ -2,6 +2,7 @@
 
 /media
 .env
+.envrc
 
 # compiled output
 dist

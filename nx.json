@@ -7,13 +7,20 @@
   "targetDefaults": {
     "build": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "^gererate"
       ]
     },
     "dev": {
       "dependsOn": [
         "^build"
       ]
+    },
+    "generate": {
+      "dependsOn": []
+    },
+    "watch": {
+      "dependsOn": []
     },
     "lint": {
       "dependsOn": [
@@ -28,8 +35,8 @@
         "cacheableOperations": [
           "build",
           "lint",
-          "test",
-          "e2e"
+          "generate",
+          "test"
         ]
       }
     }

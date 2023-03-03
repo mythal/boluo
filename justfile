@@ -1,14 +1,14 @@
 alias fmt := format
 alias gen := generate
 
-build target="*":
-    npm exec nx run-many -- --target=build --projects={{target}}
+build projects="*":
+    npm exec nx run-many -- --target=build --projects={{projects}}
 
-lint target="*":
-    npm exec nx run-many -- --target=lint --projects={{target}}
+lint projects="*":
+    npm exec nx run-many -- --target=lint --projects={{projects}}
 
-dev target="*":
-    npm exec nx run-many -- --target=dev --projects={{target}}
+dev projects="*":
+    npm exec nx run-many -- --target=dev --projects={{projects}}
 
 graph:
     npm exec nx graph

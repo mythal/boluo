@@ -19,14 +19,16 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - uses: extractions/setup-just@v1
+
       - name: Install
-        run: npm install
+        run: just install
 
       - name: Lint
-        run: npm run lint
+        run: just lint
 
       - name: Build
-        run: npm run build
+        run: just build
         env:
           CI: true
 

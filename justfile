@@ -1,4 +1,5 @@
 alias fmt := format
+alias gen := generate
 
 build target="*":
     npm exec nx run-many -- --target=build --projects={{target}}
@@ -23,3 +24,6 @@ install:
 
 format:
     dprint fmt
+
+generate:
+    npm exec nx run-many -- --target=generate

@@ -4,8 +4,9 @@ alias gen := generate
 build projects="*":
     npm exec nx run-many -- --target=build --projects={{projects}}
 
-lint projects="*":
-    npm exec nx run-many -- --target=lint --projects={{projects}}
+lint:
+    npm exec nx run-many -- --target=lint
+    npm exec dprint check
 
 dev projects="*":
     npm exec nx run-many -- --target=dev --projects={{projects}}
@@ -23,7 +24,7 @@ install:
     npm install
 
 format:
-    dprint fmt
+    npm exec dprint fmt
 
 generate:
     npm exec nx run-many -- --target=generate

@@ -7,6 +7,6 @@
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "@formatjs/cli": "^5.1.12"
+    "@formatjs/cli": "^6.0.4"
   }
 }

@@ -17,6 +17,7 @@
     "**/dist/",
     "**/.next/",
     "**/compiled/",
+    "**/target/",
     "packages/logo/src/",
     "packages/icons/src/"
   ],

@@ -62,7 +62,7 @@
         };
 
         devShells.default = mkShell {
-          buildInputs = [ rust dprint nodejs nodePackages.pnpm just ]
+          buildInputs = [ rust nodejs just ]
             ++ securityFrameworks;
           nativeBuildInputs = [ pkgs.pkg-config ];
           PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";

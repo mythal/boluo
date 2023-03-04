@@ -2,14 +2,13 @@
   "name": "boluo",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {
-  },
+  "scripts": {},
   "private": true,
   "dependencies": {
-    "dprint": "^0.34.4"
+    "dprint": "^0.34.5"
   },
   "devDependencies": {
-    "nx": "15.6.3"
+    "nx": "^15.8.5"
   },
   "workspaces": [
     "packages/*",

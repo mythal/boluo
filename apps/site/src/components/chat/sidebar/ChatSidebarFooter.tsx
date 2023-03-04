@@ -2,9 +2,8 @@ import { HelpCircle, Settings } from 'icons';
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
-import { Indicator } from 'ui/Indicator';
 import { useChatPaneDispatch } from '../../../state/panes';
-import type { HelpPane, SettingsPane } from '../../../types/chat-pane';
+import { makePane, Pane } from '../../../types/chat-pane';
 
 interface Props {
   className?: string;
@@ -20,7 +19,7 @@ const SettingToggleButton: FC<{ on: boolean; isExpand: boolean }> = ({ on, isExp
   const label = on
     ? intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName })
     : intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName });
-  const pane: SettingsPane = { type: 'SETTINGS', id: 'settings' };
+  const pane: Pane = makePane({ type: 'SETTINGS' });
   return (
     <Button
       onClick={() => dispatch({ type: 'TOGGLE', pane })}
@@ -43,7 +42,7 @@ const HelpToggleButton: FC<{ on: boolean; isExpand: boolean }> = ({ on, isExpand
   const label = on
     ? intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName })
     : intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName });
-  const pane: HelpPane = { type: 'HELP', id: 'help' };
+  const pane: Pane = makePane({ type: 'HELP' });
   return (
     <Button
       onClick={() => dispatch({ type: 'TOGGLE', pane })}

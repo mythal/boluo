@@ -7,10 +7,11 @@ export interface ChannelState {
   fullLoaded: boolean;
   messages: MessageItem[];
   previewMap: Record<string, PreviewItem>; // Key: User ID
+  opened: boolean;
 }
 
 export const makeInitialChannelState = (id: string): ChannelState => {
-  return { id, messages: [], fullLoaded: false, previewMap: {} };
+  return { id, messages: [], fullLoaded: false, previewMap: {}, opened: false };
 };
 
 const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {

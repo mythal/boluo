@@ -77,19 +77,55 @@ const makeChatState = (spaceId: string): ChatSpaceState => ({
   },
 });
 
+const handleOpenedChannels = (
+  state: ChatSpaceState,
+  { payload: { channelIdSet: opendChannelIdSet } }: ChatAction<'panesChange'>,
+): ChatSpaceState => {
+  const channelIdList = Object.keys(state.channels);
+  if (
+    channelIdList.length === opendChannelIdSet.size
+    && channelIdList.every(id => opendChannelIdSet.has(id))
+  ) {
+    return state;
+  }
+  const channels = { ...state.channels };
+  for (const channelId of opendChannelIdSet) {
+    if (channelId in channels) {
+      const channelState = channels[channelId]!;
+      if (!channelState.opened) {
+        channels[channelId] = { ...channelState, opened: true };
+      }
+    } else {
+      const newChannelState = makeInitialChannelState(channelId);
+      newChannelState.opened = true;
+      channels[channelId] = newChannelState;
+    }
+  }
+  for (const channelId of channelIdList) {
+    if (!opendChannelIdSet.has(channelId)) {
+      const channelState = channels[channelId]!;
+      if (channelState.opened) {
+        channels[channelId] = { ...channelState, opened: false };
+      }
+    }
+  }
+  return { ...state, channels };
+};
+
 export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,
   action: ChatActionUnion,
 ): ChatSpaceState => {
   console.debug(`action: ${action.type}`, action.payload);
-  if (action.type === 'enterSpace') {
+  if (action.type === 'panesChange') {
+    return handleOpenedChannels(state, action);
+  } else if (action.type === 'spaceUpdated') {
+    return handleSpaceUpdated(state, action);
+  } else if (action.type === 'enterSpace') {
     if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {
       return state;
     }
     return makeChatState(action.payload.spaceId);
-  }
-  if (action.type === 'spaceUpdated') {
-    return handleSpaceUpdated(state, action);
   }
   const { context } = state;
   if (action.type === 'initialized') {

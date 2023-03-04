@@ -2,6 +2,7 @@ import { atomFamily, selectAtom } from 'jotai/utils';
 import { ChatItem, posCompare } from '../../types/chat-items';
 import { ChannelState, makeInitialChannelState } from '../channel';
 import { ChatSpaceState } from '../chat';
+import { store } from '../store';
 import { chatAtom } from './chat';
 
 export interface ChatListState {
@@ -26,7 +27,7 @@ export const chatListAtomFamily = atomFamily((channelId: string) =>
         return undefined;
       }
       let channelState = chat.channels[channelId];
-      if (channelState === previousListState?.channelState) {
+      if (previousListState && channelState === previousListState.channelState) {
         return previousListState;
       }
       channelState ||= makeInitialChannelState(channelId);
@@ -35,4 +36,13 @@ export const chatListAtomFamily = atomFamily((channelId: string) =>
     },
   )
 );
-// FIXME: Avoid memory leak https://jotai.org/docs/utilities/family#caveat-memory-leaks
+
+// Avoid memory leak
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+window.setInterval(() => {
+  const channels = store.get(chatAtom).channels;
+  chatListAtomFamily.setShouldRemove((_, channelId): boolean =>
+    !(channelId in channels) || channels[channelId]?.opened !== true
+  );
+  chatListAtomFamily.setShouldRemove(null);
+}, 10000);

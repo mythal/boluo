@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useChatPaneDispatch } from '../../../state/panes';
-import type { Pane, SpaceSettingsPane } from '../../../types/chat-pane';
+import { makePane, Pane, SpaceSettingsPane } from '../../../types/chat-pane';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 export const SpaceOptions: FC<Props> = ({ space, panes }) => {
   const dispatch = useChatPaneDispatch();
   const [folded, setFold] = useState(true);
-  const spaceSettingsPane: SpaceSettingsPane = { type: 'SPACE_SETTINGS', id: space.id, spaceId: space.id };
+  const spaceSettingsPane: SpaceSettingsPane = { type: 'SPACE_SETTINGS', spaceId: space.id };
   const spaceSettingsActive = useMemo(() => panes.findIndex(pane => pane.type === 'SPACE_SETTINGS') !== -1, [panes]);
   return (
     <div className={folded ? '' : 'border-b'}>
@@ -40,7 +40,7 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
           <SidebarItem
             icon={<Settings />}
             active={spaceSettingsActive}
-            onClick={() => dispatch({ type: 'TOGGLE', pane: spaceSettingsPane })}
+            onClick={() => dispatch({ type: 'TOGGLE', pane: makePane(spaceSettingsPane) })}
             toggle
           >
             <FormattedMessage defaultMessage="Space Settings" />

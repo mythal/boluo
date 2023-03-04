@@ -1,11 +1,12 @@
 import type { Channel } from 'api';
-import type { Dispatch, FC } from 'react';
+import { Dispatch, FC, useEffect, useMemo } from 'react';
 import { useCallback } from 'react';
 import { createContext, useContext, useReducer } from 'react';
 import { makeId } from 'utils';
 import type { ChildrenProps } from 'utils';
 import { useChannelList } from '../hooks/useChannelList';
-import type { Pane } from '../types/chat-pane';
+import { isPaneData, isSamePaneData, makePane, Pane, PaneData as PaneData } from '../types/chat-pane';
+import { useChatDispatch } from './atoms/chat';
 
 export interface AddPane {
   type: 'ADD_PANE';
@@ -33,7 +34,12 @@ export interface Focus {
   id: string;
 }
 
-type Action = AddPane | ReplacePane | RemovePane | Focus | TogglePane;
+export interface RouteChanged {
+  type: 'ROUTE_CHANGED';
+  paneDataList: PaneData[];
+}
+
+type Action = AddPane | ReplacePane | RemovePane | Focus | TogglePane | RouteChanged;
 
 const PaneDispatchContext = createContext<Dispatch<Action>>(() => {
   throw new Error('Unexpected');
@@ -169,7 +175,59 @@ const handleFocus = (state: PaneState, { id }: Focus): PaneState => {
   return { panes, focused: id };
 };
 
-const initPaneState = (channels: Channel[]) => {
+const handleRouteChanged = (state: PaneState, { paneDataList }: RouteChanged): PaneState => {
+  const length = Math.min(state.panes.length, paneDataList.length);
+  const panes = [];
+  let changed = false;
+  for (let i = 0; i < length; i += 1) {
+    const paneData = paneDataList[i]!;
+    const pane = state.panes[i]!;
+    if (isSamePaneData(paneData, pane)) {
+      panes.push(pane);
+    } else {
+      changed = true;
+      panes.push(makePane(paneData));
+    }
+  }
+  if (state.panes.length !== paneDataList.length) {
+    changed = true;
+    panes.push(...paneDataList.slice(length).map(makePane));
+  }
+  if (!changed) {
+    return state;
+  }
+  let { focused } = state;
+  if (panes.length === 0) {
+    focused = null;
+  } else if (!panes.some(pane => pane.id === focused)) {
+    focused = panes[0]!.id;
+  }
+  return { ...state, focused, panes };
+};
+
+const parsePaneDataList = (hash: string): PaneData[] | null => {
+  try {
+    const panes: unknown = JSON.parse(decodeURIComponent(hash.slice(1)));
+    if (Array.isArray(panes) && panes.every(isPaneData)) {
+      return panes;
+    }
+  } catch (e) {
+  }
+  return null;
+};
+
+const panesToPaneDataList = (panes: Pane[]): PaneData[] => {
+  return panes.filter(pane => pane.type !== 'EMPTY').map(pane => ({ ...pane, id: undefined }));
+};
+
+const initPaneState = (channels: Channel[]): PaneState => {
+  const hash = window.location.hash;
+  if (hash) {
+    const paneDataList = parsePaneDataList(hash);
+    if (paneDataList) {
+      return { focused: null, panes: paneDataList.map(makePane) };
+    }
+  }
   const channel = channels.find(channel => channel.isPublic);
   if (!channel) {
     return { focused: null, panes: [] };
@@ -181,6 +239,7 @@ const initPaneState = (channels: Channel[]) => {
 };
 
 export const usePanes = (spaceId: string): Return => {
+  const chatDispatch = useChatDispatch();
   const channels = useChannelList(spaceId);
   const reducer = (state: PaneState, action: Action): PaneState => {
     switch (action.type) {
@@ -194,6 +253,8 @@ export const usePanes = (spaceId: string): Return => {
         return handleReplacePane(state, action);
       case 'TOGGLE':
         return handleTogglePane(state, action);
+      case 'ROUTE_CHANGED':
+        return handleRouteChanged(state, action);
       default:
         return state;
     }
@@ -201,5 +262,29 @@ export const usePanes = (spaceId: string): Return => {
 
   const [state, dispatch] = useReducer(reducer, channels, initPaneState);
   const { panes, focused } = state;
+  const hash = useMemo(() => encodeURIComponent(JSON.stringify(panesToPaneDataList(panes))), [panes]);
+
+  useEffect(() => {
+    window.location.hash = hash;
+    const listener = (e: HashChangeEvent) => {
+      const newUrl = new URL(e.newURL);
+      const newHash = newUrl.hash;
+      if (newHash !== '#' + hash) {
+        const paneDataList = parsePaneDataList(newHash);
+        if (paneDataList) {
+          dispatch({ type: 'ROUTE_CHANGED', paneDataList });
+        }
+      }
+    };
+    window.addEventListener('hashchange', listener);
+    return () => window.removeEventListener('hashchange', listener);
+  }, [hash]);
+
+  useEffect(() => chatDispatch('enterSpace', { spaceId }), [chatDispatch, spaceId]);
+
+  useEffect(() => {
+    const channelIdSet = new Set(panes.flatMap(pane => (pane.type === 'CHANNEL' ? [pane.channelId] : [])));
+    chatDispatch('panesChange', { channelIdSet });
+  }, [panes, chatDispatch]);
   return { panes: panes, dispatch, focused };
 };

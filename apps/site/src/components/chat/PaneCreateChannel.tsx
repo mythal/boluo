@@ -3,10 +3,9 @@ import { FormProvider, useController, useForm, useFormContext } from 'react-hook
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button, TextInput } from 'ui';
-import { makeId } from 'utils';
 import { post } from '../../api/browser';
 import { useChatPaneDispatch, useClosePane } from '../../state/panes';
-import type { ChannelPane } from '../../types/chat-pane';
+import { makePane } from '../../types/chat-pane';
 import { DiceSelect } from '../DiceSelect';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBodyBox } from './PaneBodyBox';
@@ -110,7 +109,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
     }
     const { channel } = result.unwrap();
     await mutate(['/channels/by_space', spaceId]);
-    const newChannelPane: ChannelPane = { type: 'CHANNEL', channelId: channel.id, id: makeId() };
+    const newChannelPane = makePane({ type: 'CHANNEL', channelId: channel.id });
     dispatch({ type: 'REPLACE_PANE', item: newChannelPane });
   };
   return (

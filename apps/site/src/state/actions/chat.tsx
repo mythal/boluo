@@ -6,6 +6,7 @@ export type ChatActionMap = {
   receiveMessage: { channelId: string; message: Message };
   initialized: Empty;
   enterSpace: { spaceId: string };
+  panesChange: { channelIdSet: Set<string> };
   spaceUpdated: SpaceWithRelated;
   messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
   messageEdited: { message: Message; channelId: string };

@@ -2,16 +2,21 @@ import type { FC } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui';
 import { useSpace } from '../../hooks/useSpace';
-import { PaneProvider, usePanes } from '../../state/panes';
-import { ChatView } from './ChatView';
+import { ChatViewState, PaneProvider, useChatViewState } from '../../state/chat-view';
+import { ChatNotFound } from './ChatNotFound';
+import { SpaceChatView } from './SpaceChatView';
 
-interface Props {
+const SpaceChat: FC<{
   spaceId: string;
-}
-
-const Chat: FC<Props> = ({ spaceId }) => {
+  panes: ChatViewState['panes'];
+}> = ({ spaceId, panes }) => {
   const space = useSpace(spaceId);
-  const { panes, dispatch, focused } = usePanes(spaceId);
+
+  return <SpaceChatView space={space} panes={panes} />;
+};
+
+const Chat: FC = () => {
+  const { panes, dispatch, focused, route } = useChatViewState();
 
   return (
     <Suspense
@@ -22,7 +27,8 @@ const Chat: FC<Props> = ({ spaceId }) => {
       }
     >
       <PaneProvider dispatch={dispatch} focused={focused}>
-        <ChatView space={space} panes={panes} focused={focused} />
+        {route.type === 'SPACE' && <SpaceChat spaceId={route.spaceId} panes={panes} />}
+        {route.type === 'NOT_FOUND' && <ChatNotFound />}
       </PaneProvider>
     </Suspense>
   );

@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button, TextInput } from 'ui';
 import { post } from '../../api/browser';
-import { useChatPaneDispatch, useClosePane } from '../../state/panes';
+import { useChatPaneDispatch, useClosePane } from '../../state/chat-view';
 import { makePane } from '../../types/chat-pane';
 import { DiceSelect } from '../DiceSelect';
 import { ClosePaneButton } from './ClosePaneButton';

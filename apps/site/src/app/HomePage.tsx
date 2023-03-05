@@ -1,6 +1,6 @@
 'use client';
 
-import type { GetMe, Space } from 'api';
+import type { Space } from 'api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
@@ -56,7 +56,7 @@ const UserOperations = ({ className }: StyleProps) => {
 const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
   return (
     <div>
-      <Link href={`/chat/space/${space.id}`} className="link">
+      <Link href={`/chat#${space.id}`} className="link">
         {space.name}
       </Link>
     </div>

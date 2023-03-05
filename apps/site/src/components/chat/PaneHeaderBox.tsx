@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import type { FC, ReactNode } from 'react';
 import { stopPropagation } from 'utils';
-import { useFocusPane, useIsFocused } from '../../state/panes';
+import { useFocusPane, useIsFocused } from '../../state/chat-view';
 
 interface Props {
   children: ReactNode;

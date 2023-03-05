@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
 import { useChannelList } from '../../../hooks/useChannelList';
-import { useChatPaneDispatch } from '../../../state/panes';
+import { useChatPaneDispatch } from '../../../state/chat-view';
 import { makePane, Pane } from '../../../types/chat-pane';
 import { SidebarChannelItem } from './SidebarChannelItem';
 

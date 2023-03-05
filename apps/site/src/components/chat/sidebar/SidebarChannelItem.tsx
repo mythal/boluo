@@ -2,7 +2,7 @@ import type { Channel } from 'api';
 import { Hash } from 'icons';
 import type { FC } from 'react';
 import { makeId } from 'utils';
-import { useChatPaneDispatch } from '../../../state/panes';
+import { useChatPaneDispatch } from '../../../state/chat-view';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {

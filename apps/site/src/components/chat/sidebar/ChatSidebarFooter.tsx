@@ -2,7 +2,7 @@ import { HelpCircle, Settings } from 'icons';
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
-import { useChatPaneDispatch } from '../../../state/panes';
+import { useChatPaneDispatch } from '../../../state/chat-view';
 import { makePane, Pane } from '../../../types/chat-pane';
 
 interface Props {

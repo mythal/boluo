@@ -1,6 +1,7 @@
 import type { Space } from 'api';
-import type { FC } from 'react';
+import { FC, useContext } from 'react';
 import { useMemo } from 'react';
+import { FocusPaneContext } from '../../state/chat-view';
 import type { Pane } from '../../types/chat-pane';
 import { PaneEmpty } from './PaneEmpty';
 import { ChatPaneSwitch } from './PaneSwitch';
@@ -9,10 +10,10 @@ import { ChatSiderbar } from './sidebar/ChatSidebar';
 interface Props {
   space: Space;
   panes: Pane[];
-  focused: string | null;
 }
 
-export const ChatView: FC<Props> = ({ space, panes, focused }) => {
+export const SpaceChatView: FC<Props> = ({ space, panes }) => {
+  const focused = useContext(FocusPaneContext);
   const sidebar = useMemo(
     () => (
       <ChatSiderbar

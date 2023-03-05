@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import type { ChildrenProps } from 'utils';
-import { PaneBox } from '../../../components/chat/PaneBox';
+import { PaneBox } from '../../components/chat/PaneBox';
 
 export const ChatSkeleton: FC<Partial<ChildrenProps>> = ({ children }) => {
   return (

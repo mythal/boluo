@@ -11,7 +11,7 @@ import { Button, HelpText, Spinner, TextArea, TextInput } from 'ui';
 import type { ChildrenProps } from 'utils';
 import { post } from '../../../api/browser';
 import { useSpace } from '../../../hooks/useSpace';
-import { useClosePane } from '../../../state/panes';
+import { useClosePane } from '../../../state/chat-view';
 import { DiceSelect } from '../../DiceSelect';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';

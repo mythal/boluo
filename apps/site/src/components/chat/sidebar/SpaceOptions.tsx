@@ -5,7 +5,7 @@ import type { FC } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { useChatPaneDispatch } from '../../../state/panes';
+import { useChatPaneDispatch } from '../../../state/chat-view';
 import { makePane, Pane, SpaceSettingsPane } from '../../../types/chat-pane';
 import { SidebarItem } from './SidebarItem';
 

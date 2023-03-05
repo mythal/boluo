@@ -6,7 +6,7 @@ import { Button } from 'ui';
 import { makeId } from 'utils';
 import { useChannel } from '../../../hooks/useChannel';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { useChatPaneDispatch, usePaneId } from '../../../state/panes';
+import { useChatPaneDispatch, usePaneId } from '../../../state/chat-view';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 

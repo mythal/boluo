@@ -1,6 +1,6 @@
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
-import { Oops } from 'ui';
+import { Oops } from 'ui/Oops';
 import type { ChildrenProps, StyleProps } from 'utils';
 import { PaneBox } from './PaneBox';
 

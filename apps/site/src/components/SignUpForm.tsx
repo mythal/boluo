@@ -6,7 +6,8 @@ import { useId, useState } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Label, Oops, TextInput } from 'ui';
+import { Button, Label, TextInput } from 'ui';
+import { Oops } from 'ui/Oops';
 import { post } from '../api/browser';
 import * as validations from '../validations';
 

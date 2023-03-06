@@ -9,14 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "lang": "^0.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-intl": "^6.2.10",
     "ui": "^0.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.1.0",
+    "babel-plugin-formatjs": "^10.4.0",
     "tailwindcss": "^3.2.7",
     "typescript": "^4.9.3",
     "vite": "^4.1.0"

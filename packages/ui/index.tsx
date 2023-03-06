@@ -5,7 +5,6 @@ export { Button } from './Button';
 export { HelpText } from './HelpText';
 export { useTheme } from './hooks/useTheme';
 export { Loading } from './Loading';
-export { Oops } from './Oops';
 export { RefreshButton } from './RefreshButton';
 export { Select } from './Select';
 export { Spinner } from './Spinner';

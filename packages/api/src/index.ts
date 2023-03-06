@@ -1,4 +1,5 @@
 import { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
+import { Empty } from 'utils';
 import { AppResponse, isAppResponse, makeUri } from './request';
 import type { Channel, ChannelMember, ChannelWithMember, CreateChannel } from './types/channels';
 import { GetMessagesByChannel, Message, NewMessage } from './types/messages';
@@ -30,7 +31,7 @@ export interface Post {
   // spaces
   '/spaces/create': { payload: CreateSpace; query: null; result: SpaceWithMember };
   '/spaces/edit': { payload: EditSpace; query: null; result: Space };
-  '/spaces/delete': { payload: {}; query: { id: string }; result: Space };
+  '/spaces/delete': { payload: Empty; query: { id: string }; result: Space };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };
@@ -48,6 +49,8 @@ export interface Patch {
 
 export type { AppResponse };
 export { isAppResponse, makeUri };
+export { get, patch, post } from './browser';
+export { appFetch } from './common';
 export * from './error-types';
 export * from './errors';
 export * from './types/channels';

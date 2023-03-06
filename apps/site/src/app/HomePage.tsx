@@ -1,6 +1,7 @@
 'use client';
 
 import type { Space } from 'api';
+import { useGet, useMe, useMySpaces } from 'common';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
@@ -9,20 +10,18 @@ import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import type { StyleProps } from 'utils';
-import { get } from '../api/browser';
 import { Me } from '../components/Me';
-import { useMe } from '../hooks/useMe';
-import { useMySpaces } from '../hooks/useMySpaces';
 
 const useLogout = () => {
   const router = useRouter();
   const { mutate } = useSWRConfig();
+  const get = useGet();
 
   return useCallback(async () => {
     await get('/users/logout', null);
     await mutate('/users/get_me', null);
     router.refresh();
-  }, [router, mutate]);
+  }, [get, mutate, router]);
 };
 
 const UserOperations = ({ className }: StyleProps) => {

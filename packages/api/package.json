@@ -5,18 +5,21 @@
   "types": "./dist/index.d.ts",
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "utils": "*",
     "server-bindings": "*",
     "tsconfig": "*",
-    "tslib": "^2.4.1"
+    "tslib": "^2.4.1",
+    "utils": "*"
   },
   "sideEffects": false,
   "devDependencies": {
+    "eslint": "^8.35.0",
+    "eslint-config-custom": "^0.0.0",
     "typescript": "^4.9.4"
   }
 }

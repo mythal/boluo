@@ -11,6 +11,7 @@ export const makeUri = (baseUrl: string, path: string, query?: unknown): string 
   }
   const searchParams = new URLSearchParams();
   for (const entry of entities) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [key, value] = entry;
     if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
       searchParams.set(key, String(value));
@@ -24,7 +25,7 @@ export interface AppResponse {
   ok: unknown;
   err: ApiError;
 }
-export function isAppResponse(data: any): data is AppResponse {
+export function isAppResponse(data: unknown): data is AppResponse {
   if (typeof data !== 'object' || data === undefined || data === null) {
     return false;
   }

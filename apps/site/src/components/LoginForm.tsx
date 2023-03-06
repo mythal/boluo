@@ -1,5 +1,6 @@
 'use client';
 import type { ApiError } from 'api';
+import { usePost } from 'common';
 import { useRouter } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';
@@ -12,7 +13,6 @@ import { useSWRConfig } from 'swr';
 import { Button, Label, TextInput } from 'ui';
 import { Oops } from 'ui/Oops';
 import type { StyleProps } from 'utils';
-import { post } from '../api/browser';
 import { required } from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/
@@ -130,6 +130,7 @@ export const LoginForm: FC<Props> = () => {
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
   const [error, setError] = useState<ApiError | null>(null);
+  const post = usePost();
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
     const result = await post('/users/login', null, { password, username });
     if (result.isErr) {

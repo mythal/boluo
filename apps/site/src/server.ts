@@ -2,6 +2,9 @@ import 'server-only';
 import type { IntlShape } from '@formatjs/intl';
 import { createIntl } from '@formatjs/intl';
 import type { GetMe } from 'api';
+import { defaultLocale, localeList, toLocale } from 'common/locale';
+import type { IntlMessages, Locale } from 'common/locale';
+import { toSettings } from 'common/settings';
 import en from 'lang/compiled/en.json';
 import ja from 'lang/compiled/ja_JP.json';
 import zh_CN from 'lang/compiled/zh_CN.json';
@@ -10,11 +13,6 @@ import { cache } from 'react';
 import type { Theme } from 'ui';
 import { toTheme } from 'ui/theme';
 import { get } from './api/server';
-import type { IntlMessages, Locale } from './locale';
-import { defaultLocale } from './locale';
-import { localeList } from './locale';
-import { toLocale } from './locale';
-import { toSettings } from './settings';
 
 export const getMe = cache(async (): Promise<GetMe | null> => {
   return (await get('/users/get_me', null)).unwrapOr(null);

@@ -1,5 +1,6 @@
 'use client';
 import type { ApiError, CreateSpace } from 'api';
+import { usePost } from 'common';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
@@ -10,7 +11,6 @@ import { useSWRConfig } from 'swr';
 import { Button, Label, TextArea, TextInput } from 'ui';
 import { Oops } from 'ui/Oops';
 import type { SelectItem } from 'ui/Select';
-import { post } from '../api/browser';
 import { required } from '../validations';
 import { DiceSelect } from './DiceSelect';
 
@@ -124,6 +124,7 @@ export const CreateSpaceForm: FC<Props> = () => {
   const { handleSubmit } = methods;
   const [error, setError] = useState<ApiError | null>(null);
   const router = useRouter();
+  const post = usePost();
   const onSubmit: SubmitHandler<CreateSpace> = async (params) => {
     const result = await post('/spaces/create', null, params);
     if (result.isErr) {

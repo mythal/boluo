@@ -1,10 +1,10 @@
 import 'server-only';
 import type { ApiError, Get, Post } from 'api';
 import { makeUri } from 'api';
+import { appFetch } from 'api';
 import { cookies } from 'next/headers';
 import type { Result } from 'utils';
 import { BACKEND_URL } from '../const';
-import { appFetch } from './common';
 
 // Keep this value the same as the server
 const sessionCookieKey = 'boluo-session-v1';

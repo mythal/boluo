@@ -1,13 +1,14 @@
 'use client';
 import type { ApiError } from 'api';
+import { usePost } from 'common';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Label, Oops, TextInput } from 'ui';
-import { post } from '../api/browser';
+import { Button, Label, TextInput } from 'ui';
+import { Oops } from 'ui/Oops';
 import * as validations from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/
@@ -167,6 +168,7 @@ export const SignUpForm = () => {
   const router = useRouter();
   const methods = useForm<Schema>();
   const [error, setError] = useState<ApiError | null>(null);
+  const post = usePost();
 
   const onSubmit: SubmitHandler<Schema> = async ({ password, username, email, nickname }) => {
     const result = await post('/users/register', null, { password, username, email, nickname });

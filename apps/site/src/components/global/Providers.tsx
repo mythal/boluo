@@ -2,6 +2,10 @@
 
 import type { OnErrorFn } from '@formatjs/intl';
 import type { GetMe } from 'api';
+import { MeProvider } from 'common';
+import type { IntlMessages, Locale } from 'common/locale';
+import { defaultLocale } from 'common/locale';
+import { store } from 'common/store';
 import { Provider as JotaiProvider } from 'jotai';
 import type { FC } from 'react';
 import { useEffect } from 'react';
@@ -9,10 +13,6 @@ import { IntlProvider } from 'react-intl';
 import { SWRConfig } from 'swr';
 import { clearWatchSystemTheme, watchSystemTheme } from 'ui/theme';
 import type { ChildrenProps } from 'utils';
-import { MeProvider } from '../../hooks/useMe';
-import type { IntlMessages, Locale } from '../../locale';
-import { defaultLocale } from '../../locale';
-import { store } from '../../state/store';
 
 interface Props extends ChildrenProps {
   locale: Locale;

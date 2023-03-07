@@ -9,7 +9,7 @@ lint:
     npm exec dprint check
 
 dev projects="*":
-    npm exec nx run-many -- --target=dev --projects={{projects}}
+    npm exec nx run-many -- --target=dev --projects={{projects}} --parallel=16
 
 graph:
     npm exec nx graph

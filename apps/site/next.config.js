@@ -13,7 +13,7 @@ const config = {
     dirs: ['src', 'tests'],
   },
   output: 'standalone',
-  transpilePackages: ['ui'],
+  transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
     appDir: true,
     typedRoutes: true,

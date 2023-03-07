@@ -1,13 +1,14 @@
 {
   "name": "utils",
   "version": "0.0.0",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc --project tsconfig.json --watch",
-    "lint": "eslint ./src/*.ts"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "license": "GPL-3.0",
   "dependencies": {

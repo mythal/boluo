@@ -6,6 +6,8 @@
       "ESNext",
       "DOM"
     ],
+    "target": "ESNext",
+    "module": "ESNext",
     "outDir": "dist/"
   },
   "include": [

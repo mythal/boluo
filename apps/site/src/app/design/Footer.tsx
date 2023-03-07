@@ -1,7 +1,7 @@
 'use client';
 
-import { LocaleSelect } from '../../components/chat/settings/LocaleSelect';
-import { ThemeSelect } from '../../components/chat/settings/ThemeSelect';
+import { LocaleSelect } from 'chat/src/components/settings/LocaleSelect';
+import { ThemeSelect } from 'chat/src/components/settings/ThemeSelect';
 
 export const Footer = () => {
   return (

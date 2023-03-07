@@ -1,0 +1,45 @@
+{
+  "name": "chat",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.0.8",
+    "@dnd-kit/sortable": "^7.0.2",
+    "@dnd-kit/utilities": "^3.2.1",
+    "api": "0.0.0",
+    "clsx": "^1.2.1",
+    "common": "0.0.0",
+    "icons": "0.0.0",
+    "jotai": "^2.0.3",
+    "lang": "0.0.0",
+    "logo": "0.0.0",
+    "react": "^18.2.0",
+    "react-colorful": "^5.6.1",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.43.5",
+    "react-intl": "^6.2.10",
+    "react-virtuoso": "^4.1.0",
+    "swr": "^2.1.0",
+    "ui": "0.0.0",
+    "utils": "0.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.1.0",
+    "babel-plugin-formatjs": "^10.4.0",
+    "eslint": "^8.35.0",
+    "eslint-config-custom": "^0.0.0",
+    "tailwindcss": "^3.2.7",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0"
+  }
+}

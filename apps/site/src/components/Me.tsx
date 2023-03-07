@@ -1,4 +1,4 @@
-import { useMe } from '../hooks/useMe';
+import { useMe } from 'common';
 
 export const Me = () => {
   const me = useMe();

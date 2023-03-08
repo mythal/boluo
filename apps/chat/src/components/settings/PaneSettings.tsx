@@ -5,6 +5,7 @@ import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
 import { Kbd } from 'ui/Kbd';
+import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { useSettings } from '../../hooks/useSettings';
 import { ClosePaneButton } from '../ClosePaneButton';
@@ -14,6 +15,8 @@ import { EnterSendSwitch } from './EnterSendSwitch';
 import { ExpandDiceSwitch } from './ExpandDiceSwitch';
 import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
+
+const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="font-bold mb-2">{children}</h3>;
 
 const LanguageField = () => {
   const id = useId();
@@ -94,8 +97,12 @@ const EneterSendField = () => {
 
 const LogoutField = () => {
   const logout = useLogout();
+  const me = useMe()!;
   return (
-    <div className="flex items-center gap-4 select-none">
+    <div className="flex justify-between items-center gap-4 select-none">
+      <div className="text-lg">
+        {me.user.nickname} <span className="text-sm">({me.user.username})</span>
+      </div>
       <Button onClick={logout}>
         <FormattedMessage defaultMessage="Logout" />
       </Button>
@@ -108,9 +115,9 @@ const AccountFields = () => {
   if (!me) return null;
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-xl">
+      <SectionTitle>
         <FormattedMessage defaultMessage="Account" />
-      </h3>
+      </SectionTitle>
 
       <LogoutField />
     </div>
@@ -123,11 +130,11 @@ export const PaneSettings: FC = () => {
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
         <FormattedMessage defaultMessage="Settings" />
       </PaneHeaderBox>
-      <PaneBodyBox className="p-4 flex flex-col gap-10 overflow-y-auto">
-        <div className="flex flex-col gap-6">
-          <h3 className="text-xl">
+      <PaneBodyBox className="p-4 flex flex-col gap-8 overflow-y-auto">
+        <div className="flex flex-col gap-2">
+          <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />
-          </h3>
+          </SectionTitle>
           <LanguageField />
           <ThemeField />
           <ExpandDiceField />

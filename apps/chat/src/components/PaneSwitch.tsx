@@ -17,7 +17,9 @@ interface Props {
   pane: Pane;
 }
 
-const PANE_MAP = {
+const createPaneMap = <T extends Record<Pane['type'], unknown>>(map: T) => map;
+
+const PANE_MAP = createPaneMap({
   CHANNEL: ChatPaneChannel,
   SETTINGS: PaneSettings,
   HELP: PaneHelp,
@@ -25,7 +27,7 @@ const PANE_MAP = {
   CREATE_CHANNEL: PaneCreateChannel,
   LOGIN: PaneLogin,
   EMPTY: PaneEmpty,
-} satisfies Record<Pane['type'], unknown>;
+}); // satisfies Record<Pane['type'], unknown>; // https://github.com/vercel/next.js/issues/43799
 
 const Switch: FC<Props> = ({ pane }) => {
   switch (pane.type) {

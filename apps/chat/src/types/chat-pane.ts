@@ -9,6 +9,10 @@ export interface SettingsPane {
   type: 'SETTINGS';
 }
 
+export interface LoginPane {
+  type: 'LOGIN';
+}
+
 export interface HelpPane {
   type: 'HELP';
 }
@@ -27,7 +31,16 @@ export interface EmptyPane {
   type: 'EMPTY';
 }
 
-export type PaneData = ChannelPane | EmptyPane | SettingsPane | HelpPane | SpaceSettingsPane | CreateChannelPane;
+export type PaneData =
+  | ChannelPane
+  | EmptyPane
+  | SettingsPane
+  | HelpPane
+  | SpaceSettingsPane
+  | CreateChannelPane
+  | LoginPane;
+
+const UNIQUE_PANE_TYPES: Array<Pane['type']> = ['HELP', 'CREATE_CHANNEL', 'SETTINGS', 'LOGIN', 'SPACE_SETTINGS'];
 
 export type Pane = PaneData & {
   id: string;
@@ -61,16 +74,9 @@ export const isSamePaneData = (paneData: PaneData, pane: Pane): boolean => {
 
 export const makePane = (paneData: PaneData): Pane => {
   const { type } = paneData;
-  switch (paneData.type) {
-    case 'HELP':
-      return { ...paneData, id: type };
-    case 'SETTINGS':
-      return { ...paneData, id: type };
-    case 'CREATE_CHANNEL':
-      return { ...paneData, id: type };
-    case 'SPACE_SETTINGS':
-      return { ...paneData, id: type };
-    default:
-      return { ...paneData, id: makeId() };
+  if (UNIQUE_PANE_TYPES.includes(type)) {
+    return { ...paneData, id: type };
+  } else {
+    return { ...paneData, id: makeId() };
   }
 };

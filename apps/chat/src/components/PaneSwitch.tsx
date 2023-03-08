@@ -9,12 +9,23 @@ import { PaneEmpty } from './PaneEmpty';
 import { PaneError } from './PaneError';
 import { PaneHelp } from './PaneHelp';
 import { PaneLoading } from './PaneLoading';
+import { PaneLogin } from './PaneLogin';
 import { PaneSettings } from './settings/PaneSettings';
 import { PaneSpaceSettings } from './space-settings/PaneSpaceSettings';
 
 interface Props {
   pane: Pane;
 }
+
+const PANE_MAP = {
+  CHANNEL: ChatPaneChannel,
+  SETTINGS: PaneSettings,
+  HELP: PaneHelp,
+  SPACE_SETTINGS: PaneSpaceSettings,
+  CREATE_CHANNEL: PaneCreateChannel,
+  LOGIN: PaneLogin,
+  EMPTY: PaneEmpty,
+} satisfies Record<Pane['type'], unknown>;
 
 const Switch: FC<Props> = ({ pane }) => {
   switch (pane.type) {
@@ -24,16 +35,13 @@ const Switch: FC<Props> = ({ pane }) => {
           <ChatPaneChannel key={pane.channelId} />
         </ChannelIdContext.Provider>
       );
-    case 'SETTINGS':
-      return <PaneSettings />;
-    case 'HELP':
-      return <PaneHelp />;
     case 'SPACE_SETTINGS':
       return <PaneSpaceSettings spaceId={pane.spaceId} />;
     case 'CREATE_CHANNEL':
       return <PaneCreateChannel spaceId={pane.spaceId} />;
     default:
-      return <PaneEmpty />;
+      const Component = PANE_MAP[pane.type] ?? PaneEmpty;
+      return <Component />;
   }
 };
 

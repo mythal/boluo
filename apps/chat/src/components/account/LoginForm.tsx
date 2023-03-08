@@ -10,6 +10,7 @@ import { Button, Label, TextInput } from 'ui';
 import { StyleProps } from 'utils';
 
 interface Props extends StyleProps {
+  onSuccess?: () => void;
 }
 interface Inputs {
   username: string;
@@ -85,7 +86,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
   );
 };
 
-export const LoginForm: FC<Props> = () => {
+export const LoginForm: FC<Props> = ({ onSuccess, className = '' }) => {
   const { mutate } = useSWRConfig();
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
@@ -98,11 +99,14 @@ export const LoginForm: FC<Props> = () => {
     }
     setError(null);
     await mutate('/users/get_me', result.some.me);
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className={className}>
         <FormContent error={error} />
       </form>
     </FormProvider>

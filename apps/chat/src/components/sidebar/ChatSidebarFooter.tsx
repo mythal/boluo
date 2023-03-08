@@ -1,3 +1,4 @@
+import { useMe } from 'common';
 import { HelpCircle, LogIn, Settings } from 'icons';
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
@@ -83,11 +84,14 @@ const LoginButton: FC<{ on: boolean; isExpand: boolean }> = ({ isExpand, on }) =
 };
 
 export const ChatSidebarFooter: FC<Props> = ({ className, isSettingsOpen, isHelpOpen, isExpand, isLoginOpen }) => {
+  const me = useMe();
   return (
     <div className={className}>
       <HelpToggleButton on={isHelpOpen} isExpand={isExpand} />
-      <LoginButton on={isLoginOpen} isExpand={isExpand} />
-      <SettingToggleButton on={isSettingsOpen} isExpand={isExpand} />
+
+      {me
+        ? <SettingToggleButton on={isSettingsOpen} isExpand={isExpand} />
+        : <LoginButton on={isLoginOpen} isExpand={isExpand} />}
     </div>
   );
 };

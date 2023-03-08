@@ -1,8 +1,11 @@
+import { useMe } from 'common';
 import { Settings } from 'icons';
 import type { FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { Button } from 'ui';
 import { Kbd } from 'ui/Kbd';
+import { useLogout } from '../../hooks/useLogout';
 import { useSettings } from '../../hooks/useSettings';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';
@@ -89,17 +92,48 @@ const EneterSendField = () => {
   );
 };
 
+const LogoutField = () => {
+  const logout = useLogout();
+  return (
+    <div className="flex items-center gap-4 select-none">
+      <Button onClick={logout}>
+        <FormattedMessage defaultMessage="Logout" />
+      </Button>
+    </div>
+  );
+};
+
+const AccountFields = () => {
+  const me = useMe();
+  if (!me) return null;
+  return (
+    <div className="flex flex-col gap-4">
+      <h3 className="text-xl">
+        <FormattedMessage defaultMessage="Account" />
+      </h3>
+
+      <LogoutField />
+    </div>
+  );
+};
+
 export const PaneSettings: FC = () => {
   return (
     <>
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
         <FormattedMessage defaultMessage="Settings" />
       </PaneHeaderBox>
-      <PaneBodyBox className="flex p-4 flex-col gap-6 overflow-y-auto">
-        <LanguageField />
-        <ThemeField />
-        <ExpandDiceField />
-        <EneterSendField />
+      <PaneBodyBox className="p-4 flex flex-col gap-10 overflow-y-auto">
+        <div className="flex flex-col gap-6">
+          <h3 className="text-xl">
+            <FormattedMessage defaultMessage="Interface" />
+          </h3>
+          <LanguageField />
+          <ThemeField />
+          <ExpandDiceField />
+          <EneterSendField />
+        </div>
+        <AccountFields />
       </PaneBodyBox>
     </>
   );

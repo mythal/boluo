@@ -3,8 +3,8 @@ import { useIntl } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { identity } from 'utils';
-import { Locale, toLocale } from './locale';
-import type { Settings } from './settings';
+import { Locale, toLocale } from '../locale';
+import type { Settings } from '../settings';
 import { useMe } from './useMe';
 import { usePatch } from './usePatch';
 

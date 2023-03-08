@@ -7,7 +7,6 @@
       "dom.iterable",
       "esnext"
     ],
-    "target": "ESNext",
     "declaration": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,

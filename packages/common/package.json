@@ -4,9 +4,10 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "dev": "tsc --project tsconfig.json --watch",
     "build": "tsc --project tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx"
   },

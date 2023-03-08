@@ -18,10 +18,10 @@ export function useLogout(): () => void {
   return useCallback(async () => {
     await Promise.all([
       get('/users/logout', null),
-      mutate('/users/get_me', null),
       deleteAllIndexedDbDatabases(),
     ]);
     localStorage.clear();
     sessionStorage.clear();
+    await mutate('/users/get_me', null);
   }, [get, mutate]);
 }

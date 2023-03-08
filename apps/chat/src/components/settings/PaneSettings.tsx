@@ -111,8 +111,6 @@ const LogoutField = () => {
 };
 
 const AccountFields = () => {
-  const me = useMe();
-  if (!me) return null;
   return (
     <div className="flex flex-col gap-4">
       <SectionTitle>
@@ -125,6 +123,7 @@ const AccountFields = () => {
 };
 
 export const PaneSettings: FC = () => {
+  const me = useMe();
   return (
     <>
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
@@ -137,10 +136,10 @@ export const PaneSettings: FC = () => {
           </SectionTitle>
           <LanguageField />
           <ThemeField />
-          <ExpandDiceField />
-          <EneterSendField />
+          {me && <ExpandDiceField />}
+          {me && <EneterSendField />}
         </div>
-        <AccountFields />
+        {me && <AccountFields />}
       </PaneBodyBox>
     </>
   );

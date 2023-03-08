@@ -1,5 +1,5 @@
 import type { EditSpace, Space } from 'api';
-import { usePost } from 'common';
+import { useMe, usePost } from 'common';
 import { Settings } from 'icons';
 import { FC, useCallback } from 'react';
 import { useId } from 'react';
@@ -172,6 +172,23 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
       form.reset(spaceToForm(space));
     }
   };
+  const me = useMe();
+  if (!me) {
+    return (
+      <>
+        <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
+          <FormattedMessage
+            defaultMessage="Settings of &quot;{spaceName}&quot; Space"
+            values={{ spaceName: space.name }}
+          />
+        </PaneHeaderBox>
+
+        <PaneBodyBox className="flex items-center justify-center text-surface-400">
+          <FormattedMessage defaultMessage="You are not logged in" />
+        </PaneBodyBox>
+      </>
+    );
+  }
   return (
     <>
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>

@@ -1,5 +1,7 @@
-import type { FC } from 'react';
+import { ApiError } from 'api';
+import { createContext, FC, useState } from 'react';
 import { memo, Suspense } from 'react';
+import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneIdProvider } from '../state/chat-view';
 import type { Pane } from '../types/chat-pane';
@@ -48,12 +50,17 @@ const Switch: FC<Props> = ({ pane }) => {
 };
 
 export const ChatPaneSwitch = memo<Props>(({ pane }) => {
+  const [banner, setBanner] = useState<Banner | null>(emptyBanner);
   return (
     <PaneIdProvider key={pane.id} id={pane.id}>
       <PaneError>
-        <Suspense fallback={<PaneLoading />}>
-          <Switch pane={pane} />
-        </Suspense>
+        <PaneBannerContext.Provider value={banner ?? emptyBanner}>
+          <ThrowBanner.Provider value={setBanner}>
+            <Suspense fallback={<PaneLoading />}>
+              <Switch pane={pane} />
+            </Suspense>
+          </ThrowBanner.Provider>
+        </PaneBannerContext.Provider>
       </PaneError>
     </PaneIdProvider>
   );

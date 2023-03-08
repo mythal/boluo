@@ -1,7 +1,9 @@
 import clsx from 'clsx';
-import type { FC, ReactNode } from 'react';
+import { FC, ReactNode } from 'react';
 import { stopPropagation } from 'utils';
+import { usePaneBanner, useSetBannel } from '../hooks/useBanner';
 import { useFocusPane, useIsFocused } from '../state/chat-view';
+import { PaneBanner } from './PaneBanner';
 
 interface Props {
   children: ReactNode;
@@ -12,10 +14,11 @@ interface Props {
 export const PaneHeaderBox: FC<Props> = ({ children, operators, icon }) => {
   const isFocused = useIsFocused();
   const focus = useFocusPane();
+  const paneBanner = usePaneBanner();
   return (
     <div
       className={clsx(
-        'bg-surface-100 flex items-center px-4 text-lg',
+        'relative bg-surface-100 flex items-center px-4 text-lg',
         'justify-between border-b-1/2 transition-colors duration-200',
         isFocused ? 'border-brand-600' : 'border-surface-300',
       )}
@@ -26,6 +29,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon }) => {
         {children}
       </div>
       {operators && <div className="inline-flex gap-1 ml-2" onClick={stopPropagation}>{operators}</div>}
+      {paneBanner.content && <PaneBanner banner={paneBanner} />}
     </div>
   );
 };

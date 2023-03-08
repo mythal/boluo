@@ -252,7 +252,7 @@ const panesToPaneDataList = (panes: Pane[]): PaneData[] => {
 const initPaneState = (hash: string): ChatViewState => {
   const serilizedPaneState = parseSerializedState(hash);
   if (!serilizedPaneState) {
-    return { route: { type: 'NOT_FOUND' }, hash, focused: null, panes: [] };
+    return { route: { type: 'ROOT' }, hash, focused: null, panes: [] };
   }
   const { route, paneDataList } = serilizedPaneState;
   const panes = paneDataList.map(makePane);
@@ -266,22 +266,19 @@ interface SerializedPaneState {
 
 const SPACE_ID_PART_REGEX = /^([a-zA-Z0-9\-]+)\/?/;
 
-const parseSerializedState = (raw: string): SerializedPaneState | null => {
-  let route: ChatRoute = { type: 'NOT_FOUND' };
+const parseSerializedState = (raw: string): SerializedPaneState => {
   const matchSpaceId = SPACE_ID_PART_REGEX.exec(raw);
   if (!matchSpaceId) {
-    console.log('Invalid space id', raw);
-    return { route, paneDataList: [] };
+    return { route: { type: 'ROOT' }, paneDataList: [] };
   }
   const spaceId = matchSpaceId[1];
   if (!isUuid(spaceId)) {
     console.log('Invalid space id', spaceId);
-    return { route, paneDataList: [] };
+    return { route: { type: 'NOT_FOUND' }, paneDataList: [] };
   }
   const rest = raw.slice(matchSpaceId[0].length);
   const paneDataList = parsePaneDataList(rest) ?? [];
-  route = { type: 'SPACE', spaceId };
-  return { route, paneDataList };
+  return { route: { type: 'SPACE', spaceId }, paneDataList };
 };
 
 const getHash = (): string => {

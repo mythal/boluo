@@ -1,3 +1,5 @@
+import { ChatSkeleton } from './ChatSkeleton';
+
 export const ChatNotFound = () => {
-  return <div>Chat Not Found</div>;
+  return <ChatSkeleton>Not Found</ChatSkeleton>;
 };

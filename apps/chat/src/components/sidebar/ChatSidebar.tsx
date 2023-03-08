@@ -21,6 +21,7 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
   const toggleExpand = useCallback(() => setExpand(toggle), []);
   const isSettingsOpen = useMemo(() => panes.findIndex(pane => pane.type === 'SETTINGS') !== -1, [panes]);
   const isHelpOpen = useMemo(() => panes.findIndex(pane => pane.type === 'HELP') !== -1, [panes]);
+  const isLoginOpen = useMemo(() => panes.findIndex(pane => pane.type === 'LOGIN') !== -1, [panes]);
   return (
     <>
       <div className="border-b-1/2 bg-surface-100 border-b-gray-400 flex justify-between gap-1 py-2 px-4 items-center select-none">
@@ -56,6 +57,7 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
             : 'flex flex-col justify-center items-center gap-2 p-2'}
           isSettingsOpen={isSettingsOpen}
           isHelpOpen={isHelpOpen}
+          isLoginOpen={isLoginOpen}
           isExpand={isExpand}
         />
       </div>

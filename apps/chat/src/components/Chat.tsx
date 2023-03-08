@@ -3,7 +3,9 @@ import { Suspense } from 'react';
 import { Loading } from 'ui';
 import { useSpace } from '../hooks/useSpace';
 import { ChatViewState, PaneProvider, useChatViewState } from '../state/chat-view';
+import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
+import { ChatRoot } from './ChatRoot';
 import { SpaceChatView } from './SpaceChatView';
 
 const SpaceChat: FC<{
@@ -19,18 +21,21 @@ const Chat: FC = () => {
   const { panes, dispatch, focused, route } = useChatViewState();
 
   return (
-    <Suspense
-      fallback={
-        <div className="w-screen h-screen">
-          <Loading />
-        </div>
-      }
-    >
-      <PaneProvider dispatch={dispatch} focused={focused}>
-        {route.type === 'SPACE' && <SpaceChat spaceId={route.spaceId} panes={panes} />}
-        {route.type === 'NOT_FOUND' && <ChatNotFound />}
-      </PaneProvider>
-    </Suspense>
+    <ChatErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="w-screen h-screen">
+            <Loading />
+          </div>
+        }
+      >
+        <PaneProvider dispatch={dispatch} focused={focused}>
+          {route.type === 'SPACE' && <SpaceChat spaceId={route.spaceId} panes={panes} />}
+          {route.type === 'NOT_FOUND' && <ChatNotFound />}
+          {route.type === 'ROOT' && <ChatRoot />}
+        </PaneProvider>
+      </Suspense>
+    </ChatErrorBoundary>
   );
 };
 

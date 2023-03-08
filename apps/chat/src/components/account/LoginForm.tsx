@@ -3,7 +3,7 @@
 import { ApiError } from 'api';
 import { usePost } from 'common';
 import { FC, useId, useState } from 'react';
-import { FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
+import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button, Label, TextInput } from 'ui';
@@ -11,11 +11,19 @@ import { StyleProps } from 'utils';
 
 interface Props extends StyleProps {
   onSuccess?: () => void;
+  onError?: (error: ApiError) => void;
 }
 interface Inputs {
   username: string;
   password: string;
 }
+
+const ErrorMessage: FC<{ error?: FieldError }> = ({ error }) => {
+  if (!error) {
+    return null;
+  }
+  return <div className="mt-1 text-sm">{error.message}</div>;
+};
 
 const UsernameField = () => {
   const id = useId();
@@ -35,6 +43,8 @@ const UsernameField = () => {
           data-state={error ? 'error' : 'default'}
           {...register('username', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
         />
+
+        <ErrorMessage error={error} />
       </div>
     </>
   );
@@ -58,12 +68,13 @@ const PasswordField = () => {
           data-state={error ? 'error' : 'default'}
           {...register('password', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
         />
+        <ErrorMessage error={error} />
       </div>
     </>
   );
 };
 
-const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
+const FormContent: FC = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="text-2xl">
@@ -86,18 +97,19 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
   );
 };
 
-export const LoginForm: FC<Props> = ({ onSuccess, className = '' }) => {
+export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => {
   const { mutate } = useSWRConfig();
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
-  const [error, setError] = useState<ApiError | null>(null);
   const post = usePost();
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
     const result = await post('/users/login', null, { password, username });
     if (result.isErr) {
-      return setError(result.err);
+      if (onError) {
+        onError(result.err);
+      }
+      return;
     }
-    setError(null);
     await mutate('/users/get_me', result.some.me);
     if (onSuccess) {
       onSuccess();
@@ -107,7 +119,7 @@ export const LoginForm: FC<Props> = ({ onSuccess, className = '' }) => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className={className}>
-        <FormContent error={error} />
+        <FormContent />
       </form>
     </FormProvider>
   );

@@ -27,13 +27,15 @@ const config = {
   env: {
     PUBLIC_DEFAULT_API_URL,
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${BACKEND_URL}/:path*`, // Proxy to Backend
-      },
-    ];
+  rewrites: async () => {
+    return BACKEND_URL
+      ? [
+        {
+          source: '/api/:path*',
+          destination: `${BACKEND_URL}/:path*`, // Proxy to Backend
+        },
+      ]
+      : [];
   },
   webpack: (config) => {
     if (ANALYZE) {

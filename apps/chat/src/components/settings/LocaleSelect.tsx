@@ -6,12 +6,13 @@ import { Select } from 'ui';
 interface Props {
   id?: string;
   className?: string;
+  disabled?: boolean;
 }
 
-export const LocaleSelect: React.FC<Props> = ({ id }) => {
-  const [locale, changeLocale] = useLocale();
-  const handler = (value: string) => {
-    changeLocale(toLocale(value));
+export const LocaleSelect: React.FC<Props> = ({ id, disabled = false }) => {
+  const [locale, setLocale] = useLocale();
+  const onChange = (value: string) => {
+    setLocale(toLocale(value));
   };
   const items = useMemo(
     () => [
@@ -30,5 +31,5 @@ export const LocaleSelect: React.FC<Props> = ({ id }) => {
     ],
     [],
   );
-  return <Select id={id} items={items} value={locale} onChange={handler} />;
+  return <Select id={id} items={items} value={locale} onChange={onChange} disabled={disabled} />;
 };

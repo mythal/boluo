@@ -1,5 +1,5 @@
+import type { OnErrorFn } from '@formatjs/intl';
 import type { IntlConfig } from 'react-intl';
-
 export type IntlMessages = IntlConfig['messages'];
 export type Locale = 'en' | 'ja' | 'zh-CN';
 export const localeList: Locale[] = ['en', 'ja', 'zh-CN'];
@@ -24,5 +24,17 @@ export const toLocale = (data: unknown): Locale => {
     return 'ja';
   } else {
     return 'en';
+  }
+};
+
+export const onIntlError: OnErrorFn = (e) => {
+  if (e.code === 'MISSING_TRANSLATION') {
+    if (typeof window === 'undefined' /* SSR */) {
+      // do noting
+    } else {
+      console.debug('Missing Translation: ', e.message);
+    }
+  } else {
+    throw e;
   }
 };

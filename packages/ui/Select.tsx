@@ -14,13 +14,14 @@ export interface SelectItem {
 interface Props {
   items: SelectItem[];
   value: string;
+  disabled?: boolean;
   id?: string;
   onChange: (newValue: string) => void;
 }
 
-export const Select: FC<Props> = ({ items, onChange, value, id }) => {
+export const Select: FC<Props> = ({ items, onChange, value, id, disabled = false }) => {
   return (
-    <BaseSelect.Root value={value} onValueChange={onChange}>
+    <BaseSelect.Root value={value} onValueChange={onChange} disabled={disabled}>
       <BaseSelect.Trigger
         id={id}
         className={clsx(

@@ -1,6 +1,7 @@
-import { useMe } from 'common';
+import { Locale, useMe } from 'common';
 import { Settings } from 'icons';
-import type { FC } from 'react';
+import { useSetAtom } from 'jotai';
+import { FC, useTransition } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
@@ -8,6 +9,7 @@ import { Kbd } from 'ui/Kbd';
 import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { useSettings } from '../../hooks/useSettings';
+import { localeAtom } from '../../state/locale';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
@@ -20,6 +22,8 @@ const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="font-bo
 
 const LanguageField = () => {
   const id = useId();
+  const setLocale = useSetAtom(localeAtom);
+  const [disabled, startTransition] = useTransition();
   return (
     <div>
       <label className="block py-1" htmlFor={id}>

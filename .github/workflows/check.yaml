@@ -24,13 +24,14 @@ jobs:
       - name: Install
         run: just install
 
-      - name: Lint
-        run: just lint
-
       - name: Build
         run: just build
         env:
           CI: true
+          BACKEND_URL: https://staging.boluo.chat/api
+
+      - name: Lint
+        run: just lint
 
   legacy:
     name: Legacy Application

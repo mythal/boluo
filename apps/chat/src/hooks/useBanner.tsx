@@ -19,6 +19,6 @@ export function usePaneBanner(): Banner {
   return useContext(PaneBannerContext);
 }
 
-export function useSetBannel(): (banner: Banner | null) => void {
+export function useSetBanner(): (banner: Banner | null) => void {
   return useContext(ThrowBanner);
 }

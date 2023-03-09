@@ -2,13 +2,13 @@ import clsx from 'clsx';
 import { X } from 'icons';
 import { FC, useCallback } from 'react';
 import { Button, Icon } from 'ui';
-import { Banner, useSetBannel } from '../hooks/useBanner';
+import { Banner, useSetBanner } from '../hooks/useBanner';
 
 interface Props {
   banner: Banner;
 }
 export const PaneBanner: FC<Props> = ({ banner }) => {
-  const setBanner = useSetBannel();
+  const setBanner = useSetBanner();
   const closeBanner = useCallback(() => setBanner(null), [setBanner]);
   const level = banner.level ?? 'INFO';
   return (

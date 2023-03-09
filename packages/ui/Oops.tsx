@@ -1,6 +1,6 @@
+import { useErrorExplain } from 'common';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { useErrorExplain } from './hooks/useErrorExplain';
 
 export type OopsType = 'block' | 'inline' | 'inline-small';
 
@@ -10,19 +10,20 @@ interface Props {
 }
 
 export const Oops: FC<Props> = ({ error, type = 'block' }) => {
-  const explain = useErrorExplain(error);
+  const errorExplain = useErrorExplain();
+  const message = errorExplain(error);
   if (type === 'inline') {
     return (
       <span>
         <span className="font-bold">
           <FormattedMessage defaultMessage="Oops" />
         </span>{' '}
-        <span>{explain}</span>
+        <span>{message}</span>
       </span>
     );
   } else if (type === 'inline-small') {
     return (
-      <span className="font-bold" title={explain}>
+      <span className="font-bold" title={message}>
         <FormattedMessage defaultMessage="Oops" />
       </span>
     );
@@ -34,7 +35,7 @@ export const Oops: FC<Props> = ({ error, type = 'block' }) => {
           <FormattedMessage defaultMessage="Oops" />
         </div>
         <div>
-          {explain}
+          {message}
         </div>
       </div>
     </div>

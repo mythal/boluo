@@ -1,4 +1,5 @@
 export { baseUrlAtom, useBaseUrl } from './hooks/useBaseUrl';
+export { useErrorExplain } from './hooks/useErrorExplain';
 export { useGet } from './hooks/useGet';
 export { useLocale } from './hooks/useLocale';
 export { MeProvider, useMe } from './hooks/useMe';

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { FC, ReactNode } from 'react';
 import { stopPropagation } from 'utils';
-import { usePaneBanner, useSetBannel } from '../hooks/useBanner';
+import { usePaneBanner, useSetBanner } from '../hooks/useBanner';
 import { useFocusPane, useIsFocused } from '../state/chat-view';
 import { PaneBanner } from './PaneBanner';
 

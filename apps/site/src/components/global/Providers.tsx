@@ -1,36 +1,22 @@
 'use client';
 
-import type { OnErrorFn } from '@formatjs/intl';
 import type { GetMe } from 'api';
 import { MeProvider } from 'common';
-import type { IntlMessages, Locale } from 'common/locale';
-import { defaultLocale } from 'common/locale';
+import { IntlMessages, Locale } from 'common/locale';
 import { store } from 'common/store';
 import { Provider as JotaiProvider } from 'jotai';
 import type { FC } from 'react';
 import { useEffect } from 'react';
-import { IntlProvider } from 'react-intl';
 import { SWRConfig } from 'swr';
 import { clearWatchSystemTheme, watchSystemTheme } from 'ui/theme';
 import type { ChildrenProps } from 'utils';
+import { LocaleProvider } from './LocaleProvider';
 
 interface Props extends ChildrenProps {
   locale: Locale;
   messages: IntlMessages;
   me: GetMe | null;
 }
-
-const onIntlError: OnErrorFn = (e) => {
-  if (e.code === 'MISSING_TRANSLATION') {
-    if (typeof window === 'undefined' /* SSR */) {
-      // do noting
-    } else {
-      console.debug('Missing Translation: ', e.message);
-    }
-  } else {
-    throw e;
-  }
-};
 
 export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) => {
   useEffect(() => {
@@ -45,11 +31,11 @@ export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) =
           suspense: true,
         }}
       >
-        <IntlProvider locale={locale} messages={messages} defaultLocale={defaultLocale} onError={onIntlError}>
-          <MeProvider initialMe={me}>
+        <MeProvider initialMe={me}>
+          <LocaleProvider locale={locale} messages={messages}>
             {children}
-          </MeProvider>
-        </IntlProvider>
+          </LocaleProvider>
+        </MeProvider>
       </SWRConfig>
     </JotaiProvider>
   );

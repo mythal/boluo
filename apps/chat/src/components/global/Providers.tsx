@@ -1,12 +1,10 @@
 import { MeProvider } from 'common';
 import { store } from 'common/store';
 import { Provider as JotaiProvider } from 'jotai';
-import en from 'lang/compiled/en.json';
-import zhCn from 'lang/compiled/zh_CN.json';
 import { ReactNode, Suspense } from 'react';
-import { IntlProvider } from 'react-intl';
 import { SWRConfig } from 'swr';
-import { ChatSkeleton } from './ChatSkeleton';
+import { ChatSkeleton } from '../ChatSkeleton';
+import { LocaleProvider } from './LocaleProvider';
 
 interface Props {
   children: ReactNode;
@@ -21,13 +19,13 @@ export function Providers({ children }: Props) {
           suspense: true,
         }}
       >
-        <IntlProvider locale={'en'} messages={en}>
-          <Suspense fallback={<ChatSkeleton>Loading...</ChatSkeleton>}>
+        <Suspense fallback={<ChatSkeleton>Loading...</ChatSkeleton>}>
+          <LocaleProvider>
             <MeProvider>
               {children}
             </MeProvider>
-          </Suspense>
-        </IntlProvider>
+          </LocaleProvider>
+        </Suspense>
       </SWRConfig>
     </JotaiProvider>
   );

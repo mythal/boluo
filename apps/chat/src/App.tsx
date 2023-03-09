@@ -1,5 +1,5 @@
 import Chat from './components/Chat';
-import { Providers } from './components/Providers';
+import { Providers } from './components/global/Providers';
 
 function App() {
   return (

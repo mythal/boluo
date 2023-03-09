@@ -2,10 +2,10 @@ import { ApiError, Patch, patch } from 'api';
 import { appFetch } from 'api';
 import { useCallback } from 'react';
 import { Result } from 'utils';
-import { useBaseUrl } from './useBaseUrl';
+import { useApiUrl } from './useApiUrl';
 
 export const usePatch = () => {
-  const baseUrl = useBaseUrl();
+  const baseUrl = useApiUrl();
   return useCallback(async <P extends keyof Patch>(
     path: P,
     query: Patch[P]['query'],

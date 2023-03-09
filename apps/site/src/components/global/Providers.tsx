@@ -1,10 +1,12 @@
 'use client';
 
 import type { GetMe } from 'api';
-import { MeProvider } from 'common';
+import { apiUrlAtom, MeProvider } from 'common';
+import { DEFAULT_API_URL } from 'common';
 import { IntlMessages, Locale } from 'common/locale';
 import { store } from 'common/store';
 import { Provider as JotaiProvider } from 'jotai';
+import { useHydrateAtoms } from 'jotai/utils';
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { SWRConfig } from 'swr';
@@ -23,6 +25,8 @@ export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) =
     watchSystemTheme();
     return clearWatchSystemTheme;
   }, []);
+
+  useHydrateAtoms([[apiUrlAtom, process.env.PUBLIC_DEFAULT_API_URL || DEFAULT_API_URL]], { store });
   return (
     <JotaiProvider store={store}>
       <SWRConfig

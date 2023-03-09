@@ -1,6 +1,8 @@
-import { MeProvider } from 'common';
+import { apiUrlAtom, MeProvider } from 'common';
+import { DEFAULT_API_URL } from 'common';
 import { store } from 'common/store';
 import { Provider as JotaiProvider } from 'jotai';
+import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode, Suspense } from 'react';
 import { SWRConfig } from 'swr';
 import { ChatSkeleton } from '../ChatSkeleton';
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export function Providers({ children }: Props) {
+  useHydrateAtoms([[apiUrlAtom, import.meta.env.PUBLIC_DEFAULT_API_URL || DEFAULT_API_URL]], { store });
   return (
     <JotaiProvider store={store}>
       <SWRConfig

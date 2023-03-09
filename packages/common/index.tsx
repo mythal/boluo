@@ -1,4 +1,3 @@
-export * from './const';
 export { apiUrlAtom, useApiUrl } from './hooks/useApiUrl';
 export { useErrorExplain } from './hooks/useErrorExplain';
 export { useGet } from './hooks/useGet';

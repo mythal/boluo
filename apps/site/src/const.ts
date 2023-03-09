@@ -6,4 +6,4 @@ if (!process.env.BACKEND_URL) {
   throw new Error('Missing environment variable BACKEND_URL');
 }
 
-export const SERVER_SIDE_API_URL = process.env.BACKEND_URL;
+export const SERVER_SIDE_API_URL = process.env.BACKEND_URL + '/api';

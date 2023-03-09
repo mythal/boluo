@@ -25,7 +25,7 @@ const config = {
     return [
       {
         source: '/api/:path*',
-        destination: `${BACKEND_URL}/:path*`, // Proxy to Backend
+        destination: `${BACKEND_URL}/api/:path*`, // Proxy to Backend
       },
     ];
   },

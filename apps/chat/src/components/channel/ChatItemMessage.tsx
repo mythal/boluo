@@ -2,8 +2,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Message } from 'api';
 import clsx from 'clsx';
+import { useMe } from 'common';
 import type { FC } from 'react';
-import { useMe } from '../../../hooks/useMe';
 import { MessageReorderHandle } from './MessageReorderHandle';
 
 interface Props {

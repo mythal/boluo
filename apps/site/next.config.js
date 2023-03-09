@@ -2,7 +2,9 @@ const path = require('path');
 const withMDX = require('@next/mdx')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
-const BACKEND_URL = process.env.NEXT_BACKEND_URL || 'https://staging.boluo.chat/api';
+
+// Backend URL for server-side
+const BACKEND_URL = process.env.BACKEND_URL;
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -19,14 +21,11 @@ const config = {
     typedRoutes: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  env: {
-    backendUrl: BACKEND_URL,
-  },
-  async rewrites() {
+  rewrites: async () => {
     return [
       {
         source: '/api/:path*',
-        destination: `${BACKEND_URL}/:path*`, // Proxy to Backend
+        destination: `${BACKEND_URL}/api/:path*`, // Proxy to Backend
       },
     ];
   },

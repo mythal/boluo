@@ -4,7 +4,7 @@ import { makeUri } from 'api';
 import { appFetch } from 'api';
 import { cookies } from 'next/headers';
 import type { Result } from 'utils';
-import { BACKEND_URL } from '../const';
+import { SERVER_SIDE_API_URL } from '../const';
 
 // Keep this value the same as the server
 const sessionCookieKey = 'boluo-session-v1';
@@ -23,7 +23,7 @@ export async function get<P extends keyof Get>(
   path: P,
   query: Get[P]['query'],
 ): Promise<Result<Get[P]['result'], ApiError>> {
-  const url = makeUri(BACKEND_URL, path, query);
+  const url = makeUri(SERVER_SIDE_API_URL, path, query);
   return appFetch(url, { headers: makeHeaders() });
 }
 
@@ -31,7 +31,7 @@ export async function post<P extends keyof Post>(
   path: P,
   payload: Post[P]['payload'],
 ): Promise<Result<Post[P]['result'], ApiError>> {
-  const url = BACKEND_URL + path;
+  const url = SERVER_SIDE_API_URL + path;
 
   const headers = makeHeaders();
   headers.set('Content-Type', 'application/json');

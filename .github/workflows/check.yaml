@@ -24,13 +24,13 @@ jobs:
       - name: Install
         run: just install
 
-      - name: Lint
-        run: just lint
-
       - name: Build
         run: just build
         env:
           CI: true
+
+      - name: Lint
+        run: just lint
 
   legacy:
     name: Legacy Application

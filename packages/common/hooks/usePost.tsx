@@ -1,10 +1,10 @@
 import { ApiError, Post, post } from 'api';
 import { useCallback } from 'react';
 import { Result } from 'utils';
-import { useBaseUrl } from './useBaseUrl';
+import { useApiUrl } from './useApiUrl';
 
 export const usePost = () => {
-  const baseUrl = useBaseUrl();
+  const baseUrl = useApiUrl();
   return useCallback(async <P extends keyof Post>(
     path: P,
     query: Post[P]['query'],

@@ -23,6 +23,7 @@ export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) =
     watchSystemTheme();
     return clearWatchSystemTheme;
   }, []);
+
   return (
     <JotaiProvider store={store}>
       <SWRConfig

@@ -1,8 +1,10 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 /media
-.env
 .envrc
+.env.local
+.env*.local
+**/*.tsbuildinfo
 
 # compiled output
 dist

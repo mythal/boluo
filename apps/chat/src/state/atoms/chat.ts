@@ -1,5 +1,5 @@
 import { isServerEvent } from 'api';
-import { wsBaseUrlAtom } from 'common';
+import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
 import { store } from 'common/store';
 import { useSetAtom } from 'jotai';
 import { atomWithReducer, selectAtom } from 'jotai/utils';
@@ -40,7 +40,7 @@ store.sub(connectionStateAtom, () => {
   const { spaceId: mailboxId } = store.get(chatAtom).context;
   console.debug(`establish new connection for ${mailboxId}`);
   store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
-  const newConnection = createMailboxConnection(store.get(wsBaseUrlAtom), mailboxId);
+  const newConnection = createMailboxConnection(store.get(webSocketUrlAtom), mailboxId);
   newConnection.onopen = (_) => {
     store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }, undefined));
   };

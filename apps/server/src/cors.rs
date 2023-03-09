@@ -5,11 +5,15 @@ use hyper::header::{
 };
 use hyper::{Body, Request, Response};
 
+pub fn is_allowed_origin(origin: &str) -> bool {
+    let start = ["https://boluo.chat", "http://localhost:", "http://127.0.0.1:"];
+    start.iter().any(|x| origin.starts_with(x))
+}
+
 pub fn allow_origin(origin: Option<&str>, mut res: Response<Body>) -> Response<Body> {
     let header = res.headers_mut();
     let origin = if let Some(origin) = origin {
-        if origin == "https://boluo.chat" || origin.ends_with(".boluo.chat") || origin.starts_with("http://localhost:")
-        {
+        if origin.ends_with(".boluo.chat") || is_allowed_origin(origin) {
             origin
         } else {
             ""

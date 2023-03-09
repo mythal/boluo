@@ -9,6 +9,16 @@ export default defineConfig({
       '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.BACKEND_URL,
+        ws: true,
+      },
+    },
+  },
+  envDir: '../../',
+  envPrefix: 'PUBLIC_',
   plugins: [react({
     babel: {
       configFile: true,

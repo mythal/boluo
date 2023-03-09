@@ -1,5 +1,8 @@
 import { atom, useAtomValue } from 'jotai';
-import { DEFAULT_API_URL } from '../const';
+
+const isBrowser = typeof window !== 'undefined';
+
+export const DEFAULT_API_URL = isBrowser ? window.location.origin + '/api' : 'https://staging.boluo.chat/api';
 
 export const apiUrlAtom = atom(DEFAULT_API_URL);
 

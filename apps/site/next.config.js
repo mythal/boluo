@@ -3,11 +3,8 @@ const withMDX = require('@next/mdx')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
 
-// Backend URL for frontend
-const PUBLIC_DEFAULT_API_URL = process.env.PUBLIC_DEFAULT_API_URL;
-
 // Backend URL for server-side
-const BACKEND_URL = process.env.BACKEND_URL || PUBLIC_DEFAULT_API_URL;
+const BACKEND_URL = process.env.BACKEND_URL;
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -24,18 +21,13 @@ const config = {
     typedRoutes: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  env: {
-    PUBLIC_DEFAULT_API_URL,
-  },
   rewrites: async () => {
-    return BACKEND_URL
-      ? [
-        {
-          source: '/api/:path*',
-          destination: `${BACKEND_URL}/:path*`, // Proxy to Backend
-        },
-      ]
-      : [];
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${BACKEND_URL}/:path*`, // Proxy to Backend
+      },
+    ];
   },
   webpack: (config) => {
     if (ANALYZE) {

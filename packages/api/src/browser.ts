@@ -1,6 +1,8 @@
 import type { Result } from 'utils';
-import { ApiError, Get, makeUri, Patch, Post } from '.';
+import type { ApiError, Get, Patch, Post, User } from '.';
 import { appFetch } from './common';
+import { makeUri } from './request';
+import type { Media } from './types/media';
 
 export async function get<P extends keyof Get>(
   baseUrl: string,
@@ -47,6 +49,54 @@ export async function patch<P extends keyof Patch>(
     cache: 'no-cache',
     method: 'PATCH',
     body: JSON.stringify(payload),
+  };
+  return appFetch(url, params);
+}
+
+export function mediaUrl(baseUrl: string, id: string, download = false): string {
+  return makeUri(baseUrl, '/media/get', { download, id });
+}
+
+export function mediaHead(baseUrl: string, id: string): Promise<Response> {
+  const url = makeUri(baseUrl, '/media/get', { id });
+  return fetch(url, {
+    method: 'HEAD',
+    credentials: 'include',
+  });
+}
+
+export function upload(
+  baseUrl: string,
+  file: Blob,
+  filename: string,
+  mimeType: string,
+  path = '/media/upload',
+): Promise<Result<Media, ApiError>> {
+  const url = makeUri(baseUrl, path, { filename, mimeType });
+
+  const params: RequestInit = {
+    credentials: 'include',
+    headers,
+    cache: 'no-cache',
+    method: 'POST',
+    body: file,
+  };
+  return appFetch(url, params);
+}
+
+export function editAvatar(
+  baseUrl: string,
+  file: File,
+): Promise<Result<User, ApiError>> {
+  const path = '/users/edit_avatar';
+  const url = makeUri(baseUrl, path, { filename: file.name, mimeType: file.type });
+
+  const params: RequestInit = {
+    credentials: 'include',
+    headers,
+    cache: 'no-cache',
+    method: 'POST',
+    body: file,
   };
   return appFetch(url, params);
 }

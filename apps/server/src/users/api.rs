@@ -75,7 +75,8 @@ pub struct LoginReturn {
     pub token: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct EditUser {
     pub nickname: Option<String>,

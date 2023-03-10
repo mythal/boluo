@@ -149,6 +149,10 @@ impl User {
             .await?;
         row.try_get(0).map_err(Into::into)
     }
+    pub async fn remove_avatar<T: Querist>(db: &mut T, id: &Uuid) -> Result<User, ModelError> {
+        let row = db.query_exactly_one(include_str!("sql/remove_avatar.sql"), &[id]).await?;
+        row.try_get(0).map_err(Into::into)
+    }
 }
 
 #[derive(Debug, Serialize, FromSql, Clone)]

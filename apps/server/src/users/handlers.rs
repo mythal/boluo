@@ -207,6 +207,15 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
         .map_err(Into::into)
 }
 
+pub async fn remove_avatar(req: Request<Body>) -> Result<User, AppError> {
+    use crate::csrf::authenticate;
+    let session = authenticate(&req).await?;
+    let mut db = database::get().await?;
+    User::remove_avatar(&mut *db, &session.user_id)
+        .await
+        .map_err(Into::into)
+}
+
 pub async fn check_email_exists(req: Request<Body>) -> Result<bool, AppError> {
     let CheckEmailExists { email } = parse_query(req.uri())?;
     let mut db = database::get().await?;
@@ -332,6 +341,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/settings", Method::GET) => query_settings(req).await.map(ok_response),
         ("/edit", Method::POST) => edit(req).await.map(ok_response),
         ("/edit_avatar", Method::POST) => edit_avatar(req).await.map(ok_response),
+        ("/remove_avatar", Method::POST) => remove_avatar(req).await.map(ok_response),
         ("/update_settings", Method::POST) => update_settings(req).await.map(ok_response),
         ("/update_settings", Method::PUT) => update_settings(req).await.map(ok_response),
         ("/update_settings", Method::PATCH) => partial_update_settings(req).await.map(ok_response),

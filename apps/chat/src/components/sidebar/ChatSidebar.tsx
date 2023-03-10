@@ -1,13 +1,11 @@
 import type { Space } from 'api';
 import clsx from 'clsx';
-import { useMe } from 'common';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
 import { toggle } from 'utils';
 import type { Pane } from '../../types/chat-pane';
-import { Avatar } from '../account/Avatar';
 import { ChatSidebarFooter } from './ChatSidebarFooter';
 import { SidebarChannelList } from './SidebarChannelList';
 import { SidebarHeader } from './SidebarHeader';

@@ -267,7 +267,7 @@ module.exports = {
       addVariant('state-unchecked', '&[data-state="unchecked"]');
       addVariant('hightlighted', '&[data-highlighted]');
     }),
-
+    require('@tailwindcss/container-queries'),
     themeSwapper({
       themes: [
         {

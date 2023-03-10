@@ -17,7 +17,9 @@ export const SidebarUserIcon: FC<Props> = ({ onClick }) => {
       <Avatar
         size={32}
         id={me.user.id}
-        className={clsx('w-8 h-8 rounded border cursor-pointer', 'border-surface-400 hover:brightness-125')}
+        name={me.user.nickname}
+        avatarId={me.user.avatarId}
+        className={clsx('w-8 h-8 rounded border cursor-pointer', 'border-surface-400')}
       />
     </button>
   );

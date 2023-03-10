@@ -31,6 +31,11 @@ export interface EmptyPane {
   type: 'EMPTY';
 }
 
+export interface ProfilePane {
+  type: 'PROFILE';
+  userId: string;
+}
+
 export type PaneData =
   | ChannelPane
   | EmptyPane
@@ -38,7 +43,8 @@ export type PaneData =
   | HelpPane
   | SpaceSettingsPane
   | CreateChannelPane
-  | LoginPane;
+  | LoginPane
+  | ProfilePane;
 
 const UNIQUE_PANE_TYPES: Array<Pane['type']> = ['HELP', 'CREATE_CHANNEL', 'SETTINGS', 'LOGIN', 'SPACE_SETTINGS'];
 

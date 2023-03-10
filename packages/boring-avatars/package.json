@@ -1,0 +1,17 @@
+{
+  "name": "boring-avatars",
+  "version": "0.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "MIT"
+}

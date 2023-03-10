@@ -9,6 +9,7 @@ import { toggle } from 'utils';
 import type { Pane } from '../../types/chat-pane';
 import { ChatSidebarFooter } from './ChatSidebarFooter';
 import { SidebarChannelList } from './SidebarChannelList';
+import { SidebarHeader } from './SidebarHeader';
 import { SpaceOptions } from './SpaceOptions';
 
 interface Props {
@@ -24,19 +25,7 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
   const isLoginOpen = useMemo(() => panes.findIndex(pane => pane.type === 'LOGIN') !== -1, [panes]);
   return (
     <>
-      <div className="border-b-1/2 bg-surface-100 border-b-gray-400 flex justify-between gap-1 py-2 px-4 items-center select-none">
-        <button
-          className={clsx(
-            'p-2 border rounded-md  cursor-pointer ',
-            isExpand
-              ? 'border-surface-400 bg-surface-200 hover:bg-surface-50'
-              : 'border-surface-300 bg-surface-50 hover:bg-surface-200',
-          )}
-          onClick={toggleExpand}
-        >
-          {isExpand ? <ChevronLeft /> : <ChevronRight />}
-        </button>
-      </div>
+      <SidebarHeader isExpand={isExpand} toggleExpand={toggleExpand} />
       <div
         className={clsx(
           'bg-bg relative flex flex-col justify-between overflow-y-auto row-start-2 row-end-[-1] col-start-1 col-end-1',

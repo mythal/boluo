@@ -1,3 +1,4 @@
+import type { AvatarProps } from './Avatar';
 import { getRandomColor, hashCode } from './utilities';
 
 const SIZE = 90;
@@ -21,8 +22,8 @@ function generateColors(colors, name) {
   return colorsList;
 }
 
-const AvatarRing = (props) => {
-  const ringColors = generateColors(props.colors, props.name);
+const AvatarRing = ({ name, colors, size, square, ...props }: AvatarProps) => {
+  const ringColors = generateColors(colors, name);
 
   return (
     <svg
@@ -30,13 +31,12 @@ const AvatarRing = (props) => {
       fill="none"
       role="img"
       xmlns="http://www.w3.org/2000/svg"
-      width={props.size}
-      height={props.size}
-      className={props.className}
+      width={size}
+      height={size}
+      {...props}
     >
-      {props.title && <title>{props.name}</title>}
       <mask id="mask__ring" maskUnits="userSpaceOnUse" x={0} y={0} width={SIZE} height={SIZE}>
-        <rect width={SIZE} height={SIZE} rx={props.square ? undefined : SIZE * 2} fill="#FFFFFF" />
+        <rect width={SIZE} height={SIZE} rx={square ? undefined : SIZE * 2} fill="#FFFFFF" />
       </mask>
       <g mask="url(#mask__ring)">
         <path d="M0 0h90v45H0z" fill={ringColors[0]} />

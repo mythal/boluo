@@ -1,16 +1,15 @@
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { ChevronLeft, ChevronRight } from 'icons';
-import type { FC } from 'react';
-import { Avatar } from '../account/Avatar';
+import type { FC, ReactNode } from 'react';
 
 interface Props {
   isExpand: boolean;
+  userIcon: ReactNode;
   toggleExpand: () => void;
 }
 
-export const SidebarHeader: FC<Props> = ({ isExpand, toggleExpand }) => {
-  const me = useMe();
+export const SidebarHeader: FC<Props> = ({ isExpand, toggleExpand, userIcon }) => {
   return (
     <div className="border-b-1/2 bg-surface-100 border-b-gray-400 flex justify-between gap-1 py-2 px-4 items-center select-none">
       <button
@@ -24,7 +23,7 @@ export const SidebarHeader: FC<Props> = ({ isExpand, toggleExpand }) => {
       >
         {isExpand ? <ChevronLeft /> : <ChevronRight />}
       </button>
-      {me && isExpand && <Avatar size={32} id={me.user.id} className="rounded" />}
+      {isExpand && userIcon}
     </div>
   );
 };

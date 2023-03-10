@@ -1,15 +1,18 @@
 import type { Space } from 'api';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight } from 'icons';
+import { useMe } from 'common';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
 import { toggle } from 'utils';
 import type { Pane } from '../../types/chat-pane';
+import { Avatar } from '../account/Avatar';
 import { ChatSidebarFooter } from './ChatSidebarFooter';
 import { SidebarChannelList } from './SidebarChannelList';
 import { SidebarHeader } from './SidebarHeader';
+import { SidebarUserIcon } from './SidebarUserIcon';
+import { SidebarUserOperations } from './SidebarUserOperations';
 import { SpaceOptions } from './SpaceOptions';
 
 interface Props {
@@ -23,9 +26,18 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
   const isSettingsOpen = useMemo(() => panes.findIndex(pane => pane.type === 'SETTINGS') !== -1, [panes]);
   const isHelpOpen = useMemo(() => panes.findIndex(pane => pane.type === 'HELP') !== -1, [panes]);
   const isLoginOpen = useMemo(() => panes.findIndex(pane => pane.type === 'LOGIN') !== -1, [panes]);
+  const [showUserOperations, setShowUserOperations] = useState(false);
+  const handleClickUserIcon = useCallback(() => {
+    setExpand(true);
+    setShowUserOperations(true);
+  }, []);
+  const userIcon = useMemo(
+    () => <SidebarUserIcon onClick={handleClickUserIcon} />,
+    [handleClickUserIcon],
+  );
   return (
     <>
-      <SidebarHeader isExpand={isExpand} toggleExpand={toggleExpand} />
+      <SidebarHeader isExpand={isExpand} toggleExpand={toggleExpand} userIcon={userIcon} />
       <div
         className={clsx(
           'bg-bg relative flex flex-col justify-between overflow-y-auto row-start-2 row-end-[-1] col-start-1 col-end-1',
@@ -35,11 +47,16 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
         {isExpand
           ? (
             <div>
+              {showUserOperations && <SidebarUserOperations close={() => setShowUserOperations(false)} />}
               <SpaceOptions space={space} panes={panes} />
               <SidebarChannelList panes={panes} spaceId={space.id} />
             </div>
           )
-          : <div />}
+          : (
+            <div className="flex justify-center py-4">
+              {userIcon}
+            </div>
+          )}
         <ChatSidebarFooter
           className={isExpand
             ? 'p-2 flex justify-between sticky bottom-0 bg-bg'

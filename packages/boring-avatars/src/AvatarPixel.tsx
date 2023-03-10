@@ -1,3 +1,4 @@
+import type { AvatarProps } from './Avatar';
 import { getRandomColor, hashCode } from './utilities';
 
 const ELEMENTS = 64;
@@ -12,8 +13,8 @@ function generateColors(name, colors) {
   return colorList;
 }
 
-const AvatarPixel = (props) => {
-  const pixelColors = generateColors(props.name, props.colors);
+const AvatarPixel = ({ name, colors, size, square, ...props }: AvatarProps) => {
+  const pixelColors = generateColors(name, colors);
 
   return (
     <svg
@@ -21,11 +22,10 @@ const AvatarPixel = (props) => {
       fill="none"
       role="img"
       xmlns="http://www.w3.org/2000/svg"
-      width={props.size}
-      height={props.size}
-      className={props.className}
+      width={size}
+      height={size}
+      {...props}
     >
-      {props.title && <title>{props.name}</title>}
       <mask
         id="mask__pixel"
         mask-type="alpha"
@@ -35,7 +35,7 @@ const AvatarPixel = (props) => {
         width={SIZE}
         height={SIZE}
       >
-        <rect width={SIZE} height={SIZE} rx={props.square ? undefined : SIZE * 2} fill="#FFFFFF" />
+        <rect width={SIZE} height={SIZE} rx={square ? undefined : SIZE * 2} fill="#FFFFFF" />
       </mask>
       <g mask="url(#mask__pixel)">
         <rect width={10} height={10} fill={pixelColors[0]} />

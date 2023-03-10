@@ -1,3 +1,4 @@
+import type { AvatarProps } from './Avatar';
 import { getBoolean, getContrast, getRandomColor, getUnit, hashCode } from './utilities';
 
 const SIZE = 36;
@@ -31,8 +32,8 @@ function generateData(name, colors) {
   return data;
 }
 
-const AvatarBeam = (props) => {
-  const data = generateData(props.name, props.colors);
+const AvatarBeam = ({ name, size, colors, square, ...props }: AvatarProps) => {
+  const data = generateData(name, colors);
 
   return (
     <svg
@@ -40,13 +41,12 @@ const AvatarBeam = (props) => {
       fill="none"
       role="img"
       xmlns="http://www.w3.org/2000/svg"
-      width={props.size}
-      height={props.size}
-      className={props.className}
+      width={size}
+      height={size}
+      {...props}
     >
-      {props.title && <title>{props.name}</title>}
       <mask id="mask__beam" maskUnits="userSpaceOnUse" x={0} y={0} width={SIZE} height={SIZE}>
-        <rect width={SIZE} height={SIZE} rx={props.square ? undefined : SIZE * 2} fill="#FFFFFF" />
+        <rect width={SIZE} height={SIZE} rx={square ? undefined : SIZE * 2} fill="#FFFFFF" />
       </mask>
       <g mask="url(#mask__beam)">
         <rect width={SIZE} height={SIZE} fill={data.backgroundColor} />

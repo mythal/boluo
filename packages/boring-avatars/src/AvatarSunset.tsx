@@ -1,3 +1,4 @@
+import type { AvatarProps } from './Avatar';
 import { getRandomColor, hashCode } from './utilities';
 
 const ELEMENTS = 4;
@@ -12,9 +13,9 @@ function generateColors(name, colors) {
   return colorsList;
 }
 
-const AvatarSunset = (props) => {
-  const sunsetColors = generateColors(props.name, props.colors);
-  const name = props.name.replace(/\s/g, '');
+const AvatarSunset = ({ name, colors, size, square, ...props }: AvatarProps) => {
+  const sunsetColors = generateColors(name, colors);
+  name = name.replace(/\s/g, '');
 
   return (
     <svg
@@ -22,13 +23,12 @@ const AvatarSunset = (props) => {
       fill="none"
       role="img"
       xmlns="http://www.w3.org/2000/svg"
-      width={props.size}
-      height={props.size}
-      className={props.className}
+      width={size}
+      height={size}
+      {...props}
     >
-      {props.title && <title>{props.name}</title>}
       <mask id="mask__sunset" maskUnits="userSpaceOnUse" x={0} y={0} width={SIZE} height={SIZE}>
-        <rect width={SIZE} height={SIZE} rx={props.square ? undefined : SIZE * 2} fill="#FFFFFF" />
+        <rect width={SIZE} height={SIZE} rx={square ? undefined : SIZE * 2} fill="#FFFFFF" />
       </mask>
       <g mask="url(#mask__sunset)">
         <path fill={'url(#gradient_paint0_linear_' + name + ')'} d="M0 0h80v40H0z" />

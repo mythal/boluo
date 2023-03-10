@@ -5,16 +5,12 @@ import AvatarPixel from './AvatarPixel';
 import AvatarRing from './AvatarRing';
 import AvatarSunset from './AvatarSunset';
 
-const variants = ['pixel', 'bauhaus', 'ring', 'beam', 'sunset', 'marble'];
-const deprecatedVariants = { geometric: 'beam', abstract: 'bauhaus' };
-
-export interface AvatarProps {
+export interface AvatarProps extends React.HTMLAttributes<SVGElement> {
   size?: number | string;
   name?: string;
   square?: boolean;
   variant?: 'marble' | 'beam' | 'pixel' | 'sunset' | 'ring' | 'bauhaus';
   colors?: string[];
-  className?: string;
 }
 
 const Avatar = ({
@@ -25,16 +21,7 @@ const Avatar = ({
   size = 40,
   ...props
 }: AvatarProps) => {
-  const avatarProps = { colors, name, size, square, ...props };
-  const checkedVariant = () => {
-    if (Object.keys(deprecatedVariants).includes(variant)) {
-      return deprecatedVariants[variant];
-    }
-    if (variants.includes(variant)) {
-      return variant;
-    }
-    return 'marble';
-  };
+  const avatarProps: AvatarProps = { colors, name, size, square, ...props };
   const avatars = {
     pixel: <AvatarPixel {...avatarProps} />,
     bauhaus: <AvatarBauhaus {...avatarProps} />,
@@ -43,7 +30,7 @@ const Avatar = ({
     sunset: <AvatarSunset {...avatarProps} />,
     marble: <AvatarMarble {...avatarProps} />,
   };
-  return avatars[checkedVariant()];
+  return avatars[variant];
 };
 
 export default Avatar;

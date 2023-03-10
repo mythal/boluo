@@ -1,3 +1,4 @@
+import type { AvatarProps } from './Avatar';
 import { getRandomColor, getUnit, hashCode } from './utilities';
 
 const ELEMENTS = 3;
@@ -18,8 +19,8 @@ function generateColors(name, colors) {
   return elementsProperties;
 }
 
-const AvatarMarble = (props) => {
-  const properties = generateColors(props.name, props.colors);
+const AvatarMarble = ({ name, colors, size, square, ...props }: AvatarProps) => {
+  const properties = generateColors(name, colors);
 
   return (
     <svg
@@ -27,13 +28,12 @@ const AvatarMarble = (props) => {
       fill="none"
       role="img"
       xmlns="http://www.w3.org/2000/svg"
-      width={props.size}
-      height={props.size}
-      className={props.className}
+      width={size}
+      height={size}
+      {...props}
     >
-      {props.title && <title>{props.name}</title>}
       <mask id="mask__marble" maskUnits="userSpaceOnUse" x={0} y={0} width={SIZE} height={SIZE}>
-        <rect width={SIZE} height={SIZE} rx={props.square ? undefined : SIZE * 2} fill="#FFFFFF" />
+        <rect width={SIZE} height={SIZE} rx={square ? undefined : SIZE * 2} fill="#FFFFFF" />
       </mask>
       <g mask="url(#mask__marble)">
         <rect width={SIZE} height={SIZE} fill={properties[0].color} />

@@ -24,6 +24,7 @@ import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import useSWRImmutable from 'swr/immutable';
@@ -353,9 +354,12 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
             </Button>
           )}
         </SortableContext>
-        <DragOverlay zIndex={15}>
-          {active && <ChatItemMessage message={active[1]} className="py-2 px-4" />}
-        </DragOverlay>
+        {createPortal(
+          <DragOverlay zIndex={15}>
+            {active && <ChatItemMessage message={active[1]} className="py-2 px-4" />}
+          </DragOverlay>,
+          document.body,
+        )}
       </DndContext>
     </div>
   );

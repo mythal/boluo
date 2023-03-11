@@ -6,6 +6,7 @@ import { Button } from 'ui';
 import { toggle } from 'utils';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';
+import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneProfileEdit } from './PaneProfileEdit';
 import { PaneProfileNotFound } from './PaneProfileNotFound';
@@ -38,7 +39,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
     </>
   );
   return (
-    <>
+    <PaneBox>
       <PaneHeaderBox operators={operators} icon={isEditing ? <Edit /> : <User />}>
         {user.nickname} {isMe && (
           <span className="text-surface-500">
@@ -51,6 +52,6 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
           ? <PaneProfileEdit exit={() => setIsEditing(false)} me={me.user} />
           : <PaneProfileView user={user} />}
       </PaneBodyBox>
-    </>
+    </PaneBox>
   );
 };

@@ -1,5 +1,5 @@
-import { PaneBox } from './PaneBox';
+import { PaneSimpleBox } from './PaneSimpleBox';
 
 export const PaneEmpty = () => {
-  return <PaneBox>∅</PaneBox>;
+  return <PaneSimpleBox>∅</PaneSimpleBox>;
 };

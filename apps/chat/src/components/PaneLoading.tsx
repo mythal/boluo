@@ -1,10 +1,10 @@
 import { Loading } from 'ui';
-import { PaneBox } from './PaneBox';
+import { PaneSimpleBox } from './PaneSimpleBox';
 
 export const PaneLoading = () => {
   return (
-    <PaneBox>
+    <PaneSimpleBox>
       <Loading />
-    </PaneBox>
+    </PaneSimpleBox>
   );
 };

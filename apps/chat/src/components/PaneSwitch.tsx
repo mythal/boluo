@@ -1,5 +1,4 @@
-import { ApiError } from 'api';
-import { createContext, FC, useState } from 'react';
+import { FC, useState } from 'react';
 import { memo, Suspense } from 'react';
 import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';

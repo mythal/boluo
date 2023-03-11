@@ -9,16 +9,13 @@ interface Props {
 
 export const PaneBodyBox: FC<Props> = ({ children, className }) => {
   const isFocused = useIsFocused();
-  const focus = useFocusPane();
   return (
     <div
       className={clsx(
-        '@container bg-bg',
-        isFocused && `pane-focused`,
-        `max-md:[&:not(.pane-focused)]:hidden`,
+        '@container bg-bg flex-grow',
+        isFocused ? '' : 'max-md:hidden max-md:h-0',
         className,
       )}
-      onClick={focus}
     >
       {children}
     </div>

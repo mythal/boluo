@@ -2,7 +2,7 @@ import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
 import { Oops } from 'ui/Oops';
 import type { ChildrenProps, StyleProps } from 'utils';
-import { PaneBox } from './PaneBox';
+import { PaneSimpleBox } from './PaneSimpleBox';
 
 interface Props extends ChildrenProps, StyleProps {
 }
@@ -30,9 +30,9 @@ export class PaneError extends Component<Props, State> {
   override render() {
     if (this.state.error) {
       return (
-        <PaneBox>
+        <PaneSimpleBox>
           <Oops error={this.state.error} type="block" />
-        </PaneBox>
+        </PaneSimpleBox>
       );
     } else {
       return <React.Fragment>{this.props.children}</React.Fragment>;

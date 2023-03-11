@@ -15,10 +15,11 @@ import { SpaceOptions } from './SpaceOptions';
 
 interface Props {
   space: Space;
+  className?: string;
   panes: Pane[];
 }
 
-export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
+export const ChatSiderbar: FC<Props> = ({ space, panes, className }) => {
   const [isExpand, setExpand] = useState(true);
   const toggleExpand = useCallback(() => setExpand(toggle), []);
   const isSettingsOpen = useMemo(() => panes.findIndex(pane => pane.type === 'SETTINGS') !== -1, [panes]);
@@ -34,12 +35,12 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
     [handleClickUserIcon],
   );
   return (
-    <>
+    <div className={className}>
       <SidebarHeader isExpand={isExpand} toggleExpand={toggleExpand} userIcon={userIcon} />
       <div
         className={clsx(
-          'bg-bg relative flex flex-col justify-between overflow-y-auto row-start-2 row-end-[-1] col-start-1 col-end-1',
-          isExpand ? 'w-48' : '',
+          'bg-bg relative flex-grow flex flex-col justify-between overflow-y-auto',
+          isExpand ? 'w-sidebar' : '',
         )}
       >
         {isExpand
@@ -65,6 +66,6 @@ export const ChatSiderbar: FC<Props> = ({ space, panes }) => {
           isExpand={isExpand}
         />
       </div>
-    </>
+    </div>
   );
 };

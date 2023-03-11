@@ -9,6 +9,7 @@ import { makePane } from '../types/chat-pane';
 import { ClosePaneButton } from './ClosePaneButton';
 import { DiceSelect } from './DiceSelect';
 import { PaneBodyBox } from './PaneBodyBox';
+import { PaneBox } from './PaneBox';
 import { PaneFooterBox } from './PaneFooterBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
@@ -114,7 +115,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
     dispatch({ type: 'REPLACE_PANE', item: newChannelPane });
   };
   return (
-    <>
+    <PaneBox>
       <PaneHeaderBox operators={<ClosePaneButton />}>
         <FormattedMessage defaultMessage="Create Channel" />
       </PaneHeaderBox>
@@ -138,6 +139,6 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
           </form>
         </FormProvider>
       </PaneBodyBox>
-    </>
+    </PaneBox>
   );
 };

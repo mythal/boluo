@@ -19,7 +19,7 @@ export function Providers({ children }: Props) {
           suspense: true,
         }}
       >
-        <Suspense fallback={<ChatSkeleton>Loading...</ChatSkeleton>}>
+        <Suspense fallback={<ChatSkeleton placeholder="Loading..." />}>
           <LocaleProvider>
             <MeProvider>
               {children}

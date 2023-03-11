@@ -1,9 +1,14 @@
 import { isApiError } from 'api';
-import type { ErrorInfo } from 'react';
+import { useErrorExplain } from 'common';
+import type { ErrorInfo, FC } from 'react';
 import React, { Component } from 'react';
-import { Oops } from 'ui/Oops';
 import type { ChildrenProps, StyleProps } from 'utils';
 import { ChatSkeleton } from './ChatSkeleton';
+
+const Explain: FC<{ error: unknown }> = ({ error }) => {
+  const explain = useErrorExplain();
+  return <>{explain(error)}</>;
+};
 
 interface Props extends ChildrenProps, StyleProps {
 }
@@ -30,10 +35,8 @@ export class ChatErrorBoundary extends Component<Props, State> {
 
   override render() {
     const error = this.state.error;
-    if (isApiError(error) && error.code === 'NOT_FOUND') {
-      return <ChatSkeleton>Chat Not Found</ChatSkeleton>;
-    } else if (error) {
-      return <ChatSkeleton>Unexpected Error</ChatSkeleton>;
+    if (error) {
+      return <ChatSkeleton placeholder={<Explain error={error} />} />;
     } else {
       return <React.Fragment>{this.props.children}</React.Fragment>;
     }

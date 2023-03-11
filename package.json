@@ -5,7 +5,6 @@
   "scripts": {},
   "private": true,
   "dependencies": {
-    "dprint": "^0.34.5"
   },
   "devDependencies": {
     "nx": "^15.8.5"

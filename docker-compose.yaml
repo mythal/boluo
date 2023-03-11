@@ -1,4 +1,9 @@
 services:
+  site: # site
+    image: ghcr.io/mythal/boluo/site:master
+    build:
+      dockerfile: ./apps/site/Dockerfile
+
   legacy:
     image: ghcr.io/mythal/boluo/legacy:master
     build:

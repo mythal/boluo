@@ -1,13 +1,17 @@
-import type { FC } from 'react';
-import type { ChildrenProps } from 'utils';
+import type { FC, ReactNode } from 'react';
 import { PaneBox } from './PaneBox';
 
-export const ChatSkeleton: FC<Partial<ChildrenProps>> = ({ children }) => {
+interface Props {
+  children?: ReactNode;
+  placeholder?: ReactNode;
+}
+
+export const ChatSkeleton: FC<Props> = ({ children, placeholder }) => {
   return (
     <div className="chat-grid">
       <div className="border-r border-b-1/2 border-b-gray-400"></div>
       <div className="border-r w-48"></div>
-      <PaneBox>{children}</PaneBox>
+      <PaneBox>{children || <span className="text-surface-400">{placeholder}</span>}</PaneBox>
     </div>
   );
 };

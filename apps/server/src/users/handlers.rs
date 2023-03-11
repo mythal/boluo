@@ -15,6 +15,7 @@ use crate::spaces::Space;
 use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
 use crate::users::models::UserExt;
 use crate::utils::get_ip;
+use hyper::header::ORIGIN;
 use hyper::{Body, Method, Request};
 use redis::AsyncCommands;
 
@@ -86,7 +87,8 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
                 if is_authenticate_use_cookie(req.headers()) {
                     // refresh session cookie
                     let host = req.headers().get("host");
-                    add_session_cookie(&session.id, host, response.headers_mut())
+                    let origin = req.headers().get(ORIGIN);
+                    add_session_cookie(&session.id, origin, host, response.headers_mut())
                 }
                 Ok(response)
             } else {
@@ -119,6 +121,7 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
     use crate::session;
 
     let host = req.headers().get("host").cloned();
+    let origin = req.headers().get(ORIGIN).cloned();
     let form: Login = interface::parse_body(req).await?;
     let mut conn = database::get().await?;
     let db = &mut *conn;
@@ -138,7 +141,7 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
         my_channels,
     };
     let mut response = ok_response(LoginReturn { me, token });
-    add_session_cookie(&session, host.as_ref(), response.headers_mut());
+    add_session_cookie(&session, origin.as_ref(), host.as_ref(), response.headers_mut());
     Ok(response)
 }
 

@@ -97,26 +97,26 @@ pub async fn get_session_from_old_version_cookies(headers: &HeaderMap<HeaderValu
     get_session_from_token(token).await.ok()
 }
 
-pub fn add_session_cookie(session: &Uuid, host: Option<&HeaderValue>, response_header: &mut HeaderMap<HeaderValue>) {
+pub fn add_session_cookie(session: &Uuid, origin: Option<&HeaderValue>, host: Option<&HeaderValue>, response_header: &mut HeaderMap<HeaderValue>) {
     use cookie::time::Duration;
     use cookie::{CookieBuilder, SameSite};
     use hyper::header::SET_COOKIE;
 
-    let should_set_domain = host
+    let origin = origin
         .and_then(|value| value.to_str().ok())
-        .unwrap_or("boluo.chat")
-        .to_lowercase()
-        .ends_with(SESSION_COOKIE_DOMAIN);
+        .unwrap_or("")
+        .to_lowercase();
+    let is_development = origin.starts_with("http://127.0.0.1") || origin.starts_with("http://localhost");
 
     let token = token(session);
     let mut builder = CookieBuilder::new(SESSION_COOKIE_KEY, token)
         .same_site(SameSite::Lax)
-        .secure(should_set_domain)
+        .secure(!is_development)
         .http_only(true)
         .path("/")
         .max_age(Duration::days(30));
 
-    if should_set_domain {
+    if !is_development {
         builder = builder.domain(SESSION_COOKIE_DOMAIN);
     }
     let session_cookie = builder.finish().to_string();

@@ -13,18 +13,6 @@ interface Props {
 }
 
 export const SpaceChatView: FC<Props> = ({ space, panes }) => {
-  const focused = useContext(FocusPaneContext);
-  const sidebar = useMemo(
-    () => (
-      <ChatSiderbar
-        key={space.id}
-        space={space}
-        panes={panes}
-      />
-    ),
-    [space, panes],
-  );
-
   const chatBody = useMemo(() => {
     if (panes.length === 0) {
       return <PaneEmpty />;
@@ -32,20 +20,17 @@ export const SpaceChatView: FC<Props> = ({ space, panes }) => {
     return panes.map((pane) => <ChatPaneSwitch key={pane.id} pane={pane} />);
   }, [panes]);
 
-  const templates: string | undefined = useMemo(() => {
-    if (panes.length < 2) {
-      return undefined;
-    }
-    return panes
-      .map(pane => pane.id === focused ? 'var(--pane-header-height) 1fr' : 'var(--pane-header-height)')
-      .join(' ');
-  }, [focused, panes]);
-
-  const style = { '--pane-grid-rows': templates } as React.CSSProperties;
   return (
-    <div className="chat-grid bg-surface-300 gap-x-[1px]" style={style}>
-      {sidebar}
-      {chatBody}
+    <div className="flex h-screen">
+      <ChatSiderbar
+        className="flex flex-col h-full flex-none border-r"
+        key={space.id}
+        space={space}
+        panes={panes}
+      />
+      <div className="flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x">
+        {chatBody}
+      </div>
     </div>
   );
 };

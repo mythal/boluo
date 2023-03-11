@@ -14,6 +14,7 @@ import { useClosePane } from '../../state/chat-view';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
 import { PaneBodyBox } from '../PaneBodyBox';
+import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 
@@ -175,7 +176,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const me = useMe();
   if (!me) {
     return (
-      <>
+      <PaneBox>
         <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
           <FormattedMessage
             defaultMessage="Settings of &quot;{spaceName}&quot; Space"
@@ -183,14 +184,14 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           />
         </PaneHeaderBox>
 
-        <PaneBodyBox className="flex items-center justify-center text-surface-400">
+        <PaneBodyBox className="flex p-8 items-center justify-center text-surface-400">
           <FormattedMessage defaultMessage="You are not logged in" />
         </PaneBodyBox>
-      </>
+      </PaneBox>
     );
   }
   return (
-    <>
+    <PaneBox>
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
         <FormattedMessage
           defaultMessage="Settings of &quot;{spaceName}&quot; Space"
@@ -235,6 +236,6 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           </form>
         </FormProvider>
       </PaneBodyBox>
-    </>
+    </PaneBox>
   );
 };

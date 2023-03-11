@@ -240,6 +240,15 @@ module.exports = {
         '12px': '12px',
         '24px': '24px',
       },
+      width: {
+        sidebar: '12rem',
+      },
+      height: {
+        'pane-header': '3rem',
+      },
+      minHeight: {
+        'pane-header': '3rem',
+      },
       boxShadow: {
         '1/2': '0.125rem 0.125rem 0',
         1: '0.25rem 0.25rem 0',

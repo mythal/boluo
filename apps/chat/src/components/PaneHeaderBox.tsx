@@ -13,16 +13,14 @@ interface Props {
 
 export const PaneHeaderBox: FC<Props> = ({ children, operators, icon }) => {
   const isFocused = useIsFocused();
-  const focus = useFocusPane();
   const paneBanner = usePaneBanner();
   return (
     <div
       className={clsx(
-        'relative bg-surface-100 flex items-center px-4 text-lg',
+        'relative min-h-pane-header bg-surface-100 flex items-center px-4 text-lg',
         'justify-between border-b-1/2 transition-colors duration-200',
         isFocused ? 'border-brand-600' : 'border-surface-300',
       )}
-      onClick={focus}
     >
       <div className="inline-flex gap-1 items-center flex-nowrap whitespace-nowrap overflow-hidden">
         {icon}

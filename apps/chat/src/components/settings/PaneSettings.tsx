@@ -12,6 +12,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { localeAtom } from '../../state/locale';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';
+import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { EnterSendSwitch } from './EnterSendSwitch';
 import { ExpandDiceSwitch } from './ExpandDiceSwitch';
@@ -129,7 +130,7 @@ const AccountFields = () => {
 export const PaneSettings: FC = () => {
   const me = useMe();
   return (
-    <>
+    <PaneBox>
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
         <FormattedMessage defaultMessage="Settings" />
       </PaneHeaderBox>
@@ -145,6 +146,6 @@ export const PaneSettings: FC = () => {
         </div>
         {me && <AccountFields />}
       </PaneBodyBox>
-    </>
+    </PaneBox>
   );
 };

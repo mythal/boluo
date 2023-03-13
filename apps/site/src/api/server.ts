@@ -24,7 +24,20 @@ export async function get<P extends keyof Get>(
   query: Get[P]['query'],
 ): Promise<Result<Get[P]['result'], ApiError>> {
   const url = makeUri(SERVER_SIDE_API_URL, path, query);
-  return appFetch(url, { headers: makeHeaders() });
+  const headers = makeHeaders();
+  return appFetch(url, {
+    headers,
+
+    // By next.js document:
+    // https://beta.nextjs.org/docs/api-reference/fetch#optionscache
+    // > If you don't provide a cache option, Next.js will default to force-cache,
+    // > unless a dynamic function such as cookies() is used, in which case it
+    // > will default to no-store.
+    //
+    // In the `makeHeader()` above, `cookies()` are called, however, in recent
+    // versions this has become cached by default, which may be a bug in Next.js.
+    cache: 'no-cache',
+  });
 }
 
 export async function post<P extends keyof Post>(

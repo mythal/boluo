@@ -14,17 +14,16 @@ export const PaneBanner: FC<Props> = ({ banner }) => {
   return (
     <div
       className={clsx(
-        'absolute top-full left-0 w-full z-10',
-        'p-4 text-sm shadow-md ',
+        'flex items-center justify-between p-4 text-sm',
         level === 'INFO' && 'bg-surface-100',
         level === 'WARNING' && 'bg-warning-50',
         level === 'ERROR' && 'bg-error-50',
       )}
     >
-      <Button data-small onClick={closeBanner} className="float-right ml-2 mb-2">
+      {banner.content}
+      <Button data-small onClick={closeBanner} className="ml-2 mb-2">
         <Icon icon={X} />
       </Button>
-      {banner.content}
     </div>
   );
 };

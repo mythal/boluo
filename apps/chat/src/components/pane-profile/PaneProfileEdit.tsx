@@ -4,9 +4,11 @@ import { FC, useState } from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button, TextInput } from 'ui';
+import { Button } from 'ui';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { EditAvatar } from './EditAvatar';
+import { NicknameField } from './NicknameField';
 import { ShowUsername } from './ShowUsername';
 
 interface Props {
@@ -25,16 +27,16 @@ export const PaneProfileEdit: FC<Props> = ({ me, exit }) => {
   const { mutate } = useSWRConfig();
   const baseUrl = useApiUrl();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const alert = useErrorAlert();
   const onSubmit = async ({ avatar, nickname }: ProfileEditSchema) => {
     setIsSubmitting(true);
-    // TODO: error handing
     if (avatar instanceof File) {
       await editAvatar(baseUrl, avatar);
     } else if (avatar === null && me.avatarId) {
-      await post('/users/remove_avatar', null, null);
+      (await post('/users/remove_avatar', null, null)).mapErr(alert);
     }
     if (nickname !== me.nickname) {
-      await post('/users/edit', null, { nickname });
+      (await post('/users/edit', null, { nickname })).mapErr(alert);
     }
     await mutate('/users/get_me');
     await mutate(['/users/query', me.id]);
@@ -54,9 +56,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, exit }) => {
             />
             <div>
               <ShowUsername username={me.username} />
-              <div>
-                <TextInput defaultValue={me.nickname} {...form.register('nickname', { required: true })}></TextInput>
-              </div>
+              <NicknameField />
             </div>
           </div>
         </div>

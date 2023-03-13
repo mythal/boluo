@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { useMe } from 'common';
 import { ChevronLeft, ChevronRight } from 'icons';
 import type { FC, ReactNode } from 'react';
 

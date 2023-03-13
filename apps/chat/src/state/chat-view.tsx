@@ -120,6 +120,10 @@ export interface ChatViewState {
 
 const handleAddChat = (state: ChatViewState, { insertAfter, item }: AddPane): ChatViewState => {
   const panes = [...state.panes];
+  const alreadyExists = panes.find(pane => pane.type === item.type && pane.id === item.id);
+  if (alreadyExists) {
+    return { ...state, focused: alreadyExists.id };
+  }
   if (insertAfter === undefined) {
     panes.unshift(item);
   } else {

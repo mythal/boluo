@@ -28,10 +28,10 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
     }
   };
   return (
-    <div className={folded ? '' : 'border-b'}>
+    <div className="">
       <button
         onClick={handleToggle}
-        className="flex items-center justify-between w-full text-surface-600 py-3 px-4 text-sm border-b border-surface-200 group cursor-pointer hover:bg-surface-100"
+        className="flex items-center justify-between w-full text-surface-600 py-3 px-4 text-sm border-surface-200 group cursor-pointer hover:bg-surface-100"
       >
         <span className="overflow-ellipsis overflow-hidden break-all whitespace-nowrap">{space.name}</span>
         {!disabled && (
@@ -46,7 +46,7 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
         )}
       </button>
       {!folded && (
-        <>
+        <div className="pb-2">
           <SidebarItem
             icon={<Settings />}
             active={spaceSettingsActive}
@@ -55,7 +55,7 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
           >
             <FormattedMessage defaultMessage="Space Settings" />
           </SidebarItem>
-        </>
+        </div>
       )}
     </div>
   );

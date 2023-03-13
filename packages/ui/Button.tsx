@@ -20,8 +20,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
         'disabled:cursor-not-allowed enabled:cursor-pointer',
         'select-none appearance-none focus-visible:outline-none',
         'inline-flex items-center justify-center focus:ring',
-        'm-0 gap-1 rounded-sm px-4 py-2 text-baese',
-        isSmall && 'min-h-[1.75rem] py-0.5 px-[0.75rem] text-sm',
+        'm-0 gap-1 rounded-sm',
+        isSmall ? 'min-h-[1.75rem] py-0.5 px-[0.75rem] text-sm' : 'px-4 py-2 text-baese',
         type === 'default' && [
           'bg-surface-300 text-highest',
           'hover-enabled:bg-surface-200 active-enabled:bg-surface-400',

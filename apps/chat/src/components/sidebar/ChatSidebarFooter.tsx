@@ -19,8 +19,8 @@ const SettingToggleButton: FC<{ on: boolean; isExpand: boolean }> = ({ on, isExp
   const dispatch = useChatPaneDispatch();
   const paneName = intl.formatMessage({ defaultMessage: 'Settings' });
   const label = on
-    ? intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName })
-    : intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName });
+    ? intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName })
+    : intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName });
   const pane: Pane = makePane({ type: 'SETTINGS' });
   return (
     <Button
@@ -29,7 +29,7 @@ const SettingToggleButton: FC<{ on: boolean; isExpand: boolean }> = ({ on, isExp
       aria-label={label}
       className="group"
       data-type="switch"
-      data-small={!isExpand}
+      data-small
       data-on={on}
     >
       <Settings />
@@ -42,8 +42,8 @@ const HelpToggleButton: FC<{ on: boolean; isExpand: boolean }> = ({ on, isExpand
   const dispatch = useChatPaneDispatch();
   const paneName = intl.formatMessage({ defaultMessage: 'Help' });
   const label = on
-    ? intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName })
-    : intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName });
+    ? intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName })
+    : intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName });
   const pane: Pane = makePane({ type: 'HELP' });
   return (
     <Button
@@ -51,34 +51,11 @@ const HelpToggleButton: FC<{ on: boolean; isExpand: boolean }> = ({ on, isExpand
       title={label}
       aria-label={label}
       className="group"
-      data-small={!isExpand}
+      data-small
       data-type="switch"
       data-on={on}
     >
       <HelpCircle />
-    </Button>
-  );
-};
-
-const LoginButton: FC<{ on: boolean; isExpand: boolean }> = ({ isExpand, on }) => {
-  const intl = useIntl();
-  const dispatch = useChatPaneDispatch();
-  const paneName = intl.formatMessage({ defaultMessage: 'Login' });
-  const label = on
-    ? intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName })
-    : intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName });
-  const pane: Pane = makePane({ type: 'LOGIN' });
-  return (
-    <Button
-      onClick={() => dispatch({ type: 'TOGGLE', pane })}
-      title={label}
-      aria-label={label}
-      className="group"
-      data-small={!isExpand}
-      data-type="switch"
-      data-on={on}
-    >
-      <LogIn />
     </Button>
   );
 };
@@ -88,10 +65,7 @@ export const ChatSidebarFooter: FC<Props> = ({ className, isSettingsOpen, isHelp
   return (
     <div className={className}>
       <HelpToggleButton on={isHelpOpen} isExpand={isExpand} />
-
-      {me
-        ? <SettingToggleButton on={isSettingsOpen} isExpand={isExpand} />
-        : <LoginButton on={isLoginOpen} isExpand={isExpand} />}
+      <SettingToggleButton on={isSettingsOpen} isExpand={isExpand} />
     </div>
   );
 };

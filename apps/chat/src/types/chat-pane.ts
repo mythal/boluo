@@ -80,9 +80,14 @@ export const isSamePaneData = (paneData: PaneData, pane: Pane): boolean => {
 
 export const makePane = (paneData: PaneData): Pane => {
   const { type } = paneData;
-  if (UNIQUE_PANE_TYPES.includes(type)) {
-    return { ...paneData, id: type };
-  } else {
-    return { ...paneData, id: makeId() };
+  switch (type) {
+    case 'PROFILE':
+      return { ...paneData, id: paneData.userId };
+    default:
+      if (UNIQUE_PANE_TYPES.includes(type)) {
+        return { ...paneData, id: type };
+      } else {
+        return { ...paneData, id: makeId() };
+      }
   }
 };

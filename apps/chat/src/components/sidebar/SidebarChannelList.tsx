@@ -1,6 +1,7 @@
+import { Plus } from 'icons';
 import type { FC } from 'react';
 import { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui';
 import { useChannelList } from '../../hooks/useChannelList';
 import { useChatPaneDispatch } from '../../state/chat-view';
@@ -25,9 +26,11 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
   const isCreateChannelPaneOpened = useMemo(() => panes.find(pane => pane.type === 'CREATE_CHANNEL') !== undefined, [
     panes,
   ]);
+  const intl = useIntl();
+  const createChannelLabel = intl.formatMessage({ defaultMessage: 'Create channel' });
   return (
-    <>
-      <div className="py-2 px-4 text-surface-600 flex justify-between items-center text-sm border-b border-surface-200">
+    <div>
+      <div className="py-2 px-4 text-surface-600 flex justify-between items-center text-sm">
         <span>
           <FormattedMessage defaultMessage="Channels" />
         </span>
@@ -38,8 +41,10 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
             data-small
             data-type="switch"
             data-on={isCreateChannelPaneOpened}
+            title={createChannelLabel}
+            aria-label={createChannelLabel}
           >
-            +
+            <Plus />
           </Button>
         </div>
       </div>
@@ -50,6 +55,6 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
           active={channelIdFromPanes.includes(channel.id)}
         />
       ))}
-    </>
+    </div>
   );
 };

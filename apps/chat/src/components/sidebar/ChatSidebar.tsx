@@ -1,5 +1,6 @@
 import type { Space } from 'api';
 import clsx from 'clsx';
+import { useMe } from 'common';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
@@ -21,18 +22,29 @@ interface Props {
 
 export const ChatSiderbar: FC<Props> = ({ space, panes, className }) => {
   const [isExpand, setExpand] = useState(true);
+  const me = useMe();
   const toggleExpand = useCallback(() => setExpand(toggle), []);
   const isSettingsOpen = useMemo(() => panes.findIndex(pane => pane.type === 'SETTINGS') !== -1, [panes]);
   const isHelpOpen = useMemo(() => panes.findIndex(pane => pane.type === 'HELP') !== -1, [panes]);
   const isLoginOpen = useMemo(() => panes.findIndex(pane => pane.type === 'LOGIN') !== -1, [panes]);
+  const isProfileOpen = useMemo(() => {
+    if (!me) return false;
+    return panes.findIndex(pane => pane.type === 'PROFILE' && pane.userId === me.user.id) !== -1;
+  }, [panes, me]);
   const [showUserOperations, setShowUserOperations] = useState(false);
   const handleClickUserIcon = useCallback(() => {
     setExpand(true);
     setShowUserOperations(true);
   }, []);
   const userIcon = useMemo(
-    () => <SidebarUserIcon onClick={handleClickUserIcon} />,
-    [handleClickUserIcon],
+    () => (
+      <SidebarUserIcon
+        isUserOperationOpen={isExpand && showUserOperations}
+        onClick={handleClickUserIcon}
+        isLoginOpen={isLoginOpen}
+      />
+    ),
+    [handleClickUserIcon, isExpand, isLoginOpen, showUserOperations],
   );
   return (
     <div className={className}>
@@ -45,8 +57,13 @@ export const ChatSiderbar: FC<Props> = ({ space, panes, className }) => {
       >
         {isExpand
           ? (
-            <div>
-              {showUserOperations && <SidebarUserOperations close={() => setShowUserOperations(false)} />}
+            <div className="divide-y">
+              {showUserOperations && (
+                <SidebarUserOperations
+                  isProfileOpen={isProfileOpen}
+                  close={() => setShowUserOperations(false)}
+                />
+              )}
               <SpaceOptions space={space} panes={panes} />
               <SidebarChannelList panes={panes} spaceId={space.id} />
             </div>
@@ -58,7 +75,7 @@ export const ChatSiderbar: FC<Props> = ({ space, panes, className }) => {
           )}
         <ChatSidebarFooter
           className={isExpand
-            ? 'p-2 flex justify-between sticky bottom-0 bg-bg'
+            ? 'p-2 px-4 flex justify-between sticky bottom-0 bg-bg'
             : 'flex flex-col justify-center items-center gap-2 p-2'}
           isSettingsOpen={isSettingsOpen}
           isHelpOpen={isHelpOpen}

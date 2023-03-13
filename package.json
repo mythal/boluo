@@ -4,9 +4,8 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": {
-  },
   "devDependencies": {
+    "dprint": "^0.35.0",
     "nx": "^15.8.5"
   },
   "workspaces": [

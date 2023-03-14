@@ -54,6 +54,16 @@ pub struct EditChannelMember {
     pub text_color: Option<String>,
 }
 
+
+#[derive(Serialize, Debug, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelMembers {
+    pub members: Vec<Member>,
+    pub color_list: HashMap<Uuid, String>,
+    pub heartbeat_map: HashMap<Uuid, i64>,
+}
+
 #[derive(Serialize, Debug, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]

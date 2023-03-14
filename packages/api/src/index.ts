@@ -1,7 +1,7 @@
 import type { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
 import type { Empty } from 'utils';
 import type { AppResponse } from './request';
-import type { Channel, ChannelWithMember, CreateChannel } from './types/channels';
+import type { Channel, ChannelMembers, ChannelWithMember, CreateChannel, JoinChannel } from './types/channels';
 import type { GetMessagesByChannel, Message, NewMessage } from './types/messages';
 import type {
   CreateSpace,
@@ -39,6 +39,7 @@ export interface Get {
   // channels
   '/channels/query': { query: { id: string }; result: Channel };
   '/channels/by_space': { query: { id: string }; result: Channel[] };
+  '/channels/members': { query: { id: string }; result: ChannelMembers };
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
 }
@@ -60,6 +61,7 @@ export interface Post {
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };
   // channels
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
+  '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };
 }
 
 export interface Put {

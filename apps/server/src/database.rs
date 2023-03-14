@@ -88,6 +88,8 @@ pub trait Querist: Send {
 pub fn get_postgres_url() -> String {
     let key = if cfg!(test) {
         dotenv::dotenv().ok();
+        dotenv::from_filename(".env.local").ok();
+        dotenv::from_filename(".env.test.local").ok();
         "TEST_DATABASE_URL"
     } else {
         "DATABASE_URL"

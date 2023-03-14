@@ -1,4 +1,4 @@
-use super::api::{CreateChannel, EditChannel};
+use super::api::{CreateChannel, EditChannel, ChannelMembers};
 use super::models::ChannelMember;
 use super::Channel;
 use crate::channels::api::{
@@ -29,6 +29,30 @@ async fn query(req: Request<Body>) -> Result<Channel, AppError> {
 
     let mut db = database::get().await?;
     Channel::get_by_id(&mut *db, &query.id).await.or_not_found()
+}
+
+async fn members(req: Request<Body>) -> Result<ChannelMembers,AppError> {
+    let query: IdQuery = parse_query(req.uri())?;
+
+    let mut conn = database::get().await?;
+    let db = &mut *conn;
+    let channel = Channel::get_by_id(db, &query.id).await.or_not_found()?;
+    let members = Member::get_by_channel(db, channel.id).await?;
+
+    let color_list = ChannelMember::get_color_list(db, &channel.id).await?;
+
+    let heartbeat_map = {
+        let map = get_heartbeat_map().lock().await;
+        match map.get(&query.id) {
+            Some(map) => map.clone(),
+            _ => HashMap::new(),
+        }
+    };
+    Ok(ChannelMembers {
+        members,
+        color_list,
+        heartbeat_map,
+    })
 }
 
 async fn query_with_related(req: Request<Body>) -> Result<ChannelWithRelated, AppError> {
@@ -305,6 +329,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
     match (path, req.method().clone()) {
         ("/query", Method::GET) => query(req).await.map(ok_response),
         ("/query_with_related", Method::GET) => query_with_related(req).await.map(ok_response),
+        ("/members", Method::GET) => members(req).await.map(ok_response),
         ("/by_space", Method::GET) => by_space(req).await.map(ok_response),
         ("/my", Method::GET) => my_channels(req).await.map(ok_response),
         ("/create", Method::POST) => create(req).await.map(ok_response),

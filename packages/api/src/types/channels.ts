@@ -1,6 +1,7 @@
 import type { AddChannelMember } from 'server-bindings/AddChannelMember';
 import type { Channel } from 'server-bindings/Channel';
 import type { ChannelMember } from 'server-bindings/ChannelMember';
+import type { ChannelMembers } from 'server-bindings/ChannelMembers';
 import type { ChannelMemberWithUser } from 'server-bindings/ChannelMemberWithUser';
 import type { ChannelWithMember } from 'server-bindings/ChannelWithMember';
 import type { ChannelWithRelated } from 'server-bindings/ChannelWithRelated';
@@ -16,6 +17,7 @@ export {
   AddChannelMember,
   Channel,
   ChannelMember,
+  ChannelMembers,
   ChannelMemberWithUser,
   ChannelWithMember,
   ChannelWithRelated,

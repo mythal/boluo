@@ -1,6 +1,8 @@
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { HelpCircle, LogIn, Settings, User } from 'icons';
+import { useAtom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { toggle } from 'utils';
@@ -18,13 +20,15 @@ interface Props {
   isHelpOpen: boolean;
 }
 
+export const isUserOperationsFoldedAtom = atomWithStorage('isUserOperationsFolded:v0', false);
+
 export const SidebarUserOperations: FC<Props> = (
   { isProfileOpen, isLoginOpen, isSettingsOpen, isHelpOpen },
 ) => {
   const me = useMe();
   const { isExpanded } = useSidebarState();
-  const [folded, setFolded] = useState(true);
-  const toggleFolded = useCallback(() => setFolded(toggle), []);
+  const [folded, setFolded] = useAtom(isUserOperationsFoldedAtom);
+  const toggleFolded = useCallback(() => setFolded(toggle), [setFolded]);
   const dispatch = useChatPaneDispatch();
   const handleToggleLogin = useCallback(() => {
     if (me) {

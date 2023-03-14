@@ -12,7 +12,7 @@ export const PaneBodyBox: FC<Props> = ({ children, className }) => {
   return (
     <div
       className={clsx(
-        '@container bg-bg flex-grow',
+        'bg-bg flex-grow',
         isFocused ? '' : 'max-md:hidden max-md:h-0',
         className,
       )}

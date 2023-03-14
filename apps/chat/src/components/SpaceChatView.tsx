@@ -5,7 +5,7 @@ import { FocusPaneContext } from '../state/chat-view';
 import type { Pane } from '../types/chat-pane';
 import { PaneEmpty } from './PaneEmpty';
 import { ChatPaneSwitch } from './PaneSwitch';
-import { ChatSiderbar } from './sidebar/ChatSidebar';
+import { Sidebar } from './sidebar/Sidebar';
 
 interface Props {
   space: Space;
@@ -22,8 +22,8 @@ export const SpaceChatView: FC<Props> = ({ space, panes }) => {
 
   return (
     <div className="flex h-screen">
-      <ChatSiderbar
-        className="flex flex-col h-full flex-none border-r"
+      <Sidebar
+        className="flex flex-col h-full flex-none border-r border-surface-300"
         key={space.id}
         space={space}
         panes={panes}

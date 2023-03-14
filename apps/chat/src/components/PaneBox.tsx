@@ -13,7 +13,7 @@ export const PaneBox: FC<Props> = ({ className, children }) => {
     <div
       onClick={focus}
       className={clsx(
-        'min-w-[18rem] flex-[1_1_100%] flex flex-col h-full',
+        '@container min-w-[18rem] flex-[1_1_100%] flex flex-col h-full',
         isFocused ? 'max-md:flex-[1_1_100%]' : 'max-md:flex-[0_1_0%]',
         className,
       )}

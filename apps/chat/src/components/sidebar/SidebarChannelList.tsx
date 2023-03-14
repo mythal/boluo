@@ -1,4 +1,4 @@
-import { Plus } from 'icons';
+import { Bell, Plus } from 'icons';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -7,6 +7,7 @@ import { useChannelList } from '../../hooks/useChannelList';
 import { useChatPaneDispatch } from '../../state/chat-view';
 import { makePane, Pane } from '../../types/chat-pane';
 import { SidebarChannelItem } from './SidebarChannelItem';
+import { SidebarItem } from './SidebarItem';
 
 interface Props {
   spaceId: string;
@@ -23,11 +24,14 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
   const handleOpenCreateChannelPane = () => {
     dispatch({ type: 'TOGGLE', pane: makePane({ type: 'CREATE_CHANNEL', spaceId }) });
   };
+  const handleToggleNotification = () => {
+    // To be implemented
+  };
   const isCreateChannelPaneOpened = useMemo(() => panes.find(pane => pane.type === 'CREATE_CHANNEL') !== undefined, [
     panes,
   ]);
   const intl = useIntl();
-  const createChannelLabel = intl.formatMessage({ defaultMessage: 'Create channel' });
+  const toggleNotification = intl.formatMessage({ defaultMessage: 'Toggle Notification' });
   return (
     <div>
       <div className="py-2 px-4 text-surface-600 flex justify-between items-center text-sm">
@@ -36,15 +40,15 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
         </span>
         <div>
           <Button
-            onClick={handleOpenCreateChannelPane}
+            onClick={handleToggleNotification}
             type="button"
             data-small
             data-type="switch"
-            data-on={isCreateChannelPaneOpened}
-            title={createChannelLabel}
-            aria-label={createChannelLabel}
+            data-on={false}
+            title={toggleNotification}
+            aria-label={toggleNotification}
           >
-            <Plus />
+            <Bell />
           </Button>
         </div>
       </div>
@@ -55,6 +59,11 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
           active={channelIdFromPanes.includes(channel.id)}
         />
       ))}
+      <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={handleOpenCreateChannelPane}>
+        <span className="text-surface-400 group-hover:text-surface-800">
+          <FormattedMessage defaultMessage="Add New" />
+        </span>
+      </SidebarItem>
     </div>
   );
 };

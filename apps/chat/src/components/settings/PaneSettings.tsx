@@ -1,5 +1,5 @@
 import { Locale, useMe } from 'common';
-import { Settings } from 'icons';
+import { LogOut, Settings, User } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, useTransition } from 'react';
 import { useId } from 'react';
@@ -9,7 +9,9 @@ import { Kbd } from 'ui/Kbd';
 import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { useSettings } from '../../hooks/useSettings';
+import { useChatPaneDispatch } from '../../state/chat-view';
 import { localeAtom } from '../../state/locale';
+import { makePane } from '../../types/chat-pane';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneBox } from '../PaneBox';
@@ -101,16 +103,25 @@ const EneterSendField = () => {
 };
 
 const LogoutField = () => {
+  const dispatch = useChatPaneDispatch();
   const logout = useLogout();
   const me = useMe()!;
+  const openProfile = () => dispatch({ type: 'ADD_PANE', item: makePane({ type: 'PROFILE', userId: me.user.id }) });
   return (
-    <div className="flex justify-between items-center gap-4 select-none">
+    <div className="flex justify-between @md:items-center gap-4 select-none flex-col @md:flex-row">
       <div className="text-lg">
         {me.user.nickname} <span className="text-sm">({me.user.username})</span>
       </div>
-      <Button onClick={logout}>
-        <FormattedMessage defaultMessage="Logout" />
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={openProfile}>
+          <User />
+          <FormattedMessage defaultMessage="Profile" />
+        </Button>
+        <Button onClick={logout}>
+          <LogOut />
+          <FormattedMessage defaultMessage="Logout" />
+        </Button>
+      </div>
     </div>
   );
 };
@@ -134,7 +145,7 @@ export const PaneSettings: FC = () => {
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
         <FormattedMessage defaultMessage="Settings" />
       </PaneHeaderBox>
-      <PaneBodyBox className="p-4 flex flex-col gap-8 overflow-y-auto">
+      <PaneBodyBox className="p-4 flex flex-col gap-8 max-w-lg overflow-y-auto">
         <div className="flex flex-col gap-2">
           <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />

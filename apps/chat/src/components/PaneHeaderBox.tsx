@@ -20,13 +20,17 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) =
       <div
         className={clsx(
           'min-h-pane-header bg-surface-100 flex items-center px-4 text-lg',
-          'justify-between border-b-1/2 transition-colors duration-100 ease-in-out',
+          'justify-between border-b transition-colors duration-100 ease-in-out',
           isFocused ? 'border-brand-600' : 'border-surface-300',
         )}
       >
-        <div className="inline-flex gap-1 items-center flex-nowrap whitespace-nowrap overflow-hidden">
-          {icon}
-          {children}
+        <div className="inline-flex gap-1 items-center flex-nowrap min-w-0">
+          <div className="flex-shrink-0">
+            {icon}
+          </div>
+          <div className="whitespace-nowrap overflow-hidden text-ellipsis flex-shrink">
+            {children}
+          </div>
         </div>
         {operators && <div className="inline-flex gap-1 ml-2" onClick={stopPropagation}>{operators}</div>}
       </div>

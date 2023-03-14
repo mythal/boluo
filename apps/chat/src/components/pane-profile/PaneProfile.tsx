@@ -1,9 +1,10 @@
 import { useMe, useUser } from 'common';
-import { Edit, User } from 'icons';
+import { Edit, LogOut, User } from 'icons';
 import { FC, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui';
 import { toggle } from 'utils';
+import { useLogout } from '../../hooks/useLogout';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneBox } from '../PaneBox';
@@ -22,6 +23,10 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   const user = userQuery.data;
   const isMe = me?.user.id === userId;
   const [isEditing, setIsEditing] = useState(false);
+  const intl = useIntl();
+  const logoutLabel = intl.formatMessage({ defaultMessage: 'Logout' });
+  const editLabel = intl.formatMessage({ defaultMessage: 'Edit' });
+  const logout = useLogout();
 
   if (!user) {
     return <PaneProfileNotFound />;
@@ -29,9 +34,25 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   const operators = (
     <>
       {isMe && (
-        <Button data-small data-type="switch" data-on={isEditing} onClick={() => setIsEditing(toggle)}>
+        <Button data-small onClick={logout} title={logoutLabel}>
+          <LogOut />
+          <span className="hidden @xs:inline">
+            <FormattedMessage defaultMessage="Logout" />
+          </span>
+        </Button>
+      )}
+      {isMe && (
+        <Button
+          data-small
+          data-type="switch"
+          data-on={isEditing}
+          onClick={() => setIsEditing(toggle)}
+          title={editLabel}
+        >
           <Edit />
-          <FormattedMessage defaultMessage="Edit" />
+          <span className="hidden @md:inline">
+            <FormattedMessage defaultMessage="Edit" />
+          </span>
         </Button>
       )}
 

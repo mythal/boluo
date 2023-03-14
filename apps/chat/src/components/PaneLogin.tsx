@@ -30,7 +30,7 @@ export const PaneLogin: FC<Props> = () => {
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<LogIn />}>
         <FormattedMessage defaultMessage="Login" />
       </PaneHeaderBox>
-      <PaneBodyBox className="p-4 flex w-full">
+      <PaneBodyBox className="p-4 flex max-w-lg">
         <LoginForm onSuccess={close} onError={handleError} className="w-full" />
       </PaneBodyBox>
     </PaneBox>

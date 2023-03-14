@@ -9,6 +9,7 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Button, HelpText, Spinner, TextArea, TextInput } from 'ui';
 import type { ChildrenProps } from 'utils';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { useSpace } from '../../hooks/useSpace';
 import { useClosePane } from '../../state/chat-view';
 import { ClosePaneButton } from '../ClosePaneButton';
@@ -145,21 +146,19 @@ const spaceToForm = (space: Space): FormSchema => ({
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const close = useClosePane();
   const space = useSpace(spaceId);
+  const alert = useErrorAlert();
 
   const post = usePost();
   const updater: MutationFetcher<Space, EditSpace, [string, string]> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
-    const space = result.unwrap();
+    const space = result.mapErr(alert).unwrap();
     return space;
-  }, [post]);
+  }, [alert, post]);
   const { trigger: editSpace, isMutating } = useSWRMutation(
     ['/spaces/query', spaceId],
     updater,
     {
-      populateCache: (space: Space) => {
-        console.log(space);
-        return space;
-      },
+      populateCache: (space: Space) => space,
       revalidate: false,
     },
   );

@@ -22,7 +22,7 @@ export const PaneProfileView: FC<Props> = ({ user }) => {
         />
         <div className="">
           <ShowUsername username={user.username} />
-          <div className="text-xl py-2">{user.nickname}</div>
+          <div className="text-xl py-2 whitespace-nowrap overflow-hidden text-ellipsis pr-2">{user.nickname}</div>
         </div>
       </div>
     </div>

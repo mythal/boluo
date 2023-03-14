@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useChatPaneDispatch } from '../../state/chat-view';
 import { makePane, Pane, SpaceSettingsPane } from '../../types/chat-pane';
+import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
@@ -29,24 +30,18 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
   };
   return (
     <div className="">
-      <button
-        onClick={handleToggle}
-        className="flex items-center justify-between w-full text-surface-600 py-3 px-4 text-sm border-surface-200 group cursor-pointer hover:bg-surface-100"
+      <SidebarGroupHeader
+        disabled={disabled}
+        folded={folded}
+        toggle={handleToggle}
       >
-        <span className="overflow-ellipsis overflow-hidden break-all whitespace-nowrap">{space.name}</span>
-        {!disabled && (
-          <span
-            className={clsx(
-              'p-1 border rounded-md bg-surface-50',
-              folded ? 'group-hover:border-surface-300' : 'border-surface-400',
-            )}
-          >
-            {folded ? <ChevronDown /> : <ChevronUp />}
-          </span>
-        )}
-      </button>
+        <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">
+          {space.name}
+        </div>
+      </SidebarGroupHeader>
+
       {!folded && (
-        <div className="pb-2">
+        <div className="">
           <SidebarItem
             icon={<Settings />}
             active={spaceSettingsActive}

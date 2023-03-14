@@ -1,52 +1,107 @@
+import clsx from 'clsx';
 import { useMe } from 'common';
-import { LogOut, User, X } from 'icons';
-import { FC, useCallback } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui';
-import { useLogout } from '../../hooks/useLogout';
+import { HelpCircle, LogIn, Settings, User } from 'icons';
+import { FC, useCallback, useMemo, useState } from 'react';
+import { FormattedMessage } from 'react-intl';
+import { toggle } from 'utils';
 import { useChatPaneDispatch } from '../../state/chat-view';
 import { makePane } from '../../types/chat-pane';
+import { Avatar } from '../account/Avatar';
+import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
+import { useSidebarState } from './useSidebarState';
 
 interface Props {
   isProfileOpen: boolean;
-  close: () => void;
+  isSettingsOpen: boolean;
+  isLoginOpen: boolean;
+  isHelpOpen: boolean;
 }
 
-export const SidebarUserOperations: FC<Props> = ({ close, isProfileOpen }) => {
+export const SidebarUserOperations: FC<Props> = (
+  { isProfileOpen, isLoginOpen, isSettingsOpen, isHelpOpen },
+) => {
   const me = useMe();
-  const logout = useLogout();
+  const { isExpanded } = useSidebarState();
+  const [folded, setFolded] = useState(true);
+  const toggleFolded = useCallback(() => setFolded(toggle), []);
   const dispatch = useChatPaneDispatch();
+  const handleToggleLogin = useCallback(() => {
+    if (me) {
+      return;
+    }
+    dispatch({ type: 'TOGGLE', pane: makePane({ type: 'LOGIN' }) });
+  }, [dispatch, me]);
+  const handleToggleSettings = useCallback(() => {
+    dispatch({ type: 'TOGGLE', pane: makePane({ type: 'SETTINGS' }) });
+  }, [dispatch]);
   const handleToggleProfile = useCallback(() => {
     if (!me) {
       return;
     }
     dispatch({ type: 'TOGGLE', pane: makePane({ type: 'PROFILE', userId: me.user.id }) });
   }, [dispatch, me]);
-  if (!me) {
-    return null;
+  const loginItem = !me && (
+    <SidebarItem icon={<LogIn />} toggle onClick={handleToggleLogin} active={isLoginOpen}>
+      <FormattedMessage defaultMessage="Login" />
+    </SidebarItem>
+  );
+  const settingsItem = (
+    <SidebarItem icon={<Settings />} active={isSettingsOpen} toggle onClick={handleToggleSettings}>
+      <FormattedMessage defaultMessage="Settings" />
+    </SidebarItem>
+  );
+  const toggleHelp = useCallback(() => dispatch({ type: 'TOGGLE', pane: makePane({ type: 'HELP' }) }), [dispatch]);
+  const helpItem = useMemo(() => (
+    <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle onClick={toggleHelp}>
+      <FormattedMessage defaultMessage="Help" />
+    </SidebarItem>
+  ), [isHelpOpen, toggleHelp]);
+  if (!isExpanded) {
+    return (
+      <div>
+        {settingsItem}
+        {helpItem}
+        {!me && loginItem}
+      </div>
+    );
   }
   return (
-    <div className="">
-      <div className="flex items-center justify-between px-4 py-3 group">
-        <div className="text-surface-600 text-sm">
-          <FormattedMessage defaultMessage="My" />
-        </div>
-        <div>
-          <button onClick={close} className="border p-1 rounded text-sm group-hover:border-surface-300">
-            <X />
-          </button>
-        </div>
-      </div>
-      <SidebarItem icon={<User />} active={isProfileOpen} toggle onClick={handleToggleProfile}>
-        {me.user.nickname}
-      </SidebarItem>
-      <div className="px-4 pt-2 pb-2 text-right">
-        <Button data-small onClick={logout}>
-          <LogOut />
-          <FormattedMessage defaultMessage="Logout" />
-        </Button>
-      </div>
+    <div className={folded ? '' : 'border-t'}>
+      {!folded && me && (
+        <>
+          {settingsItem}
+          {helpItem}
+          <SidebarItem icon={<User />} active={isProfileOpen} toggle onClick={handleToggleProfile}>
+            <FormattedMessage defaultMessage="Profile" />
+          </SidebarItem>
+        </>
+      )}
+
+      {me
+        ? (
+          <SidebarGroupHeader folded={folded} toggle={toggleFolded}>
+            <Avatar
+              size={32}
+              id={me.user.id}
+              name={me.user.nickname}
+              avatarId={me.user.avatarId}
+              className={clsx(
+                'w-6 h-6 rounded',
+              )}
+            />
+            <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">
+              {me.user.nickname}
+            </div>
+          </SidebarGroupHeader>
+        )
+        : (
+          <>
+            {helpItem}
+            {settingsItem}
+            {loginItem}
+          </>
+        )}
     </div>
   );
 };

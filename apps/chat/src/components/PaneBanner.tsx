@@ -21,7 +21,7 @@ export const PaneBanner: FC<Props> = ({ banner }) => {
       )}
     >
       {banner.content}
-      <Button data-small onClick={closeBanner} className="ml-2 mb-2">
+      <Button data-small onClick={closeBanner}>
         <Icon icon={X} />
       </Button>
     </div>

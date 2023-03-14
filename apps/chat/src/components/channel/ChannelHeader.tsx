@@ -1,7 +1,7 @@
 import { Hash, SplitHorizontal } from 'icons';
 import type { FC } from 'react';
 import { useTransition } from 'react';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui';
 import { makeId } from 'utils';
 import { useChannel } from '../../hooks/useChannel';
@@ -27,6 +27,9 @@ const SplitPaneButton: FC = () => {
       title={intl.formatMessage({ defaultMessage: 'Split pane' })}
     >
       <SplitHorizontal className="rotate-90 md:rotate-0" />
+      <span className="hidden @4xl:inline">
+        <FormattedMessage defaultMessage="Split" />
+      </span>
     </Button>
   );
 };

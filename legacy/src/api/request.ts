@@ -186,7 +186,7 @@ export function get(path: '/spaces/search', query: SearchParams): Promise<AppRes
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(path: '/spaces/query_with_related', query: IdWithToken): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/token', query: IdQuery): Promise<AppResult<string>>;
-export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<SpaceMemberWithUser[]>>;
+export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<Record<string, SpaceMemberWithUser>>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
 export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;

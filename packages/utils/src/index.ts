@@ -1,5 +1,5 @@
 export { sleep } from './async';
-export { stopPropagation } from './browser';
+export { getOS, isUseCommandKey, stopPropagation } from './browser';
 export { isDaytime, parseDate } from './date';
 export { parseBool } from './env';
 export { IS_DEBUG } from './flags';

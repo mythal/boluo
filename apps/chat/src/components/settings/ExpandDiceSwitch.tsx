@@ -3,7 +3,7 @@ import { toSettings } from 'common/settings';
 import { FC, useCallback } from 'react';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { Switch } from 'ui';
+import { Button, Switch } from 'ui';
 import { identity } from 'utils';
 import { useSettings } from '../../hooks/useSettings';
 
@@ -22,6 +22,6 @@ export const ExpandDiceSwitch: FC<Props> = () => {
     revalidate: false,
   });
   const { expandDice = false } = useSettings();
-  const handleChange = (expandDice: boolean) => trigger(expandDice);
-  return <Switch disabled={isMutating} checked={expandDice} onChange={handleChange} />;
+  const toggle = () => trigger(!expandDice);
+  return <Button disabled={isMutating} data-type="switch" data-on={expandDice} onClick={toggle}>Enable</Button>;
 };

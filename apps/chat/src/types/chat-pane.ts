@@ -17,6 +17,11 @@ export interface HelpPane {
   type: 'HELP';
 }
 
+export interface SpaceMembersPane {
+  type: 'SPACE_MEMBERS';
+  spaceId: string;
+}
+
 export interface SpaceSettingsPane {
   type: 'SPACE_SETTINGS';
   spaceId: string;
@@ -44,9 +49,17 @@ export type PaneData =
   | SpaceSettingsPane
   | CreateChannelPane
   | LoginPane
-  | ProfilePane;
+  | ProfilePane
+  | SpaceMembersPane;
 
-const UNIQUE_PANE_TYPES: Array<Pane['type']> = ['HELP', 'CREATE_CHANNEL', 'SETTINGS', 'LOGIN', 'SPACE_SETTINGS'];
+const UNIQUE_PANE_TYPES: Array<Pane['type']> = [
+  'HELP',
+  'CREATE_CHANNEL',
+  'SETTINGS',
+  'LOGIN',
+  'SPACE_SETTINGS',
+  'SPACE_MEMBERS',
+];
 
 export type Pane = PaneData & {
   id: string;
@@ -71,6 +84,8 @@ export const isSamePaneData = (paneData: PaneData, pane: Pane): boolean => {
       return paneData.channelId === (pane as ChannelPane).channelId;
     case 'SPACE_SETTINGS':
       return paneData.spaceId === (pane as SpaceSettingsPane).spaceId;
+    case 'SPACE_MEMBERS':
+      return paneData.spaceId === (pane as SpaceMembersPane).spaceId;
     case 'CREATE_CHANNEL':
       return paneData.spaceId === (pane as CreateChannelPane).spaceId;
     default:

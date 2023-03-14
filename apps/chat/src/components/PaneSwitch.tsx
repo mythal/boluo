@@ -6,6 +6,7 @@ import { PaneIdProvider } from '../state/chat-view';
 import type { Pane } from '../types/chat-pane';
 import { ChatPaneChannel } from './channel/ChannelPane';
 import { PaneProfile } from './pane-profile/PaneProfile';
+import { PaneSpaceMembers } from './pane-space-members/PaneSpaceMembers';
 import { PaneCreateChannel } from './PaneCreateChannel';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneError } from './PaneError';
@@ -29,6 +30,7 @@ const PANE_MAP = createPaneMap({
   CREATE_CHANNEL: PaneCreateChannel,
   LOGIN: PaneLogin,
   PROFILE: PaneProfile,
+  SPACE_MEMBERS: PaneSpaceMembers,
   EMPTY: PaneEmpty,
 }); // satisfies Record<Pane['type'], unknown>; // https://github.com/vercel/next.js/issues/43799
 
@@ -46,6 +48,8 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneCreateChannel spaceId={pane.spaceId} />;
     case 'PROFILE':
       return <PaneProfile userId={pane.userId} />;
+    case 'SPACE_MEMBERS':
+      return <PaneSpaceMembers spaceId={pane.spaceId} />;
     default:
       const Component = PANE_MAP[pane.type] ?? PaneEmpty;
       return <Component />;

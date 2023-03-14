@@ -3,7 +3,14 @@ import type { Empty } from 'utils';
 import type { AppResponse } from './request';
 import type { Channel, ChannelWithMember, CreateChannel } from './types/channels';
 import type { GetMessagesByChannel, Message, NewMessage } from './types/messages';
-import type { CreateSpace, EditSpace, Space, SpaceWithMember, SpaceWithRelated } from './types/spaces';
+import type {
+  CreateSpace,
+  EditSpace,
+  Space,
+  SpaceMemberWithUser,
+  SpaceWithMember,
+  SpaceWithRelated,
+} from './types/spaces';
 import type {
   CheckEmail,
   CheckUsername,
@@ -27,6 +34,8 @@ export interface Get {
   '/spaces/query': { query: { id: string }; result: Space };
   '/spaces/my': { query: null; result: SpaceWithMember[] };
   '/spaces/query_with_related': { query: { id: string }; result: SpaceWithRelated };
+  '/spaces/members': { query: { id: string }; result: Record<string, SpaceMemberWithUser> };
+  '/spaces/token': { query: { id: string }; result: string };
   // channels
   '/channels/query': { query: { id: string }; result: Channel };
   '/channels/by_space': { query: { id: string }; result: Channel[] };
@@ -44,6 +53,7 @@ export interface Post {
   '/spaces/create': { payload: CreateSpace; query: null; result: SpaceWithMember };
   '/spaces/edit': { payload: EditSpace; query: null; result: Space };
   '/spaces/delete': { payload: Empty; query: { id: string }; result: Space };
+  '/spaces/refresh_token': { payload: Empty; query: { id: string }; result: string };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };

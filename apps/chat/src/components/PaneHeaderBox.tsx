@@ -16,7 +16,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) =
   const isFocused = useIsFocused();
   const paneBanner = usePaneBanner();
   return (
-    <div className={paneBanner.content || extra ? 'border-b border-surface-300' : ''}>
+    <div className={paneBanner.content || extra ? '' : ''}>
       <div
         className={clsx(
           'min-h-pane-header bg-surface-100 flex items-center px-4 text-lg',

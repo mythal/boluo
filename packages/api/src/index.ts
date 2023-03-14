@@ -54,6 +54,7 @@ export interface Post {
   '/spaces/edit': { payload: EditSpace; query: null; result: Space };
   '/spaces/delete': { payload: Empty; query: { id: string }; result: Space };
   '/spaces/refresh_token': { payload: Empty; query: { id: string }; result: string };
+  '/spaces/join': { payload: Empty; result: SpaceWithMember; query: { spaceId: string; token?: string } };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };

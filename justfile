@@ -17,6 +17,10 @@ graph:
 server:
     cargo run -p server
 
+# admin page
+cns:
+    trunk serve ./apps/central-nervous-system/index.html
+
 test:
     cargo test
 

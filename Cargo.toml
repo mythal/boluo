@@ -3,6 +3,7 @@ resolver = "2"
 members = [
   "apps/server",
   "apps/manage-cli",
+  "apps/central-nervous-system/",
 ]
 
 [profile.release]

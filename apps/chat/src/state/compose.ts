@@ -30,10 +30,35 @@ const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setS
   return { ...state, source: action.payload.source, previewId };
 };
 
+const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleInGame'>): ComposeState => {
+  const inGame = !state.inGame;
+  return { ...state, inGame };
+};
+
+const handleRecoverState = (state: ComposeState, action: ComposeAction<'recoverState'>): ComposeState => {
+  return { ...action.payload, previewId: makeId(), media: undefined };
+};
+
+const handleAddDice = (state: ComposeState, action: ComposeAction<'addDice'>): ComposeState => {
+  let { source } = state;
+  if (source.trim().length === 0) {
+    source = '{d} ';
+  } else {
+    source += ' {d} ';
+  }
+  return { ...state, source };
+};
+
 export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
       return handleSetComposeSource(state, action);
+    case 'toggleInGame':
+      return handleToggleInGame(state, action);
+    case 'recoverState':
+      return handleRecoverState(state, action);
+    case 'addDice':
+      return handleAddDice(state, action);
     default:
       return state;
   }

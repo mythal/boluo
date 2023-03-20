@@ -1,7 +1,12 @@
+import type { Empty } from 'utils';
+import type { ComposeState } from '../compose';
 import { MakeAction, makeAction } from './actions';
 
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
+  toggleInGame: Empty;
+  addDice: Empty;
+  recoverState: ComposeState;
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

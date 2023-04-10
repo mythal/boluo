@@ -13,7 +13,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Message } from 'api';
-import { useGet, usePost } from 'common';
+import { useGet, useMe, usePost } from 'common';
 import { ChevronsDown } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -277,7 +277,17 @@ const useDragHandles = (chatList: ChatItem[], setOptimisticReorder: SetOptimisti
   return { handleDragStart, handleDragEnd, active, clearActive };
 };
 
+const CONTINUOUS_TIME_MS = 60 * 1000;
+const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
+  if (a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' || a.senderId !== b.senderId) {
+    return false;
+  }
+  const timeDiff = Math.abs(Date.parse(a.created) - Date.parse(b.created));
+  return timeDiff < CONTINUOUS_TIME_MS;
+};
+
 const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
+  const me = useMe();
   const isFullLoaded = useIsFullLoaded();
   const dispatch = useChatDispatch();
   const channelId = useChannelId();
@@ -325,16 +335,19 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
             totalCount={totalCount}
             startReached={isFullLoaded ? undefined : loadMore}
             followOutput="auto"
+            computeItemKey={(_, item) => item.id}
             itemContent={(virtualIndex, chatItem) => {
               const realIndex = virtualIndex - firstItemIndex;
               if (optimisticReorder?.optimisticIndex === realIndex) {
                 const { message } = optimisticReorder;
-                return <ChatItemMessage message={message} key={message.id} />;
+                return <ChatItemMessage message={message} key={message.id} self />;
               }
               return (
                 <ChatItemSwitch
                   key={chatItem.id}
+                  myId={me?.user.id}
                   chatItem={chatItem}
+                  isContinuous={isContinuous(optimisticChatList[realIndex - 1], chatItem)}
                 />
               );
             }}
@@ -356,7 +369,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
         </SortableContext>
         {createPortal(
           <DragOverlay zIndex={15}>
-            {active && <ChatItemMessage message={active[1]} className="py-2 px-4" />}
+            {active && <ChatItemMessage message={active[1]} className="py-2 px-4" self />}
           </DragOverlay>,
           document.body,
         )}

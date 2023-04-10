@@ -22,7 +22,7 @@ export const MessageReorderHandle: FC<Props> = ({ listeners, attributes, loading
       {...listeners}
       {...attributes}
       className={clsx(
-        'inline-flex w-6 h-6 items-center justify-center text-surface-300 rounded-sm',
+        'inline-flex h-full col-span-1 row-span-full items-center justify-center text-surface-300 rounded-sm',
         !loading && 'group-hover:bg-surface-500/10 hover:text-surface-700 cursor-move',
         loading && 'cursor-not-allowed',
       )}

@@ -17,6 +17,9 @@ export const useSendPreview = (channelId: string, nickname: string, compose: Com
     sendTimeoutRef.current = window.setTimeout(() => {
       const { inGame, isAction, source, previewId, inputedName } = compose;
       const inGameName = inputedName || '';
+      if (!previewId) {
+        return;
+      }
       const preview: PreviewPost = {
         id: previewId || makeId(),
         channelId,

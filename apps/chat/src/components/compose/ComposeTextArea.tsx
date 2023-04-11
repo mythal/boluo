@@ -5,12 +5,13 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useSettings } from '../../hooks/useSettings';
 import { makeComposeAction } from '../../state/actions/compose';
 import { composeAtomFamily } from '../../state/atoms/compose';
+import { useSend } from '../channel/useSend';
 
 interface Props {
-  send: () => void;
 }
 
-export const ComposeTextArea: FC<Props> = ({ send }) => {
+export const ComposeTextArea: FC<Props> = ({}) => {
+  const send = useSend();
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
   const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);

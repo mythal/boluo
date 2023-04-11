@@ -1,6 +1,6 @@
 'use client';
 import type { GetMe } from 'api';
-import { useCallback, useRef } from 'react';
+import { Ref } from 'react';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
@@ -9,11 +9,10 @@ import { SendButton, SendRef } from './SendButton';
 interface Props {
   me: GetMe;
   className?: string;
+  sendRef: Ref<SendRef>;
 }
 
-export const Compose = ({ me, className }: Props) => {
-  const sendRef = useRef<SendRef | null>(null);
-  const send = useCallback(() => sendRef.current?.send(), []);
+export const Compose = ({ me, className, sendRef }: Props) => {
   return (
     <div className={className}>
       <div className="flex flex-col gap-2">
@@ -24,7 +23,7 @@ export const Compose = ({ me, className }: Props) => {
             <SendButton me={me} ref={sendRef} />
           </div>
         </div>
-        <ComposeTextArea send={send} />
+        <ComposeTextArea />
       </div>
     </div>
   );

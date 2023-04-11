@@ -20,18 +20,6 @@ export interface SendRef {
   send: () => void;
 }
 
-type VerifyResult = 'OK' | 'EMPTY' | 'NO_NAME';
-
-const verifyCompose = (compose: ComposeState): VerifyResult => {
-  if (compose.source.trim() === '') {
-    return 'EMPTY';
-  }
-  if (compose.inGame && compose.inputedName.trim() === '') {
-    return 'NO_NAME';
-  }
-  return 'OK';
-};
-
 export const SendButton = forwardRef<SendRef, Props>(({ me }, ref) => {
   const channelId = useChannelId();
   const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
@@ -41,10 +29,9 @@ export const SendButton = forwardRef<SendRef, Props>(({ me }, ref) => {
   const { nickname } = me.user;
 
   useSendPreview(channelId, nickname, compose);
-  const verifyResult = verifyCompose(compose);
 
   const send = useCallback(async () => {
-    if (verifyResult !== 'OK') {
+    if (compose.error !== null) {
       return;
     }
     const backupComposeState = compose;
@@ -57,10 +44,10 @@ export const SendButton = forwardRef<SendRef, Props>(({ me }, ref) => {
     const result = await post('/messages/send', null, {
       messageId: compose.previewId,
       channelId,
-      name: nickname,
+      name: compose.inputedName.trim() || nickname,
       text: compose.source,
       entities: [],
-      inGame: false,
+      inGame: compose.inGame,
       isAction: false,
       mediaId: null,
       pos: null,
@@ -84,11 +71,11 @@ export const SendButton = forwardRef<SendRef, Props>(({ me }, ref) => {
         </div>
       ),
     });
-  }, [channelId, compose, dispatch, nickname, post, setBanner, verifyResult]);
+  }, [channelId, compose, dispatch, nickname, post, setBanner]);
 
   useImperativeHandle(ref, () => ({ send }), [send]);
   return (
-    <Button onClick={() => send()} disabled={verifyResult !== 'OK'}>
+    <Button onClick={() => send()} disabled={compose.error !== null}>
       <FormattedMessage defaultMessage="Send" />
       <PaperPlane />
     </Button>

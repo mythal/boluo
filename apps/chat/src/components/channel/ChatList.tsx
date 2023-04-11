@@ -279,11 +279,24 @@ const useDragHandles = (chatList: ChatItem[], setOptimisticReorder: SetOptimisti
 
 const CONTINUOUS_TIME_MS = 60 * 1000;
 const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
-  if (a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' || a.senderId !== b.senderId) {
+  if (
+    a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
+    || a.senderId !== b.senderId || a.name !== b.name // sender
+    || a.folded || b.folded || a.whisperToUsers || b.whisperToUsers // other
+  ) {
     return false;
   }
   const timeDiff = Math.abs(Date.parse(a.created) - Date.parse(b.created));
   return timeDiff < CONTINUOUS_TIME_MS;
+};
+
+const chatItemKey = (item: ChatItem) => {
+  switch (item.type) {
+    case 'PREVIEW':
+      return 'preview:' + item.senderId;
+    default:
+      return item.id;
+  }
 };
 
 const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
@@ -335,7 +348,6 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
             totalCount={totalCount}
             startReached={isFullLoaded ? undefined : loadMore}
             followOutput="auto"
-            computeItemKey={(_, item) => item.id}
             itemContent={(virtualIndex, chatItem) => {
               const realIndex = virtualIndex - firstItemIndex;
               if (optimisticReorder?.optimisticIndex === realIndex) {
@@ -344,7 +356,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
               }
               return (
                 <ChatItemSwitch
-                  key={chatItem.id}
+                  key={chatItemKey(chatItem)}
                   myId={me?.user.id}
                   chatItem={chatItem}
                   isContinuous={isContinuous(optimisticChatList[realIndex - 1], chatItem)}

@@ -1,6 +1,8 @@
 import { makeId } from 'utils';
 import { ComposeAction, ComposeActionUnion } from './actions/compose';
 
+export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
+
 export interface ComposeState {
   inputedName: string;
   previewId: string | null;
@@ -9,6 +11,7 @@ export interface ComposeState {
   broadcast: boolean;
   source: string;
   media: File | undefined;
+  error: ComposeError | null;
 }
 
 export const initialComposeState: ComposeState = {
@@ -19,6 +22,7 @@ export const initialComposeState: ComposeState = {
   broadcast: false,
   source: '',
   media: undefined,
+  error: 'TEXT_EMPTY',
 };
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
@@ -49,10 +53,19 @@ const handleAddDice = (state: ComposeState, action: ComposeAction<'addDice'>): C
   return { ...state, source };
 };
 
-export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
+const handleSetInputedName = (
+  state: ComposeState,
+  { payload: { inputedName } }: ComposeAction<'setInputedName'>,
+): ComposeState => {
+  return { ...state, inputedName };
+};
+
+const composeSwitch = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
       return handleSetComposeSource(state, action);
+    case 'setInputedName':
+      return handleSetInputedName(state, action);
     case 'toggleInGame':
       return handleToggleInGame(state, action);
     case 'recoverState':
@@ -62,4 +75,25 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
     default:
       return state;
   }
+};
+
+const checkCompose = (
+  { source, inputedName, inGame }: ComposeState,
+): ComposeError | null => {
+  if (source.trim() === '') {
+    return 'TEXT_EMPTY';
+  }
+  if (inGame && inputedName.trim() === '') {
+    return 'NO_NAME';
+  }
+  return null;
+};
+
+export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
+  const nextState = composeSwitch(state, action);
+  if (nextState === state) {
+    return nextState;
+  }
+  const error = checkCompose(nextState);
+  return { ...nextState, error };
 };

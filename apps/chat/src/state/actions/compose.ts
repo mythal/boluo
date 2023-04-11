@@ -4,6 +4,7 @@ import { MakeAction, makeAction } from './actions';
 
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
+  setInputedName: { inputedName: string };
   toggleInGame: Empty;
   addDice: Empty;
   recoverState: ComposeState;

@@ -5,7 +5,6 @@ import clsx from 'clsx';
 import { FC, useMemo } from 'react';
 import { MessageReorderHandle } from './MessageReorderHandle';
 import { Name } from './Name';
-import { NameBox } from './NameBox';
 
 interface Props {
   message: Message;

@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { MasksTheater } from 'icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -9,9 +10,10 @@ import { makeComposeAction } from '../../state/actions/compose';
 import { composeAtomFamily } from '../../state/atoms/compose';
 
 interface Props {
+  iconOnly?: boolean;
 }
 
-export const InGameSwitchButton: FC<Props> = ({}) => {
+export const InGameSwitchButton: FC<Props> = ({ iconOnly = false }) => {
   const channelId = useChannelId();
   const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
   const inGame = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.inGame), [composeAtom]));
@@ -23,7 +25,7 @@ export const InGameSwitchButton: FC<Props> = ({}) => {
       onClick={() => dispatch(makeComposeAction('toggleInGame', {}))}
     >
       <MasksTheater />
-      <span className="hidden @md:inline">
+      <span className={clsx('hidden', !iconOnly && '@md:inline')}>
         <FormattedMessage defaultMessage="In Game" />
       </span>
     </Button>

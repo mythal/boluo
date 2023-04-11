@@ -57,7 +57,8 @@ const handleMessagePreview = (
   { payload: { preview } }: ChatAction<'messagePreview'>,
 ): ChannelState => {
   let { previewMap } = state;
-  previewMap = { ...previewMap, [preview.senderId]: { ...preview, type: 'PREVIEW' } };
+  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW' };
+  previewMap = { ...previewMap, [preview.senderId]: chatItem };
   return { ...state, previewMap };
 };
 

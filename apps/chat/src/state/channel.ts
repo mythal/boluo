@@ -14,8 +14,11 @@ export const makeInitialChannelState = (id: string): ChannelState => {
   return { id, messages: [], fullLoaded: false, previewMap: {}, opened: false };
 };
 
-const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
-  const messages = state.messages.concat([{ ...payload.message, type: 'MESSAGE' }]);
+const handleNewMessage = (
+  state: ChannelState,
+  { payload: { message } }: ChatAction<'receiveMessage'>,
+): ChannelState => {
+  const messages = state.messages.concat([{ ...message, type: 'MESSAGE', key: message.id }]);
   messages.sort(posCompare);
   return { ...state, messages };
 };
@@ -24,7 +27,7 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
   const { fullLoaded } = payload;
   const newMessages: MessageItem[] = [...payload.messages]
     .reverse()
-    .map(message => ({ ...message, type: 'MESSAGE' }));
+    .map(message => ({ ...message, type: 'MESSAGE', key: message.id }));
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
   }
@@ -45,7 +48,7 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
-  const message: MessageItem = { ...payload.message, type: 'MESSAGE' };
+  const message: MessageItem = { ...payload.message, type: 'MESSAGE', key: payload.message.id };
   // TODO: Optimize this
   const messages = state.messages.map((x) => (x.id === message.id ? message : x));
   messages.sort(posCompare);
@@ -57,7 +60,7 @@ const handleMessagePreview = (
   { payload: { preview } }: ChatAction<'messagePreview'>,
 ): ChannelState => {
   let { previewMap } = state;
-  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW' };
+  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', key: `preview:${preview.senderId}` };
   previewMap = { ...previewMap, [preview.senderId]: chatItem };
   return { ...state, previewMap };
 };

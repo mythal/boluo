@@ -290,15 +290,6 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   return timeDiff < CONTINUOUS_TIME_MS;
 };
 
-const chatItemKey = (item: ChatItem) => {
-  switch (item.type) {
-    case 'PREVIEW':
-      return 'preview:' + item.senderId;
-    default:
-      return item.id;
-  }
-};
-
 const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
   const me = useMe();
   const isFullLoaded = useIsFullLoaded();
@@ -356,7 +347,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
               }
               return (
                 <ChatItemSwitch
-                  key={chatItemKey(chatItem)}
+                  key={chatItem.key}
                   myId={me?.user.id}
                   chatItem={chatItem}
                   isContinuous={isContinuous(optimisticChatList[realIndex - 1], chatItem)}

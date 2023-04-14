@@ -1,5 +1,4 @@
 INSERT INTO messages (
-    id,
     sender_id,
     channel_id,
     name,
@@ -13,7 +12,7 @@ INSERT INTO messages (
     pos
 )
 VALUES (
-    COALESCE($1, uuid_generate_v1mc()),
+    $1,
     $2,
     $3,
     $4,
@@ -23,7 +22,6 @@ VALUES (
     $8,
     $9,
     $10,
-    $11,
-    $12
+    $11
 )
 RETURNING messages;

@@ -3,6 +3,8 @@ import { ComposeAction, ComposeActionUnion } from './actions/compose';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
 
+export type ComposeRange = [number, number] | null;
+
 export interface ComposeState {
   inputedName: string;
   previewId: string | null;
@@ -12,7 +14,18 @@ export interface ComposeState {
   source: string;
   media: File | undefined;
   error: ComposeError | null;
+  range: ComposeRange;
 }
+
+const isSameRange = (a: ComposeRange, b: ComposeRange) => {
+  if (a === b) {
+    return true;
+  }
+  if (a === null || b === null) return false;
+  const [a0, a1] = a;
+  const [b0, b1] = b;
+  return a0 === a1 && b0 === b1;
+};
 
 export const initialComposeState: ComposeState = {
   inputedName: '',
@@ -23,6 +36,7 @@ export const initialComposeState: ComposeState = {
   source: '',
   media: undefined,
   error: 'TEXT_EMPTY',
+  range: null,
 };
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
@@ -60,6 +74,13 @@ const handleSetInputedName = (
   return { ...state, inputedName };
 };
 
+const handleSetRange = (state: ComposeState, { payload: { range } }: ComposeAction<'setRange'>): ComposeState => {
+  if (isSameRange(state.range, range)) {
+    return state;
+  }
+  return { ...state, range };
+};
+
 const composeSwitch = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
@@ -72,6 +93,8 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleRecoverState(state, action);
     case 'addDice':
       return handleAddDice(state, action);
+    case 'setRange':
+      return handleSetRange(state, action);
     default:
       return state;
   }
@@ -80,11 +103,11 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
 const checkCompose = (
   { source, inputedName, inGame }: ComposeState,
 ): ComposeError | null => {
-  if (source.trim() === '') {
-    return 'TEXT_EMPTY';
-  }
   if (inGame && inputedName.trim() === '') {
     return 'NO_NAME';
+  }
+  if (source.trim() === '') {
+    return 'TEXT_EMPTY';
   }
   return null;
 };

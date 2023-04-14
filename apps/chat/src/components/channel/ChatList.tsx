@@ -31,6 +31,7 @@ import useSWRImmutable from 'swr/immutable';
 import { Button, Loading } from 'ui';
 import { unwrap } from 'utils';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { chatAtom, useChatDispatch } from '../../state/atoms/chat';
 import { chatListAtomFamily } from '../../state/atoms/chat-list';
 import type { ChannelState } from '../../state/channel';
@@ -318,6 +319,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
     [setOptimisticReorder],
   );
   const loadMore = useLoadMore(chatList, onNewMessage);
+  const member = useMyChannelMember(channelId);
 
   const { handleDragStart, handleDragEnd, active, clearActive } = useDragHandles(chatList, setOptimisticReorder);
   return (
@@ -350,6 +352,7 @@ const MessageListView: FC<ViewProps> = ({ className = '', chatList }) => {
                   key={chatItem.key}
                   myId={me?.user.id}
                   chatItem={chatItem}
+                  isMember={member !== null}
                   isContinuous={isContinuous(optimisticChatList[realIndex - 1], chatItem)}
                 />
               );

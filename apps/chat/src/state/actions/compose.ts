@@ -3,11 +3,12 @@ import type { ComposeState } from '../compose';
 import { MakeAction, makeAction } from './actions';
 
 export type ComposeActionMap = {
-  setSource: { channelId: string; source: string };
+  setSource: { channelId: string; source: string; range: [number, number] };
   setInputedName: { inputedName: string };
   toggleInGame: Empty;
   addDice: Empty;
   recoverState: ComposeState;
+  setRange: { range: [number, number] | null };
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

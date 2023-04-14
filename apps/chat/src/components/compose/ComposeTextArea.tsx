@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, KeyboardEvent, useCallback, useMemo, useRef } from 'react';
+import { ChangeEventHandler, FC, FocusEventHandler, KeyboardEvent, useCallback, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
@@ -19,10 +19,19 @@ export const ComposeTextArea: FC<Props> = ({}) => {
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
   const settings = useSettings();
 
-  const setSource = useCallback(
-    (source: string) => dispatch(makeComposeAction('setSource', { channelId, source })),
-    [channelId, dispatch],
-  );
+  const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback((e) => {
+    const { value, selectionStart, selectionEnd } = e.target;
+    dispatch(makeComposeAction('setSource', { channelId, source: value, range: [selectionStart, selectionEnd] }));
+  }, [channelId, dispatch]);
+  const handleFocus: FocusEventHandler<HTMLTextAreaElement> = useCallback((e) => {
+    const { selectionStart, selectionEnd } = e.target;
+    dispatch(makeComposeAction('setRange', { range: [selectionStart, selectionEnd] }));
+  }, [dispatch]);
+
+  const handleBlur = useCallback(() => {
+    dispatch(makeComposeAction('setRange', { range: null }));
+  }, [dispatch]);
+
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== 'Enter') {
       return;
@@ -40,7 +49,9 @@ export const ComposeTextArea: FC<Props> = ({}) => {
   return (
     <textarea
       value={source}
-      onChange={(e) => setSource(e.target.value)}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onChange={handleChange}
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}

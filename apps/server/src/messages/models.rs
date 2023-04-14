@@ -123,7 +123,7 @@ impl Message {
     pub async fn create<T: Querist>(
         db: &mut T,
         cache: &mut crate::cache::Connection,
-        message_id: Option<&Uuid>,
+        preview_id: Option<&Uuid>,
         channel_id: &Uuid,
         sender_id: &Uuid,
         default_name: &str,
@@ -138,7 +138,7 @@ impl Message {
         request_pos: Option<f64>,
     ) -> Result<Message, AppError> {
         use postgres_types::Type;
-        let pos: f64 = match (request_pos, message_id) {
+        let pos: f64 = match (request_pos, preview_id) {
             (Some(pos), _) => pos,
             (None, Some(id)) => crate::pos::pos(db, cache, *channel_id, *id).await? as f64,
             (None, None) => crate::pos::alloc_new_pos(db, cache, *channel_id).await? as f64,
@@ -158,7 +158,6 @@ impl Message {
         let types = &[
             Type::UUID,
             Type::UUID,
-            Type::UUID,
             Type::TEXT,
             Type::TEXT,
             Type::JSON,
@@ -174,7 +173,6 @@ impl Message {
                 source,
                 types,
                 &[
-                    &message_id,
                     sender_id,
                     channel_id,
                     &name,
@@ -195,40 +193,13 @@ impl Message {
                     "A conflict occurred while creating a new message at channel {}",
                     channel_id
                 );
-                let mut message_id = message_id;
-                if let Some(id) = message_id {
-                    let conflicted = Message::get(db, id, None).await?;
-                    if let Some(conflicted) = conflicted {
-                        log::warn!("message id conflicted: {}", conflicted.id);
-                        if text == conflicted.text {
-                            log::warn!("duplicate message: {}", text);
-                            return Err(AppError::Conflict("duplicated message".to_string()));
-                        } else {
-                            message_id = None;
-                        }
-                    }
-                }
-                let conflicted = Message::query_by_pos(db, channel_id, pos).await?;
-                let reset_pos = if let Some(conflicted) = conflicted {
-                    if conflicted.text == text {
-                        log::warn!("duplicate message: {}", text);
-                        return Err(AppError::Conflict("duplicated message".to_string()));
-                    }
-                    log::info!("conflict at position {}", pos);
-                    crate::pos::reset_channel_pos(cache, channel_id).await?;
-                    if let Some(message_id) = message_id {
-                        crate::pos::finished(cache, *channel_id, *message_id).await?;
-                    }
-                    crate::pos::alloc_new_pos(db, cache, *channel_id).await? as f64
-                } else {
-                    pos
-                };
+                crate::pos::reset_channel_pos(cache, channel_id).await?;
+                let reset_pos = crate::pos::alloc_new_pos(db, cache, *channel_id).await? as f64;
                 row = db
                     .query_exactly_one_typed(
                         source,
                         types,
                         &[
-                            &message_id,
                             sender_id,
                             channel_id,
                             &name,
@@ -246,7 +217,9 @@ impl Message {
             }
         }
         let mut message: Message = row?.try_get(0)?;
-        crate::pos::finished(cache, *channel_id, message.id).await?;
+        if let Some(preview_id) = preview_id {
+            crate::pos::finished(cache, *channel_id, *preview_id).await?;
+        }
         message.hide();
         Ok(message)
     }

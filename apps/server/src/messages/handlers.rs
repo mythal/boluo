@@ -14,6 +14,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let NewMessage {
         message_id,
+        preview_id,
         channel_id,
         name,
         text,
@@ -33,7 +34,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
     let message = Message::create(
         db,
         &mut cache,
-        message_id.as_ref(),
+        preview_id.or(message_id).as_ref(),
         &channel_id,
         &session.user_id,
         &channel_member.character_name,

@@ -1,18 +1,16 @@
 import { Dice } from 'icons';
 import { useSetAtom } from 'jotai';
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
-import { useChannelId } from '../../hooks/useChannelId';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/actions/compose';
-import { composeAtomFamily } from '../../state/atoms/compose';
 
 interface Props {
 }
 
 export const AddDiceButton: FC<Props> = () => {
-  const channelId = useChannelId();
-  const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
+  const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
   const handleAddDice = () => dispatch(makeComposeAction('addDice', {}));
   return (

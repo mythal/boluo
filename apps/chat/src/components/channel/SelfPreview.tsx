@@ -1,11 +1,10 @@
 import type { Preview } from 'api';
-import { useMe } from 'common';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
-import { composeAtomFamily } from '../../state/atoms/compose';
 import { InGameSwitchButton } from '../compose/InGameSwitchButton';
 import { Content } from './Content';
 import { Name } from './Name';
@@ -21,7 +20,7 @@ export const SelfPreview: FC<Props> = ({ preview }) => {
   const channelId = useChannelId();
   const member = useMyChannelMember(channelId);
   const isMaster = member?.channel.isMaster ?? false;
-  const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
+  const composeAtom = useComposeAtom();
   const inGame = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ inGame }) => inGame), [composeAtom]),
   );

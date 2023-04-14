@@ -2,9 +2,9 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, KeyboardEvent, useCallback, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
 import { makeComposeAction } from '../../state/actions/compose';
-import { composeAtomFamily } from '../../state/atoms/compose';
 import { useSend } from '../channel/useSend';
 
 interface Props {
@@ -14,7 +14,7 @@ export const ComposeTextArea: FC<Props> = ({}) => {
   const send = useSend();
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
-  const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
+  const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
   const settings = useSettings();

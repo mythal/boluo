@@ -1,10 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { useChannelId } from '../../hooks/useChannelId';
+import { FormattedMessage } from 'react-intl';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
-import { composeAtomFamily } from '../../state/atoms/compose';
 import { ComposeError } from '../../state/compose';
 import { useSend } from './useSend';
 
@@ -24,11 +23,10 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
 export const SelfPreviewSendHelpText: FC<Props> = () => {
   const send = useSend();
   const settings = useSettings();
-  const channelId = useChannelId();
+  const composeAtom = useComposeAtom();
   const composeError: ComposeError | null = useAtomValue(useMemo(() => {
-    const composeAtom = composeAtomFamily(channelId);
     return selectAtom(composeAtom, (compose) => compose.error);
-  }, [channelId]));
+  }, [composeAtom]));
   if (composeError !== null) {
     return (
       <div className="text-sm text-error-500">

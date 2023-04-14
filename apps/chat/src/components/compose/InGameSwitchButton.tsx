@@ -5,17 +5,15 @@ import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
-import { useChannelId } from '../../hooks/useChannelId';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/actions/compose';
-import { composeAtomFamily } from '../../state/atoms/compose';
 
 interface Props {
   iconOnly?: boolean;
 }
 
 export const InGameSwitchButton: FC<Props> = ({ iconOnly = false }) => {
-  const channelId = useChannelId();
-  const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
+  const composeAtom = useComposeAtom();
   const inGame = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.inGame), [composeAtom]));
   const dispatch = useSetAtom(composeAtom);
   return (

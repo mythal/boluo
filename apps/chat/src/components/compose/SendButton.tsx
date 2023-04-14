@@ -7,9 +7,8 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/actions/compose';
-import { composeAtomFamily } from '../../state/atoms/compose';
-import { ComposeState } from '../../state/compose';
 import { useSendPreview } from './useSendPreview';
 
 interface Props {
@@ -22,13 +21,11 @@ export interface SendRef {
 
 export const SendButton = forwardRef<SendRef, Props>(({ me }, ref) => {
   const channelId = useChannelId();
-  const composeAtom = useMemo(() => composeAtomFamily(channelId), [channelId]);
+  const composeAtom = useComposeAtom();
   const [compose, dispatch] = useAtom(composeAtom);
   const setBanner = useSetBanner();
   const post = usePost();
   const { nickname } = me.user;
-
-  useSendPreview(channelId, nickname, compose);
 
   const send = useCallback(async () => {
     if (compose.error !== null) {

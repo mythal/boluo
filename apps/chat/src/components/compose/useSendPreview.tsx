@@ -4,6 +4,7 @@ import { MutableRefObject, useEffect, useRef } from 'react';
 import { makeId } from 'utils';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
 import { connectionStateAtom } from '../../state/atoms/chat';
+import { useIsFocused } from '../../state/chat-view';
 import { ComposeState } from '../../state/compose';
 
 const SEND_PREVIEW_TIMEOUT_MS = 250;
@@ -47,15 +48,18 @@ const sendPreview = (
 export const useSendPreview = (channelId: string, nickname: string | undefined, composeAtom: ComposeAtom) => {
   const store = useStore();
   const sendTimoutRef = useRef<number | undefined>(undefined);
+  const isFocused = useIsFocused();
   const connectionState = useAtomValue(connectionStateAtom);
   useEffect(() => {
-    const unsub = store.sub(composeAtom, () => {
+    return store.sub(composeAtom, () => {
       if (nickname === undefined || connectionState.type !== 'CONNECTED') {
+        return;
+      }
+      if (!isFocused) {
         return;
       }
       const composeState = store.get(composeAtom);
       sendPreview(channelId, nickname, composeState, connectionState.connection, sendTimoutRef);
     });
-    return () => unsub();
-  }, [channelId, composeAtom, connectionState, nickname, store]);
+  }, [channelId, composeAtom, connectionState, isFocused, nickname, store]);
 };

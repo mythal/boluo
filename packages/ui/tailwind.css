@@ -78,3 +78,23 @@
     opacity: 100%;
   }
 }
+
+
+.cursor-blink {
+  animation: cursor-blink 1s ease-in-out infinite;
+}
+
+@keyframes cursor-blink {
+  0% {
+    opacity: 40%;
+  }
+  40% {
+    opacity: 40%;
+  }
+  40% {
+    opacity: 0%;
+  }
+  100% {
+    opacity: 0%;
+  }
+}

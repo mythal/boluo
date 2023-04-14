@@ -36,10 +36,11 @@ export const SendButton = forwardRef<SendRef, Props>(({ me }, ref) => {
       dispatch(makeComposeAction('recoverState', backupComposeState));
       setBanner(null);
     };
-    dispatch(makeComposeAction('setSource', { channelId, source: '' }));
+    dispatch(makeComposeAction('setSource', { channelId, source: '', range: [0, 0] }));
 
     const result = await post('/messages/send', null, {
-      messageId: compose.previewId,
+      messageId: null,
+      previewId: compose.previewId,
       channelId,
       name: compose.inputedName.trim() || nickname,
       text: compose.source,

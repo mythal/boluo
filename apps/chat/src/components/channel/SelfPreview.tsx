@@ -9,17 +9,21 @@ import { InGameSwitchButton } from '../compose/InGameSwitchButton';
 import { Content } from './Content';
 import { Name } from './Name';
 import { NameInput } from './NameInput';
+import { PreviewBox } from './PreviewBox';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
 
 interface Props {
   className?: string;
-  preview?: Preview;
+  preview: Preview;
 }
 
-export const SelfPreview: FC<Props> = ({ preview }) => {
+export const SelfPreview: FC<Props> = ({ preview, className }) => {
   const channelId = useChannelId();
   const member = useMyChannelMember(channelId);
-  const isMaster = member?.channel.isMaster ?? false;
+  if (member === null) {
+    throw new Error('Member not found');
+  }
+  const isMaster = member.channel.isMaster;
   const composeAtom = useComposeAtom();
   const inGame = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ inGame }) => inGame), [composeAtom]),
@@ -27,7 +31,7 @@ export const SelfPreview: FC<Props> = ({ preview }) => {
   const nameInCompose = useAtomValue(
     useMemo(() => selectAtom(composeAtom, (compose) => compose.inputedName), [composeAtom]),
   );
-  const name = inGame ? nameInCompose.trim() : (member?.user.nickname ?? preview?.name ?? '');
+  const name = inGame ? nameInCompose.trim() : member.user.nickname;
   const isAction = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ isAction }) => isAction), [composeAtom]),
   );
@@ -39,7 +43,7 @@ export const SelfPreview: FC<Props> = ({ preview }) => {
   }, [isMaster, name]);
 
   return (
-    <>
+    <PreviewBox id={preview.id} className="bg-brand-50 border-t border-b border-brand-200">
       <div className="flex @2xl:flex-col gap-y-1 gap-x-4 items-center @2xl:items-end justify-between @2xl:justify-start">
         <div className="flex-grow flex-shrink-1 truncate @2xl:flex-shrink-0">
           {!isAction && nameNode}
@@ -53,6 +57,6 @@ export const SelfPreview: FC<Props> = ({ preview }) => {
         <Content text={source} nameNode={nameNode} isAction={isAction} />
         <SelfPreviewSendHelpText />
       </div>
-    </>
+    </PreviewBox>
   );
 };

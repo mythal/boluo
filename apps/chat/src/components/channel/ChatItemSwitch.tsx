@@ -6,11 +6,12 @@ import { ChatItemPreview } from './ChatItemPreview';
 interface Props {
   chatItem: ChatItem;
   myId: string | undefined;
+  isMember: boolean;
   className?: string;
   isContinuous: boolean;
 }
 
-export const ChatItemSwitch: FC<Props> = ({ chatItem, className = '', myId, isContinuous }) => {
+export const ChatItemSwitch: FC<Props> = ({ chatItem, className = '', myId, isContinuous, isMember }) => {
   switch (chatItem.type) {
     case 'MESSAGE':
       return (
@@ -22,7 +23,7 @@ export const ChatItemSwitch: FC<Props> = ({ chatItem, className = '', myId, isCo
         />
       );
     case 'PREVIEW':
-      return <ChatItemPreview self={myId === chatItem.senderId} preview={chatItem} className={className} />;
+      return <ChatItemPreview self={isMember && myId === chatItem.senderId} preview={chatItem} className={className} />;
     default:
       return <div className={className}>Not implemented</div>;
   }

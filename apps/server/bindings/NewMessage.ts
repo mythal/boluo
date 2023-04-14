@@ -2,6 +2,7 @@
 
 export interface NewMessage {
   messageId: string | null;
+  previewId: string | null;
   channelId: string;
   name: string;
   text: string;

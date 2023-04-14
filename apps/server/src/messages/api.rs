@@ -8,6 +8,7 @@ use uuid::Uuid;
 #[serde(rename_all = "camelCase")]
 pub struct NewMessage {
     pub message_id: Option<Uuid>,
+    pub preview_id: Option<Uuid>,
     pub channel_id: Uuid,
     pub name: String,
     pub text: String,

@@ -1,3 +1,4 @@
+import { User } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
@@ -7,7 +8,9 @@ import { useSettings } from '../../hooks/useSettings';
 import { ComposeError } from '../../state/compose';
 import { useSend } from './useSend';
 
-interface Props {}
+interface Props {
+  me: User;
+}
 
 const Reason: FC<{ error: ComposeError }> = ({ error }) => {
   switch (error) {
@@ -20,8 +23,8 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
   }
 };
 
-export const SelfPreviewSendHelpText: FC<Props> = () => {
-  const send = useSend();
+export const SelfPreviewSendHelpText: FC<Props> = ({ me }) => {
+  const send = useSend(me);
   const settings = useSettings();
   const composeAtom = useComposeAtom();
   const composeError: ComposeError | null = useAtomValue(useMemo(() => {

@@ -55,7 +55,7 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
       </div>
       <div className="flex flex-col h-full items-between">
         <Content text={source} nameNode={nameNode} isAction={isAction} />
-        <SelfPreviewSendHelpText />
+        <SelfPreviewSendHelpText me={member.user} />
       </div>
     </PreviewBox>
   );

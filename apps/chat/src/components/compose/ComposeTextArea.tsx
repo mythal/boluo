@@ -1,3 +1,4 @@
+import { GetMe } from 'api';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, FocusEventHandler, KeyboardEvent, useCallback, useMemo, useRef } from 'react';
@@ -8,10 +9,11 @@ import { makeComposeAction } from '../../state/actions/compose';
 import { useSend } from '../channel/useSend';
 
 interface Props {
+  me: GetMe;
 }
 
-export const ComposeTextArea: FC<Props> = ({}) => {
-  const send = useSend();
+export const ComposeTextArea: FC<Props> = ({ me }) => {
+  const send = useSend(me.user);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
   const composeAtom = useComposeAtom();
@@ -32,17 +34,17 @@ export const ComposeTextArea: FC<Props> = ({}) => {
     dispatch(makeComposeAction('setRange', { range: null }));
   }, [dispatch]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== 'Enter') {
       return;
     }
     if (settings.enterSend) {
       if (!e.shiftKey) {
-        send();
+        await send();
       }
     } else {
       if (e.ctrlKey || e.metaKey) {
-        send();
+        await send();
       }
     }
   }, [send, settings.enterSend]);

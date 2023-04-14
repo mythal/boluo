@@ -1,18 +1,16 @@
 'use client';
 import type { GetMe } from 'api';
-import { Ref } from 'react';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
-import { SendButton, SendRef } from './SendButton';
+import { SendButton } from './SendButton';
 
 interface Props {
   me: GetMe;
   className?: string;
-  sendRef: Ref<SendRef>;
 }
 
-export const Compose = ({ me, className, sendRef }: Props) => {
+export const Compose = ({ me, className }: Props) => {
   return (
     <div className={className}>
       <div className="flex flex-col gap-2">
@@ -20,10 +18,10 @@ export const Compose = ({ me, className, sendRef }: Props) => {
           <InGameSwitchButton />
           <AddDiceButton />
           <div className="flex-grow text-right">
-            <SendButton me={me} ref={sendRef} />
+            <SendButton me={me} />
           </div>
         </div>
-        <ComposeTextArea />
+        <ComposeTextArea me={me} />
       </div>
     </div>
   );

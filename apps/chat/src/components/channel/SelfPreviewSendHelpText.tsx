@@ -30,6 +30,9 @@ export const SelfPreviewSendHelpText: FC<Props> = ({ me }) => {
   const composeError: ComposeError | null = useAtomValue(useMemo(() => {
     return selectAtom(composeAtom, (compose) => compose.error);
   }, [composeAtom]));
+  if (composeError === 'TEXT_EMPTY') {
+    return null;
+  }
   if (composeError !== null) {
     return (
       <div className="text-sm text-error-500">

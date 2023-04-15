@@ -13,14 +13,14 @@ import { useSendPreview } from '../compose/useSendPreview';
 import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneBox } from '../PaneBox';
 import { ChannelHeader } from './ChannelHeader';
-import { ChatList } from './ChatList';
+import { ChatContent } from './ChatContent';
 
 interface Props {
+  channelId: string;
 }
 
-export const ChatPaneChannel: FC<Props> = memo(({}) => {
+export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const me = useMe();
-  const channelId = useChannelId();
   const member = useMyChannelMember(channelId);
   const composeAtom = useMemo(() => atomWithReducer(initialComposeState, composeReducer), []);
   const nickname = me?.user.nickname;
@@ -30,7 +30,7 @@ export const ChatPaneChannel: FC<Props> = memo(({}) => {
       <PaneBox>
         <ChannelHeader />
         <PaneBodyBox className={clsx('flex-col justify-between flex flex-grow')}>
-          <ChatList className="relative flex-grow" />
+          <ChatContent className="relative flex-grow" me={me} channelId={channelId} />
           {me && member
             ? <Compose me={me} className={clsx('m-2 max-h-[8rem]')} />
             : <GuestCompose />}

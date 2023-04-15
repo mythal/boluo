@@ -14,8 +14,12 @@ const makeChatList = (channelState: ChannelState): ChatItem[] => {
   const { minPos } = channelState;
   const previews = Object.values(channelState.previewMap);
   const messages = Object.values(channelState.messageMap);
-  let chatItemList: ChatItem[] = messages;
-  chatItemList = chatItemList.concat(minPos === null ? previews : previews.filter(item => item.pos > minPos));
+  const chatItemList: ChatItem[] = messages;
+  if (minPos === null) {
+    chatItemList.push(...previews);
+  } else {
+    chatItemList.push(...previews.filter(item => item.pos > minPos));
+  }
   chatItemList.sort(byPos);
   return chatItemList;
 };

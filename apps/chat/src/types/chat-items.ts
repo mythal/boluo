@@ -6,6 +6,6 @@ export type MessageItem = Message & { type: 'MESSAGE'; key: string };
 
 export type ChatItem = PreviewItem | MessageItem;
 
-export function posCompare(a: { pos: number }, b: { pos: number }): number {
+export function byPos(a: { pos: number }, b: { pos: number }): number {
   return a.pos - b.pos;
 }

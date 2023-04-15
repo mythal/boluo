@@ -1,68 +1,104 @@
-import { MessageItem, posCompare, PreviewItem } from '../types/chat-items';
+import type { Message } from 'api';
+import { byPos, MessageItem, PreviewItem } from '../types/chat-items';
 import { ChatAction, ChatActionUnion } from './actions/chat';
 import type { ChatReducerContext } from './chat';
+
+export type UserId = string;
 
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
-  messages: MessageItem[];
-  previewMap: Record<string, PreviewItem>; // Key: User ID
+  minPos: number | null;
+  messageMap: Record<string, MessageItem>;
+  previewMap: Record<UserId, PreviewItem>;
   opened: boolean;
 }
 
+const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE', key: message.id });
+
 export const makeInitialChannelState = (id: string): ChannelState => {
-  return { id, messages: [], fullLoaded: false, previewMap: {}, opened: false };
+  return {
+    id,
+    minPos: null,
+    messageMap: {},
+    fullLoaded: false,
+    previewMap: {},
+    opened: false,
+  };
 };
 
 const handleNewMessage = (
   state: ChannelState,
-  { payload: { message } }: ChatAction<'receiveMessage'>,
+  { payload }: ChatAction<'receiveMessage'>,
 ): ChannelState => {
-  const messages = state.messages.concat([{ ...message, type: 'MESSAGE', key: message.id }]);
-  messages.sort(posCompare);
-  return { ...state, messages };
+  const prevMessageMap = state.messageMap;
+  const message = makeMessageItem(payload.message);
+
+  if (state.minPos === null) {
+    const minPos = message.pos;
+    const messageMap = { [message.id]: message };
+    return { ...state, minPos, messageMap };
+  }
+
+  if (message.pos <= state.minPos && !state.fullLoaded) {
+    return state;
+  }
+  if (message.id in prevMessageMap) {
+    console.warn('Received a duplicate new message.');
+    return state;
+  }
+  const messageMap = { ...prevMessageMap, [message.id]: message };
+  return { ...state, messageMap };
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
   const { fullLoaded } = payload;
-  const newMessages: MessageItem[] = [...payload.messages]
-    .reverse()
-    .map(message => ({ ...message, type: 'MESSAGE', key: message.id }));
+  if (state.fullLoaded) {
+    return state;
+  }
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
   }
-  if (newMessages.length === 0) {
+  if (payload.messages.length === 0) {
     console.log('Received empty messages list');
     return state;
   }
-  if (state.messages.length === 0) {
-    return { ...state, messages: newMessages };
+  const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages]
+    .map(message => [message.id, makeMessageItem(message)]);
+  const minPos = payload.messages.at(-1)!.pos;
+  if (state.minPos === null) {
+    return { ...state, messageMap: Object.fromEntries(newMessageEntries), minPos };
   }
-  const firstMessage = state.messages[0]!;
-  if (firstMessage.pos <= newMessages[0]!.pos) {
+  if (state.minPos <= minPos) {
     console.warn('Received messages that are older than the ones already loaded');
     return state;
   }
-  const messages = newMessages.concat(state.messages);
-  return { ...state, messages };
+  const messageMap = { ...state.messageMap };
+  for (const [id, item] of newMessageEntries) {
+    messageMap[id] = item;
+  }
+  return { ...state, messageMap, minPos };
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
-  const message: MessageItem = { ...payload.message, type: 'MESSAGE', key: payload.message.id };
-  const prevMessages = state.messages;
-  if (prevMessages.length === 0) {
+  const message: MessageItem = makeMessageItem(payload.message);
+  if (state.minPos === null) {
     return state;
   }
-  const prevFirstMessage = prevMessages[0]!;
-  if (message.pos < prevFirstMessage.pos) {
-    // The edited message has been moved out of the range of currently loaded messages.
-    const messages = state.messages.filter((x) => (x.id !== message.id));
-    return { ...state, messages };
+  if (message.pos < state.minPos && !state.fullLoaded) {
+    if (message.id in state.messageMap) {
+      // The edited message has been moved out of the range of currently loaded messages.
+      const messageMap = { ...state.messageMap };
+      delete messageMap[message.id];
+      return { ...state, messageMap };
+    } else {
+      return state;
+    }
   }
-  // TODO: Optimize this
-  const messages = state.messages.map((x) => (x.id === message.id ? message : x));
-  messages.sort(posCompare);
-  return { ...state, messages };
+
+  const messageMap = { ...state.messageMap };
+  messageMap[message.id] = message;
+  return { ...state, messageMap };
 };
 
 const handleMessagePreview = (

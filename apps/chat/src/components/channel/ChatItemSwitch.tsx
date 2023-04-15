@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import { memo } from 'react';
 import { ChatItem } from '../../types/chat-items';
 import { ChatItemMessage } from './ChatItemMessage';
 import { ChatItemPreview } from './ChatItemPreview';
@@ -8,10 +8,10 @@ interface Props {
   myId: string | undefined;
   isMember: boolean;
   className?: string;
-  isContinuous: boolean;
+  continuous: boolean;
 }
 
-export const ChatItemSwitch: FC<Props> = ({ chatItem, className = '', myId, isContinuous, isMember }) => {
+export const ChatItemSwitch = memo<Props>(({ chatItem, className = '', myId, continuous, isMember }) => {
   switch (chatItem.type) {
     case 'MESSAGE':
       return (
@@ -19,7 +19,7 @@ export const ChatItemSwitch: FC<Props> = ({ chatItem, className = '', myId, isCo
           self={myId === chatItem.senderId}
           message={chatItem}
           className={className}
-          isContinuous={isContinuous}
+          continuous={continuous}
         />
       );
     case 'PREVIEW':
@@ -27,4 +27,5 @@ export const ChatItemSwitch: FC<Props> = ({ chatItem, className = '', myId, isCo
     default:
       return <div className={className}>Not implemented</div>;
   }
-};
+});
+ChatItemSwitch.displayName = 'ChatItemSwitch';

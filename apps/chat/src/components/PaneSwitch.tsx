@@ -39,7 +39,7 @@ const Switch: FC<Props> = ({ pane }) => {
     case 'CHANNEL':
       return (
         <ChannelIdContext.Provider value={pane.channelId}>
-          <ChatPaneChannel key={pane.channelId} />
+          <ChatPaneChannel channelId={pane.channelId} key={pane.channelId} />
         </ChannelIdContext.Provider>
       );
     case 'SPACE_SETTINGS':

@@ -49,6 +49,16 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
   const message: MessageItem = { ...payload.message, type: 'MESSAGE', key: payload.message.id };
+  const prevMessages = state.messages;
+  if (prevMessages.length === 0) {
+    return state;
+  }
+  const prevFirstMessage = prevMessages[0]!;
+  if (message.pos < prevFirstMessage.pos) {
+    // The edited message has been moved out of the range of currently loaded messages.
+    const messages = state.messages.filter((x) => (x.id !== message.id));
+    return { ...state, messages };
+  }
   // TODO: Optimize this
   const messages = state.messages.map((x) => (x.id === message.id ? message : x));
   messages.sort(posCompare);

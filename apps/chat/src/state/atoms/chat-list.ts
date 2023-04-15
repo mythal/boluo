@@ -1,6 +1,6 @@
 import { store } from 'common/store';
 import { atomFamily, selectAtom } from 'jotai/utils';
-import { ChatItem, posCompare } from '../../types/chat-items';
+import { byPos, ChatItem } from '../../types/chat-items';
 import { ChannelState, makeInitialChannelState } from '../channel';
 import { ChatSpaceState } from '../chat';
 import { chatAtom } from './chat';
@@ -11,11 +11,12 @@ export interface ChatListState {
 }
 
 const makeChatList = (channelState: ChannelState): ChatItem[] => {
+  const { minPos } = channelState;
   const previews = Object.values(channelState.previewMap);
-  let chatItemList: ChatItem[] = channelState.messages;
-  chatItemList = chatItemList.concat(previews);
-  // TODO: Optimize this
-  chatItemList.sort(posCompare);
+  const messages = Object.values(channelState.messageMap);
+  let chatItemList: ChatItem[] = messages;
+  chatItemList = chatItemList.concat(minPos === null ? previews : previews.filter(item => item.pos > minPos));
+  chatItemList.sort(byPos);
   return chatItemList;
 };
 

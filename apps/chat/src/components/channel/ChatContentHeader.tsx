@@ -44,22 +44,15 @@ export const ChatListHeader: FC = () => {
   const loadMore = async () => {
     if (isLoading || !mountedRef.current) return;
     const chatListAtom = chatListAtomFamily(channelId);
-    const chatList = store.get(chatListAtom)?.itemList;
-    if (!chatList) {
-      return;
-    }
+    const chatListState = store.get(chatListAtom);
+    const minPos = chatListState?.channelState.minPos ?? null;
     setIsLoading(true);
-    let before: number | null = null;
-    for (const item of chatList) {
-      if (item.type === 'MESSAGE') {
-        before = item.pos;
-        break;
-      }
-    }
+    const before: number | null = minPos;
     const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
     const result = await fetchPromise;
     if (result.isErr) {
       // TODO: error handing
+      setIsLoading(false);
       return;
     }
     const newMessages = result.some;
@@ -69,6 +62,7 @@ export const ChatListHeader: FC = () => {
       messages: newMessages,
       fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
     });
+    setIsLoading(false);
   };
   return (
     <div ref={boxRef} className="h-16 flex items-center justify-center select-none">

@@ -79,17 +79,17 @@ const makeChatState = (spaceId: string): ChatSpaceState => ({
 
 const handleOpenedChannels = (
   state: ChatSpaceState,
-  { payload: { channelIdSet: opendChannelIdSet } }: ChatAction<'panesChange'>,
+  { payload: { channelIdSet: openedChannelIdSet } }: ChatAction<'panesChange'>,
 ): ChatSpaceState => {
   const channelIdList = Object.keys(state.channels);
   if (
-    channelIdList.length === opendChannelIdSet.size
-    && channelIdList.every(id => opendChannelIdSet.has(id))
+    channelIdList.length === openedChannelIdSet.size
+    && channelIdList.every(id => openedChannelIdSet.has(id))
   ) {
     return state;
   }
   const channels = { ...state.channels };
-  for (const channelId of opendChannelIdSet) {
+  for (const channelId of openedChannelIdSet) {
     if (channelId in channels) {
       const channelState = channels[channelId]!;
       if (!channelState.opened) {
@@ -102,7 +102,7 @@ const handleOpenedChannels = (
     }
   }
   for (const channelId of channelIdList) {
-    if (!opendChannelIdSet.has(channelId)) {
+    if (!openedChannelIdSet.has(channelId)) {
       const channelState = channels[channelId]!;
       if (channelState.opened) {
         channels[channelId] = { ...channelState, opened: false };

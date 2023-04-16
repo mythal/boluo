@@ -2,7 +2,7 @@ import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { GetMe, Member, Message } from 'api';
 import { usePost } from 'common';
-import type { Dispatch, FC, SetStateAction } from 'react';
+import type { Dispatch, FC, MutableRefObject, RefObject, SetStateAction } from 'react';
 import { useMemo } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
@@ -11,7 +11,6 @@ import { useState } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useChatDispatch } from '../../state/atoms/chat';
 import { ChatItem } from '../../types/chat-items';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatListHeader } from './ChatContentHeader';
@@ -27,20 +26,21 @@ interface Props {
 }
 
 const START_INDEX = Number.MAX_SAFE_INTEGER - 10000000;
-const SHOW_BOTTOM_BUTTON_TIMEOUT = 500;
+const SHOW_BOTTOM_BUTTON_TIMEOUT = 2000;
 const OPTIMISTIC_REORDER_TIMEOUT = 2000;
 
 interface UseScrollToBottom {
   showButton: boolean;
-  bottomStateChange: (bottom: boolean) => void;
+  onBottomStateChange: (bottom: boolean) => void;
+  goBottom: () => void;
 }
 
-const useScrollToBottom = (): UseScrollToBottom => {
+const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseScrollToBottom => {
   // ref: https://virtuoso.dev/stick-to-bottom/
   const [showButton, setShowButton] = useState(false);
   const showButtonTimeoutRef = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(showButtonTimeoutRef.current));
-  const bottomStateChange = useCallback((bottom: boolean) => {
+  const onBottomStateChange = useCallback((bottom: boolean) => {
     window.clearTimeout(showButtonTimeoutRef.current);
     if (bottom) {
       setShowButton(false);
@@ -48,7 +48,13 @@ const useScrollToBottom = (): UseScrollToBottom => {
       showButtonTimeoutRef.current = window.setTimeout(() => setShowButton(true), SHOW_BOTTOM_BUTTON_TIMEOUT);
     }
   }, []);
-  return { showButton, bottomStateChange };
+
+  const goBottom = useCallback(() => {
+    const virtuoso = virtuosoRef.current;
+    if (!virtuoso) return;
+    virtuoso.scrollToIndex({ index: 'LAST', behavior: 'smooth' });
+  }, [virtuosoRef]);
+  return { showButton, onBottomStateChange, goBottom };
 };
 
 interface SortableData {
@@ -213,30 +219,78 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   return timeDiff < CONTINUOUS_TIME_MS;
 };
 
+interface UseAutoScrollReturn {
+  scrollerRef: MutableRefObject<HTMLDivElement | null>;
+  boxRef: MutableRefObject<HTMLDivElement | null>;
+  onBottomStateChange: (bottom: boolean) => void;
+}
+
+const useAutoScroll = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseAutoScrollReturn => {
+  const lockBottomRef = useRef(true);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const scrollTimeoutRef = useRef<number | undefined>(undefined);
+  const viewportBottomIndexRef = useRef<number | 'LAST'>('LAST');
+
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const resizeObserver = new ResizeObserver(() => {
+      window.clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        const index = viewportBottomIndexRef.current;
+        virtuosoRef.current?.scrollToIndex({ index, align: 'end', behavior: 'auto' });
+      }, 0);
+    });
+    resizeObserver.observe(box);
+    return () => resizeObserver.disconnect();
+  }, [virtuosoRef]);
+
+  useEffect(() => {
+    const ref = scrollerRef.current;
+    if (!ref) return;
+
+    let prevScrollTop = Number.MAX_SAFE_INTEGER;
+    const onScroll = () => {
+      const scrollTop = ref.scrollTop;
+      if (!lockBottomRef.current) {
+      } else {
+        const scrollBottom = ref.scrollHeight - scrollTop - ref.offsetHeight;
+        if (prevScrollTop - scrollTop > 2 && scrollBottom > 2) {
+          lockBottomRef.current = false;
+        }
+      }
+      prevScrollTop = scrollTop;
+    };
+    ref.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      ref.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+  const onBottomStateChange = useCallback((bottom: boolean) => {
+    if (bottom) {
+      if (!lockBottomRef.current) {
+        console.log('lock to bottom');
+        lockBottomRef.current = true;
+      }
+    } else {
+      if (lockBottomRef.current) {
+        virtuosoRef.current?.scrollTo({ top: Number.MAX_SAFE_INTEGER, behavior: 'smooth' });
+      }
+    }
+  }, [virtuosoRef]);
+  return { scrollerRef, boxRef, onBottomStateChange };
+};
+
 export const ChatContentView: FC<Props> = ({ className = '', chatList: actualChatList, me, myMember }) => {
-  const dispatch = useChatDispatch();
   const channelId = useChannelId();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-  const { showButton, bottomStateChange } = useScrollToBottom();
+  const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
 
   const { chatList, optimisticReorder, setOptimisticReorder, firstItemIndex } = useDerivedChatList(
     actualChatList,
   );
   const totalCount = chatList.length;
-  const goButtom = useCallback(
-    () => {
-      const virtuoso = virtuosoRef.current;
-      if (!virtuoso) return;
-      virtuoso.scrollToIndex({ index: totalCount - 1, behavior: 'smooth' });
-    },
-    [totalCount],
-  );
-  const handleBottomStateChange = useCallback(() => (bottom: boolean) => {
-    bottomStateChange(bottom);
-    if (bottom) {
-      dispatch('reachBottom', { channelId });
-    }
-  }, [bottomStateChange, channelId, dispatch]);
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
@@ -261,8 +315,15 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
       />
     );
   };
+  const { scrollerRef, boxRef, onBottomStateChange: autoScrollOnBottomChange } = useAutoScroll(virtuosoRef);
+
+  const handleBottomStateChange = (bottom: boolean) => {
+    goBottomButtonOnBottomChange(bottom);
+    autoScrollOnBottomChange(bottom);
+  };
+
   return (
-    <div className={className}>
+    <div className={className} ref={boxRef}>
       <ChatListDndContext
         active={active}
         myId={me?.user.id}
@@ -274,14 +335,18 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
           <Virtuoso
             firstItemIndex={firstItemIndex}
             ref={virtuosoRef}
+            scrollerRef={(ref) => {
+              if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
+            }}
             components={{ Header: ChatListHeader }}
             initialTopMostItemIndex={totalCount - 1}
             totalCount={totalCount}
-            followOutput="auto"
+            alignToBottom
             itemContent={itemContent}
+            followOutput="auto"
             atBottomStateChange={handleBottomStateChange}
           />
-          {showButton && <GoButtomButton onClick={goButtom} />}
+          {showButton && <GoButtomButton onClick={goBottom} />}
         </SortableContext>
       </ChatListDndContext>
     </div>

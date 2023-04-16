@@ -40,7 +40,7 @@ export const MessageBox: FC<Props> = (
           loading={optimistic}
         />
       )
-      : <div className="col-span-1 row-span-2 h-full" />
+      : <div className="col-span-1 row-span-full h-full" />
   ), [
     attributes,
     draggable,

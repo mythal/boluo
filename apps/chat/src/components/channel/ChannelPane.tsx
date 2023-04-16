@@ -29,11 +29,11 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     <ComposeAtomContext.Provider value={composeAtom}>
       <PaneBox>
         <ChannelHeader />
-        <PaneBodyBox className={clsx('flex-col justify-between flex flex-grow')}>
+        <PaneBodyBox className={clsx('flex-col justify-between flex flex-grow relative')}>
           <ChatContent className="relative flex-grow" me={me} channelId={channelId} />
           {me && member
-            ? <Compose me={me} className={clsx('m-2 max-h-[8rem]')} />
-            : <GuestCompose />}
+            ? <Compose me={me} className={clsx('p-2 border-t')} />
+            : null}
         </PaneBodyBox>
       </PaneBox>
     </ComposeAtomContext.Provider>

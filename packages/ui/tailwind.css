@@ -5,7 +5,8 @@
 @layer base {
   html {
     font-size: clamp(12px, 1.25vw, 15px);
-    font-family: 'IBM Plex Sans', sans-serif;
+    /* https://github.com/system-fonts/modern-font-stacks#humanist */
+    font-family: 'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
   }
   html.switching,
   html.switching * {

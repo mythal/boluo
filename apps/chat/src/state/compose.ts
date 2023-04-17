@@ -67,6 +67,16 @@ const handleAddDice = (state: ComposeState, action: ComposeAction<'addDice'>): C
   return { ...state, source };
 };
 
+const handleLink = (state: ComposeState, { payload: { href, text } }: ComposeAction<'link'>): ComposeState => {
+  const source = state.source + `[${text}](${href})`;
+  return { ...state, source };
+};
+
+const handleBold = (state: ComposeState, { payload: { text } }: ComposeAction<'bold'>): ComposeState => {
+  const source = state.source + `**${text}**`;
+  return { ...state, source };
+};
+
 const handleSetInputedName = (
   state: ComposeState,
   { payload: { inputedName } }: ComposeAction<'setInputedName'>,
@@ -93,6 +103,10 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleRecoverState(state, action);
     case 'addDice':
       return handleAddDice(state, action);
+    case 'link':
+      return handleLink(state, action);
+    case 'bold':
+      return handleBold(state, action);
     case 'setRange':
       return handleSetRange(state, action);
     default:

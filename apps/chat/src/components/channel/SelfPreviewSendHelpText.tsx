@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { isApple } from 'utils';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
 import { ComposeError } from '../../state/compose';
@@ -40,7 +41,7 @@ export const SelfPreviewSendHelpText: FC<Props> = ({ me }) => {
       </div>
     );
   }
-  const key = settings.enterSend ? 'Enter' : 'Ctrl + Enter';
+  const key = settings.enterSend ? '⏎' : isApple() ? '⌘ + ⏎' : 'Ctrl + ⏎';
   const sendNode = <button className="underline text-surface-600" onClick={send}>Send</button>;
   return (
     <div className="text-sm text-surface-400">

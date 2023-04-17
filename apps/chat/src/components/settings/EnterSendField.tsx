@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Kbd } from 'ui/Kbd';
-import { getOS, identity, isUseCommandKey } from 'utils';
+import { identity, isApple } from 'utils';
 import { useSettings } from '../../hooks/useSettings';
 import { OptionBox } from './OptionBox';
 
@@ -25,7 +25,7 @@ export const EneterSendField: FC<Props> = () => {
   });
   const { enterSend = false } = useSettings();
   const handleChange = (enterSend: boolean) => trigger(enterSend);
-  const useCommand = isUseCommandKey();
+  const useCommand = isApple();
   const setEnterSend = () => {
     if (!enterSend) void handleChange(true);
   };

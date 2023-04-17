@@ -24,7 +24,7 @@ export function getOS(): 'macOS' | 'iOS' | 'Windows' | 'Android' | 'Linux' | nul
   return os;
 }
 
-export function isUseCommandKey(): boolean {
+export function isApple(): boolean {
   const os = getOS();
   return os === 'macOS' || os === 'iOS';
 }

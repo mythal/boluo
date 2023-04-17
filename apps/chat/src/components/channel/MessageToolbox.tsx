@@ -1,6 +1,6 @@
 import { Message } from 'api';
 import { usePost } from 'common';
-import { Trash, X } from 'icons';
+import { Edit, Trash, X } from 'icons';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Spinner } from 'ui';
@@ -44,7 +44,7 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
           <MessageToolboxButton type="DANGER" onClick={handleDelete}>
             <Trash className="inline-block" />
             <span>
-              <FormattedMessage defaultMessage="Delete" />
+              <FormattedMessage defaultMessage="Confirm Delete" />
             </span>
           </MessageToolboxButton>
           <MessageToolboxButton onClick={() => setState('NORMAL')}>
@@ -58,9 +58,14 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
         </MessageToolboxButton>
       )}
       {state === 'NORMAL' && (
-        <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
-          <Trash />
-        </MessageToolboxButton>
+        <>
+          <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
+            <Trash />
+          </MessageToolboxButton>
+          <MessageToolboxButton>
+            <Edit />
+          </MessageToolboxButton>
+        </>
       )}
     </Box>
   );

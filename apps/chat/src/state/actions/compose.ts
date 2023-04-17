@@ -7,6 +7,8 @@ export type ComposeActionMap = {
   setInputedName: { inputedName: string };
   toggleInGame: Empty;
   addDice: Empty;
+  link: { text: string; href: string };
+  bold: { text: string };
   recoverState: ComposeState;
   setRange: { range: [number, number] | null };
 };

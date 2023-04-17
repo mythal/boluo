@@ -12,6 +12,7 @@ import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import { useChannelId } from '../../hooks/useChannelId';
 import { IsScrollingContext } from '../../hooks/useIsScrolling';
+import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { ChatItem } from '../../types/chat-items';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatListHeader } from './ChatContentHeader';
@@ -226,10 +227,12 @@ interface UseAutoScrollReturn {
   onBottomStateChange: (bottom: boolean) => void;
 }
 
-const useAutoScroll = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseAutoScrollReturn => {
+const useAutoScroll = (
+  virtuosoRef: RefObject<VirtuosoHandle | null>,
+  scrollerRef: RefObject<HTMLDivElement | null>,
+): UseAutoScrollReturn => {
   const lockBottomRef = useRef(true);
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const scrollTimeoutRef = useRef<number | undefined>(undefined);
   const viewportBottomIndexRef = useRef<number | 'LAST'>('LAST');
 
@@ -267,7 +270,7 @@ const useAutoScroll = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseAutoSc
     return () => {
       ref.removeEventListener('scroll', onScroll);
     };
-  }, []);
+  }, [scrollerRef]);
   const onBottomStateChange = useCallback((bottom: boolean) => {
     if (bottom) {
       if (!lockBottomRef.current) {
@@ -317,7 +320,8 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
       />
     );
   };
-  const { scrollerRef, boxRef, onBottomStateChange: autoScrollOnBottomChange } = useAutoScroll(virtuosoRef);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const { boxRef, onBottomStateChange: autoScrollOnBottomChange } = useAutoScroll(virtuosoRef, scrollerRef);
 
   const handleBottomStateChange = (bottom: boolean) => {
     goBottomButtonOnBottomChange(bottom);
@@ -333,27 +337,28 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <IsScrollingContext.Provider value={isScrolling}>
-          <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
-            <Virtuoso
-              className="overflow-x-hidden"
-              firstItemIndex={firstItemIndex}
-              ref={virtuosoRef}
-              scrollerRef={(ref) => {
-                if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
-              }}
-              components={{ Header: ChatListHeader }}
-              initialTopMostItemIndex={totalCount - 1}
-              totalCount={totalCount}
-              isScrolling={setIsScrolling}
-              alignToBottom
-              itemContent={itemContent}
-              followOutput="auto"
-              atBottomStateChange={handleBottomStateChange}
-            />
-            {showButton && <GoButtomButton onClick={goBottom} />}
-          </SortableContext>
-        </IsScrollingContext.Provider>
+        <ScrollerRefContext.Provider value={scrollerRef}>
+          <IsScrollingContext.Provider value={isScrolling}>
+            <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
+              <Virtuoso
+                className="overflow-x-hidden"
+                firstItemIndex={firstItemIndex}
+                ref={virtuosoRef}
+                scrollerRef={(ref) => {
+                  if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
+                }}
+                components={{ Header: ChatListHeader }}
+                initialTopMostItemIndex={totalCount - 1}
+                totalCount={totalCount}
+                isScrolling={setIsScrolling}
+                itemContent={itemContent}
+                followOutput="auto"
+                atBottomStateChange={handleBottomStateChange}
+              />
+              {showButton && <GoButtomButton onClick={goBottom} />}
+            </SortableContext>
+          </IsScrollingContext.Provider>
+        </ScrollerRefContext.Provider>
       </ChatListDndContext>
     </div>
   );

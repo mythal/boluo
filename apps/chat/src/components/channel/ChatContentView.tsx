@@ -336,6 +336,7 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
         <IsScrollingContext.Provider value={isScrolling}>
           <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
             <Virtuoso
+              className="overflow-x-hidden"
               firstItemIndex={firstItemIndex}
               ref={virtuosoRef}
               scrollerRef={(ref) => {

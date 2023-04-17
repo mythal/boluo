@@ -16,6 +16,7 @@ export type ChatActionMap = {
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
   messagePreview: { channelId: string; preview: Preview };
+  messageDeleted: { channelId: string; messageId: string };
 };
 
 export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
@@ -36,6 +37,8 @@ export const eventToChatAction = (e: ServerEvent): ChatActionUnion | null => {
       return makeChatAction('spaceUpdated', e.body.spaceWithRelated);
     case 'MESSAGE_EDITED':
       return makeChatAction('messageEdited', e.body);
+    case 'MESSAGE_DELETED':
+      return makeChatAction('messageDeleted', e.body);
     case 'MESSAGE_PREVIEW':
       return makeChatAction('messagePreview', e.body);
     default:

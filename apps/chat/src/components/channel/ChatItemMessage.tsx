@@ -23,11 +23,11 @@ export const ChatItemMessage: FC<Props> = (
   );
 
   return (
-    <MessageBox message={message} draggable={self} continuous={continuous} optimistic={optimistic}>
+    <MessageBox self={self} message={message} draggable={self} continuous={continuous} optimistic={optimistic}>
       <div className={clsx('@2xl:text-right', continuous ? 'hidden @2xl:block' : '')}>
         {continuous || isAction ? null : name}
       </div>
-      <div>
+      <div className="@2xl:pr-[6rem]">
         {isAction && name} {message.text}
       </div>
     </MessageBox>

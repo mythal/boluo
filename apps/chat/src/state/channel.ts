@@ -1,5 +1,5 @@
 import type { Message } from 'api';
-import { byPos, MessageItem, PreviewItem } from '../types/chat-items';
+import { MessageItem, PreviewItem } from '../types/chat-items';
 import { ChatAction, ChatActionUnion } from './actions/chat';
 import type { ChatReducerContext } from './chat';
 
@@ -111,6 +111,23 @@ const handleMessagePreview = (
   return { ...state, previewMap };
 };
 
+const handleMessageDeleted = (
+  state: ChannelState,
+  { payload: { messageId } }: ChatAction<'messageDeleted'>,
+): ChannelState => {
+  if (messageId in state.messageMap) {
+    const messageMap = { ...state.messageMap };
+    const message = messageMap[messageId]!;
+    delete messageMap[messageId];
+    let minPos = state.minPos;
+    if (minPos && message.pos >= minPos) {
+      minPos = Math.min(...Object.values(messageMap).map(message => message.pos));
+    }
+    return { ...state, messageMap, minPos };
+  }
+  return state;
+};
+
 export const channelReducer = (
   state: ChannelState,
   action: ChatActionUnion,
@@ -123,6 +140,8 @@ export const channelReducer = (
       return handleNewMessage(state, action);
     case 'messageEdited':
       return handleMessageEdited(state, action);
+    case 'messageDeleted':
+      return handleMessageDeleted(state, action);
     case 'messagesLoaded':
       // This action is triggered by the user
       // and should be ignored if the chat state

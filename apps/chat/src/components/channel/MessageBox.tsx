@@ -3,7 +3,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { Message } from 'api';
 import clsx from 'clsx';
 import { FC, ReactNode, useMemo } from 'react';
+import { Delay } from '../Delay';
 import { MessageReorderHandle } from './MessageReorderHandle';
+import { MessageToolbox } from './MessageToolbox';
 interface Props {
   className?: string;
   children: ReactNode;
@@ -11,10 +13,11 @@ interface Props {
   draggable?: boolean;
   continuous?: boolean;
   optimistic?: boolean;
+  self: boolean;
 }
 
 export const MessageBox: FC<Props> = (
-  { className = '', children, draggable = false, message, continuous = false, optimistic = false },
+  { className = '', children, draggable = false, message, continuous = false, optimistic = false, self },
 ) => {
   const {
     attributes,
@@ -48,10 +51,28 @@ export const MessageBox: FC<Props> = (
     optimistic,
     setActivatorNodeRef,
   ]);
+  const toolbox = useMemo(() => (
+    <Delay timeout={400}>
+      <div
+        className={clsx(
+          'absolute right-4 max-h-full z-10 group-hover:z-20 top-0',
+          'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-200 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
+        )}
+      >
+        <MessageToolbox
+          message={message}
+          className={clsx(
+            'absolute right-4 max-h-full z-10 group-hover:z-20 top-0',
+            'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-200 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
+          )}
+        />
+      </div>
+    </Delay>
+  ), [message]);
   return (
     <div
       className={clsx(
-        'grid py-2 px-2 items-center group gap-2 grid-flow-col',
+        'grid py-2 pl-2 pr-2 items-center group gap-2 grid-flow-col relative hover:bg-surface-100',
         'grid-cols-[2rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[2rem_12rem_minmax(0,1fr)]',
         !continuous && 'grid-rows-2 @2xl:grid-rows-1',
@@ -63,6 +84,7 @@ export const MessageBox: FC<Props> = (
     >
       {handle}
       {children}
+      {self && toolbox}
     </div>
   );
 };

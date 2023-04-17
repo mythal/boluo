@@ -1,8 +1,9 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
 import { GripVertical } from 'icons';
-import { FC, forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { Spinner } from 'ui';
+import { Delay } from '../Delay';
 
 type UseSortableReturn = ReturnType<typeof useSortable>;
 
@@ -29,7 +30,9 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
           loading && 'cursor-not-allowed',
         )}
       >
-        {loading ? <Spinner /> : <GripVertical />}
+        <Delay>
+          {loading ? <Spinner /> : <GripVertical />}
+        </Delay>
       </div>
     );
   },

@@ -2,7 +2,8 @@ import clsx from 'clsx';
 import { Gamemaster } from 'icons';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { TextInput } from 'ui';
+import { Delay } from '../Delay';
+import { FallbackIcon } from '../FallbackIcon';
 
 interface Props {
   name: string | undefined | null;
@@ -14,7 +15,11 @@ interface Props {
 
 export const Name: FC<Props> = ({ name, className, isMaster, isPreview = false, self }) => {
   const isEmptyName = name === '' || name == null;
-  const masterIcon = <Gamemaster className="inline ml-1" />;
+  const masterIcon = (
+    <Delay fallback={<FallbackIcon />}>
+      <Gamemaster className="inline-block h-[1em] w-[1em]" />
+    </Delay>
+  );
   return (
     <span
       className={clsx(
@@ -23,7 +28,9 @@ export const Name: FC<Props> = ({ name, className, isMaster, isPreview = false, 
         className,
       )}
     >
-      {isEmptyName ? <FormattedMessage defaultMessage="[NO NAME]" /> : name}
+      <span className="mr-1">
+        {isEmptyName ? <FormattedMessage defaultMessage="[NO NAME]" /> : name}
+      </span>
       {isMaster && masterIcon}
     </span>
   );

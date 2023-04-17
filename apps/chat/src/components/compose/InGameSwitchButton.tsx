@@ -7,6 +7,8 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/actions/compose';
+import { Delay } from '../Delay';
+import { FallbackIcon } from '../FallbackIcon';
 
 interface Props {
   iconOnly?: boolean;
@@ -22,7 +24,9 @@ export const InGameSwitchButton: FC<Props> = ({ iconOnly = false }) => {
       data-on={inGame}
       onClick={() => dispatch(makeComposeAction('toggleInGame', {}))}
     >
-      <MasksTheater />
+      <Delay fallback={<FallbackIcon />}>
+        <MasksTheater />
+      </Delay>
       <span className={clsx('hidden', !iconOnly && '@md:inline')}>
         <FormattedMessage defaultMessage="In Game" />
       </span>

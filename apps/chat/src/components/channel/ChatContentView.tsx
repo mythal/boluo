@@ -11,6 +11,7 @@ import { useState } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import { useChannelId } from '../../hooks/useChannelId';
+import { IsScrollingContext } from '../../hooks/useIsScrolling';
 import { ChatItem } from '../../types/chat-items';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatListHeader } from './ChatContentHeader';
@@ -284,6 +285,7 @@ const useAutoScroll = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseAutoSc
 
 export const ChatContentView: FC<Props> = ({ className = '', chatList: actualChatList, me, myMember }) => {
   const channelId = useChannelId();
+  const [isScrolling, setIsScrolling] = useState(false);
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
 
@@ -331,23 +333,26 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
-          <Virtuoso
-            firstItemIndex={firstItemIndex}
-            ref={virtuosoRef}
-            scrollerRef={(ref) => {
-              if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
-            }}
-            components={{ Header: ChatListHeader }}
-            initialTopMostItemIndex={totalCount - 1}
-            totalCount={totalCount}
-            alignToBottom
-            itemContent={itemContent}
-            followOutput="auto"
-            atBottomStateChange={handleBottomStateChange}
-          />
-          {showButton && <GoButtomButton onClick={goBottom} />}
-        </SortableContext>
+        <IsScrollingContext.Provider value={isScrolling}>
+          <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
+            <Virtuoso
+              firstItemIndex={firstItemIndex}
+              ref={virtuosoRef}
+              scrollerRef={(ref) => {
+                if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
+              }}
+              components={{ Header: ChatListHeader }}
+              initialTopMostItemIndex={totalCount - 1}
+              totalCount={totalCount}
+              isScrolling={setIsScrolling}
+              alignToBottom
+              itemContent={itemContent}
+              followOutput="auto"
+              atBottomStateChange={handleBottomStateChange}
+            />
+            {showButton && <GoButtomButton onClick={goBottom} />}
+          </SortableContext>
+        </IsScrollingContext.Provider>
       </ChatListDndContext>
     </div>
   );

@@ -21,6 +21,7 @@
     "jotai": "^2.0.3",
     "lang": "0.0.0",
     "logo": "0.0.0",
+    "prando": "^6.0.1",
     "react": "^18.2.0",
     "react-colorful": "^5.6.1",
     "react-dom": "^18.2.0",

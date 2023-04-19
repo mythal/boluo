@@ -1,7 +1,7 @@
 import { User } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, useMemo } from 'react';
+import { FC, memo, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { isApple } from 'utils';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
@@ -24,7 +24,7 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
   }
 };
 
-export const SelfPreviewSendHelpText: FC<Props> = ({ me }) => {
+export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
   const send = useSend(me);
   const settings = useSettings();
   const composeAtom = useComposeAtom();
@@ -48,4 +48,6 @@ export const SelfPreviewSendHelpText: FC<Props> = ({ me }) => {
       <FormattedMessage defaultMessage="Press {key} to {send}" values={{ key, send: sendNode }} />
     </div>
   );
-};
+});
+
+SelfPreviewSendHelpText.displayName = 'SelfPreviewSendHelpText';

@@ -7,6 +7,7 @@ import { Button } from 'ui';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { parse } from '../../interpreter/parser';
 import { ComposeActionUnion, makeComposeAction } from '../../state/actions/compose';
 
 export const useSend = (me: User) => {
@@ -29,14 +30,15 @@ export const useSend = (me: User) => {
       setBanner(null);
     };
     dispatch(makeComposeAction('setSource', { channelId, source: '', range: [0, 0] }));
+    const { text, entities } = parse(compose.source);
 
     const result = await post('/messages/send', null, {
       messageId: null,
       previewId: compose.previewId,
       channelId,
       name: compose.inputedName.trim() || nickname,
-      text: compose.source,
-      entities: [],
+      text,
+      entities,
       inGame: compose.inGame,
       isAction: false,
       mediaId: null,

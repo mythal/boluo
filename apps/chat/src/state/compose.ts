@@ -1,4 +1,5 @@
 import { makeId } from 'utils';
+import { parse, ParseResult } from '../interpreter/parser';
 import { ComposeAction, ComposeActionUnion } from './actions/compose';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
@@ -14,18 +15,9 @@ export interface ComposeState {
   source: string;
   media: File | undefined;
   error: ComposeError | null;
+  parsed: ParseResult;
   range: ComposeRange;
 }
-
-const isSameRange = (a: ComposeRange, b: ComposeRange) => {
-  if (a === b) {
-    return true;
-  }
-  if (a === null || b === null) return false;
-  const [a0, a1] = a;
-  const [b0, b1] = b;
-  return a0 === a1 && b0 === b1;
-};
 
 export const initialComposeState: ComposeState = {
   inputedName: '',
@@ -37,6 +29,7 @@ export const initialComposeState: ComposeState = {
   media: undefined,
   error: 'TEXT_EMPTY',
   range: null,
+  parsed: { text: '', entities: [] },
 };
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
@@ -59,22 +52,52 @@ const handleRecoverState = (state: ComposeState, action: ComposeAction<'recoverS
 
 const handleAddDice = (state: ComposeState, action: ComposeAction<'addDice'>): ComposeState => {
   let { source } = state;
+  let range = state.range;
   if (source.trim().length === 0) {
     source = '{d} ';
-  } else {
+    range = [source.length, source.length];
+  } else if (!state.range) {
     source += ' {d} ';
+    range = [source.length, source.length];
+  } else {
+    const [a, b] = state.range;
+    if (a === b) {
+      const left = source.substring(0, a);
+      const right = source.substring(a);
+      source = `${left} {d} `;
+      range = [source.length, source.length];
+      source += right;
+    }
   }
-  return { ...state, source };
+  return { ...state, source, range };
 };
 
 const handleLink = (state: ComposeState, { payload: { href, text } }: ComposeAction<'link'>): ComposeState => {
-  const source = state.source + `[${text}](${href})`;
-  return { ...state, source };
+  let { source, range } = state;
+  if (!range) {
+    range = [source.length, source.length];
+  }
+  const [a, b] = range;
+
+  const insertText = `[${source.substring(a, b)}]()`;
+  const head = source.substring(0, a);
+  const tail = source.substring(b);
+  source = `${head}${insertText}${tail}`;
+  return { ...state, source, range: [head.length + 1, head.length + insertText.length - 3] };
 };
 
-const handleBold = (state: ComposeState, { payload: { text } }: ComposeAction<'bold'>): ComposeState => {
-  const source = state.source + `**${text}**`;
-  return { ...state, source };
+const handleBold = (state: ComposeState, { payload }: ComposeAction<'bold'>): ComposeState => {
+  let { source, range } = state;
+  if (!range) {
+    range = [source.length, source.length];
+  }
+  const [a, b] = range;
+
+  const insertText = `**${source.substring(a, b)}**`;
+  const head = source.substring(0, a);
+  const tail = source.substring(b);
+  source = `${head}${insertText}${tail}`;
+  return { ...state, source, range: [head.length + 2, head.length + insertText.length - 2] };
 };
 
 const handleSetInputedName = (
@@ -85,10 +108,28 @@ const handleSetInputedName = (
 };
 
 const handleSetRange = (state: ComposeState, { payload: { range } }: ComposeAction<'setRange'>): ComposeState => {
-  if (isSameRange(state.range, range)) {
+  if (!range) {
+    return { ...state, range };
+  }
+  if (range[0] > range[1]) {
+    range = [range[1], range[0]];
+  }
+  const [a, b] = range;
+  if (!state.range) {
+    return { ...state, range };
+  }
+  if (state.range[0] === a && state.range[1] === b) {
     return state;
   }
   return { ...state, range };
+};
+
+const handleParsed = (state: ComposeState, { payload: parsed }: ComposeAction<'parsed'>): ComposeState => {
+  const { text } = parsed;
+  if (text !== state.source || text === state.parsed?.text) {
+    return state;
+  }
+  return { ...state, parsed };
 };
 
 const composeSwitch = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
@@ -109,6 +150,8 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleBold(state, action);
     case 'setRange':
       return handleSetRange(state, action);
+    case 'parsed':
+      return handleParsed(state, action);
     default:
       return state;
   }

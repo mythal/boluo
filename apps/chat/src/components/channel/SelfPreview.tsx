@@ -1,7 +1,7 @@
 import type { Preview } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, useMemo } from 'react';
+import { FC, useDeferredValue, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
@@ -10,6 +10,7 @@ import { Content } from './Content';
 import { Name } from './Name';
 import { NameInput } from './NameInput';
 import { PreviewBox } from './PreviewBox';
+import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
 
 interface Props {
@@ -35,9 +36,6 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
   const isAction = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ isAction }) => isAction), [composeAtom]),
   );
-  const source = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ source }) => source), [composeAtom]),
-  );
   const nameNode = useMemo(() => {
     return <Name name={name} isMaster={isMaster} isPreview self />;
   }, [isMaster, name]);
@@ -54,7 +52,7 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
         </div>
       </div>
       <div className="flex flex-col h-full items-between">
-        <Content text={source} nameNode={nameNode} isAction={isAction} self />
+        <SelfPreviewContent isAction={isAction} nameNode={nameNode} />
         <SelfPreviewSendHelpText me={member.user} />
       </div>
     </PreviewBox>

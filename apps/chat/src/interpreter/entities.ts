@@ -1,6 +1,8 @@
+import { isLegacyEntity, LegacyEntity } from './legacy-entities';
+
 export interface BaseEntity {
   start: number;
-  offset: number;
+  len: number;
 }
 
 export interface Text extends BaseEntity {
@@ -9,7 +11,11 @@ export interface Text extends BaseEntity {
 
 export interface Link extends BaseEntity {
   type: 'Link';
-  href: string;
+  child: Text;
+  href: {
+    start: number;
+    len: number;
+  } | string;
   title?: string;
 }
 
@@ -20,32 +26,25 @@ export interface Expr extends BaseEntity {
 
 export interface Code extends BaseEntity {
   type: 'Code';
+  child: Text;
 }
 
 export interface CodeBlock extends BaseEntity {
   type: 'CodeBlock';
+  child: Text;
 }
 
 export interface Strong extends BaseEntity {
   type: 'Strong';
+  child: Text;
 }
 
 export interface Emphasis extends BaseEntity {
   type: 'Emphasis';
+  child: Text;
 }
 
-export interface EntityUser {
-  id: string;
-  name: string;
-}
-
-export interface Mention extends BaseEntity {
-  type: 'Mention';
-  user: EntityUser;
-  self?: boolean;
-}
-
-export type Entity = Text | Link | Expr | Strong | Emphasis | Mention | Code | CodeBlock;
+export type Entity = Text | Link | Expr | Strong | Emphasis | Code | CodeBlock;
 
 export interface Unknown {
   type: 'Unknown';
@@ -189,5 +188,46 @@ export interface ExportExpr extends BaseEntity {
 }
 
 export type ExportEntity =
-  | ((Text | Link | Strong | Emphasis | Mention | Code | CodeBlock) & { text: string })
+  | ((Text | Link | Strong | Emphasis | Code | CodeBlock) & { text: string })
   | ExportExpr;
+
+export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {
+  const { start, offset: len } = legacy;
+  switch (legacy.type) {
+    case 'Text':
+      return { type: 'Text', start, len };
+    case 'Link':
+      return { type: 'Link', start, len, child: { type: 'Text', start, len }, href: legacy.href, title: legacy.title };
+    case 'Expr':
+      return { type: 'Expr', start, len, node: legacy.node };
+    case 'Strong':
+      return { type: 'Strong', start, len, child: { type: 'Text', start, len } };
+    case 'Emphasis':
+      return { type: 'Emphasis', start, len, child: { type: 'Text', start, len } };
+    case 'Code':
+      return { type: 'Code', start, len, child: { type: 'Text', start, len } };
+    case 'CodeBlock':
+      return { type: 'CodeBlock', start, len, child: { type: 'Text', start, len } };
+  }
+};
+
+function isEntity(raw: unknown): raw is Entity {
+  if (typeof raw !== 'object' || raw === null || !('type' in raw)) {
+    return false;
+  }
+  return 'len' in raw && 'start' in raw;
+}
+
+export const fromRawEntities = (text: string, rawEntities: unknown[]): Entity[] => {
+  if (rawEntities.length === 0) {
+    return [{ type: 'Text', start: 0, len: text.length }];
+  }
+  const firstEntity = rawEntities[0];
+  if (isLegacyEntity(firstEntity)) {
+    return (rawEntities as LegacyEntity[]).map(fromLegacyEntity);
+  } else if (isEntity(firstEntity)) {
+    return rawEntities as Entity[];
+  } else {
+    return [{ type: 'Text', start: 0, len: text.length }];
+  }
+};

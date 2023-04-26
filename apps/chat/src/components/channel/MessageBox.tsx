@@ -56,16 +56,10 @@ export const MessageBox: FC<Props> = (
       <div
         className={clsx(
           'absolute right-4 max-h-full z-10 group-hover:z-20 top-0',
-          'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-200 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
+          'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-100 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
         )}
       >
-        <MessageToolbox
-          message={message}
-          className={clsx(
-            'absolute right-4 max-h-full z-10 group-hover:z-20 top-0',
-            'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-200 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
-          )}
-        />
+        <MessageToolbox message={message} />
       </div>
     </Delay>
   ), [message]);

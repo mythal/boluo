@@ -208,7 +208,7 @@ const useDndHandles = (
   return { handleDragStart, handleDragEnd, active: draggingItem, handleDragCancel };
 };
 
-const CONTINUOUS_TIME_MS = 60 * 1000;
+const CONTINUOUS_TIME_MS = 5 * 60 * 1000;
 const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   if (
     a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type

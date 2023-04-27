@@ -55,7 +55,7 @@ export const useSend = (me: User) => {
         text,
         entities,
         inGame: compose.inGame,
-        isAction: false,
+        isAction: compose.isAction,
         mediaId: null,
         pos: null,
         whisperToUsers: null,

@@ -1,3 +1,4 @@
+import { Message } from 'api';
 import type { Empty } from 'utils';
 import type { ParseResult } from '../interpreter/parser';
 import { MakeAction, makeAction } from './actions';
@@ -12,6 +13,9 @@ export type ComposeActionMap = {
   bold: { text: string };
   recoverState: ComposeState;
   parsed: ParseResult;
+  editMessage: { message: Message };
+  sent: Empty;
+  reset: Empty;
   setRange: { range: [number, number] | null };
 };
 

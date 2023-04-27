@@ -7,5 +7,6 @@ module.exports = {
         ast: true,
       },
     ],
+    ['jotai/babel/plugin-react-refresh'],
   ],
 };

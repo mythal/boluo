@@ -2,7 +2,7 @@ import type { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
 import type { Empty } from 'utils';
 import type { AppResponse } from './request';
 import type { Channel, ChannelMembers, ChannelWithMember, CreateChannel, JoinChannel } from './types/channels';
-import type { GetMessagesByChannel, Message, NewMessage } from './types/messages';
+import type { EditMessage, GetMessagesByChannel, Message, NewMessage } from './types/messages';
 import type {
   CreateSpace,
   EditSpace,
@@ -70,8 +70,8 @@ export interface Put {
 }
 
 export interface Patch {
-  // users
   '/users/update_settings': { payload: object; query: null; result: object };
+  '/messages/edit': { payload: EditMessage; query: null; result: Message };
 }
 
 export type { AppResponse };

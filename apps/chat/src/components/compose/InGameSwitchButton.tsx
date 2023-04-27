@@ -11,10 +11,11 @@ import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 
 interface Props {
-  iconOnly?: boolean;
+  type?: 'DEFAULT' | 'ICON' | 'SMALL';
 }
 
-export const InGameSwitchButton: FC<Props> = ({ iconOnly = false }) => {
+export const InGameSwitchButton: FC<Props> = ({ type = 'DEFAULT' }) => {
+  const iconOnly = type === 'ICON';
   const composeAtom = useComposeAtom();
   const inGame = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.inGame), [composeAtom]));
   const dispatch = useSetAtom(composeAtom);
@@ -22,6 +23,7 @@ export const InGameSwitchButton: FC<Props> = ({ iconOnly = false }) => {
     <Button
       data-type="switch"
       data-on={inGame}
+      data-small={type === 'SMALL' || iconOnly}
       onClick={() => dispatch(makeComposeAction('toggleInGame', {}))}
     >
       <Delay fallback={<FallbackIcon />}>

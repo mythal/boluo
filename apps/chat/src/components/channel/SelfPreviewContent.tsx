@@ -7,11 +7,14 @@ import { Content } from './Content';
 
 interface Props {
   nameNode: ReactNode;
-  isAction: boolean;
 }
 
-export const SelfPreviewContent: FC<Props> = ({ nameNode, isAction }) => {
+export const SelfPreviewContent: FC<Props> = ({ nameNode }) => {
   const composeAtom = useComposeAtom();
+
+  const isAction = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ isAction }) => isAction), [composeAtom]),
+  );
   const parsed = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ parsed }) => parsed), [composeAtom]),
   );

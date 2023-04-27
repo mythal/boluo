@@ -2,6 +2,8 @@ import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { GetMe, Member, Message } from 'api';
 import { usePost } from 'common';
+import { useStore } from 'jotai';
+import { selectAtom } from 'jotai/utils';
 import type { Dispatch, FC, MutableRefObject, RefObject, SetStateAction } from 'react';
 import { useMemo } from 'react';
 import { useRef } from 'react';
@@ -11,6 +13,7 @@ import { useState } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { IsScrollingContext } from '../../hooks/useIsScrolling';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { ChatItem } from '../../types/chat-items';
@@ -221,82 +224,75 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   return timeDiff < CONTINUOUS_TIME_MS;
 };
 
-interface UseAutoScrollReturn {
-  scrollerRef: MutableRefObject<HTMLDivElement | null>;
-  boxRef: MutableRefObject<HTMLDivElement | null>;
-  onBottomStateChange: (bottom: boolean) => void;
-}
-
-const useAutoScroll = (
+const useScrollLock = (
   virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,
-): UseAutoScrollReturn => {
-  const lockBottomRef = useRef(true);
-  const boxRef = useRef<HTMLDivElement | null>(null);
-  const scrollTimeoutRef = useRef<number | undefined>(undefined);
-  const viewportBottomIndexRef = useRef<number | 'LAST'>('LAST');
+  chatList: ChatItem[],
+): MutableRefObject<ScrollLockState> => {
+  const composeAtom = useComposeAtom();
+  const store = useStore();
+  const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
+  const modifiedAtom = useMemo(
+    () =>
+      selectAtom(
+        composeAtom,
+        ({ range }) => range,
+      ),
+    [composeAtom],
+  );
+  useEffect(() =>
+    store.sub(modifiedAtom, () => {
+      const { previewId } = store.get(composeAtom);
+      if (previewId === null) return;
+      scrollLockRef.current.id = previewId;
+      scrollLockRef.current.modified = (new Date()).getTime();
+    }), [composeAtom, modifiedAtom, store]);
 
   useEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
-    const resizeObserver = new ResizeObserver(() => {
-      window.clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = window.setTimeout(() => {
-        const index = viewportBottomIndexRef.current;
-        virtuosoRef.current?.scrollToIndex({ index, align: 'end', behavior: 'auto' });
-      }, 0);
-    });
-    resizeObserver.observe(box);
-    return () => resizeObserver.disconnect();
-  }, [virtuosoRef]);
-
-  useEffect(() => {
-    const ref = scrollerRef.current;
-    if (!ref) return;
-
-    let prevScrollTop = Number.MAX_SAFE_INTEGER;
-    const onScroll = () => {
-      const scrollTop = ref.scrollTop;
-      if (!lockBottomRef.current) {
-      } else {
-        const scrollBottom = ref.scrollHeight - scrollTop - ref.offsetHeight;
-        if (prevScrollTop - scrollTop > 2 && scrollBottom > 2) {
-          lockBottomRef.current = false;
+    const handle = window.setInterval(() => {
+      const virtuoso = virtuosoRef.current;
+      if (!virtuoso) return;
+      const scrollLock = scrollLockRef.current;
+      const { modified, end } = scrollLock;
+      const now = (new Date()).getTime();
+      const id: string | null = now - modified < 1000 ? scrollLock.id : null;
+      if (id !== null) {
+        const index = chatList.findIndex(item => item.type === 'PREVIEW' && item.id === id);
+        if (index >= 0) {
+          const cursor = scrollerRef.current?.querySelector('.preview-cursor');
+          if (cursor) {
+            cursor.scrollIntoView();
+          } else {
+            virtuoso.scrollToIndex({ index, behavior: 'smooth' });
+          }
+          return;
         }
       }
-      prevScrollTop = scrollTop;
-    };
-    ref.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      ref.removeEventListener('scroll', onScroll);
-    };
-  }, [scrollerRef]);
-  const onBottomStateChange = useCallback((bottom: boolean) => {
-    if (bottom) {
-      if (!lockBottomRef.current) {
-        console.log('lock to bottom');
-        lockBottomRef.current = true;
-      }
-    } else {
-      if (lockBottomRef.current) {
-        virtuosoRef.current?.scrollTo({ top: Number.MAX_SAFE_INTEGER, behavior: 'smooth' });
-      }
-    }
-  }, [virtuosoRef]);
-  return { scrollerRef, boxRef, onBottomStateChange };
+      if (!end) return;
+      virtuoso.scrollToIndex({ index: 'LAST', behavior: 'smooth', align: 'end' });
+    }, 500);
+    return () => window.clearInterval(handle);
+  });
+  return scrollLockRef;
 };
+
+interface ScrollLockState {
+  end: boolean;
+  id: string | null;
+  modified: number;
+}
 
 export const ChatContentView: FC<Props> = ({ className = '', chatList: actualChatList, me, myMember }) => {
   const channelId = useChannelId();
   const [isScrolling, setIsScrolling] = useState(false);
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-
+  const composeAtom = useComposeAtom();
   const { chatList, optimisticReorder, setOptimisticReorder, firstItemIndex } = useDerivedChatList(
     actualChatList,
   );
-  const totalCount = chatList.length;
 
+  const totalCount = chatList.length;
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
     chatList,
@@ -321,15 +317,16 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
     );
   };
   const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const { boxRef, onBottomStateChange: autoScrollOnBottomChange } = useAutoScroll(virtuosoRef, scrollerRef);
+
+  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, chatList);
 
   const handleBottomStateChange = (bottom: boolean) => {
     goBottomButtonOnBottomChange(bottom);
-    autoScrollOnBottomChange(bottom);
+    scrollLockRef.current.end = bottom;
   };
 
   return (
-    <div className={className} ref={boxRef}>
+    <div className={className}>
       <ChatListDndContext
         active={active}
         myId={me?.user.id}
@@ -350,6 +347,7 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
                 components={{ Header: ChatListHeader }}
                 initialTopMostItemIndex={totalCount - 1}
                 totalCount={totalCount}
+                atBottomThreshold={64}
                 isScrolling={setIsScrolling}
                 itemContent={itemContent}
                 followOutput="auto"

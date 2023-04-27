@@ -35,10 +35,18 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
   const settings = useSettings();
   useWorkerParse(dispatch, source);
   const lock = useRef(false);
+  const updateRangeTimeout = useRef<number | undefined>(undefined);
 
   const updateRange = useCallback(
-    ({ selectionStart, selectionEnd }: { selectionStart: number; selectionEnd: number }) => {
-      dispatch(makeComposeAction('setRange', { range: [selectionStart, selectionEnd] }));
+    () => {
+      window.clearTimeout(updateRangeTimeout.current);
+      updateRangeTimeout.current = window.setTimeout(() => {
+        if (lock.current) return;
+        const textArea = ref.current;
+        if (!textArea) return;
+        const { selectionStart, selectionEnd } = textArea;
+        dispatch(makeComposeAction('setRange', { range: [selectionStart, selectionEnd] }));
+      }, 20);
     },
     [dispatch],
   );
@@ -60,23 +68,23 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
         textArea.setSelectionRange(a, b);
         lock.current = false;
       });
-    }), [rangeAtom, store, updateRange]);
+    }), [rangeAtom, store]);
 
   const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback((e) => {
     const { value } = e.target;
+    updateRange();
     dispatch(
       makeComposeAction('setSource', { channelId, source: value }),
     );
-  }, [channelId, dispatch]);
+  }, [channelId, dispatch, updateRange]);
   useEffect(() => {
     const handle = (e: Event) => {
-      const textArea = ref.current;
-      if (!textArea || document.activeElement !== textArea || lock.current) {
-        return;
-      }
       const selection = document.getSelection();
       if (!selection) return;
-      updateRange(textArea);
+      const textArea = ref.current;
+      if (!textArea) return;
+      if (document.activeElement !== textArea) return;
+      updateRange();
     };
     document.addEventListener('selectionchange', handle);
     return () => document.removeEventListener('selectionchange', handle);

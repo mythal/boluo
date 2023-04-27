@@ -2,6 +2,8 @@ import { makeId } from 'utils';
 import { parse, ParseResult } from '../interpreter/parser';
 import { ComposeAction, ComposeActionUnion } from './compose.actions';
 
+const ACTION_COMMAND = /^[.。][mM][eE]\s*/;
+
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
 
 export type ComposeRange = [number, number];
@@ -40,7 +42,8 @@ const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setS
   if ((source === '' || state.source === '') && state.editFor === null) {
     previewId = makeId();
   }
-  return { ...state, source: action.payload.source, previewId };
+  const isAction = ACTION_COMMAND.exec(source) !== null;
+  return { ...state, source: action.payload.source, previewId, isAction };
 };
 
 const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleInGame'>): ComposeState => {
@@ -139,6 +142,20 @@ const handleEditMessage = (
   return { ...makeInitialComposeState(), previewId, editFor, source, inGame, inputedName, range };
 };
 
+const handleToggleAction = (
+  state: ComposeState,
+  _: ComposeAction<'toggleAction'>,
+): ComposeState => {
+  const { source } = state;
+  const actionMatch = ACTION_COMMAND.exec(source);
+  if (actionMatch === null) {
+    return { ...state, source: '.me ' + source, isAction: true };
+  }
+  const length = actionMatch[0].length;
+
+  return { ...state, source: source.substring(length), isAction: false };
+};
+
 const handleParsed = (state: ComposeState, { payload: parsed }: ComposeAction<'parsed'>): ComposeState => {
   const { text } = parsed;
   if (text !== state.source || text === state.parsed?.text) {
@@ -189,6 +206,8 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleReset();
     case 'sent':
       return handleSent(state, action);
+    case 'toggleAction':
+      return handleToggleAction(state, action);
   }
 };
 

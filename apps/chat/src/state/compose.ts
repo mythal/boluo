@@ -4,9 +4,10 @@ import { ComposeAction, ComposeActionUnion } from './actions/compose';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
 
-export type ComposeRange = [number, number] | null;
+export type ComposeRange = [number, number];
 
 export interface ComposeState {
+  editFor: string | null;
   inputedName: string;
   previewId: string | null;
   isAction: boolean;
@@ -20,6 +21,7 @@ export interface ComposeState {
 }
 
 export const initialComposeState: ComposeState = {
+  editFor: null,
   inputedName: '',
   previewId: null,
   isAction: false,
@@ -28,7 +30,7 @@ export const initialComposeState: ComposeState = {
   source: '',
   media: undefined,
   error: 'TEXT_EMPTY',
-  range: null,
+  range: [0, 0],
   parsed: { text: '', entities: [] },
 };
 
@@ -109,7 +111,8 @@ const handleSetInputedName = (
 
 const handleSetRange = (state: ComposeState, { payload: { range } }: ComposeAction<'setRange'>): ComposeState => {
   if (!range) {
-    return { ...state, range };
+    const end = state.source.length - 1;
+    return { ...state, range: [end, end] };
   }
   if (range[0] > range[1]) {
     range = [range[1], range[0]];

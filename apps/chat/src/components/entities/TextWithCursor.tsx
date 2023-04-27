@@ -45,11 +45,13 @@ export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entit
   const a = text.substring(0, start);
   const b = text.substring(start, end);
   const c = text.substring(end);
+  const cursorBetweenBC = cursorEnd <= entityEnd && cursorEnd > entityStart;
 
   return (
     <>
       {a}
       <span className="bg-blue-100">{b}</span>
+      {cursorBetweenBC && <Cursor self={cursorState.self} />}
       {c}
     </>
   );

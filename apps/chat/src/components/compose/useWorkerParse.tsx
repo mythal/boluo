@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ParseResult } from '../../interpreter/parser';
-import { ComposeActionUnion, makeComposeAction } from '../../state/actions/compose';
+import { ComposeActionUnion, makeComposeAction } from '../../state/compose.actions';
 import type { ParserArguments } from './parser-worker';
 
 const create = (): Worker => new Worker(new URL('./parser-worker.ts', import.meta.url));

@@ -1,5 +1,5 @@
 import { createContext, FC, ReactNode, useContext, useMemo } from 'react';
-import { ComposeRange } from '../../state/compose';
+import { ComposeRange } from '../../state/compose.reducer';
 import { Cursor } from './Cursor';
 
 export interface CursorState {

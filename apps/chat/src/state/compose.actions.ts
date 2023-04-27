@@ -1,7 +1,7 @@
 import type { Empty } from 'utils';
-import type { ParseResult } from '../../interpreter/parser';
-import type { ComposeState } from '../compose';
+import type { ParseResult } from '../interpreter/parser';
 import { MakeAction, makeAction } from './actions';
+import type { ComposeState } from './compose.reducer';
 
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };

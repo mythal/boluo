@@ -2,7 +2,7 @@ import { createContext, Dispatch, FC, useCallback, useContext, useEffect, useRed
 import { isUuid } from 'utils';
 import type { ChildrenProps } from 'utils';
 import { isPaneData, isSamePaneData, makePane, Pane, PaneData as PaneData } from '../types/chat-pane';
-import { useChatDispatch } from './atoms/chat';
+import { useChatDispatch } from './chat.atoms';
 
 interface RootRoute {
   type: 'ROOT';

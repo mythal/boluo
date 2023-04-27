@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { TextInput } from 'ui';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { makeComposeAction } from '../../state/actions/compose';
+import { makeComposeAction } from '../../state/compose.actions';
 
 interface Props {
   className?: string;

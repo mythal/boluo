@@ -3,10 +3,10 @@ import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
 import { store } from 'common/store';
 import { useSetAtom } from 'jotai';
 import { atomWithReducer, selectAtom } from 'jotai/utils';
-import { PING, PONG } from '../../const';
-import { makeAction } from '../actions/actions';
-import { ChatActionUnion, eventToChatAction, makeChatAction } from '../actions/chat';
-import { chatReducer, ChatSpaceState, initialChatState } from '../chat';
+import { PING, PONG } from '../const';
+import { makeAction } from './actions';
+import { chatReducer, ChatSpaceState, initialChatState } from './chat';
+import { ChatActionUnion, eventToChatAction, makeChatAction } from './chat.actions';
 
 export const chatAtom = atomWithReducer<ChatSpaceState, ChatActionUnion>(initialChatState, chatReducer);
 

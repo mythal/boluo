@@ -1,7 +1,7 @@
 import type { Message } from 'api';
 import { MessageItem, PreviewItem } from '../types/chat-items';
-import { ChatAction, ChatActionUnion } from './actions/chat';
 import type { ChatReducerContext } from './chat';
+import { ChatAction, ChatActionUnion } from './chat.actions';
 
 export type UserId = string;
 

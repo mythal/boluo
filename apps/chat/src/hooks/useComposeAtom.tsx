@@ -1,7 +1,7 @@
 import { WritableAtom } from 'jotai';
 import { createContext, useContext } from 'react';
-import { ComposeActionUnion } from '../state/actions/compose';
-import { ComposeState } from '../state/compose';
+import { ComposeActionUnion } from '../state/compose.actions';
+import { ComposeState } from '../state/compose.reducer';
 
 export type ComposeAtom = WritableAtom<ComposeState, [ComposeActionUnion], void>;
 

@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useMemo } from 'react';
-import { chatAtom } from '../state/atoms/chat';
 import { ChannelState, makeInitialChannelState } from '../state/channel';
 import { ChatSpaceState } from '../state/chat';
+import { chatAtom } from '../state/chat.atoms';
 import { useChannelId } from './useChannelId';
 
 const getChannel = (chatState: ChatSpaceState, channelId: string): ChannelState | undefined => {

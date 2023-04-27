@@ -5,7 +5,7 @@ import { memo, RefObject, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
-import { makeComposeAction } from '../../state/actions/compose';
+import { makeComposeAction } from '../../state/compose.actions';
 import { SelfCursorButton } from './SelfCursorButton';
 
 interface Props {

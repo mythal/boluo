@@ -6,7 +6,7 @@ import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { makeComposeAction } from '../../state/actions/compose';
+import { makeComposeAction } from '../../state/compose.actions';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 

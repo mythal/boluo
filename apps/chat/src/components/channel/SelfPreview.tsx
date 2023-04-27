@@ -2,6 +2,7 @@ import type { Preview } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
+import { Button } from 'ui';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
@@ -12,6 +13,7 @@ import { NameInput } from './NameInput';
 import { PreviewBox } from './PreviewBox';
 import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
+import { ToggleActionButton } from './ToggleActionButton';
 
 type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'isAction'> & {
   editMode: boolean;
@@ -63,6 +65,9 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
       </div>
       <div className="flex flex-col h-full items-between">
         <SelfPreviewContent isAction={isAction} nameNode={nameNode} />
+        <div>
+          <ToggleActionButton />
+        </div>
         <SelfPreviewSendHelpText me={member.user} />
       </div>
     </PreviewBox>

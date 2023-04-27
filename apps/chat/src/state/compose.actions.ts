@@ -17,6 +17,7 @@ export type ComposeActionMap = {
   sent: Empty;
   reset: Empty;
   setRange: { range: [number, number] | null };
+  toggleAction: Empty;
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

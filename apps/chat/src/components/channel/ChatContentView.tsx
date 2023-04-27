@@ -227,6 +227,7 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
 const useScrollLock = (
   virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,
+  rangeRef: MutableRefObject<[number, number]>,
   chatList: ChatItem[],
 ): MutableRefObject<ScrollLockState> => {
   const composeAtom = useComposeAtom();
@@ -258,19 +259,15 @@ const useScrollLock = (
       const id: string | null = now - modified < 1000 ? scrollLock.id : null;
       if (id !== null) {
         const index = chatList.findIndex(item => item.type === 'PREVIEW' && item.id === id);
-        if (index >= 0) {
-          const cursor = scrollerRef.current?.querySelector('.preview-cursor');
-          if (cursor) {
-            cursor.scrollIntoView();
-          } else {
-            virtuoso.scrollToIndex({ index, behavior: 'auto' });
-          }
+        const [a, b] = rangeRef.current;
+        if (index >= 0 && (index < a || index > b)) {
+          virtuoso.scrollToIndex({ index, behavior: 'auto' });
           return;
         }
       }
       if (!end) return;
       virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
-    }, 500);
+    }, 50);
     return () => window.clearInterval(handle);
   });
   return scrollLockRef;
@@ -297,6 +294,7 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
     chatList,
     setOptimisticReorder,
   );
+  const renderRangeRef = useRef<[number, number]>([0, 0]);
 
   const itemContent = (offsetIndex: number) => {
     const index = offsetIndex - firstItemIndex;
@@ -317,7 +315,7 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
   };
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, chatList);
+  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, renderRangeRef, chatList);
 
   const handleBottomStateChange = (bottom: boolean) => {
     goBottomButtonOnBottomChange(bottom);
@@ -339,6 +337,8 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
               <Virtuoso
                 className="overflow-x-hidden"
                 firstItemIndex={firstItemIndex}
+                rangeChanged={({ startIndex, endIndex }) =>
+                  renderRangeRef.current = [startIndex - firstItemIndex, endIndex - firstItemIndex]}
                 ref={virtuosoRef}
                 scrollerRef={(ref) => {
                   if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;

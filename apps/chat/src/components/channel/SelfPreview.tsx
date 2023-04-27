@@ -1,17 +1,33 @@
 import type { Preview } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, useDeferredValue, useMemo } from 'react';
+import { FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
+import { ComposeState } from '../../state/compose.reducer';
 import { InGameSwitchButton } from '../compose/InGameSwitchButton';
-import { Content } from './Content';
 import { Name } from './Name';
 import { NameInput } from './NameInput';
 import { PreviewBox } from './PreviewBox';
 import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
+
+type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'isAction'> & {
+  editMode: boolean;
+  name: string;
+};
+
+const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
+  a.source === b.source && a.editMode === b.editMode
+  && a.inGame === b.inGame && a.name === b.name
+  && a.isAction === b.isAction;
+
+const selector = ({ inGame, isAction, inputedName, source, editFor }: ComposeState): ComposeDrived => {
+  const editMode = editFor !== null;
+  const name = inGame ? inputedName.trim() : '';
+  return { inGame, isAction, name, source, editMode };
+};
 
 interface Props {
   className?: string;
@@ -26,22 +42,17 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
   }
   const isMaster = member.channel.isMaster;
   const composeAtom = useComposeAtom();
-  const inGame = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ inGame }) => inGame), [composeAtom]),
+  const compose: ComposeDrived = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
-  const nameInCompose = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, (compose) => compose.inputedName), [composeAtom]),
-  );
-  const name = inGame ? nameInCompose.trim() : member.user.nickname;
-  const isAction = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ isAction }) => isAction), [composeAtom]),
-  );
+  const { editMode, inGame, isAction } = compose;
+  const name = compose.name || member.user.nickname;
   const nameNode = useMemo(() => {
     return <Name name={name} isMaster={isMaster} isPreview self />;
   }, [isMaster, name]);
 
   return (
-    <PreviewBox id={preview.id} className="bg-brand-50 border-t border-b border-brand-200">
+    <PreviewBox id={preview.id} editMode={editMode} className="bg-brand-50 border-t border-b border-brand-200">
       <div className="flex @2xl:flex-col gap-y-1 gap-x-4 items-center @2xl:items-end justify-between @2xl:justify-start">
         <div className="flex-grow flex-shrink-1 truncate @2xl:flex-shrink-0">
           {!isAction && nameNode}

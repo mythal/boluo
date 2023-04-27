@@ -1,5 +1,5 @@
 import type { GetMe } from 'api';
-import { PaperPlane } from 'icons';
+import { Edit, PaperPlane } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, forwardRef, useMemo } from 'react';
@@ -10,16 +10,17 @@ import { useSend } from '../channel/useSend';
 
 interface Props {
   me: GetMe;
+  editMode?: boolean;
 }
 
-export const SendButton: FC<Props> = ({ me }) => {
+export const SendButton: FC<Props> = ({ me, editMode = false }) => {
   const composeAtom = useComposeAtom();
   const error = useAtomValue(useMemo(() => selectAtom(composeAtom, compose => compose.error), [composeAtom]));
   const send = useSend(me.user);
   return (
     <Button onClick={() => send()} disabled={error !== null}>
-      <FormattedMessage defaultMessage="Send" />
-      <PaperPlane />
+      {editMode ? <FormattedMessage defaultMessage="Edit" /> : <FormattedMessage defaultMessage="Send" />}
+      {editMode ? <Edit /> : <PaperPlane />}
     </Button>
   );
 };

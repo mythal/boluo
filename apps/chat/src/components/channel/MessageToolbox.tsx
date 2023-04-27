@@ -1,10 +1,13 @@
 import { Message } from 'api';
 import { usePost } from 'common';
 import { Edit, Trash, X } from 'icons';
+import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Spinner } from 'ui';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useOutside } from '../../hooks/useOutside';
+import { makeComposeAction } from '../../state/compose.actions';
 import { MessageToolboxButton } from './MessageToolboxButton';
 
 interface Props {
@@ -25,6 +28,8 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
   const post = usePost();
   const boxRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<ToolboxState>('NORMAL');
+  const composeAtom = useComposeAtom();
+  const dispatch = useSetAtom(composeAtom);
   useOutside(useCallback(() => setState('NORMAL'), []), boxRef);
   const handleDelete = async () => {
     setState('LOADING');
@@ -37,6 +42,10 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
       return;
     }
   };
+
+  const handleEditMessage = useCallback(() => {
+    dispatch(makeComposeAction('editMessage', { message }));
+  }, [dispatch, message]);
   return (
     <Box className={className} ref={boxRef}>
       {state === 'DELETE_CONFRIM' && (
@@ -62,7 +71,7 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
           <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
             <Trash />
           </MessageToolboxButton>
-          <MessageToolboxButton>
+          <MessageToolboxButton onClick={handleEditMessage}>
             <Edit />
           </MessageToolboxButton>
         </>

@@ -9,7 +9,7 @@ export type ComposeRange = [number, number];
 export interface ComposeState {
   editFor: string | null;
   inputedName: string;
-  previewId: string | null;
+  previewId: string;
   isAction: boolean;
   inGame: boolean;
   broadcast: boolean;
@@ -20,10 +20,10 @@ export interface ComposeState {
   range: ComposeRange;
 }
 
-export const initialComposeState: ComposeState = {
+export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
-  previewId: null,
+  previewId: makeId(),
   isAction: false,
   inGame: false,
   broadcast: false,
@@ -32,12 +32,12 @@ export const initialComposeState: ComposeState = {
   error: 'TEXT_EMPTY',
   range: [0, 0],
   parsed: { text: '', entities: [] },
-};
+});
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
   const { source } = action.payload;
   let { previewId } = state;
-  if (source === '' || (state.source === '' && source !== '')) {
+  if ((source === '' || state.source === '') && state.editFor === null) {
     previewId = makeId();
   }
   return { ...state, source: action.payload.source, previewId };
@@ -127,12 +127,40 @@ const handleSetRange = (state: ComposeState, { payload: { range } }: ComposeActi
   return { ...state, range };
 };
 
+const handleEditMessage = (
+  state: ComposeState,
+  { payload: { message } }: ComposeAction<'editMessage'>,
+): ComposeState => {
+  const { id: previewId, modified: editFor, text: source, inGame, name } = message;
+
+  const inputedName = inGame ? name : '';
+  const range: ComposeState['range'] = [source.length, source.length];
+
+  return { ...makeInitialComposeState(), previewId, editFor, source, inGame, inputedName, range };
+};
+
 const handleParsed = (state: ComposeState, { payload: parsed }: ComposeAction<'parsed'>): ComposeState => {
   const { text } = parsed;
   if (text !== state.source || text === state.parsed?.text) {
     return state;
   }
   return { ...state, parsed };
+};
+
+const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState => {
+  return {
+    ...state,
+    previewId: makeId(),
+    editFor: null,
+    range: [0, 0],
+    media: undefined,
+    source: '',
+    parsed: { text: '', entities: [] },
+  };
+};
+
+const handleReset = (): ComposeState => {
+  return makeInitialComposeState();
 };
 
 const composeSwitch = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
@@ -155,8 +183,12 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleSetRange(state, action);
     case 'parsed':
       return handleParsed(state, action);
-    default:
-      return state;
+    case 'editMessage':
+      return handleEditMessage(state, action);
+    case 'reset':
+      return handleReset();
+    case 'sent':
+      return handleSent(state, action);
   }
 };
 

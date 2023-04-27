@@ -1,14 +1,12 @@
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { atomWithReducer } from 'jotai/utils';
-import { FC, useCallback, useMemo, useRef } from 'react';
+import { FC, useMemo } from 'react';
 import { memo } from 'react';
-import { useChannelId } from '../../hooks/useChannelId';
 import { ComposeAtomContext } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
-import { composeReducer, initialComposeState } from '../../state/compose.reducer';
+import { composeReducer, makeInitialComposeState } from '../../state/compose.reducer';
 import { Compose } from '../compose/Compose';
-import { GuestCompose } from '../compose/GuestCompose';
 import { useSendPreview } from '../compose/useSendPreview';
 import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneBox } from '../PaneBox';
@@ -22,7 +20,8 @@ interface Props {
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const me = useMe();
   const member = useMyChannelMember(channelId);
-  const composeAtom = useMemo(() => atomWithReducer(initialComposeState, composeReducer), []);
+  const initialCompose = useMemo(makeInitialComposeState, []);
+  const composeAtom = useMemo(() => atomWithReducer(initialCompose, composeReducer), [initialCompose]);
   const nickname = me?.user.nickname;
   useSendPreview(channelId, nickname, composeAtom);
   return (

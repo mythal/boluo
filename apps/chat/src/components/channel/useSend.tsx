@@ -1,9 +1,10 @@
-import { User } from 'api';
-import { usePost } from 'common';
+import { ApiError, Message, User } from 'api';
+import { usePatch, usePost } from 'common';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
+import { Result } from 'utils';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
@@ -16,6 +17,7 @@ export const useSend = (me: User) => {
   const composeAtom = useComposeAtom();
   const setBanner = useSetBanner();
   const post = usePost();
+  const patch = usePatch();
   const { nickname } = me;
 
   const send = useCallback(async () => {
@@ -29,22 +31,37 @@ export const useSend = (me: User) => {
       dispatch(makeComposeAction('recoverState', backupComposeState));
       setBanner(null);
     };
-    dispatch(makeComposeAction('setSource', { channelId, source: '', range: [0, 0] }));
+    dispatch(makeComposeAction('sent', {}));
     const { text, entities } = parse(compose.source);
+    let result: Result<Message, ApiError>;
+    const name = compose.inputedName.trim() || nickname;
+    const isEditing = compose.editFor !== null;
+    if (isEditing) {
+      result = await patch('/messages/edit', null, {
+        messageId: compose.previewId,
+        name,
+        text: compose.parsed.text,
+        entities: compose.parsed.entities,
+        inGame: compose.inGame,
+        isAction: compose.isAction,
+        mediaId: null,
+      });
+    } else {
+      result = await post('/messages/send', null, {
+        messageId: null,
+        previewId: compose.previewId,
+        channelId,
+        name,
+        text,
+        entities,
+        inGame: compose.inGame,
+        isAction: false,
+        mediaId: null,
+        pos: null,
+        whisperToUsers: null,
+      });
+    }
 
-    const result = await post('/messages/send', null, {
-      messageId: null,
-      previewId: compose.previewId,
-      channelId,
-      name: compose.inputedName.trim() || nickname,
-      text,
-      entities,
-      inGame: compose.inGame,
-      isAction: false,
-      mediaId: null,
-      pos: null,
-      whisperToUsers: null,
-    });
     if (result.isOk) {
       return;
     }
@@ -63,7 +80,7 @@ export const useSend = (me: User) => {
         </div>
       ),
     });
-  }, [channelId, composeAtom, nickname, post, setBanner, store]);
+  }, [channelId, composeAtom, nickname, patch, post, setBanner, store]);
 
   return send;
 };

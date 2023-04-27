@@ -1,7 +1,7 @@
 import { store } from 'common/store';
 import { atomFamily, selectAtom } from 'jotai/utils';
 import { byPos } from '../sort';
-import { ChatItem } from '../types/chat-items';
+import { ChatItem, MessageItem, PreviewItem } from '../types/chat-items';
 import { ChannelState, makeInitialChannelState } from './channel';
 import { ChatSpaceState } from './chat';
 import { chatAtom } from './chat.atoms';
@@ -12,17 +12,30 @@ export interface ChatListState {
 }
 
 const makeChatList = (channelState: ChannelState): ChatItem[] => {
-  const { minPos } = channelState;
-  const previews = Object.values(channelState.previewMap);
-  const messages = Object.values(channelState.messageMap);
-  const chatItemList: ChatItem[] = messages;
-  if (minPos === null) {
-    chatItemList.push(...previews);
-  } else {
-    chatItemList.push(...previews.filter(item => item.pos > minPos));
+  const minPos = channelState.minPos ?? Number.MIN_SAFE_INTEGER;
+  const previewMap = new Map<string, PreviewItem>(
+    Object.values(channelState.previewMap).map((item): [string, PreviewItem] => [item.id, item]),
+  );
+  const itemList: ChatItem[] = Object.values(channelState.messageMap);
+  for (let i = 0; i < itemList.length; i += 1) {
+    const message = itemList[i]! as MessageItem;
+    const preview = previewMap.get(message.id);
+    if (!preview) {
+      continue;
+    }
+    if (preview.editFor === message.modified) {
+      itemList[i] = { ...preview, pos: message.pos };
+    }
+    previewMap.delete(message.id);
   }
-  chatItemList.sort(byPos);
-  return chatItemList;
+  const previews = previewMap.values();
+  for (const preview of previews) {
+    if (preview.pos > minPos && preview.text !== '') {
+      itemList.push(preview);
+    }
+  }
+  itemList.sort(byPos);
+  return itemList;
 };
 
 export const chatListAtomFamily = atomFamily((channelId: string) =>

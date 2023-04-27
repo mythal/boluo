@@ -22,7 +22,7 @@ const sendPreview = (
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { inGame, isAction, source, previewId, inputedName } = compose;
+    const { inGame, isAction, source, previewId, inputedName, editFor } = compose;
     const inGameName = inputedName || '';
     if (!previewId) {
       return;
@@ -37,7 +37,7 @@ const sendPreview = (
       text: source,
       clear: false,
       entities: [],
-      editFor: null,
+      editFor,
     };
 
     const clientEvent: ClientEvent = { type: 'PREVIEW', preview };

@@ -287,7 +287,6 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
   const [isScrolling, setIsScrolling] = useState(false);
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const composeAtom = useComposeAtom();
   const { chatList, optimisticReorder, setOptimisticReorder, firstItemIndex } = useDerivedChatList(
     actualChatList,
   );

@@ -8,9 +8,10 @@ interface Props {
   children: ReactNode;
   id: string;
   className?: string;
+  editMode?: boolean;
 }
 
-export const PreviewBox: FC<Props> = ({ id, children, className = '' }) => {
+export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode = false }) => {
   const {
     setNodeRef,
     transform,
@@ -32,7 +33,7 @@ export const PreviewBox: FC<Props> = ({ id, children, className = '' }) => {
       ref={setNodeRef}
       style={style}
     >
-      <PreviewHandlePlaceHolder />
+      <PreviewHandlePlaceHolder editMode={editMode} />
       {children}
     </div>
   );

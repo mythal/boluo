@@ -7,8 +7,8 @@ import { Button } from 'ui';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { useMountedRef } from '../../hooks/useMounted';
-import { useChatDispatch } from '../../state/atoms/chat';
-import { chatListAtomFamily } from '../../state/atoms/chat-list';
+import { chatListAtomFamily } from '../../state/chat-list.atoms';
+import { useChatDispatch } from '../../state/chat.atoms';
 
 const LOAD_MESSAGE_LIMIT = 51;
 export const ChatListHeader: FC = () => {

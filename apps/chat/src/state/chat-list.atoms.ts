@@ -1,10 +1,10 @@
 import { store } from 'common/store';
 import { atomFamily, selectAtom } from 'jotai/utils';
-import { byPos } from '../../sort';
-import { ChatItem } from '../../types/chat-items';
-import { ChannelState, makeInitialChannelState } from '../channel';
-import { ChatSpaceState } from '../chat';
-import { chatAtom } from './chat';
+import { byPos } from '../sort';
+import { ChatItem } from '../types/chat-items';
+import { ChannelState, makeInitialChannelState } from './channel';
+import { ChatSpaceState } from './chat';
+import { chatAtom } from './chat.atoms';
 
 export interface ChatListState {
   channelState: ChannelState;

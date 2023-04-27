@@ -6,7 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { isApple } from 'utils';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
-import { ComposeError } from '../../state/compose';
+import { ComposeError } from '../../state/compose.reducer';
 import { useSend } from './useSend';
 
 interface Props {

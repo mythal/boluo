@@ -14,7 +14,7 @@ import {
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
-import { makeComposeAction } from '../../state/actions/compose';
+import { makeComposeAction } from '../../state/compose.actions';
 import { useSend } from '../channel/useSend';
 import { useWorkerParse } from './useWorkerParse';
 

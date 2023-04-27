@@ -1,7 +1,7 @@
 import { store } from 'common/store';
-import { ChatActionUnion } from './actions/chat';
-import { chatAtom } from './atoms/chat';
 import { ChatReducerContext } from './chat';
+import { ChatActionUnion } from './chat.actions';
+import { chatAtom } from './chat.atoms';
 
 export interface Connected {
   type: 'CONNECTED';

@@ -3,9 +3,9 @@ import { useAtomValue, useStore } from 'jotai';
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { makeId } from 'utils';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
-import { connectionStateAtom } from '../../state/atoms/chat';
 import { useIsFocused } from '../../state/chat-view';
-import { ComposeState } from '../../state/compose';
+import { connectionStateAtom } from '../../state/chat.atoms';
+import { ComposeState } from '../../state/compose.reducer';
 
 const SEND_PREVIEW_TIMEOUT_MS = 250;
 const isVaildName = (name: string) => {

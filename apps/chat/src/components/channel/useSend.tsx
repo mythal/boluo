@@ -8,7 +8,7 @@ import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { parse } from '../../interpreter/parser';
-import { ComposeActionUnion, makeComposeAction } from '../../state/actions/compose';
+import { ComposeActionUnion, makeComposeAction } from '../../state/compose.actions';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();

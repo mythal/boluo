@@ -6,7 +6,7 @@ import { memo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { ComposeAtomContext } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
-import { composeReducer, initialComposeState } from '../../state/compose';
+import { composeReducer, initialComposeState } from '../../state/compose.reducer';
 import { Compose } from '../compose/Compose';
 import { GuestCompose } from '../compose/GuestCompose';
 import { useSendPreview } from '../compose/useSendPreview';

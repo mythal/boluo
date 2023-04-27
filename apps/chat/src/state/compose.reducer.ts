@@ -1,6 +1,6 @@
 import { makeId } from 'utils';
 import { parse, ParseResult } from '../interpreter/parser';
-import { ComposeAction, ComposeActionUnion } from './actions/compose';
+import { ComposeAction, ComposeActionUnion } from './compose.actions';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
 

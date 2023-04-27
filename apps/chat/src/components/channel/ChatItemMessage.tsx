@@ -6,6 +6,7 @@ import { ParseResult } from '../../interpreter/parser';
 import { Content } from './Content';
 import { MessageBox } from './MessageBox';
 import { Name } from './Name';
+import { PreviewNameCellActionIndicator } from './PreviewNameCellActionIndicator';
 
 interface Props {
   message: Message;
@@ -37,7 +38,8 @@ export const ChatItemMessage: FC<Props> = (
   return (
     <MessageBox self={self} message={message} draggable={self} continuous={continuous} optimistic={optimistic}>
       <div className={clsx('self-start @2xl:text-right', continuous ? 'hidden @2xl:block' : '')}>
-        {continuous || isAction ? null : nameNode}
+        {!continuous && isAction && <PreviewNameCellActionIndicator />}
+        {!continuous && !isAction && nameNode}
       </div>
       <div className="@2xl:pr-[6rem]">
         <Content parsed={parsed} isAction={isAction} nameNode={nameNode} isPreview={false} />

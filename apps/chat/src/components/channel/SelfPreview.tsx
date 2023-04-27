@@ -2,16 +2,14 @@ import type { Preview } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
-import { Button } from 'ui';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ComposeState } from '../../state/compose.reducer';
-import { InGameSwitchButton } from '../compose/InGameSwitchButton';
 import { Name } from './Name';
-import { NameInput } from './NameInput';
 import { PreviewBox } from './PreviewBox';
 import { SelfPreviewContent } from './SelfPreviewContent';
+import { SelfPreviewNameCell } from './SelfPreviewNameCell';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
 import { ToggleActionButton } from './ToggleActionButton';
 
@@ -54,21 +52,15 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
 
   return (
     <PreviewBox id={preview.id} editMode={editMode} className="bg-brand-50 border-t border-b border-brand-200">
-      <div className="flex @2xl:flex-col gap-y-1 gap-x-4 items-center @2xl:items-end justify-between @2xl:justify-start">
-        <div className="flex-grow flex-shrink-1 truncate @2xl:flex-shrink-0">
-          {!isAction && nameNode}
-        </div>
-        <div className="flex-shrink flex gap-1 h-8">
-          {inGame && <NameInput className="text-sm w-[5rem] @xs:w-[7rem] @2xl:w-full " />}
-          <InGameSwitchButton iconOnly />
-        </div>
-      </div>
-      <div className="flex flex-col h-full items-between">
-        <SelfPreviewContent isAction={isAction} nameNode={nameNode} />
-        <div>
+      <SelfPreviewNameCell isAction={isAction} inGame={inGame} nameNode={nameNode} />
+      <div className="flex flex-col gap-1 h-full items-between">
+        <SelfPreviewContent nameNode={nameNode} />
+        <div className="flex gap-1">
           <ToggleActionButton />
         </div>
-        <SelfPreviewSendHelpText me={member.user} />
+        <div className="min-h-[1.5em]">
+          <SelfPreviewSendHelpText me={member.user} />
+        </div>
       </div>
     </PreviewBox>
   );

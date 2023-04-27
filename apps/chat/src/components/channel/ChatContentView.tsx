@@ -216,6 +216,7 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   if (
     a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
     || a.senderId !== b.senderId || a.name !== b.name // sender
+    || a.isAction !== b.isAction
     || a.folded || b.folded || a.whisperToUsers || b.whisperToUsers // other
   ) {
     return false;
@@ -263,13 +264,13 @@ const useScrollLock = (
           if (cursor) {
             cursor.scrollIntoView();
           } else {
-            virtuoso.scrollToIndex({ index, behavior: 'smooth' });
+            virtuoso.scrollToIndex({ index, behavior: 'auto' });
           }
           return;
         }
       }
       if (!end) return;
-      virtuoso.scrollToIndex({ index: 'LAST', behavior: 'smooth', align: 'end' });
+      virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
     }, 500);
     return () => window.clearInterval(handle);
   });

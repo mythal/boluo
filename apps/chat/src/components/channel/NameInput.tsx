@@ -1,7 +1,6 @@
 import { useAtom } from 'jotai';
 import { FC } from 'react';
 import { TextInput } from 'ui';
-import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/compose.actions';
 
@@ -16,7 +15,7 @@ export const NameInput: FC<Props> = ({ className }) => {
     <TextInput
       value={compose.inputedName}
       className={className}
-      onChange={(e) => dispatch(makeComposeAction('setInputedName', { inputedName: e.target.value.trim() }))}
+      onChange={(e) => dispatch(makeComposeAction('setInputedName', { inputedName: e.target.value }))}
     />
   );
 };

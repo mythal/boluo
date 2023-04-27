@@ -25,8 +25,7 @@ const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
 
 const selector = ({ inGame, isAction, inputedName, source, editFor }: ComposeState): ComposeDrived => {
   const editMode = editFor !== null;
-  const name = inGame ? inputedName.trim() : '';
-  return { inGame, isAction, name, source, editMode };
+  return { inGame, isAction, name: inputedName.trim(), source, editMode };
 };
 
 interface Props {
@@ -46,7 +45,7 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
   const { editMode, inGame, isAction } = compose;
-  const name = compose.name || member.user.nickname;
+  const name = inGame ? compose.name : member.user.nickname;
   const nameNode = useMemo(() => {
     return <Name name={name} isMaster={isMaster} isPreview self />;
   }, [isMaster, name]);

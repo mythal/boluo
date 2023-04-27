@@ -11,13 +11,13 @@ interface Props {
   children: ReactNode;
   message: Message;
   draggable?: boolean;
-  continuous?: boolean;
+  mini?: boolean;
   optimistic?: boolean;
   self: boolean;
 }
 
 export const MessageBox: FC<Props> = (
-  { className = '', children, draggable = false, message, continuous = false, optimistic = false, self },
+  { className = '', children, draggable = false, message, mini = false, optimistic = false, self },
 ) => {
   const {
     attributes,
@@ -69,7 +69,7 @@ export const MessageBox: FC<Props> = (
         'grid py-2 pl-2 pr-2 items-center group gap-2 grid-flow-col relative hover:bg-surface-100',
         'grid-cols-[2rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[2rem_12rem_minmax(0,1fr)]',
-        !continuous && 'grid-rows-2 @2xl:grid-rows-1',
+        !mini && 'grid-rows-2 @2xl:grid-rows-1',
         isDragging && 'opacity-0',
         className,
       )}

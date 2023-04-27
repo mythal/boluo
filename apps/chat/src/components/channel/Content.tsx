@@ -57,6 +57,7 @@ export const Content = memo<Props>(({
   }, [entities, rng, source]);
   return (
     <div ref={ref} className={clsx('h-full break-all whitespace-pre-wrap relative', self ? 'pb-12' : '')}>
+      {isAction && <span className="mr-1 text-surface-400">*</span>}
       {isAction && nameNode}
       {entityNodeList}
       {self && isPreview && (

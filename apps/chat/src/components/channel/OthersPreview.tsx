@@ -5,7 +5,6 @@ import { ParseResult } from '../../interpreter/parser';
 import { Content } from './Content';
 import { Name } from './Name';
 import { PreviewBox } from './PreviewBox';
-import { PreviewNameCellActionIndicator } from './PreviewNameCellActionIndicator';
 
 interface Props {
   preview: Preview;
@@ -31,7 +30,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
     <PreviewBox id={preview.id} editMode={preview.editFor !== null} className="text-surface-600">
       <div className="flex @2xl:flex-col gap-1">
         <div className="@2xl:text-right">
-          {isAction ? <PreviewNameCellActionIndicator /> : nameNode}
+          {isAction ? null : <>{nameNode}:</>}
         </div>
       </div>
       <Content parsed={deferredParsed} nameNode={nameNode} isAction={isAction} isPreview />

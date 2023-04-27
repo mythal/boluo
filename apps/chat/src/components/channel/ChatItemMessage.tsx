@@ -4,9 +4,9 @@ import { FC, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
 import { ParseResult } from '../../interpreter/parser';
 import { Content } from './Content';
+import { IsActionIndicator } from './IsActionIndicator';
 import { MessageBox } from './MessageBox';
 import { Name } from './Name';
-import { PreviewNameCellActionIndicator } from './PreviewNameCellActionIndicator';
 
 interface Props {
   message: Message;
@@ -34,12 +34,12 @@ export const ChatItemMessage: FC<Props> = (
     const entities = fromRawEntities(text, rawEntities);
     return { text, entities };
   }, [message.entities, message.text]);
+  const mini = continuous || isAction;
 
   return (
-    <MessageBox self={self} message={message} draggable={self} continuous={continuous} optimistic={optimistic}>
-      <div className={clsx('self-start @2xl:text-right', continuous ? 'hidden @2xl:block' : '')}>
-        {!continuous && isAction && <PreviewNameCellActionIndicator />}
-        {!continuous && !isAction && nameNode}
+    <MessageBox self={self} message={message} draggable={self} mini={mini} optimistic={optimistic}>
+      <div className={clsx('self-start @2xl:text-right', mini ? 'hidden @2xl:block' : '')}>
+        {!mini && <>{nameNode}:</>}
       </div>
       <div className="@2xl:pr-[6rem]">
         <Content parsed={parsed} isAction={isAction} nameNode={nameNode} isPreview={false} />

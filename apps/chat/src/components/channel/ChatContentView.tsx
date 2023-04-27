@@ -216,7 +216,6 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   if (
     a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
     || a.senderId !== b.senderId || a.name !== b.name // sender
-    || a.isAction !== b.isAction
     || a.folded || b.folded || a.whisperToUsers || b.whisperToUsers // other
   ) {
     return false;

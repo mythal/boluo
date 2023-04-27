@@ -24,12 +24,17 @@ export const Name: FC<Props> = ({ name, className, isMaster, isPreview = false, 
     <span
       className={clsx(
         'font-bold flex-none mr-1 w-[8rem] @xl:w-[10rem] @2xl:w-[12rem] break-all',
-        isEmptyName && 'text-error-400 font-mono',
         className,
       )}
     >
       <span className="mr-1">
-        {isEmptyName ? <FormattedMessage defaultMessage="[NO NAME]" /> : name}
+        {isEmptyName
+          ? (
+            <span className="text-error-400 italic">
+              #<FormattedMessage defaultMessage="No Name" />#
+            </span>
+          )
+          : name}
       </span>
       {isMaster && masterIcon}
     </span>

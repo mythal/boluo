@@ -16,7 +16,7 @@ export const ChatItemSwitch = memo<Props>(({ chatItem, className = '', myId, con
     case 'MESSAGE':
       return (
         <ChatItemMessage
-          self={myId === chatItem.senderId}
+          self={isMember && myId === chatItem.senderId}
           message={chatItem}
           className={className}
           continuous={continuous}

@@ -6,6 +6,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ComposeState } from '../../state/compose.reducer';
+import { CancelEditingButton } from './CancelEditingButton';
 import { Name } from './Name';
 import { PreviewBox } from './PreviewBox';
 import { SelfPreviewContent } from './SelfPreviewContent';
@@ -57,6 +58,7 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
         <SelfPreviewContent nameNode={nameNode} />
         <div className="flex gap-1">
           <ToggleActionButton />
+          <CancelEditingButton />
         </div>
         <div className="min-h-[1.5em]">
           <SelfPreviewSendHelpText me={member.user} />

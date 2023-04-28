@@ -1,11 +1,11 @@
 import type { Space } from 'api';
-import clsx from 'clsx';
 import { useMe } from 'common';
-import { ChevronDown, ChevronUp, Settings, Users } from 'icons';
+import { Settings, Users } from 'icons';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { useMySpaceMember } from '../../hooks/useMySpaceMember';
 import { useChatPaneDispatch } from '../../state/chat-view';
 import { makePane, Pane, SpaceMembersPane, SpaceSettingsPane } from '../../types/chat-pane';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
@@ -19,6 +19,7 @@ interface Props {
 export const SpaceOptions: FC<Props> = ({ space, panes }) => {
   const dispatch = useChatPaneDispatch();
   const me = useMe();
+  const mySpaceMember = useMySpaceMember(space.id);
   const disabled = me === null;
   const [folded, setFold] = useState(true);
   const spaceSettingsPane: SpaceSettingsPane = { type: 'SPACE_SETTINGS', spaceId: space.id };
@@ -44,14 +45,16 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
 
       {!folded && (
         <div className="">
-          <SidebarItem
-            icon={<Settings />}
-            active={spaceSettingsActive}
-            onClick={() => dispatch({ type: 'TOGGLE', pane: makePane(spaceSettingsPane) })}
-            toggle
-          >
-            <FormattedMessage defaultMessage="Space Settings" />
-          </SidebarItem>
+          {mySpaceMember?.isAdmin && (
+            <SidebarItem
+              icon={<Settings />}
+              active={spaceSettingsActive}
+              onClick={() => dispatch({ type: 'TOGGLE', pane: makePane(spaceSettingsPane) })}
+              toggle
+            >
+              <FormattedMessage defaultMessage="Space Settings" />
+            </SidebarItem>
+          )}
 
           <SidebarItem
             icon={<Users />}

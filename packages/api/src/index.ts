@@ -7,6 +7,7 @@ import type {
   CreateSpace,
   EditSpace,
   Space,
+  SpaceMember,
   SpaceMemberWithUser,
   SpaceWithMember,
   SpaceWithRelated,
@@ -34,6 +35,7 @@ export interface Get {
   '/spaces/query': { query: { id: string }; result: Space };
   '/spaces/my': { query: null; result: SpaceWithMember[] };
   '/spaces/query_with_related': { query: { id: string }; result: SpaceWithRelated };
+  '/spaces/my_space_member': { query: { id: string }; result: SpaceMember | null };
   '/spaces/members': { query: { id: string }; result: Record<string, SpaceMemberWithUser> };
   '/spaces/token': { query: { id: string }; result: string };
   // channels

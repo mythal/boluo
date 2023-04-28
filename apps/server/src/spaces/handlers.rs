@@ -245,6 +245,20 @@ async fn kick(req: Request<Body>) -> Result<bool, AppError> {
     }
 }
 
+async fn my_space_member(req: Request<Body>) -> Result<Option<SpaceMember>, AppError> {
+    let session = if let Ok(session) = authenticate(&req).await {
+        session
+    } else {
+        return Ok(None);
+    };
+    let IdQuery { id } = parse_query(req.uri())?;
+    let mut db = database::get().await?;
+    let db = &mut *db;
+    SpaceMember::get(&mut *db, &session.user_id, &id)
+        .await
+        .map_err(Into::into)
+}
+
 async fn members(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let mut db = database::get().await?;
@@ -285,6 +299,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/join", Method::POST) => join(req).await.map(ok_response),
         ("/leave", Method::POST) => leave(req).await.map(ok_response),
         ("/kick", Method::POST) => kick(req).await.map(ok_response),
+        ("/my_space_member", Method::GET) => my_space_member(req).await.map(ok_response),
         ("/members", Method::GET) => members(req).await.map(ok_response),
         ("/delete", Method::POST) => delete(req).await.map(ok_response),
         _ => missing(),

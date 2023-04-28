@@ -1,4 +1,5 @@
 import Prando from 'prando';
+import { IntlShape } from 'react-intl';
 import { by, byReverse } from '../sort';
 import { CocRoll, EvaluatedExprNode, ExprNode, FateResult } from './entities';
 
@@ -193,34 +194,34 @@ export const makeRng = (seed?: number[]): Prando | undefined => {
   return new Prando(a);
 };
 
-export const cocRollSubTypeDisplay = (subType: CocRoll['subType']): string | null => {
+export const cocRollSubTypeDisplay = (intl: IntlShape, subType: CocRoll['subType']): string | null => {
   let modifierName: string | null = null;
   if (subType === 'BONUS') {
-    modifierName = '奖';
+    modifierName = '↥';
   } else if (subType === 'BONUS_2') {
-    modifierName = '奖²';
+    modifierName = '⇈';
   } else if (subType === 'PENALTY') {
-    modifierName = '罚';
+    modifierName = '↧';
   } else if (subType === 'PENALTY_2') {
-    modifierName = '罚²';
+    modifierName = '⇊';
   }
   return modifierName;
 };
 
-export const cocSuccessLevelDisplay = (value: number, targetValue: number): string => {
+export const cocSuccessLevelDisplay = (intl: IntlShape, value: number, targetValue: number): string => {
   let successName: string;
   if (value === 100 || (targetValue < 50 && value > 95)) {
-    successName = '大失败';
+    successName = intl.formatMessage({ defaultMessage: 'Fumble' });
   } else if (value === 1) {
-    successName = '大成功';
+    successName = intl.formatMessage({ defaultMessage: 'Critical' });
   } else if (value > targetValue) {
-    successName = '失败';
+    successName = intl.formatMessage({ defaultMessage: 'Failure' });
   } else if (value <= Math.floor(targetValue / 5)) {
-    successName = '⅕极难成功';
+    successName = '⅕' + intl.formatMessage({ defaultMessage: 'Extreme Success' });
   } else if (value <= targetValue >> 1) {
-    successName = '½困难成功';
+    successName = '½' + intl.formatMessage({ defaultMessage: 'Hard Success' });
   } else {
-    successName = '常规成功';
+    successName = intl.formatMessage({ defaultMessage: 'Success' });
   }
   return successName;
 };
@@ -235,7 +236,8 @@ const fateDiceToText = (dice: number): string => {
   }
 };
 
-export const nodeToText = (node: EvaluatedExprNode): string => {
+export const nodeToText = (intl: IntlShape, node: EvaluatedExprNode): string => {
+  const toText = (node: EvaluatedExprNode): string => nodeToText(intl, node);
   if (node.type === 'Roll') {
     const values = node.values.length > 1 ? `=[${node.values.join(', ')}]` : '';
     const filtered = node.filter && node.filtered && node.filtered.length !== node.values.length
@@ -243,26 +245,29 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
       : '';
     return `${node.counter}d${node.face}${values}${filtered}=${node.value}`;
   } else if (node.type === 'Binary') {
-    return `${nodeToText(node.l)}${node.op}${nodeToText(node.r)}=${node.value}`;
+    return `${toText(node.l)}${node.op}${toText(node.r)}=${node.value}`;
   } else if (node.type === 'Num') {
     return String(node.value);
   } else if (node.type === 'SubExpr') {
-    return `(${nodeToText(node.evaluatedNode)})=${node.value}`;
+    return `(${toText(node.evaluatedNode)})=${node.value}`;
   } else if (node.type === 'FateRoll') {
     return `${node.values.map(fateDiceToText).join('')}=${node.value}`;
   } else if (node.type === 'DicePool') {
     return `${node.counter}d${node.face} [${node.values.join(', ')}] ≥ ${node.min} ⇒ ${node.value}`;
   } else if (node.type === 'CocRoll') {
     const { subType } = node;
-    const typeDisplay = cocRollSubTypeDisplay(subType) || '';
+    const typeDisplay = cocRollSubTypeDisplay(intl, subType) || '';
     const modifier = node.subType === 'NORMAL' ? '' : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
-    const successLevel = node.targetValue === undefined
-      ? ''
-      : `: (基准${node.targetValue})${cocSuccessLevelDisplay(node.value, node.targetValue)}`;
+    let successLevel: string = '';
+    if (node.targetValue) {
+      const tagetLabel = intl.formatMessage({ defaultMessage: 'target' });
+      const successLevelLabel = cocSuccessLevelDisplay(intl, node.value, node.targetValue);
+      successLevel = `: (${tagetLabel})${successLevelLabel}`;
+    }
     return `${node.value}${modifier}${successLevel}`;
   } else if (node.type === 'Repeat') {
-    const textList: string[] = node.evaluated.map(nodeToText);
+    const textList: string[] = node.evaluated.map(toText);
     return textList.join(', ');
   }
-  return '[未知]';
+  return '[???]';
 };

@@ -267,7 +267,7 @@ const useScrollLock = (
       }
       if (!end) return;
       virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
-    }, 50);
+    }, 500);
     return () => window.clearInterval(handle);
   });
   return scrollLockRef;

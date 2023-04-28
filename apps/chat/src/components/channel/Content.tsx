@@ -21,6 +21,7 @@ interface Props {
   isAction: boolean;
   isPreview: boolean;
   seed?: number[];
+  cursorNode?: ReactNode;
   nameNode: ReactNode;
 }
 
@@ -30,6 +31,7 @@ export const Content = memo<Props>(({
   nameNode,
   seed,
   isPreview,
+  cursorNode = null,
   self = false,
 }) => {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -39,13 +41,13 @@ export const Content = memo<Props>(({
     return (entities.length === 0 ? defaultEntities : entities).map((entity, index) => {
       switch (entity.type) {
         case 'Text':
-          return <EntityText key={index} source={source} entity={entity} />;
+          return <EntityText cursorNode={cursorNode} key={index} source={source} entity={entity} />;
         case 'Link':
           return <EntityLink key={index} source={source} entity={entity} />;
         case 'Strong':
-          return <EntityStrong key={index} source={source} entity={entity} />;
+          return <EntityStrong cursorNode={cursorNode} key={index} source={source} entity={entity} />;
         case 'Emphasis':
-          return <EntityEmphasis key={index} source={source} entity={entity} />;
+          return <EntityEmphasis cursorNode={cursorNode} key={index} source={source} entity={entity} />;
         case 'Code':
           return <EntityCode key={index} source={source} entity={entity} />;
         case 'CodeBlock':
@@ -54,7 +56,7 @@ export const Content = memo<Props>(({
           return <EntityExpr key={index} source={source} node={entity.node} rng={rng} />;
       }
     });
-  }, [entities, rng, source]);
+  }, [cursorNode, entities, rng, source]);
   return (
     <div ref={ref} className={clsx('h-full break-all whitespace-pre-wrap relative', self ? 'pb-12' : '')}>
       {isAction && <span className="mr-1 text-surface-400">*</span>}

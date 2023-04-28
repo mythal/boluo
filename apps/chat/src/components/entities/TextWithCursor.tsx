@@ -1,6 +1,5 @@
-import { createContext, FC, ReactNode, useContext, useMemo } from 'react';
+import { createContext, FC, ReactNode, useContext } from 'react';
 import { ComposeRange } from '../../state/compose.reducer';
-import { Cursor } from './Cursor';
 
 export interface CursorState {
   self: boolean;
@@ -12,10 +11,11 @@ export const CursorContext = createContext<CursorState | null>(null);
 interface Props {
   text: string;
   start: number;
+  cursorNode: ReactNode;
   len: number;
 }
 
-export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entityLen }) => {
+export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entityLen, cursorNode }) => {
   const cursorState = useContext(CursorContext);
 
   if (!cursorState || !cursorState.range) {
@@ -35,7 +35,7 @@ export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entit
     return (
       <>
         {leftText}
-        <Cursor self={cursorState.self} />
+        {cursorNode}
         {rightText}
       </>
     );
@@ -51,7 +51,7 @@ export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entit
     <>
       {a}
       <span className="bg-blue-100">{b}</span>
-      {cursorBetweenBC && <Cursor self={cursorState.self} />}
+      {cursorBetweenBC && cursorNode}
       {c}
     </>
   );

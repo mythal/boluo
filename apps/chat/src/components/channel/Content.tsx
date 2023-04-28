@@ -43,7 +43,7 @@ export const Content = memo<Props>(({
         case 'Text':
           return <EntityText cursorNode={cursorNode} key={index} source={source} entity={entity} />;
         case 'Link':
-          return <EntityLink key={index} source={source} entity={entity} />;
+          return <EntityLink cursorNode={cursorNode} key={index} source={source} entity={entity} />;
         case 'Strong':
           return <EntityStrong cursorNode={cursorNode} key={index} source={source} entity={entity} />;
         case 'Emphasis':

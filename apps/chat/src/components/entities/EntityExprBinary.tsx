@@ -6,12 +6,17 @@ interface Props {
   node: Binary | BinaryResult;
 }
 
-export const EntityExprBinary: FC<Props> = (props) => {
+export const EntityExprBinary: FC<Props> = ({ node }) => {
+  let result = '';
+  if ('value' in node) {
+    result = `=${node.value}`;
+  }
   return (
     <>
-      <EntityExprNode node={props.node.l} />
-      {props.node.op}
-      <EntityExprNode node={props.node.r} />
+      <EntityExprNode node={node.l} />
+      {node.op}
+      <EntityExprNode node={node.r} />
+      {result}
     </>
   );
 };

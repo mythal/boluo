@@ -42,7 +42,7 @@ export const ChatItemMessage: FC<Props> = (
         {!mini && <>{nameNode}:</>}
       </div>
       <div className="@2xl:pr-[6rem]">
-        <Content parsed={parsed} isAction={isAction} nameNode={nameNode} isPreview={false} />
+        <Content parsed={parsed} isAction={isAction} nameNode={nameNode} isPreview={false} seed={message.seed} />
       </div>
     </MessageBox>
   );

@@ -1,6 +1,6 @@
 import Prando from 'prando';
-import { FC } from 'react';
-import { ExprNode } from '../../interpreter/entities';
+import { FC, useEffect, useState } from 'react';
+import { EvaluatedExprNode, ExprNode } from '../../interpreter/entities';
 import { evaluate } from '../../interpreter/eval';
 import { EntityExprNode } from './EntityExprNode';
 

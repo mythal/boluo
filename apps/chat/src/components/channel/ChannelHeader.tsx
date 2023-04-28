@@ -1,3 +1,4 @@
+import { useMe } from 'common';
 import { Hash, SplitHorizontal } from 'icons';
 import type { FC } from 'react';
 import { useTransition } from 'react';
@@ -6,9 +7,11 @@ import { Button } from 'ui';
 import { makeId } from 'utils';
 import { useChannel } from '../../hooks/useChannel';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useChatPaneDispatch, usePaneId } from '../../state/chat-view';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneHeaderBox } from '../PaneHeaderBox';
+import { ChannelHeaderMemberButton } from './ChannelHeaderMemberButton';
 
 const SplitPaneButton: FC = () => {
   const channelId = useChannelId();
@@ -34,24 +37,25 @@ const SplitPaneButton: FC = () => {
   );
 };
 
-const ChannelName: FC = () => {
-  const channelId = useChannelId();
+const ChannelName: FC<{ channelId: string }> = ({ channelId }) => {
   const channel = useChannel(channelId);
   return <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">{channel.name}</span>;
 };
 
 export const ChannelHeader: FC = () => {
+  const channelId = useChannelId();
   return (
     <PaneHeaderBox
       icon={<Hash />}
       operators={
         <>
+          <ChannelHeaderMemberButton channelId={channelId} />
           <SplitPaneButton />
           <ClosePaneButton />
         </>
       }
     >
-      <ChannelName />
+      <ChannelName channelId={channelId} />
     </PaneHeaderBox>
   );
 };

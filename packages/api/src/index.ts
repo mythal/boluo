@@ -66,6 +66,7 @@ export interface Post {
   // channels
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
   '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };
+  '/channels/leave': { payload: Empty; query: { id: string }; result: true };
 }
 
 export interface Put {

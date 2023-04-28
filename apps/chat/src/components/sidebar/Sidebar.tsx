@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useMemo } from 'react';
 import { toggle } from 'utils';
 import { Pane } from '../../types/chat-pane';
+import { ConnectionIndicatior } from './ConnectionIndicator';
 import { SidebarChannelList } from './SidebarChannelList';
 import { SidebarHeader } from './SidebarHeader';
 import { SpaceOptions } from './SidebarSpaceOptions';
@@ -47,7 +48,11 @@ export const Sidebar: FC<Props> = ({ space, panes, className }) => {
                 <SidebarChannelList panes={panes} spaceId={space.id} />
               </div>
             )
-            : <div />}
+            : (
+              <div className="flex flex-col items-center py-2">
+                <ConnectionIndicatior className="p-2" />
+              </div>
+            )}
 
           <SidebarUserOperations
             isProfileOpen={isProfileOpen}

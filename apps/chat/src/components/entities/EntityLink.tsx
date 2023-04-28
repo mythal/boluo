@@ -1,14 +1,15 @@
 import { ExternalLink } from 'icons';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import type { Link } from '../../interpreter/entities';
 import { EntityText } from './EntityText';
 
 interface Props {
   source: string;
   entity: Link;
+  cursorNode: ReactNode;
 }
 
-export const EntityLink: FC<Props> = ({ source, entity }) => {
+export const EntityLink: FC<Props> = ({ source, entity, cursorNode }) => {
   const { title } = entity;
   let href = '';
   if (typeof entity.href === 'string') {
@@ -21,7 +22,7 @@ export const EntityLink: FC<Props> = ({ source, entity }) => {
   const childEnd = childStart + entity.child.len;
   return (
     <a target="_blank" title={title} href={href} className="underline underline-offset-2">
-      <EntityText source={source.substring(childStart, childEnd)} entity={entity.child} />
+      <EntityText cursorNode={cursorNode} source={source.substring(childStart, childEnd)} entity={entity.child} />
       <ExternalLink className="inline" />
     </a>
   );

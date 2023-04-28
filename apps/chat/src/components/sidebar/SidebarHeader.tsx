@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight } from 'icons';
 import type { FC } from 'react';
+import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useSidebarState } from './useSidebarState';
 
 interface Props {
@@ -27,6 +28,7 @@ export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
       >
         {isExpanded ? <ChevronLeft /> : <ChevronRight />}
       </button>
+      {isExpanded && <ConnectionIndicatior />}
     </div>
   );
 };

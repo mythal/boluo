@@ -20,8 +20,12 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 async fn admin_only<T: Querist>(db: &mut T, user_id: &Uuid, space_id: &Uuid) -> Result<(), AppError> {
-    SpaceMember::get(db, user_id, space_id).await.or_no_permission()?;
-    Ok(())
+    let member = SpaceMember::get(db, user_id, space_id).await.or_no_permission()?;
+    if member.is_admin {
+        Ok(())
+    } else {
+        Err(AppError::NoPermission("You're not admin".to_string()))
+    }
 }
 
 async fn query(req: Request<Body>) -> Result<Channel, AppError> {

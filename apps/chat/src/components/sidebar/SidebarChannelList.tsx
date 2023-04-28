@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui';
 import { useChannelList } from '../../hooks/useChannelList';
+import { useMySpaceMember } from '../../hooks/useMySpaceMember';
 import { useChatPaneDispatch } from '../../state/chat-view';
 import { makePane, Pane } from '../../types/chat-pane';
 import { SidebarChannelItem } from './SidebarChannelItem';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
+  const mySpaceMember = useMySpaceMember(spaceId);
   const channels = useChannelList(spaceId);
   const channelIdFromPanes = useMemo(
     () => panes.flatMap((pane) => pane.type === 'CHANNEL' ? [pane.channelId] : []),
@@ -59,11 +61,13 @@ export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
           active={channelIdFromPanes.includes(channel.id)}
         />
       ))}
-      <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={handleOpenCreateChannelPane}>
-        <span className="text-surface-400 group-hover:text-surface-800">
-          <FormattedMessage defaultMessage="Add New" />
-        </span>
-      </SidebarItem>
+      {mySpaceMember?.isAdmin && (
+        <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={handleOpenCreateChannelPane}>
+          <span className="text-surface-400 group-hover:text-surface-800">
+            <FormattedMessage defaultMessage="Add New" />
+          </span>
+        </SidebarItem>
+      )}
     </div>
   );
 };

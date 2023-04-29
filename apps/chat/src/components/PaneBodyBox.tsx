@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { FC, ReactNode } from 'react';
-import { useFocusPane, useIsFocused } from '../state/chat-view';
+import { useIsFocused } from '../state/chat-view';
 
 interface Props {
   children: ReactNode;
@@ -12,7 +12,7 @@ export const PaneBodyBox: FC<Props> = ({ children, className }) => {
   return (
     <div
       className={clsx(
-        'bg-bg flex-grow',
+        'bg-bg flex-grow h-0', /* TODO: Investigate why `h-0` work */
         isFocused ? '' : 'max-md:hidden max-md:h-0',
         className,
       )}

@@ -1,4 +1,5 @@
 import { isServerEvent } from 'api';
+import { apiUrlAtom } from 'common';
 import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
 import { store } from 'common/store';
 import { useSetAtom } from 'jotai';
@@ -67,4 +68,11 @@ store.sub(connectionStateAtom, () => {
     if (!isServerEvent(event)) return;
     store.set(chatAtom, makeAction('eventFromServer', event, undefined));
   };
+});
+
+store.sub(apiUrlAtom, () => {
+  const connection = store.get(connectionStateAtom);
+  if (connection.type === 'CONNECTED') {
+    connection.connection.close();
+  }
 });

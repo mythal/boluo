@@ -1,9 +1,9 @@
 import type { Reducer } from 'react';
 import type { ChannelState } from './channel';
 import { channelReducer, makeInitialChannelState } from './channel';
-import { ChatAction, ChatActionUnion } from './chat.actions';
-import type { ConnectionState } from './connection';
-import { connectionReducer, initialConnectionState } from './connection';
+import { ChatAction, ChatActionUnion, eventToChatAction } from './chat.actions';
+import type { ConnectionState } from './connection.reducer';
+import { connectionReducer, initialConnectionState } from './connection.reducer';
 
 export interface ChatReducerContext {
   spaceId: string;
@@ -15,6 +15,7 @@ export interface ChatSpaceState {
   connection: ConnectionState;
   channels: Record<string, ChannelState>;
   context: ChatReducerContext;
+  lastEventTimestamp: number;
 }
 
 export const initialChatState: ChatSpaceState = {
@@ -22,12 +23,14 @@ export const initialChatState: ChatSpaceState = {
   connection: {
     type: 'CLOSED',
     retry: 0,
+    countdown: 0,
   },
   channels: {},
   context: {
     spaceId: '',
     initialized: false,
   },
+  lastEventTimestamp: 0,
 };
 
 const channelsReducer = (
@@ -75,6 +78,7 @@ const makeChatState = (spaceId: string): ChatSpaceState => ({
     spaceId,
     initialized: false,
   },
+  lastEventTimestamp: 0,
 });
 
 const handleOpenedChannels = (
@@ -112,10 +116,27 @@ const handleOpenedChannels = (
   return { ...state, channels };
 };
 
+const handleEventFromServer = (
+  state: ChatSpaceState,
+  { payload: event }: ChatAction<'eventFromServer'>,
+): ChatSpaceState => {
+  if (event.timestamp <= state.lastEventTimestamp) {
+    return state;
+  }
+  const chatAction = eventToChatAction(event);
+  const lastEventTimestamp = event.timestamp;
+  if (chatAction === null) {
+    return { ...state, lastEventTimestamp };
+  }
+  return { ...chatReducer(state, chatAction), lastEventTimestamp };
+};
 export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,
   action: ChatActionUnion,
 ): ChatSpaceState => {
+  if (action.type === 'eventFromServer') {
+    return handleEventFromServer(state, action);
+  }
   console.debug(`action: ${action.type}`, action.payload);
   if (action.type === 'panesChange') {
     return handleOpenedChannels(state, action);

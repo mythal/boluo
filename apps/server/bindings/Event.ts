@@ -3,6 +3,6 @@ import type { EventBody } from './EventBody';
 
 export interface Event {
   mailbox: string;
-  timestamp: bigint;
+  timestamp: number;
   body: EventBody;
 }

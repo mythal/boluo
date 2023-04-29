@@ -3,8 +3,8 @@ import { atomFamily, selectAtom } from 'jotai/utils';
 import { byPos } from '../sort';
 import { ChatItem, MessageItem, PreviewItem } from '../types/chat-items';
 import { ChannelState, makeInitialChannelState } from './channel';
-import { ChatSpaceState } from './chat';
 import { chatAtom } from './chat.atoms';
+import { ChatSpaceState } from './chat.reducer';
 
 export interface ChatListState {
   channelState: ChannelState;

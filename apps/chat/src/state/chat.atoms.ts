@@ -5,8 +5,8 @@ import { useSetAtom } from 'jotai';
 import { atomWithReducer, selectAtom } from 'jotai/utils';
 import { PING, PONG } from '../const';
 import { makeAction } from './actions';
-import { chatReducer, ChatSpaceState, initialChatState } from './chat';
-import { ChatActionUnion, eventToChatAction, makeChatAction } from './chat.actions';
+import { ChatActionUnion, makeChatAction } from './chat.actions';
+import { chatReducer, ChatSpaceState, initialChatState } from './chat.reducer';
 
 export const chatAtom = atomWithReducer<ChatSpaceState, ChatActionUnion>(initialChatState, chatReducer);
 
@@ -34,18 +34,21 @@ export const connectionStateAtom = selectAtom(chatAtom, (chatState) => chatState
 
 store.sub(connectionStateAtom, () => {
   const connectionState = store.get(connectionStateAtom);
-  if (connectionState.type !== 'CLOSED') {
+  if (connectionState.type !== 'CLOSED') return;
+  if (connectionState.countdown > 0) {
+    setTimeout(() => store.set(chatAtom, makeAction('reconnectCountdownTick', {}, undefined)), 1000);
     return;
   }
   const { spaceId: mailboxId } = store.get(chatAtom).context;
   console.debug(`establish new connection for ${mailboxId}`);
   store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
+
   const newConnection = createMailboxConnection(store.get(webSocketUrlAtom), mailboxId);
   newConnection.onopen = (_) => {
     store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }, undefined));
   };
   newConnection.onclose = (_) => {
-    store.set(chatAtom, makeAction('connectionClosed', { mailboxId }, undefined));
+    store.set(chatAtom, makeAction('connectionClosed', { mailboxId, random: Math.random() }, undefined));
   };
   newConnection.onmessage = (message: MessageEvent<unknown>) => {
     const raw = message.data;
@@ -53,9 +56,7 @@ store.sub(connectionStateAtom, () => {
       newConnection.send(PONG);
       return;
     }
-    if (!raw || typeof raw !== 'string' || raw === PONG) {
-      return;
-    }
+    if (!raw || typeof raw !== 'string' || raw === PONG) return;
 
     let event: unknown = null;
     try {
@@ -63,13 +64,7 @@ store.sub(connectionStateAtom, () => {
     } catch {
       return;
     }
-    if (!isServerEvent(event)) {
-      return;
-    }
-    const action = eventToChatAction(event);
-    if (!action) {
-      return;
-    }
-    store.set(chatAtom, action);
+    if (!isServerEvent(event)) return;
+    store.set(chatAtom, makeAction('eventFromServer', event, undefined));
   };
 });

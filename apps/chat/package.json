@@ -14,6 +14,7 @@
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^7.0.2",
     "@dnd-kit/utilities": "^3.2.1",
+    "@floating-ui/react": "^0.23.1",
     "api": "0.0.0",
     "boring-avatars": "0.0.0",
     "clsx": "^1.2.1",

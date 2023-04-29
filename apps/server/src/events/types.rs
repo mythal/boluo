@@ -96,6 +96,7 @@ pub enum EventBody {
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     pub mailbox: Uuid,
+    #[ts(type = "number")]
     pub timestamp: i64,
     pub body: EventBody,
 }

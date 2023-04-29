@@ -1,6 +1,6 @@
 import { useMe } from 'common';
 import { LogOut, Settings, User } from 'icons';
-import { useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { FC, useTransition } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -8,6 +8,7 @@ import { Button } from 'ui';
 import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { useChatPaneDispatch } from '../../state/chat-view';
+import { devMode as devModeAtom } from '../../state/dev.atoms';
 import { localeAtom } from '../../state/locale';
 import { makePane } from '../../types/chat-pane';
 import { ClosePaneButton } from '../ClosePaneButton';
@@ -92,6 +93,7 @@ const AccountFields = () => {
 
 export const PaneSettings: FC = () => {
   const me = useMe();
+  const [devMode, setDevMode] = useAtom(devModeAtom);
   return (
     <PaneBox>
       <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
@@ -108,6 +110,14 @@ export const PaneSettings: FC = () => {
           {me && <ExpandDiceField />}
         </div>
         {me && <AccountFields />}
+        <div>
+          <SectionTitle>Developer Mode</SectionTitle>
+          <div>
+            <Button data-type="switch" data-on={devMode} onClick={() => setDevMode(!devMode)}>
+              Turn On Developer Mode
+            </Button>
+          </div>
+        </div>
       </PaneBodyBox>
     </PaneBox>
   );

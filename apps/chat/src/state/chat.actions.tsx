@@ -12,11 +12,14 @@ export type ChatActionMap = {
   messageEdited: { message: Message; channelId: string };
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };
-  connectionClosed: { mailboxId: string };
+  reconnectCountdownTick: { immediately?: boolean };
+  connectionClosed: { mailboxId: string; random: number };
+  debugCloseConnection: { countdown: number };
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
   messagePreview: { channelId: string; preview: Preview };
   messageDeleted: { channelId: string; messageId: string };
+  eventFromServer: ServerEvent;
 };
 
 export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;

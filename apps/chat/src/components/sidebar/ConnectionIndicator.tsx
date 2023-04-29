@@ -13,6 +13,7 @@ import { useAtomValue } from 'jotai';
 import { FC, useState } from 'react';
 import { Spinner } from 'ui';
 import { connectionStateAtom } from '../../state/chat.atoms';
+import { BaseUrlSelector } from './BaseUrlSelector';
 import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
 import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
 import { ConnectionIndicatorConnecting } from './ConnectionIndicatorConnecting';
@@ -68,6 +69,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
             {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
             {connectionState.type === 'CLOSED' && <ConnectionIndicatorClosed countdown={connectionState.countdown} />}
+            <BaseUrlSelector />
           </div>
         </FloatingPortal>
       )}

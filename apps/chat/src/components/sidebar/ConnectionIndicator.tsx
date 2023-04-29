@@ -62,7 +62,8 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
             className={clsx(
-              'border border-pin-surface-800 bg-pin-surface-700 text-pin-surface-100',
+              'border border-surface-400 bg-surface-100',
+              'flex flex-col gap-4',
               'w-[max-content] px-4 py-2 rounded shadow-lg',
             )}
           >

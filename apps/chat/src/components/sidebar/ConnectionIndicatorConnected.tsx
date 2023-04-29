@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { Button } from 'ui';
 import { useChatDispatch } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
 import { TooltipButton } from './TooltipButton';
@@ -21,9 +22,9 @@ export const ConnectionIndicatorConnected: FC<Props> = ({}) => {
       </div>
       {isDevMode && (
         <div className="mt-2">
-          <TooltipButton onClick={disconnect}>
+          <Button data-small onClick={disconnect}>
             <FormattedMessage defaultMessage="Disconnect" />
-          </TooltipButton>
+          </Button>
         </div>
       )}
     </div>

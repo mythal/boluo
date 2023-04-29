@@ -14,9 +14,9 @@ export const EntityExprRepeat: FC<Props> = ({ node: repeat }) => {
   }
   if ('value' in repeat) {
     const xs = repeat.evaluated.map((node, key) => <EntityExprNode key={key} node={node} />);
-    return <div className="inline-flex gap-1">[{xs}]={repeat.value}</div>;
+    return <div className="inline-flex flex-wrap gap-1">[{xs}]={repeat.value}</div>;
   } else {
     const xs = Array(count).fill(0).map((_, key) => <EntityExprNode key={key} node={node} />);
-    return <div className="inline-flex gap-1">[{xs}]</div>;
+    return <div className="inline-flex flex-wrap gap-1">[{xs}]</div>;
   }
 };

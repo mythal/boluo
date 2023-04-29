@@ -58,7 +58,7 @@ export const Content = memo<Props>(({
     });
   }, [cursorNode, entities, rng, source]);
   return (
-    <div ref={ref} className={clsx('h-full break-all whitespace-pre-wrap relative', self ? 'pb-12' : '')}>
+    <div ref={ref} className={clsx('h-full break-all whitespace-pre-wrap relative pr-6', self ? 'pb-12' : '')}>
       {isAction && <span className="mr-1 text-surface-400">*</span>}
       {isAction && nameNode}
       {entityNodeList}

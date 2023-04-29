@@ -10,9 +10,7 @@ export const ConnectionIndicatorConnecting: FC<Props> = ({}) => {
   const isDevMode = useAtomValue(devMode);
   return (
     <div>
-      <div>
-        <FormattedMessage defaultMessage="Connecting" />
-      </div>
+      <FormattedMessage defaultMessage="Connecting" />
     </div>
   );
 };

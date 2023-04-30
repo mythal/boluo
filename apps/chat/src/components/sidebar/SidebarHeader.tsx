@@ -28,7 +28,7 @@ export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
       >
         {isExpanded ? <ChevronLeft /> : <ChevronRight />}
       </button>
-      {isExpanded && <ConnectionIndicatior />}
+      {isExpanded && <ConnectionIndicatior className="p-2 border rounded bg-surface-50 cursor-pointer" />}
     </div>
   );
 };

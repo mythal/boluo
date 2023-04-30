@@ -22,7 +22,7 @@ export const EntityLink: FC<Props> = ({ source, entity, cursorNode }) => {
   const childEnd = childStart + entity.child.len;
   return (
     <a target="_blank" title={title} href={href} className="underline underline-offset-2">
-      <EntityText cursorNode={cursorNode} source={source.substring(childStart, childEnd)} entity={entity.child} />
+      <EntityText cursorNode={cursorNode} source={source} entity={entity.child} />
       <ExternalLink className="inline" />
     </a>
   );

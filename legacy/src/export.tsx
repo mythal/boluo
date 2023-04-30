@@ -2,7 +2,7 @@ import Prando from 'prando';
 import { ChannelMemberWithUser } from './api/channels';
 import { Message } from './api/messages';
 import { mediaUrl } from './api/request';
-import { ExportEntity } from './interpreter/entities';
+import { ExportEntity, fromLegacyEntity } from './interpreter/entities';
 import { evaluate, makeRng, nodeToText } from './interpreter/eval';
 import { genColor } from './utils/game';
 import { parseDateString } from './utils/helper';
@@ -73,20 +73,21 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
     const rng = makeRng(seed);
     const exportEntities: ExportEntity[] = !rng
       ? []
-      : entities.map((entity) => {
+      : entities.map((item) => {
+        const entity = 'offset' in item ? fromLegacyEntity(item) : item;
         if (entity.type === 'Expr') {
-          const { type, start, offset } = entity;
+          const { type, start, len } = entity;
           const node = evaluate(entity.node, rng);
           return {
             type,
             start,
-            offset,
+            len,
             node,
             exprText: nodeToText(node),
-            text: text.substr(start, offset).trimRight(),
+            text: text.substr(start, len).trimRight(),
           };
         } else {
-          return { ...entity, text: text.substr(entity.start, entity.offset) };
+          return { ...entity, text: text.substr(entity.start, entity.len) };
         }
       });
     let whisperTo: ExportMessage['whisperTo'] = null;
@@ -156,7 +157,7 @@ function entityBbCode(entity: ExportEntity, color: string): string {
     case 'Expr':
       return `[tt]{${entity.exprText}}[/tt]`;
     default:
-      return `[不支持 (${entity.text})]`;
+      return `[不支持]`;
   }
 }
 function entityMarkdown(entity: ExportEntity): string {
@@ -176,7 +177,7 @@ function entityMarkdown(entity: ExportEntity): string {
     case 'Expr':
       return `{${entity.exprText}}`;
     default:
-      return `[不支持 (${entity.text})]`;
+      return `[不支持]`;
   }
 }
 

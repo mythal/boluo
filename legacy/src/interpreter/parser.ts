@@ -13,7 +13,6 @@ import {
   Link,
   Num,
   Operator,
-  Repeat,
   Roll,
   Strong,
   SubExpr,
@@ -156,7 +155,7 @@ const regex = (pattern: RegExp): P<RegExpMatchArray> =>
       return null;
     }
     const matched = match[0];
-    rest = rest.substr(matched.length);
+    rest = rest.substring(matched.length);
     return [match, { text, rest }];
   });
 
@@ -165,11 +164,16 @@ const regex = (pattern: RegExp): P<RegExpMatchArray> =>
 const EM_REGEX = /^\*(.+?)\*/;
 
 const emphasis: P<Entity> = regex(EM_REGEX).then(([match, { text, rest }]) => {
-  const [entire, content] = match;
+  const [entire, content = ''] = match;
   const entity: Emphasis = {
     type: 'Emphasis',
-    start: text.length + entire.indexOf(content),
-    offset: content.length,
+    start: text.length,
+    len: entire.length,
+    child: {
+      type: 'Text',
+      start: text.length + entire.indexOf(content),
+      len: content.length,
+    },
   };
   text += entire;
   return [entity, { text, rest }];
@@ -177,11 +181,16 @@ const emphasis: P<Entity> = regex(EM_REGEX).then(([match, { text, rest }]) => {
 
 const CODE_REGEX = /^`(.+?)`/;
 const code: P<Entity> = regex(CODE_REGEX).then(([match, { text, rest }]) => {
-  const [entire, content] = match;
+  const [entire, content = ''] = match;
   const entity: Code = {
     type: 'Code',
-    start: text.length + entire.indexOf(content),
-    offset: content.length,
+    start: text.length,
+    child: {
+      type: 'Text',
+      start: text.length + entire.indexOf(content),
+      len: content.length,
+    },
+    len: entire.length,
   };
   text += entire;
   return [entity, { text, rest }];
@@ -189,11 +198,16 @@ const code: P<Entity> = regex(CODE_REGEX).then(([match, { text, rest }]) => {
 
 const CODE_BLOCK_REGEX = /^```\n?([\s\S]*?)\n?```\s*/;
 const codeBlock: P<Entity> = regex(CODE_BLOCK_REGEX).then(([match, { text, rest }]) => {
-  const [entire, content] = match;
+  const [entire, content = ''] = match;
   const entity: CodeBlock = {
     type: 'CodeBlock',
-    start: text.length + entire.indexOf(content),
-    offset: content.length,
+    start: text.length,
+    len: entire.length,
+    child: {
+      type: 'Text',
+      start: text.length + entire.indexOf(content),
+      len: content.length,
+    },
   };
   text += entire;
   return [entity, { text, rest }];
@@ -202,11 +216,16 @@ const codeBlock: P<Entity> = regex(CODE_BLOCK_REGEX).then(([match, { text, rest 
 const STRONG_REGEX = /^\*\*(.+?)\*\*/;
 
 const strong: P<Entity> = regex(STRONG_REGEX).then(([match, { text, rest }]) => {
-  const [entire, content] = match;
+  const [entire, content = ''] = match;
   const entity: Strong = {
     type: 'Strong',
-    start: text.length + entire.indexOf(content),
-    offset: content.length,
+    start: text.length,
+    len: entire.length,
+    child: {
+      type: 'Text',
+      start: text.length + entire.indexOf(content),
+      len: content.length,
+    },
   };
   text += entire;
   return [entity, { text, rest }];
@@ -218,9 +237,17 @@ const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
   const entity: Link = {
     type: 'Link',
-    href: content,
+    child: {
+      type: 'Text',
+      start: text.length,
+      len: content.length,
+    },
+    href: {
+      start: text.length,
+      len: content.length,
+    },
     start: text.length,
-    offset: content.length,
+    len: content.length,
   };
   text += content;
   return [entity, { text, rest }];
@@ -237,20 +264,40 @@ const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   const entity: Text = {
     type: 'Text',
     start: text.length,
-    offset,
+    len: offset,
   };
   text += content;
   return [entity, { text, rest }];
 });
 
-const LINK_REGEX = /^\[(.+?)]\((.+?)\)/;
+const LINK_REGEX = /^\[(.+?)]\(([^)]+?)\)/;
 const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
-  const [entire, content, url] = match;
+  const [entire, content = '', link = ''] = match;
+  let href: Link['href'];
+  if (link.length === 0) {
+    href = link;
+  } else {
+    try {
+      new URL(link);
+      href = {
+        start: text.length + entire.lastIndexOf(link),
+        len: link.length,
+      };
+    } catch {
+      href = `http://${link}`;
+    }
+  }
+
   const entity: Link = {
     type: 'Link',
-    start: text.length + entire.indexOf(content),
-    offset: content.length,
-    href: url,
+    start: text.length,
+    len: entire.length,
+    child: {
+      type: 'Text',
+      start: text.length + entire.indexOf(content),
+      len: content.length,
+    },
+    href,
   };
   text += entire;
   return [entity, { text, rest }];
@@ -370,7 +417,7 @@ const str = (s: string, appendText = false): P<string> =>
     if (!rest.startsWith(s)) {
       return null;
     }
-    rest = rest.substr(s.length);
+    rest = rest.substring(s.length);
     if (appendText) {
       text += s;
     }
@@ -473,7 +520,7 @@ const atom = (disableRoll = false): P<ExprNode> => {
 
 const repeat = (): P<ExprNode> =>
   regex(/^(\d{1,2})#/).then(([match, state], env) => {
-    const count = parseInt(match[1]);
+    const count = parseInt(match[1]!);
     if (count === 0) {
       return null;
     }
@@ -520,7 +567,7 @@ const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], e
   const entity: Expr = {
     type: 'Expr',
     start: text.length,
-    offset: entire.length,
+    len: entire.length,
     node,
   };
   return [entity, { text: text + entire, rest }];
@@ -528,11 +575,11 @@ const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], e
 
 const exprNodeToEntity = (state: State) => ([node, next]: [ExprNode, State]): [Entity, State] => {
   const offset = state.rest.length - next.rest.length;
-  const consumed = state.rest.substr(0, offset);
+  const consumed = state.rest.substring(0, offset);
   const entity: Expr = {
     type: 'Expr',
     start: state.text.length,
-    offset,
+    len: offset,
     node,
   };
   return [entity, { text: state.text + consumed, rest: next.rest }];
@@ -545,11 +592,11 @@ const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl,
 const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
 
 const rollCommand: P<Entity[]> = new P((state, env) => {
-  const prefix = state.rest.match(ROLL_COMMAND);
+  const prefix = ROLL_COMMAND.exec(state.rest);
   if (!prefix) {
     return null;
   }
-  const next: State = { text: '.r ', rest: state.rest.substr(prefix[0].length) };
+  const next: State = { text: '.r ', rest: state.rest.substring(prefix[0].length) };
   const exprEntity = new P((state, env) => {
     const result = expr().run(state, env);
     if (result === null) {
@@ -569,9 +616,9 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
     entities.push(entity);
     return entities;
   } else {
-    const last = entities[entities.length - 1];
+    const last = entities[entities.length - 1]!;
     if (last.type === 'Text') {
-      last.offset += entity.offset;
+      last.len += entity.len;
     } else {
       entities.push(entity);
     }
@@ -587,9 +634,9 @@ export interface ParseResult {
 const SKIP_HEAD = /^[.。]me\s*/;
 
 const initState = (source: string): State => {
-  const skipHead = source.match(SKIP_HEAD);
+  const skipHead = SKIP_HEAD.exec(source);
   if (skipHead) {
-    return { text: skipHead[0], rest: source.substr(skipHead[0].length) };
+    return { text: skipHead[0], rest: source.substring(skipHead[0].length) };
   }
   return { text: '', rest: source };
 };

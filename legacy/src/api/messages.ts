@@ -1,4 +1,5 @@
 import { Entity } from '../interpreter/entities';
+import { LegacyEntity } from '../interpreter/legacy-entities';
 import { Id } from '../utils/id';
 
 export interface Message {
@@ -18,7 +19,7 @@ export interface Message {
   folded: boolean;
   text: string;
   whisperToUsers: Id[] | null;
-  entities: Entity[];
+  entities: Array<Entity> | Array<LegacyEntity>;
   created: string;
   modified: string;
   pos: number;

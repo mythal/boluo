@@ -24,7 +24,7 @@ function PreviewItem({ preview }: Props) {
 
   if (text === null) {
     text = '……（预览广播已关闭）……';
-    entities = [{ type: 'Text', start: 0, offset: text.length }];
+    entities = [{ type: 'Text', start: 0, len: text.length }];
     isAction = true;
   }
 

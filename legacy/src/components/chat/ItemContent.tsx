@@ -1,8 +1,9 @@
 import styled from '@emotion/styled';
 import Prando from 'prando';
 import * as React from 'react';
-import { Entity } from '../../interpreter/entities';
+import { Entity, fromLegacyEntity } from '../../interpreter/entities';
 import { makeRng } from '../../interpreter/eval';
+import { LegacyEntity } from '../../interpreter/legacy-entities';
 import { fontMono, link } from '../../styles/atoms';
 import { white } from '../../styles/colors';
 import { Code } from '../atoms/Code';
@@ -12,7 +13,7 @@ import { codeBlockStyle } from './styles';
 
 interface Props {
   text: string;
-  entities: Entity[];
+  entities: Array<Entity> | Array<LegacyEntity>;
   seed?: number[];
 }
 
@@ -38,7 +39,8 @@ function ItemContent({ text, entities, seed }: Props) {
   let rng: Prando | undefined = undefined;
 
   for (let key = 0; key < entities.length; key += 1) {
-    const entity = entities[key];
+    const item = entities[key];
+    const entity = 'offset' in item ? fromLegacyEntity(item) : item;
     if (entity.type === 'Expr') {
       rng = rng ?? makeRng(seed);
       content.push(
@@ -47,23 +49,24 @@ function ItemContent({ text, entities, seed }: Props) {
         </Expr>,
       );
     } else if (entity.type === 'Text') {
-      content.push(<Text key={key}>{text.substr(entity.start, entity.offset)}</Text>);
+      content.push(<Text key={key}>{text.substr(entity.start, entity.len)}</Text>);
     } else if (entity.type === 'Link') {
+      const href = typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len);
       content.push(
-        <ExternalLink css={link} key={key} to={entity.href}>
-          {text.substr(entity.start, entity.offset)}
+        <ExternalLink css={link} key={key} to={href}>
+          {text.substr(entity.child.start, entity.child.len)}
         </ExternalLink>,
       );
     } else if (entity.type === 'Strong') {
-      content.push(<Strong key={key}>{text.substr(entity.start, entity.offset)}</Strong>);
+      content.push(<Strong key={key}>{text.substr(entity.child.start, entity.child.len)}</Strong>);
     } else if (entity.type === 'Emphasis') {
-      content.push(<Emphasis key={key}>{text.substr(entity.start, entity.offset)}</Emphasis>);
+      content.push(<Emphasis key={key}>{text.substr(entity.child.start, entity.child.len)}</Emphasis>);
     } else if (entity.type === 'Code') {
-      content.push(<Code key={key}>{text.substr(entity.start, entity.offset)}</Code>);
+      content.push(<Code key={key}>{text.substr(entity.child.start, entity.child.len)}</Code>);
     } else if (entity.type === 'CodeBlock') {
       content.push(
         <pre css={codeBlockStyle} key={key}>
-          {text.substr(entity.start, entity.offset)}
+          {text.substr(entity.child.start, entity.child.len)}
         </pre>,
       );
     }

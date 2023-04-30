@@ -21,7 +21,7 @@ export const SpaceChatView: FC<Props> = ({ space, panes }) => {
   }, [panes]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex view-height">
       <Sidebar
         className="flex flex-col h-full flex-none border-r border-surface-300"
         key={space.id}

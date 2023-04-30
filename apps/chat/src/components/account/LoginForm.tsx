@@ -39,6 +39,8 @@ const UsernameField = () => {
         <TextInput
           className="w-full"
           id={id}
+          autoCapitalize="off"
+          autoCorrect="off"
           autoComplete="username"
           data-state={error ? 'error' : 'default'}
           {...register('username', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}

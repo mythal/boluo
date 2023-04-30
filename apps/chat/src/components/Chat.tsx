@@ -24,7 +24,7 @@ const Chat: FC = () => {
     <ChatErrorBoundary>
       <Suspense
         fallback={
-          <div className="w-screen h-screen">
+          <div className="w-screen view-height">
             <Loading />
           </div>
         }

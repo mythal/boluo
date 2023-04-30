@@ -15,3 +15,4 @@ RUN npm run build
 FROM nginx AS runner
 WORKDIR /usr/share/nginx/html
 COPY --from=builder /app/dist/ .
+COPY ./legacy/nginx.conf /etc/nginx/conf.d/default.conf

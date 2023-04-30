@@ -2,6 +2,7 @@ import {
   autoUpdate,
   FloatingPortal,
   safePolygon,
+  useClick,
   useDismiss,
   useFloating,
   useHover,
@@ -10,7 +11,7 @@ import {
 import clsx from 'clsx';
 import { Cloud, CloudOff } from 'icons';
 import { useAtomValue } from 'jotai';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Spinner } from 'ui';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { BaseUrlSelector } from './BaseUrlSelector';
@@ -23,39 +24,34 @@ interface Props {
 }
 
 export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const connectionState = useAtomValue(connectionStateAtom);
+  const [isPopoverOpen, setPopoverOpen] = useState(false);
   const { x, y, strategy, refs, context } = useFloating({
-    open: connectionState.type === 'CONNECTED' ? isOpen : true,
+    open: connectionState.type === 'CONNECTED' ? isPopoverOpen : true,
     strategy: 'fixed',
     placement: 'bottom-start',
-    onOpenChange: setIsOpen,
+    onOpenChange: setPopoverOpen,
     whileElementsMounted: autoUpdate,
   });
+  useEffect(() => {
+    setPopoverOpen(connectionState.type !== 'CONNECTED');
+  }, [connectionState.type]);
 
-  const hover = useHover(context, {
-    enabled: connectionState.type === 'CONNECTED',
-    delay: {
-      close: 1000,
-    },
-    handleClose: safePolygon(),
-  });
+  const click = useClick(context, {});
 
-  const dismiss = useDismiss(context, { enabled: connectionState.type === 'CONNECTED' });
+  const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([
-    hover,
+    click,
     dismiss,
   ]);
   return (
     <>
       <div className={className} ref={refs.setReference} {...getReferenceProps()}>
-        <button className="p-1">
-          {connectionState.type === 'CLOSED' && <CloudOff />}
-          {connectionState.type === 'CONNECTING' && <Spinner />}
-          {connectionState.type === 'CONNECTED' && <Cloud />}
-        </button>
+        {connectionState.type === 'CLOSED' && <CloudOff />}
+        {connectionState.type === 'CONNECTING' && <Spinner />}
+        {connectionState.type === 'CONNECTED' && <Cloud />}
       </div>
-      {isOpen && (
+      {isPopoverOpen && (
         <FloatingPortal>
           <div
             ref={refs.setFloating}
@@ -64,7 +60,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             className={clsx(
               'border border-surface-400 bg-surface-100',
               'flex flex-col gap-4',
-              'w-[max-content] px-4 py-2 rounded shadow-lg',
+              'w-[max-content] px-4 py-4 rounded shadow-lg',
             )}
           >
             {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}

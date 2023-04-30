@@ -4,7 +4,6 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
 import { useChatDispatch } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
-import { TooltipButton } from './TooltipButton';
 
 interface Props {
 }
@@ -17,7 +16,7 @@ export const ConnectionIndicatorConnected: FC<Props> = ({}) => {
   };
   return (
     <div>
-      <div>
+      <div className="font-bold">
         <FormattedMessage defaultMessage="Connected" />
       </div>
       {isDevMode && (

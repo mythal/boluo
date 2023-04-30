@@ -50,7 +50,7 @@ export const Sidebar: FC<Props> = ({ space, panes, className }) => {
             )
             : (
               <div className="flex flex-col items-center py-2">
-                <ConnectionIndicatior className="p-2" />
+                <ConnectionIndicatior className="p-2 border rounded cursor-pointer" />
               </div>
             )}
 

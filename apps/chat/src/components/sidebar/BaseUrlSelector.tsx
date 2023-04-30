@@ -21,14 +21,17 @@ export const BaseUrlSelector: FC<Props> = () => {
   const [apiUrl, changApiUrl] = useAtom(apiUrlAtom);
   const [delay, setDelay] = useState<number | 'ERROR' | 'LOADING'>('LOADING');
   useEffect(() => {
-    const base = new Date().getTime();
-    setDelay('LOADING');
-    get(apiUrl, '/users/get_me', null).then(() => {
-      const now = new Date().getTime();
-      setDelay(now - base);
-    }).catch(() => {
-      setDelay('ERROR');
-    });
+    const handle = window.setInterval(() => {
+      const base = new Date().getTime();
+      setDelay('LOADING');
+      get(apiUrl, '/users/get_me', null).then(() => {
+        const now = new Date().getTime();
+        setDelay(now - base);
+      }).catch(() => {
+        setDelay('ERROR');
+      });
+    }, 1000);
+    return () => window.clearInterval(handle);
   }, [apiUrl]);
   return (
     <div>
@@ -37,7 +40,7 @@ export const BaseUrlSelector: FC<Props> = () => {
         <div className="text-surface-900">
           <Select items={items} value={apiUrl} onChange={changApiUrl} />
         </div>
-        <div>
+        <div className="text-sm">
           <FormattedMessage defaultMessage="Delay" />: {delay === 'LOADING' && '...'}
           {delay === 'ERROR' && <FormattedMessage defaultMessage="Failed to connect" />}
           {typeof delay === 'number' && <span>{delay}</span>}

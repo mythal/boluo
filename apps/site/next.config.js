@@ -18,7 +18,6 @@ const config = {
   transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
     appDir: true,
-    typedRoutes: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
   env: {

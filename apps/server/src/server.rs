@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]
-#![feature(once_cell)]
 
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};

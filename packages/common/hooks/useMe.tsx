@@ -20,5 +20,5 @@ export const MeProvider: FC<{ initialMe?: GetMe | null; children: ReactNode }> =
       }
       : {},
   );
-  return <MeContext.Provider value={data}>{children}</MeContext.Provider>;
+  return <MeContext.Provider value={data ?? null}>{children}</MeContext.Provider>;
 };

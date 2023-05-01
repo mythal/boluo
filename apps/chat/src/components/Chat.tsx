@@ -6,6 +6,7 @@ import { ChatViewState, PaneProvider, useChatViewState } from '../state/chat-vie
 import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
 import { ChatRoot } from './ChatRoot';
+import { ChatSkeleton } from './ChatSkeleton';
 import { SpaceChatView } from './SpaceChatView';
 
 const SpaceChat: FC<{
@@ -24,9 +25,9 @@ const Chat: FC = () => {
     <ChatErrorBoundary>
       <Suspense
         fallback={
-          <div className="w-screen view-height">
+          <ChatSkeleton>
             <Loading />
-          </div>
+          </ChatSkeleton>
         }
       >
         <PaneProvider dispatch={dispatch} focused={focused}>

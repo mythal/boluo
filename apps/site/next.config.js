@@ -18,7 +18,17 @@ const config = {
   transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
     appDir: true,
+    typedRoutes: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
+    swcPlugins: [
+      [
+        '@formatjs/swc-plugin-experimental',
+        {
+          ast: true,
+          idInterpolationPattern: '[sha512:contenthash:base64:6]',
+        },
+      ],
+    ],
   },
   env: {
     PUBLIC_API_URL: process.env.PUBLIC_API_URL,

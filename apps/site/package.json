@@ -25,7 +25,7 @@
     "jotai": "^2.0.1",
     "lang": "*",
     "logo": "*",
-    "next": "^13.1.1",
+    "next": "canary",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.41.3",
@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.7",
+    "@formatjs/swc-plugin-experimental": "^0.3.6",
     "@jest/types": "^29.3.1",
     "@mdx-js/loader": "^2.2.1",
     "@mdx-js/react": "^2.2.1",

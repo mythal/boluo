@@ -322,8 +322,11 @@ export const useChatViewState = (): UseChatViewStateReturn => {
 
   useEffect(() => {
     if (route.type === 'SPACE') {
-      const panesPart = encodeURIComponent(JSON.stringify(panesToPaneDataList(panes)));
-      const newHash = `${route.spaceId}/${panesPart}`;
+      let panesPart = '';
+      if (panes.length > 0) {
+        panesPart = '/' + encodeURIComponent(JSON.stringify(panesToPaneDataList(panes)));
+      }
+      const newHash = `${route.spaceId}${panesPart}`;
       window.location.hash = newHash;
     }
     const listener = (e: HashChangeEvent) => {

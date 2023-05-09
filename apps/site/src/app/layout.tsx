@@ -1,7 +1,16 @@
 import type { ReactNode } from 'react';
 import 'ui/tailwind.css';
+import { Metadata } from 'next';
 import { ClientProviders } from '../components/global/Providers';
-import { getLocale, getMe, getMessages, getTheme } from '../server';
+import { getIntl, getLocale, getMe, getMessages, getTheme } from '../server';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const intl = await getIntl();
+  return {
+    title: intl.formatMessage({ defaultMessage: 'Boluo ' }),
+    colorScheme: 'dark light',
+  };
+}
 
 export default async function RootLayout({
   children,

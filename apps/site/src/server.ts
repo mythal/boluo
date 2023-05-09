@@ -93,15 +93,6 @@ export const getIntl = cache(async (): Promise<IntlShape<string>> => {
   });
 });
 
-export const getIntlSync = (): IntlShape<string> => {
-  const locale = getLocaleFromHeaders();
-  const messages = getMessages(locale);
-  return createIntl({
-    locale,
-    messages,
-  });
-};
-
 export const title = (intl: IntlShape<string>, prefix: string): string => {
   return prefix + ' - ' + intl.formatMessage({ defaultMessage: 'Boluo' });
 };

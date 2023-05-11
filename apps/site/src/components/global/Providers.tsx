@@ -3,10 +3,10 @@
 import type { GetMe } from 'api';
 import { MeProvider } from 'common';
 import { IntlMessages, Locale } from 'common/locale';
-import { store } from 'common/store';
 import { Provider as JotaiProvider } from 'jotai';
 import type { FC } from 'react';
 import { useEffect } from 'react';
+import { store } from 'store';
 import { SWRConfig } from 'swr';
 import { clearWatchSystemTheme, watchSystemTheme } from 'ui/theme';
 import type { ChildrenProps } from 'utils';

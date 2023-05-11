@@ -13,7 +13,6 @@
   "license": "GPL-3.0",
   "dependencies": {
     "server-bindings": "*",
-    "store": "0.0.0",
     "tsconfig": "*",
     "tslib": "^2.4.1",
     "utils": "*"

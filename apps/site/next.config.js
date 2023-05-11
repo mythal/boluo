@@ -15,7 +15,7 @@ const config = {
     dirs: ['src', 'tests'],
   },
   output: 'standalone',
-  transpilePackages: ['ui', 'chat', 'common', 'store'],
+  transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
     appDir: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),

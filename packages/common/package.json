@@ -16,8 +16,8 @@
     "jotai": "^2.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "swr": "^2.1.0",
-    "react-intl": "^6.2.10"
+    "react-intl": "^6.2.10",
+    "swr": "^2.1.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
@@ -34,6 +34,7 @@
     "utils": "0.0.0"
   },
   "dependencies": {
+    "api-browser": "0.0.0",
     "clsx": "^1.2.1",
     "icons": "*"
   }

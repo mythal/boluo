@@ -23,7 +23,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     const settings: Settings = { theme };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.unwrapOr({});
-  }, [patch]);
+  }, []);
   const { trigger } = useSWRMutation('/users/settings', updater, {
     populateCache: identity,
     revalidate: false,

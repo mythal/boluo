@@ -1,5 +1,5 @@
-import { store } from 'common/store';
 import { atomFamily, selectAtom } from 'jotai/utils';
+import { store } from 'store';
 import { byPos } from '../sort';
 import { ChatItem, MessageItem, PreviewItem } from '../types/chat-items';
 import { ChannelState, makeInitialChannelState } from './channel';

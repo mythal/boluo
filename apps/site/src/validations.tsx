@@ -1,8 +1,8 @@
 import { get } from 'api';
 import { apiUrlAtom } from 'common';
-import { store } from 'common/store';
 import type { RegisterOptions } from 'react-hook-form';
 import type { IntlShape } from 'react-intl';
+import { store } from 'store';
 
 export const required = (intl: IntlShape) => ({
   required: intl.formatMessage({ defaultMessage: "Can't be empty." }),

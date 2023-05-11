@@ -1,9 +1,9 @@
 import { isServerEvent } from 'api';
 import { apiUrlAtom } from 'common';
 import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
-import { store } from 'common/store';
 import { useSetAtom } from 'jotai';
 import { atomWithReducer, selectAtom } from 'jotai/utils';
+import { store } from 'store';
 import { PING, PONG } from '../const';
 import { makeAction } from './actions';
 import { ChatActionUnion, makeChatAction } from './chat.actions';

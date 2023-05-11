@@ -1,4 +1,4 @@
-import { store } from 'common/store';
+import { store } from 'store';
 import { ChatAction, ChatActionUnion } from './chat.actions';
 import { chatAtom } from './chat.atoms';
 import { ChatReducerContext } from './chat.reducer';

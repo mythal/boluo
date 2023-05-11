@@ -31,6 +31,7 @@
     "react-hook-form": "^7.41.3",
     "react-intl": "^6.2.5",
     "server-only": "^0.0.1",
+    "store": "0.0.0",
     "swr": "^2.0.0",
     "tslib": "^2.4.1",
     "ui": "*",

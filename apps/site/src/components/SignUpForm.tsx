@@ -1,6 +1,6 @@
 'use client';
 import type { ApiError } from 'api';
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
@@ -168,7 +168,6 @@ export const SignUpForm = () => {
   const router = useRouter();
   const methods = useForm<Schema>();
   const [error, setError] = useState<ApiError | null>(null);
-  const post = usePost();
 
   const onSubmit: SubmitHandler<Schema> = async ({ password, username, email, nickname }) => {
     const result = await post('/users/register', null, { password, username, email, nickname });

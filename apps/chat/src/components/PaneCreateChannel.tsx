@@ -1,4 +1,4 @@
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import type { FC } from 'react';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -88,7 +88,6 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
   const { mutate } = useSWRConfig();
   const dispatch = useChatPaneDispatch();
   const intl = useIntl();
-  const post = usePost();
   const form = useForm<FormSchema>({
     defaultValues: {
       name: '',

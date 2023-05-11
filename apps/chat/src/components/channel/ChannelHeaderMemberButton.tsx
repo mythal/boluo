@@ -1,4 +1,5 @@
-import { useMe, usePost } from 'common';
+import { post } from 'api-browser';
+import { useMe } from 'common';
 import { UserPlus, UserX } from 'icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -12,7 +13,6 @@ interface Props {
 
 export const ChannelHeaderMemberButton: FC<Props> = ({ channelId }) => {
   const me = useMe();
-  const post = usePost();
   const { mutate } = useSWRConfig();
   const channelMember = useMyChannelMember(channelId);
   const join = async () => {

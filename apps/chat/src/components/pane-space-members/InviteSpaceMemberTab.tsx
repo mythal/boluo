@@ -1,4 +1,4 @@
-import { useGet, usePost } from 'common';
+import { get, post } from 'api-browser';
 import { FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
@@ -12,8 +12,6 @@ interface Props {
 }
 
 export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
-  const get = useGet();
-  const post = usePost();
   const { data: token, mutate } = useSWR(
     ['/spaces/token' as const, spaceId],
     ([path, id]) => get(path, { id }).then(unwrap),
@@ -36,7 +34,7 @@ export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
       const newToken = result.some;
       await mutate(newToken);
     }
-  }, [mutate, post, spaceId]);
+  }, [mutate, spaceId]);
   return (
     <PaneBodyBox className="p-4 max-w-lg flex flex-col gap-4">
       <div>

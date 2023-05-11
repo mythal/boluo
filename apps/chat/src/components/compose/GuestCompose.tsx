@@ -1,4 +1,5 @@
-import { useMe, usePost } from 'common';
+import { post } from 'api-browser';
+import { useMe } from 'common';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
@@ -10,7 +11,6 @@ const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="tex
 
 export const GuestCompose = () => {
   const me = useMe();
-  const post = usePost();
   const channelId = useChannelId();
   const { mutate } = useSWRConfig();
   const join = async () => {

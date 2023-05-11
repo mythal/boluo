@@ -1,7 +1,7 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { GetMe, Member, Message } from 'api';
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import type { Dispatch, FC, MutableRefObject, RefObject, SetStateAction } from 'react';
@@ -162,7 +162,6 @@ const useDndHandles = (
     setOptimisticReorder(null);
   }, [setOptimisticReorder]);
   const resetDragging = useCallback(() => setDraggingItem(null), []);
-  const post = usePost();
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const active = activeRef.current;
@@ -202,7 +201,7 @@ const useDndHandles = (
       }
     }
     setOptimisticReorder(null);
-  }, [setOptimisticReorder, post, channelId, resetDragging]);
+  }, [setOptimisticReorder, channelId, resetDragging]);
 
   const handleDragCancel = useCallback(() => {
     resetDragging();

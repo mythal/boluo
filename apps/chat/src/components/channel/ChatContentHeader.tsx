@@ -1,4 +1,4 @@
-import { useGet } from 'common';
+import { get } from 'api-browser';
 import { CircleNotch } from 'icons';
 import { useStore } from 'jotai';
 import { FC, useEffect, useRef, useState } from 'react';
@@ -18,7 +18,6 @@ export const ChatListHeader: FC = () => {
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
-  const get = useGet();
   const dispatch = useChatDispatch();
   const [isLoading, setIsLoading] = useState(false);
 

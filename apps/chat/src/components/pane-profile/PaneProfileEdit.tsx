@@ -1,5 +1,5 @@
-import { editAvatar, User } from 'api';
-import { useApiUrl, usePost } from 'common';
+import type { User } from 'api';
+import { editAvatar, post } from 'api-browser';
 import { FC, useState } from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
@@ -23,15 +23,13 @@ export interface ProfileEditSchema {
 
 export const PaneProfileEdit: FC<Props> = ({ me, exit }) => {
   const form = useForm<ProfileEditSchema>({ defaultValues: { nickname: me.nickname, avatar: me.avatarId } });
-  const post = usePost();
   const { mutate } = useSWRConfig();
-  const baseUrl = useApiUrl();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const alert = useErrorAlert();
   const onSubmit = async ({ avatar, nickname }: ProfileEditSchema) => {
     setIsSubmitting(true);
     if (avatar instanceof File) {
-      await editAvatar(baseUrl, avatar);
+      await editAvatar(avatar);
     } else if (avatar === null && me.avatarId) {
       (await post('/users/remove_avatar', null, null)).mapErr(alert);
     }

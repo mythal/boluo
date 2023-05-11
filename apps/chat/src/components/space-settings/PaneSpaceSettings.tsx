@@ -1,5 +1,6 @@
 import type { EditSpace, Space } from 'api';
-import { useMe, usePost } from 'common';
+import { post } from 'api-browser';
+import { useMe } from 'common';
 import { Settings } from 'icons';
 import { FC, useCallback } from 'react';
 import { useId } from 'react';
@@ -148,12 +149,11 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const space = useSpace(spaceId);
   const alert = useErrorAlert();
 
-  const post = usePost();
   const updater: MutationFetcher<Space, EditSpace, [string, string]> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
     const space = result.mapErr(alert).unwrap();
     return space;
-  }, [alert, post]);
+  }, [alert]);
   const { trigger: editSpace, isMutating } = useSWRMutation(
     ['/spaces/query', spaceId],
     updater,

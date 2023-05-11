@@ -1,12 +1,11 @@
 import type { SpaceWithRelated } from 'api';
-import { useGet } from 'common';
+import { get } from 'api-browser';
 import useSWR, { useSWRConfig } from 'swr';
 import { unwrap } from 'utils';
 
 const options = { revalidate: false };
 
 export const useSpaceWithRelated = (spaceId: string): SpaceWithRelated => {
-  const get = useGet();
   const { mutate } = useSWRConfig();
   const { data } = useSWR(
     ['/spaces/query_with_related' as const, spaceId],

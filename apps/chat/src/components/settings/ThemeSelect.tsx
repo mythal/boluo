@@ -1,5 +1,6 @@
 'use client';
-import { Settings, useMe, usePatch } from 'common';
+import { patch } from 'api-browser';
+import { Settings, useMe } from 'common';
 import { FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
@@ -17,7 +18,6 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   const me = useMe();
   const theme = useTheme();
   const intl = useIntl();
-  const patch = usePatch();
 
   const updater: MutationFetcher<Settings, Theme, string> = useCallback(async (url: string, { arg: theme }) => {
     const settings: Settings = { theme };

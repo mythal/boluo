@@ -1,5 +1,5 @@
 import { ApiError, Message, User } from 'api';
-import { usePatch, usePost } from 'common';
+import { patch, post } from 'api-browser';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -16,8 +16,6 @@ export const useSend = (me: User) => {
   const store = useStore();
   const composeAtom = useComposeAtom();
   const setBanner = useSetBanner();
-  const post = usePost();
-  const patch = usePatch();
   const { nickname } = me;
 
   const send = useCallback(async () => {
@@ -80,7 +78,7 @@ export const useSend = (me: User) => {
         </div>
       ),
     });
-  }, [channelId, composeAtom, nickname, patch, post, setBanner, store]);
+  }, [channelId, composeAtom, nickname, setBanner, store]);
 
   return send;
 };

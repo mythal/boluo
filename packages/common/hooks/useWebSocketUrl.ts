@@ -1,5 +1,5 @@
+import { apiUrlAtom } from 'api-browser';
 import { atom, useAtomValue } from 'jotai';
-import { apiUrlAtom } from './useApiUrl';
 
 export const webSocketUrlAtom = atom(
   (get) => {

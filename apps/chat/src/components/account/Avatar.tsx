@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { mediaUrl } from 'api';
-import { useApiUrl } from 'common';
+import { mediaUrl } from 'api-browser';
 import { FC, Suspense } from 'react';
 import React from 'react';
 interface Props {
@@ -28,7 +27,6 @@ const EmptyAvatar: FC<Props> = ({ className }) => <div className={className} />;
 export const Avatar: FC<Props> = (props) => {
   const { id, size = '1em', name, className, avatarId, onClick } = props;
   const variant = variants[name.charCodeAt(name.length - 1) % variants.length]!;
-  const baseUrl = useApiUrl();
   return (
     <Suspense fallback={<EmptyAvatar {...props} />}>
       {avatarId
@@ -39,7 +37,7 @@ export const Avatar: FC<Props> = (props) => {
             height={size}
             onClick={onClick}
             className={className}
-            src={mediaUrl(baseUrl, avatarId)}
+            src={mediaUrl(avatarId)}
           />
         )
         : (

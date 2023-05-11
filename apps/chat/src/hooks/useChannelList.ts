@@ -1,10 +1,9 @@
 import type { Channel } from 'api';
-import { useGet } from 'common';
+import { get } from 'api-browser';
 import useSWR, { useSWRConfig } from 'swr';
 import { unwrap } from 'utils';
 
 export const useChannelList = (spaceId: string): Channel[] => {
-  const get = useGet();
   const { mutate } = useSWRConfig();
   const query = useSWR(
     ['/channels/by_space' as const, spaceId],

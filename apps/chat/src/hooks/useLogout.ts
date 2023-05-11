@@ -1,4 +1,4 @@
-import { useGet } from 'common';
+import { get } from 'api-browser';
 import { useCallback } from 'react';
 import { useSWRConfig } from 'swr';
 
@@ -14,7 +14,6 @@ async function deleteAllIndexedDbDatabases() {
 
 export function useLogout(): () => void {
   const { mutate } = useSWRConfig();
-  const get = useGet();
   return useCallback(async () => {
     await Promise.all([
       get('/users/logout', null),
@@ -23,5 +22,5 @@ export function useLogout(): () => void {
     localStorage.clear();
     sessionStorage.clear();
     await mutate('/users/get_me', null);
-  }, [get, mutate]);
+  }, [mutate]);
 }

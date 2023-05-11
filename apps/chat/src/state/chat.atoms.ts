@@ -1,5 +1,5 @@
 import { isServerEvent } from 'api';
-import { apiUrlAtom } from 'common';
+import { backendUrlAtom } from 'api-browser';
 import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
 import { useSetAtom } from 'jotai';
 import { atomWithReducer, selectAtom } from 'jotai/utils';
@@ -70,7 +70,7 @@ store.sub(connectionStateAtom, () => {
   };
 });
 
-store.sub(apiUrlAtom, () => {
+store.sub(backendUrlAtom, () => {
   const connection = store.get(connectionStateAtom);
   if (connection.type === 'CONNECTED') {
     connection.connection.close();

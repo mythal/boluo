@@ -1,5 +1,5 @@
 import { Message } from 'api';
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { Edit, Trash, X } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
@@ -25,7 +25,6 @@ const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode
 Box.displayName = 'MessageToolboxBox';
 
 export const MessageToolbox: FC<Props> = ({ className, message }) => {
-  const post = usePost();
   const boxRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<ToolboxState>('NORMAL');
   const composeAtom = useComposeAtom();

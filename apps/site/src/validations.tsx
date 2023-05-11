@@ -1,8 +1,6 @@
-import { get } from 'api';
-import { apiUrlAtom } from 'common';
+import { get } from 'api-browser';
 import type { RegisterOptions } from 'react-hook-form';
 import type { IntlShape } from 'react-intl';
-import { store } from 'store';
 
 export const required = (intl: IntlShape) => ({
   required: intl.formatMessage({ defaultMessage: "Can't be empty." }),
@@ -42,8 +40,7 @@ export const username = (intl: IntlShape) => ({
   ...maxLength(32),
 
   validate: async (username: string) => {
-    const apiUrl = store.get(apiUrlAtom);
-    const result = await get(apiUrl, '/users/check_username', { username });
+    const result = await get('/users/check_username', { username });
     if (!result.isOk) {
       console.warn(result);
     } else if (result.some) {
@@ -63,8 +60,7 @@ export const email = (intl: IntlShape) => ({
     message: intl.formatMessage({ defaultMessage: 'Must be a valid email address.' }),
   },
   validate: async (email: string) => {
-    const apiUrl = store.get(apiUrlAtom);
-    const result = await get(apiUrl, '/users/check_email', { email });
+    const result = await get('/users/check_email', { email });
     if (!result.isOk) {
       console.warn(result.err);
     } else if (result.some) {

@@ -1,8 +1,8 @@
 'use client';
 
 import { ApiError } from 'api';
-import { usePost } from 'common';
-import { FC, useId, useState } from 'react';
+import { post } from 'api-browser';
+import { FC, useId } from 'react';
 import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
@@ -103,7 +103,6 @@ export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => 
   const { mutate } = useSWRConfig();
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
-  const post = usePost();
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
     const result = await post('/users/login', null, { password, username });
     if (result.isErr) {

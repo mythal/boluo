@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "api-browser",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,11 +12,9 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "server-bindings": "*",
-    "store": "0.0.0",
-    "tsconfig": "*",
-    "tslib": "^2.4.1",
-    "utils": "*"
+    "api": "0.0.0",
+    "utils": "0.0.0",
+    "store": "0.0.0"
   },
   "sideEffects": false,
   "devDependencies": {

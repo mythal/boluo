@@ -1,4 +1,5 @@
-import { Settings, usePatch } from 'common';
+import { patch } from 'api-browser';
+import { Settings } from 'common';
 import { toSettings } from 'common/settings';
 import { FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -13,12 +14,11 @@ interface Props {
 }
 
 export const EneterSendField: FC<Props> = () => {
-  const patch = usePatch();
   const updater: MutationFetcher<Settings, boolean, string> = useCallback(async (url: string, { arg: enterSend }) => {
     const settings: Settings = { enterSend };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});
-  }, [patch]);
+  }, []);
   const { trigger, isMutating } = useSWRMutation('/users/settings', updater, {
     populateCache: identity,
     revalidate: false,

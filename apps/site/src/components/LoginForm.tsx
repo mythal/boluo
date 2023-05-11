@@ -1,6 +1,6 @@
 'use client';
 import type { ApiError } from 'api';
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';
@@ -130,7 +130,6 @@ export const LoginForm: FC<Props> = () => {
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
   const [error, setError] = useState<ApiError | null>(null);
-  const post = usePost();
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
     const result = await post('/users/login', null, { password, username });
     if (result.isErr) {

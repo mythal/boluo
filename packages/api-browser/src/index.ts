@@ -1,14 +1,32 @@
+import { ApiError, appFetch, Get, makeUri, Media, Patch, Post, User } from 'api';
+import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+import { store } from 'store';
 import type { Result } from 'utils';
-import type { ApiError, Get, Patch, Post, User } from '.';
-import { appFetch } from './common';
-import { makeUri } from './request';
-import type { Media } from './types/media';
+
+const isBrowser = typeof window !== 'undefined';
+
+export const DEFAULT_BACKEND_URL = isBrowser ? window.location.origin : process.env.BACKEND_URL || '';
+
+export const backendUrlAtom = atomWithStorage('BOLUO_BACKEND_API_URL', DEFAULT_BACKEND_URL);
+
+export const apiUrlAtom = atom((get) => {
+  const url = get(backendUrlAtom);
+  if (url.endsWith('/api')) {
+    return url;
+  } else if (url.endsWith('/')) {
+    return url + 'api';
+  } else {
+    return url + '/api';
+  }
+});
 
 export async function get<P extends keyof Get>(
-  baseUrl: string,
   path: P,
   query: Get[P]['query'],
+  apiUrl?: string,
 ): Promise<Result<Get[P]['result'], ApiError>> {
+  const baseUrl = apiUrl || store.get(apiUrlAtom);
   const url = makeUri(baseUrl, path, query);
 
   const params: RequestInit = { credentials: 'include' };
@@ -20,11 +38,11 @@ const headers = new Headers({
 });
 
 export async function post<P extends keyof Post>(
-  baseUrl: string,
   path: P,
   query: Post[P]['query'],
   payload: Post[P]['payload'],
 ): Promise<Result<Post[P]['result'], ApiError>> {
+  const baseUrl = store.get(apiUrlAtom);
   const url = makeUri(baseUrl, path, query);
   const params: RequestInit = {
     credentials: 'include',
@@ -37,11 +55,11 @@ export async function post<P extends keyof Post>(
 }
 
 export async function patch<P extends keyof Patch>(
-  baseUrl: string,
   path: P,
   query: Patch[P]['query'],
   payload: Patch[P]['payload'],
 ): Promise<Result<Patch[P]['result'], ApiError>> {
+  const baseUrl = store.get(apiUrlAtom);
   const url = makeUri(baseUrl, path, query);
   const params: RequestInit = {
     credentials: 'include',
@@ -53,11 +71,13 @@ export async function patch<P extends keyof Patch>(
   return appFetch(url, params);
 }
 
-export function mediaUrl(baseUrl: string, id: string, download = false): string {
+export function mediaUrl(id: string, download = false): string {
+  const baseUrl = store.get(apiUrlAtom);
   return makeUri(baseUrl, '/media/get', { download, id });
 }
 
-export function mediaHead(baseUrl: string, id: string): Promise<Response> {
+export function mediaHead(id: string): Promise<Response> {
+  const baseUrl = store.get(apiUrlAtom);
   const url = makeUri(baseUrl, '/media/get', { id });
   return fetch(url, {
     method: 'HEAD',
@@ -66,12 +86,12 @@ export function mediaHead(baseUrl: string, id: string): Promise<Response> {
 }
 
 export function upload(
-  baseUrl: string,
   file: Blob,
   filename: string,
   mimeType: string,
   path = '/media/upload',
 ): Promise<Result<Media, ApiError>> {
+  const baseUrl = store.get(apiUrlAtom);
   const url = makeUri(baseUrl, path, { filename, mimeType });
 
   const params: RequestInit = {
@@ -85,9 +105,9 @@ export function upload(
 }
 
 export function editAvatar(
-  baseUrl: string,
   file: File,
 ): Promise<Result<User, ApiError>> {
+  const baseUrl = store.get(apiUrlAtom);
   const path = '/users/edit_avatar';
   const url = makeUri(baseUrl, path, { filename: file.name, mimeType: file.type });
 

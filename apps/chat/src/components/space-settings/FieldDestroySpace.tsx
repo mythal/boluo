@@ -1,4 +1,4 @@
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useState } from 'react';
@@ -11,7 +11,6 @@ export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ 
   const router = useRouter();
   const [isShowConfirm, setShowConfirm] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
-  const post = usePost();
   const deleteSpace = async () => {
     setIsMutating(true);
     const result = await post('/spaces/delete', { id: spaceId }, {});

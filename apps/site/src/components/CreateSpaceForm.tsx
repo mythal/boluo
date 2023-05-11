@@ -1,6 +1,6 @@
 'use client';
 import type { ApiError, CreateSpace } from 'api';
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
@@ -124,7 +124,6 @@ export const CreateSpaceForm: FC<Props> = () => {
   const { handleSubmit } = methods;
   const [error, setError] = useState<ApiError | null>(null);
   const router = useRouter();
-  const post = usePost();
   const onSubmit: SubmitHandler<CreateSpace> = async (params) => {
     const result = await post('/spaces/create', null, params);
     if (result.isErr) {

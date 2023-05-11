@@ -1,6 +1,6 @@
 'use client';
 
-import { usePost } from 'common';
+import { post } from 'api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -13,7 +13,6 @@ interface Props {
 
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   const router = useRouter();
-  const post = usePost();
   const handleClick = async () => {
     const result = await post('/spaces/join', { spaceId, token }, {});
     const { space } = result.unwrap();

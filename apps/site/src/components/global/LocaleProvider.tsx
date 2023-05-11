@@ -1,5 +1,6 @@
 'use client';
-import { Locale, Settings, useMe, usePatch } from 'common';
+import { patch } from 'api-browser';
+import { Locale, Settings, useMe } from 'common';
 import { ChangeLocaleContext } from 'common/hooks/useLocale';
 import { defaultLocale, IntlMessages, onIntlError } from 'common/locale';
 import { useRouter } from 'next/navigation';
@@ -16,14 +17,13 @@ interface Props extends ChildrenProps {
 
 export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const me = useMe();
-  const patch = usePatch();
   const router = useRouter();
 
   const updateLocale: MutationFetcher<Settings, Locale, string> = useCallback(async (url: string, { arg: locale }) => {
     const settings: Settings = { locale };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.unwrapOr({});
-  }, [patch]);
+  }, []);
   const { trigger } = useSWRMutation('/users/settings', updateLocale, {
     populateCache: identity,
     revalidate: false,

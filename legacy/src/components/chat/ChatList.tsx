@@ -54,6 +54,18 @@ const listWrapperStyle = css`
   }
 `;
 
+const itemPos = (item: PreviewItem | MessageItem | undefined | null): [number, number] | null => {
+  if (!item) {
+    return null;
+  }
+  switch (item.type) {
+    case 'MESSAGE':
+      return [item.message.posP, item.message.posQ];
+    case 'PREVIEW':
+      return [Math.ceil(item.preview.pos), 1];
+  }
+};
+
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
   const scrollEnd = useRef<number>(0);
 
@@ -99,16 +111,17 @@ function useOnDragEnd(
       if (sourceItem?.type !== 'MESSAGE') {
         return;
       }
-      let a: number | null = null;
-      let b: number | null = null;
+      let a: [number, number] | null = null;
+      let b: [number, number] | null = null;
       if (source.index > destination.index) {
         if (destination.index > 0) {
-          a = filteredMessages.get(destination.index - 1, null)?.pos ?? null;
+          const above = filteredMessages.get(destination.index - 1, null);
+          a = itemPos(above);
         }
-        b = filteredMessages.get(destination.index, null)?.pos ?? null;
+        b = itemPos(filteredMessages.get(destination.index, null));
       } else {
-        a = filteredMessages.get(destination.index, null)?.pos ?? null;
-        b = filteredMessages.get(destination.index + 1, null)?.pos ?? null;
+        a = itemPos(filteredMessages.get(destination.index, null));
+        b = itemPos(filteredMessages.get(destination.index + 1, null));
       }
       dispatch(finishMove);
 

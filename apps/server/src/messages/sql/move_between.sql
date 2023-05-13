@@ -1,4 +1,6 @@
 UPDATE messages
-SET pos = rational_intermediate($2::rational, $3::rational)
-WHERE id = $1
+SET
+  (pos_p, pos_q) = (select p as pos_p, q as pos_q from find_intermediate($2, $3, $4, $5))
+WHERE
+  id = $1
 RETURNING messages;

@@ -11,13 +11,16 @@ use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 use tokio_postgres::error::SqlState;
 
-pub fn check_pos(pos: f64) -> Result<(), ValidationFailed> {
-    if pos.is_nan() || pos.is_infinite() {
+pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
+    if q == 0 {
         return Err(ValidationFailed(
-            "The wrong floating point value was used for the position value",
+            r#""pos_q" cannot be 0"#,
         ));
-    } else if pos < 0.0 {
-        return Err(ValidationFailed("The position value cannot be less than zero"));
+    }
+    if p < 0 || q < 0 {
+        return Err(ValidationFailed(
+            r#""pos_p" and "pos_q" cannot be negative numbers"#,
+        ));
     }
     Ok(())
 }
@@ -51,6 +54,8 @@ pub struct Message {
     pub order_date: DateTime<Utc>,
     pub order_offset: i32,
     pub pos: f64,
+    pub pos_p: i32,
+    pub pos_q: i32,
 }
 
 impl Message {
@@ -68,9 +73,9 @@ impl Message {
         }
     }
 
-    pub async fn query_by_pos<T: Querist>(db: &mut T, channel_id: &Uuid, pos: f64) -> Result<Option<Message>, DbError> {
+    pub async fn query_by_pos<T: Querist>(db: &mut T, channel_id: &Uuid, (p, q): (i32, i32)) -> Result<Option<Message>, DbError> {
         let row = db
-            .query_one(include_str!("sql/by_pos.sql"), &[channel_id, &pos])
+            .query_one(include_str!("sql/by_pos.sql"), &[channel_id, &p, &q])
             .await?;
         let maybe_message = if let Some(row) = row { row.try_get(0)? } else { None };
         Ok(maybe_message)
@@ -135,13 +140,13 @@ impl Message {
         is_master: bool,
         whisper_to: Option<Vec<Uuid>>,
         media_id: Option<Uuid>,
-        request_pos: Option<f64>,
+        request_pos: Option<(i32, i32)>,
     ) -> Result<Message, AppError> {
         use postgres_types::Type;
-        let pos: f64 = match (request_pos, preview_id) {
+        let pos: (i32, i32) = match (request_pos, preview_id) {
             (Some(pos), _) => pos,
-            (None, Some(id)) => crate::pos::pos(db, cache, *channel_id, *id).await? as f64,
-            (None, None) => crate::pos::alloc_new_pos(db, cache, *channel_id).await? as f64,
+            (None, Some(id)) => (crate::pos::pos(db, cache, *channel_id, *id).await?, 1),
+            (None, None) => (crate::pos::alloc_new_pos(db, cache, *channel_id).await?, 1),
         };
         check_pos(pos)?;
 
@@ -166,7 +171,8 @@ impl Message {
             Type::BOOL,
             Type::UUID_ARRAY,
             Type::UUID,
-            Type::FLOAT8,
+            Type::INT4,
+            Type::INT4,
         ];
         let mut row = db
             .query_exactly_one_typed(
@@ -183,7 +189,8 @@ impl Message {
                     &is_master,
                     &whisper_to,
                     &media_id,
-                    &pos,
+                    &pos.0,
+                    &pos.1,
                 ],
             )
             .await;
@@ -194,7 +201,8 @@ impl Message {
                     channel_id
                 );
                 crate::pos::reset_channel_pos(cache, channel_id).await?;
-                let reset_pos = crate::pos::alloc_new_pos(db, cache, *channel_id).await? as f64;
+                let p = crate::pos::alloc_new_pos(db, cache, *channel_id).await?;
+                let q = 1i32;
                 row = db
                     .query_exactly_one_typed(
                         source,
@@ -210,7 +218,8 @@ impl Message {
                             &is_master,
                             &whisper_to,
                             &media_id,
-                            &reset_pos,
+                            &p,
+                            &q,
                         ],
                     )
                     .await;
@@ -237,16 +246,16 @@ impl Message {
         db: &mut T,
         channel_id: &Uuid,
         message_id: &Uuid,
-        pos: &f64,
+        pos: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         use postgres_types::Type;
-        check_pos(*pos)?;
+        check_pos(pos)?;
 
         let row = db
             .query_one_typed(
                 include_str!("sql/move_above.sql"),
-                &[Type::UUID, Type::UUID, Type::FLOAT8],
-                &[channel_id, message_id, pos],
+                &[Type::UUID, Type::UUID, Type::INT4, Type::INT4],
+                &[channel_id, message_id, &pos.0, &pos.1],
             )
             .await?;
         if let Some(row) = row {
@@ -260,16 +269,16 @@ impl Message {
         db: &mut T,
         channel_id: &Uuid,
         message_id: &Uuid,
-        pos: &f64,
+        pos: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         use postgres_types::Type;
-        check_pos(*pos)?;
+        check_pos(pos)?;
 
         let row = db
             .query_one_typed(
                 include_str!("sql/move_bottom.sql"),
-                &[Type::UUID, Type::UUID, Type::FLOAT8],
-                &[channel_id, message_id, pos],
+                &[Type::UUID, Type::UUID, Type::INT4, Type::INT4],
+                &[channel_id, message_id, &pos.0, &pos.1],
             )
             .await?;
         if let Some(row) = row {
@@ -282,24 +291,24 @@ impl Message {
     pub async fn move_between<T: Querist>(
         db: &mut T,
         id: &Uuid,
-        a: &f64,
-        b: &f64,
+        a: (i32, i32),
+        b: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         use postgres_types::Type;
-        check_pos(*a)?;
-        check_pos(*b)?;
-        let row = if *a == *b {
+        check_pos(a)?;
+        check_pos(b)?;
+        let row = if a == b {
             db.query_one_typed(
                 include_str!("sql/set_position.sql"),
-                &[Type::UUID, Type::FLOAT8],
-                &[id, a],
+                &[Type::UUID, Type::INT4, Type::INT4],
+                &[id, &a.0, &a.1],
             )
             .await?
         } else {
             db.query_one_typed(
                 include_str!("sql/move_between.sql"),
-                &[Type::UUID, Type::FLOAT8, Type::FLOAT8],
-                &[id, a, b],
+                &[Type::UUID, Type::INT4, Type::INT4, Type::INT4, Type::INT4],
+                &[id, &a.0, &a.1, &b.0, &b.1],
             )
             .await?
         };
@@ -309,11 +318,14 @@ impl Message {
             Ok(None)
         }
     }
-    pub async fn max_pos<T: Querist>(db: &mut T, channel_id: &Uuid) -> f64 {
-        db.query_exactly_one(include_str!("./sql/max_pos.sql"), &[channel_id])
-            .await
-            .and_then(|row| row.try_get(0))
-            .unwrap()
+    pub async fn max_pos<T: Querist>(db: &mut T, channel_id: &Uuid) -> (i32, i32) {
+        let row = db.query_one(include_str!("./sql/max_pos.sql"), &[channel_id])
+            .await;
+        if let Ok(Some(row)) = row {
+            (row.get(0), row.get(1))
+        } else {
+            (42,1)
+        }
     }
     pub async fn edit<T: Querist>(
         db: &mut T,
@@ -398,7 +410,7 @@ async fn message_test() -> Result<(), crate::error::AppError> {
         Some(Uuid::nil()),
         None,
     )
-    .await?;
+    .await.unwrap();
     assert_eq!(message.text, "");
 
     let message = Message::get(db, &message.id, Some(&user.id)).await?.unwrap();
@@ -422,7 +434,7 @@ async fn message_test() -> Result<(), crate::error::AppError> {
 
     let message = Message::get(db, &message.id, Some(&user.id)).await?.unwrap();
     assert_eq!(message.text, new_text);
-    let message_by_pos = Message::query_by_pos(db, &message.channel_id, message.pos)
+    let message_by_pos = Message::query_by_pos(db, &message.channel_id, (message.pos_p, message.pos_q))
         .await?
         .unwrap();
     assert_eq!(message_by_pos.id, message.id);
@@ -475,16 +487,16 @@ async fn message_test() -> Result<(), crate::error::AppError> {
     )
     .await
     .unwrap();
-    let a = messages[1].pos;
-    let b = messages[0].pos;
-    Message::move_between(db, &c.id, &a, &b).await.unwrap().unwrap();
+    let a = (messages[1].pos_p, messages[1].pos_q);
+    let b = (messages[0].pos_p, messages[0].pos_q);
+    Message::move_between(db, &c.id, a, b).await.unwrap().unwrap();
     let messages = Message::get_by_channel(db, &channel.id, None, 128).await?;
     assert_eq!(messages.len(), 3);
     assert_eq!(messages[1].id, c.id);
-    Message::move_above(db, &c.channel_id, &c.id, &messages[2].pos).await?;
+    Message::move_above(db, &c.channel_id, &c.id, (messages[2].pos_p, messages[2].pos_q)).await?;
     let messages = Message::get_by_channel(db, &channel.id, None, 128).await?;
     assert_eq!(messages[2].id, c.id);
-    Message::move_bottom(db, &c.channel_id, &c.id, &messages[0].pos).await?;
+    Message::move_bottom(db, &c.channel_id, &c.id, (messages[0].pos_p, messages[0].pos_q)).await?;
     let messages = Message::get_by_channel(db, &channel.id, None, 128).await?;
     assert_eq!(messages[0].id, c.id);
     Ok(())

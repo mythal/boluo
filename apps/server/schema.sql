@@ -1,7 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "hstore";
-CREATE EXTENSION IF NOT EXISTS "pg_rational";
 
 
 CREATE TABLE media
@@ -134,13 +133,14 @@ CREATE TABLE messages
     "modified"          timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "order_date"        timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "order_offset"      integer   NOT NULL DEFAULT 0,
-    "pos"               float     NOT NULL DEFAULT 0.0
+    "pos_p"             integer   NOT NULL,
+    "pos_q"             integer   NOT NULL,
+    "pos"               float8 GENERATED ALWAYS AS (pos_p::float8 / pos_q) STORED
 );
 
 ALTER TABLE messages
     ADD CONSTRAINT pos_unique UNIQUE (channel_id, pos) DEFERRABLE INITIALLY IMMEDIATE;
 
-CREATE INDEX "message_pos" ON messages (pos);
 CREATE INDEX "message_tags" ON messages USING GIN (tags);
 CREATE INDEX "message_channel_index" ON messages USING btree (channel_id);
 

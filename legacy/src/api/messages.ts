@@ -23,6 +23,8 @@ export interface Message {
   created: string;
   modified: string;
   pos: number;
+  posP: number;
+  posQ: number;
 }
 
 export interface MessageOrder {
@@ -32,7 +34,7 @@ export interface MessageOrder {
 }
 
 export interface NewMessage {
-  messageId: Id;
+  previewId: Id | null;
   channelId: Id;
   name: string;
   text: string;
@@ -59,11 +61,6 @@ export interface ByChannel {
   limit?: number;
 }
 
-export interface SwapMessage {
-  a: Id;
-  b: Id;
-}
-
 export interface MoveTo {
   channelId: Id;
   messageId: Id;
@@ -74,5 +71,5 @@ export interface MoveTo {
 export interface MoveBetween {
   channelId: Id;
   messageId: Id;
-  range: [number | null, number | null];
+  range: [[number, number] | null, [number, number] | null];
 }

@@ -1,5 +1,5 @@
 export const revertPalette = (colors: Record<string, string>): Record<string, string> => {
-  let colorEntries: [number, string][] = Object.entries(colors).map(([key, value]) => [Number(key), value]);
+  const colorEntries: [number, string][] = Object.entries(colors).map(([key, value]) => [Number(key), value]);
   colorEntries.sort(([k1], [k2]) => k1 - k2);
   const keys = colorEntries.map(([key]) => String(key));
   const reversedKey = keys.reverse();

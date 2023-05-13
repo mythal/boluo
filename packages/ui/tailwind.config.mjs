@@ -1,7 +1,7 @@
-const { revertPalette: revert } = require('palette-tools');
-const colors = require('tailwindcss/colors');
-const plugin = require('tailwindcss/plugin');
-const themeSwapper = require('tailwindcss-theme-swapper');
+import themeSwapper from 'tailwindcss-theme-swapper';
+import colors from 'tailwindcss/colors';
+import plugin from 'tailwindcss/plugin';
+import { revertPalette as revert } from 'utils';
 
 const { red, neutral, blue, green, yellow, white, black, gray, slate, lime } = colors;
 const revRed = revert(red);

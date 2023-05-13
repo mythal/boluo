@@ -18,7 +18,7 @@ pub struct NewMessage {
     pub is_action: bool,
     pub media_id: Option<Uuid>,
     pub whisper_to_users: Option<Vec<Uuid>>,
-    pub pos: Option<f64>,
+    pub pos: Option<(i32, i32)>,
 }
 
 #[derive(Deserialize, Debug, TS)]
@@ -48,7 +48,8 @@ pub enum MessageMoveToMode {
 #[serde(rename_all = "camelCase")]
 pub struct MoveMessageBetween {
     pub message_id: Uuid,
-    pub range: (Option<f64>, Option<f64>),
+    #[allow(clippy::type_complexity)]
+    pub range: (Option<(i32, i32)>, Option<(i32, i32)>),
     pub channel_id: Uuid,
 }
 

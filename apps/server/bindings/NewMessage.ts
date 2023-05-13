@@ -11,5 +11,5 @@ export interface NewMessage {
   isAction: boolean;
   mediaId: string | null;
   whisperToUsers: Array<string> | null;
-  pos: number | null;
+  pos: [number, number] | null;
 }

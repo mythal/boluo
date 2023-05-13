@@ -2,6 +2,6 @@
 
 export interface MoveMessageBetween {
   messageId: string;
-  range: [number | null, number | null];
+  range: [[number, number] | null, [number, number] | null];
   channelId: string;
 }

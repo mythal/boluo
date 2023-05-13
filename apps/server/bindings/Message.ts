@@ -22,4 +22,6 @@ export interface Message {
   orderDate: string;
   orderOffset: number;
   pos: number;
+  posP: number;
+  posQ: number;
 }

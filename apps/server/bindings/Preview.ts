@@ -14,7 +14,6 @@ export interface Preview {
   text: string | null;
   whisperToUsers: Array<string> | null;
   entities: Array<unknown>;
-  start: number;
   pos: number;
   editFor: string | null;
 }

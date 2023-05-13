@@ -27,8 +27,7 @@ pub struct Preview {
     pub whisper_to_users: Option<Vec<Uuid>>,
     #[ts(type = "Array<unknown>")]
     pub entities: Vec<JsonValue>,
-    pub start: f64,
-    pub pos: f64,
+    pub pos: i32,
     pub edit_for: Option<DateTime<Utc>>,
 }
 
@@ -75,7 +74,7 @@ impl PreviewPost {
                 should_finish = true;
             }
         }
-        let start: f64 = crate::pos::pos(db, cache, channel_id, id).await? as f64;
+        let start: i32 = crate::pos::pos(db, cache, channel_id, id).await?;
         let is_master = ChannelMember::get(db, &user_id, &channel_id)
             .await
             .or_no_permission()?
@@ -93,7 +92,6 @@ impl PreviewPost {
             text,
             whisper_to_users,
             entities,
-            start,
             is_master,
             edit_for,
             clear,

@@ -78,7 +78,7 @@ jobs:
         ports:
           - "6379:6379"
       postgres:
-        image: ghcr.io/mythal/boluo-postgres:latest
+        image: postgres:15
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: boluo

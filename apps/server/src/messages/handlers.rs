@@ -127,15 +127,15 @@ async fn move_between(req: Request<Body>) -> Result<bool, AppError> {
         (None, None) => return Err(AppError::BadRequest("a and b cannot both be null".to_string())),
         (Some(a), Some(b)) => {
             if a < b {
-                Message::move_between(db, &message_id, &a, &b).await?.or_not_found()?
+                Message::move_between(db, &message_id, a, b).await?.or_not_found()?
             } else {
-                Message::move_between(db, &message_id, &b, &a).await?.or_not_found()?
+                Message::move_between(db, &message_id, b, a).await?.or_not_found()?
             }
         }
-        (None, Some(b)) => Message::move_above(db, &channel_id, &message_id, &b)
+        (None, Some(b)) => Message::move_above(db, &channel_id, &message_id, b)
             .await?
             .or_not_found()?,
-        (Some(a), None) => Message::move_bottom(db, &channel_id, &message_id, &a)
+        (Some(a), None) => Message::move_bottom(db, &channel_id, &message_id, a)
             .await?
             .or_not_found()?,
     };

@@ -107,7 +107,7 @@ export const useOnSend = () => {
     }
 
     const newMessage: NewMessage = {
-      messageId,
+      previewId: messageId,
       channelId,
       mediaId,
       name,

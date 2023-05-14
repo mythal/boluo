@@ -2,6 +2,38 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "hstore";
 
+-- From https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
+CREATE OR REPLACE FUNCTION find_intermediate (p1 integer, q1 integer, p2 integer, q2 integer, OUT p integer, OUT q integer)
+LANGUAGE plpgsql
+IMMUTABLE STRICT
+AS $f$
+DECLARE
+    pl integer := 0;
+    ql integer := 1;
+    ph integer := 1;
+    qh integer := 0;
+BEGIN
+    IF (p1::bigint * q2 + 1) <> (p2::bigint * q1) THEN
+        LOOP
+            p := pl + ph;
+            q := ql + qh;
+            IF (p::bigint * q1 <= q::bigint * p1) THEN
+                pl := p;
+                ql := q;
+            ELSIF (p2::bigint * q <= q2::bigint * p) THEN
+                ph := p;
+                qh := q;
+            ELSE
+                exit;
+            END IF;
+        END LOOP;
+    ELSE
+        p := p1 + p2;
+        q := q1 + q2;
+    END IF;
+END;
+$f$;
+
 
 CREATE TABLE media
 (

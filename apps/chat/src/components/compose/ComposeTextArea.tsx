@@ -33,6 +33,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
   const store = useStore();
   const rangeAtom = useMemo(() => selectAtom(composeAtom, compose => compose.range), [composeAtom]);
   const settings = useSettings();
+  const enterSend = settings.enterSend === true;
   useWorkerParse(dispatch, source);
   const lock = useRef(false);
   const updateRangeTimeout = useRef<number | undefined>(undefined);
@@ -94,7 +95,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
     if (e.key !== 'Enter') {
       return;
     }
-    if (settings.enterSend) {
+    if (enterSend) {
       if (!e.shiftKey) {
         await send();
       }
@@ -103,7 +104,14 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
         await send();
       }
     }
-  }, [send, settings.enterSend]);
+  }, [send, enterSend]);
+
+  useEffect(() => {
+    const textarea = ref.current;
+    if (!textarea) return;
+    textarea.enterKeyHint = enterSend ? 'send' : 'enter';
+  }, [enterSend]);
+
   return (
     <textarea
       ref={ref}

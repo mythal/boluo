@@ -1,11 +1,11 @@
 import type { Space } from 'api';
 import clsx from 'clsx';
 import { useMe } from 'common';
+import { useAtom } from 'jotai';
 import type { FC } from 'react';
-import { useCallback } from 'react';
-import { useState } from 'react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { toggle } from 'utils';
+import { isSidebarExpandedAtom } from '../../state/ui.atoms';
 import { Pane } from '../../types/chat-pane';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { SidebarChannelList } from './SidebarChannelList';
@@ -21,9 +21,9 @@ interface Props {
 }
 
 export const Sidebar: FC<Props> = ({ space, panes, className }) => {
-  const [isExpand, setExpand] = useState(true);
+  const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
   const me = useMe();
-  const toggleExpand = useCallback(() => setExpand(toggle), []);
+  const toggleExpanded = useCallback(() => setExpanded(toggle), [setExpanded]);
   const isSettingsOpen = useMemo(() => panes.findIndex(pane => pane.type === 'SETTINGS') !== -1, [panes]);
   const isHelpOpen = useMemo(() => panes.findIndex(pane => pane.type === 'HELP') !== -1, [panes]);
   const isLoginOpen = useMemo(() => panes.findIndex(pane => pane.type === 'LOGIN') !== -1, [panes]);
@@ -32,16 +32,16 @@ export const Sidebar: FC<Props> = ({ space, panes, className }) => {
     return panes.findIndex(pane => pane.type === 'PROFILE' && pane.userId === me.user.id) !== -1;
   }, [panes, me]);
   return (
-    <SidebarStateContext.Provider value={{ isExpanded: isExpand }}>
+    <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
       <div className={className}>
-        <SidebarHeader toggleExpand={toggleExpand} />
+        <SidebarHeader toggleExpand={toggleExpanded} />
         <div
           className={clsx(
             'bg-bg relative flex-grow flex flex-col justify-between overflow-hidden',
-            isExpand ? 'w-sidebar' : '',
+            isExpanded ? 'w-sidebar' : '',
           )}
         >
-          {isExpand
+          {isExpanded
             ? (
               <div className="divide-y overflow-y-auto">
                 <SpaceOptions space={space} panes={panes} />

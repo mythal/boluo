@@ -69,7 +69,7 @@ export const MessageBox: FC<Props> = (
         'grid py-2 pl-2 pr-2 items-center group gap-2 grid-flow-col relative hover:bg-surface-100',
         'grid-cols-[2rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[2rem_12rem_minmax(0,1fr)]',
-        !mini && 'grid-rows-2 @2xl:grid-rows-1',
+        !mini && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
         isDragging && 'opacity-0',
         className,
       )}

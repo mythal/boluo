@@ -1,7 +1,8 @@
 import type { Space } from 'api';
-import { FC, useContext } from 'react';
+import { FC } from 'react';
 import { useMemo } from 'react';
-import { FocusPaneContext } from '../state/chat-view';
+import { store } from 'store';
+import { isSidebarExpandedAtom } from '../state/ui.atoms';
 import type { Pane } from '../types/chat-pane';
 import { PaneEmpty } from './PaneEmpty';
 import { ChatPaneSwitch } from './PaneSwitch';
@@ -19,7 +20,12 @@ export const SpaceChatView: FC<Props> = ({ space, panes }) => {
     }
     return panes.map((pane) => <ChatPaneSwitch key={pane.id} pane={pane} />);
   }, [panes]);
-
+  const handleTouch = () => {
+    if (window.innerWidth < 560) {
+      // Auto fold sidebar
+      store.set(isSidebarExpandedAtom, false);
+    }
+  };
   return (
     <div className="flex view-height">
       <Sidebar
@@ -28,7 +34,10 @@ export const SpaceChatView: FC<Props> = ({ space, panes }) => {
         space={space}
         panes={panes}
       />
-      <div className="flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x">
+      <div
+        onTouchStart={handleTouch}
+        className="flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x"
+      >
         {chatBody}
       </div>
     </div>

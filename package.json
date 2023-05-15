@@ -4,13 +4,13 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "devDependencies": {
-    "dprint": "^0.35.0",
-    "nx": "^15.8.5"
-  },
   "workspaces": [
     "packages/*",
     "apps/server/bindings",
     "apps/*"
-  ]
+  ],
+  "dependencies": {
+    "dprint": "^0.35.0",
+    "nx": "^15.8.5"
+  }
 }

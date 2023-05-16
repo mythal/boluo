@@ -81,41 +81,6 @@ const makeChatState = (spaceId: string): ChatSpaceState => ({
   lastEventTimestamp: 0,
 });
 
-const handleOpenedChannels = (
-  state: ChatSpaceState,
-  { payload: { channelIdSet: openedChannelIdSet } }: ChatAction<'panesChange'>,
-): ChatSpaceState => {
-  const channelIdList = Object.keys(state.channels);
-  if (
-    channelIdList.length === openedChannelIdSet.size
-    && channelIdList.every(id => openedChannelIdSet.has(id))
-  ) {
-    return state;
-  }
-  const channels = { ...state.channels };
-  for (const channelId of openedChannelIdSet) {
-    if (channelId in channels) {
-      const channelState = channels[channelId]!;
-      if (!channelState.opened) {
-        channels[channelId] = { ...channelState, opened: true };
-      }
-    } else {
-      const newChannelState = makeInitialChannelState(channelId);
-      newChannelState.opened = true;
-      channels[channelId] = newChannelState;
-    }
-  }
-  for (const channelId of channelIdList) {
-    if (!openedChannelIdSet.has(channelId)) {
-      const channelState = channels[channelId]!;
-      if (channelState.opened) {
-        channels[channelId] = { ...channelState, opened: false };
-      }
-    }
-  }
-  return { ...state, channels };
-};
-
 const handleEventFromServer = (
   state: ChatSpaceState,
   { payload: event }: ChatAction<'eventFromServer'>,
@@ -138,9 +103,7 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
     return handleEventFromServer(state, action);
   }
   console.debug(`action: ${action.type}`, action.payload);
-  if (action.type === 'panesChange') {
-    return handleOpenedChannels(state, action);
-  } else if (action.type === 'spaceUpdated') {
+  if (action.type === 'spaceUpdated') {
     return handleSpaceUpdated(state, action);
   } else if (action.type === 'enterSpace') {
     if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {

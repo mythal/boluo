@@ -6,7 +6,6 @@ export type ChatActionMap = {
   receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
   initialized: Empty;
   enterSpace: { spaceId: string };
-  panesChange: { channelIdSet: Set<string> };
   spaceUpdated: SpaceWithRelated;
   messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
   messageEdited: { message: Message; channelId: string };

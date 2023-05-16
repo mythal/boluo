@@ -20,9 +20,6 @@ const config = {
     appDir: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  env: {
-    PUBLIC_API_URL: process.env.PUBLIC_API_URL,
-  },
   rewrites: async () => {
     return [
       {

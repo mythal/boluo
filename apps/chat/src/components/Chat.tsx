@@ -23,8 +23,10 @@ const Chat: FC = () => {
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.overscrollBehaviorY = 'none';
     return () => {
       document.documentElement.style.overflow = '';
+      document.documentElement.style.overscrollBehaviorY = '';
     };
   }, []);
 

@@ -15,7 +15,6 @@ import { useSpace } from '../../hooks/useSpace';
 import { useClosePane } from '../../state/chat-view';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
-import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
@@ -175,29 +174,34 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const me = useMe();
   if (!me) {
     return (
-      <PaneBox>
+      <PaneBox
+        header={
+          <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
+            <FormattedMessage
+              defaultMessage="Settings of &quot;{spaceName}&quot; Space"
+              values={{ spaceName: space.name }}
+            />
+          </PaneHeaderBox>
+        }
+      >
+        <div className="flex p-8 items-center justify-center text-surface-400">
+          <FormattedMessage defaultMessage="You are not logged in" />
+        </div>
+      </PaneBox>
+    );
+  }
+  return (
+    <PaneBox
+      header={
         <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
           <FormattedMessage
             defaultMessage="Settings of &quot;{spaceName}&quot; Space"
             values={{ spaceName: space.name }}
           />
         </PaneHeaderBox>
-
-        <PaneBodyBox className="flex p-8 items-center justify-center text-surface-400">
-          <FormattedMessage defaultMessage="You are not logged in" />
-        </PaneBodyBox>
-      </PaneBox>
-    );
-  }
-  return (
-    <PaneBox>
-      <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
-        <FormattedMessage
-          defaultMessage="Settings of &quot;{spaceName}&quot; Space"
-          values={{ spaceName: space.name }}
-        />
-      </PaneHeaderBox>
-      <PaneBodyBox className="relative overflow-x-hidden overflow-y-auto ">
+      }
+    >
+      <div className="relative">
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-4 flex flex-col gap-8 h-full max-w-md">
@@ -234,7 +238,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
             </PaneFooterBox>
           </form>
         </FormProvider>
-      </PaneBodyBox>
+      </div>
     </PaneBox>
   );
 };

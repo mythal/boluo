@@ -4,8 +4,6 @@ import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
 import { Button, TextInput } from 'ui';
 import { unwrap } from 'utils';
-import { useSpaceInvitationToken } from '../../hooks/useSpaceInvitationToken';
-import { PaneBodyBox } from '../PaneBodyBox';
 
 interface Props {
   spaceId: string;
@@ -36,7 +34,7 @@ export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
     }
   }, [mutate, spaceId]);
   return (
-    <PaneBodyBox className="p-4 max-w-lg flex flex-col gap-4">
+    <div className="p-4 max-w-lg flex flex-col gap-4">
       <div>
         <label htmlFor={id + 'link'} className="block mb-1">
           <FormattedMessage defaultMessage="Invite Link" />
@@ -64,6 +62,6 @@ export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
           </div>
         </div>
       </div>
-    </PaneBodyBox>
+    </div>
   );
 };

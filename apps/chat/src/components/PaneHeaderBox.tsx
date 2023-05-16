@@ -20,7 +20,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) =
       <div
         className={clsx(
           'min-h-pane-header bg-surface-100 flex items-center px-4 text-lg',
-          'justify-between border-b transition-colors duration-100 ease-in-out',
+          'justify-between border-b',
           isFocused ? 'border-brand-600' : 'border-surface-300',
         )}
       >

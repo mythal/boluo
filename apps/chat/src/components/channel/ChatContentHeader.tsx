@@ -1,5 +1,6 @@
 import { get } from 'api-browser';
-import { ChevronDown, CircleNotch } from 'icons';
+import clsx from 'clsx';
+import { ChevronDown, ChevronUp, CircleNotch } from 'icons';
 import { useStore } from 'jotai';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -21,21 +22,26 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
+const AUTO_LOAD = false;
 export const ChatContentHeader: FC = () => {
   const isFullLoaded = useIsFullLoaded();
   const channelId = useChannelId();
+  const isTouchDeviceRef = useRef(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
   const dispatch = useChatDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const isLoadingRef = useRef(false);
+  isLoadingRef.current = isLoading;
   const [touchState, setTouchState] = useState<'NONE' | 'START' | 'WILL_LOAD'>('NONE');
   const isVisibleRef = useRef(false);
   const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
+      isTouchDeviceRef.current = true;
       if (!isVisibleRef.current) return;
       const { touches } = e;
       if (touches.length !== 1) return;
@@ -78,11 +84,18 @@ export const ChatContentHeader: FC = () => {
     };
   }, []);
 
+  const autoLoadTimeoutRef = useRef<number | undefined>(undefined);
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries.length === 0) return;
       const entry = entries[0]!;
       isVisibleRef.current = entry.isIntersecting;
+      if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
+        window.clearTimeout(autoLoadTimeoutRef.current);
+        autoLoadTimeoutRef.current = window.setTimeout(() => {
+          loadMoreRef.current?.click();
+        }, 500);
+      }
     }, { threshold: [0.75] });
     if (loadMoreRef.current) {
       observer.observe(loadMoreRef.current);
@@ -93,7 +106,7 @@ export const ChatContentHeader: FC = () => {
   }, []);
   const loadMore = useCallback(
     async () => {
-      if (isLoading || !mountedRef.current) return;
+      if (isLoadingRef.current || !mountedRef.current) return;
       const chatListAtom = chatListAtomFamily(channelId);
       const chatListState = store.get(chatListAtom);
       const minPos = chatListState?.channelState.minPos ?? null;
@@ -115,31 +128,27 @@ export const ChatContentHeader: FC = () => {
       });
       setIsLoading(false);
     },
-    [channelId, dispatch, isLoading, mountedRef, store],
+    [channelId, dispatch, mountedRef, store],
   );
 
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      loadMoreRef.current?.click();
-    }, 200);
-    return () => window.clearTimeout(handle);
-  }, []);
   const willLoad = touchState === 'WILL_LOAD';
   return (
     <div ref={boxRef} className="h-16 flex items-center justify-center select-none">
       {isFullLoaded
         ? <span className="text-surface-500">Ω</span>
         : (
-          <Button ref={loadMoreRef} disabled={isLoading || willLoad} onClick={loadMore}>
-            {isLoading ? <CircleNotch className="animate-spin" /> : null}
-            {touchState === 'START' && (
-              <>
-                <ChevronDown />
-                <FormattedMessage defaultMessage="Pull" />
-              </>
-            )}
-            {willLoad && <FormattedMessage defaultMessage="Release to Load" />}
-            {touchState === 'NONE' && <FormattedMessage defaultMessage="Load More" />}
+          <Button ref={loadMoreRef} disabled={isLoading} onClick={loadMore}>
+            <div className="w-36 flex gap-1 justify-between items-center">
+              {isLoading
+                ? <CircleNotch className="animate-spin" />
+                : <ChevronDown className={clsx('transition-transform duration-300', willLoad && 'rotate-180')} />}
+
+              <div className="text-center flex-grow">
+                {touchState === 'START' && <FormattedMessage defaultMessage="Pull to Load" />}
+                {willLoad && <FormattedMessage defaultMessage="Release to Load" />}
+                {touchState === 'NONE' && <FormattedMessage defaultMessage="Load More" />}
+              </div>
+            </div>
           </Button>
         )}
     </div>

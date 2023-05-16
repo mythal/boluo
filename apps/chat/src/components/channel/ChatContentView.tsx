@@ -19,7 +19,7 @@ import { IsScrollingContext } from '../../hooks/useIsScrolling';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { ChatItem } from '../../types/chat-items';
 import { ChatListDndContext } from './ChatContentDndContext';
-import { ChatListHeader } from './ChatContentHeader';
+import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemMessage } from './ChatItemMessage';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { GoButtomButton } from './GoBottomButton';
@@ -333,8 +333,6 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
     scrollLockRef.current.end = bottom;
   };
 
-  const increaseViewportBy = IS_SAFARI ? { top: 1024, bottom: 128 } : { top: 256, bottom: 128 };
-
   return (
     <div className={className}>
       <ChatListDndContext
@@ -356,11 +354,12 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
                 scrollerRef={(ref) => {
                   if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
                 }}
-                components={{ Header: ChatListHeader }}
+                components={{ Header: ChatContentHeader }}
                 initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
                 totalCount={totalCount}
                 atBottomThreshold={64}
-                increaseViewportBy={increaseViewportBy}
+                increaseViewportBy={{ top: 512, bottom: 128 }}
+                overscan={{ main: 128, reverse: 512 }}
                 isScrolling={setIsScrolling}
                 itemContent={itemContent}
                 followOutput="auto"

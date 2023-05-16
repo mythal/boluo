@@ -70,11 +70,11 @@ impl PreviewPost {
         let db = &mut *conn;
         let mut should_finish = false;
         if let Some(text) = text.as_ref() {
-            if text.trim().is_empty() {
+            if text.trim().is_empty() && edit_for.is_none() {
                 should_finish = true;
             }
         }
-        let start: i32 = crate::pos::pos(db, cache, channel_id, id).await?;
+        let start: i32 = if edit_for.is_some() { 0 } else { crate::pos::pos(db, cache, channel_id, id).await? };
         let is_master = ChannelMember::get(db, &user_id, &channel_id)
             .await
             .or_no_permission()?

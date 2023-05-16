@@ -1,4 +1,5 @@
 import type { Message } from 'api';
+import { byPos } from '../sort';
 import { MessageItem, PreviewItem } from '../types/chat-items';
 import { ChatAction, ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
@@ -8,8 +9,9 @@ export type UserId = string;
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
-  minPos: number | null;
   messageMap: Record<string, MessageItem>;
+  /** Values of the messageMap, sorted */
+  messages: MessageItem[];
   previewMap: Record<UserId, PreviewItem>;
   opened: boolean;
 }
@@ -19,7 +21,7 @@ const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
     id,
-    minPos: null,
+    messages: [],
     messageMap: {},
     fullLoaded: false,
     previewMap: {},
@@ -33,14 +35,19 @@ const handleNewMessage = (
 ): ChannelState => {
   const prevMessageMap = state.messageMap;
   const message = makeMessageItem(payload.message);
-
-  if (state.minPos === null) {
-    const minPos = message.pos;
-    const messageMap = { [message.id]: message };
-    return { ...state, minPos, messageMap };
+  let { previewMap } = state;
+  if (payload.previewId && payload.previewId in previewMap) {
+    previewMap = { ...previewMap };
+    delete previewMap[payload.previewId];
   }
 
-  if (message.pos <= state.minPos && !state.fullLoaded) {
+  if (state.messages.length === 0) {
+    const messageMap = { [message.id]: message };
+    return { ...state, messageMap, previewMap };
+  }
+
+  const minPos = state.messages[0]!.pos;
+  if (message.pos <= minPos && !state.fullLoaded) {
     return state;
   }
   if (message.id in prevMessageMap) {
@@ -48,7 +55,7 @@ const handleNewMessage = (
     return state;
   }
   const messageMap = { ...prevMessageMap, [message.id]: message };
-  return { ...state, messageMap };
+  return { ...state, messageMap, previewMap };
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
@@ -66,10 +73,10 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
   const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages]
     .map(message => [message.id, makeMessageItem(message)]);
   const minPos = payload.messages.at(-1)!.pos;
-  if (state.minPos === null) {
-    return { ...state, messageMap: Object.fromEntries(newMessageEntries), minPos };
+  if (state.messages.length === 0) {
+    return { ...state, messageMap: Object.fromEntries(newMessageEntries) };
   }
-  if (state.minPos <= minPos) {
+  if (state.messages[0]!.pos <= minPos) {
     console.warn('Received messages that are older than the ones already loaded');
     return state;
   }
@@ -77,15 +84,15 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
   for (const [id, item] of newMessageEntries) {
     messageMap[id] = item;
   }
-  return { ...state, messageMap, minPos };
+  return { ...state, messageMap };
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
   const message: MessageItem = makeMessageItem(payload.message);
-  if (state.minPos === null) {
+  if (state.messages.length === 0) {
     return state;
   }
-  if (message.pos < state.minPos && !state.fullLoaded) {
+  if (message.pos < state.messages[0]!.pos && !state.fullLoaded) {
     if (message.id in state.messageMap) {
       // The edited message has been moved out of the range of currently loaded messages.
       const messageMap = { ...state.messageMap };
@@ -106,7 +113,20 @@ const handleMessagePreview = (
   { payload: { preview } }: ChatAction<'messagePreview'>,
 ): ChannelState => {
   let { previewMap } = state;
-  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', key: `preview:${preview.senderId}` };
+  let pos = Math.ceil(preview.pos);
+  let posP = pos;
+  let posQ = 1;
+  if (preview.editFor && preview.id in state.messageMap) {
+    const message = state.messageMap[preview.id]!;
+    if (message.senderId !== preview.senderId) {
+      return state;
+    }
+    pos = message.pos;
+    posP = message.posP;
+    posQ = message.posQ;
+  }
+
+  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', key: `preview:${preview.senderId}`, posQ, posP, pos };
   previewMap = { ...previewMap, [preview.senderId]: chatItem };
   return { ...state, previewMap };
 };
@@ -115,24 +135,15 @@ const handleMessageDeleted = (
   state: ChannelState,
   { payload: { messageId } }: ChatAction<'messageDeleted'>,
 ): ChannelState => {
-  if (messageId in state.messageMap) {
-    const messageMap = { ...state.messageMap };
-    const message = messageMap[messageId]!;
-    delete messageMap[messageId];
-    let minPos = state.minPos;
-    if (minPos && message.pos >= minPos) {
-      minPos = Math.min(...Object.values(messageMap).map(message => message.pos));
-    }
-    return { ...state, messageMap, minPos };
+  if (!(messageId in state.messageMap)) {
+    return state;
   }
-  return state;
+  const messageMap = { ...state.messageMap };
+  delete messageMap[messageId];
+  return { ...state, messageMap };
 };
 
-export const channelReducer = (
-  state: ChannelState,
-  action: ChatActionUnion,
-  { initialized }: ChatReducerContext,
-): ChannelState => {
+const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initialized: boolean): ChannelState => {
   switch (action.type) {
     case 'messagePreview':
       return handleMessagePreview(state, action);
@@ -150,4 +161,17 @@ export const channelReducer = (
     default:
       return state;
   }
+};
+
+export const channelReducer = (
+  state: ChannelState,
+  action: ChatActionUnion,
+  { initialized }: ChatReducerContext,
+): ChannelState => {
+  const nextState: ChannelState = channelReducer$(state, action, initialized);
+  if (nextState.messageMap !== state.messageMap) {
+    nextState.messages = Object.values(nextState.messageMap);
+    nextState.messages.sort(byPos);
+  }
+  return nextState;
 };

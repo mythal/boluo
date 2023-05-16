@@ -143,15 +143,6 @@ interface UseDragHandlesResult {
   handleDragCancel: () => void;
 }
 
-const itemInsertPos = (item: ChatItem): [number, number] => {
-  switch (item.type) {
-    case 'PREVIEW':
-      return [Math.ceil(item.pos), 1];
-    case 'MESSAGE':
-      return [item.posP, item.posQ];
-  }
-};
-
 const useDndHandles = (
   channelId: string,
   derivedChatList: ChatItem[],
@@ -196,10 +187,10 @@ const useDndHandles = (
     let range: [[number, number] | null, [number, number] | null] | null = null;
     if (realIndex < targetIndex) {
       const item = chatList[targetIndex]!;
-      range = [itemInsertPos(item), null];
+      range = [[item.posP, item.posQ], null];
     } else {
       const item = chatList[targetIndex]!;
-      range = [null, itemInsertPos(item)];
+      range = [null, [item.posP, item.posQ]];
     }
     if (range) {
       const result = await post('/messages/move_between', null, {

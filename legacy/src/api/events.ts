@@ -71,6 +71,7 @@ export interface Initialized {
 export interface NewMessage {
   type: NEW_MESSAGE;
   message: Message;
+  previewId: string | null;
 }
 
 export interface MessageDeleted {
@@ -124,6 +125,7 @@ export interface MessagePreview {
 
 export interface AppUpdated {
   type: APP_UPDATED;
+  version: string;
 }
 
 export interface MessagesMoved {

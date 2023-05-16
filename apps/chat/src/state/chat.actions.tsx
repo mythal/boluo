@@ -1,9 +1,9 @@
-import type { Message, Preview, ServerEvent, SpaceWithRelated } from 'api';
+import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from 'api';
 import type { Empty } from 'utils';
 import { MakeAction, makeAction } from './actions';
 
 export type ChatActionMap = {
-  receiveMessage: { channelId: string; message: Message };
+  receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
   initialized: Empty;
   enterSpace: { spaceId: string };
   panesChange: { channelIdSet: Set<string> };
@@ -33,7 +33,7 @@ export const makeChatAction = <A extends ChatActionUnion>(type: A['type'], paylo
 export const eventToChatAction = (e: ServerEvent): ChatActionUnion | null => {
   switch (e.body.type) {
     case 'NEW_MESSAGE':
-      return makeChatAction('receiveMessage', { channelId: e.body.channelId, message: e.body.message });
+      return makeChatAction('receiveMessage', e.body);
     case 'INITIALIZED':
       return makeChatAction('initialized', {});
     case 'SPACE_UPDATED':

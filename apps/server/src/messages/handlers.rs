@@ -13,7 +13,7 @@ use hyper::{Body, Request};
 async fn send(req: Request<Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let NewMessage {
-        message_id,
+        message_id: _,
         preview_id,
         channel_id,
         name,
@@ -34,7 +34,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
     let message = Message::create(
         db,
         &mut cache,
-        preview_id.or(message_id).as_ref(),
+        preview_id.as_ref(),
         &channel_id,
         &session.user_id,
         &channel_member.character_name,
@@ -49,7 +49,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
         request_pos,
     )
     .await?;
-    Event::new_message(space_member.space_id, message.clone());
+    Event::new_message(space_member.space_id, message.clone(), preview_id);
     Ok(message)
 }
 

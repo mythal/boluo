@@ -13,7 +13,6 @@ export interface ChannelState {
   /** Values of the messageMap, sorted */
   messages: MessageItem[];
   previewMap: Record<UserId, PreviewItem>;
-  opened: boolean;
 }
 
 const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE', key: message.id });
@@ -25,7 +24,6 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     messageMap: {},
     fullLoaded: false,
     previewMap: {},
-    opened: false,
   };
 };
 

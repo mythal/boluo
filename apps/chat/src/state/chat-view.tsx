@@ -337,9 +337,5 @@ export const useChatViewState = (): UseChatViewStateReturn => {
     return () => window.removeEventListener('hashchange', listener);
   }, [panes, route]);
 
-  useEffect(() => {
-    const channelIdSet = new Set(panes.flatMap(pane => (pane.type === 'CHANNEL' ? [pane.channelId] : [])));
-    chatDispatch('panesChange', { channelIdSet });
-  }, [panes, chatDispatch]);
   return { route, panes, dispatch, focused };
 };

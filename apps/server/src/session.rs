@@ -106,7 +106,13 @@ pub fn add_session_cookie(session: &Uuid, origin: Option<&HeaderValue>, _host: O
         .and_then(|value| value.to_str().ok())
         .unwrap_or("")
         .to_lowercase();
-    let is_development = origin.starts_with("http://127.0.0.1") || origin.starts_with("http://localhost");
+    let internal_start = [
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://0.0.0.0",
+        "http://192.168",
+    ];
+    let is_development = internal_start.iter().any(|start| origin.starts_with(start));
 
     let token = token(session);
     let mut builder = CookieBuilder::new(SESSION_COOKIE_KEY, token)

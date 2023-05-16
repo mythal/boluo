@@ -22,7 +22,7 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
-const AUTO_LOAD = false;
+const AUTO_LOAD = true;
 export const ChatContentHeader: FC = () => {
   const isFullLoaded = useIsFullLoaded();
   const channelId = useChannelId();
@@ -90,8 +90,8 @@ export const ChatContentHeader: FC = () => {
       if (entries.length === 0) return;
       const entry = entries[0]!;
       isVisibleRef.current = entry.isIntersecting;
+      window.clearTimeout(autoLoadTimeoutRef.current);
       if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
-        window.clearTimeout(autoLoadTimeoutRef.current);
         autoLoadTimeoutRef.current = window.setTimeout(() => {
           loadMoreRef.current?.click();
         }, 500);

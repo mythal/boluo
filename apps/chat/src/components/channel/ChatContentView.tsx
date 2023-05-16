@@ -12,6 +12,7 @@ import { useCallback } from 'react';
 import { useState } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
+import { IS_SAFARI } from '../../const';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { IsScrollingContext } from '../../hooks/useIsScrolling';
@@ -332,6 +333,8 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
     scrollLockRef.current.end = bottom;
   };
 
+  const increaseViewportBy = IS_SAFARI ? { top: 1024, bottom: 128 } : { top: 256, bottom: 128 };
+
   return (
     <div className={className}>
       <ChatListDndContext
@@ -354,9 +357,10 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
                   if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
                 }}
                 components={{ Header: ChatListHeader }}
-                initialTopMostItemIndex={totalCount - 1}
+                initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
                 totalCount={totalCount}
                 atBottomThreshold={64}
+                increaseViewportBy={increaseViewportBy}
                 isScrolling={setIsScrolling}
                 itemContent={itemContent}
                 followOutput="auto"

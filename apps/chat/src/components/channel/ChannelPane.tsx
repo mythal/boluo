@@ -29,7 +29,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
       <PaneBox>
         <ChannelHeader />
         <PaneBodyBox className={clsx('flex-col justify-between flex flex-grow relative')}>
-          <ChatContent className="relative flex-grow" me={me} channelId={channelId} />
+          <ChatContent className="relative flex-grow h-full" me={me} channelId={channelId} />
           {me && member
             ? <Compose me={me} className={clsx('p-2 border-t')} />
             : null}

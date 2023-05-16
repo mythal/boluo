@@ -1,6 +1,6 @@
 import { get } from 'api-browser';
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp, CircleNotch } from 'icons';
+import { ChevronDown, CircleNotch } from 'icons';
 import { useStore } from 'jotai';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -8,8 +8,7 @@ import { Button } from 'ui';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { useMountedRef } from '../../hooks/useMounted';
-import { chatListAtomFamily } from '../../state/chat-list.atoms';
-import { useChatDispatch } from '../../state/chat.atoms';
+import { chatAtom, useChatDispatch } from '../../state/chat.atoms';
 
 const LOAD_MESSAGE_LIMIT = 51;
 
@@ -107,9 +106,10 @@ export const ChatContentHeader: FC = () => {
   const loadMore = useCallback(
     async () => {
       if (isLoadingRef.current || !mountedRef.current) return;
-      const chatListAtom = chatListAtomFamily(channelId);
-      const chatListState = store.get(chatListAtom);
-      const minPos = chatListState?.channelState.minPos ?? null;
+      const chatState = store.get(chatAtom);
+      const channelState = chatState.channels[channelId];
+      if (!channelState) return;
+      const { minPos } = channelState;
       setIsLoading(true);
       const before: number | null = minPos;
       const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });

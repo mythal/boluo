@@ -12,7 +12,6 @@ import { useCallback } from 'react';
 import { useState } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { Virtuoso } from 'react-virtuoso';
-import { IS_SAFARI } from '../../const';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { IsScrollingContext } from '../../hooks/useIsScrolling';
@@ -31,7 +30,7 @@ interface Props {
   className?: string;
 }
 
-const START_INDEX = Number.MAX_SAFE_INTEGER - 10000000;
+const START_INDEX = 100000000;
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 2000;
 const OPTIMISTIC_REORDER_TIMEOUT = 2000;
 
@@ -309,7 +308,12 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
 
   const itemContent = (offsetIndex: number) => {
     const index = offsetIndex - firstItemIndex;
-    const item = chatList[index]!;
+    const item = chatList[index];
+    if (!item) {
+      // Sometimes an index is passed in that exceeds the maximum length,
+      // kind of like a Virtuoso bug.
+      return <div className="h-[1px]" />;
+    }
     if (optimisticReorder?.optimisticIndex === index) {
       const { message } = optimisticReorder;
       return <ChatItemMessage message={message} key={message.id} self={message.senderId === me?.user.id} />;

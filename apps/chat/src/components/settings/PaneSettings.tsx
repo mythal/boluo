@@ -1,7 +1,7 @@
 import { useMe } from 'common';
 import { LogOut, Settings, User } from 'icons';
-import { useAtom, useSetAtom } from 'jotai';
-import { FC, useTransition } from 'react';
+import { useAtom } from 'jotai';
+import { FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
@@ -9,10 +9,8 @@ import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { useChatPaneDispatch } from '../../state/chat-view';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
-import { localeAtom } from '../../state/locale';
 import { makePane } from '../../types/chat-pane';
 import { ClosePaneButton } from '../ClosePaneButton';
-import { PaneBodyBox } from '../PaneBodyBox';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { EneterSendField } from './EnterSendField';
@@ -95,11 +93,14 @@ export const PaneSettings: FC = () => {
   const me = useMe();
   const [devMode, setDevMode] = useAtom(devModeAtom);
   return (
-    <PaneBox>
-      <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
-        <FormattedMessage defaultMessage="Settings" />
-      </PaneHeaderBox>
-      <PaneBodyBox className="p-4 flex flex-col gap-8 min-w-[18rem] max-w-lg overflow-y-auto">
+    <PaneBox
+      header={
+        <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
+          <FormattedMessage defaultMessage="Settings" />
+        </PaneHeaderBox>
+      }
+    >
+      <div className="p-4 flex flex-col gap-8 min-w-[18rem] max-w-lg">
         <div className="flex flex-col gap-4">
           <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />
@@ -118,7 +119,7 @@ export const PaneSettings: FC = () => {
             </Button>
           </div>
         </div>
-      </PaneBodyBox>
+      </div>
     </PaneBox>
   );
 };

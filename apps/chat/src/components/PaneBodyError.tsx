@@ -2,8 +2,6 @@ import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
 import { Oops } from 'ui/Oops';
 import type { ChildrenProps, StyleProps } from 'utils';
-import { PaneBox } from './PaneBox';
-import { PaneHeaderBox } from './PaneHeaderBox';
 
 interface Props extends ChildrenProps, StyleProps {
 }
@@ -12,7 +10,7 @@ interface State {
   error: unknown;
 }
 
-export class PaneError extends Component<Props, State> {
+export class PaneBodyError extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { error: undefined };
@@ -31,11 +29,9 @@ export class PaneError extends Component<Props, State> {
   override render() {
     if (this.state.error) {
       return (
-        <PaneBox header={<PaneHeaderBox>Oops</PaneHeaderBox>}>
-          <div className="h-full">
-            <Oops error={this.state.error} type="block" />
-          </div>
-        </PaneBox>
+        <div className="h-full">
+          <Oops error={this.state.error} type="block" />
+        </div>
       );
     } else {
       return <React.Fragment>{this.props.children}</React.Fragment>;

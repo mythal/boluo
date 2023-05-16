@@ -7,7 +7,6 @@ import { useSetBanner } from '../hooks/useBanner';
 import { useClosePane } from '../state/chat-view';
 import { LoginForm } from './account/LoginForm';
 import { ClosePaneButton } from './ClosePaneButton';
-import { PaneBodyBox } from './PaneBodyBox';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
@@ -26,13 +25,16 @@ export const PaneLogin: FC<Props> = () => {
     setBanner({ content, level: 'ERROR' });
   }, [errorExplain, intl, setBanner]);
   return (
-    <PaneBox>
-      <PaneHeaderBox operators={<ClosePaneButton />} icon={<LogIn />}>
-        <FormattedMessage defaultMessage="Login" />
-      </PaneHeaderBox>
-      <PaneBodyBox className="p-4 flex max-w-lg">
+    <PaneBox
+      header={
+        <PaneHeaderBox operators={<ClosePaneButton />} icon={<LogIn />}>
+          <FormattedMessage defaultMessage="Login" />
+        </PaneHeaderBox>
+      }
+    >
+      <div className="p-4 flex">
         <LoginForm onSuccess={close} onError={handleError} className="w-full" />
-      </PaneBodyBox>
+      </div>
     </PaneBox>
   );
 };

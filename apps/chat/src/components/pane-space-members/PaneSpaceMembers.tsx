@@ -34,13 +34,16 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
   );
   if (mySpaceMember?.isAdmin !== true) {
     return (
-      <PaneBox>
-        <PaneHeaderBox
-          operators={<ClosePaneButton />}
-          icon={<Users />}
-        >
-          {title}
-        </PaneHeaderBox>
+      <PaneBox
+        header={
+          <PaneHeaderBox
+            operators={<ClosePaneButton />}
+            icon={<Users />}
+          >
+            {title}
+          </PaneHeaderBox>
+        }
+      >
         <Suspense fallback={<Loading />}>
           <SpaceMemberListTab spaceId={spaceId} />
         </Suspense>
@@ -49,14 +52,17 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
   }
 
   return (
-    <PaneBox>
-      <PaneHeaderBox
-        operators={<ClosePaneButton />}
-        icon={<Users />}
-        extra={<HeaderTab value={tab} onChange={setTab} tabItems={MembersTabItems} />}
-      >
-        {title}
-      </PaneHeaderBox>
+    <PaneBox
+      header={
+        <PaneHeaderBox
+          operators={<ClosePaneButton />}
+          icon={<Users />}
+          extra={<HeaderTab value={tab} onChange={setTab} tabItems={MembersTabItems} />}
+        >
+          {title}
+        </PaneHeaderBox>
+      }
+    >
       <Suspense fallback={<Loading />}>
         {tab === 'INVITATION' && <InviteSpaceMemberTab spaceId={spaceId} />}
         {tab === 'LIST' && <SpaceMemberListTab spaceId={spaceId} />}

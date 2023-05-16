@@ -8,7 +8,6 @@ import { useChatPaneDispatch, useClosePane } from '../state/chat-view';
 import { makePane } from '../types/chat-pane';
 import { ClosePaneButton } from './ClosePaneButton';
 import { DiceSelect } from './DiceSelect';
-import { PaneBodyBox } from './PaneBodyBox';
 import { PaneBox } from './PaneBox';
 import { PaneFooterBox } from './PaneFooterBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
@@ -114,11 +113,14 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
     dispatch({ type: 'REPLACE_PANE', item: newChannelPane });
   };
   return (
-    <PaneBox>
-      <PaneHeaderBox operators={<ClosePaneButton />}>
-        <FormattedMessage defaultMessage="Create Channel" />
-      </PaneHeaderBox>
-      <PaneBodyBox className="relative overflow-x-hidden overflow-y-auto">
+    <PaneBox
+      header={
+        <PaneHeaderBox operators={<ClosePaneButton />}>
+          <FormattedMessage defaultMessage="Create Channel" />
+        </PaneHeaderBox>
+      }
+    >
+      <div className="relative">
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-4 flex flex-col gap-2 h-full max-w-md">
@@ -137,7 +139,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
             </PaneFooterBox>
           </form>
         </FormProvider>
-      </PaneBodyBox>
+      </div>
     </PaneBox>
   );
 };

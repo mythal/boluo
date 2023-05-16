@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui';
 import { useSpace } from '../hooks/useSpace';
@@ -20,6 +20,13 @@ const SpaceChat: FC<{
 
 const Chat: FC = () => {
   const { panes, dispatch, focused, route } = useChatViewState();
+
+  useEffect(() => {
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
 
   return (
     <ChatErrorBoundary>

@@ -31,7 +31,7 @@ export const ChatListHeader: FC = () => {
         if (node.getBoundingClientRect().top >= 0) {
           node.click();
         }
-      }, 50);
+      }, 2000);
     }, {});
     if (loadMoreRef.current) {
       observer.observe(loadMoreRef.current);

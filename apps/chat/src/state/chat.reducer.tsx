@@ -1,6 +1,6 @@
 import type { Reducer } from 'react';
-import type { ChannelState } from './channel';
-import { channelReducer, makeInitialChannelState } from './channel';
+import type { ChannelState } from './channel.reducer';
+import { channelReducer, makeInitialChannelState } from './channel.reducer';
 import { ChatAction, ChatActionUnion, eventToChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';

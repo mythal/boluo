@@ -2,10 +2,11 @@ import { isServerEvent } from 'api';
 import { backendUrlAtom } from 'api-browser';
 import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
 import { useSetAtom } from 'jotai';
-import { atomWithReducer, selectAtom } from 'jotai/utils';
+import { atomFamily, atomWithReducer, selectAtom } from 'jotai/utils';
 import { store } from 'store';
 import { PING, PONG } from '../const';
 import { makeAction } from './actions';
+import { ChannelState } from './channel.reducer';
 import { ChatActionUnion, makeChatAction } from './chat.actions';
 import { chatReducer, ChatSpaceState, initialChatState } from './chat.reducer';
 

@@ -109,9 +109,8 @@ export const ChatContentHeader: FC = () => {
       const chatState = store.get(chatAtom);
       const channelState = chatState.channels[channelId];
       if (!channelState) return;
-      const { minPos } = channelState;
       setIsLoading(true);
-      const before: number | null = minPos;
+      const before: number | null = channelState.messages.length === 0 ? null : channelState.messages[0]!.pos;
       const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
       const result = await fetchPromise;
       if (result.isErr) {

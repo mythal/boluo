@@ -46,6 +46,8 @@ pub enum EventBody {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
         message: Box<Message>,
+        #[serde(rename = "previewId")]
+        preview_id: Option<Uuid>,
     },
     MessageDeleted {
         #[serde(rename = "messageId")]
@@ -88,7 +90,9 @@ pub enum EventBody {
         #[serde(rename = "spaceWithRelated")]
         space_with_related: SpaceWithRelated,
     },
-    AppUpdated,
+    AppUpdated {
+        version: String,
+    },
 }
 
 #[derive(Serialize, Debug, TS)]
@@ -110,10 +114,10 @@ impl Event {
         }
     }
 
-    pub fn new_message(mailbox: Uuid, message: Message) {
+    pub fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Event::fire(EventBody::NewMessage { message, channel_id }, mailbox)
+        Event::fire(EventBody::NewMessage { message, channel_id, preview_id }, mailbox)
     }
 
     pub fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid) {

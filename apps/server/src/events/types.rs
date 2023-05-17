@@ -264,16 +264,18 @@ impl Event {
         enum Kind {
             Preview { channel_id: Uuid, sender_id: Uuid, },
             Edition { message_id: Uuid },
-            Other,
+            NoCache,
+            Cache,
         }
-
         let kind = match &body {
             EventBody::MessagePreview { preview, channel_id: _ } => Kind::Preview {
                 sender_id: preview.sender_id,
                 channel_id: preview.channel_id,
             },
             EventBody::MessageEdited { channel_id, message } => Kind::Edition { message_id: message.id },
-            _ => Kind::Other,
+            | EventBody::NewMessage { channel_id: _, message: _, preview_id: _ }
+            | EventBody::MessageDeleted { message_id: _, channel_id: _ } => Kind::Cache,
+            _ => Kind::NoCache,
         };
 
         let event = Event::build(body, mailbox);
@@ -284,9 +286,10 @@ impl Event {
             Kind::Edition {  message_id } => {
                 cache.edition_map.insert(message_id, event.clone());
             }
-            Kind::Other => {
+            Kind::Cache => {
                 cache.events.push_back(event.clone());
             }
+            Kind::NoCache => {}
         }
 
         Event::send(mailbox, event).await;

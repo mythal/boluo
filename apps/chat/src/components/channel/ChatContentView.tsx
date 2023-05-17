@@ -240,7 +240,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   const channelId = useChannelId();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, setOptimisticItems, firstItemIndex } = useChatList(channelId);
+  const { chatList, setOptimisticItems, firstItemIndex } = useChatList(channelId, me?.user.id);
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,

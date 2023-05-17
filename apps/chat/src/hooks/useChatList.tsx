@@ -1,10 +1,12 @@
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { Dispatch, SetStateAction, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
 import { ChannelState } from '../state/channel.reducer';
 import { chatAtom } from '../state/chat.atoms';
+import { ComposeState } from '../state/compose.reducer';
 import { ChatItem, MessageItem, PreviewItem } from '../types/chat-items';
+import { useComposeAtom } from './useComposeAtom';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
 
@@ -21,7 +23,34 @@ export interface OptimisticItem {
 }
 const START_INDEX = 100000000;
 
-export const useChatList = (channelId: string): UseChatListReturn => {
+type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & { prevPreviewId: string | null; empty: boolean };
+
+const selectComposeSlice = (
+  { source, previewId, editFor }: ComposeState,
+  prevSlice: ComposeSlice | null | undefined,
+): ComposeSlice => {
+  const empty = source.trim().length === 0;
+
+  let prevPreviewId: string | null = null;
+  if (prevSlice) {
+    if (prevSlice.previewId !== previewId) {
+      prevPreviewId = prevSlice.previewId;
+    } else {
+      prevPreviewId = prevSlice.prevPreviewId;
+    }
+  }
+
+  return { previewId, editFor, prevPreviewId, empty };
+};
+
+export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
+  const composeAtom = useComposeAtom();
+  const composeSliceAtom = useMemo(
+    () => selectAtom(composeAtom, selectComposeSlice, (a, b) => a.previewId === b.previewId && a.empty === b.empty),
+    [composeAtom],
+  );
+  const composeSlice = useAtomValue(composeSliceAtom);
+
   const messagesAtom = useMemo(
     () =>
       selectAtom(chatAtom, (chat): [ChannelState['messages'] | null, ChannelState['messageMap'] | null] => {
@@ -58,8 +87,31 @@ export const useChatList = (channelId: string): UseChatListReturn => {
       }
     });
     const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
+    if (myId && !composeSlice.empty && previews.every(preview => preview.id !== composeSlice.previewId)) {
+      const pos = 0;
+      previews.push({
+        type: 'PREVIEW',
+        pos,
+        posP: pos,
+        posQ: 1,
+        id: composeSlice.previewId,
+        senderId: myId,
+        channelId,
+        parentMessageId: null,
+        name: 'dummy',
+        mediaId: null,
+        inGame: false,
+        isAction: false,
+        isMaster: false,
+        clear: false,
+        text: 'dummy',
+        whisperToUsers: null,
+        entities: [],
+        editFor: composeSlice.editFor,
+      });
+    }
     for (const preview of previews) {
-      if (preview.text === '') continue;
+      if (preview.text === '' || preview.id === composeSlice.prevPreviewId) continue;
       if (preview.id in messageMap) {
         const message = messageMap[preview.id]!;
         if (preview.editFor !== message.modified) {
@@ -78,7 +130,9 @@ export const useChatList = (channelId: string): UseChatListReturn => {
       } else if (preview.editFor) {
         continue;
       }
-      if (preview.pos > minPos) {
+      if (preview.pos === 0 /* dummy preview */) {
+        itemList.push(preview);
+      } else if (preview.pos > minPos) {
         const index = binarySearchPos(itemList, preview.pos);
         itemList.splice(index, 0, preview);
       }
@@ -93,7 +147,7 @@ export const useChatList = (channelId: string): UseChatListReturn => {
     }
 
     return itemList;
-  }, [messageMap, messages, optimisticItemMap, previewMap]);
+  }, [channelId, composeSlice, messageMap, messages, myId, optimisticItemMap, previewMap]);
 
   // Compute firstItemIndex for prepending items
   // https://virtuoso.dev/prepend-items/

@@ -199,6 +199,7 @@ impl Event {
             cache
                 .events
                 .iter()
+                .chain(cache.edition_map.values())
                 .chain(cache.preview_map.values())
                 .map(|event| event.encoded.clone())
                 .collect()
@@ -261,7 +262,8 @@ impl Event {
         let mut cache = cache.lock().await;
 
         enum Kind {
-            Preview { sender_id: Uuid, channel_id: Uuid },
+            Preview { channel_id: Uuid, sender_id: Uuid, },
+            Edition { message_id: Uuid },
             Other,
         }
 
@@ -270,6 +272,7 @@ impl Event {
                 sender_id: preview.sender_id,
                 channel_id: preview.channel_id,
             },
+            EventBody::MessageEdited { channel_id, message } => Kind::Edition { message_id: message.id },
             _ => Kind::Other,
         };
 
@@ -277,6 +280,9 @@ impl Event {
         match kind {
             Kind::Preview { sender_id, channel_id } => {
                 cache.preview_map.insert((sender_id, channel_id), event.clone());
+            }
+            Kind::Edition {  message_id } => {
+                cache.edition_map.insert(message_id, event.clone());
             }
             Kind::Other => {
                 cache.events.push_back(event.clone());

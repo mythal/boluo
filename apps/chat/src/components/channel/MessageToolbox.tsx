@@ -1,6 +1,6 @@
 import { Message } from 'api';
 import { post } from 'api-browser';
-import { Edit, Trash, X } from 'icons';
+import { Archive, Edit, Trash, X } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -42,6 +42,12 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
     }
   };
 
+  const handleArchiveMessage = useCallback(async () => {
+    setState('LOADING');
+    await post('/messages/toggle_fold', { id: message.id }, {});
+    setState('NORMAL');
+  }, [message.id]);
+
   const handleEditMessage = useCallback(() => {
     dispatch(makeComposeAction('editMessage', { message }));
   }, [dispatch, message]);
@@ -67,6 +73,9 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
       )}
       {state === 'NORMAL' && (
         <>
+          <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
+            <Archive />
+          </MessageToolboxButton>
           <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
             <Trash />
           </MessageToolboxButton>

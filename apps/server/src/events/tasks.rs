@@ -50,7 +50,7 @@ async fn events_clean() {
                     let mut mailbox = mailbox.lock().await;
                     let mut len = mailbox.events.len();
                     while let Some(event) = mailbox.events.pop_front() {
-                        if len < 4096 && event.event.timestamp > before {
+                        if len < 1024 && event.event.timestamp > before {
                             before = event.event.timestamp - 1;
                             mailbox.events.push_front(event);
                             break;

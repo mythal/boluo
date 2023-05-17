@@ -88,12 +88,22 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     });
     const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
     if (myId && !composeSlice.empty && previews.every(preview => preview.id !== composeSlice.previewId)) {
-      const pos = 0;
+      let pos = 0;
+      let posP = pos;
+      let posQ = 1;
+      if (composeSlice.editFor !== null) {
+        const message = messageMap[composeSlice.previewId];
+        if (message) {
+          pos = message.pos;
+          posP = message.posP;
+          posQ = message.posQ;
+        }
+      }
       previews.push({
         type: 'PREVIEW',
         pos,
-        posP: pos,
-        posQ: 1,
+        posP,
+        posQ,
         id: composeSlice.previewId,
         senderId: myId,
         channelId,

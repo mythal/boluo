@@ -15,7 +15,7 @@ export interface ChannelState {
   previewMap: Record<UserId, PreviewItem>;
 }
 
-const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE', key: message.id });
+const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE' });
 
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
@@ -34,9 +34,12 @@ const handleNewMessage = (
   const prevMessageMap = state.messageMap;
   const message = makeMessageItem(payload.message);
   let { previewMap } = state;
-  if (payload.previewId && payload.previewId in previewMap) {
-    previewMap = { ...previewMap };
-    delete previewMap[payload.previewId];
+  const previews = Object.values(previewMap);
+  if (payload.previewId && previews.find(preview => preview.id === payload.previewId)) {
+    previewMap = Object.fromEntries(
+      previews.filter(preview => preview.id !== payload.previewId)
+        .map(preview => [preview.senderId, preview]),
+    );
   }
 
   if (state.messages.length === 0) {
@@ -124,7 +127,7 @@ const handleMessagePreview = (
     posQ = message.posQ;
   }
 
-  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', key: `preview:${preview.senderId}`, posQ, posP, pos };
+  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos };
   previewMap = { ...previewMap, [preview.senderId]: chatItem };
   return { ...state, previewMap };
 };

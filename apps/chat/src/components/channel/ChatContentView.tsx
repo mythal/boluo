@@ -1,38 +1,32 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { GetMe, Member, Message } from 'api';
+import type { GetMe, Member } from 'api';
 import { post } from 'api-browser';
 import { useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import type { Dispatch, FC, MutableRefObject, RefObject, SetStateAction } from 'react';
+import type { FC, MutableRefObject, RefObject } from 'react';
 import { useMemo } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
-import { Virtuoso } from 'react-virtuoso';
 import { useChannelId } from '../../hooks/useChannelId';
+import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { IsScrollingContext } from '../../hooks/useIsScrolling';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
-import { ChatItem } from '../../types/chat-items';
+import { ChatItem, MessageItem } from '../../types/chat-items';
 import { ChatListDndContext } from './ChatContentDndContext';
-import { ChatContentHeader } from './ChatContentHeader';
-import { ChatItemMessage } from './ChatItemMessage';
-import { ChatItemSwitch } from './ChatItemSwitch';
+import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';
 
 interface Props {
-  chatList: ChatItem[];
   me: GetMe | null;
   myMember: Member | null;
   className?: string;
 }
 
-const START_INDEX = 100000000;
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 2000;
-const OPTIMISTIC_REORDER_TIMEOUT = 2000;
 
 interface UseScrollToBottom {
   showButton: boolean;
@@ -63,7 +57,7 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
 };
 
 interface SortableData {
-  message: Message;
+  message: MessageItem;
   sortable: {
     index: number;
   };
@@ -71,70 +65,8 @@ interface SortableData {
 
 export interface DraggingItem {
   realIndex: number;
-  message: Message;
+  message: MessageItem;
 }
-
-interface OptimisticItem {
-  realIndex: number;
-  optimisticIndex: number;
-  message: Message;
-}
-
-type SetOptimisticReorder = Dispatch<SetStateAction<OptimisticItem | null>>;
-
-interface UseDerivedChatListReturn {
-  optimisticReorder: OptimisticItem | null;
-  chatList: ChatItem[];
-  setOptimisticReorder: SetOptimisticReorder;
-  firstItemIndex: number;
-}
-
-const useDerivedChatList = (actualChatList: ChatItem[]): UseDerivedChatListReturn => {
-  const [optimisticReorder, setOptimisticReorder] = useState<OptimisticItem | null>(null);
-
-  // Reset the optimistic reorder when messages changed
-  if (optimisticReorder !== null) {
-    const item = actualChatList[optimisticReorder.realIndex];
-    if (!item || item.id !== optimisticReorder.message.id) {
-      // Directly set state to avoid re-render
-      // https://beta.reactjs.org/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-      setOptimisticReorder(null);
-    }
-  }
-
-  // Reset the optimistic reorder after timeout
-  useEffect(() => {
-    if (optimisticReorder === null) return;
-    const timeout = window.setTimeout(() => setOptimisticReorder(null), OPTIMISTIC_REORDER_TIMEOUT);
-    return () => window.clearTimeout(timeout);
-  }, [optimisticReorder]);
-
-  const optimisticChatList = useMemo(() => {
-    if (optimisticReorder === null) return actualChatList;
-    const { realIndex, optimisticIndex } = optimisticReorder;
-    if (realIndex === optimisticIndex) return actualChatList;
-    const newMessages = [...actualChatList];
-    const message = newMessages.splice(realIndex, 1)[0]!;
-    newMessages.splice(optimisticIndex, 0, message);
-    return newMessages;
-  }, [optimisticReorder, actualChatList]);
-
-  const chatList = optimisticChatList;
-
-  // for prepending items https://virtuoso.dev/prepend-items/
-  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
-  const prevChatListRef = useRef<ChatItem[]>();
-  if (prevChatListRef.current) {
-    const prevChatList = prevChatListRef.current;
-    if (prevChatList.length > 0 && chatList.length > prevChatList.length && prevChatList[0]!.id !== chatList[0]!.id) {
-      setFirstItemIndex((prevIndex) => prevIndex - (chatList.length - prevChatList.length));
-      setOptimisticReorder(null);
-    }
-  }
-  prevChatListRef.current = chatList;
-
-  return { chatList, optimisticReorder, setOptimisticReorder, firstItemIndex };
-};
 
 interface UseDragHandlesResult {
   handleDragStart: (event: DragStartEvent) => void;
@@ -145,22 +77,22 @@ interface UseDragHandlesResult {
 
 const useDndHandles = (
   channelId: string,
-  derivedChatList: ChatItem[],
-  setOptimisticReorder: SetOptimisticReorder,
+  chatList: ChatItem[],
+  setOptimisticItems: SetOptimisticItems,
 ): UseDragHandlesResult => {
   const [draggingItem, setDraggingItem] = useState<DraggingItem | null>(null);
   const activeRef = useRef<DraggingItem | null>(draggingItem);
   activeRef.current = draggingItem;
-  const chatListRef = useRef<ChatItem[]>(derivedChatList);
-  chatListRef.current = derivedChatList;
+
+  const chatListRef = useRef<ChatItem[]>(chatList);
+  chatListRef.current = chatList;
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data as DataRef<SortableData>;
     if (!data.current) return;
     const { message, sortable } = data.current;
     setDraggingItem({ realIndex: sortable.index, message });
-    setOptimisticReorder(null);
-  }, [setOptimisticReorder]);
+  }, []);
   const resetDragging = useCallback(() => setDraggingItem(null), []);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
@@ -179,18 +111,38 @@ const useDndHandles = (
     const targetIndex = sortable.index;
     if (realIndex === targetIndex) return;
     resetDragging();
-    setOptimisticReorder({
-      message: draggingMessage,
-      realIndex,
-      optimisticIndex: targetIndex,
-    });
+    const targetItem = chatList[targetIndex];
+    if (!targetItem) {
+      console.warn('Lost the target item when drag end');
+      return;
+    }
+    const timestamp = new Date().getTime();
+    const item: MessageItem = { ...draggingMessage, optimistic: true };
     let range: [[number, number] | null, [number, number] | null] | null = null;
     if (realIndex < targetIndex) {
-      const item = chatList[targetIndex]!;
-      range = [[item.posP, item.posQ], null];
+      range = [[targetItem.posP, targetItem.posQ], null];
+      const targetNext = chatList[targetIndex + 1];
+      const optimisticPos = targetNext
+        ? (targetNext.pos + targetItem.pos) / 2
+        : (targetItem.posP + 1) / targetItem.posQ;
+
+      setOptimisticItems((items) => ({
+        ...items,
+        [draggingMessage.id]: { item, optimisticPos, timestamp },
+      }));
     } else {
-      const item = chatList[targetIndex]!;
-      range = [null, [item.posP, item.posQ]];
+      range = [null, [targetItem.posP, targetItem.posQ]];
+
+      const targetBefore = chatList[targetIndex - 1];
+
+      const optimisticPos = targetBefore
+        ? (targetBefore.pos + targetItem.pos) / 2
+        : targetItem.posP / targetItem.posQ + 1;
+
+      setOptimisticItems((items) => ({
+        ...items,
+        [draggingMessage.id]: { item, optimisticPos, timestamp },
+      }));
     }
     if (range) {
       const result = await post('/messages/move_between', null, {
@@ -198,12 +150,16 @@ const useDndHandles = (
         messageId: draggingMessage.id,
         range,
       });
+      setOptimisticItems(items => {
+        const nextItems = { ...items };
+        delete nextItems[draggingMessage.id];
+        return nextItems;
+      });
       if (result.isErr) {
         // TODO: handle error
       }
     }
-    setOptimisticReorder(null);
-  }, [setOptimisticReorder, channelId, resetDragging]);
+  }, [setOptimisticItems, channelId, resetDragging]);
 
   const handleDragCancel = useCallback(() => {
     resetDragging();
@@ -280,45 +236,19 @@ interface ScrollLockState {
   modified: number;
 }
 
-export const ChatContentView: FC<Props> = ({ className = '', chatList: actualChatList, me, myMember }) => {
+export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => {
   const channelId = useChannelId();
-  const [isScrolling, setIsScrolling] = useState(false);
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, optimisticReorder, setOptimisticReorder, firstItemIndex } = useDerivedChatList(
-    actualChatList,
-  );
+  const { chatList, setOptimisticItems, firstItemIndex } = useChatList(channelId);
 
-  const totalCount = chatList.length;
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
     chatList,
-    setOptimisticReorder,
+    setOptimisticItems,
   );
   const renderRangeRef = useRef<[number, number]>([0, 0]);
 
-  const itemContent = (offsetIndex: number) => {
-    const index = offsetIndex - firstItemIndex;
-    const item = chatList[index];
-    if (!item) {
-      // Sometimes an index is passed in that exceeds the maximum length,
-      // kind of like a Virtuoso bug.
-      return <div className="h-[1px]" />;
-    }
-    if (optimisticReorder?.optimisticIndex === index) {
-      const { message } = optimisticReorder;
-      return <ChatItemMessage message={message} key={message.id} self={message.senderId === me?.user.id} />;
-    }
-    return (
-      <ChatItemSwitch
-        key={item.key}
-        myId={me?.user.id}
-        chatItem={item}
-        isMember={myMember !== null}
-        continuous={isContinuous(chatList[index - 1], item)}
-      />
-    );
-  };
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, renderRangeRef, chatList);
@@ -338,31 +268,19 @@ export const ChatContentView: FC<Props> = ({ className = '', chatList: actualCha
         onDragEnd={handleDragEnd}
       >
         <ScrollerRefContext.Provider value={scrollerRef}>
-          <IsScrollingContext.Provider value={isScrolling}>
-            <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
-              <Virtuoso
-                className="overflow-x-hidden"
-                firstItemIndex={firstItemIndex}
-                rangeChanged={({ startIndex, endIndex }) =>
-                  renderRangeRef.current = [startIndex - firstItemIndex, endIndex - firstItemIndex]}
-                ref={virtuosoRef}
-                scrollerRef={(ref) => {
-                  if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
-                }}
-                components={{ Header: ChatContentHeader }}
-                initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
-                totalCount={totalCount}
-                atBottomThreshold={64}
-                increaseViewportBy={{ top: 512, bottom: 128 }}
-                overscan={{ main: 128, reverse: 512 }}
-                isScrolling={setIsScrolling}
-                itemContent={itemContent}
-                followOutput="auto"
-                atBottomStateChange={handleBottomStateChange}
-              />
-              {showButton && <GoButtomButton onClick={goBottom} />}
-            </SortableContext>
-          </IsScrollingContext.Provider>
+          <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
+            <ChatContentVirtualList
+              firstItemIndex={firstItemIndex}
+              renderRangeRef={renderRangeRef}
+              virtuosoRef={virtuosoRef}
+              scrollerRef={scrollerRef}
+              chatList={chatList}
+              handleBottomStateChange={handleBottomStateChange}
+              me={me}
+              myMember={myMember}
+            />
+            {showButton && <GoButtomButton onClick={goBottom} />}
+          </SortableContext>
         </ScrollerRefContext.Provider>
       </ChatListDndContext>
     </div>

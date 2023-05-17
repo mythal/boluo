@@ -1,25 +1,23 @@
-import { Message } from 'api';
 import clsx from 'clsx';
 import { FC, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
 import { ParseResult } from '../../interpreter/parser';
+import { MessageItem } from '../../types/chat-items';
 import { Content } from './Content';
-import { IsActionIndicator } from './IsActionIndicator';
 import { MessageBox } from './MessageBox';
 import { Name } from './Name';
 
 interface Props {
-  message: Message;
-  optimistic?: boolean;
+  message: MessageItem;
   className?: string;
   self: boolean;
   continuous?: boolean;
 }
 
 export const ChatItemMessage: FC<Props> = (
-  { message, className = '', optimistic = false, self, continuous = false },
+  { message, className = '', self, continuous = false },
 ) => {
-  const { isMaster, isAction } = message;
+  const { isMaster, isAction, optimistic } = message;
 
   const nameNode = useMemo(
     () => <Name name={message.name} isMaster={isMaster} self={self} />,

@@ -5,13 +5,18 @@ interface Props {
   children: ReactNode;
   type?: 'NORMAL' | 'DANGER';
   onClick?: () => void;
+  on?: boolean;
 }
 
-export const MessageToolboxButton: FC<Props> = ({ children, onClick, type = 'NORMAL' }) => {
+export const MessageToolboxButton: FC<Props> = ({ children, onClick, type = 'NORMAL', on }) => {
   const danger = type === 'DANGER';
   return (
     <button
-      className={clsx('p-2 hover:bg-surface-300 items-center flex gap-1', danger && 'text-error-600')}
+      className={clsx(
+        'p-2  items-center flex gap-1 first-of-type:rounded-l-sm last-of-type:rounded-r-sm',
+        on ? 'bg-surface-400 hover:bg-surface-500 text-surface-100' : 'hover:bg-surface-300 active:bg-surface-400',
+        danger && 'text-error-600',
+      )}
       onClick={onClick}
     >
       {children}

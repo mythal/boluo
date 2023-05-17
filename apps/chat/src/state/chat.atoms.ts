@@ -2,15 +2,16 @@ import { isServerEvent } from 'api';
 import { backendUrlAtom } from 'api-browser';
 import { webSocketUrlAtom } from 'common/hooks/useWebSocketUrl';
 import { useSetAtom } from 'jotai';
-import { atomFamily, atomWithReducer, selectAtom } from 'jotai/utils';
+import { atomWithReducer, selectAtom } from 'jotai/utils';
 import { store } from 'store';
 import { PING, PONG } from '../const';
 import { makeAction } from './actions';
-import { ChannelState } from './channel.reducer';
 import { ChatActionUnion, makeChatAction } from './chat.actions';
 import { chatReducer, ChatSpaceState, initialChatState } from './chat.reducer';
 
 export const chatAtom = atomWithReducer<ChatSpaceState, ChatActionUnion>(initialChatState, chatReducer);
+
+export const isChatInitializedAtom = selectAtom(chatAtom, (chat) => chat.context.initialized);
 
 const createMailboxConnection = (baseUrl: string, id: string): WebSocket => {
   return new WebSocket(`${baseUrl}/events/connect?mailbox=${id}`);

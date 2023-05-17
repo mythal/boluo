@@ -41,17 +41,21 @@ async fn events_clean() {
     IntervalStream::new(interval(Duration::from_secs(60 * 60 * 2)))
         .for_each(|_| async {
             let mut next_map = HashMap::new();
-            let before = timestamp() - 24 * 60 * 60 * 1000;
+            let before = timestamp() - 12 * 60 * 60 * 1000;
             let cache = super::context::get_cache().mailboxes.read().await;
             for (id, mailbox) in cache.iter() {
                 let mut empty = false;
+                let mut before = before.clone();
                 {
                     let mut mailbox = mailbox.lock().await;
+                    let mut len = mailbox.events.len();
                     while let Some(event) = mailbox.events.pop_front() {
-                        if event.event.timestamp > before {
+                        if len < 4096 && event.event.timestamp > before {
+                            before = event.event.timestamp - 1;
                             mailbox.events.push_front(event);
                             break;
                         }
+                        len -= 1;
                     }
                     let mut preview_map = HashMap::new();
                     let mut edition_map = HashMap::new();

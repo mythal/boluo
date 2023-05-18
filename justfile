@@ -2,7 +2,7 @@ alias fmt := format
 alias gen := generate
 
 build projects="*":
-    npm exec nx run-many -- --target=build --projects={{projects}}
+    npm exec nx run-many -- --target=build --output-style="stream" --projects={{projects}}
 
 lint:
     npm exec nx run-many -- --target=lint

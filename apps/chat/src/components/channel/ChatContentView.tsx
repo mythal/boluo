@@ -286,3 +286,5 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
     </div>
   );
 };
+
+export default ChatContentView;

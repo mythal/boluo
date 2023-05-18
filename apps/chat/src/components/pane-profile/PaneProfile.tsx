@@ -76,3 +76,5 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
     </PaneBox>
   );
 };
+
+export default PaneProfile;

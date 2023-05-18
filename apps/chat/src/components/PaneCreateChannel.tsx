@@ -143,3 +143,5 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
     </PaneBox>
   );
 };
+
+export default PaneCreateChannel;

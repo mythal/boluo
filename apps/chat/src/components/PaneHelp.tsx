@@ -23,3 +23,5 @@ export const PaneHelp: FC<Props> = () => {
     </PaneBox>
   );
 };
+
+export default PaneHelp;

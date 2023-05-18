@@ -1,5 +1,4 @@
 import { SendStatus } from 'api/events';
-import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { useSend } from '../../hooks/useSend';
 import { HEARTBEAT_INTERVAL } from '../../settings';

@@ -1,26 +1,20 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
-import { mix } from 'polished';
 import * as React from 'react';
 import { useState } from 'react';
-import { useHistory } from 'react-router-dom';
 import { Channel } from '../../api/channels';
 import { Space, SpaceMemberWithUser } from '../../api/spaces';
 import userCog from '../../assets/icons/user-cog.svg';
-import { useChannelId } from '../../hooks/useChannelId';
 import { useTitle } from '../../hooks/useTitle';
-import { useDispatch, useSelector } from '../../store';
+import { useSelector } from '../../store';
 import { breakpoint, flex, fontBold, mediaQuery, mL, p, pX, pY, textLg } from '../../styles/atoms';
 import { blue, gray } from '../../styles/colors';
 import { Id } from '../../utils/id';
-import { chatPath } from '../../utils/path';
-import Badge from '../atoms/Badge';
 import Icon from '../atoms/Icon';
 import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import ManageSpace from '../organisms/ManageSpace';
 import ChatHeaderButton, { chatHeaderButtonStyle } from './ChatHeaderButton';
-import MemberListItem from './MemberListItem';
 import { chatHeaderStyle, chatHeaderToolbar } from './styles';
 
 const Header = styled.div(chatHeaderStyle);
@@ -41,18 +35,6 @@ const container = css`
   &[data-active='true'] {
     border-color: ${blue['800']};
   }
-`;
-
-const memberList = css`
-  flex: 1 1 16rem;
-  min-width: 12rem;
-
-  ${mediaQuery(breakpoint.md)} {
-    max-width: 16rem;
-  }
-  background-color: ${mix(0.5, gray['900'], gray['800'])};
-  overflow-y: auto;
-  overflow-x: hidden;
 `;
 
 const Title = styled.div`
@@ -86,8 +68,6 @@ const Buttons = styled.div`
 function Home({ space, members, channels }: Props) {
   useTitle(space.name);
 
-  const dispatch = useDispatch();
-  const history = useHistory();
   // const setActive = () => {
   //   if (!activePane) {
   //     dispatch({ type: 'SWITCH_ACTIVE_PANE', pane });

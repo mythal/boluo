@@ -13,20 +13,7 @@ import { useChannelId, usePane } from '../../hooks/useChannelId';
 import { useTitle } from '../../hooks/useTitle';
 import { useNotify } from '../../states/notify';
 import { useSelector } from '../../store';
-import {
-  breakpoint,
-  flex,
-  fontBold,
-  fontMono,
-  fontNormal,
-  mediaQuery,
-  mL,
-  mR,
-  pR,
-  textBase,
-  textLg,
-  textSm,
-} from '../../styles/atoms';
+import { flex, fontBold, fontMono, fontNormal, mL, mR, pR, textBase, textLg, textSm } from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
 import ChannelMemberButton from './ChannelMemberButton';
@@ -71,13 +58,6 @@ const ChannelName = styled.div`
 const name = css`
   ${[textBase, fontBold, textLg]};
   color: ${textColor};
-`;
-
-const showOnMd = css`
-  display: none;
-  ${mediaQuery(breakpoint.md)} {
-    display: unset;
-  }
 `;
 
 interface Props {

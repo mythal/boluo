@@ -1,10 +1,9 @@
 import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../../api/request';
-import { User } from '../../api/users';
 import removeMember from '../../assets/icons/user-minus.svg';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';

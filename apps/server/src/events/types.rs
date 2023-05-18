@@ -117,7 +117,14 @@ impl Event {
     pub fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Event::fire(EventBody::NewMessage { message, channel_id, preview_id }, mailbox)
+        Event::fire(
+            EventBody::NewMessage {
+                message,
+                channel_id,
+                preview_id,
+            },
+            mailbox,
+        )
     }
 
     pub fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid) {
@@ -262,7 +269,7 @@ impl Event {
         let mut cache = cache.lock().await;
 
         enum Kind {
-            Preview { channel_id: Uuid, sender_id: Uuid, },
+            Preview { channel_id: Uuid, sender_id: Uuid },
             Edition { message_id: Uuid },
             NoCache,
             Cache,
@@ -272,9 +279,16 @@ impl Event {
                 sender_id: preview.sender_id,
                 channel_id: preview.channel_id,
             },
-            EventBody::MessageEdited { channel_id, message } => Kind::Edition { message_id: message.id },
-            | EventBody::NewMessage { channel_id: _, message: _, preview_id: _ }
-            | EventBody::MessageDeleted { message_id: _, channel_id: _ } => Kind::Cache,
+            EventBody::MessageEdited { channel_id: _, message } => Kind::Edition { message_id: message.id },
+            EventBody::NewMessage {
+                channel_id: _,
+                message: _,
+                preview_id: _,
+            }
+            | EventBody::MessageDeleted {
+                message_id: _,
+                channel_id: _,
+            } => Kind::Cache,
             _ => Kind::NoCache,
         };
 
@@ -283,7 +297,7 @@ impl Event {
             Kind::Preview { sender_id, channel_id } => {
                 cache.preview_map.insert((sender_id, channel_id), event.clone());
             }
-            Kind::Edition {  message_id } => {
+            Kind::Edition { message_id } => {
                 cache.edition_map.insert(message_id, event.clone());
             }
             Kind::Cache => {

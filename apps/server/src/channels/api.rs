@@ -54,7 +54,6 @@ pub struct EditChannelMember {
     pub text_color: Option<String>,
 }
 
-
 #[derive(Serialize, Debug, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]

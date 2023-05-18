@@ -1,4 +1,4 @@
-use super::api::{CreateChannel, EditChannel, ChannelMembers};
+use super::api::{ChannelMembers, CreateChannel, EditChannel};
 use super::models::ChannelMember;
 use super::Channel;
 use crate::channels::api::{
@@ -35,7 +35,7 @@ async fn query(req: Request<Body>) -> Result<Channel, AppError> {
     Channel::get_by_id(&mut *db, &query.id).await.or_not_found()
 }
 
-async fn members(req: Request<Body>) -> Result<ChannelMembers,AppError> {
+async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
     let mut conn = database::get().await?;

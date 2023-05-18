@@ -97,7 +97,12 @@ pub async fn get_session_from_old_version_cookies(headers: &HeaderMap<HeaderValu
     get_session_from_token(token).await.ok()
 }
 
-pub fn add_session_cookie(session: &Uuid, origin: Option<&HeaderValue>, _host: Option<&HeaderValue>, response_header: &mut HeaderMap<HeaderValue>) {
+pub fn add_session_cookie(
+    session: &Uuid,
+    origin: Option<&HeaderValue>,
+    _host: Option<&HeaderValue>,
+    response_header: &mut HeaderMap<HeaderValue>,
+) {
     use cookie::time::Duration;
     use cookie::{CookieBuilder, SameSite};
     use hyper::header::SET_COOKIE;

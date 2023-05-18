@@ -45,7 +45,7 @@ async fn events_clean() {
             let cache = super::context::get_cache().mailboxes.read().await;
             for (id, mailbox) in cache.iter() {
                 let mut empty = false;
-                let mut before = before.clone();
+                let mut before = before;
                 {
                     let mut mailbox = mailbox.lock().await;
                     let mut len = mailbox.events.len();

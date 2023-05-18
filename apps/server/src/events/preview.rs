@@ -74,7 +74,11 @@ impl PreviewPost {
                 should_finish = true;
             }
         }
-        let start: i32 = if edit_for.is_some() { 0 } else { crate::pos::pos(db, cache, channel_id, id).await? };
+        let start: i32 = if edit_for.is_some() {
+            0
+        } else {
+            crate::pos::pos(db, cache, channel_id, id).await?
+        };
         let is_master = ChannelMember::get(db, &user_id, &channel_id)
             .await
             .or_no_permission()?

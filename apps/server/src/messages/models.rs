@@ -13,14 +13,10 @@ use tokio_postgres::error::SqlState;
 
 pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     if q == 0 {
-        return Err(ValidationFailed(
-            r#""pos_q" cannot be 0"#,
-        ));
+        return Err(ValidationFailed(r#""pos_q" cannot be 0"#));
     }
     if p < 0 || q < 0 {
-        return Err(ValidationFailed(
-            r#""pos_p" and "pos_q" cannot be negative numbers"#,
-        ));
+        return Err(ValidationFailed(r#""pos_p" and "pos_q" cannot be negative numbers"#));
     }
     Ok(())
 }
@@ -73,7 +69,11 @@ impl Message {
         }
     }
 
-    pub async fn query_by_pos<T: Querist>(db: &mut T, channel_id: &Uuid, (p, q): (i32, i32)) -> Result<Option<Message>, DbError> {
+    pub async fn query_by_pos<T: Querist>(
+        db: &mut T,
+        channel_id: &Uuid,
+        (p, q): (i32, i32),
+    ) -> Result<Option<Message>, DbError> {
         let row = db
             .query_one(include_str!("sql/by_pos.sql"), &[channel_id, &p, &q])
             .await?;
@@ -319,12 +319,11 @@ impl Message {
         }
     }
     pub async fn max_pos<T: Querist>(db: &mut T, channel_id: &Uuid) -> (i32, i32) {
-        let row = db.query_one(include_str!("./sql/max_pos.sql"), &[channel_id])
-            .await;
+        let row = db.query_one(include_str!("./sql/max_pos.sql"), &[channel_id]).await;
         if let Ok(Some(row)) = row {
             (row.get(0), row.get(1))
         } else {
-            (42,1)
+            (42, 1)
         }
     }
     pub async fn edit<T: Querist>(
@@ -410,7 +409,8 @@ async fn message_test() -> Result<(), crate::error::AppError> {
         Some(Uuid::nil()),
         None,
     )
-    .await.unwrap();
+    .await
+    .unwrap();
     assert_eq!(message.text, "");
 
     let message = Message::get(db, &message.id, Some(&user.id)).await?.unwrap();

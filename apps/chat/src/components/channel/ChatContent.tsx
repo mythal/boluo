@@ -1,11 +1,12 @@
 import type { GetMe } from 'api';
 import { useAtomValue } from 'jotai';
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { Suspense } from 'react';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { isChatInitializedAtom } from '../../state/chat.atoms';
 import { ChatListLoading } from './ChatContentLoading';
-import { ChatContentView } from './ChatContentView';
+
+const ChatContentView = React.lazy(() => import('./ChatContentView'));
 
 interface Props {
   className: string;

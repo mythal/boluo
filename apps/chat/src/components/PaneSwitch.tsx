@@ -1,20 +1,21 @@
-import { FC, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { memo, Suspense } from 'react';
 import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneIdProvider } from '../state/chat-view';
 import type { Pane } from '../types/chat-pane';
 import { ChatPaneChannel } from './channel/ChannelPane';
-import { PaneProfile } from './pane-profile/PaneProfile';
-import { PaneSpaceMembers } from './pane-space-members/PaneSpaceMembers';
-import { PaneCreateChannel } from './PaneCreateChannel';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneError } from './PaneError';
-import { PaneHelp } from './PaneHelp';
 import { PaneLoading } from './PaneLoading';
-import { PaneLogin } from './PaneLogin';
-import { PaneSettings } from './settings/PaneSettings';
-import { PaneSpaceSettings } from './space-settings/PaneSpaceSettings';
+
+const PaneSpaceSettings = React.lazy(() => import('./space-settings/PaneSpaceSettings'));
+const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
+const PaneProfile = React.lazy(() => import('./pane-profile/PaneProfile'));
+const PaneCreateChannel = React.lazy(() => import('./PaneCreateChannel'));
+const PaneSettings = React.lazy(() => import('./settings/PaneSettings'));
+const PaneLogin = React.lazy(() => import('./PaneLogin'));
+const PaneHelp = React.lazy(() => import('./PaneHelp'));
 
 interface Props {
   pane: Pane;

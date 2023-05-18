@@ -242,3 +242,5 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
     </PaneBox>
   );
 };
+
+export default PaneSpaceSettings;

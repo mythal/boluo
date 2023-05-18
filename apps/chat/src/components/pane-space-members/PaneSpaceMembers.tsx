@@ -70,3 +70,5 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
     </PaneBox>
   );
 };
+
+export default PaneSpaceMembers;

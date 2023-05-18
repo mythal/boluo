@@ -123,3 +123,5 @@ export const PaneSettings: FC = () => {
     </PaneBox>
   );
 };
+
+export default PaneSettings;

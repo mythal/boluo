@@ -38,3 +38,5 @@ export const PaneLogin: FC<Props> = () => {
     </PaneBox>
   );
 };
+
+export default PaneLogin;

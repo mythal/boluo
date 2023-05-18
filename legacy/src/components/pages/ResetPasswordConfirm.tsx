@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { RegisterOptions as ValidationRules } from 'react-hook-form/dist/types/validator';
@@ -24,7 +23,7 @@ interface UrlParams {
 
 function ResetPasswordConfirm() {
   useTitle('重设密码');
-  const { register, handleSubmit, watch, errors } = useForm<FormData>();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>();
   const [state, setState] = useState<'loading' | 'default'>('default');
   const { token } = useParams<UrlParams>();
   const history = useHistory();
@@ -49,7 +48,7 @@ function ResetPasswordConfirm() {
         <div css={[mY(2)]}>
           <Label htmlFor="password">密码</Label>
           <div>
-            <Input css={largeInput} type="password" name="password" id="password" ref={register(passwordValidation)} />
+            <Input css={largeInput} type="password" id="password" {...register('password', passwordValidation)} />
           </div>
           <div>{errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}</div>
 
@@ -59,9 +58,8 @@ function ResetPasswordConfirm() {
               <Input
                 css={largeInput}
                 type="password"
-                name="passwordRepeat"
                 id="password"
-                ref={register(passwordRepeatValidation)}
+                {...register('passwordRepeat', passwordRepeatValidation)}
               />
             </div>
             <div>{errors.passwordRepeat && <ErrorMessage>{errors.passwordRepeat.message}</ErrorMessage>}</div>

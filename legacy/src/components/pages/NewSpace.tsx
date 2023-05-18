@@ -1,5 +1,4 @@
 import { css } from '@emotion/react';
-import * as React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
@@ -35,7 +34,7 @@ function NewSpace() {
   useTitle('新建位面');
   const [creationError, setCreationError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
-  const { register, handleSubmit, errors } = useForm<CreateSpace>();
+  const { register, handleSubmit, formState: { errors } } = useForm<CreateSpace>();
   const [submitting, setSubmitting] = useState(false);
 
   const history = useHistory();
@@ -66,7 +65,7 @@ function NewSpace() {
         <div css={[md(fieldsLayout)]}>
           <div css={[mY(2), gridColumn(1, 3)]}>
             <Label htmlFor="name">位面名</Label>
-            <Input css={largeInput} id="name" name="name" ref={register(spaceNameValidation)} />
+            <Input css={largeInput} id="name" {...register('name', spaceNameValidation)} />
             {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
           </div>
           <div css={mY(2)}>
@@ -90,8 +89,7 @@ function NewSpace() {
               css={largeInput}
               defaultValue="综合"
               id="firstChannelName"
-              name="firstChannelName"
-              ref={register(channelNameValidation())}
+              {...register('firstChannelName', channelNameValidation())}
             />
             <HelpText>频道中可以发送各种消息。</HelpText>
           </div>
@@ -100,8 +98,7 @@ function NewSpace() {
             <TextArea
               placeholder="（选填）简要描述一下这个位面。"
               id="description"
-              name="description"
-              ref={register(descriptionValidation)}
+              {...register('description', descriptionValidation)}
             />
           </div>
         </div>

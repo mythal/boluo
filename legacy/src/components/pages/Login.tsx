@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useHistory } from 'react-router-dom';
@@ -30,7 +29,7 @@ function Login() {
   const dispatch = useDispatch();
   const history = useHistory();
   const [loginError, setLoginError] = useState<AppError | null>(null);
-  const { register, handleSubmit, errors } = useForm<LoginData>();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginData>();
   const [loggingIn, setLoggingIn] = useState(false);
   const onSubmit = async (data: LoginData) => {
     setLoggingIn(true);
@@ -57,9 +56,8 @@ function Login() {
             <Input
               css={largeInput}
               id="username"
-              name="username"
               autoComplete="username"
-              ref={register({ required })}
+              {...register('username', { required })}
             />
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
@@ -69,9 +67,8 @@ function Login() {
               css={largeInput}
               type="password"
               id="password"
-              name="password"
               autoComplete="current-password"
-              ref={register({ required })}
+              {...register('password', { required })}
             />
             {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
           </div>

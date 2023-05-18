@@ -50,6 +50,8 @@ export interface EditSpace {
   description?: string;
   defaultDiceType: string | undefined;
   explorable?: boolean;
+  isPublic?: boolean;
+  allowSpectator?: boolean;
 }
 
 export type StatusKind = 'OFFLINE' | 'AWAY' | 'ONLINE';

@@ -153,6 +153,7 @@ function Wod() {
 interface SwitchButtonProps {
   page: string;
   self: string;
+  children: React.ReactNode;
   setPage: (page: string) => void;
 }
 

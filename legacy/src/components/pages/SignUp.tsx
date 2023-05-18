@@ -81,7 +81,11 @@ function SignUp() {
   return (
     <>
       <Title>注册账号</Title>
-      {registerError && <InformationBar variant="ERROR">{errorText(registerError)}</InformationBar>}
+      {registerError && (
+        <InformationBar variant="ERROR">
+          <>{errorText(registerError)}</>
+        </InformationBar>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div css={formGrid}>
           <div css={[mY(2)]}>

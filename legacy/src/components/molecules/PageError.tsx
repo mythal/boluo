@@ -9,7 +9,9 @@ import Title from '../../components/atoms/Title';
 import { mask, mX, mY } from '../../styles/atoms';
 import { Code } from '../atoms/Code';
 
-interface Props {}
+interface Props {
+  children: React.ReactNode;
+}
 
 interface State {
   error: unknown;

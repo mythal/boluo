@@ -1,6 +1,5 @@
 import { css } from '@emotion/react';
 import { Set } from 'immutable';
-import * as React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
@@ -76,7 +75,7 @@ export function makeMemberOption({ user }: Member): MemberOption {
 
 function ManageChannel({ channel, dismiss }: Props) {
   const channelId = channel.id;
-  const { register, handleSubmit, errors } = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -146,9 +145,8 @@ function ManageChannel({ channel, dismiss }: Props) {
           <Input
             css={largeInput}
             id="name"
-            name="name"
             defaultValue={channel.name}
-            ref={register(channelNameValidation(channel.spaceId, channel.name))}
+            {...register('name', channelNameValidation(channel.spaceId, channel.name))}
           />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
@@ -170,9 +168,8 @@ function ManageChannel({ channel, dismiss }: Props) {
           <Input
             css={largeInput}
             id="defaultRollCommand"
-            name="defaultRollCommand"
             defaultValue={channel.defaultRollCommand}
-            ref={register}
+            {...register('defaultRollCommand')}
           />
           <HelpText>「插入骰子」按钮自动插入的指令</HelpText>
         </div>
@@ -181,9 +178,8 @@ function ManageChannel({ channel, dismiss }: Props) {
           <TextArea
             id="topic"
             defaultValue={channel.topic}
-            name="topic"
             placeholder="例如：在你们护送物资的时候，四只地精埋伏你们于路边"
-            ref={register(channelTopicValidation)}
+            {...register('topic', channelTopicValidation)}
           />
           <HelpText>话题可以用来记录和提醒你们当前专注于什么。</HelpText>
           {errors.topic && <ErrorMessage>{errors.topic.message}</ErrorMessage>}
@@ -194,8 +190,12 @@ function ManageChannel({ channel, dismiss }: Props) {
         </div>
         <div css={field}>
           <Label>
-            <input name="isPrivate" id="isPrivate" defaultChecked={!channel.isPublic} ref={register} type="checkbox" />
-            {' '}
+            <input
+              id="isPrivate"
+              defaultChecked={!channel.isPublic}
+              {...register('isPrivate')}
+              type="checkbox"
+            />{' '}
             秘密频道
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>

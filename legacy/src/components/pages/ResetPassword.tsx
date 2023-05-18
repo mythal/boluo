@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { showFlash } from '../../actions';
@@ -52,10 +51,9 @@ function ResetPassword() {
             <Input
               css={largeInput}
               type="email"
-              name="email"
               id="email"
               placeholder="someone@example.com"
-              ref={register({ required })}
+              {...register('email', { required })}
             />
           </div>
           {state === 'sent' && <div css={mY(2)}>已发送，请在邮箱查收，如果找不到请检查垃圾邮箱。</div>}

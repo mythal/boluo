@@ -1,5 +1,4 @@
 import { css } from '@emotion/react';
-import * as React from 'react';
 import { useState } from 'react';
 import { RegisterOptions as ValidationRules, useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
@@ -62,7 +61,7 @@ const noticeStyle = css`
 
 function SignUp() {
   useTitle('注册账号');
-  const { register, handleSubmit, watch, errors } = useForm<FormData>();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>();
   const [submitting, setSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<AppError | null>(null);
   const history = useHistory();
@@ -87,7 +86,7 @@ function SignUp() {
         <div css={formGrid}>
           <div css={[mY(2)]}>
             <Label htmlFor="email">邮箱</Label>
-            <Input css={largeInput} type="email" id="email" name="email" ref={register(emailValidation)} />
+            <Input css={largeInput} type="email" id="email" {...register('email', emailValidation)} />
             {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
           </div>
           <div css={[mY(2)]}>
@@ -95,16 +94,15 @@ function SignUp() {
             <Input
               css={largeInput}
               id="username"
-              name="username"
               autoComplete="username"
-              ref={register(usernameValidation)}
+              {...register('username', usernameValidation)}
             />
             <HelpText>英文、数字和下划线。至少3个字符。</HelpText>
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
           <div css={[mY(2)]}>
             <Label htmlFor="nickname">昵称</Label>
-            <Input css={largeInput} id="nickname" name="nickname" ref={register(nicknameValidation)} />
+            <Input css={largeInput} id="nickname" {...register('nickname', nicknameValidation)} />
             {errors.nickname && <ErrorMessage>{errors.nickname.message}</ErrorMessage>}
           </div>
           <div css={mY(2)}>
@@ -113,9 +111,8 @@ function SignUp() {
               css={largeInput}
               type="password"
               id="password"
-              name="password"
               autoComplete="new-password"
-              ref={register(passwordValidation)}
+              {...register('password', passwordValidation)}
             />
             <HelpText>至少8个字符，请勿过于简单。</HelpText>
             {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
@@ -126,9 +123,8 @@ function SignUp() {
               css={largeInput}
               type="password"
               id="passwordRepeat"
-              name="passwordRepeat"
               autoComplete="new-password"
-              ref={register(passwordRepeatValidation)}
+              {...register('passwordRepeat', passwordRepeatValidation)}
             />
             {errors.passwordRepeat && <ErrorMessage>{errors.passwordRepeat.message}</ErrorMessage>}
           </div>

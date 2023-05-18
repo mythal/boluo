@@ -1,5 +1,4 @@
 import { css } from '@emotion/react';
-import * as React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { JoinedChannel } from '../../actions';
@@ -39,7 +38,7 @@ interface FormData {
 
 function CreateChannel({ space, dismiss }: Props) {
   const spaceId = space.id;
-  const { register, handleSubmit, errors } = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -72,7 +71,7 @@ function CreateChannel({ space, dismiss }: Props) {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
           <Label htmlFor="name">频道名</Label>
-          <Input css={largeInput} id="name" name="name" ref={register(channelNameValidation())} />
+          <Input css={largeInput} id="name" {...register('name', channelNameValidation())} />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
         <div>
@@ -92,15 +91,14 @@ function CreateChannel({ space, dismiss }: Props) {
           <Label htmlFor="characterName">角色名</Label>
           <Input
             id="characterName"
-            name="characterName"
             placeholder="例如：KP"
-            ref={register(characterNameValidation)}
+            {...register('characterName', characterNameValidation)}
           />
           {errors.characterName && <ErrorMessage>{errors.characterName.message}</ErrorMessage>}
         </div>
         <div>
           <Label>
-            <input name="isPrivate" id="isPrivate" defaultChecked={false} ref={register} type="checkbox" /> 秘密频道
+            <input id="isPrivate" defaultChecked={false} {...register('isPrivate')} type="checkbox" /> 秘密频道
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>
         </div>

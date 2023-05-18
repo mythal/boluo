@@ -1,5 +1,4 @@
 import { css } from '@emotion/react';
-import * as React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AppError } from '../../api/error';
@@ -34,7 +33,7 @@ function Settings() {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useSelector((state) => state.profile!.user);
   const settings = useSelector((state) => state.profile!.settings);
-  const { register, handleSubmit, errors } = useForm<EditUser>();
+  const { register, handleSubmit, formState: { errors } } = useForm<SettingsForm>();
   const [submitting, setSubmitting] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -97,8 +96,7 @@ function Settings() {
               css={largeInput}
               defaultValue={user.nickname}
               id="nickname"
-              name="nickname"
-              ref={register(nicknameValidation)}
+              {...register('nickname', nicknameValidation)}
             />
             {errors.nickname && <ErrorMessage>{errors.nickname.message}</ErrorMessage>}
           </div>
@@ -106,17 +104,16 @@ function Settings() {
         </div>
         <div>
           <Label htmlFor="bio">简介</Label>
-          <TextArea defaultValue={user.bio} id="bio" name="bio" ref={register(bioValidation)} />
+          <TextArea defaultValue={user.bio} id="bio" {...register('bio', bioValidation)} />
         </div>
         <div>
           <Label>
             <input
               type="checkbox"
-              name="enterSend"
               id="enterSend"
               defaultChecked={Boolean(settings.enterSend)}
-              ref={register}
               css={[mR(1)]}
+              {...register('enterSend')}
             />
             使用回车键发送消息
           </Label>
@@ -125,11 +122,10 @@ function Settings() {
           <Label>
             <input
               type="checkbox"
-              name="expandDice"
               id="expandDice"
               defaultChecked={Boolean(settings.expandDice)}
-              ref={register}
               css={[mR(1)]}
+              {...register('expandDice')}
             />
             默认展开每个骰子
           </Label>

@@ -6,7 +6,7 @@
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@redux-devtools/extension": "^3.2.5",
-    "immutable": "^4.0.0-rc.12",
+    "immutable": "^4.3.0",
     "jotai": "^2.1.0",
     "optics-ts": "^2.4.0",
     "polished": "^4.2.2",

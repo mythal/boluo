@@ -34,7 +34,7 @@ export const fieldsLayout = css`
 function NewSpace() {
   useTitle('新建位面');
   const [creationError, setCreationError] = useState<AppError | null>(null);
-  const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
+  const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
   const { register, handleSubmit, errors } = useForm<CreateSpace>();
   const [submitting, setSubmitting] = useState(false);
 

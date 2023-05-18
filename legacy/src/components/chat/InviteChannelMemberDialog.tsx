@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { ValueType } from 'react-select';
+import Select from 'react-select';
 import { post } from '../../api/request';
 import { User } from '../../api/users';
 import { useDispatch, useSelector } from '../../store';
@@ -8,8 +8,6 @@ import { selectTheme } from '../../styles/atoms';
 import { throwErr } from '../../utils/errors';
 import { Id } from '../../utils/id';
 import Dialog from '../molecules/Dialog';
-
-const Select = React.lazy(() => import('react-select'));
 
 export interface MemberOption {
   label: string;
@@ -50,9 +48,8 @@ function InviteChannelMemberDialog({ channelId, dismiss, spaceId }: Props) {
     }
     dismiss();
   };
-  const handleChange = (value: ValueType<MemberOption, false>) => {
-    const values = (value || []) as MemberOption[];
-    setMembersToInvite(values);
+  const handleChange = (values: readonly MemberOption[]) => {
+    setMembersToInvite([...values]);
   };
   const memberOptions: MemberOption[] = [];
   for (const member of Object.values(spaceMembers)) {

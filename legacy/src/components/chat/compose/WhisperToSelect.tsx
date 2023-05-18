@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import Select from 'react-select';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { UserItem } from '../../../reducers/chatState';
 import { useDispatch, useSelector } from '../../../store';
@@ -7,8 +8,6 @@ import { mB, selectTheme } from '../../../styles/atoms';
 import { HelpText } from '../../atoms/HelpText';
 import Text from '../../atoms/Text';
 import Dialog from '../../molecules/Dialog';
-
-const Select = React.lazy(() => import('react-select'));
 
 interface Props {
   dismiss: () => void;
@@ -50,12 +49,12 @@ function WhisperToSelect({ dismiss }: Props) {
         </label>
       </Text>
       {isWhisper && (
-        <Select
+        <Select<UserItem, true>
           value={values}
           isMulti
           options={options}
           theme={selectTheme}
-          onChange={setValues}
+          onChange={(options) => setValues([...options])}
           css={mB(2)}
           placeholder={`悄悄说给...`}
         />

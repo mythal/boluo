@@ -1,10 +1,9 @@
 import * as React from 'react';
+import Select from 'react-select';
 import { Props as SelectProps } from 'react-select';
 import { selectTheme, uiShadow } from '../../styles/atoms';
 
-const Select = React.lazy(() => import('react-select'));
-
-interface Props extends Omit<SelectProps, 'options'> {
+interface Props extends Omit<SelectProps<DiceOption, false>, 'options'> {
   defaultDiceType?: string;
 }
 

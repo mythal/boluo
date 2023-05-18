@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useSWR from 'swr';
 import { errLoading } from '../../api/error';
@@ -28,7 +28,7 @@ import {
   text3Xl,
 } from '../../styles/atoms';
 import { throwErr } from '../../utils/errors';
-import { decodeUuid, encodeUuid, Id } from '../../utils/id';
+import { decodeUuid, encodeUuid } from '../../utils/id';
 import Button, { buttonStyle } from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Input from '../atoms/Input';
@@ -73,7 +73,7 @@ function SpacePage() {
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const inviteLinkInput = useRef<HTMLInputElement>(null);
 
-  const { data } = useSWR(['/spaces/query_with_related' as const, id], (path, id) => get(path, { id, token }));
+  const { data } = useSWR(['/spaces/query_with_related' as const, id], ([path, id]) => get(path, { id, token }));
   const result: AppResult<SpaceWithRelated> = data ?? errLoading();
 
   useTitleWithResult<SpaceWithRelated>(result, ({ space }) => space.name);

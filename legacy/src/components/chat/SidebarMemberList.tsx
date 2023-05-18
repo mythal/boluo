@@ -14,7 +14,7 @@ interface Props {
 function SidebarMemberList({ spaceId }: Props) {
   const spaceResult = useSelector((state) => state.ui.spaceSet.get(spaceId));
   const [, setUserDialog] = useAtom(userDialogAtom);
-  const handleClick = useCallback((userId) => setUserDialog(userId), [setUserDialog]);
+  const handleClick = useCallback((userId: Id) => setUserDialog(userId), [setUserDialog]);
   if (!spaceResult || !spaceResult.isOk) {
     return null;
   }

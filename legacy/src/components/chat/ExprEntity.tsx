@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Prando from 'prando';
-import React, { MouseEventHandler, useState } from 'react';
+import React, { MouseEventHandler, ReactNode, useState } from 'react';
 import dicePoolIcon from '../../assets/icons/cubes.svg';
 import D20Icon from '../../assets/icons/d20.svg';
 import elderSign from '../../assets/icons/elder-sign.svg';
@@ -37,7 +37,7 @@ interface Props {
 
 const fakeRng = new Prando();
 
-const Num: React.FC = ({ children }) => {
+const Num: React.FC<{ children: ReactNode }> = ({ children }) => {
   if (!Number.isSafeInteger(children)) {
     children = '?';
   }

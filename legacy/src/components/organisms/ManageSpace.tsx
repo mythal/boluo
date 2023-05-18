@@ -54,7 +54,7 @@ const panelStyle = css`
 function ManageSpace({ space, my, dismiss }: Props) {
   const { register, handleSubmit, errors } = useForm<EditSpace>();
   const [editError, setEditError] = useState<AppError | null>(null);
-  const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
+  const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
   const [deleteDialog, showDeleteDialog] = useState(false);
   const history = useHistory();
   const [submitting, setSubmitting] = useState(false);

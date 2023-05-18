@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
-import { ValueType } from 'react-select';
+import Select from 'react-select';
 import { showFlash } from '../../actions';
 import { Channel, EditChannel, Member } from '../../api/channels';
 import { AppError } from '../../api/error';
@@ -37,8 +37,6 @@ import Dialog from '../molecules/Dialog';
 import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
 import Panel from '../molecules/Panel';
 import { RenderError } from '../molecules/RenderError';
-
-const Select = React.lazy(() => import('react-select'));
 
 interface Props {
   channel: Channel;
@@ -80,7 +78,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const channelId = channel.id;
   const { register, handleSubmit, errors } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
-  const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
+  const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const history = useHistory();
@@ -135,9 +133,8 @@ function ManageChannel({ channel, dismiss }: Props) {
       dispatch(showFlash('ERROR', '删除频道失败'));
     }
   };
-  const handleChange = (value: ValueType<MemberOption, false>) => {
-    const values = (value || []) as MemberOption[];
-    setSelectedMember(values);
+  const handleChange = (values: readonly MemberOption[]) => {
+    setSelectedMember([...values]);
   };
   return (
     <Panel css={panelStyle} dismiss={dismiss} mask>

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
+import Select from 'react-select';
 import { Channel, Export } from '../../api/channels';
 import { get } from '../../api/request';
 import exportIcon from '../../assets/icons/file-export.svg';
@@ -12,8 +13,6 @@ import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import { Label } from '../atoms/Label';
 import Dialog from '../molecules/Dialog';
-
-const Select = React.lazy(() => import('react-select'));
 
 interface Props {
   dismiss: () => void;
@@ -110,7 +109,9 @@ function ExportDialog({ dismiss, channel }: Props) {
         <Select
           id="export-format"
           value={format}
-          onChange={setFormat}
+          onChange={(format) => {
+            if (format) setFormat(format);
+          }}
           css={[uiShadow, mB(2)]}
           options={options}
           theme={selectTheme}
@@ -122,7 +123,9 @@ function ExportDialog({ dismiss, channel }: Props) {
         <Select
           id="export-after"
           value={afterDays}
-          onChange={setAfterDays}
+          onChange={(afterDays) => {
+            if (afterDays) setAfterDays(afterDays);
+          }}
           css={[uiShadow, mB(2)]}
           options={daysOptions}
           theme={selectTheme}

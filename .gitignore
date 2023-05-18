@@ -7,7 +7,7 @@
 **/*.tsbuildinfo
 
 # compiled output
-dist
+**/dist
 tmp
 /out-tsc
 **/.next

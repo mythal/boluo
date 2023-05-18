@@ -41,7 +41,7 @@ function CreateChannel({ space, dismiss }: Props) {
   const spaceId = space.id;
   const { register, handleSubmit, errors } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
-  const [defaultDice, setDefaultDice] = useState<DiceOption | undefined>(undefined);
+  const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const spaceMember = useSelector((state) => state.profile?.spaces.get(spaceId)?.member);
   const dispatch = useDispatch();

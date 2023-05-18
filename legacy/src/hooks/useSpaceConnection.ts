@@ -1,5 +1,4 @@
-import { atom } from 'jotai';
-import { useUpdateAtom } from 'jotai/utils';
+import { atom, useSetAtom } from 'jotai';
 import { useCallback, useRef } from 'react';
 import { connectSpace, SpaceUpdated } from '../actions';
 import { connect } from '../api/connect';
@@ -32,7 +31,7 @@ export function useSpaceConnection() {
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const myId = useMyId();
   const spaceId = useSelector((state) => state.ui.spaceId);
-  const setConnectState = useUpdateAtom(connectStateAtom);
+  const setConnectState = useSetAtom(connectStateAtom);
 
   const after = useRef<number>(0);
   const retry = useRef<number>(0);

@@ -1,7 +1,6 @@
 import { css, Global } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useAtom } from 'jotai';
-import { Provider } from 'jotai';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
@@ -189,9 +188,7 @@ function Chat() {
                   isFocused: index === focused,
                 }}
               >
-                <Provider key={paneId} scope={paneId}>
-                  <ChannelChat focus={focus} key={paneId} spaceId={spaceId} channelId={paneId} />
-                </Provider>
+                <ChannelChat focus={focus} key={paneId} spaceId={spaceId} channelId={paneId} />
               </PaneContext.Provider>
             );
           })

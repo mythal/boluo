@@ -73,7 +73,7 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
     const rng = makeRng(seed);
     const exportEntities: ExportEntity[] = !rng
       ? []
-      : entities.map((item) => {
+      : entities.map((item): ExportEntity => {
         const entity = 'offset' in item ? fromLegacyEntity(item) : item;
         if (entity.type === 'Expr') {
           const { type, start, len } = entity;
@@ -85,6 +85,14 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
             node,
             exprText: nodeToText(node),
             text: text.substr(start, len).trimRight(),
+          };
+        } else if (entity.type === 'Link') {
+          return {
+            type: 'ExportLink',
+            text: text.substr(entity.start, entity.len),
+            href: typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len),
+            start: entity.start,
+            len: entity.len,
           };
         } else {
           return { ...entity, text: text.substr(entity.start, entity.len) };
@@ -148,8 +156,8 @@ function entityBbCode(entity: ExportEntity, color: string): string {
       return `[/color]\n[code]${entity.text}[/code]\n[color=${color}]`;
     case 'Emphasis':
       return `[i]${entity.text}[/i]`;
-    case 'Link':
-      return `[url=${entity.href}]${entity.title}[/url]`;
+    case 'ExportLink':
+      return `[url=${entity.href}]${entity.text}[/url]`;
     case 'Strong':
       return `[b]${entity.text}[/b]`;
     case 'Text':
@@ -168,8 +176,8 @@ function entityMarkdown(entity: ExportEntity): string {
       return `\n\`\`\`\n${entity.text}\n\`\`\`\n`;
     case 'Emphasis':
       return `*${entity.text}*`;
-    case 'Link':
-      return `[${entity.title}](${entity.href})`;
+    case 'ExportLink':
+      return `[${entity.text}](${entity.href})`;
     case 'Strong':
       return `**${entity.text}**`;
     case 'Text':

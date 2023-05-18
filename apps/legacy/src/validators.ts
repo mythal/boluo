@@ -18,7 +18,7 @@ export const emailValidation: ValidationRules = {
     value: /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
     message: 'E-mail 地址格式不正确，请检查',
   },
-  validate: async (email) => {
+  validate: async (email: string) => {
     const result = await get('/users/check_email', { email });
     if (!result.isOk) {
       console.warn(result);
@@ -61,7 +61,7 @@ export const usernameValidation: ValidationRules = {
     value: 32,
     message: '用户名最多只能有32个字符',
   },
-  validate: async (username) => {
+  validate: async (username: string) => {
     const result = await get('/users/check_username', { username });
     if (!result.isOk) {
       console.warn(result);
@@ -94,7 +94,7 @@ export const spaceNameValidation: ValidationRules = {
     value: 32,
     message: '位面名不可超过32字符',
   },
-  validate: async (name: string) => {
+  validate: (name: string) => {
     const striped = name.replace(/\s/g, '');
     if (striped.length === 0) {
       return '位面名不能为空';

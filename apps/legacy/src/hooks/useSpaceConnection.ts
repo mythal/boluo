@@ -40,7 +40,7 @@ export function useSpaceConnection() {
     if (!spaceId) {
       throw new Error('unexpected error: there is no space id');
     }
-    const connection = await connect(baseUrl, spaceId, await getConnectionToken(spaceId, myId));
+    const connection = connect(baseUrl, spaceId, await getConnectionToken(spaceId, myId));
     connection.onerror = (e) => {
       console.warn(e);
     };
@@ -50,7 +50,7 @@ export function useSpaceConnection() {
 
     connection.onmessage = (wsMsg) => {
       setConnectState('OPEN');
-      const event = JSON.parse(wsMsg.data) as Events;
+      const event = JSON.parse(wsMsg.data as string) as Events;
       after.current = event.timestamp;
       const { body } = event;
       if (body.type === 'APP_UPDATED') {

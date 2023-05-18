@@ -16,11 +16,11 @@ export const handleKeyDown = (
     if (enterSend && e.key === 'Enter' && !e.shiftKey) {
       if (!e.ctrlKey) {
         e.preventDefault();
-        submitKey(async () => onSend());
+        submitKey(() => onSend());
       }
     } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
-      submitKey(async () => onSend());
+      submitKey(() => onSend());
     } else if (e.key === 'Escape') {
       e.preventDefault();
       submitKey(() => toggleInGame());

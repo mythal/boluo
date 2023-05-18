@@ -19,6 +19,12 @@ export interface Link extends BaseEntity {
   title?: string;
 }
 
+export interface ExportLink extends BaseEntity {
+  type: 'ExportLink';
+  href: string;
+  title?: string;
+}
+
 export interface Expr extends BaseEntity {
   type: 'Expr';
   node: ExprNode;
@@ -188,7 +194,7 @@ export interface ExportExpr extends BaseEntity {
 }
 
 export type ExportEntity =
-  | ((Text | Link | Strong | Emphasis | Code | CodeBlock) & { text: string })
+  | ((Text | ExportLink | Strong | Emphasis | Code | CodeBlock) & { text: string })
   | ExportExpr;
 
 export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {

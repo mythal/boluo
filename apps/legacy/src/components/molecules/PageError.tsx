@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import styled from '@emotion/styled';
 import * as React from 'react';
 import mushroomCloud from '../../assets/icons/mushroom-cloud.svg';

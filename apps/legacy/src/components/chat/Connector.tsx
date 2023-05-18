@@ -1,6 +1,5 @@
 import { css } from '@emotion/react';
 import { useEffect, useRef, useState } from 'react';
-import React from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
 import { Events, SpaceUpdated } from '../../api/events';
@@ -128,17 +127,17 @@ export const Connector = ({ spaceId, myId }: Props) => {
         connectionRef.current = null;
       };
       connection.onerror = (event) => {
-        console.warn('WebSocket error ' + event);
+        console.warn('WebSocket error ', event);
       };
       connection.onmessage = (onMessageEvent) => {
         retrySec.current = 0;
         setState('OPEN');
-        const received = onMessageEvent.data;
+        const received = onMessageEvent.data as string;
         if (received === PING) {
           connection.send(PONG);
           return;
         }
-        const event: Events = JSON.parse(onMessageEvent.data);
+        const event: Events = JSON.parse(received) as Events;
         if (after.current >= event.timestamp) {
           return;
         }

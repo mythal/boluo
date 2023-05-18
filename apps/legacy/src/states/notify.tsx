@@ -1,5 +1,4 @@
 import { atom, useAtom } from 'jotai';
-import * as React from 'react';
 import { showFlash } from '../actions';
 import { useMyId } from '../hooks/useMyId';
 import { useSelector } from '../store';
@@ -26,7 +25,7 @@ export const useNotificationSwitch = (): { canNotify: boolean; startNotify: () =
     setCanNotify(Notification.permission === 'granted');
     return;
   };
-  const stopNotify = async () => {
+  const stopNotify = () => {
     setCanNotify(false);
   };
   return { canNotify, startNotify, stopNotify };

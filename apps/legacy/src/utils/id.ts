@@ -5,7 +5,7 @@ const getNodeId = (): number[] => {
   const serializedId = localStorage.getItem(key);
   if (serializedId) {
     try {
-      return JSON.parse(serializedId);
+      return JSON.parse(serializedId) as number[];
     } catch (e) {
       localStorage.removeItem(key);
       return getNodeId();

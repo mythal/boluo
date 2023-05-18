@@ -20,7 +20,7 @@ export const useSendPreview = () => {
     if (!initialized) {
       return;
     }
-    const handle = window.setTimeout(async () => {
+    const handle = window.setTimeout(() => {
       let name = nickname;
       if (inGame) {
         if (inputName) {

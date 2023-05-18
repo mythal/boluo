@@ -23,7 +23,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          file: legacy/Dockerfile
+          file: apps/legacy/Dockerfile
           tags: |
             ghcr.io/${{ github.repository }}/legacy:${{ github.ref_name }}
 

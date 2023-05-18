@@ -4,7 +4,6 @@ import { Ref, useCallback, useEffect, useRef, useState } from 'react';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
-import { newId } from '../../../utils/id';
 
 interface Props {
   initialValue?: string;
@@ -59,7 +58,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
   const placeholder = inGame ? '书写独一无二的冒险吧' : '尽情聊天吧';
   useAutoFocus(autoFocus, inputRef);
 
-  const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = async (e) => {
+  const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const value = e.target.value;
     setSource(value);
   };

@@ -1,6 +1,5 @@
 // eslint-disable-next-line no-undef
 module.exports = {
-  root: true,
   settings: {
     react: {
       version: 'detect',
@@ -15,7 +14,15 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
   ],
+
   overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+        project: ['./tsconfig.json'],
+      },
+    },
     {
       files: ['*.config.js'],
       env: {
@@ -32,6 +39,7 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-floating-promises': 'off',
     'react/prop-types': 'off',
     'react/display-name': 'off',
     'react/no-unknown-property': ['error', { ignore: ['css'] }],

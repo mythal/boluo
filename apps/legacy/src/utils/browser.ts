@@ -9,7 +9,7 @@ export const setRealHeight = () => {
 
 export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-export const isMac = navigator.userAgent.indexOf('Mac OS X') != -1;
+export const isMac = navigator.userAgent.includes('Mac OS X');
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

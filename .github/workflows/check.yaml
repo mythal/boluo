@@ -32,40 +32,6 @@ jobs:
       - name: Lint
         run: just lint
 
-  legacy:
-    name: Legacy Application
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node: [18]
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install
-        working-directory: ./legacy
-        run: npm install
-
-      - name: Check
-        working-directory: ./legacy
-        run: npm run check
-
-      - name: Lint
-        working-directory: ./legacy
-        run: npm run lint
-
-      - name: Build
-        working-directory: ./legacy
-        run: npm run build
-        env:
-          CI: true
-
   cargo:
     name: Cargo Workspace
     env:

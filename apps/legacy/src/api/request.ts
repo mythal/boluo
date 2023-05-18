@@ -87,6 +87,7 @@ export const request = async <T>(
     credentials: 'include',
   });
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const appResult = toResult<T, AppError>(await result.json());
     if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
       location.replace('/login');
@@ -114,12 +115,13 @@ export const makeUri = (path: string, query?: object): string => {
   }
   const searchParams = new URLSearchParams();
   for (const entry of entities) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [key, value] = entry;
     if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
       searchParams.set(key, String(value));
     }
   }
-  return `${path}?${searchParams}`;
+  return `${path}?${searchParams.toString()}`;
 };
 
 interface IdQuery {

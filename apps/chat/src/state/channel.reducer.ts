@@ -15,7 +15,7 @@ export interface ChannelState {
   previewMap: Record<UserId, PreviewItem>;
 }
 
-const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE' });
+const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE', key: message.id });
 
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
@@ -127,7 +127,7 @@ const handleMessagePreview = (
     posQ = message.posQ;
   }
 
-  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos };
+  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos, key: preview.senderId };
   previewMap = { ...previewMap, [preview.senderId]: chatItem };
   return { ...state, previewMap };
 };

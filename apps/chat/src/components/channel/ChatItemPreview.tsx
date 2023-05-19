@@ -1,25 +1,18 @@
-import { Preview } from 'api';
-import { useAtomValue } from 'jotai';
-import { selectAtom } from 'jotai/utils';
-import { FC, useMemo } from 'react';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
+import type { FC } from 'react';
 import { useIsFocused } from '../../state/chat-view';
+import { PreviewItem } from '../../types/chat-items';
 import { OthersPreview } from './OthersPreview';
 import { SelfPreview } from './SelfPreview';
 
 interface Props {
-  preview: Preview;
+  preview: PreviewItem;
   className?: string;
   self: boolean;
 }
 
 export const ChatItemPreview: FC<Props> = ({ preview, self }) => {
   const paneFocused = useIsFocused();
-  const composeAtom = useComposeAtom();
-  const composePreviewId = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, compose => compose.previewId), [composeAtom]),
-  );
-  return paneFocused && preview.id === composePreviewId && self
+  return paneFocused && self
     ? <SelfPreview preview={preview} />
     : <OthersPreview preview={preview} />;
 };

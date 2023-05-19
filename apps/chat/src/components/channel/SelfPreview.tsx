@@ -6,6 +6,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ComposeState } from '../../state/compose.reducer';
+import { PreviewItem } from '../../types/chat-items';
 import { CancelEditingButton } from './CancelEditingButton';
 import { Name } from './Name';
 import { PreviewBox } from './PreviewBox';
@@ -31,7 +32,7 @@ const selector = ({ inGame, isAction, inputedName, source, editFor }: ComposeSta
 
 interface Props {
   className?: string;
-  preview: Preview;
+  preview: PreviewItem;
 }
 
 export const SelfPreview: FC<Props> = ({ preview, className }) => {
@@ -52,7 +53,7 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
   }, [isMaster, name]);
 
   return (
-    <PreviewBox id={preview.id} editMode={editMode} className="bg-brand-50 border-t border-b border-brand-200">
+    <PreviewBox id={preview.key} editMode={editMode} className="bg-brand-50 border-t border-b border-brand-200">
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} nameNode={nameNode} />
       <div className="flex flex-col gap-1 h-full items-between">
         <SelfPreviewContent nameNode={nameNode} />

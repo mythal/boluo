@@ -19,6 +19,7 @@ export interface ComposeState {
   media: File | undefined;
   error: ComposeError | null;
   parsed: ParseResult;
+  focused: boolean;
   range: ComposeRange;
 }
 
@@ -34,6 +35,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   error: 'TEXT_EMPTY',
   range: [0, 0],
   parsed: { text: '', entities: [] },
+  focused: false,
 });
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
@@ -176,6 +178,10 @@ const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState
   };
 };
 
+const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeState => ({ ...state, focused: true });
+
+const handleBlur = (state: ComposeState, _: ComposeAction<'blur'>): ComposeState => ({ ...state, focused: false });
+
 const handleReset = (): ComposeState => {
   return makeInitialComposeState();
 };
@@ -208,6 +214,10 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleSent(state, action);
     case 'toggleAction':
       return handleToggleAction(state, action);
+    case 'focus':
+      return handleFocus(state, action);
+    case 'blur':
+      return handleBlur(state, action);
   }
 };
 

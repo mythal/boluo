@@ -50,7 +50,7 @@ export const ChatContentVirtualList: FC<Props> = ({
     }
     return (
       <ChatItemSwitch
-        key={item.id}
+        key={item.key}
         myId={me?.user.id}
         chatItem={item}
         isMember={myMember !== null}

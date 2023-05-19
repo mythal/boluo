@@ -22,6 +22,9 @@ interface Props {
   me: GetMe;
 }
 
+const focusAction = makeComposeAction('focus', {});
+const blurAction = makeComposeAction('blur', {});
+
 export const ComposeTextArea: FC<Props> = ({ me }) => {
   const send = useSend(me.user);
   const ref = useRef<HTMLTextAreaElement | null>(null);
@@ -117,6 +120,8 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
       ref={ref}
       value={source}
       onChange={handleChange}
+      onFocus={() => dispatch(focusAction)}
+      onBlur={() => dispatch(blurAction)}
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}

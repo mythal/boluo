@@ -16,6 +16,8 @@ export type ComposeActionMap = {
   editMessage: { message: Message };
   sent: Empty;
   reset: Empty;
+  focus: Empty;
+  blur: Empty;
   setRange: { range: [number, number] | null };
   toggleAction: Empty;
 };

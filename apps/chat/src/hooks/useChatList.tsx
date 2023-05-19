@@ -3,6 +3,7 @@ import { selectAtom } from 'jotai/utils';
 import { Dispatch, SetStateAction, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
 import { ChannelState } from '../state/channel.reducer';
+import { useIsFocused } from '../state/chat-view';
 import { chatAtom } from '../state/chat.atoms';
 import { ComposeState } from '../state/compose.reducer';
 import { ChatItem, MessageItem, PreviewItem } from '../types/chat-items';
@@ -23,10 +24,13 @@ export interface OptimisticItem {
 }
 const START_INDEX = 100000000;
 
-type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & { prevPreviewId: string | null; empty: boolean };
+type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
+  prevPreviewId: string | null;
+  show: boolean;
+};
 
 const selectComposeSlice = (
-  { source, previewId, editFor }: ComposeState,
+  { source, previewId, editFor, focused }: ComposeState,
   prevSlice: ComposeSlice | null | undefined,
 ): ComposeSlice => {
   const empty = source.trim().length === 0;
@@ -40,13 +44,14 @@ const selectComposeSlice = (
     }
   }
 
-  return { previewId, editFor, prevPreviewId, empty };
+  return { previewId, editFor, prevPreviewId, show: !empty || focused };
 };
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
+  const isFocused = useIsFocused();
   const composeAtom = useComposeAtom();
   const composeSliceAtom = useMemo(
-    () => selectAtom(composeAtom, selectComposeSlice, (a, b) => a.previewId === b.previewId && a.empty === b.empty),
+    () => selectAtom(composeAtom, selectComposeSlice, (a, b) => a.previewId === b.previewId && a.show === b.show),
     [composeAtom],
   );
   const composeSlice = useAtomValue(composeSliceAtom);
@@ -87,7 +92,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       }
     });
     const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
-    if (myId && !composeSlice.empty && previews.every(preview => preview.id !== composeSlice.previewId)) {
+    if (myId && isFocused && composeSlice.show && previews.every(preview => preview.senderId !== myId)) {
       let pos = 0;
       let posP = pos;
       let posQ = 1;
@@ -118,17 +123,24 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         whisperToUsers: null,
         entities: [],
         editFor: composeSlice.editFor,
+        optimistic: true,
+        key: myId,
       });
     }
     for (const preview of previews) {
-      if (preview.text === '' || preview.id === composeSlice.prevPreviewId) continue;
+      if (isFocused && preview.senderId === myId) {
+        /* Always show preview when the compose is focused */
+      } else if (preview.text === '' || preview.id === composeSlice.prevPreviewId) {
+        continue;
+      }
       if (preview.id in messageMap) {
+        // A edit preview
         const message = messageMap[preview.id]!;
         if (preview.editFor !== message.modified) {
           continue;
         }
         const index = binarySearchPos(itemList, message.pos);
-        if (message !== itemList[index]) {
+        if (message.id !== itemList[index]?.id) {
           throw new Error('Failed binary search');
         }
         if (message.pos === preview.pos) {
@@ -140,7 +152,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       } else if (preview.editFor) {
         continue;
       }
-      if (preview.pos === 0 /* dummy preview */) {
+      // Insert the preview to item list
+      if (preview.optimistic && !preview.editFor) {
         itemList.push(preview);
       } else if (preview.pos > minPos) {
         const index = binarySearchPos(itemList, preview.pos);
@@ -157,7 +170,19 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     }
 
     return itemList;
-  }, [channelId, composeSlice, messageMap, messages, myId, optimisticItemMap, previewMap]);
+  }, [
+    channelId,
+    composeSlice.editFor,
+    composeSlice.prevPreviewId,
+    composeSlice.previewId,
+    composeSlice.show,
+    isFocused,
+    messageMap,
+    messages,
+    myId,
+    optimisticItemMap,
+    previewMap,
+  ]);
 
   // Compute firstItemIndex for prepending items
   // https://virtuoso.dev/prepend-items/

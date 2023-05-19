@@ -1,18 +1,17 @@
 import clsx from 'clsx';
 import Prando from 'prando';
 import { memo, ReactNode, useMemo, useRef } from 'react';
-import type { Entity } from '../../interpreter/entities';
 import { makeRng } from '../../interpreter/eval';
 import type { ParseResult } from '../../interpreter/parser';
 import { Delay } from '../Delay';
 import { EntityCode } from '../entities/EntityCode';
 import { EntityCodeBlock } from '../entities/EntityCodeBlock';
 import { EntityEmphasis } from '../entities/EntityEmphasis';
+import { EntityEmpty } from '../entities/EntityEmpty';
 import { EntityExpr } from '../entities/EntityExpr';
 import { EntityLink } from '../entities/EntityLink';
 import { EntityStrong } from '../entities/EntityStrong';
 import { EntityText } from '../entities/EntityText';
-import { EntityUnknown } from '../entities/EntityUnknown';
 import { SelfCursorToolbar } from './SelfCursorToolbar';
 
 interface Props {
@@ -37,8 +36,10 @@ export const Content = memo<Props>(({
   const ref = useRef<HTMLDivElement | null>(null);
   const rng: Prando | undefined = useMemo(() => makeRng(seed), [seed]);
   const entityNodeList = useMemo(() => {
-    const defaultEntities: Entity[] = [{ type: 'Text', start: 0, len: source.length }];
-    return (entities.length === 0 ? defaultEntities : entities).map((entity, index) => {
+    if (entities.length === 0) {
+      return <EntityEmpty cursorNode={cursorNode} />;
+    }
+    return entities.map((entity, index) => {
       switch (entity.type) {
         case 'Text':
           return <EntityText cursorNode={cursorNode} key={index} source={source} entity={entity} />;

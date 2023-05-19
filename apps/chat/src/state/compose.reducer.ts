@@ -29,7 +29,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   previewId: makeId(),
   isAction: false,
   inGame: false,
-  broadcast: false,
+  broadcast: true,
   source: '',
   media: undefined,
   error: 'TEXT_EMPTY',
@@ -143,6 +143,9 @@ const handleEditMessage = (
 
   return { ...makeInitialComposeState(), previewId, editFor, source, inGame, inputedName, range };
 };
+const handleToggleBroadcast = (state: ComposeState, _: ComposeAction<'toggleBroadcast'>): ComposeState => {
+  return { ...state, broadcast: !state.broadcast };
+};
 
 const handleToggleAction = (
   state: ComposeState,
@@ -218,6 +221,8 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleFocus(state, action);
     case 'blur':
       return handleBlur(state, action);
+    case 'toggleBroadcast':
+      return handleToggleBroadcast(state, action);
   }
 };
 

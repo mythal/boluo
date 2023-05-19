@@ -1,13 +1,16 @@
 import type { Preview } from 'api';
 import { FC, useDeferredValue, useMemo } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { fromRawEntities } from '../../interpreter/entities';
 import { ParseResult } from '../../interpreter/parser';
+import { PreviewItem } from '../../types/chat-items';
 import { Content } from './Content';
 import { Name } from './Name';
+import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
 import { PreviewBox } from './PreviewBox';
 
 interface Props {
-  preview: Preview;
+  preview: PreviewItem;
   className?: string;
 }
 
@@ -33,7 +36,9 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
           {isAction ? null : <>{nameNode}:</>}
         </div>
       </div>
-      <Content parsed={deferredParsed} nameNode={nameNode} isAction={isAction} isPreview />
+      {preview.text === null
+        ? <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
+        : <Content parsed={deferredParsed} nameNode={nameNode} isAction={isAction} isPreview />}
     </PreviewBox>
   );
 };

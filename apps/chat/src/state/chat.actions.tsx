@@ -16,7 +16,7 @@ export type ChatActionMap = {
   debugCloseConnection: { countdown: number };
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
-  messagePreview: { channelId: string; preview: Preview };
+  messagePreview: { channelId: string; preview: Preview; timestamp: number };
   messageDeleted: { channelId: string; messageId: string };
   eventFromServer: ServerEvent;
 };
@@ -42,7 +42,7 @@ export const eventToChatAction = (e: ServerEvent): ChatActionUnion | null => {
     case 'MESSAGE_DELETED':
       return makeChatAction('messageDeleted', e.body);
     case 'MESSAGE_PREVIEW':
-      return makeChatAction('messagePreview', e.body);
+      return makeChatAction('messagePreview', { ...e.body, timestamp: e.timestamp });
     default:
       return null;
   }

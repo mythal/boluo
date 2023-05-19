@@ -7,13 +7,13 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ComposeState } from '../../state/compose.reducer';
 import { PreviewItem } from '../../types/chat-items';
-import { CancelEditingButton } from './CancelEditingButton';
+import { Delay } from '../Delay';
 import { Name } from './Name';
 import { PreviewBox } from './PreviewBox';
 import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewNameCell } from './SelfPreviewNameCell';
+import { SelfPreviewOperations } from './SelfPreviewOperations';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
-import { ToggleActionButton } from './ToggleActionButton';
 
 type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'isAction'> & {
   editMode: boolean;
@@ -57,10 +57,9 @@ export const SelfPreview: FC<Props> = ({ preview, className }) => {
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} nameNode={nameNode} />
       <div className="flex flex-col gap-1 h-full items-between">
         <SelfPreviewContent nameNode={nameNode} />
-        <div className="flex gap-1">
-          <ToggleActionButton />
-          <CancelEditingButton />
-        </div>
+        <Delay timeout={16} fallback={<div className="h-12"></div>}>
+          <SelfPreviewOperations className="flex gap-1 items-center h-12 transition-opacity duration-700 opacity-0 data-[enter='true']:opacity-100" />
+        </Delay>
         <div className="min-h-[1.5em]">
           <SelfPreviewSendHelpText me={member.user} />
         </div>

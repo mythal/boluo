@@ -22,7 +22,7 @@ const sendPreview = (
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { inGame, isAction, parsed, previewId, inputedName, editFor } = compose;
+    const { inGame, isAction, parsed, previewId, inputedName, editFor, broadcast } = compose;
     const inGameName = inputedName || '';
     if (!previewId) {
       return;
@@ -34,9 +34,9 @@ const sendPreview = (
       mediaId: null,
       inGame,
       isAction,
-      text: parsed.text,
+      text: broadcast || parsed.text === '' ? parsed.text : null,
       clear: false,
-      entities: parsed.entities,
+      entities: broadcast ? parsed.entities : [],
       editFor,
     };
 

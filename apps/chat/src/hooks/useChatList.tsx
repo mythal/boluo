@@ -125,6 +125,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         editFor: composeSlice.editFor,
         optimistic: true,
         key: myId,
+        timestamp: new Date().getTime(),
       });
     }
     for (const preview of previews) {

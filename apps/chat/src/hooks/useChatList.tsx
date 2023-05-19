@@ -22,7 +22,7 @@ export interface OptimisticItem {
   timestamp: number;
   item: MessageItem | PreviewItem;
 }
-const START_INDEX = 100000000;
+export const START_INDEX = 100000000;
 
 type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
   prevPreviewId: string | null;
@@ -73,7 +73,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const previewMap = useAtomValue(previewMapAtom);
 
   const [optimisticItemMap, setOptimisticItems] = useState<Record<string, OptimisticItem>>({});
-  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX); // can't be negative
+  const firstItemIndex = useRef(START_INDEX); // can't be negative
   const chatList = useMemo((): ChatItem[] => {
     if (!messages || !messageMap || !previewMap) return [];
     const previews = Object.values(previewMap);
@@ -197,19 +197,18 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       const prevFirstItem = prevChatList[0]!;
       if (prevFirstItem.id !== chatList[0]!.id) {
         const prevFirstItemNewIndex = chatList.findIndex(item => item.id === prevFirstItem.id);
-        setFirstItemIndex((prev) => {
-          if (prevFirstItemNewIndex !== -1) {
-            return prev - prevFirstItemNewIndex;
-          } else {
-            console.warn('Lost the previous first item');
-            const lengthDiff = chatList.length - prevChatList.length;
-            return prev - lengthDiff;
-          }
-        });
+        const prevFirstItemIndex = firstItemIndex.current;
+        if (prevFirstItemNewIndex !== -1) {
+          firstItemIndex.current = prevFirstItemIndex - prevFirstItemNewIndex;
+        } else {
+          console.warn('Lost the previous first item');
+          const lengthDiff = chatList.length - prevChatList.length;
+          firstItemIndex.current = prevFirstItemIndex - lengthDiff;
+        }
       }
     }
   }
   prevChatListRef.current = chatList;
 
-  return { chatList, setOptimisticItems, firstItemIndex };
+  return { chatList, setOptimisticItems, firstItemIndex: firstItemIndex.current };
 };

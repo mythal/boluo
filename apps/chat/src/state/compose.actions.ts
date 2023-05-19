@@ -8,6 +8,7 @@ export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
   setInputedName: { inputedName: string };
   toggleInGame: Empty;
+  toggleBroadcast: Empty;
   addDice: Empty;
   link: { text: string; href: string };
   bold: { text: string };

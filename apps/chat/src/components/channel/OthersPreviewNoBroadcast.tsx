@@ -1,0 +1,28 @@
+import React, { useEffect, useRef } from 'react';
+import { FormattedMessage } from 'react-intl';
+
+interface Props {
+  timestamp: number;
+}
+
+export const OthersPreviewNoBroadcast = React.memo<Props>(({ timestamp }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const now = new Date().getTime();
+    if (now - timestamp > 2000) return;
+    ref.current?.setAttribute('data-highlight', 'true');
+    const handle = window.setTimeout(() => {
+      ref.current?.setAttribute('data-highlight', 'false');
+    }, 200);
+    return () => window.clearTimeout(handle);
+  }, [timestamp]);
+  return (
+    <div ref={ref} className="text-surface-600 data-[highlight=true]:text-surface-300 transition-colors duration-100">
+      *<span className="italic px-1">
+        <FormattedMessage defaultMessage="Broadcast has been turned off" />
+      </span>*
+    </div>
+  );
+});
+
+OthersPreviewNoBroadcast.displayName = 'OthersPreviewNoBroadcast';

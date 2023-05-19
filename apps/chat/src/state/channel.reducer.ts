@@ -111,7 +111,7 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
 
 const handleMessagePreview = (
   state: ChannelState,
-  { payload: { preview } }: ChatAction<'messagePreview'>,
+  { payload: { preview, timestamp } }: ChatAction<'messagePreview'>,
 ): ChannelState => {
   let { previewMap } = state;
   let pos = Math.ceil(preview.pos);
@@ -127,7 +127,7 @@ const handleMessagePreview = (
     posQ = message.posQ;
   }
 
-  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos, key: preview.senderId };
+  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos, key: preview.senderId, timestamp };
   previewMap = { ...previewMap, [preview.senderId]: chatItem };
   return { ...state, previewMap };
 };

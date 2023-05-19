@@ -1,10 +1,8 @@
 'use client';
 import type { GetMe } from 'api';
-import { X } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useMemo } from 'react';
-import { Button } from 'ui';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';

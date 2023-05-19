@@ -1,16 +1,7 @@
-import { WritableAtom } from 'jotai';
-import { createContext, useContext } from 'react';
-import { ComposeActionUnion } from '../state/compose.actions';
-import { ComposeState } from '../state/compose.reducer';
+import { ChannelAtoms, useChannelAtoms } from './useChannelAtoms';
 
-export type ComposeAtom = WritableAtom<ComposeState, [ComposeActionUnion], void>;
+export type ComposeAtom = ChannelAtoms['composeAtom'];
 
-export const ComposeAtomContext = createContext<ComposeAtom | null>(null);
-
-export const useComposeAtom = (): ComposeAtom => {
-  const composeAtom = useContext(ComposeAtomContext);
-  if (composeAtom === null) {
-    throw new Error('Access compose atom outside context');
-  }
-  return composeAtom;
+export const useComposeAtom = (): ChannelAtoms['composeAtom'] => {
+  return useChannelAtoms().composeAtom;
 };

@@ -7,7 +7,7 @@ import { useIsFocused } from '../state/chat-view';
 import { chatAtom } from '../state/chat.atoms';
 import { ComposeState } from '../state/compose.reducer';
 import { ChatItem, MessageItem, PreviewItem } from '../types/chat-items';
-import { useComposeAtom } from './useComposeAtom';
+import { ChannelFilter, useChannelAtoms } from './useChannelAtoms';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
 
@@ -27,10 +27,11 @@ export const START_INDEX = 100000000;
 type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
   prevPreviewId: string | null;
   show: boolean;
+  inGame: boolean;
 };
 
 const selectComposeSlice = (
-  { source, previewId, editFor, focused }: ComposeState,
+  { source, previewId, editFor, focused, inGame }: ComposeState,
   prevSlice: ComposeSlice | null | undefined,
 ): ComposeSlice => {
   const empty = source.trim().length === 0;
@@ -44,14 +45,26 @@ const selectComposeSlice = (
     }
   }
 
-  return { previewId, editFor, prevPreviewId, show: !empty || focused };
+  return { previewId, editFor, prevPreviewId, show: !empty || focused, inGame };
+};
+
+const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) => (
+  a.previewId === b.previewId && a.show === b.show && a.inGame === b.inGame
+);
+
+const filter = (type: ChannelFilter, item: ChatItem) => {
+  if (type === 'OOC' && item.inGame) return false;
+  if (type === 'IN_GAME' && !item.inGame) return false;
+  return true;
 };
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
+  const { composeAtom, filterAtom, showArchivedAtom } = useChannelAtoms();
+  const showArchived = useAtomValue(showArchivedAtom);
+  const filterType = useAtomValue(filterAtom);
   const isFocused = useIsFocused();
-  const composeAtom = useComposeAtom();
   const composeSliceAtom = useMemo(
-    () => selectAtom(composeAtom, selectComposeSlice, (a, b) => a.previewId === b.previewId && a.show === b.show),
+    () => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq),
     [composeAtom],
   );
   const composeSlice = useAtomValue(composeSliceAtom);
@@ -79,6 +92,9 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     const previews = Object.values(previewMap);
     const optimisticMessageItems: OptimisticItem[] = [];
     const itemList: ChatItem[] = messages.filter(item => {
+      const isFiltered = !filter(filterType, item);
+      if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
+      if (isFiltered) return false;
       const optimisticItem = optimisticItemMap[item.id];
       if (!optimisticItem || optimisticItem.item.pos !== item.pos || optimisticItem.item.type !== 'MESSAGE') {
         return true;
@@ -115,7 +131,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         parentMessageId: null,
         name: 'dummy',
         mediaId: null,
-        inGame: false,
+        inGame: composeSlice.inGame,
         isAction: false,
         isMaster: false,
         clear: false,
@@ -129,7 +145,9 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       });
     }
     for (const preview of previews) {
-      if (isFocused && preview.senderId === myId) {
+      const isFiltered = !filter(filterType, preview);
+      if (isFiltered) continue;
+      else if (isFocused && preview.senderId === myId) {
         /* Always show preview when the compose is focused */
       } else if (preview.text === '' || preview.id === composeSlice.prevPreviewId) {
         continue;
@@ -174,15 +192,18 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   }, [
     channelId,
     composeSlice.editFor,
+    composeSlice.inGame,
     composeSlice.prevPreviewId,
     composeSlice.previewId,
     composeSlice.show,
+    filterType,
     isFocused,
     messageMap,
     messages,
     myId,
     optimisticItemMap,
     previewMap,
+    showArchived,
   ]);
 
   // Compute firstItemIndex for prepending items

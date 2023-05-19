@@ -29,7 +29,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.43.9",
     "react-intl": "^6.4.2",
-    "react-virtuoso": "^4.3.6",
+    "react-virtuoso": "^4.3.7",
     "store": "0.0.0",
     "swr": "^2.1.5",
     "ui": "0.0.0",

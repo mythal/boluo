@@ -1,6 +1,7 @@
 import { GetMe, Member } from 'api';
 import { FC, MutableRefObject } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { START_INDEX } from '../../hooks/useChatList';
 import { ChatItem } from '../../types/chat-items';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
@@ -29,25 +30,21 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
   return timeDiff < CONTINUOUS_TIME_MS;
 };
 
-export const ChatContentVirtualList: FC<Props> = ({
-  firstItemIndex,
-  renderRangeRef,
-  virtuosoRef,
-  chatList,
-  scrollerRef,
-  handleBottomStateChange,
-  me,
-  myMember,
-}) => {
+export const ChatContentVirtualList: FC<Props> = (props) => {
+  const {
+    firstItemIndex,
+    renderRangeRef,
+    virtuosoRef,
+    chatList,
+    scrollerRef,
+    handleBottomStateChange,
+    me,
+    myMember,
+  } = props;
   const totalCount = chatList.length;
 
-  const itemContent = (offsetIndex: number) => {
-    const index = offsetIndex - firstItemIndex;
-    const item = chatList[index];
-    if (!item) {
-      console.warn('index exceeds the item list length');
-      return <div className="h-[1px]" />;
-    }
+  const itemContent = (offsetIndex: number, item: ChatItem) => {
+    const index = totalCount - (START_INDEX - offsetIndex) - 1;
     return (
       <ChatItemSwitch
         key={item.key}
@@ -59,18 +56,16 @@ export const ChatContentVirtualList: FC<Props> = ({
     );
   };
   return (
-    <Virtuoso
+    <Virtuoso<ChatItem, never>
       className="overflow-x-hidden"
       firstItemIndex={firstItemIndex}
-      rangeChanged={({ startIndex, endIndex }) =>
-        renderRangeRef.current = [startIndex - firstItemIndex, endIndex - firstItemIndex]}
       ref={virtuosoRef}
       scrollerRef={(ref) => {
         if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
       }}
       components={{ Header: ChatContentHeader }}
+      data={chatList}
       initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
-      totalCount={totalCount}
       atBottomThreshold={64}
       increaseViewportBy={{ top: 512, bottom: 128 }}
       overscan={{ main: 128, reverse: 512 }}

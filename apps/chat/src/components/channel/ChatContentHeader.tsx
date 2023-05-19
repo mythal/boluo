@@ -10,7 +10,8 @@ import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom, useChatDispatch } from '../../state/chat.atoms';
 
-const LOAD_MESSAGE_LIMIT = 51;
+const LOAD_MESSAGE_LIMIT = 41;
+const AUTO_LOAD = true;
 
 interface Point {
   x: number;
@@ -21,7 +22,6 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
-const AUTO_LOAD = true;
 export const ChatContentHeader: FC = () => {
   const isFullLoaded = useIsFullLoaded();
   const channelId = useChannelId();

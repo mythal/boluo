@@ -9,6 +9,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom, useChatDispatch } from '../../state/chat.atoms';
+import { VirtualListContext } from './ChatContentVirtualList';
 
 const LOAD_MESSAGE_LIMIT = 41;
 const AUTO_LOAD = true;
@@ -22,7 +23,12 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
-export const ChatContentHeader: FC = () => {
+interface Props {
+  context?: VirtualListContext;
+}
+
+export const ChatContentHeader: FC<Props> = (props) => {
+  const count = props.context?.filteredMessageCount ?? 0;
   const isFullLoaded = useIsFullLoaded();
   const channelId = useChannelId();
   const isTouchDeviceRef = useRef(false);
@@ -134,7 +140,12 @@ export const ChatContentHeader: FC = () => {
 
   const willLoad = touchState === 'WILL_LOAD';
   return (
-    <div ref={boxRef} className="h-16 flex items-center justify-center select-none">
+    <div ref={boxRef} className="h-48 py-4 flex flex-col gap-2 items-center justify-end select-none">
+      {count !== 0 && (
+        <span className="text-xs text-surface-500">
+          <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />
+        </span>
+      )}
       {isFullLoaded
         ? <span className="text-surface-500">Ω</span>
         : (

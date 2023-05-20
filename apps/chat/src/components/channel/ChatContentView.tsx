@@ -240,7 +240,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   const channelId = useChannelId();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, setOptimisticItems, firstItemIndex } = useChatList(channelId, me?.user.id);
+  const { chatList, setOptimisticItems, firstItemIndex, filteredMessageCount } = useChatList(channelId, me?.user.id);
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
@@ -272,6 +272,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
             <ChatContentVirtualList
               firstItemIndex={firstItemIndex}
               renderRangeRef={renderRangeRef}
+              filteredMessageCount={filteredMessageCount}
               virtuosoRef={virtuosoRef}
               scrollerRef={scrollerRef}
               chatList={chatList}

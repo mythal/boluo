@@ -15,6 +15,7 @@ interface UseChatListReturn {
   chatList: ChatItem[];
   setOptimisticItems: SetOptimisticItems;
   firstItemIndex: number;
+  filteredMessageCount: number;
 }
 
 export interface OptimisticItem {
@@ -87,124 +88,131 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
 
   const [optimisticItemMap, setOptimisticItems] = useState<Record<string, OptimisticItem>>({});
   const firstItemIndex = useRef(START_INDEX); // can't be negative
-  const chatList = useMemo((): ChatItem[] => {
-    if (!messages || !messageMap || !previewMap) return [];
-    const previews = Object.values(previewMap);
-    const optimisticMessageItems: OptimisticItem[] = [];
-    const itemList: ChatItem[] = messages.filter(item => {
-      const isFiltered = !filter(filterType, item);
-      if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
-      if (isFiltered) return false;
-      const optimisticItem = optimisticItemMap[item.id];
-      if (!optimisticItem || optimisticItem.item.pos !== item.pos || optimisticItem.item.type !== 'MESSAGE') {
-        return true;
-      }
-      const itemTimestamp = Date.parse(item.modified);
-      if (itemTimestamp >= optimisticItem.timestamp) {
-        return true;
-      } else {
-        optimisticMessageItems.push(optimisticItem);
-        return false;
-      }
-    });
-    const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
-    if (myId && isFocused && composeSlice.show && previews.every(preview => preview.senderId !== myId)) {
-      let pos = 0;
-      let posP = pos;
-      let posQ = 1;
-      if (composeSlice.editFor !== null) {
-        const message = messageMap[composeSlice.previewId];
-        if (message) {
-          pos = message.pos;
-          posP = message.posP;
-          posQ = message.posQ;
+  const { chatList, filteredMessageCount } = useMemo(
+    (): Pick<UseChatListReturn, 'chatList' | 'filteredMessageCount'> => {
+      if (!messages || !messageMap || !previewMap) return { chatList: [], filteredMessageCount: 0 };
+      const previews = Object.values(previewMap);
+      const optimisticMessageItems: OptimisticItem[] = [];
+      let filteredMessageCount = 0;
+      const itemList: ChatItem[] = messages.filter(item => {
+        const isFiltered = !filter(filterType, item);
+        if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
+        if (isFiltered) {
+          filteredMessageCount += 1;
+          return false;
         }
-      }
-      previews.push({
-        type: 'PREVIEW',
-        pos,
-        posP,
-        posQ,
-        id: composeSlice.previewId,
-        senderId: myId,
-        channelId,
-        parentMessageId: null,
-        name: 'dummy',
-        mediaId: null,
-        inGame: composeSlice.inGame,
-        isAction: false,
-        isMaster: false,
-        clear: false,
-        text: 'dummy',
-        whisperToUsers: null,
-        entities: [],
-        editFor: composeSlice.editFor,
-        optimistic: true,
-        key: myId,
-        timestamp: new Date().getTime(),
-      });
-    }
-    for (const preview of previews) {
-      const isFiltered = !filter(filterType, preview);
-      if (isFiltered) continue;
-      else if (isFocused && preview.senderId === myId) {
-        /* Always show preview when the compose is focused */
-      } else if (preview.text === '' || preview.id === composeSlice.prevPreviewId) {
-        continue;
-      }
-      if (preview.id in messageMap) {
-        // A edit preview
-        const message = messageMap[preview.id]!;
-        if (preview.editFor !== message.modified) {
-          continue;
+        const optimisticItem = optimisticItemMap[item.id];
+        if (!optimisticItem || optimisticItem.item.pos !== item.pos || optimisticItem.item.type !== 'MESSAGE') {
+          return true;
         }
-        const index = binarySearchPos(itemList, message.pos);
-        if (message.id !== itemList[index]?.id) {
-          throw new Error('Failed binary search');
-        }
-        if (message.pos === preview.pos) {
-          itemList[index] = preview;
-          continue;
+        const itemTimestamp = Date.parse(item.modified);
+        if (itemTimestamp >= optimisticItem.timestamp) {
+          return true;
         } else {
-          itemList.splice(index, 1);
+          optimisticMessageItems.push(optimisticItem);
+          return false;
         }
-      } else if (preview.editFor) {
-        continue;
+      });
+      const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
+      if (myId && isFocused && composeSlice.show && previews.every(preview => preview.senderId !== myId)) {
+        let pos = 0;
+        let posP = pos;
+        let posQ = 1;
+        if (composeSlice.editFor !== null) {
+          const message = messageMap[composeSlice.previewId];
+          if (message) {
+            pos = message.pos;
+            posP = message.posP;
+            posQ = message.posQ;
+          }
+        }
+        previews.push({
+          type: 'PREVIEW',
+          pos,
+          posP,
+          posQ,
+          id: composeSlice.previewId,
+          senderId: myId,
+          channelId,
+          parentMessageId: null,
+          name: 'dummy',
+          mediaId: null,
+          inGame: composeSlice.inGame,
+          isAction: false,
+          isMaster: false,
+          clear: false,
+          text: 'dummy',
+          whisperToUsers: null,
+          entities: [],
+          editFor: composeSlice.editFor,
+          optimistic: true,
+          key: myId,
+          timestamp: new Date().getTime(),
+        });
       }
-      // Insert the preview to item list
-      if (preview.optimistic && !preview.editFor) {
-        itemList.push(preview);
-      } else if (preview.pos > minPos) {
-        const index = binarySearchPos(itemList, preview.pos);
-        itemList.splice(index, 0, preview);
+      for (const preview of previews) {
+        const isFiltered = !filter(filterType, preview);
+        if (isFiltered) continue;
+        else if (isFocused && preview.senderId === myId) {
+          /* Always show preview when the compose is focused */
+        } else if (preview.text === '' || preview.id === composeSlice.prevPreviewId) {
+          continue;
+        }
+        if (preview.id in messageMap) {
+          // A edit preview
+          const message = messageMap[preview.id]!;
+          if (preview.editFor !== message.modified) {
+            continue;
+          }
+          const index = binarySearchPos(itemList, message.pos);
+          if (message.id !== itemList[index]?.id) {
+            throw new Error('Failed binary search');
+          }
+          if (message.pos === preview.pos) {
+            itemList[index] = preview;
+            continue;
+          } else {
+            itemList.splice(index, 1);
+          }
+        } else if (preview.editFor) {
+          continue;
+        }
+        // Insert the preview to item list
+        if (preview.optimistic && !preview.editFor) {
+          itemList.push(preview);
+        } else if (preview.pos > minPos) {
+          const index = binarySearchPos(itemList, preview.pos);
+          itemList.splice(index, 0, preview);
+        }
       }
-    }
-    for (const optimisticItem of optimisticMessageItems) {
-      const { item, optimisticPos } = optimisticItem;
-      itemList.splice(
-        binarySearchPos(itemList, optimisticPos),
-        0,
-        item,
-      );
-    }
+      for (const optimisticItem of optimisticMessageItems) {
+        const { item, optimisticPos } = optimisticItem;
+        itemList.splice(
+          binarySearchPos(itemList, optimisticPos),
+          0,
+          item,
+        );
+      }
 
-    return itemList;
-  }, [
-    channelId,
-    composeSlice.editFor,
-    composeSlice.inGame,
-    composeSlice.prevPreviewId,
-    composeSlice.previewId,
-    composeSlice.show,
-    filterType,
-    isFocused,
-    messageMap,
-    messages,
-    myId,
-    optimisticItemMap,
-    previewMap,
-    showArchived,
-  ]);
+      return { chatList: itemList, filteredMessageCount };
+    },
+    [
+      channelId,
+      composeSlice.editFor,
+      composeSlice.inGame,
+      composeSlice.prevPreviewId,
+      composeSlice.previewId,
+      composeSlice.show,
+      filterType,
+      isFocused,
+      messageMap,
+      messages,
+      myId,
+      optimisticItemMap,
+      previewMap,
+      showArchived,
+    ],
+  );
 
   // Compute firstItemIndex for prepending items
   // https://virtuoso.dev/prepend-items/
@@ -231,5 +239,5 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   }
   prevChatListRef.current = chatList;
 
-  return { chatList, setOptimisticItems, firstItemIndex: firstItemIndex.current };
+  return { chatList, setOptimisticItems, firstItemIndex: firstItemIndex.current, filteredMessageCount };
 };

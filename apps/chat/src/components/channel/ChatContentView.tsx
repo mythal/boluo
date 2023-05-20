@@ -168,22 +168,10 @@ const useDndHandles = (
   return { handleDragStart, handleDragEnd, active: draggingItem, handleDragCancel };
 };
 
-const CONTINUOUS_TIME_MS = 5 * 60 * 1000;
-const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
-  if (
-    a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
-    || a.senderId !== b.senderId || a.name !== b.name // sender
-    || a.folded || b.folded || a.whisperToUsers || b.whisperToUsers // other
-  ) {
-    return false;
-  }
-  const timeDiff = Math.abs(Date.parse(a.created) - Date.parse(b.created));
-  return timeDiff < CONTINUOUS_TIME_MS;
-};
-
 const useScrollLock = (
   virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,
+  wrapperRef: RefObject<HTMLDivElement | null>,
   rangeRef: MutableRefObject<[number, number]>,
   chatList: ChatItem[],
 ): MutableRefObject<ScrollLockState> => {
@@ -207,7 +195,7 @@ const useScrollLock = (
     }), [composeAtom, modifiedAtom, store]);
 
   useEffect(() => {
-    const handle = window.setInterval(() => {
+    const callback = () => {
       const virtuoso = virtuosoRef.current;
       if (!virtuoso) return;
       const scrollLock = scrollLockRef.current;
@@ -224,8 +212,19 @@ const useScrollLock = (
       }
       if (!end) return;
       virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
-    }, 500);
-    return () => window.clearInterval(handle);
+    };
+    const scroller = scrollerRef.current;
+    const wrapper = wrapperRef.current;
+    const resizeObserver = new ResizeObserver((entries) => {
+      callback();
+    });
+    if (scroller) resizeObserver.observe(scroller);
+    if (wrapper) resizeObserver.observe(wrapper);
+    const handle = window.setInterval(callback, 2000);
+    return () => {
+      window.clearInterval(handle);
+      resizeObserver.disconnect();
+    };
   });
   return scrollLockRef;
 };
@@ -250,8 +249,9 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   const renderRangeRef = useRef<[number, number]>([0, 0]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, renderRangeRef, chatList);
+  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
 
   const handleBottomStateChange = (bottom: boolean) => {
     goBottomButtonOnBottomChange(bottom);
@@ -259,7 +259,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   };
 
   return (
-    <div className={className}>
+    <div className={className} ref={wrapperRef}>
       <ChatListDndContext
         active={active}
         myId={me?.user.id}

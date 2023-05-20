@@ -1,4 +1,4 @@
-import { memo, ReactNode, useEffect, useRef, useState } from 'react';
+import { memo, ReactNode, useEffect, useState } from 'react';
 
 interface Props {
   fallback?: ReactNode;
@@ -9,10 +9,16 @@ interface Props {
 export const Delay = memo<Props>(({ fallback = null, children, timeout = 64 }) => {
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const handle = window.setTimeout(() => {
+    const callback = () => {
       setShow(true);
-    }, timeout);
-    return () => window.clearTimeout(handle);
+    };
+    if (window.requestIdleCallback !== undefined) {
+      const handle = requestIdleCallback(callback);
+      return () => cancelIdleCallback(handle);
+    } else {
+      const handle = window.setTimeout(callback, timeout);
+      return () => window.clearTimeout(handle);
+    }
   }, [timeout]);
 
   return <>{show ? children : fallback}</>;

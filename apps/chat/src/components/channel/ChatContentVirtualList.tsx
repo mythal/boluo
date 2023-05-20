@@ -12,14 +12,14 @@ interface Props {
   virtuosoRef: MutableRefObject<VirtuosoHandle | null>;
   scrollerRef: MutableRefObject<HTMLDivElement | null>;
   chatList: ChatItem[];
-  filteredMessageCount: number;
+  filteredMessagesCount: number;
   handleBottomStateChange: (bottom: boolean) => void;
   me: GetMe | null;
   myMember: Member | null;
 }
 
 export interface VirtualListContext {
-  filteredMessageCount: number;
+  filteredMessagesCount: number;
 }
 
 const CONTINUOUS_TIME_MS = 5 * 60 * 1000;
@@ -42,7 +42,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     virtuosoRef,
     chatList,
     scrollerRef,
-    filteredMessageCount,
+    filteredMessagesCount,
     handleBottomStateChange,
     me,
     myMember,
@@ -77,7 +77,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       scrollerRef={(ref) => {
         if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
       }}
-      context={{ filteredMessageCount }}
+      context={{ filteredMessagesCount }}
       components={{ Header: ChatContentHeader }}
       data={chatList}
       initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}

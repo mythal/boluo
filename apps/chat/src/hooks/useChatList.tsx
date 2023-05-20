@@ -15,7 +15,7 @@ interface UseChatListReturn {
   chatList: ChatItem[];
   setOptimisticItems: SetOptimisticItems;
   firstItemIndex: number;
-  filteredMessageCount: number;
+  filteredMessagesCount: number;
 }
 
 export interface OptimisticItem {
@@ -88,17 +88,15 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
 
   const [optimisticItemMap, setOptimisticItems] = useState<Record<string, OptimisticItem>>({});
   const firstItemIndex = useRef(START_INDEX); // can't be negative
-  const { chatList, filteredMessageCount } = useMemo(
-    (): Pick<UseChatListReturn, 'chatList' | 'filteredMessageCount'> => {
-      if (!messages || !messageMap || !previewMap) return { chatList: [], filteredMessageCount: 0 };
+  const { chatList, filteredMessagesCount } = useMemo(
+    (): Pick<UseChatListReturn, 'chatList' | 'filteredMessagesCount'> => {
+      if (!messages || !messageMap || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
       const previews = Object.values(previewMap);
       const optimisticMessageItems: OptimisticItem[] = [];
-      let filteredMessageCount = 0;
       const itemList: ChatItem[] = messages.filter(item => {
         const isFiltered = !filter(filterType, item);
         if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
         if (isFiltered) {
-          filteredMessageCount += 1;
           return false;
         }
         const optimisticItem = optimisticItemMap[item.id];
@@ -113,6 +111,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           return false;
         }
       });
+      const filteredMessagesCount = messages.length - itemList.length;
       const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
       if (myId && isFocused && composeSlice.show && previews.every(preview => preview.senderId !== myId)) {
         let pos = 0;
@@ -194,7 +193,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         );
       }
 
-      return { chatList: itemList, filteredMessageCount };
+      return { chatList: itemList, filteredMessagesCount };
     },
     [
       channelId,
@@ -239,5 +238,5 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   }
   prevChatListRef.current = chatList;
 
-  return { chatList, setOptimisticItems, firstItemIndex: firstItemIndex.current, filteredMessageCount };
+  return { chatList, setOptimisticItems, firstItemIndex: firstItemIndex.current, filteredMessagesCount };
 };

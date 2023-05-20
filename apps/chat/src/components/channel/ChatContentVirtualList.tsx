@@ -23,9 +23,9 @@ export interface VirtualListContext {
 }
 
 const CONTINUOUS_TIME_MS = 5 * 60 * 1000;
-const isContinuous = (a: ChatItem | null | undefined, b: ChatItem): boolean => {
+const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undefined): boolean => {
   if (
-    a == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
+    a == null || b == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
     || a.senderId !== b.senderId || a.name !== b.name // sender
     || a.folded || b.folded || a.whisperToUsers || b.whisperToUsers // other
   ) {
@@ -49,15 +49,23 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   } = props;
   const totalCount = chatList.length;
 
+  let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
+  let prevItem: ChatItem | null = null;
   const itemContent = (offsetIndex: number, item: ChatItem) => {
-    const index = totalCount - (START_INDEX - offsetIndex) - 1;
+    let continuous = false;
+    if (offsetIndex - 1 === prevOffsetIndex) {
+      continuous = isContinuous(prevItem, item);
+    }
+
+    prevOffsetIndex = offsetIndex;
+    prevItem = item;
     return (
       <ChatItemSwitch
         key={item.key}
         myId={me?.user.id}
         chatItem={item}
         isMember={myMember !== null}
-        continuous={isContinuous(chatList[index - 1], item)}
+        continuous={continuous}
       />
     );
   };

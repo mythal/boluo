@@ -14,7 +14,7 @@ export const ChatContentHeader: FC<Props> = (props) => {
   const boxRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={boxRef} className="h-48 py-4 flex flex-col gap-2 items-center justify-end select-none">
+    <div ref={boxRef} className="h-28 py-4 flex flex-col gap-2 items-center justify-end select-none">
       {count !== 0 && (
         <span className="text-xs text-surface-500">
           <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />

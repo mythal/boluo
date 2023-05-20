@@ -77,6 +77,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       scrollerRef={(ref) => {
         if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
       }}
+      alignToBottom
       context={{ filteredMessagesCount }}
       components={{ Header: ChatContentHeader }}
       data={chatList}

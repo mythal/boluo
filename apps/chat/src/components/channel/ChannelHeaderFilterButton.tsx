@@ -15,7 +15,7 @@ export const ChannelHeaderFilterButton: FC<Props> = ({ on, toggle }) => {
   const { filterAtom } = useChannelAtoms();
   const filter = useAtomValue(filterAtom);
   return (
-    <div className="relative">
+    <div className="relative flex items-stretch">
       <Button data-small onClick={toggle} data-active={on}>
         <Filter />
         <span className="hidden @4xl:inline-flex gap-1 items-center">

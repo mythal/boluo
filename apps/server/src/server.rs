@@ -22,6 +22,7 @@ mod cors;
 mod csrf;
 mod database;
 mod events;
+mod info;
 mod interface;
 mod logger;
 mod mail;
@@ -74,6 +75,9 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
     let uri = req.uri().clone();
     if req.method() == hyper::Method::OPTIONS {
         return Ok(cors::preflight_requests(req));
+    }
+    if let Some(subpath) = uri.path().strip_prefix("/api/info") {
+        return Ok(info::router(req, subpath));
     }
     let response = router(req).await;
     let mut has_error = false;

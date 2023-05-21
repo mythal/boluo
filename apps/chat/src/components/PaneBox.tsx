@@ -2,7 +2,8 @@ import clsx from 'clsx';
 import { FC, ReactNode, Suspense } from 'react';
 import { Loading } from 'ui';
 import { ChildrenProps, StyleProps } from 'utils';
-import { useFocusPane, useIsFocused } from '../state/chat-view';
+import { usePaneFocus } from '../hooks/usePaneFocus';
+import { usePaneIsFocus } from '../hooks/usePaneIsFocus';
 import { Delay } from './Delay';
 import { PaneBodyError } from './PaneBodyError';
 
@@ -15,8 +16,8 @@ const Placeholder = () => {
 };
 
 export const PaneBox: FC<Props> = ({ className, header, children }) => {
-  const isFocused = useIsFocused();
-  const focus = useFocusPane();
+  const isFocused = usePaneIsFocus();
+  const focus = usePaneFocus();
   return (
     <div
       onClick={focus}

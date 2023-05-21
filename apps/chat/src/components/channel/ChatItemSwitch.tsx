@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ChatItem } from '../../types/chat-items';
+import { ChatItem } from '../../state/channel.types';
 import { ChatItemMessage } from './ChatItemMessage';
 import { ChatItemPreview } from './ChatItemPreview';
 

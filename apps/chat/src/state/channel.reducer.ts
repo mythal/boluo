@@ -1,6 +1,6 @@
 import type { Message } from 'api';
 import { byPos } from '../sort';
-import { MessageItem, PreviewItem } from '../types/chat-items';
+import { MessageItem, PreviewItem } from './channel.types';
 import { ChatAction, ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
 

@@ -15,7 +15,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
-import { ChatItem, MessageItem } from '../../types/chat-items';
+import { ChatItem, MessageItem } from '../../state/channel.types';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';

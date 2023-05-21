@@ -3,11 +3,11 @@ import type { FC } from 'react';
 import { useTransition } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from 'ui';
-import { useClosePane } from '../state/chat-view';
+import { usePaneClose } from '../hooks/usePaneClose';
 
 export const ClosePaneButton: FC = () => {
   const intl = useIntl();
-  const close = useClosePane();
+  const close = usePaneClose();
   const [, starTransition] = useTransition();
   return (
     <Button

@@ -11,8 +11,8 @@ import useSWRMutation from 'swr/mutation';
 import { Button, HelpText, Spinner, TextArea, TextInput } from 'ui';
 import type { ChildrenProps } from 'utils';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { usePaneClose } from '../../hooks/usePaneClose';
 import { useSpace } from '../../hooks/useSpace';
-import { useClosePane } from '../../state/chat-view';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
 import { PaneBox } from '../PaneBox';
@@ -144,7 +144,7 @@ const spaceToForm = (space: Space): FormSchema => ({
 });
 
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
-  const close = useClosePane();
+  const close = usePaneClose();
   const space = useSpace(spaceId);
   const alert = useErrorAlert();
 

@@ -1,30 +1,31 @@
 import { Bell, Plus } from 'icons';
+import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui';
 import { useChannelList } from '../../hooks/useChannelList';
 import { useMySpaceMember } from '../../hooks/useMySpaceMember';
-import { useChatPaneDispatch } from '../../state/chat-view';
-import { makePane, Pane } from '../../types/chat-pane';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { panesAtom } from '../../state/view.atoms';
 import { SidebarChannelItem } from './SidebarChannelItem';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
   spaceId: string;
-  panes: Pane[];
 }
 
-export const SidebarChannelList: FC<Props> = ({ spaceId, panes }) => {
+export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
+  const panes = useAtomValue(panesAtom);
   const mySpaceMember = useMySpaceMember(spaceId);
   const channels = useChannelList(spaceId);
   const channelIdFromPanes = useMemo(
     () => panes.flatMap((pane) => pane.type === 'CHANNEL' ? [pane.channelId] : []),
     [panes],
   );
-  const dispatch = useChatPaneDispatch();
+  const togglePane = usePaneToggle();
   const handleOpenCreateChannelPane = () => {
-    dispatch({ type: 'TOGGLE', pane: makePane({ type: 'CREATE_CHANNEL', spaceId }) });
+    togglePane({ type: 'CREATE_CHANNEL', spaceId });
   };
   const handleToggleNotification = () => {
     // To be implemented

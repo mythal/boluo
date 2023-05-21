@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import { FC, ReactNode } from 'react';
 import { stopPropagation } from 'utils';
-import { usePaneBanner, useSetBanner } from '../hooks/useBanner';
-import { useFocusPane, useIsFocused } from '../state/chat-view';
+import { usePaneBanner } from '../hooks/useBanner';
+import { usePaneIsFocus } from '../hooks/usePaneIsFocus';
 import { PaneBanner } from './PaneBanner';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) => {
-  const isFocused = useIsFocused();
+  const isFocused = usePaneIsFocus();
   const paneBanner = usePaneBanner();
   return (
     <div className={paneBanner.content || extra ? '' : ''}>

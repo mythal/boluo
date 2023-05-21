@@ -3,10 +3,9 @@ import clsx from 'clsx';
 import { useMe } from 'common';
 import { useAtom } from 'jotai';
 import type { FC } from 'react';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { toggle } from 'utils';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';
-import { Pane } from '../../types/chat-pane';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { SidebarChannelList } from './SidebarChannelList';
 import { SidebarHeader } from './SidebarHeader';
@@ -17,20 +16,12 @@ import { SidebarStateContext } from './useSidebarState';
 interface Props {
   space: Space;
   className?: string;
-  panes: Pane[];
 }
 
-export const Sidebar: FC<Props> = ({ space, panes, className }) => {
+export const Sidebar: FC<Props> = ({ space, className }) => {
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
   const me = useMe();
   const toggleExpanded = useCallback(() => setExpanded(toggle), [setExpanded]);
-  const isSettingsOpen = useMemo(() => panes.findIndex(pane => pane.type === 'SETTINGS') !== -1, [panes]);
-  const isHelpOpen = useMemo(() => panes.findIndex(pane => pane.type === 'HELP') !== -1, [panes]);
-  const isLoginOpen = useMemo(() => panes.findIndex(pane => pane.type === 'LOGIN') !== -1, [panes]);
-  const isProfileOpen = useMemo(() => {
-    if (!me) return false;
-    return panes.findIndex(pane => pane.type === 'PROFILE' && pane.userId === me.user.id) !== -1;
-  }, [panes, me]);
   return (
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
       <div className={className}>
@@ -44,8 +35,8 @@ export const Sidebar: FC<Props> = ({ space, panes, className }) => {
           {isExpanded
             ? (
               <div className="divide-y overflow-y-auto">
-                <SpaceOptions space={space} panes={panes} />
-                <SidebarChannelList panes={panes} spaceId={space.id} />
+                <SpaceOptions space={space} />
+                <SidebarChannelList spaceId={space.id} />
               </div>
             )
             : (
@@ -54,12 +45,7 @@ export const Sidebar: FC<Props> = ({ space, panes, className }) => {
               </div>
             )}
 
-          <SidebarUserOperations
-            isProfileOpen={isProfileOpen}
-            isSettingsOpen={isSettingsOpen}
-            isLoginOpen={isLoginOpen}
-            isHelpOpen={isHelpOpen}
-          />
+          <SidebarUserOperations />
         </div>
       </div>
     </SidebarStateContext.Provider>

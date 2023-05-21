@@ -21,6 +21,7 @@
     "common": "0.0.0",
     "icons": "0.0.0",
     "jotai": "^2.1.0",
+    "jotai-location": "^0.5.1",
     "lang": "0.0.0",
     "logo": "0.0.0",
     "prando": "^6.0.1",
@@ -34,7 +35,8 @@
     "swr": "^2.1.5",
     "ui": "0.0.0",
     "utils": "0.0.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.6",

@@ -55,7 +55,7 @@ const UserOperations = ({ className }: StyleProps) => {
 const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
   return (
     <div>
-      <Link href={`/chat#${space.id}`} className="link">
+      <Link href={`/chat#route="${space.id}"`} className="link">
         {space.name}
       </Link>
     </div>

@@ -7,9 +7,8 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
 import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
-import { useChatPaneDispatch } from '../../state/chat-view';
+import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
-import { makePane } from '../../types/chat-pane';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
@@ -54,10 +53,12 @@ const ExpandDiceField = () => {
 };
 
 const LogoutField = () => {
-  const dispatch = useChatPaneDispatch();
   const logout = useLogout();
   const me = useMe()!;
-  const openProfile = () => dispatch({ type: 'ADD_PANE', item: makePane({ type: 'PROFILE', userId: me.user.id }) });
+  const addPane = usePaneAdd();
+  const openProfile = () => {
+    addPane({ type: 'PROFILE', userId: me.user.id });
+  };
   return (
     <div className="flex justify-between @md:items-center gap-4 select-none flex-col @md:flex-row">
       <div className="text-lg">

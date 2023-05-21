@@ -4,8 +4,8 @@ import { FormProvider, useController, useForm, useFormContext } from 'react-hook
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button, TextInput } from 'ui';
-import { useChatPaneDispatch, useClosePane } from '../state/chat-view';
-import { makePane } from '../types/chat-pane';
+import { usePaneClose } from '../hooks/usePaneClose';
+import { usePaneReplace } from '../hooks/usePaneReplace';
 import { ClosePaneButton } from './ClosePaneButton';
 import { DiceSelect } from './DiceSelect';
 import { PaneBox } from './PaneBox';
@@ -83,9 +83,9 @@ interface Props {
 }
 
 export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
-  const close = useClosePane();
+  const close = usePaneClose();
   const { mutate } = useSWRConfig();
-  const dispatch = useChatPaneDispatch();
+  const replacePane = usePaneReplace();
   const intl = useIntl();
   const form = useForm<FormSchema>({
     defaultValues: {
@@ -109,8 +109,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
     }
     const { channel } = result.unwrap();
     await mutate(['/channels/by_space', spaceId]);
-    const newChannelPane = makePane({ type: 'CHANNEL', channelId: channel.id });
-    dispatch({ type: 'REPLACE_PANE', item: newChannelPane });
+    replacePane({ type: 'CHANNEL', channelId: channel.id });
   };
   return (
     <PaneBox

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { FC, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
 import { ParseResult } from '../../interpreter/parser';
-import { MessageItem } from '../../types/chat-items';
+import { MessageItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { MessageBox } from './MessageBox';
 import { Name } from './Name';

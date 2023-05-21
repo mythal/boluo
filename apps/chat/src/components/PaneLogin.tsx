@@ -4,7 +4,7 @@ import { LogIn } from 'icons';
 import { FC, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSetBanner } from '../hooks/useBanner';
-import { useClosePane } from '../state/chat-view';
+import { usePaneClose } from '../hooks/usePaneClose';
 import { LoginForm } from './account/LoginForm';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBox } from './PaneBox';
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const PaneLogin: FC<Props> = () => {
-  const close = useClosePane();
+  const close = usePaneClose();
   const setBanner = useSetBanner();
   const intl = useIntl();
   const errorExplain = useErrorExplain();

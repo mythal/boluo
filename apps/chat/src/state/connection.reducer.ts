@@ -86,7 +86,7 @@ const handleReconnectCountdownTick = (
   connection: ConnectionState,
   { payload: { immediately = false } }: ChatAction<'reconnectCountdownTick'>,
 ): ConnectionState => {
-  if (connection.type !== 'CLOSED' || connection.countdown < 1) {
+  if (connection.type !== 'CLOSED') {
     return connection;
   }
   const countdown = immediately ? 0 : connection.countdown - 1;

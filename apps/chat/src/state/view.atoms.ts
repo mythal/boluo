@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithHash } from 'jotai-location';
+import { selectAtom } from 'jotai/utils';
 import { isUuid } from 'utils';
 import { Pane, Route } from './view.types';
 
@@ -35,12 +36,37 @@ export const routeAtom = atom<Route, [Route], void>(
   },
 );
 
-const baseFocusPaneAtom = atom<number | null>(null);
+interface FocusRecord {
+  key: number;
+  timestamp: number;
+}
+
+const focusRecordAtom = atom<FocusRecord | null>(null);
 
 export const focusPaneAtom = atom<number | null, [number], void>(
-  (get) => get(baseFocusPaneAtom) || get(panesAtom)[0]?.key || null,
-  (_get, set, paneKey: number) => {
-    set(baseFocusPaneAtom, paneKey);
+  (get): number | null => {
+    const creationMap = get(panesCreationTimeMapAtom);
+    const focusRecord = get(focusRecordAtom);
+    const entries = [...creationMap.entries()].sort((a, b) => b[1] - a[1]);
+    const first = entries[0];
+    if (!first) {
+      return null;
+    }
+    const [firstKey, firstTime] = first;
+    if (focusRecord !== null) {
+      const { timestamp, key } = focusRecord;
+      if (creationMap.has(key) && timestamp > firstTime) {
+        return key;
+      }
+    }
+    return firstKey;
+  },
+  (get, set, key: number) => {
+    const creationMap = get(panesCreationTimeMapAtom);
+    if (creationMap.has(key)) {
+      const time = new Date().getTime();
+      set(focusRecordAtom, { key, timestamp: time });
+    }
   },
 );
 
@@ -54,6 +80,28 @@ const paneDeserialize = (raw: string): Pane[] => {
 };
 
 export const panesAtom = atomWithHash<Pane[]>('panes', [], { deserialize: paneDeserialize });
+
+export const panesCreationTimeMapAtom = selectAtom(
+  panesAtom,
+  (panes, prevMap: Map<number, number> | undefined): Map<number, number> => {
+    const map = new Map<number, number>();
+    const now = new Date().getTime();
+    if (!prevMap) {
+      for (const pane of panes) {
+        map.set(pane.key, now);
+      }
+    } else {
+      for (const pane of panes) {
+        if (prevMap.has(pane.key)) {
+          map.set(pane.key, prevMap.get(pane.key)!);
+        } else {
+          map.set(pane.key, now);
+        }
+      }
+    }
+    return map;
+  },
+);
 
 export const findNextPaneKey = (panes: Pane[]) => {
   if (panes.length === 0) {

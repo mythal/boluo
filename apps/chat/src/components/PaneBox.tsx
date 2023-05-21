@@ -21,15 +21,17 @@ export const PaneBox: FC<Props> = ({ className, header, children }) => {
   return (
     <div
       onClick={focus}
-      onFocus={focus}
       className={clsx(
-        '@container min-w-[18rem] flex-[1_1_100%] flex flex-col h-full',
-        isFocused ? 'max-md:flex-[1_1_100%]' : 'max-md:flex-[0_1_0%]',
+        '@container min-w-[22rem] flex-[1_1_100%] flex flex-col',
+        isFocused ? 'max-md:flex-[1_1_100%] max-md:h-0' : 'max-md:flex-[0_1_0]',
         className,
       )}
     >
       {header}
-      <div className={clsx('bg-bg overflow-y-auto overflow-x-hidden flex-grow', isFocused ? '' : 'max-md:hidden')}>
+      <div
+        onFocus={focus}
+        className={clsx('bg-bg overflow-y-auto overflow-x-hidden flex-grow', isFocused ? '' : 'max-md:hidden')}
+      >
         <Suspense
           fallback={
             <div className="h-full flex justify-center items-center">

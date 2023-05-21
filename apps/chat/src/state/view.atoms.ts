@@ -35,7 +35,14 @@ export const routeAtom = atom<Route, [Route], void>(
   },
 );
 
-export const focusPaneAtom = atom<number | null>(null);
+const baseFocusPaneAtom = atom<number | null>(null);
+
+export const focusPaneAtom = atom<number | null, [number], void>(
+  (get) => get(baseFocusPaneAtom) || get(panesAtom)[0]?.key || null,
+  (_get, set, paneKey: number) => {
+    set(baseFocusPaneAtom, paneKey);
+  },
+);
 
 const paneDeserialize = (raw: string): Pane[] => {
   try {

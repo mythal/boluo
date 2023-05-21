@@ -19,10 +19,11 @@ export const usePaneToggle = () => {
       const nextKey = findNextPaneKey(panes);
       const newPane: Pane = { ...pane, key: nextKey };
       if (index !== -1) {
-        return insertPaneByPosition(panes, newPane, position);
+        const nextPanes = [...panes];
+        nextPanes.splice(index, 1);
+        return nextPanes;
       }
-      const nextPanes = [...panes];
-      nextPanes.unshift(newPane);
-      return nextPanes;
+
+      return insertPaneByPosition(panes, newPane, position);
     }), [setPanes]);
 };

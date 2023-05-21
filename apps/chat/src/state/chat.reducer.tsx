@@ -11,7 +11,6 @@ export interface ChatReducerContext {
 }
 
 export interface ChatSpaceState {
-  type: 'SPACE';
   connection: ConnectionState;
   channels: Record<string, ChannelState>;
   context: ChatReducerContext;
@@ -19,7 +18,6 @@ export interface ChatSpaceState {
 }
 
 export const initialChatState: ChatSpaceState = {
-  type: 'SPACE',
   connection: {
     type: 'CLOSED',
     retry: 0,
@@ -70,8 +68,7 @@ const handleSpaceUpdated = (
   return { ...state, channels };
 };
 
-const makeChatState = (spaceId: string): ChatSpaceState => ({
-  type: 'SPACE',
+export const makeChatState = (spaceId: string): ChatSpaceState => ({
   channels: {},
   connection: initialConnectionState,
   context: {
@@ -106,7 +103,7 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   if (action.type === 'spaceUpdated') {
     return handleSpaceUpdated(state, action);
   } else if (action.type === 'enterSpace') {
-    if (state.type === 'SPACE' && state.context.spaceId === action.payload.spaceId) {
+    if (state.context.spaceId === action.payload.spaceId) {
       return state;
     }
     return makeChatState(action.payload.spaceId);

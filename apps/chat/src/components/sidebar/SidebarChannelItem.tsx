@@ -1,8 +1,7 @@
 import type { Channel } from 'api';
 import { Hash } from 'icons';
 import type { FC } from 'react';
-import { makeId } from 'utils';
-import { useChatPaneDispatch } from '../../state/chat-view';
+import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
@@ -11,13 +10,13 @@ interface Props {
 }
 
 export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
-  const dispatch = useChatPaneDispatch();
-  const replace = () => {
-    dispatch({ type: 'REPLACE_PANE', item: { type: 'CHANNEL', id: makeId(), channelId: channel.id } });
+  const replacePane = usePaneReplace();
+  const handleClick = () => {
+    replacePane({ type: 'CHANNEL', channelId: channel.id }, (pane) => pane.type === 'CHANNEL');
   };
 
   return (
-    <SidebarItem onClick={replace} icon={<Hash />} active={active}>
+    <SidebarItem onClick={handleClick} icon={<Hash />} active={active}>
       {channel.name}
     </SidebarItem>
   );

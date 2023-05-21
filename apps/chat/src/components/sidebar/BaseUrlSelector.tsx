@@ -17,12 +17,13 @@ export const BaseUrlSelector: FC<Props> = () => {
     { label: 'JP (NNC)', value: 'https://raylet.boluo.chat' },
   ], [intl]);
   const [backendUrl, setBackendUrl] = useAtom(backendUrlAtom);
+  const apiUrl = useMemo(() => backendUrl.endsWith('/api') ? backendUrl : backendUrl + '/api', [backendUrl]);
   const [delay, setDelay] = useState<number | 'ERROR' | 'LOADING'>('LOADING');
   useEffect(() => {
     const handle = window.setInterval(() => {
       const base = new Date().getTime();
       setDelay('LOADING');
-      get('/users/get_me', null, backendUrl).then(() => {
+      get('/users/get_me', null, apiUrl).then(() => {
         const now = new Date().getTime();
         setDelay(now - base);
       }).catch(() => {
@@ -30,7 +31,7 @@ export const BaseUrlSelector: FC<Props> = () => {
       });
     }, 1000);
     return () => window.clearInterval(handle);
-  }, [backendUrl]);
+  }, [apiUrl]);
   return (
     <div>
       <label className="flex flex-col gap-1">

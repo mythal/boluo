@@ -1,27 +1,29 @@
 import type { Space } from 'api';
 import { useMe } from 'common';
 import { Settings, Users } from 'icons';
+import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useMySpaceMember } from '../../hooks/useMySpaceMember';
-import { useChatPaneDispatch } from '../../state/chat-view';
-import { makePane, Pane, SpaceMembersPane, SpaceSettingsPane } from '../../types/chat-pane';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { panesAtom } from '../../state/view.atoms';
+import { SpaceMembersPane, SpaceSettingsPane } from '../../state/view.types';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
   space: Space;
-  panes: Pane[];
 }
 
-export const SpaceOptions: FC<Props> = ({ space, panes }) => {
-  const dispatch = useChatPaneDispatch();
+export const SpaceOptions: FC<Props> = ({ space }) => {
+  const panes = useAtomValue(panesAtom);
   const me = useMe();
   const mySpaceMember = useMySpaceMember(space.id);
   const disabled = me === null;
   const [folded, setFold] = useState(true);
+  const togglePane = usePaneToggle();
   const spaceSettingsPane: SpaceSettingsPane = { type: 'SPACE_SETTINGS', spaceId: space.id };
   const spaceMembersPane: SpaceMembersPane = { type: 'SPACE_MEMBERS', spaceId: space.id };
   const spaceSettingsActive = useMemo(() => panes.findIndex(pane => pane.type === 'SPACE_SETTINGS') !== -1, [panes]);
@@ -49,7 +51,7 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
             <SidebarItem
               icon={<Settings />}
               active={spaceSettingsActive}
-              onClick={() => dispatch({ type: 'TOGGLE', pane: makePane(spaceSettingsPane) })}
+              onClick={() => togglePane(spaceSettingsPane)}
               toggle
             >
               <FormattedMessage defaultMessage="Space Settings" />
@@ -59,7 +61,7 @@ export const SpaceOptions: FC<Props> = ({ space, panes }) => {
           <SidebarItem
             icon={<Users />}
             active={spaceMembersActive}
-            onClick={() => dispatch({ type: 'TOGGLE', pane: makePane(spaceMembersPane) })}
+            onClick={() => togglePane(spaceMembersPane)}
             toggle
           >
             <FormattedMessage defaultMessage="Members" />

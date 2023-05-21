@@ -1,6 +1,6 @@
 import type { FC } from 'react';
-import { useIsFocused } from '../../state/chat-view';
-import { PreviewItem } from '../../types/chat-items';
+import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
+import { PreviewItem } from '../../state/channel.types';
 import { OthersPreview } from './OthersPreview';
 import { SelfPreview } from './SelfPreview';
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const ChatItemPreview: FC<Props> = ({ preview, self }) => {
-  const paneFocused = useIsFocused();
+  const paneFocused = usePaneIsFocus();
   return paneFocused && self
     ? <SelfPreview preview={preview} />
     : <OthersPreview preview={preview} />;

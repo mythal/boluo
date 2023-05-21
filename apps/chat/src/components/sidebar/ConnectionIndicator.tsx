@@ -1,13 +1,4 @@
-import {
-  autoUpdate,
-  FloatingPortal,
-  safePolygon,
-  useClick,
-  useDismiss,
-  useFloating,
-  useHover,
-  useInteractions,
-} from '@floating-ui/react';
+import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import clsx from 'clsx';
 import { Cloud, CloudOff } from 'icons';
 import { useAtomValue } from 'jotai';

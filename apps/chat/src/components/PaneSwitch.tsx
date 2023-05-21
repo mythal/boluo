@@ -2,8 +2,8 @@ import React, { FC, useState } from 'react';
 import { memo, Suspense } from 'react';
 import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';
-import { PaneIdProvider } from '../state/chat-view';
-import type { Pane } from '../types/chat-pane';
+import { PaneProvider } from '../state/view.context';
+import { Pane } from '../state/view.types';
 import { ChatPaneChannel } from './channel/ChannelPane';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneError } from './PaneError';
@@ -60,7 +60,7 @@ const Switch: FC<Props> = ({ pane }) => {
 export const ChatPaneSwitch = memo<Props>(({ pane }) => {
   const [banner, setBanner] = useState<Banner | null>(emptyBanner);
   return (
-    <PaneIdProvider key={pane.id} id={pane.id}>
+    <PaneProvider key={pane.key} paneKey={pane.key}>
       <PaneError>
         <PaneBannerContext.Provider value={banner ?? emptyBanner}>
           <ThrowBanner.Provider value={setBanner}>
@@ -70,7 +70,7 @@ export const ChatPaneSwitch = memo<Props>(({ pane }) => {
           </ThrowBanner.Provider>
         </PaneBannerContext.Provider>
       </PaneError>
-    </PaneIdProvider>
+    </PaneProvider>
   );
 });
 ChatPaneSwitch.displayName = 'ChatPaneSwitch';

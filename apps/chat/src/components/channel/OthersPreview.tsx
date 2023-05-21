@@ -3,7 +3,7 @@ import { FC, useDeferredValue, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { fromRawEntities } from '../../interpreter/entities';
 import { ParseResult } from '../../interpreter/parser';
-import { PreviewItem } from '../../types/chat-items';
+import { PreviewItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';

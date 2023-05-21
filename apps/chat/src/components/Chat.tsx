@@ -1,8 +1,10 @@
+import { useAtomValue } from 'jotai';
 import { FC, useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui';
+import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useSpace } from '../hooks/useSpace';
-import { ChatViewState, PaneProvider, useChatViewState } from '../state/chat-view';
+import { routeAtom } from '../state/view.atoms';
 import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
 import { ChatRoot } from './ChatRoot';
@@ -11,15 +13,15 @@ import { SpaceChatView } from './SpaceChatView';
 
 const SpaceChat: FC<{
   spaceId: string;
-  panes: ChatViewState['panes'];
-}> = ({ spaceId, panes }) => {
+}> = ({ spaceId }) => {
   const space = useSpace(spaceId);
 
-  return <SpaceChatView space={space} panes={panes} />;
+  return <SpaceChatView space={space} />;
 };
 
 const Chat: FC = () => {
-  const { panes, dispatch, focused, route } = useChatViewState();
+  const route = useAtomValue(routeAtom);
+  useConnectionEffect();
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';
@@ -39,11 +41,9 @@ const Chat: FC = () => {
           </ChatSkeleton>
         }
       >
-        <PaneProvider dispatch={dispatch} focused={focused}>
-          {route.type === 'SPACE' && <SpaceChat spaceId={route.spaceId} panes={panes} />}
-          {route.type === 'NOT_FOUND' && <ChatNotFound />}
-          {route.type === 'ROOT' && <ChatRoot />}
-        </PaneProvider>
+        {route.type === 'SPACE' && <SpaceChat spaceId={route.spaceId} />}
+        {route.type === 'NOT_FOUND' && <ChatNotFound />}
+        {route.type === 'ROOT' && <ChatRoot />}
       </Suspense>
     </ChatErrorBoundary>
   );

@@ -1,50 +1,68 @@
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { HelpCircle, LogIn, Settings, User } from 'icons';
-import { useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { toggle } from 'utils';
-import { useChatPaneDispatch } from '../../state/chat-view';
-import { makePane } from '../../types/chat-pane';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { panesAtom } from '../../state/view.atoms';
 import { Avatar } from '../account/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 import { useSidebarState } from './useSidebarState';
 
 interface Props {
-  isProfileOpen: boolean;
-  isSettingsOpen: boolean;
-  isLoginOpen: boolean;
-  isHelpOpen: boolean;
 }
 
 export const isUserOperationsFoldedAtom = atomWithStorage('isUserOperationsFolded:v0', false);
 
-export const SidebarUserOperations: FC<Props> = (
-  { isProfileOpen, isLoginOpen, isSettingsOpen, isHelpOpen },
-) => {
+export const isSettingsOpenAtom = atom((get) => {
+  const panes = get(panesAtom);
+  return panes.findIndex(pane => pane.type === 'SETTINGS') !== -1;
+});
+
+export const isHelpOpenAtom = atom((get) => {
+  const panes = get(panesAtom);
+  return panes.findIndex(pane => pane.type === 'HELP') !== -1;
+});
+
+export const isLoginOpenAtom = atom((get) => {
+  const panes = get(panesAtom);
+  return panes.findIndex(pane => pane.type === 'LOGIN') !== -1;
+});
+
+export const isProfileOpenAtom = atom((get) => {
+  const panes = get(panesAtom);
+  // TODO: me
+  return panes.findIndex(pane => pane.type === 'PROFILE') !== -1;
+});
+export const SidebarUserOperations: FC<Props> = () => {
   const me = useMe();
   const { isExpanded } = useSidebarState();
+  const isLoginOpen = useAtomValue(isLoginOpenAtom);
+  const isHelpOpen = useAtomValue(isHelpOpenAtom);
+  const isSettingsOpen = useAtomValue(isSettingsOpenAtom);
+  const isProfileOpen = useAtomValue(isProfileOpenAtom);
   const [folded, setFolded] = useAtom(isUserOperationsFoldedAtom);
   const toggleFolded = useCallback(() => setFolded(toggle), [setFolded]);
-  const dispatch = useChatPaneDispatch();
+  const togglePane = usePaneToggle();
   const handleToggleLogin = useCallback(() => {
     if (me) {
       return;
     }
-    dispatch({ type: 'TOGGLE', pane: makePane({ type: 'LOGIN' }) });
-  }, [dispatch, me]);
+    togglePane({ type: 'LOGIN' });
+  }, [me, togglePane]);
   const handleToggleSettings = useCallback(() => {
-    dispatch({ type: 'TOGGLE', pane: makePane({ type: 'SETTINGS' }) });
-  }, [dispatch]);
+    togglePane({ type: 'SETTINGS' });
+  }, [togglePane]);
   const handleToggleProfile = useCallback(() => {
     if (!me) {
       return;
     }
-    dispatch({ type: 'TOGGLE', pane: makePane({ type: 'PROFILE', userId: me.user.id }) });
-  }, [dispatch, me]);
+    togglePane({ type: 'PROFILE', userId: me.user.id });
+  }, [me, togglePane]);
   const loginItem = !me && (
     <SidebarItem icon={<LogIn />} toggle onClick={handleToggleLogin} active={isLoginOpen}>
       <FormattedMessage defaultMessage="Login" />
@@ -55,7 +73,7 @@ export const SidebarUserOperations: FC<Props> = (
       <FormattedMessage defaultMessage="Settings" />
     </SidebarItem>
   );
-  const toggleHelp = useCallback(() => dispatch({ type: 'TOGGLE', pane: makePane({ type: 'HELP' }) }), [dispatch]);
+  const toggleHelp = useCallback(() => togglePane({ type: 'HELP' }), [togglePane]);
   const helpItem = useMemo(() => (
     <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle onClick={toggleHelp}>
       <FormattedMessage defaultMessage="Help" />

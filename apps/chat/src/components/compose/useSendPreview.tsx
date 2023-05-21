@@ -3,7 +3,7 @@ import { useAtomValue, useStore } from 'jotai';
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { makeId } from 'utils';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
-import { useIsFocused } from '../../state/chat-view';
+import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { ComposeState } from '../../state/compose.reducer';
 
@@ -48,7 +48,7 @@ const sendPreview = (
 export const useSendPreview = (channelId: string, nickname: string | undefined, composeAtom: ComposeAtom) => {
   const store = useStore();
   const sendTimoutRef = useRef<number | undefined>(undefined);
-  const isFocused = useIsFocused();
+  const isFocused = usePaneIsFocus();
   const connectionState = useAtomValue(connectionStateAtom);
   useEffect(() => {
     return store.sub(composeAtom, () => {

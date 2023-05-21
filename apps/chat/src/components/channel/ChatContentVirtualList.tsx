@@ -2,7 +2,7 @@ import { GetMe, Member } from 'api';
 import { FC, MutableRefObject } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { START_INDEX } from '../../hooks/useChatList';
-import { ChatItem } from '../../types/chat-items';
+import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 

@@ -2,8 +2,7 @@ import { Settings } from 'icons';
 import { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from 'ui';
-import { useChatPaneDispatch } from '../../state/chat-view';
-import { makePane } from '../../types/chat-pane';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
 
 interface Props {
   on: boolean;
@@ -12,15 +11,14 @@ interface Props {
 
 export const SettingsToggleButton: FC<Props> = ({ on, isExpand }) => {
   const intl = useIntl();
-  const dispatch = useChatPaneDispatch();
+  const togglePane = usePaneToggle();
   const paneName = intl.formatMessage({ defaultMessage: 'Settings' });
   const label = on
     ? intl.formatMessage({ defaultMessage: 'Close {paneName}' }, { paneName })
     : intl.formatMessage({ defaultMessage: 'Open {paneName}' }, { paneName });
-  const pane = makePane({ type: 'SETTINGS' });
   return (
     <Button
-      onClick={() => dispatch({ type: 'TOGGLE', pane })}
+      onClick={() => togglePane({ type: 'SETTINGS' })}
       title={label}
       aria-label={label}
       className="group"

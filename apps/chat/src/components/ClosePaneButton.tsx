@@ -8,11 +8,13 @@ import { usePaneClose } from '../hooks/usePaneClose';
 export const ClosePaneButton: FC = () => {
   const intl = useIntl();
   const close = usePaneClose();
-  const [, starTransition] = useTransition();
   return (
     <Button
       data-small
-      onClick={() => starTransition(close)}
+      onClick={(e) => {
+        e.stopPropagation();
+        close();
+      }}
       title={intl.formatMessage({ defaultMessage: 'Close pane' })}
     >
       <Close />

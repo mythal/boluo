@@ -84,15 +84,7 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
             Err(e) => {
                 has_error = true;
                 error::log_error(&e, &uri);
-                let mut remove_session = false;
-                if let AppError::Unauthenticated(_) = e {
-                    remove_session = true;
-                }
-                let mut res = err_response(e);
-                if remove_session {
-                    session::remove_session_cookie(res.headers_mut());
-                }
-                res
+                err_response(e)
             }
         },
     );

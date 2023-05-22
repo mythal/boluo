@@ -3,7 +3,7 @@ use super::models::User;
 use crate::interface::{missing, ok_response, parse_body, parse_query, Response};
 use crate::session::{
     add_session_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie, remove_session,
-    remove_session_cookie, revoke_session, AuthenticateFail,
+    remove_session_cookie, revoke_session,
 };
 use crate::{cache, database, mail};
 
@@ -105,14 +105,7 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
                 Ok(response)
             }
         }
-        Err(AppError::Unauthenticated(AuthenticateFail::NoData)) => Ok(ok_response::<Option<GetMe>>(None)),
-        Err(AppError::Unauthenticated(_)) => {
-            let mut response = ok_response::<Option<GetMe>>(None);
-            if is_authenticate_use_cookie(req.headers()) {
-                remove_session_cookie(response.headers_mut());
-            }
-            Ok(response)
-        }
+        Err(AppError::Unauthenticated(_)) => Ok(ok_response::<Option<GetMe>>(None)),
         Err(e) => Err(e),
     }
 }

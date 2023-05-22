@@ -117,17 +117,17 @@ pub fn add_session_cookie(
         "http://0.0.0.0",
         "http://192.168",
     ];
-    let is_development = internal_start.iter().any(|start| origin.starts_with(start));
+    let is_local = internal_start.iter().any(|start| origin.starts_with(start));
 
     let token = token(session);
     let mut builder = CookieBuilder::new(SESSION_COOKIE_KEY, token)
         .same_site(SameSite::Lax)
-        .secure(!is_development)
+        .secure(!is_local)
         .http_only(true)
         .path("/")
         .max_age(Duration::days(30));
 
-    if !is_development {
+    if origin.ends_with(SESSION_COOKIE_DOMAIN) {
         builder = builder.domain(SESSION_COOKIE_DOMAIN);
     }
     let session_cookie = builder.finish().to_string();

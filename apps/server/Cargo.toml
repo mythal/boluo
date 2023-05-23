@@ -25,8 +25,11 @@ futures = "0.3"
 itertools = "0.10"
 log = "0.4"
 mime = "0.3"
+openssl = { version = "0.10", features = ["vendored"] }
+openssl-probe = "0.1.2"
 percent-encoding = "2.2.0"
 postgres = "0.19"
+postgres-openssl = { version = "0.5" }
 postgres-types = { version = "0.2", features = ["derive"] }
 regex = "1"
 ring = "0.16"

@@ -983,6 +983,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "111.25.3+1.1.1t"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "924757a6a226bf60da5f7dd0311a34d2b52283dd82ddeb103208ddc66362f80c"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -991,6 +1000,7 @@ dependencies = [
  "autocfg",
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -1089,6 +1099,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "postgres-openssl"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1de0ea6504e07ca78355a6fb88ad0f36cafe9e696cbc6717f16a207f3a60be72"
+dependencies = [
+ "futures",
+ "openssl",
+ "tokio",
+ "tokio-openssl",
+ "tokio-postgres",
 ]
 
 [[package]]
@@ -1439,8 +1462,11 @@ dependencies = [
  "itertools",
  "log",
  "mime",
+ "openssl",
+ "openssl-probe",
  "percent-encoding",
  "postgres",
+ "postgres-openssl",
  "postgres-types",
  "redis",
  "regex",
@@ -1693,6 +1719,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
 dependencies = [
  "native-tls",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-openssl"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c08f9ffb7809f1b20c1b398d92acf4cc719874b3b2b2d9ea2f09b4a80350878a"
+dependencies = [
+ "futures-util",
+ "openssl",
+ "openssl-sys",
  "tokio",
 ]
 

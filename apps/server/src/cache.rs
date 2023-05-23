@@ -1,6 +1,7 @@
 use crate::error::CacheError;
 pub use redis::aio::MultiplexedConnection;
 pub use redis::AsyncCommands;
+use uuid::fmt::Hyphenated;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -65,12 +66,16 @@ pub async fn conn() -> Connection {
 }
 
 pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
-    let mut buffer = Vec::with_capacity(type_name.len() + field_name.len() + 24);
-    buffer.extend_from_slice(type_name);
-    buffer.push(b':');
-    buffer.extend_from_slice(id.as_bytes());
-    buffer.push(b':');
-    buffer.extend_from_slice(field_name);
+    let type_name_len = type_name.len();
+    let mut buffer = vec![0; type_name_len + 1 + Hyphenated::LENGTH + 1 + field_name.len()];
+    buffer[0..type_name_len].copy_from_slice(type_name);
+    buffer[type_name_len] = b':';
+    let id_start = type_name_len + 1;
+    let id_end = id_start + Hyphenated::LENGTH;
+    id.as_hyphenated().encode_lower(&mut buffer[id_start..id_end]);
+    let field_start = id_end + 1;
+    buffer[id_end] = b':';
+    buffer[field_start..].copy_from_slice(field_name);
     buffer
 }
 

@@ -1,6 +1,6 @@
 use crate::error::DbError;
-use openssl::ssl::{SslConnector, SslMethod};
-use postgres_openssl::MakeTlsConnector;
+use native_tls::TlsConnector;
+use postgres_native_tls::MakeTlsConnector;
 use std::collections::HashMap;
 use std::convert::{From, Into};
 use std::env;
@@ -141,8 +141,9 @@ impl Client {
     }
 
     pub async fn with_config(config: &tokio_postgres::Config) -> Result<Client, DbError> {
-        let builder = SslConnector::builder(SslMethod::tls()).unwrap();
-        let connector = MakeTlsConnector::new(builder.build());
+        let connector = TlsConnector::builder().build().expect("Failed to build TLS connector");
+        let connector = MakeTlsConnector::new(connector);
+
         let (client, connection) = config.connect(connector).await?;
         tokio::spawn(connection);
         let prepared = HashMap::with_capacity_and_hasher(64, CrcBuilder);

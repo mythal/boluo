@@ -51,12 +51,19 @@ impl RedisFactory {
 /// Get cache database connection.
 pub async fn conn() -> Connection {
     use std::env::var;
+    if cfg!(test) {
+        dotenv::from_filename(".env.test.local").ok();
+        dotenv::from_filename(".env.local").ok();
+        dotenv::dotenv().ok();
+        openssl_probe::init_ssl_cert_env_vars();
+    };
     let url = if let Ok(url) = var("REDIS_URL") {
         url
     } else {
         log::warn!("Failed to load Redis URL, use default");
         "redis://127.0.0.1/".to_string()
     };
+
     let connection_manager = redis::Client::open(&*url)
         .expect("Unable to open redis")
         .get_multiplexed_tokio_connection()

@@ -77,7 +77,7 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
         return Ok(cors::preflight_requests(req));
     }
     if let Some(subpath) = uri.path().strip_prefix("/api/info") {
-        return Ok(info::router(req, subpath));
+        return Ok(info::router(req, subpath).await);
     }
     let response = router(req).await;
     let mut has_error = false;

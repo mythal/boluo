@@ -1,36 +1,25 @@
-import { LOCAL_BACKEND } from './settings';
+interface Proxy {
+  name: string;
+  url: string;
+}
 
-const STAGING_BASE_URL = 'https://staging.boluo.chat';
-export const baseUrlList = (() => {
-  const { host } = window.location;
-  if (host.endsWith('staging.boluo.chat')) {
-    return [
-      STAGING_BASE_URL,
-    ];
+let urlListCache: string[] = [];
+
+export const getBaseUrlList = async (): Promise<string[]> => {
+  if (urlListCache.length > 0) {
+    return urlListCache;
   }
-  if (host.startsWith('localhost')) {
-    return [LOCAL_BACKEND ? 'http://localhost:3000' : STAGING_BASE_URL];
-  }
-  if (host.startsWith('127.0.0.1')) {
-    return [LOCAL_BACKEND ? 'http://127.0.0.1:3000' : STAGING_BASE_URL];
-  }
-  return ['https://boluo.chat', 'https://raylet.boluo.chat', 'https://cloudflare.boluo.chat', 'https://gce.boluo.chat'];
-})();
+  const response = await fetch('/api/info/proxies');
+  const proxies = await response.json() as Proxy[];
+  const urls = [location.origin, ...proxies.map((proxy) => proxy.url)];
+  urlListCache = urls;
+  return urls;
+};
 
 const FAILED = Number.MAX_SAFE_INTEGER;
 
 export const getDefaultBaseUrl = (): string => {
-  const { host } = window.location;
-  if (host.endsWith('staging.boluo.chat')) {
-    return STAGING_BASE_URL;
-  }
-  if (host.startsWith('localhost')) {
-    return LOCAL_BACKEND ? 'http://localhost:3000' : STAGING_BASE_URL;
-  }
-  if (host.startsWith('127.0.0.1')) {
-    return LOCAL_BACKEND ? 'http://127.0.0.1:3000' : STAGING_BASE_URL;
-  }
-  return 'https://boluo.chat';
+  return location.origin;
 };
 
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
@@ -48,6 +37,7 @@ const testBaseUrl = async (baseUrl: string): Promise<number> => {
 };
 
 export const selectBestBaseUrl = async (block?: string): Promise<string> => {
+  const baseUrlList = await getBaseUrlList();
   const list = baseUrlList.filter((url) => url !== block);
   const responseMsList = await Promise.all(list.map((url) => testBaseUrl(url)));
   let bestIndex = 0;

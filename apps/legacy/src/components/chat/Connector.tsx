@@ -72,15 +72,6 @@ const handleEvent = (dispatch: Dispatch, event: Events) => {
   }
 };
 
-const Retry = ({ second, setSecond }: { second: number; setSecond: (f: x) => void }) => {
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      setSecond(x => x - 1);
-    }, 1000);
-  }, []);
-  return <div css={style}>链接出错，等待重连 ({second})</div>;
-};
-
 interface Props {
   spaceId: Id;
   myId: Id | undefined;

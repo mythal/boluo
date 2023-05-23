@@ -49,6 +49,14 @@ CREATE TABLE media
     "created"           timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
+CREATE TABLE proxies (
+    "name" text NOT NULL PRIMARY KEY,
+    "url" text NOT NULL,
+    "is_enabled" boolean NOT NULL DEFAULT true,
+    "region" text NOT NULL DEFAULT '',
+    "created" timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
+);
+
 CREATE TABLE users
 (
     "id"          uuid      NOT NULL DEFAULT uuid_generate_v1mc() PRIMARY KEY,

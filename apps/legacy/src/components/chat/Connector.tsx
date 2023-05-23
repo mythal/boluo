@@ -6,8 +6,9 @@ import { Events, SpaceUpdated } from '../../api/events';
 import { get } from '../../api/request';
 import { selectBestBaseUrl } from '../../base-url';
 import store, { Dispatch, useDispatch, useSelector } from '../../store';
-import { spacingN } from '../../styles/atoms';
+import { shadowXl, spacingN, textSm } from '../../styles/atoms';
 import { Id } from '../../utils/id';
+import Button from '../atoms/Button';
 
 export const PING = '♥';
 export const PONG = '♡';
@@ -15,9 +16,13 @@ export const PONG = '♡';
 export const style = css`
   z-index: 999;
   position: fixed;
-  top: ${spacingN(2)};
-  right: ${spacingN(2)};
-  padding: ${spacingN(2)};
+  border-radius: 0.25rem;
+  ${shadowXl};
+  ${textSm};
+  top: ${spacingN(6)};
+  right: 50%;
+  transform: translateX(50%);
+  padding: ${spacingN(2)} ${spacingN(4)};
   background-color: aqua;
   color: #1a202c;
 `;
@@ -67,13 +72,13 @@ const handleEvent = (dispatch: Dispatch, event: Events) => {
   }
 };
 
-const Retry = ({ second }: { second: number }) => {
-  const [sec, setSec] = useState(second);
+const Retry = ({ second, setSecond }: { second: number; setSecond: (f: x) => void }) => {
   useEffect(() => {
-    const handle = window.setInterval(() => setSec((sec) => Math.max(sec - 1, 0)), 1000);
-    return () => window.clearInterval(handle);
+    const handle = window.setTimeout(() => {
+      setSecond(x => x - 1);
+    }, 1000);
   }, []);
-  return <div css={style}>链接出错，等待重连 ({sec})</div>;
+  return <div css={style}>链接出错，等待重连 ({second})</div>;
 };
 
 interface Props {
@@ -81,38 +86,61 @@ interface Props {
   myId: Id | undefined;
 }
 
-const MAX_RETRY_WAIT_SEC = 7;
+const RETRY_WAIT_SEC = [0, 0, 1, 2, 3, 3, 5, 6, 6, 6, 6];
+const DEVELOPMENT = false;
 
 export const Connector = ({ spaceId, myId }: Props) => {
   const dispatch = useDispatch();
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const [state, setState] = useState<ConnectState>('CLOSED');
+  const stateRef = useRef<ConnectState>(state);
+  const [retrySec, setRetrySec] = useState<number>(0);
   const connectionRef = useRef<WebSocket | null>(null);
   const baseUrlRef = useRef<string>(baseUrl);
 
-  const retrySec = useRef(0);
+  const retryCount = useRef(0);
   const after = useRef<number>(0);
 
   useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
     baseUrlRef.current = baseUrl;
+    if (stateRef.current === 'OPEN') {
+      if (connectionRef.current) {
+        connectionRef.current.close();
+      }
+    }
   }, [baseUrl]);
 
   useEffect(() => {
     const makeConnection = async () => {
+      const retry = () => {
+        setState('CLOSED');
+        retryCount.current += 1;
+        if (retryCount.current <= 2) {
+          setRetrySec(0);
+        } else if (retryCount.current >= RETRY_WAIT_SEC.length) {
+          setRetrySec(7);
+        } else {
+          const x = Math.random();
+          let sec = RETRY_WAIT_SEC[retryCount.current];
+          if (x > 0.66666) {
+            sec += 1;
+          } else if (x < 0.33333) {
+            sec -= 1;
+          }
+          setRetrySec(sec);
+        }
+        connectionRef.current = null;
+      };
       setState('CONNECTING');
       let token: string | null = null;
       try {
         token = await getConnectionToken(spaceId, myId);
       } catch {
-        setState('CLOSED');
-        if (Math.random() > 0.75) {
-          retrySec.current += 1;
-        } else {
-          retrySec.current += 2;
-        }
-        if (retrySec.current >= MAX_RETRY_WAIT_SEC) {
-          retrySec.current = MAX_RETRY_WAIT_SEC;
-        }
+        retry();
         return;
       }
       const connection = connect(baseUrlRef.current, spaceId, token);
@@ -120,9 +148,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connection.onclose = (event) => {
         console.log('Websocket connection closed', event);
         if (event.code !== 1000) {
+          retry();
           selectBestBaseUrl(baseUrlRef.current).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
-          setState('CLOSED');
-          retrySec.current += 1;
+          return;
         }
         connectionRef.current = null;
       };
@@ -130,8 +158,10 @@ export const Connector = ({ spaceId, myId }: Props) => {
         console.warn('WebSocket error ', event);
       };
       connection.onmessage = (onMessageEvent) => {
-        retrySec.current = 0;
-        setState('OPEN');
+        retryCount.current = 0;
+        if (stateRef.current !== 'OPEN') {
+          setState('OPEN');
+        }
         const received = onMessageEvent.data as string;
         if (received === PING) {
           connection.send(PONG);
@@ -146,20 +176,44 @@ export const Connector = ({ spaceId, myId }: Props) => {
       };
       dispatch(connectSpace(spaceId, connection));
     };
-    if (state === 'CLOSED') {
-      console.log('attempt to reconnection ', retrySec.current);
-      const handle = window.setTimeout(() => {
-        makeConnection().catch(console.warn);
-      }, retrySec.current * 1000);
-      return () => window.clearTimeout(handle);
+    if (state === 'CLOSED' && retrySec === 0) {
+      console.log('attempt to reconnection ', retryCount.current);
+      makeConnection().catch(console.warn);
     }
-  }, [state, spaceId, myId, dispatch]);
+  }, [state, spaceId, myId, dispatch, retrySec]);
+
+  useEffect(() => {
+    if (retrySec === 0) {
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      setRetrySec(x => x - 1);
+    }, 1000);
+    return () => {
+      window.clearTimeout(handle);
+    };
+  }, [retrySec]);
 
   if (state === 'OPEN') {
+    if (DEVELOPMENT) {
+      return (
+        <div css={style}>
+          <Button
+            onClick={() => {
+              retryCount.current = 10;
+              setRetrySec(5);
+              connectionRef.current?.close();
+            }}
+          >
+            断开连接
+          </Button>
+        </div>
+      );
+    }
     return null;
   }
-  if (state === 'CLOSED' && retrySec.current > 0) {
-    return <Retry second={retrySec.current} />;
+  if (state === 'CLOSED' && retrySec > 0) {
+    return <div css={style}>链接出错，等待重连 ({retrySec})</div>;
   }
   return <div css={style}>连接中……</div>;
 };

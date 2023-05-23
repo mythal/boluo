@@ -48,6 +48,9 @@ module.exports = {
     static: {
       directory: path.resolve(__dirname, 'public'),
     },
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
     hot: true,
     compress: true,
     historyApiFallback: true,

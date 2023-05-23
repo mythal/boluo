@@ -101,6 +101,7 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
 
 #[tokio::main]
 async fn main() {
+    openssl_probe::init_ssl_cert_env_vars();
     dotenv::dotenv().ok();
     dotenv::from_filename(".env.local").ok();
     let port: u16 = env::var("PORT").unwrap().parse().unwrap();

@@ -3,6 +3,7 @@ import type { Patch } from './patch';
 import type { Post } from './post';
 import type { AppResponse } from './request';
 
+export type { Proxy } from 'server-bindings/Proxy';
 export type { AppResponse, Get, Patch, Post };
 export { appFetch } from './common';
 export * from './error-types';

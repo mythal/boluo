@@ -2,7 +2,7 @@ import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInter
 import clsx from 'clsx';
 import { Cloud, CloudOff } from 'icons';
 import { useAtomValue } from 'jotai';
-import { FC, useEffect, useState } from 'react';
+import { FC, Suspense, useEffect, useState } from 'react';
 import { Spinner } from 'ui';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { BaseUrlSelector } from './BaseUrlSelector';
@@ -57,7 +57,9 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
             {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
             {connectionState.type === 'CLOSED' && <ConnectionIndicatorClosed countdown={connectionState.countdown} />}
-            <BaseUrlSelector />
+            <Suspense fallback="...">
+              <BaseUrlSelector />
+            </Suspense>
           </div>
         </FloatingPortal>
       )}

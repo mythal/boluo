@@ -1,21 +1,30 @@
 import { backendUrlAtom, DEFAULT_BACKEND_URL, get } from 'api-browser';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Select } from 'ui';
 import { SelectItem } from 'ui/Select';
+import { proxiesAtom } from '../../state/info.atoms';
 
 interface Props {
 }
 
 export const BaseUrlSelector: FC<Props> = () => {
   const intl = useIntl();
-  const items: SelectItem[] = useMemo(() => [
-    { label: intl.formatMessage({ defaultMessage: 'Default' }), value: DEFAULT_BACKEND_URL },
-    { label: 'JP (GCE)', value: 'https://gce.boluo.chat' },
-    { label: 'Cloudflare', value: 'https://cloudflare.boluo.chat' },
-    { label: 'JP (NNC)', value: 'https://raylet.boluo.chat' },
-  ], [intl]);
+  const proxies = useAtomValue(proxiesAtom);
+  const items: SelectItem[] = useMemo(() => {
+    const defaultItem: SelectItem = {
+      label: intl.formatMessage({ defaultMessage: 'Default' }),
+      value: DEFAULT_BACKEND_URL,
+    };
+    return [defaultItem].concat(proxies.map((proxy): SelectItem => {
+      let label = proxy.name;
+      if (proxy.region) {
+        label += ` (${proxy.region})`;
+      }
+      return ({ label, value: proxy.url });
+    }));
+  }, [proxies, intl]);
   const [backendUrl, setBackendUrl] = useAtom(backendUrlAtom);
   const apiUrl = useMemo(() => backendUrl.endsWith('/api') ? backendUrl : backendUrl + '/api', [backendUrl]);
   const [delay, setDelay] = useState<number | 'ERROR' | 'LOADING'>('LOADING');

@@ -82,9 +82,9 @@ features = [
 ]
 
 [dependencies.redis]
-version = "0.22"
+version = "0.23"
 default-features = false
-features = ["connection-manager", "tokio-comp"]
+features = ["connection-manager", "tokio-native-tls-comp"]
 
 [dependencies.fern]
 version = "0.6"

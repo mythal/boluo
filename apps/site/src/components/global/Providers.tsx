@@ -29,7 +29,6 @@ export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) =
       <SWRConfig
         value={{
           refreshInterval: 60000,
-          suspense: true,
         }}
       >
         <MeProvider initialMe={me}>

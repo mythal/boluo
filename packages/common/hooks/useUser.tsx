@@ -3,7 +3,9 @@ import { get } from 'api-browser';
 import useSWR, { SWRResponse } from 'swr';
 import { Result } from 'utils';
 
-export const useUser = (userId: string): SWRResponse<User | null, ApiError> => {
+export const useUser = (
+  userId: string,
+): SWRResponse<User | null, ApiError> => {
   return useSWR(
     ['/users/query' as const, userId],
     async ([path, userId]): Promise<User | null> => {
@@ -17,5 +19,6 @@ export const useUser = (userId: string): SWRResponse<User | null, ApiError> => {
       }
       throw error;
     },
+    { suspense: true },
   );
 };

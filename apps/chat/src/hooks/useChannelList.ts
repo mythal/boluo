@@ -9,6 +9,7 @@ export const useChannelList = (spaceId: string): Channel[] => {
     ['/channels/by_space' as const, spaceId],
     ([path, id]) => get(path, { id }).then(unwrap),
     {
+      suspense: true,
       onSuccess: (channels) =>
         void Promise.all(
           channels.map((channel) => mutate(['/channels/query', channel.id], channel, { revalidate: false })),

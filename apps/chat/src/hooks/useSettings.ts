@@ -7,6 +7,6 @@ export const useSettings = (): Settings => {
   const { data } = useSWR('/users/settings', async (path): Promise<Settings> => {
     const settings = await get(path, null);
     return toSettings(settings.unwrapOr(defaultSettings));
-  });
+  }, { suspense: true });
   return data;
 };

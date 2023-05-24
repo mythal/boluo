@@ -13,6 +13,7 @@ export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
   const { data: token, mutate } = useSWR(
     ['/spaces/token' as const, spaceId],
     ([path, id]) => get(path, { id }).then(unwrap),
+    { suspense: true },
   );
   const link = `${window.location.origin}/space/invite/${spaceId}/${token}`;
   const id = useId();

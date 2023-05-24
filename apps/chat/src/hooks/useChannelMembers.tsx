@@ -7,6 +7,7 @@ export const useChannelMembers = (channelId: string): ChannelMembers => {
   const { data } = useSWR(
     ['/channels/members' as const, channelId],
     ([path, id]) => get(path, { id }).then(unwrap),
+    { suspense: true },
   );
   return data;
 };

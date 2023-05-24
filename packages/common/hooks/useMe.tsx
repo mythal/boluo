@@ -16,8 +16,9 @@ export const MeProvider: FC<{ initialMe?: GetMe | null; children: ReactNode }> =
     initialMe !== undefined
       ? {
         fallbackData: initialMe,
+        suspense: false,
       }
-      : {},
+      : { suspense: true },
   );
   return <MeContext.Provider value={data ?? null}>{children}</MeContext.Provider>;
 };

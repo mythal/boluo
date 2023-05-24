@@ -16,7 +16,6 @@ export function Providers({ children }: Props) {
       <SWRConfig
         value={{
           refreshInterval: 60000,
-          suspense: true,
         }}
       >
         <Suspense fallback={<ChatSkeleton placeholder="Loading..." />}>

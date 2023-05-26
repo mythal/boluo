@@ -168,6 +168,15 @@ const useDndHandles = (
   return { handleDragStart, handleDragEnd, active: draggingItem, handleDragCancel };
 };
 
+interface ScrollLockState {
+  end: boolean;
+  /** The id of current preview */
+  id: string | null;
+  modified: number;
+}
+
+const PREVIEW_LOCK_TIMEOUT = 1000;
+
 const useScrollLock = (
   virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,
@@ -201,10 +210,13 @@ const useScrollLock = (
       const scrollLock = scrollLockRef.current;
       const { modified, end } = scrollLock;
       const now = (new Date()).getTime();
-      const id: string | null = now - modified < 1000 ? scrollLock.id : null;
+      // lock on a preview only if it is recently modified
+      const id: string | null = now - modified < PREVIEW_LOCK_TIMEOUT ? scrollLock.id : null;
       if (id !== null) {
         const index = chatList.findIndex(item => item.type === 'PREVIEW' && item.id === id);
         const [a, b] = rangeRef.current;
+        // If the preview is not rendered, scroll to it
+        // The more precisly scrolling will be done by the cursor element
         if (index >= 0 && (index < a || index > b)) {
           virtuoso.scrollToIndex({ index, behavior: 'auto' });
           return;
@@ -228,12 +240,6 @@ const useScrollLock = (
   });
   return scrollLockRef;
 };
-
-interface ScrollLockState {
-  end: boolean;
-  id: string | null;
-  modified: number;
-}
 
 export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => {
   const channelId = useChannelId();

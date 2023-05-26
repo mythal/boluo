@@ -1,7 +1,6 @@
 import { GetMe, Member } from 'api';
 import { FC, MutableRefObject } from 'react';
-import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-import { START_INDEX } from '../../hooks/useChatList';
+import { ListRange, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
@@ -69,6 +68,9 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       />
     );
   };
+  const handleRangeChange = (range: ListRange) => {
+    renderRangeRef.current = [range.startIndex, range.endIndex];
+  };
   return (
     <Virtuoso<ChatItem, VirtualListContext>
       className="overflow-x-hidden"
@@ -77,6 +79,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       scrollerRef={(ref) => {
         if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
       }}
+      rangeChanged={handleRangeChange}
       alignToBottom
       context={{ filteredMessagesCount }}
       components={{ Header: ChatContentHeader }}

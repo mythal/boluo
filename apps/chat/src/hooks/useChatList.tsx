@@ -50,7 +50,7 @@ const selectComposeSlice = (
 };
 
 const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) => (
-  a.previewId === b.previewId && a.show === b.show && a.inGame === b.inGame
+  a.previewId === b.previewId && a.show === b.show && a.inGame === b.inGame && a.editFor === b.editFor
 );
 
 const filter = (type: ChannelFilter, item: ChatItem) => {
@@ -58,6 +58,39 @@ const filter = (type: ChannelFilter, item: ChatItem) => {
   if (type === 'IN_GAME' && !item.inGame) return false;
   return true;
 };
+
+const makeDummyPreview = (
+  id: string,
+  myId: string,
+  channelId: string,
+  inGame: boolean,
+  editFor: string | null,
+  pos: number,
+  posP: number,
+  posQ: number,
+): PreviewItem => ({
+  id,
+  type: 'PREVIEW',
+  pos,
+  posP,
+  posQ,
+  senderId: myId,
+  channelId,
+  parentMessageId: null,
+  name: 'dummy',
+  mediaId: null,
+  inGame,
+  isAction: false,
+  isMaster: false,
+  clear: false,
+  text: 'dummy',
+  whisperToUsers: null,
+  entities: [],
+  editFor,
+  optimistic: true,
+  key: myId,
+  timestamp: new Date().getTime(),
+});
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const { composeAtom, filterAtom, showArchivedAtom } = useChannelAtoms();
@@ -91,7 +124,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const { chatList, filteredMessagesCount } = useMemo(
     (): Pick<UseChatListReturn, 'chatList' | 'filteredMessagesCount'> => {
       if (!messages || !messageMap || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
-      const previews = Object.values(previewMap);
+      const optimisticPreviewMap = { ...previewMap };
       const optimisticMessageItems: OptimisticItem[] = [];
       const itemList: ChatItem[] = messages.filter(item => {
         const isFiltered = !filter(filterType, item);
@@ -113,43 +146,36 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       });
       const filteredMessagesCount = messages.length - itemList.length;
       const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
-      if (myId && isFocused && composeSlice.show && previews.every(preview => preview.senderId !== myId)) {
-        let pos = 0;
-        let posP = pos;
-        let posQ = 1;
-        if (composeSlice.editFor !== null) {
-          const message = messageMap[composeSlice.previewId];
-          if (message) {
-            pos = message.pos;
-            posP = message.posP;
-            posQ = message.posQ;
-          }
+      if (myId && isFocused && composeSlice.show) {
+        const existsPreview = optimisticPreviewMap[myId];
+        if (existsPreview && existsPreview.id !== composeSlice.previewId) {
+          delete optimisticPreviewMap[myId];
         }
-        previews.push({
-          type: 'PREVIEW',
-          pos,
-          posP,
-          posQ,
-          id: composeSlice.previewId,
-          senderId: myId,
-          channelId,
-          parentMessageId: null,
-          name: 'dummy',
-          mediaId: null,
-          inGame: composeSlice.inGame,
-          isAction: false,
-          isMaster: false,
-          clear: false,
-          text: 'dummy',
-          whisperToUsers: null,
-          entities: [],
-          editFor: composeSlice.editFor,
-          optimistic: true,
-          key: myId,
-          timestamp: new Date().getTime(),
-        });
+        if (!(myId in optimisticPreviewMap)) {
+          let pos = 0;
+          let posP = pos;
+          let posQ = 1;
+          if (composeSlice.editFor !== null) {
+            const message = messageMap[composeSlice.previewId];
+            if (message) {
+              pos = message.pos;
+              posP = message.posP;
+              posQ = message.posQ;
+            }
+          }
+          optimisticPreviewMap[myId] = makeDummyPreview(
+            composeSlice.previewId,
+            myId,
+            channelId,
+            composeSlice.inGame,
+            composeSlice.editFor,
+            pos,
+            posP,
+            posQ,
+          );
+        }
       }
-      for (const preview of previews) {
+      for (const preview of Object.values(optimisticPreviewMap)) {
         const isFiltered = !filter(filterType, preview);
         if (isFiltered) continue;
         else if (isFocused && preview.senderId === myId) {

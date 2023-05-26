@@ -203,13 +203,14 @@ impl Event {
         let cache = super::context::get_cache().try_mailbox(mailbox).await;
         if let Some(cache) = cache {
             let cache = cache.lock().await;
-            cache
+            let mut event_list: Vec<&Arc<SyncEvent>> = cache
                 .events
                 .iter()
                 .chain(cache.edition_map.values())
                 .chain(cache.preview_map.values())
-                .map(|event| event.encoded.clone())
-                .collect()
+                .collect();
+            event_list.sort_by(|a, b| a.event.timestamp.cmp(&b.event.timestamp));
+            event_list.into_iter().map(|e| e.encoded.clone()).collect()
         } else {
             vec![]
         }

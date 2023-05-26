@@ -7,8 +7,12 @@ import { PING, PONG } from '../const';
 import { makeAction } from '../state/actions';
 import { chatAtom, connectionStateAtom } from '../state/chat.atoms';
 
-const createMailboxConnection = (baseUrl: string, id: string): WebSocket => {
-  const url = `${baseUrl}/events/connect?mailbox=${id}`;
+const createMailboxConnection = (baseUrl: string, id: string, token?: string, after?: number): WebSocket => {
+  const paramsObject: Record<string, string> = { mailbox: id };
+  if (token) paramsObject.token = token;
+  if (after) paramsObject.after = after.toString();
+  const params = new URLSearchParams(paramsObject);
+  const url = `${baseUrl}/events/connect?${params.toString()}`;
   return new WebSocket(url);
 };
 
@@ -25,7 +29,8 @@ const connect = (store: ReturnType<typeof useStore>) => {
   console.info(`establishing new connection for ${mailboxId}`);
   store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
 
-  const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId);
+  const after = store.get(chatAtom).lastEventTimestamp;
+  const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, undefined, after);
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
     store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }, undefined));

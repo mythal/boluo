@@ -219,11 +219,10 @@ const useScrollLock = (
         // The more precisly scrolling will be done by the cursor element
         if (index >= 0 && (index < a || index > b)) {
           virtuoso.scrollToIndex({ index, behavior: 'auto' });
-          return;
         }
+      } else if (end) {
+        virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
       }
-      if (!end) return;
-      virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
     };
     const scroller = scrollerRef.current;
     const wrapper = wrapperRef.current;

@@ -69,7 +69,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     );
   };
   const handleRangeChange = (range: ListRange) => {
-    renderRangeRef.current = [range.startIndex, range.endIndex];
+    renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];
   };
   return (
     <Virtuoso<ChatItem, VirtualListContext>

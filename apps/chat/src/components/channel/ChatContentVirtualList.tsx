@@ -74,6 +74,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   return (
     <Virtuoso<ChatItem, VirtualListContext>
       className="overflow-x-hidden"
+      style={{ overflowY: 'scroll' }}
       firstItemIndex={firstItemIndex}
       ref={virtuosoRef}
       scrollerRef={(ref) => {

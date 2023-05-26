@@ -23,6 +23,8 @@ pub struct EventQuery {
     pub mailbox: Uuid,
     #[serde(default)]
     pub token: Option<Uuid>,
+    #[serde(default)]
+    pub after: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, TS)]
@@ -199,7 +201,8 @@ impl Event {
         cache::make_key(b"mailbox", mailbox, b"events")
     }
 
-    pub async fn get_from_cache(mailbox: &Uuid) -> Vec<String> {
+    pub async fn get_from_cache(mailbox: &Uuid, after: Option<i64>) -> Vec<String> {
+        let after = after.unwrap_or(i64::MIN);
         let cache = super::context::get_cache().try_mailbox(mailbox).await;
         if let Some(cache) = cache {
             let cache = cache.lock().await;
@@ -210,7 +213,11 @@ impl Event {
                 .chain(cache.preview_map.values())
                 .collect();
             event_list.sort_by(|a, b| a.event.timestamp.cmp(&b.event.timestamp));
-            event_list.into_iter().map(|e| e.encoded.clone()).collect()
+            event_list
+                .into_iter()
+                .skip_while(|e| e.event.timestamp < after)
+                .map(|e| e.encoded.clone())
+                .collect()
         } else {
             vec![]
         }

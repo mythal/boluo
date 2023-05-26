@@ -134,7 +134,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         retry();
         return;
       }
-      const connection = connect(baseUrlRef.current, spaceId, token);
+      const connection = connect(baseUrlRef.current, spaceId, token, after.current);
       connectionRef.current = connection;
       connection.onclose = (event) => {
         console.log('Websocket connection closed', event);

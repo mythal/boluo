@@ -26,7 +26,7 @@ const onSendFailed = (pane: Id, compose: Compose, dispatch: Dispatch) => {
   showFlash(
     'ERROR',
     <span>
-      消息发送失败，恢复之前的文本吗？{' '}
+      消息发送可能失败了，恢复之前的文本吗？{' '}
       <Button
         data-size="small"
         data-variant="primary"
@@ -120,13 +120,23 @@ export const useOnSend = () => {
       newMessage.whisperToUsers = whisperTo.map((item) => item.value);
     }
     let sent: AppResult<Message>;
+    let finished = false;
+    let showFailed = false;
+    setTimeout(() => {
+      if (!finished) {
+        onSendFailed(pane, compose, dispatch);
+        showFailed = true;
+      }
+    }, 1000);
     try {
       sent = await post('/messages/send', newMessage);
     } catch {
       onSendFailed(pane, compose, dispatch);
       return;
+    } finally {
+      finished = true;
     }
-    if (!sent.isOk) {
+    if (!sent.isOk && !showFailed) {
       onSendFailed(pane, compose, dispatch);
     }
   }, [channelId]);

@@ -80,7 +80,7 @@ async fn query_with_related(req: Request<Body>) -> Result<ChannelWithRelated, Ap
     };
 
     let encoded_events = if channel.is_public || my_member.is_some() {
-        Event::get_from_cache(&query.id).await
+        Event::get_from_cache(&query.id, None).await
     } else {
         channel.topic = String::new();
         Vec::new()

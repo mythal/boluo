@@ -1,6 +1,9 @@
 import { FC } from 'react';
 import { EvaluatedExprNode, ExprNode } from '../../interpreter/entities';
 import { EntityExprBinary } from './EntityExprBinary';
+import { EntityExprCocRoll } from './EntityExprCocRoll';
+import { EntityExprDicePoolRoll } from './EntityExprDicePool';
+import { EntityExprFateRoll } from './EntityExprFateRoll';
 import { EntityExprMax } from './EntityExprMax';
 import { EntityExprMin } from './EntityExprMin';
 import { EntityExprRepeat } from './EntityExprRepeat';
@@ -19,6 +22,12 @@ export const EntityExprNode: FC<Props> = ({ node }) => {
       return <EntityExprBinary node={node} />;
     case 'Roll':
       return <EntityExprRoll node={node} />;
+    case 'FateRoll':
+      return <EntityExprFateRoll node={node} />;
+    case 'CocRoll':
+      return <EntityExprCocRoll node={node} />;
+    case 'DicePool':
+      return <EntityExprDicePoolRoll node={node} />;
     case 'Repeat':
       return <EntityExprRepeat node={node} />;
     case 'Max':
@@ -31,10 +40,7 @@ export const EntityExprNode: FC<Props> = ({ node }) => {
           (<EntityExprNode node={node.node} />)
         </>
       );
-    case 'CocRoll':
-    case 'FateRoll':
-    case 'DicePool':
-    case 'Unknown':
+    default:
+      return <EntityExprNodeUnknown />;
   }
-  return <EntityExprNodeUnknown />;
 };

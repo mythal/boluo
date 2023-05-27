@@ -11,7 +11,7 @@
       let
         overlays = [
           (import rust-overlay)
-          (final: prev: { nodejs = prev.nodejs-16_x; })
+          (final: prev: { nodejs = prev.nodejs-18_x; })
         ];
         pkgs = import nixpkgs { inherit system overlays; };
 
@@ -62,8 +62,7 @@
         };
 
         devShells.default = mkShell {
-          buildInputs = [ rust nodejs just ]
-            ++ securityFrameworks;
+          buildInputs = [ rust nodejs just ] ++ securityFrameworks;
           nativeBuildInputs = [ pkgs.pkg-config ];
           PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
         };

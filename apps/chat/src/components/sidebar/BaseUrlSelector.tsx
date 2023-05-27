@@ -1,58 +1,42 @@
-import { backendUrlAtom, DEFAULT_BACKEND_URL, get } from 'api-browser';
-import { useAtom, useAtomValue } from 'jotai';
-import { FC, useEffect, useMemo, useState } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { Select } from 'ui';
-import { SelectItem } from 'ui/Select';
-import { proxiesAtom } from '../../state/info.atoms';
+import { backendUrlAtom } from 'api-browser';
+import { useAtom } from 'jotai';
+import type { FC } from 'react';
+import { FormattedMessage } from 'react-intl';
+import { shouldAutoSelectAtom, useAutoSelectProxy } from '../../hooks/useAutoSelectProxy';
+import { useProxies } from '../../hooks/useProxies';
+import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 
 interface Props {
 }
 
 export const BaseUrlSelector: FC<Props> = () => {
-  const intl = useIntl();
-  const proxies = useAtomValue(proxiesAtom);
-  const items: SelectItem[] = useMemo(() => {
-    const defaultItem: SelectItem = {
-      label: intl.formatMessage({ defaultMessage: 'Default' }),
-      value: DEFAULT_BACKEND_URL,
-    };
-    return [defaultItem].concat(proxies.map((proxy): SelectItem => {
-      let label = proxy.name;
-      if (proxy.region) {
-        label += ` (${proxy.region})`;
-      }
-      return ({ label, value: proxy.url });
-    }));
-  }, [proxies, intl]);
+  const proxies = useProxies();
+  const testReuslt = useAutoSelectProxy(2000);
+  const [shouldAutoSelect, setShouldAutoSelect] = useAtom(shouldAutoSelectAtom);
   const [backendUrl, setBackendUrl] = useAtom(backendUrlAtom);
-  const apiUrl = useMemo(() => backendUrl.endsWith('/api') ? backendUrl : backendUrl + '/api', [backendUrl]);
-  const [delay, setDelay] = useState<number | 'ERROR' | 'LOADING'>('LOADING');
-  useEffect(() => {
-    const handle = window.setInterval(() => {
-      const base = new Date().getTime();
-      setDelay('LOADING');
-      get('/users/get_me', null, apiUrl).then(() => {
-        const now = new Date().getTime();
-        setDelay(now - base);
-      }).catch(() => {
-        setDelay('ERROR');
-      });
-    }, 1000);
-    return () => window.clearInterval(handle);
-  }, [apiUrl]);
+  const handleSelect = (backendUrl: string) => {
+    setShouldAutoSelect(false);
+    setBackendUrl(backendUrl);
+  };
   return (
     <div>
-      <label className="flex flex-col gap-1">
+      <label className="block">
         <FormattedMessage defaultMessage="Change Connection Region" />
-        <div className="text-surface-900">
-          <Select items={items} value={backendUrl} onChange={setBackendUrl} />
+        <div className="text-surface-900 pt-1 flex flex-col gap-1">
+          {proxies.map(proxy => (
+            <BaseUrlSelectorItem
+              proxy={proxy}
+              result={testReuslt.find(item => item.proxy.name === proxy.name)?.result}
+              selected={proxy.url === backendUrl}
+              setUrl={handleSelect}
+            />
+          ))}
         </div>
-        <div className="text-sm">
-          <FormattedMessage defaultMessage="Delay" />: {delay === 'LOADING' && '...'}
-          {delay === 'ERROR' && <FormattedMessage defaultMessage="Failed to connect" />}
-          {typeof delay === 'number' && <span>{delay}</span>}
-        </div>
+      </label>
+
+      <label className="flex items-center gap-1 py-2">
+        <input type="checkbox" checked={shouldAutoSelect} onChange={e => setShouldAutoSelect(e.target.checked)} />
+        <FormattedMessage defaultMessage="Auto Select" />
       </label>
     </div>
   );

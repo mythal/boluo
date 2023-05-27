@@ -2,9 +2,9 @@ import { useAtomValue } from 'jotai';
 import { FC, useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui';
+import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useSpace } from '../hooks/useSpace';
-import { proxiesAtom } from '../state/info.atoms';
 import { routeAtom } from '../state/view.atoms';
 import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
@@ -22,7 +22,7 @@ const SpaceChat: FC<{
 
 const Chat: FC = () => {
   const route = useAtomValue(routeAtom);
-  useAtomValue(proxiesAtom);
+  useAutoSelectProxy(60 * 1000);
   useConnectionEffect();
 
   useEffect(() => {

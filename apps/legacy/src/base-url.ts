@@ -22,10 +22,21 @@ export const getDefaultBaseUrl = (): string => {
   return location.origin;
 };
 
+const timeout = (ms: number): Promise<'TIMEOUT'> => {
+  return new Promise((resolve) => {
+    window.setTimeout(() => {
+      resolve('TIMEOUT');
+    }, ms);
+  });
+};
+
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
   const start = performance.now();
   try {
-    const response = await fetch(baseUrl + '/api/users/get_me', { method: 'GET', credentials: 'include' });
+    const response = await Promise.race([fetch(baseUrl + '/api/info'), timeout(2000)]);
+    if (response === 'TIMEOUT') {
+      return FAILED;
+    }
     if (response.status > 299) {
       return FAILED;
     }

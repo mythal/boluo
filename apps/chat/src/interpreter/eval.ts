@@ -194,7 +194,7 @@ export const makeRng = (seed?: number[]): Prando | undefined => {
   return new Prando(a);
 };
 
-export const cocRollSubTypeDisplay = (intl: IntlShape, subType: CocRoll['subType']): string | null => {
+export const cocRollSubTypeDisplay = (subType: CocRoll['subType']): string | null => {
   let modifierName: string | null = null;
   if (subType === 'BONUS') {
     modifierName = '↥';
@@ -217,9 +217,9 @@ export const cocSuccessLevelDisplay = (intl: IntlShape, value: number, targetVal
   } else if (value > targetValue) {
     successName = intl.formatMessage({ defaultMessage: 'Failure' });
   } else if (value <= Math.floor(targetValue / 5)) {
-    successName = '⅕' + intl.formatMessage({ defaultMessage: 'Extreme Success' });
+    successName = '⅕ ' + intl.formatMessage({ defaultMessage: 'Extreme Success' });
   } else if (value <= targetValue >> 1) {
-    successName = '½' + intl.formatMessage({ defaultMessage: 'Hard Success' });
+    successName = '½ ' + intl.formatMessage({ defaultMessage: 'Hard Success' });
   } else {
     successName = intl.formatMessage({ defaultMessage: 'Success' });
   }
@@ -256,7 +256,7 @@ export const nodeToText = (intl: IntlShape, node: EvaluatedExprNode): string => 
     return `${node.counter}d${node.face} [${node.values.join(', ')}] ≥ ${node.min} ⇒ ${node.value}`;
   } else if (node.type === 'CocRoll') {
     const { subType } = node;
-    const typeDisplay = cocRollSubTypeDisplay(intl, subType) || '';
+    const typeDisplay = cocRollSubTypeDisplay(subType) || '';
     const modifier = node.subType === 'NORMAL' ? '' : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
     let successLevel: string = '';
     if (node.targetValue) {

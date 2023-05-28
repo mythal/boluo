@@ -96,7 +96,7 @@ impl AppError {
     }
 
     pub fn missing() -> AppError {
-        AppError::NotFound("The request was sent with the wrong path or method")
+        AppError::NotFound("Failed to match route")
     }
 
     pub fn unexpected<E: Error + Send + Sync + 'static>(e: E) -> AppError {

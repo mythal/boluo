@@ -53,6 +53,7 @@ async fn router(req: Request<Body>) -> Result<Response, AppError> {
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(req).await.map(ok_response);
     }
+    table!("/api/info", info::router);
     table!("/api/messages", messages::router);
     table!("/api/users", users::router);
     table!("/api/media", media::router);
@@ -75,9 +76,6 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
     let uri = req.uri().clone();
     if req.method() == hyper::Method::OPTIONS {
         return Ok(cors::preflight_requests(req));
-    }
-    if let Some(subpath) = uri.path().strip_prefix("/api/info") {
-        return Ok(info::router(req, subpath).await);
     }
     let response = router(req).await;
     let mut has_error = false;

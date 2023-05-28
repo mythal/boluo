@@ -15,6 +15,10 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     selectBestBaseUrl().then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
+    const handle = window.setInterval(() => {
+      selectBestBaseUrl().then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
+    }, 10000);
+    return () => window.clearInterval(handle);
   }, [dispatch]);
   useGetMe(dispatch, () => setLoading(false));
   const flashState = useSelector(

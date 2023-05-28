@@ -106,6 +106,13 @@ export const Connector = ({ spaceId, myId }: Props) => {
   }, [baseUrl]);
 
   useEffect(() => {
+    const handle = window.setInterval(() => {
+      selectBestBaseUrl().then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
+    }, 5000);
+    return window.clearInterval(handle);
+  }, [dispatch]);
+
+  useEffect(() => {
     const makeConnection = async () => {
       const retry = () => {
         setState('CLOSED');
@@ -140,7 +147,6 @@ export const Connector = ({ spaceId, myId }: Props) => {
         console.log('Websocket connection closed', event);
         if (event.code !== 1000) {
           retry();
-          selectBestBaseUrl(baseUrlRef.current).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
           return;
         }
         connectionRef.current = null;

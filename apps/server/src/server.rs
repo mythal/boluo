@@ -93,6 +93,8 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
 
     if has_error {
         log::warn!("{} {} {:?}", method, &uri, start.elapsed());
+    } else if uri.path().starts_with("/api/info") {
+        // do nothing
     } else if uri.path().starts_with("/api/users/get_me") {
         log::debug!("{} {} {:?}", method, &uri, start.elapsed());
     } else {

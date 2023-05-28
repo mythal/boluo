@@ -1,5 +1,14 @@
 import { Map } from 'immutable';
-import { Action, FocusChannel, JoinedSpace, LeftSpace, SpaceEdited, UnfocusChannel, UserEdited } from '../actions';
+import {
+  Action,
+  ChangeBaseUrl,
+  FocusChannel,
+  JoinedSpace,
+  LeftSpace,
+  SpaceEdited,
+  UnfocusChannel,
+  UserEdited,
+} from '../actions';
 import { Channel } from '../api/channels';
 import { errLoading } from '../api/error';
 import { StatusMap } from '../api/events';
@@ -146,6 +155,12 @@ const handleFocusChannel = (state: UiState, { pane }: FocusChannel): UiState => 
   }
 };
 
+const handleChangeBaseUrl = (state: UiState, { baseUrl }: ChangeBaseUrl): UiState => {
+  if (state.baseUrl === baseUrl) return state;
+  console.log('change base url to: ', baseUrl);
+  return { ...state, baseUrl };
+};
+
 const handleUnfocusChannel = (state: UiState, { pane }: UnfocusChannel): UiState => {
   const focusChannelList = state.focusChannelList.filter((id) => id !== pane);
   return { ...state, focusChannelList };
@@ -195,7 +210,7 @@ export function uiReducer(state: UiState = initUiState, action: Action, userId: 
           return state;
       }
     case 'CHANGE_BASE_URL':
-      return { ...state, baseUrl: action.baseUrl };
+      return handleChangeBaseUrl(state, action);
   }
   return state;
 }

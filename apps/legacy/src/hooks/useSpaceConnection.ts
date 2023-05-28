@@ -40,7 +40,7 @@ export function useSpaceConnection() {
     if (!spaceId) {
       throw new Error('unexpected error: there is no space id');
     }
-    const connection = connect(baseUrl, spaceId, await getConnectionToken(spaceId, myId));
+    const connection = connect(baseUrl, spaceId, await getConnectionToken(spaceId, myId), after.current);
     connection.onerror = (e) => {
       console.warn(e);
     };

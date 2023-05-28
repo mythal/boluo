@@ -42,6 +42,7 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
+        <News css={[mB(2)]}>现在会根据延迟自动选择线路，改进了断线重连。另外完全重写的新版菠萝即将可以使用。</News>
         <News css={[mB(2)]}>加回了多窗格功能，抱歉迟了很久。</News>
         <News css={[mB(2)]}>能够找回密码了</News>
         <News css={[mB(2)]}>
@@ -49,7 +50,6 @@ function My() {
         </News>
         <News css={[mB(2)]}>
           导出功能现在可以选择时间，导出最近的消息了。切换游戏内外的按键改为<code>Esc</code>键。
-          增加了网络连不上时候的备用线路 <Code>https://cdn.boluo.chat/</Code>。
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

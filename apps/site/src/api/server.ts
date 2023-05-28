@@ -7,7 +7,7 @@ import type { Result } from 'utils';
 import { SERVER_SIDE_API_URL } from '../const';
 
 // Keep this value the same as the server
-const sessionCookieKey = 'boluo-session-v1';
+const sessionCookieKey = 'boluo-session-v2';
 
 const makeHeaders = (): Headers => {
   const session = cookies().get(sessionCookieKey)?.value;

@@ -33,7 +33,7 @@ const timeout = (ms: number): Promise<'TIMEOUT'> => {
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
   const start = performance.now();
   try {
-    const response = await Promise.race([fetch(baseUrl + '/api/info'), timeout(2000)]);
+    const response = await Promise.race([fetch(baseUrl + '/api/info'), timeout(1000)]);
     if (response === 'TIMEOUT') {
       return FAILED;
     }

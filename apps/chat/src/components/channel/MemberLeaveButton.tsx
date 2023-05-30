@@ -46,7 +46,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   ]);
   return (
     <>
-      <Button data-small ref={refs.setReference} disabled={!channelMember} {...getReferenceProps()}>
+      <Button data-small ref={refs.setReference} disabled={!channelMember || isMutating} {...getReferenceProps()}>
         {isMutating ? <Spinner /> : <UserX />}
         <FormattedMessage defaultMessage="Leave" />
       </Button>

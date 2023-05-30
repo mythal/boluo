@@ -2,14 +2,32 @@
   "+OyBM6": {
     "message": "This email is already in use."
   },
+  "+PG3ZZ": {
+    "message": "Dice Pool"
+  },
+  "+a+2ug": {
+    "message": "Members"
+  },
+  "/3UTYF": {
+    "message": "Use {key} to send messages."
+  },
   "/iUStU": {
     "message": "e.g. Gandalf"
+  },
+  "01eQoz": {
+    "message": "Change Connection Region"
   },
   "2gujDD": {
     "message": "These are the pages used to design and debug the components"
   },
+  "2pzTGC": {
+    "message": "Critical"
+  },
   "39AHJm": {
     "message": "Sign Up"
+  },
+  "3VI9mt": {
+    "message": "Save Changes"
   },
   "3cc4Ct": {
     "message": "Light"
@@ -17,8 +35,14 @@
   "47FYwb": {
     "message": "Cancel"
   },
+  "4l6vz1": {
+    "message": "Copy"
+  },
   "5HUwAy": {
     "message": "Only letters, numbers, and underscores are allowed."
+  },
+  "5WZlnV": {
+    "message": "Find By Name"
   },
   "5sg7KC": {
     "message": "Password"
@@ -26,8 +50,35 @@
   "6JNvt/": {
     "message": "Must be at least {min} characters."
   },
+  "6PgVSe": {
+    "message": "Regenerate"
+  },
+  "6QRlW8": {
+    "message": "Waiting for reconnection ({countdown}s)"
+  },
+  "6q3tCn": {
+    "message": "Connecting"
+  },
+  "7G8Ojg": {
+    "message": "Unable to send message"
+  },
   "973Dls": {
     "message": "Only invited people can join this space"
+  },
+  "9Obw6C": {
+    "message": "Filter"
+  },
+  "9WRlF4": {
+    "message": "Send"
+  },
+  "9kvEKC": {
+    "message": "Add Dice"
+  },
+  "9to/Le": {
+    "message": "Change Avatar"
+  },
+  "AVI/0j": {
+    "message": "Split"
   },
   "AyGauy": {
     "message": "Login"
@@ -35,8 +86,17 @@
   "BzWmz8": {
     "message": "Space Name"
   },
+  "C81/uG": {
+    "message": "Logout"
+  },
+  "CW7jWC": {
+    "message": "(me)"
+  },
   "CoEsov": {
     "message": "Username or Email"
+  },
+  "CoTP+E": {
+    "message": "You are not a member of this channel"
   },
   "CuNepY": {
     "message": "Create Channel"
@@ -47,17 +107,32 @@
   "GMPXuF": {
     "message": "Everyone can join this space"
   },
+  "GYTzXV": {
+    "message": "Toggle Notification"
+  },
   "H2WXs6": {
     "message": "Destroy Space"
+  },
+  "HTmh5Q": {
+    "message": "target"
   },
   "HpyhN3": {
     "message": "Boluo"
   },
+  "IW0/M8": {
+    "message": "Auto Select"
+  },
   "IvBid4": {
     "message": "Use the {enter} key to send messages"
   },
+  "IvjoDS": {
+    "message": "Connected"
+  },
   "JCIgkj": {
     "message": "Username"
+  },
+  "JQt0RP": {
+    "message": "Pull to Load"
   },
   "K7AkdL": {
     "message": "Show"
@@ -68,8 +143,29 @@
   "LqOJ8B": {
     "message": "Is this a secret channel?"
   },
+  "MoRJdV": {
+    "message": "Which key to use to send a message?"
+  },
+  "MoZLbF": {
+    "message": "Unsupported"
+  },
+  "Mtd9LO": {
+    "message": "Timeout"
+  },
   "NigiUz": {
     "message": "You have to enter a channel name."
+  },
+  "O5epsB": {
+    "message": "take"
+  },
+  "OLFHJL": {
+    "message": "Extreme Success"
+  },
+  "OYT4m/": {
+    "message": "Message cannot be empty"
+  },
+  "P6PLpi": {
+    "message": "Join"
   },
   "Pe0ogR": {
     "message": "Theme"
@@ -77,11 +173,17 @@
   "Q8Qw5B": {
     "message": "Description"
   },
-  "RoMEHB": {
-    "message": "Tip: Use {key} to make a line break."
+  "QlsDcr": {
+    "message": "Action"
+  },
+  "R59CS8": {
+    "message": "Remove Avatar"
   },
   "RraqCg": {
     "message": "Username and password do not match"
+  },
+  "RvUa7+": {
+    "message": "No Name"
   },
   "SBkvpf": {
     "message": "Nickname"
@@ -95,8 +197,23 @@
   "SqVNRz": {
     "message": "Create a Space"
   },
+  "TThIOM": {
+    "message": "Not found"
+  },
+  "TwyMau": {
+    "message": "Account"
+  },
+  "UIVqKu": {
+    "message": "Recover"
+  },
+  "UvDPcD": {
+    "message": "Work in progress"
+  },
   "VA/Z1S": {
     "message": "Hide"
+  },
+  "VnXp8Z": {
+    "message": "Avatar"
   },
   "VzzYJk": {
     "message": "Create"
@@ -104,17 +221,38 @@
   "X5rIjZ": {
     "message": "Danger Zone"
   },
-  "YELoe8": {
-    "message": "Tip: Use {key} to send messages."
+  "YETHtM": {
+    "message": "Interface"
+  },
+  "YNPiTV": {
+    "message": "Are you sure you want to leave {channelName}?"
   },
   "YtexzU": {
     "message": "Close {paneName}"
   },
+  "ZKBnrB": {
+    "message": "Character name is required"
+  },
+  "ZvI2/H": {
+    "message": "Release to Load"
+  },
+  "a+BhVZ": {
+    "message": "Regenerated"
+  },
+  "aw8eqe": {
+    "message": "Use {key} to make a line break."
+  },
   "bGay8d": {
     "message": "Space Settings"
   },
+  "beLe/F": {
+    "message": "Broadcast"
+  },
   "cCTI4h": {
     "message": "Whether to allow everyone on the Internet to view this space"
+  },
+  "cLIHUg": {
+    "message": "Hard Success"
   },
   "clpFBW": {
     "message": "Space Publicity"
@@ -125,23 +263,53 @@
   "dVoumD": {
     "message": "My Character Name in the Channel (Optional)"
   },
+  "dYaE6J": {
+    "message": "Members of &quot;{spaceName}&quot; Space"
+  },
+  "e+eb5F": {
+    "message": "Broadcast has been turned off"
+  },
+  "e3Ttmb": {
+    "message": "In Game"
+  },
   "fGwy5t": {
     "message": "This channel name already exist."
   },
   "fNCCY7": {
     "message": "Basic"
   },
+  "fnihsY": {
+    "message": "Leave"
+  },
+  "hCMGkK": {
+    "message": "You are not logged in"
+  },
   "hh0xW7": {
     "message": "Channel Name"
   },
-  "iFsDVR": {
-    "message": "Loading"
+  "iLUQIP": {
+    "message": "Invite Link"
+  },
+  "itPgxd": {
+    "message": "Profile"
+  },
+  "k1s9UW": {
+    "message": "Not Found"
   },
   "kIUNDX": {
     "message": "Default Dice"
   },
   "kMogDE": {
     "message": "Must be a valid email address."
+  },
+  "lJePcp": {
+    "message": "Failure"
+  },
+  "lKv8ex": {
+    "message": "Default"
+  },
+  "muMPUp": {
+    "message": "Fumble"
   },
   "nmSKJK": {
     "message": "Can't be empty."
@@ -152,14 +320,26 @@
   "q7JBy1": {
     "message": "Change Settings"
   },
+  "qGHWyb": {
+    "message": "{count} filtered messages"
+  },
   "qbB8pg": {
     "message": "Space Description"
+  },
+  "qj1uhz": {
+    "message": "Disconnect"
   },
   "qoUUiA": {
     "message": "Allow Spectator"
   },
   "qvc9uM": {
     "message": "This cannot be undone."
+  },
+  "qwN+HQ": {
+    "message": "Error while sending a message, did you recover the message?"
+  },
+  "r2rV1X": {
+    "message": "Out-Of-Character"
   },
   "rELDbB": {
     "message": "Refresh"
@@ -173,14 +353,32 @@
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
   },
+  "sMAAlN": {
+    "message": "Add New"
+  },
+  "sjzLbX": {
+    "message": "Accept"
+  },
+  "sloBpe": {
+    "message": "Press {key} to {send}"
+  },
+  "t/BlH4": {
+    "message": "Confirm Delete"
+  },
   "tOdNiY": {
     "message": "Dark"
   },
   "uhu5aG": {
     "message": "Public"
   },
+  "vXCeIi": {
+    "message": "Failed"
+  },
   "viXE32": {
     "message": "Private"
+  },
+  "wEQDC6": {
+    "message": "Edit"
   },
   "wR2FW8": {
     "message": "Settings of &quot;{spaceName}&quot; Space"
@@ -194,6 +392,12 @@
   "x32Fvf": {
     "message": "Expand dice in the messages"
   },
+  "xMnH8F": {
+    "message": "Load More"
+  },
+  "xrKHS6": {
+    "message": "Success"
+  },
   "y1Z3or": {
     "message": "Language"
   },
@@ -202,5 +406,8 @@
   },
   "zNnjeF": {
     "message": "Are you sure you want to delete {spaceName}?"
+  },
+  "zQvVDJ": {
+    "message": "All"
   }
 }

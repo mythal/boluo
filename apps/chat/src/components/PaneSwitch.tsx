@@ -5,6 +5,7 @@ import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
 import { Pane } from '../state/view.types';
 import { ChatPaneChannel } from './channel/ChannelPane';
+import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneError } from './PaneError';
 import { PaneLoading } from './PaneLoading';
@@ -32,6 +33,7 @@ const PANE_MAP = createPaneMap({
   LOGIN: PaneLogin,
   PROFILE: PaneProfile,
   SPACE_MEMBERS: PaneSpaceMembers,
+  CHANNEL_SETTINGS: PaneChannelSettings,
   EMPTY: PaneEmpty,
 }); // satisfies Record<Pane['type'], unknown>; // https://github.com/vercel/next.js/issues/43799
 
@@ -41,6 +43,12 @@ const Switch: FC<Props> = ({ pane }) => {
       return (
         <ChannelIdContext.Provider value={pane.channelId}>
           <ChatPaneChannel channelId={pane.channelId} key={pane.channelId} />
+        </ChannelIdContext.Provider>
+      );
+    case 'CHANNEL_SETTINGS':
+      return (
+        <ChannelIdContext.Provider value={pane.channelId}>
+          <PaneChannelSettings channelId={pane.channelId} key={pane.channelId} />
         </ChannelIdContext.Provider>
       );
     case 'SPACE_SETTINGS':

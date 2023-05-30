@@ -27,6 +27,11 @@ export interface SpaceSettingsPane {
   spaceId: string;
 }
 
+export interface ChannelSettingsPane {
+  type: 'CHANNEL_SETTINGS';
+  channelId: string;
+}
+
 export interface CreateChannelPane {
   type: 'CREATE_CHANNEL';
   spaceId: string;
@@ -47,6 +52,7 @@ export type PaneData =
   | SettingsPane
   | HelpPane
   | SpaceSettingsPane
+  | ChannelSettingsPane
   | CreateChannelPane
   | LoginPane
   | ProfilePane

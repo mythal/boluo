@@ -25,6 +25,7 @@ export const BaseUrlSelector: FC<Props> = () => {
         <div className="text-surface-900 pt-1 flex flex-col gap-1">
           {proxies.map(proxy => (
             <BaseUrlSelectorItem
+              key={proxy.name}
               proxy={proxy}
               result={testReuslt.find(item => item.proxy.name === proxy.name)?.result}
               selected={proxy.url === backendUrl}

@@ -1,8 +1,16 @@
-import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  autoUpdate,
+  FloatingPortal,
+  offset,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
 import clsx from 'clsx';
 import { Cloud, CloudOff } from 'icons';
 import { useAtomValue } from 'jotai';
-import { FC, Suspense, useEffect, useState } from 'react';
+import { FC, Suspense, useEffect, useMemo, useState } from 'react';
 import { Spinner } from 'ui';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { BaseUrlSelector } from './BaseUrlSelector';
@@ -17,10 +25,12 @@ interface Props {
 export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
   const connectionState = useAtomValue(connectionStateAtom);
   const [isPopoverOpen, setPopoverOpen] = useState(false);
+  const middleware = useMemo(() => [offset(-6)], []);
   const { x, y, strategy, refs, context } = useFloating({
     open: connectionState.type === 'CONNECTED' ? isPopoverOpen : true,
     strategy: 'fixed',
     placement: 'bottom-start',
+    middleware,
     onOpenChange: setPopoverOpen,
     whileElementsMounted: autoUpdate,
   });
@@ -51,7 +61,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             className={clsx(
               'border border-surface-400 bg-surface-100',
               'flex flex-col gap-4',
-              'w-[max-content] px-4 py-4 rounded shadow-lg',
+              'w-[max-content] px-4 py-4 rounded-sm shadow-1 shadow-surface-900/25',
             )}
           >
             {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}

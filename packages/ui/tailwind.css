@@ -56,6 +56,15 @@
 }
 
 @layer utilities {
+  .contain-strict {
+    contain: strict;
+  }
+  .contain-content {
+    contain: content;
+  }
+  .contain-size {
+    contain: size;
+  }
 }
 
 .view-height {

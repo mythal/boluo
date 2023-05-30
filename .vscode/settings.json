@@ -29,5 +29,10 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "dprint.dprint"
   },
-  "typescript.tsdk": "./node_modules/typescript/lib"
+  "typescript.tsdk": "./node_modules/typescript/lib",
+
+  // Tailwind CSS
+  "files.associations": {
+    "tailwind.css": "tailwindcss"
+  }
 }

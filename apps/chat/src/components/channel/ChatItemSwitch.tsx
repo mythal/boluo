@@ -23,7 +23,7 @@ export const ChatItemSwitch = memo<Props>(({ chatItem, className = '', myId, con
         />
       );
     case 'PREVIEW':
-      return <ChatItemPreview self={isMember && myId === chatItem.senderId} preview={chatItem} className={className} />;
+      return <ChatItemPreview preview={chatItem} className={className} />;
     default:
       return <div className={className}>Not implemented</div>;
   }

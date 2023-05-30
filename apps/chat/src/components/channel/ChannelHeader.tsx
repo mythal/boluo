@@ -20,7 +20,7 @@ export const ChannelHeader: FC = () => {
   return (
     <PaneHeaderBox
       icon={<Hash />}
-      operators={<ChannelHeaderOperations stateAtom={headerStateAtom} />}
+      operators={<ChannelHeaderOperations stateAtom={headerStateAtom} channelId={channelId} />}
       extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
     >
       <ChannelName channelId={channelId} />

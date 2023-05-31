@@ -2,9 +2,10 @@ import { useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { TextInput } from 'ui';
+import { ChannelSettingsForm } from './form';
 
 export const ChannelNameField = () => {
-  const { register } = useFormContext();
+  const { register } = useFormContext<ChannelSettingsForm>();
   const id = useId();
   return (
     <div>

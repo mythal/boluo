@@ -9,9 +9,11 @@ import { Button } from 'ui';
 import { useChannel } from '../../hooks/useChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { PaneBox } from '../PaneBox';
+import { PaneFooterBox } from '../PaneFooterBox';
 import { ChannelNameField } from './ChannelNameField';
 import { DefaultDiceField } from './DefaultDiceField';
 import { ChannelSettingsForm } from './form';
+import { IsPrivateField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 
@@ -40,6 +42,7 @@ const editChannel: MutationFetcher<Channel, ChannelSettingsForm, [string, string
 export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
   const channel = useChannel(channelId);
   if (!channel) {
+    // TODO: Error handling
     throw new Error('Channel not found');
   }
   const form = useForm<ChannelSettingsForm>({
@@ -72,15 +75,16 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
             <ChannelNameField />
             <DefaultDiceField />
             <TopicField />
+            <IsPrivateField />
           </div>
-          <div className="p-4 flex gap-2 justify-end">
+          <PaneFooterBox>
             <Button type="button" onClick={close}>
               <FormattedMessage defaultMessage="Cancel" />
             </Button>
             <Button type="submit" data-type="primary" disabled={!form.formState.isDirty || isMutating}>
               <FormattedMessage defaultMessage="Save Changes" />
             </Button>
-          </div>
+          </PaneFooterBox>
         </form>
       </FormProvider>
     </PaneBox>

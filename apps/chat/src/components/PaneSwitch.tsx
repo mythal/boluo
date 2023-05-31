@@ -4,17 +4,17 @@ import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/us
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
 import { Pane } from '../state/view.types';
-import { ChatPaneChannel } from './channel/ChannelPane';
 import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
+import { ChatPaneChannel } from './pane-channel/ChannelPane';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneError } from './PaneError';
 import { PaneLoading } from './PaneLoading';
 
-const PaneSpaceSettings = React.lazy(() => import('./space-settings/PaneSpaceSettings'));
+const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
 const PaneProfile = React.lazy(() => import('./pane-profile/PaneProfile'));
 const PaneCreateChannel = React.lazy(() => import('./PaneCreateChannel'));
-const PaneSettings = React.lazy(() => import('./settings/PaneSettings'));
+const PaneSettings = React.lazy(() => import('./pane-settings/PaneSettings'));
 const PaneLogin = React.lazy(() => import('./PaneLogin'));
 const PaneHelp = React.lazy(() => import('./PaneHelp'));
 

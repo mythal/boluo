@@ -1,6 +1,6 @@
 import { Settings } from 'icons';
 import { useAtom } from 'jotai';
-import { FC, useCallback } from 'react';
+import { FC, MouseEventHandler, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
@@ -18,7 +18,8 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
   const settingsPaneKey = panes
     .find((pane) => pane.type === 'CHANNEL_SETTINGS' && pane.channelId === channelId)
     ?.key;
-  const handleClick = useCallback(() => {
+  const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.stopPropagation();
     if (settingsPaneKey != null) {
       setPanes(panes => panes.filter((pane) => pane.key !== settingsPaneKey));
     } else {

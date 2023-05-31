@@ -27,7 +27,7 @@
     "message": "新規登録"
   },
   "3VI9mt": {
-    "message": "Save Changes"
+    "message": "変更を保存"
   },
   "3cc4Ct": {
     "message": "ライト"
@@ -36,13 +36,13 @@
     "message": "キャンセル"
   },
   "4l6vz1": {
-    "message": "Copy"
+    "message": "コピー"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
   },
   "5WZlnV": {
-    "message": "Find By Name"
+    "message": "名前で検索"
   },
   "5sg7KC": {
     "message": "パスワード"
@@ -51,34 +51,34 @@
     "message": "少なくとも {min} 文字以上でなければなりません。"
   },
   "6PgVSe": {
-    "message": "Regenerate"
+    "message": "再生成"
   },
   "6QRlW8": {
-    "message": "Waiting for reconnection ({countdown}s)"
+    "message": "再接続を待っています ({countdown}s)"
   },
   "6q3tCn": {
-    "message": "Connecting"
+    "message": "接続中"
   },
   "7G8Ojg": {
-    "message": "Unable to send message"
+    "message": "メッセージを送信できません"
   },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
   },
   "9Obw6C": {
-    "message": "Filter"
+    "message": "絞り込み"
   },
   "9WRlF4": {
-    "message": "Send"
+    "message": "送信"
   },
   "9kvEKC": {
-    "message": "Add Dice"
+    "message": "サイコロを追加"
   },
   "9to/Le": {
-    "message": "Change Avatar"
+    "message": "アバターの変更"
   },
   "AVI/0j": {
-    "message": "Split"
+    "message": "分割"
   },
   "AyGauy": {
     "message": "ログイン"
@@ -87,10 +87,10 @@
     "message": "次元名"
   },
   "C81/uG": {
-    "message": "Logout"
+    "message": "ログアウト"
   },
   "CW7jWC": {
-    "message": "(me)"
+    "message": "(自分)"
   },
   "CoEsov": {
     "message": "ユーザー名またはメール"
@@ -108,55 +108,55 @@
     "message": "誰でもこの次元に参加できます"
   },
   "GYTzXV": {
-    "message": "Toggle Notification"
+    "message": "通知の切り替え"
   },
   "H2WXs6": {
     "message": "次元を破壊する"
   },
   "HTmh5Q": {
-    "message": "target"
+    "message": "目標"
   },
   "HpyhN3": {
     "message": "パイン"
   },
   "IW0/M8": {
-    "message": "Auto Select"
+    "message": "自動選択"
   },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
   },
   "IvjoDS": {
-    "message": "Connected"
+    "message": "接続されました"
   },
   "JCIgkj": {
     "message": "ユーザー名"
   },
   "JQt0RP": {
-    "message": "Pull to Load"
+    "message": "引いて読み込む"
   },
   "K7AkdL": {
     "message": "表示"
   },
   "LUrJwE": {
-    "message": "Channels"
+    "message": "チャンネル"
   },
   "LqOJ8B": {
-    "message": "Is this a secret channel?"
+    "message": "これは、秘密のチャンネルですか?"
   },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
   },
   "MoZLbF": {
-    "message": "Unsupported"
+    "message": "未対応"
   },
   "Mtd9LO": {
-    "message": "Timeout"
+    "message": "タイムアウト"
   },
   "NigiUz": {
     "message": "You have to enter a channel name."
   },
   "O5epsB": {
-    "message": "take"
+    "message": "取る"
   },
   "OLFHJL": {
     "message": "Extreme Success"
@@ -165,7 +165,7 @@
     "message": "Message cannot be empty"
   },
   "P6PLpi": {
-    "message": "Join"
+    "message": "参加する"
   },
   "Pe0ogR": {
     "message": "テーマ"
@@ -174,16 +174,16 @@
     "message": "説明"
   },
   "QlsDcr": {
-    "message": "Action"
+    "message": "動作"
   },
   "R59CS8": {
-    "message": "Remove Avatar"
+    "message": "アイコンを削除"
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
   },
   "RvUa7+": {
-    "message": "No Name"
+    "message": "名前なし"
   },
   "SBkvpf": {
     "message": "ニックネーム"
@@ -201,7 +201,7 @@
     "message": "Not found"
   },
   "TwyMau": {
-    "message": "Account"
+    "message": "アカウント"
   },
   "UIVqKu": {
     "message": "Recover"
@@ -213,7 +213,7 @@
     "message": "非表示"
   },
   "VnXp8Z": {
-    "message": "Avatar"
+    "message": "アバター"
   },
   "VzzYJk": {
     "message": "作成する"
@@ -222,7 +222,7 @@
     "message": "危険な操作"
   },
   "YETHtM": {
-    "message": "Interface"
+    "message": "インターフェース"
   },
   "YNPiTV": {
     "message": "Are you sure you want to leave {channelName}?"
@@ -237,7 +237,7 @@
     "message": "Release to Load"
   },
   "a+BhVZ": {
-    "message": "Regenerated"
+    "message": "再生成しました"
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."

@@ -2,11 +2,32 @@
   "+OyBM6": {
     "message": "このメールアドレスは既に使用されています。"
   },
+  "+PG3ZZ": {
+    "message": "Dice Pool"
+  },
+  "+a+2ug": {
+    "message": "Members"
+  },
+  "/3UTYF": {
+    "message": "Use {key} to send messages."
+  },
+  "/iUStU": {
+    "message": "e.g. Gandalf"
+  },
+  "01eQoz": {
+    "message": "Change Connection Region"
+  },
   "2gujDD": {
     "message": "これらはコンポーネントの設計とデバッグに使用されるページです"
   },
+  "2pzTGC": {
+    "message": "Critical"
+  },
   "39AHJm": {
     "message": "新規登録"
+  },
+  "3VI9mt": {
+    "message": "変更を保存"
   },
   "3cc4Ct": {
     "message": "ライト"
@@ -14,8 +35,14 @@
   "47FYwb": {
     "message": "キャンセル"
   },
+  "4l6vz1": {
+    "message": "コピー"
+  },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
+  },
+  "5WZlnV": {
+    "message": "名前で検索"
   },
   "5sg7KC": {
     "message": "パスワード"
@@ -23,8 +50,35 @@
   "6JNvt/": {
     "message": "少なくとも {min} 文字以上でなければなりません。"
   },
+  "6PgVSe": {
+    "message": "再生成"
+  },
+  "6QRlW8": {
+    "message": "再接続を待っています ({countdown}s)"
+  },
+  "6q3tCn": {
+    "message": "接続中"
+  },
+  "7G8Ojg": {
+    "message": "メッセージを送信できません"
+  },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
+  },
+  "9Obw6C": {
+    "message": "絞り込み"
+  },
+  "9WRlF4": {
+    "message": "送信"
+  },
+  "9kvEKC": {
+    "message": "サイコロを追加"
+  },
+  "9to/Le": {
+    "message": "アバターの変更"
+  },
+  "AVI/0j": {
+    "message": "分割"
   },
   "AyGauy": {
     "message": "ログイン"
@@ -32,8 +86,20 @@
   "BzWmz8": {
     "message": "次元名"
   },
+  "C81/uG": {
+    "message": "ログアウト"
+  },
+  "CW7jWC": {
+    "message": "(自分)"
+  },
   "CoEsov": {
     "message": "ユーザー名またはメール"
+  },
+  "CoTP+E": {
+    "message": "You are not a member of this channel"
+  },
+  "CuNepY": {
+    "message": "Create Channel"
   },
   "D3idYv": {
     "message": "設定"
@@ -41,20 +107,65 @@
   "GMPXuF": {
     "message": "誰でもこの次元に参加できます"
   },
+  "GYTzXV": {
+    "message": "通知の切り替え"
+  },
   "H2WXs6": {
     "message": "次元を破壊する"
+  },
+  "HTmh5Q": {
+    "message": "目標"
   },
   "HpyhN3": {
     "message": "パイン"
   },
+  "IW0/M8": {
+    "message": "自動選択"
+  },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
+  },
+  "IvjoDS": {
+    "message": "接続されました"
   },
   "JCIgkj": {
     "message": "ユーザー名"
   },
+  "JQt0RP": {
+    "message": "引いて読み込む"
+  },
   "K7AkdL": {
     "message": "表示"
+  },
+  "LUrJwE": {
+    "message": "チャンネル"
+  },
+  "LqOJ8B": {
+    "message": "これは、秘密のチャンネルですか?"
+  },
+  "MoRJdV": {
+    "message": "Which key to use to send a message?"
+  },
+  "MoZLbF": {
+    "message": "未対応"
+  },
+  "Mtd9LO": {
+    "message": "タイムアウト"
+  },
+  "NigiUz": {
+    "message": "You have to enter a channel name."
+  },
+  "O5epsB": {
+    "message": "取る"
+  },
+  "OLFHJL": {
+    "message": "Extreme Success"
+  },
+  "OYT4m/": {
+    "message": "Message cannot be empty"
+  },
+  "P6PLpi": {
+    "message": "参加する"
   },
   "Pe0ogR": {
     "message": "テーマ"
@@ -62,11 +173,17 @@
   "Q8Qw5B": {
     "message": "説明"
   },
-  "RoMEHB": {
-    "message": "ヒント: {key} を使用して改行します。"
+  "QlsDcr": {
+    "message": "動作"
+  },
+  "R59CS8": {
+    "message": "アイコンを削除"
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
+  },
+  "RvUa7+": {
+    "message": "名前なし"
   },
   "SBkvpf": {
     "message": "ニックネーム"
@@ -74,17 +191,29 @@
   "SENRqu": {
     "message": "ヘルプ"
   },
-  "SQoTBO": {
-    "message": "{spaceName} のオプション"
-  },
   "Sf+ebw": {
     "message": "ペインを閉じる"
   },
   "SqVNRz": {
     "message": "次元を作成する"
   },
+  "TThIOM": {
+    "message": "Not found"
+  },
+  "TwyMau": {
+    "message": "アカウント"
+  },
+  "UIVqKu": {
+    "message": "Recover"
+  },
+  "UvDPcD": {
+    "message": "Work in progress"
+  },
   "VA/Z1S": {
     "message": "非表示"
+  },
+  "VnXp8Z": {
+    "message": "アバター"
   },
   "VzzYJk": {
     "message": "作成する"
@@ -92,17 +221,38 @@
   "X5rIjZ": {
     "message": "危険な操作"
   },
-  "YELoe8": {
-    "message": "ヒント: {key} でメッセージを送信できます。"
+  "YETHtM": {
+    "message": "インターフェース"
+  },
+  "YNPiTV": {
+    "message": "Are you sure you want to leave {channelName}?"
   },
   "YtexzU": {
     "message": "{paneName} を閉じる"
   },
+  "ZKBnrB": {
+    "message": "Character name is required"
+  },
+  "ZvI2/H": {
+    "message": "Release to Load"
+  },
+  "a+BhVZ": {
+    "message": "再生成しました"
+  },
+  "aw8eqe": {
+    "message": "Use {key} to make a line break."
+  },
   "bGay8d": {
     "message": "次元の設定"
   },
+  "beLe/F": {
+    "message": "Broadcast"
+  },
   "cCTI4h": {
     "message": "インターネット上の誰もがこの次元を閲覧できるようにするか"
+  },
+  "cLIHUg": {
+    "message": "Hard Success"
   },
   "clpFBW": {
     "message": "次元のパブリシティ"
@@ -110,17 +260,56 @@
   "dMEGZV": {
     "message": "分割ペイン"
   },
+  "dVoumD": {
+    "message": "My Character Name in the Channel (Optional)"
+  },
+  "dYaE6J": {
+    "message": "Members of &quot;{spaceName}&quot; Space"
+  },
+  "e+eb5F": {
+    "message": "Broadcast has been turned off"
+  },
+  "e3Ttmb": {
+    "message": "In Game"
+  },
+  "fGwy5t": {
+    "message": "This channel name already exist."
+  },
   "fNCCY7": {
     "message": "ベーシック"
   },
-  "iFsDVR": {
-    "message": "読み込み中"
+  "fnihsY": {
+    "message": "Leave"
+  },
+  "hCMGkK": {
+    "message": "You are not logged in"
+  },
+  "hh0xW7": {
+    "message": "Channel Name"
+  },
+  "iLUQIP": {
+    "message": "Invite Link"
+  },
+  "itPgxd": {
+    "message": "Profile"
+  },
+  "k1s9UW": {
+    "message": "Not Found"
   },
   "kIUNDX": {
     "message": "デフォルトのサイコロ"
   },
   "kMogDE": {
     "message": "メールアドレスのフォーマットが不正です。"
+  },
+  "lJePcp": {
+    "message": "Failure"
+  },
+  "lKv8ex": {
+    "message": "Default"
+  },
+  "muMPUp": {
+    "message": "Fumble"
   },
   "nmSKJK": {
     "message": "入力必須です。"
@@ -131,14 +320,26 @@
   "q7JBy1": {
     "message": "設定を変更"
   },
+  "qGHWyb": {
+    "message": "{count} filtered messages"
+  },
   "qbB8pg": {
     "message": "次元の説明"
+  },
+  "qj1uhz": {
+    "message": "Disconnect"
   },
   "qoUUiA": {
     "message": "観覧を許可"
   },
   "qvc9uM": {
     "message": "この操作は元に戻すことができません。"
+  },
+  "qwN+HQ": {
+    "message": "Error while sending a message, did you recover the message?"
+  },
+  "r2rV1X": {
+    "message": "Out-Of-Character"
   },
   "rELDbB": {
     "message": "再読み込み"
@@ -152,14 +353,32 @@
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
+  "sMAAlN": {
+    "message": "Add New"
+  },
+  "sjzLbX": {
+    "message": "Accept"
+  },
+  "sloBpe": {
+    "message": "Press {key} to {send}"
+  },
+  "t/BlH4": {
+    "message": "Confirm Delete"
+  },
   "tOdNiY": {
     "message": "ダーク"
   },
   "uhu5aG": {
     "message": "公開"
   },
+  "vXCeIi": {
+    "message": "Failed"
+  },
   "viXE32": {
     "message": "非公開"
+  },
+  "wEQDC6": {
+    "message": "Edit"
   },
   "wR2FW8": {
     "message": "「{spaceName}」次元の設定"
@@ -173,6 +392,12 @@
   "x32Fvf": {
     "message": "メッセージ内のサイコロを展開"
   },
+  "xMnH8F": {
+    "message": "Load More"
+  },
+  "xrKHS6": {
+    "message": "Success"
+  },
   "y1Z3or": {
     "message": "言語"
   },
@@ -181,5 +406,8 @@
   },
   "zNnjeF": {
     "message": "本当に「{spaceName}」を削除しますか？"
+  },
+  "zQvVDJ": {
+    "message": "All"
   }
 }

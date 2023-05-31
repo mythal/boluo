@@ -2,11 +2,32 @@
   "+OyBM6": {
     "message": "这个邮箱地址已经被使用。"
   },
+  "+PG3ZZ": {
+    "message": "骰池"
+  },
+  "+a+2ug": {
+    "message": "成员"
+  },
+  "/3UTYF": {
+    "message": "使用 {key} 键发送消息."
+  },
+  "/iUStU": {
+    "message": "例如: 哪吒"
+  },
+  "01eQoz": {
+    "message": "更换线路"
+  },
   "2gujDD": {
     "message": "这些是用于设计和调试组件的页面"
   },
+  "2pzTGC": {
+    "message": "大成功"
+  },
   "39AHJm": {
     "message": "注册"
+  },
+  "3VI9mt": {
+    "message": "保存更改"
   },
   "3cc4Ct": {
     "message": "亮色"
@@ -14,8 +35,14 @@
   "47FYwb": {
     "message": "取消"
   },
+  "4l6vz1": {
+    "message": "复制"
+  },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
+  },
+  "5WZlnV": {
+    "message": "按名称查找"
   },
   "5sg7KC": {
     "message": "密码"
@@ -23,8 +50,35 @@
   "6JNvt/": {
     "message": "至少需要 {min} 个字符。"
   },
+  "6PgVSe": {
+    "message": "重新生成"
+  },
+  "6QRlW8": {
+    "message": "正在等待重新连接 ({countdown}s)"
+  },
+  "6q3tCn": {
+    "message": "正在连接"
+  },
+  "7G8Ojg": {
+    "message": "无法发送信息"
+  },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
+  },
+  "9Obw6C": {
+    "message": "筛选"
+  },
+  "9WRlF4": {
+    "message": "发送"
+  },
+  "9kvEKC": {
+    "message": "添加骰子"
+  },
+  "9to/Le": {
+    "message": "更改头像"
+  },
+  "AVI/0j": {
+    "message": "拆分"
   },
   "AyGauy": {
     "message": "登录"
@@ -32,8 +86,20 @@
   "BzWmz8": {
     "message": "位面名"
   },
+  "C81/uG": {
+    "message": "登出"
+  },
+  "CW7jWC": {
+    "message": "(自己)"
+  },
   "CoEsov": {
     "message": "用户名或邮箱"
+  },
+  "CoTP+E": {
+    "message": "您不是该频道的成员"
+  },
+  "CuNepY": {
+    "message": "创建频道"
   },
   "D3idYv": {
     "message": "设置"
@@ -41,20 +107,65 @@
   "GMPXuF": {
     "message": "每个人都可以加入这个位面"
   },
+  "GYTzXV": {
+    "message": "切换通知"
+  },
   "H2WXs6": {
     "message": "摧毁位面"
+  },
+  "HTmh5Q": {
+    "message": "目标"
   },
   "HpyhN3": {
     "message": "菠萝"
   },
+  "IW0/M8": {
+    "message": "自动选择"
+  },
   "IvBid4": {
     "message": "使用 {enter} 键发送消息"
+  },
+  "IvjoDS": {
+    "message": "已连接"
   },
   "JCIgkj": {
     "message": "用户名"
   },
+  "JQt0RP": {
+    "message": "下拉刷新"
+  },
   "K7AkdL": {
     "message": "显示"
+  },
+  "LUrJwE": {
+    "message": "频道"
+  },
+  "LqOJ8B": {
+    "message": "是否为秘密频道？"
+  },
+  "MoRJdV": {
+    "message": "用哪个按键发送消息？"
+  },
+  "MoZLbF": {
+    "message": "暂不支持"
+  },
+  "Mtd9LO": {
+    "message": "超时"
+  },
+  "NigiUz": {
+    "message": "必须输入频道名。"
+  },
+  "O5epsB": {
+    "message": "取"
+  },
+  "OLFHJL": {
+    "message": "极难成功"
+  },
+  "OYT4m/": {
+    "message": "消息不能为空"
+  },
+  "P6PLpi": {
+    "message": "加入"
   },
   "Pe0ogR": {
     "message": "主题"
@@ -62,11 +173,17 @@
   "Q8Qw5B": {
     "message": "描述"
   },
-  "RoMEHB": {
-    "message": "提示：使用 {key} 换行。"
+  "QlsDcr": {
+    "message": "动作"
+  },
+  "R59CS8": {
+    "message": "移除头像"
   },
   "RraqCg": {
     "message": "帐号与密码不匹配"
+  },
+  "RvUa7+": {
+    "message": "无名称"
   },
   "SBkvpf": {
     "message": "昵称"
@@ -74,17 +191,29 @@
   "SENRqu": {
     "message": "帮助"
   },
-  "SQoTBO": {
-    "message": "{spaceName} 的选项"
-  },
   "Sf+ebw": {
     "message": "关闭窗格"
   },
   "SqVNRz": {
     "message": "创建位面"
   },
+  "TThIOM": {
+    "message": "未找到"
+  },
+  "TwyMau": {
+    "message": "账号"
+  },
+  "UIVqKu": {
+    "message": "恢复"
+  },
+  "UvDPcD": {
+    "message": "正在开发"
+  },
   "VA/Z1S": {
     "message": "隐藏"
+  },
+  "VnXp8Z": {
+    "message": "头像"
   },
   "VzzYJk": {
     "message": "创建"
@@ -92,17 +221,38 @@
   "X5rIjZ": {
     "message": "危险操作"
   },
-  "YELoe8": {
-    "message": "提示：使用 {key} 发送消息。"
+  "YETHtM": {
+    "message": "界面"
+  },
+  "YNPiTV": {
+    "message": "确定要离开「{channelName}」吗？"
   },
   "YtexzU": {
     "message": "关闭 {paneName}"
   },
+  "ZKBnrB": {
+    "message": "必须填写角色名"
+  },
+  "ZvI2/H": {
+    "message": "释放加载"
+  },
+  "a+BhVZ": {
+    "message": "重新生成"
+  },
+  "aw8eqe": {
+    "message": "Use {key} to make a line break."
+  },
   "bGay8d": {
     "message": "位面设置"
   },
+  "beLe/F": {
+    "message": "Broadcast"
+  },
   "cCTI4h": {
     "message": "是否允许互联网上的任何人查看此位面"
+  },
+  "cLIHUg": {
+    "message": "Hard Success"
   },
   "clpFBW": {
     "message": "位面公开性"
@@ -110,17 +260,56 @@
   "dMEGZV": {
     "message": "分割窗格"
   },
+  "dVoumD": {
+    "message": "My Character Name in the Channel (Optional)"
+  },
+  "dYaE6J": {
+    "message": "Members of &quot;{spaceName}&quot; Space"
+  },
+  "e+eb5F": {
+    "message": "Broadcast has been turned off"
+  },
+  "e3Ttmb": {
+    "message": "In Game"
+  },
+  "fGwy5t": {
+    "message": "This channel name already exist."
+  },
   "fNCCY7": {
     "message": "基本"
   },
-  "iFsDVR": {
-    "message": "加载中"
+  "fnihsY": {
+    "message": "Leave"
+  },
+  "hCMGkK": {
+    "message": "You are not logged in"
+  },
+  "hh0xW7": {
+    "message": "Channel Name"
+  },
+  "iLUQIP": {
+    "message": "Invite Link"
+  },
+  "itPgxd": {
+    "message": "Profile"
+  },
+  "k1s9UW": {
+    "message": "Not Found"
   },
   "kIUNDX": {
     "message": "默认使用的骰子"
   },
   "kMogDE": {
     "message": "请输入合法的邮箱地址。"
+  },
+  "lJePcp": {
+    "message": "Failure"
+  },
+  "lKv8ex": {
+    "message": "Default"
+  },
+  "muMPUp": {
+    "message": "Fumble"
   },
   "nmSKJK": {
     "message": "不能为空。"
@@ -131,14 +320,26 @@
   "q7JBy1": {
     "message": "更改设置"
   },
+  "qGHWyb": {
+    "message": "{count} filtered messages"
+  },
   "qbB8pg": {
     "message": "位面描述"
+  },
+  "qj1uhz": {
+    "message": "Disconnect"
   },
   "qoUUiA": {
     "message": "允许旁观者"
   },
   "qvc9uM": {
     "message": "此操作不可撤销。"
+  },
+  "qwN+HQ": {
+    "message": "Error while sending a message, did you recover the message?"
+  },
+  "r2rV1X": {
+    "message": "Out-Of-Character"
   },
   "rELDbB": {
     "message": "刷新"
@@ -152,14 +353,32 @@
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
   },
+  "sMAAlN": {
+    "message": "Add New"
+  },
+  "sjzLbX": {
+    "message": "Accept"
+  },
+  "sloBpe": {
+    "message": "Press {key} to {send}"
+  },
+  "t/BlH4": {
+    "message": "Confirm Delete"
+  },
   "tOdNiY": {
     "message": "暗色"
   },
   "uhu5aG": {
     "message": "公开"
   },
+  "vXCeIi": {
+    "message": "Failed"
+  },
   "viXE32": {
     "message": "非公开"
+  },
+  "wEQDC6": {
+    "message": "Edit"
   },
   "wR2FW8": {
     "message": "「{spaceName}」位面设置"
@@ -173,6 +392,12 @@
   "x32Fvf": {
     "message": "自动展开消息中的骰子"
   },
+  "xMnH8F": {
+    "message": "Load More"
+  },
+  "xrKHS6": {
+    "message": "Success"
+  },
   "y1Z3or": {
     "message": "语言"
   },
@@ -181,5 +406,8 @@
   },
   "zNnjeF": {
     "message": "确定要删除「{spaceName}」吗？"
+  },
+  "zQvVDJ": {
+    "message": "All"
   }
 }

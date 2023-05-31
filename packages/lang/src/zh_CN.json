@@ -3,31 +3,31 @@
     "message": "这个邮箱地址已经被使用。"
   },
   "+PG3ZZ": {
-    "message": "Dice Pool"
+    "message": "骰池"
   },
   "+a+2ug": {
-    "message": "Members"
+    "message": "成员"
   },
   "/3UTYF": {
-    "message": "Use {key} to send messages."
+    "message": "使用 {key} 键发送消息."
   },
   "/iUStU": {
-    "message": "e.g. Gandalf"
+    "message": "例如: 哪吒"
   },
   "01eQoz": {
-    "message": "Change Connection Region"
+    "message": "更换线路"
   },
   "2gujDD": {
     "message": "这些是用于设计和调试组件的页面"
   },
   "2pzTGC": {
-    "message": "Critical"
+    "message": "大成功"
   },
   "39AHJm": {
     "message": "注册"
   },
   "3VI9mt": {
-    "message": "Save Changes"
+    "message": "保存更改"
   },
   "3cc4Ct": {
     "message": "亮色"
@@ -36,13 +36,13 @@
     "message": "取消"
   },
   "4l6vz1": {
-    "message": "Copy"
+    "message": "复制"
   },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
   },
   "5WZlnV": {
-    "message": "Find By Name"
+    "message": "按名称查找"
   },
   "5sg7KC": {
     "message": "密码"
@@ -51,34 +51,34 @@
     "message": "至少需要 {min} 个字符。"
   },
   "6PgVSe": {
-    "message": "Regenerate"
+    "message": "重新生成"
   },
   "6QRlW8": {
-    "message": "Waiting for reconnection ({countdown}s)"
+    "message": "正在等待重新连接 ({countdown}s)"
   },
   "6q3tCn": {
-    "message": "Connecting"
+    "message": "正在连接"
   },
   "7G8Ojg": {
-    "message": "Unable to send message"
+    "message": "无法发送信息"
   },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
   },
   "9Obw6C": {
-    "message": "Filter"
+    "message": "筛选"
   },
   "9WRlF4": {
-    "message": "Send"
+    "message": "发送"
   },
   "9kvEKC": {
-    "message": "Add Dice"
+    "message": "添加骰子"
   },
   "9to/Le": {
-    "message": "Change Avatar"
+    "message": "更改头像"
   },
   "AVI/0j": {
-    "message": "Split"
+    "message": "拆分"
   },
   "AyGauy": {
     "message": "登录"
@@ -87,19 +87,19 @@
     "message": "位面名"
   },
   "C81/uG": {
-    "message": "Logout"
+    "message": "登出"
   },
   "CW7jWC": {
-    "message": "(me)"
+    "message": "(自己)"
   },
   "CoEsov": {
     "message": "用户名或邮箱"
   },
   "CoTP+E": {
-    "message": "You are not a member of this channel"
+    "message": "您不是该频道的成员"
   },
   "CuNepY": {
-    "message": "Create Channel"
+    "message": "创建频道"
   },
   "D3idYv": {
     "message": "设置"
@@ -108,64 +108,64 @@
     "message": "每个人都可以加入这个位面"
   },
   "GYTzXV": {
-    "message": "Toggle Notification"
+    "message": "切换通知"
   },
   "H2WXs6": {
     "message": "摧毁位面"
   },
   "HTmh5Q": {
-    "message": "target"
+    "message": "目标"
   },
   "HpyhN3": {
     "message": "菠萝"
   },
   "IW0/M8": {
-    "message": "Auto Select"
+    "message": "自动选择"
   },
   "IvBid4": {
     "message": "使用 {enter} 键发送消息"
   },
   "IvjoDS": {
-    "message": "Connected"
+    "message": "已连接"
   },
   "JCIgkj": {
     "message": "用户名"
   },
   "JQt0RP": {
-    "message": "Pull to Load"
+    "message": "下拉刷新"
   },
   "K7AkdL": {
     "message": "显示"
   },
   "LUrJwE": {
-    "message": "Channels"
+    "message": "频道"
   },
   "LqOJ8B": {
-    "message": "Is this a secret channel?"
+    "message": "是否为秘密频道？"
   },
   "MoRJdV": {
-    "message": "Which key to use to send a message?"
+    "message": "用哪个按键发送消息？"
   },
   "MoZLbF": {
-    "message": "Unsupported"
+    "message": "暂不支持"
   },
   "Mtd9LO": {
-    "message": "Timeout"
+    "message": "超时"
   },
   "NigiUz": {
-    "message": "You have to enter a channel name."
+    "message": "必须输入频道名。"
   },
   "O5epsB": {
-    "message": "take"
+    "message": "取"
   },
   "OLFHJL": {
-    "message": "Extreme Success"
+    "message": "极难成功"
   },
   "OYT4m/": {
-    "message": "Message cannot be empty"
+    "message": "消息不能为空"
   },
   "P6PLpi": {
-    "message": "Join"
+    "message": "加入"
   },
   "Pe0ogR": {
     "message": "主题"
@@ -174,16 +174,16 @@
     "message": "描述"
   },
   "QlsDcr": {
-    "message": "Action"
+    "message": "动作"
   },
   "R59CS8": {
-    "message": "Remove Avatar"
+    "message": "移除头像"
   },
   "RraqCg": {
     "message": "帐号与密码不匹配"
   },
   "RvUa7+": {
-    "message": "No Name"
+    "message": "无名称"
   },
   "SBkvpf": {
     "message": "昵称"
@@ -198,22 +198,22 @@
     "message": "创建位面"
   },
   "TThIOM": {
-    "message": "Not found"
+    "message": "未找到"
   },
   "TwyMau": {
-    "message": "Account"
+    "message": "账号"
   },
   "UIVqKu": {
-    "message": "Recover"
+    "message": "恢复"
   },
   "UvDPcD": {
-    "message": "Work in progress"
+    "message": "正在开发"
   },
   "VA/Z1S": {
     "message": "隐藏"
   },
   "VnXp8Z": {
-    "message": "Avatar"
+    "message": "头像"
   },
   "VzzYJk": {
     "message": "创建"
@@ -222,22 +222,22 @@
     "message": "危险操作"
   },
   "YETHtM": {
-    "message": "Interface"
+    "message": "界面"
   },
   "YNPiTV": {
-    "message": "Are you sure you want to leave {channelName}?"
+    "message": "确定要离开「{channelName}」吗？"
   },
   "YtexzU": {
     "message": "关闭 {paneName}"
   },
   "ZKBnrB": {
-    "message": "Character name is required"
+    "message": "必须填写角色名"
   },
   "ZvI2/H": {
-    "message": "Release to Load"
+    "message": "释放加载"
   },
   "a+BhVZ": {
-    "message": "Regenerated"
+    "message": "重新生成"
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."

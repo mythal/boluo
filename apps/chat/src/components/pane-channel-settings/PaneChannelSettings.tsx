@@ -70,7 +70,7 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="p-4 flex flex-col gap-4">
-            <ChannelNameField />
+            <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
             <DefaultDiceField />
             <TopicField />
             <IsPrivateField />
@@ -89,7 +89,11 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
             <Button type="button" onClick={close}>
               <FormattedMessage defaultMessage="Cancel" />
             </Button>
-            <Button type="submit" data-type="primary" disabled={!form.formState.isDirty || isMutating}>
+            <Button
+              type="submit"
+              data-type="primary"
+              disabled={!form.formState.isDirty || isMutating}
+            >
               <FormattedMessage defaultMessage="Save Changes" />
             </Button>
           </PaneFooterBox>

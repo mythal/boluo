@@ -14,10 +14,11 @@ export const IsPrivateField: FC<Props> = () => {
         <input type="checkbox" {...register('isPrivate')} />
         <FormattedMessage defaultMessage="Is secret channel?" />
 
-        <div />
-        <HelpText>
-          <FormattedMessage defaultMessage="Secret channels are only accessible by invitation." />
-        </HelpText>
+        <div className="col-start-2">
+          <HelpText>
+            <FormattedMessage defaultMessage="Secret channels are only accessible by invitation." />
+          </HelpText>
+        </div>
       </label>
     </div>
   );

@@ -6,8 +6,8 @@ import { PaneProvider } from '../state/view.context';
 import { Pane } from '../state/view.types';
 import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
 import { ChatPaneChannel } from './pane-channel/ChannelPane';
+import { PaneError } from './pane-error/PaneError';
 import { PaneEmpty } from './PaneEmpty';
-import { PaneError } from './PaneError';
 import { PaneLoading } from './PaneLoading';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
@@ -69,15 +69,15 @@ export const ChatPaneSwitch = memo<Props>(({ pane }) => {
   const [banner, setBanner] = useState<Banner | null>(emptyBanner);
   return (
     <PaneProvider key={pane.key} paneKey={pane.key}>
-      <PaneError>
-        <PaneBannerContext.Provider value={banner ?? emptyBanner}>
-          <ThrowBanner.Provider value={setBanner}>
-            <Suspense fallback={<PaneLoading />}>
+      <PaneBannerContext.Provider value={banner ?? emptyBanner}>
+        <ThrowBanner.Provider value={setBanner}>
+          <Suspense fallback={<PaneLoading />}>
+            <PaneError>
               <Switch pane={pane} />
-            </Suspense>
-          </ThrowBanner.Provider>
-        </PaneBannerContext.Provider>
-      </PaneError>
+            </PaneError>
+          </Suspense>
+        </ThrowBanner.Provider>
+      </PaneBannerContext.Provider>
     </PaneProvider>
   );
 });

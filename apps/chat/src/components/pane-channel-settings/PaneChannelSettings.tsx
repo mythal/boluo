@@ -12,6 +12,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { ChannelNameField } from './ChannelNameField';
 import { DefaultDiceField } from './DefaultDiceField';
+import { DeleteChannelButton } from './DeleteChannelButton';
 import { ChannelSettingsForm } from './form';
 import { IsPrivateField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
@@ -41,10 +42,6 @@ const editChannel: MutationFetcher<Channel, ChannelSettingsForm, [string, string
 
 export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
   const channel = useChannel(channelId);
-  if (!channel) {
-    // TODO: Error handling
-    throw new Error('Channel not found');
-  }
   const form = useForm<ChannelSettingsForm>({
     defaultValues: {
       name: channel.name,
@@ -65,6 +62,7 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
 
   const onSubmit: SubmitHandler<ChannelSettingsForm> = async (data) => {
     await trigger(data);
+    close();
   };
 
   return (
@@ -76,6 +74,16 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
             <DefaultDiceField />
             <TopicField />
             <IsPrivateField />
+            <div className="p-2 border-t border-b border-error-200 bg-error-50">
+              <div className="text-lg">
+                <FormattedMessage defaultMessage="Danger Zone" />
+              </div>
+              <div>
+                <div className="py-2">
+                  <DeleteChannelButton channelId={channelId} channelName={channel.name} />
+                </div>
+              </div>
+            </div>
           </div>
           <PaneFooterBox>
             <Button type="button" onClick={close}>

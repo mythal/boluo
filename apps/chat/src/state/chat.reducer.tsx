@@ -78,6 +78,16 @@ export const makeChatState = (spaceId: string): ChatSpaceState => ({
   lastEventTimestamp: 0,
 });
 
+const handleChannelDeleted = (
+  state: ChatSpaceState,
+  { payload: { channelId } }: ChatAction<'channelDeleted'>,
+): ChatSpaceState => {
+  const { channels } = state;
+  const nextChannels = { ...channels };
+  delete nextChannels[channelId];
+  return { ...state, channels: nextChannels };
+};
+
 const handleEventFromServer = (
   state: ChatSpaceState,
   { payload: event }: ChatAction<'eventFromServer'>,
@@ -107,6 +117,8 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
       return state;
     }
     return makeChatState(action.payload.spaceId);
+  } else if (action.type === 'channelDeleted') {
+    return handleChannelDeleted(state, action);
   }
   const { context } = state;
   if (action.type === 'initialized') {

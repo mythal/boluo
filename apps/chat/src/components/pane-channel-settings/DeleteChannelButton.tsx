@@ -1,5 +1,6 @@
 import {
   autoUpdate,
+  flip,
   FloatingPortal,
   offset,
   shift,
@@ -56,9 +57,9 @@ export const DeleteChannelButton: FC<Props> = ({ channelId, channelName }) => {
   const { x, y, strategy, refs, context } = useFloating({
     open: isConfirmOpen,
     strategy: 'fixed',
-    placement: 'right-end',
+    placement: 'bottom-start',
     onOpenChange: setComfirmOpen,
-    middleware: [offset(8)],
+    middleware: [offset(8), flip()],
     whileElementsMounted: autoUpdate,
   });
 
@@ -88,7 +89,7 @@ export const DeleteChannelButton: FC<Props> = ({ channelId, channelName }) => {
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
-            className="bg-error-50 border border-error-400 rounded-sm shadow-1 shadow-surface-900/25 py-2 px-4"
+            className="bg-error-50 border w-60 border-error-400 rounded-sm shadow-1 shadow-surface-900/25 py-2 px-4"
           >
             <FormattedMessage
               defaultMessage="Are you sure you want to delete the &quot;{channelName}&quot; channel?"

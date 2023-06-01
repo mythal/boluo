@@ -10,7 +10,9 @@ import { Button, TextInput } from 'ui';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { usePaneReplace } from '../hooks/usePaneReplace';
 import { ClosePaneButton } from './ClosePaneButton';
-import { DiceSelect } from './DiceSelect';
+import { ChannelNameField } from './pane-channel-settings/ChannelNameField';
+import { DefaultDiceField } from './pane-channel-settings/DefaultDiceField';
+import { IsPrivateField } from './pane-channel-settings/IsPrivateField';
 import { PaneBox } from './PaneBox';
 import { PaneFooterBox } from './PaneFooterBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
@@ -35,40 +37,6 @@ const createChannel: MutationFetcher<ChannelWithMember, FormSchema, [string]> = 
   return result.unwrap();
 };
 
-const NameField: FC<Props> = ({ spaceId }) => {
-  const { register, formState: { errors } } = useFormContext<FormSchema>();
-  const intl = useIntl();
-  return (
-    <label className="flex flex-col">
-      <div className="py-1">
-        <FormattedMessage defaultMessage="Channel Name" />
-      </div>
-      <TextInput {...register('name', channelNameValidation(intl, spaceId))} />
-      {errors.name && <div className="pt-1 text-sm text-error-700">{errors.name.message}</div>}
-    </label>
-  );
-};
-
-const FieldDefaultDice: FC = () => {
-  const {
-    field: { onChange, value },
-    fieldState: { error },
-  } = useController<FormSchema, 'defaultDiceType'>({
-    name: 'defaultDiceType',
-    defaultValue: 'd20',
-  });
-  return (
-    <div>
-      <label>
-        <div className="py-1">
-          <FormattedMessage defaultMessage="Default Dice" />
-        </div>
-        <DiceSelect value={value} onChange={onChange} />
-      </label>
-    </div>
-  );
-};
-
 const CharacterNameField: FC = () => {
   const { register } = useFormContext<FormSchema>();
   const intl = useIntl();
@@ -78,16 +46,6 @@ const CharacterNameField: FC = () => {
         <FormattedMessage defaultMessage="My Character Name in the Channel (Optional)" />
       </div>
       <TextInput {...register('characterName')} placeholder={intl.formatMessage({ defaultMessage: 'e.g. Gandalf' })} />
-    </label>
-  );
-};
-
-const PublicityField: FC = () => {
-  const { register } = useFormContext<FormSchema>();
-  return (
-    <label className="flex items-center gap-1">
-      <input type="checkbox" {...register('isSecret')} />
-      <FormattedMessage defaultMessage="Is this a secret channel?" />
     </label>
   );
 };
@@ -129,10 +87,10 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-4 flex flex-col gap-2 h-full max-w-md">
-              <NameField spaceId={spaceId} />
+              <ChannelNameField spaceId={spaceId} />
               <CharacterNameField />
-              <PublicityField />
-              <FieldDefaultDice />
+              <IsPrivateField />
+              <DefaultDiceField />
             </div>
             <PaneFooterBox>
               <Button type="button" onClick={close}>

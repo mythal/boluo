@@ -1,7 +1,7 @@
 import { FC, useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
-import { TextArea } from 'ui';
+import { HelpText, TextArea } from 'ui';
 
 interface Props {
 }
@@ -17,6 +17,9 @@ export const TopicField: FC<Props> = ({}) => {
       <div>
         <TextArea className="w-full" id={id} {...register('topic')} />
       </div>
+      <HelpText>
+        <FormattedMessage defaultMessage="Topics can be used to record and remind you of what you are currently focused on." />
+      </HelpText>
     </div>
   );
 };

@@ -2,12 +2,11 @@ import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { HelpText } from 'ui';
-import { ChannelSettingsForm } from './form';
 
 interface Props {}
 
 export const IsPrivateField: FC<Props> = () => {
-  const { register } = useFormContext<ChannelSettingsForm>();
+  const { register } = useFormContext<{ isPrivate: boolean }>();
   return (
     <div>
       <label className="grid grid-rows-2 grid-cols-[auto_1fr] gap-x-2 items-center">

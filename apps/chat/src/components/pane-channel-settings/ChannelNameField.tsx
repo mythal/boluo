@@ -7,11 +7,11 @@ import { ChannelSettingsForm } from './form';
 
 interface Props {
   spaceId: string;
-  channelName: string;
+  channelName?: string;
 }
 
 export const ChannelNameField: FC<Props> = ({ spaceId, channelName }) => {
-  const { register, formState: { errors } } = useFormContext<ChannelSettingsForm>();
+  const { register, formState: { errors } } = useFormContext<{ name: string }>();
   const intl = useIntl();
   const id = useId();
   return (
@@ -20,7 +20,11 @@ export const ChannelNameField: FC<Props> = ({ spaceId, channelName }) => {
         <FormattedMessage defaultMessage="Channel Name" />
       </label>
       <div>
-        <TextInput id={id} {...register('name', channelNameValidation(intl, spaceId, channelName))} />
+        <TextInput
+          className="w-full"
+          id={id}
+          {...register('name', channelNameValidation(intl, spaceId, channelName))}
+        />
       </div>
       {errors.name && (
         <div className="pt-1 text-sm text-error-700">

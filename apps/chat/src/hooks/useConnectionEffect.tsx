@@ -1,7 +1,8 @@
-import { isServerEvent } from 'api';
+import { isServerEvent, ServerEvent } from 'api';
 import { webSocketUrlAtom } from 'common';
 import { useStore } from 'jotai';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useSWRConfig } from 'swr';
 import { isUuid } from 'utils';
 import { PING, PONG } from '../const';
 import { makeAction } from '../state/actions';
@@ -16,7 +17,7 @@ const createMailboxConnection = (baseUrl: string, id: string, token?: string, af
   return new WebSocket(url);
 };
 
-const connect = (store: ReturnType<typeof useStore>) => {
+const connect = (store: ReturnType<typeof useStore>, handleEvent: (event: ServerEvent) => void) => {
   const { spaceId: mailboxId } = store.get(chatAtom).context;
   if (!isUuid(mailboxId)) return;
   const webSocketEndpoint = store.get(webSocketUrlAtom);
@@ -55,15 +56,45 @@ const connect = (store: ReturnType<typeof useStore>) => {
     }
     if (!isServerEvent(event)) return;
     store.set(chatAtom, makeAction('eventFromServer', event, undefined));
+    handleEvent(event);
   };
 };
 
 export const useConnectionEffect = () => {
+  const { mutate } = useSWRConfig();
   const store = useStore();
+
+  const handleEvent = useCallback((event: ServerEvent) => {
+    switch (event.body.type) {
+      case 'CHANNEL_DELETED':
+        void mutate(['/channels/by_space', event.mailbox]);
+        void mutate(['/channels/query', event.body.channelId]);
+        return;
+      case 'CHANNEL_EDITED':
+        void mutate(['/channels/by_space', event.mailbox]);
+        void mutate(['/channels/query', event.body.channelId], event.body.channel);
+        return;
+      case 'SPACE_UPDATED':
+        const { space, channelMembers, channels } = event.body.spaceWithRelated;
+        void mutate(['/spaces/query', space.id], space);
+        void mutate(['/channels/by_space', space.id], channels);
+        return;
+      case 'NEW_MESSAGE':
+      case 'MESSAGE_DELETED':
+      case 'MESSAGE_EDITED':
+      case 'MESSAGE_PREVIEW':
+      case 'MEMBERS':
+      case 'INITIALIZED':
+      case 'STATUS_MAP':
+      case 'APP_UPDATED':
+        return;
+    }
+  }, [mutate]);
+
   useEffect(() => {
-    connect(store);
+    connect(store, handleEvent);
     return store.sub(connectionStateAtom, () => {
-      connect(store);
+      connect(store, handleEvent);
     });
-  }, [store]);
+  }, [handleEvent, store]);
 };

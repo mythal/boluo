@@ -1,4 +1,7 @@
 {
+  "+CI3C/": {
+    "message": "When you type 1{value}, you can simplify it to 1d."
+  },
   "+OyBM6": {
     "message": "This email is already in use."
   },
@@ -62,6 +65,9 @@
   "7G8Ojg": {
     "message": "Unable to send message"
   },
+  "7q87xo": {
+    "message": "Channel Settings"
+  },
   "973Dls": {
     "message": "Only invited people can join this space"
   },
@@ -92,6 +98,9 @@
   "CW7jWC": {
     "message": "(me)"
   },
+  "Ciussb": {
+    "message": "Secret channels are only accessible by invitation."
+  },
   "CoEsov": {
     "message": "Username or Email"
   },
@@ -112,6 +121,9 @@
   },
   "H2WXs6": {
     "message": "Destroy Space"
+  },
+  "HSaR2M": {
+    "message": "Is secret channel?"
   },
   "HTmh5Q": {
     "message": "target"
@@ -134,14 +146,14 @@
   "JQt0RP": {
     "message": "Pull to Load"
   },
+  "K3r6DQ": {
+    "message": "Delete"
+  },
   "K7AkdL": {
     "message": "Show"
   },
   "LUrJwE": {
     "message": "Channels"
-  },
-  "LqOJ8B": {
-    "message": "Is this a secret channel?"
   },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
@@ -152,14 +164,17 @@
   "Mtd9LO": {
     "message": "Timeout"
   },
-  "NigiUz": {
-    "message": "You have to enter a channel name."
-  },
   "O5epsB": {
     "message": "take"
   },
   "OLFHJL": {
     "message": "Extreme Success"
+  },
+  "OSS58q": {
+    "message": "Are you sure you want to delete the &quot;{channelName}&quot; channel?"
+  },
+  "OWhbRI": {
+    "message": "The command that will be inserted when the button is pressed."
   },
   "OYT4m/": {
     "message": "Message cannot be empty"
@@ -178,6 +193,9 @@
   },
   "R59CS8": {
     "message": "Remove Avatar"
+  },
+  "RYulBW": {
+    "message": "Settings of &quot;{channelName}&quot; Channel"
   },
   "RraqCg": {
     "message": "Username and password do not match"
@@ -206,6 +224,12 @@
   "UIVqKu": {
     "message": "Recover"
   },
+  "UdtpV7": {
+    "message": "Topic"
+  },
+  "Ujs8Kg": {
+    "message": "Message from server"
+  },
   "UvDPcD": {
     "message": "Work in progress"
   },
@@ -227,6 +251,9 @@
   "YNPiTV": {
     "message": "Are you sure you want to leave {channelName}?"
   },
+  "YQwJw3": {
+    "message": "Default Roll Command"
+  },
   "YtexzU": {
     "message": "Close {paneName}"
   },
@@ -241,6 +268,9 @@
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."
+  },
+  "b2XKbY": {
+    "message": "e.g. A group of kobolds tried to attack us"
   },
   "bGay8d": {
     "message": "Space Settings"
@@ -257,6 +287,9 @@
   "clpFBW": {
     "message": "Space Publicity"
   },
+  "cpFKi9": {
+    "message": "Topics can be used to record and remind you of what you are currently focused on."
+  },
   "dMEGZV": {
     "message": "Split pane"
   },
@@ -266,14 +299,14 @@
   "dYaE6J": {
     "message": "Members of &quot;{spaceName}&quot; Space"
   },
+  "dzosaH": {
+    "message": "Delete Channel"
+  },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
   },
   "e3Ttmb": {
     "message": "In Game"
-  },
-  "fGwy5t": {
-    "message": "This channel name already exist."
   },
   "fNCCY7": {
     "message": "Basic"
@@ -313,6 +346,9 @@
   },
   "nmSKJK": {
     "message": "Can't be empty."
+  },
+  "noZdV2": {
+    "message": "Deleting..."
   },
   "oVARYX": {
     "message": "Must be at most {max} characters."
@@ -361,6 +397,9 @@
   },
   "sloBpe": {
     "message": "Press {key} to {send}"
+  },
+  "sol2mE": {
+    "message": "Not found, Perhaps resource was deleted."
   },
   "t/BlH4": {
     "message": "Confirm Delete"

@@ -6,7 +6,7 @@ import { FC, forwardRef, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { useSend } from '../channel/useSend';
+import { useSend } from '../pane-channel/useSend';
 
 interface Props {
   me: GetMe;

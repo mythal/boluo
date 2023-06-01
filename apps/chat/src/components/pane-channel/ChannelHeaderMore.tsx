@@ -1,5 +1,7 @@
 import { useMe } from 'common';
 import { FC } from 'react';
+import { useMyChannelMember } from '../../hooks/useMyChannelMember';
+import { ChannelSettingsButton } from './ChannelSettingsButton';
 import { MemberLeaveButton } from './MemberLeaveButton';
 
 interface Props {
@@ -9,9 +11,11 @@ interface Props {
 
 export const ChannelHeaderMore: FC<Props> = ({ channelId, resetHeaderState }) => {
   const me = useMe();
+  const member = useMyChannelMember(channelId);
   return (
     <div className="py-2 px-4 border-b flex justify-between gap-2">
       {me && <MemberLeaveButton me={me} channelId={channelId} onSuccess={resetHeaderState} />}
+      {member && member.space.isAdmin && <ChannelSettingsButton channelId={channelId} />}
     </div>
   );
 };

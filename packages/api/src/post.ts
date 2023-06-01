@@ -1,6 +1,15 @@
 import type { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
 import type { Empty } from 'utils';
-import type { ChannelWithMember, CreateChannel, JoinChannel } from './types/channels';
+import type {
+  AddChannelMember,
+  Channel,
+  ChannelMember,
+  ChannelWithMember,
+  CreateChannel,
+  EditChannel,
+  EditChannelMember,
+  JoinChannel,
+} from './types/channels';
 import type { Message, NewMessage } from './types/messages';
 import type { CreateSpace, EditSpace, Space, SpaceWithMember } from './types/spaces';
 import type { EditUser, LoginData, LoginReturn, RegisterData, User } from './types/users';
@@ -26,4 +35,8 @@ export interface Post {
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
   '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };
   '/channels/leave': { payload: Empty; query: { id: string }; result: true };
+  '/channels/edit': { payload: EditChannel; query: null; result: Channel };
+  '/channels/delete': { payload: Empty; query: { id: string }; result: Channel };
+  '/channels/edit_member': { payload: EditChannelMember; query: null; result: ChannelMember };
+  '/channels/add_member': { payload: AddChannelMember; query: null; result: ChannelWithMember };
 }

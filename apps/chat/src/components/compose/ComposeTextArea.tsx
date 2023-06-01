@@ -15,7 +15,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
 import { makeComposeAction } from '../../state/compose.actions';
-import { useSend } from '../channel/useSend';
+import { useSend } from '../pane-channel/useSend';
 import { useWorkerParse } from './useWorkerParse';
 
 interface Props {

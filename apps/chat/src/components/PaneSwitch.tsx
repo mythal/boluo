@@ -4,16 +4,17 @@ import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/us
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
 import { Pane } from '../state/view.types';
-import { ChatPaneChannel } from './channel/ChannelPane';
+import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
+import { ChatPaneChannel } from './pane-channel/ChannelPane';
+import { PaneError } from './pane-error/PaneError';
 import { PaneEmpty } from './PaneEmpty';
-import { PaneError } from './PaneError';
 import { PaneLoading } from './PaneLoading';
 
-const PaneSpaceSettings = React.lazy(() => import('./space-settings/PaneSpaceSettings'));
+const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
 const PaneProfile = React.lazy(() => import('./pane-profile/PaneProfile'));
 const PaneCreateChannel = React.lazy(() => import('./PaneCreateChannel'));
-const PaneSettings = React.lazy(() => import('./settings/PaneSettings'));
+const PaneSettings = React.lazy(() => import('./pane-settings/PaneSettings'));
 const PaneLogin = React.lazy(() => import('./PaneLogin'));
 const PaneHelp = React.lazy(() => import('./PaneHelp'));
 
@@ -32,6 +33,7 @@ const PANE_MAP = createPaneMap({
   LOGIN: PaneLogin,
   PROFILE: PaneProfile,
   SPACE_MEMBERS: PaneSpaceMembers,
+  CHANNEL_SETTINGS: PaneChannelSettings,
   EMPTY: PaneEmpty,
 }); // satisfies Record<Pane['type'], unknown>; // https://github.com/vercel/next.js/issues/43799
 
@@ -41,6 +43,12 @@ const Switch: FC<Props> = ({ pane }) => {
       return (
         <ChannelIdContext.Provider value={pane.channelId}>
           <ChatPaneChannel channelId={pane.channelId} key={pane.channelId} />
+        </ChannelIdContext.Provider>
+      );
+    case 'CHANNEL_SETTINGS':
+      return (
+        <ChannelIdContext.Provider value={pane.channelId}>
+          <PaneChannelSettings channelId={pane.channelId} key={pane.channelId} />
         </ChannelIdContext.Provider>
       );
     case 'SPACE_SETTINGS':
@@ -61,15 +69,15 @@ export const ChatPaneSwitch = memo<Props>(({ pane }) => {
   const [banner, setBanner] = useState<Banner | null>(emptyBanner);
   return (
     <PaneProvider key={pane.key} paneKey={pane.key}>
-      <PaneError>
-        <PaneBannerContext.Provider value={banner ?? emptyBanner}>
-          <ThrowBanner.Provider value={setBanner}>
-            <Suspense fallback={<PaneLoading />}>
+      <PaneBannerContext.Provider value={banner ?? emptyBanner}>
+        <ThrowBanner.Provider value={setBanner}>
+          <Suspense fallback={<PaneLoading />}>
+            <PaneError>
               <Switch pane={pane} />
-            </Suspense>
-          </ThrowBanner.Provider>
-        </PaneBannerContext.Provider>
-      </PaneError>
+            </PaneError>
+          </Suspense>
+        </ThrowBanner.Provider>
+      </PaneBannerContext.Provider>
     </PaneProvider>
   );
 });

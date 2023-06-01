@@ -1,9 +1,11 @@
+import { isApiError } from 'api';
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
 import { Oops } from 'ui/Oops';
 import type { ChildrenProps, StyleProps } from 'utils';
-import { PaneBox } from './PaneBox';
-import { PaneHeaderBox } from './PaneHeaderBox';
+import { PaneBox } from '../PaneBox';
+import { PaneHeaderBox } from '../PaneHeaderBox';
+import { PaneErrorNotFound } from './PaneErrorNotFound';
 
 interface Props extends ChildrenProps, StyleProps {
 }
@@ -29,7 +31,10 @@ export class PaneError extends Component<Props, State> {
   }
 
   override render() {
-    if (this.state.error) {
+    const { error } = this.state;
+    if (isApiError(error) && error.code === 'NOT_FOUND') {
+      return <PaneErrorNotFound error={error} />;
+    } else if (error) {
       return (
         <PaneBox header={<PaneHeaderBox>Oops</PaneHeaderBox>}>
           <div className="h-full">

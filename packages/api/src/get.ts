@@ -22,6 +22,7 @@ export interface Get {
   '/channels/query': { query: { id: string }; result: Channel };
   '/channels/by_space': { query: { id: string }; result: Channel[] };
   '/channels/members': { query: { id: string }; result: ChannelMembers };
+  '/channels/check_name': { query: { name: string; spaceId: string }; result: boolean };
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
 }

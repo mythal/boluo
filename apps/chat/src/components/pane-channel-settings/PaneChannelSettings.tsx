@@ -12,6 +12,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { ChannelNameField } from './ChannelNameField';
 import { DefaultDiceField } from './DefaultDiceField';
+import { DefaultRollCommandField } from './DefaultRollCommandField';
 import { DeleteChannelButton } from './DeleteChannelButton';
 import { ChannelSettingsForm } from './form';
 import { IsPrivateField } from './IsPrivateField';
@@ -72,6 +73,7 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
           <div className="p-4 flex flex-col gap-4">
             <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
             <DefaultDiceField />
+            <DefaultRollCommandField />
             <TopicField />
             <IsPrivateField />
             <div className="p-2 border-t border-b border-error-200 bg-error-50">

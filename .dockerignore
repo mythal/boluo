@@ -2,3 +2,6 @@
 **/node_modules/
 **/dist/
 out/
+.direnv/
+target/
+.env.local

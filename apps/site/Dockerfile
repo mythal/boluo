@@ -1,17 +1,23 @@
 FROM node:lts AS base
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN npm add -g pnpm
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY . ./
-RUN npm install
+COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
+RUN pnpm fetch
+COPY package.json pnpm-workspace.yaml nx.json version.json .eslintrc.js .
+COPY ./apps/ ./apps/
+COPY ./packages/ ./packages/
+RUN pnpm install
+RUN pnpm install -r
 
-# Disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV BACKEND_URL https://boluo.chat
 
-RUN npm exec nx run site:build
+RUN pnpm exec nx run site:build
 
 # Production image, copy all the files and run next
 FROM node:lts AS runner

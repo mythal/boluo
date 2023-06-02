@@ -2,8 +2,12 @@ const path = require('path');
 
 const ANALYZE = Boolean(process.env.ANALYZE);
 
-// Backend URL for server-side
-const BACKEND_URL = process.env.BACKEND_URL;
+const rewrites = async () => [
+  {
+    source: '/api/:path*',
+    destination: `${process.env.BACKEND_URL}/api/:path*`, // Proxy to Backend
+  },
+];
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -18,14 +22,7 @@ const config = {
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  rewrites: async () => {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${BACKEND_URL}/api/:path*`, // Proxy to Backend
-      },
-    ];
-  },
+  rewrites: process.env.NODE_ENV === 'production' ? undefined : rewrites,
   webpack: (config) => {
     if (ANALYZE) {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');

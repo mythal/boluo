@@ -1,7 +1,7 @@
 import { apiUrlAtom } from 'api-browser';
-import { atom, useAtomValue } from 'jotai';
+import { Atom, atom, useAtomValue } from 'jotai';
 
-export const webSocketUrlAtom = atom(
+export const webSocketUrlAtom: Atom<string> = atom(
   (get) => {
     const baseUrl = get(apiUrlAtom);
     return baseUrl.replace(/^http/, 'ws');

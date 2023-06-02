@@ -18,9 +18,10 @@
   "sideEffects": false,
   "devDependencies": {
     "@types/uuid": "^9.0.1",
+    "@types/react": "^18.2.8",
     "eslint": "^8.40.0",
-    "eslint-config-custom": "*",
-    "tsconfig": "*",
+    "eslint-config-custom": "workspace:*",
+    "tsconfig": "workspace:*",
     "typescript": "^5.0.4"
   }
 }

@@ -8,7 +8,7 @@
     "build": "svgr --config-file svgr.config.js -- svg && tsc --project tsconfig.json"
   },
   "dependencies": {
-    "tsconfig": "*"
+    "tsconfig": "workspace:*"
   },
   "sideEffects": false,
   "devDependencies": {

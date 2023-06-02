@@ -2,7 +2,9 @@
   "name": "boluo",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "build": "nx run-many --target=build --all"
+  },
   "private": true,
   "workspaces": [
     "packages/*",
@@ -10,7 +12,7 @@
     "apps/*"
   ],
   "dependencies": {
-    "dprint": "^0.35.0",
-    "nx": "^15.8.5"
+    "dprint": "^0.35.4",
+    "nx": "^15.9.4"
   }
 }

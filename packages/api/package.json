@@ -12,10 +12,10 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "server-bindings": "*",
-    "tsconfig": "*",
+    "server-bindings": "workspace:*",
+    "tsconfig": "workspace:*",
     "tslib": "^2.5.0",
-    "utils": "*"
+    "utils": "workspace:*"
   },
   "sideEffects": false,
   "devDependencies": {

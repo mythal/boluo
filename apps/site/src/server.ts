@@ -10,8 +10,8 @@ import ja from 'lang/compiled/ja_JP.json';
 import zh_CN from 'lang/compiled/zh_CN.json';
 import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
+import { toTheme } from 'theme';
 import type { Theme } from 'ui';
-import { toTheme } from 'ui/theme';
 import { get } from './api/server';
 
 export const getMe = cache(async (): Promise<GetMe | null> => {

@@ -6,7 +6,7 @@ import type { Result } from 'utils';
 
 const isBrowser = typeof window !== 'undefined';
 
-export const DEFAULT_BACKEND_URL = isBrowser ? window.location.origin : process.env.BACKEND_URL || '';
+export const DEFAULT_BACKEND_URL = isBrowser ? window.location.origin : '';
 
 export const backendUrlAtom = atomWithStorage('BOLUO_BACKEND_API_URL', DEFAULT_BACKEND_URL);
 

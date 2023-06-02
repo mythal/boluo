@@ -1,5 +1,5 @@
 {
-  "name": "common",
+  "name": "theme",
   "version": "0.0.0",
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
@@ -13,37 +13,17 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "jotai": "^2.0.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-intl": "^6.2.10",
-    "react-hook-form": "^7.44",
-    "swr": "^2.1.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
-    "api": "workspace:*",
     "eslint": "^8.40.0",
-    "theme": "workspace:*",
     "eslint-config-custom": "workspace:*",
-    "@formatjs/intl": "*",
-    "jotai": "^2.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-intl": "^6.4.2",
-    "swr": "^2.1.5",
-    "ts-node": "^10.9.1",
     "tsconfig": "workspace:*",
     "typescript": "^5.0.4",
     "utils": "workspace:*"
   },
   "dependencies": {
-    "api-browser": "workspace:*",
-    "clsx": "^1.2.1",
-    "lang": "workspace:*",
-    "react-hook-form": "^7.44.3",
-    "icons": "workspace:*"
   }
 }

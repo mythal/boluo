@@ -19,7 +19,7 @@
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^8.40.0",
-    "eslint-config-custom": "^0.0.0",
+    "eslint-config-custom": "workspace:*",
     "jotai": "^2.1.0",
     "typescript": "^5.1.3"
   },

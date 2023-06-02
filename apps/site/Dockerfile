@@ -10,7 +10,8 @@ WORKDIR /app
 COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm fetch
 COPY package.json pnpm-workspace.yaml nx.json version.json .eslintrc.js .
-COPY ./apps/ ./apps/
+COPY ./apps/site ./apps/site
+COPY ./apps/server/bindings ./apps/server/bindings
 COPY ./packages/ ./packages/
 RUN pnpm install --frozen-lockfile
 RUN pnpm install -r --frozen-lockfile

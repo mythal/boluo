@@ -17,121 +17,6 @@ importers:
         specifier: ^5.1.3
         version: 5.1.3
 
-  apps/chat:
-    dependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.8
-        version: 6.0.8(react-dom@18.2.0)(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.2
-        version: 7.0.2(@dnd-kit/core@6.0.8)(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.1
-        version: 3.2.1(react@18.2.0)
-      '@floating-ui/react':
-        specifier: ^0.24.0
-        version: 0.24.2(react-dom@18.2.0)(react@18.2.0)
-      api:
-        specifier: workspace:*
-        version: link:../../packages/api
-      api-browser:
-        specifier: workspace:*
-        version: link:../../packages/api-browser
-      boring-avatars:
-        specifier: workspace:*
-        version: link:../../packages/boring-avatars
-      clsx:
-        specifier: ^1.2.1
-        version: 1.2.1
-      common:
-        specifier: workspace:*
-        version: link:../../packages/common
-      icons:
-        specifier: workspace:*
-        version: link:../../packages/icons
-      jotai:
-        specifier: ^2.1.0
-        version: 2.1.0(react@18.2.0)
-      jotai-location:
-        specifier: ^0.5.1
-        version: 0.5.1(jotai@2.1.0)
-      lang:
-        specifier: workspace:*
-        version: link:../../packages/lang
-      logo:
-        specifier: workspace:*
-        version: link:../../packages/logo
-      prando:
-        specifier: ^6.0.1
-        version: 6.0.1
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-colorful:
-        specifier: ^5.6.1
-        version: 5.6.1(react-dom@18.2.0)(react@18.2.0)
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-hook-form:
-        specifier: ^7.43.9
-        version: 7.44.3(react@18.2.0)
-      react-intl:
-        specifier: ^6.4.2
-        version: 6.4.2(react@18.2.0)(typescript@5.1.3)
-      react-virtuoso:
-        specifier: ^4.3.7
-        version: 4.3.8(react-dom@18.2.0)(react@18.2.0)
-      store:
-        specifier: workspace:*
-        version: link:../../packages/store
-      swr:
-        specifier: ^2.1.5
-        version: 2.1.5(react@18.2.0)
-      ui:
-        specifier: workspace:*
-        version: link:../../packages/ui
-      utils:
-        specifier: workspace:*
-        version: link:../../packages/utils
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.0
-      zod:
-        specifier: ^3.21.4
-        version: 3.21.4
-    devDependencies:
-      '@types/react':
-        specifier: ^18.2.8
-        version: 18.2.8
-      '@types/react-dom':
-        specifier: ^18.2.4
-        version: 18.2.4
-      '@vitejs/plugin-react':
-        specifier: ^4.0.0
-        version: 4.0.0(vite@4.3.9)
-      babel-plugin-formatjs:
-        specifier: ^10.5.1
-        version: 10.5.1
-      eslint:
-        specifier: ^8.40.0
-        version: 8.41.0
-      eslint-config-custom:
-        specifier: ^0.0.0
-        version: link:../../packages/eslint-config-custom
-      tailwindcss:
-        specifier: ^3.3.2
-        version: 3.3.2(ts-node@10.9.1)
-      typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
-      vite:
-        specifier: ^4.3.5
-        version: 4.3.9(@types/node@20.2.5)
-      vitest:
-        specifier: ^0.31.0
-        version: 0.31.4
-
   apps/legacy:
     dependencies:
       '@emotion/react':
@@ -350,7 +235,7 @@ importers:
         version: link:../../packages/api-browser
       chat:
         specifier: workspace:*
-        version: link:../chat
+        version: link:../../packages/chat
       clsx:
         specifier: ^1.2.1
         version: 1.2.1
@@ -500,6 +385,91 @@ importers:
         specifier: ^4.8.0
         version: 4.9.0
 
+  apps/spa:
+    dependencies:
+      api:
+        specifier: workspace:*
+        version: link:../../packages/api
+      api-browser:
+        specifier: workspace:*
+        version: link:../../packages/api-browser
+      boring-avatars:
+        specifier: workspace:*
+        version: link:../../packages/boring-avatars
+      chat:
+        specifier: workspace:*
+        version: link:../../packages/chat
+      clsx:
+        specifier: ^1.2.1
+        version: 1.2.1
+      common:
+        specifier: workspace:*
+        version: link:../../packages/common
+      icons:
+        specifier: workspace:*
+        version: link:../../packages/icons
+      jotai:
+        specifier: ^2.1.0
+        version: 2.1.0(react@18.2.0)
+      lang:
+        specifier: workspace:*
+        version: link:../../packages/lang
+      logo:
+        specifier: workspace:*
+        version: link:../../packages/logo
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      react-intl:
+        specifier: ^6.4.2
+        version: 6.4.2(react@18.2.0)(typescript@5.1.3)
+      store:
+        specifier: workspace:*
+        version: link:../../packages/store
+      swr:
+        specifier: ^2.1.5
+        version: 2.1.5(react@18.2.0)
+      ui:
+        specifier: workspace:*
+        version: link:../../packages/ui
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
+    devDependencies:
+      '@types/react':
+        specifier: ^18.2.8
+        version: 18.2.8
+      '@types/react-dom':
+        specifier: ^18.2.4
+        version: 18.2.4
+      '@vitejs/plugin-react':
+        specifier: ^4.0.0
+        version: 4.0.0(vite@4.3.9)
+      babel-plugin-formatjs:
+        specifier: ^10.5.1
+        version: 10.5.1
+      eslint:
+        specifier: ^8.40.0
+        version: 8.41.0
+      eslint-config-custom:
+        specifier: workspace:*
+        version: link:../../packages/eslint-config-custom
+      tailwindcss:
+        specifier: ^3.3.2
+        version: 3.3.2(ts-node@10.9.1)
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+      vite:
+        specifier: ^4.3.5
+        version: 4.3.9(@types/node@18.16.16)
+      vitest:
+        specifier: ^0.31.0
+        version: 0.31.4
+
   packages/api:
     dependencies:
       server-bindings:
@@ -519,7 +489,7 @@ importers:
         specifier: ^8.40.0
         version: 8.41.0
       eslint-config-custom:
-        specifier: ^0.0.0
+        specifier: workspace:*
         version: link:../eslint-config-custom
       jotai:
         specifier: ^2.1.0
@@ -547,7 +517,7 @@ importers:
         specifier: ^8.40.0
         version: 8.41.0
       eslint-config-custom:
-        specifier: ^0.0.0
+        specifier: workspace:*
         version: link:../eslint-config-custom
       tsconfig:
         specifier: workspace:*
@@ -570,6 +540,118 @@ importers:
       typescript:
         specifier: ^5.1.3
         version: 5.1.3
+
+  packages/chat:
+    dependencies:
+      '@dnd-kit/core':
+        specifier: ^6.0.8
+        version: 6.0.8(react-dom@18.2.0)(react@18.2.0)
+      '@dnd-kit/sortable':
+        specifier: ^7.0.2
+        version: 7.0.2(@dnd-kit/core@6.0.8)(react@18.2.0)
+      '@dnd-kit/utilities':
+        specifier: ^3.2.1
+        version: 3.2.1(react@18.2.0)
+      '@floating-ui/react':
+        specifier: ^0.24.0
+        version: 0.24.2(react-dom@18.2.0)(react@18.2.0)
+      api:
+        specifier: workspace:*
+        version: link:../api
+      api-browser:
+        specifier: workspace:*
+        version: link:../api-browser
+      boring-avatars:
+        specifier: workspace:*
+        version: link:../boring-avatars
+      clsx:
+        specifier: ^1.2.1
+        version: 1.2.1
+      common:
+        specifier: workspace:*
+        version: link:../common
+      icons:
+        specifier: workspace:*
+        version: link:../icons
+      jotai:
+        specifier: ^2.1.0
+        version: 2.1.0(react@18.2.0)
+      jotai-location:
+        specifier: ^0.5.1
+        version: 0.5.1(jotai@2.1.0)
+      lang:
+        specifier: workspace:*
+        version: link:../lang
+      logo:
+        specifier: workspace:*
+        version: link:../logo
+      prando:
+        specifier: ^6.0.1
+        version: 6.0.1
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-colorful:
+        specifier: ^5.6.1
+        version: 5.6.1(react-dom@18.2.0)(react@18.2.0)
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      react-hook-form:
+        specifier: ^7.43.9
+        version: 7.44.3(react@18.2.0)
+      react-intl:
+        specifier: ^6.4.2
+        version: 6.4.2(react@18.2.0)(typescript@5.1.3)
+      react-virtuoso:
+        specifier: ^4.3.7
+        version: 4.3.8(react-dom@18.2.0)(react@18.2.0)
+      store:
+        specifier: workspace:*
+        version: link:../store
+      swr:
+        specifier: ^2.1.5
+        version: 2.1.5(react@18.2.0)
+      ui:
+        specifier: workspace:*
+        version: link:../ui
+      utils:
+        specifier: workspace:*
+        version: link:../utils
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.0
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@types/react':
+        specifier: ^18.2.8
+        version: 18.2.8
+      '@types/react-dom':
+        specifier: ^18.2.4
+        version: 18.2.4
+      babel-plugin-formatjs:
+        specifier: ^10.5.1
+        version: 10.5.1
+      eslint:
+        specifier: ^8.40.0
+        version: 8.41.0
+      eslint-config-custom:
+        specifier: workspace:*
+        version: link:../eslint-config-custom
+      tailwindcss:
+        specifier: ^3.3.2
+        version: 3.3.2(ts-node@10.9.1)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+      vitest:
+        specifier: ^0.31.0
+        version: 0.31.4
 
   packages/common:
     dependencies:
@@ -738,7 +820,7 @@ importers:
         specifier: ^8.40.0
         version: 8.41.0
       eslint-config-custom:
-        specifier: ^0.0.0
+        specifier: workspace:*
         version: link:../eslint-config-custom
       tsconfig:
         specifier: workspace:*
@@ -794,7 +876,7 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1
       common:
-        specifier: ^0.0.0
+        specifier: workspace:*
         version: link:../common
       icons:
         specifier: workspace:*
@@ -4425,10 +4507,6 @@ packages:
   /@types/node@18.16.16:
     resolution: {integrity: sha512-NpaM49IGQQAUlBhHMF82QH80J08os4ZmyF9MkpCzWAGuOHqE4gTEbhzd7L3l5LmWuZ6E0OiC1FweQ4tsiW35+g==}
 
-  /@types/node@20.2.5:
-    resolution: {integrity: sha512-JJulVEQXmiY9Px5axXHeYGLSjhkZEnD+MDPDGbCbIAbMslkKwmygtZFy1X6s/075Yo94sf8GuSlFfPzysQrWZQ==}
-    dev: true
-
   /@types/parse-json@4.0.0:
     resolution: {integrity: sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==}
 
@@ -4732,7 +4810,7 @@ packages:
       '@babel/plugin-transform-react-jsx-self': 7.21.0(@babel/core@7.22.1)
       '@babel/plugin-transform-react-jsx-source': 7.19.6(@babel/core@7.22.1)
       react-refresh: 0.14.0
-      vite: 4.3.9(@types/node@20.2.5)
+      vite: 4.3.9(@types/node@18.16.16)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -7705,7 +7783,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.0.5
+      minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -9937,6 +10015,7 @@ packages:
     resolution: {integrity: sha512-tUpxzX0VAzJHjLu0xUfFv1gwVp9ba3IOuRAVH2EGuRW8a5emA2FlACLqiT/lDVtS1W+TGNwqz3sWaNyLgDJWuw==}
     dependencies:
       brace-expansion: 1.1.11
+    dev: false
 
   /minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -13182,7 +13261,7 @@ packages:
       unist-util-stringify-position: 3.0.3
       vfile-message: 3.1.4
 
-  /vite-node@0.31.4(@types/node@20.2.5):
+  /vite-node@0.31.4(@types/node@18.16.16):
     resolution: {integrity: sha512-uzL377GjJtTbuc5KQxVbDu2xfU/x0wVjUtXQR2ihS21q/NK6ROr4oG0rsSkBBddZUVCwzfx22in76/0ZZHXgkQ==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -13192,7 +13271,7 @@ packages:
       mlly: 1.3.0
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.3.9(@types/node@20.2.5)
+      vite: 4.3.9(@types/node@18.16.16)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -13203,7 +13282,7 @@ packages:
       - terser
     dev: true
 
-  /vite@4.3.9(@types/node@20.2.5):
+  /vite@4.3.9(@types/node@18.16.16):
     resolution: {integrity: sha512-qsTNZjO9NoJNW7KnOrgYwczm0WctJ8m/yqYAMAK9Lxt4SoySUfS5S8ia9K7JHpa3KEeMfyF8LoJ3c5NeBJy6pg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -13228,7 +13307,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 20.2.5
+      '@types/node': 18.16.16
       esbuild: 0.17.19
       postcss: 8.4.24
       rollup: 3.23.0
@@ -13269,7 +13348,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.5
       '@types/chai-subset': 1.3.3
-      '@types/node': 20.2.5
+      '@types/node': 18.16.16
       '@vitest/expect': 0.31.4
       '@vitest/runner': 0.31.4
       '@vitest/snapshot': 0.31.4
@@ -13289,8 +13368,8 @@ packages:
       strip-literal: 1.0.1
       tinybench: 2.5.0
       tinypool: 0.5.0
-      vite: 4.3.9(@types/node@20.2.5)
-      vite-node: 0.31.4(@types/node@20.2.5)
+      vite: 4.3.9(@types/node@18.16.16)
+      vite-node: 0.31.4(@types/node@18.16.16)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less

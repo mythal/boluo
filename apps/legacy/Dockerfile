@@ -9,7 +9,8 @@ FROM base AS builder
 COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm fetch
 COPY package.json pnpm-workspace.yaml nx.json .eslintrc.js .
-COPY ./apps/ ./apps/
+COPY ./apps/server/bindings ./apps/server/bindings
+COPY ./apps/legacy ./apps/legacy
 COPY ./packages/ ./packages/
 RUN pnpm install -r
 

@@ -41,7 +41,7 @@
     "@radix-ui/react-switch": "^1.0.2",
     "@radix-ui/react-toggle-group": "^1.0.3",
     "clsx": "^1.2.1",
-    "common": "^0.0.0",
+    "common": "workspace:*",
     "icons": "workspace:*",
     "react-intl": "^6.4.2",
     "tslib": "^2.5.0"

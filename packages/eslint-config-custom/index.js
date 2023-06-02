@@ -6,7 +6,7 @@
  * @type {import('eslint').Linter.Config}
  */
 module.exports = {
-  extends: ['next', 'prettier'],
+  extends: ['next'],
   plugins: ['formatjs', 'import'],
   rules: {
     'react-hooks/rules-of-hooks': 'error',

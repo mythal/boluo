@@ -7,6 +7,9 @@ importers:
       dprint:
         specifier: latest
         version: 0.36.1
+      eslint-config-custom:
+        specifier: workspace:*
+        version: link:packages/eslint-config-custom
       nx:
         specifier: ^16.3.1
         version: 16.3.1
@@ -276,6 +279,9 @@ importers:
       eslint:
         specifier: ^8.40.0
         version: 8.41.0
+      eslint-config-custom:
+        specifier: workspace:*
+        version: link:../../packages/eslint-config-custom
       eslint-plugin-react:
         specifier: ^7.32.2
         version: 7.32.2(eslint@8.41.0)

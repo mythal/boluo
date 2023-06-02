@@ -5,10 +5,10 @@ importers:
   .:
     dependencies:
       dprint:
-        specifier: ^0.35.4
-        version: 0.35.4
+        specifier: latest
+        version: 0.36.1
       nx:
-        specifier: 16.3.1
+        specifier: ^16.3.1
         version: 16.3.1
 
   apps/chat:
@@ -96,7 +96,7 @@ importers:
         version: 3.21.4
     devDependencies:
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       '@types/react-dom':
         specifier: ^18.2.4
@@ -226,10 +226,10 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       '@types/node':
-        specifier: '16'
-        version: 16.18.34
+        specifier: ^18.16.16
+        version: 18.16.16
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       '@types/react-beautiful-dnd':
         specifier: ^13.0.0
@@ -250,10 +250,10 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       '@typescript-eslint/eslint-plugin':
-        specifier: ^5.59.6
+        specifier: ^5.59.8
         version: 5.59.8(@typescript-eslint/parser@5.59.8)(eslint@8.41.0)(typescript@5.1.3)
       '@typescript-eslint/parser':
-        specifier: ^5.59.6
+        specifier: ^5.59.8
         version: 5.59.8(eslint@8.41.0)(typescript@5.1.3)
       babel-loader:
         specifier: ^9.1.2
@@ -310,7 +310,7 @@ importers:
         specifier: ^5.0.4
         version: 5.1.3
       webpack:
-        specifier: ^5.83.1
+        specifier: ^5.85.0
         version: 5.85.0(webpack-cli@5.1.1)
       webpack-bundle-analyzer:
         specifier: ^4.8.0
@@ -437,10 +437,10 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5
       '@types/node':
-        specifier: ^18.11.18
+        specifier: ^18.16.16
         version: 18.16.16
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       '@types/react-dom':
         specifier: ^18.2.4
@@ -491,7 +491,7 @@ importers:
         specifier: ^5.0.4
         version: 5.1.3
       webpack:
-        specifier: ^5.82.1
+        specifier: ^5.85.0
         version: 5.85.0(webpack-cli@5.1.1)
       webpack-bundle-analyzer:
         specifier: ^4.8.0
@@ -587,13 +587,13 @@ importers:
         version: 7.44.3(react@18.2.0)
     devDependencies:
       '@formatjs/intl':
-        specifier: '*'
+        specifier: ^2.7.2
         version: 2.7.2(typescript@5.1.3)
       '@types/node':
-        specifier: ^18.11.18
+        specifier: ^18.16.16
         version: 18.16.16
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       '@types/react-dom':
         specifier: ^18.2.4
@@ -641,10 +641,10 @@ importers:
   packages/eslint-config-custom:
     dependencies:
       '@typescript-eslint/eslint-plugin':
-        specifier: ^5.59.5
+        specifier: ^5.59.8
         version: 5.59.8(@typescript-eslint/parser@5.59.8)(eslint@8.41.0)(typescript@5.1.3)
       '@typescript-eslint/parser':
-        specifier: ^5.59.5
+        specifier: ^5.59.8
         version: 5.59.8(eslint@8.41.0)(typescript@5.1.3)
       eslint:
         specifier: ^8.40.0
@@ -691,7 +691,7 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       react:
         specifier: ^18.2.0
@@ -719,7 +719,7 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       react:
         specifier: ^18.2.0
@@ -750,10 +750,10 @@ importers:
   packages/theme:
     devDependencies:
       '@types/node':
-        specifier: ^18.11.18
+        specifier: ^18.16.16
         version: 18.16.16
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       '@types/react-dom':
         specifier: ^18.2.4
@@ -816,10 +816,10 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.3.2)
       '@types/node':
-        specifier: ^18.11.18
+        specifier: ^18.16.16
         version: 18.16.16
       '@types/react':
-        specifier: ^18.2.6
+        specifier: ^18.2.8
         version: 18.2.8
       '@types/react-dom':
         specifier: ^18.2.4
@@ -2735,7 +2735,7 @@ packages:
     dependencies:
       '@formatjs/icu-messageformat-parser': 2.4.0
       '@types/json-stable-stringify': 1.0.34
-      '@types/node': 16.18.34
+      '@types/node': 17.0.45
       chalk: 4.1.2
       json-stable-stringify: 1.0.2
       tslib: 2.5.2
@@ -4419,8 +4419,8 @@ packages:
   /@types/ms@0.7.31:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
 
-  /@types/node@16.18.34:
-    resolution: {integrity: sha512-VmVm7gXwhkUimRfBwVI1CHhwp86jDWR04B5FGebMMyxV90SlCmFujwUHrxTD4oO+SOYU86SoxvhgeRQJY7iXFg==}
+  /@types/node@17.0.45:
+    resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
 
   /@types/node@18.16.16:
     resolution: {integrity: sha512-NpaM49IGQQAUlBhHMF82QH80J08os4ZmyF9MkpCzWAGuOHqE4gTEbhzd7L3l5LmWuZ6E0OiC1FweQ4tsiW35+g==}
@@ -6669,8 +6669,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /dprint@0.35.4:
-    resolution: {integrity: sha512-bCfS1kjmNgCWZ6/TQzcyz30jQpQ8/yHe7cN04cL9VRnC3AgtAyfXPMafYuR5ALNbndwkK/mEJ+Nh+Ec4lFjszA==}
+  /dprint@0.36.1:
+    resolution: {integrity: sha512-F8TaWlieYtJc4ktqr0tjNwg/HN4wNPTU6rTq29MdoIKXi9gQmh7Ibqr0oyW1hsLpqBuAXjjwEYIos9plYkwENQ==}
     hasBin: true
     requiresBuild: true
     dependencies:
@@ -7714,7 +7714,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.1.2
+      minimatch: 3.0.5
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -9946,7 +9946,6 @@ packages:
     resolution: {integrity: sha512-tUpxzX0VAzJHjLu0xUfFv1gwVp9ba3IOuRAVH2EGuRW8a5emA2FlACLqiT/lDVtS1W+TGNwqz3sWaNyLgDJWuw==}
     dependencies:
       brace-expansion: 1.1.11
-    dev: false
 
   /minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}

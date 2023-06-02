@@ -20,7 +20,6 @@
   "devDependencies": {
     "eslint": "^8.40.0",
     "eslint-config-custom": "^0.0.0",
-    "jotai": "^2.1.0",
     "tsconfig": "workspace:*",
     "typescript": "^5.0.4"
   }

@@ -7,7 +7,6 @@
   "main": "./index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "tsc --project tsconfig.json --watch",
     "build": "tsc --project tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx"
   },

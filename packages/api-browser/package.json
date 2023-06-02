@@ -7,7 +7,6 @@
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "dev": "tsc --watch",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "license": "GPL-3.0",

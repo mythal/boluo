@@ -1,5 +1,4 @@
 const path = require('path');
-const withMDX = require('@next/mdx')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
 
@@ -17,7 +16,6 @@ const config = {
   output: 'standalone',
   transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
-    appDir: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
   rewrites: async () => {
@@ -42,10 +40,8 @@ const config = {
     // https://github.com/vercel/next.js/issues/30434
     config.resolve.alias['@formatjs/icu-messageformat-parser'] = '@formatjs/icu-messageformat-parser/no-parser';
 
-    // avoid extra bundle cost, see https://github.com/reduxjs/react-redux/releases/tag/v8.0.0
-    config.resolve.alias['react-redux'] = 'react-redux/es/next';
     return config;
   },
 };
 
-module.exports = withMDX(config);
+module.exports = config;

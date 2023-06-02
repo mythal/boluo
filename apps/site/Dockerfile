@@ -12,8 +12,8 @@ RUN pnpm fetch
 COPY package.json pnpm-workspace.yaml nx.json version.json .eslintrc.js .
 COPY ./apps/ ./apps/
 COPY ./packages/ ./packages/
-RUN pnpm install
-RUN pnpm install -r
+RUN pnpm install --frozen-lockfile
+RUN pnpm install -r --frozen-lockfile
 
 ENV BACKEND_URL https://boluo.chat
 

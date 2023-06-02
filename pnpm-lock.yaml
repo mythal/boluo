@@ -10,6 +10,9 @@ importers:
       nx:
         specifier: ^16.3.1
         version: 16.3.1
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
 
   apps/chat:
     dependencies:
@@ -117,7 +120,7 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2(ts-node@10.9.1)
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
       vite:
         specifier: ^4.3.5
@@ -307,7 +310,7 @@ importers:
         specifier: ^9.4.2
         version: 9.4.3(typescript@5.1.3)(webpack@5.85.0)
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
       webpack:
         specifier: ^5.85.0
@@ -325,7 +328,7 @@ importers:
   apps/server/bindings:
     devDependencies:
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   apps/site:
@@ -488,7 +491,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
       webpack:
         specifier: ^5.85.0
@@ -522,7 +525,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(react@18.2.0)
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   packages/api-browser:
@@ -565,7 +568,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   packages/common:
@@ -632,7 +635,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
       utils:
         specifier: workspace:*
@@ -675,7 +678,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   packages/icons:
@@ -697,7 +700,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   packages/lang:
@@ -725,7 +728,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   packages/store:
@@ -744,7 +747,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
   packages/theme:
@@ -768,7 +771,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
       utils:
         specifier: workspace:*
@@ -864,7 +867,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
       utils:
         specifier: workspace:*
@@ -895,7 +898,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ^5.0.4
+        specifier: ^5.1.3
         version: 5.1.3
 
 packages:

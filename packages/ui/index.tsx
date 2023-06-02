@@ -1,5 +1,5 @@
 import { Root as Label } from '@radix-ui/react-label';
-export type { Theme } from '../theme/dist';
+export type { Theme } from 'theme';
 import Icon from './Icon';
 
 export { setThemeToDom } from 'theme';

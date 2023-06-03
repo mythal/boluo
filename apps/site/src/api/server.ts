@@ -4,7 +4,24 @@ import { makeUri } from 'api';
 import { appFetch } from 'api';
 import { cookies } from 'next/headers';
 import type { Result } from 'utils';
-import { SERVER_SIDE_API_URL } from '../const';
+
+let backEndUrl: string | undefined;
+
+const getBackEndUrl = () => {
+  if (backEndUrl) {
+    return backEndUrl;
+  } else if (process.env.BACKEND_URL) {
+    const BACKEND_URL = process.env.BACKEND_URL;
+    if (BACKEND_URL.endsWith('/')) {
+      backEndUrl = BACKEND_URL + 'api';
+    } else {
+      backEndUrl = BACKEND_URL + '/api';
+    }
+    return backEndUrl;
+  } else {
+    throw new Error('BACKEND_URL is not set');
+  }
+};
 
 // Keep this value the same as the server
 const sessionCookieKey = 'boluo-session-v2';
@@ -23,7 +40,7 @@ export async function get<P extends keyof Get>(
   path: P,
   query: Get[P]['query'],
 ): Promise<Result<Get[P]['result'], ApiError>> {
-  const url = makeUri(SERVER_SIDE_API_URL, path, query);
+  const url = makeUri(getBackEndUrl(), path, query);
   const headers = makeHeaders();
   return appFetch(url, {
     headers,
@@ -44,7 +61,7 @@ export async function post<P extends keyof Post>(
   path: P,
   payload: Post[P]['payload'],
 ): Promise<Result<Post[P]['result'], ApiError>> {
-  const url = SERVER_SIDE_API_URL + path;
+  const url = getBackEndUrl() + path;
 
   const headers = makeHeaders();
   headers.set('Content-Type', 'application/json');

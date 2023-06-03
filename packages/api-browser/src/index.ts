@@ -4,15 +4,13 @@ import { atomWithStorage } from 'jotai/utils';
 import { store } from 'store';
 import type { Result } from 'utils';
 
-const isBrowser = typeof window !== 'undefined';
-
-export const DEFAULT_BACKEND_URL = isBrowser ? window.location.origin : '';
-
-export const backendUrlAtom = atomWithStorage('BOLUO_BACKEND_API_URL', DEFAULT_BACKEND_URL);
+export const backendUrlAtom = atomWithStorage('BOLUO_BACKEND_API_URL', '');
 
 export const apiUrlAtom = atom((get) => {
-  const url = get(backendUrlAtom);
-  if (url.endsWith('/api')) {
+  const url = get(backendUrlAtom).trim();
+  if (url === '') {
+    return window.location.origin + '/api';
+  } else if (url.endsWith('/api')) {
     return url;
   } else if (url.endsWith('/')) {
     return url + 'api';

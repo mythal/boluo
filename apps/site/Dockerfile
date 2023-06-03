@@ -16,6 +16,7 @@ COPY ./packages/ ./packages/
 RUN pnpm install --frozen-lockfile
 RUN pnpm install -r --frozen-lockfile
 
+# https://github.com/vercel/next.js/issues/45383
 ENV BACKEND_URL https://boluo.chat
 
 RUN pnpm exec nx run site:build

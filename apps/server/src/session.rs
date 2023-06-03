@@ -1,4 +1,5 @@
 use crate::cache;
+use crate::context::domain;
 use crate::error::AppError;
 use crate::error::CacheError;
 use crate::utils::{self, sign};
@@ -12,7 +13,6 @@ use thiserror::Error;
 use uuid::Uuid;
 
 pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
-pub const SESSION_COOKIE_DOMAIN: &str = "boluo.chat";
 
 #[derive(Error, Debug)]
 pub enum AuthenticateFail {
@@ -114,8 +114,9 @@ pub fn add_session_cookie(session: &Uuid, host: Option<&HeaderValue>, response_h
         .path("/")
         .max_age(Duration::days(30));
 
-    if host.ends_with(SESSION_COOKIE_DOMAIN) {
-        builder = builder.domain(SESSION_COOKIE_DOMAIN);
+    let session_cookie_domain = domain();
+    if host.ends_with(session_cookie_domain) {
+        builder = builder.domain(session_cookie_domain);
     }
     let session_cookie = builder.finish().to_string();
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
@@ -139,7 +140,7 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
             HeaderValue::from_str(
                 &CookieBuilder::new(SESSION_COOKIE_KEY, "")
                     .http_only(true)
-                    .domain(SESSION_COOKIE_DOMAIN)
+                    .domain(domain())
                     .path("/")
                     .max_age(zero)
                     .finish()

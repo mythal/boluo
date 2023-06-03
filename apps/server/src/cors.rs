@@ -1,19 +1,42 @@
 //! Make server allow all origins for development.
+use std::sync::OnceLock;
+
 use hyper::header::{
     HeaderValue, ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS,
     ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_MAX_AGE, ACCESS_CONTROL_REQUEST_HEADERS, ORIGIN,
 };
 use hyper::{Body, Request, Response};
 
+use crate::context::get_domain;
+
 pub fn is_allowed_origin(origin: &str) -> bool {
-    let start = ["https://boluo.chat", "http://localhost:", "http://127.0.0.1:"];
+    static ALLOWED_ORIGIN_SUFFIX: OnceLock<String> = OnceLock::new();
+
+    fn get_allowed_origin_suffix() -> String {
+        let domain = get_domain();
+        format!(".{}", domain)
+    }
+    static ALLOWED_ORIGIN: OnceLock<String> = OnceLock::new();
+    fn get_allowed_origin() -> String {
+        let domain = get_domain();
+        format!("https://{}", domain)
+    }
+
+    if origin.ends_with(ALLOWED_ORIGIN_SUFFIX.get_or_init(get_allowed_origin_suffix)) {
+        return true;
+    }
+    let start = [
+        ALLOWED_ORIGIN.get_or_init(get_allowed_origin),
+        "http://localhost:",
+        "http://127.0.0.1:",
+    ];
     start.iter().any(|x| origin.starts_with(x))
 }
 
 pub fn allow_origin(origin: Option<&str>, mut res: Response<Body>) -> Response<Body> {
     let header = res.headers_mut();
     let origin = if let Some(origin) = origin {
-        if origin.ends_with(".boluo.chat") || is_allowed_origin(origin) {
+        if is_allowed_origin(origin) {
             origin
         } else {
             ""

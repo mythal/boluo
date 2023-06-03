@@ -120,21 +120,17 @@ export const useOnSend = () => {
       newMessage.whisperToUsers = whisperTo.map((item) => item.value);
     }
     let sent: AppResult<Message>;
-    let finished = false;
     let showFailed = false;
-    setTimeout(() => {
-      if (!finished) {
-        onSendFailed(pane, compose, dispatch);
-        showFailed = true;
-      }
-    }, 1000);
+    const handle = window.setTimeout(() => {
+      onSendFailed(pane, compose, dispatch);
+      showFailed = true;
+    }, 2000);
     try {
       sent = await post('/messages/send', newMessage);
+      window.clearTimeout(handle);
     } catch {
       onSendFailed(pane, compose, dispatch);
       return;
-    } finally {
-      finished = true;
     }
     if (!sent.isOk && !showFailed) {
       onSendFailed(pane, compose, dispatch);

@@ -1,3 +1,4 @@
+import { localeAtom, messagesAtom } from 'chat/state/locale';
 import { Locale } from 'common';
 import { ChangeLocaleContext } from 'common/hooks/useLocale';
 import { onIntlError } from 'common/locale';
@@ -5,7 +6,6 @@ import { useAtom, useAtomValue } from 'jotai';
 import { FC, useCallback, useEffect, useTransition } from 'react';
 import { IntlProvider } from 'react-intl';
 import { ChildrenProps } from 'utils';
-import { localeAtom, messagesAtom } from '../../state/locale';
 
 export const LocaleProvider: FC<ChildrenProps> = ({ children }) => {
   const [locale, setLocale] = useAtom(localeAtom);

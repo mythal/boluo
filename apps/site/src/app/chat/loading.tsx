@@ -1,4 +1,4 @@
-import { ChatSkeleton } from 'chat/src/components/ChatSkeleton';
+import { ChatSkeleton } from 'chat/components/ChatSkeleton';
 import { Loading as LoadingUi } from 'ui/Loading';
 
 export default function Loading() {

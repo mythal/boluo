@@ -5,4 +5,5 @@ module.exports = {
   jsxRuntime: 'automatic',
   icon: '1em',
   memo: false,
+  prettier: false,
 };

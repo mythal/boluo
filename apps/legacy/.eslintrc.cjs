@@ -1,8 +1,14 @@
-// eslint-disable-next-line no-undef
+/**
+ * @type {import('eslint').Linter.Config}
+ */
 module.exports = {
+  root: true,
+  env: {
+    node: true,
+  },
   settings: {
     react: {
-      version: 'detect',
+      version: '18',
     },
   },
   parser: '@typescript-eslint/parser',

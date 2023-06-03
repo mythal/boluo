@@ -1,11 +1,11 @@
 'use client';
 
-import { ChatSkeleton } from 'chat/src/components/ChatSkeleton';
+import { ChatSkeleton } from 'chat/components/ChatSkeleton';
 import type { FC, ReactNode } from 'react';
 import React, { useEffect, useState } from 'react';
 import { Loading as LoadingUi } from 'ui';
 
-const Chat = React.lazy(() => import('chat/src/components/Chat'));
+const Chat = React.lazy(() => import('chat/components/Chat'));
 
 export const ChatPage: FC = () => {
   const [loading, setLoading] = useState<ReactNode | false>(<LoadingUi />);

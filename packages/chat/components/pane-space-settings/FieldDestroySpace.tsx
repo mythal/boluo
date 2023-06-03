@@ -1,5 +1,4 @@
 import { post } from 'api-browser';
-import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -8,7 +7,6 @@ import { Button } from 'ui';
 
 export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ spaceId, spaceName }) => {
   const { mutate } = useSWRConfig();
-  const router = useRouter();
   const [isShowConfirm, setShowConfirm] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
   const deleteSpace = async () => {
@@ -17,7 +15,7 @@ export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ 
     setIsMutating(false);
     if (result.isOk) {
       await mutate('/spaces/my');
-      router.push('/', {});
+      // TODO: redirect
     }
   };
   if (!isShowConfirm) {

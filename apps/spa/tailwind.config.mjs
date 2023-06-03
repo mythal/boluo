@@ -5,7 +5,6 @@ const config = {
   ...defaultConfig,
   content: [
     './src/**/*.{tsx,ts,html}',
-    '../chat/src/**/*.{tsx,ts,html}',
     '../../packages/**/*.{tsx,ts,html}',
   ],
 };

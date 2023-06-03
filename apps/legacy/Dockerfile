@@ -1,18 +1,23 @@
 # Add lockfile and package.json's of isolated subworkspace
-FROM node:lts AS builder
+FROM node:lts AS base
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN npm add -g pnpm
 
+FROM base AS builder
 # First install the dependencies (as they change less often)
-COPY .gitignore .gitignore
-COPY ./apps/legacy/package.json ./package.json
-COPY ./apps/legacy/package-lock.json ./package-lock.json
-RUN npm install
+COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
+RUN pnpm fetch
+COPY package.json pnpm-workspace.yaml nx.json .eslintrc.js .
+COPY ./apps/server/bindings ./apps/server/bindings
+COPY ./apps/legacy ./apps/legacy
+COPY ./packages/ ./packages/
+RUN pnpm install -r
 
 # Build the project
-COPY ./apps/legacy/ .
-RUN npm run build
+RUN pnpm exec nx run legacy:build
 
 FROM nginx AS runner
 WORKDIR /usr/share/nginx/html
-COPY --from=builder /app/dist/ .
+COPY --from=builder /app/apps/legacy/dist/ .
 COPY ./apps/legacy/nginx.conf /etc/nginx/conf.d/default.conf

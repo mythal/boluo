@@ -1,4 +1,4 @@
-import type { Theme } from 'ui';
+import type { Theme } from '../theme/dist';
 import type { Locale } from './locale';
 
 export interface Settings {

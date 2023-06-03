@@ -4,4 +4,5 @@ module.exports = {
   outDir: './src/',
   jsxRuntime: 'automatic',
   memo: false,
+  prettier: false,
 };

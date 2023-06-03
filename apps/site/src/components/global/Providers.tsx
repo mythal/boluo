@@ -8,7 +8,7 @@ import type { FC } from 'react';
 import { useEffect } from 'react';
 import { store } from 'store';
 import { SWRConfig } from 'swr';
-import { clearWatchSystemTheme, watchSystemTheme } from 'ui/theme';
+import { clearWatchSystemTheme, watchSystemTheme } from 'theme';
 import type { ChildrenProps } from 'utils';
 import { LocaleProvider } from './LocaleProvider';
 

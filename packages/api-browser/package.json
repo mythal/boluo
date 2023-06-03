@@ -7,23 +7,20 @@
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "dev": "tsc --watch",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "api": "0.0.0",
-    "store": "0.0.0",
-    "utils": "0.0.0"
+    "api": "workspace:*",
+    "store": "workspace:*",
+    "utils": "workspace:*",
+    "jotai": "^2.1.0"
   },
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^8.40.0",
-    "eslint-config-custom": "^0.0.0",
-    "jotai": "^2.1.0",
+    "eslint-config-custom": "workspace:*",
+    "tsconfig": "workspace:*",
     "typescript": "^5.0.4"
-  },
-  "peerDependencies": {
-    "jotai": "^2.1.0"
   }
 }

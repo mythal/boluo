@@ -1,9 +1,9 @@
+import { ChatSkeleton } from 'chat/components/ChatSkeleton';
 import { MeProvider } from 'common';
 import { Provider as JotaiProvider } from 'jotai';
 import { ReactNode, Suspense } from 'react';
 import { store } from 'store';
 import { SWRConfig } from 'swr';
-import { ChatSkeleton } from '../ChatSkeleton';
 import { LocaleProvider } from './LocaleProvider';
 
 interface Props {

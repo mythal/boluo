@@ -1,10 +1,13 @@
 const path = require('path');
-const withMDX = require('@next/mdx')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
 
-// Backend URL for server-side
-const BACKEND_URL = process.env.BACKEND_URL;
+const rewrites = async () => [
+  {
+    source: '/api/:path*',
+    destination: `${process.env.BACKEND_URL}/api/:path*`, // Proxy to Backend
+  },
+];
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -17,17 +20,9 @@ const config = {
   output: 'standalone',
   transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
-    appDir: true,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  rewrites: async () => {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${BACKEND_URL}/api/:path*`, // Proxy to Backend
-      },
-    ];
-  },
+  rewrites: process.env.NODE_ENV === 'production' ? undefined : rewrites,
   webpack: (config) => {
     if (ANALYZE) {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
@@ -42,10 +37,8 @@ const config = {
     // https://github.com/vercel/next.js/issues/30434
     config.resolve.alias['@formatjs/icu-messageformat-parser'] = '@formatjs/icu-messageformat-parser/no-parser';
 
-    // avoid extra bundle cost, see https://github.com/reduxjs/react-redux/releases/tag/v8.0.0
-    config.resolve.alias['react-redux'] = 'react-redux/es/next';
     return config;
   },
 };
 
-module.exports = withMDX(config);
+module.exports = config;

@@ -42,11 +42,16 @@ function My() {
         <Title>
           <Icon sprite={newspaper} /> 新闻
         </Title>
-        <News css={[mB(2)]}>现在会根据延迟自动选择线路，改进了断线重连。另外完全重写的新版菠萝即将可以使用。</News>
-        <News css={[mB(2)]}>加回了多窗格功能，抱歉迟了很久。</News>
-        <News css={[mB(2)]}>能够找回密码了</News>
         <News css={[mB(2)]}>
-          增加了消息通知功能，底层改动比较大，现在可能会有一些 Bug，可以到QQ群（1107382038）反馈。
+          现在会根据延迟自动选择线路，改进了断线重连。重写的<ExternalLink css={link} to="https://next.boluo.chat">
+            新版菠萝
+          </ExternalLink>可以试用。
+        </News>
+        <News css={[mB(2)]}>
+          如果有什么问题可以到QQ群（1107382038）反馈，也可以提交{' '}
+          <ExternalLink css={link} to="https://github.com/mythal/boluo/issues">
+            GitHub Issues
+          </ExternalLink>，或者直接给我发邮件：<Code>admin@boluo.chat</Code>。
         </News>
         <News css={[mB(2)]}>
           导出功能现在可以选择时间，导出最近的消息了。切换游戏内外的按键改为<code>Esc</code>键。

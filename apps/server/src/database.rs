@@ -128,11 +128,19 @@ impl Client {
         self.broken
     }
 
-    fn check_broken<T>(&mut self, input: Result<T, DbError>) -> Result<T, DbError> {
+    async fn prevent_broken<T>(&mut self, input: Result<T, DbError>) -> Result<T, DbError> {
         if input.is_err() && self.client.is_closed() {
-            self.mark_broken()
+            self.ensure_connected().await?;
         }
         input
+    }
+
+    async fn ensure_connected(&mut self) -> Result<(), DbError> {
+        if self.client.is_closed() {
+            let mut client = Client::new().await?;
+            std::mem::swap(self, &mut client);
+        }
+        Ok(())
     }
 
     fn mark_broken(&mut self) {
@@ -156,9 +164,7 @@ impl Client {
     }
 
     pub async fn transaction(&'_ mut self) -> Result<Transaction<'_>, DbError> {
-        if self.client.is_closed() {
-            self.mark_broken()
-        }
+        self.ensure_connected().await?;
         let transaction = self.client.transaction().await?;
         let prepared = &mut self.prepared;
         Ok(Transaction { transaction, prepared })
@@ -175,9 +181,7 @@ impl Client {
                     Ok(statement)
                 }
                 Err(e) => {
-                    if self.client.is_closed() {
-                        self.mark_broken();
-                    }
+                    self.ensure_connected().await?;
                     Err(e)
                 }
             }
@@ -194,7 +198,7 @@ impl Querist for Client {
         params: &[&(dyn ToSql + Sync)],
     ) -> Result<Vec<tokio_postgres::Row>, DbError> {
         let statement = self.get_statement(source.into(), types).await?;
-        self.check_broken(self.client.query(&statement, params).await)
+        self.prevent_broken(self.client.query(&statement, params).await).await
     }
 
     async fn query_one_typed<T: Into<Sql> + Send>(
@@ -204,7 +208,8 @@ impl Querist for Client {
         params: &[&(dyn ToSql + Sync)],
     ) -> Result<Option<Row>, DbError> {
         let statement = self.get_statement(source.into(), types).await?;
-        self.check_broken(self.client.query_opt(&statement, params).await)
+        self.prevent_broken(self.client.query_opt(&statement, params).await)
+            .await
     }
 
     async fn query_exactly_one_typed<T: Into<Sql> + Send>(
@@ -214,7 +219,8 @@ impl Querist for Client {
         params: &[&(dyn ToSql + Sync)],
     ) -> Result<Row, DbError> {
         let statement = self.get_statement(source.into(), types).await?;
-        self.check_broken(self.client.query_one(&statement, params).await)
+        self.prevent_broken(self.client.query_one(&statement, params).await)
+            .await
     }
 
     async fn execute_typed<T: Into<Sql> + Send>(
@@ -224,7 +230,7 @@ impl Querist for Client {
         params: &[&(dyn ToSql + Sync)],
     ) -> Result<u64, DbError> {
         let statement = self.get_statement(source.into(), types).await?;
-        self.check_broken(self.client.execute(&statement, params).await)
+        self.prevent_broken(self.client.execute(&statement, params).await).await
     }
 }
 

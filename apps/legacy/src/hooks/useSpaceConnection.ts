@@ -1,10 +1,11 @@
-import { atom, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useRef } from 'react';
 import { connectSpace, SpaceUpdated } from '../actions';
 import { connect } from '../api/connect';
 import { Events } from '../api/events';
 import { get } from '../api/request';
 import { selectBestBaseUrl } from '../base-url';
+import { autoSelectAtom } from '../states/connection';
 import store, { useDispatch, useSelector } from '../store';
 import { Id } from '../utils/id';
 import { useMyId } from './useMyId';
@@ -27,6 +28,7 @@ export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Pro
 }
 
 export function useSpaceConnection() {
+  const autoSelect = useAtomValue(autoSelectAtom);
   const dispatch = useDispatch();
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const myId = useMyId();
@@ -84,7 +86,9 @@ export function useSpaceConnection() {
     connection.onerror = (e) => {
       console.warn('connection error: ', e);
       setConnectState('CLOSED');
-      selectBestBaseUrl(baseUrl).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
+      if (autoSelect) {
+        selectBestBaseUrl(baseUrl).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
+      }
     };
     connection.onclose = (e) => {
       console.warn('connection close: ', e);
@@ -92,7 +96,7 @@ export function useSpaceConnection() {
     };
     dispatch(connectSpace(spaceId, connection));
     return connection;
-  }, [baseUrl, dispatch, myId, setConnectState, spaceId]);
+  }, [autoSelect, baseUrl, dispatch, myId, setConnectState, spaceId]);
 
   return conn;
 }

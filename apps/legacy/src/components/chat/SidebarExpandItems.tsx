@@ -22,6 +22,7 @@ import CreateChannel from '../organisms/CreateChannel';
 import ChatHeaderButton from './ChatHeaderButton';
 import Help from './Help';
 import { SidebarChannelItem } from './SidebarChannelItem';
+import { SidebarConnectionDisplay } from './SidebarConnectionDisplay';
 
 interface Props {
   space: Space;
@@ -75,6 +76,7 @@ function SidebarExpandItems({ space, channels }: Props) {
   const { canNotify, stopNotify, startNotify } = useNotificationSwitch();
   return (
     <React.Fragment>
+      <SidebarConnectionDisplay />
       <NavLink css={sidebarTitle} exact activeClassName="active" to={`/chat/${encodeUuid(space.id)}`}>
         <SpaceName>{space.name}</SpaceName>
       </NavLink>

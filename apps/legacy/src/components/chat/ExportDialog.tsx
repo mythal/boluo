@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useRef, useState } from 'react';
 import Select from 'react-select';
 import { Channel, Export } from '../../api/channels';

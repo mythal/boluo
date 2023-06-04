@@ -4,22 +4,28 @@ import { useDispatch, useSelector } from '../store';
 import Flash from './organisms/Flash';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
+import { useAtomValue } from 'jotai';
 import { selectBestBaseUrl } from '../base-url';
 import PageError from '../components/molecules/PageError';
 import PageLoading from '../components/molecules/PageLoading';
 import { useGetMe } from '../hooks/useGetMe';
+import { autoSelectAtom } from '../states/connection';
 import { Router } from './Router';
 
 export const App: React.FC = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
+  const autoSelect = useAtomValue(autoSelectAtom);
   useEffect(() => {
+    if (!autoSelect) {
+      return;
+    }
     selectBestBaseUrl().then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
     const handle = window.setInterval(() => {
       selectBestBaseUrl().then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
     }, 10000);
     return () => window.clearInterval(handle);
-  }, [dispatch]);
+  }, [autoSelect, dispatch]);
   useGetMe(dispatch, () => setLoading(false));
   const flashState = useSelector(
     (state) => state.flash,

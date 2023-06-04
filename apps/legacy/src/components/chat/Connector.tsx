@@ -1,10 +1,11 @@
 import { css } from '@emotion/react';
+import { useAtom } from 'jotai';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
 import { Events, SpaceUpdated } from '../../api/events';
 import { get } from '../../api/request';
-import { selectBestBaseUrl } from '../../base-url';
+import { connectionStateAtom } from '../../states/connection';
 import store, { Dispatch, useDispatch, useSelector } from '../../store';
 import { shadowXl, spacingN, textSm } from '../../styles/atoms';
 import { Id } from '../../utils/id';
@@ -83,7 +84,7 @@ const DEVELOPMENT = false;
 export const Connector = ({ spaceId, myId }: Props) => {
   const dispatch = useDispatch();
   const baseUrl = useSelector((state) => state.ui.baseUrl);
-  const [state, setState] = useState<ConnectState>('CLOSED');
+  const [state, setState] = useAtom(connectionStateAtom);
   const stateRef = useRef<ConnectState>(state);
   const [retrySec, setRetrySec] = useState<number>(0);
   const connectionRef = useRef<WebSocket | null>(null);
@@ -170,7 +171,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
       console.log('attempt to reconnection ', retryCount.current);
       makeConnection().catch(console.warn);
     }
-  }, [state, spaceId, myId, dispatch, retrySec]);
+  }, [state, spaceId, myId, dispatch, retrySec, setState]);
 
   useEffect(() => {
     if (retrySec === 0) {

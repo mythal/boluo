@@ -107,7 +107,7 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
     const sender = memberMap[senderId] || defaultMember;
     let media: string | null = null;
     if (mediaId) {
-      media = `${location.origin}${mediaUrl(mediaId, false)}`;
+      media = `${location.origin}${mediaUrl(mediaId, false, false)}`;
     }
     return {
       id,

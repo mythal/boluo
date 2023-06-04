@@ -98,8 +98,11 @@ export const request = async <T>(
   }
 };
 
-export const makeUri = (path: string, query?: object): string => {
-  const { baseUrl } = store.getState().ui;
+export const makeUri = (path: string, query?: object, addBaseUrl = true): string => {
+  let baseUrl = '';
+  if (addBaseUrl) {
+    baseUrl = store.getState().ui.baseUrl;
+  }
   if (path[0] !== '/') {
     path = '/api/' + path;
   } else {
@@ -217,8 +220,8 @@ export function upload(
   return request(makeUri(path, { filename, mimeType }), 'POST', file, mimeType);
 }
 
-export function mediaUrl(id: string, download = false): string {
-  return makeUri('/media/get', { download, id });
+export function mediaUrl(id: string, download = false, addBaseUrl = true): string {
+  return makeUri('/media/get', { download, id }, addBaseUrl);
 }
 
 export function mediaHead(id: string): Promise<Response> {

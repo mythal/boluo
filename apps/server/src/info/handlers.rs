@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use super::models::Proxy;
 use crate::{
     database::{self, Querist},
@@ -6,8 +8,34 @@ use crate::{
 };
 use hyper::{Body, Method, Request};
 
-// TODO: cache
-pub async fn proxies() -> Result<Response, AppError> {
+#[derive(Debug, Clone, Default)]
+pub struct ProxiesCache {
+    proxies: Vec<Proxy>,
+    timestamp: Option<u64>,
+}
+
+thread_local! {
+    pub static PROXIES: RefCell<ProxiesCache> = RefCell::new(ProxiesCache::default());
+}
+
+pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
+    fn make_timestamp() -> u64 {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("Unexpected failture in get timestamp")
+            .as_secs()
+    }
+    let now = make_timestamp();
+    let mut proxies: ProxiesCache = ProxiesCache::default();
+    PROXIES.with(|x| {
+        proxies = x.borrow().clone();
+    });
+    if let Some(timestamp) = proxies.timestamp {
+        if now - timestamp < 60 * 60 {
+            return Ok(proxies.proxies);
+        }
+    }
+
     let mut db = database::get().await.expect("Unexpected failture in get database");
     let result = db.query(include_str!("sql/proxies.sql"), &[]).await;
     let proxies: Vec<Proxy> = match result {
@@ -26,6 +54,15 @@ pub async fn proxies() -> Result<Response, AppError> {
             vec![]
         }
     };
+    PROXIES.with(|x| {
+        x.borrow_mut().proxies = proxies.clone();
+        x.borrow_mut().timestamp = Some(now);
+    });
+    Ok(proxies)
+}
+
+pub async fn proxies() -> Result<Response, AppError> {
+    let proxies: Vec<Proxy> = get_proxies().await?;
     let body = serde_json::to_string(&proxies).expect("Unexpected failture in serialize proxies");
     let response = hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")

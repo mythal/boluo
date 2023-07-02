@@ -1,6 +1,6 @@
 import { css, Global } from '@emotion/react';
 import styled from '@emotion/styled';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
@@ -24,6 +24,7 @@ import MemberDialog from '../chat/MemberDialog';
 import Sidebar from '../chat/Sidebar';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
+import { connectStateAtom } from '../../hooks/useSpaceConnection';
 
 interface Params {
   spaceId: string;
@@ -99,9 +100,11 @@ const Container = styled.div`
 
 function useLoadSpace(spaceId: Id) {
   const dispatch = useDispatch();
+  const setConnectionState = useSetAtom(connectStateAtom);
   useEffect(() => {
+    setConnectionState("CLOSED");
     dispatch(loadSpace(spaceId));
-  }, [spaceId, dispatch]);
+  }, [spaceId, dispatch, setConnectionState]);
 }
 
 function Chat() {

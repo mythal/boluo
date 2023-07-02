@@ -11,6 +11,7 @@ import { SpaceWithRelated } from '../../api/spaces';
 import PageLoading from '../../components/molecules/PageLoading';
 import { PaneContext } from '../../hooks/useChannelId';
 import { useMyId } from '../../hooks/useMyId';
+import { connectStateAtom } from '../../hooks/useSpaceConnection';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
 import { breakpoint, mediaQuery } from '../../styles/atoms';
@@ -24,7 +25,6 @@ import MemberDialog from '../chat/MemberDialog';
 import Sidebar from '../chat/Sidebar';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
-import { connectStateAtom } from '../../hooks/useSpaceConnection';
 
 interface Params {
   spaceId: string;
@@ -102,7 +102,7 @@ function useLoadSpace(spaceId: Id) {
   const dispatch = useDispatch();
   const setConnectionState = useSetAtom(connectStateAtom);
   useEffect(() => {
-    setConnectionState("CLOSED");
+    setConnectionState('CLOSED');
     dispatch(loadSpace(spaceId));
   }, [spaceId, dispatch, setConnectionState]);
 }

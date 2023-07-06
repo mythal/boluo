@@ -104,7 +104,10 @@ export const Connector = ({ spaceId, myId }: Props) => {
         connectionRef.current.close();
       }
     }
-  }, [baseUrl]);
+    return () => {
+      setState('CLOSED');
+    };
+  }, [baseUrl, setState]);
 
   useEffect(() => {
     const makeConnection = async () => {

@@ -1,9 +1,10 @@
 'use client';
 import type { GetMe } from 'api';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
@@ -17,17 +18,29 @@ interface Props {
 
 export const Compose = ({ me, className }: Props) => {
   const composeAtom = useComposeAtom();
+
+  const { onDrop } = useMediaDrop();
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault(); // This is important to prevent the browser's default handling of the data
+  };
   const editMode = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor !== null), [composeAtom]),
   );
   return (
-    <div className={className}>
+    <div className={className} onDrop={onDrop} onDragOver={handleDragOver}>
       <div className="flex flex-col gap-2">
-        <div className="flex gap-1">
-          <InGameSwitchButton />
-          <AddDiceButton />
-          <div className="flex-grow flex gap-1 justify-end">
-            {editMode && <ResetComposeButton />}
+        <div className="flex gap-1 items-center ">
+          <div className="flex-shrink-0">
+            <InGameSwitchButton />
+          </div>
+
+          <div className="flex-shrink-0">
+            <AddDiceButton />
+          </div>
+          <div className="flex-shrink flex-grow w-full" />
+          {editMode && <ResetComposeButton />}
+          <div className="flex-shrink-0">
             <SendButton me={me} editMode={editMode} />
           </div>
         </div>

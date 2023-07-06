@@ -3,6 +3,7 @@ export { getOS, isApple, stopPropagation } from './browser';
 export { revertPalette } from './color';
 export { isDaytime, parseDate } from './date';
 export { parseBool } from './env';
+export { showFileSize } from './files';
 export { IS_DEBUG } from './flags';
 export { empty, identity, not, toggle } from './function';
 export type { EmptyFunction, SelfMapper } from './function';

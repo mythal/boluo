@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { CancelEditingButton } from './CancelEditingButton';
+import { FileButton } from './FileButton';
 import { ToggleActionButton } from './ToggleActionButton';
 import { ToggleBroadcastButton } from './ToggleBroadcastButton';
 
@@ -12,6 +13,7 @@ export const SelfPreviewOperations: FC<Props> = ({ className }) => {
     <div className={className} ref={(node) => node?.setAttribute('data-enter', 'true')}>
       <ToggleActionButton />
       <ToggleBroadcastButton />
+      <FileButton />
       <CancelEditingButton />
     </div>
   );

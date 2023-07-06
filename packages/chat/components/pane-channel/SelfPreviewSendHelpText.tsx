@@ -6,6 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { isApple } from 'utils';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSettings } from '../../hooks/useSettings';
+import { mediaMaxSizeMb } from '../../media';
 import { ComposeError } from '../../state/compose.reducer';
 import { useSend } from './useSend';
 
@@ -19,6 +20,15 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
       return <FormattedMessage defaultMessage="Message cannot be empty" />;
     case 'NO_NAME':
       return <FormattedMessage defaultMessage="Character name is required" />;
+    case 'MEDIA_TOO_LARGE':
+      return (
+        <FormattedMessage
+          defaultMessage="File size must be less than {sizeLimit}M"
+          values={{ sizeLimit: mediaMaxSizeMb }}
+        />
+      );
+    case 'MEDIA_TYPE_NOT_SUPPORTED':
+      return <FormattedMessage defaultMessage="Unsupported media type" />;
     default:
       return <FormattedMessage defaultMessage="Unable to send message" />;
   }

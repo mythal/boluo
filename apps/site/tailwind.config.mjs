@@ -4,9 +4,9 @@ import defaultConfig from 'ui/tailwind.config';
 const config = {
   ...defaultConfig,
   content: [
-    './src/**/*.{tsx,ts,html}',
-    '../chat/src/**/*.{tsx,ts,html}',
+    '!../../**/node_modules/**',
     '../../packages/**/*.{tsx,ts,html}',
+    '../../apps/**/*.{tsx,ts,html}',
   ],
 };
 

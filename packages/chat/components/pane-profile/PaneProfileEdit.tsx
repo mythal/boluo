@@ -6,6 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from 'ui';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { upload } from '../../media';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { EditAvatar } from './EditAvatar';
 import { NicknameField } from './NicknameField';
@@ -30,6 +31,16 @@ export const PaneProfileEdit: FC<Props> = ({ me, exit }) => {
     setIsSubmitting(true);
     if (avatar instanceof File) {
       await editAvatar(avatar);
+      const uploadResult = await upload(avatar);
+      if (uploadResult.isErr) {
+        // TODO: handle error
+        return;
+      }
+      const editAvatarResult = await post('/users/edit', null, { avatar: uploadResult.some.mediaId });
+      if (editAvatarResult.isErr) {
+        // TODO: handle error
+        return;
+      }
     } else if (avatar === null && me.avatarId) {
       (await post('/users/remove_avatar', null, null)).mapErr(alert);
     }

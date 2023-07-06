@@ -9,6 +9,7 @@ import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { parse } from '../../interpreter/parser';
+import { upload } from '../../media';
 import { ComposeActionUnion, makeComposeAction } from '../../state/compose.actions';
 
 export const useSend = (me: User) => {
@@ -45,6 +46,16 @@ export const useSend = (me: User) => {
         mediaId: null,
       });
     } else {
+      let mediaId: string | null = null;
+      if (compose.media) {
+        const uploadResult = await upload(compose.media);
+        if (uploadResult.isOk) {
+          mediaId = uploadResult.some.mediaId;
+        } else {
+          // TODO: show error
+          return;
+        }
+      }
       result = await post('/messages/send', null, {
         messageId: null,
         previewId: compose.previewId,
@@ -54,7 +65,7 @@ export const useSend = (me: User) => {
         entities,
         inGame: compose.inGame,
         isAction: compose.isAction,
-        mediaId: null,
+        mediaId,
         pos: null,
         whisperToUsers: null,
       });

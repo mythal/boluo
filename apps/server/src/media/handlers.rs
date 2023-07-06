@@ -4,7 +4,7 @@ use crate::csrf::authenticate;
 use crate::database;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{missing, ok_response, parse_query, Response};
-use crate::media::api::MediaQuery;
+use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
 use crate::utils;
 use futures::StreamExt;
@@ -163,6 +163,75 @@ async fn delete(_req: Request<Body>) -> Result<(), AppError> {
     todo!()
 }
 
+async fn put_object(
+    client: &aws_sdk_s3::Client,
+    bucket: &str,
+    object: &str,
+    expires_in: u64,
+    content_type: String,
+    content_length: i32,
+) -> Result<Uri, AppError> {
+    let expires_in = std::time::Duration::from_secs(expires_in);
+
+    let presigned =
+        aws_sdk_s3::presigning::PresigningConfig::expires_in(expires_in).map_err(|e| AppError::Unexpected(e.into()))?;
+    let presigned_request = client
+        .put_object()
+        .content_type(content_type)
+        .content_length(content_length as i64)
+        .bucket(bucket)
+        .key(object)
+        .presigned(presigned)
+        .await
+        .map_err(|e| AppError::Unexpected(e.into()))?;
+
+    Ok(presigned_request.uri().clone())
+}
+
+const EXPIRES_IN_SEC: u64 = 60 * 10;
+async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
+    use crate::s3;
+    let session = authenticate(&req).await?;
+    let PreSign {
+        filename,
+        mime_type,
+        size,
+    } = parse_query(req.uri())?;
+    let client = s3::get_client();
+
+    let mut db = database::get().await?;
+    if size <= 0 {
+        return Err(ValidationFailed("File size must be greater than 0.").into());
+    }
+    if size > 1024 * 1024 * 16 {
+        return Err(ValidationFailed("File size must be less than 16MB.").into());
+    }
+    let media = Media::create(
+        &mut *db,
+        &mime_type,
+        session.user_id,
+        &filename,
+        &filename,
+        String::new(),
+        size,
+        "",
+    )
+    .await?;
+    let uri = put_object(
+        client,
+        s3::get_bucket_name(),
+        &media.id.as_hyphenated().to_string(),
+        EXPIRES_IN_SEC,
+        mime_type,
+        size,
+    )
+    .await?;
+    Ok(PreSignResult {
+        url: uri.to_string(),
+        media_id: media.id,
+    })
+}
+
 pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
@@ -170,6 +239,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/get", Method::GET) => get(req).await,
         ("/get", Method::HEAD) => get(req).await,
         ("/upload", Method::POST) => media_upload(req).await.map(ok_response),
+        ("/presigned", Method::POST) => presigned(req).await.map(ok_response),
         _ => missing(),
     }
 }

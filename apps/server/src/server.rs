@@ -30,6 +30,7 @@ mod media;
 mod messages;
 mod pool;
 mod pos;
+mod s3;
 mod session;
 mod spaces;
 mod users;

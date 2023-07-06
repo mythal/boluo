@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { FC, ReactNode } from 'react';
+import { DragEventHandler, FC, ReactNode } from 'react';
 import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
 
 interface Props {
@@ -9,9 +9,10 @@ interface Props {
   id: string;
   className?: string;
   editMode?: boolean;
+  onDrop?: DragEventHandler;
 }
 
-export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode = false }) => {
+export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode = false, onDrop }) => {
   const {
     setNodeRef,
     transform,
@@ -32,6 +33,8 @@ export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode =
       )}
       ref={setNodeRef}
       style={style}
+      onDrop={onDrop}
+      onDragOver={(event) => event.preventDefault()}
     >
       <PreviewHandlePlaceHolder editMode={editMode} />
       {children}

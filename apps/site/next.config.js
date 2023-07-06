@@ -18,6 +18,9 @@ const config = {
     dirs: ['src', 'tests'],
   },
   output: 'standalone',
+  env: {
+    MEDIA_PUBLIC_URL: process.env.MEDIA_PUBLIC_URL,
+  },
   transpilePackages: ['ui', 'chat', 'common'],
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),

@@ -1,4 +1,6 @@
 import type { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
+import { PreSign } from 'server-bindings/PreSign';
+import { PreSignResult } from 'server-bindings/PreSignResult';
 import type { Empty } from 'utils';
 import type {
   AddChannelMember,
@@ -39,4 +41,6 @@ export interface Post {
   '/channels/delete': { payload: Empty; query: { id: string }; result: Channel };
   '/channels/edit_member': { payload: EditChannelMember; query: null; result: ChannelMember };
   '/channels/add_member': { payload: AddChannelMember; query: null; result: ChannelWithMember };
+  // meida
+  '/media/presigned': { query: PreSign; payload: Empty; result: PreSignResult };
 }

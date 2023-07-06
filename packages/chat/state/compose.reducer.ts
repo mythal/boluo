@@ -1,10 +1,11 @@
 import { makeId } from 'utils';
 import { parse, ParseResult } from '../interpreter/parser';
+import { MediaError, mediaMaxSizeByte, supportedMediaType, validateMedia } from '../media';
 import { ComposeAction, ComposeActionUnion } from './compose.actions';
 
 const ACTION_COMMAND = /^[.。][mM][eE]\s*/;
 
-export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME';
+export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
 
 export type ComposeRange = [number, number];
 
@@ -16,7 +17,7 @@ export interface ComposeState {
   inGame: boolean;
   broadcast: boolean;
   source: string;
-  media: File | undefined;
+  media: File | null;
   error: ComposeError | null;
   parsed: ParseResult;
   focused: boolean;
@@ -31,7 +32,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   inGame: false,
   broadcast: true,
   source: '',
-  media: undefined,
+  media: null,
   error: 'TEXT_EMPTY',
   range: [0, 0],
   parsed: { text: '', entities: [] },
@@ -54,7 +55,7 @@ const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleIn
 };
 
 const handleRecoverState = (state: ComposeState, action: ComposeAction<'recoverState'>): ComposeState => {
-  return { ...action.payload, previewId: makeId(), media: undefined };
+  return { ...action.payload, previewId: makeId(), media: null };
 };
 
 const handleAddDice = (state: ComposeState, action: ComposeAction<'addDice'>): ComposeState => {
@@ -175,11 +176,16 @@ const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState
     previewId: makeId(),
     editFor: null,
     range: [0, 0],
-    media: undefined,
+    media: null,
     source: '',
     parsed: { text: '', entities: [] },
   };
 };
+
+const handleMedia = (state: ComposeState, { payload: { media } }: ComposeAction<'media'>): ComposeState => ({
+  ...state,
+  media,
+});
 
 const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeState => ({ ...state, focused: true });
 
@@ -219,6 +225,8 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
       return handleToggleAction(state, action);
     case 'focus':
       return handleFocus(state, action);
+    case 'media':
+      return handleMedia(state, action);
     case 'blur':
       return handleBlur(state, action);
     case 'toggleBroadcast':
@@ -227,10 +235,14 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
 };
 
 const checkCompose = (
-  { source, inputedName, inGame }: ComposeState,
+  { source, inputedName, inGame, media }: ComposeState,
 ): ComposeError | null => {
   if (inGame && inputedName.trim() === '') {
     return 'NO_NAME';
+  }
+  const mediaResult = validateMedia(media);
+  if (mediaResult.isErr) {
+    return mediaResult.err;
   }
   if (source.trim() === '') {
     return 'TEXT_EMPTY';

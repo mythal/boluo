@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
 import { FC, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
@@ -5,6 +6,7 @@ import { ParseResult } from '../../interpreter/parser';
 import { MessageItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { MessageBox } from './MessageBox';
+import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 
 interface Props {
@@ -41,6 +43,7 @@ export const ChatItemMessage: FC<Props> = (
       </div>
       <div className="@2xl:pr-[6rem]">
         <Content parsed={parsed} isAction={isAction} nameNode={nameNode} isPreview={false} seed={message.seed} />
+        {message.mediaId != null && <MessageMedia className="pt-2" mediaId={message.mediaId} />}
       </div>
     </MessageBox>
   );

@@ -14,6 +14,7 @@ export type ComposeActionMap = {
   bold: { text: string };
   recoverState: ComposeState;
   parsed: ParseResult;
+  media: { media: File | null };
   editMessage: { message: Message };
   sent: Empty;
   reset: Empty;

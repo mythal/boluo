@@ -100,11 +100,9 @@ const Container = styled.div`
 
 function useLoadSpace(spaceId: Id) {
   const dispatch = useDispatch();
-  const setConnectionState = useSetAtom(connectStateAtom);
   useEffect(() => {
-    setConnectionState('CLOSED');
     dispatch(loadSpace(spaceId));
-  }, [spaceId, dispatch, setConnectionState]);
+  }, [spaceId, dispatch]);
 }
 
 function Chat() {

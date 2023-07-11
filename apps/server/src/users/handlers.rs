@@ -260,7 +260,7 @@ pub async fn email_limit(cache: &mut cache::Connection, email: &str) -> Result<(
 }
 
 pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
-    let mut cache = cache::conn().await;
+    let mut cache = cache::conn().await?;
     ip_limit(&mut cache, &req).await?;
     let ResetPassword { email } = parse_body(req).await?;
     email_limit(&mut cache, &email).await?;
@@ -296,7 +296,7 @@ pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
 pub async fn reset_password_token_check(req: Request<Body>) -> Result<bool, AppError> {
     let ResetPasswordTokenCheck { token } = parse_query(req.uri())?;
     let email = cache::conn()
-        .await
+        .await?
         .get(token_key(&token).as_slice())
         .await?
         .map(String::from_utf8);
@@ -311,7 +311,7 @@ pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> 
     let ResetPasswordConfirm { token, password } = parse_body(req).await?;
     let mut db = database::get().await?;
     let email = cache::conn()
-        .await
+        .await?
         .get(token_key(&token).as_slice())
         .await?
         .map(String::from_utf8)

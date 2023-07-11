@@ -142,7 +142,7 @@ async fn connect(req: Request) -> Result<Response, anyhow::Error> {
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        let mut redis = cache::conn().await;
+        let mut redis = cache::conn().await?;
         let key = make_key(b"token", &token, b"user_id");
         let data = redis.get(&key).await?;
         if let Some(bytes) = data {
@@ -199,7 +199,7 @@ async fn connect(req: Request) -> Result<Response, anyhow::Error> {
 
 pub async fn token(req: Request) -> Result<Token, AppError> {
     if let Ok(session) = authenticate(&req).await {
-        let mut redis = cache::conn().await;
+        let mut redis = cache::conn().await?;
         let token = Uuid::new_v4();
         let key = make_key(b"token", &token, b"user_id");
         redis.set_with_expiration(&key, session.user_id.as_bytes(), 10).await?;

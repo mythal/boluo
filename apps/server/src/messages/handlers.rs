@@ -30,7 +30,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
     let (channel_member, space_member) = ChannelMember::get_with_space_member(db, &session.user_id, &channel_id)
         .await
         .or_no_permission()?;
-    let mut cache = crate::cache::conn().await;
+    let mut cache = crate::cache::conn().await?;
     let message = Message::create(
         db,
         &mut cache,

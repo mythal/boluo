@@ -426,7 +426,7 @@ async fn space_test() -> Result<(), crate::error::AppError> {
 async fn status_test() -> Result<(), anyhow::Error> {
     use crate::utils::timestamp;
 
-    let mut cache = crate::cache::conn().await;
+    let mut cache = crate::cache::conn().await?;
     let space_id = Uuid::new_v4();
     let user_id = Uuid::new_v4();
     let now = timestamp();

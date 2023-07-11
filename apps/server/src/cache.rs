@@ -49,7 +49,7 @@ impl RedisFactory {
 }
 
 /// Get cache database connection.
-pub async fn conn() -> Connection {
+pub async fn conn() -> redis::RedisResult<Connection> {
     use std::env::var;
     if cfg!(test) {
         dotenv::from_filename(".env.test.local").ok();
@@ -67,9 +67,8 @@ pub async fn conn() -> Connection {
     let connection_manager = redis::Client::open(&*url)
         .expect("Unable to open redis")
         .get_multiplexed_tokio_connection()
-        .await
-        .expect("Unable to get tokio connection manager");
-    Connection::new(connection_manager)
+        .await?;
+    Ok(Connection::new(connection_manager))
 }
 
 pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
@@ -88,7 +87,7 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
 
 #[tokio::test]
 async fn cache_test() -> anyhow::Result<()> {
-    let mut cache = crate::cache::conn().await;
+    let mut cache = crate::cache::conn().await.unwrap();
 
     let _result: Option<String> = cache.inner.get("hello").await.unwrap();
     Ok(())

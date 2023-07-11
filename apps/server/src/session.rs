@@ -48,7 +48,7 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
 
 pub async fn revoke_session(id: &Uuid) -> Result<(), CacheError> {
     let key = make_key(id);
-    cache::conn().await.remove(&key).await
+    cache::conn().await?.remove(&key).await
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn make_key(session: &Uuid) -> Vec<u8> {
 pub async fn start(user_id: &Uuid) -> Result<Uuid, CacheError> {
     let session = utils::id();
     let key = make_key(&session);
-    cache::conn().await.set(&key, user_id.as_bytes()).await?;
+    cache::conn().await?.set(&key, user_id.as_bytes()).await?;
     Ok(session)
 }
 
@@ -124,7 +124,7 @@ pub fn add_session_cookie(session: &Uuid, host: Option<&HeaderValue>, response_h
 
 pub async fn remove_session(id: Uuid) -> Result<(), CacheError> {
     let key = make_key(&id);
-    cache::conn().await.remove(&key).await?;
+    cache::conn().await?.remove(&key).await?;
     Ok(())
 }
 
@@ -212,7 +212,7 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     };
 
     let key = make_key(&id);
-    let bytes: Vec<u8> = cache::conn().await.get(&key).await?.ok_or_else(|| {
+    let bytes: Vec<u8> = cache::conn().await?.get(&key).await?.ok_or_else(|| {
         log::warn!("Session {} not found, token: {}", id, token);
         AuthenticateFail::NoSessionFound
     })?;

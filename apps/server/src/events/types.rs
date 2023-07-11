@@ -160,7 +160,7 @@ impl Event {
         timestamp: i64,
         focus: Vec<Uuid>,
     ) -> Result<(), anyhow::Error> {
-        let mut cache = cache::conn().await;
+        let mut cache = cache::conn().await?;
         let heartbeat = UserStatus { timestamp, kind, focus };
         let mut changed = true;
 

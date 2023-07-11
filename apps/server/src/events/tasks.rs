@@ -30,6 +30,16 @@ async fn push_status() {
             };
 
             let mut cache = cache::conn().await;
+            if cache.is_err() {
+                // retry once
+                cache = cache::conn().await;
+            }
+            let mut cache = if let Ok(cache) = cache {
+                cache
+            } else {
+                log::warn!("Failed to connect to redis");
+                return;
+            };
             for space_id in spaces {
                 Event::push_status(&mut cache, space_id).await.ok();
             }

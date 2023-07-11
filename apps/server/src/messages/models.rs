@@ -370,7 +370,7 @@ async fn message_test() -> Result<(), crate::error::AppError> {
     use crate::spaces::SpaceMember;
     use crate::users::User;
 
-    let mut cache = crate::cache::conn().await;
+    let mut cache = crate::cache::conn().await.unwrap();
     let mut client = Client::new().await?;
 
     let mut trans = client.transaction().await?;

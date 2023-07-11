@@ -65,7 +65,7 @@ impl PreviewPost {
             clear,
         } = self;
         let mut conn = database::get().await?;
-        let mut cache = cache::conn().await;
+        let mut cache = cache::conn().await?;
         let cache = &mut cache;
         let db = &mut *conn;
         let mut should_finish = false;

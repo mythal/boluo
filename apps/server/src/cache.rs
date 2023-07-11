@@ -1,16 +1,16 @@
 use crate::error::CacheError;
-pub use redis::aio::MultiplexedConnection;
+pub use redis::aio::{ConnectionManager, MultiplexedConnection};
 pub use redis::AsyncCommands;
 use uuid::fmt::Hyphenated;
 use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct Connection {
-    pub inner: MultiplexedConnection,
+    pub inner: ConnectionManager,
 }
 
 impl Connection {
-    fn new(inner: MultiplexedConnection) -> Connection {
+    fn new(inner: ConnectionManager) -> Connection {
         Connection { inner }
     }
 
@@ -51,23 +51,25 @@ impl RedisFactory {
 /// Get cache database connection.
 pub async fn conn() -> redis::RedisResult<Connection> {
     use std::env::var;
-    if cfg!(test) {
-        dotenv::from_filename(".env.test.local").ok();
-        dotenv::from_filename(".env.local").ok();
-        dotenv::dotenv().ok();
-        openssl_probe::init_ssl_cert_env_vars();
-    };
-    let url = if let Ok(url) = var("REDIS_URL") {
-        url
-    } else {
-        log::warn!("Failed to load Redis URL, use default");
-        "redis://127.0.0.1/".to_string()
-    };
+    use std::sync::OnceLock;
+    static CLIENT: OnceLock<redis::Client> = OnceLock::new();
+    let client = CLIENT.get_or_init(|| {
+        if cfg!(test) {
+            dotenv::from_filename(".env.test.local").ok();
+            dotenv::from_filename(".env.local").ok();
+            dotenv::dotenv().ok();
+            openssl_probe::init_ssl_cert_env_vars();
+        };
+        let url = if let Ok(url) = var("REDIS_URL") {
+            url
+        } else {
+            log::warn!("Failed to load Redis URL, use default");
+            "redis://127.0.0.1/".to_string()
+        };
+        redis::Client::open(&*url).expect("Unable to open redis")
+    });
 
-    let connection_manager = redis::Client::open(&*url)
-        .expect("Unable to open redis")
-        .get_multiplexed_tokio_connection()
-        .await?;
+    let connection_manager = client.get_tokio_connection_manager().await?;
     Ok(Connection::new(connection_manager))
 }
 

@@ -1304,9 +1304,18 @@ name = "manage-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "aws-config",
+ "aws-credential-types",
+ "aws-endpoint",
+ "aws-sdk-s3",
  "clap",
  "dotenv",
- "postgres",
+ "native-tls",
+ "openssl-probe",
+ "postgres-native-tls",
+ "tokio",
+ "tokio-postgres",
+ "uuid",
 ]
 
 [[package]]

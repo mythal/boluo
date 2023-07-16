@@ -7,9 +7,37 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
+aws-config = "0.55.3"
+aws-credential-types = "*"
+aws-endpoint = "0.55.3"
+aws-sdk-s3 = "0.28.0"
 dotenv = "0.15.0"
-postgres = "0.19"
+native-tls = "0.2"
+openssl-probe = "0.1.2"
+postgres-native-tls = "0.5"
+uuid = "1"
+
+[dependencies.tokio]
+version = "1"
+features = [
+  "rt",
+  "rt-multi-thread",
+  "io-util",
+  "io-std",
+  "net",
+  "time",
+  "process",
+  "macros",
+  "sync",
+  "signal",
+  "fs",
+  "parking_lot",
+]
+
+[dependencies.tokio-postgres]
+version = "0.7"
+features = ["with-chrono-0_4", "with-uuid-1", "with-serde_json-1"]
 
 [dependencies.clap]
 version = "4.1"
-features = ["derive"]
+features = ["derive", "env"]

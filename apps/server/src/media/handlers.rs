@@ -1,5 +1,6 @@
 use super::api::Upload;
 use super::models::Media;
+use crate::context::{disable_s3, media_public_url};
 use crate::csrf::authenticate;
 use crate::database;
 use crate::error::{AppError, Find, ValidationFailed};
@@ -124,6 +125,17 @@ async fn get(req: Request<Body>) -> Result<Response, AppError> {
         media = Some(Media::get_by_filename(db, &filename).await.or_not_found()?);
     }
     let media = media.ok_or_else(|| AppError::BadRequest("Filename or media id must be specified.".to_string()))?;
+
+    if !disable_s3() {
+        let url = format!("{}/{}", media_public_url().trim_end_matches('/'), media.id);
+        let response = hyper::Response::builder()
+            .status(hyper::StatusCode::MOVED_PERMANENTLY)
+            .header(header::LOCATION, url)
+            .body(Body::empty())
+            .map_err(error_unexpected!("Failed to build media redirect response"))?;
+        return Ok(response);
+    }
+
     let path = Media::path(&media.filename);
     let size = std::fs::metadata(&path)
         .map(|metadata| metadata.len())
@@ -191,6 +203,9 @@ async fn put_object(
 const EXPIRES_IN_SEC: u64 = 60 * 10;
 async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
     use crate::s3;
+    if disable_s3() {
+        return Err(AppError::BadRequest("presign upload is disabled.".to_string()));
+    }
     let session = authenticate(&req).await?;
     let PreSign {
         filename,

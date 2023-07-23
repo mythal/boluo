@@ -117,10 +117,6 @@ impl From<DbError> for AppError {
 }
 
 macro_rules! unexpected {
-    () => {{
-        ::log::error!("Unexpected error: [{}][{}]", file!(), line!());
-        crate::error::AppError::Unexpected(::anyhow::anyhow!("Unexpected"))
-    }};
     ($msg: expr) => {{
         let msg = $msg.to_string();
         ::log::error!("Unexpected error: [{}][{}]{}", file!(), line!(), msg);
@@ -133,6 +129,12 @@ macro_rules! error_unexpected {
         |e| {
             ::log::error!("Unexpected error: [{}][{}]{}", file!(), line!(), e);
             crate::error::AppError::Unexpected(e.into())
+        }
+    };
+    ($msg: expr) => {
+        |e| {
+            ::log::error!("Unexpected error: [{}][{}]{}{}", file!(), line!(), $msg, e);
+            crate::error::AppError::Unexpected(::anyhow::anyhow!($msg))
         }
     };
 }

@@ -19,6 +19,20 @@ pub fn get_domain() -> String {
     env::var("DOMAIN").unwrap_or("boluo.chat".to_string())
 }
 
+pub fn disable_s3() -> bool {
+    env::var("DISABLE_S3").map(env_bool).unwrap_or(false)
+}
+
+pub fn media_public_url() -> &'static str {
+    static MEDIA_PUBLIC_URL: OnceCell<String> = OnceCell::new();
+    MEDIA_PUBLIC_URL.get_or_init(|| {
+        let url = env::var("MEDIA_PUBLIC_URL").unwrap_or_default();
+        let url = url.trim_end_matches('/');
+        let url = url.trim_start_matches("https://");
+        format!("https://{}", url)
+    })
+}
+
 pub fn domain() -> &'static str {
     static DOMAIN: OnceCell<String> = OnceCell::new();
     DOMAIN.get_or_init(get_domain)

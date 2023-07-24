@@ -217,7 +217,7 @@ export function upload(
   mimeType: string,
   path = '/media/upload',
 ): Promise<AppResult<Media>> {
-  return request(makeUri(path, { filename, mimeType }), 'POST', file, mimeType);
+  return request(makeUri(path, { filename, mimeType, size: file.size }), 'POST', file, mimeType);
 }
 
 export function mediaUrl(id: string, download = false, addBaseUrl = true): string {

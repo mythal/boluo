@@ -8,6 +8,8 @@ use uuid::Uuid;
 pub struct Upload {
     pub filename: String,
     pub mime_type: Option<String>,
+    #[serde(default)]
+    pub size: usize,
 }
 
 #[derive(Deserialize, TS)]

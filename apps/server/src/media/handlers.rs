@@ -8,7 +8,7 @@ use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
 use crate::utils::id;
-use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::primitives::{ByteStream, SdkBody};
 use futures::StreamExt;
 use hyper::header::{self, HeaderValue};
 use hyper::{Body, Request, Uri};
@@ -31,69 +31,99 @@ fn filename_sanitizer(filename: String) -> String {
 }
 
 pub fn upload_params(uri: &Uri) -> Result<Upload, AppError> {
-    let Upload { filename, mime_type } = parse_query(uri)?;
+    let Upload {
+        filename,
+        mime_type,
+        size,
+    } = parse_query(uri)?;
     if filename.len() > 200 {
         return Err(ValidationFailed("File Name is too long").into());
     }
     let filename = filename_sanitizer(filename);
-    Ok(Upload { filename, mime_type })
+    Ok(Upload {
+        filename,
+        mime_type,
+        size,
+    })
+}
+
+async fn save_file_to_local(
+    id: Uuid,
+    temp_path: &Path,
+    mime_type: String,
+    hash: String,
+    filename: String,
+    size: usize,
+) -> Result<MediaFile, AppError> {
+    let ext = temp_path.extension().and_then(|s| s.to_str()).unwrap_or("");
+    let new_filename = format!("{hash}.{ext}");
+    let new_path = Media::path(&new_filename);
+    let duplicate = new_path.exists();
+    if duplicate {
+        tokio::fs::remove_file(temp_path).await?;
+    } else {
+        tokio::fs::rename(temp_path, new_path).await?;
+    }
+
+    let media_file = MediaFile {
+        id,
+        mime_type,
+        filename: new_filename,
+        original_filename: filename,
+        hash,
+        size,
+        duplicate,
+    };
+    Ok(media_file)
+}
+
+fn check_size(size: usize, max_size: usize) -> Result<(), AppError> {
+    if size == 0 {
+        return Err(ValidationFailed("File size must be greater than 0.").into());
+    }
+    if size > max_size {
+        return Err(ValidationFailed("File size must be less than 16MB.").into());
+    }
+    Ok(())
 }
 
 pub async fn upload(req: Request<Body>, id: Uuid, params: Upload, max_size: usize) -> Result<MediaFile, AppError> {
-    let Upload { filename, mime_type } = params;
-    let temp_filename = format!("{id}_{filename}");
-
-    let path = Media::path(&temp_filename);
-    let mut file = File::create(&path).await?;
-    let mut body = req.into_body();
-    let mut hasher = blake3::Hasher::new();
-    let mut size: usize = 0;
-    while let Some(bytes) = body.next().await {
-        let bytes = bytes?;
-        size += bytes.len();
-        if size > max_size {
-            tokio::fs::remove_file(&*path).await.ok();
-            return Err(AppError::BadRequest(
-                "The maximum file size has been exceeded.".to_string(),
-            ));
-        }
-        hasher.update(&bytes);
-        file.write_all(&bytes).await?;
-    }
-
-    let hash = hasher.finalize();
-    let hash = hash.to_hex().to_string();
-    let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
+    let Upload {
+        filename,
+        mime_type,
+        size,
+    } = params;
 
     let mime_type = mime_type.unwrap_or_default();
     if disable_s3() {
-        let new_filename = format!("{hash}.{ext}");
-        let new_path = Media::path(&new_filename);
-        let duplicate = new_path.exists();
-        if duplicate {
-            tokio::fs::remove_file(path).await?;
-        } else {
-            tokio::fs::rename(path, new_path).await?;
+        let temp_filename = format!("{id}_{filename}");
+
+        let media_temp_path = std::env::temp_dir().join(temp_filename);
+        let mut file = File::create(&media_temp_path).await?;
+        let mut body = req.into_body();
+        let mut hasher = blake3::Hasher::new();
+        let mut size: usize = 0;
+        while let Some(bytes) = body.next().await {
+            let bytes = bytes?;
+            size += bytes.len();
+            check_size(size, max_size)?;
+            hasher.update(&bytes);
+            file.write_all(&bytes).await?;
         }
 
-        let media_file = MediaFile {
-            id,
-            mime_type,
-            filename: new_filename,
-            original_filename: filename,
-            hash,
-            size,
-            duplicate,
-        };
-        Ok(media_file)
+        let hash = hasher.finalize();
+        let hash = hash.to_hex().to_string();
+        save_file_to_local(id, &media_temp_path, mime_type, hash, filename, size).await
     } else {
+        check_size(size, max_size)?;
+        let body = req.into_body();
         let client = crate::s3::get_client();
         let bucket = crate::s3::get_bucket_name();
         put_object(
             client,
             bucket,
             &id.as_hyphenated().to_string(),
-            &path,
+            body,
             &mime_type,
             size as i32,
         )
@@ -103,7 +133,7 @@ pub async fn upload(req: Request<Body>, id: Uuid, params: Upload, max_size: usiz
             mime_type,
             filename: String::new(),
             original_filename: filename,
-            hash,
+            hash: String::new(),
             size,
             duplicate: false,
         };
@@ -206,13 +236,11 @@ async fn put_object(
     client: &aws_sdk_s3::Client,
     bucket: &str,
     object: &str,
-    path: &Path,
+    body: hyper::Body,
     content_type: &str,
     content_length: i32,
 ) -> Result<(), AppError> {
-    let body = ByteStream::from_path(path)
-        .await
-        .map_err(error_unexpected!("Failed to read file"))?;
+    let body = ByteStream::new(SdkBody::from(body));
     client
         .put_object()
         .content_type(content_type)
@@ -246,7 +274,7 @@ async fn put_object_presigned(
         .key(object)
         .presigned(presigned)
         .await
-        .map_err(|e| AppError::Unexpected(e.into()))?;
+        .map_err(error_unexpected!("Failed to generate presigned url"))?;
 
     Ok(presigned_request.uri().clone())
 }

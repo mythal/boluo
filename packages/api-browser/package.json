@@ -12,15 +12,15 @@
   "license": "GPL-3.0",
   "dependencies": {
     "api": "workspace:*",
+    "jotai": "^2.2.2",
     "store": "workspace:*",
-    "utils": "workspace:*",
-    "jotai": "^2.1.0"
+    "utils": "workspace:*"
   },
   "sideEffects": false,
   "devDependencies": {
-    "eslint": "^8.40.0",
+    "eslint": "^8.45.0",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
-    "typescript": "^5.0.4"
+    "typescript": "^5.1.6"
   }
 }

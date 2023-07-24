@@ -29,7 +29,7 @@ interface Props {
   spaceId: string;
 }
 
-const createChannel: MutationFetcher<ChannelWithMember, FormSchema, [string]> = async (
+const createChannel: MutationFetcher<ChannelWithMember, [string], FormSchema> = async (
   _,
   { arg: { isSecret, ...payload } },
 ) => {

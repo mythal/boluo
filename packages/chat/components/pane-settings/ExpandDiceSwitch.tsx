@@ -11,7 +11,7 @@ import { useSettings } from '../../hooks/useSettings';
 interface Props {
 }
 export const ExpandDiceSwitch: FC<Props> = () => {
-  const updater: MutationFetcher<Settings, boolean, string> = useCallback(async (url: string, { arg: expandDice }) => {
+  const updater: MutationFetcher<Settings, string, boolean> = useCallback(async (url: string, { arg: expandDice }) => {
     const settings: Settings = { expandDice };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});

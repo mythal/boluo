@@ -23,7 +23,7 @@ interface Props {
   channelId: string;
 }
 
-const editChannel: MutationFetcher<Channel, ChannelSettingsForm, [string, string]> = async (
+const editChannel: MutationFetcher<Channel, [string, string], ChannelSettingsForm> = async (
   [_, channelId],
   { arg: { name, defaultDiceType, topic, isPrivate } },
 ): Promise<Channel> => {

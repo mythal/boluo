@@ -26,7 +26,7 @@ interface Props {
   channelName: string;
 }
 
-const deleteChannel: MutationFetcher<Channel, Empty, [string, string]> = async ([_, channelId]) => {
+const deleteChannel: MutationFetcher<Channel, [string, string], Empty> = async ([_, channelId]) => {
   const result = await post('/channels/delete', { id: channelId }, {});
   return result.unwrap();
 };

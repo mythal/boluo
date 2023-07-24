@@ -9,6 +9,7 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 pub struct MediaFile {
+    pub id: Uuid,
     pub mime_type: String,
     pub filename: String,
     pub original_filename: String,
@@ -21,6 +22,7 @@ impl MediaFile {
     pub async fn create<T: Querist>(self, db: &mut T, user_id: Uuid, source: &str) -> Result<Media, DbError> {
         Media::create(
             db,
+            &self.id,
             &self.mime_type,
             user_id,
             &self.filename,
@@ -71,6 +73,7 @@ impl Media {
 
     pub async fn create<T: Querist>(
         db: &mut T,
+        media_id: &Uuid,
         mime_type: &str,
         uploader_id: Uuid,
         filename: &str,
@@ -83,6 +86,7 @@ impl Media {
             .query_exactly_one(
                 include_str!("sql/create.sql"),
                 &[
+                    &media_id,
                     &mime_type,
                     &uploader_id,
                     &filename,

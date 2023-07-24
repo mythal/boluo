@@ -227,6 +227,5 @@ export function mediaUrl(id: string, download = false, addBaseUrl = true): strin
 export function mediaHead(id: string): Promise<Response> {
   return fetch(`/api/media/get?id=${id}`, {
     method: 'HEAD',
-    credentials: 'include',
   });
 }

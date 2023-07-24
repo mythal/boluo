@@ -14,7 +14,7 @@ use crate::media::{upload, upload_params};
 use crate::spaces::Space;
 use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
 use crate::users::models::UserExt;
-use crate::utils::get_ip;
+use crate::utils::{get_ip, id};
 use hyper::{Body, Method, Request};
 use redis::AsyncCommands;
 
@@ -192,7 +192,8 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
     if !is_image(&params.mime_type) {
         return Err(ValidationFailed("Incorrect File Format").into());
     }
-    let media = upload(req, params, 1024 * 1024).await?;
+    let media_id = id();
+    let media = upload(req, media_id, params, 1024 * 1024).await?;
     let mut db = database::get().await?;
     let media = media.create(&mut *db, session.user_id, "avatar").await?;
     User::edit(&mut *db, &session.user_id, None, None, Some(media.id))

@@ -215,8 +215,10 @@ async fn user_test() -> Result<(), crate::error::AppError> {
     let user = User::login(db, username, password).await.unwrap().unwrap();
     assert_eq!(user.nickname, nickname);
 
+    let avatar_id = crate::utils::id();
     let avatar = Media::create(
         db,
+        &avatar_id,
         "text/plain",
         user.id,
         "avatar.jpg",

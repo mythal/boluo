@@ -7,13 +7,15 @@ use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
-use crate::utils;
+use crate::utils::id;
+use aws_sdk_s3::primitives::ByteStream;
 use futures::StreamExt;
 use hyper::header::{self, HeaderValue};
 use hyper::{Body, Request, Uri};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
+use uuid::Uuid;
 
 fn content_disposition(attachment: bool, filename: &str) -> HeaderValue {
     use percent_encoding::{utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC};
@@ -37,9 +39,8 @@ pub fn upload_params(uri: &Uri) -> Result<Upload, AppError> {
     Ok(Upload { filename, mime_type })
 }
 
-pub async fn upload(req: Request<Body>, params: Upload, max_size: usize) -> Result<MediaFile, AppError> {
+pub async fn upload(req: Request<Body>, id: Uuid, params: Upload, max_size: usize) -> Result<MediaFile, AppError> {
     let Upload { filename, mime_type } = params;
-    let id = utils::id();
     let temp_filename = format!("{id}_{filename}");
 
     let path = Media::path(&temp_filename);
@@ -64,31 +65,57 @@ pub async fn upload(req: Request<Body>, params: Upload, max_size: usize) -> Resu
     let hash = hash.to_hex().to_string();
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
 
-    let new_filename = format!("{hash}.{ext}");
-    let new_path = Media::path(&new_filename);
-    let duplicate = new_path.exists();
-    if duplicate {
-        tokio::fs::remove_file(path).await?;
-    } else {
-        tokio::fs::rename(path, new_path).await?;
-    }
-
     let mime_type = mime_type.unwrap_or_default();
-    let media_file = MediaFile {
-        mime_type,
-        filename: new_filename,
-        original_filename: filename,
-        hash,
-        size,
-        duplicate,
-    };
-    Ok(media_file)
+    if disable_s3() {
+        let new_filename = format!("{hash}.{ext}");
+        let new_path = Media::path(&new_filename);
+        let duplicate = new_path.exists();
+        if duplicate {
+            tokio::fs::remove_file(path).await?;
+        } else {
+            tokio::fs::rename(path, new_path).await?;
+        }
+
+        let media_file = MediaFile {
+            id,
+            mime_type,
+            filename: new_filename,
+            original_filename: filename,
+            hash,
+            size,
+            duplicate,
+        };
+        Ok(media_file)
+    } else {
+        let client = crate::s3::get_client();
+        let bucket = crate::s3::get_bucket_name();
+        put_object(
+            client,
+            bucket,
+            &id.as_hyphenated().to_string(),
+            &path,
+            &mime_type,
+            size as i32,
+        )
+        .await?;
+        let media_file = MediaFile {
+            id,
+            mime_type,
+            filename: String::new(),
+            original_filename: filename,
+            hash,
+            size,
+            duplicate: false,
+        };
+        Ok(media_file)
+    }
 }
 
 async fn media_upload(req: Request<Body>) -> Result<Media, AppError> {
     let session = authenticate(&req).await?;
     let params = upload_params(req.uri())?;
-    let media_file = upload(req, params, 1024 * 1024 * 16).await?;
+    let media_id = id();
+    let media_file = upload(req, media_id, params, 1024 * 1024 * 16).await?;
     let mut conn = database::get().await?;
     media_file
         .create(&mut *conn, session.user_id, "")
@@ -179,8 +206,32 @@ async fn put_object(
     client: &aws_sdk_s3::Client,
     bucket: &str,
     object: &str,
+    path: &Path,
+    content_type: &str,
+    content_length: i32,
+) -> Result<(), AppError> {
+    let body = ByteStream::from_path(path)
+        .await
+        .map_err(error_unexpected!("Failed to read file"))?;
+    client
+        .put_object()
+        .content_type(content_type)
+        .content_length(content_length as i64)
+        .bucket(bucket)
+        .key(object)
+        .body(body)
+        .send()
+        .await
+        .map_err(error_unexpected!("Failed to upload object"))?;
+    Ok(())
+}
+
+async fn put_object_presigned(
+    client: &aws_sdk_s3::Client,
+    bucket: &str,
+    object: &str,
     expires_in: u64,
-    content_type: String,
+    content_type: &str,
     content_length: i32,
 ) -> Result<Uri, AppError> {
     let expires_in = std::time::Duration::from_secs(expires_in);
@@ -221,8 +272,10 @@ async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
     if size > 1024 * 1024 * 16 {
         return Err(ValidationFailed("File size must be less than 16MB.").into());
     }
+    let media_id = id();
     let media = Media::create(
         &mut *db,
+        &media_id,
         &mime_type,
         session.user_id,
         &filename,
@@ -232,12 +285,12 @@ async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
         "",
     )
     .await?;
-    let uri = put_object(
+    let uri = put_object_presigned(
         client,
         s3::get_bucket_name(),
         &media.id.as_hyphenated().to_string(),
         EXPIRES_IN_SEC,
-        mime_type,
+        &mime_type,
         size,
     )
     .await?;

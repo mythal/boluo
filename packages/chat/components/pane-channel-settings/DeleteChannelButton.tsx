@@ -16,7 +16,7 @@ import { FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import type { MutationFetcher } from 'swr/mutation';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { Empty } from 'utils';
 import { panesAtom } from '../../state/view.atoms';
 import { Pane } from '../../state/view.types';

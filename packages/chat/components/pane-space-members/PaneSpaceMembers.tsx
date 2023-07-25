@@ -1,7 +1,7 @@
 import { Users } from 'icons';
 import { FC, Suspense, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Loading } from 'ui';
+import { Loading } from 'ui/Loading';
 import { useMySpaceMember } from '../../hooks/useMySpaceMember';
 import { useSpace } from '../../hooks/useSpace';
 import { ClosePaneButton } from '../ClosePaneButton';

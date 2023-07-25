@@ -5,7 +5,8 @@ import { UserPlus } from 'icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
-import { Button, Spinner } from 'ui';
+import { Button } from 'ui/Button';
+import { Spinner } from 'ui/Spinner';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 
 interface Props {

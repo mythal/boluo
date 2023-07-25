@@ -3,7 +3,7 @@ import { patch, post } from 'api-browser';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { Result } from 'utils';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';

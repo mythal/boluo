@@ -2,7 +2,7 @@ import { useMe } from 'common';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useIntl } from 'react-intl';
-import { TextInput } from 'ui';
+import { TextInput } from 'ui/TextInput';
 import { ProfileEditSchema } from './PaneProfileEdit';
 
 interface Props {

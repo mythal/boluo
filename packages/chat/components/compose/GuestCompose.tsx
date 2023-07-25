@@ -3,7 +3,7 @@ import { useMe } from 'common';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { ChildrenProps } from 'utils';
 import { useChannelId } from '../../hooks/useChannelId';
 

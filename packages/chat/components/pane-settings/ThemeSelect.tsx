@@ -6,8 +6,9 @@ import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import type { Theme } from 'ui';
-import { Select, setThemeToDom, useTheme } from 'ui';
+import { setThemeToDom, Theme } from 'theme';
+import { useTheme } from 'theme/useTheme';
+import { Select } from 'ui/Select';
 import { identity } from 'utils';
 
 interface Props {

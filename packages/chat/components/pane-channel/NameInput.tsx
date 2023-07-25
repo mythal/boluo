@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { FC } from 'react';
-import { TextInput } from 'ui';
+import { TextInput } from 'ui/TextInput';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/compose.actions';
 

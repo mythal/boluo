@@ -3,7 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/compose.actions';
 

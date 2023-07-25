@@ -1,7 +1,8 @@
 import { FC, useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { HelpText, TextArea } from 'ui';
+import { HelpText } from 'ui/HelpText';
+import { TextArea } from 'ui/TextInput';
 
 interface Props {
 }

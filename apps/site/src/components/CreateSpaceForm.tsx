@@ -8,9 +8,10 @@ import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button, Label, TextArea, TextInput } from 'ui';
+import { Button } from 'ui/Button';
 import { Oops } from 'ui/Oops';
 import type { SelectItem } from 'ui/Select';
+import { TextArea, TextInput } from 'ui/TextInput';
 import { required } from '../validations';
 import { DiceSelect } from './DiceSelect';
 
@@ -38,9 +39,9 @@ const NameField: FC = () => {
   const { register, formState: { errors: { name: error } } } = useFormContext<CreateSpace>();
   return (
     <div>
-      <Label htmlFor={id}>
+      <label htmlFor={id}>
         <FormattedMessage defaultMessage="Space Name" />
-      </Label>
+      </label>
 
       <TextInput
         className="w-full"
@@ -69,9 +70,9 @@ const DefaultDiceField: FC = () => {
   });
   return (
     <div>
-      <Label htmlFor={id}>
+      <label htmlFor={id}>
         <FormattedMessage defaultMessage="Default Dice" />
-      </Label>
+      </label>
       <div>
         <DiceSelect value={value ?? 'd20'} onChange={onChange} />
       </div>
@@ -86,9 +87,9 @@ const FirstChannelNameField: FC = () => {
   const { register, formState: { errors: { firstChannelName: error } } } = useFormContext<CreateSpace>();
   return (
     <div>
-      <Label htmlFor={id}>
+      <label htmlFor={id}>
         <FormattedMessage defaultMessage="Initial Channel Name" />
-      </Label>
+      </label>
 
       <TextInput
         className="w-full"
@@ -107,9 +108,9 @@ const DescriptionField: FC = () => {
   const { register, formState: { errors: { description: error } } } = useFormContext<CreateSpace>();
   return (
     <div>
-      <Label htmlFor={id}>
+      <label htmlFor={id}>
         <FormattedMessage defaultMessage="Description" />
-      </Label>
+      </label>
       <TextArea className="w-full" data-state={error ? 'error' : 'default'} {...register('description')} />
       <FieldErrorDisplay error={error} />
     </div>

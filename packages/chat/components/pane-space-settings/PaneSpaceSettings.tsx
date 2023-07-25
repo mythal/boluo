@@ -8,7 +8,10 @@ import { FormProvider, useController, useForm, useFormContext } from 'react-hook
 import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { Button, HelpText, Spinner, TextArea, TextInput } from 'ui';
+import { Button } from 'ui/Button';
+import { HelpText } from 'ui/HelpText';
+import { Spinner } from 'ui/Spinner';
+import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { usePaneClose } from '../../hooks/usePaneClose';

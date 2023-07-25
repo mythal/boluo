@@ -1,7 +1,7 @@
 import { HelpCircle } from 'icons';
 import { FC } from 'react';
 import { useIntl } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 
 interface Props {

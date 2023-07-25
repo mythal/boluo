@@ -5,7 +5,7 @@ import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { MutationFetcher } from 'swr/mutation';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useChannel } from '../../hooks/useChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { PaneBox } from '../PaneBox';

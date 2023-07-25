@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useChannelList } from '../../hooks/useChannelList';
 import { useMySpaceMember } from '../../hooks/useMySpaceMember';
 import { usePaneToggle } from '../../hooks/usePaneToggle';

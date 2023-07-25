@@ -4,7 +4,11 @@ import { Fairy } from 'icons';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button, Icon, Label, RefreshButton, Spinner, Switch } from 'ui';
+import { Button } from 'ui/Button';
+import Icon from 'ui/Icon';
+import { RefreshButton } from 'ui/RefreshButton';
+import { Spinner } from 'ui/Spinner';
+import { Switch } from 'ui/Switch';
 
 export const ButtonPlayground: FC = () => {
   const [disabled, setDisabled] = useState(false);
@@ -13,20 +17,20 @@ export const ButtonPlayground: FC = () => {
   return (
     <div>
       <div className="flex gap-4">
-        <Label className="inline-flex gap-4 items-center">
+        <label className="inline-flex gap-4 items-center">
           Disable?
           <Switch checked={disabled} onChange={setDisabled} />
-        </Label>
+        </label>
 
-        <Label className="inline-flex gap-4 items-center">
+        <label className="inline-flex gap-4 items-center">
           Small?
           <Switch checked={small} onChange={setSmall} />
-        </Label>
+        </label>
 
-        <Label className="inline-flex gap-4 items-center">
+        <label className="inline-flex gap-4 items-center">
           Icon?
           <Switch checked={icon} onChange={setIcon} />
-        </Label>
+        </label>
       </div>
 
       <div className="flex flex-col gap-2">

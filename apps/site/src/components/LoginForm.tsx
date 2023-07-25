@@ -10,8 +10,9 @@ import { FormProvider, useFormContext } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button, Label, TextInput } from 'ui';
+import { Button } from 'ui/Button';
 import { Oops } from 'ui/Oops';
+import { TextInput } from 'ui/TextInput';
 import type { StyleProps } from 'utils';
 import { required } from '../validations';
 
@@ -54,9 +55,9 @@ const UsernameField = () => {
   return (
     <>
       <div>
-        <Label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="w-full block py-1">
           <FormattedMessage defaultMessage="Username or Email" />
-        </Label>
+        </label>
 
         <TextInput
           className="w-full"
@@ -78,9 +79,9 @@ const PasswordField = () => {
   return (
     <>
       <div>
-        <Label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="w-full block py-1">
           <FormattedMessage defaultMessage="Password" />
-        </Label>
+        </label>
         <TextInput
           id={id}
           type="password"

@@ -1,6 +1,6 @@
 import { ChevronsDown } from 'icons';
 import { memo } from 'react';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 
 interface Props {
   onClick: () => void;

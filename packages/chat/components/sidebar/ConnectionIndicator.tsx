@@ -11,7 +11,7 @@ import clsx from 'clsx';
 import { Cloud, CloudOff } from 'icons';
 import { useAtomValue } from 'jotai';
 import { FC, Suspense, useEffect, useMemo, useState } from 'react';
-import { Spinner } from 'ui';
+import { Spinner } from 'ui/Spinner';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { BaseUrlSelector } from './BaseUrlSelector';
 import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';

@@ -4,7 +4,7 @@ import { toSettings } from 'common/settings';
 import { FC, useCallback } from 'react';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { Button, Switch } from 'ui';
+import { Button } from 'ui/Button';
 import { identity } from 'utils';
 import { useSettings } from '../../hooks/useSettings';
 

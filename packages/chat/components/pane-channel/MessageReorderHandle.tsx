@@ -2,7 +2,7 @@ import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
 import { GripVertical } from 'icons';
 import { forwardRef } from 'react';
-import { Spinner } from 'ui';
+import { Spinner } from 'ui/Spinner';
 import { Delay } from '../Delay';
 
 type UseSortableReturn = ReturnType<typeof useSortable>;

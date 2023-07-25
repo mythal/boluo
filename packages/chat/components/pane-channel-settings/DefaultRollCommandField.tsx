@@ -1,7 +1,8 @@
 import { FC, useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
-import { HelpText, TextInput } from 'ui';
+import { HelpText } from 'ui/HelpText';
+import { TextInput } from 'ui/TextInput';
 import { ChannelSettingsForm } from './form';
 
 interface Props {

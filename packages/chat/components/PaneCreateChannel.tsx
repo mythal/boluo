@@ -1,12 +1,12 @@
-import { Channel, ChannelWithMember } from 'api';
+import { ChannelWithMember } from 'api';
 import { post } from 'api-browser';
-import { channelNameValidation } from 'common/validations';
 import type { FC } from 'react';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
-import { Button, TextInput } from 'ui';
+import { Button } from 'ui/Button';
+import { TextInput } from 'ui/TextInput';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { usePaneReplace } from '../hooks/usePaneReplace';
 import { ClosePaneButton } from './ClosePaneButton';

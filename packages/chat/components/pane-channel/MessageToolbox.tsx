@@ -4,7 +4,7 @@ import { Archive, Edit, Trash, X } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Spinner } from 'ui';
+import { Spinner } from 'ui/Spinner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useOutside } from '../../hooks/useOutside';
 import { makeComposeAction } from '../../state/compose.actions';

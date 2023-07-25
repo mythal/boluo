@@ -4,7 +4,7 @@ import { FC, useState } from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { upload } from '../../media';
 import { PaneFooterBox } from '../PaneFooterBox';

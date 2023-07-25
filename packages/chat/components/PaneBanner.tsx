@@ -1,7 +1,8 @@
 import clsx from 'clsx';
 import { X } from 'icons';
 import { FC, useCallback } from 'react';
-import { Button, Icon } from 'ui';
+import { Button } from 'ui/Button';
+import Icon from 'ui/Icon';
 import { Banner, useSetBanner } from '../hooks/useBanner';
 
 interface Props {

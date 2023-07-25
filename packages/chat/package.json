@@ -31,6 +31,7 @@
     "react-virtuoso": "^4.4.2",
     "store": "workspace:*",
     "swr": "^2.2.0",
+    "theme": "workspace:*",
     "ui": "workspace:*",
     "utils": "workspace:*",
     "uuid": "^9.0.0",

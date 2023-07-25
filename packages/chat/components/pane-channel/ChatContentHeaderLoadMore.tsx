@@ -4,7 +4,7 @@ import { ChevronDown, CircleNotch } from 'icons';
 import { useStore } from 'jotai';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom, useChatDispatch } from '../../state/chat.atoms';

@@ -1,7 +1,7 @@
-import { ChevronDown, Filter, Menu } from 'icons';
+import { ChevronDown, Filter } from 'icons';
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {

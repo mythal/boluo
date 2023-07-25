@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Label, Select, Switch, TextArea, TextInput } from 'ui';
+import { Select } from 'ui/Select';
+import { Switch } from 'ui/Switch';
+import { TextArea, TextInput } from 'ui/TextInput';
 
 const items = [
   { label: 'Papika', value: 'papika' },
@@ -18,10 +20,10 @@ export const FormPlayground = () => {
         <h2 className="text-xl mb-4">Text Input</h2>
         <div className="flex gap-2 flex-col">
           <div>
-            <Label className="inline-flex gap-4 items-center">
+            <label className="inline-flex gap-4 items-center">
               Disable?
               <Switch checked={disabled} onChange={setDisabled} />
-            </Label>
+            </label>
           </div>
           <TextInput disabled={disabled} placeholder="Default" />
           <TextInput disabled={disabled} placeholder="Default" data-state="error" />

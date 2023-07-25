@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { FC, ReactNode, Suspense } from 'react';
-import { Loading } from 'ui';
+import { Loading } from 'ui/Loading';
 import { ChildrenProps, StyleProps } from 'utils';
 import { usePaneFocus } from '../hooks/usePaneFocus';
 import { usePaneIsFocus } from '../hooks/usePaneIsFocus';

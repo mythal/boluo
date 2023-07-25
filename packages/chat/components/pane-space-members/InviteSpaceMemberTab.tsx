@@ -2,7 +2,8 @@ import { get, post } from 'api-browser';
 import { FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
-import { Button, TextInput } from 'ui';
+import { Button } from 'ui/Button';
+import { TextInput } from 'ui/TextInput';
 import { unwrap } from 'utils';
 
 interface Props {

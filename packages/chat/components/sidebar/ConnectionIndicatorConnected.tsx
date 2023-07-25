@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useChatDispatch } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
 

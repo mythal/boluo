@@ -1,6 +1,6 @@
 import { ChevronDown, Menu } from 'icons';
-import { Dispatch, FC, SetStateAction, useState } from 'react';
-import { Button } from 'ui';
+import { FC } from 'react';
+import { Button } from 'ui/Button';
 
 interface Props {
   on: boolean;

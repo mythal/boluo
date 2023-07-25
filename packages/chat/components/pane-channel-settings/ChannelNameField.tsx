@@ -2,7 +2,7 @@ import { channelNameValidation } from 'common/validations';
 import { FC, useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { TextInput } from 'ui';
+import { TextInput } from 'ui/TextInput';
 import { ChannelSettingsForm } from './form';
 
 interface Props {

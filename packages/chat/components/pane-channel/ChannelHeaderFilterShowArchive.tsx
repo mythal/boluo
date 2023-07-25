@@ -1,8 +1,7 @@
 import { Archive } from 'icons';
 import { useAtom } from 'jotai';
 import { FC } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { toggle } from 'utils';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 

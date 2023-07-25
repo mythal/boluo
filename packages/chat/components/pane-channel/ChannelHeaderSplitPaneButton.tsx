@@ -1,7 +1,7 @@
 import { SplitHorizontal } from 'icons';
 import { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { usePaneSplit } from '../../hooks/usePaneSplit';
 
 export const ChannelHeaderSplitPaneButton: FC = () => {

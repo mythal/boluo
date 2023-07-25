@@ -1,7 +1,7 @@
 import { X } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC } from 'react';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { makeComposeAction } from '../../state/compose.actions';
 

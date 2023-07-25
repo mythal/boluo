@@ -2,8 +2,7 @@ import { Filter } from 'icons';
 import { useAtom } from 'jotai';
 import { FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Select } from 'ui';
-import { SelectItem } from 'ui/Select';
+import { Select, SelectItem } from 'ui/Select';
 import { ChannelFilter, useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {

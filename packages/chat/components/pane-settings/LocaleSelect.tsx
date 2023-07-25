@@ -1,7 +1,7 @@
 import { useLocale } from 'common';
 import { toLocale } from 'common/locale';
 import React, { useMemo } from 'react';
-import { Select } from 'ui';
+import { Select } from 'ui/Select';
 
 interface Props {
   id?: string;

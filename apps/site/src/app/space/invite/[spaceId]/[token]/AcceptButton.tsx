@@ -4,7 +4,7 @@ import { post } from 'api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 
 interface Props {
   spaceId: string;

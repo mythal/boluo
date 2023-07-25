@@ -7,8 +7,9 @@ import { useId, useState } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Label, TextInput } from 'ui';
+import { Button } from 'ui/Button';
 import { Oops } from 'ui/Oops';
+import { TextInput } from 'ui/TextInput';
 import * as validations from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/
@@ -42,9 +43,9 @@ const UsernameField = () => {
   return (
     <>
       <div>
-        <Label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="w-full block py-1">
           <FormattedMessage defaultMessage="Username" />
-        </Label>
+        </label>
 
         <TextInput
           className="w-full"
@@ -66,9 +67,9 @@ const EmailField = () => {
   return (
     <>
       <div>
-        <Label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="w-full block py-1">
           <FormattedMessage defaultMessage="EMail" />
-        </Label>
+        </label>
 
         <TextInput
           className="w-full"
@@ -90,9 +91,9 @@ const NicknameField = () => {
   return (
     <>
       <div>
-        <Label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="w-full block py-1">
           <FormattedMessage defaultMessage="Nickname" />
-        </Label>
+        </label>
 
         <TextInput
           className="w-full"
@@ -116,9 +117,9 @@ const PasswordField = () => {
     <>
       <div>
         <div className="flex py-1">
-          <Label htmlFor={id} className="flex-grow">
+          <label htmlFor={id} className="flex-grow">
             <FormattedMessage defaultMessage="Password" />
-          </Label>
+          </label>
 
           <button type="button" onClick={() => setShow((show) => !show)} className="text-brand-700">
             {show ? <FormattedMessage defaultMessage="Hide" /> : <FormattedMessage defaultMessage="Show" />}

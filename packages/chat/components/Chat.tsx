@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { FC, useEffect } from 'react';
 import { Suspense } from 'react';
-import { Loading } from 'ui';
+import { Loading } from 'ui/Loading';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useSpace } from '../hooks/useSpace';

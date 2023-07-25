@@ -2,7 +2,7 @@ import { Settings } from 'icons';
 import { useAtom } from 'jotai';
 import { FC, MouseEventHandler, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { usePaneKey } from '../../hooks/usePaneKey';
 import { panesAtom } from '../../state/view.atoms';

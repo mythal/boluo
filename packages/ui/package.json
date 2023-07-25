@@ -1,7 +1,6 @@
 {
   "name": "ui",
   "version": "0.0.0",
-  "main": "./index.tsx",
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
   "scripts": {

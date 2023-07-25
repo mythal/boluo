@@ -3,7 +3,7 @@ import { Upload, X } from 'icons';
 import { FC, useCallback, useMemo, useRef } from 'react';
 import { useWatch } from 'react-hook-form';
 import { useIntl } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { Avatar } from '../account/Avatar';
 import type { ProfileEditSchema } from './PaneProfileEdit';
 

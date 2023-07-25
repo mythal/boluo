@@ -4,7 +4,7 @@ import { useAtom } from 'jotai';
 import { FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui';
+import { Button } from 'ui/Button';
 import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';

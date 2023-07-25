@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Loading, Spinner } from 'ui';
+import { Loading } from 'ui/Loading';
+import { Spinner } from 'ui/Spinner';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 

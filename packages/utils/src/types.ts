@@ -1,5 +1,7 @@
 import type React from 'react';
 
+export type Empty = Record<string, never>;
+
 export interface StyleProps {
   className?: string | undefined;
 }

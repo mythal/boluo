@@ -17,7 +17,7 @@ interface Props {
   onSuccess?: () => void;
 }
 
-const leave: MutationFetcher<void, [string, string], Empty> = async ([_, channelId]) => {
+const leave: MutationFetcher<void, Empty, [string, string]> = async ([_, channelId]) => {
   await post('/channels/leave', { id: channelId }, {});
 };
 

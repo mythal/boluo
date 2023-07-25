@@ -13,7 +13,7 @@ interface Props {
   channelId: string;
 }
 
-const join: MutationFetcher<ChannelWithMember, [string, string], { characterName?: string }> = async (
+const join: MutationFetcher<ChannelWithMember, { characterName?: string }, [string, string]> = async (
   [_, channelId],
   { arg: { characterName = '' } },
 ) => {

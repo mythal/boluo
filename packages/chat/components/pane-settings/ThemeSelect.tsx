@@ -20,7 +20,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   const theme = useTheme();
   const intl = useIntl();
 
-  const updater: MutationFetcher<Settings, string, Theme> = useCallback(async (url: string, { arg: theme }) => {
+  const updater: MutationFetcher<Settings, Theme, string> = useCallback(async (url: string, { arg: theme }) => {
     const settings: Settings = { theme };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.unwrapOr({});

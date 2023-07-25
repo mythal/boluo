@@ -35,10 +35,7 @@
     "utils": "workspace:*"
   },
   "dependencies": {
-    "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-select": "^1.2.2",
-    "@radix-ui/react-switch": "^1.0.3",
-    "@radix-ui/react-toggle-group": "^1.0.4",
     "clsx": "^1.2.1",
     "common": "workspace:*",
     "icons": "workspace:*",

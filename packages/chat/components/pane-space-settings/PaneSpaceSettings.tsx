@@ -151,7 +151,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const space = useSpace(spaceId);
   const alert = useErrorAlert();
 
-  const updater: MutationFetcher<Space, [string, string], EditSpace> = useCallback(async ([_, spaceId], { arg }) => {
+  const updater: MutationFetcher<Space, EditSpace, [string, string]> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
     const space = result.mapErr(alert).unwrap();
     return space;

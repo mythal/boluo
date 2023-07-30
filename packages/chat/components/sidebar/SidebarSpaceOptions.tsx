@@ -1,6 +1,6 @@
 import type { Space } from 'api';
 import { useMe } from 'common';
-import { Settings, Users } from 'icons';
+import { Settings, Tool, Users } from 'icons';
 import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useState } from 'react';
@@ -39,6 +39,7 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
         disabled={disabled}
         folded={folded}
         toggle={handleToggle}
+        icon={Tool}
       >
         <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">
           {space.name}

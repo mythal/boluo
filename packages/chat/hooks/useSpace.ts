@@ -1,15 +1,12 @@
-import type { Space } from 'api';
+import type { ApiError, Space } from 'api';
 import { get } from 'api-browser';
-import useSWR from 'swr';
+import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
 
-export const useSpace = (spaceId: string): Space => {
-  const { data } = useSWR(
-    ['/spaces/query' as const, spaceId],
+export const useSpace = (spaceId: string): SWRResponse<Space, ApiError> => {
+  const key = ['/spaces/query', spaceId] as const;
+  return useSWR<Space, ApiError, typeof key>(
+    key,
     ([path, id]) => get(path, { id }).then(unwrap),
-    {
-      suspense: true,
-    },
   );
-  return data;
 };

@@ -19,6 +19,5 @@ export const useUser = (
       }
       throw error;
     },
-    { suspense: true },
   );
 };

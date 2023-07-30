@@ -5,10 +5,10 @@ export type LoadingType = 'inline' | 'block';
 
 interface Props {
   type?: LoadingType;
+  label?: string;
 }
 
-export const Loading: FC<Props> = ({ type = 'block' }) => {
-  const label = 'Loading';
+export const Loading: FC<Props> = ({ type = 'block', label = 'Loading' }) => {
   if (type === 'inline') {
     return (
       <span className="text-sm">

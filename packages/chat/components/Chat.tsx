@@ -15,7 +15,8 @@ import { SpaceChatView } from './SpaceChatView';
 const SpaceChat: FC<{
   spaceId: string;
 }> = ({ spaceId }) => {
-  const space = useSpace(spaceId);
+  const { data: space } = useSpace(spaceId);
+  if (!space) return <Loading />;
 
   return <SpaceChatView space={space} />;
 };

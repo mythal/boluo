@@ -11,6 +11,7 @@ import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { HelpText } from 'ui/HelpText';
 import Icon from 'ui/Icon';
+import { Loading } from 'ui/Loading';
 import { Spinner } from 'ui/Spinner';
 import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
@@ -167,18 +168,16 @@ const spaceToForm = (space: Space): FormSchema => ({
   allowSpectator: space.allowSpectator,
 });
 
-export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
-  const close = usePaneClose();
-  const space = useSpace(spaceId);
+const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
   const alert = useErrorAlert();
-
   const updater: MutationFetcher<Space, EditSpace, [string, string]> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
     const space = result.mapErr(alert).unwrap();
     return space;
   }, [alert]);
+
   const { trigger: editSpace, isMutating } = useSWRMutation(
-    ['/spaces/query', spaceId],
+    ['/spaces/query', space.id],
     updater,
     {
       populateCache: (space: Space) => space,
@@ -188,6 +187,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const form = useForm<FormSchema>({
     defaultValues: spaceToForm(space),
   });
+
   const onSubmit = async ({ publicity, ...rest }: FormSchema): Promise<void> => {
     const isPublic = publicity === 'public';
     const space = await editSpace({ isPublic, ...rest, grantAdmins: [], removeAdmins: [] });
@@ -195,6 +195,50 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
       form.reset(spaceToForm(space));
     }
   };
+  return (
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="p-4 flex flex-col gap-8 h-full max-w-md">
+          <div className="flex flex-col gap-2">
+            <SectionTitle>
+              <FormattedMessage defaultMessage="Basic" />
+            </SectionTitle>
+            <NameField />
+            <FieldDefaultDice />
+            <DescriptionField />
+            <InvitationField spaceId={space.id} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <SectionTitle>
+              <FormattedMessage defaultMessage="Space Publicity" />
+            </SectionTitle>
+            <PublicityField />
+          </div>
+          <div>
+            <SectionTitle>
+              <FormattedMessage defaultMessage="Danger Zone" />
+            </SectionTitle>
+            <FieldDestroySpace spaceId={space.id} spaceName={space.name} />
+          </div>
+        </div>
+        <PaneFooterBox>
+          {isMutating && <Spinner />}
+          <Button type="button" onClick={close}>
+            <FormattedMessage defaultMessage="Cancel" />
+          </Button>
+
+          <Button type="submit" data-type="primary" disabled={isMutating || !form.formState.isDirty}>
+            <FormattedMessage defaultMessage="Change Settings" />
+          </Button>
+        </PaneFooterBox>
+      </form>
+    </FormProvider>
+  );
+};
+
+export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
+  const { data: space } = useSpace(spaceId);
+
   const me = useMe();
   if (!me) {
     return (
@@ -203,7 +247,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
             <FormattedMessage
               defaultMessage="Settings of &quot;{spaceName}&quot; Space"
-              values={{ spaceName: space.name }}
+              values={{ spaceName: space?.name ?? '...' }}
             />
           </PaneHeaderBox>
         }
@@ -213,6 +257,9 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
         </div>
       </PaneBox>
     );
+  }
+  if (!space) {
+    return <Loading />;
   }
   return (
     <PaneBox
@@ -226,43 +273,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
       }
     >
       <div className="relative">
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="p-4 flex flex-col gap-8 h-full max-w-md">
-              <div className="flex flex-col gap-2">
-                <SectionTitle>
-                  <FormattedMessage defaultMessage="Basic" />
-                </SectionTitle>
-                <NameField />
-                <FieldDefaultDice />
-                <DescriptionField />
-                <InvitationField spaceId={spaceId} />
-              </div>
-              <div className="flex flex-col gap-2">
-                <SectionTitle>
-                  <FormattedMessage defaultMessage="Space Publicity" />
-                </SectionTitle>
-                <PublicityField />
-              </div>
-              <div>
-                <SectionTitle>
-                  <FormattedMessage defaultMessage="Danger Zone" />
-                </SectionTitle>
-                <FieldDestroySpace spaceId={space.id} spaceName={space.name} />
-              </div>
-            </div>
-            <PaneFooterBox>
-              {isMutating && <Spinner />}
-              <Button type="button" onClick={close}>
-                <FormattedMessage defaultMessage="Cancel" />
-              </Button>
-
-              <Button type="submit" data-type="primary" disabled={isMutating || !form.formState.isDirty}>
-                <FormattedMessage defaultMessage="Change Settings" />
-              </Button>
-            </PaneFooterBox>
-          </form>
-        </FormProvider>
+        <PaneSpaceSettingsForm space={space} />
       </div>
     </PaneBox>
   );

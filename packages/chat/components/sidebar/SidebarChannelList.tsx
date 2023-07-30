@@ -17,7 +17,7 @@ interface Props {
 
 export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
   const panes = useAtomValue(panesAtom);
-  const mySpaceMember = useMySpaceMember(spaceId);
+  const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const { data: channels } = useChannelList(spaceId);
   const channelIdFromPanes = useMemo(
     () => panes.flatMap((pane) => pane.type === 'CHANNEL' ? [pane.channelId] : []),

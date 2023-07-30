@@ -1,8 +1,8 @@
 import type { EditSpace, Space } from 'api';
 import { post } from 'api-browser';
 import { useMe } from 'common';
-import { Settings } from 'icons';
-import { FC, useCallback } from 'react';
+import { ChevronDown, ChevronUp, Settings } from 'icons';
+import { FC, useCallback, useState } from 'react';
 import { useId } from 'react';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
@@ -10,6 +10,7 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { HelpText } from 'ui/HelpText';
+import Icon from 'ui/Icon';
 import { Spinner } from 'ui/Spinner';
 import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
@@ -18,6 +19,7 @@ import { usePaneClose } from '../../hooks/usePaneClose';
 import { useSpace } from '../../hooks/useSpace';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
+import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
@@ -59,6 +61,25 @@ const DescriptionField: FC = () => {
       </div>
       <TextArea {...register('description')} />
     </label>
+  );
+};
+
+const InvitationField: FC<{ spaceId: string }> = ({ spaceId }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div>
+      <div>
+        <Button onClick={() => setExpanded(x => !x)} type="button">
+          <Icon icon={expanded ? ChevronUp : ChevronDown} />
+          <FormattedMessage defaultMessage="Invite" />
+        </Button>
+      </div>
+      {expanded && (
+        <div className="py-2">
+          <InviteSpaceMember spaceId={spaceId} />
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -215,6 +236,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
                 <NameField />
                 <FieldDefaultDice />
                 <DescriptionField />
+                <InvitationField spaceId={spaceId} />
               </div>
               <div className="flex flex-col gap-2">
                 <SectionTitle>

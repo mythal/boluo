@@ -3,6 +3,7 @@ import { FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
 import { Button } from 'ui/Button';
+import { Loading } from 'ui/Loading';
 import { TextInput } from 'ui/TextInput';
 import { unwrap } from 'utils';
 
@@ -10,13 +11,11 @@ interface Props {
   spaceId: string;
 }
 
-export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
+export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   const { data: token, mutate } = useSWR(
     ['/spaces/token' as const, spaceId],
     ([path, id]) => get(path, { id }).then(unwrap),
-    { suspense: true },
   );
-  const link = `${window.location.origin}/space/invite/${spaceId}/${token}`;
   const id = useId();
   const inviteLinkRef = useRef<HTMLInputElement>(null);
   const copy = useCallback(() => {
@@ -35,8 +34,14 @@ export const InviteSpaceMemberTab: FC<Props> = ({ spaceId }) => {
       await mutate(newToken);
     }
   }, [mutate, spaceId]);
+
+  if (!token) {
+    return <Loading />;
+  }
+
+  const link = `${window.location.origin}/space/invite/${spaceId}/${token}`;
   return (
-    <div className="p-4 max-w-lg flex flex-col gap-4">
+    <div className="max-w-lg flex flex-col gap-4">
       <div>
         <label htmlFor={id + 'link'} className="block mb-1">
           <FormattedMessage defaultMessage="Invite Link" />

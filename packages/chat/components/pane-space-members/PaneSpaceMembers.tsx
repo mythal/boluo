@@ -6,9 +6,9 @@ import { useMySpaceMember } from '../../hooks/useMySpaceMember';
 import { useSpace } from '../../hooks/useSpace';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { HeaderTab, TabItem } from '../HeaderTab';
+import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
-import { InviteSpaceMemberTab } from './InviteSpaceMemberTab';
 import { SpaceMemberListTab } from './SpaceMemberListTab';
 
 interface Props {
@@ -64,7 +64,11 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
       }
     >
       <Suspense fallback={<Loading />}>
-        {tab === 'INVITATION' && <InviteSpaceMemberTab spaceId={spaceId} />}
+        {tab === 'INVITATION' && (
+          <div className="p-4">
+            <InviteSpaceMember spaceId={spaceId} />
+          </div>
+        )}
         {tab === 'LIST' && <SpaceMemberListTab spaceId={spaceId} />}
       </Suspense>
     </PaneBox>

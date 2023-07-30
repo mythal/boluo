@@ -6,6 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { MutationFetcher } from 'swr/mutation';
 import { Button } from 'ui/Button';
+import { Loading } from 'ui/Loading';
 import { useChannel } from '../../hooks/useChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { PaneBox } from '../PaneBox';
@@ -41,8 +42,7 @@ const editChannel: MutationFetcher<Channel, ChannelSettingsForm, [string, string
   return result.unwrap();
 };
 
-export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
-  const channel = useChannel(channelId);
+const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const form = useForm<ChannelSettingsForm>({
     defaultValues: {
       name: channel.name,
@@ -51,9 +51,10 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
       defaultRollCommand: channel.defaultRollCommand,
     },
   });
+
   const close = usePaneClose();
   const { trigger, isMutating } = useSWRMutation<Channel, ApiError, [string, string], ChannelSettingsForm>(
-    ['/channels/query', channelId],
+    ['/channels/query', channel.id],
     editChannel,
     {
       populateCache: (channel) => channel,
@@ -67,40 +68,52 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
   };
 
   return (
-    <PaneBox header={<PaneChannelSettingsHeader channel={channel} />}>
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="p-4 flex flex-col gap-4">
-            <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
-            <DefaultDiceField />
-            <DefaultRollCommandField />
-            <TopicField />
-            <IsPrivateField />
-            <div className="p-2 border-t border-b border-error-200 bg-error-50">
-              <div className="text-lg">
-                <FormattedMessage defaultMessage="Danger Zone" />
-              </div>
-              <div>
-                <div className="py-2">
-                  <DeleteChannelButton channelId={channelId} channelName={channel.name} />
-                </div>
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="p-4 flex flex-col gap-4">
+          <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
+          <DefaultDiceField />
+          <DefaultRollCommandField />
+          <TopicField />
+          <IsPrivateField />
+          <div className="p-2 border-t border-b border-error-200 bg-error-50">
+            <div className="text-lg">
+              <FormattedMessage defaultMessage="Danger Zone" />
+            </div>
+            <div>
+              <div className="py-2">
+                <DeleteChannelButton channelId={channel.id} channelName={channel.name} />
               </div>
             </div>
           </div>
-          <PaneFooterBox>
-            <Button type="button" onClick={close}>
-              <FormattedMessage defaultMessage="Cancel" />
-            </Button>
-            <Button
-              type="submit"
-              data-type="primary"
-              disabled={!form.formState.isDirty || isMutating}
-            >
-              <FormattedMessage defaultMessage="Save Changes" />
-            </Button>
-          </PaneFooterBox>
-        </form>
-      </FormProvider>
+        </div>
+        <PaneFooterBox>
+          <Button type="button" onClick={close}>
+            <FormattedMessage defaultMessage="Cancel" />
+          </Button>
+          <Button
+            type="submit"
+            data-type="primary"
+            disabled={!form.formState.isDirty || isMutating}
+          >
+            <FormattedMessage defaultMessage="Save Changes" />
+          </Button>
+        </PaneFooterBox>
+      </form>
+    </FormProvider>
+  );
+};
+
+export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
+  const { data: channel } = useChannel(channelId);
+
+  if (!channel) {
+    return <Loading />;
+  }
+
+  return (
+    <PaneBox header={<PaneChannelSettingsHeader channel={channel} />}>
+      <PaneChannelSettingsForm channel={channel} />
     </PaneBox>
   );
 };

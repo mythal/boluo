@@ -1,15 +1,12 @@
-import type { SpaceMemberWithUser } from 'api';
+import type { ApiError, SpaceMemberWithUser } from 'api';
 import { get } from 'api-browser';
-import useSWR from 'swr';
+import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
 
-export const useSpaceMembers = (spaceId: string): Record<string, SpaceMemberWithUser> => {
-  const { data } = useSWR(
-    ['/spaces/members' as const, spaceId],
+export const useSpaceMembers = (spaceId: string): SWRResponse<Record<string, SpaceMemberWithUser>, ApiError> => {
+  const key = ['/spaces/members', spaceId] as const;
+  return useSWR<Record<string, SpaceMemberWithUser>, ApiError, typeof key>(
+    key,
     ([path, id]) => get(path, { id }).then(unwrap),
-    {
-      suspense: true,
-    },
   );
-  return data;
 };

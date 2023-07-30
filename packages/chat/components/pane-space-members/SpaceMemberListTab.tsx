@@ -1,12 +1,20 @@
 import { FC } from 'react';
+import { Loading } from 'ui/Loading';
 import { useSpaceMembers } from '../../hooks/useSpaceMembers';
+import { ErrorDisplay } from '../ErrorDisplay';
 
 interface Props {
   spaceId: string;
 }
 
 export const SpaceMemberListTab: FC<Props> = ({ spaceId }) => {
-  const membersMap = useSpaceMembers(spaceId);
+  const { data: membersMap, error } = useSpaceMembers(spaceId);
+  if (error != null) {
+    return <ErrorDisplay error={error} />;
+  }
+  if (membersMap == null) {
+    return <Loading />;
+  }
   const members = Object.values(membersMap);
   return (
     <div>

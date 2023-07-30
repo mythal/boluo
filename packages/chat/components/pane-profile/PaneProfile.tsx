@@ -3,6 +3,7 @@ import { Edit, LogOut, User } from 'icons';
 import { FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
+import { Loading } from 'ui/Loading';
 import { toggle } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { ClosePaneButton } from '../ClosePaneButton';
@@ -18,8 +19,7 @@ interface Props {
 
 export const PaneProfile: FC<Props> = ({ userId }) => {
   const me = useMe();
-  const userQuery = useUser(userId);
-  const user = userQuery.data;
+  const { isLoading, data: user } = useUser(userId);
   const isMe = me?.user.id === userId;
   const [isEditing, setIsEditing] = useState(false);
   const intl = useIntl();
@@ -27,6 +27,9 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   const editLabel = intl.formatMessage({ defaultMessage: 'Edit' });
   const logout = useLogout();
 
+  if (isLoading) {
+    return <Loading />;
+  }
   if (!user) {
     return <PaneProfileNotFound />;
   }

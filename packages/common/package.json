@@ -22,10 +22,10 @@
   "devDependencies": {
     "@formatjs/intl": "^2.9.0",
     "@types/node": "^18.17.1",
-    "@types/react": "^18.2.16",
+    "@types/react": "^18.2.17",
     "@types/react-dom": "^18.2.7",
     "api": "workspace:*",
-    "eslint": "^8.45.0",
+    "eslint": "^8.46.0",
     "eslint-config-custom": "workspace:*",
     "jotai": "^2.2.2",
     "react": "^18.2.0",

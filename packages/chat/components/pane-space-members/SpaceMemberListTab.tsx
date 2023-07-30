@@ -10,7 +10,7 @@ interface Props {
 export const SpaceMemberListTab: FC<Props> = ({ spaceId }) => {
   const { data: membersMap, error } = useSpaceMembers(spaceId);
   if (error != null) {
-    return <ErrorDisplay error={error} />;
+    return <ErrorDisplay error={error} type="block" />;
   }
   if (membersMap == null) {
     return <Loading />;

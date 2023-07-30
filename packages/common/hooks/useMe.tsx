@@ -10,9 +10,10 @@ const MeContext = React.createContext<GetMe | null>(null);
 export const useMe = (): GetMe | null => useContext(MeContext);
 
 export const MeProvider: FC<{ initialMe?: GetMe | null; children: ReactNode }> = ({ initialMe, children }) => {
+  const key = ['/users/get_me'] as const;
   const { data } = useSWR(
-    '/users/get_me',
-    (path) => get(path, null).then(unwrap),
+    key,
+    ([path]) => get(path, null).then(unwrap),
     initialMe !== undefined
       ? {
         fallbackData: initialMe,

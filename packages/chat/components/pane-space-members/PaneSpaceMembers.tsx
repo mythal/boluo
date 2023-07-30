@@ -25,7 +25,7 @@ const MembersTabItems: TabItem[] = [
 export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
   const { data: space } = useSpace(spaceId);
   const [tab, setTab] = useState<MembersTab>('LIST');
-  const mySpaceMember = useMySpaceMember(spaceId);
+  const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const title = (
     <FormattedMessage
       defaultMessage="Members of &quot;{spaceName}&quot; Space"

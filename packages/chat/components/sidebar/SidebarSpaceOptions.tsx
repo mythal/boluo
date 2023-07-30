@@ -20,7 +20,7 @@ interface Props {
 export const SpaceOptions: FC<Props> = ({ space }) => {
   const panes = useAtomValue(panesAtom);
   const me = useMe();
-  const mySpaceMember = useMySpaceMember(space.id);
+  const { data: mySpaceMember } = useMySpaceMember(space.id);
   const disabled = me === null;
   const [folded, setFold] = useState(true);
   const togglePane = usePaneToggle();

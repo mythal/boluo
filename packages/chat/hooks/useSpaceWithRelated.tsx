@@ -1,17 +1,17 @@
-import type { SpaceWithRelated } from 'api';
+import { ApiError, SpaceWithRelated } from 'api';
 import { get } from 'api-browser';
-import useSWR, { useSWRConfig } from 'swr';
+import useSWR, { SWRResponse, useSWRConfig } from 'swr';
 import { unwrap } from 'utils';
 
 const options = { revalidate: false };
 
-export const useSpaceWithRelated = (spaceId: string): SpaceWithRelated => {
+export const useSpaceWithRelated = (spaceId: string): SWRResponse<SpaceWithRelated, ApiError> => {
   const { mutate } = useSWRConfig();
-  const { data } = useSWR(
+  const key = ['/spaces/query_with_related', spaceId] as const;
+  return useSWR<SpaceWithRelated, ApiError, typeof key>(
     ['/spaces/query_with_related' as const, spaceId],
     ([path, id]) => get(path, { id }).then(unwrap),
     {
-      suspense: true,
       onSuccess: (({ space, channels }) => {
         void mutate(['/space/query', space.id], space, options);
         void mutate(['/channels/by_space', space.id], channels, options);
@@ -21,5 +21,4 @@ export const useSpaceWithRelated = (spaceId: string): SpaceWithRelated => {
       }),
     },
   );
-  return data;
 };

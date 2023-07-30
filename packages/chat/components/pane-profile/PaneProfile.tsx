@@ -74,7 +74,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
       }
     >
       {(isMe && isEditing)
-        ? <PaneProfileEdit exit={() => setIsEditing(false)} me={me.user} />
+        ? <PaneProfileEdit onSuccess={() => setIsEditing(false)} me={me.user} />
         : <PaneProfileView user={user} />}
     </PaneBox>
   );

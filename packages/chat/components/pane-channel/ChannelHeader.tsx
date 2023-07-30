@@ -10,8 +10,8 @@ import { ChannelHeaderOperations } from './ChannelHeaderOperations';
 export type ChannelHeaderState = 'DEFAULT' | 'MORE' | 'FILTER';
 
 const ChannelName: FC<{ channelId: string }> = ({ channelId }) => {
-  const channel = useChannel(channelId);
-  return <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">{channel.name}</span>;
+  const { data: channel } = useChannel(channelId);
+  return <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">{channel?.name ?? '...'}</span>;
 };
 
 export const ChannelHeader: FC = () => {

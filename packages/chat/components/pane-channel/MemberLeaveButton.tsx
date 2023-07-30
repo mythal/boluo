@@ -23,7 +23,7 @@ const leave: MutationFetcher<void, Empty, [string, string]> = async ([_, channel
 
 export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   const channelMember = useMyChannelMember(channelId);
-  const channel = useChannel(channelId);
+  const { data: channel, isLoading } = useChannel(channelId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, { onSuccess });
 
   const [isConfirmOpen, setComfirmOpen] = useState(false);
@@ -47,8 +47,13 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   ]);
   return (
     <>
-      <Button data-small ref={refs.setReference} disabled={!channelMember || isMutating} {...getReferenceProps()}>
-        {isMutating ? <Spinner /> : <UserX />}
+      <Button
+        data-small
+        ref={refs.setReference}
+        disabled={!channelMember || isMutating || isLoading}
+        {...getReferenceProps()}
+      >
+        {isMutating || isLoading ? <Spinner /> : <UserX />}
         <FormattedMessage defaultMessage="Leave" />
       </Button>
       {isConfirmOpen && (
@@ -66,7 +71,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
               />
             </div>
             <div className="text-right pt-2">
-              <Button data-type="danger" data-small onClick={confirm}>
+              <Button data-type="danger" data-small onClick={confirm} disabled={channel == null}>
                 <FormattedMessage defaultMessage="Leave" />
               </Button>
             </div>

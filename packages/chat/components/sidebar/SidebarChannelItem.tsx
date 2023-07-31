@@ -17,7 +17,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
 
   return (
     <SidebarItem onClick={handleClick} icon={<Hash />} active={active}>
-      {channel.name}
+      <span className="text-left break-all">
+        {channel.name}
+      </span>
     </SidebarItem>
   );
 };

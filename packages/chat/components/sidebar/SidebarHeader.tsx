@@ -13,7 +13,7 @@ export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
   return (
     <div
       className={clsx(
-        'h-pane-header border-b bg-surface-100 border-b-gray-400 flex justify-between gap-1 py-2 items-center select-none',
+        'h-pane-header flex justify-between gap-1 py-2 items-center select-none',
         isExpanded ? 'px-4' : 'px-3',
       )}
     >

@@ -28,7 +28,7 @@ export const Sidebar: FC<Props> = ({ space, className }) => {
         <SidebarHeader toggleExpand={toggleExpanded} />
         <div
           className={clsx(
-            'bg-bg relative flex-grow flex flex-col justify-between overflow-hidden',
+            'relative flex-grow flex flex-col justify-between overflow-hidden',
             isExpanded ? 'w-sidebar' : '',
           )}
         >

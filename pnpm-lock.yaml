@@ -5,7 +5,7 @@ importers:
   .:
     dependencies:
       dprint:
-        specifier: ^0.36.1
+        specifier: ~0.36.1
         version: 0.36.1
       eslint-config-custom:
         specifier: workspace:*

@@ -10,12 +10,14 @@ import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
 import { ChatRoot } from './ChatRoot';
 import { ChatSkeleton } from './ChatSkeleton';
+import { ErrorDisplay } from './ErrorDisplay';
 import { SpaceChatView } from './SpaceChatView';
 
 const SpaceChat: FC<{
   spaceId: string;
 }> = ({ spaceId }) => {
-  const { data: space } = useSpace(spaceId);
+  const { data: space, error } = useSpace(spaceId);
+  if (error) return <ErrorDisplay error={error} />;
   if (!space) return <Loading />;
 
   return <SpaceChatView space={space} />;

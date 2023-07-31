@@ -7,6 +7,7 @@ import { Loading } from 'ui/Loading';
 import { toggle } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { ClosePaneButton } from '../ClosePaneButton';
+import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneProfileEdit } from './PaneProfileEdit';
@@ -19,7 +20,7 @@ interface Props {
 
 export const PaneProfile: FC<Props> = ({ userId }) => {
   const me = useMe();
-  const { isLoading, data: user } = useUser(userId);
+  const { isLoading, data: user, error } = useUser(userId);
   const isMe = me?.user.id === userId;
   const [isEditing, setIsEditing] = useState(false);
   const intl = useIntl();
@@ -29,8 +30,9 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
 
   if (isLoading) {
     return <Loading />;
-  }
-  if (!user) {
+  } else if (error) {
+    return <ErrorDisplay error={error} />;
+  } else if (user == null) {
     return <PaneProfileNotFound />;
   }
   const operators = (

@@ -1,14 +1,25 @@
+import { ApiError, isApiError } from 'api';
 import { useErrorExplain } from 'common';
-import { FC } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 interface Props {
   error: unknown;
-  type?: 'block' | 'banner';
+  type?: 'block' | 'unstyled' | 'banner';
+  className?: string;
+  custom?: (error: ApiError) => ReactNode;
 }
 
-export const ErrorDisplay: FC<Props> = ({ error, type = 'block' }) => {
+export const ErrorDisplay: FC<Props> = ({ error, type = 'unstyled', className = '', custom }) => {
   const explain = useErrorExplain();
-  const message = explain(error);
+  const message: ReactNode = useMemo(() => {
+    if (custom && isApiError(error)) {
+      const customMessage = custom(error);
+      if (customMessage) {
+        return customMessage;
+      }
+    }
+    return explain(error);
+  }, [custom, error, explain]);
 
   switch (type) {
     case 'banner':
@@ -16,6 +27,7 @@ export const ErrorDisplay: FC<Props> = ({ error, type = 'block' }) => {
     case 'block':
       return <div>{message}</div>;
     default:
-      return <div>{message}</div>;
+      // unstyled
+      return <div className={className}>{message}</div>;
   }
 };

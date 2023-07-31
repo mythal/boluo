@@ -1,12 +1,11 @@
 import type { ApiError, User } from 'api';
 import { editAvatar, post } from 'api-browser';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
-import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { upload } from '../../media';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneFooterBox } from '../PaneFooterBox';

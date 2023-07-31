@@ -5,6 +5,7 @@ import { useStore } from 'jotai';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
+import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom, useChatDispatch } from '../../state/chat.atoms';
@@ -37,6 +38,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const [touchState, setTouchState] = useState<'NONE' | 'START' | 'WILL_LOAD'>('NONE');
   const isVisibleRef = useRef(false);
   const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
+  const setBanner = useSetBanner();
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -116,7 +118,15 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
       const result = await fetchPromise;
       if (result.isErr) {
-        // TODO: error handing
+        setBanner({
+          level: 'ERROR',
+          content: (
+            <FormattedMessage
+              defaultMessage="Failed to load messages ({errorCode})"
+              values={{ errorCode: result.err.code }}
+            />
+          ),
+        });
         setIsLoading(false);
         return;
       }
@@ -129,7 +139,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       });
       setIsLoading(false);
     },
-    [channelId, dispatch, mountedRef, store],
+    [channelId, dispatch, mountedRef, setBanner, store],
   );
 
   const willLoad = touchState === 'WILL_LOAD';

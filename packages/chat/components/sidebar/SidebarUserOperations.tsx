@@ -33,10 +33,9 @@ export const isLoginOpenAtom = atom((get) => {
   return panes.findIndex(pane => pane.type === 'LOGIN') !== -1;
 });
 
-export const isProfileOpenAtom = atom((get) => {
+export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {
   const panes = get(panesAtom);
-  // TODO: me
-  return panes.findIndex(pane => pane.type === 'PROFILE') !== -1;
+  return (id: string) => panes.findIndex(pane => pane.type === 'PROFILE' && pane.userId === id) !== -1;
 });
 export const SidebarUserOperations: FC<Props> = () => {
   const me = useMe();
@@ -89,12 +88,12 @@ export const SidebarUserOperations: FC<Props> = () => {
     );
   }
   return (
-    <div className={folded ? '' : 'border-t'}>
+    <div className={'border-t border-surface-100'}>
       {!folded && me && (
         <>
           {settingsItem}
           {helpItem}
-          <SidebarItem icon={<User />} active={isProfileOpen} toggle onClick={handleToggleProfile}>
+          <SidebarItem icon={<User />} active={isProfileOpen(me.user.id)} toggle onClick={handleToggleProfile}>
             <FormattedMessage defaultMessage="Profile" />
           </SidebarItem>
         </>

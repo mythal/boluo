@@ -18,17 +18,17 @@ export const SidebarItem: FC<Props> = (
     <button
       onClick={onClick}
       className={clsx(
-        'group flex text-left items-center gap-1 w-full hover:bg-surface-200',
+        'group flex text-left items-center justify-between gap-1 w-full hover:bg-surface-100',
         isExpanded ? 'text-left text-sm  px-4 py-3' : 'text-center justify-center text-lg px-2 py-3',
-        toggle && [
-          'border-r',
-          active ? 'border-brand-500' : 'border-surface-200',
-        ],
-        active && 'bg-surface-100',
+        active && 'bg-surface-50',
       )}
     >
       <span className={active ? 'text-surface-600' : 'text-surface-400'}>{icon}</span>
-      {isExpanded && children}
+      <span className="text-left flex-grow">
+        {isExpanded && children}
+      </span>
+
+      {toggle && <span className={clsx('', active ? 'text-brand-500' : 'text-surface-300')}>{active ? '•' : '•'}</span>}
     </button>
   );
 };

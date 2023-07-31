@@ -19,16 +19,21 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) =
     <div className={paneBanner.content || extra ? '' : ''}>
       <div
         className={clsx(
-          'min-h-pane-header bg-surface-100 flex items-center px-4 text-lg',
-          'justify-between border-b',
-          isFocused ? 'border-brand-600' : 'border-surface-300',
+          'min-h-pane-header flex items-center px-4 text-lg',
+          'justify-between border-b border-surface-200',
+          isFocused ? 'bg-surface-50' : 'bg-surface-50',
         )}
       >
         <div className="inline-flex gap-1 items-center flex-nowrap min-w-0">
-          <div className="flex-shrink-0">
+          <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>
             {icon}
           </div>
-          <div className="whitespace-nowrap overflow-hidden text-ellipsis flex-shrink">
+          <div
+            className={clsx(
+              'whitespace-nowrap overflow-hidden text-ellipsis flex-shrink',
+              isFocused ? 'text-surface-950' : 'text-surface-400',
+            )}
+          >
             {children}
           </div>
         </div>

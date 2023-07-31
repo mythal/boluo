@@ -34,7 +34,7 @@ export const Sidebar: FC<Props> = ({ space, className }) => {
         >
           {isExpanded
             ? (
-              <div className="divide-y overflow-y-auto">
+              <div className="divide-y overflow-y-auto overflow-x-hidden">
                 <SpaceOptions space={space} />
                 <SidebarChannelList spaceId={space.id} />
               </div>

@@ -16,6 +16,7 @@ import { Spinner } from 'ui/Spinner';
 import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { usePaneClose } from '../../hooks/usePaneClose';
 import { useSpace } from '../../hooks/useSpace';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
@@ -167,7 +168,7 @@ const spaceToForm = (space: Space): FormSchema => ({
   allowSpectator: space.allowSpectator,
 });
 
-const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
+const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space, close }) => {
   const key = ['/spaces/query', space.id] as const;
   const updater: MutationFetcher<Space, EditSpace, typeof key> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
@@ -243,6 +244,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const { data: space, error } = useSpace(spaceId);
 
+  const close = usePaneClose();
   const me = useMe();
 
   if (error) {
@@ -281,7 +283,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
       }
     >
       <div className="relative">
-        <PaneSpaceSettingsForm space={space} />
+        <PaneSpaceSettingsForm space={space} close={close} />
       </div>
     </PaneBox>
   );

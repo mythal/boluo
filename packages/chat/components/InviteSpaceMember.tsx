@@ -36,7 +36,11 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   }, [mutate, spaceId]);
 
   if (!token) {
-    return <Loading />;
+    return (
+      <div className="py-2">
+        <Loading />
+      </div>
+    );
   }
 
   const link = `${window.location.origin}/space/invite/${spaceId}/${token}`;

@@ -37,7 +37,7 @@ export const Select: FC<Props> = ({ items, onChange, value, id, disabled = false
       </BaseSelect.Trigger>
 
       <BaseSelect.Portal>
-        <BaseSelect.Content className="bg-lowest border-1/2 border-pin-surface-600 rounded shadow-1 shadow-surface-300/50">
+        <BaseSelect.Content className="bg-lowest border-1/2 border-pin-surface-600 rounded shadow-lg">
           <BaseSelect.ScrollUpButton>
             <Icon icon={ChevronUp} />
           </BaseSelect.ScrollUpButton>

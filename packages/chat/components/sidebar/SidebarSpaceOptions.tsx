@@ -41,7 +41,7 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
         toggle={handleToggle}
         icon={Tool}
       >
-        <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">
+        <div className="break-all">
           {space.name}
         </div>
       </SidebarGroupHeader>

@@ -9,6 +9,7 @@ import { Button } from 'ui/Button';
 import { Loading } from 'ui/Loading';
 import { useChannel } from '../../hooks/useChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
+import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { ChannelNameField } from './ChannelNameField';
@@ -53,7 +54,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   });
 
   const close = usePaneClose();
-  const { trigger, isMutating } = useSWRMutation<Channel, ApiError, [string, string], ChannelSettingsForm>(
+  const { trigger, isMutating, error } = useSWRMutation<Channel, ApiError, [string, string], ChannelSettingsForm>(
     ['/channels/query', channel.id],
     editChannel,
     {
@@ -69,6 +70,11 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 
   return (
     <FormProvider {...form}>
+      {error && (
+        <div className="py-2 px-4">
+          <ErrorDisplay type="banner" error={error} />
+        </div>
+      )}
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="p-4 flex flex-col gap-4">
           <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
@@ -105,9 +111,11 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 };
 
 export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
-  const { data: channel } = useChannel(channelId);
+  const { data: channel, error } = useChannel(channelId);
 
-  if (!channel) {
+  if (error) {
+    return <ErrorDisplay type="block" error={error} />;
+  } else if (!channel) {
     return <Loading />;
   }
 

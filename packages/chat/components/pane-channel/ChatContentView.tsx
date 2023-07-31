@@ -10,7 +10,9 @@ import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
+import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
+import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
@@ -80,6 +82,7 @@ const useDndHandles = (
   chatList: ChatItem[],
   setOptimisticItems: SetOptimisticItems,
 ): UseDragHandlesResult => {
+  const setBanner = useSetBanner();
   const [draggingItem, setDraggingItem] = useState<DraggingItem | null>(null);
   const activeRef = useRef<DraggingItem | null>(draggingItem);
   activeRef.current = draggingItem;
@@ -156,10 +159,14 @@ const useDndHandles = (
         return nextItems;
       });
       if (result.isErr) {
-        // TODO: handle error
+        const errorCode = result.err.code;
+        setBanner({
+          level: 'ERROR',
+          content: <FormattedMessage defaultMessage="Failed to move message ({errorCode})" values={{ errorCode }} />,
+        });
       }
     }
-  }, [setOptimisticItems, channelId, resetDragging]);
+  }, [resetDragging, setOptimisticItems, channelId, setBanner]);
 
   const handleDragCancel = useCallback(() => {
     resetDragging();

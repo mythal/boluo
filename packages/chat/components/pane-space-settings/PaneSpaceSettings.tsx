@@ -1,4 +1,4 @@
-import type { EditSpace, Space } from 'api';
+import type { ApiError, EditSpace, Space } from 'api';
 import { post } from 'api-browser';
 import { useMe } from 'common';
 import { ChevronDown, ChevronUp, Settings } from 'icons';
@@ -16,10 +16,10 @@ import { Spinner } from 'ui/Spinner';
 import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
-import { usePaneClose } from '../../hooks/usePaneClose';
 import { useSpace } from '../../hooks/useSpace';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
+import { ErrorDisplay } from '../ErrorDisplay';
 import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
@@ -169,14 +169,14 @@ const spaceToForm = (space: Space): FormSchema => ({
 });
 
 const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
-  const alert = useErrorAlert();
-  const updater: MutationFetcher<Space, EditSpace, [string, string]> = useCallback(async ([_, spaceId], { arg }) => {
+  const key = ['/spaces/query', space.id] as const;
+  const updater: MutationFetcher<Space, EditSpace, typeof key> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
-    const space = result.mapErr(alert).unwrap();
+    const space = result.unwrap();
     return space;
-  }, [alert]);
+  }, []);
 
-  const { trigger: editSpace, isMutating } = useSWRMutation(
+  const { trigger: editSpace, isMutating, error } = useSWRMutation<Space, ApiError, typeof key, EditSpace>(
     ['/spaces/query', space.id],
     updater,
     {
@@ -197,6 +197,11 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
   };
   return (
     <FormProvider {...form}>
+      {error && (
+        <div>
+          <ErrorDisplay type="banner" error={error} />
+        </div>
+      )}
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="p-4 flex flex-col gap-8 h-full max-w-md">
           <div className="flex flex-col gap-2">
@@ -237,9 +242,16 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
 };
 
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
-  const { data: space } = useSpace(spaceId);
+  const { data: space, error } = useSpace(spaceId);
 
   const me = useMe();
+
+  if (error) {
+    return <ErrorDisplay error={error} />;
+  }
+  if (!space) {
+    return <Loading />;
+  }
   if (!me) {
     return (
       <PaneBox
@@ -247,7 +259,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
             <FormattedMessage
               defaultMessage="Settings of &quot;{spaceName}&quot; Space"
-              values={{ spaceName: space?.name ?? '...' }}
+              values={{ spaceName: space.name ?? '...' }}
             />
           </PaneHeaderBox>
         }
@@ -257,9 +269,6 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
         </div>
       </PaneBox>
     );
-  }
-  if (!space) {
-    return <Loading />;
   }
   return (
     <PaneBox

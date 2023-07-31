@@ -5,6 +5,7 @@ import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Spinner } from 'ui/Spinner';
+import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useOutside } from '../../hooks/useOutside';
 import { makeComposeAction } from '../../state/compose.actions';
@@ -25,6 +26,7 @@ const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode
 Box.displayName = 'MessageToolboxBox';
 
 export const MessageToolbox: FC<Props> = ({ className, message }) => {
+  const setBanner = useSetBanner();
   const boxRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<ToolboxState>('NORMAL');
   const composeAtom = useComposeAtom();
@@ -34,7 +36,11 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
     setState('LOADING');
     const result = await post('/messages/delete', { id: message.id }, {});
     if (result.isErr) {
-      // TODO: error handing
+      const errorCode = result.err.code;
+      setBanner({
+        level: 'ERROR',
+        content: <FormattedMessage defaultMessage="Failed to delete message ({ errorCode })" values={{ errorCode }} />,
+      });
       setState('NORMAL');
       return;
     } else {

@@ -1,6 +1,5 @@
 {
   // ESLint
-  "eslint.packageManager": "npm",
   "eslint.workingDirectories": [
     {
       "pattern": "./packages/*"

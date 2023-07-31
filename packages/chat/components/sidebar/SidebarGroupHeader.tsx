@@ -14,7 +14,7 @@ export const SidebarGroupHeader: FC<Props> = ({ folded, toggle, children, disabl
   return (
     <button
       onClick={toggle}
-      className="flex gap-2 items-center justify-between w-full text-surface-600 py-3 px-4  border-surface-100 group cursor-pointer hover:bg-surface-100"
+      className="flex gap-2 items-center justify-between w-full text-surface-600 py-3 px-4 border-surface-100 group cursor-pointer hover:bg-surface-100"
     >
       <div className="flex text-left gap-2 min-w-0 text-base">
         {children}
@@ -22,7 +22,7 @@ export const SidebarGroupHeader: FC<Props> = ({ folded, toggle, children, disabl
       {!disabled && (
         <span
           className={clsx(
-            'p-1.5 border rounded-md bg-surface-50 text-sm',
+            'w-8 h-8 flex-none inline-flex items-center justify-center border rounded-md bg-surface-50 text-sm',
             folded ? 'group-hover:border-surface-300' : 'border-surface-400',
           )}
         >

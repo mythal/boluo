@@ -89,13 +89,13 @@ export const DeleteChannelButton: FC<Props> = ({ channelId, channelName }) => {
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
-            className="bg-error-50 border w-60 border-error-400 rounded-sm shadow-1 shadow-surface-900/25 py-2 px-4"
+            className="bg-warning-50 border w-60 border-warning-300 rounded shadow py-2 px-4"
           >
             <FormattedMessage
               defaultMessage="Are you sure you want to delete the &quot;{channelName}&quot; channel?"
               values={{ channelName }}
             />
-            <div className="flex gap-1 justify-end pt-2">
+            <div className="flex gap-1 justify-end pt-3">
               <Button type="button" onClick={cancel}>
                 <FormattedMessage defaultMessage="Cancel" />
               </Button>

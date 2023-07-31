@@ -28,7 +28,7 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
     }
   }, [settingsPaneKey, setPanes, currentPaneKey, addPane, channelId]);
   return (
-    <Button data-small onClick={handleClick} data-type="switch" data-on={settingsPaneKey != null}>
+    <Button onClick={handleClick} data-type="switch" data-on={settingsPaneKey != null}>
       <Settings />
       <FormattedMessage defaultMessage="Channel Settings" />
     </Button>

@@ -48,7 +48,6 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   return (
     <>
       <Button
-        data-small
         ref={refs.setReference}
         disabled={!channelMember || isMutating || isLoading}
         {...getReferenceProps()}
@@ -59,7 +58,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
       {isConfirmOpen && (
         <FloatingPortal>
           <div
-            className="bg-surface-100 border border-surface-400 rounded-sm shadow-1 shadow-surface-900/25 py-2 px-4"
+            className="bg-surface-50 border border-surface-200 rounded-sm shadow py-3 px-4"
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}

@@ -16,12 +16,8 @@ export const ChannelHeaderFilterButton: FC<Props> = ({ on, toggle }) => {
   const filter = useAtomValue(filterAtom);
   return (
     <div className="relative flex items-stretch">
-      <Button data-small onClick={toggle} data-active={on}>
+      <Button data-small onClick={toggle} data-type="detail" data-active={on} data-on={on}>
         <Filter />
-        <ChevronDown
-          data-on={on}
-          className="data-[on=true]:rotate-180 transition-transform duration-200 text-surface-500 data-[on=true]:text-surface-600"
-        />
       </Button>
       {filter !== 'ALL' && <Dot />}
     </div>

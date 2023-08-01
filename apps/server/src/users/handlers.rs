@@ -2,8 +2,8 @@ use super::api::{Login, LoginReturn, Register, ResetPassword, ResetPasswordConfi
 use super::models::User;
 use crate::interface::{missing, ok_response, parse_body, parse_query, Response};
 use crate::session::{
-    add_session_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie, remove_session,
-    remove_session_cookie, revoke_session,
+    add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie,
+    remove_session, remove_session_cookie, revoke_session,
 };
 use crate::{cache, database, mail};
 
@@ -126,12 +126,14 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
     let settings = UserExt::get_settings(db, user.id).await?;
     let me = GetMe {
         user,
-        settings,
+        settings: settings.clone(),
         my_spaces,
         my_channels,
     };
     let mut response = ok_response(LoginReturn { me, token });
-    add_session_cookie(&session, host.as_ref(), response.headers_mut());
+    let headers = response.headers_mut();
+    add_session_cookie(&session, host.as_ref(), headers);
+    add_settings_cookie(&settings, headers);
     Ok(response)
 }
 

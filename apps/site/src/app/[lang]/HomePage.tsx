@@ -8,10 +8,10 @@ import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import type { StyleProps } from 'utils';
-import { Me } from '../components/Me';
+import { Me } from '../../components/Me';
 
 const useLogout = () => {
   const router = useRouter();

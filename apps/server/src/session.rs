@@ -122,6 +122,45 @@ pub fn add_session_cookie(session: &Uuid, host: Option<&HeaderValue>, response_h
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
 }
 
+pub fn add_settings_cookie(settings: &serde_json::Value, response_header: &mut HeaderMap<HeaderValue>) {
+    use cookie::time::Duration;
+    use cookie::CookieBuilder;
+    use hyper::header::SET_COOKIE;
+
+    if settings.is_null() || !settings.is_object() {
+        return;
+    }
+    let max_age = Duration::days(10 * 365);
+    if let Some(locale) = settings.get("locale") {
+        if locale.is_string() {
+            let locale = locale.as_str().expect("Failed to get locale string.");
+            let cookie = CookieBuilder::new("boluo-locale", locale)
+                .path("/")
+                .max_age(max_age)
+                .finish()
+                .to_string();
+            response_header.append(
+                SET_COOKIE,
+                HeaderValue::from_str(&cookie).expect("Failed to convert cookie to header value."),
+            );
+        }
+    }
+    if let Some(theme) = settings.get("theme") {
+        if theme.is_string() {
+            let theme = theme.as_str().expect("Failed to get theme string.");
+            let cookie = CookieBuilder::new("boluo-theme", theme)
+                .path("/")
+                .max_age(max_age)
+                .finish()
+                .to_string();
+            response_header.append(
+                SET_COOKIE,
+                HeaderValue::from_str(&cookie).expect("Failed to convert cookie to header value."),
+            );
+        }
+    }
+}
+
 pub async fn remove_session(id: Uuid) -> Result<(), CacheError> {
     let key = make_key(&id);
     cache::conn().await?.remove(&key).await?;

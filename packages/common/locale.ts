@@ -15,16 +15,24 @@ export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {
   }
 };
 
+export const narrowLocale = (locale: string): Locale | null => {
+  if (locale === 'zh' || locale.startsWith('zh-')) {
+    return 'zh-CN';
+  } else if (locale === 'ja') {
+    return 'ja';
+  } else if (locale === 'en' || locale.startsWith('en-')) {
+    return 'en';
+  } else {
+    return null;
+  }
+};
+
 export const toLocale = (data: unknown): Locale => {
   if (typeof data !== 'string') {
     return 'en';
-  } else if (data.startsWith('zh')) {
-    return 'zh-CN';
-  } else if (data.startsWith('ja')) {
-    return 'ja';
-  } else {
-    return 'en';
   }
+  const locale = data.trim().toLocaleLowerCase();
+  return narrowLocale(locale) ?? 'en';
 };
 
 export const onIntlError: OnErrorFn = (e) => {

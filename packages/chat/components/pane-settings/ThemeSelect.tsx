@@ -35,7 +35,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     if (me) {
       void trigger(theme);
     } else {
-      document.cookie = `BOLUO_THEME=${theme}; path=/`;
+      document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
     }
   };
 

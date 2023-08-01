@@ -14,6 +14,10 @@ import { toTheme } from 'theme';
 import type { Theme } from 'theme';
 import { get } from './api/server';
 
+export interface LangParams {
+  lang?: string;
+}
+
 export const getMe = cache(async (): Promise<GetMe | null> => {
   return (await get('/users/get_me', null)).unwrapOr(null);
 });
@@ -55,7 +59,7 @@ export const getLocale = cache(async (): Promise<Locale> => {
 });
 
 export const getThemeFromHeaders = cache((): Theme => {
-  const cookieTheme = cookies().get('BOLUO_THEME')?.value;
+  const cookieTheme = cookies().get('boluo-theme')?.value;
   if (!cookieTheme) {
     return 'system';
   }
@@ -84,14 +88,21 @@ export const getMessages = (locale: Locale): IntlMessages => {
   }
 };
 
-export const getIntl = cache(async (): Promise<IntlShape<string>> => {
-  const locale = await getLocale();
+export const getIntl = ({ lang }: LangParams): IntlShape<string> => {
+  const locale = toLocale(lang);
   const messages = getMessages(locale);
   return createIntl({
     locale,
     messages,
+    onError: (err) => {
+      if (err.code === 'MISSING_TRANSLATION') {
+        console.warn(err.message.trim());
+      } else {
+        console.error(err);
+      }
+    },
   });
-});
+};
 
 export const title = (intl: IntlShape<string>, prefix: string): string => {
   return prefix + ' - ' + intl.formatMessage({ defaultMessage: 'Boluo' });

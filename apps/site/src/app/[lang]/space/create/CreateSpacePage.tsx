@@ -2,7 +2,7 @@
 
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
-import { CreateSpaceForm } from '../../../components/CreateSpaceForm';
+import { CreateSpaceForm } from '../../../../components/CreateSpaceForm';
 
 export const CreateSpacePage: FC = () => {
   const intl = useIntl();

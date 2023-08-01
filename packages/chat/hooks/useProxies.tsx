@@ -4,12 +4,12 @@ import { useIntl } from 'react-intl';
 import useSWR from 'swr';
 
 const fetcher = async (): Promise<Proxy[]> => {
-  const res = await fetch('api/info/proxies');
+  const res = await fetch('/api/info/proxies');
   return (await res.json()) as Proxy[];
 };
 
 export const useProxies = () => {
-  const { data: proxies } = useSWR('/info/proxies', fetcher, {
+  const { data: proxies } = useSWR(['/info/proxies'], fetcher, {
     suspense: false,
     revalidateOnFocus: true,
     refreshInterval: 1000 * 60,

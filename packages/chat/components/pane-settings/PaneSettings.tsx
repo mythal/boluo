@@ -54,11 +54,20 @@ const ExpandDiceField = () => {
 
 const LogoutField = () => {
   const logout = useLogout();
-  const me = useMe()!;
+  const me = useMe();
   const addPane = usePaneAdd();
   const openProfile = () => {
-    addPane({ type: 'PROFILE', userId: me.user.id });
+    if (me != null && me !== 'LOADING') {
+      addPane({ type: 'PROFILE', userId: me.user.id });
+    }
   };
+  if (me == null) {
+    console.error("Unexpected null value for 'me'");
+    return null;
+  }
+  if (me === 'LOADING') {
+    return null;
+  }
   return (
     <div className="flex justify-between @md:items-center gap-4 select-none flex-col @md:flex-row">
       <div className="text-lg">

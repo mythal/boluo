@@ -57,7 +57,7 @@ export const SidebarUserOperations: FC<Props> = () => {
     togglePane({ type: 'SETTINGS' });
   }, [togglePane]);
   const handleToggleProfile = useCallback(() => {
-    if (!me) {
+    if (!me || me === 'LOADING') {
       return;
     }
     togglePane({ type: 'PROFILE', userId: me.user.id });
@@ -86,6 +86,9 @@ export const SidebarUserOperations: FC<Props> = () => {
         {!me && loginItem}
       </div>
     );
+  }
+  if (me === 'LOADING') {
+    return <div className="border-t border-surface-100" />;
   }
   return (
     <div className={'border-t border-surface-100'}>

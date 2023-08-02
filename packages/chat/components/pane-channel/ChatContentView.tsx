@@ -23,7 +23,7 @@ import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';
 
 interface Props {
-  me: GetMe | null;
+  me: GetMe | 'LOADING' | null;
   myMember: Member | null;
   className?: string;
 }
@@ -250,8 +250,13 @@ const useScrollLock = (
 export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => {
   const channelId = useChannelId();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+
+  let myId: string | undefined;
+  if (me && me !== 'LOADING') {
+    myId = me.user.id;
+  }
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount } = useChatList(channelId, me?.user.id);
+  const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount } = useChatList(channelId, myId);
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
@@ -274,7 +279,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
     <div className={className} ref={wrapperRef}>
       <ChatListDndContext
         active={active}
-        myId={me?.user.id}
+        myId={myId}
         onDragCancel={handleDragCancel}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}

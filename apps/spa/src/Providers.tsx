@@ -1,5 +1,4 @@
 import { ChatSkeleton } from 'chat/components/ChatSkeleton';
-import { MeProvider } from 'common';
 import { Provider as JotaiProvider } from 'jotai';
 import { ReactNode, Suspense } from 'react';
 import { store } from 'store';
@@ -20,9 +19,7 @@ export function Providers({ children }: Props) {
       >
         <Suspense fallback={<ChatSkeleton placeholder="Loading..." />}>
           <LocaleProvider>
-            <MeProvider>
-              {children}
-            </MeProvider>
+            {children}
           </LocaleProvider>
         </Suspense>
       </SWRConfig>

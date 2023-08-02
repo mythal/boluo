@@ -12,6 +12,10 @@ export const NicknameField: FC<Props> = () => {
   const me = useMe();
   const intl = useIntl();
   const { register, formState: { errors } } = useFormContext<ProfileEditSchema>();
+  if (me === 'LOADING' || me == null) {
+    console.error('Unexpected null me in NicknameField.');
+    return null;
+  }
   return (
     <div>
       <TextInput

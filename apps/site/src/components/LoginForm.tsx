@@ -137,7 +137,7 @@ export const LoginForm: FC<Props> = () => {
       return setError(result.err);
     }
     setError(null);
-    await mutate('/users/get_me', result.some.me);
+    await mutate(['/users/get_me'], result.some.me);
     router.push('/');
   };
 

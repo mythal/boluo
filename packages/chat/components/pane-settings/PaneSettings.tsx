@@ -73,7 +73,7 @@ const LogoutField = () => {
       <div className="text-lg">
         {me.user.nickname} <span className="text-sm">({me.user.username})</span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-none">
         <Button onClick={openProfile}>
           <User />
           <FormattedMessage defaultMessage="Profile" />

@@ -37,7 +37,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) =
             {children}
           </div>
         </div>
-        {operators && <div className="inline-flex gap-1 ml-2" onClick={stopPropagation}>{operators}</div>}
+        {operators && <div className="inline-flex flex-none gap-1 ml-2" onClick={stopPropagation}>{operators}</div>}
       </div>
 
       <div className="divide-y">

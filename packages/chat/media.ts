@@ -1,7 +1,6 @@
 import { ApiError } from 'api';
 import { post } from 'api-browser';
 import { Err, Ok, Result } from 'utils';
-import { MEDIA_PUBLIC_URL } from './const';
 
 export const mediaMaxSizeMb = 8;
 export const mediaMaxSizeByte = mediaMaxSizeMb * 1024 * 1024;
@@ -13,8 +12,8 @@ interface S3Error {
   err: Response;
 }
 
-export function getMediaUrl(mediaId: string): string {
-  return `${MEDIA_PUBLIC_URL}/${mediaId}`;
+export function getMediaUrl(mediaPublicUrl: string, mediaId: string): string {
+  return `${mediaPublicUrl}/${mediaId}`;
 }
 
 async function uploadImageToS3(file: File, presignedUrl: string): Promise<Result<void, S3Error>> {

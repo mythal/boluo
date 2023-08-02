@@ -25,14 +25,14 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
     showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
   }), [channelId, initialCompose]);
-  const nickname = me?.user.nickname;
+  const nickname = me != null && me !== 'LOADING' ? me.user.nickname : undefined;
   useSendPreview(channelId, nickname, atoms.composeAtom);
   return (
     <ChannelAtomsContext.Provider value={atoms}>
       <PaneBox header={<ChannelHeader />}>
         <div className={clsx('flex-col justify-between flex flex-grow relative h-full')}>
           <ChatContent className="relative flex-grow flex-[1_1_100%]" me={me} channelId={channelId} />
-          {me && member
+          {me && me !== 'LOADING' && member
             ? <Compose me={me} className={clsx('p-2 border-t flex-[1_0_auto]')} />
             : null}
         </div>

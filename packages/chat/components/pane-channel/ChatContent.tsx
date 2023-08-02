@@ -11,7 +11,7 @@ const ChatContentView = React.lazy(() => import('./ChatContentView'));
 interface Props {
   className: string;
   channelId: string;
-  me: GetMe | null;
+  me: GetMe | 'LOADING' | null;
 }
 
 export const ChatContent: FC<Props> = ({ className, me, channelId }) => {

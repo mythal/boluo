@@ -1,7 +1,6 @@
 'use client';
 
 import type { GetMe } from 'api';
-import { MeProvider } from 'common';
 import { IntlMessages, Locale } from 'common/locale';
 import { Provider as JotaiProvider } from 'jotai';
 import type { FC } from 'react';
@@ -31,11 +30,9 @@ export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) =
           refreshInterval: 60000,
         }}
       >
-        <MeProvider initialMe={me}>
-          <LocaleProvider locale={locale} messages={messages}>
-            {children}
-          </LocaleProvider>
-        </MeProvider>
+        <LocaleProvider locale={locale} messages={messages}>
+          {children}
+        </LocaleProvider>
       </SWRConfig>
     </JotaiProvider>
   );

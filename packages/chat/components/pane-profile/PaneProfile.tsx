@@ -21,7 +21,7 @@ interface Props {
 export const PaneProfile: FC<Props> = ({ userId }) => {
   const me = useMe();
   const { isLoading, data: user, error } = useUser(userId);
-  const isMe = me?.user.id === userId;
+  const isMe = me != null && me !== 'LOADING' && me.user.id === userId;
   const [isEditing, setIsEditing] = useState(false);
   const intl = useIntl();
   const logoutLabel = intl.formatMessage({ defaultMessage: 'Logout' });

@@ -1,13 +1,10 @@
-import { SpaceWithMember } from 'api';
+import { ApiError, SpaceWithMember } from 'api';
 import { get } from 'api-browser';
-import useSWR from 'swr';
+import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
-import { useMe } from './useMe';
 
-export const useMySpaces = (): SpaceWithMember[] => {
-  const me = useMe();
-  const { data: mySpaces } = useSWR('/spaces/my', (path) => get(path, null).then(unwrap), {
-    fallbackData: me?.mySpaces ?? [],
-  });
-  return mySpaces;
+const key = ['/spaces/my'] as const;
+
+export const useMySpaces = (): SWRResponse<SpaceWithMember[], ApiError> => {
+  return useSWR<SpaceWithMember[], ApiError, typeof key>(['/spaces/my'], ([path]) => get(path, null).then(unwrap));
 };

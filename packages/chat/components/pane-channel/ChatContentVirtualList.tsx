@@ -13,7 +13,7 @@ interface Props {
   chatList: ChatItem[];
   filteredMessagesCount: number;
   handleBottomStateChange: (bottom: boolean) => void;
-  me: GetMe | null;
+  me: GetMe | 'LOADING' | null;
   myMember: Member | null;
 }
 
@@ -50,6 +50,11 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;
+  let myId: string | undefined;
+  if (me && me !== 'LOADING') {
+    myId = me.user.id;
+  }
+
   const itemContent = (offsetIndex: number, item: ChatItem) => {
     let continuous = false;
     if (offsetIndex - 1 === prevOffsetIndex) {
@@ -61,7 +66,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     return (
       <ChatItemSwitch
         key={item.key}
-        myId={me?.user.id}
+        myId={myId}
         chatItem={item}
         isMember={myMember !== null}
         continuous={continuous}

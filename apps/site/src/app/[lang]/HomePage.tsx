@@ -8,8 +8,9 @@ import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useMemo } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
+import { Loading } from 'ui/Loading';
 import type { StyleProps } from 'utils';
 import { Me } from '../../components/Me';
 
@@ -19,7 +20,7 @@ const useLogout = () => {
 
   return useCallback(async () => {
     await get('/users/logout', null);
-    await mutate('/users/get_me', null);
+    await mutate(['/users/get_me'], null);
     router.refresh();
   }, [mutate, router]);
 };
@@ -27,6 +28,13 @@ const useLogout = () => {
 const UserOperations = ({ className }: StyleProps) => {
   const me = useMe();
   const logout = useLogout();
+  if (me === 'LOADING') {
+    return (
+      <div className={className}>
+        <Loading />
+      </div>
+    );
+  }
   if (me === null) {
     return (
       <div className={className}>
@@ -63,9 +71,9 @@ const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
 };
 
 const MySpaceList: FC = () => {
-  const spaces = useMySpaces();
+  const { data: spaces } = useMySpaces();
   const items = useMemo(() => (
-    spaces.map(item => <MySpaceListItem key={item.space.id} space={item.space} />)
+    (spaces ?? []).map(item => <MySpaceListItem key={item.space.id} space={item.space} />)
   ), [spaces]);
 
   return <div>{items}</div>;

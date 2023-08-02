@@ -19,7 +19,7 @@ const config = {
   },
   output: 'standalone',
   env: {
-    MEDIA_PUBLIC_URL: process.env.MEDIA_PUBLIC_URL,
+    PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
   },
   transpilePackages: ['ui', 'chat', 'common'],
   experimental: {

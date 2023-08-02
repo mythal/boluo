@@ -1,9 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
 import { Paperclip, Refresh, X } from 'icons';
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode, useContext, useState } from 'react';
 import Icon from 'ui/Icon';
 import { showFileSize } from 'utils';
+import { ConfigurationContext } from '../../configuration';
 import { getMediaUrl, supportedMediaType } from '../../media';
 
 type Props = {
@@ -15,11 +16,12 @@ type Props = {
 
 export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, children = null }) => {
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
+  const { mediaPublicUrl } = useContext(ConfigurationContext);
   let src: string | null = null;
   if (mediaFile != null) {
     src = URL.createObjectURL(mediaFile);
   } else if (mediaId != null) {
-    src = getMediaUrl(mediaId);
+    src = getMediaUrl(mediaPublicUrl, mediaId);
   } else {
     return null;
   }

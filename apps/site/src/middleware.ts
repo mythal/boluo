@@ -25,8 +25,13 @@ function getLocale(request: NextRequest): Locale {
 
 const locales = ['en', 'ja', 'zh', 'zh-CN'] as const;
 
+const IS_STATIC_FILES = /^\/\w+\.(png|ico|svg)/;
+
 export function middleware(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
+  if (IS_STATIC_FILES.test(pathname)) {
+    return;
+  }
   if (pathname.startsWith('/api')) {
     return;
   }

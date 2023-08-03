@@ -1,7 +1,6 @@
-import type { ReactNode } from 'react';
-import 'ui/tailwind.css';
 import { Locale } from 'common/locale';
 import { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { ClientProviders } from '../../components/global/Providers';
 import { getIntl, getMessages, LangParams } from '../../server';
 

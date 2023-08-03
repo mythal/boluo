@@ -11,7 +11,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "jotai": "^2.2.2"
+    "jotai": "^2.2.3"
   },
   "devDependencies": {
     "eslint": "^8.46.0",

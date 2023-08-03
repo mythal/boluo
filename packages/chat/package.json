@@ -18,7 +18,7 @@
     "clsx": "^1.2.1",
     "common": "workspace:*",
     "icons": "workspace:*",
-    "jotai": "^2.2.2",
+    "jotai": "^2.2.3",
     "jotai-location": "^0.5.1",
     "lang": "workspace:*",
     "logo": "workspace:*",
@@ -38,7 +38,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@types/react": "^18.2.17",
+    "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
     "babel-plugin-formatjs": "^10.5.3",
     "eslint": "^8.46.0",

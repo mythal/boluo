@@ -17,7 +17,7 @@
   "dependencies": {
     "dprint": "~0.36.1",
     "eslint-config-custom": "workspace:*",
-    "nx": "^16.5.5",
+    "nx": "^16.6.0",
     "typescript": "^5.1.6"
   },
   "packageManager": "pnpm@8.5.1"

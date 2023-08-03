@@ -20,7 +20,7 @@
   "devDependencies": {
     "eslint": "^8.46.0",
     "eslint-config-custom": "workspace:*",
-    "jotai": "^2.2.2",
+    "jotai": "^2.2.3",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {

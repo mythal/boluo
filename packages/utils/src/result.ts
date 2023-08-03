@@ -18,7 +18,8 @@ export class Err<E> {
   }
 
   unwrap(): never {
-    this.expect('called `unwrap()` on a `Err` value.');
+    console.error('Unhandled error', this.err);
+    throw this.err;
   }
 
   unwrapOr<T>(other: T): T {

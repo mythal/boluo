@@ -18,7 +18,13 @@ const SpaceChat: FC<{
 }> = ({ spaceId }) => {
   const { data: space, error } = useSpace(spaceId);
   if (error) return <ErrorDisplay error={error} />;
-  if (!space) return <Loading />;
+  if (!space) {
+    return (
+      <ChatSkeleton>
+        <Loading />
+      </ChatSkeleton>
+    );
+  }
 
   return <SpaceChatView space={space} />;
 };

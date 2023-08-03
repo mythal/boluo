@@ -27,7 +27,6 @@ const removeLocalePrefix = (pathname: string) => {
 export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const me = useMe();
   const router = useRouter();
-  const pathname = usePathname();
 
   const key = ['/users/settings'] as const;
   const localeUpdater: MutationFetcher<Settings, Locale, typeof key> = useCallback(

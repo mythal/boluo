@@ -35,8 +35,8 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
   const store = useStore();
   const rangeAtom = useMemo(() => selectAtom(composeAtom, compose => compose.range), [composeAtom]);
-  const settings = useSettings();
-  const enterSend = settings.enterSend === true;
+  const { data: settings } = useSettings();
+  const enterSend = settings?.enterSend === true;
   useWorkerParse(dispatch, source);
   const lock = useRef(false);
   const updateRangeTimeout = useRef<number | undefined>(undefined);

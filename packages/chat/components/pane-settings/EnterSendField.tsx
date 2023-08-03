@@ -14,16 +14,18 @@ interface Props {
 }
 
 export const EneterSendField: FC<Props> = () => {
-  const updater: MutationFetcher<Settings, boolean, string> = useCallback(async (url: string, { arg: enterSend }) => {
+  const key = ['/users/settings'] as const;
+  const updater: MutationFetcher<Settings, boolean, typeof key> = useCallback(async (_, { arg: enterSend }) => {
     const settings: Settings = { enterSend };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});
   }, []);
-  const { trigger, isMutating } = useSWRMutation('/users/settings', updater, {
+  const { trigger, isMutating } = useSWRMutation(key, updater, {
     populateCache: identity,
     revalidate: false,
   });
-  const { enterSend = false } = useSettings();
+  const { data: settings } = useSettings();
+  const enterSend = settings?.enterSend ?? false;
   const handleChange = (enterSend: boolean) => trigger(enterSend);
   const useCommand = isApple();
   const setEnterSend = () => {

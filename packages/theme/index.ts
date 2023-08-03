@@ -14,6 +14,14 @@ export const toTheme = (value: string): Theme => {
   }
 };
 
+export const getThemeFromCookie = (): Theme | null => {
+  const themeMatch = /boluo-theme=([^;]+)/.exec(document.cookie);
+  if (themeMatch == null || themeMatch[1] == null) {
+    return null;
+  }
+  return toTheme(themeMatch[1]);
+};
+
 export const getThemeFromDom = (): Theme => {
   if (typeof window === 'undefined') {
     return DEFAULT_THEME;

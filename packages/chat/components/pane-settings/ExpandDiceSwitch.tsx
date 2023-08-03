@@ -10,17 +10,20 @@ import { useSettings } from '../../hooks/useSettings';
 
 interface Props {
 }
+
 export const ExpandDiceSwitch: FC<Props> = () => {
-  const updater: MutationFetcher<Settings, boolean, string> = useCallback(async (url: string, { arg: expandDice }) => {
+  const key = ['/users/settings'] as const;
+  const updater: MutationFetcher<Settings, boolean, typeof key> = useCallback(async (url, { arg: expandDice }) => {
     const settings: Settings = { expandDice };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});
   }, []);
-  const { trigger, isMutating } = useSWRMutation('/users/settings', updater, {
+  const { trigger, isMutating } = useSWRMutation(key, updater, {
     populateCache: identity,
     revalidate: false,
   });
-  const { expandDice = false } = useSettings();
+  const { data: settings } = useSettings();
+  const expandDice = settings?.expandDice ?? false;
   const toggle = () => trigger(!expandDice);
   return <Button disabled={isMutating} data-type="switch" data-on={expandDice} onClick={toggle}>Enable</Button>;
 };

@@ -36,7 +36,7 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
 
 export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
   const send = useSend(me);
-  const settings = useSettings();
+  const { data: settings } = useSettings();
   const composeAtom = useComposeAtom();
   const composeError: ComposeError | null = useAtomValue(useMemo(() => {
     return selectAtom(composeAtom, (compose) => compose.error);
@@ -51,7 +51,7 @@ export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
       </div>
     );
   }
-  const key = settings.enterSend ? '⏎' : isApple() ? '⌘ + ⏎' : 'Ctrl + ⏎';
+  const key = settings?.enterSend ? '⏎' : isApple() ? '⌘ + ⏎' : 'Ctrl + ⏎';
   const sendNode = <button className="underline text-surface-600" onClick={send}>Send</button>;
   return (
     <div className="text-sm text-surface-400">

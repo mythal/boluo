@@ -4,11 +4,10 @@ import type { GetMe } from 'api';
 import { Configuration, ConfigurationContext } from 'chat/configuration';
 import { IntlMessages, Locale } from 'common/locale';
 import { Provider as JotaiProvider } from 'jotai';
-import { FC, useMemo } from 'react';
-import { useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { store } from 'store';
 import { SWRConfig } from 'swr';
-import { clearWatchSystemTheme, watchSystemTheme } from 'theme';
+import { clearWatchSystemTheme, getThemeFromCookie, setThemeToDom, watchSystemTheme } from 'theme';
 import type { ChildrenProps } from 'utils';
 import { LocaleProvider } from './LocaleProvider';
 
@@ -37,6 +36,10 @@ const configuration: Configuration = {
 
 export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) => {
   useEffect(() => {
+    const theme = getThemeFromCookie();
+    if (theme != null) {
+      setThemeToDom(theme);
+    }
     watchSystemTheme();
     return clearWatchSystemTheme;
   }, []);

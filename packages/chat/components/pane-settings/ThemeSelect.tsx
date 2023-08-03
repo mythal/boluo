@@ -20,22 +20,22 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   const theme = useTheme();
   const intl = useIntl();
 
-  const updater: MutationFetcher<Settings, Theme, string> = useCallback(async (url: string, { arg: theme }) => {
+  const key = ['/users/settings'] as const;
+  const updater: MutationFetcher<Settings, Theme, typeof key> = useCallback(async (url, { arg: theme }) => {
     const settings: Settings = { theme };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.unwrapOr({});
   }, []);
-  const { trigger } = useSWRMutation('/users/settings', updater, {
+  const { trigger } = useSWRMutation(key, updater, {
     populateCache: identity,
     revalidate: false,
   });
 
   const handleChange = (value: string) => {
     const theme = setThemeToDom(value);
-    if (me) {
+    document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
+    if (me && me !== 'LOADING') {
       void trigger(theme);
-    } else {
-      document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
     }
   };
 

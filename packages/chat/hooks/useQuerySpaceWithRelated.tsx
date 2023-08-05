@@ -5,7 +5,7 @@ import { unwrap } from 'utils';
 
 const options = { revalidate: false };
 
-export const useSpaceWithRelated = (spaceId: string): SWRResponse<SpaceWithRelated, ApiError> => {
+export const useQuerySpaceWithRelated = (spaceId: string): SWRResponse<SpaceWithRelated, ApiError> => {
   const { mutate } = useSWRConfig();
   const key = ['/spaces/query_with_related', spaceId] as const;
   return useSWR<SpaceWithRelated, ApiError, typeof key>(

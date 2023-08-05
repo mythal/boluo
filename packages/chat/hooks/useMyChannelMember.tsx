@@ -1,6 +1,6 @@
 import type { Member } from 'api';
 import { useMe } from 'common';
-import { useChannelMembers } from './useChannelMembers';
+import { useChannelMembers } from './useQueryChannelMembers';
 
 export const useMyChannelMember = (channelId: string): Member | null => {
   const { data: members } = useChannelMembers(channelId);

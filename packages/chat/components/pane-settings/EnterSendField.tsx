@@ -7,7 +7,7 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Kbd } from 'ui/Kbd';
 import { identity, isApple } from 'utils';
-import { useSettings } from '../../hooks/useSettings';
+import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { OptionBox } from './OptionBox';
 
 interface Props {
@@ -24,7 +24,7 @@ export const EneterSendField: FC<Props> = () => {
     populateCache: identity,
     revalidate: false,
   });
-  const { data: settings } = useSettings();
+  const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend ?? false;
   const handleChange = (enterSend: boolean) => trigger(enterSend);
   const useCommand = isApple();

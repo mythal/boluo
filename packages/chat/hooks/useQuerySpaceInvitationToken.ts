@@ -3,7 +3,7 @@ import { get } from 'api-browser';
 import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
 
-export const useSpaceInvitationToken = (spaceId: string): SWRResponse<string, ApiError> => {
+export const useQuerySpaceInvitationToken = (spaceId: string): SWRResponse<string, ApiError> => {
   const key = ['/spaces/token', spaceId] as const;
   return useSWR<string, ApiError, typeof key>(
     key,

@@ -8,8 +8,8 @@ import useSWRMutation, { MutationFetcher } from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { Spinner } from 'ui/Spinner';
 import { Empty } from 'utils';
-import { useChannel } from '../../hooks/useChannel';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
+import { useQueryChannel } from '../../hooks/useQueryChannel';
 
 interface Props {
   channelId: string;
@@ -23,7 +23,7 @@ const leave: MutationFetcher<void, Empty, [string, string]> = async ([_, channel
 
 export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   const channelMember = useMyChannelMember(channelId);
-  const { data: channel, isLoading } = useChannel(channelId);
+  const { data: channel, isLoading } = useQueryChannel(channelId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, { onSuccess });
 
   const [isConfirmOpen, setComfirmOpen] = useState(false);

@@ -5,7 +5,7 @@ import { FC, memo, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { isApple } from 'utils';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { useSettings } from '../../hooks/useSettings';
+import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { mediaMaxSizeMb } from '../../media';
 import { ComposeError } from '../../state/compose.reducer';
 import { useSend } from './useSend';
@@ -36,7 +36,7 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
 
 export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
   const send = useSend(me);
-  const { data: settings } = useSettings();
+  const { data: settings } = useQuerySettings();
   const composeAtom = useComposeAtom();
   const composeError: ComposeError | null = useAtomValue(useMemo(() => {
     return selectAtom(composeAtom, (compose) => compose.error);

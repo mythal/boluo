@@ -1,5 +1,6 @@
 import { ChannelWithMember } from 'api';
 import { post } from 'api-browser';
+import { Plus } from 'icons';
 import type { FC } from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -28,7 +29,8 @@ interface Props {
   spaceId: string;
 }
 
-const createChannel: MutationFetcher<ChannelWithMember, FormSchema, [string]> = async (
+const key = ['/channel/create'];
+const createChannel: MutationFetcher<ChannelWithMember, FormSchema, typeof key> = async (
   _,
   { arg: { isSecret, ...payload } },
 ) => {
@@ -66,7 +68,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
       isSecret: false,
     },
   });
-  const { trigger, isMutating } = useSWRMutation(['/channel/create'], createChannel, {});
+  const { trigger, isMutating } = useSWRMutation(key, createChannel, {});
   const onSubmit = async (data: FormSchema) => {
     const channelWithMember = await trigger(data);
     if (channelWithMember) {
@@ -77,7 +79,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox>
+        <PaneHeaderBox icon={<Plus />}>
           <FormattedMessage defaultMessage="Create Channel" />
         </PaneHeaderBox>
       }

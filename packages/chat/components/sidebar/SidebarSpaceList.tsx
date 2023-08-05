@@ -1,9 +1,13 @@
 import { Space } from 'api';
 import { useQueryMySpaces } from 'common';
-import { FC } from 'react';
+import { Plus } from 'icons';
+import { useAtomValue } from 'jotai';
+import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useSpace } from '../../hooks/useSpace';
 import { useSwitchSpace } from '../../hooks/useSwitchSpace';
+import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
@@ -24,6 +28,11 @@ const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
 
 export const SidebarSpaceList: FC<Props> = () => {
   const { data: spacesWithMemberData } = useQueryMySpaces();
+  const panes = useAtomValue(panesAtom);
+
+  const togglePane = usePaneToggle();
+  const isCreateSpacePaneOpened = useMemo(() => panes.findIndex(pane => pane.type === 'CREATE_SPACE') !== -1, [panes]);
+  const handleToggleCreateSpacePane = () => togglePane({ type: 'CREATE_SPACE' });
   return (
     <div>
       <div className="py-2 px-4 text-surface-600 flex justify-between items-center text-sm">
@@ -37,6 +46,11 @@ export const SidebarSpaceList: FC<Props> = () => {
           space={space}
         />
       ))}
+      <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>
+        <span className="text-surface-400 group-hover:text-surface-800">
+          <FormattedMessage defaultMessage="Add New" />
+        </span>
+      </SidebarItem>
     </div>
   );
 };

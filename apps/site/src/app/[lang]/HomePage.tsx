@@ -2,7 +2,7 @@
 
 import type { Space } from 'api';
 import { get } from 'api-browser';
-import { useMe, useMySpaces } from 'common';
+import { useMe, useQueryMySpaces } from 'common';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
@@ -71,7 +71,7 @@ const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
 };
 
 const MySpaceList: FC = () => {
-  const { data: spaces } = useMySpaces();
+  const { data: spaces } = useQueryMySpaces();
   const items = useMemo(() => (
     (spaces ?? []).map(item => <MySpaceListItem key={item.space.id} space={item.space} />)
   ), [spaces]);

@@ -23,7 +23,7 @@ export const SidebarItem: FC<Props> = (
         active && 'bg-surface-50',
       )}
     >
-      <span className={active ? 'text-surface-600' : 'text-surface-400'}>{icon}</span>
+      {icon && <span className={active ? 'text-surface-600' : 'text-surface-400'}>{icon}</span>}
       <span className={clsx(isExpanded ? 'text-left' : 'hidden', 'flex-grow')}>
         {isExpanded && children}
       </span>

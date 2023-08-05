@@ -6,7 +6,6 @@ import { Button } from 'ui/Button';
 import { Loading } from 'ui/Loading';
 import { toggle } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
-import { ClosePaneButton } from '../ClosePaneButton';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
@@ -59,8 +58,6 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
           </span>
         </Button>
       )}
-
-      <ClosePaneButton />
     </>
   );
   return (

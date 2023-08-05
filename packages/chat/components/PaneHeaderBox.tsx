@@ -1,20 +1,29 @@
 import clsx from 'clsx';
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useContext, useMemo } from 'react';
 import { stopPropagation } from 'utils';
 import { usePaneBanner } from '../hooks/useBanner';
 import { usePaneIsFocus } from '../hooks/usePaneIsFocus';
+import { PaneContext } from '../state/view.context';
+import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from './PaneBanner';
 
 interface Props {
+  withoutDefaultOperators?: boolean;
   children: ReactNode;
   operators?: ReactNode;
   icon?: ReactNode;
   extra?: ReactNode;
 }
 
-export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) => {
-  const isFocused = usePaneIsFocus();
+export const PaneHeaderBox: FC<Props> = (
+  { children, operators, icon, extra, withoutDefaultOperators = false },
+) => {
+  const { focused: isFocused, canClose } = useContext(PaneContext);
   const paneBanner = usePaneBanner();
+  const defaultOperators: ReactNode = useMemo(() => {
+    if (withoutDefaultOperators || canClose === false) return null;
+    return <ClosePaneButton />;
+  }, [withoutDefaultOperators, canClose]);
   return (
     <div className={paneBanner.content || extra ? '' : ''}>
       <div
@@ -37,7 +46,12 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra }) =
             {children}
           </div>
         </div>
-        {operators && <div className="inline-flex flex-none gap-1 ml-2" onClick={stopPropagation}>{operators}</div>}
+        {(operators != null || defaultOperators != null) && (
+          <div className="inline-flex flex-none gap-1 ml-2" onClick={stopPropagation}>
+            {operators}
+            {defaultOperators}
+          </div>
+        )}
       </div>
 
       <div className="divide-y">

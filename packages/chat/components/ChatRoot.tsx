@@ -1,7 +1,9 @@
 import { useMe } from 'common';
-import { FC } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { LoginForm } from './account/LoginForm';
 import { ChatSkeleton } from './ChatSkeleton';
+import { ChatView } from './ChatView';
+import PaneLogin from './PaneLogin';
 
 const Login: FC = () => {
   return (
@@ -13,12 +15,15 @@ const Login: FC = () => {
 
 export const ChatRoot: FC = () => {
   const me = useMe();
-  if (!me) {
-    return <Login />;
-  }
-  return (
-    <ChatSkeleton placeholder="Chat">
-      {me ? null : <Login />}
-    </ChatSkeleton>
-  );
+  const defaultPane: ReactNode = useMemo(() => {
+    if (me === 'LOADING') {
+      return null;
+    }
+    if (!me) {
+      return <PaneLogin />;
+    } else {
+      return <div>{me.user.username}</div>;
+    }
+  }, [me]);
+  return <ChatView defaultPane={defaultPane} />;
 };

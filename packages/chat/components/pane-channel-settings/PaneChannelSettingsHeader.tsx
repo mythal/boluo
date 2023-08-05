@@ -11,7 +11,7 @@ interface Props {
 
 export const PaneChannelSettingsHeader: FC<Props> = ({ channel }) => {
   return (
-    <PaneHeaderBox icon={<Settings />} operators={<ClosePaneButton />}>
+    <PaneHeaderBox icon={<Settings />}>
       <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">
         <FormattedMessage
           defaultMessage="Settings of &quot;{channelName}&quot; Channel"

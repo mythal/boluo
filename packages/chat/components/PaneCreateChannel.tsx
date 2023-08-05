@@ -1,7 +1,7 @@
 import { ChannelWithMember } from 'api';
 import { post } from 'api-browser';
 import type { FC } from 'react';
-import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
+import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
@@ -9,7 +9,6 @@ import { Button } from 'ui/Button';
 import { TextInput } from 'ui/TextInput';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { usePaneReplace } from '../hooks/usePaneReplace';
-import { ClosePaneButton } from './ClosePaneButton';
 import { ChannelNameField } from './pane-channel-settings/ChannelNameField';
 import { DefaultDiceField } from './pane-channel-settings/DefaultDiceField';
 import { IsPrivateField } from './pane-channel-settings/IsPrivateField';
@@ -78,7 +77,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox operators={<ClosePaneButton />}>
+        <PaneHeaderBox>
           <FormattedMessage defaultMessage="Create Channel" />
         </PaneHeaderBox>
       }

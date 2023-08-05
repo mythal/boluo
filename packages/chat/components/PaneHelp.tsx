@@ -12,7 +12,7 @@ export const PaneHelp: FC<Props> = () => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox operators={<ClosePaneButton />} icon={<HelpCircle />}>
+        <PaneHeaderBox icon={<HelpCircle />}>
           <FormattedMessage defaultMessage="Help" />
         </PaneHeaderBox>
       }

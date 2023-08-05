@@ -27,7 +27,7 @@ export const PaneLogin: FC<Props> = () => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox operators={<ClosePaneButton />} icon={<LogIn />}>
+        <PaneHeaderBox icon={<LogIn />}>
           <FormattedMessage defaultMessage="Login" />
         </PaneHeaderBox>
       }

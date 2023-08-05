@@ -1,5 +1,9 @@
-import { ChatSkeleton } from './ChatSkeleton';
+import { useMemo } from 'react';
+import { ChatView } from './ChatView';
 
 export const ChatNotFound = () => {
-  return <ChatSkeleton placeholder="Not Found" />;
+  const defaultPane = useMemo(() => {
+    return <div className="h-full w-full flex items-center justify-center">Not found</div>;
+  }, []);
+  return <ChatView defaultPane={defaultPane} />;
 };

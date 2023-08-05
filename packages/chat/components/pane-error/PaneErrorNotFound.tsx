@@ -14,7 +14,7 @@ export const PaneErrorNotFound: FC<Props> = ({ error }) => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox icon={<AlertCircle />} operators={<ClosePaneButton />}>
+        <PaneHeaderBox icon={<AlertCircle />}>
           <FormattedMessage defaultMessage="Not Found" />
         </PaneHeaderBox>
       }

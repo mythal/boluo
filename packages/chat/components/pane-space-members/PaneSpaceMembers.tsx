@@ -36,10 +36,7 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
     return (
       <PaneBox
         header={
-          <PaneHeaderBox
-            operators={<ClosePaneButton />}
-            icon={<Users />}
-          >
+          <PaneHeaderBox icon={<Users />}>
             {title}
           </PaneHeaderBox>
         }
@@ -55,7 +52,6 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
     <PaneBox
       header={
         <PaneHeaderBox
-          operators={<ClosePaneButton />}
           icon={<Users />}
           extra={<HeaderTab value={tab} onChange={setTab} tabItems={MembersTabItems} />}
         >

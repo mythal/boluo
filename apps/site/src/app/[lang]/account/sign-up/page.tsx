@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { SignUpForm } from '../../../../components/SignUpForm';
 import { getIntl, LangParams } from '../../../../server';
+import { Footer } from './Footer';
 
 export function generateMetadata(
   { params }: { params: LangParams },
@@ -13,5 +14,10 @@ export function generateMetadata(
 }
 
 export default function Page() {
-  return <SignUpForm />;
+  return (
+    <div>
+      <SignUpForm />
+      <Footer />
+    </div>
+  );
 }

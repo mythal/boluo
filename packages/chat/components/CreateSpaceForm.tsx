@@ -1,5 +1,6 @@
 import type { ApiError, CreateSpace, Space, SpaceWithMember } from 'api';
 import { post } from 'api-browser';
+import { useErrorExplain } from 'common';
 import { required } from 'common/validations';
 import type { FC } from 'react';
 import { useId } from 'react';
@@ -9,16 +10,17 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
 import { Button } from 'ui/Button';
-import { Oops } from 'ui/Oops';
+import { ErrorMessageBox } from 'ui/ErrorMessageBox';
 import { TextArea, TextInput } from 'ui/TextInput';
 import { DiceSelect } from './DiceSelect';
 import { PaneFooterBox } from './PaneFooterBox';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
+  const explain = useErrorExplain();
   return (
-    <div className="my-1 text-error-700">
-      <Oops error={error} type="inline" />
-    </div>
+    <ErrorMessageBox>
+      {explain(error)}
+    </ErrorMessageBox>
   );
 };
 

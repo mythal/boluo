@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
+import { FormattedMessage } from 'react-intl';
 import { LoginForm } from '../../../../components/LoginForm';
 import { getIntl, LangParams } from '../../../../server';
+import { Footer } from './Footer';
 
 export function generateMetadata(
   { params }: { params: LangParams },
@@ -13,5 +16,10 @@ export function generateMetadata(
 }
 
 export default function Page() {
-  return <LoginForm />;
+  return (
+    <div>
+      <LoginForm />
+      <Footer />
+    </div>
+  );
 }

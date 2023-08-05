@@ -1,14 +1,15 @@
 'use client';
 import type { ApiError } from 'api';
 import { post } from 'api-browser';
+import { useErrorExplain } from 'common';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
-import type { FieldError, SubmitHandler } from 'react-hook-form';
+import { FieldError, SubmitHandler, useFormState } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
-import { Oops } from 'ui/Oops';
+import { ErrorMessageBox } from 'ui/ErrorMessageBox';
 import { TextInput } from 'ui/TextInput';
 import * as validations from '../validations';
 
@@ -22,10 +23,11 @@ interface Schema {
 }
 
 const FormErrorDisplay: FC<{ error: ApiError }> = ({ error }) => {
+  const explain = useErrorExplain();
   return (
-    <div className="my-1 text-error-700">
-      <Oops error={error} type="inline" />
-    </div>
+    <ErrorMessageBox>
+      {explain(error)}
+    </ErrorMessageBox>
   );
 };
 
@@ -140,24 +142,23 @@ const PasswordField = () => {
 };
 
 const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
+  const { isSubmitting, isValid } = useFormState();
   return (
     <div className="flex flex-col gap-2">
       <div className="text-2xl">
         <FormattedMessage defaultMessage="Sign Up" />
       </div>
-      <div>
-        <UsernameField />
-        <EmailField />
-        <NicknameField />
-        <PasswordField />
-      </div>
+      <UsernameField />
+      <EmailField />
+      <NicknameField />
+      <PasswordField />
       {error && (
         <div className="my-1 text-error-700">
           <FormErrorDisplay error={error} />
         </div>
       )}
       <div className="mt-2 flex justify-end">
-        <Button data-type="primary" type="submit">
+        <Button data-type="primary" type="submit" disabled={!isValid || isSubmitting}>
           <FormattedMessage defaultMessage="Sign Up" />
         </Button>
       </div>
@@ -167,7 +168,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
 
 export const SignUpForm = () => {
   const router = useRouter();
-  const methods = useForm<Schema>();
+  const methods = useForm<Schema>({ mode: 'onChange' });
   const [error, setError] = useState<ApiError | null>(null);
 
   const onSubmit: SubmitHandler<Schema> = async ({ password, username, email, nickname }) => {

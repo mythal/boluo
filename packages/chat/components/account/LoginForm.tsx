@@ -3,7 +3,7 @@
 import { ApiError } from 'api';
 import { post } from 'api-browser';
 import { FC, useId } from 'react';
-import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
+import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext, useFormState } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from 'ui/Button';
@@ -78,6 +78,7 @@ const PasswordField = () => {
 };
 
 const FormContent: FC = () => {
+  const { isSubmitting, isDirty } = useFormState();
   return (
     <div className="flex flex-col gap-2">
       <div className="text-2xl">
@@ -92,7 +93,7 @@ const FormContent: FC = () => {
       </div>
 
       <div className="mt-2 flex justify-end">
-        <Button data-type="primary" type="submit">
+        <Button data-type="primary" type="submit" disabled={!isDirty || isSubmitting}>
           <FormattedMessage defaultMessage="Login" />
         </Button>
       </div>

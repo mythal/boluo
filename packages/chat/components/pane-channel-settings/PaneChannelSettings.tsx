@@ -25,24 +25,6 @@ interface Props {
   channelId: string;
 }
 
-const editChannel: MutationFetcher<Channel, ChannelSettingsForm, [string, string]> = async (
-  [_, channelId],
-  { arg: { name, defaultDiceType, topic, isPrivate } },
-): Promise<Channel> => {
-  const result = await post('/channels/edit', null, {
-    name,
-    defaultDiceType,
-    topic,
-    isPublic: !isPrivate,
-    channelId,
-    defaultRollCommand: null,
-    grantMasters: [],
-    removeMasters: [],
-    isDocument: null,
-  });
-  return result.unwrap();
-};
-
 const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const form = useForm<ChannelSettingsForm>({
     defaultValues: {
@@ -54,7 +36,26 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   });
 
   const close = usePaneClose();
-  const { trigger, isMutating, error } = useSWRMutation<Channel, ApiError, [string, string], ChannelSettingsForm>(
+
+  const key = ['/channels/query', channel.id] as const;
+  const editChannel: MutationFetcher<Channel, ChannelSettingsForm, typeof key> = async (
+    [_, channelId],
+    { arg: { name, defaultDiceType, topic, isPrivate } },
+  ): Promise<Channel> => {
+    const result = await post('/channels/edit', null, {
+      name,
+      defaultDiceType,
+      topic,
+      isPublic: !isPrivate,
+      channelId,
+      defaultRollCommand: null,
+      grantMasters: [],
+      removeMasters: [],
+      isDocument: null,
+    });
+    return result.unwrap();
+  };
+  const { trigger, error } = useSWRMutation<Channel, ApiError, typeof key, ChannelSettingsForm>(
     ['/channels/query', channel.id],
     editChannel,
     {
@@ -100,7 +101,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           <Button
             type="submit"
             data-type="primary"
-            disabled={!form.formState.isDirty || isMutating}
+            disabled={!form.formState.isDirty || form.formState.isSubmitting}
           >
             <FormattedMessage defaultMessage="Save Changes" />
           </Button>

@@ -1,6 +1,7 @@
 import { ApiError, isApiError } from 'api';
 import { useErrorExplain } from 'common';
 import { FC, ReactNode, useMemo } from 'react';
+import { ErrorMessageBox } from 'ui/ErrorMessageBox';
 
 interface Props {
   error: unknown;
@@ -23,7 +24,7 @@ export const ErrorDisplay: FC<Props> = ({ error, type = 'unstyled', className = 
 
   switch (type) {
     case 'banner':
-      return <div className="rounded px-2 py-2 bg-error-100 border border-error-300">{explain(error)}</div>;
+      return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
     case 'block':
       return <div>{message}</div>;
     default:

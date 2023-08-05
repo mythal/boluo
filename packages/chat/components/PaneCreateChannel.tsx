@@ -1,5 +1,6 @@
-import { ChannelWithMember } from 'api';
+import { ApiError, ChannelWithMember } from 'api';
 import { post } from 'api-browser';
+import { useErrorExplain } from 'common';
 import { Plus } from 'icons';
 import type { FC } from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
@@ -7,6 +8,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
 import { Button } from 'ui/Button';
+import { ErrorMessageBox } from 'ui/ErrorMessageBox';
 import { TextInput } from 'ui/TextInput';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { usePaneReplace } from '../hooks/usePaneReplace';
@@ -16,6 +18,15 @@ import { IsPrivateField } from './pane-channel-settings/IsPrivateField';
 import { PaneBox } from './PaneBox';
 import { PaneFooterBox } from './PaneFooterBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
+
+const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
+  const explain = useErrorExplain();
+  return (
+    <ErrorMessageBox>
+      {explain(error)}
+    </ErrorMessageBox>
+  );
+};
 
 export interface FormSchema {
   name: string;
@@ -68,7 +79,11 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
       isSecret: false,
     },
   });
-  const { trigger, isMutating } = useSWRMutation(key, createChannel, {});
+  const { trigger, isMutating, error } = useSWRMutation<ChannelWithMember, ApiError, typeof key, FormSchema>(
+    key,
+    createChannel,
+    {},
+  );
   const onSubmit = async (data: FormSchema) => {
     const channelWithMember = await trigger(data);
     if (channelWithMember) {
@@ -92,6 +107,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
               <CharacterNameField />
               <IsPrivateField />
               <DefaultDiceField />
+              {error && <FormErrorDispay error={error} />}
             </div>
             <PaneFooterBox>
               <Button type="button" onClick={close}>

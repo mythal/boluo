@@ -1,3 +1,3 @@
 export default function Loading() {
-  return <span>Loading...</span>;
+  return <div className="py-8 text-center">Loading...</div>;
 }

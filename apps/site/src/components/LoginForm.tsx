@@ -1,16 +1,18 @@
 'use client';
 import type { ApiError } from 'api';
 import { post } from 'api-browser';
+import { useErrorExplain } from 'common';
 import { useRouter } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';
 import { useState } from 'react';
-import type { FieldError, SubmitHandler } from 'react-hook-form';
+import { FieldError, SubmitHandler, useFormState } from 'react-hook-form';
 import { FormProvider, useFormContext } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from 'ui/Button';
+import { ErrorMessageBox } from 'ui/ErrorMessageBox';
 import { Oops } from 'ui/Oops';
 import { TextInput } from 'ui/TextInput';
 import type { StyleProps } from 'utils';
@@ -27,17 +29,18 @@ interface Inputs {
 }
 
 const FormErrorDisplay: FC<{ error: ApiError }> = ({ error }) => {
-  let oops: ReactNode;
+  const explain = useErrorExplain();
+  let errorMessage: ReactNode;
 
   if (error.code === 'NO_PERMISSION') {
-    oops = <FormattedMessage defaultMessage="Username and password do not match" />;
+    errorMessage = <FormattedMessage defaultMessage="Username and password do not match" />;
   } else {
-    oops = <Oops error={error} type="inline" />;
+    errorMessage = <span>{explain(error)}</span>;
   }
   return (
-    <div className="my-1 text-error-700">
-      {oops}
-    </div>
+    <ErrorMessageBox>
+      {errorMessage}
+    </ErrorMessageBox>
   );
 };
 
@@ -97,6 +100,7 @@ const PasswordField = () => {
 };
 
 const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
+  const { isDirty, isSubmitting } = useFormState();
   return (
     <div className="flex flex-col gap-2">
       <div className="text-2xl">
@@ -117,7 +121,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       )}
 
       <div className="mt-2 flex justify-end">
-        <Button data-type="primary" type="submit">
+        <Button data-type="primary" type="submit" disabled={!isDirty || isSubmitting}>
           <FormattedMessage defaultMessage="Login" />
         </Button>
       </div>

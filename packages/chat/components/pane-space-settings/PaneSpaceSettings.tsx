@@ -1,7 +1,7 @@
 import type { ApiError, EditSpace, Space } from 'api';
 import { post } from 'api-browser';
 import { useMe } from 'common';
-import { ChevronDown, ChevronUp, Settings } from 'icons';
+import { Settings } from 'icons';
 import { FC, useCallback, useState } from 'react';
 import { useId } from 'react';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
@@ -10,15 +10,12 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { HelpText } from 'ui/HelpText';
-import Icon from 'ui/Icon';
 import { Loading } from 'ui/Loading';
 import { Spinner } from 'ui/Spinner';
 import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
-import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
-import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { InviteSpaceMember } from '../InviteSpaceMember';
@@ -257,7 +254,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
     return (
       <PaneBox
         header={
-          <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
+          <PaneHeaderBox icon={<Settings />}>
             <FormattedMessage
               defaultMessage="Settings of &quot;{spaceName}&quot; Space"
               values={{ spaceName: space.name ?? '...' }}
@@ -274,7 +271,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
+        <PaneHeaderBox icon={<Settings />}>
           <FormattedMessage
             defaultMessage="Settings of &quot;{spaceName}&quot; Space"
             values={{ spaceName: space.name }}

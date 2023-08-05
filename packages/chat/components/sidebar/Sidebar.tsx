@@ -1,10 +1,10 @@
-import type { Space } from 'api';
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { useAtom } from 'jotai';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { toggle } from 'utils';
+import { useSpace } from '../../hooks/useSpace';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { SidebarChannelList } from './SidebarChannelList';
@@ -14,13 +14,12 @@ import { SidebarUserOperations } from './SidebarUserOperations';
 import { SidebarStateContext } from './useSidebarState';
 
 interface Props {
-  space: Space;
   className?: string;
 }
 
-export const Sidebar: FC<Props> = ({ space, className }) => {
+export const Sidebar: FC<Props> = ({ className }) => {
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
-  const me = useMe();
+  const space = useSpace();
   const toggleExpanded = useCallback(() => setExpanded(toggle), [setExpanded]);
   return (
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
@@ -35,8 +34,12 @@ export const Sidebar: FC<Props> = ({ space, className }) => {
           {isExpanded
             ? (
               <div className="divide-y overflow-y-auto overflow-x-hidden">
-                <SpaceOptions space={space} />
-                <SidebarChannelList spaceId={space.id} />
+                {space && (
+                  <>
+                    <SpaceOptions space={space} />
+                    <SidebarChannelList spaceId={space.id} />
+                  </>
+                )}
               </div>
             )
             : (

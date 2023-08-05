@@ -5,9 +5,10 @@ import { focusPaneAtom } from './view.atoms';
 interface PaneContext {
   key: number | null;
   focused: boolean;
+  canClose?: boolean;
 }
 
-export const PaneContext = createContext<PaneContext>({ key: null, focused: false });
+export const PaneContext = createContext<PaneContext>({ key: null, focused: true, canClose: false });
 
 interface Props {
   children: ReactNode;

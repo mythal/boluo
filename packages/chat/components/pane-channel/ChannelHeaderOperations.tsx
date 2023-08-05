@@ -33,7 +33,6 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channelId }) => 
       {memberButton}
       <ChannelHeaderFilterButton on={state === 'FILTER'} toggle={toggleFilterBar} />
       <ChannelHeaderSplitPaneButton />
-      <ClosePaneButton />
     </>
   );
 };

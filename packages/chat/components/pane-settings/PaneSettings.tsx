@@ -9,7 +9,6 @@ import { ChildrenProps } from 'utils';
 import { useLogout } from '../../hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
-import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { EneterSendField } from './EnterSendField';
@@ -105,7 +104,7 @@ export const PaneSettings: FC = () => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox operators={<ClosePaneButton />} icon={<Settings />}>
+        <PaneHeaderBox icon={<Settings />}>
           <FormattedMessage defaultMessage="Settings" />
         </PaneHeaderBox>
       }

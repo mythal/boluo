@@ -7,7 +7,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 export const PaneProfileNotFound: FC = () => {
   return (
     <>
-      <PaneHeaderBox operators={<ClosePaneButton />} icon={<User />}>
+      <PaneHeaderBox icon={<User />}>
         <FormattedMessage defaultMessage="Not Found" />
       </PaneHeaderBox>
       <div className="p-4">

@@ -12,6 +12,7 @@ import { Cloud, CloudOff } from 'icons';
 import { useAtomValue } from 'jotai';
 import { FC, Suspense, useEffect, useMemo, useState } from 'react';
 import { Spinner } from 'ui/Spinner';
+import { useSpace } from '../../hooks/useSpace';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { BaseUrlSelector } from './BaseUrlSelector';
 import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
+  const space = useSpace();
   const connectionState = useAtomValue(connectionStateAtom);
   const [isPopoverOpen, setPopoverOpen] = useState(false);
   const middleware = useMemo(() => [offset(-6)], []);
@@ -45,6 +47,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
     click,
     dismiss,
   ]);
+  if (space == null) return null;
   return (
     <>
       <div className={className} ref={refs.setReference} {...getReferenceProps()}>

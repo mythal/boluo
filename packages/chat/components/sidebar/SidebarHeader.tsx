@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight } from 'icons';
 import type { FC } from 'react';
+import { useSpace } from '../../hooks/useSpace';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useSidebarState } from './useSidebarState';
 

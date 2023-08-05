@@ -13,11 +13,12 @@ export const PaneContext = createContext<PaneContext>({ key: null, focused: true
 interface Props {
   children: ReactNode;
   paneKey: number;
+  canClose?: boolean;
 }
 
-export const PaneProvider: FC<Props> = ({ paneKey: key, children }) => {
+export const PaneProvider: FC<Props> = ({ paneKey: key, children, canClose = true }) => {
   const isFocusedAtom = useMemo(() => atom((get) => get(focusPaneAtom) === key), [key]);
   const focused = useAtomValue(isFocusedAtom);
-  const value: PaneContext = useMemo(() => ({ key, focused }), [focused, key]);
+  const value: PaneContext = useMemo(() => ({ key, focused, canClose }), [canClose, focused, key]);
   return <PaneContext.Provider value={value}>{children}</PaneContext.Provider>;
 };

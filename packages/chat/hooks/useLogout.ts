@@ -21,6 +21,6 @@ export function useLogout(): () => void {
     ]);
     localStorage.clear();
     sessionStorage.clear();
-    await mutate('/users/get_me', null);
+    await mutate(['/users/get_me'], null);
   }, [mutate]);
 }

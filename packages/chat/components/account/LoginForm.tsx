@@ -113,7 +113,7 @@ export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => 
       return;
     }
     const { me } = result.some;
-    await mutate('/users/get_me', me);
+    await mutate(['/users/get_me'], me);
     if (onSuccess) {
       onSuccess();
     }

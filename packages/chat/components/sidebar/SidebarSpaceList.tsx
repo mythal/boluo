@@ -1,22 +1,21 @@
 import { Space } from 'api';
 import { useQueryMySpaces } from 'common';
-import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { routeAtom } from '../../state/view.atoms';
+import { useSpace } from '../../hooks/useSpace';
+import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { SidebarItem } from './SidebarItem';
 
 interface Props {
 }
 
 const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
-  const setRoute = useSetAtom(routeAtom);
-  const handleClick = () => {
-    setRoute({ type: 'SPACE', spaceId: space.id });
-  };
+  const currentSpace = useSpace();
+  const switchSpace = useSwitchSpace();
   return (
     <SidebarItem
-      onClick={handleClick}
+      onClick={() => switchSpace(space.id)}
+      active={currentSpace?.id === space.id}
     >
       {space.name}
     </SidebarItem>

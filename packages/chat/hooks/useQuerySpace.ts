@@ -3,7 +3,7 @@ import { get } from 'api-browser';
 import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
 
-export const useSpace = (spaceId: string): SWRResponse<Space, ApiError> => {
+export const useQuerySpace = (spaceId: string): SWRResponse<Space, ApiError> => {
   const key = ['/spaces/query', spaceId] as const;
   return useSWR<Space, ApiError, typeof key>(
     key,

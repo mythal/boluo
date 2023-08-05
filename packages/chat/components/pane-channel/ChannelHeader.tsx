@@ -1,8 +1,8 @@
 import { Hash } from 'icons';
 import { atom } from 'jotai';
 import { FC, useMemo } from 'react';
-import { useChannel } from '../../hooks/useChannel';
 import { useChannelId } from '../../hooks/useChannelId';
+import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { ChannelHeaderExtra } from './ChannelHeaderExtra';
 import { ChannelHeaderOperations } from './ChannelHeaderOperations';
@@ -10,7 +10,7 @@ import { ChannelHeaderOperations } from './ChannelHeaderOperations';
 export type ChannelHeaderState = 'DEFAULT' | 'MORE' | 'FILTER';
 
 const ChannelName: FC<{ channelId: string }> = ({ channelId }) => {
-  const { data: channel } = useChannel(channelId);
+  const { data: channel } = useQueryChannel(channelId);
   return <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">{channel?.name ?? '...'}</span>;
 };
 

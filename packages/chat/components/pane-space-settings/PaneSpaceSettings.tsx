@@ -17,7 +17,7 @@ import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { usePaneClose } from '../../hooks/usePaneClose';
-import { useSpace } from '../../hooks/useSpace';
+import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { DiceSelect } from '../DiceSelect';
 import { ErrorDisplay } from '../ErrorDisplay';
@@ -242,7 +242,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
 };
 
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
-  const { data: space, error } = useSpace(spaceId);
+  const { data: space, error } = useQuerySpace(spaceId);
 
   const close = usePaneClose();
   const me = useMe();

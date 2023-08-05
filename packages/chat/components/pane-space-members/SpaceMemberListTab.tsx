@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Loading } from 'ui/Loading';
-import { useSpaceMembers } from '../../hooks/useSpaceMembers';
+import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { ErrorDisplay } from '../ErrorDisplay';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const SpaceMemberListTab: FC<Props> = ({ spaceId }) => {
-  const { data: membersMap, error } = useSpaceMembers(spaceId);
+  const { data: membersMap, error } = useQuerySpaceMembers(spaceId);
   if (error != null) {
     return <ErrorDisplay error={error} type="block" />;
   }

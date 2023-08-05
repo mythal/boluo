@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Loading } from 'ui/Loading';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
-import { useSpace } from '../hooks/useSpace';
+import { useQuerySpace } from '../hooks/useQuerySpace';
 import { routeAtom } from '../state/view.atoms';
 import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
@@ -16,7 +16,7 @@ import { SpaceChatView } from './SpaceChatView';
 const SpaceChat: FC<{
   spaceId: string;
 }> = ({ spaceId }) => {
-  const { data: space, error } = useSpace(spaceId);
+  const { data: space, error } = useQuerySpace(spaceId);
   if (error) return <ErrorDisplay error={error} />;
   if (!space) {
     return (

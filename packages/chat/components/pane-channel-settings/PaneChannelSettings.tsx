@@ -7,8 +7,8 @@ import useSWRMutation from 'swr/mutation';
 import { MutationFetcher } from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { Loading } from 'ui/Loading';
-import { useChannel } from '../../hooks/useChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
+import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneFooterBox } from '../PaneFooterBox';
@@ -111,7 +111,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 };
 
 export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
-  const { data: channel, error } = useChannel(channelId);
+  const { data: channel, error } = useQueryChannel(channelId);
 
   if (error) {
     return <ErrorDisplay type="block" error={error} />;

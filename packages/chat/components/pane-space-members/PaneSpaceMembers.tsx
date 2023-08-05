@@ -2,8 +2,8 @@ import { Users } from 'icons';
 import { FC, Suspense, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Loading } from 'ui/Loading';
-import { useMySpaceMember } from '../../hooks/useMySpaceMember';
-import { useSpace } from '../../hooks/useSpace';
+import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
+import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { ClosePaneButton } from '../ClosePaneButton';
 import { HeaderTab, TabItem } from '../HeaderTab';
 import { InviteSpaceMember } from '../InviteSpaceMember';
@@ -23,7 +23,7 @@ const MembersTabItems: TabItem[] = [
 ];
 
 export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
-  const { data: space } = useSpace(spaceId);
+  const { data: space } = useQuerySpace(spaceId);
   const [tab, setTab] = useState<MembersTab>('LIST');
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const title = (

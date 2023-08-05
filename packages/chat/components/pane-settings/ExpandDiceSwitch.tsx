@@ -6,7 +6,7 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { identity } from 'utils';
-import { useSettings } from '../../hooks/useSettings';
+import { useQuerySettings } from '../../hooks/useQuerySettings';
 
 interface Props {
 }
@@ -22,7 +22,7 @@ export const ExpandDiceSwitch: FC<Props> = () => {
     populateCache: identity,
     revalidate: false,
   });
-  const { data: settings } = useSettings();
+  const { data: settings } = useQuerySettings();
   const expandDice = settings?.expandDice ?? false;
   const toggle = () => trigger(!expandDice);
   return <Button disabled={isMutating} data-type="switch" data-on={expandDice} onClick={toggle}>Enable</Button>;

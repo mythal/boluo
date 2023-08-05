@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { useSettings } from '../../hooks/useSettings';
+import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { makeComposeAction } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
 import { useWorkerParse } from './useWorkerParse';
@@ -35,7 +35,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
   const store = useStore();
   const rangeAtom = useMemo(() => selectAtom(composeAtom, compose => compose.range), [composeAtom]);
-  const { data: settings } = useSettings();
+  const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend === true;
   useWorkerParse(dispatch, source);
   const lock = useRef(false);

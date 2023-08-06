@@ -1,17 +1,8 @@
 import { useMe } from 'common';
 import { FC, ReactNode, useMemo } from 'react';
-import { LoginForm } from './account/LoginForm';
-import { ChatSkeleton } from './ChatSkeleton';
 import { ChatView } from './ChatView';
 import PaneLogin from './PaneLogin';
-
-const Login: FC = () => {
-  return (
-    <ChatSkeleton>
-      <LoginForm />
-    </ChatSkeleton>
-  );
-};
+import { PaneWelcome } from './PaneWelcome';
 
 export const ChatRoot: FC = () => {
   const me = useMe();
@@ -22,7 +13,7 @@ export const ChatRoot: FC = () => {
     if (!me) {
       return <PaneLogin />;
     } else {
-      return <div>{me.user.username}</div>;
+      return <PaneWelcome />;
     }
   }, [me]);
   return <ChatView defaultPane={defaultPane} />;

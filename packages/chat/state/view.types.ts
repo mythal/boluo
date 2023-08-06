@@ -1,5 +1,9 @@
 import { makeId } from 'utils';
 
+export interface SpacePane {
+  type: 'SPACE';
+  spaceId: string;
+}
 export interface ChannelPane {
   type: 'CHANNEL';
   channelId: string;
@@ -51,6 +55,7 @@ export interface ProfilePane {
 }
 
 export type PaneData =
+  | SpacePane
   | ChannelPane
   | EmptyPane
   | SettingsPane

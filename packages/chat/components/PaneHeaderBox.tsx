@@ -34,9 +34,11 @@ export const PaneHeaderBox: FC<Props> = (
         )}
       >
         <div className="inline-flex gap-1 items-center flex-nowrap min-w-0">
-          <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>
-            {icon}
-          </div>
+          {icon && (
+            <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>
+              {icon}
+            </div>
+          )}
           <div
             className={clsx(
               'whitespace-nowrap overflow-hidden text-ellipsis flex-shrink',

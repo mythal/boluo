@@ -9,6 +9,8 @@ import { ChatPaneChannel } from './pane-channel/ChannelPane';
 import { PaneError } from './pane-error/PaneError';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneLoading } from './PaneLoading';
+import { PaneSpace } from './PaneSpace';
+import { PaneWelcome } from './PaneWelcome';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
@@ -26,7 +28,9 @@ interface Props {
 const createPaneMap = <T extends Record<Pane['type'], unknown>>(map: T) => map;
 
 const PANE_MAP = createPaneMap({
+  WELCOME: PaneWelcome,
   CHANNEL: ChatPaneChannel,
+  SPACE: PaneSpace,
   SETTINGS: PaneSettings,
   HELP: PaneHelp,
   SPACE_SETTINGS: PaneSpaceSettings,
@@ -41,6 +45,8 @@ const PANE_MAP = createPaneMap({
 
 const Switch: FC<Props> = ({ pane }) => {
   switch (pane.type) {
+    case 'SPACE':
+      return <PaneSpace spaceId={pane.spaceId} />;
     case 'CHANNEL':
       return (
         <ChannelIdContext.Provider value={pane.channelId}>

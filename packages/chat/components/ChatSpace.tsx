@@ -1,10 +1,10 @@
-import { FC } from 'react';
-import { Loading } from 'ui/Loading';
+import { FC, useMemo } from 'react';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
-import { ChatSkeleton } from './ChatSkeleton';
 import { ChatView } from './ChatView';
 import { ErrorDisplay } from './ErrorDisplay';
+import { PaneLoading } from './PaneLoading';
+import { PaneSpace } from './PaneSpace';
 
 interface Props {
   spaceId: string;
@@ -12,18 +12,15 @@ interface Props {
 
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
   const { data: space, error } = useQuerySpace(spaceId);
+  const defaultPane = useMemo(() => <PaneSpace spaceId={spaceId} />, [spaceId]);
   if (error) return <ErrorDisplay error={error} />;
   if (!space) {
-    return (
-      <ChatSkeleton>
-        <Loading />
-      </ChatSkeleton>
-    );
+    return <PaneLoading />;
   }
 
   return (
     <SpaceContext.Provider value={space}>
-      <ChatView />
+      <ChatView defaultPane={defaultPane} />
     </SpaceContext.Provider>
   );
 };

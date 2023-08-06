@@ -1,16 +1,17 @@
 import type { ApiError, Space } from 'api';
 import { get } from 'api-browser';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
-import { unwrap } from 'utils';
 
 export const useQuerySpace = (
-  spaceId: string,
+  spaceId: string | null | undefined,
   configuration?: SWRConfiguration<Space, ApiError>,
 ): SWRResponse<Space, ApiError> => {
-  const key = ['/spaces/query', spaceId] as const;
-  return useSWR<Space, ApiError, typeof key>(
-    key,
-    ([path, id]) => get(path, { id }).then(unwrap),
+  return useSWR<Space, ApiError, ['/spaces/query', string] | null>(
+    spaceId == null || spaceId === '' ? null : ['/spaces/query', spaceId],
+    async ([path, id]) => {
+      const result = await get(path, { id });
+      return result.unwrap();
+    },
     configuration,
   );
 };

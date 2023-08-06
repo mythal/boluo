@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight } from 'icons';
 import type { FC } from 'react';
-import { useSpace } from '../../hooks/useSpace';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useSidebarState } from './useSidebarState';
 
@@ -14,8 +13,7 @@ export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
   return (
     <div
       className={clsx(
-        'h-pane-header flex justify-between gap-1 py-2 items-center select-none',
-        isExpanded ? 'px-4' : 'px-3',
+        'h-pane-header flex justify-between gap-1 py-2 items-center select-none px-3',
       )}
     >
       <button
@@ -29,9 +27,7 @@ export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
       >
         {isExpanded ? <ChevronLeft /> : <ChevronRight />}
       </button>
-      {isExpanded && (
-        <ConnectionIndicatior className="w-8 h-8 inline-flex items-center justify-center border rounded bg-surface-50 cursor-pointer" />
-      )}
+      <ConnectionIndicatior className="w-8 h-8 inline-flex items-center justify-center border rounded bg-surface-50 cursor-pointer" />
     </div>
   );
 };

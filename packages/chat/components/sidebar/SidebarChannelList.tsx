@@ -28,9 +28,6 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
   const toggleCreateChannelPane = () => {
     togglePane({ type: 'CREATE_CHANNEL', spaceId });
   };
-  const handleToggleNotification = () => {
-    // To be implemented
-  };
   const isCreateChannelPaneOpened = useMemo(() => panes.find(pane => pane.type === 'CREATE_CHANNEL') !== undefined, [
     panes,
   ]);
@@ -38,23 +35,10 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
   const toggleNotification = intl.formatMessage({ defaultMessage: 'Toggle Notification' });
   return (
     <div>
-      <div className="py-2 px-4 text-surface-600 flex justify-between items-center text-sm">
+      <div className="py-2 px-3 text-surface-600 flex justify-between items-center text-sm">
         <span>
           <FormattedMessage defaultMessage="Channels" />
         </span>
-        <div>
-          <Button
-            onClick={handleToggleNotification}
-            type="button"
-            data-small
-            data-type="switch"
-            data-on={false}
-            title={toggleNotification}
-            aria-label={toggleNotification}
-          >
-            <Bell />
-          </Button>
-        </div>
       </div>
       {channels == null && <SidebarItemSkeleton />}
       {channels?.map((channel) => (

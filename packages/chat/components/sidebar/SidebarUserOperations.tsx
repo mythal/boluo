@@ -11,7 +11,6 @@ import { panesAtom } from '../../state/view.atoms';
 import { Avatar } from '../account/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
-import { useSidebarState } from './useSidebarState';
 
 interface Props {
 }
@@ -39,7 +38,6 @@ export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {
 });
 export const SidebarUserOperations: FC<Props> = () => {
   const me = useMe();
-  const { isExpanded } = useSidebarState();
   const isLoginOpen = useAtomValue(isLoginOpenAtom);
   const isHelpOpen = useAtomValue(isHelpOpenAtom);
   const isSettingsOpen = useAtomValue(isSettingsOpenAtom);
@@ -78,20 +76,11 @@ export const SidebarUserOperations: FC<Props> = () => {
       <FormattedMessage defaultMessage="Help" />
     </SidebarItem>
   ), [isHelpOpen, toggleHelp]);
-  if (!isExpanded) {
-    return (
-      <div>
-        {settingsItem}
-        {helpItem}
-        {!me && loginItem}
-      </div>
-    );
-  }
   if (me === 'LOADING') {
-    return <div className="border-t border-surface-100" />;
+    return <div className="" />;
   }
   return (
-    <div className={'border-t border-surface-100'}>
+    <div className={'pt-2'}>
       {!folded && me && (
         <>
           {settingsItem}

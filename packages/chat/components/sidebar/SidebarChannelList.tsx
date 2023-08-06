@@ -25,7 +25,7 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
     [panes],
   );
   const togglePane = usePaneToggle();
-  const handleOpenCreateChannelPane = () => {
+  const toggleCreateChannelPane = () => {
     togglePane({ type: 'CREATE_CHANNEL', spaceId });
   };
   const handleToggleNotification = () => {
@@ -65,7 +65,7 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
         />
       ))}
       {mySpaceMember?.isAdmin && (
-        <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={handleOpenCreateChannelPane}>
+        <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={toggleCreateChannelPane}>
           <span className="text-surface-400 group-hover:text-surface-800">
             <FormattedMessage defaultMessage="Add New" />
           </span>

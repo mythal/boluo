@@ -3,8 +3,8 @@ import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { ChatView } from './ChatView';
 import { ErrorDisplay } from './ErrorDisplay';
+import { PaneSpace } from './pane-space/PaneSpace';
 import { PaneLoading } from './PaneLoading';
-import { PaneSpace } from './PaneSpace';
 
 interface Props {
   spaceId: string;

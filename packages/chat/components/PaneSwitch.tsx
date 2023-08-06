@@ -7,9 +7,9 @@ import { Pane } from '../state/view.types';
 import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
 import { ChatPaneChannel } from './pane-channel/ChannelPane';
 import { PaneError } from './pane-error/PaneError';
+import { PaneSpace } from './pane-space/PaneSpace';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneLoading } from './PaneLoading';
-import { PaneSpace } from './PaneSpace';
 import { PaneWelcome } from './PaneWelcome';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));

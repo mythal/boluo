@@ -14,7 +14,15 @@ import type {
 } from './types/channels';
 import type { Message, NewMessage } from './types/messages';
 import type { CreateSpace, EditSpace, Space, SpaceWithMember } from './types/spaces';
-import type { EditUser, LoginData, LoginReturn, RegisterData, User } from './types/users';
+import type {
+  EditUser,
+  LoginData,
+  LoginReturn,
+  RegisterData,
+  ResetPassword,
+  ResetPasswordConfirm,
+  User,
+} from './types/users';
 
 export interface Post {
   // users
@@ -22,12 +30,16 @@ export interface Post {
   '/users/register': { payload: RegisterData; query: null; result: User };
   '/users/edit': { payload: Partial<EditUser>; query: null; result: User };
   '/users/remove_avatar': { payload: null; query: null; result: User };
+  '/users/reset_password': { payload: ResetPassword; query: null; result: null };
+  '/users/reset_password_confirm': { payload: ResetPasswordConfirm; query: null; result: null };
   // spaces
   '/spaces/create': { payload: CreateSpace; query: null; result: SpaceWithMember };
   '/spaces/edit': { payload: EditSpace; query: null; result: Space };
   '/spaces/delete': { payload: Empty; query: { id: string }; result: Space };
   '/spaces/refresh_token': { payload: Empty; query: { id: string }; result: string };
   '/spaces/join': { payload: Empty; result: SpaceWithMember; query: { spaceId: string; token?: string } };
+  '/spaces/leave': { payload: Empty; query: { id: string }; result: true };
+  '/spaces/kick': { payload: Empty; query: { id: string }; result: true };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };

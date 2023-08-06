@@ -6,7 +6,6 @@ import { useCallback } from 'react';
 import { toggle } from 'utils';
 import { useSpace } from '../../hooks/useSpace';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
-import { ConnectionIndicatior } from './ConnectionIndicator';
 import { SidebarChannelList } from './SidebarChannelList';
 import { SidebarHeader } from './SidebarHeader';
 import { SidebarSpaceList } from './SidebarSpaceList';
@@ -18,7 +17,7 @@ interface Props {
   className?: string;
 }
 
-const ExpandedSidebarContent: FC = () => {
+const SidebarContent: FC = () => {
   const space = useSpace();
   const contentState = useAtomValue(sidebarContentStateAtom);
   const me = useMe();
@@ -40,27 +39,21 @@ const ExpandedSidebarContent: FC = () => {
 export const Sidebar: FC<Props> = ({ className }) => {
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
   const toggleExpanded = useCallback(() => setExpanded(toggle), [setExpanded]);
+  if (!isExpanded) {
+    return null;
+  }
   return (
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
       <div className={className}>
         <SidebarHeader toggleExpand={toggleExpanded} />
         <div
           className={clsx(
-            'relative flex-grow flex flex-col justify-between overflow-hidden',
-            isExpanded ? 'w-sidebar' : '',
+            'relative flex-grow flex flex-col justify-between overflow-hidden w-sidebar',
           )}
         >
-          {isExpanded
-            ? (
-              <div className="divide-y overflow-y-auto overflow-x-hidden">
-                <ExpandedSidebarContent />
-              </div>
-            )
-            : (
-              <div className="flex flex-col items-center py-2">
-                <ConnectionIndicatior className="p-2 border rounded cursor-pointer" />
-              </div>
-            )}
+          <div className="divide-y overflow-y-auto overflow-x-hidden">
+            <SidebarContent />
+          </div>
 
           <SidebarUserOperations />
         </div>

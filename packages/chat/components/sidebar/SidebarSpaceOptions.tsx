@@ -53,7 +53,7 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
       </SidebarGroupHeader>
 
       {!folded && (
-        <div className="">
+        <div className="pb-2">
           {mySpaceMember?.isAdmin && (
             <SidebarItem
               icon={<Settings />}

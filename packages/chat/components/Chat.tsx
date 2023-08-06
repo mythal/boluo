@@ -14,6 +14,7 @@ import { ChatRoot } from './ChatRoot';
 import { ChatSkeleton } from './ChatSkeleton';
 import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
+import { OpenSidebarButton } from './sidebar/OpenSidebarButton';
 import { Sidebar } from './sidebar/Sidebar';
 
 const SpaceProvider: FC<{ spaceId: string | null; children: ReactNode }> = ({ spaceId, children }) => {
@@ -59,6 +60,7 @@ const Chat: FC = () => {
         }
       >
         <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
+          <OpenSidebarButton />
           <div className="flex view-height">
             <Sidebar className="flex flex-col h-full flex-none border-r bg-lowest border-surface-300" />
             <div

@@ -10,6 +10,7 @@ import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarChannelItem } from './SidebarChannelItem';
 import { SidebarItem } from './SidebarItem';
+import { SidebarItemSkeleton } from './SidebarItemSkeleton';
 
 interface Props {
   spaceId: string;
@@ -55,6 +56,7 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
           </Button>
         </div>
       </div>
+      {channels == null && <SidebarItemSkeleton />}
       {channels?.map((channel) => (
         <SidebarChannelItem
           key={channel.id}

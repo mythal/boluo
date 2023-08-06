@@ -9,6 +9,7 @@ import { useSpace } from '../../hooks/useSpace';
 import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
+import { SidebarItemSkeleton } from './SidebarItemSkeleton';
 
 interface Props {
 }
@@ -40,6 +41,7 @@ export const SidebarSpaceList: FC<Props> = () => {
           <FormattedMessage defaultMessage="Switch Spaces" />
         </span>
       </div>
+      {spacesWithMemberData == null && <SidebarItemSkeleton />}
       {spacesWithMemberData?.map(({ space }) => (
         <SidebarSpaceItem
           key={space.id}

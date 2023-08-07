@@ -36,8 +36,7 @@ export const Avatar: FC<Props> = (props) => {
         ? (
           <img
             alt={name}
-            width={size}
-            height={size}
+            style={{ width: size, height: size }}
             onClick={onClick}
             className={className}
             src={getMediaUrl(mediaPublicUrl, avatarId)}

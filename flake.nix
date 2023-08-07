@@ -19,9 +19,10 @@
         #   ld: framework not found Security
         # source:
         # https://discourse.nixos.org/t/compile-a-rust-binary-on-macos-dbcrossbar/8612
-        securityFrameworks = if pkgs.stdenv.isDarwin then
-          [ pkgs.darwin.apple_sdk.frameworks.Security ]
-        else
+        securityFrameworks = if pkgs.stdenv.isDarwin then [
+          pkgs.darwin.apple_sdk.frameworks.Security
+          pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+        ] else
           [ ];
         rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in with pkgs; {

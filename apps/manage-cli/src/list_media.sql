@@ -1,1 +1,1 @@
-SELECT id, filename FROM media;
+SELECT id, filename, mime_type FROM media;

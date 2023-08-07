@@ -35,6 +35,7 @@ struct MigrateMedia {
 struct Media {
     id: uuid::Uuid,
     filename: String,
+    mime_type: String,
 }
 
 #[derive(Parser)]
@@ -93,6 +94,7 @@ async fn migrate_media(
         .map(|row| Media {
             id: row.get(0),
             filename: row.get(1),
+            mime_type: row.get(2),
         })
         .collect::<Vec<_>>();
     let credentials = Credentials::new(s3_access_key_id, s3_secret_access_key, None, None, "boluo");
@@ -117,7 +119,6 @@ async fn migrate_media(
             continue;
         };
 
-        let media_id = media.id;
         let s3 = s3.clone();
         let s3_bucket = s3_bucket.clone();
         tokio::spawn(async move {
@@ -132,7 +133,8 @@ async fn migrate_media(
             let Ok(_) = s3
                 .put_object()
                 .bucket(s3_bucket.clone())
-                .key(media_id.as_hyphenated().to_string())
+                .key(media.id.as_hyphenated().to_string())
+                .content_type(media.mime_type)
                 .body(body)
                 .send()
                 .await
@@ -143,7 +145,7 @@ async fn migrate_media(
             };
             println!("[{}/{}] uploaded {}", i + 1, total, media_path.display());
         });
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     }
 }
 

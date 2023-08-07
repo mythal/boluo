@@ -2,9 +2,9 @@ import { SpaceMemberWithUser } from 'api';
 import { Users } from 'icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { Badge } from 'ui/Badge';
 import Icon from 'ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
-import { Badge } from './Badge';
 
 interface Props {
   spaceId: string;

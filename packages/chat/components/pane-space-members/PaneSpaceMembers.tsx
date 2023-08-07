@@ -42,7 +42,7 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
         }
       >
         <Suspense fallback={<Loading />}>
-          <SpaceMemberListTab spaceId={spaceId} />
+          <SpaceMemberListTab spaceId={spaceId} spaceOwnerId={space?.ownerId} />
         </Suspense>
       </PaneBox>
     );
@@ -65,7 +65,7 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
             <InviteSpaceMember spaceId={spaceId} />
           </div>
         )}
-        {tab === 'LIST' && <SpaceMemberListTab spaceId={spaceId} />}
+        {tab === 'LIST' && <SpaceMemberListTab spaceId={spaceId} spaceOwnerId={space?.ownerId} />}
       </Suspense>
     </PaneBox>
   );

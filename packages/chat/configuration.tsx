@@ -1,13 +1,18 @@
-import React from 'react';
-
 export interface Configuration {
   app: 'site' | 'spa' | 'unknown';
-  mediaPublicUrl: string;
   development: boolean;
+  mediaUrl: string;
 }
 
-export const ConfigurationContext = React.createContext<Configuration>({
-  app: 'unknown',
-  mediaPublicUrl: '',
-  development: false,
-});
+let configuration: Configuration | undefined;
+
+export function setConfiguration(newConfiguration: Configuration): void {
+  configuration = newConfiguration;
+}
+
+export function getConfiguration(): Configuration {
+  if (configuration == null) {
+    throw new Error('Configuration not found');
+  }
+  return configuration;
+}

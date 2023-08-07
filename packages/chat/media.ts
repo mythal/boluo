@@ -1,6 +1,7 @@
 import { ApiError } from 'api';
 import { post } from 'api-browser';
 import { Err, Ok, Result } from 'utils';
+import { getConfiguration } from './configuration';
 
 export const mediaMaxSizeMb = 8;
 export const mediaMaxSizeByte = mediaMaxSizeMb * 1024 * 1024;
@@ -12,7 +13,32 @@ interface S3Error {
   err: Response;
 }
 
-export function getMediaUrl(mediaPublicUrl: string, mediaId: string): string {
+export const makeMeidaPublicUrl = (raw: unknown) => {
+  if (typeof raw !== 'string') {
+    throw new Error('The public media URL is not defined');
+  }
+  let url = raw;
+  if (url.endsWith('/')) {
+    url = raw.slice(0, -1);
+  }
+  try {
+    new URL(url);
+  } catch (e) {
+    throw new Error('The public media URL is not valid');
+  }
+  return url;
+};
+
+const getMediaPublicUrl = () => {
+  const url = getConfiguration().mediaUrl;
+  if (url == null) {
+    throw new Error('PUBLIC_MEDIA_URL is not defined');
+  }
+  return url;
+};
+
+export function getMediaUrl(mediaId: string): string {
+  const mediaPublicUrl = getMediaPublicUrl();
   return `${mediaPublicUrl}/${mediaId}`;
 }
 

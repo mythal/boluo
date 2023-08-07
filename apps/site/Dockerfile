@@ -17,7 +17,8 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm install -r --frozen-lockfile
 
 # https://github.com/vercel/next.js/issues/45383
-ENV BACKEND_URL https://boluo.chat
+ARG MEDIA_URL=https://media.boluo.chat
+ENV PUBLIC_MEDIA_URL $MEDIA_URL
 
 RUN pnpm exec nx run site:build
 

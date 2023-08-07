@@ -1,7 +1,8 @@
 'use client';
 
 import type { GetMe } from 'api';
-import { Configuration, ConfigurationContext } from 'chat/configuration';
+import { setConfiguration } from 'chat/configuration';
+import { makeMeidaPublicUrl } from 'chat/media';
 import { IntlMessages, Locale } from 'common/locale';
 import { Provider as JotaiProvider } from 'jotai';
 import { FC, useEffect } from 'react';
@@ -17,22 +18,11 @@ interface Props extends ChildrenProps {
   me: GetMe | null;
 }
 
-const getMediaPublicUrl = () => {
-  const url = process.env.PUBLIC_MEDIA_URL;
-  if (url == null) {
-    throw new Error('PUBLIC_MEDIA_URL is not defined');
-  }
-  if (url.endsWith('/')) {
-    return url.slice(0, -1);
-  }
-  return url;
-};
-
-const configuration: Configuration = {
+setConfiguration({
   app: 'site',
-  mediaPublicUrl: getMediaPublicUrl(),
   development: process.env.NODE_ENV === 'development',
-};
+  mediaUrl: makeMeidaPublicUrl(process.env.PUBLIC_MEDIA_URL),
+});
 
 export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) => {
   useEffect(() => {
@@ -45,20 +35,16 @@ export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) =
   }, []);
 
   return (
-    <ConfigurationContext.Provider
-      value={configuration}
-    >
-      <JotaiProvider store={store}>
-        <SWRConfig
-          value={{
-            refreshInterval: 60000,
-          }}
-        >
-          <LocaleProvider locale={locale} messages={messages}>
-            {children}
-          </LocaleProvider>
-        </SWRConfig>
-      </JotaiProvider>
-    </ConfigurationContext.Provider>
+    <JotaiProvider store={store}>
+      <SWRConfig
+        value={{
+          refreshInterval: 60000,
+        }}
+      >
+        <LocaleProvider locale={locale} messages={messages}>
+          {children}
+        </LocaleProvider>
+      </SWRConfig>
+    </JotaiProvider>
   );
 };

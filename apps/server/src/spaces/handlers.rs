@@ -211,16 +211,13 @@ async fn leave(req: Request<Body>) -> Result<bool, AppError> {
     let mut trans = conn.transaction().await?;
     let db = &mut trans;
 
-    let channels = SpaceMember::remove_user(db, &session.user_id, &id).await?;
+    SpaceMember::remove_user(db, &session.user_id, &id).await?;
     trans.commit().await?;
     Event::space_updated(id);
-    for channel_id in channels {
-        Event::push_members(channel_id);
-    }
     Ok(true)
 }
 
-async fn kick(req: Request<Body>) -> Result<bool, AppError> {
+async fn kick(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let session = authenticate(&req).await?;
     let KickFromSpace { space_id, user_id } = parse_query(req.uri())?;
 
@@ -232,17 +229,13 @@ async fn kick(req: Request<Body>) -> Result<bool, AppError> {
     if kick_member.is_admin {
         return Err(AppError::BadRequest("Can't kick admin".to_string()));
     }
-    if my_member.is_admin {
-        let channels = SpaceMember::remove_user(db, &user_id, &space_id).await?;
-        trans.commit().await?;
-        Event::space_updated(space_id);
-        for channel_id in channels {
-            Event::push_members(channel_id);
-        }
-        Ok(true)
-    } else {
-        Err(AppError::NoPermission("A non-admin tries to kick".to_string()))
+    if !my_member.is_admin {
+        return Err(AppError::NoPermission("A non-admin tries to kick".to_string()));
     }
+    SpaceMember::remove_user(db, &user_id, &space_id).await?;
+    trans.commit().await?;
+    Event::space_updated(space_id);
+    Ok(SpaceMemberWithUser::get_by_space(&mut *conn, &space_id).await?)
 }
 
 async fn my_space_member(req: Request<Body>) -> Result<Option<SpaceMember>, AppError> {

@@ -1,8 +1,7 @@
-use std::path::PathBuf;
-
 use aws_credential_types::{provider::SharedCredentialsProvider, Credentials};
 use clap::Parser;
 use native_tls::TlsConnector;
+use tokio::io::AsyncWriteExt;
 
 #[derive(Parser)]
 #[clap(version = "0.0", author = "uonr")]
@@ -58,6 +57,23 @@ async fn get_postgres_client(database_url: String) -> tokio_postgres::Client {
     client
 }
 
+async fn write_failed_list(failed_path: &std::path::Path) {
+    // Append failed path to /tmp/failed_list.txt
+    let failed_path = failed_path.display().to_string();
+    let Ok(mut file) = tokio::fs::OpenOptions::new()
+        .append(true)
+        .open("/tmp/failed_list.txt")
+        .await
+    else {
+        eprintln!("failed to open /tmp/failed_list.txt");
+        return;
+    };
+    let Ok(_) = file.write_all(failed_path.as_bytes()).await else {
+        eprintln!("failed to write failed list");
+        return;
+    };
+}
+
 async fn migrate_media(
     MigrateMedia {
         database_url,
@@ -89,7 +105,6 @@ async fn migrate_media(
     let s3 = aws_sdk_s3::Client::new(&config);
     let media_dir = std::path::Path::new(&media_dir);
     let total = media_list.len();
-    let mut failed_list: Vec<PathBuf> = Vec::new();
     for (i, media) in media_list.into_iter().enumerate() {
         let media_path = media_dir.join(&media.filename);
         if !media_path.exists() {
@@ -98,36 +113,38 @@ async fn migrate_media(
         }
         let Ok(media_path) = media_path.canonicalize() else {
             eprintln!("failed to canonicalize {}", media_path.display());
-            failed_list.push(media_path);
+            write_failed_list(&media_path).await;
             continue;
         };
-        println!("[{}/{}] uploading {}", i + 1, total, media_path.display());
-        // upload file
-        // https://docs.aws.amazon.com/sdk-for-rust/latest/dg/rust_s3_code_examples.html
-        let Ok(body) = aws_sdk_s3::primitives::ByteStream::from_path(media_path.clone()).await else {
-            eprintln!("failed to read {}", media_path.display());
-            failed_list.push(media_path);
-            continue;
-        };
-        let Ok(_) = s3
-            .put_object()
-            .bucket(s3_bucket.clone())
-            .key(media.id.as_hyphenated().to_string())
-            .body(body)
-            .send()
-            .await
-        else {
-            eprintln!("failed to read {}", media_path.display());
-            continue;
-        };
+
+        let media_id = media.id;
+        let s3 = s3.clone();
+        let s3_bucket = s3_bucket.clone();
+        tokio::spawn(async move {
+            // upload file
+            // https://docs.aws.amazon.com/sdk-for-rust/latest/dg/rust_s3_code_examples.html
+            let Ok(body) = aws_sdk_s3::primitives::ByteStream::from_path(media_path.clone()).await else {
+                eprintln!("failed to read {}", media_path.display());
+                write_failed_list(&media_path).await;
+                return;
+            };
+
+            let Ok(_) = s3
+                .put_object()
+                .bucket(s3_bucket.clone())
+                .key(media_id.as_hyphenated().to_string())
+                .body(body)
+                .send()
+                .await
+            else {
+                eprintln!("failed to read {}", media_path.display());
+                write_failed_list(&media_path).await;
+                return;
+            };
+            println!("[{}/{}] uploaded {}", i + 1, total, media_path.display());
+        });
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
-    // Write failed list to /tmp/failed_list.txt
-    let failed_list = failed_list
-        .into_iter()
-        .map(|path| path.display().to_string())
-        .collect::<Vec<_>>()
-        .join("\n");
-    std::fs::write("/tmp/failed_list.txt", failed_list).expect("failed to write failed list");
 }
 
 #[tokio::main]

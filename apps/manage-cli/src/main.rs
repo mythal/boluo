@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use aws_credential_types::{provider::SharedCredentialsProvider, Credentials};
 use clap::Parser;
 use native_tls::TlsConnector;
@@ -87,27 +89,45 @@ async fn migrate_media(
     let s3 = aws_sdk_s3::Client::new(&config);
     let media_dir = std::path::Path::new(&media_dir);
     let total = media_list.len();
+    let mut failed_list: Vec<PathBuf> = Vec::new();
     for (i, media) in media_list.into_iter().enumerate() {
         let media_path = media_dir.join(&media.filename);
         if !media_path.exists() {
-            println!("{} not exists, skip", media_path.display());
+            eprintln!("{} not exists, skip", media_path.display());
             continue;
         }
-        let media_path = media_path.canonicalize().unwrap();
+        let Ok(media_path) = media_path.canonicalize() else {
+            eprintln!("failed to canonicalize {}", media_path.display());
+            failed_list.push(media_path);
+            continue;
+        };
         println!("[{}/{}] uploading {}", i + 1, total, media_path.display());
         // upload file
         // https://docs.aws.amazon.com/sdk-for-rust/latest/dg/rust_s3_code_examples.html
-        let body = aws_sdk_s3::primitives::ByteStream::from_path(media_path)
-            .await
-            .expect("Failed to read file");
-        s3.put_object()
+        let Ok(body) = aws_sdk_s3::primitives::ByteStream::from_path(media_path.clone()).await else {
+            eprintln!("failed to read {}", media_path.display());
+            failed_list.push(media_path);
+            continue;
+        };
+        let Ok(_) = s3
+            .put_object()
             .bucket(s3_bucket.clone())
             .key(media.id.as_hyphenated().to_string())
             .body(body)
             .send()
             .await
-            .expect("Failed to upload file");
+        else {
+            eprintln!("failed to read {}", media_path.display());
+            continue;
+        };
     }
+    // Write failed list to /tmp/failed_list.txt
+    let failed_list = failed_list
+        .into_iter()
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>()
+        .join("\n");
+    std::fs::write("/tmp/failed_list.txt", failed_list).expect("failed to write failed list");
 }
 
 #[tokio::main]

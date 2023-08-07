@@ -1,8 +1,10 @@
 import { get, post } from 'api-browser';
+import { Clipboard, Refresh } from 'icons';
 import { FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
 import { Button } from 'ui/Button';
+import Icon from 'ui/Icon';
 import { Loading } from 'ui/Loading';
 import { TextInput } from 'ui/TextInput';
 import { unwrap } from 'utils';
@@ -51,12 +53,14 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
           <FormattedMessage defaultMessage="Invite Link" />
         </label>
         <div className="flex gap-1">
-          <TextInput ref={inviteLinkRef} id={id + 'link'} className="w-full" value={link} readOnly />
+          <TextInput ref={inviteLinkRef} id={id + 'link'} className="w-full flex-1" value={link} readOnly />
 
           <Button onClick={copy}>
+            <Icon icon={Clipboard} />
             <FormattedMessage defaultMessage="Copy" />
           </Button>
           <Button onClick={handleRefresh} disabled={didRefresh}>
+            <Icon icon={Refresh} />
             {didRefresh
               ? <FormattedMessage defaultMessage="Regenerated" />
               : <FormattedMessage defaultMessage="Regenerate" />}

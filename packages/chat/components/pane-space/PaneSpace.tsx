@@ -100,7 +100,7 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
         </div>
 
         {description !== '' && (
-          <div className="whitespace-pre">
+          <div className="whitespace-pre-line">
             {description}
           </div>
         )}

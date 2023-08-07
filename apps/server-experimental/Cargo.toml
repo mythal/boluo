@@ -1,0 +1,35 @@
+[package]
+name = "server-experimental"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.clap]
+version = "4.1"
+features = ["derive", "env"]
+
+[dependencies.axum]
+version = "0.6"
+features = ["ws"]
+
+[dependencies.tokio]
+version = "1"
+features = ["full"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive", "rc"]
+
+[dependencies.uuid]
+version = "1"
+features = ["serde", "v1", "v4"]
+
+[dependencies]
+futures = "0.3"
+specta = { version = "1.0.5", features = ["typescript", "uuid", "export"] }
+sqlx = { version = "0.7", features = ["runtime-tokio", "tls-native-tls", "postgres", "json", "uuid", "macros"] }
+tower = { version = "0.4", features = ["util"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

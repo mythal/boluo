@@ -49,7 +49,8 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
             id={userId}
             name={nickname}
             avatarId={typeof avatar === 'string' ? avatar : null}
-            className="h-28 w-28 rounded-md cursor-pointer"
+            size="6rem"
+            className="rounded-md cursor-pointer"
             onClick={triggerUpload}
           />
         )}

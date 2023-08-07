@@ -9,6 +9,7 @@ import { Button } from 'ui/Button';
 import { upload } from '../../media';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneFooterBox } from '../PaneFooterBox';
+import { BioField } from './BioField';
 import { EditAvatar } from './EditAvatar';
 import { NicknameField } from './NicknameField';
 import { ShowUsername } from './ShowUsername';
@@ -21,20 +22,23 @@ interface Props {
 export interface ProfileEditSchema {
   nickname: string;
   avatar: File | string | null;
+  bio: string;
 }
 
 export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
-  const form = useForm<ProfileEditSchema>({ defaultValues: { nickname: me.nickname, avatar: me.avatarId } });
+  const form = useForm<ProfileEditSchema>({
+    defaultValues: { nickname: me.nickname, avatar: me.avatarId, bio: me.bio },
+  });
   const { mutate } = useSWRConfig();
   const key = ['/users/get_me'] as const;
-  const { trigger: editUser, isMutating: isSubmitting, error } = useSWRMutation<
+  const { trigger: editUser, error, isMutating } = useSWRMutation<
     User,
     ApiError,
     typeof key,
     ProfileEditSchema
   >(
     key,
-    async (_, { arg: { avatar, nickname } }) => {
+    async (_, { arg: { avatar, nickname, bio } }) => {
       let avatarId: string | null | undefined = undefined;
 
       if (avatar instanceof File) {
@@ -50,7 +54,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
         nickname = nickname.trim();
       }
 
-      const editResult = await post('/users/edit', null, { nickname, avatar: avatarId });
+      const editResult = await post('/users/edit', null, { nickname, avatar: avatarId, bio });
       editResult.unwrap();
       return editResult.unwrap();
     },
@@ -62,7 +66,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
       },
     },
   );
-  const disabled = !form.formState.isDirty || isSubmitting;
+  const disabled = !form.formState.isDirty || isMutating;
   return (
     <FormProvider {...form}>
       {error && (
@@ -79,9 +83,10 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
                 <EditAvatar userId={me.id} avatar={value} onChange={onChange} />
               )}
             />
-            <div>
+            <div className="flex flex-col gap-2 pr-4">
               <ShowUsername username={me.username} />
               <NicknameField />
+              <BioField className="max-w-md min-h-[8rem]" />
             </div>
           </div>
         </div>

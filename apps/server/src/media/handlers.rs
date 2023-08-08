@@ -26,7 +26,7 @@ fn content_disposition(attachment: bool, filename: &str) -> HeaderValue {
 }
 
 fn filename_sanitizer(filename: String) -> String {
-    let filename_replace = regex!(r#"[/?*:|<>\\]"#);
+    let filename_replace = regex!(r"[/?*:|<>\\]");
     filename_replace.replace_all(&filename, "_").to_string()
 }
 

@@ -49,6 +49,8 @@ async fn check_permissions<T: Querist>(
     Ok(())
 }
 
+// false positive
+#[allow(clippy::needless_pass_by_ref_mut)]
 async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>) -> Result<(), anyhow::Error> {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;

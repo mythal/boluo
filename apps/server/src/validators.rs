@@ -43,7 +43,7 @@ pub static NAME: Validator<str> = Validator(&[
     ("Name length shall not be more than 32.", &max!(32)),
     (
         r#"Username can only contain letters, "_" and numbers."#,
-        &is_match!(r#"^[\w_\d]+$"#),
+        &is_match!(r"^[\w_\d]+$"),
     ),
 ]);
 

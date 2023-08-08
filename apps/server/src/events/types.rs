@@ -7,8 +7,8 @@ use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use crate::spaces::models::{space_users_status, StatusKind, UserStatus};
-use crate::utils::timestamp;
 use crate::{cache, database};
+use chrono::Utc;
 use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,6 +16,8 @@ use std::sync::Arc;
 use tokio::spawn;
 use ts_rs::TS;
 use uuid::Uuid;
+
+pub type Seq = u16;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -25,6 +27,8 @@ pub struct EventQuery {
     pub token: Option<Uuid>,
     #[serde(default)]
     pub after: Option<i64>,
+    #[serde(default)]
+    pub seq: Option<Seq>,
 }
 
 #[derive(Deserialize, Debug, TS)]
@@ -81,6 +85,10 @@ pub enum EventBody {
         channel_id: Uuid,
         members: Vec<Member>,
     },
+    Batch {
+        #[serde(rename = "encodedEvents")]
+        encoded_events: Vec<String>,
+    },
     Initialized,
     StatusMap {
         #[serde(rename = "statusMap")]
@@ -102,8 +110,7 @@ pub enum EventBody {
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     pub mailbox: Uuid,
-    #[ts(type = "number")]
-    pub timestamp: i64,
+    pub id: EventId,
     pub body: EventBody,
 }
 
@@ -111,8 +118,17 @@ impl Event {
     pub fn initialized(mailbox: Uuid) -> Event {
         Event {
             mailbox,
-            timestamp: timestamp(),
+            id: EventId::new(),
             body: EventBody::Initialized,
+        }
+    }
+
+    pub fn batch(mailbox: Uuid, encoded_events: Vec<String>) -> Event {
+        Event {
+            mailbox,
+            id: EventId::new(),
+            // subsec: now.timestamp_subsec_millis(),
+            body: EventBody::Batch { encoded_events },
         }
     }
 
@@ -201,26 +217,31 @@ impl Event {
         cache::make_key(b"mailbox", mailbox, b"events")
     }
 
-    pub async fn get_from_cache(mailbox: &Uuid, after: Option<i64>) -> Vec<String> {
+    pub async fn get_from_cache(mailbox: &Uuid, after: Option<i64>, seq: Option<Seq>) -> Vec<String> {
+        use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
         let cache = super::context::get_cache().try_mailbox(mailbox).await;
-        if let Some(cache) = cache {
-            let cache = cache.lock().await;
-            let mut event_list: Vec<&Arc<SyncEvent>> = cache
-                .events
-                .iter()
-                .chain(cache.edition_map.values())
-                .chain(cache.preview_map.values())
-                .collect();
-            event_list.sort_by(|a, b| a.event.timestamp.cmp(&b.event.timestamp));
-            event_list
-                .into_iter()
-                .skip_while(|e| e.event.timestamp < after)
-                .map(|e| e.encoded.clone())
-                .collect()
-        } else {
-            vec![]
-        }
+        let Some(cache) = cache else { return vec![] };
+        let cache = cache.lock().await;
+        let mut event_list: Vec<&Arc<SyncEvent>> = cache
+            .events
+            .iter()
+            .chain(cache.edition_map.values())
+            .chain(cache.preview_map.values())
+            .collect();
+        event_list.sort_by(|a, b| a.event.id.cmp(&b.event.id));
+        event_list
+            .into_iter()
+            .skip_while(|e| match e.event.id.timestamp.cmp(&after) {
+                Ordering::Less => true,
+                Ordering::Greater => false,
+                Ordering::Equal => {
+                    let Some(seq) = seq else { return false };
+                    e.event.id.seq <= seq
+                }
+            })
+            .map(|e| e.encoded.clone())
+            .collect()
     }
 
     pub fn space_updated(space_id: Uuid) {
@@ -257,7 +278,7 @@ impl Event {
         let event = SyncEvent::new(Event {
             mailbox: channel_id,
             body: EventBody::Members { members, channel_id },
-            timestamp: timestamp(),
+            id: EventId::new(),
         });
 
         Event::send(channel.space_id, Arc::new(event)).await;
@@ -268,7 +289,7 @@ impl Event {
         Arc::new(SyncEvent::new(Event {
             mailbox,
             body,
-            timestamp: timestamp(),
+            id: EventId::new(),
         }))
     }
 
@@ -326,5 +347,55 @@ impl Event {
 
     pub fn fire(body: EventBody, mailbox: Uuid) {
         spawn(Event::async_fire(body, mailbox));
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, TS, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize)]
+#[ts(export)]
+pub struct EventId {
+    /// The timestamp in milliseconds
+    /// The value will not exceed 2^53 - 1, which is safe for JavaScript
+    #[ts(type = "number")]
+    pub timestamp: i64,
+    /// Preserved for future use
+    pub node: u16,
+    pub seq: Seq,
+}
+
+impl EventId {
+    pub fn new() -> EventId {
+        use std::sync::atomic::{AtomicI64, AtomicU16, Ordering};
+        static SEQUENCE: AtomicU16 = AtomicU16::new(Seq::MAX / 2);
+        static PREV_TIMESTAMP: AtomicI64 = AtomicI64::new(0);
+
+        let now = Utc::now();
+        let mut timestamp = now.timestamp_millis();
+        let seq = SEQUENCE.fetch_add(1, Ordering::SeqCst);
+
+        if seq < Seq::MAX / 2 {
+            // A wrap-around occurred
+            timestamp += 1;
+        }
+        let prev_timestamp = PREV_TIMESTAMP.fetch_max(timestamp, Ordering::SeqCst);
+        timestamp = prev_timestamp.max(timestamp);
+        EventId {
+            timestamp,
+            node: 0,
+            seq,
+        }
+    }
+}
+
+#[test]
+fn test_event_id() {
+    for _ in 0..1000 {
+        std::thread::spawn(|| {
+            let mut prev_id = EventId::new();
+            for _ in 0..1000000 {
+                let id = EventId::new();
+                assert!(id > prev_id);
+                prev_id = id;
+            }
+        });
     }
 }

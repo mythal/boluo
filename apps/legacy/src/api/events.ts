@@ -38,14 +38,21 @@ export interface EventQuery {
   after: number;
 }
 
+export interface EventId {
+  timestamp: number;
+  node: number;
+  seq: number;
+}
+
 interface Event<B> {
   mailbox: Id;
-  timestamp: number;
+  id: EventId;
   mailboxType: MailboxType;
   body: B;
 }
 
 export type Events =
+  | Event<Batch>
   | Event<NewMessage>
   | Event<MessageDeleted>
   | Event<MessageEdited>
@@ -58,6 +65,11 @@ export type Events =
   | Event<StatusMap>
   | Event<SpaceUpdated>
   | Event<AppUpdated>;
+
+export interface Batch {
+  type: 'BATCH';
+  encodedEvents: string[];
+}
 
 export interface SpaceUpdated {
   type: 'SPACE_UPDATED';
@@ -173,3 +185,29 @@ export type ClientEvent = SendPreview | SendStatus;
 
 export const isEmptyPreview = (preview: Preview): boolean =>
   preview.text === '' || (preview.text !== null && preview.entities.length === 0);
+
+export const compareEvents = (a: EventId, b: EventId): number => {
+  if (a.timestamp !== b.timestamp) {
+    return a.timestamp - b.timestamp;
+  } else if (a.node !== b.node) {
+    return a.node - b.node;
+  } else {
+    return a.seq - b.seq;
+  }
+};
+
+export const eventIdMax = (a: EventId, b: EventId): EventId => {
+  if (compareEvents(a, b) < 0) {
+    return b;
+  } else {
+    return a;
+  }
+};
+
+export const eventIdMin = (a: EventId, b: EventId): EventId => {
+  if (compareEvents(a, b) < 0) {
+    return a;
+  } else {
+    return b;
+  }
+};

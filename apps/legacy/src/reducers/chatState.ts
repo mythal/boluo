@@ -24,7 +24,7 @@ import {
   StopEditMessage,
 } from '../actions';
 import { Channel, makeMembers, Member } from '../api/channels';
-import { Events, Preview } from '../api/events';
+import { compareEvents, EventId, eventIdMax, Events, Preview } from '../api/events';
 import { Message, MessageOrder } from '../api/messages';
 import { SpaceWithRelated } from '../api/spaces';
 import { Entity } from '../interpreter/entities';
@@ -71,7 +71,7 @@ export interface ChatState {
   // heartbeatMap: Map<Id, number>;
   itemSet: ChatItemSet;
   finished: boolean;
-  eventAfter: number;
+  eventAfter: EventId;
   lastLoadBefore: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
   showFolded: boolean;
@@ -363,7 +363,7 @@ const handleComposeRestore = (state: ChatState, { compose }: RestoreComposeState
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
   let { itemSet, channel, colorMap, members, eventAfter, initialized, compose } = chat;
-  if (event.timestamp < eventAfter) {
+  if (compareEvents(event.id, eventAfter) <= 0) {
     return chat;
   }
   if ('channelId' in body && body.channelId !== channel.id) {
@@ -383,7 +383,7 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, myId);
       break;
     case 'MESSAGE_EDITED':
-      eventAfter = Math.max(eventAfter, event.timestamp);
+      eventAfter = eventIdMax(eventAfter, event.id);
       chat = handleEditMessage(chat, body.message, myId);
       return { ...chat, eventAfter };
     case 'CHANNEL_EDITED':
@@ -405,7 +405,7 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
   if (DEBUG) {
     checkMessagesOrder(itemSet);
   }
-  eventAfter = Math.max(eventAfter, event.timestamp);
+  eventAfter = eventIdMax(eventAfter, event.id);
   return {
     ...chat,
     channel,

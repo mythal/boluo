@@ -2,7 +2,7 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useRef } from 'react';
 import { connectSpace, SpaceUpdated } from '../actions';
 import { connect } from '../api/connect';
-import { Events } from '../api/events';
+import { EventId, Events } from '../api/events';
 import { get } from '../api/request';
 import { selectBestBaseUrl } from '../base-url';
 import { autoSelectAtom } from '../states/connection';
@@ -35,14 +35,20 @@ export function useSpaceConnection() {
   const spaceId = useSelector((state) => state.ui.spaceId);
   const setConnectState = useSetAtom(connectStateAtom);
 
-  const after = useRef<number>(0);
+  const after = useRef<EventId>({ timestamp: 0, seq: 0, node: 0 });
   const retry = useRef<number>(0);
 
   const conn = useCallback(async (): Promise<WebSocket> => {
     if (!spaceId) {
       throw new Error('unexpected error: there is no space id');
     }
-    const connection = connect(baseUrl, spaceId, await getConnectionToken(spaceId, myId), after.current);
+    const connection = connect(
+      baseUrl,
+      spaceId,
+      await getConnectionToken(spaceId, myId),
+      after.current.timestamp,
+      after.current.seq,
+    );
     connection.onerror = (e) => {
       console.warn(e);
     };
@@ -53,7 +59,7 @@ export function useSpaceConnection() {
     connection.onmessage = (wsMsg) => {
       setConnectState('OPEN');
       const event = JSON.parse(wsMsg.data as string) as Events;
-      after.current = event.timestamp;
+      after.current = event.id;
       const { body } = event;
       if (body.type === 'APP_UPDATED') {
         location.reload();

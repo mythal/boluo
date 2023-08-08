@@ -1,5 +1,6 @@
 import { Map } from 'immutable';
-import { Action } from '../actions';
+import { Action, EventReceived } from '../actions';
+import { Events } from '../api/events';
 import { Id } from '../utils/id';
 import { ChatState } from './chatState';
 import { ChatStateMap, chatStateMapReducer } from './chatStateMap';
@@ -14,10 +15,29 @@ export interface ApplicationState {
   chatStates: ChatStateMap;
 }
 
+export const handleBatch = (state: ApplicationState, action: EventReceived): ApplicationState => {
+  if (action.event.body.type !== 'BATCH') {
+    return state;
+  }
+  for (const encodedEvent of action.event.body.encodedEvents) {
+    try {
+      const event = JSON.parse(encodedEvent) as Events;
+      const action: EventReceived = { type: 'EVENT_RECEIVED', event };
+      state = applicationReducer(state, action);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return state;
+};
+
 export const applicationReducer = (
   state: ApplicationState = initApplicationState,
   action: Action,
 ): ApplicationState => {
+  if (action.type === 'EVENT_RECEIVED' && action.event.body.type === 'BATCH') {
+    return handleBatch(state, action);
+  }
   const profile = profileReducer(state.profile, action);
   const userId = profile?.user.id;
   const chatStates = chatStateMapReducer(state.chatStates, action, userId);

@@ -51,7 +51,12 @@ async fn check_permissions<T: Querist>(
 
 // false positive
 #[allow(clippy::needless_pass_by_ref_mut)]
-async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>) -> Result<(), anyhow::Error> {
+async fn push_events(
+    mailbox: Uuid,
+    outgoing: &mut Sender,
+    after: Option<i64>,
+    seq: Option<u16>,
+) -> Result<(), anyhow::Error> {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;
     use tokio::time::interval;
@@ -73,15 +78,16 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>) -
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(&mailbox).await;
 
-        let cached_events = Event::get_from_cache(&mailbox, after).await;
-        for e in cached_events.into_iter() {
-            tx.send(WsMessage::Text(e)).await.ok();
+        let cached_events = Event::get_from_cache(&mailbox, after, seq).await;
+        if !cached_events.is_empty() {
+            let Ok(batch_event) = serde_json::to_string(&Event::batch(mailbox, cached_events)) else {
+                return Err(anyhow!("Failed to serialize batch event"));
+            };
+            tx.send(WsMessage::Text(batch_event)).await.ok();
         }
-        tx.send(WsMessage::Text(
-            serde_json::to_string(&Event::initialized(mailbox)).unwrap(),
-        ))
-        .await
-        .ok();
+        let initialized = Event::initialized(mailbox);
+        let initialized = serde_json::to_string(&initialized).expect("Failed to serialize initialized event");
+        tx.send(WsMessage::Text(initialized)).await.ok();
 
         loop {
             let message = match mailbox_rx.recv().await {
@@ -140,7 +146,12 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: Stri
 async fn connect(req: Request) -> Result<Response, anyhow::Error> {
     use futures::future;
 
-    let EventQuery { mailbox, token, after } = parse_query(req.uri())?;
+    let EventQuery {
+        mailbox,
+        token,
+        after,
+        seq,
+    } = parse_query(req.uri())?;
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
@@ -167,7 +178,7 @@ async fn connect(req: Request) -> Result<Response, anyhow::Error> {
         let (mut outgoing, incoming) = ws_stream.split();
 
         let server_push_events = async move {
-            if let Err(e) = push_events(mailbox, &mut outgoing, after).await {
+            if let Err(e) = push_events(mailbox, &mut outgoing, after, seq).await {
                 log::warn!("Failed to push events: {}", e);
             }
             outgoing.close().await.ok();

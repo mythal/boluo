@@ -60,8 +60,8 @@ async fn events_clean() {
                     let mut mailbox = mailbox.lock().await;
                     let mut len = mailbox.events.len();
                     while let Some(event) = mailbox.events.pop_front() {
-                        if len < 1024 && event.event.timestamp > before {
-                            before = event.event.timestamp - 1;
+                        if len < 1024 && event.event.id.timestamp > before {
+                            before = event.event.id.timestamp - 1;
                             mailbox.events.push_front(event);
                             break;
                         }
@@ -73,11 +73,11 @@ async fn events_clean() {
                     swap(&mut edition_map, &mut mailbox.edition_map);
                     mailbox.preview_map = preview_map
                         .into_iter()
-                        .filter(|(_, preview)| preview.event.timestamp > before)
+                        .filter(|(_, preview)| preview.event.id.timestamp > before)
                         .collect();
                     mailbox.edition_map = edition_map
                         .into_iter()
-                        .filter(|(_, edition)| edition.event.timestamp > before)
+                        .filter(|(_, edition)| edition.event.id.timestamp > before)
                         .collect();
                     mailbox.start_at = before;
                     if mailbox.events.is_empty() && mailbox.edition_map.is_empty() && mailbox.preview_map.is_empty() {

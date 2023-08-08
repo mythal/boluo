@@ -1,3 +1,5 @@
+import { EventId } from 'api';
+
 export function by(a: number, b: number): number {
   return b - a;
 }
@@ -27,3 +29,29 @@ export function binarySearchPos(arr: Array<{ pos: number }>, targetPos: number):
 
   return left;
 }
+
+export const eventIdCompare = (a: EventId, b: EventId): number => {
+  if (a.timestamp !== b.timestamp) {
+    return a.timestamp - b.timestamp;
+  } else if (a.node !== b.node) {
+    return a.node - b.node;
+  } else {
+    return a.seq - b.seq;
+  }
+};
+
+export const eventIdMax = (a: EventId, b: EventId): EventId => {
+  if (eventIdCompare(a, b) < 0) {
+    return b;
+  } else {
+    return a;
+  }
+};
+
+export const eventIdMin = (a: EventId, b: EventId): EventId => {
+  if (eventIdCompare(a, b) < 0) {
+    return a;
+  } else {
+    return b;
+  }
+};

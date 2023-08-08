@@ -1,4 +1,6 @@
+import type { EventId, ServerEvent } from 'api';
 import type { Reducer } from 'react';
+import { eventIdCompare } from '../sort';
 import type { ChannelState } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
 import { ChatAction, ChatActionUnion, eventToChatAction } from './chat.actions';
@@ -14,8 +16,10 @@ export interface ChatSpaceState {
   connection: ConnectionState;
   channels: Record<string, ChannelState>;
   context: ChatReducerContext;
-  lastEventTimestamp: number;
+  lastEventId: EventId;
 }
+
+export const zeroEventId: EventId = { timestamp: 0, seq: 0, node: 0 };
 
 export const initialChatState: ChatSpaceState = {
   connection: {
@@ -28,7 +32,7 @@ export const initialChatState: ChatSpaceState = {
     spaceId: '',
     initialized: false,
   },
-  lastEventTimestamp: 0,
+  lastEventId: zeroEventId,
 };
 
 const channelsReducer = (
@@ -75,7 +79,7 @@ export const makeChatState = (spaceId: string): ChatSpaceState => ({
     spaceId,
     initialized: false,
   },
-  lastEventTimestamp: 0,
+  lastEventId: zeroEventId,
 });
 
 const handleChannelDeleted = (
@@ -92,15 +96,40 @@ const handleEventFromServer = (
   state: ChatSpaceState,
   { payload: event }: ChatAction<'eventFromServer'>,
 ): ChatSpaceState => {
-  if (event.timestamp <= state.lastEventTimestamp) {
+  if (eventIdCompare(event.id, state.lastEventId) <= 0) {
     return state;
   }
-  const chatAction = eventToChatAction(event);
-  const lastEventTimestamp = event.timestamp;
-  if (chatAction === null) {
-    return { ...state, lastEventTimestamp };
+  const lastEventId = event.id;
+  if (event.body.type === 'BATCH') {
+    const { encodedEvents } = event.body;
+    const events: Array<ServerEvent | null> = encodedEvents.map(
+      (encodedEvent) => {
+        try {
+          return JSON.parse(encodedEvent) as ServerEvent;
+        } catch {
+          console.error('Failed to parse event', encodedEvent);
+          return null;
+        }
+      },
+    );
+    let nextState = state;
+    for (const event of events) {
+      if (event === null) {
+        continue;
+      }
+      const chatAction = eventToChatAction(event);
+      if (chatAction === null) {
+        continue;
+      }
+      nextState = chatReducer(nextState, chatAction);
+    }
+    return { ...nextState, lastEventId };
   }
-  return { ...chatReducer(state, chatAction), lastEventTimestamp };
+  const chatAction = eventToChatAction(event);
+  if (chatAction === null) {
+    return { ...state, lastEventId };
+  }
+  return { ...chatReducer(state, chatAction), lastEventId };
 };
 export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,

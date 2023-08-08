@@ -1,14 +1,23 @@
 import { Id } from '../utils/id';
 
-export const connect = (baseUrl: string, id: Id, token: Id | null, after: number): WebSocket => {
+export const connect = (
+  baseUrl: string,
+  id: Id,
+  token: Id | null,
+  after: number | null,
+  seq: number | null,
+): WebSocket => {
   if (baseUrl.startsWith('https://')) {
     baseUrl = baseUrl.replace('https://', 'wss://');
   } else {
     baseUrl = baseUrl.replace('http://', 'ws://');
   }
-  if (token) {
-    return new WebSocket(`${baseUrl}/api/events/connect?mailbox=${id}&after=${after}&token=${token}`);
-  } else {
-    return new WebSocket(`${baseUrl}/api/events/connect?mailbox=${id}&after=${after}`);
+  const paramsObject: Record<string, string> = { mailbox: id };
+  if (token != null) paramsObject.token = token;
+  if (after != null) {
+    paramsObject.after = after.toString();
+    if (seq != null) paramsObject.seq = seq.toString();
   }
+  const params = new URLSearchParams(paramsObject);
+  return new WebSocket(`${baseUrl}/api/events/connect?${params.toString()}`);
 };

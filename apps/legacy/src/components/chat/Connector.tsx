@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
-import { Events, SpaceUpdated } from '../../api/events';
+import { compareEvents, EventId, Events, SpaceUpdated } from '../../api/events';
 import { get } from '../../api/request';
 import { connectionStateAtom } from '../../states/connection';
 import store, { Dispatch, useDispatch, useSelector } from '../../store';
@@ -91,7 +91,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
   const baseUrlRef = useRef<string>(baseUrl);
 
   const retryCount = useRef(0);
-  const after = useRef<number>(0);
+  const after = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
 
   useEffect(() => {
     stateRef.current = state;
@@ -138,7 +138,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         retry();
         return;
       }
-      const connection = connect(baseUrlRef.current, spaceId, token, after.current);
+      const connection = connect(baseUrlRef.current, spaceId, token, after.current.timestamp, after.current.seq);
       connectionRef.current = connection;
       connection.onclose = (event) => {
         console.log('Websocket connection closed', event);
@@ -162,10 +162,10 @@ export const Connector = ({ spaceId, myId }: Props) => {
           return;
         }
         const event: Events = JSON.parse(received) as Events;
-        if (after.current >= event.timestamp) {
+        if (compareEvents(after.current, event.id) > 0) {
           return;
         }
-        after.current = event.timestamp;
+        after.current = event.id;
         handleEvent(dispatch, event);
       };
       dispatch(connectSpace(spaceId, connection));

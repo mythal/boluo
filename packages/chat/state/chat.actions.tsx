@@ -43,7 +43,7 @@ export const eventToChatAction = (e: ServerEvent): ChatActionUnion | null => {
     case 'MESSAGE_DELETED':
       return makeChatAction('messageDeleted', e.body);
     case 'MESSAGE_PREVIEW':
-      return makeChatAction('messagePreview', { ...e.body, timestamp: e.timestamp });
+      return makeChatAction('messagePreview', { ...e.body, timestamp: e.id.timestamp });
     case 'CHANNEL_DELETED':
       return makeChatAction('channelDeleted', e.body);
     case 'CHANNEL_EDITED':

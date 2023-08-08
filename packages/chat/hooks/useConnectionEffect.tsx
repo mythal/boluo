@@ -1,4 +1,4 @@
-import { isServerEvent, ServerEvent } from 'api';
+import { EventId, isServerEvent, ServerEvent } from 'api';
 import { webSocketUrlAtom } from 'common';
 import { useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
@@ -8,10 +8,13 @@ import { PING, PONG } from '../const';
 import { makeAction } from '../state/actions';
 import { chatAtom, connectionStateAtom } from '../state/chat.atoms';
 
-const createMailboxConnection = (baseUrl: string, id: string, token?: string, after?: number): WebSocket => {
+const createMailboxConnection = (baseUrl: string, id: string, token?: string, after?: EventId): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
   if (token) paramsObject.token = token;
-  if (after) paramsObject.after = after.toString();
+  if (after) {
+    paramsObject.after = after.timestamp.toString();
+    paramsObject.seq = after.seq.toString();
+  }
   const params = new URLSearchParams(paramsObject);
   const url = `${baseUrl}/events/connect?${params.toString()}`;
   return new WebSocket(url);
@@ -30,7 +33,7 @@ const connect = (store: ReturnType<typeof useStore>, handleEvent: (event: Server
   console.info(`establishing new connection for ${mailboxId}`);
   store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
 
-  const after = store.get(chatAtom).lastEventTimestamp;
+  const after = store.get(chatAtom).lastEventId;
   const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, undefined, after);
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);

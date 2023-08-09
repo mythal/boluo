@@ -3,5 +3,5 @@ export interface ChannelSettingsForm {
   topic: string;
   defaultDiceType: string;
   defaultRollCommand: string;
-  isPrivate: boolean;
+  isSecret: boolean;
 }

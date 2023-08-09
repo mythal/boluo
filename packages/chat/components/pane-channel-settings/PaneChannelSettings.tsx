@@ -32,6 +32,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
       defaultDiceType: channel.defaultDiceType,
       topic: channel.topic,
       defaultRollCommand: channel.defaultRollCommand,
+      isSecret: !channel.isPublic,
     },
   });
 
@@ -40,13 +41,13 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const key = ['/channels/query', channel.id] as const;
   const editChannel: MutationFetcher<Channel, ChannelSettingsForm, typeof key> = async (
     [_, channelId],
-    { arg: { name, defaultDiceType, topic, isPrivate } },
+    { arg: { name, defaultDiceType, topic, isSecret } },
   ): Promise<Channel> => {
     const result = await post('/channels/edit', null, {
       name,
       defaultDiceType,
       topic,
-      isPublic: !isPrivate,
+      isPublic: !isSecret,
       channelId,
       defaultRollCommand: null,
       grantMasters: [],

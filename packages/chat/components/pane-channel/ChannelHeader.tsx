@@ -17,19 +17,19 @@ const ChannelName: FC<{ channel: Channel | undefined }> = ({ channel }) => {
 
 export const ChannelHeader: FC = () => {
   const channelId = useChannelId();
-  const space = useSpace();
   const { data: channel } = useQueryChannel(channelId);
   const headerStateAtom = useMemo(() => atom<ChannelHeaderState>('DEFAULT'), []);
   return (
     <PaneHeaderBox
       icon={channel && !channel.isPublic ? <LockedHash /> : <Hash />}
-      operators={
-        <ChannelHeaderOperations
-          stateAtom={headerStateAtom}
-          channelId={channelId}
-          spaceId={channel?.spaceId ?? space?.id ?? null}
-        />
-      }
+      operators={channel
+        ? (
+          <ChannelHeaderOperations
+            stateAtom={headerStateAtom}
+            channel={channel}
+          />
+        )
+        : null}
       extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
     >
       <ChannelName channel={channel} />

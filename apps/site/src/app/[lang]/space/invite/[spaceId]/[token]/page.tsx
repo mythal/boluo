@@ -52,6 +52,7 @@ export default async function Page({ params: { spaceId, token } }: Props) {
       <div className="text-xl">
         You have been invited to <span className="font-bold">{space.name}</span>
       </div>
+      {space.description !== '' && <div className="py-4 max-w-md whitespace-pre-line">{space.description}</div>}
       <div className="mt-4 space-x-2">
         <AcceptButton spaceId={spaceId} token={token} />
       </div>

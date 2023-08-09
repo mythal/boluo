@@ -14,7 +14,7 @@ import { usePaneClose } from '../hooks/usePaneClose';
 import { usePaneReplace } from '../hooks/usePaneReplace';
 import { ChannelNameField } from './pane-channel-settings/ChannelNameField';
 import { DefaultDiceField } from './pane-channel-settings/DefaultDiceField';
-import { IsPrivateField } from './pane-channel-settings/IsPrivateField';
+import { IsSecretField } from './pane-channel-settings/IsPrivateField';
 import { PaneBox } from './PaneBox';
 import { PaneFooterBox } from './PaneFooterBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
@@ -105,7 +105,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
             <div className="p-4 flex flex-col gap-2 h-full max-w-md">
               <ChannelNameField spaceId={spaceId} />
               <CharacterNameField />
-              <IsPrivateField />
+              <IsSecretField />
               <DefaultDiceField />
               {error && <FormErrorDispay error={error} />}
             </div>

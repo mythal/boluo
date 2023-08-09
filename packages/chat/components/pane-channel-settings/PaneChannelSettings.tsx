@@ -17,7 +17,7 @@ import { DefaultDiceField } from './DefaultDiceField';
 import { DefaultRollCommandField } from './DefaultRollCommandField';
 import { DeleteChannelButton } from './DeleteChannelButton';
 import { ChannelSettingsForm } from './form';
-import { IsPrivateField } from './IsPrivateField';
+import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 
@@ -82,7 +82,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           <DefaultDiceField />
           <DefaultRollCommandField />
           <TopicField />
-          <IsPrivateField />
+          <IsSecretField />
           <div className="p-2 border-t border-b border-error-200 bg-error-50">
             <div className="text-lg">
               <FormattedMessage defaultMessage="Danger Zone" />

@@ -1,4 +1,4 @@
-import type { Channel, ChannelMembers } from './types/channels';
+import type { Channel, ChannelMembers, ChannelWithMaybeMember } from './types/channels';
 import type { GetMessagesByChannel, Message } from './types/messages';
 import type { Space, SpaceMember, SpaceMemberWithUser, SpaceWithMember, SpaceWithRelated } from './types/spaces';
 import type { CheckEmail, CheckUsername, GetMe, User } from './types/users';
@@ -20,7 +20,7 @@ export interface Get {
   '/spaces/token': { query: { id: string }; result: string };
   // channels
   '/channels/query': { query: { id: string }; result: Channel };
-  '/channels/by_space': { query: { id: string }; result: Channel[] };
+  '/channels/by_space': { query: { id: string }; result: ChannelWithMaybeMember[] };
   '/channels/members': { query: { id: string }; result: ChannelMembers };
   '/channels/check_name': { query: { name: string; spaceId: string }; result: boolean };
   // messages

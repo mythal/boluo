@@ -110,6 +110,16 @@ impl Space {
         Ok(row.try_get(0)?)
     }
 
+    pub async fn is_admin<T: Querist>(&self, db: &mut T, user_id: &Uuid) -> bool {
+        if self.owner_id == *user_id {
+            return true;
+        }
+        let Ok(space_member) = SpaceMember::get(db, user_id, &self.id).await else {
+            return false;
+        };
+        space_member.map(|member| member.is_admin).unwrap_or(false)
+    }
+
     pub async fn delete<T: Querist>(db: &mut T, id: &Uuid) -> Result<(), DbError> {
         db.execute(include_str!("sql/delete.sql"), &[id]).await.map(|_| ())
     }

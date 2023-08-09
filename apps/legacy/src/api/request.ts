@@ -194,7 +194,10 @@ export function get(path: '/spaces/token', query: IdQuery): Promise<AppResult<st
 export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<Record<string, SpaceMemberWithUser>>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
 export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
-export function get(path: '/channels/by_space', query: IdQuery): Promise<AppResult<Channel[]>>;
+export function get(
+  path: '/channels/by_space',
+  query: IdQuery,
+): Promise<AppResult<Array<{ channel: Channel; member: ChannelMember | null }>>>;
 export function get(path: '/channels/all_members', query: IdQuery): Promise<AppResult<ChannelMemberWithUser[]>>;
 export function get(path: '/channels/check_name', query: CheckChannelName): Promise<AppResult<boolean>>;
 export function get(path: '/channels/export', query: Export): Promise<AppResult<Message[]>>;

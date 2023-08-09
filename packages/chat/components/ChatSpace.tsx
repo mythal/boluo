@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'icons';
 import { FC, useMemo } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { ChatView } from './ChatView';
@@ -20,7 +21,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
         <div className="p-4">
           <div className="py-2 text-xl flex gap-2 items-center">
             <AlertTriangle className="inline" />
-            You do not have permission to view this space.
+            <FormattedMessage defaultMessage="You do not have permission to view this space." />
           </div>
         </div>
       );

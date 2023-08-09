@@ -20,6 +20,14 @@ pub struct CreateSpace {
 #[derive(Deserialize, Debug, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
+pub struct QuerySpace {
+    pub id: Uuid,
+    pub token: Option<Uuid>,
+}
+
+#[derive(Deserialize, Debug, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct JoinSpace {
     pub space_id: Uuid,
     pub token: Option<Uuid>,

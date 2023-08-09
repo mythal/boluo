@@ -1,4 +1,5 @@
-import { Hash } from 'icons';
+import { Channel } from 'api';
+import { Hash, LockedHash } from 'icons';
 import { atom } from 'jotai';
 import { FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
@@ -9,21 +10,21 @@ import { ChannelHeaderOperations } from './ChannelHeaderOperations';
 
 export type ChannelHeaderState = 'DEFAULT' | 'MORE' | 'FILTER';
 
-const ChannelName: FC<{ channelId: string }> = ({ channelId }) => {
-  const { data: channel } = useQueryChannel(channelId);
+const ChannelName: FC<{ channel: Channel | undefined }> = ({ channel }) => {
   return <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">{channel?.name ?? '...'}</span>;
 };
 
 export const ChannelHeader: FC = () => {
   const channelId = useChannelId();
+  const { data: channel } = useQueryChannel(channelId);
   const headerStateAtom = useMemo(() => atom<ChannelHeaderState>('DEFAULT'), []);
   return (
     <PaneHeaderBox
-      icon={<Hash />}
+      icon={channel && !channel.isPublic ? <LockedHash /> : <Hash />}
       operators={<ChannelHeaderOperations stateAtom={headerStateAtom} channelId={channelId} />}
       extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
     >
-      <ChannelName channelId={channelId} />
+      <ChannelName channel={channel} />
     </PaneHeaderBox>
   );
 };

@@ -1,6 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import useSWR from 'swr';
 import { mediaHead, mediaUrl } from '../../api/request';
 import { roundedSm } from '../../styles/atoms';
 import { gray } from '../../styles/colors';
@@ -44,33 +45,31 @@ export const inlineImgLink = css`
   }
 `;
 
+export const xStyle = css`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 2rem;
+`;
+
 function MessageMedia({ className, mediaId, file }: Props) {
   const [lightBox, setLightBox] = useState(false);
-  const [type, setType] = useState<string | undefined | null>(file?.type);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mediaId || !mounted.current) {
-      return;
-    }
-    (async () => {
-      const response = await mediaHead(mediaId);
-      if (response.ok && mounted.current) {
-        setType(response.headers.get('content-type'));
-      }
-    })();
-  }, [mediaId]);
-
+  const { data: headResponse, isLoading, error } = useSWR(
+    mediaId ? ['media', mediaId] : null,
+    ([, mediaId]) => mediaHead(mediaId),
+  );
+  console.log('headResponse', headResponse);
+  let type: string | null = null;
+  if (file) {
+    type = file.type;
+  } else if (headResponse?.ok) {
+    type = headResponse.headers.get('content-type') || null;
+  }
   useEffect(() => {
     if (file) {
-      setType(file.type);
       const reader = new FileReader();
       reader.addEventListener(
         'load',
@@ -87,6 +86,13 @@ function MessageMedia({ className, mediaId, file }: Props) {
 
   if (!mediaId && !file) {
     return null;
+  }
+  if (error) {
+    return (
+      <div css={placeHolder} className={className}>
+        <div css={xStyle}>×</div>
+      </div>
+    );
   }
   if (!type) {
     return <div css={placeHolder} className={className} />;

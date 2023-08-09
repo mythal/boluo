@@ -1,11 +1,12 @@
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { Lock } from 'icons';
+import { atom } from 'jotai';
 import { atomWithReducer, atomWithStorage } from 'jotai/utils';
 import { FC, useMemo } from 'react';
 import { memo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ChannelAtoms, ChannelAtomsContext, ChannelFilter } from '../../hooks/useChannelAtoms';
+import { ChannelAtoms, ChannelAtomsContext, ChannelFilter, ChannelMemberListState } from '../../hooks/useChannelAtoms';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { composeReducer, makeInitialComposeState } from '../../state/compose.reducer';
@@ -41,6 +42,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     composeAtom: atomWithReducer(initialCompose, composeReducer),
     filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
     showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
+    memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
   }), [channelId, initialCompose]);
   const nickname = me != null && me !== 'LOADING' ? me.user.nickname : undefined;
   const { data: channel, isLoading } = useQueryChannel(channelId);

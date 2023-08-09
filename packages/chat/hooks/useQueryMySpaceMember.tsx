@@ -3,10 +3,9 @@ import { get } from 'api-browser';
 import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
 
-export const useMySpaceMember = (spaceId: string): SWRResponse<SpaceMember | null, ApiError> => {
-  const key = ['/spaces/my_space_member', spaceId] as const;
+export const useMySpaceMember = (spaceId: string | null): SWRResponse<SpaceMember | null, ApiError> => {
   return useSWR(
-    key,
+    spaceId ? ['/spaces/my_space_member', spaceId] as const : null,
     ([path, id]) => get(path, { id }).then(unwrap),
   );
 };

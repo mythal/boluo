@@ -12,9 +12,10 @@ import { MemberJoinButton } from './MemberJoinButton';
 interface Props {
   stateAtom: PrimitiveAtom<ChannelHeaderState>;
   channelId: string;
+  spaceId: string | null;
 }
 
-export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channelId }) => {
+export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channelId, spaceId }) => {
   const [state, setState] = useAtom(stateAtom);
   const toggleMore = useCallback(() => setState(prev => prev === 'MORE' ? 'DEFAULT' : 'MORE'), [setState]);
   const toggleFilterBar = useCallback(() => setState(prev => prev === 'FILTER' ? 'DEFAULT' : 'FILTER'), [setState]);
@@ -25,7 +26,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channelId }) => 
     if (channelMember) {
       memberButton = <ChannelHeaderMoreButton on={state === 'MORE'} toggle={toggleMore} />;
     } else {
-      memberButton = <MemberJoinButton channelId={channelId} />;
+      memberButton = <MemberJoinButton channelId={channelId} spaceId={spaceId} />;
     }
   }
   return (

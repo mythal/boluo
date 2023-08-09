@@ -4,6 +4,7 @@ import { atom } from 'jotai';
 import { FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useSpace } from '../../hooks/useSpace';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { ChannelHeaderExtra } from './ChannelHeaderExtra';
 import { ChannelHeaderOperations } from './ChannelHeaderOperations';
@@ -16,12 +17,19 @@ const ChannelName: FC<{ channel: Channel | undefined }> = ({ channel }) => {
 
 export const ChannelHeader: FC = () => {
   const channelId = useChannelId();
+  const space = useSpace();
   const { data: channel } = useQueryChannel(channelId);
   const headerStateAtom = useMemo(() => atom<ChannelHeaderState>('DEFAULT'), []);
   return (
     <PaneHeaderBox
       icon={channel && !channel.isPublic ? <LockedHash /> : <Hash />}
-      operators={<ChannelHeaderOperations stateAtom={headerStateAtom} channelId={channelId} />}
+      operators={
+        <ChannelHeaderOperations
+          stateAtom={headerStateAtom}
+          channelId={channelId}
+          spaceId={channel?.spaceId ?? space?.id ?? null}
+        />
+      }
       extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
     >
       <ChannelName channel={channel} />

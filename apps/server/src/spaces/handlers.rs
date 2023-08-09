@@ -24,7 +24,15 @@ async fn query(req: Request<Body>) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let mut conn = database::get().await?;
     let db = &mut *conn;
-    Space::get_by_id(db, &id).await?.or_not_found()
+    let space = Space::get_by_id(db, &id).await?.or_not_found()?;
+    if space.is_public || space.allow_spectator {
+        return Ok(space);
+    }
+    let session = authenticate(&req).await?;
+    let Some(_) = SpaceMember::get(db, &session.user_id, &id).await? else {
+        return Err(AppError::NoPermission("A non-member tries to query space".to_string()));
+    };
+    Ok(space)
 }
 
 pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {

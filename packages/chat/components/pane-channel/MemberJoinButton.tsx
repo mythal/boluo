@@ -1,4 +1,4 @@
-import { ChannelWithMember } from 'api';
+import { Channel, ChannelWithMember } from 'api';
 import { post } from 'api-browser';
 import { useMe } from 'common';
 import { UserPlus } from 'icons';
@@ -11,8 +11,7 @@ import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 
 interface Props {
-  channelId: string;
-  spaceId: string | null;
+  channel: Channel;
 }
 
 const join: MutationFetcher<ChannelWithMember, { characterName?: string }, [string, string]> = async (
@@ -23,16 +22,20 @@ const join: MutationFetcher<ChannelWithMember, { characterName?: string }, [stri
   return channelWithMember.unwrap();
 };
 
-export const MemberJoinButton: FC<Props> = ({ channelId, spaceId }) => {
+export const MemberJoinButton: FC<Props> = ({ channel }) => {
   const me = useMe();
-  const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], join);
-  const { data: spaceMember } = useMySpaceMember(spaceId);
-  const channelMember = useMyChannelMember(channelId);
+  const { trigger, isMutating } = useSWRMutation(['/channels/members', channel.id], join);
+  const { data: spaceMember } = useMySpaceMember(channel.spaceId);
+  const channelMember = useMyChannelMember(channel.id);
   const intl = useIntl();
 
   const handleClick = async () => {
     if (me == null) {
       alert(intl.formatMessage({ defaultMessage: 'You must be logged in to join a channel.' }));
+      return;
+    }
+    if (!channel.isPublic) {
+      alert(intl.formatMessage({ defaultMessage: 'You must be invited to join a private channel.' }));
       return;
     }
     if (spaceMember == null) {

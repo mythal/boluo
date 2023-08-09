@@ -16,6 +16,7 @@ import Icon from '../atoms/Icon';
 import { chatContentLineHeight } from './styles';
 
 interface Props {
+  shown?: boolean;
   myMember?: ChannelMember;
   message: Message;
 }
@@ -33,7 +34,7 @@ const whisperContentWrapper = css`
   }
 `;
 
-function MessageWhisperList({ myMember, message }: Props) {
+function MessageWhisperList({ myMember, message, shown = false }: Props) {
   const dispatch = useDispatch();
   const pane = useChannelId();
   const members = useSelector((state) => state.chatStates.get(pane)!.members);
@@ -65,9 +66,12 @@ function MessageWhisperList({ myMember, message }: Props) {
     }
     return (
       <div css={whisperContentWrapper} data-folded={message.folded}>
-        <Button data-size="small" onClick={reveal} css={mR(2)}>
-          查看 <Icon sprite={eye} />
-        </Button>
+        {!shown && (
+          <Button data-size="small" onClick={reveal} css={mR(2)}>
+            查看 <Icon sprite={eye} />
+          </Button>
+        )}
+
         {description}
       </div>
     );

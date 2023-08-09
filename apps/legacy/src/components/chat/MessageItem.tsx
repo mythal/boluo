@@ -58,6 +58,7 @@ function MessageItem({
       >
         <MessageMedia css={itemImage} mediaId={message.mediaId} />
         {message.isAction && name}
+        {message.whisperToUsers != null && <MessageWhisperList message={message} myMember={myMember} shown />}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
         <MessageTime created={message.created} modified={message.modified} />
       </ChatItemContentContainer>

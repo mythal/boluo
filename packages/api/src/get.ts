@@ -12,7 +12,7 @@ export interface Get {
   '/users/check_username': { query: CheckUsername; result: boolean };
   '/users/check_email': { query: CheckEmail; result: boolean };
   // spaces
-  '/spaces/query': { query: { id: string }; result: Space };
+  '/spaces/query': { query: { id: string; token?: string }; result: Space };
   '/spaces/my': { query: null; result: SpaceWithMember[] };
   '/spaces/query_with_related': { query: { id: string }; result: SpaceWithRelated };
   '/spaces/my_space_member': { query: { id: string }; result: SpaceMember | null };

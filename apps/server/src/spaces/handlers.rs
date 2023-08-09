@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::api::{CreateSpace, EditSpace, SpaceWithRelated};
+use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
 use super::models::space_users_status;
 use super::{Space, SpaceMember};
 use crate::channels::{Channel, ChannelMember};
@@ -21,12 +21,17 @@ async fn list(_req: Request<Body>) -> Result<Vec<Space>, AppError> {
 }
 
 async fn query(req: Request<Body>) -> Result<Space, AppError> {
-    let IdQuery { id } = parse_query(req.uri())?;
+    let QuerySpace { id, token } = parse_query(req.uri())?;
     let mut conn = database::get().await?;
     let db = &mut *conn;
     let space = Space::get_by_id(db, &id).await?.or_not_found()?;
     if space.is_public || space.allow_spectator {
         return Ok(space);
+    }
+    if let Some(token) = token {
+        if token == space.invite_token {
+            return Ok(space);
+        }
     }
     let session = authenticate(&req).await?;
     let Some(_) = SpaceMember::get(db, &session.user_id, &id).await? else {

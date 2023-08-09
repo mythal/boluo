@@ -45,7 +45,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const nickname = me != null && me !== 'LOADING' ? me.user.nickname : undefined;
   const { data: channel, isLoading } = useQueryChannel(channelId);
   useSendPreview(channelId, nickname, atoms.composeAtom);
-  if (isLoading) {
+  if (isLoading || member === 'LOADING') {
     return <PaneLoading />;
   }
   return (

@@ -13,7 +13,7 @@ interface Props {
 export const ChatItemPreview: FC<Props> = ({ preview }) => {
   const paneFocused = usePaneIsFocus();
   const myMember = useMyChannelMember(preview.channelId);
-  return paneFocused && myMember?.user.id === preview.senderId
-    ? <SelfPreview preview={preview} />
+  return paneFocused && myMember != null && myMember !== 'LOADING' && myMember.user.id === preview.senderId
+    ? <SelfPreview preview={preview} myMember={myMember} />
     : <OthersPreview preview={preview} />;
 };

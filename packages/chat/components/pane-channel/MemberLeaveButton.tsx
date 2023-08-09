@@ -49,7 +49,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
     <>
       <Button
         ref={refs.setReference}
-        disabled={!channelMember || isMutating || isLoading}
+        disabled={!channelMember || channelMember === 'LOADING' || isMutating || isLoading}
         {...getReferenceProps()}
       >
         {isMutating || isLoading ? <Spinner /> : <UserX />}

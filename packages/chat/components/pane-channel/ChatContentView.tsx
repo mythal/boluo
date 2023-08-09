@@ -24,7 +24,7 @@ import { GoButtomButton } from './GoBottomButton';
 
 interface Props {
   me: GetMe | 'LOADING' | null;
-  myMember: Member | null;
+  myMember: Member | 'LOADING' | null;
   className?: string;
 }
 

@@ -1,3 +1,4 @@
+import { Member } from 'api';
 import { Trash } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -37,14 +38,10 @@ const selector = ({ inGame, isAction, inputedName, source, editFor, media }: Com
 interface Props {
   className?: string;
   preview: PreviewItem;
+  myMember: Member;
 }
 
-export const SelfPreview: FC<Props> = ({ preview, className }) => {
-  const channelId = useChannelId();
-  const member = useMyChannelMember(channelId);
-  if (member === null) {
-    throw new Error('Member not found');
-  }
+export const SelfPreview: FC<Props> = ({ preview, className, myMember: member }) => {
   const isMaster = member.channel.isMaster;
   const composeAtom = useComposeAtom();
   const compose: ComposeDrived = useAtomValue(

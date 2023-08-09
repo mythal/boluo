@@ -7,6 +7,7 @@ import { ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderFilterButton } from './ChannelHeaderFilterButton';
 import { ChannelHeaderMoreButton } from './ChannelHeaderMenuButton';
 import { ChannelHeaderSplitPaneButton } from './ChannelHeaderSplitPaneButton';
+import { ChannelMembersButton } from './ChannelMembersButton';
 import { MemberJoinButton } from './MemberJoinButton';
 
 interface Props {
@@ -21,7 +22,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const me = useMe();
   const channelMember = useMyChannelMember(channel.id);
   let memberButton: ReactNode = null;
-  if (me) {
+  if (me && channelMember !== 'LOADING') {
     if (channelMember) {
       memberButton = <ChannelHeaderMoreButton on={state === 'MORE'} toggle={toggleMore} />;
     } else {
@@ -33,6 +34,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
       {memberButton}
       <ChannelHeaderFilterButton on={state === 'FILTER'} toggle={toggleFilterBar} />
       <ChannelHeaderSplitPaneButton />
+      <ChannelMembersButton channelId={channel.id} />
     </>
   );
 };

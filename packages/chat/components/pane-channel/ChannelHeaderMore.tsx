@@ -15,7 +15,9 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, resetHeaderState }) =>
   return (
     <div className="py-2 px-4 border-b flex justify-between gap-2">
       {(me && me !== 'LOADING') && <MemberLeaveButton me={me} channelId={channelId} onSuccess={resetHeaderState} />}
-      {member && member.space.isAdmin && <ChannelSettingsButton channelId={channelId} />}
+      {member != null && member !== 'LOADING' && member.space.isAdmin && <ChannelSettingsButton
+        channelId={channelId}
+      />}
     </div>
   );
 };

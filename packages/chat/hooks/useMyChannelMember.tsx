@@ -1,10 +1,11 @@
 import type { Member } from 'api';
 import { useMe } from 'common';
-import { useChannelMembers } from './useQueryChannelMembers';
+import { useQueryChannelMembers } from './useQueryChannelMembers';
 
-export const useMyChannelMember = (channelId: string): Member | null => {
-  const { data: members } = useChannelMembers(channelId);
+export const useMyChannelMember = (channelId: string): Member | 'LOADING' | null => {
+  const { data: members, isLoading } = useQueryChannelMembers(channelId);
   const me = useMe();
-  if (!me || me === 'LOADING') return null;
+  if (me === 'LOADING' || isLoading) return 'LOADING';
+  if (!me) return null;
   return members?.members.find((member) => member.user.id === me.user.id) ?? null;
 };

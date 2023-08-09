@@ -14,7 +14,7 @@ interface Props {
   filteredMessagesCount: number;
   handleBottomStateChange: (bottom: boolean) => void;
   me: GetMe | 'LOADING' | null;
-  myMember: Member | null;
+  myMember: Member | 'LOADING' | null;
 }
 
 export interface VirtualListContext {
@@ -68,7 +68,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
         key={item.key}
         myId={myId}
         chatItem={item}
-        isMember={myMember !== null}
+        isMember={myMember !== null && myMember !== 'LOADING'}
         continuous={continuous}
       />
     );

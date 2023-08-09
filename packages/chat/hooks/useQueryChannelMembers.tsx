@@ -3,7 +3,7 @@ import { get } from 'api-browser';
 import useSWR, { SWRResponse } from 'swr';
 import { unwrap } from 'utils';
 
-export const useChannelMembers = (channelId: string): SWRResponse<ChannelMembers, ApiError> => {
+export const useQueryChannelMembers = (channelId: string): SWRResponse<ChannelMembers, ApiError> => {
   const key = ['/channels/members' as const, channelId] as const;
   return useSWR<ChannelMembers, ApiError, typeof key>(
     key,

@@ -1,6 +1,6 @@
 import type { Channel } from 'api';
 import clsx from 'clsx';
-import { Hash, X } from 'icons';
+import { Hash, LockedHash, X } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, useCallback } from 'react';
 import { useIntl } from 'react-intl';
@@ -51,7 +51,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
           )}
         >
           <Icon
-            icon={Hash}
+            icon={channel.isPublic ? Hash : LockedHash}
           />
         </span>
         <span className="text-left flex-1">

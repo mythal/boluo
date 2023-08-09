@@ -14,7 +14,6 @@ export const useQuerySpaceWithRelated = (spaceId: string): SWRResponse<SpaceWith
     {
       onSuccess: (({ space, channels }) => {
         void mutate(['/space/query', space.id], space, options);
-        void mutate(['/channels/by_space', space.id], channels, options);
         void Promise.all(
           channels.map((channel) => mutate(['/channels/query', channel.id], channel, options)),
         );

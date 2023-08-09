@@ -1,4 +1,4 @@
-use super::api::{ChannelMembers, CreateChannel, EditChannel};
+use super::api::{ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel};
 use super::models::ChannelMember;
 use super::Channel;
 use crate::channels::api::{
@@ -14,6 +14,7 @@ use crate::events::context::get_heartbeat_map;
 use crate::events::Event;
 use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery, Response};
 use crate::messages::Message;
+use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
 use hyper::{Body, Request};
 use std::collections::HashMap;
@@ -286,11 +287,28 @@ async fn delete(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn by_space(req: Request<Body>) -> Result<Vec<Channel>, AppError> {
-    let IdQuery { id } = parse_query(req.uri())?;
+async fn by_space(req: Request<Body>) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
+    let IdQuery { id: space_id } = parse_query(req.uri())?;
     let mut conn = database::get().await?;
+    let session = authenticate(&req).await.ok();
     let db = &mut *conn;
-    Channel::get_by_space(db, &id).await.map_err(Into::into)
+    let channels = if let Some(Session { user_id, .. }) = session {
+        dbg!(user_id);
+        Channel::get_by_space_and_user(db, &space_id, &user_id)
+            .await
+            .map_err(Into::<AppError>::into)?
+            .into_iter()
+            .collect()
+    } else {
+        Channel::get_by_space(db, &space_id)
+            .await
+            .map_err(Into::<AppError>::into)?
+            .into_iter()
+            .filter(|channel| channel.is_public)
+            .map(|channel| ChannelWithMaybeMember { channel, member: None })
+            .collect()
+    };
+    Ok(channels)
 }
 
 async fn export(req: Request<Body>) -> Result<Vec<Message>, AppError> {

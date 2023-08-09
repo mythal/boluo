@@ -19,7 +19,7 @@ interface Props {
 export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
   const panes = useAtomValue(panesAtom);
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
-  const { data: channels } = useChannelList(spaceId);
+  const { data: channelWithMemberList } = useChannelList(spaceId);
   const channelIdFromPanes = useMemo(
     () => panes.flatMap((pane) => pane.type === 'CHANNEL' ? [pane.channelId] : []),
     [panes],
@@ -40,14 +40,15 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
           <FormattedMessage defaultMessage="Channels" />
         </span>
       </div>
-      {channels == null && <SidebarItemSkeleton />}
-      {channels?.map((channel) => (
-        <SidebarChannelItem
-          key={channel.id}
-          channel={channel}
-          active={channelIdFromPanes.includes(channel.id)}
-        />
-      ))}
+      {channelWithMemberList == null
+        ? <SidebarItemSkeleton />
+        : channelWithMemberList?.map(({ channel }) => (
+          <SidebarChannelItem
+            key={channel.id}
+            channel={channel}
+            active={channelIdFromPanes.includes(channel.id)}
+          />
+        ))}
       {mySpaceMember?.isAdmin && (
         <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={toggleCreateChannelPane}>
           <span className="text-surface-400 group-hover:text-surface-800">

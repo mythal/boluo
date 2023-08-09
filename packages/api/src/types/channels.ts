@@ -3,6 +3,7 @@ import type { Channel } from 'server-bindings/Channel';
 import type { ChannelMember } from 'server-bindings/ChannelMember';
 import type { ChannelMembers } from 'server-bindings/ChannelMembers';
 import type { ChannelMemberWithUser } from 'server-bindings/ChannelMemberWithUser';
+import type { ChannelWithMaybeMember } from 'server-bindings/ChannelWithMaybeMember';
 import type { ChannelWithMember } from 'server-bindings/ChannelWithMember';
 import type { ChannelWithRelated } from 'server-bindings/ChannelWithRelated';
 import type { CheckChannelName } from 'server-bindings/CheckChannelName';
@@ -19,6 +20,7 @@ export {
   ChannelMember,
   ChannelMembers,
   ChannelMemberWithUser,
+  ChannelWithMaybeMember,
   ChannelWithMember,
   ChannelWithRelated,
   CheckChannelName,

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
 
-use crate::channels::api::{ChannelMemberWithUser, ChannelWithMember};
+use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::database::Querist;
 use crate::error::{DbError, ModelError};
 use crate::spaces::{Space, SpaceMember};
@@ -84,6 +84,29 @@ impl Channel {
     pub async fn get_by_space<T: Querist>(db: &mut T, space_id: &Uuid) -> Result<Vec<Channel>, DbError> {
         let rows = db.query(include_str!("sql/get_by_space.sql"), &[space_id]).await?;
         Ok(rows.into_iter().map(|row| row.get(0)).collect())
+    }
+
+    pub async fn get_by_space_and_user<T: Querist>(
+        db: &mut T,
+        space_id: &Uuid,
+        user_id: &Uuid,
+    ) -> Result<Vec<ChannelWithMaybeMember>, DbError> {
+        let rows = db
+            .query(include_str!("sql/get_by_space_and_user.sql"), &[space_id, user_id])
+            .await?;
+        let mut channels: Vec<ChannelWithMaybeMember> = Vec::new();
+        for row in rows.into_iter() {
+            let Ok(channel) = row.try_get::<_, Channel>(0) else {
+                log::warn!("Failed to serilze channel of space {space_id} for user {user_id}");
+                continue;
+            };
+            let Ok(member) = row.try_get::<_, Option<ChannelMember>>(1) else {
+                log::warn!("Failed to serilize channel member of space {space_id} for user {user_id}");
+                continue;
+            };
+            channels.push(ChannelWithMaybeMember { channel, member });
+        }
+        Ok(channels)
     }
 
     pub async fn delete<T: Querist>(db: &mut T, id: &Uuid) -> Result<u64, DbError> {
@@ -191,6 +214,32 @@ impl ChannelMember {
     pub async fn get_color_list<T: Querist>(db: &mut T, channel_id: &Uuid) -> Result<HashMap<Uuid, String>, DbError> {
         let rows = db.query(include_str!("sql/get_color_list.sql"), &[channel_id]).await?;
         Ok(rows.into_iter().map(|row| (row.get(0), row.get(1))).collect())
+    }
+
+    pub async fn get_by_user_and_space<T: Querist>(
+        db: &mut T,
+        space_id: &Uuid,
+        user_id: &Uuid,
+    ) -> Result<Vec<ChannelMember>, DbError> {
+        let rows = db
+            .query(
+                include_str!("sql/get_channel_member_list_by_user_and_space.sql"),
+                &[user_id, space_id],
+            )
+            .await?;
+        let mut members: Vec<ChannelMember> = Vec::new();
+        for row in rows {
+            let Ok(member) = row.try_get(0) else {
+                log::warn!(
+                    "Failed to get channel member of space {} for user {}",
+                    space_id,
+                    user_id
+                );
+                continue;
+            };
+            members.push(member);
+        }
+        Ok(members)
     }
 
     pub async fn get_by_space<T: Querist>(

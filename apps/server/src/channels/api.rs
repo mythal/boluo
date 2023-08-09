@@ -86,6 +86,14 @@ pub struct ChannelWithMember {
 #[derive(Serialize, Debug, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
+pub struct ChannelWithMaybeMember {
+    pub channel: Channel,
+    pub member: Option<ChannelMember>,
+}
+
+#[derive(Serialize, Debug, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct ChannelMemberWithUser {
     pub member: ChannelMember,
     pub user: User,

@@ -293,7 +293,6 @@ async fn by_space(req: Request<Body>) -> Result<Vec<ChannelWithMaybeMember>, App
     let session = authenticate(&req).await.ok();
     let db = &mut *conn;
     let channels = if let Some(Session { user_id, .. }) = session {
-        dbg!(user_id);
         Channel::get_by_space_and_user(db, &space_id, &user_id)
             .await
             .map_err(Into::<AppError>::into)?

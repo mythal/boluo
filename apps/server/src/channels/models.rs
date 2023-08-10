@@ -266,10 +266,13 @@ impl ChannelMember {
     pub async fn get_by_channel<T: Querist>(
         db: &mut T,
         channel: &Uuid,
-        full: bool,
+        include_leave: bool,
     ) -> Result<Vec<ChannelMemberWithUser>, DbError> {
         let rows = db
-            .query(include_str!("sql/get_channel_member_list.sql"), &[channel, &full])
+            .query(
+                include_str!("sql/get_channel_member_list.sql"),
+                &[channel, &include_leave],
+            )
             .await?;
         let mapper = |row: Row| ChannelMemberWithUser {
             member: row.get(0),

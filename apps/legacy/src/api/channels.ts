@@ -46,6 +46,12 @@ export interface Member {
   user: User;
 }
 
+export interface ChannelMembers {
+  members: Member[];
+  colorList: Record<Id, string>;
+  heartbeatMap: Record<Id, number>;
+}
+
 export interface JoinChannel {
   channelId: Id;
   characterName?: string;

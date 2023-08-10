@@ -1,4 +1,4 @@
-import { EventId, isServerEvent, ServerEvent } from 'api';
+import { ChannelMembers, EventId, isServerEvent, ServerEvent } from 'api';
 import { webSocketUrlAtom } from 'common';
 import { useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
@@ -82,11 +82,21 @@ export const useConnectionEffect = () => {
         void mutate(['/spaces/query', space.id], space);
         void mutate(['/channels/by_space', space.id]);
         return;
+      case 'MEMBERS':
+        const members = event.body.members;
+        void mutate<ChannelMembers>(
+          ['/channels/members', event.body.channelId],
+          (channelMembers) => {
+            if (channelMembers != null) {
+              return { ...channelMembers, members };
+            }
+          },
+        );
+        return;
       case 'NEW_MESSAGE':
       case 'MESSAGE_DELETED':
       case 'MESSAGE_EDITED':
       case 'MESSAGE_PREVIEW':
-      case 'MEMBERS':
       case 'INITIALIZED':
       case 'STATUS_MAP':
       case 'APP_UPDATED':

@@ -11,7 +11,7 @@ use crate::database;
 use crate::database::Querist;
 use crate::error::{AppError, Find};
 use crate::events::context::get_heartbeat_map;
-use crate::events::Event;
+use crate::events::{Event, EventBody};
 use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery, Response};
 use crate::messages::Message;
 use crate::session::Session;
@@ -46,13 +46,12 @@ async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
 
     let color_list = ChannelMember::get_color_list(db, &channel.id).await?;
 
-    let heartbeat_map = {
-        let map = get_heartbeat_map().lock().await;
-        match map.get(&query.id) {
-            Some(map) => map.clone(),
-            _ => HashMap::new(),
-        }
-    };
+    let heartbeat_map = get_heartbeat_map()
+        .lock()
+        .await
+        .get(&query.id)
+        .cloned()
+        .unwrap_or_default();
     Ok(ChannelMembers {
         members,
         color_list,
@@ -269,7 +268,7 @@ async fn leave(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn kick(req: Request<Body>) -> Result<Vec<ChannelMemberWithUser>, AppError> {
+async fn kick(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     let session = authenticate(&req).await?;
     let KickFromChannel {
         space_id,
@@ -293,9 +292,22 @@ async fn kick(req: Request<Body>) -> Result<Vec<ChannelMemberWithUser>, AppError
         }
     }
     ChannelMember::remove_user(&mut trans, &user_to_be_kicked, &channel_id).await?;
-    let members = ChannelMember::get_by_channel(&mut trans, &channel_id, false).await?;
     trans.commit().await?;
-    Ok(members)
+    Event::push_members(channel_id);
+    let db = &mut *db;
+    let members = Member::get_by_channel(db, channel_id).await?;
+    let color_list = ChannelMember::get_color_list(db, &channel_id).await?;
+    let heartbeat_map = get_heartbeat_map()
+        .lock()
+        .await
+        .get(&channel_id)
+        .cloned()
+        .unwrap_or_default();
+    Ok(ChannelMembers {
+        members,
+        color_list,
+        heartbeat_map,
+    })
 }
 
 async fn delete(req: Request<Body>) -> Result<bool, AppError> {

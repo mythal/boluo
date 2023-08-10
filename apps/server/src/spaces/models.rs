@@ -28,6 +28,7 @@ pub enum StatusKind {
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct UserStatus {
+    #[ts(type = "number")]
     pub timestamp: i64,
     pub kind: StatusKind,
     pub focus: Vec<Uuid>,
@@ -45,7 +46,7 @@ pub async fn space_users_status(
         let user_id_array: [u8; 16] = match user_id_bytes.try_into() {
             Ok(array) => array,
             Err(bytes) => {
-                log::error!("failed to convert user id in cache: {:?}", bytes);
+                log::error!("Failed to convert user id in cache to [u8; 16]: {:?}", bytes);
                 continue;
             }
         };

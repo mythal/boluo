@@ -1,9 +1,10 @@
-import { ChannelMembers, EventId, isServerEvent, ServerEvent } from 'api';
+import { ChannelMembers, EventId, isServerEvent, ServerEvent, UserStatus } from 'api';
 import { webSocketUrlAtom } from 'common';
 import { useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
 import { isUuid } from 'utils';
+import { U } from 'vitest/dist/types-dea83b3d';
 import { PING, PONG } from '../const';
 import { makeAction } from '../state/actions';
 import { chatAtom, connectionStateAtom } from '../state/chat.atoms';
@@ -93,12 +94,15 @@ export const useConnectionEffect = () => {
           },
         );
         return;
+      case 'STATUS_MAP':
+        console.debug('Status changed:', event.body);
+        void mutate<Record<string, UserStatus>>(['/spaces/users_status', event.body.spaceId], event.body.statusMap);
+        return;
       case 'NEW_MESSAGE':
       case 'MESSAGE_DELETED':
       case 'MESSAGE_EDITED':
       case 'MESSAGE_PREVIEW':
       case 'INITIALIZED':
-      case 'STATUS_MAP':
       case 'APP_UPDATED':
         return;
     }

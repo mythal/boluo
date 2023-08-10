@@ -34,7 +34,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
       {memberButton}
       <ChannelHeaderFilterButton on={state === 'FILTER'} toggle={toggleFilterBar} />
       <ChannelHeaderSplitPaneButton />
-      <ChannelMembersButton channelId={channel.id} />
+      <ChannelMembersButton spaceId={channel.spaceId} channelId={channel.id} />
     </>
   );
 };

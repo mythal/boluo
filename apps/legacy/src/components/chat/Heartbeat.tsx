@@ -24,7 +24,10 @@ export function useHeartbeat() {
       }
     };
     document.addEventListener('visibilitychange', visibilityListener);
-    return () => window.clearInterval(pulse);
+    return () => {
+      window.clearInterval(pulse);
+      document.removeEventListener('visibilitychange', visibilityListener);
+    };
   }, [send, focus]);
   return null;
 }

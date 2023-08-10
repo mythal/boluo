@@ -154,6 +154,11 @@ export function post(path: '/channels/edit_member', payload: EditChannelMember):
 export function post(path: '/channels/join', payload: JoinChannel): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/add_member', payload: AddMember): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
+export function post(
+  path: '/channel/kick',
+  payload: {},
+  query: { channelId: string; userId: string; spaceId: string },
+): Promise<AppResult<true>>;
 export function post(path: '/channels/delete', payload: {}, query: IdQuery): Promise<AppResult<Channel>>;
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
 export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;

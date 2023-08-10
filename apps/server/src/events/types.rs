@@ -276,7 +276,7 @@ impl Event {
         let members = Member::get_by_channel(db, channel_id).await?;
         drop(conn);
         let event = SyncEvent::new(Event {
-            mailbox: channel_id,
+            mailbox: channel.space_id,
             body: EventBody::Members { members, channel_id },
             id: EventId::new(),
         });

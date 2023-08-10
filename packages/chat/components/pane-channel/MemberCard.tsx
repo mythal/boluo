@@ -32,6 +32,8 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(({ member, can
     );
     return result.unwrap();
   }, {
+    revalidate: false,
+    populateCache: x => x,
     onSuccess: () => {
       setComfirmKick(false);
     },

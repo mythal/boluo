@@ -3,7 +3,7 @@ use super::models::ChannelMember;
 use super::Channel;
 use crate::channels::api::{
     AddChannelMember, ChannelMemberWithUser, ChannelWithMember, ChannelWithRelated, CheckChannelName,
-    EditChannelMember, Export, JoinChannel,
+    EditChannelMember, Export, JoinChannel, KickFromChannel,
 };
 use crate::channels::models::Member;
 use crate::csrf::authenticate;
@@ -269,6 +269,34 @@ async fn leave(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
+async fn kick(req: Request<Body>) -> Result<Vec<ChannelMemberWithUser>, AppError> {
+    let session = authenticate(&req).await?;
+    let KickFromChannel {
+        space_id,
+        channel_id,
+        user_id: user_to_be_kicked,
+    } = parse_query(req.uri())?;
+    let operator_user_id = session.user_id;
+    let mut db = database::get().await?;
+    let mut trans = db.transaction().await?;
+    let space_member = SpaceMember::get(&mut trans, &operator_user_id, &space_id)
+        .await
+        .or_no_permission()?;
+    if !space_member.is_admin {
+        let channel_member = ChannelMember::get(&mut trans, &operator_user_id, &channel_id)
+            .await
+            .or_no_permission()?;
+        if !channel_member.is_master {
+            return Err(AppError::NoPermission(
+                "You have no permission to kick user from this channel.".to_string(),
+            ));
+        }
+    }
+    ChannelMember::remove_user(&mut trans, &session.user_id, &user_to_be_kicked).await?;
+    let members = ChannelMember::get_by_channel(&mut trans, &channel_id, true).await?;
+    Ok(members)
+}
+
 async fn delete(req: Request<Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
@@ -360,6 +388,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/all_members", Method::GET) => all_members(req).await.map(ok_response),
         ("/join", Method::POST) => join(req).await.map(ok_response),
         ("/leave", Method::POST) => leave(req).await.map(ok_response),
+        ("/kick", Method::POST) => kick(req).await.map(ok_response),
         ("/delete", Method::POST) => delete(req).await.map(ok_response),
         ("/check_name", Method::GET) => check_channel_name_exists(req).await.map(ok_response),
         ("/export", Method::GET) => export(req).await.map(ok_response),

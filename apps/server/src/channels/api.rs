@@ -111,6 +111,15 @@ pub struct JoinChannel {
 #[derive(Deserialize, Debug, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
+pub struct KickFromChannel {
+    pub space_id: Uuid,
+    pub channel_id: Uuid,
+    pub user_id: Uuid,
+}
+
+#[derive(Deserialize, Debug, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct AddChannelMember {
     pub channel_id: Uuid,
     pub user_id: Uuid,

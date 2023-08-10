@@ -12,6 +12,7 @@ import type { EditChannel } from 'server-bindings/EditChannel';
 import type { EditChannelMember } from 'server-bindings/EditChannelMember';
 import type { Export } from 'server-bindings/Export';
 import type { JoinChannel } from 'server-bindings/JoinChannel';
+import type { KickFromChannel } from 'server-bindings/KickFromChannel';
 import type { Member } from 'server-bindings/Member';
 
 export {
@@ -29,5 +30,6 @@ export {
   EditChannelMember,
   Export,
   JoinChannel,
+  KickFromChannel,
   Member,
 };

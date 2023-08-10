@@ -11,6 +11,7 @@ import type {
   EditChannel,
   EditChannelMember,
   JoinChannel,
+  KickFromChannel,
 } from './types/channels';
 import type { Message, NewMessage } from './types/messages';
 import type {
@@ -56,6 +57,7 @@ export interface Post {
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
   '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };
   '/channels/leave': { payload: Empty; query: { id: string }; result: true };
+  '/channel/kick': { payload: Empty; query: KickFromChannel; result: ChannelMember };
   '/channels/edit': { payload: EditChannel; query: null; result: Channel };
   '/channels/delete': { payload: Empty; query: { id: string }; result: Channel };
   '/channels/edit_member': { payload: EditChannelMember; query: null; result: ChannelMember };

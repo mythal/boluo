@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { FC, ReactNode } from 'react';
 import { useMemo } from 'react';
+import { useSendStatus } from '../hooks/useSendStatus';
 import { panesAtom } from '../state/view.atoms';
 import { PaneEmpty } from './PaneEmpty';
 import { ChatPaneSwitch } from './PaneSwitch';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const ChatView: FC<Props> = ({ defaultPane }) => {
+  useSendStatus();
   const panes = useAtomValue(panesAtom);
   return useMemo(() => {
     if (panes.length === 0) {

@@ -11,7 +11,7 @@ use crate::database;
 use crate::database::Querist;
 use crate::error::{AppError, Find};
 use crate::events::context::get_heartbeat_map;
-use crate::events::{Event, EventBody};
+use crate::events::Event;
 use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery, Response};
 use crate::messages::Message;
 use crate::session::Session;

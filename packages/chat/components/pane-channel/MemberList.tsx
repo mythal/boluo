@@ -4,10 +4,12 @@ import { FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { MemberListItem } from './MemberListItem';
 
 interface Props {
   className?: string;
+  spaceId: string;
   channelId: string;
   myMember: Member | 'LOADING' | null;
 }
@@ -22,8 +24,9 @@ const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const MemberList: FC<Props> = ({ className, channelId, myMember }) => {
+export const MemberList: FC<Props> = ({ className, channelId, myMember, spaceId }) => {
   const intl = useIntl();
+  const { data: userStatus } = useQueryUsersStatus(spaceId);
   const { data: membersData, error } = useQueryChannelMembers(channelId);
   const [showCharaterName, setShowCharacterName] = useState(true);
   if (error) {
@@ -69,6 +72,7 @@ export const MemberList: FC<Props> = ({ className, channelId, myMember }) => {
             member={member}
             canIKick={canIKick}
             showCharacterName={showCharaterName}
+            status={userStatus?.[member.user.id]}
           />
         ))}
       </div>

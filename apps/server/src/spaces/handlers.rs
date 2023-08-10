@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
-use super::models::space_users_status;
+use super::models::{space_users_status, UserStatus};
 use super::{Space, SpaceMember};
 use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
@@ -274,6 +274,14 @@ async fn members(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser
         .map_err(Into::into)
 }
 
+async fn users_status(req: Request<Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
+    let IdQuery { id: space_id } = parse_query(req.uri())?;
+    // TODO: permission check
+    let mut cache = crate::cache::conn().await?;
+    let users_status = space_users_status(&mut cache, space_id).await?;
+    Ok(users_status)
+}
+
 async fn delete(req: Request<Body>) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let mut conn = database::get().await?;
@@ -295,6 +303,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
     match (path, req.method().clone()) {
         ("/list", Method::GET) => list(req).await.map(ok_response),
         ("/query", Method::GET) => query(req).await.map(ok_response),
+        ("/users_status", Method::GET) => users_status(req).await.map(ok_response),
         ("/query_with_related", Method::GET) => query_with_related(req).await.map(ok_response),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         ("/refresh_token", Method::POST) => refresh_token(req).await.map(ok_response),

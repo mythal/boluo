@@ -2,7 +2,7 @@
 import type { StatusKind } from './StatusKind';
 
 export interface UserStatus {
-  timestamp: bigint;
+  timestamp: number;
   kind: StatusKind;
   focus: Array<string>;
 }

@@ -292,8 +292,9 @@ async fn kick(req: Request<Body>) -> Result<Vec<ChannelMemberWithUser>, AppError
             ));
         }
     }
-    ChannelMember::remove_user(&mut trans, &session.user_id, &user_to_be_kicked).await?;
-    let members = ChannelMember::get_by_channel(&mut trans, &channel_id, true).await?;
+    ChannelMember::remove_user(&mut trans, &user_to_be_kicked, &channel_id).await?;
+    let members = ChannelMember::get_by_channel(&mut trans, &channel_id, false).await?;
+    trans.commit().await?;
     Ok(members)
 }
 

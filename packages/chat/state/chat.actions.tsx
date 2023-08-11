@@ -19,6 +19,7 @@ export type ChatActionMap = {
   messagePreview: { channelId: string; preview: Preview; timestamp: number };
   messageDeleted: { channelId: string; messageId: string };
   channelDeleted: { channelId: string };
+  resetGc: { pos: number };
   eventFromServer: ServerEvent;
 };
 

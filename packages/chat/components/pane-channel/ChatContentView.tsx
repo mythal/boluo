@@ -18,6 +18,7 @@ import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { ChatItem, MessageItem } from '../../state/channel.types';
+import { chatAtom } from '../../state/chat.atoms';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';
@@ -249,6 +250,7 @@ const useScrollLock = (
 
 export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => {
   const channelId = useChannelId();
+  const store = useStore();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
   let myId: string | undefined;
@@ -256,7 +258,10 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
     myId = me.user.id;
   }
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount } = useChatList(channelId, myId);
+  const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
+    channelId,
+    myId,
+  );
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
@@ -269,6 +274,15 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
+  useEffect(() => {
+    if (scheduledGcLowerPos === null) return;
+    const [a] = renderRangeRef.current;
+    const chatItem = chatList[a];
+    if (chatItem && scheduledGcLowerPos > chatItem.pos) {
+      console.debug(`[Messages GC] Reset GC. scheduled: ${scheduledGcLowerPos} reset: ${chatItem.pos}`);
+      store.set(chatAtom, { type: 'resetGc', context: undefined, payload: { pos: chatItem.pos } });
+    }
+  });
 
   const handleBottomStateChange = (bottom: boolean) => {
     goBottomButtonOnBottomChange(bottom);

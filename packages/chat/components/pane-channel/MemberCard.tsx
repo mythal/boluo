@@ -2,7 +2,7 @@ import { Channel, ChannelMember, Member, SpaceMember, User, UserStatus } from 'a
 import { post } from 'api-browser';
 import clsx from 'clsx';
 import { useMe } from 'common';
-import { Mask, UserPlus, UserX } from 'icons';
+import { Gamemaster, Mask, UserPlus, UserX } from 'icons';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
@@ -17,6 +17,27 @@ const MINUTES_IN_MS = SECONDS_IN_MS * 60;
 const HOURS_IN_MS = MINUTES_IN_MS * 60;
 const DAYS_IN_MS = HOURS_IN_MS * 24;
 const WEEKS_IN_MS = DAYS_IN_MS * 7;
+
+const EditMasterButton: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
+  const key = ['/channels/members', channelMember.channelId] as const;
+  const { isMutating: isEditing, trigger: edit } = useSWRMutation(key, async ([_, channelId]) => {
+    const result = await post('/channels/edit_master', null, {
+      channelId,
+      userId: channelMember.userId,
+      grantOrRevoke: channelMember.isMaster ? 'REVOKE' : 'GRANT',
+    });
+    return result.unwrap();
+  });
+
+  return (
+    <Button data-small disabled={isEditing} onClick={() => edit()}>
+      <Icon icon={Gamemaster} />
+      {channelMember.isMaster
+        ? <FormattedMessage defaultMessage="Revoke Master" />
+        : <FormattedMessage defaultMessage="Grant as Game Master" />}
+    </Button>
+  );
+};
 
 const InviteButton: FC<{ userId: string; channelId: string }> = ({ userId, channelId }) => {
   const key = ['/channels/members', channelId] as const;
@@ -212,106 +233,121 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
   status?: UserStatus;
   canIKick?: boolean;
   canIInvite?: boolean;
+  canIEditMaster?: boolean;
 }
 
-export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
-  ({ user, spaceMember, channelMember, canIKick = false, canIInvite = false, status, channel, ...props }, ref) => {
-    const me = useMe();
-    const thisIsMe = me != null && me !== 'LOADING' && user.id === me.user.id;
-    const [confirmKick, setConfirmKick] = useState(false);
-    const [confirm, setConfirmLeave] = useState(false);
-    const intl = useIntl();
-    let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
-    if (status != null) {
-      switch (status.kind) {
-        case 'ONLINE':
-          statusText = intl.formatMessage({ defaultMessage: 'Online' });
-          break;
-        case 'OFFLINE':
-          statusText = intl.formatMessage({ defaultMessage: 'Offline' });
-          break;
-        case 'AWAY':
-          statusText = intl.formatMessage({ defaultMessage: 'Away' });
-          break;
-      }
+export const MemberCard = React.forwardRef<HTMLDivElement, Props>((
+  {
+    user,
+    spaceMember,
+    channelMember,
+    canIKick = false,
+    canIInvite = false,
+    canIEditMaster = false,
+    status,
+    channel,
+    ...props
+  },
+  ref,
+) => {
+  const me = useMe();
+  const thisIsMe = me != null && me !== 'LOADING' && user.id === me.user.id;
+  const [confirmKick, setConfirmKick] = useState(false);
+  const [confirm, setConfirmLeave] = useState(false);
+  const intl = useIntl();
+  let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
+  if (status != null) {
+    switch (status.kind) {
+      case 'ONLINE':
+        statusText = intl.formatMessage({ defaultMessage: 'Online' });
+        break;
+      case 'OFFLINE':
+        statusText = intl.formatMessage({ defaultMessage: 'Offline' });
+        break;
+      case 'AWAY':
+        statusText = intl.formatMessage({ defaultMessage: 'Away' });
+        break;
     }
-    return (
-      <div {...props} ref={ref}>
-        <div className="p-4 rounded shadow bg-lowest w-[20rem]">
-          <div className="flex items-end">
-            <Avatar
-              size="6rem"
-              className="float-left mr-2 rounded"
-              id={user.id}
-              avatarId={user.avatarId}
-              name={user.nickname}
-            />
-            <div className="space-y-1">
-              <Names
-                username={user.username}
-                nickname={user.nickname}
-                characterName={channelMember?.characterName ?? ''}
-              />
-
-              {status != null && (
-                <div className="text-sm space-x-1">
-                  {status.kind === 'ONLINE'
-                    ? <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
-                    : <LastSeen timestamp={status.timestamp} className="text-surface-500" />}
-                </div>
-              )}
-              <Badges
-                thisIsMe={thisIsMe}
-                isAdmin={spaceMember.isAdmin}
-                isMaster={channelMember?.isMaster ?? false}
-              />
-            </div>
-          </div>
-          <div className="py-4">
-            <div className="text-sm whitespace-pre-line max-h-32 overflow-y-auto">
-              {user.bio}
-            </div>
-          </div>
-
-          <div className="">
-            {canIKick && !thisIsMe && !confirmKick && (
-              <Button
-                data-small
-                onClick={() => setConfirmKick(true)}
-              >
-                <Icon icon={UserX} />
-                <FormattedMessage defaultMessage="Kick" />
-              </Button>
-            )}
-            {thisIsMe && channelMember != null && !confirm && (
-              <Button data-small onClick={() => setConfirmLeave(true)}>
-                <FormattedMessage defaultMessage="Leave" />
-              </Button>
-            )}
-            {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
-              <InviteButton userId={user.id} channelId={channel.id} />
-            )}
-          </div>
-          {confirmKick && (
-            <ConfirmKick
-              spaceId={spaceMember.spaceId}
-              channelId={channel.id}
-              userId={user.id}
-              nickname={user.nickname}
+  }
+  return (
+    <div {...props} ref={ref}>
+      <div className="p-4 rounded shadow bg-lowest w-[20rem]">
+        <div className="flex items-end">
+          <Avatar
+            size="6rem"
+            className="float-left mr-2 rounded"
+            id={user.id}
+            avatarId={user.avatarId}
+            name={user.nickname}
+          />
+          <div className="space-y-1">
+            <Names
               username={user.username}
-              dismiss={() => setConfirmKick(false)}
+              nickname={user.nickname}
+              characterName={channelMember?.characterName ?? ''}
             />
+
+            {status != null && (
+              <div className="text-sm space-x-1">
+                {status.kind === 'ONLINE'
+                  ? <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
+                  : <LastSeen timestamp={status.timestamp} className="text-surface-500" />}
+              </div>
+            )}
+            <Badges
+              thisIsMe={thisIsMe}
+              isAdmin={spaceMember.isAdmin}
+              isMaster={channelMember?.isMaster ?? false}
+            />
+          </div>
+        </div>
+        <div className="py-4">
+          <div className="text-sm whitespace-pre-line max-h-32 overflow-y-auto">
+            {user.bio}
+          </div>
+        </div>
+
+        <div className="space-x-1">
+          {canIKick && !thisIsMe && !confirmKick && (
+            <Button
+              data-small
+              onClick={() => setConfirmKick(true)}
+            >
+              <Icon icon={UserX} />
+              <FormattedMessage defaultMessage="Kick" />
+            </Button>
           )}
-          {confirm && (
-            <ConfirmLeave
-              channelId={channel.id}
-              channelName={channel.name}
-              dismiss={() => setConfirmLeave(false)}
-            />
+          {thisIsMe && channelMember != null && !confirm && (
+            <Button data-small onClick={() => setConfirmLeave(true)}>
+              <FormattedMessage defaultMessage="Leave" />
+            </Button>
+          )}
+          {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
+            <InviteButton userId={user.id} channelId={channel.id} />
+          )}
+          {canIEditMaster && channelMember?.channelId === channel.id && (
+            <EditMasterButton channelMember={channelMember} />
           )}
         </div>
+        {confirmKick && (
+          <ConfirmKick
+            spaceId={spaceMember.spaceId}
+            channelId={channel.id}
+            userId={user.id}
+            nickname={user.nickname}
+            username={user.username}
+            dismiss={() => setConfirmKick(false)}
+          />
+        )}
+        {confirm && (
+          <ConfirmLeave
+            channelId={channel.id}
+            channelName={channel.name}
+            dismiss={() => setConfirmLeave(false)}
+          />
+        )}
       </div>
-    );
-  },
-);
+    </div>
+  );
+});
 MemberCard.displayName = 'MemberCard';

@@ -14,11 +14,12 @@ interface Props {
   channel: Channel;
   canIKick: boolean;
   showCharacterName: boolean;
+  canIEditMaster: boolean;
   status: UserStatus | undefined;
 }
 
 export const MemberListItem: FC<Props> = (
-  { member, canIKick, myId, showCharacterName, status, channel },
+  { member, canIKick, myId, showCharacterName, status, channel, canIEditMaster },
 ) => {
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
@@ -65,6 +66,7 @@ export const MemberListItem: FC<Props> = (
             user={member.user}
             channelMember={member.channel}
             spaceMember={member.space}
+            canIEditMaster={canIEditMaster}
             status={status}
             style={floatingStyles}
             canIKick={canIKick}

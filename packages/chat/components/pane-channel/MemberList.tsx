@@ -130,6 +130,7 @@ export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
               channel={channel}
               member={member}
               canIKick={canIKick}
+              canIEditMaster={myMember?.space.isAdmin ?? false}
               showCharacterName={showCharaterName}
               status={userStatusMap?.[member.user.id]}
             />

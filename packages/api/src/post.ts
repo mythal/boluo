@@ -10,6 +10,7 @@ import type {
   CreateChannel,
   EditChannel,
   EditChannelMember,
+  GrantOrRemoveChannelMaster,
   JoinChannel,
   KickFromChannel,
 } from './types/channels';
@@ -62,6 +63,7 @@ export interface Post {
   '/channels/delete': { payload: Empty; query: { id: string }; result: Channel };
   '/channels/edit_member': { payload: EditChannelMember; query: null; result: ChannelMember };
   '/channels/add_member': { payload: AddChannelMember; query: null; result: ChannelWithMember };
+  '/channels/edit_master': { payload: GrantOrRemoveChannelMaster; query: null; result: true };
   // meida
   '/media/presigned': { query: PreSign; payload: Empty; result: PreSignResult };
 }

@@ -1,4 +1,4 @@
-import { ChannelMember, Member } from 'api';
+import { Channel, ChannelMember, Member } from 'api';
 import { Mask, UserPlus } from 'icons';
 import { FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -9,8 +9,7 @@ import { MemberListItem } from './MemberListItem';
 
 interface Props {
   className?: string;
-  spaceId: string;
-  channelId: string;
+  channel: Channel;
   myMember: Member | 'LOADING' | null;
 }
 
@@ -24,10 +23,10 @@ const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const MemberList: FC<Props> = ({ className, channelId, myMember, spaceId }) => {
+export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
   const intl = useIntl();
-  const { data: userStatus } = useQueryUsersStatus(spaceId);
-  const { data: membersData, error } = useQueryChannelMembers(channelId);
+  const { data: userStatus } = useQueryUsersStatus(channel.spaceId);
+  const { data: membersData, error } = useQueryChannelMembers(channel.id);
   const [showCharaterName, setShowCharacterName] = useState(true);
 
   const members: Member[] = useMemo(() => {
@@ -104,6 +103,7 @@ export const MemberList: FC<Props> = ({ className, channelId, myMember, spaceId 
           <MemberListItem
             key={member.user.id}
             myId={myId}
+            channel={channel}
             member={member}
             canIKick={canIKick}
             showCharacterName={showCharaterName}

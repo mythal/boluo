@@ -1,5 +1,5 @@
 import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
-import { Member, UserStatus } from 'api';
+import { Channel, Member, UserStatus } from 'api';
 import { Mask } from 'icons';
 import { FC, useState } from 'react';
 import Icon from 'ui/Icon';
@@ -11,13 +11,14 @@ import { MemberStatusBadge } from './MemberStatusBadge';
 interface Props {
   member: Member;
   myId: string | null;
+  channel: Channel;
   canIKick: boolean;
   showCharacterName: boolean;
   status: UserStatus | undefined;
 }
 
 export const MemberListItem: FC<Props> = (
-  { member, canIKick, myId, showCharacterName, status },
+  { member, canIKick, myId, showCharacterName, status, channel },
 ) => {
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
@@ -60,6 +61,7 @@ export const MemberListItem: FC<Props> = (
         <FloatingPortal>
           <MemberCard
             ref={refs.setFloating}
+            channel={channel}
             className="absolute -translate-x-full"
             member={member}
             status={status}

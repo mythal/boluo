@@ -1,4 +1,4 @@
-import { Member, User, UserStatus } from 'api';
+import { Channel, Member, User, UserStatus } from 'api';
 import { post } from 'api-browser';
 import clsx from 'clsx';
 import { useMe } from 'common';
@@ -17,6 +17,75 @@ const MINUTES_IN_MS = SECONDS_IN_MS * 60;
 const HOURS_IN_MS = MINUTES_IN_MS * 60;
 const DAYS_IN_MS = HOURS_IN_MS * 24;
 const WEEKS_IN_MS = DAYS_IN_MS * 7;
+
+const ConfirmLeave: FC<
+  { channelId: string; channelName: string; dismiss: () => void }
+> = ({ channelId, dismiss, channelName }) => {
+  const key = ['/channels/members', channelId] as const;
+  const { isMutating: isKicking, trigger: kick } = useSWRMutation(key, async ([_, channelId]) => {
+    const result = await post(
+      '/channels/leave',
+      { id: channelId },
+      {},
+    );
+    return result.unwrap();
+  }, {
+    onSuccess: dismiss,
+  });
+  return (
+    <div className="text-sm pt-2">
+      <div>
+        <FormattedMessage
+          defaultMessage="Are you sure you want to leave {channelName}?"
+          values={{ channelName }}
+        />
+      </div>
+      <div className="text-right pt-2">
+        <Button data-small className="mx-1" onClick={dismiss}>
+          <FormattedMessage defaultMessage="Cancel" />
+        </Button>
+        <Button data-small data-type="danger" disabled={isKicking} onClick={() => kick()}>
+          <FormattedMessage defaultMessage="Leave" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+const ConfirmKick: FC<
+  { spaceId: string; channelId: string; userId: string; nickname: string; username: string; dismiss: () => void }
+> = ({ userId, nickname, username, spaceId, channelId, dismiss }) => {
+  const key = ['/channels/members', channelId] as const;
+  const { isMutating: isKicking, trigger: kick } = useSWRMutation(key, async ([_, channelId]) => {
+    const result = await post(
+      '/channels/kick',
+      { channelId, spaceId, userId },
+      {},
+    );
+    return result.unwrap();
+  }, {
+    revalidate: false,
+    populateCache: x => x,
+    onSuccess: dismiss,
+  });
+  return (
+    <div className="text-sm pt-2">
+      <div>
+        <FormattedMessage
+          defaultMessage="Are you sure you want to kick {nickname} ({username})?"
+          values={{ nickname, username }}
+        />
+      </div>
+      <div className="text-right pt-2">
+        <Button data-small className="mx-1" onClick={dismiss}>
+          <FormattedMessage defaultMessage="Cancel" />
+        </Button>
+        <Button data-small data-type="danger" disabled={isKicking} onClick={() => kick()}>
+          <FormattedMessage defaultMessage="Yes, Kick" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const LastSeen: FC<{ timestamp: number; className?: string }> = React.memo(
   ({ timestamp: lastSeenTimeStamp, className }) => {
@@ -122,111 +191,107 @@ const Badges: FC<{ thisIsMe: boolean; isMaster: boolean; isAdmin: boolean }> = (
 };
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
+  channel: Channel;
   member: Member;
   status?: UserStatus;
   canIKick?: boolean;
 }
 
-export const MemberCard = React.forwardRef<HTMLDivElement, Props>(({ member, canIKick, status, ...props }, ref) => {
-  const me = useMe();
-  const thisIsMe = me != null && me !== 'LOADING' && member.user.id === me.user.id;
-  const [comfirmKick, setComfirmKick] = React.useState(false);
-  const key = ['/channels/members', member.channel.channelId] as const;
-  const { isMutating: isKicking, trigger: kick } = useSWRMutation(key, async ([_, channelId]) => {
-    const result = await post(
-      '/channels/kick',
-      { channelId, spaceId: member.space.spaceId, userId: member.user.id },
-      {},
-    );
-    return result.unwrap();
-  }, {
-    revalidate: false,
-    populateCache: x => x,
-    onSuccess: () => {
-      setComfirmKick(false);
-    },
-  });
-  const intl = useIntl();
-  let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
-  if (status != null) {
-    switch (status.kind) {
-      case 'ONLINE':
-        statusText = intl.formatMessage({ defaultMessage: 'Online' });
-        break;
-      case 'OFFLINE':
-        statusText = intl.formatMessage({ defaultMessage: 'Offline' });
-        break;
-      case 'AWAY':
-        statusText = intl.formatMessage({ defaultMessage: 'Away' });
-        break;
+export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
+  ({ member, canIKick, status, channel, ...props }, ref) => {
+    const me = useMe();
+    const thisIsMe = me != null && me !== 'LOADING' && member.user.id === me.user.id;
+    const [confirmKick, setConfirmKick] = useState(false);
+    const [confirm, setConfirmLeave] = useState(false);
+    const intl = useIntl();
+    let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
+    if (status != null) {
+      switch (status.kind) {
+        case 'ONLINE':
+          statusText = intl.formatMessage({ defaultMessage: 'Online' });
+          break;
+        case 'OFFLINE':
+          statusText = intl.formatMessage({ defaultMessage: 'Offline' });
+          break;
+        case 'AWAY':
+          statusText = intl.formatMessage({ defaultMessage: 'Away' });
+          break;
+      }
     }
-  }
-  return (
-    <div {...props} ref={ref}>
-      <div className="p-4 rounded shadow bg-lowest w-[20rem]">
-        <div className="flex items-end">
-          <Avatar
-            size="6rem"
-            className="float-left mr-2 rounded"
-            id={member.user.id}
-            avatarId={member.user.avatarId}
-            name={member.user.nickname}
-          />
-          <div className="space-y-1">
-            <Names
-              username={member.user.username}
-              nickname={member.user.nickname}
-              characterName={member.channel.characterName}
+    return (
+      <div {...props} ref={ref}>
+        <div className="p-4 rounded shadow bg-lowest w-[20rem]">
+          <div className="flex items-end">
+            <Avatar
+              size="6rem"
+              className="float-left mr-2 rounded"
+              id={member.user.id}
+              avatarId={member.user.avatarId}
+              name={member.user.nickname}
             />
+            <div className="space-y-1">
+              <Names
+                username={member.user.username}
+                nickname={member.user.nickname}
+                characterName={member.channel.characterName}
+              />
 
-            {status != null && (
-              <div className="text-sm space-x-1">
-                {status.kind === 'ONLINE'
-                  ? <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
-                  : <LastSeen timestamp={status.timestamp} className="text-surface-500" />}
-              </div>
-            )}
-            <Badges
-              thisIsMe={thisIsMe}
-              isAdmin={member.space.isAdmin}
-              isMaster={member.channel.isMaster}
-            />
-          </div>
-        </div>
-        <div className="py-4">
-          <div className="text-sm whitespace-pre-line max-h-32 overflow-y-auto">
-            {member.user.bio}
-          </div>
-        </div>
-
-        <div className="">
-          {canIKick && !thisIsMe && !comfirmKick && (
-            <Button data-small onClick={() => setComfirmKick(true)}>
-              <Icon icon={UserX} />
-              <FormattedMessage defaultMessage="Kick" />
-            </Button>
-          )}
-        </div>
-        {comfirmKick && (
-          <div className="text-sm pt-2">
-            <div>
-              <FormattedMessage
-                defaultMessage="Are you sure you want to kick {nickname} ({username})?"
-                values={{ nickname: member.user.nickname, username: member.user.username }}
+              {status != null && (
+                <div className="text-sm space-x-1">
+                  {status.kind === 'ONLINE'
+                    ? <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
+                    : <LastSeen timestamp={status.timestamp} className="text-surface-500" />}
+                </div>
+              )}
+              <Badges
+                thisIsMe={thisIsMe}
+                isAdmin={member.space.isAdmin}
+                isMaster={member.channel.isMaster}
               />
             </div>
-            <div className="text-right pt-2">
-              <Button data-small className="mx-1" onClick={() => setComfirmKick(false)}>
-                <FormattedMessage defaultMessage="Cancel" />
-              </Button>
-              <Button data-small data-type="danger" disabled={isKicking} onClick={() => kick()}>
-                <FormattedMessage defaultMessage="Yes, Kick" />
-              </Button>
+          </div>
+          <div className="py-4">
+            <div className="text-sm whitespace-pre-line max-h-32 overflow-y-auto">
+              {member.user.bio}
             </div>
           </div>
-        )}
+
+          <div className="">
+            {canIKick && !thisIsMe && !confirmKick && (
+              <Button
+                data-small
+                onClick={() => setConfirmKick(true)}
+              >
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Kick" />
+              </Button>
+            )}
+            {thisIsMe && !confirm && (
+              <Button data-small onClick={() => setConfirmLeave(true)}>
+                <FormattedMessage defaultMessage="Leave" />
+              </Button>
+            )}
+          </div>
+          {confirmKick && (
+            <ConfirmKick
+              spaceId={member.space.spaceId}
+              channelId={member.channel.channelId}
+              userId={member.user.id}
+              nickname={member.user.nickname}
+              username={member.user.username}
+              dismiss={() => setConfirmKick(false)}
+            />
+          )}
+          {confirm && (
+            <ConfirmLeave
+              channelId={channel.id}
+              channelName={channel.name}
+              dismiss={() => setConfirmLeave(false)}
+            />
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 MemberCard.displayName = 'MemberCard';

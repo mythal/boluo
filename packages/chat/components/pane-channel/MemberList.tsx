@@ -1,6 +1,6 @@
 import { ChannelMember, Member } from 'api';
 import { Mask, UserPlus } from 'icons';
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
@@ -29,14 +29,49 @@ export const MemberList: FC<Props> = ({ className, channelId, myMember, spaceId 
   const { data: userStatus } = useQueryUsersStatus(spaceId);
   const { data: membersData, error } = useQueryChannelMembers(channelId);
   const [showCharaterName, setShowCharacterName] = useState(true);
+
+  const members: Member[] = useMemo(() => {
+    if (membersData == null) {
+      return [];
+    }
+    if (userStatus == null) {
+      return membersData.members;
+    }
+    const members = [...membersData.members];
+    members.sort((a, b) => {
+      const idA = a.user.id;
+      const idB = b.user.id;
+      const statusA = userStatus[idA];
+      const statusB = userStatus[idB];
+      if (statusA == null) {
+        return 1;
+      }
+      if (statusB == null) {
+        return -1;
+      }
+      if (a.channel.isMaster && !b.channel.isMaster) {
+        return -1;
+      }
+      if (statusA.kind === statusB.kind) {
+        return a.user.username.localeCompare(b.user.username);
+      } else if (statusA.kind === 'ONLINE') {
+        return -1;
+      } else if (statusB.kind === 'ONLINE') {
+        return 1;
+      } else {
+        return a.user.username.localeCompare(b.user.username);
+      }
+    });
+    return members;
+  }, [membersData, userStatus]);
   if (error) {
     // TODO: handle error
     return null;
   }
+
   if (!membersData) {
     return <MemberListLoading className={className} />;
   }
-  const { members } = membersData;
   let canIKick = false;
   let myId: string | null = null;
   if (myMember != null && myMember !== 'LOADING') {

@@ -1,8 +1,8 @@
-import { Channel, Member, User, UserStatus } from 'api';
+import { Channel, ChannelMember, Member, SpaceMember, User, UserStatus } from 'api';
 import { post } from 'api-browser';
 import clsx from 'clsx';
 import { useMe } from 'common';
-import { Mask, UserX } from 'icons';
+import { Mask, UserPlus, UserX } from 'icons';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
@@ -17,6 +17,20 @@ const MINUTES_IN_MS = SECONDS_IN_MS * 60;
 const HOURS_IN_MS = MINUTES_IN_MS * 60;
 const DAYS_IN_MS = HOURS_IN_MS * 24;
 const WEEKS_IN_MS = DAYS_IN_MS * 7;
+
+const InviteButton: FC<{ userId: string; channelId: string }> = ({ userId, channelId }) => {
+  const key = ['/channels/members', channelId] as const;
+  const { isMutating: isInviting, trigger: invite } = useSWRMutation(key, async ([_, channelId]) => {
+    const result = await post('/channels/add_member', null, { channelId, userId, characterName: '' });
+    return result.unwrap();
+  });
+  return (
+    <Button data-small disabled={isInviting} onClick={() => invite()}>
+      <Icon icon={UserPlus} />
+      <FormattedMessage defaultMessage="Invite" />
+    </Button>
+  );
+};
 
 const ConfirmLeave: FC<
   { channelId: string; channelName: string; dismiss: () => void }
@@ -192,15 +206,18 @@ const Badges: FC<{ thisIsMe: boolean; isMaster: boolean; isAdmin: boolean }> = (
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   channel: Channel;
-  member: Member;
+  user: User;
+  spaceMember: SpaceMember;
+  channelMember?: ChannelMember;
   status?: UserStatus;
   canIKick?: boolean;
+  canIInvite?: boolean;
 }
 
 export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
-  ({ member, canIKick, status, channel, ...props }, ref) => {
+  ({ user, spaceMember, channelMember, canIKick = false, canIInvite = false, status, channel, ...props }, ref) => {
     const me = useMe();
-    const thisIsMe = me != null && me !== 'LOADING' && member.user.id === me.user.id;
+    const thisIsMe = me != null && me !== 'LOADING' && user.id === me.user.id;
     const [confirmKick, setConfirmKick] = useState(false);
     const [confirm, setConfirmLeave] = useState(false);
     const intl = useIntl();
@@ -225,15 +242,15 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
             <Avatar
               size="6rem"
               className="float-left mr-2 rounded"
-              id={member.user.id}
-              avatarId={member.user.avatarId}
-              name={member.user.nickname}
+              id={user.id}
+              avatarId={user.avatarId}
+              name={user.nickname}
             />
             <div className="space-y-1">
               <Names
-                username={member.user.username}
-                nickname={member.user.nickname}
-                characterName={member.channel.characterName}
+                username={user.username}
+                nickname={user.nickname}
+                characterName={channelMember?.characterName ?? ''}
               />
 
               {status != null && (
@@ -245,14 +262,14 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
               )}
               <Badges
                 thisIsMe={thisIsMe}
-                isAdmin={member.space.isAdmin}
-                isMaster={member.channel.isMaster}
+                isAdmin={spaceMember.isAdmin}
+                isMaster={channelMember?.isMaster ?? false}
               />
             </div>
           </div>
           <div className="py-4">
             <div className="text-sm whitespace-pre-line max-h-32 overflow-y-auto">
-              {member.user.bio}
+              {user.bio}
             </div>
           </div>
 
@@ -266,19 +283,22 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
                 <FormattedMessage defaultMessage="Kick" />
               </Button>
             )}
-            {thisIsMe && !confirm && (
+            {thisIsMe && channelMember != null && !confirm && (
               <Button data-small onClick={() => setConfirmLeave(true)}>
                 <FormattedMessage defaultMessage="Leave" />
               </Button>
             )}
+            {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
+              <InviteButton userId={user.id} channelId={channel.id} />
+            )}
           </div>
           {confirmKick && (
             <ConfirmKick
-              spaceId={member.space.spaceId}
-              channelId={member.channel.channelId}
-              userId={member.user.id}
-              nickname={member.user.nickname}
-              username={member.user.username}
+              spaceId={spaceMember.spaceId}
+              channelId={channel.id}
+              userId={user.id}
+              nickname={user.nickname}
+              username={user.username}
               dismiss={() => setConfirmKick(false)}
             />
           )}

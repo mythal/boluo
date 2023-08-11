@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { Dispatch, SetStateAction, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
-import { ChannelState } from '../state/channel.reducer';
+import { ChannelState, ScheduledGc } from '../state/channel.reducer';
 import { ChatItem, MessageItem, PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { ComposeState } from '../state/compose.reducer';
@@ -16,6 +16,7 @@ interface UseChatListReturn {
   setOptimisticItems: SetOptimisticItems;
   firstItemIndex: number;
   filteredMessagesCount: number;
+  scheduledGcLowerPos: number | null;
 }
 
 export interface OptimisticItem {
@@ -116,8 +117,13 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     () => selectAtom(chatAtom, (chat) => chat.channels[channelId]?.previewMap),
     [channelId],
   );
+  const scheduledGcLowerPosAtom = useMemo(
+    () => selectAtom(chatAtom, (chat) => chat.channels[channelId]?.scheduledGc?.lowerPos ?? null),
+    [channelId],
+  );
   const [messages, messageMap] = useAtomValue(messagesAtom);
   const previewMap = useAtomValue(previewMapAtom);
+  const scheduledGcLowerPos = useAtomValue(scheduledGcLowerPosAtom);
 
   const [optimisticItemMap, setOptimisticItems] = useState<Record<string, OptimisticItem>>({});
   const firstItemIndex = useRef(START_INDEX); // can't be negative
@@ -264,5 +270,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   }
   prevChatListRef.current = chatList;
 
-  return { chatList, setOptimisticItems, firstItemIndex: firstItemIndex.current, filteredMessagesCount };
+  return {
+    chatList,
+    setOptimisticItems,
+    firstItemIndex: firstItemIndex.current,
+    filteredMessagesCount,
+    scheduledGcLowerPos,
+  };
 };

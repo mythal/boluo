@@ -6,6 +6,10 @@ import type { ChatReducerContext } from './chat.reducer';
 
 export type UserId = string;
 
+const GC_TRIGGER_LENGTH = 128;
+const GC_INITIAL_COUNTDOWN = 8;
+const MIN_START_GC_COUNT = 4;
+
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
@@ -13,6 +17,13 @@ export interface ChannelState {
   /** Values of the messageMap, sorted */
   messages: MessageItem[];
   previewMap: Record<UserId, PreviewItem>;
+  scheduledGc: ScheduledGc | null;
+}
+
+export interface ScheduledGc {
+  countdown: number;
+  /** Messages with pos < lower will be deleted */
+  lowerPos: number;
 }
 
 const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE', key: message.id });
@@ -24,6 +35,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     messageMap: {},
     fullLoaded: false,
     previewMap: {},
+    scheduledGc: null,
   };
 };
 
@@ -144,6 +156,13 @@ const handleMessageDeleted = (
   return { ...state, messageMap };
 };
 
+const handleResetGc = (state: ChannelState, { payload: { pos } }: ChatAction<'resetGc'>): ChannelState => {
+  if (state.scheduledGc == null) return state;
+  const { lowerPos } = state.scheduledGc;
+  if (pos >= lowerPos) return state;
+  return { ...state, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
+};
+
 const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initialized: boolean): ChannelState => {
   switch (action.type) {
     case 'messagePreview':
@@ -159,9 +178,32 @@ const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initializ
       // and should be ignored if the chat state
       // has not been initialized.
       return initialized ? handleMessagesLoaded(state, action) : state;
+    case 'resetGc':
+      return handleResetGc(state, action);
     default:
       return state;
   }
+};
+
+const handleGcCountdown = (state: ChannelState): ChannelState => {
+  const { scheduledGc } = state;
+  if (scheduledGc == null || scheduledGc.countdown <= 0) return state;
+  // console.debug('[Messages GC] Countdown: ', scheduledGc.countdown - 1);
+  return { ...state, scheduledGc: { ...scheduledGc, countdown: scheduledGc.countdown - 1 } };
+};
+
+const handleGc = (state: ChannelState): ChannelState => {
+  if (state.scheduledGc == null || state.scheduledGc.countdown > 0) return state;
+  const { lowerPos } = state.scheduledGc;
+  const gcLowerIndex = state.messages.findIndex(message => message.pos >= lowerPos) - 1;
+  if (gcLowerIndex <= MIN_START_GC_COUNT) return { ...state, scheduledGc: null };
+  console.debug(`[Messages GC] Start GC. Lower index: ${gcLowerIndex} Power Pos: ${lowerPos}`);
+  const messages = [...state.messages];
+  messages.splice(0, gcLowerIndex);
+  const messageMap = Object.fromEntries(messages.map(message => [message.id, message]));
+  const scheduledGc = null;
+  const fullLoaded = false;
+  return { ...state, messageMap, messages, scheduledGc, fullLoaded };
 };
 
 export const channelReducer = (
@@ -169,10 +211,18 @@ export const channelReducer = (
   action: ChatActionUnion,
   { initialized }: ChatReducerContext,
 ): ChannelState => {
-  const nextState: ChannelState = channelReducer$(state, action, initialized);
+  let nextState: ChannelState = channelReducer$(state, action, initialized);
+  nextState = handleGcCountdown(nextState);
   if (nextState.messageMap !== state.messageMap) {
-    nextState.messages = Object.values(nextState.messageMap);
-    nextState.messages.sort(byPos);
+    const messages = Object.values(nextState.messageMap);
+    messages.sort(byPos);
+    nextState = { ...nextState, messages };
+  }
+  if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {
+    const pos = nextState.messages[GC_TRIGGER_LENGTH >> 1]!.pos;
+    nextState = { ...nextState, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
+  } else if (nextState.scheduledGc) {
+    nextState = handleGc(nextState);
   }
   return nextState;
 };

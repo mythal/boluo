@@ -23,6 +23,7 @@ use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::WebSocketStream;
 use uuid::Uuid;
 
+const CHUNK_SIZE: usize = 16;
 type Sender = SplitSink<WebSocketStream<Upgraded>, tungstenite::Message>;
 
 async fn check_permissions<T: Querist>(
@@ -80,10 +81,17 @@ async fn push_events(
 
         let cached_events = Event::get_from_cache(&mailbox, after, seq).await;
         if !cached_events.is_empty() {
-            let Ok(batch_event) = serde_json::to_string(&Event::batch(mailbox, cached_events)) else {
-                return Err(anyhow!("Failed to serialize batch event"));
-            };
-            tx.send(WsMessage::Text(batch_event)).await.ok();
+            use itertools::Itertools;
+            let messages: Vec<Result<String, serde_json::Error>> = cached_events
+                .into_iter()
+                .chunks(CHUNK_SIZE)
+                .into_iter()
+                .map(|events| Event::batch(mailbox, events.collect()))
+                .map(|batch_event| serde_json::to_string(&batch_event))
+                .collect();
+            for message in messages {
+                tx.send(WsMessage::Text(message?)).await?;
+            }
         }
         let initialized = Event::initialized(mailbox);
         let initialized = serde_json::to_string(&initialized).expect("Failed to serialize initialized event");

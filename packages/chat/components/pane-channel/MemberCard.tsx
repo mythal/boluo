@@ -3,7 +3,7 @@ import { post } from 'api-browser';
 import clsx from 'clsx';
 import { useMe } from 'common';
 import { Mask, UserX } from 'icons';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Badge } from 'ui/Badge';
@@ -89,23 +89,34 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
 };
 
 const Badges: FC<{ thisIsMe: boolean; isMaster: boolean; isAdmin: boolean }> = ({ thisIsMe, isMaster, isAdmin }) => {
+  const badges: ReactNode[] = [];
+  if (thisIsMe) {
+    badges.push(
+      <Badge key="me">
+        <FormattedMessage defaultMessage="Me" />
+      </Badge>,
+    );
+  }
+  if (isMaster) {
+    badges.push(
+      <Badge key="master">
+        <FormattedMessage defaultMessage="Master" />
+      </Badge>,
+    );
+  }
+  if (isAdmin) {
+    badges.push(
+      <Badge key="admin">
+        <FormattedMessage defaultMessage="Admin" />
+      </Badge>,
+    );
+  }
+  if (badges.length === 0) {
+    return null;
+  }
   return (
-    <div className="flex gap-1 mt-1">
-      {thisIsMe && (
-        <Badge>
-          <FormattedMessage defaultMessage="Me" />
-        </Badge>
-      )}
-      {isMaster && (
-        <Badge>
-          <FormattedMessage defaultMessage="Master" />
-        </Badge>
-      )}
-      {isAdmin && (
-        <Badge>
-          <FormattedMessage defaultMessage="Admin" />
-        </Badge>
-      )}
+    <div className="flex gap-1">
+      {badges}
     </div>
   );
 };
@@ -161,7 +172,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(({ member, can
             avatarId={member.user.avatarId}
             name={member.user.nickname}
           />
-          <div>
+          <div className="space-y-1">
             <Names
               username={member.user.username}
               nickname={member.user.nickname}
@@ -169,7 +180,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(({ member, can
             />
 
             {status != null && (
-              <div className="text-sm py-1 space-x-1">
+              <div className="text-sm space-x-1">
                 {status.kind === 'ONLINE'
                   ? <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
                   : <LastSeen timestamp={status.timestamp} className="text-surface-500" />}

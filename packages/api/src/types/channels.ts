@@ -14,6 +14,7 @@ import type { Export } from 'server-bindings/Export';
 import type { JoinChannel } from 'server-bindings/JoinChannel';
 import type { KickFromChannel } from 'server-bindings/KickFromChannel';
 import type { Member } from 'server-bindings/Member';
+export type { GrantOrRemoveChannelMaster } from 'server-bindings/GrantOrRemoveChannelMaster';
 
 export {
   AddChannelMember,

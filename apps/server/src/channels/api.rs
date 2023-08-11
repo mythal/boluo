@@ -39,6 +39,23 @@ pub struct EditChannel {
 
 #[derive(Deserialize, Debug, TS)]
 #[ts(export)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum GrantOrRevoke {
+    Grant,
+    Revoke,
+}
+
+#[derive(Deserialize, Debug, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
+pub struct GrantOrRemoveChannelMaster {
+    pub channel_id: Uuid,
+    pub user_id: Uuid,
+    pub grant_or_revoke: GrantOrRevoke,
+}
+
+#[derive(Deserialize, Debug, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct CheckChannelName {
     pub space_id: Uuid,

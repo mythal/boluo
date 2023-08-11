@@ -1,9 +1,9 @@
-use super::api::{ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel};
+use super::api::{ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel, GrantOrRemoveChannelMaster};
 use super::models::ChannelMember;
 use super::Channel;
 use crate::channels::api::{
     AddChannelMember, ChannelMemberWithUser, ChannelWithMember, ChannelWithRelated, CheckChannelName,
-    EditChannelMember, Export, JoinChannel, KickFromChannel,
+    EditChannelMember, Export, GrantOrRevoke, JoinChannel, KickFromChannel,
 };
 use crate::channels::models::Member;
 use crate::csrf::authenticate;
@@ -175,6 +175,40 @@ async fn edit(req: Request<Body>) -> Result<Channel, AppError> {
     Event::channel_edited(channel.clone());
     Event::space_updated(channel.space_id);
     Ok(channel)
+}
+
+async fn edit_masters(req: Request<Body>) -> Result<bool, AppError> {
+    let session = authenticate(&req).await?;
+    let GrantOrRemoveChannelMaster {
+        channel_id,
+        grant_or_revoke,
+        user_id,
+    } = interface::parse_body(req).await?;
+    let mut conn = database::get().await?;
+    let mut trans = conn.transaction().await?;
+    let db = &mut trans;
+
+    let space_member = SpaceMember::get_by_channel(db, &session.user_id, &channel_id)
+        .await
+        .or_no_permission()?;
+    if !space_member.is_admin {
+        return Err(AppError::NoPermission("user is not admin".to_string()));
+    }
+
+    ChannelMember::set_master(
+        db,
+        &user_id,
+        &channel_id,
+        match grant_or_revoke {
+            GrantOrRevoke::Grant => true,
+            GrantOrRevoke::Revoke => false,
+        },
+    )
+    .await
+    .ok();
+    trans.commit().await?;
+    Event::push_members(channel_id);
+    Ok(true)
 }
 
 async fn add_member(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
@@ -396,6 +430,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/my", Method::GET) => my_channels(req).await.map(ok_response),
         ("/create", Method::POST) => create(req).await.map(ok_response),
         ("/edit", Method::POST) => edit(req).await.map(ok_response),
+        ("/edit_master", Method::POST) => edit_masters(req).await.map(ok_response),
         ("/add_member", Method::POST) => add_member(req).await.map(ok_response),
         ("/edit_member", Method::POST) => edit_member(req).await.map(ok_response),
         ("/all_members", Method::GET) => all_members(req).await.map(ok_response),

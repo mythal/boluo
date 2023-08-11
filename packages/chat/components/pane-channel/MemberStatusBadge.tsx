@@ -30,7 +30,7 @@ export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ statu
         ref={refs.setReference}
         className={clsx(
           'inline-block rounded-full w-[0.5em] h-[0.5em] border-[0.125em] box-content',
-          status.kind === 'ONLINE' && 'bg-green-400 border-green-700',
+          status.kind === 'ONLINE' && 'bg-green-400 border-green-500',
         )}
         aria-label={text}
         {...getReferenceProps()}

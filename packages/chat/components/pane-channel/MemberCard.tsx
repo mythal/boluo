@@ -2,7 +2,7 @@ import { Channel, ChannelMember, Member, SpaceMember, User, UserStatus } from 'a
 import { post } from 'api-browser';
 import clsx from 'clsx';
 import { useMe } from 'common';
-import { Gamemaster, Mask, UserPlus, UserX } from 'icons';
+import { Gamemaster, Mask, UserCog, UserPlus, UserX } from 'icons';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
@@ -18,7 +18,7 @@ const HOURS_IN_MS = MINUTES_IN_MS * 60;
 const DAYS_IN_MS = HOURS_IN_MS * 24;
 const WEEKS_IN_MS = DAYS_IN_MS * 7;
 
-const EditMasterButton: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
+const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
   const key = ['/channels/members', channelMember.channelId] as const;
   const { isMutating: isEditing, trigger: edit } = useSWRMutation(key, async ([_, channelId]) => {
     const result = await post('/channels/edit_master', null, {
@@ -30,12 +30,26 @@ const EditMasterButton: FC<{ channelMember: ChannelMember }> = ({ channelMember 
   });
 
   return (
-    <Button data-small disabled={isEditing} onClick={() => edit()}>
-      <Icon icon={Gamemaster} />
-      {channelMember.isMaster
-        ? <FormattedMessage defaultMessage="Revoke Master" />
-        : <FormattedMessage defaultMessage="Grant as Game Master" />}
-    </Button>
+    <label className="grid grid-rows-[auto_auto] grid-cols-[auto_1fr] gap-x-1 gap-y-0.5 group">
+      <input
+        type="checkbox"
+        checked={channelMember.isMaster}
+        onChange={() => edit()}
+        disabled={isEditing}
+      />
+      <span className="space-x-1">
+        <span>
+          <FormattedMessage defaultMessage="Game Master" />
+        </span>
+        <Icon
+          icon={Gamemaster}
+          className={channelMember.isMaster ? '' : 'text-surface-400'}
+        />
+      </span>
+      <span className="col-start-2 text-sm text-surface-600 group-hover:text-surface-900">
+        A game master can read whispers, kick members, move messages, and other.
+      </span>
+    </label>
   );
 };
 
@@ -252,8 +266,8 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>((
 ) => {
   const me = useMe();
   const thisIsMe = me != null && me !== 'LOADING' && user.id === me.user.id;
-  const [confirmKick, setConfirmKick] = useState(false);
-  const [confirm, setConfirmLeave] = useState(false);
+  const canIManage = canIKick || canIInvite || canIEditMaster || thisIsMe;
+  const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>('VIEW');
   const intl = useIntl();
   let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
   if (status != null) {
@@ -306,44 +320,77 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>((
             {user.bio}
           </div>
         </div>
-
-        <div className="space-x-1">
-          {canIKick && !thisIsMe && !confirmKick && (
+        {uiState === 'VIEW' && canIManage && (
+          <div className="text-right space-x-1">
+            {thisIsMe && channelMember != null && (
+              <Button
+                data-small
+                onClick={() => setUiState('CONFIRM_LEAVE')}
+              >
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Leave" />
+              </Button>
+            )}
             <Button
               data-small
-              onClick={() => setConfirmKick(true)}
+              onClick={() => setUiState(x => x === 'VIEW' ? 'MANAGE' : 'VIEW')}
+              title={intl.formatMessage({ defaultMessage: 'Manage' })}
             >
-              <Icon icon={UserX} />
-              <FormattedMessage defaultMessage="Kick" />
+              <Icon icon={UserCog} />
             </Button>
-          )}
-          {thisIsMe && channelMember != null && !confirm && (
-            <Button data-small onClick={() => setConfirmLeave(true)}>
-              <FormattedMessage defaultMessage="Leave" />
-            </Button>
-          )}
-          {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
-            <InviteButton userId={user.id} channelId={channel.id} />
-          )}
-          {canIEditMaster && channelMember?.channelId === channel.id && (
-            <EditMasterButton channelMember={channelMember} />
-          )}
-        </div>
-        {confirmKick && (
+          </div>
+        )}
+
+        {uiState === 'MANAGE' && (
+          <div className="py-2">
+            {canIEditMaster && channelMember?.channelId === channel.id && (
+              <EditMasterCheckBox channelMember={channelMember} />
+            )}
+          </div>
+        )}
+
+        {uiState === 'MANAGE' && (
+          <div className="space-x-1">
+            {canIKick && !thisIsMe && (
+              <Button
+                data-small
+                onClick={() => setUiState('CONFIRM_KICK')}
+              >
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Kick this member" />
+              </Button>
+            )}
+            {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
+              <InviteButton userId={user.id} channelId={channel.id} />
+            )}
+
+            {thisIsMe && channelMember?.channelId === channel.id && (
+              <Button
+                data-small
+                onClick={() => setUiState('CONFIRM_LEAVE')}
+              >
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Leave" />
+              </Button>
+            )}
+          </div>
+        )}
+
+        {uiState === 'CONFIRM_KICK' && (
           <ConfirmKick
             spaceId={spaceMember.spaceId}
             channelId={channel.id}
             userId={user.id}
             nickname={user.nickname}
             username={user.username}
-            dismiss={() => setConfirmKick(false)}
+            dismiss={() => setUiState('VIEW')}
           />
         )}
-        {confirm && (
+        {uiState === 'CONFIRM_LEAVE' && (
           <ConfirmLeave
             channelId={channel.id}
             channelName={channel.name}
-            dismiss={() => setConfirmLeave(false)}
+            dismiss={() => setUiState('VIEW')}
           />
         )}
       </div>

@@ -12,9 +12,9 @@
   },
   "sideEffects": false,
   "devDependencies": {
-    "@babel/core": "^7.22.9",
+    "@babel/core": "^7.22.10",
     "@svgr/cli": "^8.0.1",
-    "@types/react": "^18.2.18",
+    "@types/react": "^18.2.20",
     "react": "^18.2.0",
     "typescript": "^5.1.6"
   }

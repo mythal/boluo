@@ -18,9 +18,9 @@
   },
   "sideEffects": false,
   "devDependencies": {
-    "eslint": "^8.46.0",
+    "eslint": "^8.47.0",
     "eslint-config-custom": "workspace:*",
-    "jotai": "^2.2.3",
+    "jotai": "^2.3.1",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {

@@ -3,14 +3,14 @@ use std::sync::OnceLock;
 use aws_config::SdkConfig;
 
 fn make_config() -> SdkConfig {
-    use aws_credential_types::{provider::SharedCredentialsProvider, Credentials};
+    use aws_credential_types::Credentials;
     use std::env;
     let access_key = env::var("S3_ACCESS_KEY_ID").expect("S3_ACCESS_KEY is not set");
     let secret_access_key = env::var("S3_SECRET_ACCESS_KEY").expect("S3_SECRET_ACCESS_KEY is not set");
     let endpoint_url = env::var("S3_ENDPOINT_URL").expect("S3_ENDPOINT_URL is not set");
 
     let credentials = Credentials::new(access_key, secret_access_key, None, None, "boluo");
-    let credentials_provider = SharedCredentialsProvider::new(credentials);
+    let credentials_provider = aws_credential_types::provider::SharedCredentialsProvider::new(credentials);
     SdkConfig::builder()
         .region(aws_sdk_s3::config::Region::new("auto"))
         .endpoint_url(endpoint_url)

@@ -198,8 +198,7 @@ const handleGc = (state: ChannelState): ChannelState => {
   const gcLowerIndex = state.messages.findIndex(message => message.pos >= lowerPos) - 1;
   if (gcLowerIndex <= MIN_START_GC_COUNT) return { ...state, scheduledGc: null };
   console.debug(`[Messages GC] Start GC. Lower index: ${gcLowerIndex} Power Pos: ${lowerPos}`);
-  const messages = [...state.messages];
-  messages.splice(0, gcLowerIndex);
+  const messages = state.messages.slice(gcLowerIndex);
   const messageMap = Object.fromEntries(messages.map(message => [message.id, message]));
   const scheduledGc = null;
   const fullLoaded = false;

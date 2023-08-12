@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { MasksTheater } from 'icons';
+import { Mask } from 'icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
@@ -27,7 +27,7 @@ export const InGameSwitchButton: FC<Props> = ({ type = 'DEFAULT' }) => {
       onClick={() => dispatch(makeComposeAction('toggleInGame', {}))}
     >
       <Delay fallback={<FallbackIcon />}>
-        <MasksTheater />
+        <Mask />
       </Delay>
       <span className={clsx('hidden', !iconOnly && '@md:inline')}>
         <FormattedMessage defaultMessage="In Game" />

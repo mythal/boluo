@@ -1,15 +1,16 @@
+import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { useChatDispatch } from '../../state/chat.atoms';
+import { chatAtom } from '../../state/chat.atoms';
 
 interface Props {
   countdown: number;
 }
 
 export const ConnectionIndicatorClosed: FC<Props> = ({ countdown }) => {
-  const dispatch = useChatDispatch();
+  const dispatch = useSetAtom(chatAtom);
   const immediatelyReconnect = () => {
-    dispatch('reconnectCountdownTick', { immediately: true });
+    dispatch({ type: 'reconnectCountdownTick', payload: { immediately: true } });
   };
   return (
     <div className="flex flex-col gap-2">

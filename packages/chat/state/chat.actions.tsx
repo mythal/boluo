@@ -1,6 +1,6 @@
 import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from 'api';
 import type { Empty } from 'utils';
-import { MakeAction, makeAction } from './actions';
+import { MakeAction } from './actions';
 
 export type ChatActionMap = {
   receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
@@ -27,26 +27,22 @@ export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
 
 export type ChatAction<T extends keyof ChatActionMap> = MakeAction<ChatActionMap, T>;
 
-export const makeChatAction = <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => {
-  return makeAction<ChatActionMap, A, undefined>(type, payload, undefined);
-};
-
 export const eventToChatAction = (e: ServerEvent): ChatActionUnion | null => {
   switch (e.body.type) {
     case 'NEW_MESSAGE':
-      return makeChatAction('receiveMessage', e.body);
+      return { type: 'receiveMessage', payload: e.body };
     case 'INITIALIZED':
-      return makeChatAction('initialized', {});
+      return { type: 'initialized', payload: {} };
     case 'SPACE_UPDATED':
-      return makeChatAction('spaceUpdated', e.body.spaceWithRelated);
+      return { type: 'spaceUpdated', payload: e.body.spaceWithRelated };
     case 'MESSAGE_EDITED':
-      return makeChatAction('messageEdited', e.body);
+      return { type: 'messageEdited', payload: e.body };
     case 'MESSAGE_DELETED':
-      return makeChatAction('messageDeleted', e.body);
+      return { type: 'messageDeleted', payload: e.body };
     case 'MESSAGE_PREVIEW':
-      return makeChatAction('messagePreview', { ...e.body, timestamp: e.id.timestamp });
+      return { type: 'messagePreview', payload: { ...e.body, timestamp: e.id.timestamp } };
     case 'CHANNEL_DELETED':
-      return makeChatAction('channelDeleted', e.body);
+      return { type: 'channelDeleted', payload: e.body };
     case 'CHANNEL_EDITED':
     case 'MEMBERS':
     case 'STATUS_MAP':

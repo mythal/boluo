@@ -280,7 +280,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
     const chatItem = chatList[a];
     if (chatItem && scheduledGcLowerPos > chatItem.pos) {
       console.debug(`[Messages GC] Reset GC. scheduled: ${scheduledGcLowerPos} reset: ${chatItem.pos}`);
-      store.set(chatAtom, { type: 'resetGc', context: undefined, payload: { pos: chatItem.pos } });
+      store.set(chatAtom, { type: 'resetGc', payload: { pos: chatItem.pos } });
     }
   });
 

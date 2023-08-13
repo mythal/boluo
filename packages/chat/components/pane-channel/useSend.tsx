@@ -10,7 +10,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
-import { ComposeActionUnion, makeComposeAction } from '../../state/compose.actions';
+import { ComposeActionUnion } from '../../state/compose.actions';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
@@ -27,10 +27,10 @@ export const useSend = (me: User) => {
     const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const handleRecover = () => {
-      dispatch(makeComposeAction('recoverState', backupComposeState));
+      dispatch({ type: 'recoverState', payload: backupComposeState });
       setBanner(null);
     };
-    dispatch(makeComposeAction('sent', {}));
+    dispatch({ type: 'sent', payload: {} });
     const { text, entities } = parse(compose.source);
     let result: Result<Message, ApiError>;
     const name = compose.inputedName.trim() || nickname;

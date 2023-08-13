@@ -19,7 +19,7 @@ export const FileButton: FC<Props> = () => {
       return;
     }
     const file = files[0]!;
-    dispatch({ type: 'media', payload: { media: file }, context: undefined });
+    dispatch({ type: 'media', payload: { media: file } });
     // reset file input
     event.target.value = '';
   };

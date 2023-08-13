@@ -5,11 +5,8 @@ import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
 import { isUuid } from 'utils';
 import { PING, PONG } from '../const';
-import { makeAction } from '../state/actions';
-import { chatAtom, connectionStateAtom } from '../state/chat.atoms';
+import { chatAtom, ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { ConnectionState } from '../state/connection.reducer';
-
-type ChatDispatch = ReturnType<typeof useSetAtom<typeof chatAtom>>;
 
 const createMailboxConnection = (baseUrl: string, id: string, token?: string, after?: EventId): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
@@ -34,20 +31,20 @@ const connect = (
   if (!isUuid(mailboxId)) return null;
   if (connectionState.type !== 'CLOSED') return null;
   if (connectionState.countdown > 0) {
-    setTimeout(() => dispatch(makeAction('reconnectCountdownTick', {}, undefined)), 1000);
+    setTimeout(() => dispatch({ type: 'reconnectCountdownTick', payload: {} }), 1000);
     return null;
   }
   console.info(`establishing new connection for ${mailboxId}`);
-  dispatch(makeAction('connecting', { mailboxId }, undefined));
+  dispatch({ type: 'connecting', payload: { mailboxId } });
 
   const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, undefined, after);
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
-    dispatch(makeAction('connected', { connection: newConnection, mailboxId }, undefined));
+    dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
   };
   newConnection.onclose = (event) => {
     console.info(`connection closed for ${mailboxId}`, event);
-    dispatch(makeAction('connectionClosed', { mailboxId, random: Math.random() }, undefined));
+    dispatch({ type: 'connectionClosed', payload: { mailboxId, random: Math.random() } });
   };
   newConnection.onmessage = (message: MessageEvent<unknown>) => {
     const raw = message.data;
@@ -64,7 +61,7 @@ const connect = (
       return;
     }
     if (!isServerEvent(event)) return;
-    dispatch(makeAction('eventFromServer', event, undefined));
+    dispatch({ type: 'eventFromServer', payload: event });
     onEvent(event);
   };
   return newConnection;

@@ -1,8 +1,9 @@
 import { apiUrlAtom } from 'api-browser';
-import { atom, useSetAtom } from 'jotai';
+import { atom } from 'jotai';
+import type { useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { store } from 'store';
-import { ChatActionUnion, makeChatAction } from './chat.actions';
+import { ChatActionUnion } from './chat.actions';
 import { chatReducer, ChatSpaceState, initialChatState, makeChatState } from './chat.reducer';
 import { routeAtom } from './view.atoms';
 
@@ -45,12 +46,7 @@ store.sub(chatAtom, () => {
   }
 });
 
-export type ChatDispatch = <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => void;
-
-export const useChatDispatch = (): ChatDispatch => {
-  const set = useSetAtom(chatAtom);
-  return <A extends ChatActionUnion>(type: A['type'], payload: A['payload']) => set(makeChatAction(type, payload));
-};
+export type ChatDispatch = ReturnType<typeof useSetAtom<typeof chatAtom>>;
 
 export const connectionStateAtom = selectAtom(chatAtom, (chatState) => chatState.connection);
 

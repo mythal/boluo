@@ -1,8 +1,8 @@
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
-import { useChatDispatch } from '../../state/chat.atoms';
+import { chatAtom } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
 
 interface Props {
@@ -10,9 +10,9 @@ interface Props {
 
 export const ConnectionIndicatorConnected: FC<Props> = ({}) => {
   const isDevMode = useAtomValue(devMode);
-  const dispatch = useChatDispatch();
+  const dispatch = useSetAtom(chatAtom);
   const disconnect = () => {
-    dispatch('debugCloseConnection', { countdown: 5 });
+    dispatch({ type: 'debugCloseConnection', payload: { countdown: 5 } });
   };
   return (
     <div>

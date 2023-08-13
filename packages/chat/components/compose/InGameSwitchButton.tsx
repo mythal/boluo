@@ -6,7 +6,6 @@ import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { makeComposeAction } from '../../state/compose.actions';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 
@@ -24,7 +23,7 @@ export const InGameSwitchButton: FC<Props> = ({ type = 'DEFAULT' }) => {
       data-type="switch"
       data-on={inGame}
       data-small={type === 'SMALL' || iconOnly}
-      onClick={() => dispatch(makeComposeAction('toggleInGame', {}))}
+      onClick={() => dispatch({ type: 'toggleInGame', payload: {} })}
     >
       <Delay fallback={<FallbackIcon />}>
         <Mask />

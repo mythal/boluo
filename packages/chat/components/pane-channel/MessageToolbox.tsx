@@ -8,7 +8,6 @@ import { Spinner } from 'ui/Spinner';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useOutside } from '../../hooks/useOutside';
-import { makeComposeAction } from '../../state/compose.actions';
 import { MessageToolboxButton } from './MessageToolboxButton';
 
 interface Props {
@@ -55,7 +54,7 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
   }, [message.id]);
 
   const handleEditMessage = useCallback(() => {
-    dispatch(makeComposeAction('editMessage', { message }));
+    dispatch({ type: 'editMessage', payload: { message } });
   }, [dispatch, message]);
   return (
     <Box className={className} ref={boxRef}>

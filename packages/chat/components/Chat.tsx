@@ -3,7 +3,6 @@ import { FC, ReactNode, useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui/Loading';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
-import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { isSidebarExpandedAtom } from '../state/ui.atoms';
@@ -32,7 +31,6 @@ const SpaceProvider: FC<{ spaceId: string | null; children: ReactNode }> = ({ sp
 const Chat: FC = () => {
   const route = useAtomValue(routeAtom);
   useAutoSelectProxy(60 * 1000);
-  useConnectionEffect();
   const setSidebarExpanded = useSetAtom(isSidebarExpandedAtom);
 
   useEffect(() => {

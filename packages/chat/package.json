@@ -18,7 +18,7 @@
     "clsx": "^1.2.1",
     "common": "workspace:*",
     "icons": "workspace:*",
-    "jotai": "^2.2.3",
+    "jotai": "^2.3.1",
     "jotai-location": "^0.5.1",
     "lang": "workspace:*",
     "logo": "workspace:*",

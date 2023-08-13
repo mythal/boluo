@@ -1,6 +1,7 @@
 import { AlertTriangle } from 'icons';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { ChatView } from './ChatView';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
+  useConnectionEffect(spaceId);
   const { data: space, error } = useQuerySpace(spaceId);
   const defaultPane = useMemo(() => <PaneSpace spaceId={spaceId} />, [spaceId]);
   if (error) {

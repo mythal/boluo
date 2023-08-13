@@ -1,13 +1,15 @@
 import { ChannelMembers, EventId, isServerEvent, ServerEvent, UserStatus } from 'api';
 import { webSocketUrlAtom } from 'common';
-import { useStore } from 'jotai';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
 import { isUuid } from 'utils';
-import { U } from 'vitest/dist/types-dea83b3d';
 import { PING, PONG } from '../const';
 import { makeAction } from '../state/actions';
 import { chatAtom, connectionStateAtom } from '../state/chat.atoms';
+import { ConnectionState } from '../state/connection.reducer';
+
+type ChatDispatch = ReturnType<typeof useSetAtom<typeof chatAtom>>;
 
 const createMailboxConnection = (baseUrl: string, id: string, token?: string, after?: EventId): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
@@ -21,28 +23,31 @@ const createMailboxConnection = (baseUrl: string, id: string, token?: string, af
   return new WebSocket(url);
 };
 
-const connect = (store: ReturnType<typeof useStore>, handleEvent: (event: ServerEvent) => void) => {
-  const { spaceId: mailboxId } = store.get(chatAtom).context;
-  if (!isUuid(mailboxId)) return;
-  const webSocketEndpoint = store.get(webSocketUrlAtom);
-  const connectionState = store.get(connectionStateAtom);
-  if (connectionState.type !== 'CLOSED') return;
+const connect = (
+  webSocketEndpoint: string,
+  mailboxId: string,
+  connectionState: ConnectionState,
+  after: EventId,
+  onEvent: (event: ServerEvent) => void,
+  dispatch: ChatDispatch,
+): WebSocket | null => {
+  if (!isUuid(mailboxId)) return null;
+  if (connectionState.type !== 'CLOSED') return null;
   if (connectionState.countdown > 0) {
-    setTimeout(() => store.set(chatAtom, makeAction('reconnectCountdownTick', {}, undefined)), 1000);
-    return;
+    setTimeout(() => dispatch(makeAction('reconnectCountdownTick', {}, undefined)), 1000);
+    return null;
   }
   console.info(`establishing new connection for ${mailboxId}`);
-  store.set(chatAtom, makeAction('connecting', { mailboxId }, undefined));
+  dispatch(makeAction('connecting', { mailboxId }, undefined));
 
-  const after = store.get(chatAtom).lastEventId;
   const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, undefined, after);
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
-    store.set(chatAtom, makeAction('connected', { connection: newConnection, mailboxId }, undefined));
+    dispatch(makeAction('connected', { connection: newConnection, mailboxId }, undefined));
   };
   newConnection.onclose = (event) => {
     console.info(`connection closed for ${mailboxId}`, event);
-    store.set(chatAtom, makeAction('connectionClosed', { mailboxId, random: Math.random() }, undefined));
+    dispatch(makeAction('connectionClosed', { mailboxId, random: Math.random() }, undefined));
   };
   newConnection.onmessage = (message: MessageEvent<unknown>) => {
     const raw = message.data;
@@ -59,16 +64,19 @@ const connect = (store: ReturnType<typeof useStore>, handleEvent: (event: Server
       return;
     }
     if (!isServerEvent(event)) return;
-    store.set(chatAtom, makeAction('eventFromServer', event, undefined));
-    handleEvent(event);
+    dispatch(makeAction('eventFromServer', event, undefined));
+    onEvent(event);
   };
+  return newConnection;
 };
 
-export const useConnectionEffect = () => {
+export const useConnectionEffect = (mailboxId: string) => {
   const { mutate } = useSWRConfig();
+  const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
   const store = useStore();
+  const dispatch = useSetAtom(chatAtom);
 
-  const handleEvent = useCallback((event: ServerEvent) => {
+  const onEvent = useCallback((event: ServerEvent) => {
     switch (event.body.type) {
       case 'CHANNEL_DELETED':
         void mutate(['/channels/by_space', event.mailbox]);
@@ -109,9 +117,16 @@ export const useConnectionEffect = () => {
   }, [mutate]);
 
   useEffect(() => {
-    connect(store, handleEvent);
-    return store.sub(connectionStateAtom, () => {
-      connect(store, handleEvent);
+    if (mailboxId === '') return;
+    const chatState = store.get(chatAtom);
+    let ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
+    const unsub = store.sub(connectionStateAtom, () => {
+      const chatState = store.get(chatAtom);
+      ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
     });
-  }, [handleEvent, store]);
+    return () => {
+      unsub();
+      if (ws) ws.close();
+    };
+  }, [onEvent, mailboxId, store, webSocketEndpoint, dispatch]);
 };

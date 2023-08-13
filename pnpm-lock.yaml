@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -32,8 +36,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       optics-ts:
         specifier: ^2.4.1
         version: 2.4.1
@@ -246,8 +250,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/icons
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       lang:
         specifier: workspace:*
         version: link:../../packages/lang
@@ -415,8 +419,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/icons
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       lang:
         specifier: workspace:*
         version: link:../../packages/lang
@@ -498,8 +502,8 @@ importers:
         specifier: workspace:*
         version: link:../eslint-config-custom
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -510,8 +514,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       store:
         specifier: workspace:*
         version: link:../store
@@ -580,11 +584,11 @@ importers:
         specifier: workspace:*
         version: link:../icons
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       jotai-location:
         specifier: ^0.5.1
-        version: 0.5.1(jotai@2.2.3)
+        version: 0.5.1(jotai@2.3.1)
       lang:
         specifier: workspace:*
         version: link:../lang
@@ -702,8 +706,8 @@ importers:
         specifier: workspace:*
         version: link:../eslint-config-custom
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -822,8 +826,8 @@ importers:
   packages/store:
     dependencies:
       jotai:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.3.1
+        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
     devDependencies:
       eslint:
         specifier: ^8.46.0
@@ -9050,16 +9054,16 @@ packages:
     hasBin: true
     dev: true
 
-  /jotai-location@0.5.1(jotai@2.2.3):
+  /jotai-location@0.5.1(jotai@2.3.1):
     resolution: {integrity: sha512-6b34X6PpUaXmHCcyxdMFUHgRLUEp+SFHq9UxHbg5HxHC1LddVyVZbPJI+P15+SOQJcUTH3KrsIeKmeLko+Vw/A==}
     peerDependencies:
       jotai: '>=1.11.0'
     dependencies:
-      jotai: 2.2.3(@types/react@18.2.18)(react@18.2.0)
+      jotai: 2.3.1(@types/react@18.2.18)(react@18.2.0)
     dev: false
 
-  /jotai@2.2.3(@types/react@18.2.18)(react@18.2.0):
-    resolution: {integrity: sha512-E3tTBb2CKwjAJKUJYVV6rKM8zxmpsPMedRclRnI2RgLzkvgDEH6mhtZPVesxIoixJ8p7949RWd8eo/8TqDDFDA==}
+  /jotai@2.3.1(@types/react@18.2.18)(react@18.2.0):
+    resolution: {integrity: sha512-pXhx8/MeRUAHbzayerEUf9NHvP+Ba3q9WAvIMjaSwwuSCKEFhb8UW4XuZPC+Bv4u2ufvlyrxIZ+vy5UJ3f8JsQ==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
       '@types/react': '>=17.0.0'

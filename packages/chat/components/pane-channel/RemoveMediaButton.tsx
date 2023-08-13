@@ -9,7 +9,7 @@ export const RemoveMediaButton: FC = () => {
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
   const removeMedia = useCallback(() => {
-    dispatch({ type: 'media', payload: { media: null }, context: undefined });
+    dispatch({ type: 'media', payload: { media: null } });
   }, [dispatch]);
   return (
     <button

@@ -1,20 +1,11 @@
 import { GetMe } from 'api';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import {
-  ChangeEventHandler,
-  FC,
-  FocusEventHandler,
-  KeyboardEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
-import { makeComposeAction } from '../../state/compose.actions';
+import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
 import { useWorkerParse } from './useWorkerParse';
 
@@ -22,8 +13,8 @@ interface Props {
   me: GetMe;
 }
 
-const focusAction = makeComposeAction('focus', {});
-const blurAction = makeComposeAction('blur', {});
+const focusAction: ComposeActionUnion & { type: 'focus' } = { type: 'focus', payload: {} };
+const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payload: {} };
 
 export const ComposeTextArea: FC<Props> = ({ me }) => {
   const send = useSend(me.user);
@@ -49,7 +40,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
         const textArea = ref.current;
         if (!textArea) return;
         const { selectionStart, selectionEnd } = textArea;
-        dispatch(makeComposeAction('setRange', { range: [selectionStart, selectionEnd] }));
+        dispatch({ type: 'setRange', payload: { range: [selectionStart, selectionEnd] } });
       }, 20);
     },
     [dispatch],
@@ -78,7 +69,10 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
     const { value } = e.target;
     updateRange();
     dispatch(
-      makeComposeAction('setSource', { channelId, source: value }),
+      {
+        type: 'setSource',
+        payload: { channelId, source: value },
+      },
     );
   }, [channelId, dispatch, updateRange]);
   useEffect(() => {

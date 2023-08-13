@@ -4,7 +4,6 @@ import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { makeComposeAction } from '../../state/compose.actions';
 
 interface Props {
 }
@@ -12,7 +11,7 @@ interface Props {
 export const AddDiceButton: FC<Props> = () => {
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  const handleAddDice = () => dispatch(makeComposeAction('addDice', {}));
+  const handleAddDice = () => dispatch({ type: 'addDice', payload: {} });
   return (
     <Button onClick={handleAddDice}>
       <Dice />

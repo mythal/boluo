@@ -17,7 +17,7 @@ export const useMediaDrop = (): MediaDropReturn => {
         const fileDropped = event.dataTransfer.items[0].getAsFile();
         if (fileDropped) {
           console.debug(fileDropped);
-          dispatch({ type: 'media', payload: { media: fileDropped }, context: undefined });
+          dispatch({ type: 'media', payload: { media: fileDropped } });
         }
       }
     }

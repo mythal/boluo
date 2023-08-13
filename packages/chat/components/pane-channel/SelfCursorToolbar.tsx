@@ -5,7 +5,6 @@ import { memo, RefObject, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
-import { makeComposeAction } from '../../state/compose.actions';
 import { SelfCursorButton } from './SelfCursorButton';
 
 interface Props {
@@ -15,9 +14,9 @@ interface Props {
 export const SelfCursorToolbar = memo<Props>(({ contentRef }) => {
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  const handleAddDice = () => dispatch(makeComposeAction('addDice', {}));
-  const handleAddLink = () => dispatch(makeComposeAction('link', { text: '', href: '' }));
-  const handleBold = () => dispatch(makeComposeAction('bold', { text: '', href: '' }));
+  const handleAddDice = () => dispatch({ type: 'addDice', payload: {} });
+  const handleAddLink = () => dispatch({ type: 'link', payload: { text: '', href: '' } });
+  const handleBold = () => dispatch({ type: 'bold', payload: { text: '' } });
   const scrollerRef = useScrollerRef();
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {

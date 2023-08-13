@@ -1,14 +1,14 @@
 import { get } from 'api-browser';
 import clsx from 'clsx';
 import { ChevronDown, CircleNotch } from 'icons';
-import { useStore } from 'jotai';
+import { useSetAtom, useStore } from 'jotai';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';
-import { chatAtom, useChatDispatch } from '../../state/chat.atoms';
+import { chatAtom } from '../../state/chat.atoms';
 
 const LOAD_MESSAGE_LIMIT = 51;
 const AUTO_LOAD = true;
@@ -31,7 +31,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
-  const dispatch = useChatDispatch();
+  const dispatch = useSetAtom(chatAtom);
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
   isLoadingRef.current = isLoading;
@@ -131,11 +131,14 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
         return;
       }
       const newMessages = result.some;
-      dispatch('messagesLoaded', {
-        before,
-        channelId,
-        messages: newMessages,
-        fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
+      dispatch({
+        type: 'messagesLoaded',
+        payload: {
+          before,
+          channelId,
+          messages: newMessages,
+          fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
+        },
       });
       setIsLoading(false);
     },

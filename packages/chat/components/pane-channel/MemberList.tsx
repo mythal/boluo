@@ -88,55 +88,53 @@ export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
 
   return (
     <div className={className}>
-      <div className="overflow-y-auto h-full px-1 ">
-        <div className="py-2 px-1 flex gap-1 justify-between">
-          {myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin) && (
-            <Button
-              data-small
-              type="button"
-              data-type="switch"
-              data-on={uiState === 'INVITE'}
-              onClick={toggleInvite}
-            >
-              <UserPlus />
-              <FormattedMessage defaultMessage="Invite" />
-            </Button>
-          )}
-          {uiState === 'MEMBER' && (
-            <Button
-              type="button"
-              data-type="switch"
-              data-on={showCharaterName}
-              title={showCharacterNameTitle}
-              onClick={() => setShowCharacterName(x => !x)}
-            >
-              <Mask />
-            </Button>
-          )}
-        </div>
-        {uiState === 'INVITE' && myMember != null && (
-          <MemberInvitation
-            members={members}
-            myMember={myMember}
-            channel={channel}
-            userStatusMap={userStatusMap}
-          />
+      <div className="py-2 px-1 flex gap-1 justify-between sticky top-0 z-10 bg-surface-50">
+        {myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin) && (
+          <Button
+            data-small
+            type="button"
+            data-type="switch"
+            data-on={uiState === 'INVITE'}
+            onClick={toggleInvite}
+          >
+            <UserPlus />
+            <FormattedMessage defaultMessage="Invite" />
+          </Button>
         )}
         {uiState === 'MEMBER' && (
-          members.map((member) => (
-            <MemberListItem
-              key={member.user.id}
-              myId={myId}
-              channel={channel}
-              member={member}
-              canIKick={canIKick}
-              canIEditMaster={myMember?.space.isAdmin ?? false}
-              showCharacterName={showCharaterName}
-              status={userStatusMap?.[member.user.id]}
-            />
-          ))
+          <Button
+            type="button"
+            data-type="switch"
+            data-on={showCharaterName}
+            title={showCharacterNameTitle}
+            onClick={() => setShowCharacterName(x => !x)}
+          >
+            <Mask />
+          </Button>
         )}
       </div>
+      {uiState === 'INVITE' && myMember != null && (
+        <MemberInvitation
+          members={members}
+          myMember={myMember}
+          channel={channel}
+          userStatusMap={userStatusMap}
+        />
+      )}
+      {uiState === 'MEMBER' && (
+        members.map((member) => (
+          <MemberListItem
+            key={member.user.id}
+            myId={myId}
+            channel={channel}
+            member={member}
+            canIKick={canIKick}
+            canIEditMaster={myMember?.space.isAdmin ?? false}
+            showCharacterName={showCharaterName}
+            status={userStatusMap?.[member.user.id]}
+          />
+        ))
+      )}
     </div>
   );
 };

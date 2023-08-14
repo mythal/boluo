@@ -85,7 +85,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
         >
           <ChatContent className="relative" me={me} channelId={channelId} />
           {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
-          {me && me !== 'LOADING' && member !== 'LOADING'
+          {me && me !== 'LOADING' && member !== 'LOADING' && member != null
             ? <Compose me={me} className={clsx('p-2 border-t col-span-full')} />
             : null}
         </div>

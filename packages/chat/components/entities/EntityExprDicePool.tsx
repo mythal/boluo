@@ -49,8 +49,19 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
       <Delay fallback={<FallbackIcon />}>
         <Cubes className="inline" />
       </Delay>
-      <span className="px-1">
+      <span className="px-1 relative underline decoration-dotted decoration-surface-600 cursor-help group/dice-pool">
         <FormattedMessage defaultMessage="Dice Pool" />
+        <span className="absolute hidden w-max bottom-full left-0  group-hover/dice-pool:inline-block bg-highest/75 text-lowest shadow rounded-sm px-2 py-1 text-sm">
+          <FormattedMessage
+            defaultMessage="Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
+            values={{
+              critical: node.critical ?? 'N/A',
+              fumble: node.fumble ?? 'N/A',
+              success: node.min,
+              addition: node.addition,
+            }}
+          />
+        </span>
       </span>
 
       <span>

@@ -79,15 +79,13 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
       <PaneBox header={<ChannelHeader />}>
         <div
           className={clsx(
-            'grid grid-rows-[1fr_auto] relative h-full',
-            memberListState === 'CLOSED' ? 'grid-cols-1' : 'grid-cols-[1fr_auto]',
+            'grid grid-rows-[minmax(0,1fr)_auto] relative h-full',
+            memberListState === 'CLOSED' ? 'grid-cols-1' : 'grid-cols-[1fr_12rem]',
           )}
         >
           <ChatContent className="relative" me={me} channelId={channelId} />
-          {memberListState === 'RIGHT' && (
-            <MemberList myMember={member} className="w-[12rem] overflow-y-auto relative" channel={channel} />
-          )}
-          {me && me !== 'LOADING' && member && member !== 'LOADING'
+          {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
+          {me && me !== 'LOADING' && member !== 'LOADING'
             ? <Compose me={me} className={clsx('p-2 border-t col-span-full')} />
             : null}
         </div>

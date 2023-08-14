@@ -31,20 +31,21 @@ async fn check_permissions<T: Querist>(
     space: &Space,
     user_id: &Result<Uuid, AppError>,
 ) -> Result<(), AppError> {
-    if !space.allow_spectator {
-        match user_id {
-            Ok(user_id) => {
-                SpaceMember::get(db, user_id, &space.id).await.or_no_permission()?;
-            }
-            Err(err) => {
-                log::warn!(
-                    "A user tried to access space but did not pass authentication: {:?}",
-                    err
-                );
-                return Err(AppError::NoPermission(
-                    "This space does not allow non-members to view it.".to_string(),
-                ));
-            }
+    if space.is_public || space.allow_spectator {
+        return Ok(());
+    }
+    match user_id {
+        Ok(user_id) => {
+            SpaceMember::get(db, user_id, &space.id).await.or_no_permission()?;
+        }
+        Err(err) => {
+            log::warn!(
+                "A user tried to access space but did not pass authentication: {:?}",
+                err
+            );
+            return Err(AppError::NoPermission(
+                "This space does not allow non-members to view it.".to_string(),
+            ));
         }
     }
     Ok(())

@@ -41,6 +41,7 @@ export const MemberInvitation: FC<Props> = ({ members, myMember, channel, userSt
         {spaceMemberList == null ? <span>...</span> : (
           spaceMemberList.map((member) => (
             <MemberInvitationItem
+              key={member.user.id}
               user={member.user}
               channel={channel}
               spaceMember={member.space}

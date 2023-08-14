@@ -24,7 +24,7 @@ const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
+export const MemberList: FC<Props> = ({ myMember, channel }) => {
   const intl = useIntl();
   const [uiState, setUiState] = useState<'MEMBER' | 'INVITE'>('MEMBER');
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
@@ -74,7 +74,7 @@ export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
   }
 
   if (membersData == null || myMember === 'LOADING') {
-    return <MemberListLoading className={className} />;
+    return <MemberListLoading />;
   }
   let canIKick = false;
   let myId: string | null = null;
@@ -87,8 +87,8 @@ export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
   });
 
   return (
-    <div className={className}>
-      <div className="py-2 px-1 flex gap-1 justify-between sticky top-0 z-10 bg-surface-50">
+    <div className="flex flex-col">
+      <div className="py-2 px-1 flex gap-1 justify-between">
         {myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin) && (
           <Button
             data-small
@@ -113,28 +113,30 @@ export const MemberList: FC<Props> = ({ className, myMember, channel }) => {
           </Button>
         )}
       </div>
-      {uiState === 'INVITE' && myMember != null && (
-        <MemberInvitation
-          members={members}
-          myMember={myMember}
-          channel={channel}
-          userStatusMap={userStatusMap}
-        />
-      )}
-      {uiState === 'MEMBER' && (
-        members.map((member) => (
-          <MemberListItem
-            key={member.user.id}
-            myId={myId}
+      <div className="overflow-y-auto">
+        {uiState === 'INVITE' && myMember != null && (
+          <MemberInvitation
+            members={members}
+            myMember={myMember}
             channel={channel}
-            member={member}
-            canIKick={canIKick}
-            canIEditMaster={myMember?.space.isAdmin ?? false}
-            showCharacterName={showCharaterName}
-            status={userStatusMap?.[member.user.id]}
+            userStatusMap={userStatusMap}
           />
-        ))
-      )}
+        )}
+        {uiState === 'MEMBER' && (
+          members.map((member) => (
+            <MemberListItem
+              key={member.user.id}
+              myId={myId}
+              channel={channel}
+              member={member}
+              canIKick={canIKick}
+              canIEditMaster={myMember?.space.isAdmin ?? false}
+              showCharacterName={showCharaterName}
+              status={userStatusMap?.[member.user.id]}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };

@@ -87,7 +87,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
           {memberListState === 'RIGHT' && (
             <MemberList myMember={member} className="w-[12rem] overflow-y-auto relative" channel={channel} />
           )}
-          {me && me !== 'LOADING' && member
+          {me && me !== 'LOADING' && member && member !== 'LOADING'
             ? <Compose me={me} className={clsx('p-2 border-t col-span-full')} />
             : null}
         </div>

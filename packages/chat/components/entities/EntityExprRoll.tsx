@@ -35,7 +35,7 @@ const Undecided: FC = () => (
 
 const ShowRollResult: FC<{ node: RollResult }> = ({ node }) => {
   if (node.values.length <= 1) {
-    return <span className="ml-0.5">{node.value}</span>;
+    return <span className="">{'='}{node.value}</span>;
   }
   return (
     <>

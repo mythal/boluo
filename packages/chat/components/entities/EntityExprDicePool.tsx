@@ -1,6 +1,7 @@
-import { Cubes } from 'icons';
-import { FC } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { Cubes, ThumbsDown, ThumbsUp } from 'icons';
+import { FC, ReactNode } from 'react';
+import React from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { DicePool, DicePoolResult } from '../../interpreter/entities';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
@@ -10,7 +11,39 @@ interface Props {
   node: DicePool | DicePoolResult;
 }
 
-export const EntityExprDicePoolRoll: FC<Props> = ({ node }) => {
+interface SingleDiceProps {
+  value: number;
+  last?: boolean;
+  addition: number;
+  critical?: number;
+  fumble?: number;
+}
+
+export const SingleDice: FC<SingleDiceProps> = React.memo(({ value, last = false, fumble, critical }) => {
+  const intl = useIntl();
+  let special: ReactNode = null;
+  if (fumble && value <= fumble) {
+    const title = intl.formatMessage({ defaultMessage: 'Fumble' });
+    special = <ThumbsUp className="text-sm inline" aria-label={title} />;
+  } else if (critical && value >= critical) {
+    const title = intl.formatMessage({ defaultMessage: 'Critical' });
+    special = <ThumbsDown className="text-sm inline" aria-label={title} />;
+  }
+
+  return (
+    <>
+      <span>{value}</span>
+      <span className="text-xs text-surface-700">
+        {special}
+      </span>
+      {!last && ', '}
+    </>
+  );
+});
+
+SingleDice.displayName = 'SingleDice';
+
+export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
   return (
     <RollBox>
       <Delay fallback={<FallbackIcon />}>
@@ -20,9 +53,30 @@ export const EntityExprDicePoolRoll: FC<Props> = ({ node }) => {
         <FormattedMessage defaultMessage="Dice Pool" />
       </span>
 
-      <span className="text-sm italic">
-        <FormattedMessage defaultMessage="Work in progress" />
+      <span>
+        {node.counter}d{node.face}
       </span>
+      <span>
+        =
+      </span>
+      {'values' in node
+        ? (
+          <span className="text-surface-500">
+            [
+            {node.values.map((value, index) => (
+              <SingleDice
+                key={index}
+                value={value}
+                last={index === node.values.length - 1}
+                addition={node.addition}
+                critical={node.critical}
+                fumble={node.fumble}
+              />
+            ))}
+            ]
+          </span>
+        )
+        : <span className="italic">???</span>}
       {'value' in node && (
         <span className="pl-1">
           ={node.value}
@@ -30,4 +84,6 @@ export const EntityExprDicePoolRoll: FC<Props> = ({ node }) => {
       )}
     </RollBox>
   );
-};
+});
+
+EntityExprDicePoolRoll.displayName = 'EntityExprDicePoolRoll';

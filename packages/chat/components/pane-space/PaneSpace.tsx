@@ -51,29 +51,27 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     if (space == null || myId == null) {
       return null;
     }
-    if (space.ownerId === myId || mySpaceMember?.space.isAdmin) {
-      let toggleMembershipButton: ReactNode = null;
-      if (isSpaceMembersLoading) {
-        // pass
-      }
-      if (mySpaceMember != null) {
-        toggleMembershipButton = <SpaceLeaveButton space={space} mySpaceMember={mySpaceMember} />;
-      } else if (space.isPublic) {
-        toggleMembershipButton = <SpaceJoinButton spaceId={space.id} />;
-      }
-      return (
-        <>
-          {toggleMembershipButton}
+    let toggleMembershipButton: ReactNode = null;
+    if (isSpaceMembersLoading) {
+      // pass
+    }
+    if (mySpaceMember != null) {
+      toggleMembershipButton = <SpaceLeaveButton space={space} mySpaceMember={mySpaceMember} />;
+    } else if (space.isPublic) {
+      toggleMembershipButton = <SpaceJoinButton spaceId={space.id} />;
+    }
+    return (
+      <>
+        {toggleMembershipButton}
+        {(space.ownerId === myId || mySpaceMember?.space.isAdmin) && (
           <SidebarHeaderButton icon={<Settings />} onClick={openSettings}>
             <span className="hidden @xl:inline">
               <FormattedMessage defaultMessage="Space Settings" />
             </span>
           </SidebarHeaderButton>
-        </>
-      );
-    }
-
-    return null;
+        )}
+      </>
+    );
   }, [isSpaceMembersLoading, myId, mySpaceMember, openSettings, space]);
   if (isLoading || !space) {
     return <PaneLoading />;

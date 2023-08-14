@@ -4,7 +4,7 @@ import { useMe } from 'common';
 import { Settings } from 'icons';
 import { FC, useCallback, useState } from 'react';
 import { useId } from 'react';
-import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
+import { FormProvider, useController, useForm, useFormContext, useWatch } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
@@ -81,6 +81,32 @@ const InvitationField: FC<{ spaceId: string }> = ({ spaceId }) => {
   );
 };
 
+const AllowsSpectatorField: FC = () => {
+  const { register } = useFormContext<FormSchema>();
+  const publicity = useWatch<FormSchema, 'publicity'>({ name: 'publicity' });
+  const id = useId();
+  if (publicity === 'public') {
+    return null;
+  }
+  return (
+    <>
+      <input id={id} type="checkbox" className="mr-2" {...register('allowSpectator')} />
+
+      <label htmlFor={id}>
+        <div>
+          <FormattedMessage defaultMessage="Allow Spectator" />
+        </div>
+      </label>
+
+      <label htmlFor={id} className="col-start-2">
+        <HelpText>
+          <FormattedMessage defaultMessage="Whether to allow everyone on the Internet to view this space" />
+        </HelpText>
+      </label>
+    </>
+  );
+};
+
 const PublicityField: FC = () => {
   const { register } = useFormContext<FormSchema>();
   const id = useId();
@@ -112,20 +138,7 @@ const PublicityField: FC = () => {
             <FormattedMessage defaultMessage="Only invited people can join this space" />
           </HelpText>
         </label>
-
-        <input id={fieldId.spectator} type="checkbox" className="mr-2" {...register('allowSpectator')} />
-
-        <label htmlFor={fieldId.spectator}>
-          <div>
-            <FormattedMessage defaultMessage="Allow Spectator" />
-          </div>
-        </label>
-
-        <label htmlFor={fieldId.spectator} className="col-start-2">
-          <HelpText>
-            <FormattedMessage defaultMessage="Whether to allow everyone on the Internet to view this space" />
-          </HelpText>
-        </label>
+        <AllowsSpectatorField />
       </div>
     </div>
   );

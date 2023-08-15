@@ -1,9 +1,10 @@
-import { GetMe } from 'api';
+import { ChannelMember, GetMe } from 'api';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useComposeError } from '../../hooks/useComposeError';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
@@ -11,13 +12,15 @@ import { useWorkerParse } from './useWorkerParse';
 
 interface Props {
   me: GetMe;
+  member: ChannelMember;
 }
 
 const focusAction: ComposeActionUnion & { type: 'focus' } = { type: 'focus', payload: {} };
 const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payload: {} };
 
-export const ComposeTextArea: FC<Props> = ({ me }) => {
-  const send = useSend(me.user);
+export const ComposeTextArea: FC<Props> = ({ me, member }) => {
+  const composeError = useComposeError(member);
+  const send = useSend(me.user, member, composeError);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);

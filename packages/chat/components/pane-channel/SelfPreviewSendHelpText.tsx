@@ -1,10 +1,12 @@
-import { User } from 'api';
+import { ChannelMember, User } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, memo, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { isApple } from 'utils';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useComposeError } from '../../hooks/useComposeError';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { mediaMaxSizeMb } from '../../media';
 import { ComposeError } from '../../state/compose.reducer';
@@ -12,6 +14,7 @@ import { useSend } from './useSend';
 
 interface Props {
   me: User;
+  member: ChannelMember;
 }
 
 const Reason: FC<{ error: ComposeError }> = ({ error }) => {
@@ -34,13 +37,10 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
   }
 };
 
-export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
-  const send = useSend(me);
+export const SelfPreviewSendHelpText = memo<Props>(({ me, member }) => {
   const { data: settings } = useQuerySettings();
-  const composeAtom = useComposeAtom();
-  const composeError: ComposeError | null = useAtomValue(useMemo(() => {
-    return selectAtom(composeAtom, (compose) => compose.error);
-  }, [composeAtom]));
+  const composeError = useComposeError(member);
+  const send = useSend(me, member, composeError);
   if (composeError === 'TEXT_EMPTY') {
     return null;
   }

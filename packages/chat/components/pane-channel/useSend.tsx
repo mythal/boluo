@@ -1,4 +1,4 @@
-import { ApiError, Message, User } from 'api';
+import { ApiError, ChannelMember, Message, User } from 'api';
 import { patch, post } from 'api-browser';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
@@ -11,8 +11,9 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
+import { ComposeError } from '../../state/compose.reducer';
 
-export const useSend = (me: User) => {
+export const useSend = (me: User, member: ChannelMember, composeError: ComposeError | null) => {
   const channelId = useChannelId();
   const store = useStore();
   const composeAtom = useComposeAtom();
@@ -21,9 +22,7 @@ export const useSend = (me: User) => {
 
   const send = useCallback(async () => {
     const compose = store.get(composeAtom);
-    if (compose.error !== null) {
-      return;
-    }
+    if (composeError !== null) return;
     const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const handleRecover = () => {
@@ -33,7 +32,15 @@ export const useSend = (me: User) => {
     dispatch({ type: 'sent', payload: {} });
     const { text, entities } = parse(compose.source);
     let result: Result<Message, ApiError>;
-    const name = compose.inputedName.trim() || nickname;
+    let name = nickname;
+    if (compose.inGame) {
+      const inputedName = compose.inputedName.trim();
+      if (inputedName === '') {
+        name = member.characterName;
+      } else {
+        name = inputedName;
+      }
+    }
     const isEditing = compose.editFor !== null;
     if (isEditing) {
       result = await patch('/messages/edit', null, {
@@ -89,7 +96,7 @@ export const useSend = (me: User) => {
         </div>
       ),
     });
-  }, [channelId, composeAtom, nickname, setBanner, store]);
+  }, [channelId, composeAtom, composeError, member.characterName, nickname, setBanner, store]);
 
   return send;
 };

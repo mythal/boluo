@@ -18,7 +18,6 @@ export interface ComposeState {
   broadcast: boolean;
   source: string;
   media: File | null;
-  error: ComposeError | null;
   parsed: ParseResult;
   focused: boolean;
   range: ComposeRange;
@@ -33,7 +32,6 @@ export const makeInitialComposeState = (): ComposeState => ({
   broadcast: true,
   source: '',
   media: null,
-  error: 'TEXT_EMPTY',
   range: [0, 0],
   parsed: { text: '', entities: [] },
   focused: false,
@@ -195,7 +193,7 @@ const handleReset = (): ComposeState => {
   return makeInitialComposeState();
 };
 
-const composeSwitch = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
+export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
       return handleSetComposeSource(state, action);
@@ -234,8 +232,8 @@ const composeSwitch = (state: ComposeState, action: ComposeActionUnion): Compose
   }
 };
 
-const checkCompose = (
-  { source, inputedName, inGame, media }: ComposeState,
+export const checkCompose = (
+  { source, inputedName, inGame, media }: Pick<ComposeState, 'source' | 'inputedName' | 'inGame' | 'media'>,
 ): ComposeError | null => {
   if (inGame && inputedName.trim() === '') {
     return 'NO_NAME';
@@ -248,13 +246,4 @@ const checkCompose = (
     return 'TEXT_EMPTY';
   }
   return null;
-};
-
-export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
-  const nextState = composeSwitch(state, action);
-  if (nextState === state) {
-    return nextState;
-  }
-  const error = checkCompose(nextState);
-  return { ...nextState, error };
 };

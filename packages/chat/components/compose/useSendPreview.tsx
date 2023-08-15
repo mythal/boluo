@@ -15,6 +15,7 @@ const isVaildName = (name: string) => {
 const sendPreview = (
   channelId: string,
   nickname: string,
+  characterName: string,
   compose: ComposeState,
   connection: WebSocket,
   sendTimeoutRef: MutableRefObject<number | undefined>,
@@ -23,7 +24,7 @@ const sendPreview = (
 
   sendTimeoutRef.current = window.setTimeout(() => {
     const { inGame, isAction, parsed, previewId, inputedName, editFor, broadcast } = compose;
-    const inGameName = inputedName || '';
+    const inGameName = inputedName || characterName;
     if (!previewId) {
       return;
     }
@@ -45,7 +46,12 @@ const sendPreview = (
   }, SEND_PREVIEW_TIMEOUT_MS);
 };
 
-export const useSendPreview = (channelId: string, nickname: string | undefined, composeAtom: ComposeAtom) => {
+export const useSendPreview = (
+  channelId: string,
+  nickname: string | undefined,
+  characterName: string,
+  composeAtom: ComposeAtom,
+) => {
   const store = useStore();
   const sendTimoutRef = useRef<number | undefined>(undefined);
   const isFocused = usePaneIsFocus();
@@ -59,7 +65,7 @@ export const useSendPreview = (channelId: string, nickname: string | undefined, 
         return;
       }
       const composeState = store.get(composeAtom);
-      sendPreview(channelId, nickname, composeState, connectionState.connection, sendTimoutRef);
+      sendPreview(channelId, nickname, characterName, composeState, connectionState.connection, sendTimoutRef);
     });
-  }, [channelId, composeAtom, connectionState, isFocused, nickname, store]);
+  }, [channelId, characterName, composeAtom, connectionState, isFocused, nickname, store]);
 };

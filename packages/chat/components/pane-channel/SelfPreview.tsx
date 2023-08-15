@@ -48,7 +48,14 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
   const { editMode, inGame, isAction, media } = compose;
-  const name = inGame ? compose.name : member.user.nickname;
+  const name = useMemo(() => {
+    if (!inGame) {
+      return member.user.nickname;
+    } else if (compose.name !== '') {
+      return compose.name;
+    }
+    return member.channel.characterName;
+  }, [compose.name, inGame, member.channel.characterName, member.user.nickname]);
   const nameNode = useMemo(() => {
     return <Name name={name} isMaster={isMaster} isPreview self />;
   }, [isMaster, name]);
@@ -73,7 +80,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
           <SelfPreviewOperations className="flex gap-1 items-center h-12 transition-opacity duration-700 opacity-0 data-[enter='true']:opacity-100" />
         </Delay>
         <div className="min-h-[1.5em]">
-          <SelfPreviewSendHelpText me={member.user} />
+          <SelfPreviewSendHelpText me={member.user} member={member.channel} />
         </div>
       </div>
     </PreviewBox>

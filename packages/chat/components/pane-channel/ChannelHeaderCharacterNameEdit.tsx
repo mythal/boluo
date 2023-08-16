@@ -1,11 +1,10 @@
-import { ApiError, ChannelMember } from 'api';
-import { post } from 'api-browser';
-import { FC, useId, useState } from 'react';
+import { ChannelMember } from 'api';
+import { FC, useId } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
-import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { TextInput } from 'ui/TextInput';
+import { useEditChannelCharacterName } from '../../hooks/useEditChannelCharacterName';
 
 interface Props {
   member: ChannelMember;
@@ -21,17 +20,7 @@ export const ChannelHeaderCharacterNameEdit: FC<Props> = ({ member, exitEdit }) 
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormSchema>({
     defaultValues: { characterName: member.characterName },
   });
-  const key = ['/channels/members', member.channelId] as const;
-  const { trigger } = useSWRMutation<ChannelMember, ApiError, typeof key, FormSchema>(
-    key,
-    async ([, channelId], { arg: { characterName } }) => {
-      const result = await post('/channels/edit_member', null, { channelId, characterName, textColor: null });
-      return result.unwrap();
-    },
-    {
-      onSuccess: exitEdit,
-    },
-  );
+  const { trigger } = useEditChannelCharacterName(member.channelId, { onSuccess: exitEdit });
   const save = (formData: FormSchema) => {
     void trigger(formData);
   };

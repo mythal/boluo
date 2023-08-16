@@ -1,12 +1,9 @@
 import { Member } from 'api';
-import { Trash } from 'icons';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
-import { useChannelId } from '../../hooks/useChannelId';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { PreviewItem } from '../../state/channel.types';
 import { ComposeState } from '../../state/compose.reducer';
 import { Delay } from '../Delay';
@@ -68,7 +65,12 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       onDrop={onDrop}
       className="bg-brand-50 border-t border-b border-brand-200"
     >
-      <SelfPreviewNameCell isAction={isAction} inGame={inGame} nameNode={nameNode} />
+      <SelfPreviewNameCell
+        isAction={isAction}
+        inGame={inGame}
+        name={name}
+        channelMember={member.channel}
+      />
       <div className="flex flex-col gap-1 h-full items-between">
         <SelfPreviewContent nameNode={nameNode} />
         <MessageMedia mediaFile={media} className="relative w-fit py-2">

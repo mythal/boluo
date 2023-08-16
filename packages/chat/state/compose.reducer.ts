@@ -1,6 +1,6 @@
 import { makeId } from 'utils';
-import { parse, ParseResult } from '../interpreter/parser';
-import { MediaError, mediaMaxSizeByte, supportedMediaType, validateMedia } from '../media';
+import { ParseResult } from '../interpreter/parser';
+import { MediaError, validateMedia } from '../media';
 import { ComposeAction, ComposeActionUnion } from './compose.actions';
 
 const ACTION_COMMAND = /^[.。][mM][eE]\s*/;
@@ -108,8 +108,9 @@ const handleBold = (state: ComposeState, { payload }: ComposeAction<'bold'>): Co
 
 const handleSetInputedName = (
   state: ComposeState,
-  { payload: { inputedName } }: ComposeAction<'setInputedName'>,
+  { payload }: ComposeAction<'setInputedName'>,
 ): ComposeState => {
+  const inputedName = payload.inputedName.trim().slice(0, 32);
   return { ...state, inputedName };
 };
 

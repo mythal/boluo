@@ -19,6 +19,13 @@ export interface ComposeState {
   source: string;
   media: File | null;
   parsed: ParseResult;
+  whisperTo:
+    // Represents whisper to the Game Master
+    | null
+    // Represents whisper to users (Game Master always can read all whisper messages)
+    | string[]
+    // Represents disabled whisper
+    | undefined;
   focused: boolean;
   range: ComposeRange;
 }
@@ -35,6 +42,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   range: [0, 0],
   parsed: { text: '', entities: [] },
   focused: false,
+  whisperTo: undefined,
 });
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {

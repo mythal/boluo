@@ -19,7 +19,7 @@ export const ToggleBroadcastButton: FC<Props> = () => {
   return (
     <Button data-small data-type="switch" data-on={isBroadcasting} onClick={toggle}>
       <SatelliteDish />
-      <span className="hidden @xs:inline">
+      <span className="hidden @lg:inline">
         <FormattedMessage defaultMessage="Broadcast" />
       </span>
     </Button>

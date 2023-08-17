@@ -23,7 +23,7 @@ const initChatState = (
     filter: 'NONE',
     finished: false,
     initialized: false,
-    eventAfter: 0,
+    eventAfter: { seq: 0, node: 0, timestamp: 0 },
     itemSet: initialChatItemSet,
     lastLoadBefore: Number.MAX_SAFE_INTEGER,
     compose: {

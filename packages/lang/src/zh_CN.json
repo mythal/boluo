@@ -1,4 +1,7 @@
 {
+  "+CI3C/": {
+    "message": "When you type 1{value}, you can simplify it to 1d."
+  },
   "+OyBM6": {
     "message": "这个邮箱地址已经被使用。"
   },
@@ -62,6 +65,9 @@
   "7G8Ojg": {
     "message": "无法发送信息"
   },
+  "7q87xo": {
+    "message": "Channel Settings"
+  },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
   },
@@ -92,6 +98,9 @@
   "CW7jWC": {
     "message": "(自己)"
   },
+  "Ciussb": {
+    "message": "Secret channels are only accessible by invitation."
+  },
   "CoEsov": {
     "message": "用户名或邮箱"
   },
@@ -112,6 +121,9 @@
   },
   "H2WXs6": {
     "message": "摧毁位面"
+  },
+  "HSaR2M": {
+    "message": "Is secret channel?"
   },
   "HTmh5Q": {
     "message": "目标"
@@ -134,14 +146,14 @@
   "JQt0RP": {
     "message": "下拉刷新"
   },
+  "K3r6DQ": {
+    "message": "Delete"
+  },
   "K7AkdL": {
     "message": "显示"
   },
   "LUrJwE": {
     "message": "频道"
-  },
-  "LqOJ8B": {
-    "message": "是否为秘密频道？"
   },
   "MoRJdV": {
     "message": "用哪个按键发送消息？"
@@ -152,14 +164,17 @@
   "Mtd9LO": {
     "message": "超时"
   },
-  "NigiUz": {
-    "message": "必须输入频道名。"
-  },
   "O5epsB": {
     "message": "取"
   },
   "OLFHJL": {
     "message": "极难成功"
+  },
+  "OSS58q": {
+    "message": "Are you sure you want to delete the &quot;{channelName}&quot; channel?"
+  },
+  "OWhbRI": {
+    "message": "The command that will be inserted when the button is pressed."
   },
   "OYT4m/": {
     "message": "消息不能为空"
@@ -178,6 +193,9 @@
   },
   "R59CS8": {
     "message": "移除头像"
+  },
+  "RYulBW": {
+    "message": "Settings of &quot;{channelName}&quot; Channel"
   },
   "RraqCg": {
     "message": "帐号与密码不匹配"
@@ -206,6 +224,12 @@
   "UIVqKu": {
     "message": "恢复"
   },
+  "UdtpV7": {
+    "message": "Topic"
+  },
+  "Ujs8Kg": {
+    "message": "Message from server"
+  },
   "UvDPcD": {
     "message": "正在开发"
   },
@@ -227,6 +251,9 @@
   "YNPiTV": {
     "message": "确定要离开「{channelName}」吗？"
   },
+  "YQwJw3": {
+    "message": "Default Roll Command"
+  },
   "YtexzU": {
     "message": "关闭 {paneName}"
   },
@@ -241,6 +268,9 @@
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."
+  },
+  "b2XKbY": {
+    "message": "e.g. A group of kobolds tried to attack us"
   },
   "bGay8d": {
     "message": "位面设置"
@@ -257,6 +287,9 @@
   "clpFBW": {
     "message": "位面公开性"
   },
+  "cpFKi9": {
+    "message": "Topics can be used to record and remind you of what you are currently focused on."
+  },
   "dMEGZV": {
     "message": "分割窗格"
   },
@@ -266,14 +299,14 @@
   "dYaE6J": {
     "message": "Members of &quot;{spaceName}&quot; Space"
   },
+  "dzosaH": {
+    "message": "Delete Channel"
+  },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
   },
   "e3Ttmb": {
     "message": "In Game"
-  },
-  "fGwy5t": {
-    "message": "This channel name already exist."
   },
   "fNCCY7": {
     "message": "基本"
@@ -313,6 +346,9 @@
   },
   "nmSKJK": {
     "message": "不能为空。"
+  },
+  "noZdV2": {
+    "message": "Deleting..."
   },
   "oVARYX": {
     "message": "至多 {max} 个字符。"
@@ -361,6 +397,9 @@
   },
   "sloBpe": {
     "message": "Press {key} to {send}"
+  },
+  "sol2mE": {
+    "message": "Not found, Perhaps resource was deleted."
   },
   "t/BlH4": {
     "message": "Confirm Delete"

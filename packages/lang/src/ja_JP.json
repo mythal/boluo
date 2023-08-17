@@ -1,4 +1,7 @@
 {
+  "+CI3C/": {
+    "message": "When you type 1{value}, you can simplify it to 1d."
+  },
   "+OyBM6": {
     "message": "このメールアドレスは既に使用されています。"
   },
@@ -62,6 +65,9 @@
   "7G8Ojg": {
     "message": "メッセージを送信できません"
   },
+  "7q87xo": {
+    "message": "Channel Settings"
+  },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
   },
@@ -92,6 +98,9 @@
   "CW7jWC": {
     "message": "(自分)"
   },
+  "Ciussb": {
+    "message": "Secret channels are only accessible by invitation."
+  },
   "CoEsov": {
     "message": "ユーザー名またはメール"
   },
@@ -112,6 +121,9 @@
   },
   "H2WXs6": {
     "message": "次元を破壊する"
+  },
+  "HSaR2M": {
+    "message": "Is secret channel?"
   },
   "HTmh5Q": {
     "message": "目標"
@@ -134,14 +146,14 @@
   "JQt0RP": {
     "message": "引いて読み込む"
   },
+  "K3r6DQ": {
+    "message": "Delete"
+  },
   "K7AkdL": {
     "message": "表示"
   },
   "LUrJwE": {
     "message": "チャンネル"
-  },
-  "LqOJ8B": {
-    "message": "これは、秘密のチャンネルですか?"
   },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
@@ -152,14 +164,17 @@
   "Mtd9LO": {
     "message": "タイムアウト"
   },
-  "NigiUz": {
-    "message": "You have to enter a channel name."
-  },
   "O5epsB": {
     "message": "取る"
   },
   "OLFHJL": {
     "message": "Extreme Success"
+  },
+  "OSS58q": {
+    "message": "Are you sure you want to delete the &quot;{channelName}&quot; channel?"
+  },
+  "OWhbRI": {
+    "message": "The command that will be inserted when the button is pressed."
   },
   "OYT4m/": {
     "message": "Message cannot be empty"
@@ -178,6 +193,9 @@
   },
   "R59CS8": {
     "message": "アイコンを削除"
+  },
+  "RYulBW": {
+    "message": "Settings of &quot;{channelName}&quot; Channel"
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
@@ -206,6 +224,12 @@
   "UIVqKu": {
     "message": "Recover"
   },
+  "UdtpV7": {
+    "message": "Topic"
+  },
+  "Ujs8Kg": {
+    "message": "Message from server"
+  },
   "UvDPcD": {
     "message": "Work in progress"
   },
@@ -227,6 +251,9 @@
   "YNPiTV": {
     "message": "Are you sure you want to leave {channelName}?"
   },
+  "YQwJw3": {
+    "message": "Default Roll Command"
+  },
   "YtexzU": {
     "message": "{paneName} を閉じる"
   },
@@ -241,6 +268,9 @@
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."
+  },
+  "b2XKbY": {
+    "message": "e.g. A group of kobolds tried to attack us"
   },
   "bGay8d": {
     "message": "次元の設定"
@@ -257,6 +287,9 @@
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
+  "cpFKi9": {
+    "message": "Topics can be used to record and remind you of what you are currently focused on."
+  },
   "dMEGZV": {
     "message": "分割ペイン"
   },
@@ -266,14 +299,14 @@
   "dYaE6J": {
     "message": "Members of &quot;{spaceName}&quot; Space"
   },
+  "dzosaH": {
+    "message": "Delete Channel"
+  },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
   },
   "e3Ttmb": {
     "message": "In Game"
-  },
-  "fGwy5t": {
-    "message": "This channel name already exist."
   },
   "fNCCY7": {
     "message": "ベーシック"
@@ -313,6 +346,9 @@
   },
   "nmSKJK": {
     "message": "入力必須です。"
+  },
+  "noZdV2": {
+    "message": "Deleting..."
   },
   "oVARYX": {
     "message": "少なくとも {max} 文字以上でなければなりません。"
@@ -361,6 +397,9 @@
   },
   "sloBpe": {
     "message": "Press {key} to {send}"
+  },
+  "sol2mE": {
+    "message": "Not found, Perhaps resource was deleted."
   },
   "t/BlH4": {
     "message": "Confirm Delete"

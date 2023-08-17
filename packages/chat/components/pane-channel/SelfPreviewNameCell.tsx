@@ -26,16 +26,16 @@ const SaveAsCharacterName: FC<{ channelId: string; characterName: string }> = ({
     isMutating,
   } = useEditChannelCharacterName(channelId);
   return (
-    <div className="absolute left-0 bottom-full w-max bg-highest/60  rounded shadow px-2 py-1 -translate-x-2">
+    <div className="absolute left-0 bottom-full w-max bg-pin-highest/60  rounded shadow px-2 py-1 -translate-x-2">
       {isMutating
         ? (
-          <span className="text-sm animate-pulse text-lowest">
+          <span className="text-sm animate-pulse text-pin-lowest">
             Saving...
           </span>
         )
         : (
           <button
-            className="text-sm underline flex-none text-brand-300 hover:text-brand-200"
+            className="text-sm underline flex-none text-pin-brand-300 hover:text-pin-brand-200"
             onClick={() => trigger({ characterName })}
           >
             <FormattedMessage defaultMessage="As default character name" />
@@ -81,7 +81,7 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
       <select
         value={''}
         title={title}
-        className="border rounded w-full h-full text-sm appearance-none outline-none text-transprent"
+        className="border rounded bg-surface-300 hover:bg-surface-200 w-full h-full text-sm appearance-none outline-none text-transprent"
         onChange={handleChange}
       >
         <option value="">

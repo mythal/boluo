@@ -46,6 +46,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     nickname,
     member == null || member === 'LOADING' ? '' : member.channel.characterName,
     atoms.composeAtom,
+    atoms.parsedAtom,
   );
   const memberListState = useAtomValue(atoms.memberListStateAtom);
   if (error) {

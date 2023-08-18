@@ -2,7 +2,7 @@
 import clsx from 'clsx';
 import { FC, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
-import { ParseResult } from '../../interpreter/parser';
+import { initParseResult, ParseResult } from '../../interpreter/parse-result';
 import { MessageItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { MessageBox } from './MessageBox';
@@ -29,10 +29,10 @@ export const ChatItemMessage: FC<Props> = (
     const text = message.text;
     const rawEntities = message.entities;
     if (!Array.isArray(rawEntities) || text === null) {
-      return { text: '', entities: [] };
+      return initParseResult;
     }
     const entities = fromRawEntities(text, rawEntities);
-    return { text, entities };
+    return { ...initParseResult, text, entities };
   }, [message.entities, message.text]);
   const mini = continuous || isAction;
 
@@ -42,7 +42,7 @@ export const ChatItemMessage: FC<Props> = (
         {!mini && <>{nameNode}:</>}
       </div>
       <div className="@2xl:pr-[6rem]">
-        <Content parsed={parsed} isAction={isAction} nameNode={nameNode} isPreview={false} seed={message.seed} />
+        <Content parsed={parsed} nameNode={nameNode} isPreview={false} seed={message.seed} />
         {message.mediaId != null && <MessageMedia className="pt-2" mediaId={message.mediaId} />}
       </div>
     </MessageBox>

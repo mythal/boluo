@@ -18,6 +18,7 @@ import {
   SubExpr,
   Text,
 } from './entities';
+import type { ParseResult } from './parse-result';
 
 interface State {
   text: string;
@@ -303,7 +304,12 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
   return [entity, { text, rest }];
 });
 
-const spaces: P<null> = regex(/^\s*/).map(() => null);
+const spaces: P<null> = regex(/^\s*/).then(([match, state]) => {
+  return [null, {
+    text: state.text + match[0],
+    rest: state.rest,
+  }];
+});
 
 const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
   return { type: 'FateRoll' };
@@ -592,11 +598,6 @@ const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl,
 const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
 
 const rollCommand: P<Entity[]> = new P((state, env) => {
-  const prefix = ROLL_COMMAND.exec(state.rest);
-  if (!prefix) {
-    return null;
-  }
-  const next: State = { text: '.r ', rest: state.rest.substring(prefix[0].length) };
   const exprEntity = new P((state, env) => {
     const result = expr().run(state, env);
     if (result === null) {
@@ -606,7 +607,7 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
   });
   const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl, expression, exprEntity, span]);
   const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
-  return message.run(next, env);
+  return message.run(state, env);
 });
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
@@ -626,11 +627,6 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   return entities;
 };
 
-export interface ParseResult {
-  text: string;
-  entities: Entity[];
-}
-
 const SKIP_HEAD = /^[.。]me\s*/;
 
 const initState = (source: string): State => {
@@ -642,8 +638,10 @@ const initState = (source: string): State => {
 };
 
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
-  let state: State = initState(source);
-  const parser: P<Entity[]> = choice([rollCommand, message]);
+  const modifiersParseResult = parseModifiers(source, env);
+  const { action, isRoll, isWhisper, mute } = modifiersParseResult;
+  let state: State = { text: modifiersParseResult.text, rest: modifiersParseResult.rest };
+  const parser: P<Entity[]> = isRoll ? rollCommand : message;
 
   const result = parser.run(state, env);
 
@@ -652,7 +650,7 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   }
   const [entities, nextState] = result;
   state = nextState;
-  return { text: state.text, entities };
+  return { text: state.text, entities, isRoll, isAction: Boolean(action), isWhisper, broadcast: !mute };
 };
 
 interface MeModifier {
@@ -679,7 +677,13 @@ interface WhisperModifier {
   len: number;
 }
 
-type Modifier = MeModifier | RollModifier | HideRollModifier | WhisperModifier;
+interface MuteModifier {
+  type: 'Mute';
+  start: number;
+  len: number;
+}
+
+export type Modifier = MeModifier | RollModifier | HideRollModifier | WhisperModifier | MuteModifier;
 
 const meModifier: P<Modifier> = regex(/^[.。][mM][eE]/).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
@@ -725,29 +729,39 @@ const whisperModifier: P<Modifier> = regex(/^[.。][hH]/).then(([match, { text, 
   return [modifier, { text, rest }];
 });
 
-interface ParserModifersResult {
+const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]/).then(([match, { text, rest }]) => {
+  const [entire, content = ''] = match;
+  const modifier: MuteModifier = {
+    type: 'Mute',
+    start: text.length,
+    len: entire.length,
+  };
+  text += entire;
+  return [modifier, { text, rest }];
+});
+
+interface ParseModifersResult {
+  text: string;
   rest: string;
-  isAction: boolean;
+  action: MeModifier | false;
+  mute: MuteModifier | false;
   isRoll: boolean;
   isWhisper: boolean;
 }
 
-export const parseModifiers = (source: string, env: Env = emptyEnv): ParserModifersResult => {
+export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModifersResult => {
   const state: State = { text: '', rest: source };
-  const parser: P<Modifier[]> = many(spaces.with(choice([meModifier, rollModifier, whisperModifier])));
+  const parser: P<Modifier[]> = many(spaces.with(choice([meModifier, rollModifier, whisperModifier, muteModifier])));
 
   const result = parser.run(state, env);
 
   if (!result) {
     throw Error('Failed to parse the source: ' + source);
   }
-  const [modifiers, { rest }] = result;
-  const isAction = modifiers.some((modifier) => modifier.type === 'Me');
+  const [modifiers, { text, rest }] = result;
+  const action = modifiers.find((modifier): modifier is MeModifier => modifier.type === 'Me') || false;
+  const mute = modifiers.find((modifier): modifier is MuteModifier => modifier.type === 'Mute') || false;
   const isRoll = modifiers.some((modifier) => modifier.type === 'Roll' || modifier.type === 'HideRoll');
   const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper' || modifier.type === 'HideRoll');
-  return { rest, isAction, isRoll, isWhisper };
+  return { text, rest, action, isRoll, isWhisper, mute };
 };
-
-console.log(
-  parseModifiers('.r .h  .me hhh'),
-);

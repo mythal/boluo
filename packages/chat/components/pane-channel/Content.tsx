@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import Prando from 'prando';
 import { memo, ReactNode, useMemo, useRef } from 'react';
 import { makeRng } from '../../interpreter/eval';
-import type { ParseResult } from '../../interpreter/parser';
+import type { ParseResult } from '../../interpreter/parse-result';
 import { Delay } from '../Delay';
 import { EntityCode } from '../entities/EntityCode';
 import { EntityCodeBlock } from '../entities/EntityCodeBlock';
@@ -17,7 +17,6 @@ import { SelfCursorToolbar } from './SelfCursorToolbar';
 interface Props {
   parsed: ParseResult;
   self?: boolean;
-  isAction: boolean;
   isPreview: boolean;
   seed?: number[];
   cursorNode?: ReactNode;
@@ -25,8 +24,7 @@ interface Props {
 }
 
 export const Content = memo<Props>(({
-  parsed: { text: source, entities },
-  isAction,
+  parsed: { text: source, entities, isAction },
   nameNode,
   seed,
   isPreview,

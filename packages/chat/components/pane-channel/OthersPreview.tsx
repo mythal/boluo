@@ -1,8 +1,6 @@
-import type { Preview } from 'api';
 import { FC, useDeferredValue, useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
 import { fromRawEntities } from '../../interpreter/entities';
-import { ParseResult } from '../../interpreter/parser';
+import { initParseResult, ParseResult } from '../../interpreter/parse-result';
 import { PreviewItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { Name } from './Name';
@@ -20,7 +18,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
   const parsed: ParseResult = useMemo(() => {
     const text = preview.text || '';
     const entities = fromRawEntities(text, preview.entities);
-    return { text, entities };
+    return { ...initParseResult, text, entities };
   }, [preview.entities, preview.text]);
 
   const nameNode = useMemo(() => {
@@ -38,7 +36,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
       </div>
       {preview.text === null
         ? <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
-        : <Content parsed={deferredParsed} nameNode={nameNode} isAction={isAction} isPreview />}
+        : <Content parsed={deferredParsed} nameNode={nameNode} isPreview />}
     </PreviewBox>
   );
 };

@@ -8,7 +8,6 @@ import { useComposeError } from '../../hooks/useComposeError';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
-import { useWorkerParse } from './useWorkerParse';
 
 interface Props {
   me: GetMe;
@@ -31,7 +30,6 @@ export const ComposeTextArea: FC<Props> = ({ me, member }) => {
   const rangeAtom = useMemo(() => selectAtom(composeAtom, compose => compose.range), [composeAtom]);
   const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend === true;
-  useWorkerParse(dispatch, source);
   const lock = useRef(false);
   const updateRangeTimeout = useRef<number | undefined>(undefined);
 

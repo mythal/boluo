@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, ReactNode, useDeferredValue, useEffect, useMemo, useRef } from 'react';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { Cursor } from '../entities/Cursor';
@@ -12,14 +13,9 @@ interface Props {
 }
 
 export const SelfPreviewContent: FC<Props> = ({ nameNode }) => {
-  const composeAtom = useComposeAtom();
+  const { composeAtom, parsedAtom } = useChannelAtoms();
 
-  const isAction = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ isAction }) => isAction), [composeAtom]),
-  );
-  const parsed = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ parsed }) => parsed), [composeAtom]),
-  );
+  const parsed = useAtomValue(parsedAtom);
   const cursorState: CursorState = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ source, range }) => ({ range: range, self: true })), [composeAtom]),
   );
@@ -50,7 +46,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode }) => {
   const deferredParsed = useDeferredValue(parsed);
   return (
     <CursorContext.Provider value={cursorState}>
-      <Content cursorNode={cursorNode} parsed={deferredParsed} nameNode={nameNode} isAction={isAction} self isPreview />
+      <Content cursorNode={cursorNode} parsed={deferredParsed} nameNode={nameNode} self isPreview />
     </CursorContext.Provider>
   );
 };

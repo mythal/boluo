@@ -6,8 +6,8 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { Result } from 'utils';
 import { useSetBanner } from '../../hooks/useBanner';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
@@ -16,12 +16,13 @@ import { ComposeError } from '../../state/compose.reducer';
 export const useSend = (me: User, member: ChannelMember, composeError: ComposeError | null) => {
   const channelId = useChannelId();
   const store = useStore();
-  const composeAtom = useComposeAtom();
+  const { composeAtom, parsedAtom } = useChannelAtoms();
   const setBanner = useSetBanner();
   const { nickname } = me;
 
   const send = useCallback(async () => {
     const compose = store.get(composeAtom);
+    const parsed = store.get(parsedAtom);
     if (composeError !== null) return;
     const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
@@ -46,10 +47,10 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
       result = await patch('/messages/edit', null, {
         messageId: compose.previewId,
         name,
-        text: compose.parsed.text,
-        entities: compose.parsed.entities,
+        text: parsed.text,
+        entities: parsed.entities,
         inGame: compose.inGame,
-        isAction: compose.isAction,
+        isAction: parsed.isAction,
         mediaId: null,
       });
     } else {
@@ -71,7 +72,7 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
         text,
         entities,
         inGame: compose.inGame,
-        isAction: compose.isAction,
+        isAction: parsed.isAction,
         mediaId,
         pos: null,
         whisperToUsers: null,
@@ -96,7 +97,7 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
         </div>
       ),
     });
-  }, [channelId, composeAtom, composeError, member.characterName, nickname, setBanner, store]);
+  }, [channelId, composeAtom, composeError, member.characterName, nickname, parsedAtom, setBanner, store]);
 
   return send;
 };

@@ -1,5 +1,5 @@
 import { makeId } from 'utils';
-import { ParseResult } from '../interpreter/parser';
+import { Modifier, parseModifiers } from '../interpreter/parser';
 import { MediaError, validateMedia } from '../media';
 import { ComposeAction, ComposeActionUnion } from './compose.actions';
 
@@ -13,12 +13,9 @@ export interface ComposeState {
   editFor: string | null;
   inputedName: string;
   previewId: string;
-  isAction: boolean;
   inGame: boolean;
-  broadcast: boolean;
   source: string;
   media: File | null;
-  parsed: ParseResult;
   whisperTo:
     // Represents whisper to the Game Master
     | null
@@ -34,13 +31,10 @@ export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
   previewId: makeId(),
-  isAction: false,
   inGame: false,
-  broadcast: true,
   source: '',
   media: null,
   range: [0, 0],
-  parsed: { text: '', entities: [] },
   focused: false,
   whisperTo: undefined,
 });
@@ -51,8 +45,7 @@ const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setS
   if ((source === '' || state.source === '') && state.editFor === null) {
     previewId = makeId();
   }
-  const isAction = ACTION_COMMAND.exec(source) !== null;
-  return { ...state, source: action.payload.source, previewId, isAction };
+  return { ...state, source: action.payload.source, previewId };
 };
 
 const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleInGame'>): ComposeState => {
@@ -151,8 +144,24 @@ const handleEditMessage = (
 
   return { ...makeInitialComposeState(), previewId, editFor, source, inGame, inputedName, range };
 };
+
+const toggleModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {
+  const { source } = state;
+  let nextSource = source;
+  if (!modifier) {
+    const startsWithSpace = source.startsWith(' ');
+    nextSource = (startsWithSpace ? command : `${command} `) + source;
+  } else {
+    const before = source.substring(0, modifier.start);
+    const after = source.substring(modifier.start + modifier.len);
+    nextSource = (before + after).trimStart();
+  }
+  return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
+};
+
 const handleToggleBroadcast = (state: ComposeState, _: ComposeAction<'toggleBroadcast'>): ComposeState => {
-  return { ...state, broadcast: !state.broadcast };
+  const { mute } = parseModifiers(state.source);
+  return toggleModifier(state, mute, '.mute');
 };
 
 const handleToggleAction = (
@@ -160,32 +169,26 @@ const handleToggleAction = (
   _: ComposeAction<'toggleAction'>,
 ): ComposeState => {
   const { source } = state;
-  const actionMatch = ACTION_COMMAND.exec(source);
-  if (actionMatch === null) {
-    return { ...state, source: '.me ' + source, isAction: true };
-  }
-  const length = actionMatch[0].length;
-
-  return { ...state, source: source.substring(length), isAction: false };
-};
-
-const handleParsed = (state: ComposeState, { payload: parsed }: ComposeAction<'parsed'>): ComposeState => {
-  const { text } = parsed;
-  if (text !== state.source || text === state.parsed?.text) {
-    return state;
-  }
-  return { ...state, parsed };
+  const { action } = parseModifiers(source);
+  return toggleModifier(state, action, '.me');
 };
 
 const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState => {
+  const modifiersParseResult = parseModifiers(state.source);
+  let source = '';
+  if (modifiersParseResult.mute) {
+    source = '.mute ';
+  }
+  if (modifiersParseResult.action) {
+    source = '.me ';
+  }
   return {
     ...state,
     previewId: makeId(),
     editFor: null,
-    range: [0, 0],
+    range: [source.length, source.length],
     media: null,
-    source: '',
-    parsed: { text: '', entities: [] },
+    source,
   };
 };
 
@@ -220,8 +223,6 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleBold(state, action);
     case 'setRange':
       return handleSetRange(state, action);
-    case 'parsed':
-      return handleParsed(state, action);
     case 'editMessage':
       return handleEditMessage(state, action);
     case 'reset':

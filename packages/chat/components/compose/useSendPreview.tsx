@@ -1,9 +1,11 @@
 import { ClientEvent, PreviewPost } from 'api';
-import { useAtomValue, useStore } from 'jotai';
+import { Atom, useAtomValue, useStore } from 'jotai';
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { makeId } from 'utils';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
+import { ParseResult } from '../../interpreter/parse-result';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { ComposeState } from '../../state/compose.reducer';
 
@@ -17,13 +19,15 @@ const sendPreview = (
   nickname: string,
   characterName: string,
   compose: ComposeState,
+  parsed: ParseResult,
   connection: WebSocket,
   sendTimeoutRef: MutableRefObject<number | undefined>,
 ): void => {
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { inGame, isAction, parsed, previewId, inputedName, editFor, broadcast } = compose;
+    const { inGame, previewId, inputedName, editFor } = compose;
+    const { isAction, broadcast } = parsed;
     const inGameName = inputedName || characterName;
     if (!previewId) {
       return;
@@ -51,6 +55,7 @@ export const useSendPreview = (
   nickname: string | undefined,
   characterName: string,
   composeAtom: ComposeAtom,
+  parsedAtom: Atom<ParseResult>,
 ) => {
   const store = useStore();
   const sendTimoutRef = useRef<number | undefined>(undefined);
@@ -65,7 +70,8 @@ export const useSendPreview = (
         return;
       }
       const composeState = store.get(composeAtom);
-      sendPreview(channelId, nickname, characterName, composeState, connectionState.connection, sendTimoutRef);
+      const parsed = store.get(parsedAtom);
+      sendPreview(channelId, nickname, characterName, composeState, parsed, connectionState.connection, sendTimoutRef);
     });
-  }, [channelId, characterName, composeAtom, connectionState, isFocused, nickname, store]);
+  }, [channelId, characterName, composeAtom, connectionState, isFocused, nickname, parsedAtom, store]);
 };

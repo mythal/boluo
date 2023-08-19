@@ -31,7 +31,7 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
       setBanner(null);
     };
     dispatch({ type: 'sent', payload: {} });
-    const { text, entities } = parse(compose.source);
+    const { text, entities, isWhisper } = parse(compose.source);
     let result: Result<Message, ApiError>;
     let name = nickname;
     if (compose.inGame) {
@@ -75,7 +75,7 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
         isAction: parsed.isAction,
         mediaId,
         pos: null,
-        whisperToUsers: null,
+        whisperToUsers: isWhisper ? [] : null,
       });
     }
 

@@ -745,6 +745,7 @@ interface ParseModifersResult {
   rest: string;
   action: MeModifier | false;
   mute: MuteModifier | false;
+  whisper: WhisperModifier | false;
   isRoll: boolean;
   isWhisper: boolean;
 }
@@ -762,6 +763,7 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
   const action = modifiers.find((modifier): modifier is MeModifier => modifier.type === 'Me') || false;
   const mute = modifiers.find((modifier): modifier is MuteModifier => modifier.type === 'Mute') || false;
   const isRoll = modifiers.some((modifier) => modifier.type === 'Roll' || modifier.type === 'HideRoll');
+  const whisper = modifiers.find((modifier): modifier is WhisperModifier => modifier.type === 'Whisper') || false;
   const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper' || modifier.type === 'HideRoll');
-  return { text, rest, action, isRoll, isWhisper, mute };
+  return { text, rest, action, isRoll, isWhisper, mute, whisper };
 };

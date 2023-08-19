@@ -33,4 +33,5 @@ export interface Get {
   '/channels/check_name': { query: { name: string; spaceId: string }; result: boolean };
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
+  '/messages/query': { query: { id: string }; result: Message | null };
 }

@@ -20,6 +20,7 @@ export type ComposeActionMap = {
   blur: Empty;
   setRange: { range: [number, number] | null };
   toggleAction: Empty;
+  toggleWhisper: Empty;
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

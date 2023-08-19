@@ -27,7 +27,7 @@ const sendPreview = (
 
   sendTimeoutRef.current = window.setTimeout(() => {
     const { inGame, previewId, inputedName, editFor } = compose;
-    const { isAction, broadcast } = parsed;
+    const { isAction, broadcast, isWhisper } = parsed;
     const inGameName = inputedName || characterName;
     if (!previewId) {
       return;
@@ -39,9 +39,9 @@ const sendPreview = (
       mediaId: null,
       inGame,
       isAction,
-      text: broadcast || parsed.text === '' ? parsed.text : null,
+      text: (broadcast && !isWhisper) || parsed.text === '' ? parsed.text : null,
       clear: false,
-      entities: broadcast ? parsed.entities : [],
+      entities: (broadcast && !isWhisper) ? parsed.entities : [],
       editFor,
     };
 

@@ -164,6 +164,11 @@ const handleToggleBroadcast = (state: ComposeState, _: ComposeAction<'toggleBroa
   return toggleModifier(state, mute, '.mute');
 };
 
+const handleToggleWhisper = (state: ComposeState, _: ComposeAction<'toggleWhisper'>): ComposeState => {
+  const { whisper } = parseModifiers(state.source);
+  return toggleModifier(state, whisper, '.h');
+};
+
 const handleToggleAction = (
   state: ComposeState,
   _: ComposeAction<'toggleAction'>,
@@ -237,6 +242,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleMedia(state, action);
     case 'blur':
       return handleBlur(state, action);
+    case 'toggleWhisper':
+      return handleToggleWhisper(state, action);
     case 'toggleBroadcast':
       return handleToggleBroadcast(state, action);
   }

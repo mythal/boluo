@@ -1,9 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
 import { FC, useMemo } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { fromRawEntities } from '../../interpreter/entities';
 import { initParseResult, ParseResult } from '../../interpreter/parse-result';
 import { MessageItem } from '../../state/channel.types';
+import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
 import { MessageBox } from './MessageBox';
 import { MessageMedia } from './MessageMedia';
@@ -42,7 +44,22 @@ export const ChatItemMessage: FC<Props> = (
         {!mini && <>{nameNode}:</>}
       </div>
       <div className="@2xl:pr-[6rem]">
-        <Content parsed={parsed} nameNode={nameNode} isPreview={false} seed={message.seed} />
+        {message.whisperToUsers != null && (
+          <span className="text-sm italic text-surface-600">
+            <FormattedMessage defaultMessage="(Whisper)" />
+            {parsed.text === '' && (
+              <ChatItemMessageShowWhisper
+                className="ml-2"
+                messageId={message.id}
+                userIdList={message.whisperToUsers}
+                channelId={message.channelId}
+              />
+            )}
+          </span>
+        )}
+
+        {parsed.text !== ''
+          && <Content parsed={parsed} nameNode={nameNode} isPreview={false} seed={message.seed} />}
         {message.mediaId != null && <MessageMedia className="pt-2" mediaId={message.mediaId} />}
       </div>
     </MessageBox>

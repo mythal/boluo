@@ -75,7 +75,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) =
 export const WhisperToItem: FC<{ member: Member; remove: () => void }> = ({ member, remove }) => {
   return (
     <button
-      className="border rounded bg-lowest px-1 border-surface-500 hover:border-surface-800 hover:line-through"
+      className="border rounded bg-lowest px-1 border-surface-100 hover:border-surface-300 hover:line-through"
       onClick={remove}
     >
       {member.user.nickname}

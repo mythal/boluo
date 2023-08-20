@@ -702,8 +702,8 @@ interface MuteModifier {
 
 export type Modifier = MeModifier | RollModifier | HideRollModifier | WhisperModifier | MuteModifier;
 
-const meModifier: P<Modifier> = regex(/^[.。][mM][eE]/).then(([match, { text, rest }]) => {
-  const [entire, content = ''] = match;
+const meModifier: P<Modifier> = regex(/^[.。][mM][eE]\s*/).then(([match, { text, rest }]) => {
+  const [entire] = match;
   const modifier: MeModifier = {
     type: 'Me',
     start: text.length,
@@ -713,8 +713,8 @@ const meModifier: P<Modifier> = regex(/^[.。][mM][eE]/).then(([match, { text, r
   return [modifier, { text, rest }];
 });
 
-const rollModifier: P<Modifier> = regex(/^[.。][rR]/).then(([match, { text, rest }]) => {
-  const [entire, content = ''] = match;
+const rollModifier: P<Modifier> = regex(/^[.。][rR]\s*/).then(([match, { text, rest }]) => {
+  const [entire] = match;
   const modifier: RollModifier = {
     type: 'Roll',
     start: text.length,
@@ -724,7 +724,7 @@ const rollModifier: P<Modifier> = regex(/^[.。][rR]/).then(([match, { text, res
   return [modifier, { text, rest }];
 });
 
-const hideRollModifier: P<Modifier> = regex(/^[.。][rR]/).then(([match, { text, rest }]) => {
+const hideRollModifier: P<Modifier> = regex(/^[.。][hH][rR]\s*/).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
   const modifier: HideRollModifier = {
     type: 'HideRoll',
@@ -750,7 +750,7 @@ const mentionList: P<{ start: number; len: number; usernames: string[] }> = rege
     return [{ start: text.length, len: entire.length, usernames }, { text: text + entire, rest }];
   });
 
-const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]/).then(
+const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]\s*/).then(
   ([match, state], env) => {
     const [entire] = match;
     const memtionListResult = mentionList.run({ text: state.text + entire, rest: state.rest }, env);
@@ -775,9 +775,7 @@ const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]/).then(
   },
 );
 
-console.log('debug whisper', whisperModifier.run({ text: '', rest: '.h(@test )' }, emptyEnv));
-
-const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]/).then(([match, { text, rest }]) => {
+const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]\s*/).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
   const modifier: MuteModifier = {
     type: 'Mute',

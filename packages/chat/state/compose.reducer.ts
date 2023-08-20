@@ -178,9 +178,13 @@ const handleToggleBroadcast = (state: ComposeState, _: ComposeAction<'toggleBroa
   return toggleModifier(state, mute, '.mute');
 };
 
-const handleToggleWhisper = (state: ComposeState, _: ComposeAction<'toggleWhisper'>): ComposeState => {
+const handleToggleWhisper = (
+  state: ComposeState,
+  { payload: { username } }: ComposeAction<'toggleWhisper'>,
+): ComposeState => {
   const { whisper } = parseModifiers(state.source);
-  return toggleModifier(state, whisper, '.h');
+  const command = username != null ? `.h(@${username})` : '.h';
+  return toggleModifier(state, whisper, command);
 };
 
 const handleToggleAction = (

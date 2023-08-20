@@ -1,3 +1,4 @@
+import { useMe } from 'common';
 import { Whisper } from 'icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
@@ -10,11 +11,12 @@ interface Props {
 }
 
 export const WhisperButton: FC<Props> = ({}) => {
+  const me = useMe();
   const { isWhisperAtom, composeAtom } = useChannelAtoms();
   const isWhisper = useAtomValue(isWhisperAtom);
   const dispatch = useSetAtom(composeAtom);
   const handleClick = () => {
-    dispatch({ type: 'toggleWhisper', payload: {} });
+    dispatch({ type: 'toggleWhisper', payload: me != null && me !== 'LOADING' ? { username: me.user.username } : {} });
   };
   return (
     <Button data-small type="button" data-type="switch" data-on={isWhisper} onClick={handleClick}>

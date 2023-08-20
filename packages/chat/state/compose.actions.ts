@@ -22,7 +22,7 @@ export type ComposeActionMap = {
   addWhisperTarget: { username: string };
   removeWhisperTarget: { username: string };
   toggleAction: Empty;
-  toggleWhisper: Empty;
+  toggleWhisper: { username?: string };
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

@@ -680,16 +680,10 @@ interface RollModifier {
   start: number;
   len: number;
 }
-
-interface HideRollModifier {
-  type: 'HideRoll';
-  start: number;
-  len: number;
-}
-
 interface WhisperModifier {
   type: 'Whisper';
   usernames: string[];
+  roll?: boolean;
   start: number;
   len: number;
 }
@@ -700,7 +694,7 @@ interface MuteModifier {
   len: number;
 }
 
-export type Modifier = MeModifier | RollModifier | HideRollModifier | WhisperModifier | MuteModifier;
+export type Modifier = MeModifier | RollModifier | WhisperModifier | MuteModifier;
 
 const meModifier: P<Modifier> = regex(/^[.。][mM][eE]\s*/).then(([match, { text, rest }]) => {
   const [entire] = match;
@@ -724,17 +718,6 @@ const rollModifier: P<Modifier> = regex(/^[.。][rR]\s*/).then(([match, { text, 
   return [modifier, { text, rest }];
 });
 
-const hideRollModifier: P<Modifier> = regex(/^[.。][hH][rR]\s*/).then(([match, { text, rest }]) => {
-  const [entire, content = ''] = match;
-  const modifier: HideRollModifier = {
-    type: 'HideRoll',
-    start: text.length,
-    len: entire.length,
-  };
-  text += entire;
-  return [modifier, { text, rest }];
-});
-
 const mentionList: P<{ start: number; len: number; usernames: string[] }> = regex(/^\(\s*(.*?)\)\s*|^（\s*(.*?)）\s*/)
   .then(([match, { text, rest }], env) => {
     const [entire, a, b] = match;
@@ -750,15 +733,17 @@ const mentionList: P<{ start: number; len: number; usernames: string[] }> = rege
     return [{ start: text.length, len: entire.length, usernames }, { text: text + entire, rest }];
   });
 
-const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]\s*/).then(
+const whisperModifier: P<WhisperModifier> = regex(/^[.。]([rR])?[hH]\s*/).then(
   ([match, state], env) => {
-    const [entire] = match;
+    const [entire, rollMatch = ''] = match;
+    const roll = rollMatch.toLowerCase() === 'r';
     const memtionListResult = mentionList.run({ text: state.text + entire, rest: state.rest }, env);
     if (!memtionListResult) {
       const modifier: WhisperModifier = {
         type: 'Whisper',
         start: state.text.length,
         usernames: [],
+        roll,
         len: entire.length,
       };
       return [modifier, { text: state.text + entire, rest: state.rest }];
@@ -768,6 +753,7 @@ const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]\s*/).then(
         type: 'Whisper',
         start: state.text.length,
         usernames: mentionList.usernames,
+        roll,
         len: entire.length + mentionList.len,
       };
       return [modifier, state2];
@@ -776,7 +762,7 @@ const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]\s*/).then(
 );
 
 const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]\s*/).then(([match, { text, rest }]) => {
-  const [entire, content = ''] = match;
+  const [entire] = match;
   const modifier: MuteModifier = {
     type: 'Mute',
     start: text.length,
@@ -798,7 +784,9 @@ interface ParseModifersResult {
 
 export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModifersResult => {
   const state: State = { text: '', rest: source };
-  const parser: P<Modifier[]> = many(spaces.with(choice([meModifier, rollModifier, whisperModifier, muteModifier])));
+  const parser: P<Modifier[]> = many(
+    spaces.with(choice([meModifier, whisperModifier, rollModifier, muteModifier])),
+  );
 
   const result = parser.run(state, env);
 
@@ -808,8 +796,10 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
   const [modifiers, { text, rest }] = result;
   const action = modifiers.find((modifier): modifier is MeModifier => modifier.type === 'Me') || false;
   const mute = modifiers.find((modifier): modifier is MuteModifier => modifier.type === 'Mute') || false;
-  const isRoll = modifiers.some((modifier) => modifier.type === 'Roll' || modifier.type === 'HideRoll');
+  const isRoll = modifiers.some((modifier) =>
+    modifier.type === 'Roll' || (modifier.type === 'Whisper' && modifier.roll)
+  );
   const whisper = modifiers.find((modifier): modifier is WhisperModifier => modifier.type === 'Whisper') || false;
-  const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper' || modifier.type === 'HideRoll');
+  const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper');
   return { text, rest, action, isRoll, isWhisper, mute, whisper };
 };

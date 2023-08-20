@@ -16,8 +16,8 @@ interface Props {
 }
 
 export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
-  const { composeAtom, parsedAtom } = useChannelAtoms();
-
+  const { composeAtom, parsedAtom, inGameAtom } = useChannelAtoms();
+  const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
   const cursorState: CursorState = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ source, range }) => ({ range: range, self: true })), [composeAtom]),
@@ -50,7 +50,11 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
   return (
     <CursorContext.Provider value={cursorState}>
       {parsed.whisperToUsernames != null && (
-        <ContentWhisperTo channelId={myMember.channelId} whisperToUsernames={parsed.whisperToUsernames} />
+        <ContentWhisperTo
+          inGame={inGame}
+          channelId={myMember.channelId}
+          whisperToUsernames={parsed.whisperToUsernames}
+        />
       )}
       <Content
         channelId={myMember.channelId}

@@ -8,11 +8,12 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 
 interface Props {
+  inGame: boolean;
   channelId: string;
   whisperToUsernames: string[];
 }
 
-export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) => {
+export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame }) => {
   const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
@@ -64,7 +65,12 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) =
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToMembers.map((member) => (
-          <WhisperToItem key={member.user.id} member={member} remove={removeUsername(member.user.username)} />
+          <WhisperToItem
+            inGame={inGame}
+            key={member.user.id}
+            member={member}
+            remove={removeUsername(member.user.username)}
+          />
         ))}
         {whisperToAdd}
       </span>
@@ -72,13 +78,15 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) =
   );
 };
 
-export const WhisperToItem: FC<{ member: Member; remove: () => void }> = ({ member, remove }) => {
+export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void }> = (
+  { member, remove, inGame },
+) => {
   return (
     <button
       className="border rounded bg-lowest px-1 border-surface-100 hover:border-surface-300 hover:line-through"
       onClick={remove}
     >
-      {member.user.nickname}
+      {inGame ? member.channel.characterName : member.user.nickname}
       <Icon icon={X} />
     </button>
   );

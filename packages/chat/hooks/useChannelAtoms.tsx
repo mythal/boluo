@@ -23,6 +23,7 @@ export interface ChannelAtoms {
   isActionAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
   isWhisperAtom: Atom<boolean>;
+  inGameAtom: Atom<boolean>;
   filterAtom: PrimitiveAtom<ChannelFilter>;
   showArchivedAtom: PrimitiveAtom<boolean>;
   memberListStateAtom: PrimitiveAtom<ChannelMemberListState>;
@@ -50,6 +51,7 @@ export const makeChannelAtoms = (channelId: string): ChannelAtoms => {
   const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
   const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
   const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
+  const inGameAtom = selectAtom(composeAtom, ({ inGame }) => inGame);
   return {
     composeAtom,
     checkComposeAtom,
@@ -57,6 +59,7 @@ export const makeChannelAtoms = (channelId: string): ChannelAtoms => {
     isActionAtom,
     broadcastAtom,
     isWhisperAtom,
+    inGameAtom,
     filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
     showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
     memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),

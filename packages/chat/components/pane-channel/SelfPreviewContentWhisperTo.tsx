@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) => {
-  const { data: members, isLoading } = useQueryChannelMembers(channelId);
+  const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const removeUsername = useCallback((username: string) => () => {
@@ -24,24 +24,26 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) =
   }, [dispatch]);
 
   const whisperToAdd = useMemo(() => {
-    if (!members) return null;
-    return <WhisperToItemAdd members={members.members} add={addUsername} />;
-  }, [addUsername, members]);
+    if (!channelMembers) return null;
+    const members = channelMembers.members.filter((member) => !whisperToUsernames.includes(member.user.username));
+    if (members.length === 0) return null;
+    return <WhisperToItemAdd members={members} add={addUsername} />;
+  }, [addUsername, channelMembers, whisperToUsernames]);
 
   const whisperToMembers: Member[] | null = useMemo(() => {
-    if (!members) {
+    if (!channelMembers) {
       return null;
     }
-    return members.members.flatMap((member) => {
+    return channelMembers.members.flatMap((member) => {
       if (whisperToUsernames.includes(member.user.username)) {
         return [member];
       } else {
         return [];
       }
     });
-  }, [members, whisperToUsernames]);
+  }, [channelMembers, whisperToUsernames]);
 
-  if (members == null || whisperToMembers == null || isLoading) {
+  if (channelMembers == null || whisperToMembers == null || isLoading) {
     return (
       <span>
         <FormattedMessage defaultMessage="Whisper to …" />

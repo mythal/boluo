@@ -238,7 +238,7 @@ const handleAddWhisperTarget = (
     return state;
   }
   let mentionList = [username];
-  if (whisper) {
+  if (whisper && !whisper.usernames.includes(username)) {
     mentionList = whisper.usernames.concat(username);
   }
   const mentions = mentionList.map(u => `@${u}`).join(' ');

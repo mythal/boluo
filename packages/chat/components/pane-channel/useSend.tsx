@@ -1,27 +1,47 @@
-import { ApiError, ChannelMember, Message, User } from 'api';
+import { ApiError, Message, User } from 'api';
 import { patch, post } from 'api-browser';
 import { useStore } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { Result } from 'utils';
 import { useSetBanner } from '../../hooks/useBanner';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { ComposeError } from '../../state/compose.reducer';
 
-export const useSend = (me: User, member: ChannelMember, composeError: ComposeError | null) => {
+export const useSend = (me: User, composeError: ComposeError | null) => {
   const channelId = useChannelId();
   const store = useStore();
-  const composeAtom = useComposeAtom();
+  const { composeAtom, parsedAtom } = useChannelAtoms();
   const setBanner = useSetBanner();
+  const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
   const { nickname } = me;
+  const myMember = useMemo(() => {
+    if (queryChannelMembers == null) return null;
+    return queryChannelMembers.members.find((member) => member.user.id === me.id) ?? null;
+  }, [me.id, queryChannelMembers]);
+
+  const usernameListToUserIdList = useCallback((usernames: string[]): string[] => {
+    if (queryChannelMembers == null) return [];
+    return usernames.flatMap((username) => {
+      const member = queryChannelMembers.members.find((member) => member.user.username === username);
+      if (member == null) return [];
+      return [member.user.id];
+    });
+  }, [queryChannelMembers]);
 
   const send = useCallback(async () => {
+    if (myMember == null) {
+      console.warn('Cannot find my channel member');
+      return;
+    }
     const compose = store.get(composeAtom);
+    const parsed = store.get(parsedAtom);
     if (composeError !== null) return;
     const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
@@ -30,13 +50,13 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
       setBanner(null);
     };
     dispatch({ type: 'sent', payload: {} });
-    const { text, entities } = parse(compose.source);
+    const { text, entities, whisperToUsernames } = parse(compose.source);
     let result: Result<Message, ApiError>;
     let name = nickname;
     if (compose.inGame) {
       const inputedName = compose.inputedName.trim();
       if (inputedName === '') {
-        name = member.characterName;
+        name = myMember.channel.characterName;
       } else {
         name = inputedName;
       }
@@ -46,10 +66,10 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
       result = await patch('/messages/edit', null, {
         messageId: compose.previewId,
         name,
-        text: compose.parsed.text,
-        entities: compose.parsed.entities,
+        text: parsed.text,
+        entities: parsed.entities,
         inGame: compose.inGame,
-        isAction: compose.isAction,
+        isAction: parsed.isAction,
         mediaId: null,
       });
     } else {
@@ -71,10 +91,10 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
         text,
         entities,
         inGame: compose.inGame,
-        isAction: compose.isAction,
+        isAction: parsed.isAction,
         mediaId,
         pos: null,
-        whisperToUsers: null,
+        whisperToUsers: whisperToUsernames ? usernameListToUserIdList(whisperToUsernames) : null,
       });
     }
 
@@ -96,7 +116,17 @@ export const useSend = (me: User, member: ChannelMember, composeError: ComposeEr
         </div>
       ),
     });
-  }, [channelId, composeAtom, composeError, member.characterName, nickname, setBanner, store]);
+  }, [
+    channelId,
+    composeAtom,
+    composeError,
+    myMember,
+    nickname,
+    parsedAtom,
+    setBanner,
+    store,
+    usernameListToUserIdList,
+  ]);
 
   return send;
 };

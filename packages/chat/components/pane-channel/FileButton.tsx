@@ -1,4 +1,4 @@
-import { FilePlus, Upload } from 'icons';
+import { Upload } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -27,7 +27,7 @@ export const FileButton: FC<Props> = () => {
     <>
       <Button data-small onClick={() => inputRef.current?.click()}>
         <Upload />
-        <span className="hidden @md:inline">
+        <span className="hidden @lg:inline">
           <FormattedMessage defaultMessage="File" />
         </span>
       </Button>

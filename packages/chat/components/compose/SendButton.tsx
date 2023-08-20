@@ -18,7 +18,7 @@ interface Props {
 
 export const SendButton: FC<Props> = ({ me, member, editMode = false }) => {
   const composeError = useComposeError(member);
-  const send = useSend(me.user, member, composeError);
+  const send = useSend(me.user, composeError);
   return (
     <Button onClick={() => send()} disabled={composeError !== null}>
       {editMode ? <FormattedMessage defaultMessage="Edit" /> : <FormattedMessage defaultMessage="Send" />}

@@ -1,6 +1,5 @@
 import { Message } from 'api';
 import type { Empty } from 'utils';
-import type { ParseResult } from '../interpreter/parser';
 import { MakeAction } from './actions';
 import type { ComposeState } from './compose.reducer';
 
@@ -13,7 +12,6 @@ export type ComposeActionMap = {
   link: { text: string; href: string };
   bold: { text: string };
   recoverState: ComposeState;
-  parsed: ParseResult;
   media: { media: File | null };
   editMessage: { message: Message };
   sent: Empty;
@@ -21,7 +19,10 @@ export type ComposeActionMap = {
   focus: Empty;
   blur: Empty;
   setRange: { range: [number, number] | null };
+  addWhisperTarget: { username: string };
+  removeWhisperTarget: { username: string };
   toggleAction: Empty;
+  toggleWhisper: { username?: string };
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

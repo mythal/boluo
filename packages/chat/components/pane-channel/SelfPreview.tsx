@@ -2,7 +2,7 @@ import { Member } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { PreviewItem } from '../../state/channel.types';
 import { ComposeState } from '../../state/compose.reducer';
@@ -16,7 +16,7 @@ import { SelfPreviewNameCell } from './SelfPreviewNameCell';
 import { SelfPreviewOperations } from './SelfPreviewOperations';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
 
-type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'isAction' | 'media'> & {
+type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'media'> & {
   editMode: boolean;
   name: string;
 };
@@ -24,12 +24,11 @@ type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'isAction' | 'medi
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
   a.source === b.source && a.editMode === b.editMode
   && a.inGame === b.inGame && a.name === b.name
-  && a.isAction === b.isAction
   && a.media === b.media;
 
-const selector = ({ inGame, isAction, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
+const selector = ({ inGame, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
   const editMode = editFor !== null;
-  return { inGame, isAction, name: inputedName.trim(), source, editMode, media };
+  return { inGame, name: inputedName.trim(), source, editMode, media };
 };
 
 interface Props {
@@ -40,11 +39,12 @@ interface Props {
 
 export const SelfPreview: FC<Props> = ({ preview, className, myMember: member }) => {
   const isMaster = member.channel.isMaster;
-  const composeAtom = useComposeAtom();
+  const { composeAtom, isActionAtom } = useChannelAtoms();
   const compose: ComposeDrived = useAtomValue(
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
-  const { editMode, inGame, isAction, media } = compose;
+  const isAction = useAtomValue(isActionAtom);
+  const { editMode, inGame, media } = compose;
   const name = useMemo(() => {
     if (!inGame) {
       return member.user.nickname;
@@ -72,7 +72,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
         channelMember={member.channel}
       />
       <div className="flex flex-col gap-1 h-full items-between">
-        <SelfPreviewContent nameNode={nameNode} />
+        <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         <MessageMedia mediaFile={media} className="relative w-fit py-2">
           <div className="absolute right-full -translate-x-1 top-2">
             <RemoveMediaButton />

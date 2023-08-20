@@ -8,7 +8,6 @@ import { useComposeError } from '../../hooks/useComposeError';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
-import { useWorkerParse } from './useWorkerParse';
 
 interface Props {
   me: GetMe;
@@ -20,7 +19,7 @@ const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payloa
 
 export const ComposeTextArea: FC<Props> = ({ me, member }) => {
   const composeError = useComposeError(member);
-  const send = useSend(me.user, member, composeError);
+  const send = useSend(me.user, composeError);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
@@ -31,7 +30,6 @@ export const ComposeTextArea: FC<Props> = ({ me, member }) => {
   const rangeAtom = useMemo(() => selectAtom(composeAtom, compose => compose.range), [composeAtom]);
   const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend === true;
-  useWorkerParse(dispatch, source);
   const lock = useRef(false);
   const updateRangeTimeout = useRef<number | undefined>(undefined);
 
@@ -92,7 +90,7 @@ export const ComposeTextArea: FC<Props> = ({ me, member }) => {
   }, [updateRange]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key !== 'Enter') {
+    if (isCompositionRef.current || e.key !== 'Enter') {
       return;
     }
     if (enterSend) {

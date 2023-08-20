@@ -59,7 +59,15 @@ export const ChatItemMessage: FC<Props> = (
         )}
 
         {parsed.text !== ''
-          && <Content parsed={parsed} nameNode={nameNode} isPreview={false} seed={message.seed} />}
+          && (
+            <Content
+              channelId={message.channelId}
+              parsed={parsed}
+              nameNode={nameNode}
+              isPreview={false}
+              seed={message.seed}
+            />
+          )}
         {message.mediaId != null && <MessageMedia className="pt-2" mediaId={message.mediaId} />}
       </div>
     </MessageBox>

@@ -1,3 +1,4 @@
+import { ChannelMember } from 'api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, ReactNode, useDeferredValue, useEffect, useMemo, useRef } from 'react';
@@ -7,12 +8,14 @@ import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { Cursor } from '../entities/Cursor';
 import { CursorContext, CursorState } from '../entities/TextWithCursor';
 import { Content } from './Content';
+import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
 
 interface Props {
   nameNode: ReactNode;
+  myMember: ChannelMember;
 }
 
-export const SelfPreviewContent: FC<Props> = ({ nameNode }) => {
+export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
   const { composeAtom, parsedAtom } = useChannelAtoms();
 
   const parsed = useAtomValue(parsedAtom);
@@ -46,7 +49,17 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode }) => {
   const deferredParsed = useDeferredValue(parsed);
   return (
     <CursorContext.Provider value={cursorState}>
-      <Content cursorNode={cursorNode} parsed={deferredParsed} nameNode={nameNode} self isPreview />
+      {parsed.whisperToUsernames != null && (
+        <ContentWhisperTo channelId={myMember.channelId} whisperToUsernames={parsed.whisperToUsernames} />
+      )}
+      <Content
+        channelId={myMember.channelId}
+        cursorNode={cursorNode}
+        parsed={deferredParsed}
+        nameNode={nameNode}
+        self
+        isPreview
+      />
     </CursorContext.Provider>
   );
 };

@@ -19,6 +19,8 @@ export type ComposeActionMap = {
   focus: Empty;
   blur: Empty;
   setRange: { range: [number, number] | null };
+  addWhisperTarget: { username: string };
+  removeWhisperTarget: { username: string };
   toggleAction: Empty;
   toggleWhisper: Empty;
 };

@@ -2,7 +2,6 @@ import { ClientEvent, PreviewPost } from 'api';
 import { Atom, useAtomValue, useStore } from 'jotai';
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { makeId } from 'utils';
-import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { ParseResult } from '../../interpreter/parse-result';
@@ -27,7 +26,7 @@ const sendPreview = (
 
   sendTimeoutRef.current = window.setTimeout(() => {
     const { inGame, previewId, inputedName, editFor } = compose;
-    const { isAction, broadcast, isWhisper } = parsed;
+    const { isAction, broadcast, whisperToUsernames } = parsed;
     const inGameName = inputedName || characterName;
     if (!previewId) {
       return;
@@ -39,9 +38,9 @@ const sendPreview = (
       mediaId: null,
       inGame,
       isAction,
-      text: (broadcast && !isWhisper) || parsed.text === '' ? parsed.text : null,
+      text: (broadcast && !whisperToUsernames) || parsed.text === '' ? parsed.text : null,
       clear: false,
-      entities: (broadcast && !isWhisper) ? parsed.entities : [],
+      entities: (broadcast && !whisperToUsernames) ? parsed.entities : [],
       editFor,
     };
 

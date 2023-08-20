@@ -149,7 +149,7 @@ const choice = <T>(parsers: Array<P<T>>): P<T> =>
     return null;
   });
 
-const regex = (pattern: RegExp): P<RegExpMatchArray> =>
+const regex = (pattern: RegExp, consume = false): P<RegExpMatchArray> =>
   new P(({ text, rest }) => {
     const match = rest.match(pattern);
     if (!match) {
@@ -157,7 +157,7 @@ const regex = (pattern: RegExp): P<RegExpMatchArray> =>
     }
     const matched = match[0];
     rest = rest.substring(matched.length);
-    return [match, { text, rest }];
+    return [match, { text: consume ? text + matched : text, rest }];
   });
 
 // Parsers
@@ -269,6 +269,15 @@ const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   };
   text += content;
   return [entity, { text, rest }];
+});
+
+const mention: P<string> = regex(/^@([\w_\d]{3,32})\s*/).then(([match, { text, rest }]) => {
+  const [entire, username] = match;
+  if (!username) {
+    console.warn('Failed to parse username: ' + entire);
+    return null;
+  }
+  return [username, { text: text + entire, rest }];
 });
 
 const LINK_REGEX = /^\[(.+?)]\(([^)]+?)\)/;
@@ -639,7 +648,7 @@ const initState = (source: string): State => {
 
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
   const modifiersParseResult = parseModifiers(source, env);
-  const { action, isRoll, isWhisper, mute } = modifiersParseResult;
+  const { action, isRoll, mute, whisper } = modifiersParseResult;
   let state: State = { text: modifiersParseResult.text, rest: modifiersParseResult.rest };
   const parser: P<Entity[]> = isRoll ? rollCommand : message;
 
@@ -650,7 +659,14 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   }
   const [entities, nextState] = result;
   state = nextState;
-  return { text: state.text, entities, isRoll, isAction: Boolean(action), isWhisper, broadcast: !mute };
+  return {
+    text: state.text,
+    entities,
+    isRoll,
+    isAction: Boolean(action),
+    whisperToUsernames: whisper ? whisper.usernames : null,
+    broadcast: !mute,
+  };
 };
 
 interface MeModifier {
@@ -673,6 +689,7 @@ interface HideRollModifier {
 
 interface WhisperModifier {
   type: 'Whisper';
+  usernames: string[];
   start: number;
   len: number;
 }
@@ -718,16 +735,47 @@ const hideRollModifier: P<Modifier> = regex(/^[.。][rR]/).then(([match, { text,
   return [modifier, { text, rest }];
 });
 
-const whisperModifier: P<Modifier> = regex(/^[.。][hH]/).then(([match, { text, rest }]) => {
-  const [entire, content = ''] = match;
-  const modifier: WhisperModifier = {
-    type: 'Whisper',
-    start: text.length,
-    len: entire.length,
-  };
-  text += entire;
-  return [modifier, { text, rest }];
-});
+const mentionList: P<{ start: number; len: number; usernames: string[] }> = regex(/^\(\s*(.*?)\)\s*|^（\s*(.*?)）\s*/)
+  .then(([match, { text, rest }], env) => {
+    const [entire, a, b] = match;
+    const content = a || b;
+    if (!content) {
+      return [{ start: text.length, len: entire.length, usernames: [] }, { text: text + entire, rest }];
+    }
+    const result = many(mention).run({ text: '', rest: content }, env);
+    if (!result) {
+      return null;
+    }
+    const [usernames] = result;
+    return [{ start: text.length, len: entire.length, usernames }, { text: text + entire, rest }];
+  });
+
+const whisperModifier: P<WhisperModifier> = regex(/^[.。][hH]/).then(
+  ([match, state], env) => {
+    const [entire] = match;
+    const memtionListResult = mentionList.run({ text: state.text + entire, rest: state.rest }, env);
+    if (!memtionListResult) {
+      const modifier: WhisperModifier = {
+        type: 'Whisper',
+        start: state.text.length,
+        usernames: [],
+        len: entire.length,
+      };
+      return [modifier, { text: state.text + entire, rest: state.rest }];
+    } else {
+      const [mentionList, state2] = memtionListResult;
+      const modifier: WhisperModifier = {
+        type: 'Whisper',
+        start: state.text.length,
+        usernames: mentionList.usernames,
+        len: entire.length + mentionList.len,
+      };
+      return [modifier, state2];
+    }
+  },
+);
+
+console.log('debug whisper', whisperModifier.run({ text: '', rest: '.h(@test )' }, emptyEnv));
 
 const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]/).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;

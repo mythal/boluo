@@ -5,7 +5,7 @@ export interface ParseResult {
   entities: Entity[];
   isAction: boolean;
   isRoll: boolean;
-  isWhisper: boolean;
+  whisperToUsernames: string[] | null;
   broadcast: boolean;
 }
 
@@ -14,6 +14,6 @@ export const initParseResult: ParseResult = {
   entities: [],
   isAction: false,
   isRoll: false,
-  isWhisper: false,
+  whisperToUsernames: null,
   broadcast: false,
 };

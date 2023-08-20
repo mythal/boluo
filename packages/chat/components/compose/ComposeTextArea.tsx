@@ -19,7 +19,7 @@ const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payloa
 
 export const ComposeTextArea: FC<Props> = ({ me, member }) => {
   const composeError = useComposeError(member);
-  const send = useSend(me.user, member, composeError);
+  const send = useSend(me.user, composeError);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);

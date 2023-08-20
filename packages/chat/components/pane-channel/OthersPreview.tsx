@@ -36,7 +36,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
       </div>
       {preview.text === null
         ? <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
-        : <Content parsed={deferredParsed} nameNode={nameNode} isPreview />}
+        : <Content channelId={preview.channelId} parsed={deferredParsed} nameNode={nameNode} isPreview />}
     </PreviewBox>
   );
 };

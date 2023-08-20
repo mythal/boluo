@@ -145,6 +145,20 @@ const handleEditMessage = (
   return { ...makeInitialComposeState(), previewId, editFor, source, inGame, inputedName, range };
 };
 
+const modifyModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {
+  const { source } = state;
+  let nextSource = source;
+  if (!modifier) {
+    const startsWithSpace = source.startsWith(' ');
+    nextSource = (startsWithSpace ? command : `${command} `) + source;
+  } else {
+    const before = source.substring(0, modifier.start);
+    const after = source.substring(modifier.start + modifier.len);
+    nextSource = command + (before + after).trimStart();
+  }
+  return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
+};
+
 const toggleModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {
   const { source } = state;
   let nextSource = source;
@@ -210,6 +224,39 @@ const handleReset = (): ComposeState => {
   return makeInitialComposeState();
 };
 
+const handleAddWhisperTarget = (
+  state: ComposeState,
+  { payload: { username } }: ComposeAction<'addWhisperTarget'>,
+): ComposeState => {
+  const { whisper } = parseModifiers(state.source);
+  username = username.trim();
+  if (username === '') {
+    return state;
+  }
+  let mentionList = [username];
+  if (whisper) {
+    mentionList = whisper.usernames.concat(username);
+  }
+  const mentions = mentionList.map(u => `@${u}`).join(' ');
+  const modifiedModifier = `.h(${mentions})`;
+
+  return modifyModifier(state, whisper, modifiedModifier);
+};
+
+const handleRemoveWhisperTarget = (
+  state: ComposeState,
+  { payload: { username } }: ComposeAction<'removeWhisperTarget'>,
+): ComposeState => {
+  const { whisper } = parseModifiers(state.source);
+  if (!whisper) {
+    return state;
+  }
+  const mentions = whisper.usernames.filter((u) => u !== username).map(u => `@${u}`).join(' ');
+  const modifiedModifier = `.h(${mentions})`;
+
+  return modifyModifier(state, whisper, modifiedModifier);
+};
+
 export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
@@ -246,6 +293,10 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleToggleWhisper(state, action);
     case 'toggleBroadcast':
       return handleToggleBroadcast(state, action);
+    case 'addWhisperTarget':
+      return handleAddWhisperTarget(state, action);
+    case 'removeWhisperTarget':
+      return handleRemoveWhisperTarget(state, action);
   }
 };
 

@@ -40,7 +40,7 @@ const Reason: FC<{ error: ComposeError }> = ({ error }) => {
 export const SelfPreviewSendHelpText = memo<Props>(({ me, member }) => {
   const { data: settings } = useQuerySettings();
   const composeError = useComposeError(member);
-  const send = useSend(me, member, composeError);
+  const send = useSend(me, composeError);
   if (composeError === 'TEXT_EMPTY') {
     return null;
   }

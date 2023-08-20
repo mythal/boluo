@@ -15,6 +15,7 @@ import { EntityText } from '../entities/EntityText';
 import { SelfCursorToolbar } from './SelfCursorToolbar';
 
 interface Props {
+  channelId: string;
   parsed: ParseResult;
   self?: boolean;
   isPreview: boolean;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export const Content = memo<Props>(({
+  channelId,
   parsed: { text: source, entities, isAction },
   nameNode,
   seed,

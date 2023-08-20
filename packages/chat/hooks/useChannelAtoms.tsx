@@ -49,7 +49,7 @@ export const makeChannelAtoms = (channelId: string): ChannelAtoms => {
   });
   const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
   const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
-  const isWhisperAtom = selectAtom(parsedAtom, ({ isWhisper }) => isWhisper);
+  const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
   return {
     composeAtom,
     checkComposeAtom,

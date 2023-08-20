@@ -3,7 +3,6 @@ import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { PreviewItem } from '../../state/channel.types';
 import { ComposeState } from '../../state/compose.reducer';
@@ -73,7 +72,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
         channelMember={member.channel}
       />
       <div className="flex flex-col gap-1 h-full items-between">
-        <SelfPreviewContent nameNode={nameNode} />
+        <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         <MessageMedia mediaFile={media} className="relative w-fit py-2">
           <div className="absolute right-full -translate-x-1 top-2">
             <RemoveMediaButton />

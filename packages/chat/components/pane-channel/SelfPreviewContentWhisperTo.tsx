@@ -2,6 +2,7 @@ import { Member } from 'api';
 import { X } from 'icons';
 import { useSetAtom } from 'jotai';
 import { FC, useCallback, useMemo } from 'react';
+import { FormattedMessage } from 'react-intl';
 import Icon from 'ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
@@ -41,20 +42,24 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames }) =
   }, [members, whisperToUsernames]);
 
   if (members == null || whisperToMembers == null || isLoading) {
-    return <span>Whisper to ...</span>;
+    return (
+      <span>
+        <FormattedMessage defaultMessage="Whisper to …" />
+      </span>
+    );
   }
 
   if (whisperToMembers.length === 0) {
     return (
       <span className="text-sm text-surface-600">
-        Whisper to the Master only {whisperToAdd}
+        <FormattedMessage defaultMessage="Whisper to the Master only" /> {whisperToAdd}
       </span>
     );
   }
 
   return (
     <span className="text-sm text-surface-600">
-      Whisper to the Master and{' '}
+      <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToMembers.map((member) => (
           <WhisperToItem key={member.user.id} member={member} remove={removeUsername(member.user.username)} />
@@ -92,14 +97,21 @@ export const WhisperToItemAdd: FC<{ members: Member[]; add: (username: string) =
       <option value="">
         +
       </option>
-      {members.map((member) => (
-        <option
-          key={member.user.id}
-          value={member.user.username}
-        >
-          {member.user.nickname}
-        </option>
-      ))}
+      {members.map((member) => {
+        let name = member.user.nickname;
+        if (member.channel.characterName !== '') {
+          name += ` (${member.channel.characterName})`;
+        }
+
+        return (
+          <option
+            key={member.user.id}
+            value={member.user.username}
+          >
+            {name}
+          </option>
+        );
+      })}
     </select>
   );
 };

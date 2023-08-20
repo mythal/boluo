@@ -6,7 +6,11 @@ export interface ParserArguments {
 
 const worker = self as unknown as Worker;
 worker.addEventListener('message', ({ data: { source } }: MessageEvent<ParserArguments>) => {
-  worker.postMessage(
-    parse(source),
-  );
+  try {
+    worker.postMessage(
+      parse(source),
+    );
+  } catch (e) {
+    console.error('Error in parsing: ', e);
+  }
 });

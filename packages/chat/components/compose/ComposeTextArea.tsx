@@ -90,7 +90,7 @@ export const ComposeTextArea: FC<Props> = ({ me, member }) => {
   }, [updateRange]);
 
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key !== 'Enter') {
+    if (isCompositionRef.current || e.key !== 'Enter') {
       return;
     }
     if (enterSend) {

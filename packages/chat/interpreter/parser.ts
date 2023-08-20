@@ -636,16 +636,6 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   return entities;
 };
 
-const SKIP_HEAD = /^[.。]me\s*/;
-
-const initState = (source: string): State => {
-  const skipHead = SKIP_HEAD.exec(source);
-  if (skipHead) {
-    return { text: skipHead[0], rest: source.substring(skipHead[0].length) };
-  }
-  return { text: '', rest: source };
-};
-
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
   const modifiersParseResult = parseModifiers(source, env);
   const { action, isRoll, mute, whisper } = modifiersParseResult;
@@ -739,9 +729,10 @@ const mentionList: P<{ start: number; len: number; usernames: string[] }> = rege
     return [{ start: text.length, len: entire.length, usernames }, { text: text + entire, rest }];
   });
 
-const whisperModifier: P<WhisperModifier> = regex(/^[.。]([rR])?[hH]\s*/).then(
+const whisperModifier: P<WhisperModifier> = regex(/^[.。]([rR])[hH]\s*|^[.。][hH]([rR])?\s*/).then(
   ([match, state], env) => {
-    const [entire, rollMatch = ''] = match;
+    const [entire, g1, g2] = match;
+    const rollMatch = g1 || g2 || '';
     const roll = rollMatch.toLowerCase() === 'r';
     const memtionListResult = mentionList.run({ text: state.text + entire, rest: state.rest }, env);
     if (!memtionListResult) {

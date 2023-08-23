@@ -61,7 +61,7 @@ export const useSendPreview = (
   const isFocused = usePaneIsFocus();
   const connectionState = useAtomValue(connectionStateAtom);
   useEffect(() => {
-    return store.sub(composeAtom, () => {
+    return store.sub(parsedAtom, () => {
       if (nickname === undefined || connectionState.type !== 'CONNECTED') {
         return;
       }

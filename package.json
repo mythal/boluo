@@ -4,6 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "nx run-many --target=build --all",
+    "check": "nx run-many --target=check --all",
+    "lint": "nx run-many --target=lint --all",
     "dev:site": "nx run-many --target=dev --projects=site",
     "dev:spa": "nx run-many --target=dev --projects=spa",
     "dev:legacy": "nx run-many --target=dev --projects=legacy"

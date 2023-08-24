@@ -36,8 +36,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       optics-ts:
         specifier: ^2.4.1
         version: 2.4.1
@@ -250,8 +250,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/icons
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       lang:
         specifier: workspace:*
         version: link:../../packages/lang
@@ -419,8 +419,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/icons
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       lang:
         specifier: workspace:*
         version: link:../../packages/lang
@@ -502,8 +502,8 @@ importers:
         specifier: workspace:*
         version: link:../eslint-config-custom
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -514,8 +514,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       store:
         specifier: workspace:*
         version: link:../store
@@ -563,8 +563,8 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1(react@18.2.0)
       '@floating-ui/react':
-        specifier: ^0.24.8
-        version: 0.24.8(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^0.25.1
+        version: 0.25.1(react-dom@18.2.0)(react@18.2.0)
       api:
         specifier: workspace:*
         version: link:../api
@@ -584,11 +584,11 @@ importers:
         specifier: workspace:*
         version: link:../icons
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       jotai-location:
         specifier: ^0.5.1
-        version: 0.5.1(jotai@2.3.1)
+        version: 0.5.1(jotai@2.4.0)
       lang:
         specifier: workspace:*
         version: link:../lang
@@ -614,8 +614,8 @@ importers:
         specifier: ^6.4.4
         version: 6.4.4(react@18.2.0)(typescript@5.1.6)
       react-virtuoso:
-        specifier: ^4.4.2
-        version: 4.4.2(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^4.5.0
+        version: 4.5.0(react-dom@18.2.0)(react@18.2.0)
       store:
         specifier: workspace:*
         version: link:../store
@@ -706,8 +706,8 @@ importers:
         specifier: workspace:*
         version: link:../eslint-config-custom
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -826,8 +826,8 @@ importers:
   packages/store:
     dependencies:
       jotai:
-        specifier: ^2.3.1
-        version: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@18.2.18)(react@18.2.0)
     devDependencies:
       eslint:
         specifier: ^8.46.0
@@ -2685,14 +2685,14 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@floating-ui/react@0.24.8(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-AuYeDoaR8jtUlUXtZ1IJ/6jtBkGnSpJXbGNzokBL87VDJ8opMq1Bgrc0szhK482ReQY6KZsMoZCVSb4xwalkBA==}
+  /@floating-ui/react@0.25.1(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-lxuWxfSgDJwOeZK07PIDjTSlH0CY6LRDKo6eI0H7TnctP+5IAn0n8+npNveM0L2wNIVdAr0S8RvvoHfhzPbBAQ==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
     dependencies:
       '@floating-ui/react-dom': 2.0.1(react-dom@18.2.0)(react@18.2.0)
-      aria-hidden: 1.2.3
+      '@floating-ui/utils': 0.1.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       tabbable: 6.2.0
@@ -5711,7 +5711,7 @@ packages:
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /chrome-trace-event@1.0.3:
     resolution: {integrity: sha512-p3KULyQg4S7NIHixdwbGX+nFHkoBiA4YQmyWtjb8XngSKV124nJmRysgAeujbUVb15vh+RvFUfCPqU7rXk+hZg==}
@@ -7607,8 +7607,8 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  /fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -8798,7 +8798,7 @@ packages:
       micromatch: 4.0.5
       walker: 1.0.8
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /jest-leak-detector@29.6.2:
@@ -9054,16 +9054,16 @@ packages:
     hasBin: true
     dev: true
 
-  /jotai-location@0.5.1(jotai@2.3.1):
+  /jotai-location@0.5.1(jotai@2.4.0):
     resolution: {integrity: sha512-6b34X6PpUaXmHCcyxdMFUHgRLUEp+SFHq9UxHbg5HxHC1LddVyVZbPJI+P15+SOQJcUTH3KrsIeKmeLko+Vw/A==}
     peerDependencies:
       jotai: '>=1.11.0'
     dependencies:
-      jotai: 2.3.1(@types/react@18.2.18)(react@18.2.0)
+      jotai: 2.4.0(@types/react@18.2.18)(react@18.2.0)
     dev: false
 
-  /jotai@2.3.1(@types/react@18.2.18)(react@18.2.0):
-    resolution: {integrity: sha512-pXhx8/MeRUAHbzayerEUf9NHvP+Ba3q9WAvIMjaSwwuSCKEFhb8UW4XuZPC+Bv4u2ufvlyrxIZ+vy5UJ3f8JsQ==}
+  /jotai@2.4.0(@types/react@18.2.18)(react@18.2.0):
+    resolution: {integrity: sha512-NUHJdAJe3C8Prf0DD6EzezCATjkNvfCNI7pgkaX7bCPPsqE0oK8L9RzZsEhz/UxFoGRayXwacTvAli0VEYKkqQ==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
       '@types/react': '>=17.0.0'
@@ -11470,8 +11470,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /react-virtuoso@4.4.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-9uChSRSK5bTbKTxzuta4RqhfrlZSVHI/v8fHwmv3jmImS8FjdZ4Mzgqz9JKUp/yQo3dIHkR2QwidQeqxgYzPhQ==}
+  /react-virtuoso@4.5.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-OMP6XrzJMMos1vbJZC16RxGW7utAxUMP7i5PNPi6epBNVH7nz+CF/DlmecNBep5wyjLud51dQ5epjb2A0w9W/Q==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=16 || >=17 || >= 18'
@@ -11774,7 +11774,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /run-applescript@5.0.0:
@@ -13298,7 +13298,7 @@ packages:
       postcss: 8.4.27
       rollup: 3.27.1
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /vitest@0.31.4:

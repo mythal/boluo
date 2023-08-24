@@ -6,6 +6,7 @@
         "cacheableOperations": [
           "build",
           "lint",
+          "check",
           "generate",
           "test"
         ]
@@ -35,9 +36,13 @@
     "watch": {
       "dependsOn": []
     },
+    "check": {
+      "dependsOn": []
+    },
     "lint": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "^check"
       ]
     }
   }

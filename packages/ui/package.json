@@ -4,6 +4,7 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
   "scripts": {
+    "check": "tsc --noEmit --project tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,

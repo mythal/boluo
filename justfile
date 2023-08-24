@@ -4,6 +4,9 @@ alias gen := generate
 build projects="*":
     pnpm exec nx run-many --target=build --output-style="stream" --projects={{projects}}
 
+check:
+    pnpm exec nx run-many --target=check
+
 lint:
     pnpm exec nx run-many --target=lint
     pnpm exec dprint check

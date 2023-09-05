@@ -94,6 +94,8 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
             start: entity.start,
             len: entity.len,
           };
+        } else if (entity.type === 'Emphasis' || entity.type === 'Strong') {
+          return { ...entity, text: text.substring(entity.child.start, entity.child.start + entity.child.len) };
         } else {
           return { ...entity, text: text.substr(entity.start, entity.len) };
         }

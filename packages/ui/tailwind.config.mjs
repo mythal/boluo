@@ -2,6 +2,7 @@ import themeSwapper from 'tailwindcss-theme-swapper';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert } from 'utils';
+import screens from './screens.json';
 
 const { red, neutral, blue, green, yellow, white, black, gray, slate, lime } = colors;
 const revRed = revert(red);
@@ -212,6 +213,7 @@ module.exports = {
   content: [],
   darkMode: 'class',
   theme: {
+    screens: Object.fromEntries(Object.entries(screens).map(([key, value]) => [key, `${value}px`])),
     colors: {
       green: colors.green,
       blue: colors.blue,

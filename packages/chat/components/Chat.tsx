@@ -2,6 +2,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { FC, ReactNode, useEffect } from 'react';
 import { Suspense } from 'react';
 import { Loading } from 'ui/Loading';
+import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
@@ -49,32 +50,34 @@ const Chat: FC = () => {
   };
 
   return (
-    <ChatErrorBoundary>
-      <Suspense
-        fallback={
-          <ChatSkeleton>
-            <Loading />
-          </ChatSkeleton>
-        }
-      >
-        <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
-          <OpenSidebarButton />
-          <div className="flex view-height">
-            <Sidebar className="flex flex-col h-full flex-none border-r bg-lowest border-surface-300" />
-            <div
-              onTouchStart={handleTouch}
-              className="flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x"
-            >
-              <Suspense fallback={<PaneLoading />}>
-                {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
-                {route.type === 'NOT_FOUND' && <ChatNotFound />}
-                {route.type === 'ROOT' && <ChatRoot />}
-              </Suspense>
+    <BreakpointProvider>
+      <ChatErrorBoundary>
+        <Suspense
+          fallback={
+            <ChatSkeleton>
+              <Loading />
+            </ChatSkeleton>
+          }
+        >
+          <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
+            <OpenSidebarButton />
+            <div className="flex view-height">
+              <Sidebar className="flex flex-col h-full flex-none border-r bg-lowest border-surface-300" />
+              <div
+                onTouchStart={handleTouch}
+                className="flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x"
+              >
+                <Suspense fallback={<PaneLoading />}>
+                  {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
+                  {route.type === 'NOT_FOUND' && <ChatNotFound />}
+                  {route.type === 'ROOT' && <ChatRoot />}
+                </Suspense>
+              </div>
             </div>
-          </div>
-        </SpaceProvider>
-      </Suspense>
-    </ChatErrorBoundary>
+          </SpaceProvider>
+        </Suspense>
+      </ChatErrorBoundary>
+    </BreakpointProvider>
   );
 };
 

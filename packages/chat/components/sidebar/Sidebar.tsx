@@ -51,7 +51,7 @@ export const Sidebar: FC<Props> = ({ className }) => {
             'relative flex-grow flex flex-col justify-between overflow-hidden w-sidebar',
           )}
         >
-          <div className="divide-y overflow-y-auto overflow-x-hidden">
+          <div className="divide-y overflow-y-auto divide-surface-100 overflow-x-hidden">
             <SidebarContent />
           </div>
 

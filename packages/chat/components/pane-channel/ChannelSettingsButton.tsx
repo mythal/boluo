@@ -6,6 +6,7 @@ import { Button } from 'ui/Button';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { usePaneKey } from '../../hooks/usePaneKey';
 import { panesAtom } from '../../state/view.atoms';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   channelId: string;
@@ -28,9 +29,9 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
     }
   }, [settingsPaneKey, setPanes, currentPaneKey, addPane, channelId]);
   return (
-    <Button onClick={handleClick} data-type="switch" data-on={settingsPaneKey != null}>
+    <SidebarHeaderButton onClick={handleClick} active={settingsPaneKey != null}>
       <Settings />
       <FormattedMessage defaultMessage="Channel Settings" />
-    </Button>
+    </SidebarHeaderButton>
   );
 };

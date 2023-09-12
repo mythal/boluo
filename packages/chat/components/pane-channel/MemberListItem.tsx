@@ -1,5 +1,15 @@
-import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  autoUpdate,
+  FloatingPortal,
+  offset,
+  shift,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
 import { Channel, Member, UserStatus } from 'api';
+import clsx from 'clsx';
 import { Mask } from 'icons';
 import { FC, useState } from 'react';
 import Icon from 'ui/Icon';
@@ -13,19 +23,18 @@ interface Props {
   myId: string | null;
   channel: Channel;
   canIKick: boolean;
-  showCharacterName: boolean;
   canIEditMaster: boolean;
   status: UserStatus | undefined;
 }
 
 export const MemberListItem: FC<Props> = (
-  { member, canIKick, myId, showCharacterName, status, channel, canIEditMaster },
+  { member, canIKick, myId, status, channel, canIEditMaster },
 ) => {
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,
     onOpenChange: setShowMemberCard,
-    middleware: [],
+    middleware: [offset(4)],
     placement: 'left-start',
     whileElementsMounted: autoUpdate,
   });
@@ -33,27 +42,36 @@ export const MemberListItem: FC<Props> = (
   const dismiss = useDismiss(context, {});
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   const { user, channel: channelMember } = member;
+  const hasCharacterName = channelMember.characterName !== '';
+  const offline = status == null || status.kind !== 'ONLINE';
 
   return (
     <>
       <button
-        className="group relative w-full text-left cursor-pointer flex items-start gap-1 text-sm rounded-sm p-1 hover:bg-surface-100 active:bg-surface-200"
+        className={clsx(
+          'grid gap-x-1 items-center grid-cols-[auto_minmax(0,1fr)_auto] grid-flow-col',
+          hasCharacterName ? 'grid-rows-2' : 'grid-rows-1',
+          'group relative w-full cursor-pointer  text-sm rounded-sm px-2 py-1 hover:bg-surface-100 active:bg-surface-200',
+        )}
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        <div className="w-6 h-6 flex-none">
-          <Avatar size="1.5rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />
+        <div className="w-8 h-8 flex-none row-span-full">
+          <Avatar size="2rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />
         </div>
-        <span className="space-x-1">
-          <span className={status == null || status.kind !== 'ONLINE' ? 'text-surface-500' : ''}>
-            {showCharacterName && channelMember.characterName !== ''
-              ? (
-                <>
-                  <Icon icon={Mask} /> {channelMember.characterName}
-                </>
-              )
-              : user.nickname}
+        {hasCharacterName && (
+          <span className={clsx(offline ? 'text-surface-500' : '', 'text-left')}>
+            <Icon icon={Mask} /> {channelMember.characterName}
           </span>
+        )}
+        <span className={clsx(hasCharacterName ? '' : 'row-span-full', 'text-left')}>
+          {
+            <span className={offline ? 'text-surface-400' : (hasCharacterName ? 'text-surface-600' : '')}>
+              {user.nickname}
+            </span>
+          }
+        </span>
+        <span className="row-span-full space-x-1">
           {channelMember.isMaster && <GameMasterBadge />}
           {status && <MemberStatusBadge status={status} />}
         </span>

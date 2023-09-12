@@ -14,6 +14,7 @@ import { FC, Suspense, useEffect, useMemo, useState } from 'react';
 import { Spinner } from 'ui/Spinner';
 import { useSpace } from '../../hooks/useSpace';
 import { connectionStateAtom } from '../../state/chat.atoms';
+import { FloatingBox } from '../common/FloatingBox';
 import { BaseUrlSelector } from './BaseUrlSelector';
 import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
 import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
@@ -62,17 +63,21 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
             className={clsx(
-              'border border-surface-200 bg-surface-50',
-              'flex flex-col gap-4',
-              'w-[max-content] px-4 py-4 rounded shadow-md',
+              'w-[max-content]',
             )}
           >
-            {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
-            {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
-            {connectionState.type === 'CLOSED' && <ConnectionIndicatorClosed countdown={connectionState.countdown} />}
-            <Suspense fallback="...">
-              <BaseUrlSelector />
-            </Suspense>
+            <FloatingBox>
+              <div className="flex flex-col gap-4">
+                {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
+                {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
+                {connectionState.type === 'CLOSED' && (
+                  <ConnectionIndicatorClosed countdown={connectionState.countdown} />
+                )}
+                <Suspense fallback="...">
+                  <BaseUrlSelector />
+                </Suspense>
+              </div>
+            </FloatingBox>
           </div>
         </FloatingPortal>
       )}

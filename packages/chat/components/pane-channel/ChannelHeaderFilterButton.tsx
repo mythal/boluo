@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { FC } from 'react';
 import { Button } from 'ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   on: boolean;
@@ -16,9 +17,9 @@ export const ChannelHeaderFilterButton: FC<Props> = ({ on, toggle }) => {
   const filter = useAtomValue(filterAtom);
   return (
     <div className="relative flex items-stretch">
-      <Button data-small onClick={toggle} data-type="detail" data-active={on} data-on={on}>
+      <SidebarHeaderButton onClick={toggle} active={on}>
         <Filter />
-      </Button>
+      </SidebarHeaderButton>
       {filter !== 'ALL' && <Dot />}
     </div>
   );

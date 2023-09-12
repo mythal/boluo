@@ -26,7 +26,7 @@ export const ChannelHeaderCharacterNameEdit: FC<Props> = ({ member, exitEdit }) 
   };
   return (
     <form className="" onSubmit={handleSubmit(save)}>
-      <label className="" htmlFor={id}>
+      <label className="py-1 block" htmlFor={id}>
         <FormattedMessage defaultMessage="Character Name" />
       </label>
       <div className="flex gap-1">

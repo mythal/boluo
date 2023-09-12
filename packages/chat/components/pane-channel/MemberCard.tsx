@@ -10,6 +10,7 @@ import { Badge } from 'ui/Badge';
 import { Button } from 'ui/Button';
 import Icon from 'ui/Icon';
 import { Avatar } from '../account/Avatar';
+import { FloatingBox } from '../common/FloatingBox';
 
 const JUST_NOW = 1000 * 10;
 const SECONDS_IN_MS = 1000;
@@ -284,8 +285,8 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>((
     }
   }
   return (
-    <div {...props} ref={ref}>
-      <div className="p-4 rounded shadow bg-lowest w-[20rem]">
+    <div {...props} ref={ref} className="w-[20rem]">
+      <FloatingBox>
         <div className="flex items-end">
           <Avatar
             size="6rem"
@@ -393,7 +394,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>((
             dismiss={() => setUiState('VIEW')}
           />
         )}
-      </div>
+      </FloatingBox>
     </div>
   );
 });

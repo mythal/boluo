@@ -42,7 +42,7 @@ const closePanes = (channelId: string) => (panes: Pane[]): Pane[] =>
     }
   });
 
-export const DeleteChannelButton: FC<Props> = ({ channelId, channelName }) => {
+export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
   const store = useStore();
   const { trigger, isMutating } = useSWRMutation<Channel, Empty, [string, string], Empty>(
     ['/channels/query', channelId],
@@ -53,59 +53,20 @@ export const DeleteChannelButton: FC<Props> = ({ channelId, channelName }) => {
       },
     },
   );
-  const [isConfirmOpen, setComfirmOpen] = useState(false);
-  const { x, y, strategy, refs, context } = useFloating({
-    open: isConfirmOpen,
-    strategy: 'fixed',
-    placement: 'bottom-start',
-    onOpenChange: setComfirmOpen,
-    middleware: [offset(8), flip()],
-    whileElementsMounted: autoUpdate,
-  });
-
-  const click = useClick(context, {});
-  const dismiss = useDismiss(context);
   const confirm = useCallback(async () => {
-    setComfirmOpen(false);
     await trigger({});
   }, [trigger]);
-  const cancel = () => {
-    setComfirmOpen(false);
-  };
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-  ]);
   return (
-    <>
-      <Button disabled={isMutating} type="button" ref={refs.setReference} {...getReferenceProps()}>
-        {isMutating
-          ? <FormattedMessage defaultMessage="Deleting..." />
-          : <FormattedMessage defaultMessage="Delete Channel" />}
-      </Button>
-      {isConfirmOpen && (
-        <FloatingPortal>
-          <div
-            ref={refs.setFloating}
-            style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
-            {...getFloatingProps()}
-            className="bg-warning-50 border w-60 border-warning-300 rounded shadow py-2 px-4"
-          >
-            <FormattedMessage
-              defaultMessage="Are you sure you want to delete the &quot;{channelName}&quot; channel?"
-              values={{ channelName }}
-            />
-            <div className="flex gap-1 justify-end pt-3">
-              <Button type="button" onClick={cancel}>
-                <FormattedMessage defaultMessage="Cancel" />
-              </Button>
-              <Button type="button" data-type="danger" onClick={confirm}>
-                <FormattedMessage defaultMessage="Delete" />
-              </Button>
-            </div>
-          </div>
-        </FloatingPortal>
-      )}
-    </>
+    <div>
+      <FormattedMessage
+        defaultMessage="Are you sure you want to delete the &quot;{channelName}&quot; channel?"
+        values={{ channelName }}
+      />
+      <div className="flex gap-1 justify-end pt-3">
+        <Button type="button" data-type="danger" onClick={confirm}>
+          <FormattedMessage defaultMessage="Delete" />
+        </Button>
+      </div>
+    </div>
   );
 };

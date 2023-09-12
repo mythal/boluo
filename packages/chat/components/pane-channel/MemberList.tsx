@@ -5,6 +5,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
 
@@ -29,7 +30,6 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
   const [uiState, setUiState] = useState<'MEMBER' | 'INVITE'>('MEMBER');
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
   const { data: membersData, error } = useQueryChannelMembers(channel.id);
-  const [showCharaterName, setShowCharacterName] = useState(true);
   const toggleInvite = () => {
     setUiState(x => x === 'MEMBER' ? 'INVITE' : 'MEMBER');
   };
@@ -82,37 +82,27 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
     canIKick = myMember.channel.isMaster || myMember.space.isAdmin;
     myId = myMember.user.id;
   }
-  const showCharacterNameTitle = intl.formatMessage({
-    defaultMessage: 'Show character name',
-  });
+
+  const canInvite = myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin);
 
   return (
-    <div className="flex flex-col">
-      <div className="py-2 px-1 flex gap-1 justify-between">
-        {myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin) && (
-          <Button
-            data-small
-            type="button"
-            data-type="switch"
-            data-on={uiState === 'INVITE'}
+    <div className="flex flex-col border-l border-surface-100">
+      <div className="text-sm px-2 flex justify-between items-center py-1">
+        <span className="font-bold">
+          {uiState === 'MEMBER' && <FormattedMessage defaultMessage="Members" />}
+          {uiState === 'INVITE' && <FormattedMessage defaultMessage="Invite" />}
+        </span>
+        {canInvite && (
+          <SidebarHeaderButton
+            active={uiState === 'INVITE'}
             onClick={toggleInvite}
+            title={intl.formatMessage({ defaultMessage: 'Invite' })}
           >
             <UserPlus />
-            <FormattedMessage defaultMessage="Invite" />
-          </Button>
-        )}
-        {uiState === 'MEMBER' && (
-          <Button
-            type="button"
-            data-type="switch"
-            data-on={showCharaterName}
-            title={showCharacterNameTitle}
-            onClick={() => setShowCharacterName(x => !x)}
-          >
-            <Mask />
-          </Button>
+          </SidebarHeaderButton>
         )}
       </div>
+
       <div className="overflow-y-auto">
         {uiState === 'INVITE' && myMember != null && (
           <MemberInvitation
@@ -131,7 +121,6 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
               member={member}
               canIKick={canIKick}
               canIEditMaster={myMember?.space.isAdmin ?? false}
-              showCharacterName={showCharaterName}
               status={userStatusMap?.[member.user.id]}
             />
           ))

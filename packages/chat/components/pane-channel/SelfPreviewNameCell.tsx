@@ -1,5 +1,6 @@
 import { ChannelMember } from 'api';
-import { History } from 'icons';
+import clsx from 'clsx';
+import { History, Save } from 'icons';
 import { useSetAtom, useStore } from 'jotai';
 import { FC, memo, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -26,22 +27,26 @@ const SaveAsCharacterName: FC<{ channelId: string; characterName: string }> = ({
     isMutating,
   } = useEditChannelCharacterName(channelId);
   return (
-    <div className="absolute left-0 bottom-full w-max bg-pin-highest/60  rounded shadow px-2 py-1 -translate-x-2">
+    <button
+      className={clsx(
+        'absolute left-0 bottom-full w-max bg-pin-brand-600 text-pin-lowest rounded-sm shadow-1/2 shadow-surface-400/50 px-2 py-1 -translate-x-2',
+        'opacity-40 hover:opacity-100 group-hover:opacity-100',
+      )}
+      onClick={() => trigger({ characterName })}
+    >
       {isMutating
         ? (
           <span className="text-sm animate-pulse text-pin-lowest">
-            Saving...
+            <FormattedMessage defaultMessage="Saving…" />
           </span>
         )
         : (
-          <button
-            className="text-sm underline flex-none text-pin-brand-300 hover:text-pin-brand-200"
-            onClick={() => trigger({ characterName })}
-          >
-            <FormattedMessage defaultMessage="As default character name" />
-          </button>
+          <span className="text-sm flex-none">
+            <Icon icon={Save} className="mr-1" />
+            <FormattedMessage defaultMessage="Keep name" />
+          </span>
         )}
-    </div>
+    </button>
   );
 };
 

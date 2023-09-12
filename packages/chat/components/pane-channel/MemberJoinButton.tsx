@@ -9,6 +9,7 @@ import { Button } from 'ui/Button';
 import { Spinner } from 'ui/Spinner';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   channel: Channel;
@@ -51,9 +52,9 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
   };
 
   return (
-    <Button data-small disabled={me === 'LOADING' || isMutating} onClick={handleClick}>
+    <SidebarHeaderButton disabled={me === 'LOADING' || isMutating} onClick={handleClick}>
       {isMutating ? <Spinner /> : <UserPlus />}
       <FormattedMessage defaultMessage="Join" />
-    </Button>
+    </SidebarHeaderButton>
   );
 };

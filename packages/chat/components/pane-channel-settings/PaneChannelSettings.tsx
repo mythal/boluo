@@ -9,13 +9,14 @@ import { Button } from 'ui/Button';
 import { Loading } from 'ui/Loading';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { DangerZone } from '../common/DangerZone';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { ChannelNameField } from './ChannelNameField';
 import { DefaultDiceField } from './DefaultDiceField';
 import { DefaultRollCommandField } from './DefaultRollCommandField';
-import { DeleteChannelButton } from './DeleteChannelButton';
+import { DeleteChannel } from './DeleteChannelButton';
 import { ChannelSettingsForm } from './form';
 import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
@@ -84,16 +85,21 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           <DefaultRollCommandField />
           <TopicField />
           <IsSecretField />
-          <div className="p-2 border-t border-b border-error-200 bg-error-50">
-            <div className="text-lg">
-              <FormattedMessage defaultMessage="Danger Zone" />
-            </div>
-            <div>
-              <div className="py-2">
-                <DeleteChannelButton channelId={channel.id} channelName={channel.name} />
-              </div>
-            </div>
+
+          <div className="font-bold">
+            <FormattedMessage defaultMessage="Danger Zone" />
           </div>
+          <DangerZone
+            prompt={
+              <span className="text-lg">
+                <FormattedMessage defaultMessage="Delete Channel" />
+              </span>
+            }
+          >
+            <div className="py-2">
+              <DeleteChannel channelId={channel.id} channelName={channel.name} />
+            </div>
+          </DangerZone>
         </div>
         <PaneFooterBox>
           <Button type="button" onClick={close}>

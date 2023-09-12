@@ -6,6 +6,7 @@ import { Button } from 'ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   channelId: string;
@@ -28,10 +29,9 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
     }, 0);
   }, [membersInfo, userStatus]);
   return (
-    <Button
-      data-small
-      data-active={memberListState !== 'CLOSED'}
-      disabled={isLoading}
+    <SidebarHeaderButton
+      active={memberListState !== 'CLOSED'}
+      isLoading={isLoading}
       onClick={() => setMemberListState(prevState => prevState !== 'CLOSED' ? 'CLOSED' : 'RIGHT')}
     >
       <Users />
@@ -40,6 +40,6 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
           {onlineCount}/{membersInfo.members.length}
         </span>
       )}
-    </Button>
+    </SidebarHeaderButton>
   );
 };

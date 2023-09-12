@@ -44,7 +44,6 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
   }, [myId, spaceMembers]);
   const addPane = usePaneAdd();
   const openSettings = useCallback(() => {
-    console.log('openSettings');
     addPane({ type: 'SPACE_SETTINGS', spaceId });
   }, [addPane, spaceId]);
   const operators = useMemo(() => {

@@ -9,6 +9,7 @@ import { useLogout } from '../../hooks/useLogout';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { PaneProfileEdit } from './PaneProfileEdit';
 import { PaneProfileNotFound } from './PaneProfileNotFound';
 import { PaneProfileView } from './PaneProfileView';
@@ -37,18 +38,19 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   const operators = (
     <>
       {isMe && (
-        <Button data-small onClick={logout} title={logoutLabel}>
+        <SidebarHeaderButton
+          onClick={logout}
+          title={logoutLabel}
+        >
           <LogOut />
           <span className="hidden @xs:inline">
             <FormattedMessage defaultMessage="Logout" />
           </span>
-        </Button>
+        </SidebarHeaderButton>
       )}
       {isMe && (
-        <Button
-          data-small
-          data-type="switch"
-          data-on={isEditing}
+        <SidebarHeaderButton
+          active={isEditing}
           onClick={() => setIsEditing(toggle)}
           title={editLabel}
         >
@@ -56,7 +58,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
           <span className="hidden @md:inline">
             <FormattedMessage defaultMessage="Edit" />
           </span>
-        </Button>
+        </SidebarHeaderButton>
       )}
     </>
   );

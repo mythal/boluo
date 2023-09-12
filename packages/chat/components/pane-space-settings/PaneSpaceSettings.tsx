@@ -16,6 +16,7 @@ import { TextArea, TextInput } from 'ui/TextInput';
 import type { ChildrenProps } from 'utils';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
+import { DangerZone } from '../common/DangerZone';
 import { DiceSelect } from '../DiceSelect';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { InviteSpaceMember } from '../InviteSpaceMember';
@@ -233,7 +234,15 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
             <SectionTitle>
               <FormattedMessage defaultMessage="Danger Zone" />
             </SectionTitle>
-            <FieldDestroySpace spaceId={space.id} spaceName={space.name} />
+            <DangerZone
+              prompt={
+                <span className="text-lg">
+                  <FormattedMessage defaultMessage="Destory Space" />
+                </span>
+              }
+            >
+              <FieldDestroySpace spaceId={space.id} spaceName={space.name} />
+            </DangerZone>
           </div>
         </div>
         <PaneFooterBox>

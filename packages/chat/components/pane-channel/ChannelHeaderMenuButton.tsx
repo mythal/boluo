@@ -1,6 +1,7 @@
 import { ChevronDown, Menu, Tool } from 'icons';
 import { FC } from 'react';
 import { Button } from 'ui/Button';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   on: boolean;
@@ -9,8 +10,8 @@ interface Props {
 
 export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
   return (
-    <Button data-small onClick={toggle} data-active={on} data-on={on} data-type="detail">
+    <SidebarHeaderButton onClick={toggle} active={on}>
       <Tool />
-    </Button>
+    </SidebarHeaderButton>
   );
 };

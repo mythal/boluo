@@ -29,8 +29,7 @@ export const PaneHeaderBox: FC<Props> = (
       <div
         className={clsx(
           'min-h-pane-header flex items-center px-4 text-lg',
-          'justify-between border-b border-surface-200',
-          isFocused ? 'bg-surface-50' : 'bg-surface-50',
+          'justify-between border-b border-surface-100 bg-lowest',
         )}
       >
         <div className="inline-flex gap-1 items-center flex-nowrap min-w-0">
@@ -56,7 +55,7 @@ export const PaneHeaderBox: FC<Props> = (
         )}
       </div>
 
-      <div className="divide-y">
+      <div className="divide-y bg-lowest divide-surface-100">
         {paneBanner.content && <PaneBanner banner={paneBanner} />}
         {extra}
       </div>

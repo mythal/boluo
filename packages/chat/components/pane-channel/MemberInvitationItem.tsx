@@ -31,7 +31,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
       <button
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="group relative w-full text-left cursor-pointer flex items-start gap-1 text-sm rounded-sm p-1 hover:bg-surface-100 active:bg-surface-200"
+        className="group relative w-full text-left cursor-pointer flex items-center gap-1 text-sm rounded-sm p-1 hover:bg-surface-100 active:bg-surface-200"
       >
         <div className="w-6 h-6 flex-none">
           <Avatar size="1.5rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />

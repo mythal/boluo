@@ -10,6 +10,8 @@ import { Spinner } from 'ui/Spinner';
 import { Empty } from 'utils';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { FloatingBox } from '../common/FloatingBox';
+import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   channelId: string;
@@ -30,7 +32,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   const { x, y, strategy, refs, context } = useFloating({
     open: isConfirmOpen,
     strategy: 'fixed',
-    placement: 'bottom-start',
+    placement: 'bottom-end',
     onOpenChange: setComfirmOpen,
     whileElementsMounted: autoUpdate,
   });
@@ -47,33 +49,35 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
   ]);
   return (
     <>
-      <Button
+      <SidebarHeaderButton
         ref={refs.setReference}
         disabled={!channelMember || channelMember === 'LOADING' || isMutating || isLoading}
+        className="flex flex-none items-center gap-1 px-2 py-1 rounded-sm hover:bg-error-700/10 text-error-800"
         {...getReferenceProps()}
       >
         {isMutating || isLoading ? <Spinner /> : <UserX />}
         <FormattedMessage defaultMessage="Leave" />
-      </Button>
+      </SidebarHeaderButton>
       {isConfirmOpen && (
         <FloatingPortal>
           <div
-            className="bg-surface-50 border border-surface-200 rounded-sm shadow py-3 px-4"
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
           >
-            <div>
-              <FormattedMessage
-                defaultMessage="Are you sure you want to leave {channelName}?"
-                values={{ channelName: channel?.name }}
-              />
-            </div>
-            <div className="text-right pt-2">
-              <Button data-type="danger" data-small onClick={confirm} disabled={channel == null}>
-                <FormattedMessage defaultMessage="Leave" />
-              </Button>
-            </div>
+            <FloatingBox>
+              <div>
+                <FormattedMessage
+                  defaultMessage="Are you sure you want to leave {channelName}?"
+                  values={{ channelName: channel?.name }}
+                />
+              </div>
+              <div className="text-right pt-2">
+                <Button data-type="danger" data-small onClick={confirm} disabled={channel == null}>
+                  <FormattedMessage defaultMessage="Leave" />
+                </Button>
+              </div>
+            </FloatingBox>
           </div>
         </FloatingPortal>
       )}

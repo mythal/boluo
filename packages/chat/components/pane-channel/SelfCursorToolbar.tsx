@@ -62,7 +62,7 @@ export const SelfCursorToolbar = memo<Props>(({ contentRef }) => {
         data-flip="false"
         data-hide="false"
         className={clsx(
-          'inline-flex fixed transition-all ease-out duration-300 bg-surface-700 border border-surface-900 rounded-sm shadow-md',
+          'inline-flex fixed transition-all ease-out duration-100 bg-surface-700 border border-surface-900 rounded-sm shadow-md',
           'data-[flipped=true]:-translate-x-full',
           'data-[hide=true]:hidden',
           'opacity-40 hover:opacity-100',

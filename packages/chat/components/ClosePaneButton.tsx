@@ -1,15 +1,14 @@
 import { Close } from 'icons';
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
-import { Button } from 'ui/Button';
 import { usePaneClose } from '../hooks/usePaneClose';
+import { SidebarHeaderButton } from './sidebar/SidebarHeaderButton';
 
 export const ClosePaneButton: FC = () => {
   const intl = useIntl();
   const close = usePaneClose();
   return (
-    <Button
-      data-small
+    <SidebarHeaderButton
       onClick={(e) => {
         e.stopPropagation();
         close();
@@ -17,6 +16,6 @@ export const ClosePaneButton: FC = () => {
       title={intl.formatMessage({ defaultMessage: 'Close pane' })}
     >
       <Close />
-    </Button>
+    </SidebarHeaderButton>
   );
 };

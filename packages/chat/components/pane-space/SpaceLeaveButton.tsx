@@ -7,6 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from 'ui/Button';
 import { unwrap } from 'utils';
+import { FloatingBox } from '../common/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
@@ -60,17 +61,19 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
           style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
           ref={refs.setFloating}
           {...getFloatingProps()}
-          className="p-2 w-44 bg-lowest rounded shadow-md text-sm"
+          className="w-48"
         >
-          <FormattedMessage
-            defaultMessage="Are you sure to leave the &quot;{spaceName}&quot; space?"
-            values={{ spaceName: space.name }}
-          />
-          <div className="text-right pt-2">
-            <Button data-type="danger" type="button" onClick={() => leave()} disabled={isLeaving}>
-              <FormattedMessage defaultMessage="Leave" />
-            </Button>
-          </div>
+          <FloatingBox>
+            <FormattedMessage
+              defaultMessage="Are you sure to leave the &quot;{spaceName}&quot; space?"
+              values={{ spaceName: space.name }}
+            />
+            <div className="text-right pt-2">
+              <Button data-type="danger" type="button" onClick={() => leave()} disabled={isLeaving}>
+                <FormattedMessage defaultMessage="Leave" />
+              </Button>
+            </div>
+          </FloatingBox>
         </div>
       )}
     </>

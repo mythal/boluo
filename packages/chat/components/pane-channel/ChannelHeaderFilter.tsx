@@ -18,12 +18,14 @@ export const ChannelHeaderFilter: FC<Props> = () => {
   const { filterAtom } = useChannelAtoms();
   const [filter, setFilter] = useAtom(filterAtom);
   return (
-    <div>
-      <label className="flex gap-2 items-center">
-        <div className="flex gap1 items-center">
+    <div className="flex-none">
+      <label className="flex items-center">
+        <span className="mr-1">
           <Filter />
+        </span>
+        <span className="mr-2">
           <FormattedMessage defaultMessage="Filter" />
-        </div>
+        </span>
         <Select items={items} value={filter} onChange={(value) => setFilter(value as ChannelFilter)} />
       </label>
     </div>

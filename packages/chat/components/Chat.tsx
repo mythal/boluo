@@ -14,8 +14,8 @@ import { ChatRoot } from './ChatRoot';
 import { ChatSkeleton } from './ChatSkeleton';
 import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
-import { OpenSidebarButton } from './sidebar/OpenSidebarButton';
 import { Sidebar } from './sidebar/Sidebar';
+import { ToggleSidebarLine } from './sidebar/ToggleSidebarLine';
 
 const SpaceProvider: FC<{ spaceId: string | null; children: ReactNode }> = ({ spaceId, children }) => {
   const { data: space, isLoading } = useQuerySpace(spaceId);
@@ -60,13 +60,13 @@ const Chat: FC = () => {
           }
         >
           <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
-            <OpenSidebarButton />
             <div className="flex view-height">
-              <Sidebar className="flex flex-col h-full flex-none border-r bg-lowest border-surface-300" />
+              <Sidebar className="flex flex-col h-full flex-none bg-lowest" />
               <div
                 onTouchStart={handleTouch}
-                className="flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x"
+                className="relative flex-[1_0] h-full flex max-md:flex-col flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:overflow-x-auto md:divide-x"
               >
+                <ToggleSidebarLine />
                 <Suspense fallback={<PaneLoading />}>
                   {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
                   {route.type === 'NOT_FOUND' && <ChatNotFound />}

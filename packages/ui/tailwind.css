@@ -31,14 +31,14 @@
   }
 
   .input {
-    @apply rounded border-[0.125rem] border-solid py-2
-      px-3 focus:outline-none focus:ring
+    @apply rounded-sm border-[1px] border-solid py-2
+      px-3 focus:outline-none
       disabled:cursor-not-allowed disabled:brightness-125 dark:disabled:brightness-75 disabled:contrast-50;
   }
 
   .input-default {
-    @apply border-surface-300 bg-lowest placeholder:text-surface-400
-      focus:border-surface-600 hover-enabled:border-surface-600 focus:ring-surface-300;
+    @apply border-surface-400 bg-lowest placeholder:text-surface-400
+      focus:border-brand-900 hover-enabled:border-surface-600 focus:ring-surface-300;
   }
 
   .input-error {

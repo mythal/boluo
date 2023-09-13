@@ -1,8 +1,7 @@
 import { Channel, Member } from 'api';
-import { Mask, UserPlus } from 'icons';
+import { UserPlus } from 'icons';
 import { FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui/Button';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';

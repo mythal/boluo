@@ -82,7 +82,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
           <SelfPreviewOperations className="flex gap-1 items-center h-12 transition-opacity duration-700 opacity-0 data-[enter='true']:opacity-100" />
         </Delay>
         <div className="min-h-[1.5em]">
-          <SelfPreviewSendHelpText me={member.user} member={member.channel} />
+          <SelfPreviewSendHelpText me={member.user} />
         </div>
       </div>
     </PreviewBox>

@@ -1,8 +1,6 @@
 import { Channel, Member, SpaceMemberWithUser, UserStatus } from 'api';
-import { Filter } from 'icons';
 import { FC, ReactNode, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Icon from 'ui/Icon';
 import { TextInput } from 'ui/TextInput';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { MemberInvitationItem } from './MemberInvitationItem';

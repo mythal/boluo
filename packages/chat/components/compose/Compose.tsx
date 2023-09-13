@@ -1,8 +1,8 @@
 'use client';
 import type { ChannelMember, GetMe } from 'api';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
@@ -42,10 +42,10 @@ export const Compose = ({ me, member, className }: Props) => {
           <div className="flex-shrink flex-grow w-full" />
           {editMode && <ResetComposeButton />}
           <div className="flex-shrink-0">
-            <SendButton me={me} editMode={editMode} member={member} />
+            <SendButton me={me} editMode={editMode} />
           </div>
         </div>
-        <ComposeTextArea me={me} member={member} />
+        <ComposeTextArea me={me} />
       </div>
     </div>
   );

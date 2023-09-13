@@ -40,7 +40,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
       <a
         href="#" // TODO: link to channel
         className={clsx(
-          'group flex items-start w-full gap-1 cursor-pointer px-1 py-1 text-sm rounded',
+          'group flex items-start w-full gap-1 cursor-pointer px-1 py-1 text-sm rounded-sm',
           active ? 'bg-surface-100 hover:bg-surface-50' : 'hover:bg-surface-50',
         )}
         onClick={handleClick}

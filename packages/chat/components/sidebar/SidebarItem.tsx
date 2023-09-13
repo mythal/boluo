@@ -35,7 +35,7 @@ export const SidebarItem: FC<Props> = (
       <button
         onClick={onClick}
         className={clsx(
-          'group flex text-left items-center justify-center gap-1 w-full py-1 relative rounded',
+          'group flex text-left items-center justify-center gap-1 w-full py-1 relative rounded-sm',
           onClick ? 'cursor-pointer hover:bg-surface-100' : 'cursor-default',
           'text-left text-sm  px-1',
           active && 'bg-surface-50',

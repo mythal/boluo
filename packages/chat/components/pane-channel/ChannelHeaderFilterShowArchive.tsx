@@ -1,8 +1,8 @@
 import { Archive } from 'icons';
 import { useAtom } from 'jotai';
 import { FC } from 'react';
-import { Button } from 'ui/Button';
-import { toggle } from 'utils';
+import { FormattedMessage } from 'react-intl';
+import Icon from 'ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {
@@ -12,9 +12,14 @@ export const ChannelHeaderFilterShowArchive: FC<Props> = () => {
   const { showArchivedAtom } = useChannelAtoms();
   const [show, setShow] = useAtom(showArchivedAtom);
   return (
-    <Button data-type="switch" data-on={show} onClick={() => setShow(toggle)}>
-      <Archive />
-      {/* <FormattedMessage defaultMessage="Show Archived" /> */}
-    </Button>
+    <label className="align-middle space-x-1 select-none">
+      <span>
+        <Icon icon={Archive} />
+      </span>
+      <span className="">
+        <FormattedMessage defaultMessage="Show Archived" />
+      </span>
+      <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+    </label>
   );
 };

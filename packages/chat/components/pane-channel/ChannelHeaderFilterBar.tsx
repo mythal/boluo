@@ -6,7 +6,7 @@ interface Props {}
 
 export const ChannelHeaderFilterBar: FC<Props> = () => {
   return (
-    <div className="py-2 px-4 border-b flex justify-between gap-2">
+    <div className="py-2 px-4 border-b flex justify-between items-center gap-2">
       <ChannelHeaderFilter />
       <ChannelHeaderFilterShowArchive />
     </div>

@@ -1,6 +1,7 @@
+import { ChannelMember } from 'api';
 import { Atom, atom, PrimitiveAtom, WritableAtom } from 'jotai';
 import { atomWithReducer, atomWithStorage, loadable, selectAtom } from 'jotai/utils';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
 import { initParseResult, ParseResult } from '../interpreter/parse-result';
 import type { ComposeActionUnion } from '../state/compose.actions';
@@ -31,39 +32,44 @@ export interface ChannelAtoms {
 
 export const ChannelAtomsContext = createContext<ChannelAtoms | null>(null);
 
-export const makeChannelAtoms = (channelId: string): ChannelAtoms => {
-  const composeAtom = atomWithReducer(makeInitialComposeState(), composeReducer);
-  const checkComposeAtom: Atom<ComposeError | null> = selectAtom(composeAtom, checkCompose);
-  const loadableParsedAtom = loadable(
-    atom(async (get, { signal }): Promise<ParseResult> => {
-      const { source } = get(composeAtom);
-      return await asyncParse(source, signal);
-    }),
+export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | null): ChannelAtoms => {
+  const composeAtom = useMemo(() => atomWithReducer(makeInitialComposeState(), composeReducer), []);
+  const checkComposeAtom: Atom<ComposeError | null> = useMemo(
+    () => selectAtom(composeAtom, checkCompose(member?.characterName ?? '')),
+    [composeAtom, member?.characterName],
   );
-  let cachedParseResult: ParseResult = initParseResult;
-  const parsedAtom = atom((get) => {
-    const loadableParsed = get(loadableParsedAtom);
-    if (loadableParsed.state === 'hasData') {
-      cachedParseResult = loadableParsed.data;
-    }
-    return cachedParseResult;
-  });
-  const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
-  const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
-  const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
-  const inGameAtom = selectAtom(composeAtom, ({ inGame }) => inGame);
-  return {
-    composeAtom,
-    checkComposeAtom,
-    parsedAtom,
-    isActionAtom,
-    broadcastAtom,
-    isWhisperAtom,
-    inGameAtom,
-    filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
-    showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
-    memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
-  };
+  return useMemo(() => {
+    const loadableParsedAtom = loadable(
+      atom(async (get, { signal }): Promise<ParseResult> => {
+        const { source } = get(composeAtom);
+        return await asyncParse(source, signal);
+      }),
+    );
+    let cachedParseResult: ParseResult = initParseResult;
+    const parsedAtom = atom((get) => {
+      const loadableParsed = get(loadableParsedAtom);
+      if (loadableParsed.state === 'hasData') {
+        cachedParseResult = loadableParsed.data;
+      }
+      return cachedParseResult;
+    });
+    const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
+    const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
+    const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
+    const inGameAtom = selectAtom(composeAtom, ({ inGame }) => inGame);
+    return {
+      composeAtom,
+      checkComposeAtom,
+      parsedAtom,
+      isActionAtom,
+      broadcastAtom,
+      isWhisperAtom,
+      inGameAtom,
+      filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
+      showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
+      memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
+    };
+  }, [channelId, checkComposeAtom, composeAtom]);
 };
 
 export const useChannelAtoms = (): ChannelAtoms => {

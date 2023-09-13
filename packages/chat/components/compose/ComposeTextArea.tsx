@@ -1,4 +1,4 @@
-import { ChannelMember, GetMe } from 'api';
+import { GetMe } from 'api';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -11,14 +11,13 @@ import { useSend } from '../pane-channel/useSend';
 
 interface Props {
   me: GetMe;
-  member: ChannelMember;
 }
 
 const focusAction: ComposeActionUnion & { type: 'focus' } = { type: 'focus', payload: {} };
 const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payload: {} };
 
-export const ComposeTextArea: FC<Props> = ({ me, member }) => {
-  const composeError = useComposeError(member);
+export const ComposeTextArea: FC<Props> = ({ me }) => {
+  const composeError = useComposeError();
   const send = useSend(me.user, composeError);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const channelId = useChannelId();

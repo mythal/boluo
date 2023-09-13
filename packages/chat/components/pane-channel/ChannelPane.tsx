@@ -2,10 +2,10 @@ import clsx from 'clsx';
 import { useMe } from 'common';
 import { Lock, LockedHash } from 'icons';
 import { useAtomValue } from 'jotai';
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 import { memo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ChannelAtoms, ChannelAtomsContext, makeChannelAtoms } from '../../hooks/useChannelAtoms';
+import { ChannelAtoms, ChannelAtomsContext, useMakeChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { Compose } from '../compose/Compose';
@@ -38,7 +38,7 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const me = useMe();
   const member = useMyChannelMember(channelId);
-  const atoms: ChannelAtoms = useMemo(() => (makeChannelAtoms(channelId)), [channelId]);
+  const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member !== 'LOADING' ? member?.channel ?? null : null);
   const nickname = me != null && me !== 'LOADING' ? me.user.nickname : undefined;
   const { data: channel, isLoading, error } = useQueryChannel(channelId);
   useSendPreview(

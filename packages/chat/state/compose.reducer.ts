@@ -304,10 +304,11 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
   }
 };
 
-export const checkCompose = (
+export const checkCompose = (characterName: string) =>
+(
   { source, inputedName, inGame, media }: Pick<ComposeState, 'source' | 'inputedName' | 'inGame' | 'media'>,
 ): ComposeError | null => {
-  if (inGame && inputedName.trim() === '') {
+  if (inGame && inputedName.trim() === '' && characterName === '') {
     return 'NO_NAME';
   }
   const mediaResult = validateMedia(media);

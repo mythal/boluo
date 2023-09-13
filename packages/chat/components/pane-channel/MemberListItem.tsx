@@ -60,13 +60,15 @@ export const MemberListItem: FC<Props> = (
           <Avatar size="2rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />
         </div>
         {hasCharacterName && (
-          <span className={clsx(offline ? 'text-surface-500' : '', 'text-left')}>
+          <span className={clsx(offline ? 'text-surface-500' : '', 'text-left', 'truncate')}>
             <Icon icon={Mask} /> {channelMember.characterName}
           </span>
         )}
         <span className={clsx(hasCharacterName ? '' : 'row-span-full', 'text-left')}>
           {
-            <span className={offline ? 'text-surface-400' : (hasCharacterName ? 'text-surface-600' : '')}>
+            <span
+              className={clsx(offline ? 'text-surface-400' : (hasCharacterName ? 'text-surface-600' : ''), 'truncate')}
+            >
               {user.nickname}
             </span>
           }

@@ -81,12 +81,14 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void }> = (
   { member, remove, inGame },
 ) => {
+  const { nickname } = member.user;
+  const { characterName } = member.channel;
   return (
     <button
       className="border rounded bg-lowest px-1 border-surface-100 hover:border-surface-300 hover:line-through"
       onClick={remove}
     >
-      {inGame ? member.channel.characterName : member.user.nickname}
+      {inGame && characterName !== '' ? characterName : nickname}
       <Icon icon={X} />
     </button>
   );

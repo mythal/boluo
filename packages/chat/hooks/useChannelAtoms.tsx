@@ -56,7 +56,15 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
     const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
     const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
     const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
-    const inGameAtom = selectAtom(composeAtom, ({ inGame }) => inGame);
+    const inGameAtom = atom((read) => {
+      const { inGame } = read(parsedAtom);
+      const { defaultInGame } = read(composeAtom);
+      if (inGame == null) {
+        return defaultInGame;
+      } else {
+        return inGame;
+      }
+    });
     return {
       composeAtom,
       checkComposeAtom,

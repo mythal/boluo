@@ -13,7 +13,7 @@ export interface ComposeState {
   editFor: string | null;
   inputedName: string;
   previewId: string;
-  inGame: boolean;
+  defaultInGame: boolean;
   source: string;
   media: File | null;
   whisperTo:
@@ -31,7 +31,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
   previewId: makeId(),
-  inGame: false,
+  defaultInGame: false,
   source: '',
   media: null,
   range: [0, 0],
@@ -49,8 +49,19 @@ const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setS
 };
 
 const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleInGame'>): ComposeState => {
-  const inGame = !state.inGame;
-  return { ...state, inGame };
+  const { inGame: modifier } = parseModifiers(state.source);
+  const { source } = state;
+  let nextSource = source;
+  if (!modifier) {
+    const startsWithSpace = source.startsWith(' ');
+    const command = state.defaultInGame ? '.out' : '.in';
+    nextSource = (startsWithSpace ? command : `${command} `) + source;
+  } else {
+    const before = source.substring(0, modifier.start);
+    const after = source.substring(modifier.start + modifier.len);
+    nextSource = modifier.inGame ? '.out ' : '.in ' + (before + after).trimStart();
+  }
+  return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
 const handleRecoverState = (state: ComposeState, action: ComposeAction<'recoverState'>): ComposeState => {
@@ -142,7 +153,7 @@ const handleEditMessage = (
   const inputedName = inGame ? name : '';
   const range: ComposeState['range'] = [source.length, source.length];
 
-  return { ...makeInitialComposeState(), previewId, editFor, source, inGame, inputedName, range };
+  return { ...makeInitialComposeState(), previewId, editFor, source, defaultInGame: inGame, inputedName, range };
 };
 
 const modifyModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {
@@ -207,6 +218,7 @@ const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState
   }
   return {
     ...state,
+    defaultInGame: modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame,
     previewId: makeId(),
     editFor: null,
     range: [source.length, source.length],
@@ -306,10 +318,16 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
 
 export const checkCompose = (characterName: string) =>
 (
-  { source, inputedName, inGame, media }: Pick<ComposeState, 'source' | 'inputedName' | 'inGame' | 'media'>,
+  { source, inputedName, defaultInGame, media }: Pick<
+    ComposeState,
+    'source' | 'inputedName' | 'defaultInGame' | 'media'
+  >,
 ): ComposeError | null => {
-  if (inGame && inputedName.trim() === '' && characterName === '') {
-    return 'NO_NAME';
+  const { inGame } = parseModifiers(source);
+  if (inGame ? inGame.inGame : defaultInGame) {
+    if (inputedName.trim() === '' && characterName === '') {
+      return 'NO_NAME';
+    }
   }
   const mediaResult = validateMedia(media);
   if (mediaResult.isErr) {

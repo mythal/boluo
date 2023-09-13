@@ -1,11 +1,11 @@
 import clsx from 'clsx';
 import { Mask } from 'icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 
@@ -15,8 +15,8 @@ interface Props {
 
 export const InGameSwitchButton: FC<Props> = ({ type = 'DEFAULT' }) => {
   const iconOnly = type === 'ICON';
-  const composeAtom = useComposeAtom();
-  const inGame = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.inGame), [composeAtom]));
+  const { inGameAtom, composeAtom } = useChannelAtoms();
+  const inGame = useAtomValue(inGameAtom);
   const dispatch = useSetAtom(composeAtom);
   return (
     <Button

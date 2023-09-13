@@ -16,19 +16,19 @@ import { SelfPreviewNameCell } from './SelfPreviewNameCell';
 import { SelfPreviewOperations } from './SelfPreviewOperations';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
 
-type ComposeDrived = Pick<ComposeState, 'source' | 'inGame' | 'media'> & {
+type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & {
   editMode: boolean;
   name: string;
 };
 
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
   a.source === b.source && a.editMode === b.editMode
-  && a.inGame === b.inGame && a.name === b.name
+  && a.defaultInGame === b.defaultInGame && a.name === b.name
   && a.media === b.media;
 
-const selector = ({ inGame, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
+const selector = ({ defaultInGame: inGame, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
   const editMode = editFor !== null;
-  return { inGame, name: inputedName.trim(), source, editMode, media };
+  return { defaultInGame: inGame, name: inputedName.trim(), source, editMode, media };
 };
 
 interface Props {
@@ -39,12 +39,13 @@ interface Props {
 
 export const SelfPreview: FC<Props> = ({ preview, className, myMember: member }) => {
   const isMaster = member.channel.isMaster;
-  const { composeAtom, isActionAtom } = useChannelAtoms();
+  const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
   const compose: ComposeDrived = useAtomValue(
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
   const isAction = useAtomValue(isActionAtom);
-  const { editMode, inGame, media } = compose;
+  const inGame = useAtomValue(inGameAtom);
+  const { editMode, media } = compose;
   const name = useMemo(() => {
     if (!inGame) {
       return member.user.nickname;

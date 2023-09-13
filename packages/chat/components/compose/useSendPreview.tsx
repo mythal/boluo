@@ -25,8 +25,9 @@ const sendPreview = (
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { inGame, previewId, inputedName, editFor } = compose;
-    const { isAction, broadcast, whisperToUsernames } = parsed;
+    const { defaultInGame: composeInGame, previewId, inputedName, editFor } = compose;
+    const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame } = parsed;
+    const inGame = parsedInGame ?? composeInGame;
     const inGameName = inputedName || characterName;
     if (!previewId) {
       return;

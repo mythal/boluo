@@ -53,7 +53,8 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
     const { text, entities, whisperToUsernames } = parse(compose.source);
     let result: Result<Message, ApiError>;
     let name = nickname;
-    if (compose.inGame) {
+    const inGame = parsed.inGame ?? compose.defaultInGame;
+    if (inGame) {
       const inputedName = compose.inputedName.trim();
       if (inputedName === '') {
         name = myMember.channel.characterName;
@@ -68,7 +69,7 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
         name,
         text: parsed.text,
         entities: parsed.entities,
-        inGame: compose.inGame,
+        inGame,
         isAction: parsed.isAction,
         mediaId: null,
       });
@@ -90,7 +91,7 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
         name,
         text,
         entities,
-        inGame: compose.inGame,
+        inGame,
         isAction: parsed.isAction,
         mediaId,
         pos: null,

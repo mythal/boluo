@@ -638,7 +638,7 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
 
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
   const modifiersParseResult = parseModifiers(source, env);
-  const { action, isRoll, mute, whisper } = modifiersParseResult;
+  const { action, isRoll, mute, whisper, inGame } = modifiersParseResult;
   let state: State = { text: modifiersParseResult.text, rest: modifiersParseResult.rest };
 
   let result: [Entity[], State] | null = null;
@@ -659,6 +659,8 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
     text: state.text,
     entities,
     isRoll,
+    inGame: inGame ? inGame.inGame : null,
+    characterName: '',
     isAction: Boolean(action),
     whisperToUsernames: whisper ? whisper.usernames : null,
     broadcast: !mute,
@@ -684,13 +686,26 @@ interface WhisperModifier {
   len: number;
 }
 
+interface InGameModifier {
+  type: 'InGame';
+  start: number;
+  len: number;
+  inGame: boolean;
+  characterName: string;
+}
+
 interface MuteModifier {
   type: 'Mute';
   start: number;
   len: number;
 }
 
-export type Modifier = MeModifier | RollModifier | WhisperModifier | MuteModifier;
+export type Modifier =
+  | MeModifier
+  | RollModifier
+  | WhisperModifier
+  | MuteModifier
+  | InGameModifier;
 
 const meModifier: P<Modifier> = regex(/^[.。][mM][eE]\s*/).then(([match, { text, rest }]) => {
   const [entire] = match;
@@ -769,6 +784,20 @@ const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]\s*/).then(([mat
   return [modifier, { text, rest }];
 });
 
+const inOutGameModifier: P<Modifier> = regex(/^[.。](in)[\s$]|[.。](out)[\s$]/i).then(([match, { text, rest }]) => {
+  const [entire, inGame = ''] = match;
+
+  const modifier: InGameModifier = {
+    type: 'InGame',
+    start: text.length,
+    len: entire.length,
+    inGame: inGame.toLowerCase() === 'in',
+    characterName: '',
+  };
+  text += entire;
+  return [modifier, { text, rest }];
+});
+
 interface ParseModifersResult {
   text: string;
   rest: string;
@@ -776,13 +805,14 @@ interface ParseModifersResult {
   mute: MuteModifier | false;
   whisper: WhisperModifier | false;
   isRoll: boolean;
+  inGame: InGameModifier | false;
   isWhisper: boolean;
 }
 
 export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModifersResult => {
   const state: State = { text: '', rest: source };
   const parser: P<Modifier[]> = many(
-    spaces.with(choice([meModifier, whisperModifier, rollModifier, muteModifier])),
+    spaces.with(choice([meModifier, whisperModifier, rollModifier, muteModifier, inOutGameModifier])),
   );
 
   const result = parser.run(state, env);
@@ -793,10 +823,20 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
   const [modifiers, { text, rest }] = result;
   const action = modifiers.find((modifier): modifier is MeModifier => modifier.type === 'Me') || false;
   const mute = modifiers.find((modifier): modifier is MuteModifier => modifier.type === 'Mute') || false;
+  const inGame = modifiers.find((modifier): modifier is InGameModifier => modifier.type === 'InGame') || false;
   const isRoll = modifiers.some((modifier) =>
     modifier.type === 'Roll' || (modifier.type === 'Whisper' && modifier.roll)
   );
   const whisper = modifiers.find((modifier): modifier is WhisperModifier => modifier.type === 'Whisper') || false;
   const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper');
-  return { text, rest, action, isRoll, isWhisper, mute, whisper };
+  return {
+    text,
+    rest,
+    action,
+    isRoll,
+    isWhisper,
+    mute,
+    whisper,
+    inGame,
+  };
 };

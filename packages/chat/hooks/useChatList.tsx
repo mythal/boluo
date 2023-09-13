@@ -33,7 +33,7 @@ type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
 };
 
 const selectComposeSlice = (
-  { source, previewId, editFor, focused, inGame }: ComposeState,
+  { source, previewId, editFor, focused, defaultInGame }: ComposeState,
   prevSlice: ComposeSlice | null | undefined,
 ): ComposeSlice => {
   const empty = source.trim().length === 0;
@@ -47,7 +47,7 @@ const selectComposeSlice = (
     }
   }
 
-  return { previewId, editFor, prevPreviewId, show: !empty || focused, inGame };
+  return { previewId, editFor, prevPreviewId, show: !empty || focused, inGame: defaultInGame };
 };
 
 const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) => (

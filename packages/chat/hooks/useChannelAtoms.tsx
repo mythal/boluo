@@ -23,6 +23,7 @@ export interface ChannelAtoms {
   parsedAtom: Atom<ParseResult>;
   isActionAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
+  inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
   inGameAtom: Atom<boolean>;
   filterAtom: PrimitiveAtom<ChannelFilter>;
@@ -53,6 +54,7 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
       }
       return cachedParseResult;
     });
+    const inputedNameAtom = selectAtom(composeAtom, ({ inputedName }) => inputedName);
     const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
     const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
     const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
@@ -70,6 +72,7 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
       checkComposeAtom,
       parsedAtom,
       isActionAtom,
+      inputedNameAtom,
       broadcastAtom,
       isWhisperAtom,
       inGameAtom,

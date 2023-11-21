@@ -9,10 +9,8 @@
   outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [
-          (import rust-overlay)
-          (final: prev: { nodejs = prev.nodejs-18_x; })
-        ];
+        overlays =
+          [ (import rust-overlay) (final: prev: { nodejs = prev.nodejs_20; }) ];
         pkgs = import nixpkgs { inherit system overlays; };
 
         # workaround for rust compile failed with

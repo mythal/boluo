@@ -97,6 +97,7 @@ jobs:
 
   cargo-fmt:
     name: Style (Rust)
+    runs-on: ubuntu-latest
     container: rust:slim
     steps:
       - uses: actions/checkout@v2

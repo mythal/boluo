@@ -6,17 +6,17 @@
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
-    "eslint": "^8.46.0",
-    "eslint-config-next": "^13.4.12",
-    "eslint-plugin-formatjs": "^4.10.3",
-    "eslint-plugin-import": "^2.28.0",
-    "eslint-plugin-react": "^7.33.1"
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^13.5.6",
+    "eslint-plugin-formatjs": "^4.11.3",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-react": "^7.33.2"
   },
   "devDependencies": {
-    "next": "^13.4.12",
+    "next": "^14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"

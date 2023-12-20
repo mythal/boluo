@@ -13,26 +13,26 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@formatjs/ts-transformer": "^3.13.3",
-    "@rollup/plugin-json": "^6.0.0",
+    "@formatjs/ts-transformer": "^3.13.9",
+    "@rollup/plugin-json": "^6.0.1",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@types/node": "^18.17.1",
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
+    "@types/node": "^18.18.11",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.16",
     "api": "workspace:*",
-    "eslint": "^8.46.0",
+    "eslint": "^8.56.0",
     "eslint-config-custom": "workspace:*",
-    "postcss": "^8.4.27",
+    "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rollup": "^3.27.1",
+    "rollup": "^3.29.4",
     "rollup-plugin-typescript2": "^0.34.1",
-    "tailwindcss": "^3.3.3",
-    "tailwindcss-theme-swapper": "^0.6.5",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-theme-swapper": "^0.10.0",
     "theme": "workspace:*",
     "ts-node": "^10.9.1",
     "tsconfig": "workspace:*",
-    "typescript": "^5.1.6",
+    "typescript": "^5.3.3",
     "utils": "workspace:*"
   },
   "dependencies": {
@@ -40,7 +40,7 @@
     "clsx": "^1.2.1",
     "common": "workspace:*",
     "icons": "workspace:*",
-    "react-intl": "^6.4.4",
-    "tslib": "^2.6.1"
+    "react-intl": "^6.5.5",
+    "tslib": "^2.6.2"
   }
 }

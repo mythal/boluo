@@ -33,7 +33,7 @@ export const getUnit = (number, range, index?: number) => {
 };
 
 export const getRandomColor = (number, colors, range) => {
-  return colors[(number) % range];
+  return colors[number % range];
 };
 
 export const getContrast = (hexcolor) => {

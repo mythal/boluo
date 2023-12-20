@@ -1,18 +1,4 @@
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": [
-          "build",
-          "lint",
-          "check",
-          "generate",
-          "test"
-        ]
-      }
-    }
-  },
   "extends": "nx/presets/npm.json",
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "affected": {
@@ -20,30 +6,29 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build",
-        "^gererate"
-      ]
+      "dependsOn": ["^build", "^gererate"],
+      "cache": true
     },
     "dev": {
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "generate": {
-      "dependsOn": []
+      "dependsOn": [],
+      "cache": true
     },
     "watch": {
       "dependsOn": []
     },
     "check": {
-      "dependsOn": []
+      "dependsOn": [],
+      "cache": true
     },
     "lint": {
-      "dependsOn": [
-        "^build",
-        "^check"
-      ]
+      "dependsOn": ["^build", "^check"],
+      "cache": true
+    },
+    "test": {
+      "cache": true
     }
   }
 }

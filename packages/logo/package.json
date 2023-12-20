@@ -12,10 +12,10 @@
   },
   "sideEffects": false,
   "devDependencies": {
-    "@babel/core": "^7.22.9",
-    "@svgr/cli": "^8.0.1",
-    "@types/react": "^18.2.18",
+    "@babel/core": "^7.23.6",
+    "@svgr/cli": "^8.1.0",
+    "@types/react": "^18.2.45",
     "react": "^18.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.3.3"
   }
 }

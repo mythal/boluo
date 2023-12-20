@@ -13,15 +13,15 @@
   "dependencies": {
     "server-bindings": "workspace:*",
     "tsconfig": "workspace:*",
-    "tslib": "^2.6.1",
+    "tslib": "^2.6.2",
     "utils": "workspace:*"
   },
   "sideEffects": false,
   "devDependencies": {
-    "eslint": "^8.46.0",
+    "eslint": "^8.56.0",
     "eslint-config-custom": "workspace:*",
-    "jotai": "^2.4.0",
-    "typescript": "^5.1.6"
+    "jotai": "^2.6.0",
+    "typescript": "^5.3.3"
   },
   "peerDependencies": {
     "jotai": "^2.1.0"

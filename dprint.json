@@ -18,6 +18,7 @@
     "**/.next/",
     "**/compiled/",
     "**/target/",
+    ".nx/cache",
     "packages/logo/src/",
     "packages/icons/src/"
   ],

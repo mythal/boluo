@@ -16,6 +16,9 @@
   "editor.formatOnSave": true,
   "dprint.path": "node_modules/.bin/dprint",
   "editor.defaultFormatter": "dprint.dprint",
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
   "[json]": {
     "editor.defaultFormatter": "dprint.dprint"
   },

@@ -13,7 +13,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - uses: pnpm/action-setup@v2
         with:
           version: 8.5.1
@@ -90,7 +89,6 @@ jobs:
   dprint:
     name: Style
     runs-on: ubuntu-latest
-    container: rustlang/rust:nightly-bullseye
     steps:
       - uses: actions/checkout@v3
       - uses: dprint/check@v2.2

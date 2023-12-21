@@ -217,7 +217,7 @@ export function get<Q extends object, T>(path: string, query?: Q): Promise<AppRe
 
 export function editAvatar(file: Blob, filename: string, mimeType: string): Promise<AppResult<User>> {
   const path = '/users/edit_avatar';
-  return request(makeUri(path, { filename, mimeType }), 'POST', file, mimeType);
+  return request(makeUri(path, { filename, mimeType, size: file.size }), 'POST', file, mimeType);
 }
 
 export function upload(

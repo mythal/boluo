@@ -19,14 +19,16 @@
       "extensions": [
         "EditorConfig.EditorConfig",
         "bradlc.vscode-tailwindcss",
-        "dprint.dprint"
+        "dprint.dprint",
+        "rust-lang.rust-analyzer",
+        "mkhl.direnv"
       ]
     }
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // This can be used to network with other containers or with the host.
-  "forwardPorts": [3000, 4841]
+  "forwardPorts": [3000, 4841, 9000, 9090, 8080]
   // Use 'postCreateCommand' to run commands after the container is created.
   // "postCreateCommand": "yarn install",
 

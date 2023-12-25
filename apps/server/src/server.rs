@@ -122,6 +122,15 @@ async fn main() {
     // https://tokio.rs/tokio/topics/shutdown
     let mut stream = signal(SignalKind::terminate()).unwrap();
 
+    // check
+    let s3_client = s3::get_client();
+    s3_client
+        .head_bucket()
+        .bucket(s3::get_bucket_name())
+        .send()
+        .await
+        .expect("s3 bucket not found");
+
     #[allow(clippy::never_loop)]
     loop {
         tokio::select! {

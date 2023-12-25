@@ -28,30 +28,63 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    env_file:
-      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
   db-test:
     image: postgres:latest
     restart: unless-stopped
     volumes:
       - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    env_file:
-      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
   pgadmin:
     image: dpage/pgadmin4
     restart: unless-stopped
     volumes:
       - ./servers.json:/pgadmin4/servers.json:ro
-    env_file:
-      - .env
     depends_on:
       - db
+      - db-test
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+      - PGADMIN_CONFIG_SERVER_MODE=FALSE
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
     network_mode: service:db
 
+  store:
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    network_mode: service:db
+    volumes:
+      - minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9090"
+
+
+  store-init:
+    image: quay.io/minio/mc
+    depends_on:
+      - store
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc config host add dev http://store:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc rm -r --force dev/boluo;
+      /usr/bin/mc mb dev/boluo;
+      /usr/bin/mc policy download dev/boluo;
+      exit 0;
+      "
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
 volumes:
   postgres-data:
+  minio-data:

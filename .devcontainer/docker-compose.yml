@@ -72,15 +72,16 @@ services:
 
   store-init:
     image: quay.io/minio/mc
+    network_mode: service:db
     depends_on:
       - store
     entrypoint: >
       /bin/sh -c "
       sleep 10;
-      /usr/bin/mc config host add dev http://store:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc rm -r --force dev/boluo;
-      /usr/bin/mc mb dev/boluo;
-      /usr/bin/mc policy download dev/boluo;
+      /usr/bin/mc config host add devminio http://127.0.0.1:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc rm -r --force devminio/boluo;
+      /usr/bin/mc mb devminio/boluo;
+      /usr/bin/mc anonymous set public devminio/boluo;
       exit 0;
       "
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.

@@ -1,4 +1,9 @@
 {
+  "files.associations": {
+    "tailwind.css": "tailwindcss",
+    "*.tailwind.css": "tailwindcss",
+    ".env.local.template": "properties"
+  },
   // ESLint
   "eslint.workingDirectories": [
     {
@@ -37,8 +42,5 @@
   "editor.quickSuggestions": {
     "strings": true
   },
-  "tailwindCSS.experimental.configFile": "packages/ui/tailwind.config.mjs",
-  "files.associations": {
-    "tailwind.css": "tailwindcss"
-  }
+  "tailwindCSS.experimental.configFile": "packages/ui/tailwind.config.mjs"
 }

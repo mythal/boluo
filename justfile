@@ -10,6 +10,7 @@ check:
 lint:
     pnpm exec nx run-many --target=lint
     pnpm exec dprint check
+    cargo fmt --check
 
 dev projects="*":
     pnpm exec nx run-many --target=dev --projects={{projects}} --parallel=16
@@ -28,6 +29,10 @@ install:
 
 format:
     pnpm exec dprint fmt
+    cargo fmt
+
+env action="up":
+    docker-compose --file ./development/docker-compose.yaml {{action}}
 
 generate:
     pnpm exec nx run-many --target=generate

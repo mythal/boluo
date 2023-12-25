@@ -28,10 +28,9 @@
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // This can be used to network with other containers or with the host.
-  "forwardPorts": [3000, 4841, 9000, 9090, 8080]
+  "forwardPorts": [3000, 4841, 9000, 9090, 8080],
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "yarn install",
-
+  "postCreateCommand": "cp .env.local.example .env.local && nix develop --command bash -c 'pnpm config set store-dir ~/pnpm-store' && direnv allow"
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
   // "remoteUser": "root"
 }

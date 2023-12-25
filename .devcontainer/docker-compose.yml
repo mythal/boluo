@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
 
     volumes:
+      - nix-store:/nix:cached
       - ../..:/workspaces:cached
 
     # Overrides default command so things don't shut down after the process ends.
@@ -87,5 +88,6 @@ services:
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
 volumes:
+  nix-store:
   postgres-data:
   minio-data:

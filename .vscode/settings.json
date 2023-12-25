@@ -2,7 +2,7 @@
   "files.associations": {
     "tailwind.css": "tailwindcss",
     "*.tailwind.css": "tailwindcss",
-    ".env.local.template": "properties"
+    ".env.local.example": "properties"
   },
   // ESLint
   "eslint.workingDirectories": [

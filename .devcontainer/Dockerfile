@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 RUN apt update -y
-RUN apt install -y curl xz-utils git direnv && mkdir /nix
+RUN apt install -y curl xz-utils git && mkdir /nix
 RUN \
   useradd -m -s /bin/bash -u 1000 dev;\
   chown dev /nix;\

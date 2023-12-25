@@ -7,6 +7,7 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
+    "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
   },
 
   // Configure tool-specific properties.

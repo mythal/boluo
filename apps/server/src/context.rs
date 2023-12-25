@@ -27,9 +27,7 @@ pub fn media_public_url() -> &'static str {
     static MEDIA_PUBLIC_URL: OnceCell<String> = OnceCell::new();
     MEDIA_PUBLIC_URL.get_or_init(|| {
         let url = env::var("PUBLIC_MEDIA_URL").unwrap_or_default();
-        let url = url.trim_end_matches('/');
-        let url = url.trim_start_matches("https://");
-        format!("https://{}", url)
+        url.trim_end_matches('/').to_owned()
     })
 }
 

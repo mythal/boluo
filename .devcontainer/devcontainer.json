@@ -1,0 +1,36 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
+{
+  "name": "Boluo",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
+  },
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "bradlc.vscode-tailwindcss",
+        "dprint.dprint",
+        "rust-lang.rust-analyzer",
+        "mkhl.direnv",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // This can be used to network with other containers or with the host.
+  "forwardPorts": [3000, 4841, 9000, 9090, 8080],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "cp .env.local.example .env.local && direnv allow",
+
+  // More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "dev",
+  "containerUser": "dev"
+}

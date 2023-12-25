@@ -7,10 +7,6 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/nix:1": {
-      "extraNixConfig": "experimental-features = nix-command flakes repl-flake"
-    },
-    "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
   },
 
   // Configure tool-specific properties.
@@ -21,7 +17,8 @@
         "bradlc.vscode-tailwindcss",
         "dprint.dprint",
         "rust-lang.rust-analyzer",
-        "mkhl.direnv"
+        "mkhl.direnv",
+        "dbaeumer.vscode-eslint"
       ]
     }
   },
@@ -30,7 +27,9 @@
   // This can be used to network with other containers or with the host.
   "forwardPorts": [3000, 4841, 9000, 9090, 8080],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "cp .env.local.example .env.local && nix develop --command bash -c 'pnpm config set store-dir ~/pnpm-store' && direnv allow"
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  "postCreateCommand": "cp .env.local.example .env.local && direnv allow",
+
+  // More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "dev",
+  "containerUser": "dev"
 }

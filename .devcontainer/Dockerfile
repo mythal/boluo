@@ -1,12 +1,19 @@
-FROM mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye
+FROM ubuntu:latest
+RUN apt update -y
+RUN apt install -y curl xz-utils git direnv && mkdir /nix
+RUN \
+  useradd -m -s /bin/bash -u 1000 dev;\
+  chown dev /nix;\
+  mkdir -p /etc/nix;\
+  echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+ENV USER=dev
+USER dev
+WORKDIR /home/dev
+RUN curl -L https://nixos.org/nix/install | sh -s -- --no-daemon;
+ENV PATH="/home/dev/.nix-profile/bin:${PATH}"
 
-# [Optional] Uncomment this section to install additional OS packages.
-# RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-#     && apt-get -y install --no-install-recommends <your-package-list-here>
-
-# [Optional] Uncomment if you want to install an additional version of node using nvm
-# ARG EXTRA_NODE_VERSION=10
-# RUN su node -c "source /usr/local/share/nvm/nvm.sh && nvm install ${EXTRA_NODE_VERSION}"
-
-# [Optional] Uncomment if you want to install more global node modules
-# RUN su node -c "npm install -g <your-package-list-here>"
+ARG PNPM_STORE_DIR=/home/dev/.local/share/pnpm
+ENV PNPM_STORE_DIR=${PNPM_STORE_DIR}
+RUN mkdir -p "${PNPM_STORE_DIR}"
+COPY --chown=dev:dev flake.lock flake.nix rust-toolchain.toml ./
+RUN nix develop --command bash -c "pnpm config set store-dir ${PNPM_STORE_DIR}" && rm flake.lock flake.nix rust-toolchain.toml

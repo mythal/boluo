@@ -3,11 +3,10 @@ version: '3.8'
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
 
     volumes:
-      - nix-store:/nix:cached
       - ../..:/workspaces:cached
 
     # Overrides default command so things don't shut down after the process ends.

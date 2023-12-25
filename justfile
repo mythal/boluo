@@ -31,8 +31,5 @@ format:
     pnpm exec dprint fmt
     cargo fmt
 
-env action="up":
-    docker-compose --file ./development/docker-compose.yaml {{action}}
-
 generate:
     pnpm exec nx run-many --target=generate

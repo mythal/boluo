@@ -26,7 +26,7 @@
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // This can be used to network with other containers or with the host.
-  "forwardPorts": [3000, 4841, 9000, 9090, 8080],
+  "forwardPorts": ["app:3000", "app:3100", "app:8080", "pgadmin:4841", "store:9000", "store:9090"],
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "cp .env.local.example .env.local && direnv allow",
 

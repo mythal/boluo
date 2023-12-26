@@ -2,9 +2,14 @@ version: '3.8'
 
 services:
   app:
+    depends_on:
+      - db
+      - db-test
+      - redis
+      - store
     build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
+      context: .
+      dockerfile: Dockerfile
 
     volumes:
       - ../..:/workspaces:cached
@@ -13,10 +18,6 @@ services:
     command: sleep infinity
 
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    network_mode: service:db
-
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
 
   redis:
     image: redis
@@ -35,6 +36,8 @@ services:
   db-test:
     image: postgres:latest
     restart: unless-stopped
+    ports:
+      - 127.0.0.1:36002:5432
     volumes:
       - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     environment:
@@ -50,18 +53,16 @@ services:
       - db
       - db-test
     environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
-      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
-      - PGADMIN_CONFIG_SERVER_MODE=FALSE
+      - PGADMIN_DEFAULT_EMAIL=example@example.com
+      - PGADMIN_DEFAULT_PASSWORD=8932rhku32rhui
+      - PGADMIN_LISTEN_PORT=4841
+      - PGADMIN_CONFIG_SERVER_MODE=False
       - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    network_mode: service:db
 
   store:
     image: quay.io/minio/minio
     restart: unless-stopped
-    network_mode: service:db
     volumes:
       - minio-data:/data
     environment:
@@ -72,22 +73,17 @@ services:
 
   store-init:
     image: quay.io/minio/mc
-    network_mode: service:db
     depends_on:
       - store
     entrypoint: >
       /bin/sh -c "
       sleep 10;
-      /usr/bin/mc config host add devminio http://127.0.0.1:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc rm -r --force devminio/boluo;
-      /usr/bin/mc mb devminio/boluo;
-      /usr/bin/mc anonymous set public devminio/boluo;
+      /usr/bin/mc config host add dev http://store:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb dev/boluo;
+      /usr/bin/mc anonymous set public dev/boluo;
       exit 0;
       "
-    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
 
 volumes:
-  nix-store:
   postgres-data:
   minio-data:

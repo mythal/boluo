@@ -240,7 +240,7 @@ async fn put_object(
     content_type: &str,
     content_length: i32,
 ) -> Result<(), AppError> {
-    let body = ByteStream::new(SdkBody::from(body));
+    let body = ByteStream::new(SdkBody::from_body_0_4(body));
     client
         .put_object()
         .content_type(content_type)
@@ -261,7 +261,7 @@ async fn put_object_presigned(
     expires_in: u64,
     content_type: &str,
     content_length: i32,
-) -> Result<Uri, AppError> {
+) -> Result<String, AppError> {
     let expires_in = std::time::Duration::from_secs(expires_in);
 
     let presigned =
@@ -276,7 +276,7 @@ async fn put_object_presigned(
         .await
         .map_err(error_unexpected!("Failed to generate presigned url"))?;
 
-    Ok(presigned_request.uri().clone())
+    Ok(presigned_request.uri().to_owned())
 }
 
 const EXPIRES_IN_SEC: u64 = 60 * 10;

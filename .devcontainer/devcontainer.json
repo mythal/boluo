@@ -26,11 +26,22 @@
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // This can be used to network with other containers or with the host.
-  "forwardPorts": ["app:3000", "app:3100", "app:8080", "pgadmin:4841", "store:9000", "store:9090"],
+  "forwardPorts": [3000, 3100, 8080, 9000],
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "cp .devcontainer/.env.local.exmaple .env.local && direnv allow",
 
   // More info: https://aka.ms/dev-containers-non-root.
   "remoteUser": "dev",
-  "containerUser": "dev"
+  "containerUser": "dev",
+  "portsAttributes": {
+    "3000": {
+      "label": "server"
+    },
+    "3100": {
+      "label": "site"
+    },
+    "8080": {
+      "label": "legacy"
+    }
+  }
 }

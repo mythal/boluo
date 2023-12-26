@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
 {
   "name": "Boluo",
-  "dockerComposeFile": "docker-compose.yml",
+  "dockerComposeFile": ["docker-compose.yml", "../docker-compose.yml"],
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   // Features to add to the dev container. More info: https://containers.dev/features.
@@ -28,7 +28,7 @@
   // This can be used to network with other containers or with the host.
   "forwardPorts": ["app:3000", "app:3100", "app:8080", "pgadmin:4841", "store:9000", "store:9090"],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "cp .env.local.example .env.local && direnv allow",
+  "postCreateCommand": "cp .devcontainer/.env.local.exmaple .env.local && direnv allow",
 
   // More info: https://aka.ms/dev-containers-non-root.
   "remoteUser": "dev",

@@ -9,7 +9,7 @@ services:
       - store
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
 
     volumes:
       - ../..:/workspaces:cached
@@ -18,72 +18,3 @@ services:
     command: sleep infinity
 
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-
-  redis:
-    image: redis
-    restart: unless-stopped
-
-  db:
-    image: postgres:latest
-    restart: unless-stopped
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
-  db-test:
-    image: postgres:latest
-    restart: unless-stopped
-    ports:
-      - 127.0.0.1:36002:5432
-    volumes:
-      - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
-  pgadmin:
-    image: dpage/pgadmin4
-    restart: unless-stopped
-    volumes:
-      - ./servers.json:/pgadmin4/servers.json:ro
-    depends_on:
-      - db
-      - db-test
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=example@example.com
-      - PGADMIN_DEFAULT_PASSWORD=8932rhku32rhui
-      - PGADMIN_LISTEN_PORT=4841
-      - PGADMIN_CONFIG_SERVER_MODE=False
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
-  store:
-    image: quay.io/minio/minio
-    restart: unless-stopped
-    volumes:
-      - minio-data:/data
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    command: server /data --console-address ":9090"
-
-
-  store-init:
-    image: quay.io/minio/mc
-    depends_on:
-      - store
-    entrypoint: >
-      /bin/sh -c "
-      sleep 10;
-      /usr/bin/mc config host add dev http://store:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc mb dev/boluo;
-      /usr/bin/mc anonymous set public dev/boluo;
-      exit 0;
-      "
-
-volumes:
-  postgres-data:
-  minio-data:

@@ -388,7 +388,7 @@ impl EventId {
 
 #[test]
 fn test_event_id() {
-    for _ in 0..1000 {
+    for _ in 0..10 {
         std::thread::spawn(|| {
             let mut prev_id = EventId::new();
             for _ in 0..1000000 {

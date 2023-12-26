@@ -87,7 +87,6 @@
                 cargoExtraArgs = "--package=server";
               }
             );
-            default = self'.packages.current;
           };
 
           checks = {

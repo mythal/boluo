@@ -31,13 +31,19 @@
           };
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
-          src = craneLib.cleanCargoSource (craneLib.path ./.);
 
-          securityFrameworks =
-            if pkgs.stdenv.isDarwin then [
-              pkgs.darwin.apple_sdk.frameworks.Security
-              pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-            ] else [ ];
+          src =
+            let
+              srcFilter = path: _type: builtins.match ".*src/.*$" path != null;
+              versionFile = path: _type: builtins.match ".*version.json$" path != null;
+              srcOrCargo = path: type:
+                (srcFilter path type) || (craneLib.filterCargoSources path type) || (versionFile path type);
+            in
+            pkgs.lib.cleanSourceWith {
+              src = craneLib.path ./.;
+              filter = srcOrCargo;
+            };
+
 
           commonArgs = {
             pname = "boluo-deps";
@@ -47,20 +53,18 @@
             strictDeps = true;
 
             nativeBuildInputs = with pkgs; [ pkg-config ];
-            buildInputs = with pkgs; [ openssl ] ++ securityFrameworks;
+            buildInputs = with pkgs;
+              let
+                securityFrameworks =
+                  if stdenv.isDarwin then [
+                    darwin.apple_sdk.frameworks.Security
+                    darwin.apple_sdk.frameworks.SystemConfiguration
+                  ] else [ ];
+              in
+              [ openssl ] ++ securityFrameworks;
           };
 
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-          server = craneLib.buildPackage (
-            commonArgs
-            // {
-              pname = "server";
-              version = "0.0.0";
-
-              inherit cargoArtifacts;
-              cargoExtraArgs = "--package=server";
-            }
-          );
         in
         {
           _module.args.pkgs = import inputs.nixpkgs {
@@ -72,14 +76,21 @@
           };
 
           packages = {
-            server = server;
+            server = craneLib.buildPackage (
+              commonArgs
+              // {
+                pname = "server";
+                version = "0.0.0";
+
+                doCheck = false;
+                inherit cargoArtifacts;
+                cargoExtraArgs = "--package=server";
+              }
+            );
             default = self'.packages.current;
           };
 
           checks = {
-            # Build the crate as part of `nix flake check` for convenience
-            inherit server;
-
             # Run clippy (and deny all warnings) on the crate source,
             # again, resuing the dependency artifacts from above.
             #

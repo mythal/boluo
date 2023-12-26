@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
@@ -23,5 +26,6 @@ jobs:
         with:
           push: true
           file: .devcontainer/Dockerfile
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/${{ github.repository }}/devcontainer:latest

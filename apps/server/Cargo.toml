@@ -92,3 +92,6 @@ features = ["connection-manager", "tokio-native-tls-comp"]
 [dependencies.fern]
 version = "0.6"
 features = ["colored"]
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = "0.5"

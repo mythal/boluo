@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 RUN apt update -y
-RUN apt install -y curl xz-utils git acl && setfacl -k /tmp && mkdir /nix
+RUN apt install -y curl xz-utils git && mkdir /nix
 RUN \
   useradd -m -s /bin/bash -u 1000 dev;\
   chown dev /nix;\
@@ -9,6 +9,8 @@ RUN \
 ENV USER=dev
 USER dev
 WORKDIR /home/dev
+RUN mkdir .tmp
+ENV TMPDIR=/home/dev/.tmp
 RUN curl -L https://nixos.org/nix/install | sh -s -- --no-daemon;
 ENV PATH="/home/dev/.nix-profile/bin:${PATH}"
 

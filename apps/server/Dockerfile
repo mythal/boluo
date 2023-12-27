@@ -1,7 +1,7 @@
 FROM rustlang/rust:nightly-buster AS builder
 RUN cargo --version
 ADD . /boluo
-RUN cd /boluo && cargo build --release
+RUN cd /boluo && cargo +nightly build --release
 
 FROM debian:buster AS server
 RUN apt-get update \

@@ -49,4 +49,6 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# direnv
+.direnv/
 .nx/cache

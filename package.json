@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "nx run-many --target=build --all",
+    "build": "nx run-many --target=build --all --output-style='stream'",
     "build:affected": "nx affected -t build",
     "check": "nx run-many --target=check --all",
     "lint": "nx run-many --target=lint --all",

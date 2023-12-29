@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import Prando from 'prando';
 import { memo, ReactNode, useMemo, useRef } from 'react';
+import type { Entity } from '../../interpreter/entities';
 import { makeRng } from '../../interpreter/eval';
-import type { ParseResult } from '../../interpreter/parse-result';
 import { Delay } from '../Delay';
 import { EntityCode } from '../entities/EntityCode';
 import { EntityCodeBlock } from '../entities/EntityCodeBlock';
@@ -16,7 +16,9 @@ import { SelfCursorToolbar } from './SelfCursorToolbar';
 
 interface Props {
   channelId: string;
-  parsed: ParseResult;
+  source: string;
+  entities: Entity[];
+  isAction: boolean;
   self?: boolean;
   isPreview: boolean;
   seed?: number[];
@@ -26,7 +28,9 @@ interface Props {
 
 export const Content = memo<Props>(({
   channelId,
-  parsed: { text: source, entities, isAction },
+  source,
+  entities,
+  isAction,
   nameNode,
   seed,
   isPreview,

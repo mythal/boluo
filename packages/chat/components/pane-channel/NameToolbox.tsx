@@ -26,13 +26,18 @@ const chatStateToNameList = (state: ChatSpaceState, channelId: string, myId: str
 
 const OOC_STATE = 'BOLUO_OOC_STATE';
 
+const truncateName = (name: string) => {
+  if (name.length <= 24) return name;
+  return `${name.slice(0, 18)}…`;
+};
+
 const NameHistory: FC<{ channelId: string; myId: string }> = (
   { channelId, myId },
 ) => {
   const intl = useIntl();
   const store = useStore();
   const { inGameAtom, inputedNameAtom } = useChannelAtoms();
-  const title = intl.formatMessage({ defaultMessage: 'Name History' });
+  const title = intl.formatMessage({ defaultMessage: 'Select Character' });
   const nameHistory = useMemo(
     // In this case, we don't need to use `useAtom` hooks.
     () => chatStateToNameList(store.get(chatAtom), channelId, myId),
@@ -50,6 +55,10 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
   const selectedValue = useAtomValue(selectedValueAtom);
 
   const dispatch = useSetAtom(useComposeAtom());
+  const nameOptions = useMemo(
+    () => nameHistory.map((name, key) => <option key={key} value={name}>{truncateName(name)}</option>),
+    [nameHistory],
+  );
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { value } = e.target;
     if (value === OOC_STATE) {
@@ -64,29 +73,19 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
       <select
         value={selectedValue}
         title={title}
-        className="w-[6rem]"
+        className="w-[6rem] p-1 border border-surface-100 hover:border-surface-400 rounded"
         onChange={handleChange}
       >
         <option value={OOC_STATE}>
-          <FormattedMessage defaultMessage="Out Of Character" />
+          <FormattedMessage defaultMessage="Out Game" />
         </option>
         <option value="">
-          <FormattedMessage defaultMessage="Custom" />
+          <FormattedMessage defaultMessage="-" />
         </option>
-        {nameHistory.map((name, key) => <option key={key} value={name}>{name}</option>)}
+        {nameOptions}
       </select>
     </div>
   );
-};
-
-const SaveName: FC<{ characterName: string }> = ({ characterName }) => {
-  const { inputedNameAtom } = useChannelAtoms();
-  const inputedName = useAtomValue(inputedNameAtom);
-  if (inputedName.trim() === '' || inputedName === characterName) {
-    return null;
-  }
-
-  return <button className="underline">Save</button>;
 };
 
 export const NameToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
@@ -97,7 +96,7 @@ export const NameToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   return (
-    <div className="absolute font-normal right-0 top-full bg-lowest border border-surface-800 rounded-sm py-2 px-3 z-30 w-max text-sm flex flex-col gap-1">
+    <div className="absolute font-normal right-0 top-full bg-lowest border border-surface-200 shadow-sm rounded-sm py-2 px-3 z-30 w-max text-sm flex flex-col gap-1">
       <div className="flex gap-2 text-sm items-center">
         <NameHistory myId={myId} channelId={channelId} />
         <label>

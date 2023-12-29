@@ -211,6 +211,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         // Insert the preview to item list
         if (preview.optimistic && !preview.editFor) {
           itemList.push(preview);
+        } else if (preview.text === '' && preview.senderId === myId) {
+          itemList.push(preview);
         } else if (preview.pos > minPos) {
           const index = binarySearchPos(itemList, preview.pos);
           itemList.splice(index, 0, preview);

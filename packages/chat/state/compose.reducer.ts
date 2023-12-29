@@ -69,7 +69,7 @@ const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleIn
   } else {
     const before = source.substring(0, modifier.start);
     const after = source.substring(modifier.start + modifier.len);
-    nextSource = modifier.inGame ? '.out ' : '.in ' + (before + after).trimStart();
+    nextSource = (modifier.inGame ? '.out ' : '.in ') + (before + after).trimStart();
   }
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };

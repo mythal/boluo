@@ -50,6 +50,16 @@ const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setS
 
 const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleInGame'>): ComposeState => {
   const { inGame: modifier } = parseModifiers(state.source);
+  if (action.payload.inGame != null) {
+    // Do nothing if `inGame` is not changed
+
+    if (!modifier && state.defaultInGame === action.payload.inGame) {
+      return state;
+    }
+    if (modifier !== false && modifier.inGame === action.payload.inGame) {
+      return state;
+    }
+  }
   const { source } = state;
   let nextSource = source;
   if (!modifier) {

@@ -6,7 +6,7 @@ import type { ComposeState } from './compose.reducer';
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
   setInputedName: { inputedName: string };
-  toggleInGame: Empty;
+  toggleInGame: { inGame?: boolean };
   toggleBroadcast: Empty;
   addDice: Empty;
   link: { text: string; href: string };

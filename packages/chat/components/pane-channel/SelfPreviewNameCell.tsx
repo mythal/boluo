@@ -53,12 +53,6 @@ export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channe
       <div className="flex-grow flex-shrink-1 @2xl:flex-shrink-0 max-w-full relative">
         {!isAction ? <Name name={name} isMaster={isMaster} isPreview self /> : <IsActionIndicator />}
         <NameToolbox channelMember={channelMember} />
-
-        {inGame && name !== '' && characterName !== name && (
-          <Delay fallback={null}>
-            <SaveAsCharacterName channelId={channelMember.channelId} characterName={name} />
-          </Delay>
-        )}
       </div>
     </div>
   );

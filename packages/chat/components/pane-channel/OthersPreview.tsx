@@ -19,13 +19,13 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
     const text = preview.text || '';
     const entities = fromRawEntities(text, preview.entities);
     return { ...initParseResult, text, entities };
-  }, [preview.entities, preview.text]);
+  }, [preview.text, preview.entities]);
 
   const nameNode = useMemo(() => {
     return <Name name={name} isMaster={isMaster} isPreview self />;
   }, [isMaster, name]);
 
-  const deferredParsed = useDeferredValue(parsed);
+  const { text: source, entities } = useDeferredValue(parsed);
 
   return (
     <PreviewBox id={preview.id} editMode={preview.editFor !== null} className="text-surface-600">
@@ -36,7 +36,16 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
       </div>
       {preview.text === null
         ? <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
-        : <Content channelId={preview.channelId} parsed={deferredParsed} nameNode={nameNode} isPreview />}
+        : (
+          <Content
+            channelId={preview.channelId}
+            source={source}
+            entities={entities}
+            isAction={preview.isAction}
+            nameNode={nameNode}
+            isPreview
+          />
+        )}
     </PreviewBox>
   );
 };

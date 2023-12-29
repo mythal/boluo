@@ -62,7 +62,9 @@ export const ChatItemMessage: FC<Props> = (
           && (
             <Content
               channelId={message.channelId}
-              parsed={parsed}
+              source={parsed.text}
+              entities={parsed.entities}
+              isAction={isAction}
               nameNode={nameNode}
               isPreview={false}
               seed={message.seed}

@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -18,7 +18,7 @@ services:
     image: postgres:latest
     restart: unless-stopped
     volumes:
-      - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

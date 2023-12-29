@@ -1,4 +1,5 @@
 import { ChannelMember } from 'api';
+import { useMe } from 'common';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -34,6 +35,7 @@ const truncateName = (name: string) => {
 const NameHistory: FC<{ channelId: string; myId: string }> = (
   { channelId, myId },
 ) => {
+  const me = useMe();
   const intl = useIntl();
   const store = useStore();
   const { inGameAtom, inputedNameAtom } = useChannelAtoms();
@@ -68,20 +70,28 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
       dispatch({ type: 'setInputedName', payload: { inputedName: value } });
     }
   };
+  if (me == null) {
+    throw new Error('Unexpected: empty me');
+  }
   return (
     <div className="flex-1">
       <select
         value={selectedValue}
         title={title}
-        className="w-[6rem] p-1 border border-surface-100 hover:border-surface-400 rounded"
+        className="w-[6rem] px-1.5 py-1 border border-surface-100 hover:border-surface-400 rounded"
         onChange={handleChange}
       >
         <option value={OOC_STATE}>
-          <FormattedMessage defaultMessage="Out Game" />
+          {me === 'LOADING' ? '…' : me.user.nickname}
         </option>
         <option value="">
-          <FormattedMessage defaultMessage="-" />
+          <FormattedMessage defaultMessage="New…" />
         </option>
+        {nameOptions.length > 0 && (
+          <option disabled>
+            - <FormattedMessage defaultMessage="History Character" /> -
+          </option>
+        )}
         {nameOptions}
       </select>
     </div>

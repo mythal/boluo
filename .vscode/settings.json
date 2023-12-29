@@ -4,6 +4,20 @@
     "*.tailwind.css": "tailwindcss",
     ".env.local.example": "properties"
   },
+  // Nix
+  "nix.serverSettings": {
+    "nil": {
+      "diagnostics": {
+        "ignored": [
+          "unused_binding",
+          "unused_with"
+        ]
+      },
+      "formatting": {
+        "command": ["treefmt", "--stdin", "foo.nix"]
+      }
+    }
+  },
   // ESLint
   "eslint.workingDirectories": [
     {

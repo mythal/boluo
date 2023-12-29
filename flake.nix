@@ -119,6 +119,14 @@
               config.treefmt.build.wrapper
               rust-analyzer
               rustToolchain
+              nil
+              nodejs
+              nodePackages.pnpm
+              openssl
+            ];
+            packagesFrom = [ self'.packages.server ];
+            env = [
+              ({ name = "PKG_CONFIG_PATH"; eval = "$DEVSHELL_DIR/lib/pkgconfig"; })
             ];
           };
 

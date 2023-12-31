@@ -1,5 +1,5 @@
 import { Locale } from 'common/locale';
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../components/global/Providers';
 import { getIntl, getMessages, LangParams } from '../../server';
@@ -12,9 +12,12 @@ export function generateMetadata(
 
   return {
     title,
-    colorScheme: 'dark light',
   };
 }
+
+export const viewport: Viewport = {
+  colorScheme: 'dark light',
+};
 
 export default function RootLayout({
   children,

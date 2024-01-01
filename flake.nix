@@ -126,7 +126,7 @@
             ];
             packagesFrom = [ self'.packages.server ];
             env = [
-              ({ name = "PKG_CONFIG_PATH"; eval = "$DEVSHELL_DIR/lib/pkgconfig"; })
+              { name = "PKG_CONFIG_PATH"; eval = "$DEVSHELL_DIR/lib/pkgconfig"; }
             ];
           };
 

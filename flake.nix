@@ -122,7 +122,6 @@
               nil
               nodejs
               nodePackages.pnpm
-              openssl
             ];
             packagesFrom = [ self'.packages.server ];
             env = [

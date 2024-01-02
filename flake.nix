@@ -1,5 +1,5 @@
 {
-  description = "A nfo file generator for your anime. Source from Bangumi.";
+  description = "A chat tool made for play RPG";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";

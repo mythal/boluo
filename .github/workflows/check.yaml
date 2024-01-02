@@ -91,11 +91,6 @@ jobs:
       - name: Clippy
         run: cargo clippy
 
-      - name: Init test environment
-        run: cargo run -p manage-cli -- init
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
-
       - name: Test
         run: cargo test
         env:

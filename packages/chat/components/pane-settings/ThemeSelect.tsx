@@ -31,7 +31,8 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     revalidate: false,
   });
 
-  const handleChange = (value: string) => {
+  const handleChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
+    const value = event.target.value;
     const theme = setThemeToDom(value);
     document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
     if (me && me !== 'LOADING') {
@@ -44,5 +45,9 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     { value: 'light', label: intl.formatMessage({ defaultMessage: 'Light' }) },
     { value: 'dark', label: intl.formatMessage({ defaultMessage: 'Dark' }) },
   ], [intl]);
-  return <Select items={items} value={theme} onChange={handleChange} id={id} />;
+  return (
+    <Select value={theme} onChange={handleChange} id={id}>
+      {items.map(item => <option value={item.value}>{item.label}</option>)}
+    </Select>
+  );
 };

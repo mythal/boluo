@@ -3,6 +3,7 @@ import { useMe } from 'common';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { Select } from 'ui/Select';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
@@ -74,11 +75,10 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
     throw new Error('Unexpected: empty me');
   }
   return (
-    <div className="flex-1">
-      <select
+    <div className="flex-1 w-[6rem]">
+      <Select
         value={selectedValue}
         title={title}
-        className="w-[6rem] px-1.5 py-1 border border-surface-100 hover:border-surface-400 rounded"
         onChange={handleChange}
       >
         <option value={OOC_STATE}>
@@ -93,7 +93,7 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
           </option>
         )}
         {nameOptions}
-      </select>
+      </Select>
     </div>
   );
 };

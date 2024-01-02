@@ -36,7 +36,6 @@
     "utils": "workspace:*"
   },
   "dependencies": {
-    "@radix-ui/react-select": "^1.2.2",
     "clsx": "^1.2.1",
     "common": "workspace:*",
     "icons": "workspace:*",

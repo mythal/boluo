@@ -26,6 +26,7 @@
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
+          inherit (pkgs) lib stdenv;
           targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
 
           rustToolchain = pkgs.rust-bin.stable.latest.default.override {
@@ -34,6 +35,13 @@
           };
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
+
+          darwinInputs = with pkgs; lib.optionals stdenv.isDarwin [
+            libiconv
+            darwin.apple_sdk.frameworks.Security
+            darwin.apple_sdk.frameworks.SystemConfiguration
+            darwin.apple_sdk.frameworks.CoreFoundation
+          ];
 
           src =
             let
@@ -56,16 +64,8 @@
             inherit src;
             strictDeps = true;
 
-            nativeBuildInputs = with pkgs; [ pkg-config ];
-            buildInputs = with pkgs;
-              let
-                securityFrameworks =
-                  if stdenv.isDarwin then [
-                    darwin.apple_sdk.frameworks.Security
-                    darwin.apple_sdk.frameworks.SystemConfiguration
-                  ] else [ ];
-              in
-              [ openssl ] ++ securityFrameworks;
+            nativeBuildInputs = [ pkgs.pkg-config ];
+            buildInputs = [ pkgs.openssl.dev ] ++ darwinInputs;
           };
 
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -118,18 +118,41 @@
           };
 
           devshells.default = {
-            packages = with pkgs; [
-              clang
-              config.treefmt.build.wrapper
-              rust-analyzer
-              rustToolchain
-              nil
-              nodejs
-              nodePackages.pnpm
-            ];
+            packages =
+              let
+                common = with pkgs; [
+                  config.treefmt.build.wrapper
+                  rust-analyzer
+                  rustToolchain
+                  nil
+                  nodejs
+                  nodePackages.pnpm
+                  clang
+                  gnumake
+                ];
+              in
+              common ++ darwinInputs;
             packagesFrom = [ self'.packages.server ];
+            # https://github.com/cachix/devenv/issues/267
             env = [
               { name = "PKG_CONFIG_PATH"; eval = "$DEVSHELL_DIR/lib/pkgconfig"; }
+              {
+                name = "LIBRARY_PATH";
+                eval = "$DEVSHELL_DIR/lib";
+              }
+              {
+                name = "CFLAGS";
+                eval = "\"-I $DEVSHELL_DIR/include ${lib.optionalString pkgs.stdenv.isDarwin "-iframework $DEVSHELL_DIR/Library/Frameworks"}\"";
+              }
+            ] ++ lib.optionals pkgs.stdenv.isDarwin [
+              {
+                name = "RUSTFLAGS";
+                eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+              }
+              {
+                name = "RUSTDOCFLAGS";
+                eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+              }
             ];
           };
 

@@ -91,6 +91,12 @@ jobs:
       - name: Clippy
         run: cargo clippy
 
+      - name: Initialize database
+        run: cargo run -p server -- --init
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+
       - name: Test
         run: cargo test
         env:

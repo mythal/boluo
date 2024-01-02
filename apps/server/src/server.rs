@@ -5,6 +5,7 @@ use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use crate::context::debug;
+use clap::Parser;
 use hyper::header::ORIGIN;
 use hyper::server::conn::AddrStream;
 use hyper::service::{make_service_fn, service_fn};
@@ -110,15 +111,45 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
     Ok(response)
 }
 
+async fn check() {
+    let s3_client = s3::get_client();
+    s3_client
+        .head_bucket()
+        .bucket(s3::get_bucket_name())
+        .send()
+        .await
+        .expect("Cannot connect to bucket");
+}
+
+#[derive(Parser)]
+struct Args {
+    #[clap(long, help = "init database")]
+    init: bool,
+}
+
 #[tokio::main]
 async fn main() {
     openssl_probe::init_ssl_cert_env_vars();
     dotenv::from_filename(".env.local").ok();
     dotenv::dotenv().ok();
-    let port: u16 = env::var("PORT").unwrap().parse().unwrap();
     logger::setup_logger(debug()).unwrap();
 
-    let addr: Ipv4Addr = env::var("HOST").unwrap_or("127.0.0.1".to_string()).parse().unwrap();
+    let args = Args::parse();
+    if args.init {
+        database::initialize().await;
+        return;
+    }
+    let port: u16 = env::var("PORT")
+        .expect("PORT must be set")
+        .parse()
+        .expect("PORT must be a number");
+    check().await;
+
+    let addr: Ipv4Addr = env::var("HOST")
+        .unwrap_or("127.0.0.1".to_string())
+        .parse()
+        .expect("HOST must be a IPv4 address");
+
     let addr = SocketAddr::new(IpAddr::V4(addr), port);
 
     let make_svc = make_service_fn(|_: &AddrStream| async { Ok::<_, hyper::Error>(service_fn(handler)) });
@@ -127,15 +158,6 @@ async fn main() {
     events::tasks::start();
     // https://tokio.rs/tokio/topics/shutdown
     let mut stream = signal(SignalKind::terminate()).unwrap();
-
-    // check
-    let s3_client = s3::get_client();
-    s3_client
-        .head_bucket()
-        .bucket(s3::get_bucket_name())
-        .send()
-        .await
-        .expect("s3 bucket not found");
 
     #[allow(clippy::never_loop)]
     loop {

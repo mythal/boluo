@@ -3,7 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    devshell.url = "github:numtide/devshell";
+    devshell = {
+      url = "github:numtide/devshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     crane = {
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -36,12 +39,13 @@
             let
               srcFilter = path: _type: builtins.match ".*src/.*$" path != null;
               versionFile = path: _type: builtins.match ".*version.json$" path != null;
-              srcOrCargo = path: type:
-                (srcFilter path type) || (craneLib.filterCargoSources path type) || (versionFile path type);
+              schemaFile = path: _type: builtins.match ".*schema.sql$" path != null;
+              filter = path: type:
+                (srcFilter path type) || (craneLib.filterCargoSources path type) || (versionFile path type) || (schemaFile path type);
             in
             pkgs.lib.cleanSourceWith {
               src = craneLib.path ./.;
-              filter = srcOrCargo;
+              inherit filter;
             };
 
 

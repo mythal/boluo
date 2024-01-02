@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-import type { SelectItem } from 'ui/Select';
 import { Select } from 'ui/Select';
 
 interface Props {
@@ -8,11 +7,18 @@ interface Props {
   onChange: (value: string) => void;
 }
 
-const items: SelectItem[] = [
+const items = [
   { label: 'D20', value: 'd20' },
   { label: 'D100', value: 'd100' },
 ];
 
 export const DiceSelect: FC<Props> = ({ id, value, onChange }) => {
-  return <Select id={id} items={items} value={value} onChange={onChange} />;
+  const handleChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
+    onChange(event.target.value);
+  };
+  return (
+    <Select id={id} value={value} onChange={handleChange}>
+      {items.map(item => <option value={item.value}>{item.label}</option>)}
+    </Select>
+  );
 };

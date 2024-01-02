@@ -11,8 +11,8 @@ interface Props {
 
 export const LocaleSelect: React.FC<Props> = ({ id, disabled = false }) => {
   const [locale, setLocale] = useLocale();
-  const onChange = (value: string) => {
-    setLocale(toLocale(value));
+  const onChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setLocale(toLocale(e.target.value));
   };
   const items = useMemo(
     () => [
@@ -31,5 +31,9 @@ export const LocaleSelect: React.FC<Props> = ({ id, disabled = false }) => {
     ],
     [],
   );
-  return <Select id={id} items={items} value={locale} onChange={onChange} disabled={disabled} />;
+  return (
+    <Select id={id} value={locale} onChange={onChange} disabled={disabled}>
+      {items.map(item => <option value={item.value}>{item.label}</option>)}
+    </Select>
+  );
 };

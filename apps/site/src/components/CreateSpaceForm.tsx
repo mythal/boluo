@@ -10,7 +10,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from 'ui/Button';
 import { Oops } from 'ui/Oops';
-import type { SelectItem } from 'ui/Select';
 import { TextArea, TextInput } from 'ui/TextInput';
 import { required } from '../validations';
 import { DiceSelect } from './DiceSelect';
@@ -54,7 +53,7 @@ const NameField: FC = () => {
   );
 };
 
-const dices: SelectItem[] = [
+const dices = [
   { label: 'D20', value: 'd20' },
   { label: 'D100', value: 'd100' },
 ];

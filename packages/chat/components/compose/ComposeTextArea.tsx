@@ -88,6 +88,14 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
     return () => document.removeEventListener('selectionchange', handle);
   }, [updateRange]);
 
+  const handlePaste: React.ClipboardEventHandler<HTMLTextAreaElement> = useCallback((e) => {
+    const files = e.clipboardData.files;
+    if (files.length === 0) return;
+    e.preventDefault();
+    const media = files[0]!;
+    dispatch({ type: 'media', payload: { media } });
+  }, [dispatch]);
+
   const handleKeyDown = useCallback(async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (isCompositionRef.current || e.key !== 'Enter') {
       return;
@@ -116,6 +124,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
       onChange={handleChange}
       onFocus={() => dispatch(focusAction)}
       onBlur={() => dispatch(blurAction)}
+      onPasteCapture={handlePaste}
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}

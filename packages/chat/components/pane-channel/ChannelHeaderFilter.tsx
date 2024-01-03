@@ -27,7 +27,7 @@ export const ChannelHeaderFilter: FC<Props> = () => {
           <FormattedMessage defaultMessage="Filter" />
         </span>
         <Select value={filter} onChange={(e) => setFilter(e.target.value as ChannelFilter)}>
-          {items.map(item => <option value={item.value}>{item.label}</option>)}
+          {items.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
         </Select>
       </label>
     </div>

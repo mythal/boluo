@@ -1,11 +1,9 @@
 use crate::error::DbError;
-use native_tls::TlsConnector;
-use postgres_native_tls::MakeTlsConnector;
 use std::collections::HashMap;
 use std::convert::{From, Into};
 use std::env;
 use std::hash::BuildHasher;
-pub use tokio_postgres::types::{ToSql, Type as SqlType};
+pub use tokio_postgres::types::ToSql;
 use tokio_postgres::{Row, Statement};
 
 use async_trait::async_trait;
@@ -90,7 +88,6 @@ pub trait Querist: Send {
 pub fn get_postgres_url() -> String {
     let key = if cfg!(test) {
         dotenv::dotenv().ok();
-        openssl_probe::init_ssl_cert_env_vars();
         dotenv::from_filename(".env.local").ok();
         dotenv::from_filename(".env.test.local").ok();
         "TEST_DATABASE_URL"
@@ -149,10 +146,7 @@ impl Client {
     }
 
     pub async fn with_config(config: &tokio_postgres::Config) -> Result<Client, DbError> {
-        let connector = TlsConnector::builder().build().expect("Failed to build TLS connector");
-        let connector = MakeTlsConnector::new(connector);
-
-        let (client, connection) = config.connect(connector).await?;
+        let (client, connection) = config.connect(tokio_postgres::NoTls).await?;
         tokio::spawn(connection);
         let prepared = HashMap::with_capacity_and_hasher(64, CrcBuilder);
         let broken = false;

@@ -1,5 +1,5 @@
 use crate::error::CacheError;
-pub use redis::aio::{ConnectionManager, MultiplexedConnection};
+pub use redis::aio::ConnectionManager;
 pub use redis::AsyncCommands;
 use uuid::fmt::Hyphenated;
 use uuid::Uuid;
@@ -58,7 +58,6 @@ pub async fn conn() -> redis::RedisResult<Connection> {
             dotenv::from_filename(".env.test.local").ok();
             dotenv::from_filename(".env.local").ok();
             dotenv::dotenv().ok();
-            openssl_probe::init_ssl_cert_env_vars();
         };
         let url = if let Ok(url) = var("REDIS_URL") {
             url

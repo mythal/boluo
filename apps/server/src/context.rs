@@ -19,10 +19,6 @@ pub fn get_domain() -> String {
     env::var("DOMAIN").unwrap_or("boluo.chat".to_string())
 }
 
-pub fn disable_s3() -> bool {
-    env::var("DISABLE_S3").map(env_bool).unwrap_or(false)
-}
-
 pub fn media_public_url() -> &'static str {
     static MEDIA_PUBLIC_URL: OnceCell<String> = OnceCell::new();
     MEDIA_PUBLIC_URL.get_or_init(|| {

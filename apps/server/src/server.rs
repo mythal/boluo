@@ -129,7 +129,6 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
-    openssl_probe::init_ssl_cert_env_vars();
     dotenv::from_filename(".env.local").ok();
     dotenv::dotenv().ok();
     logger::setup_logger(debug()).unwrap();

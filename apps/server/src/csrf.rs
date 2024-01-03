@@ -13,15 +13,17 @@ pub async fn authenticate(req: &Request<Body>) -> Result<Session, AppError> {
 }
 
 pub fn generate_csrf_token(session_key: &Uuid) -> String {
+    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+
     let expire_sec = 60 * 60 * 3;
     let timestamp: i64 = Utc::now().timestamp() + expire_sec;
     let mut buffer = String::with_capacity(128);
-    base64::encode_config_buf(session_key.as_bytes(), base64::STANDARD, &mut buffer);
+    base64_engine.encode_string(session_key.as_bytes(), &mut buffer);
     buffer.push('.');
     buffer.push_str(&timestamp.to_string());
     let signature = sign(&buffer);
     buffer.push('.');
-    base64::encode_config_buf(signature, base64::STANDARD, &mut buffer);
+    base64_engine.encode_string(signature, &mut buffer);
     buffer
 }
 

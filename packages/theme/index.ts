@@ -85,20 +85,24 @@ export const clearWatchSystemTheme = () => {
 export const setThemeToDom = (value: string): Theme => {
   const html = window.document.documentElement;
   const theme = toTheme(value);
+  const colorScheme: HTMLMetaElement | null = document.querySelector('meta[name="color-scheme"]');
   switch (theme) {
     case 'light':
       html.classList.remove('system');
       html.classList.add('light');
       html.classList.remove('dark');
+      if (colorScheme) colorScheme.content = 'light';
       break;
     case 'dark':
       html.classList.remove('system');
       html.classList.remove('light');
       html.classList.add('dark');
+      if (colorScheme) colorScheme.content = 'dark';
       break;
     case 'system':
       html.classList.add('system');
       setThemeByMediaQuery(window.matchMedia(DARK_MEDIA_QUERY));
+      if (colorScheme) colorScheme.content = 'light dark';
       break;
   }
   return theme;

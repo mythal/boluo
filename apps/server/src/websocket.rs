@@ -9,7 +9,7 @@ pub use tokio_tungstenite::tungstenite::{Error as WsError, Message as WsMessage}
 use tokio_tungstenite::WebSocketStream;
 
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
-    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+    use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
 
     log::trace!("Checking Websocket request header: {:?}", headers);
     let upgrade = headers

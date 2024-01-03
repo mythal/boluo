@@ -1,6 +1,7 @@
 FROM rustlang/rust:nightly-buster AS builder
 RUN cargo --version
-ADD . /boluo
+ADD .env Cargo.lock Cargo.toml version.json /boluo/
+ADD apps/server /boluo/apps/server/
 RUN cd /boluo && cargo +nightly build --release
 
 FROM debian:buster AS server

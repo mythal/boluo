@@ -52,10 +52,13 @@ pub fn sha1(data: &[u8]) -> ring::digest::Digest {
 }
 
 pub fn verify(message: &str, signature: &str) -> Result<(), anyhow::Error> {
-    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+    use base64::{engine::general_purpose, Engine as _};
 
-    let signature = base64_engine
-        .decode(signature.trim())
+    let signature = signature.trim();
+
+    let signature = general_purpose::STANDARD_NO_PAD
+        .decode(signature)
+        .or_else(|_| general_purpose::STANDARD.decode(signature))
         .context("Failed to decode signature")?;
     hmac::verify(key(), message.as_bytes(), &signature)
         .map_err(|_| anyhow::anyhow!("Failed to verify signature of message {}", message))
@@ -83,7 +86,7 @@ pub fn merge_blank(s: &str) -> String {
 
 #[test]
 fn test_sign() {
-    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+    use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
 
     let message = "hello, world";
     let signature = sign(message);

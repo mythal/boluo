@@ -195,9 +195,13 @@ async fn connect(req: Request) -> Result<Response, anyhow::Error> {
 
         let receive_client_events = incoming
             .timeout(Duration::from_secs(40))
-            .map_err(|_| WsError::AlreadyClosed)
+            .map_err(|_| {
+                log::warn!("Incoming WebSocket connection already closed");
+                WsError::AlreadyClosed
+            })
             .and_then(future::ready)
             .try_for_each(|message: WsMessage| async move {
+                // log::debug!("Received a message from client: {:?}", message);
                 if let WsMessage::Text(message) = message {
                     if message == "♡" {
                         return Ok(());
@@ -210,8 +214,19 @@ async fn connect(req: Request) -> Result<Response, anyhow::Error> {
             });
         futures::pin_mut!(server_push_events);
         futures::pin_mut!(receive_client_events);
-        future::select(server_push_events, receive_client_events).await;
+        let select_result = future::select(server_push_events, receive_client_events).await;
         log::debug!("WebSocket connection close");
+        match select_result {
+            future::Either::Left((_, _)) => {
+                log::debug!("Stop push events");
+            }
+            future::Either::Right((Err(e), _)) => {
+                log::warn!("Failed to receive events: {}", e);
+            }
+            future::Either::Right((Ok(_), _)) => {
+                log::debug!("Stop receiving events");
+            }
+        }
         if let (Some(user_id), Some(space)) = (user_id, space) {
             Event::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await?;
         }

@@ -1,6 +1,5 @@
 use std::sync::OnceLock;
 
-use aws_config::SdkConfig;
 use aws_sdk_s3::Config;
 
 fn make_config() -> Config {

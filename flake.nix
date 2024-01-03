@@ -71,7 +71,7 @@
             strictDeps = true;
 
             nativeBuildInputs = [ pkgs.pkg-config ];
-            buildInputs = [ pkgs.openssl.dev ] ++ darwinInputs;
+            buildInputs = [ ] ++ darwinInputs;
           };
 
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;

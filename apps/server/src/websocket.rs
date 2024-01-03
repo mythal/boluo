@@ -9,6 +9,8 @@ pub use tokio_tungstenite::tungstenite::{Error as WsError, Message as WsMessage}
 use tokio_tungstenite::WebSocketStream;
 
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
+    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+
     log::trace!("Checking Websocket request header: {:?}", headers);
     let upgrade = headers
         .get(UPGRADE)
@@ -31,7 +33,7 @@ pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppErr
         .ok_or_else(|| AppError::BadRequest("Failed to read ws key from headers".to_string()))?
         .to_string();
     key.push_str("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-    let accept = base64::encode(sha1(key.as_bytes()).as_ref());
+    let accept = base64_engine.encode(sha1(key.as_bytes()).as_ref());
     HeaderValue::from_str(&accept).map_err(error_unexpected!())
 }
 

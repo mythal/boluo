@@ -27,22 +27,27 @@ pub enum AuthenticateFail {
 }
 
 pub fn token(session: &Uuid) -> String {
+    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
     // [body (base64)].[sign]
     let mut buffer = String::with_capacity(64);
-    base64::encode_config_buf(session.as_bytes(), base64::STANDARD_NO_PAD, &mut buffer);
+    base64_engine.encode_string(session.as_bytes(), &mut buffer);
     let signature = sign(&buffer);
     buffer.push('.');
-    base64::encode_config_buf(signature, base64::STANDARD_NO_PAD, &mut buffer);
+    base64_engine.encode_string(signature, &mut buffer);
     buffer
 }
 
 pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
+    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+
     let mut iter = token.split('.');
     let parse_failed = || anyhow::anyhow!("Failed to parse token: {}", token);
     let session = iter.next().ok_or_else(parse_failed)?;
     let signature = iter.next().ok_or_else(parse_failed)?;
     utils::verify(session, signature)?;
-    let session = base64::decode(session).context("Failed to decode base64 in session.")?;
+    let session = base64_engine
+        .decode(session)
+        .context("Failed to decode base64 in session.")?;
     Uuid::from_slice(session.as_slice()).context("Failed to convert session bytes data to UUID.")
 }
 

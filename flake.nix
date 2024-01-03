@@ -97,18 +97,15 @@
                 cargoExtraArgs = "--package=server";
               }
             );
-            server-image = pkgs.dockerTools.buildImage {
+            server-image = pkgs.dockerTools.buildLayeredImage {
               name = "boluo-server";
               tag = "latest";
+              contents = [
+                pkgs.cacert
+              ];
               config = {
                 Cmd = [ "${self'.packages.server}/bin/server" ];
               };
-              copyToRoot = with pkgs.dockerTools; [
-                usrBinEnv
-                binSh
-                caCertificates
-                fakeNss
-              ];
             };
           };
 

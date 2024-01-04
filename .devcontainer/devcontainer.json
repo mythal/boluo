@@ -29,7 +29,7 @@
   // This can be used to network with other containers or with the host.
   "forwardPorts": [3000, 3100, 8080, 9000],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "cp .devcontainer/.env.local.exmaple .env.local && direnv allow",
+  "postCreateCommand": "cp .devcontainer/.env.local.exmaple .env.local && cp .envrc.recommended .envrc && direnv allow",
 
   // More info: https://aka.ms/dev-containers-non-root.
   "remoteUser": "dev",

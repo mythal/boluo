@@ -19,7 +19,8 @@
         "dprint.dprint",
         "rust-lang.rust-analyzer",
         "mkhl.direnv",
-        "dbaeumer.vscode-eslint"
+        "dbaeumer.vscode-eslint",
+        "jnoortheen.nix-ide"
       ]
     }
   },

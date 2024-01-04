@@ -51,15 +51,16 @@
 
           src =
             let
-              srcFilter = path: _type: builtins.match ".*src/.*$" path != null;
-              versionFile = path: _type: builtins.match ".*version.json$" path != null;
-              schemaFile = path: _type: builtins.match ".*schema.sql$" path != null;
-              filter = path: type:
-                (srcFilter path type) || (craneLib.filterCargoSources path type) || (versionFile path type) || (schemaFile path type);
+              filters = [
+                (path: _type: lib.hasInfix "/apps/server/src/" path)
+                craneLib.filterCargoSources
+                (path: _type: lib.hasSuffix "/version.json" path)
+                (path: _type: lib.hasSuffix "/apps/server/schema.sql" path)
+              ];
             in
             pkgs.lib.cleanSourceWith {
               src = craneLib.path ./.;
-              inherit filter;
+              filter = path: type: builtins.any (f: f path type) filters;
             };
 
 

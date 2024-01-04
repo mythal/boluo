@@ -159,16 +159,16 @@
               }
               {
                 name = "CFLAGS";
-                eval = "\"-I $DEVSHELL_DIR/include ${lib.optionalString pkgs.stdenv.isDarwin "-iframework $DEVSHELL_DIR/Library/Frameworks"}\"";
+                eval = ''"-I $DEVSHELL_DIR/include ${lib.optionalString pkgs.stdenv.isDarwin "-iframework $DEVSHELL_DIR/Library/Frameworks"}"'';
               }
             ] ++ lib.optionals pkgs.stdenv.isDarwin [
               {
                 name = "RUSTFLAGS";
-                eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+                eval = ''"-L framework=$DEVSHELL_DIR/Library/Frameworks"'';
               }
               {
                 name = "RUSTDOCFLAGS";
-                eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+                eval = ''"-L framework=$DEVSHELL_DIR/Library/Frameworks"'';
               }
             ];
           };

@@ -21,6 +21,10 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build server package
         run: nix build ".#server"
+      - name: Build legacy package
+        run: nix build ".#legacy"
+      - name: Build site package
+        run: nix build ".#site"
       - name: Check versions
         run: nix develop --command bash -c "cargo --version && node --version"
       - name: Check build

@@ -21,26 +21,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      # https://github.com/pnpm/action-setup
-      - uses: pnpm/action-setup@v2
-        with:
-          run_install: false
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
       - name: Install
-        run: pnpm install
+        run: npm install
 
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
         uses: nrwl/nx-set-shas@v4
@@ -48,12 +30,12 @@ jobs:
           main-branch-name: "master"
 
       - name: Build
-        run: pnpm build:affected
+        run: npm run build:affected
         env:
           CI: true
 
       - name: Lint
-        run: pnpm lint:affected
+        run: npm run lint:affected
 
   cargo:
     name: Cargo Workspace
@@ -112,15 +94,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Get dprint version from pnpm-lock.yaml
-        id: get-info
-        # reference:
-        # https://unix.stackexchange.com/questions/13466/can-grep-output-only-specified-groupings-that-match
-        run: |
-          echo "version=$(cat pnpm-lock.yaml | grep -oP 'dprint\@\K[\d.]+' | tr -d '\n')" >> $GITHUB_OUTPUT
       - uses: dprint/check@v2.2
         with:
-          dprint-version: "${{ steps.get-info.outputs.version }}"
+          dprint-version: "0.44.0"
 
   cargo-fmt:
     name: Style (Rust)

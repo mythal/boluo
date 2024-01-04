@@ -49,6 +49,19 @@
             darwin.apple_sdk.frameworks.CoreFoundation
           ];
 
+          commonImageContents = with pkgs.dockerTools; [
+            usrBinEnv
+            binSh
+            pkgs.cacert
+            caCertificates
+            fakeNss
+          ];
+
+          certEnv = [
+            "GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+          ];
+
           src =
             let
               filters = [
@@ -101,13 +114,138 @@
             server-image = pkgs.dockerTools.buildLayeredImage {
               name = "boluo-server";
               tag = "latest";
-              contents = [
-                pkgs.cacert
-              ];
+              contents = commonImageContents;
               config = {
+                env = certEnv;
                 Cmd = [ "${self'.packages.server}/bin/server" ];
               };
             };
+
+            site =
+              let
+                filters = [
+                  (path: _type: lib.hasSuffix "nx.json" path)
+                  (path: _type: lib.hasSuffix "package.json" path)
+                  (path: _type: lib.hasSuffix "package-lock.json" path)
+                  (path: _type: lib.hasSuffix "/apps" path)
+                  (path: _type: lib.hasInfix "/apps/site" path)
+                  (path: _type: lib.hasInfix "/packages" path)
+                  (path: _type: lib.hasSuffix "/apps/server" path)
+                  (path: _type: lib.hasInfix "/apps/server/bindings" path)
+                ];
+                src = pkgs.lib.cleanSourceWith {
+                  src = ./.;
+                  filter =
+                    path: type: builtins.any (f: f path type) filters;
+                };
+                site-package = pkgs.buildNpmPackage {
+                  pname = "boluo-site";
+                  version = "0.0.0";
+                  src = src;
+                  npmBuildScript = "build:site";
+                  npmDepsHash = "sha256-SfBidl1r53PX8oik2rOzJ1G2dFQQKBwNfu9eK7nbs2s=";
+                  # TODO: remove this
+                  PUBLIC_MEDIA_URL = "https://media.boluo.chat";
+                  installPhase = ''
+                    mkdir -p $out/bin
+                    cp -r apps/site/.next/standalone/* $out
+                    cp -r apps/site/.next/static $out/apps/site/.next/static
+                  '';
+                };
+              in
+              pkgs.writeScriptBin "boluo-site" ''
+                #!${pkgs.bash}/bin/bash
+                ${pkgs.nodejs}/bin/node ${site-package}/apps/site/server.js
+              '';
+            site-image = pkgs.dockerTools.buildLayeredImage {
+              name = "boluo-site";
+              tag = "latest";
+              contents = with pkgs; commonImageContents ++ [
+                curl
+              ];
+              config = {
+                Env = certEnv;
+                Cmd = [ "${self'.packages.site}/bin/boluo-site" ];
+              };
+            };
+            legacy =
+              let
+                filters = [
+                  (path: _type: lib.hasSuffix "nx.json" path)
+                  (path: _type: lib.hasSuffix "package.json" path)
+                  (path: _type: lib.hasSuffix "package-lock.json" path)
+                  (path: _type: lib.hasSuffix "/apps" path)
+                  (path: _type: lib.hasInfix "/apps/legacy" path)
+                ];
+                src = pkgs.lib.cleanSourceWith {
+                  src = ./.;
+                  filter =
+                    path: type: builtins.any (f: f path type) filters;
+                };
+              in
+              pkgs.buildNpmPackage {
+                pname = "boluo-legacy";
+                version = "0.0.0";
+                src = src;
+                npmBuildScript = "build:legacy";
+                npmDepsHash = "sha256-SfBidl1r53PX8oik2rOzJ1G2dFQQKBwNfu9eK7nbs2s=";
+                installPhase = ''
+                  mkdir $out
+                  cp -r apps/legacy/dist/* $out
+                '';
+              };
+            legacy-image =
+              # https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/docker/examples.nix
+              let
+                webRoot = self'.packages.legacy;
+                nginxPort = "80";
+                nginxConf = pkgs.writeText "nginx.conf" ''
+                  user nobody nobody;
+                  daemon off;
+                  error_log /dev/stdout info;
+                  pid /dev/null;
+                  events {}
+                  http {
+                    include ${pkgs.nginx}/conf/mime.types;
+                    access_log /dev/stdout;
+                    server {
+                      server_name _;
+                      listen ${nginxPort};
+                      listen [::]:${nginxPort};
+                      index index.html index.htm;
+                      location / {
+                        root ${webRoot};
+                        try_files $uri $uri/ $uri.html /index.html;
+                      }
+                      location /api {
+                        return 404;
+                      }
+                    }
+                  }
+                '';
+              in
+              pkgs.dockerTools.buildLayeredImage {
+                name = "boluo-legacy";
+                tag = "latest";
+
+                contents = [
+                  pkgs.fakeNss
+                  pkgs.nginx
+                ];
+                extraCommands = ''
+                  mkdir -p tmp/nginx_client_body
+
+                  # nginx still tries to read this directory even if error_log
+                  # directive is specifying another file :/
+                  mkdir -p var/log/nginx
+                '';
+                config = {
+                  Cmd = [ "nginx" "-c" nginxConf ];
+                  ExposedPorts = {
+                    "${nginxPort}/tcp" = { };
+                  };
+                };
+              };
           };
 
           checks = {
@@ -143,7 +281,6 @@
                   rustToolchain
                   nil
                   nodejs
-                  nodePackages.pnpm
                   clang
                   gnumake
                 ];

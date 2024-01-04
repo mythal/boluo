@@ -11,15 +11,15 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "server-bindings": "workspace:*",
-    "tsconfig": "workspace:*",
+    "server-bindings": "*",
+    "tsconfig": "*",
     "tslib": "^2.6.2",
-    "utils": "workspace:*"
+    "utils": "*"
   },
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
+    "eslint-config-custom": "*",
     "jotai": "^2.6.1",
     "typescript": "^5.3.3"
   },

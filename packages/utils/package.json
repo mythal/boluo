@@ -17,7 +17,7 @@
   },
   "sideEffects": false,
   "devDependencies": {
-    "@types/react": "^18.2.45",
+    "@types/react": "^18.2.46",
     "@types/uuid": "^9.0.7",
     "eslint": "^8.56.0",
     "eslint-config-custom": "workspace:*",

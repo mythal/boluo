@@ -1,8 +1,5 @@
-name: Build Devcontainer Image
-on:
-  push:
-    branches:
-      - master
+name: Update Devcontainer Image
+on: workflow_dispatch
 jobs:
   docker:
     runs-on: ubuntu-latest

@@ -1,5 +1,13 @@
 name: Update Devcontainer Image
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.devcontainer/**'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'rust-toolchain.toml'
 jobs:
   docker:
     runs-on: ubuntu-latest

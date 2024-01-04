@@ -29,7 +29,7 @@ jobs:
           push: true
           file: apps/legacy/Dockerfile
           cache-from: type=gha
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{ github.repository }}/legacy:${{ github.ref_name }}
@@ -59,7 +59,7 @@ jobs:
           push: true
           context: .
           file: apps/site/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |

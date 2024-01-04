@@ -15,8 +15,8 @@
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
-    "tsconfig": "workspace:*",
+    "eslint-config-custom": "*",
+    "tsconfig": "*",
     "typescript": "^5.3.3"
   }
 }

@@ -4,6 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "nx run-many --target=build --all --output-style='stream'",
+    "build:legacy": "nx run-many --target=build --projects=legacy --output-style='stream'",
+    "build:site": "nx run-many --target=build --projects=site --output-style='stream'",
     "build:affected": "nx affected -t build",
     "check": "nx run-many --target=check --all",
     "lint": "nx run-many --target=lint --all",
@@ -20,9 +22,9 @@
   ],
   "dependencies": {
     "dprint": "^0.44.0",
-    "eslint-config-custom": "workspace:*",
+    "eslint-config-custom": "*",
     "nx": "17.1.3",
     "typescript": "^5.3.3"
   },
-  "packageManager": "pnpm@8.10.5"
+  "packageManager": "npm@10.2.3"
 }

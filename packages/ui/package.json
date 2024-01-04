@@ -19,9 +19,9 @@
     "@types/node": "^18.19.4",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
-    "api": "workspace:*",
+    "api": "*",
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
+    "eslint-config-custom": "*",
     "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -29,16 +29,16 @@
     "rollup-plugin-typescript2": "^0.34.1",
     "tailwindcss": "^3.4.0",
     "tailwindcss-theme-swapper": "^0.10.0",
-    "theme": "workspace:*",
+    "theme": "*",
     "ts-node": "^10.9.2",
-    "tsconfig": "workspace:*",
+    "tsconfig": "*",
     "typescript": "^5.3.3",
-    "utils": "workspace:*"
+    "utils": "*"
   },
   "dependencies": {
     "clsx": "^1.2.1",
-    "common": "workspace:*",
-    "icons": "workspace:*",
+    "common": "*",
+    "icons": "*",
     "react-intl": "^6.5.5",
     "tslib": "^2.6.2"
   }

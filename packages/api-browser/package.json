@@ -11,16 +11,16 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "api": "workspace:*",
+    "api": "*",
     "jotai": "^2.6.1",
-    "store": "workspace:*",
-    "utils": "workspace:*"
+    "store": "*",
+    "utils": "*"
   },
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-custom": "workspace:*",
-    "tsconfig": "workspace:*",
+    "eslint-config-custom": "*",
+    "tsconfig": "*",
     "typescript": "^5.3.3"
   }
 }

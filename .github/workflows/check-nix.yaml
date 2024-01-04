@@ -1,0 +1,27 @@
+name: Check Nix
+
+on:
+  push:
+    paths:
+      - 'flake.lock'
+      - 'flake.nix'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'rust-toolchain.toml'
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Set up Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build server package
+        run: nix build ".#server"
+      - name: Check versions
+        run: nix develop --command bash -c "cargo --version && node --version"
+      - name: Check build
+        run: nix develop --command bash -c "cargo build"

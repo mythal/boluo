@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+      - uses: ./.github/actions/image-tag
+        id: image-tag
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -32,7 +34,7 @@ jobs:
           platforms: linux/amd64
           cache-to: type=gha,mode=max
           tags: |
-            ghcr.io/${{ github.repository }}/legacy:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/legacy:${{ steps.image-tag.outputs.tag }}
 
   site:
     name: site
@@ -43,6 +45,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+      - uses: ./.github/actions/image-tag
+        id: image-tag
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -63,7 +67,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ghcr.io/${{ github.repository }}/site:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/site:${{ steps.image-tag.outputs.tag }}
 
   server:
     name: server
@@ -74,6 +78,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+      - uses: ./.github/actions/image-tag
+        id: image-tag
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -88,5 +94,5 @@ jobs:
       - name: Push docker image to DockerHub
         run: |
           docker load < result
-          docker tag boluo-server:latest ghcr.io/${{ github.repository }}/server:${{ github.ref_name }}
-          docker push ghcr.io/${{ github.repository }}/server:${{ github.ref_name }}
+          docker tag boluo-server:latest ghcr.io/${{ github.repository }}/server:${{ steps.image-tag.outputs.tag }}
+          docker push ghcr.io/${{ github.repository }}/server:${{ steps.image-tag.outputs.tag }}

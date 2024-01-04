@@ -1,0 +1,22 @@
+name: Check Actions
+on:
+  push:
+    paths:
+      - .github/actions/**
+jobs:
+  image-tag:
+    name: image-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/image-tag
+        id: image-tag-master
+        with:
+          branch: master
+      - uses: ./.github/actions/image-tag
+        id: image-tag-releases
+        with:
+          branch: releases/20240104-0
+      - run: |
+          test "latest" == "${{ steps.image-tag-master.outputs.tag }}"
+          test "production" == "${{ steps.image-tag-releases.outputs.tag }}"

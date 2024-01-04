@@ -5,6 +5,7 @@
 docker-compose.override.yml
 .env.local
 .env*.local
+.envrc
 **/*.tsbuildinfo
 
 # compiled output

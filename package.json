@@ -29,6 +29,7 @@
   },
   "packageManager": "npm@10.2.3",
   "devDependencies": {
-    "prettier": "3.1.1"
+    "prettier": "^3.1.1",
+    "prettier-plugin-tailwindcss": "^0.5.11"
   }
 }

@@ -57,6 +57,11 @@
             fakeNss
           ];
 
+          # Shared dependencies because we use monorepo
+          npmDepsHash = "sha256-lO7IMLLRT+LK+mv1y1gOm4ZydySfRGhusaizspt8TSo=";
+          # Uncomment this when you have to update dependencies
+          # npmDepsHash = lib.fakeHash;
+
           certEnv = [
             "GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -143,7 +148,7 @@
                   version = "0.0.0";
                   src = src;
                   npmBuildScript = "build:site";
-                  npmDepsHash = "sha256-SfBidl1r53PX8oik2rOzJ1G2dFQQKBwNfu9eK7nbs2s=";
+                  inherit npmDepsHash;
                   # TODO: remove this
                   PUBLIC_MEDIA_URL = "https://media.boluo.chat";
                   installPhase = ''
@@ -188,7 +193,7 @@
                 version = "0.0.0";
                 src = src;
                 npmBuildScript = "build:legacy";
-                npmDepsHash = "sha256-SfBidl1r53PX8oik2rOzJ1G2dFQQKBwNfu9eK7nbs2s=";
+                inherit npmDepsHash;
                 installPhase = ''
                   mkdir $out
                   cp -r apps/legacy/dist/* $out
@@ -290,6 +295,10 @@
             packagesFrom = [ self'.packages.server ];
             # https://github.com/cachix/devenv/issues/267
             env = [
+              {
+                name = "PATH";
+                prefix = "node_modules/.bin";
+              }
               { name = "PKG_CONFIG_PATH"; eval = "$DEVSHELL_DIR/lib/pkgconfig"; }
               {
                 name = "LIBRARY_PATH";

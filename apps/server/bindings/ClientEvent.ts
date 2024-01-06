@@ -2,8 +2,6 @@
 import type { PreviewPost } from './PreviewPost';
 import type { StatusKind } from './StatusKind';
 
-export type ClientEvent = { 'type': 'PREVIEW'; preview: PreviewPost } | {
-  'type': 'STATUS';
-  kind: StatusKind;
-  focus: Array<string>;
-};
+export type ClientEvent =
+  | { type: 'PREVIEW'; preview: PreviewPost }
+  | { type: 'STATUS'; kind: StatusKind; focus: Array<string> };

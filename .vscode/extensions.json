@@ -3,6 +3,6 @@
     "editorconfig.editorconfig",
     "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
-    "dprint.dprint"
+    "esbenp.prettier-vscode"
   ]
 }

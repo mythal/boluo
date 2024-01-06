@@ -17,7 +17,6 @@ But if you don't want to use nix, you can install the following tools manually:
 
 - Rust toolchain: Even though you just want to develop the frontend, you still recommended to install Rust because code generation depends on it.
 - Node.js
-- [dprint](https://dprint.dev/): For formatting.
 - Docker or Podman (recommanded)
 
 We also provide the codespaces configuration, which can be used to develop in GitHub web interface or locally without set up anything.

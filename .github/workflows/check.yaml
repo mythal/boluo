@@ -27,7 +27,7 @@ jobs:
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
         uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: "master"
+          main-branch-name: 'master'
 
       - name: Build
         run: npm run build:affected
@@ -47,14 +47,14 @@ jobs:
       redis:
         image: redis
         ports:
-          - "6379:6379"
+          - '6379:6379'
       postgres:
         image: postgres:15
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: boluo
         ports:
-          - "5432:5432"
+          - '5432:5432'
 
     steps:
       - uses: actions/checkout@v4
@@ -89,14 +89,22 @@ jobs:
           DEBUG: 1
           PORT: 3000
 
-  dprint:
-    name: Style
+  prettier:
+    name: Style (Prettier)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dprint/check@v2.2
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
-          dprint-version: "0.44.0"
+          # Make sure the actual branch is checked out when running on pull requests
+          ref: ${{ github.head_ref }}
+          # This is important to fetch the changes to the previous commit
+          fetch-depth: 0
+
+      - name: Prettier Check
+        uses: creyD/prettier_action@v4.3
+        with:
+          dry: True
 
   cargo-fmt:
     name: Style (Rust)

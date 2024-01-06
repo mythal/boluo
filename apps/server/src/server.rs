@@ -113,12 +113,15 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
 
 async fn check() {
     let s3_client = s3::get_client();
-    s3_client
-        .head_bucket()
+    let _put_object_output = s3_client
+        .put_object()
         .bucket(s3::get_bucket_name())
+        .key("check")
+        .body(Vec::<u8>::new().into())
         .send()
         .await
         .expect("Cannot connect to bucket");
+    log::info!("Object Storage is ready");
 }
 
 #[derive(Parser)]

@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - production
+      - 'releases/*'
 jobs:
   legacy:
     runs-on: ubuntu-latest

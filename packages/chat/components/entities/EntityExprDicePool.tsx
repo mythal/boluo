@@ -24,16 +24,16 @@ export const SingleDice: FC<SingleDiceProps> = React.memo(({ value, last = false
   let special: ReactNode = null;
   if (fumble && value <= fumble) {
     const title = intl.formatMessage({ defaultMessage: 'Fumble' });
-    special = <ThumbsUp className="text-sm inline" aria-label={title} />;
+    special = <ThumbsUp className="inline text-sm" aria-label={title} />;
   } else if (critical && value >= critical) {
     const title = intl.formatMessage({ defaultMessage: 'Critical' });
-    special = <ThumbsDown className="text-sm inline" aria-label={title} />;
+    special = <ThumbsDown className="inline text-sm" aria-label={title} />;
   }
 
   return (
     <>
       <span>{value}</span>
-      <span className="text-xs text-surface-700">{special}</span>
+      <span className="text-surface-700 text-xs">{special}</span>
       {!last && ', '}
     </>
   );
@@ -47,9 +47,9 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
       <Delay fallback={<FallbackIcon />}>
         <Cubes className="inline" />
       </Delay>
-      <span className="px-1 relative underline decoration-dotted decoration-surface-600 cursor-help group/dice-pool">
+      <span className="decoration-surface-600 group/dice-pool relative cursor-help px-1 underline decoration-dotted">
         <FormattedMessage defaultMessage="Dice Pool" />
-        <span className="absolute hidden w-max bottom-full left-0  group-hover/dice-pool:inline-block bg-highest/75 text-lowest shadow rounded-sm px-2 py-1 text-sm">
+        <span className="bg-highest/75 text-lowest absolute bottom-full left-0  hidden w-max rounded-sm px-2 py-1 text-sm shadow group-hover/dice-pool:inline-block">
           <FormattedMessage
             defaultMessage="Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
             values={{

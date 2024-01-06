@@ -46,7 +46,7 @@ const UsernameField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="Username" />
         </label>
 
@@ -75,7 +75,7 @@ const EmailField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="EMail" />
         </label>
 
@@ -104,7 +104,7 @@ const NicknameField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="Nickname" />
         </label>
 
@@ -169,7 +169,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       <NicknameField />
       <PasswordField />
       {error && (
-        <div className="my-1 text-error-700">
+        <div className="text-error-700 my-1">
           <FormErrorDisplay error={error} />
         </div>
       )}

@@ -5,5 +5,5 @@ interface Props {
 }
 
 export const ErrorMessageBox = ({ children }: Props) => {
-  return <div className="w-full bg-error-100 border border-error-200 rounded py-2 px-4">{children}</div>;
+  return <div className="bg-error-100 border-error-200 w-full rounded border px-4 py-2">{children}</div>;
 };

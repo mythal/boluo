@@ -17,7 +17,7 @@ export const ToggleActionButton = memo<Props>(() => {
   return (
     <Button data-small data-type="switch" data-on={isAction} onClick={toggle}>
       <PersonRunning />
-      <span className="hidden @md:inline">
+      <span className="@md:inline hidden">
         <FormattedMessage defaultMessage="Action" />
       </span>
     </Button>

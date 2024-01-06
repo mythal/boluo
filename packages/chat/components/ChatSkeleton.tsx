@@ -9,9 +9,9 @@ interface Props {
 export const ChatSkeleton: FC<Props> = ({ children, placeholder }) => {
   return (
     <div className="flex">
-      <div className="flex bg-lowest view-height flex-col flex-none">
+      <div className="bg-lowest view-height flex flex-none flex-col">
         <div className="h-pane-header border-r "></div>
-        <div className="border-r w-sidebar flex-grow"></div>
+        <div className="w-sidebar flex-grow border-r"></div>
       </div>
       <PaneSimpleBox>{children || <span className="text-surface-400">{placeholder}</span>}</PaneSimpleBox>
     </div>

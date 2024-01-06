@@ -20,7 +20,7 @@ export const WhisperButton: FC<Props> = ({}) => {
   return (
     <Button data-small type="button" data-type="switch" data-on={isWhisper} onClick={handleClick}>
       <Icon icon={Whisper} />
-      <span className="hidden @md:inline">
+      <span className="@md:inline hidden">
         <FormattedMessage defaultMessage="Whisper" />
       </span>
     </Button>

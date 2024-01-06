@@ -13,7 +13,7 @@ export const MessageToolboxButton: FC<Props> = ({ children, onClick, type = 'NOR
   return (
     <button
       className={clsx(
-        'p-2  items-center flex gap-1 first-of-type:rounded-l-sm last-of-type:rounded-r-sm',
+        'flex  items-center gap-1 p-2 first-of-type:rounded-l-sm last-of-type:rounded-r-sm',
         on ? 'bg-surface-400 hover:bg-surface-500 text-surface-100' : 'hover:bg-surface-300 active:bg-surface-400',
         danger && 'text-error-600',
       )}

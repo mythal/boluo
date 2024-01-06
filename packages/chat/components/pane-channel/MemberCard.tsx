@@ -31,7 +31,7 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
   });
 
   return (
-    <label className="grid grid-rows-[auto_auto] grid-cols-[auto_1fr] gap-x-1 gap-y-0.5 group">
+    <label className="group grid grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-1 gap-y-0.5">
       <input type="checkbox" checked={channelMember.isMaster} onChange={() => edit()} disabled={isEditing} />
       <span className="space-x-1">
         <span>
@@ -39,7 +39,7 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
         </span>
         <Icon icon={Gamemaster} className={channelMember.isMaster ? '' : 'text-surface-400'} />
       </span>
-      <span className="col-start-2 text-sm text-surface-600 group-hover:text-surface-900">
+      <span className="text-surface-600 group-hover:text-surface-900 col-start-2 text-sm">
         A game master can read whispers, kick members, move messages, and other.
       </span>
     </label>
@@ -77,11 +77,11 @@ const ConfirmLeave: FC<{ channelId: string; channelName: string; dismiss: () => 
     },
   );
   return (
-    <div className="text-sm pt-2">
+    <div className="pt-2 text-sm">
       <div>
         <FormattedMessage defaultMessage="Are you sure you want to leave {channelName}?" values={{ channelName }} />
       </div>
-      <div className="text-right pt-2">
+      <div className="pt-2 text-right">
         <Button data-small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
@@ -114,14 +114,14 @@ const ConfirmKick: FC<{
     },
   );
   return (
-    <div className="text-sm pt-2">
+    <div className="pt-2 text-sm">
       <div>
         <FormattedMessage
           defaultMessage="Are you sure you want to kick {nickname} ({username})?"
           values={{ nickname, username }}
         />
       </div>
-      <div className="text-right pt-2">
+      <div className="pt-2 text-right">
         <Button data-small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
@@ -204,7 +204,7 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
       <div className="">
         <Icon icon={Mask} /> <span className="font-bold">{characterName}</span>
       </div>
-      <div className="text-sm space-x-1">
+      <div className="space-x-1 text-sm">
         <span className="text-surface-600">{nickname}</span>
         <span className="text-surface-400">{username}</span>
       </div>
@@ -305,7 +305,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
               />
 
               {status != null && (
-                <div className="text-sm space-x-1">
+                <div className="space-x-1 text-sm">
                   {status.kind === 'ONLINE' ? (
                     <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
                   ) : (
@@ -317,10 +317,10 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
             </div>
           </div>
           <div className="py-4">
-            <div className="text-sm whitespace-pre-line max-h-32 overflow-y-auto">{user.bio}</div>
+            <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
           </div>
           {uiState === 'VIEW' && canIManage && (
-            <div className="text-right space-x-1">
+            <div className="space-x-1 text-right">
               {thisIsMe && channelMember != null && (
                 <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
                   <Icon icon={UserX} />

@@ -11,10 +11,10 @@ interface Props {
 export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
   const { isExpanded } = useSidebarState();
   return (
-    <div className={clsx('h-pane-header flex justify-between gap-1 py-2 items-center select-none px-3')}>
+    <div className={clsx('h-pane-header flex select-none items-center justify-between gap-1 px-3 py-2')}>
       <button
         className={clsx(
-          'w-8 h-8 border rounded-md  cursor-pointer flex items-center justify-center',
+          'flex h-8 w-8 cursor-pointer  items-center justify-center rounded-md border',
           isExpanded
             ? 'border-surface-400 bg-surface-200 hover:bg-surface-50'
             : 'border-surface-300 bg-surface-50 hover:bg-surface-200',
@@ -23,7 +23,7 @@ export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
       >
         {isExpanded ? <ChevronLeft /> : <ChevronRight />}
       </button>
-      <ConnectionIndicatior className="w-8 h-8 inline-flex items-center justify-center border rounded bg-surface-50 cursor-pointer" />
+      <ConnectionIndicatior className="bg-surface-50 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border" />
     </div>
   );
 };

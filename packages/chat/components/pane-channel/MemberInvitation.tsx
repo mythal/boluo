@@ -40,15 +40,15 @@ export const MemberInvitation: FC<Props> = ({ members, myMember, channel, userSt
       ));
     } else {
       membersToInvite = (
-        <div className="px-1 text-sm text-surface-600">
+        <div className="text-surface-600 px-1 text-sm">
           <FormattedMessage defaultMessage="No one to invite" />
         </div>
       );
     }
   }
   return (
-    <div className="py-1 px-2">
-      <label className="py-2 flex gap-2 items-center text-sm">
+    <div className="px-2 py-1">
+      <label className="flex items-center gap-2 py-2 text-sm">
         <TextInput
           placeholder={intl.formatMessage({ defaultMessage: 'Search' })}
           value={search}

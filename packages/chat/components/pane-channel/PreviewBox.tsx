@@ -22,7 +22,7 @@ export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode =
   return (
     <div
       className={clsx(
-        'grid py-2 px-2 items-start group gap-x-2 gap-y-1 grid-flow-col grid-rows-[auto_auto]',
+        'group grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
         'grid-cols-[2rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[2rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
         className,

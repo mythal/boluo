@@ -10,7 +10,7 @@ export const IsSecretField: FC<Props> = () => {
   const { register } = useFormContext<FormSchema, 'isSecret'>();
   return (
     <div>
-      <label className="grid grid-rows-2 grid-cols-[auto_1fr] gap-x-2 items-center">
+      <label className="grid grid-cols-[auto_1fr] grid-rows-2 items-center gap-x-2">
         <input type="checkbox" {...register('isSecret')} />
         <FormattedMessage defaultMessage="Is secret channel?" />
 

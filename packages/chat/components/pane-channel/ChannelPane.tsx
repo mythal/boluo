@@ -25,7 +25,7 @@ interface Props {
 const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
   return (
     <div className={className}>
-      <div className="text-3xl pt-4">
+      <div className="pt-4 text-3xl">
         <Lock />
       </div>
       <div className="py-4">
@@ -77,14 +77,14 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
       <PaneBox header={<ChannelHeader />}>
         <div
           className={clsx(
-            'grid grid-rows-[minmax(0,1fr)_auto] relative h-full',
-            memberListState === 'CLOSED' ? 'grid-cols-1' : 'grid-cols-[1fr_10rem] @md:grid-cols-[1fr_14rem]',
+            'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
+            memberListState === 'CLOSED' ? 'grid-cols-1' : '@md:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
           )}
         >
           <ChatContent className="relative" me={me} channelId={channelId} />
           {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
           {me && me !== 'LOADING' && member !== 'LOADING' && member != null ? (
-            <Compose me={me} className={clsx('p-2 border-t col-span-full')} member={member.channel} />
+            <Compose me={me} className={clsx('col-span-full border-t p-2')} member={member.channel} />
           ) : null}
         </div>
       </PaneBox>

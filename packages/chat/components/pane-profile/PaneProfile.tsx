@@ -40,7 +40,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
       {isMe && (
         <SidebarHeaderButton onClick={logout} title={logoutLabel}>
           <LogOut />
-          <span className="hidden @xs:inline">
+          <span className="@xs:inline hidden">
             <FormattedMessage defaultMessage="Logout" />
           </span>
         </SidebarHeaderButton>
@@ -48,7 +48,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
       {isMe && (
         <SidebarHeaderButton active={isEditing} onClick={() => setIsEditing(toggle)} title={editLabel}>
           <Edit />
-          <span className="hidden @md:inline">
+          <span className="@md:inline hidden">
             <FormattedMessage defaultMessage="Edit" />
           </span>
         </SidebarHeaderButton>

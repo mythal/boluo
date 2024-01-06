@@ -27,7 +27,7 @@ export const FileButton: FC<Props> = () => {
     <>
       <Button data-small onClick={() => inputRef.current?.click()}>
         <Upload />
-        <span className="hidden @lg:inline">
+        <span className="@lg:inline hidden">
           <FormattedMessage defaultMessage="File" />
         </span>
       </Button>

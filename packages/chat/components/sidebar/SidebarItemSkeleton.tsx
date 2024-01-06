@@ -6,7 +6,7 @@ const nop = () => {
 const SkeletonItem = () => {
   return (
     <SidebarItem onClick={nop}>
-      <span className="animate-ping text-surface-300">...</span>
+      <span className="text-surface-300 animate-ping">...</span>
     </SidebarItem>
   );
 };

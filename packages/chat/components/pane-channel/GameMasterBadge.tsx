@@ -13,7 +13,7 @@ export const GameMasterBadge: FC<Props> = React.memo(() => {
   return (
     <>
       <span
-        className="text-surface-500 bg-surface-200/50 px-1 rounded"
+        className="text-surface-500 bg-surface-200/50 rounded px-1"
         ref={refs.setReference}
         {...getReferenceProps()}
       >
@@ -25,7 +25,7 @@ export const GameMasterBadge: FC<Props> = React.memo(() => {
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="px-2 py-1 text-sm bg-highest/75 shadow text-lowest rounded"
+            className="bg-highest/75 text-lowest rounded px-2 py-1 text-sm shadow"
           >
             <FormattedMessage defaultMessage="Game Master" />
           </div>

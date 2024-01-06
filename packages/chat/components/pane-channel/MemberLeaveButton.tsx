@@ -49,7 +49,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
       <SidebarHeaderButton
         ref={refs.setReference}
         disabled={!channelMember || channelMember === 'LOADING' || isMutating || isLoading}
-        className="flex flex-none items-center gap-1 px-2 py-1 rounded-sm hover:bg-error-700/10 text-error-800"
+        className="hover:bg-error-700/10 text-error-800 flex flex-none items-center gap-1 rounded-sm px-2 py-1"
         {...getReferenceProps()}
       >
         {isMutating || isLoading ? <Spinner /> : <UserX />}
@@ -65,7 +65,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
                   values={{ channelName: channel?.name }}
                 />
               </div>
-              <div className="text-right pt-2">
+              <div className="pt-2 text-right">
                 <Button data-type="danger" data-small onClick={confirm} disabled={channel == null}>
                   <FormattedMessage defaultMessage="Leave" />
                 </Button>

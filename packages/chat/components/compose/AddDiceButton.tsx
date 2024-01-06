@@ -14,7 +14,7 @@ export const AddDiceButton: FC<Props> = () => {
   return (
     <Button onClick={handleAddDice}>
       <Dice />
-      <span className="hidden @md:inline">
+      <span className="@md:inline hidden">
         <FormattedMessage defaultMessage="Add Dice" />
       </span>
     </Button>

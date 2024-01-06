@@ -46,8 +46,8 @@ export const Sidebar: FC<Props> = ({ className }) => {
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
       <div className={className}>
         <SidebarHeader toggleExpand={toggleExpanded} />
-        <div className={clsx('relative flex-grow flex flex-col justify-between overflow-hidden w-sidebar')}>
-          <div className="divide-y overflow-y-auto divide-surface-100 overflow-x-hidden">
+        <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
+          <div className="divide-surface-100 divide-y overflow-y-auto overflow-x-hidden">
             <SidebarContent />
           </div>
 

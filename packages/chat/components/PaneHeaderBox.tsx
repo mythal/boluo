@@ -27,16 +27,16 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
       <div
         className={clsx(
           'min-h-pane-header flex items-center px-4 text-lg',
-          'justify-between border-b border-surface-100 bg-lowest',
+          'border-surface-100 bg-lowest justify-between border-b',
         )}
       >
-        <div className="inline-flex gap-1 items-center flex-nowrap min-w-0">
+        <div className="inline-flex min-w-0 flex-nowrap items-center gap-1">
           {icon && (
             <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>{icon}</div>
           )}
           <div
             className={clsx(
-              'whitespace-nowrap overflow-hidden text-ellipsis flex-shrink',
+              'flex-shrink overflow-hidden text-ellipsis whitespace-nowrap',
               isFocused ? 'text-surface-950' : 'text-surface-400',
             )}
           >
@@ -44,14 +44,14 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
           </div>
         </div>
         {(operators != null || defaultOperators != null) && (
-          <div className="inline-flex flex-none gap-1 ml-2" onClick={stopPropagation}>
+          <div className="ml-2 inline-flex flex-none gap-1" onClick={stopPropagation}>
             {operators}
             {defaultOperators}
           </div>
         )}
       </div>
 
-      <div className="divide-y bg-lowest divide-surface-100">
+      <div className="bg-lowest divide-surface-100 divide-y">
         {paneBanner.content && <PaneBanner banner={paneBanner} />}
         {extra}
       </div>

@@ -69,7 +69,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
   return (
     <FormProvider {...form}>
       {error && (
-        <div className="py-2 px-4">
+        <div className="px-4 py-2">
           <ErrorDisplay error={error} type="banner" />
         </div>
       )}
@@ -85,7 +85,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
             <div className="flex flex-col gap-2 pr-4">
               <ShowUsername username={me.username} />
               <NicknameField />
-              <BioField className="max-w-md min-h-[8rem]" />
+              <BioField className="min-h-[8rem] max-w-md" />
             </div>
           </div>
         </div>

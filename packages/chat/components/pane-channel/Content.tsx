@@ -57,12 +57,12 @@ export const Content = memo<Props>(
       <div
         ref={ref}
         className={clsx(
-          'h-full break-all whitespace-pre-wrap relative pr-6',
+          'relative h-full whitespace-pre-wrap break-all pr-6',
           self ? 'pb-12' : '',
           isPreview ? 'animate-pulse' : '',
         )}
       >
-        {isAction && <span className="mr-1 text-surface-400">*</span>}
+        {isAction && <span className="text-surface-400 mr-1">*</span>}
         {isAction && nameNode}
         {entityNodeList}
         {self && isPreview && (

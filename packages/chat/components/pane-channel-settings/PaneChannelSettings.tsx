@@ -74,12 +74,12 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   return (
     <FormProvider {...form}>
       {error && (
-        <div className="py-2 px-4">
+        <div className="px-4 py-2">
           <ErrorDisplay type="banner" error={error} />
         </div>
       )}
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="p-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 p-4">
           <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
           <DefaultDiceField />
           <DefaultRollCommandField />

@@ -47,14 +47,14 @@ export const MemberListItem: FC<Props> = ({ member, canIKick, myId, status, chan
     <>
       <button
         className={clsx(
-          'grid gap-x-1 items-center grid-cols-[auto_minmax(0,1fr)_auto] grid-flow-col',
+          'grid grid-flow-col grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1',
           hasCharacterName ? 'grid-rows-2' : 'grid-rows-1',
-          'group relative w-full cursor-pointer  text-sm rounded-sm px-2 py-1 hover:bg-surface-100 active:bg-surface-200',
+          'hover:bg-surface-100 active:bg-surface-200 group relative  w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        <div className="w-8 h-8 flex-none row-span-full">
+        <div className="row-span-full h-8 w-8 flex-none">
           <Avatar size="2rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />
         </div>
         {hasCharacterName && (

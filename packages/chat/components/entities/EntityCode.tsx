@@ -13,7 +13,7 @@ export const EntityCode: FC<Props> = ({
   },
 }) => {
   return (
-    <code className="bg-surface-200 px-1 rounded-sm border border-surface-300 shadow-sm">
+    <code className="bg-surface-200 border-surface-300 rounded-sm border px-1 shadow-sm">
       {source.substring(start, start + len)}
     </code>
   );

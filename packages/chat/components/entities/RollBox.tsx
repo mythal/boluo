@@ -6,7 +6,7 @@ interface Props {
 
 export const RollBox: FC<Props> = ({ children }) => {
   return (
-    <span className="bg-surface-200 border-surface-300/75 border rounded-sm px-1 py-0.5 shadow-1/2 shadow-surface-500/10">
+    <span className="bg-surface-200 border-surface-300/75 shadow-1/2 shadow-surface-500/10 rounded-sm border px-1 py-0.5">
       {children}
     </span>
   );

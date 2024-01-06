@@ -19,11 +19,11 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
   return (
     <button
       onClick={edit}
-      className={clsx('px-2 py-1 flex items-center gap-0.5 rounded-sm whitespace-nowrap', 'hover:bg-pin-brand-700/10')}
+      className={clsx('flex items-center gap-0.5 whitespace-nowrap rounded-sm px-2 py-1', 'hover:bg-pin-brand-700/10')}
     >
       {member.characterName ? (
         <>
-          <span className="text-sm text-surface-700 hidden @md:inline">
+          <span className="text-surface-700 @md:inline hidden text-sm">
             <FormattedMessage defaultMessage="Character Name:" />
           </span>
           {member.characterName}
@@ -31,7 +31,7 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
       ) : (
         <FormattedMessage defaultMessage="No Character Name" />
       )}
-      <Icon icon={Edit} className="ml-1 text-brand-700" />
+      <Icon icon={Edit} className="text-brand-700 ml-1" />
     </button>
   );
 };
@@ -43,13 +43,13 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, resetHeaderState }) =>
   if (me === 'LOADING' || me == null || member === 'LOADING' || member == null) return null;
   if (uiState === 'EDIT_CHARACTER_NAME') {
     return (
-      <div className="py-2 px-4 border-b flex gap-2">
+      <div className="flex gap-2 border-b px-4 py-2">
         <ChannelHeaderCharacterNameEdit member={member.channel} exitEdit={() => setUiState('DEFAULT')} />
       </div>
     );
   }
   return (
-    <div className="py-2 px-4 border-b flex gap-2 items-center">
+    <div className="flex items-center gap-2 border-b px-4 py-2">
       <div className="flex-1 overflow-hidden">
         <CharacterName member={member.channel} edit={() => setUiState('EDIT_CHARACTER_NAME')} />
       </div>

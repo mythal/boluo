@@ -10,7 +10,7 @@ interface Props {
   toggle: () => void;
 }
 
-const Dot: FC = () => <div className="absolute w-2 h-2 -right-1 -top-1 rounded-full bg-blue-600 shadow-md" />;
+const Dot: FC = () => <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-blue-600 shadow-md" />;
 
 export const ChannelHeaderFilterButton: FC<Props> = ({ on, toggle }) => {
   const { filterAtom } = useChannelAtoms();

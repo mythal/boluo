@@ -12,7 +12,7 @@ export function generateMetadata({ params }: { params: LangParams }): Metadata {
 
 export default function Page() {
   return (
-    <div className="p-4 flex flex-col gap-4">
+    <div className="flex flex-col gap-4 p-4">
       <div className="italic">This is an echo page. It will echo back the headers and cookies that were.</div>
       <div>
         <div className="text-xl">Headers:</div>

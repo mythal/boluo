@@ -154,7 +154,7 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="flex flex-col gap-2 h-full max-w-md p-4">
+        <div className="flex h-full max-w-md flex-col gap-2 p-4">
           <NameField />
           <FirstChannelNameField />
           <DescriptionField />

@@ -10,7 +10,7 @@ export const CreateSpacePage: FC = () => {
   return (
     <>
       <main className="p-4">
-        <h1 className="text-xl mb-2">{title}</h1>
+        <h1 className="mb-2 text-xl">{title}</h1>
         <CreateSpaceForm />
       </main>
     </>

@@ -16,7 +16,7 @@ import { DiceSelect } from './DiceSelect';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   return (
-    <div className="my-1 text-error-700">
+    <div className="text-error-700 my-1">
       <Oops error={error} type="inline" />
     </div>
   );
@@ -158,7 +158,7 @@ export const CreateSpaceForm: FC<Props> = () => {
           <DefaultDiceField />
         </div>
         {error && <FormErrorDispay error={error} />}
-        <div className="w-full mt-4">
+        <div className="mt-4 w-full">
           <Button data-type="primary" type="submit">
             <FormattedMessage defaultMessage="Create" />
           </Button>

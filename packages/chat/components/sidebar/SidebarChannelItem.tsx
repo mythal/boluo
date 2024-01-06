@@ -42,11 +42,11 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   );
 
   return (
-    <div className="py-0.5 px-2">
+    <div className="px-2 py-0.5">
       <a
         href="#" // TODO: link to channel
         className={clsx(
-          'group flex items-start w-full gap-1 cursor-pointer px-1 py-1 text-sm rounded-sm',
+          'group flex w-full cursor-pointer items-start gap-1 rounded-sm px-1 py-1 text-sm',
           active ? 'bg-surface-100 hover:bg-surface-50' : 'hover:bg-surface-50',
         )}
         onClick={handleClick}
@@ -54,12 +54,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         <span className={clsx(active ? 'text-surface-900' : 'text-surface-400 group-hover:text-surface-700')}>
           <Icon icon={channel.isPublic ? Hash : LockedHash} />
         </span>
-        <span className="text-left flex-1">{channel.name}</span>
+        <span className="flex-1 text-left">{channel.name}</span>
         <button
           onClick={handleClickInnerButton}
           title={active ? titleClose : titleOpenNew}
           className={clsx(
-            'flex-none inline-flex items-center justify-center',
+            'inline-flex flex-none items-center justify-center',
             active ? 'text-surface-400' : 'text-surface-300',
             'group-hover:text-brand-600 group-hover:bg-surface-200/50 h-5 w-5 rounded-sm',
           )}

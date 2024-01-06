@@ -16,7 +16,7 @@ export const DraggingOverlay = memo<Props>(({ active, myId }) => {
   const { senderId } = message;
   return (
     <DragOverlay zIndex={15}>
-      {active && <ChatItemMessage message={message} self={senderId === myId} className="py-2 px-4" />}
+      {active && <ChatItemMessage message={message} self={senderId === myId} className="px-4 py-2" />}
     </DragOverlay>
   );
 });

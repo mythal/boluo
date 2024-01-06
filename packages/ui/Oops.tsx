@@ -29,7 +29,7 @@ export const Oops: FC<Props> = ({ error, type = 'block' }) => {
     );
   }
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="flex h-full w-full items-center justify-center">
       <div>
         <div className="font-bold">
           <FormattedMessage defaultMessage="Oops" />

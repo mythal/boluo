@@ -25,7 +25,7 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
         {...listeners}
         {...attributes}
         className={clsx(
-          'inline-flex h-full col-span-1 row-span-full items-center justify-center text-surface-300 rounded-sm',
+          'text-surface-300 col-span-1 row-span-full inline-flex h-full items-center justify-center rounded-sm',
           !loading && 'group-hover:bg-surface-500/10 hover:text-surface-700 cursor-move',
           loading && 'cursor-not-allowed',
         )}

@@ -12,7 +12,7 @@ import { ChannelHeaderOperations } from './ChannelHeaderOperations';
 export type ChannelHeaderState = 'DEFAULT' | 'MORE' | 'FILTER';
 
 const ChannelName: FC<{ channel: Channel | undefined }> = ({ channel }) => {
-  return <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">{channel?.name ?? '...'}</span>;
+  return <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">{channel?.name ?? '...'}</span>;
 };
 
 export const ChannelHeader: FC = () => {

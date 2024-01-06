@@ -14,12 +14,12 @@ const RollFilter: FC<{ filter: Roll['filter'] | undefined | null }> = ({ filter 
   if (filter == null) return null;
   const [type, mount] = filter;
   return (
-    <span className="mx-0.5 text-sm text-surface-500">
+    <span className="text-surface-500 mx-0.5 text-sm">
       (
       <FormattedMessage defaultMessage="take" />{' '}
       <Delay fallback={<FallbackIcon />}>
-        {type === 'HIGH' && <ArrowUpWideShort className="inline-block w-[1em] h-[1em]" />}
-        {type === 'LOW' && <ArrowDownWideShort className="inline-block w-[1em] h-[1em]" />}
+        {type === 'HIGH' && <ArrowUpWideShort className="inline-block h-[1em] w-[1em]" />}
+        {type === 'LOW' && <ArrowDownWideShort className="inline-block h-[1em] w-[1em]" />}
       </Delay>{' '}
       {mount})
     </span>
@@ -58,7 +58,7 @@ export const EntityExprRoll: FC<Props> = ({ node }) => {
     <RollBox>
       <span className="mr-0.5">
         <Delay fallback={<FallbackIcon />}>
-          <Dice className="inline-block w-[1em] h-[1em]" />
+          <Dice className="inline-block h-[1em] w-[1em]" />
         </Delay>
       </span>
       <RollFilter filter={node.filter} />

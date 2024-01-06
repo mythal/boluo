@@ -8,7 +8,7 @@ export const FloatingBox = React.forwardRef<HTMLDivElement, Props>(({ children, 
   return (
     <div
       {...props}
-      className="p-3 bg-lowest rounded-sm text-sm shadow-1 shadow-surface-500/25 border-1/2 border-surface-800"
+      className="bg-lowest shadow-1 shadow-surface-500/25 border-1/2 border-surface-800 rounded-sm p-3 text-sm"
       ref={ref}
     >
       {children}

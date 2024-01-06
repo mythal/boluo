@@ -31,18 +31,18 @@ export const ToggleSidebarLine: FC<Props> = () => {
   }, [toggleSidebar]);
   return (
     <button
-      className="absolute z-20 left-0 top-0 h-full w-3 group cursor-col-resize"
+      className="group absolute left-0 top-0 z-20 h-full w-3 cursor-col-resize"
       onMouseDown={handleMouseDown}
       onClick={toggleSidebar}
       title={title}
     >
       <div
         className={clsx(
-          'h-full w-[1px] group-hover:w-[2px] bg-surface-300 group-hover:bg-blue-300',
+          'bg-surface-300 h-full w-[1px] group-hover:w-[2px] group-hover:bg-blue-300',
           dragging && 'bg-blue-500',
         )}
       ></div>
-      <div className="hidden group-hover:block z-30 absolute w-max top-2 left-2 rounded-sm bg-highest text-lowest px-2 py-1 space-x-1">
+      <div className="bg-highest text-lowest absolute left-2 top-2 z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 group-hover:block">
         <span>
           <Icon icon={Sidebar} />
         </span>

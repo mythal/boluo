@@ -21,7 +21,7 @@ export const BaseUrlSelector: FC<Props> = () => {
     <div>
       <label className="block">
         <FormattedMessage defaultMessage="Change Connection Region" />
-        <div className="text-surface-900 pt-1 flex flex-col gap-1">
+        <div className="text-surface-900 flex flex-col gap-1 pt-1">
           {proxies.map((proxy) => (
             <BaseUrlSelectorItem
               key={proxy.name}

@@ -2,5 +2,5 @@ import type { FC } from 'react';
 import type { ChildrenProps } from 'utils';
 
 export const PaneFooterBox: FC<ChildrenProps> = ({ children }) => (
-  <div className="p-4 sticky bottom-0 border-t bg-bg flex justify-end gap-2">{children}</div>
+  <div className="bg-bg sticky bottom-0 flex justify-end gap-2 border-t p-4">{children}</div>
 );

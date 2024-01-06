@@ -1,2 +1,1 @@
 use flake
-export PATH="$(npm root)/.bin:$PATH"

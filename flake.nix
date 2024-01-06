@@ -283,6 +283,7 @@
                   nodejs
                   clang
                   gnumake
+                  nixpkgs-fmt
                 ];
               in
               common ++ darwinInputs;

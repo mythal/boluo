@@ -8,13 +8,10 @@
   "nix.serverSettings": {
     "nil": {
       "diagnostics": {
-        "ignored": [
-          "unused_binding",
-          "unused_with"
-        ]
+        "ignored": ["unused_binding", "unused_with"]
       },
       "formatting": {
-        "command": ["treefmt", "--stdin", "foo.nix"]
+        "command": ["nixpkgs-fmt"]
       }
     }
   },
@@ -33,22 +30,20 @@
   "typescript.updateImportsOnFileMove.enabled": "always",
   // Formatter
   "editor.formatOnSave": true,
-  "dprint.path": "node_modules/.bin/dprint",
-  "editor.defaultFormatter": "dprint.dprint",
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "[json]": {
-    "editor.defaultFormatter": "dprint.dprint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "dprint.dprint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "dprint.dprint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "dprint.dprint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "typescript.tsdk": "./node_modules/typescript/lib",
 

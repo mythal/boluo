@@ -23,19 +23,21 @@ export type ApiErrorMap = MapDiscriminatedUnion<ApiError, 'code'>;
 export type ApiErrorCode = ApiError['code'];
 
 export const isApiError = (error: unknown): error is ApiError =>
-  typeof error === 'object'
-  && error !== null
-  && error.hasOwnProperty('code')
-  && (error.hasOwnProperty('message') || error.hasOwnProperty('cause'));
+  typeof error === 'object' &&
+  error !== null &&
+  error.hasOwnProperty('code') &&
+  (error.hasOwnProperty('message') || error.hasOwnProperty('cause'));
 
-export const keepError = <Code extends ApiErrorCode>(watchCodeList: Code[]) => (error: unknown): ApiErrorMap[Code] => {
-  if (!isApiError(error)) {
-    throw error;
-  }
-  for (const code of watchCodeList) {
-    if (code === error.code) {
-      return error as ApiErrorMap[Code];
+export const keepError =
+  <Code extends ApiErrorCode>(watchCodeList: Code[]) =>
+  (error: unknown): ApiErrorMap[Code] => {
+    if (!isApiError(error)) {
+      throw error;
     }
-  }
-  throw error;
-};
+    for (const code of watchCodeList) {
+      if (code === error.code) {
+        return error as ApiErrorMap[Code];
+      }
+    }
+    throw error;
+  };

@@ -2,13 +2,7 @@ import { expect, test } from 'vitest';
 import { binarySearchPos } from './sort';
 
 test('binarySearchPos', () => {
-  const arr = [
-    { pos: 1 },
-    { pos: 3 },
-    { pos: 5 },
-    { pos: 7 },
-    { pos: 9 },
-  ];
+  const arr = [{ pos: 1 }, { pos: 3 }, { pos: 5 }, { pos: 7 }, { pos: 9 }];
 
   // Testing for a pos that already exists in the array
   expect(binarySearchPos(arr, 5)).toEqual(2);

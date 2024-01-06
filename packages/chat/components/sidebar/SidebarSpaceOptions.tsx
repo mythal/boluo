@@ -27,29 +27,22 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
   const togglePane = usePaneToggle();
   const spaceSettingsPane: SpaceSettingsPane = { type: 'SPACE_SETTINGS', spaceId: space.id };
   const spaceMembersPane: SpaceMembersPane = { type: 'SPACE_MEMBERS', spaceId: space.id };
-  const spaceSettingsActive = useMemo(() => panes.findIndex(pane => pane.type === 'SPACE_SETTINGS') !== -1, [panes]);
-  const spaceMembersActive = useMemo(() => panes.findIndex(pane => pane.type === 'SPACE_MEMBERS') !== -1, [panes]);
+  const spaceSettingsActive = useMemo(() => panes.findIndex((pane) => pane.type === 'SPACE_SETTINGS') !== -1, [panes]);
+  const spaceMembersActive = useMemo(() => panes.findIndex((pane) => pane.type === 'SPACE_MEMBERS') !== -1, [panes]);
   const [sidebarState, setSidebarState] = useAtom(sidebarContentStateAtom);
   const handleToggle = () => {
     if (!disabled) {
-      setFold(folded => !folded);
+      setFold((folded) => !folded);
     }
   };
 
   const handleClickSwitchSpace = () => {
-    setSidebarState((prevState) => prevState === 'SPACES' ? 'CHANNELS' : 'SPACES');
+    setSidebarState((prevState) => (prevState === 'SPACES' ? 'CHANNELS' : 'SPACES'));
   };
   return (
     <div className="">
-      <SidebarGroupHeader
-        disabled={disabled}
-        folded={folded}
-        toggle={handleToggle}
-        icon={Tool}
-      >
-        <div className="break-all">
-          {space.name}
-        </div>
+      <SidebarGroupHeader disabled={disabled} folded={folded} toggle={handleToggle} icon={Tool}>
+        <div className="break-all">{space.name}</div>
       </SidebarGroupHeader>
 
       {!folded && (
@@ -65,12 +58,7 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
             </SidebarItem>
           )}
 
-          <SidebarItem
-            icon={<Users />}
-            active={spaceMembersActive}
-            onClick={() => togglePane(spaceMembersPane)}
-            toggle
-          >
+          <SidebarItem icon={<Users />} active={spaceMembersActive} onClick={() => togglePane(spaceMembersPane)} toggle>
             <FormattedMessage defaultMessage="Members" />
           </SidebarItem>
 

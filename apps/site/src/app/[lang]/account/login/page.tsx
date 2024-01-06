@@ -5,9 +5,7 @@ import { LoginForm } from '../../../../components/LoginForm';
 import { getIntl, LangParams } from '../../../../server';
 import { Footer } from './Footer';
 
-export function generateMetadata(
-  { params }: { params: LangParams },
-): Metadata {
+export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);
 
   return {

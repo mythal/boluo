@@ -32,7 +32,7 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
     <SidebarHeaderButton
       active={memberListState !== 'CLOSED'}
       isLoading={isLoading}
-      onClick={() => setMemberListState(prevState => prevState !== 'CLOSED' ? 'CLOSED' : 'RIGHT')}
+      onClick={() => setMemberListState((prevState) => (prevState !== 'CLOSED' ? 'CLOSED' : 'RIGHT'))}
     >
       <Users />
       {membersInfo != null && (

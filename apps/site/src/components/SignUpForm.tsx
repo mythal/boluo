@@ -24,11 +24,7 @@ interface Schema {
 
 const FormErrorDisplay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
-  return (
-    <ErrorMessageBox>
-      {explain(error)}
-    </ErrorMessageBox>
-  );
+  return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
@@ -41,7 +37,12 @@ const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
 const UsernameField = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { username: error } } } = useFormContext<Schema>();
+  const {
+    register,
+    formState: {
+      errors: { username: error },
+    },
+  } = useFormContext<Schema>();
   return (
     <>
       <div>
@@ -65,7 +66,12 @@ const UsernameField = () => {
 const EmailField = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { email: error } } } = useFormContext<Schema>();
+  const {
+    register,
+    formState: {
+      errors: { email: error },
+    },
+  } = useFormContext<Schema>();
   return (
     <>
       <div>
@@ -89,7 +95,12 @@ const EmailField = () => {
 const NicknameField = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { nickname: error } } } = useFormContext<Schema>();
+  const {
+    register,
+    formState: {
+      errors: { nickname: error },
+    },
+  } = useFormContext<Schema>();
   return (
     <>
       <div>
@@ -114,7 +125,12 @@ const PasswordField = () => {
   const intl = useIntl();
   const id = useId();
   const [show, setShow] = useState(false);
-  const { register, formState: { errors: { password: error } } } = useFormContext<Schema>();
+  const {
+    register,
+    formState: {
+      errors: { password: error },
+    },
+  } = useFormContext<Schema>();
   return (
     <>
       <div>

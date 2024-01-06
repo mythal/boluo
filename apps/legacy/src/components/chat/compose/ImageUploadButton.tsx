@@ -17,10 +17,10 @@ function ImageUploadButton({ className, size }: Props) {
   const dispatch = useDispatch();
   const media = useSelector((state) => state.chatStates.get(channelId)!.compose.media);
 
-  const removeMedia = useCallback(() => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId }), [
-    channelId,
-    dispatch,
-  ]);
+  const removeMedia = useCallback(
+    () => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId }),
+    [channelId, dispatch],
+  );
   const startUpload = useCallback(() => fileInputRef.current?.click(), []);
 
   useEffect(() => {
@@ -36,26 +36,24 @@ function ImageUploadButton({ className, size }: Props) {
   };
   return (
     <React.Fragment>
-      {media
-        ? (
-          <ChatItemToolbarButton
-            className={className}
-            onClick={removeMedia}
-            sprite={removeFileImage}
-            size={size}
-            title="清除图片"
-          />
-        )
-        : (
-          <ChatItemToolbarButton
-            className={className}
-            onClick={startUpload}
-            sprite={fileImage}
-            size={size}
-            title="上传图片"
-            info="也可以拖放或粘贴"
-          />
-        )}
+      {media ? (
+        <ChatItemToolbarButton
+          className={className}
+          onClick={removeMedia}
+          sprite={removeFileImage}
+          size={size}
+          title="清除图片"
+        />
+      ) : (
+        <ChatItemToolbarButton
+          className={className}
+          onClick={startUpload}
+          sprite={fileImage}
+          size={size}
+          title="上传图片"
+          info="也可以拖放或粘贴"
+        />
+      )}
       <input type="file" ref={fileInputRef} onChange={onFileChange} hidden />
     </React.Fragment>
   );

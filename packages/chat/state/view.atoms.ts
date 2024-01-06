@@ -73,7 +73,7 @@ export const focusPaneAtom = atom<number | null, [number], void>(
 const paneDeserialize = (raw: string): Pane[] => {
   try {
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed as Pane[] : [];
+    return Array.isArray(parsed) ? (parsed as Pane[]) : [];
   } catch (e) {
     return [];
   }
@@ -108,5 +108,5 @@ export const findNextPaneKey = (panes: Pane[]) => {
     return 1;
   }
   // TODO: reuse empty position
-  return Math.max(...panes.map(pane => pane.key)) + 1;
+  return Math.max(...panes.map((pane) => pane.key)) + 1;
 };

@@ -17,11 +17,7 @@ import { PaneFooterBox } from './PaneFooterBox';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
-  return (
-    <ErrorMessageBox>
-      {explain(error)}
-    </ErrorMessageBox>
-  );
+  return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
@@ -39,7 +35,12 @@ interface Props {
 const NameField: FC = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { name: error } } } = useFormContext<CreateSpace>();
+  const {
+    register,
+    formState: {
+      errors: { name: error },
+    },
+  } = useFormContext<CreateSpace>();
   return (
     <div>
       <label className="block pb-1" htmlFor={id}>
@@ -82,7 +83,12 @@ const DefaultDiceField: FC = () => {
 const FirstChannelNameField: FC = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { firstChannelName: error } } } = useFormContext<CreateSpace>();
+  const {
+    register,
+    formState: {
+      errors: { firstChannelName: error },
+    },
+  } = useFormContext<CreateSpace>();
   return (
     <div>
       <label htmlFor={id} className="block pb-1">
@@ -103,7 +109,12 @@ const FirstChannelNameField: FC = () => {
 const DescriptionField: FC = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { description: error } } } = useFormContext<CreateSpace>();
+  const {
+    register,
+    formState: {
+      errors: { description: error },
+    },
+  } = useFormContext<CreateSpace>();
   return (
     <div>
       <label htmlFor={id} className="block pb-1">
@@ -126,12 +137,11 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
     const result = await post('/spaces/create', null, params);
     return result.unwrap();
   };
-  const { trigger, error: creationError, isMutating: isCreating } = useSWRMutation<
-    SpaceWithMember,
-    ApiError,
-    typeof key,
-    CreateSpace
-  >(key, createSpace, {
+  const {
+    trigger,
+    error: creationError,
+    isMutating: isCreating,
+  } = useSWRMutation<SpaceWithMember, ApiError, typeof key, CreateSpace>(key, createSpace, {
     onSuccess: async ({ space }) => {
       await mutate(['/spaces/my', null]);
       onSuccess?.(space);

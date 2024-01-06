@@ -20,8 +20,7 @@ import { required } from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/
 
-interface Props extends StyleProps {
-}
+interface Props extends StyleProps {}
 
 interface Inputs {
   username: string;
@@ -37,11 +36,7 @@ const FormErrorDisplay: FC<{ error: ApiError }> = ({ error }) => {
   } else {
     errorMessage = <span>{explain(error)}</span>;
   }
-  return (
-    <ErrorMessageBox>
-      {errorMessage}
-    </ErrorMessageBox>
-  );
+  return <ErrorMessageBox>{errorMessage}</ErrorMessageBox>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
@@ -54,7 +49,12 @@ const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
 const UsernameField = () => {
   const id = useId();
   const intl = useIntl();
-  const { register, formState: { errors: { username: error } } } = useFormContext<Inputs>();
+  const {
+    register,
+    formState: {
+      errors: { username: error },
+    },
+  } = useFormContext<Inputs>();
   return (
     <>
       <div>
@@ -78,7 +78,12 @@ const UsernameField = () => {
 const PasswordField = () => {
   const id = useId();
   const intl = useIntl();
-  const { register, formState: { errors: { password: error } } } = useFormContext<Inputs>();
+  const {
+    register,
+    formState: {
+      errors: { password: error },
+    },
+  } = useFormContext<Inputs>();
   return (
     <>
       <div>

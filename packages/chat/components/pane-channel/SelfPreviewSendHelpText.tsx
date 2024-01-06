@@ -47,7 +47,11 @@ export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
     );
   }
   const key = settings?.enterSend ? '⏎' : isApple() ? '⌘ + ⏎' : 'Ctrl + ⏎';
-  const sendNode = <button className="underline text-surface-600" onClick={send}>Send</button>;
+  const sendNode = (
+    <button className="underline text-surface-600" onClick={send}>
+      Send
+    </button>
+  );
   return (
     <div className="text-sm text-surface-400">
       <FormattedMessage defaultMessage="Press {key} to {send}" values={{ key, send: sendNode }} />

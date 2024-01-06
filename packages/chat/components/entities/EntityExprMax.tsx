@@ -11,5 +11,9 @@ export const EntityExprMax: FC<Props> = ({ node: maxNode }) => {
   if ('value' in maxNode) {
     result = `=${maxNode.value}`;
   }
-  return <div className="inline-flex">max({<EntityExprNode node={maxNode.node} />}){result}</div>;
+  return (
+    <div className="inline-flex">
+      max({<EntityExprNode node={maxNode.node} />}){result}
+    </div>
+  );
 };

@@ -181,7 +181,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
       return;
     }
     const handle = window.setTimeout(() => {
-      setRetrySec(x => x - 1);
+      setRetrySec((x) => x - 1);
     }, 1000);
     return () => {
       window.clearTimeout(handle);

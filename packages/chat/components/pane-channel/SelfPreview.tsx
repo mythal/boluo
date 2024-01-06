@@ -22,9 +22,11 @@ type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & 
 };
 
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
-  a.source === b.source && a.editMode === b.editMode
-  && a.defaultInGame === b.defaultInGame && a.name === b.name
-  && a.media === b.media;
+  a.source === b.source &&
+  a.editMode === b.editMode &&
+  a.defaultInGame === b.defaultInGame &&
+  a.name === b.name &&
+  a.media === b.media;
 
 const selector = ({ defaultInGame: inGame, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
   const editMode = editFor !== null;
@@ -40,9 +42,7 @@ interface Props {
 export const SelfPreview: FC<Props> = ({ preview, className, myMember: member }) => {
   const isMaster = member.channel.isMaster;
   const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
-  const compose: ComposeDrived = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
-  );
+  const compose: ComposeDrived = useAtomValue(useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]));
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   const { editMode, media } = compose;
@@ -66,12 +66,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       onDrop={onDrop}
       className="bg-brand-50 border-t border-b border-brand-200"
     >
-      <SelfPreviewNameCell
-        isAction={isAction}
-        inGame={inGame}
-        name={name}
-        channelMember={member.channel}
-      />
+      <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member.channel} />
       <div className="flex flex-col gap-1 h-full items-between">
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         <MessageMedia mediaFile={media} className="relative w-fit py-2">

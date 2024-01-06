@@ -5,5 +5,5 @@ interface Props {
 }
 
 export const EntityEmpty: FC<Props> = ({ cursorNode }) => {
-  return <>{cursorNode}{' '}</>;
+  return <>{cursorNode} </>;
 };

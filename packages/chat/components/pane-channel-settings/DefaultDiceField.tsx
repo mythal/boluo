@@ -4,12 +4,13 @@ import { FormattedMessage } from 'react-intl';
 import { HelpText } from 'ui/HelpText';
 import { DiceSelect } from '../DiceSelect';
 
-interface Props {
-}
+interface Props {}
 
 export const DefaultDiceField: FC<Props> = ({}) => {
   const id = useId();
-  const { field: { value, onChange } } = useController<{ defaultDiceType: string }>({
+  const {
+    field: { value, onChange },
+  } = useController<{ defaultDiceType: string }>({
     name: 'defaultDiceType',
     defaultValue: 'd20',
   });

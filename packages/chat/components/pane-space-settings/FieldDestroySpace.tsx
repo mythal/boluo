@@ -20,10 +20,7 @@ export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ 
   return (
     <div className="flex flex-col gap-1">
       <div>
-        <FormattedMessage
-          defaultMessage="Are you sure you want to delete {spaceName}?"
-          values={{ spaceName }}
-        />{' '}
+        <FormattedMessage defaultMessage="Are you sure you want to delete {spaceName}?" values={{ spaceName }} />{' '}
         <span className="font-bold">
           <FormattedMessage defaultMessage="This cannot be undone." />
         </span>

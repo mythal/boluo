@@ -18,9 +18,11 @@ export const OthersPreviewNoBroadcast = React.memo<Props>(({ timestamp }) => {
   }, [timestamp]);
   return (
     <div ref={ref} className="text-surface-600 data-[highlight=true]:text-surface-300 transition-colors duration-100">
-      *<span className="italic px-1">
+      *
+      <span className="italic px-1">
         <FormattedMessage defaultMessage="Broadcast has been turned off" />
-      </span>*
+      </span>
+      *
     </div>
   );
 });

@@ -21,19 +21,25 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   const intl = useIntl();
   const titleClose = intl.formatMessage({ defaultMessage: 'Close' });
   const titleOpenNew = intl.formatMessage({ defaultMessage: 'Open in new pane' });
-  const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback((e) => {
-    e.preventDefault();
-    replacePane({ type: 'CHANNEL', channelId: channel.id }, (pane) => pane.type === 'CHANNEL');
-  }, [channel.id, replacePane]);
-  const handleClickInnerButton = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (active) {
-      setPane((panes) => panes.filter((pane) => pane.type !== 'CHANNEL' || pane.channelId !== channel.id));
-    } else {
-      addPane({ type: 'CHANNEL', channelId: channel.id });
-    }
-  }, [active, addPane, channel.id, setPane]);
+  const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      replacePane({ type: 'CHANNEL', channelId: channel.id }, (pane) => pane.type === 'CHANNEL');
+    },
+    [channel.id, replacePane],
+  );
+  const handleClickInnerButton = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (active) {
+        setPane((panes) => panes.filter((pane) => pane.type !== 'CHANNEL' || pane.channelId !== channel.id));
+      } else {
+        addPane({ type: 'CHANNEL', channelId: channel.id });
+      }
+    },
+    [active, addPane, channel.id, setPane],
+  );
 
   return (
     <div className="py-0.5 px-2">
@@ -45,18 +51,10 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         )}
         onClick={handleClick}
       >
-        <span
-          className={clsx(
-            active ? 'text-surface-900' : 'text-surface-400 group-hover:text-surface-700',
-          )}
-        >
-          <Icon
-            icon={channel.isPublic ? Hash : LockedHash}
-          />
+        <span className={clsx(active ? 'text-surface-900' : 'text-surface-400 group-hover:text-surface-700')}>
+          <Icon icon={channel.isPublic ? Hash : LockedHash} />
         </span>
-        <span className="text-left flex-1">
-          {channel.name}
-        </span>
+        <span className="text-left flex-1">{channel.name}</span>
         <button
           onClick={handleClickInnerButton}
           title={active ? titleClose : titleOpenNew}
@@ -66,12 +64,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
             'group-hover:text-brand-600 group-hover:bg-surface-200/50 h-5 w-5 rounded-sm',
           )}
         >
-          <span
-            className={clsx(
-              'transform transition-transform duration-100 ',
-              active ? 'rotate-0' : 'rotate-45',
-            )}
-          >
+          <span className={clsx('transform transition-transform duration-100 ', active ? 'rotate-0' : 'rotate-45')}>
             <Icon icon={X} />
           </span>
         </button>

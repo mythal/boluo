@@ -130,10 +130,12 @@ function Sidebar({ space, channels }: Props) {
               )}
             </div>
             <div css={sidebarBody} data-state={state}>
-              {state === 'entered'
-                && (showMember
-                  ? <SidebarMemberList spaceId={space.id} />
-                  : <SidebarExpandItems space={space} channels={channelList} />)}
+              {state === 'entered' &&
+                (showMember ? (
+                  <SidebarMemberList spaceId={space.id} />
+                ) : (
+                  <SidebarExpandItems space={space} channels={channelList} />
+                ))}
               {state === 'exited' && <SidebarFoldedItems space={space} channels={channelList} />}
             </div>
           </React.Fragment>

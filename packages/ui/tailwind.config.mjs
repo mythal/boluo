@@ -259,7 +259,7 @@ module.exports = {
     },
   },
   plugins: [
-    plugin(function({ addVariant }) {
+    plugin(function ({ addVariant }) {
       addVariant('enabled', '&:not(:disabled)');
       addVariant('hover-enabled', '&:hover:not(:disabled)');
       addVariant('active-enabled', '&:is([data-active="true"],:active):not(:disabled)');

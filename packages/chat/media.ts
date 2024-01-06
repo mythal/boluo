@@ -86,9 +86,7 @@ interface MediaValidationError {
 
 type UploadError = PreSignFail | MediaValidationError | S3Error;
 
-export const upload = async (
-  file: File,
-): Promise<Result<{ mediaId: string }, UploadError>> => {
+export const upload = async (file: File): Promise<Result<{ mediaId: string }, UploadError>> => {
   const validateResult = validateMedia(file);
   if (!validateResult.isOk) {
     return new Err({ type: 'MEDIA_VALIDATION_ERROR', err: validateResult.err });

@@ -10,8 +10,7 @@ import { identity, isApple } from 'utils';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { OptionBox } from './OptionBox';
 
-interface Props {
-}
+interface Props {}
 
 export const EneterSendField: FC<Props> = () => {
   const key = ['/users/settings'] as const;
@@ -39,12 +38,7 @@ export const EneterSendField: FC<Props> = () => {
       <div className="pb-1">
         <FormattedMessage defaultMessage="Which key to use to send a message?" />
       </div>
-      <OptionBox
-        className="mb-1"
-        active={enterSend}
-        onClick={setEnterSend}
-        disabled={isMutating}
-      >
+      <OptionBox className="mb-1" active={enterSend} onClick={setEnterSend} disabled={isMutating}>
         <div>
           <FormattedMessage
             defaultMessage="Use the {enter} key to send messages"

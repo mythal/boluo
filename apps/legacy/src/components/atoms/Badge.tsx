@@ -10,8 +10,7 @@ interface Props {
   className?: string;
 }
 
-export const tagStyle = (color: string) =>
-  css`
+export const tagStyle = (color: string) => css`
   ${[textXs, pX(1.5), pY(0.25)]};
   border-left: 2px solid ${lighten(0.1, color)};
   background-color: ${color};

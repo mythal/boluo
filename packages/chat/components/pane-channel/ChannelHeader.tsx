@@ -22,14 +22,7 @@ export const ChannelHeader: FC = () => {
   return (
     <PaneHeaderBox
       icon={channel && !channel.isPublic ? <LockedHash /> : <Hash />}
-      operators={channel
-        ? (
-          <ChannelHeaderOperations
-            stateAtom={headerStateAtom}
-            channel={channel}
-          />
-        )
-        : null}
+      operators={channel ? <ChannelHeaderOperations stateAtom={headerStateAtom} channel={channel} /> : null}
       extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
     >
       <ChannelName channel={channel} />

@@ -8,8 +8,7 @@ import { Button } from 'ui/Button';
 import { identity } from 'utils';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 
-interface Props {
-}
+interface Props {}
 
 export const ExpandDiceSwitch: FC<Props> = () => {
   const key = ['/users/settings'] as const;
@@ -25,5 +24,9 @@ export const ExpandDiceSwitch: FC<Props> = () => {
   const { data: settings } = useQuerySettings();
   const expandDice = settings?.expandDice ?? false;
   const toggle = () => trigger(!expandDice);
-  return <Button disabled={isMutating} data-type="switch" data-on={expandDice} onClick={toggle}>Enable</Button>;
+  return (
+    <Button disabled={isMutating} data-type="switch" data-on={expandDice} onClick={toggle}>
+      Enable
+    </Button>
+  );
 };

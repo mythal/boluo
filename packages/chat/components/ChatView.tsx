@@ -17,6 +17,12 @@ export const ChatView: FC<Props> = ({ defaultPane }) => {
     if (panes.length === 0) {
       return <>{defaultPane || <PaneEmpty />}</>;
     }
-    return <>{panes.map((pane) => <ChatPaneSwitch key={pane.key} pane={pane} />)}</>;
+    return (
+      <>
+        {panes.map((pane) => (
+          <ChatPaneSwitch key={pane.key} pane={pane} />
+        ))}
+      </>
+    );
   }, [defaultPane, panes]);
 };

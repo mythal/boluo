@@ -18,7 +18,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
   const handleMouseDown = () => {
     setDragging(true);
   };
-  const toggleSidebar = useCallback(() => setExpand(x => !x), [setExpand]);
+  const toggleSidebar = useCallback(() => setExpand((x) => !x), [setExpand]);
   useEffect(() => {
     const listener = () => {
       if (draggingRef.current) {
@@ -41,8 +41,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
           'h-full w-[1px] group-hover:w-[2px] bg-surface-300 group-hover:bg-blue-300',
           dragging && 'bg-blue-500',
         )}
-      >
-      </div>
+      ></div>
       <div className="hidden group-hover:block z-30 absolute w-max top-2 left-2 rounded-sm bg-highest text-lowest px-2 py-1 space-x-1">
         <span>
           <Icon icon={Sidebar} />

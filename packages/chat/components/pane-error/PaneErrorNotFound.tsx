@@ -26,9 +26,7 @@ export const PaneErrorNotFound: FC<Props> = ({ error }) => {
         <div className="text-xs pt-4">
           <FormattedMessage defaultMessage="Message from server" />
         </div>
-        <pre className="text-sm py-1 text-surface-500">
-          {error.message}
-        </pre>
+        <pre className="text-sm py-1 text-surface-500">{error.message}</pre>
       </div>
     </PaneBox>
   );

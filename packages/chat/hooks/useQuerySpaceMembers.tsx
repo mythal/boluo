@@ -5,8 +5,7 @@ import { unwrap } from 'utils';
 
 export const useQuerySpaceMembers = (spaceId: string): SWRResponse<Record<string, SpaceMemberWithUser>, ApiError> => {
   const key = ['/spaces/members', spaceId] as const;
-  return useSWR<Record<string, SpaceMemberWithUser>, ApiError, typeof key>(
-    key,
-    ([path, id]) => get(path, { id }).then(unwrap),
+  return useSWR<Record<string, SpaceMemberWithUser>, ApiError, typeof key>(key, ([path, id]) =>
+    get(path, { id }).then(unwrap),
   );
 };

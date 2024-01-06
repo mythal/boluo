@@ -7,8 +7,7 @@ import { Button } from 'ui/Button';
 import Icon from 'ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
-interface Props {
-}
+interface Props {}
 
 export const WhisperButton: FC<Props> = ({}) => {
   const me = useMe();

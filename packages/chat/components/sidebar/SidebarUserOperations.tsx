@@ -12,29 +12,28 @@ import { Avatar } from '../account/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 
-interface Props {
-}
+interface Props {}
 
 export const isUserOperationsFoldedAtom = atomWithStorage('isUserOperationsFolded:v0', false);
 
 export const isSettingsOpenAtom = atom((get) => {
   const panes = get(panesAtom);
-  return panes.findIndex(pane => pane.type === 'SETTINGS') !== -1;
+  return panes.findIndex((pane) => pane.type === 'SETTINGS') !== -1;
 });
 
 export const isHelpOpenAtom = atom((get) => {
   const panes = get(panesAtom);
-  return panes.findIndex(pane => pane.type === 'HELP') !== -1;
+  return panes.findIndex((pane) => pane.type === 'HELP') !== -1;
 });
 
 export const isLoginOpenAtom = atom((get) => {
   const panes = get(panesAtom);
-  return panes.findIndex(pane => pane.type === 'LOGIN') !== -1;
+  return panes.findIndex((pane) => pane.type === 'LOGIN') !== -1;
 });
 
 export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {
   const panes = get(panesAtom);
-  return (id: string) => panes.findIndex(pane => pane.type === 'PROFILE' && pane.userId === id) !== -1;
+  return (id: string) => panes.findIndex((pane) => pane.type === 'PROFILE' && pane.userId === id) !== -1;
 });
 export const SidebarUserOperations: FC<Props> = () => {
   const me = useMe();
@@ -71,11 +70,14 @@ export const SidebarUserOperations: FC<Props> = () => {
     </SidebarItem>
   );
   const toggleHelp = useCallback(() => togglePane({ type: 'HELP' }), [togglePane]);
-  const helpItem = useMemo(() => (
-    <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle onClick={toggleHelp}>
-      <FormattedMessage defaultMessage="Help" />
-    </SidebarItem>
-  ), [isHelpOpen, toggleHelp]);
+  const helpItem = useMemo(
+    () => (
+      <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle onClick={toggleHelp}>
+        <FormattedMessage defaultMessage="Help" />
+      </SidebarItem>
+    ),
+    [isHelpOpen, toggleHelp],
+  );
   if (me === 'LOADING') {
     return <div className="" />;
   }
@@ -91,30 +93,24 @@ export const SidebarUserOperations: FC<Props> = () => {
         </>
       )}
 
-      {me
-        ? (
-          <SidebarGroupHeader folded={folded} toggle={toggleFolded}>
-            <Avatar
-              size={32}
-              id={me.user.id}
-              name={me.user.nickname}
-              avatarId={me.user.avatarId}
-              className={clsx(
-                'w-6 h-6 rounded',
-              )}
-            />
-            <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">
-              {me.user.nickname}
-            </div>
-          </SidebarGroupHeader>
-        )
-        : (
-          <>
-            {helpItem}
-            {settingsItem}
-            {loginItem}
-          </>
-        )}
+      {me ? (
+        <SidebarGroupHeader folded={folded} toggle={toggleFolded}>
+          <Avatar
+            size={32}
+            id={me.user.id}
+            name={me.user.nickname}
+            avatarId={me.user.avatarId}
+            className={clsx('w-6 h-6 rounded')}
+          />
+          <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">{me.user.nickname}</div>
+        </SidebarGroupHeader>
+      ) : (
+        <>
+          {helpItem}
+          {settingsItem}
+          {loginItem}
+        </>
+      )}
     </div>
   );
 };

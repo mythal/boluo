@@ -30,9 +30,7 @@ export const LocaleProvider: FC<ChildrenProps> = ({ children }) => {
   }, [locale]);
   return (
     <IntlProvider locale={locale} onError={onIntlError} messages={messages.default}>
-      <ChangeLocaleContext.Provider value={changeLocale}>
-        {children}
-      </ChangeLocaleContext.Provider>
+      <ChangeLocaleContext.Provider value={changeLocale}>{children}</ChangeLocaleContext.Provider>
     </IntlProvider>
   );
 };

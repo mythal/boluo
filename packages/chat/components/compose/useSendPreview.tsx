@@ -41,7 +41,7 @@ const sendPreview = (
       isAction,
       text: (broadcast && !whisperToUsernames) || parsed.text === '' ? parsed.text : null,
       clear: false,
-      entities: (broadcast && !whisperToUsernames) ? parsed.entities : [],
+      entities: broadcast && !whisperToUsernames ? parsed.entities : [],
       editFor,
     };
 

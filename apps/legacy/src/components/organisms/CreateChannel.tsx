@@ -38,7 +38,11 @@ interface FormData {
 
 function CreateChannel({ space, dismiss }: Props) {
   const spaceId = space.id;
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -89,11 +93,7 @@ function CreateChannel({ space, dismiss }: Props) {
         </div>
         <div>
           <Label htmlFor="characterName">角色名</Label>
-          <Input
-            id="characterName"
-            placeholder="例如：KP"
-            {...register('characterName', characterNameValidation)}
-          />
+          <Input id="characterName" placeholder="例如：KP" {...register('characterName', characterNameValidation)} />
           {errors.characterName && <ErrorMessage>{errors.characterName.message}</ErrorMessage>}
         </div>
         <div>

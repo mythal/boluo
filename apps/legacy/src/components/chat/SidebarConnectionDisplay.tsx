@@ -10,8 +10,7 @@ import { green } from '../../styles/colors';
 import { Delay } from '../atoms/Delay';
 import { ConnectionSelectDialog } from './ConnectionSelectDialog';
 
-interface Props {
-}
+interface Props {}
 
 const connected = css`
   display: flex;
@@ -33,9 +32,7 @@ const Connected = ({ baseUrl }: { baseUrl: string }) => {
   return (
     <div css={connected}>
       <Delay delay={delay} />
-      <span>
-        切换线路
-      </span>
+      <span>切换线路</span>
     </div>
   );
 };
@@ -53,12 +50,8 @@ const connecting = css`
 const Connecting = () => {
   return (
     <div css={connecting}>
-      <span>
-        连接中...
-      </span>
-      <span>
-        切换线路
-      </span>
+      <span>连接中...</span>
+      <span>切换线路</span>
     </div>
   );
 };
@@ -66,12 +59,8 @@ const Connecting = () => {
 const Closed = () => {
   return (
     <div css={connecting}>
-      <span>
-        未连接
-      </span>
-      <span>
-        切换线路
-      </span>
+      <span>未连接</span>
+      <span>切换线路</span>
     </div>
   );
 };
@@ -95,9 +84,7 @@ export const SidebarConnectionDisplay = (props: Props) => {
   }
   return (
     <>
-      <div onClick={() => setOpen(true)}>
-        {display}
-      </div>
+      <div onClick={() => setOpen(true)}>{display}</div>
       {open && <ConnectionSelectDialog dismiss={dismiss} />}
     </>
   );

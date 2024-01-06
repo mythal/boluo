@@ -17,12 +17,18 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
   const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
-  const removeUsername = useCallback((username: string) => () => {
-    dispatch({ type: 'removeWhisperTarget', payload: { username } });
-  }, [dispatch]);
-  const addUsername = useCallback((username: string) => {
-    dispatch({ type: 'addWhisperTarget', payload: { username } });
-  }, [dispatch]);
+  const removeUsername = useCallback(
+    (username: string) => () => {
+      dispatch({ type: 'removeWhisperTarget', payload: { username } });
+    },
+    [dispatch],
+  );
+  const addUsername = useCallback(
+    (username: string) => {
+      dispatch({ type: 'addWhisperTarget', payload: { username } });
+    },
+    [dispatch],
+  );
 
   const whisperToAdd = useMemo(() => {
     if (!channelMembers) return null;
@@ -78,9 +84,11 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
   );
 };
 
-export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void }> = (
-  { member, remove, inGame },
-) => {
+export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void }> = ({
+  member,
+  remove,
+  inGame,
+}) => {
   const { nickname } = member.user;
   const { characterName } = member.channel;
   return (
@@ -106,9 +114,7 @@ export const WhisperToItemAdd: FC<{ members: Member[]; add: (username: string) =
       onChange={handleChange}
       className="border rounded appearance-none w-6 text-center bg-lowest hover:border-surface-400"
     >
-      <option value="">
-        +
-      </option>
+      <option value="">+</option>
       {members.map((member) => {
         let name = member.user.nickname;
         if (member.channel.characterName !== '') {
@@ -116,10 +122,7 @@ export const WhisperToItemAdd: FC<{ members: Member[]; add: (username: string) =
         }
 
         return (
-          <option
-            key={member.user.id}
-            value={member.user.username}
-          >
+          <option key={member.user.id} value={member.user.username}>
             {name}
           </option>
         );

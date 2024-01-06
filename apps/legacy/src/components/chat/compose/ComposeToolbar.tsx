@@ -23,14 +23,14 @@ function ComposeToolbar(props: Props) {
   const isAction = useSelector((state) => state.chatStates.get(channelId)!.compose.isAction);
   const broadcast = useSelector((state) => state.chatStates.get(channelId)!.compose.broadcast);
   const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
-  const toggleIsAction = useCallback(() => dispatch({ type: 'SET_IS_ACTION', pane, isAction: 'TOGGLE' }), [
-    dispatch,
-    pane,
-  ]);
-  const toggleBroadcast = useCallback(() => dispatch({ type: 'SET_BROADCAST', pane, broadcast: 'TOGGLE' }), [
-    dispatch,
-    pane,
-  ]);
+  const toggleIsAction = useCallback(
+    () => dispatch({ type: 'SET_IS_ACTION', pane, isAction: 'TOGGLE' }),
+    [dispatch, pane],
+  );
+  const toggleBroadcast = useCallback(
+    () => dispatch({ type: 'SET_BROADCAST', pane, broadcast: 'TOGGLE' }),
+    [dispatch, pane],
+  );
   const toggleInGame = useCallback(() => dispatch({ type: 'SET_IN_GAME', pane, inGame: 'TOGGLE' }), [dispatch, pane]);
   return (
     <Toolbar>

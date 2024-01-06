@@ -30,8 +30,7 @@ export const itemImage = css`
 
 const previewStripWidth = 3;
 
-export const previewStyle = (colorA: string, colorB: string) =>
-  css`
+export const previewStyle = (colorA: string, colorB: string) => css`
   background: repeating-linear-gradient(
     45deg,
     ${colorA},
@@ -108,8 +107,7 @@ export const chatHeaderToolbar = css`
   grid-area: toolbar;
 `;
 
-export const tag = (color: string) =>
-  css`
+export const tag = (color: string) => css`
   display: inline-block;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
   user-select: none;

@@ -16,13 +16,17 @@ interface Props {
 
 const ExileConfirm: FC<Props> = ({ spaceId, userId }) => {
   const key = ['/spaces/members', spaceId] as const;
-  const { trigger: exile, isMutating } = useSWRMutation(key, async ([_, spaceId]) => {
-    const result = await post('/spaces/kick', { spaceId, userId }, {});
-    return result.unwrap();
-  }, {
-    populateCache: (updatedMembers) => updatedMembers,
-    revalidate: false,
-  });
+  const { trigger: exile, isMutating } = useSWRMutation(
+    key,
+    async ([_, spaceId]) => {
+      const result = await post('/spaces/kick', { spaceId, userId }, {});
+      return result.unwrap();
+    },
+    {
+      populateCache: (updatedMembers) => updatedMembers,
+      revalidate: false,
+    },
+  );
 
   return (
     <FloatingBox className="">
@@ -49,10 +53,7 @@ export const ExileButton: FC<Props> = ({ spaceId, userId }) => {
   });
   const click = useClick(context, {});
   const dismiss = useDismiss(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-  ]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (
     <>
       <InListButton ref={refs.setReference} {...getReferenceProps()}>
@@ -62,10 +63,7 @@ export const ExileButton: FC<Props> = ({ spaceId, userId }) => {
       {isConfirming && (
         <FloatingPortal>
           <div ref={refs.setFloating} style={{ position: strategy, top: y ?? 0, left: x ?? 0 }} {...getFloatingProps()}>
-            <ExileConfirm
-              spaceId={spaceId}
-              userId={userId}
-            />
+            <ExileConfirm spaceId={spaceId} userId={userId} />
           </div>
         </FloatingPortal>
       )}

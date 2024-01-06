@@ -32,14 +32,14 @@ function ExploreSpace() {
         <Icon sprite={spaceIcon} /> 探索位面
       </Title>
       <SpaceSearchInput css={mY(4)} search={setSearchText} />
-      {result.isOk
-        ? (
-          <SpaceGrid>
-            {isLoggedIn && <NewSpaceCard />}
-            {result.value.map(spacesMapper)}
-          </SpaceGrid>
-        )
-        : <RenderError error={result.value} />}
+      {result.isOk ? (
+        <SpaceGrid>
+          {isLoggedIn && <NewSpaceCard />}
+          {result.value.map(spacesMapper)}
+        </SpaceGrid>
+      ) : (
+        <RenderError error={result.value} />
+      )}
     </>
   );
 }

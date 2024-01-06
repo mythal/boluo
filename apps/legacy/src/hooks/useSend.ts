@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { ClientEvent } from '../api/events';
 import { useSelector } from '../store';
 
-export const useSend = (): (event: ClientEvent) => void => {
+export const useSend = (): ((event: ClientEvent) => void) => {
   const connection = useSelector((state) => state.ui.connection);
   return useCallback(
     (event: ClientEvent) => {

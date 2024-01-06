@@ -11,17 +11,13 @@ import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 import { SidebarItemSkeleton } from './SidebarItemSkeleton';
 
-interface Props {
-}
+interface Props {}
 
 const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
   const currentSpace = useSpace();
   const switchSpace = useSwitchSpace();
   return (
-    <SidebarItem
-      onClick={() => switchSpace(space.id)}
-      active={currentSpace?.id === space.id}
-    >
+    <SidebarItem onClick={() => switchSpace(space.id)} active={currentSpace?.id === space.id}>
       {space.name}
     </SidebarItem>
   );
@@ -32,7 +28,10 @@ export const SidebarSpaceList: FC<Props> = () => {
   const panes = useAtomValue(panesAtom);
 
   const togglePane = usePaneToggle();
-  const isCreateSpacePaneOpened = useMemo(() => panes.findIndex(pane => pane.type === 'CREATE_SPACE') !== -1, [panes]);
+  const isCreateSpacePaneOpened = useMemo(
+    () => panes.findIndex((pane) => pane.type === 'CREATE_SPACE') !== -1,
+    [panes],
+  );
   const handleToggleCreateSpacePane = () => togglePane({ type: 'CREATE_SPACE' });
   return (
     <div>
@@ -42,12 +41,7 @@ export const SidebarSpaceList: FC<Props> = () => {
         </span>
       </div>
       {spacesWithMemberData == null && <SidebarItemSkeleton />}
-      {spacesWithMemberData?.map(({ space }) => (
-        <SidebarSpaceItem
-          key={space.id}
-          space={space}
-        />
-      ))}
+      {spacesWithMemberData?.map(({ space }) => <SidebarSpaceItem key={space.id} space={space} />)}
       <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>
         <span className="text-surface-400 group-hover:text-surface-800">
           <FormattedMessage defaultMessage="Add New" />

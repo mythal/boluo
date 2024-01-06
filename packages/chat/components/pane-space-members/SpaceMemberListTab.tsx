@@ -29,7 +29,7 @@ export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
   const members = Object.values(membersMap);
   return (
     <div>
-      {members.map(member => (
+      {members.map((member) => (
         <SpaceMemberListItem
           myId={myId}
           amIAdmin={amIAdmin}

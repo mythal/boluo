@@ -18,10 +18,7 @@ interface Props {
 }
 
 const SaveAsCharacterName: FC<{ channelId: string; characterName: string }> = ({ channelId, characterName }) => {
-  const {
-    trigger,
-    isMutating,
-  } = useEditChannelCharacterName(channelId);
+  const { trigger, isMutating } = useEditChannelCharacterName(channelId);
   return (
     <button
       className={clsx(
@@ -30,18 +27,16 @@ const SaveAsCharacterName: FC<{ channelId: string; characterName: string }> = ({
       )}
       onClick={() => trigger({ characterName })}
     >
-      {isMutating
-        ? (
-          <span className="text-sm animate-pulse text-pin-lowest">
-            <FormattedMessage defaultMessage="Saving…" />
-          </span>
-        )
-        : (
-          <span className="text-sm flex-none">
-            <Icon icon={Save} className="mr-1" />
-            <FormattedMessage defaultMessage="Keep name" />
-          </span>
-        )}
+      {isMutating ? (
+        <span className="text-sm animate-pulse text-pin-lowest">
+          <FormattedMessage defaultMessage="Saving…" />
+        </span>
+      ) : (
+        <span className="text-sm flex-none">
+          <Icon icon={Save} className="mr-1" />
+          <FormattedMessage defaultMessage="Keep name" />
+        </span>
+      )}
     </button>
   );
 };

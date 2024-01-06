@@ -78,7 +78,11 @@ function GuestHome() {
         。
       </Text>
       <Text css={[textSm, mT(8)]}>
-        本站使用 <ExternalLink to="https://www.cloudflare.com/" css={link}>Cloudflare</ExternalLink> 作为 CDN 服务商。
+        本站使用{' '}
+        <ExternalLink to="https://www.cloudflare.com/" css={link}>
+          Cloudflare
+        </ExternalLink>{' '}
+        作为 CDN 服务商。
       </Text>
     </>
   );

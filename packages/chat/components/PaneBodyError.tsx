@@ -3,8 +3,7 @@ import React, { Component } from 'react';
 import { Oops } from 'ui/Oops';
 import type { ChildrenProps, StyleProps } from 'utils';
 
-interface Props extends ChildrenProps, StyleProps {
-}
+interface Props extends ChildrenProps, StyleProps {}
 
 interface State {
   error: unknown;

@@ -19,10 +19,7 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
     ([_, spaceId]) => post('/spaces/join', { spaceId }, {}).then(unwrap),
   );
   return (
-    <SidebarHeaderButton
-      icon={<UserPlus />}
-      onClick={() => join()}
-    >
+    <SidebarHeaderButton icon={<UserPlus />} onClick={() => join()}>
       <span className="">
         <FormattedMessage defaultMessage="Join Space" />
       </span>

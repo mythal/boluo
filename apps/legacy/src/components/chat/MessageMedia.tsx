@@ -57,10 +57,11 @@ export const xStyle = css`
 function MessageMedia({ className, mediaId, file }: Props) {
   const [lightBox, setLightBox] = useState(false);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
-  const { data: headResponse, isLoading, error } = useSWR(
-    mediaId ? ['media', mediaId] : null,
-    ([, mediaId]) => mediaHead(mediaId),
-  );
+  const {
+    data: headResponse,
+    isLoading,
+    error,
+  } = useSWR(mediaId ? ['media', mediaId] : null, ([, mediaId]) => mediaHead(mediaId));
   console.log('headResponse', headResponse);
   let type: string | null = null;
   if (file) {
@@ -73,7 +74,7 @@ function MessageMedia({ className, mediaId, file }: Props) {
       const reader = new FileReader();
       reader.addEventListener(
         'load',
-        function() {
+        function () {
           setDataUrl(reader.result as string);
         },
         false,

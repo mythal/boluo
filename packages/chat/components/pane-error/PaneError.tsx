@@ -7,8 +7,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';
 
-interface Props extends ChildrenProps, StyleProps {
-}
+interface Props extends ChildrenProps, StyleProps {}
 
 interface State {
   error: unknown;

@@ -108,7 +108,7 @@ export const setThemeToDom = (value: string): Theme => {
   return theme;
 };
 
-export const observeTheme = (callback: (theme: Theme) => void): () => void => {
+export const observeTheme = (callback: (theme: Theme) => void): (() => void) => {
   const node = window.document.documentElement;
   const config: MutationObserverInit = {
     attributeFilter: ['class'],

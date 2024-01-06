@@ -10,7 +10,7 @@ export const getBaseUrlList = async (): Promise<string[]> => {
     return urlListCache;
   }
   const response = await fetch('/api/info/proxies');
-  const proxies = await response.json() as Proxy[];
+  const proxies = (await response.json()) as Proxy[];
   const urls = [location.origin, ...proxies.map((proxy) => proxy.url)];
   urlListCache = urls;
   return urls;

@@ -33,9 +33,7 @@ const truncateName = (name: string) => {
   return `${name.slice(0, 18)}…`;
 };
 
-const NameHistory: FC<{ channelId: string; myId: string }> = (
-  { channelId, myId },
-) => {
+const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId }) => {
   const me = useMe();
   const intl = useIntl();
   const store = useStore();
@@ -46,20 +44,28 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
     () => chatStateToNameList(store.get(chatAtom), channelId, myId),
     [channelId, myId, store],
   );
-  const selectedValueAtom = useMemo(() =>
-    atom((read) => {
-      const inputedName = read(inputedNameAtom);
-      const inGame = read(inGameAtom);
-      if (!inGame) return OOC_STATE;
-      if (inputedName.trim() === '') return ''; // Custom
-      if (nameHistory.includes(inputedName)) return inputedName;
-      return '';
-    }), [inGameAtom, inputedNameAtom, nameHistory]);
+  const selectedValueAtom = useMemo(
+    () =>
+      atom((read) => {
+        const inputedName = read(inputedNameAtom);
+        const inGame = read(inGameAtom);
+        if (!inGame) return OOC_STATE;
+        if (inputedName.trim() === '') return ''; // Custom
+        if (nameHistory.includes(inputedName)) return inputedName;
+        return '';
+      }),
+    [inGameAtom, inputedNameAtom, nameHistory],
+  );
   const selectedValue = useAtomValue(selectedValueAtom);
 
   const dispatch = useSetAtom(useComposeAtom());
   const nameOptions = useMemo(
-    () => nameHistory.map((name, key) => <option key={key} value={name}>{truncateName(name)}</option>),
+    () =>
+      nameHistory.map((name, key) => (
+        <option key={key} value={name}>
+          {truncateName(name)}
+        </option>
+      )),
     [nameHistory],
   );
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -76,14 +82,8 @@ const NameHistory: FC<{ channelId: string; myId: string }> = (
   }
   return (
     <div className="flex-1 w-[6rem]">
-      <Select
-        value={selectedValue}
-        title={title}
-        onChange={handleChange}
-      >
-        <option value={OOC_STATE}>
-          {me === 'LOADING' ? '…' : me.user.nickname}
-        </option>
+      <Select value={selectedValue} title={title} onChange={handleChange}>
+        <option value={OOC_STATE}>{me === 'LOADING' ? '…' : me.user.nickname}</option>
         <option value="">
           <FormattedMessage defaultMessage="New…" />
         </option>

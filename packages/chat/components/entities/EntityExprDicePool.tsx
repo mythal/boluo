@@ -33,9 +33,7 @@ export const SingleDice: FC<SingleDiceProps> = React.memo(({ value, last = false
   return (
     <>
       <span>{value}</span>
-      <span className="text-xs text-surface-700">
-        {special}
-      </span>
+      <span className="text-xs text-surface-700">{special}</span>
       {!last && ', '}
     </>
   );
@@ -67,32 +65,26 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
       <span>
         {node.counter}d{node.face}
       </span>
-      <span>
-        =
-      </span>
-      {'values' in node
-        ? (
-          <span className="text-surface-500">
-            [
-            {node.values.map((value, index) => (
-              <SingleDice
-                key={index}
-                value={value}
-                last={index === node.values.length - 1}
-                addition={node.addition}
-                critical={node.critical}
-                fumble={node.fumble}
-              />
-            ))}
-            ]
-          </span>
-        )
-        : <span className="italic">???</span>}
-      {'value' in node && (
-        <span className="pl-1">
-          ={node.value}
+      <span>=</span>
+      {'values' in node ? (
+        <span className="text-surface-500">
+          [
+          {node.values.map((value, index) => (
+            <SingleDice
+              key={index}
+              value={value}
+              last={index === node.values.length - 1}
+              addition={node.addition}
+              critical={node.critical}
+              fumble={node.fumble}
+            />
+          ))}
+          ]
         </span>
+      ) : (
+        <span className="italic">???</span>
       )}
+      {'value' in node && <span className="pl-1">={node.value}</span>}
     </RollBox>
   );
 });

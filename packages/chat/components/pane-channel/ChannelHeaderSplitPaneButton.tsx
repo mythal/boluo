@@ -9,10 +9,7 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
   const intl = useIntl();
   const dup = usePaneSplit();
   return (
-    <SidebarHeaderButton
-      onClick={dup}
-      title={intl.formatMessage({ defaultMessage: 'Split pane' })}
-    >
+    <SidebarHeaderButton onClick={dup} title={intl.formatMessage({ defaultMessage: 'Split pane' })}>
       <SplitHorizontal className="rotate-90 md:rotate-0" />
       <span className="hidden @4xl:inline">
         <FormattedMessage defaultMessage="Split" />

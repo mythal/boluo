@@ -35,11 +35,7 @@ export const useTooltip = (placement: Placement = 'bottom'): UseTooltipReturn =>
   const hover = useHover(context, {});
   const dismiss = useDismiss(context, {});
   const role = useRole(context, { role: 'tooltip' });
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    hover,
-    dismiss,
-    role,
-  ]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss, role]);
   return {
     showTooltip,
     floatingStyles,

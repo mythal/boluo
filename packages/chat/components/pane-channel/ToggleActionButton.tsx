@@ -7,8 +7,7 @@ import { Button } from 'ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 
-interface Props {
-}
+interface Props {}
 
 export const ToggleActionButton = memo<Props>(() => {
   const { composeAtom, isActionAtom } = useChannelAtoms();

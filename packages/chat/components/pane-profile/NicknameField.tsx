@@ -5,13 +5,15 @@ import { useIntl } from 'react-intl';
 import { TextInput } from 'ui/TextInput';
 import { ProfileEditSchema } from './PaneProfileEdit';
 
-interface Props {
-}
+interface Props {}
 
 export const NicknameField: FC<Props> = () => {
   const me = useMe();
   const intl = useIntl();
-  const { register, formState: { errors } } = useFormContext<ProfileEditSchema>();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<ProfileEditSchema>();
   if (me === 'LOADING' || me == null) {
     console.error('Unexpected null me in NicknameField.');
     return null;
@@ -23,8 +25,7 @@ export const NicknameField: FC<Props> = () => {
         {...register('nickname', {
           required: intl.formatMessage({ defaultMessage: "Can't be empty." }),
         })}
-      >
-      </TextInput>
+      ></TextInput>
 
       {errors.nickname && <div className="text-sm py-1 text-error-600">{errors.nickname.message}</div>}
     </div>

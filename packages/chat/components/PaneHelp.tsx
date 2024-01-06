@@ -5,8 +5,7 @@ import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
-interface Props {
-}
+interface Props {}
 
 export const PaneHelp: FC<Props> = () => {
   return (
@@ -17,9 +16,7 @@ export const PaneHelp: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-4">
-        Coming soon
-      </div>
+      <div className="p-4">Coming soon</div>
     </PaneBox>
   );
 };

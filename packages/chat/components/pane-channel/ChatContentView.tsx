@@ -99,75 +99,78 @@ const useDndHandles = (
   }, []);
   const resetDragging = useCallback(() => setDraggingItem(null), []);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const active = activeRef.current;
-    const chatList = chatListRef.current;
-    const messagesCount = chatList.length;
-    if (active === null) return;
-    resetDragging();
-    if (messagesCount < 2 || !event.over) {
-      return;
-    }
-    const overData = event.over.data as DataRef<SortableData>;
-    if (!overData.current) return;
-    const { sortable } = overData.current;
-    const { realIndex, message: draggingMessage } = active;
-    const targetIndex = sortable.index;
-    if (realIndex === targetIndex) return;
-    resetDragging();
-    const targetItem = chatList[targetIndex];
-    if (!targetItem) {
-      console.warn('Lost the target item when drag end');
-      return;
-    }
-    const timestamp = new Date().getTime();
-    const item: MessageItem = { ...draggingMessage, optimistic: true };
-    let range: [[number, number] | null, [number, number] | null] | null = null;
-    if (realIndex < targetIndex) {
-      range = [[targetItem.posP, targetItem.posQ], null];
-      const targetNext = chatList[targetIndex + 1];
-      const optimisticPos = targetNext
-        ? (targetNext.pos + targetItem.pos) / 2
-        : (targetItem.posP + 1) / targetItem.posQ;
-
-      setOptimisticItems((items) => ({
-        ...items,
-        [draggingMessage.id]: { item, optimisticPos, timestamp },
-      }));
-    } else {
-      range = [null, [targetItem.posP, targetItem.posQ]];
-
-      const targetBefore = chatList[targetIndex - 1];
-
-      const optimisticPos = targetBefore
-        ? (targetBefore.pos + targetItem.pos) / 2
-        : targetItem.posP / targetItem.posQ + 1;
-
-      setOptimisticItems((items) => ({
-        ...items,
-        [draggingMessage.id]: { item, optimisticPos, timestamp },
-      }));
-    }
-    if (range) {
-      const result = await post('/messages/move_between', null, {
-        channelId,
-        messageId: draggingMessage.id,
-        range,
-      });
-      setOptimisticItems(items => {
-        const nextItems = { ...items };
-        delete nextItems[draggingMessage.id];
-        return nextItems;
-      });
-      if (result.isErr) {
-        const errorCode = result.err.code;
-        setBanner({
-          level: 'ERROR',
-          content: <FormattedMessage defaultMessage="Failed to move message ({errorCode})" values={{ errorCode }} />,
-        });
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const active = activeRef.current;
+      const chatList = chatListRef.current;
+      const messagesCount = chatList.length;
+      if (active === null) return;
+      resetDragging();
+      if (messagesCount < 2 || !event.over) {
+        return;
       }
-    }
-  }, [resetDragging, setOptimisticItems, channelId, setBanner]);
+      const overData = event.over.data as DataRef<SortableData>;
+      if (!overData.current) return;
+      const { sortable } = overData.current;
+      const { realIndex, message: draggingMessage } = active;
+      const targetIndex = sortable.index;
+      if (realIndex === targetIndex) return;
+      resetDragging();
+      const targetItem = chatList[targetIndex];
+      if (!targetItem) {
+        console.warn('Lost the target item when drag end');
+        return;
+      }
+      const timestamp = new Date().getTime();
+      const item: MessageItem = { ...draggingMessage, optimistic: true };
+      let range: [[number, number] | null, [number, number] | null] | null = null;
+      if (realIndex < targetIndex) {
+        range = [[targetItem.posP, targetItem.posQ], null];
+        const targetNext = chatList[targetIndex + 1];
+        const optimisticPos = targetNext
+          ? (targetNext.pos + targetItem.pos) / 2
+          : (targetItem.posP + 1) / targetItem.posQ;
+
+        setOptimisticItems((items) => ({
+          ...items,
+          [draggingMessage.id]: { item, optimisticPos, timestamp },
+        }));
+      } else {
+        range = [null, [targetItem.posP, targetItem.posQ]];
+
+        const targetBefore = chatList[targetIndex - 1];
+
+        const optimisticPos = targetBefore
+          ? (targetBefore.pos + targetItem.pos) / 2
+          : targetItem.posP / targetItem.posQ + 1;
+
+        setOptimisticItems((items) => ({
+          ...items,
+          [draggingMessage.id]: { item, optimisticPos, timestamp },
+        }));
+      }
+      if (range) {
+        const result = await post('/messages/move_between', null, {
+          channelId,
+          messageId: draggingMessage.id,
+          range,
+        });
+        setOptimisticItems((items) => {
+          const nextItems = { ...items };
+          delete nextItems[draggingMessage.id];
+          return nextItems;
+        });
+        if (result.isErr) {
+          const errorCode = result.err.code;
+          setBanner({
+            level: 'ERROR',
+            content: <FormattedMessage defaultMessage="Failed to move message ({errorCode})" values={{ errorCode }} />,
+          });
+        }
+      }
+    },
+    [resetDragging, setOptimisticItems, channelId, setBanner],
+  );
 
   const handleDragCancel = useCallback(() => {
     resetDragging();
@@ -195,21 +198,17 @@ const useScrollLock = (
   const composeAtom = useComposeAtom();
   const store = useStore();
   const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
-  const modifiedAtom = useMemo(
+  const modifiedAtom = useMemo(() => selectAtom(composeAtom, ({ range }) => range), [composeAtom]);
+  useEffect(
     () =>
-      selectAtom(
-        composeAtom,
-        ({ range }) => range,
-      ),
-    [composeAtom],
+      store.sub(modifiedAtom, () => {
+        const { previewId } = store.get(composeAtom);
+        if (previewId === null) return;
+        scrollLockRef.current.id = previewId;
+        scrollLockRef.current.modified = new Date().getTime();
+      }),
+    [composeAtom, modifiedAtom, store],
   );
-  useEffect(() =>
-    store.sub(modifiedAtom, () => {
-      const { previewId } = store.get(composeAtom);
-      if (previewId === null) return;
-      scrollLockRef.current.id = previewId;
-      scrollLockRef.current.modified = (new Date()).getTime();
-    }), [composeAtom, modifiedAtom, store]);
 
   useEffect(() => {
     const callback = () => {
@@ -217,11 +216,11 @@ const useScrollLock = (
       if (!virtuoso) return;
       const scrollLock = scrollLockRef.current;
       const { modified, end } = scrollLock;
-      const now = (new Date()).getTime();
+      const now = new Date().getTime();
       // lock on a preview only if it is recently modified
       const id: string | null = now - modified < PREVIEW_LOCK_TIMEOUT ? scrollLock.id : null;
       if (id !== null) {
-        const index = chatList.findIndex(item => item.type === 'PREVIEW' && item.id === id);
+        const index = chatList.findIndex((item) => item.type === 'PREVIEW' && item.id === id);
         const [a, b] = rangeRef.current;
         // If the preview is not rendered, scroll to it
         // The more precisly scrolling will be done by the cursor element

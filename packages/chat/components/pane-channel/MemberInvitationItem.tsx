@@ -37,9 +37,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
           <Avatar size="1.5rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />
         </div>
         <span className="space-x-1">
-          <span>
-            {user.nickname}
-          </span>
+          <span>{user.nickname}</span>
           {status && <MemberStatusBadge status={status} />}
         </span>
       </button>

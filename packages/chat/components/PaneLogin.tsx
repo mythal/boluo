@@ -10,20 +10,23 @@ import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
-interface Props {
-}
+interface Props {}
 
 export const PaneLogin: FC<Props> = () => {
   const close = usePaneClose();
   const setBanner = useSetBanner();
   const intl = useIntl();
   const errorExplain = useErrorExplain();
-  const handleError = useCallback((error: ApiError) => {
-    const content = error.code === 'NO_PERMISSION'
-      ? intl.formatMessage({ defaultMessage: 'Username and password do not match' })
-      : errorExplain(error);
-    setBanner({ content, level: 'ERROR' });
-  }, [errorExplain, intl, setBanner]);
+  const handleError = useCallback(
+    (error: ApiError) => {
+      const content =
+        error.code === 'NO_PERMISSION'
+          ? intl.formatMessage({ defaultMessage: 'Username and password do not match' })
+          : errorExplain(error);
+      setBanner({ content, level: 'ERROR' });
+    },
+    [errorExplain, intl, setBanner],
+  );
   return (
     <PaneBox
       header={

@@ -7,7 +7,7 @@ import { Locale, toLocale } from '../locale';
 // different runtimes. (e.g. tauri, next.js, ...)
 // So a Provider is required to change the locale in different
 // ways depending on the runtime
-export const ChangeLocaleContext = createContext<((locale: Locale) => void)>(empty);
+export const ChangeLocaleContext = createContext<(locale: Locale) => void>(empty);
 
 export const useLocale = (): [Locale, (locale: Locale) => void] => {
   const intl = useIntl();

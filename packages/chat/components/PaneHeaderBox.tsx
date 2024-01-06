@@ -15,9 +15,7 @@ interface Props {
   extra?: ReactNode;
 }
 
-export const PaneHeaderBox: FC<Props> = (
-  { children, operators, icon, extra, withoutDefaultOperators = false },
-) => {
+export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, withoutDefaultOperators = false }) => {
   const { focused: isFocused, canClose } = useContext(PaneContext);
   const paneBanner = usePaneBanner();
   const defaultOperators: ReactNode = useMemo(() => {
@@ -34,9 +32,7 @@ export const PaneHeaderBox: FC<Props> = (
       >
         <div className="inline-flex gap-1 items-center flex-nowrap min-w-0">
           {icon && (
-            <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>
-              {icon}
-            </div>
+            <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>{icon}</div>
           )}
           <div
             className={clsx(

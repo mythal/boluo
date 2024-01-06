@@ -5,8 +5,5 @@ import { unwrap } from 'utils';
 
 export const useQueryChannel = (channelId: string): SWRResponse<Channel, ApiError> => {
   const key = ['/channels/query', channelId] as const;
-  return useSWR<Channel, ApiError, typeof key>(
-    key,
-    ([path, id]) => get(path, { id }).then(unwrap),
-  );
+  return useSWR<Channel, ApiError, typeof key>(key, ([path, id]) => get(path, { id }).then(unwrap));
 };

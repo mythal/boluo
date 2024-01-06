@@ -20,9 +20,7 @@ export const ChatContentHeader: FC<Props> = (props) => {
           <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />
         </span>
       )}
-      {isFullLoaded
-        ? <span className="text-surface-500">Ω</span>
-        : <ChatContentHeaderLoadMore />}
+      {isFullLoaded ? <span className="text-surface-500">Ω</span> : <ChatContentHeaderLoadMore />}
     </div>
   );
 };

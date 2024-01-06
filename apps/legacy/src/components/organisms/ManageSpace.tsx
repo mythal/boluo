@@ -51,7 +51,11 @@ const panelStyle = css`
 `;
 
 function ManageSpace({ space, my, dismiss }: Props) {
-  const { register, handleSubmit, formState: { errors } } = useForm<EditSpace>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EditSpace>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
   const [deleteDialog, showDeleteDialog] = useState(false);
@@ -127,13 +131,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
         </div>
         <div css={[mY(2)]}>
           <Label css={pB(0)}>
-            <input
-              type="checkbox"
-              defaultChecked={space.isPublic}
-              {...register('isPublic')}
-              id="isPublic"
-            />{' '}
-            公开位面
+            <input type="checkbox" defaultChecked={space.isPublic} {...register('isPublic')} id="isPublic" /> 公开位面
           </Label>
           <HelpText>非公开位面只能通过邀请链接来加入</HelpText>
         </div>

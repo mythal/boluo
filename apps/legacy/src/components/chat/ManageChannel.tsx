@@ -75,7 +75,11 @@ export function makeMemberOption({ user }: Member): MemberOption {
 
 function ManageChannel({ channel, dismiss }: Props) {
   const channelId = channel.id;
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -190,12 +194,7 @@ function ManageChannel({ channel, dismiss }: Props) {
         </div>
         <div css={field}>
           <Label>
-            <input
-              id="isPrivate"
-              defaultChecked={!channel.isPublic}
-              {...register('isPrivate')}
-              type="checkbox"
-            />{' '}
+            <input id="isPrivate" defaultChecked={!channel.isPublic} {...register('isPrivate')} type="checkbox" />{' '}
             秘密频道
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>

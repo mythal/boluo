@@ -240,9 +240,10 @@ export const nodeToText = (intl: IntlShape, node: EvaluatedExprNode): string => 
   const toText = (node: EvaluatedExprNode): string => nodeToText(intl, node);
   if (node.type === 'Roll') {
     const values = node.values.length > 1 ? `=[${node.values.join(', ')}]` : '';
-    const filtered = node.filter && node.filtered && node.filtered.length !== node.values.length
-      ? `| ${node.filter[0]} ${node.filter[1]}=[${node.filtered.join(', ')}]`
-      : '';
+    const filtered =
+      node.filter && node.filtered && node.filtered.length !== node.values.length
+        ? `| ${node.filter[0]} ${node.filter[1]}=[${node.filtered.join(', ')}]`
+        : '';
     return `${node.counter}d${node.face}${values}${filtered}=${node.value}`;
   } else if (node.type === 'Binary') {
     return `${toText(node.l)}${node.op}${toText(node.r)}=${node.value}`;

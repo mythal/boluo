@@ -14,10 +14,10 @@ function InGameSwitch({ className, size }: Props) {
   const channelId = useChannelId();
   const dispatch = useDispatch();
   const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
-  const toggleInGame = useCallback(() => dispatch({ type: 'SET_IN_GAME', pane: channelId, inGame: 'TOGGLE' }), [
-    channelId,
-    dispatch,
-  ]);
+  const toggleInGame = useCallback(
+    () => dispatch({ type: 'SET_IN_GAME', pane: channelId, inGame: 'TOGGLE' }),
+    [channelId, dispatch],
+  );
   return (
     <ChatItemToolbarButton
       on={inGame}

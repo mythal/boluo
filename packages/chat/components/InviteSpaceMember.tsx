@@ -14,9 +14,8 @@ interface Props {
 }
 
 export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
-  const { data: token, mutate } = useSWR(
-    ['/spaces/token' as const, spaceId],
-    ([path, id]) => get(path, { id }).then(unwrap),
+  const { data: token, mutate } = useSWR(['/spaces/token' as const, spaceId], ([path, id]) =>
+    get(path, { id }).then(unwrap),
   );
   const id = useId();
   const inviteLinkRef = useRef<HTMLInputElement>(null);
@@ -61,9 +60,11 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
           </Button>
           <Button onClick={handleRefresh} disabled={didRefresh}>
             <Icon icon={Refresh} />
-            {didRefresh
-              ? <FormattedMessage defaultMessage="Regenerated" />
-              : <FormattedMessage defaultMessage="Regenerate" />}
+            {didRefresh ? (
+              <FormattedMessage defaultMessage="Regenerated" />
+            ) : (
+              <FormattedMessage defaultMessage="Regenerate" />
+            )}
           </Button>
         </div>
       </div>

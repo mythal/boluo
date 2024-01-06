@@ -7,10 +7,10 @@ inputs:
     default: ${{ github.ref_name }}
 outputs:
   tag:
-    description: "Image tag"
+    description: 'Image tag'
     value: ${{ steps.image-tag.outputs.tag }}
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - id: image-tag
       shell: bash
@@ -22,4 +22,3 @@ runs:
         else
             echo "tag=${{ inputs.branch }}" >> $GITHUB_OUTPUT
         fi
-

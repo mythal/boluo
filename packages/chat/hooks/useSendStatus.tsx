@@ -31,14 +31,18 @@ export function useSendStatus() {
         return;
       }
       const panes = store.get(panesAtom);
-      const channelPanes: ChannelPane[] = panes.filter(pane => pane.type === 'CHANNEL') as ChannelPane[];
-      sendStatus(connection, 'ONLINE', channelPanes.map(pane => pane.channelId));
+      const channelPanes: ChannelPane[] = panes.filter((pane) => pane.type === 'CHANNEL') as ChannelPane[];
+      sendStatus(
+        connection,
+        'ONLINE',
+        channelPanes.map((pane) => pane.channelId),
+      );
     }, SEND_STATUS_INTERVAL);
     const visibilityListener = () => {
       const panes = store.get(panesAtom);
-      const channelPanes: ChannelPane[] = panes.filter(pane => pane.type === 'CHANNEL') as ChannelPane[];
+      const channelPanes: ChannelPane[] = panes.filter((pane) => pane.type === 'CHANNEL') as ChannelPane[];
       const state = document.visibilityState;
-      const focus = channelPanes.map(pane => pane.channelId);
+      const focus = channelPanes.map((pane) => pane.channelId);
       if (state === 'visible') {
         sendStatus(connection, 'ONLINE', focus);
       } else if (state === 'hidden') {

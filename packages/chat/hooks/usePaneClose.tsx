@@ -6,5 +6,5 @@ import { PaneContext } from '../state/view.context';
 export const usePaneClose = () => {
   const { key } = useContext(PaneContext);
   const setPanes = useSetAtom(panesAtom);
-  return useCallback(() => setPanes((panes) => panes.filter(pane => pane.key !== key)), [key, setPanes]);
+  return useCallback(() => setPanes((panes) => panes.filter((pane) => pane.key !== key)), [key, setPanes]);
 };

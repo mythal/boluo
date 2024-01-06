@@ -9,6 +9,10 @@ export const useGetQuery = <P extends keyof Get>(
   query: Get[P]['query'],
   options?: SWRConfiguration<Get[P]['result']>,
 ): SWRResponse<Get[P]['result'], ApiError> =>
-  useSWR<Get[P]['result'], ApiError, [P, Get[P]['query']]>([path, query], ([path]) => {
-    return get(path, null).then(unwrap);
-  }, options);
+  useSWR<Get[P]['result'], ApiError, [P, Get[P]['query']]>(
+    [path, query],
+    ([path]) => {
+      return get(path, null).then(unwrap);
+    },
+    options,
+  );

@@ -12,10 +12,12 @@ export interface Text extends BaseEntity {
 export interface Link extends BaseEntity {
   type: 'Link';
   child: Text;
-  href: {
-    start: number;
-    len: number;
-  } | string;
+  href:
+    | {
+        start: number;
+        len: number;
+      }
+    | string;
   title?: string;
 }
 
@@ -187,9 +189,7 @@ export interface ExportExpr extends BaseEntity {
   exprText: string;
 }
 
-export type ExportEntity =
-  | ((Text | Link | Strong | Emphasis | Code | CodeBlock) & { text: string })
-  | ExportExpr;
+export type ExportEntity = ((Text | Link | Strong | Emphasis | Code | CodeBlock) & { text: string }) | ExportExpr;
 
 export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {
   const { start, offset: len } = legacy;

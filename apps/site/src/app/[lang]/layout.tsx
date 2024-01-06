@@ -4,9 +4,7 @@ import type { ReactNode } from 'react';
 import { ClientProviders } from '../../components/global/Providers';
 import { getIntl, getMessages, LangParams } from '../../server';
 
-export function generateMetadata(
-  { params }: { params: LangParams },
-): Metadata {
+export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);
   const title = intl.formatMessage({ defaultMessage: 'Boluo' });
 
@@ -19,13 +17,7 @@ export const viewport: Viewport = {
   colorScheme: 'dark light',
 };
 
-export default function RootLayout({
-  children,
-  params: { lang },
-}: {
-  children: ReactNode;
-  params: { lang: Locale };
-}) {
+export default function RootLayout({ children, params: { lang } }: { children: ReactNode; params: { lang: Locale } }) {
   const messages = getMessages(lang);
   const theme = 'light';
 

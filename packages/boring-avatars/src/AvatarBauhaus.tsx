@@ -43,17 +43,19 @@ const AvatarBauhaus = ({ name, colors, size, square, ...props }: AvatarProps) =>
           width={SIZE}
           height={properties[1].isSquare ? SIZE : SIZE / 8}
           fill={properties[1].color}
-          transform={'translate('
-            + properties[1].translateX
-            + ' '
-            + properties[1].translateY
-            + ') rotate('
-            + properties[1].rotate
-            + ' '
-            + SIZE / 2
-            + ' '
-            + SIZE / 2
-            + ')'}
+          transform={
+            'translate(' +
+            properties[1].translateX +
+            ' ' +
+            properties[1].translateY +
+            ') rotate(' +
+            properties[1].rotate +
+            ' ' +
+            SIZE / 2 +
+            ' ' +
+            SIZE / 2 +
+            ')'
+          }
         />
         <circle
           cx={SIZE / 2}
@@ -69,17 +71,19 @@ const AvatarBauhaus = ({ name, colors, size, square, ...props }: AvatarProps) =>
           y2={SIZE / 2}
           strokeWidth={2}
           stroke={properties[3].color}
-          transform={'translate('
-            + properties[3].translateX
-            + ' '
-            + properties[3].translateY
-            + ') rotate('
-            + properties[3].rotate
-            + ' '
-            + SIZE / 2
-            + ' '
-            + SIZE / 2
-            + ')'}
+          transform={
+            'translate(' +
+            properties[3].translateX +
+            ' ' +
+            properties[3].translateY +
+            ') rotate(' +
+            properties[3].rotate +
+            ' ' +
+            SIZE / 2 +
+            ' ' +
+            SIZE / 2 +
+            ')'
+          }
         />
       </g>
     </svg>

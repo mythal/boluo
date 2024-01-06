@@ -15,7 +15,11 @@ export const DiceSelect: FC<Props> = ({ value, onChange }) => {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value);
   return (
     <Select value={value} onChange={handleChange}>
-      {items.map(({ label, value }) => <option key={value} value={value}>{label}</option>)}
+      {items.map(({ label, value }) => (
+        <option key={value} value={value}>
+          {label}
+        </option>
+      ))}
     </Select>
   );
 };

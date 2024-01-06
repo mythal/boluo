@@ -29,31 +29,29 @@ export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const router = useRouter();
 
   const key = ['/users/settings'] as const;
-  const localeUpdater: MutationFetcher<Settings, Locale, typeof key> = useCallback(
-    async (_, { arg: locale }) => {
-      const settings: Settings = { locale };
-      const settingsResult = await patch('/users/update_settings', null, settings);
-      return settingsResult.unwrapOr({});
-    },
-    [],
-  );
+  const localeUpdater: MutationFetcher<Settings, Locale, typeof key> = useCallback(async (_, { arg: locale }) => {
+    const settings: Settings = { locale };
+    const settingsResult = await patch('/users/update_settings', null, settings);
+    return settingsResult.unwrapOr({});
+  }, []);
   const { trigger: updateLocale } = useSWRMutation(key, localeUpdater, {
     populateCache: identity,
     revalidate: false,
   });
 
-  const handleChangeLocale = useCallback((locale: Locale) => {
-    if (me) {
-      void updateLocale(locale);
-    }
-    document.cookie = `boluo-locale=${locale}; path=/;max-age=31536000`;
-    router.refresh();
-  }, [me, router, updateLocale]);
+  const handleChangeLocale = useCallback(
+    (locale: Locale) => {
+      if (me) {
+        void updateLocale(locale);
+      }
+      document.cookie = `boluo-locale=${locale}; path=/;max-age=31536000`;
+      router.refresh();
+    },
+    [me, router, updateLocale],
+  );
   return (
     <IntlProvider locale={locale} messages={messages} defaultLocale={defaultLocale} onError={onIntlError}>
-      <ChangeLocaleContext.Provider value={handleChangeLocale}>
-        {children}
-      </ChangeLocaleContext.Provider>
+      <ChangeLocaleContext.Provider value={handleChangeLocale}>{children}</ChangeLocaleContext.Provider>
     </IntlProvider>
   );
 };

@@ -69,7 +69,7 @@ const InvitationField: FC<{ spaceId: string }> = ({ spaceId }) => {
   return (
     <div>
       <div>
-        <Button onClick={() => setExpanded(x => !x)} data-type="detail" data-on={expanded} type="button">
+        <Button onClick={() => setExpanded((x) => !x)} data-type="detail" data-on={expanded} type="button">
           <FormattedMessage defaultMessage="Invite" />
         </Button>
       </div>
@@ -187,14 +187,14 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
     return space;
   }, []);
 
-  const { trigger: editSpace, isMutating, error } = useSWRMutation<Space, ApiError, typeof key, EditSpace>(
-    ['/spaces/query', space.id],
-    updater,
-    {
-      populateCache: (space: Space) => space,
-      revalidate: false,
-    },
-  );
+  const {
+    trigger: editSpace,
+    isMutating,
+    error,
+  } = useSWRMutation<Space, ApiError, typeof key, EditSpace>(['/spaces/query', space.id], updater, {
+    populateCache: (space: Space) => space,
+    revalidate: false,
+  });
   const form = useForm<FormSchema>({
     defaultValues: spaceToForm(space),
   });
@@ -278,7 +278,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
         header={
           <PaneHeaderBox icon={<Settings />}>
             <FormattedMessage
-              defaultMessage="Settings of &quot;{spaceName}&quot; Space"
+              defaultMessage='Settings of "{spaceName}" Space'
               values={{ spaceName: space.name ?? '...' }}
             />
           </PaneHeaderBox>
@@ -294,10 +294,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
     <PaneBox
       header={
         <PaneHeaderBox icon={<Settings />}>
-          <FormattedMessage
-            defaultMessage="Settings of &quot;{spaceName}&quot; Space"
-            values={{ spaceName: space.name }}
-          />
+          <FormattedMessage defaultMessage='Settings of "{spaceName}" Space' values={{ spaceName: space.name }} />
         </PaneHeaderBox>
       }
     >

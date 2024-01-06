@@ -19,9 +19,11 @@ export default defineConfig({
   },
   envDir: '../../',
   envPrefix: 'PUBLIC_',
-  plugins: [react({
-    babel: {
-      configFile: true,
-    },
-  })],
+  plugins: [
+    react({
+      babel: {
+        configFile: true,
+      },
+    }),
+  ],
 });

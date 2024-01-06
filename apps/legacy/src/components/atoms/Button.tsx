@@ -23,8 +23,7 @@ export const focusShadow = `0 0 0 1px ${focusShadowColor} inset`;
 
 export const buttonShadow = `0 1px 0 0 ${buttonShadowColor}`;
 
-const btnColor = (color: string) =>
-  css`
+const btnColor = (color: string) => css`
   background-color: ${color};
 `;
 

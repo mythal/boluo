@@ -29,13 +29,17 @@ const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
   return <div className="mt-1 text-sm">{error.message}</div>;
 };
 
-interface Props {
-}
+interface Props {}
 
 const NameField: FC = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { name: error } } } = useFormContext<CreateSpace>();
+  const {
+    register,
+    formState: {
+      errors: { name: error },
+    },
+  } = useFormContext<CreateSpace>();
   return (
     <div>
       <label htmlFor={id}>
@@ -83,7 +87,12 @@ const DefaultDiceField: FC = () => {
 const FirstChannelNameField: FC = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { firstChannelName: error } } } = useFormContext<CreateSpace>();
+  const {
+    register,
+    formState: {
+      errors: { firstChannelName: error },
+    },
+  } = useFormContext<CreateSpace>();
   return (
     <div>
       <label htmlFor={id}>
@@ -104,7 +113,12 @@ const FirstChannelNameField: FC = () => {
 const DescriptionField: FC = () => {
   const intl = useIntl();
   const id = useId();
-  const { register, formState: { errors: { description: error } } } = useFormContext<CreateSpace>();
+  const {
+    register,
+    formState: {
+      errors: { description: error },
+    },
+  } = useFormContext<CreateSpace>();
   return (
     <div>
       <label htmlFor={id}>

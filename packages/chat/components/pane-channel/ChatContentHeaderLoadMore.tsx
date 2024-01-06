@@ -22,8 +22,7 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
-interface Props {
-}
+interface Props {}
 
 export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const channelId = useChannelId();
@@ -89,15 +88,18 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
 
   const autoLoadTimeoutRef = useRef<number | undefined>(undefined);
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.length === 0) return;
-      const entry = entries[0]!;
-      isVisibleRef.current = entry.isIntersecting;
-      window.clearTimeout(autoLoadTimeoutRef.current);
-      if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
-        loadMoreRef.current?.click();
-      }
-    }, { threshold: [0.75] });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.length === 0) return;
+        const entry = entries[0]!;
+        isVisibleRef.current = entry.isIntersecting;
+        window.clearTimeout(autoLoadTimeoutRef.current);
+        if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
+          loadMoreRef.current?.click();
+        }
+      },
+      { threshold: [0.75] },
+    );
     if (loadMoreRef.current) {
       observer.observe(loadMoreRef.current);
     }
@@ -105,53 +107,52 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       observer.disconnect();
     };
   }, []);
-  const loadMore = useCallback(
-    async () => {
-      if (isLoadingRef.current || !mountedRef.current) return;
-      const chatState = store.get(chatAtom);
-      const channelState = chatState.channels[channelId];
-      setIsLoading(true);
-      let before: number | null = null;
-      if (channelState && channelState.messages.length > 0) {
-        before = channelState.messages[0]!.pos;
-      }
-      const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
-      const result = await fetchPromise;
-      if (result.isErr) {
-        setBanner({
-          level: 'ERROR',
-          content: (
-            <FormattedMessage
-              defaultMessage="Failed to load messages ({errorCode})"
-              values={{ errorCode: result.err.code }}
-            />
-          ),
-        });
-        setIsLoading(false);
-        return;
-      }
-      const newMessages = result.some;
-      dispatch({
-        type: 'messagesLoaded',
-        payload: {
-          before,
-          channelId,
-          messages: newMessages,
-          fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
-        },
+  const loadMore = useCallback(async () => {
+    if (isLoadingRef.current || !mountedRef.current) return;
+    const chatState = store.get(chatAtom);
+    const channelState = chatState.channels[channelId];
+    setIsLoading(true);
+    let before: number | null = null;
+    if (channelState && channelState.messages.length > 0) {
+      before = channelState.messages[0]!.pos;
+    }
+    const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
+    const result = await fetchPromise;
+    if (result.isErr) {
+      setBanner({
+        level: 'ERROR',
+        content: (
+          <FormattedMessage
+            defaultMessage="Failed to load messages ({errorCode})"
+            values={{ errorCode: result.err.code }}
+          />
+        ),
       });
       setIsLoading(false);
-    },
-    [channelId, dispatch, mountedRef, setBanner, store],
-  );
+      return;
+    }
+    const newMessages = result.some;
+    dispatch({
+      type: 'messagesLoaded',
+      payload: {
+        before,
+        channelId,
+        messages: newMessages,
+        fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
+      },
+    });
+    setIsLoading(false);
+  }, [channelId, dispatch, mountedRef, setBanner, store]);
 
   const willLoad = touchState === 'WILL_LOAD';
   return (
     <Button ref={loadMoreRef} disabled={isLoading} onClick={loadMore}>
       <div className="w-36 flex gap-1 justify-between items-center">
-        {isLoading
-          ? <CircleNotch className="animate-spin" />
-          : <ChevronDown className={clsx('transition-transform duration-300', willLoad && 'rotate-180')} />}
+        {isLoading ? (
+          <CircleNotch className="animate-spin" />
+        ) : (
+          <ChevronDown className={clsx('transition-transform duration-300', willLoad && 'rotate-180')} />
+        )}
 
         <div className="text-center flex-grow">
           {touchState === 'START' && <FormattedMessage defaultMessage="Pull to Load" />}

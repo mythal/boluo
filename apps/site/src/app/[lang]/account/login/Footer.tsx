@@ -3,8 +3,7 @@ import { ChevronLeft } from 'icons';
 import { FormattedMessage } from 'react-intl';
 import { Link } from '../Link';
 
-interface Props {
-}
+interface Props {}
 
 export function Footer(props: Props) {
   return (

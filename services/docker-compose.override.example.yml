@@ -15,4 +15,3 @@ services:
   pgadmin:
     ports:
       - 127.0.0.1:4861:4861
-

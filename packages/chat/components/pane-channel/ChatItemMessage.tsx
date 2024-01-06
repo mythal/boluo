@@ -18,9 +18,7 @@ interface Props {
   continuous?: boolean;
 }
 
-export const ChatItemMessage: FC<Props> = (
-  { message, className = '', self, continuous = false },
-) => {
+export const ChatItemMessage: FC<Props> = ({ message, className = '', self, continuous = false }) => {
   const { isMaster, isAction, optimistic } = message;
 
   const nameNode = useMemo(
@@ -58,18 +56,17 @@ export const ChatItemMessage: FC<Props> = (
           </span>
         )}
 
-        {parsed.text !== ''
-          && (
-            <Content
-              channelId={message.channelId}
-              source={parsed.text}
-              entities={parsed.entities}
-              isAction={isAction}
-              nameNode={nameNode}
-              isPreview={false}
-              seed={message.seed}
-            />
-          )}
+        {parsed.text !== '' && (
+          <Content
+            channelId={message.channelId}
+            source={parsed.text}
+            entities={parsed.entities}
+            isAction={isAction}
+            nameNode={nameNode}
+            isPreview={false}
+            seed={message.seed}
+          />
+        )}
         {message.mediaId != null && <MessageMedia className="pt-2" mediaId={message.mediaId} />}
       </div>
     </MessageBox>

@@ -30,9 +30,7 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
           loading && 'cursor-not-allowed',
         )}
       >
-        <Delay>
-          {loading ? <Spinner /> : <GripVertical />}
-        </Delay>
+        <Delay>{loading ? <Spinner /> : <GripVertical />}</Delay>
       </div>
     );
   },

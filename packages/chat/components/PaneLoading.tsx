@@ -6,7 +6,11 @@ import { PaneHeaderBox } from './PaneHeaderBox';
 
 export const PaneLoading = () => {
   const header = useMemo(
-    () => <PaneHeaderBox withoutDefaultOperators icon={<Spinner />}>Loading...</PaneHeaderBox>,
+    () => (
+      <PaneHeaderBox withoutDefaultOperators icon={<Spinner />}>
+        Loading...
+      </PaneHeaderBox>
+    ),
     [],
   );
   return (

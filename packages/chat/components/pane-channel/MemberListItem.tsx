@@ -27,9 +27,7 @@ interface Props {
   status: UserStatus | undefined;
 }
 
-export const MemberListItem: FC<Props> = (
-  { member, canIKick, myId, status, channel, canIEditMaster },
-) => {
+export const MemberListItem: FC<Props> = ({ member, canIKick, myId, status, channel, canIEditMaster }) => {
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,
@@ -67,7 +65,7 @@ export const MemberListItem: FC<Props> = (
         <span className={clsx(hasCharacterName ? '' : 'row-span-full', 'text-left')}>
           {
             <span
-              className={clsx(offline ? 'text-surface-400' : (hasCharacterName ? 'text-surface-600' : ''), 'truncate')}
+              className={clsx(offline ? 'text-surface-400' : hasCharacterName ? 'text-surface-600' : '', 'truncate')}
             >
               {user.nickname}
             </span>

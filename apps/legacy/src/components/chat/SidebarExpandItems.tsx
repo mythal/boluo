@@ -94,7 +94,9 @@ function SidebarExpandItems({ space, channels }: Props) {
         </div>
       </SidebarSectionTitle>
       <div css={channelList}>
-        {channels.map((channel) => <SidebarChannelItem channel={channel} key={channel.id} />)}
+        {channels.map((channel) => (
+          <SidebarChannelItem channel={channel} key={channel.id} />
+        ))}
       </div>
       <div css={footer}>
         <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>

@@ -15,34 +15,33 @@ import { Id } from '../../utils/id';
 import ChatItem from './ChatItem';
 import LoadMore from './LoadMore';
 
-const filterMessages = (filter: ChatState['filter'], showFolded: boolean) =>
-(
-  item: PreviewItem | MessageItem,
-): boolean => {
-  const inGame = filter === 'IN_GAME';
-  const outGame = filter === 'OUT_GAME';
-  if (item.type === 'MESSAGE') {
-    const { message } = item;
-    if (inGame && !message.inGame) {
-      return false;
+const filterMessages =
+  (filter: ChatState['filter'], showFolded: boolean) =>
+  (item: PreviewItem | MessageItem): boolean => {
+    const inGame = filter === 'IN_GAME';
+    const outGame = filter === 'OUT_GAME';
+    if (item.type === 'MESSAGE') {
+      const { message } = item;
+      if (inGame && !message.inGame) {
+        return false;
+      }
+      if (outGame && message.inGame) {
+        return false;
+      }
+      if (message.folded && !showFolded) {
+        return false;
+      }
+    } else if (item.type === 'PREVIEW') {
+      const { preview } = item;
+      if (inGame && !preview.inGame) {
+        return false;
+      }
+      if (outGame && preview.inGame) {
+        return false;
+      }
     }
-    if (outGame && message.inGame) {
-      return false;
-    }
-    if (message.folded && !showFolded) {
-      return false;
-    }
-  } else if (item.type === 'PREVIEW') {
-    const { preview } = item;
-    if (inGame && !preview.inGame) {
-      return false;
-    }
-    if (outGame && preview.inGame) {
-      return false;
-    }
-  }
-  return true;
-};
+    return true;
+  };
 
 const listWrapperStyle = css`
   overflow-y: scroll;

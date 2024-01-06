@@ -29,7 +29,11 @@ function Login() {
   const dispatch = useDispatch();
   const history = useHistory();
   const [loginError, setLoginError] = useState<AppError | null>(null);
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginData>();
   const [loggingIn, setLoggingIn] = useState(false);
   const onSubmit = async (data: LoginData) => {
     setLoggingIn(true);
@@ -53,12 +57,7 @@ function Login() {
         <div css={[sm(flex)]}>
           <div css={[mY(2), sm(mR(2), flex1)]}>
             <Label htmlFor="username">用户名 / 邮箱</Label>
-            <Input
-              css={largeInput}
-              id="username"
-              autoComplete="username"
-              {...register('username', { required })}
-            />
+            <Input css={largeInput} id="username" autoComplete="username" {...register('username', { required })} />
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
           <div css={[mY(2), flex1]}>

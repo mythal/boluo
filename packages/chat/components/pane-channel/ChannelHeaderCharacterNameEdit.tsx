@@ -17,7 +17,11 @@ interface FormSchema {
 
 export const ChannelHeaderCharacterNameEdit: FC<Props> = ({ member, exitEdit }) => {
   const id = useId();
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormSchema>({
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<FormSchema>({
     defaultValues: { characterName: member.characterName },
   });
   const { trigger } = useEditChannelCharacterName(member.channelId, { onSuccess: exitEdit });

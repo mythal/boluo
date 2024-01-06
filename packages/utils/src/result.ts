@@ -93,11 +93,13 @@ export const unwrap = <T>(result: Result<T, any>): T => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const expect = (msg: string) => <T>(result: Result<T, any>): T => {
-  if (result.isOk) {
-    return result.some;
-  } else {
-    return result.expect(msg);
-  }
-};
+export const expect =
+  (msg: string) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  <T>(result: Result<T, any>): T => {
+    if (result.isOk) {
+      return result.some;
+    } else {
+      return result.expect(msg);
+    }
+  };

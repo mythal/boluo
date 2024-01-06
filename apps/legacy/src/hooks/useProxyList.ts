@@ -4,7 +4,7 @@ import { Proxy } from '../base-url';
 
 const fetchList = async (): Promise<Proxy[]> => {
   const response = await fetch('/api/info/proxies');
-  const proxies = await response.json() as Proxy[];
+  const proxies = (await response.json()) as Proxy[];
   return proxies;
 };
 

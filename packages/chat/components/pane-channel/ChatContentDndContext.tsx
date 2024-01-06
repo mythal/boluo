@@ -23,23 +23,12 @@ export const ChatListDndContext = memo<Props>(({ children, active, myId, ...rest
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor);
   const keyboardSensor = useSensor(KeyboardSensor);
-  const sensors = useSensors(
-    mouseSensor,
-    touchSensor,
-    keyboardSensor,
-  );
+  const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      {...rest}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCenter} {...rest}>
       {children}
 
-      {createPortal(
-        <DraggingOverlay active={active} myId={myId} />,
-        document.body,
-      )}
+      {createPortal(<DraggingOverlay active={active} myId={myId} />, document.body)}
     </DndContext>
   );
 });

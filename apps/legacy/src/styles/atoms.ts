@@ -14,39 +14,34 @@ import {
   uiShadowColor,
 } from './colors';
 
-export const onDisabled = (...styles: Interpolation[]) =>
-  css`
-    &:disabled {
-      ${css(styles)};
-    }
-  `;
-export const onHover = (...styles: Interpolation[]) =>
-  css`
-    &:hover {
-      ${css(styles)};
-    }
-  `;
-export const onFocus = (...styles: Interpolation[]) =>
-  css`
-    &:focus {
-      ${css(styles)};
-    }
-  `;
-export const onActive = (...styles: Interpolation[]) =>
-  css`
-    &:active {
-      ${css(styles)};
-    }
-  `;
+export const onDisabled = (...styles: Interpolation[]) => css`
+  &:disabled {
+    ${css(styles)};
+  }
+`;
+export const onHover = (...styles: Interpolation[]) => css`
+  &:hover {
+    ${css(styles)};
+  }
+`;
+export const onFocus = (...styles: Interpolation[]) => css`
+  &:focus {
+    ${css(styles)};
+  }
+`;
+export const onActive = (...styles: Interpolation[]) => css`
+  &:active {
+    ${css(styles)};
+  }
+`;
 
 export const mediaQuery = (breakPoint: string) => `@media (min-width: ${breakPoint})`;
 
-export const responsive = (breakPoint: string, ...styles: Interpolation[]) =>
-  css`
-    ${mediaQuery(breakPoint)} {
-      ${css(styles)}
-    }
-  `;
+export const responsive = (breakPoint: string, ...styles: Interpolation[]) => css`
+  ${mediaQuery(breakPoint)} {
+    ${css(styles)}
+  }
+`;
 export const breakpoint = {
   sm: '640px',
   md: '768px',
@@ -101,8 +96,7 @@ export const focused = css`
   outline: none;
 `;
 
-export const border = (color: string, width = '1px') =>
-  css`
+export const border = (color: string, width = '1px') => css`
   border: ${width} solid ${color};
 `;
 
@@ -130,7 +124,15 @@ export const text3Xl = css`
   font-size: 1.875rem;
 `;
 export const fontSans = css`
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    'Noto Sans',
     sans-serif;
 `;
 export const fontBase = fontSans;
@@ -162,7 +164,9 @@ export const shadowXl = css`
 `;
 export const focusShadow = css`
   outline: none;
-  box-shadow: 0 0 0 2px ${focusOutlineColor}, ${uiShadowValue};
+  box-shadow:
+    0 0 0 2px ${focusOutlineColor},
+    ${uiShadowValue};
 `;
 export const controlRounded = roundedPx;
 
@@ -170,10 +174,9 @@ export const duration200 = css`
   transition-duration: 200ms;
 `;
 
-export const color = (color: string) =>
-  css`
-    color: ${color};
-  `;
+export const color = (color: string) => css`
+  color: ${color};
+`;
 
 export const margin0Auto = css`
   margin: 0 auto;
@@ -183,77 +186,62 @@ export const preLine = css`
   white-space: pre-line;
 `;
 
-export const p = (n: number) =>
-  css`
+export const p = (n: number) => css`
   padding-top: ${spacingN(n)};
   padding-right: ${spacingN(n)};
   padding-bottom: ${spacingN(n)};
   padding-left: ${spacingN(n)};
 `;
-export const pX = (n: number) =>
-  css`
-    padding-left: ${spacingN(n)};
-    padding-right: ${spacingN(n)};
-  `;
-export const pY = (n: number) =>
-  css`
-    padding-top: ${spacingN(n)};
-    padding-bottom: ${spacingN(n)};
-  `;
-export const pL = (n: number) =>
-  css`
-    padding-left: ${spacingN(n)};
-  `;
-export const pR = (n: number) =>
-  css`
-    padding-right: ${spacingN(n)};
-  `;
-export const pT = (n: number) =>
-  css`
-    padding-top: ${spacingN(n)};
-  `;
-export const pB = (n: number) =>
-  css`
-    padding-bottom: ${spacingN(n)};
-  `;
+export const pX = (n: number) => css`
+  padding-left: ${spacingN(n)};
+  padding-right: ${spacingN(n)};
+`;
+export const pY = (n: number) => css`
+  padding-top: ${spacingN(n)};
+  padding-bottom: ${spacingN(n)};
+`;
+export const pL = (n: number) => css`
+  padding-left: ${spacingN(n)};
+`;
+export const pR = (n: number) => css`
+  padding-right: ${spacingN(n)};
+`;
+export const pT = (n: number) => css`
+  padding-top: ${spacingN(n)};
+`;
+export const pB = (n: number) => css`
+  padding-bottom: ${spacingN(n)};
+`;
 
-export const m = (n: number) =>
-  css`
+export const m = (n: number) => css`
   margin-top: ${spacingN(n)};
   margin-right: ${spacingN(n)};
   margin-bottom: ${spacingN(n)};
   margin-left: ${spacingN(n)};
 `;
-export const mX = (n: number) =>
-  css`
-    margin-left: ${spacingN(n)};
-    margin-right: ${spacingN(n)};
-  `;
-export const mY = (n: number) =>
-  css`
-    margin-top: ${spacingN(n)};
-    margin-bottom: ${spacingN(n)};
-  `;
-export const mL = (n: number) =>
-  css`
-    margin-left: ${spacingN(n)};
-  `;
-export const mR = (n: number) =>
-  css`
-    margin-right: ${spacingN(n)};
-  `;
-export const mT = (n: number) =>
-  css`
-    margin-top: ${spacingN(n)};
-  `;
-export const mB = (n: number) =>
-  css`
-    margin-bottom: ${spacingN(n)};
-  `;
-export const gap = (n: number) =>
-  css`
-    gap: ${spacingN(n)};
-  `;
+export const mX = (n: number) => css`
+  margin-left: ${spacingN(n)};
+  margin-right: ${spacingN(n)};
+`;
+export const mY = (n: number) => css`
+  margin-top: ${spacingN(n)};
+  margin-bottom: ${spacingN(n)};
+`;
+export const mL = (n: number) => css`
+  margin-left: ${spacingN(n)};
+`;
+export const mR = (n: number) => css`
+  margin-right: ${spacingN(n)};
+`;
+export const mT = (n: number) => css`
+  margin-top: ${spacingN(n)};
+`;
+export const mB = (n: number) => css`
+  margin-bottom: ${spacingN(n)};
+`;
+export const gap = (n: number) => css`
+  gap: ${spacingN(n)};
+`;
 
 export const listItemSquare = css`
   list-style-type: square;
@@ -343,8 +331,7 @@ export const controlHeight = css`
 
 export const largeInput = [widthFull, textXl, controlHeight];
 
-export const gridColumn = (start: number, end: number) =>
-  css`
+export const gridColumn = (start: number, end: number) => css`
   grid-column: ${start} / ${end};
 `;
 
@@ -354,16 +341,12 @@ export const spaceGrid = [
     grid-template-columns: 1fr 1fr;
     gap: ${spacingN(2)};
   `,
-  sm(
-    css`
-      grid-template-columns: 1fr 1fr 1fr;
-    `,
-  ),
-  md(
-    css`
-      grid-template-columns: 1fr 1fr 1fr 1fr;
-    `,
-  ),
+  sm(css`
+    grid-template-columns: 1fr 1fr 1fr;
+  `),
+  md(css`
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  `),
 ];
 
 export const link = css`

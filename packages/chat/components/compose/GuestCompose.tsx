@@ -29,7 +29,9 @@ export const GuestCompose = () => {
       <span className="mr-1">
         <FormattedMessage defaultMessage="You are not a member of this channel" />
       </span>
-      <Button data-small onClick={join}>Join</Button>
+      <Button data-small onClick={join}>
+        Join
+      </Button>
     </GuestComposeBox>
   );
 };

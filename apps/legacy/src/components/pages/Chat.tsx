@@ -156,45 +156,46 @@ function Chat() {
       <Global styles={viewHeight} />
       <Sidebar space={space} channels={channels} />
 
-      {channelId
-        ? (
-          paneList.map((paneId, index) => {
-            const focus = () => {
-              history.replace(chatPath(spaceId, paneId));
-              setFocused(index);
-            };
+      {channelId ? (
+        paneList.map((paneId, index) => {
+          const focus = () => {
+            history.replace(chatPath(spaceId, paneId));
+            setFocused(index);
+          };
 
-            const split = () =>
-              setPaneList((panes) => {
-                const nextPanes = [...panes];
-                nextPanes.splice(index, 0, paneId);
-                return nextPanes;
-              });
+          const split = () =>
+            setPaneList((panes) => {
+              const nextPanes = [...panes];
+              nextPanes.splice(index, 0, paneId);
+              return nextPanes;
+            });
 
-            const close = paneList.length < 2
+          const close =
+            paneList.length < 2
               ? undefined
               : () =>
-                setPaneList((panes) => {
-                  const nextPanes = [...panes];
-                  nextPanes.splice(index, 1);
-                  return nextPanes;
-                });
-            return (
-              <PaneContext.Provider
-                key={index}
-                value={{
-                  id: paneId,
-                  split,
-                  close,
-                  isFocused: index === focused,
-                }}
-              >
-                <ChannelChat focus={focus} key={paneId} spaceId={spaceId} channelId={paneId} />
-              </PaneContext.Provider>
-            );
-          })
-        )
-        : <Home members={members} channels={channels} space={space} />}
+                  setPaneList((panes) => {
+                    const nextPanes = [...panes];
+                    nextPanes.splice(index, 1);
+                    return nextPanes;
+                  });
+          return (
+            <PaneContext.Provider
+              key={index}
+              value={{
+                id: paneId,
+                split,
+                close,
+                isFocused: index === focused,
+              }}
+            >
+              <ChannelChat focus={focus} key={paneId} spaceId={spaceId} channelId={paneId} />
+            </PaneContext.Provider>
+          );
+        })
+      ) : (
+        <Home members={members} channels={channels} space={space} />
+      )}
 
       {userDialog && <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />}
     </Container>

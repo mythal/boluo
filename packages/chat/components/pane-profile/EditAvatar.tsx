@@ -30,13 +30,13 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
     return URL.createObjectURL(avatar);
   }, [avatar]);
   return (
-    <div className="inline-flex @xs:float-right relative">
+    <div className="@xs:float-right relative inline-flex">
       {selectedFileDataUrl ? (
         <img
           alt={avatarLabel}
           src={selectedFileDataUrl}
           onClick={triggerUpload}
-          className="h-28 w-28 rounded-md cursor-pointer"
+          className="h-28 w-28 cursor-pointer rounded-md"
         />
       ) : (
         <Avatar
@@ -44,11 +44,11 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
           name={nickname}
           avatarId={typeof avatar === 'string' ? avatar : null}
           size="6rem"
-          className="rounded-md cursor-pointer"
+          className="cursor-pointer rounded-md"
           onClick={triggerUpload}
         />
       )}
-      <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-75 hover:opacity-100 flex gap-1">
+      <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 hover:opacity-100 group-hover:opacity-75">
         <input
           hidden
           aria-hidden

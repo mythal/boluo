@@ -81,7 +81,7 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
     throw new Error('Unexpected: empty me');
   }
   return (
-    <div className="flex-1 w-[6rem]">
+    <div className="w-[6rem] flex-1">
       <Select value={selectedValue} title={title} onChange={handleChange}>
         <option value={OOC_STATE}>{me === 'LOADING' ? '…' : me.user.nickname}</option>
         <option value="">
@@ -106,8 +106,8 @@ export const NameToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   return (
-    <div className="absolute font-normal right-0 top-full bg-lowest border border-surface-200 shadow-sm rounded-sm py-2 px-3 z-30 w-max text-sm flex flex-col gap-1">
-      <div className="flex gap-2 text-sm items-center">
+    <div className="bg-lowest border-surface-200 absolute right-0 top-full z-30 flex w-max flex-col gap-1 rounded-sm border px-3 py-2 text-sm font-normal shadow-sm">
+      <div className="flex items-center gap-2 text-sm">
         <NameHistory myId={myId} channelId={channelId} />
         <label>
           <input type="checkbox" checked={isAction} onChange={() => dispatch({ type: 'toggleAction', payload: {} })} />

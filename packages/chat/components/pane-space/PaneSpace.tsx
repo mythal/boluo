@@ -64,7 +64,7 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
         {toggleMembershipButton}
         {(space.ownerId === myId || mySpaceMember?.space.isAdmin) && (
           <SidebarHeaderButton icon={<Settings />} onClick={openSettings}>
-            <span className="hidden @xl:inline">
+            <span className="@xl:inline hidden">
               <FormattedMessage defaultMessage="Space Settings" />
             </span>
           </SidebarHeaderButton>
@@ -79,9 +79,9 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox header={<PaneHeaderBox operators={operators}>{space.name}</PaneHeaderBox>}>
       <div className="p-4">
-        <div className="text-2xl pb-2 flex items-end gap-2">{space.name}</div>
+        <div className="flex items-end gap-2 pb-2 text-2xl">{space.name}</div>
 
-        <div className="py-2 flex gap-2">
+        <div className="flex gap-2 py-2">
           <Badge>
             <Icon icon={isPublic ? Globe : Key} />
             {isPublic ? <FormattedMessage defaultMessage="Public" /> : <FormattedMessage defaultMessage="Private" />}
@@ -90,7 +90,7 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
           <SpaceMemberBadge spaceId={spaceId} members={spaceMemberList} />
         </div>
 
-        {description !== '' && <div className="whitespace-pre-line max-w-md py-2">{description}</div>}
+        {description !== '' && <div className="max-w-md whitespace-pre-line py-2">{description}</div>}
       </div>
     </PaneBox>
   );

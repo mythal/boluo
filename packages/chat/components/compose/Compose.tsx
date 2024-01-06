@@ -31,7 +31,7 @@ export const Compose = ({ me, member, className }: Props) => {
   return (
     <div className={className} onDrop={onDrop} onDragOver={handleDragOver}>
       <div className="flex flex-col gap-2">
-        <div className="flex gap-1 items-center ">
+        <div className="flex items-center gap-1 ">
           <div className="flex-shrink-0">
             <InGameSwitchButton />
           </div>
@@ -39,7 +39,7 @@ export const Compose = ({ me, member, className }: Props) => {
           <div className="flex-shrink-0">
             <AddDiceButton />
           </div>
-          <div className="flex-shrink flex-grow w-full" />
+          <div className="w-full flex-shrink flex-grow" />
           {editMode && <ResetComposeButton />}
           <div className="flex-shrink-0">
             <SendButton me={me} editMode={editMode} />

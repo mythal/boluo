@@ -18,7 +18,7 @@ interface Props {
 type ToolboxState = 'NORMAL' | 'DELETE_CONFRIM' | 'LOADING';
 
 const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode }>(({ className, children }, ref) => (
-  <div ref={ref} className="flex shadow rounded-sm bg-surface-200 items-stretch text-base">
+  <div ref={ref} className="bg-surface-200 flex items-stretch rounded-sm text-base shadow">
     {children}
   </div>
 ));

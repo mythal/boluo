@@ -11,7 +11,7 @@ export const ChannelHeaderFilterShowArchive: FC<Props> = () => {
   const { showArchivedAtom } = useChannelAtoms();
   const [show, setShow] = useAtom(showArchivedAtom);
   return (
-    <label className="text-sm @md:text-base space-x-1 select-none">
+    <label className="@md:text-base select-none space-x-1 text-sm">
       <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
       <span>
         <Icon icon={Archive} />

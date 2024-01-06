@@ -45,7 +45,7 @@ export const EneterSendField: FC<Props> = () => {
             values={{ enter: <Kbd>Enter</Kbd> }}
           />
         </div>
-        <div className="text-neutral-500 text-sm">
+        <div className="text-sm text-neutral-500">
           <FormattedMessage
             defaultMessage="Use {key} to make a line break."
             values={{

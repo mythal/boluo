@@ -22,7 +22,7 @@ export const Name: FC<Props> = ({ name, className, isMaster, isPreview = false, 
   );
   return (
     <span
-      className={clsx('relative font-bold flex-none mr-1 w-[8rem] @xl:w-[10rem] @2xl:w-[12rem] break-all', className)}
+      className={clsx('@xl:w-[10rem] @2xl:w-[12rem] relative mr-1 w-[8rem] flex-none break-all font-bold', className)}
     >
       <span className="mr-1">
         {isEmptyName ? (

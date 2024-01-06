@@ -35,7 +35,7 @@ export const PaneLogin: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-4 flex">
+      <div className="flex p-4">
         <LoginForm onSuccess={close} onError={handleError} className="w-full" />
       </div>
     </PaneBox>

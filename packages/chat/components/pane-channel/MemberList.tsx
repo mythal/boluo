@@ -83,8 +83,8 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
   const canInvite = myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin);
 
   return (
-    <div className="flex flex-col border-l border-surface-100">
-      <div className="text-sm px-2 flex justify-between items-center py-1">
+    <div className="border-surface-100 flex flex-col border-l">
+      <div className="flex items-center justify-between px-2 py-1 text-sm">
         <span className="font-bold">
           {uiState === 'MEMBER' && <FormattedMessage defaultMessage="Members" />}
           {uiState === 'INVITE' && <FormattedMessage defaultMessage="Invite" />}

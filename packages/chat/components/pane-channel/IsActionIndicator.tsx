@@ -3,9 +3,9 @@ import { Delay } from '../Delay';
 
 export const IsActionIndicator = () => {
   return (
-    <span className="text-sm text-surface-400 select-none">
+    <span className="text-surface-400 select-none text-sm">
       <Delay fallback={null}>
-        <PersonRunning className="inline mr-1" />
+        <PersonRunning className="mr-1 inline" />
       </Delay>
       Action
     </span>

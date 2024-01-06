@@ -135,7 +135,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}
-      className="input input-default w-full h-full resize-none"
+      className="input input-default h-full w-full resize-none"
     ></textarea>
   );
 };

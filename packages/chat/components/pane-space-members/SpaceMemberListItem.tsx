@@ -34,12 +34,12 @@ export const SpaceMemberListItem: FC<Props> = ({
   const thisIsMe = myId === user.id;
 
   return (
-    <div className="group px-4 py-2 grid grid-cols-[auto_1fr_auto] grid-flow-col gap-y-1 gap-x-2 grid-rows-[auto_auto] items-center">
+    <div className="group grid grid-flow-col grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-1 px-4 py-2">
       <a href={profileUrl} className="row-span-full" onClick={openProfile}>
         <Avatar id={user.id} name={user.nickname} avatarId={user.avatarId} size="3rem" className="rounded-sm" />
       </a>
       <div>
-        <a href={profileUrl} onClick={openProfile} className="text-lg text-brand-700">
+        <a href={profileUrl} onClick={openProfile} className="text-brand-700 text-lg">
           {user.nickname}
         </a>
 
@@ -65,12 +65,12 @@ export const SpaceMemberListItem: FC<Props> = ({
 
       <div className="text-surface-400">{user.username}</div>
       {amIAdmin && !thisIsMe && (
-        <div className="row-span-full relative">
+        <div className="relative row-span-full">
           <InListButton active={isShowOperation} onClick={() => setShowOperation((x) => !x)}>
             <span>…</span>
           </InListButton>
           {isShowOperation && (
-            <div className="absolute top-0 right-full px-1">
+            <div className="absolute right-full top-0 px-1">
               <ExileButton spaceId={spaceMembership.spaceId} userId={user.id} />
             </div>
           )}

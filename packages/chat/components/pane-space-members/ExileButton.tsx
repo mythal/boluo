@@ -33,7 +33,7 @@ const ExileConfirm: FC<Props> = ({ spaceId, userId }) => {
       <div>
         <FormattedMessage defaultMessage="Are you sure you want to exile this member?" />
       </div>
-      <div className="text-right pt-2">
+      <div className="pt-2 text-right">
         <Button data-type="danger" disabled={isMutating} onClick={() => exile()}>
           <FormattedMessage defaultMessage="Exile" />
         </Button>

@@ -20,21 +20,21 @@ export const ComposingMediaInfo: FC<Props> = ({ className = '' }) => {
     return null;
   }
   return (
-    <div className="bg-lowest py-1 px-2 rounded shadow max-w-[8rem] @md:max-w-[20rem] overflow-hidden text-sm">
+    <div className="bg-lowest @md:max-w-[20rem] max-w-[8rem] overflow-hidden rounded px-2 py-1 text-sm shadow">
       <div className="flex items-center gap-1">
         <span>
           <Paperclip />
         </span>
-        <span className="font-mono truncate">{media.name}</span>
+        <span className="truncate font-mono">{media.name}</span>
         <button
           onClick={handleRemoveMedia}
-          className="p-1 text-surface-500 group-hover:text-text border border-transprent group-hover:border-surface-300 rounded hover:bg-surface-100"
+          className="text-surface-500 group-hover:text-text border-transprent group-hover:border-surface-300 hover:bg-surface-100 rounded border p-1"
         >
           <Trash />
         </button>
       </div>
       {validateResult.isErr && (
-        <ul className="flex flex-col gap-1 mt-4 list-disc pl-4">
+        <ul className="mt-4 flex list-disc flex-col gap-1 pl-4">
           {!supportedMediaType.includes(media.type) && (
             <li className="">
               <span className="text-error-500">

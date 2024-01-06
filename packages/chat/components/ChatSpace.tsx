@@ -21,7 +21,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
     if (error.code === 'NO_PERMISSION') {
       return (
         <div className="p-4">
-          <div className="py-2 text-xl flex gap-2 items-center">
+          <div className="flex items-center gap-2 py-2 text-xl">
             <AlertTriangle className="inline" />
             <FormattedMessage defaultMessage="You do not have permission to view this space." />
           </div>

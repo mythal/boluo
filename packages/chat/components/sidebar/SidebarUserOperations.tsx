@@ -100,9 +100,9 @@ export const SidebarUserOperations: FC<Props> = () => {
             id={me.user.id}
             name={me.user.nickname}
             avatarId={me.user.avatarId}
-            className={clsx('w-6 h-6 rounded')}
+            className={clsx('h-6 w-6 rounded')}
           />
-          <div className="overflow-hidden whitespace-nowrap text-ellipsis min-w-0">{me.user.nickname}</div>
+          <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{me.user.nickname}</div>
         </SidebarGroupHeader>
       ) : (
         <>

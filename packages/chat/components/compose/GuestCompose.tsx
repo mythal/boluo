@@ -7,7 +7,7 @@ import { Button } from 'ui/Button';
 import { ChildrenProps } from 'utils';
 import { useChannelId } from '../../hooks/useChannelId';
 
-const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="text-center py-2">{children}</div>;
+const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="py-2 text-center">{children}</div>;
 
 export const GuestCompose = () => {
   const me = useMe();

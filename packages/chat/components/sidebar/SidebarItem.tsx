@@ -26,7 +26,7 @@ export const SidebarItem: FC<Props> = ({
           className={clsx(
             'transition-opacity duration-100 ease-in-out',
             active ? 'opacity-100' : 'opacity-0',
-            'inline-flex justify-center items-center w-5 text-center text-surface-400 group-hover:text-brand-600',
+            'text-surface-400 group-hover:text-brand-600 inline-flex w-5 items-center justify-center text-center',
           )}
         >
           <X />
@@ -36,18 +36,18 @@ export const SidebarItem: FC<Props> = ({
     return null;
   }, [active, toggle]);
   return (
-    <div className="py-0.5 px-2">
+    <div className="px-2 py-0.5">
       <button
         onClick={onClick}
         className={clsx(
-          'group flex text-left items-center justify-center gap-1 w-full py-1 relative rounded-sm',
-          onClick ? 'cursor-pointer hover:bg-surface-100' : 'cursor-default',
-          'text-left text-sm  px-1',
+          'group relative flex w-full items-center justify-center gap-1 rounded-sm py-1 text-left',
+          onClick ? 'hover:bg-surface-100 cursor-pointer' : 'cursor-default',
+          'px-1 text-left  text-sm',
           active && 'bg-surface-50',
         )}
       >
         {icon && <span className={active ? 'text-surface-600' : 'text-surface-400'}>{icon}</span>}
-        <span className={clsx('text-left flex-grow')}>{children}</span>
+        <span className={clsx('flex-grow text-left')}>{children}</span>
 
         {extraNode}
       </button>

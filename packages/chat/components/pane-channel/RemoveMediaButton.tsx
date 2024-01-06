@@ -14,7 +14,7 @@ export const RemoveMediaButton: FC = () => {
   return (
     <button
       onClick={removeMedia}
-      className="p-2 rounded border bg-surface-100 hover:border-surface-300 hover:bg-surface-50"
+      className="bg-surface-100 hover:border-surface-300 hover:bg-surface-50 rounded border p-2"
     >
       <Delay fallback={<FallbackIcon />}>
         <Trash />

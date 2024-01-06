@@ -8,7 +8,7 @@ interface Props {
 
 export const PreviewHandlePlaceHolder: FC<Props> = ({ editMode }) => {
   return (
-    <div className="row-span-full flex py-1 justify-center text-surface-300">
+    <div className="text-surface-300 row-span-full flex justify-center py-1">
       <Delay>{editMode ? <Edit /> : null}</Delay>
     </div>
   );

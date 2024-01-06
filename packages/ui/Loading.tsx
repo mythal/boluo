@@ -17,7 +17,7 @@ export const Loading: FC<Props> = ({ type = 'block', label = 'Loading' }) => {
     );
   }
   return (
-    <div className="w-full h-full flex items-center justify-center text-lg">
+    <div className="flex h-full w-full items-center justify-center text-lg">
       <Spinner className="mr-1" /> {label}
     </div>
   );

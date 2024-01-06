@@ -147,14 +147,14 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const willLoad = touchState === 'WILL_LOAD';
   return (
     <Button ref={loadMoreRef} disabled={isLoading} onClick={loadMore}>
-      <div className="w-36 flex gap-1 justify-between items-center">
+      <div className="flex w-36 items-center justify-between gap-1">
         {isLoading ? (
           <CircleNotch className="animate-spin" />
         ) : (
           <ChevronDown className={clsx('transition-transform duration-300', willLoad && 'rotate-180')} />
         )}
 
-        <div className="text-center flex-grow">
+        <div className="flex-grow text-center">
           {touchState === 'START' && <FormattedMessage defaultMessage="Pull to Load" />}
           {willLoad && <FormattedMessage defaultMessage="Release to Load" />}
           {touchState === 'NONE' && <FormattedMessage defaultMessage="Load More" />}

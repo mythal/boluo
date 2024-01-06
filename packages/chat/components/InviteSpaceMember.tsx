@@ -46,9 +46,9 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
 
   const link = `${window.location.origin}/space/invite/${spaceId}/${token}`;
   return (
-    <div className="max-w-lg flex flex-col gap-4">
+    <div className="flex max-w-lg flex-col gap-4">
       <div>
-        <label htmlFor={id + 'link'} className="block mb-1">
+        <label htmlFor={id + 'link'} className="mb-1 block">
           <FormattedMessage defaultMessage="Invite Link" />
         </label>
         <div className="flex gap-1">
@@ -70,7 +70,7 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
       </div>
       <div>
         <div>
-          <label htmlFor={id + 'find'} className="block mb-1">
+          <label htmlFor={id + 'find'} className="mb-1 block">
             <FormattedMessage defaultMessage="Find By Name" />
           </label>
           <div>

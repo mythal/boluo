@@ -38,7 +38,7 @@ type FormSchema = {
   defaultDiceType: string;
 };
 
-const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="font-bold mb-2">{children}</h3>;
+const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="mb-2 font-bold">{children}</h3>;
 
 const NameField: FC = () => {
   const { register } = useFormContext<FormSchema>();
@@ -124,7 +124,7 @@ const PublicityField: FC = () => {
         <label htmlFor={fieldId.public}>
           <FormattedMessage defaultMessage="Public" />
         </label>
-        <label htmlFor={fieldId.public} className="mb-2 col-start-2">
+        <label htmlFor={fieldId.public} className="col-start-2 mb-2">
           <HelpText>
             <FormattedMessage defaultMessage="Everyone can join this space" />
           </HelpText>
@@ -134,7 +134,7 @@ const PublicityField: FC = () => {
         <label htmlFor={fieldId.private}>
           <FormattedMessage defaultMessage="Private" />
         </label>
-        <label htmlFor={fieldId.private} className="mb-2 col-start-2">
+        <label htmlFor={fieldId.private} className="col-start-2 mb-2">
           <HelpText>
             <FormattedMessage defaultMessage="Only invited people can join this space" />
           </HelpText>
@@ -166,7 +166,7 @@ const FieldDefaultDice: FC = () => {
 };
 
 const PaneFooterBox: FC<ChildrenProps> = ({ children }) => (
-  <div className="p-4 sticky bottom-0 border-t bg-bg flex justify-end gap-2">{children}</div>
+  <div className="bg-bg sticky bottom-0 flex justify-end gap-2 border-t p-4">{children}</div>
 );
 
 const spaceToForm = (space: Space): FormSchema => ({
@@ -214,7 +214,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
         </div>
       )}
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="p-4 flex flex-col gap-8 h-full max-w-md">
+        <div className="flex h-full max-w-md flex-col gap-8 p-4">
           <div className="flex flex-col gap-2">
             <SectionTitle>
               <FormattedMessage defaultMessage="Basic" />
@@ -284,7 +284,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           </PaneHeaderBox>
         }
       >
-        <div className="flex p-8 items-center justify-center text-surface-400">
+        <div className="text-surface-400 flex items-center justify-center p-8">
           <FormattedMessage defaultMessage="You are not logged in" />
         </div>
       </PaneBox>

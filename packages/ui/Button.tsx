@@ -17,11 +17,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
   return (
     <button
       className={clsx(
-        'disabled:cursor-not-allowed enabled:cursor-pointer',
+        'enabled:cursor-pointer disabled:cursor-not-allowed',
         'select-none appearance-none focus-visible:outline-none',
         'inline-flex items-center justify-center focus:ring',
         'm-0 gap-1 rounded-sm',
-        isSmall ? 'min-h-[1.75rem] py-0.5 px-[0.75rem] text-sm' : 'px-4 py-2 text-baese',
+        isSmall ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'text-baese px-4 py-2',
         (type === 'default' || type === 'detail') && [
           'bg-surface-200 text-highest',
           'hover-enabled:bg-surface-200 active-enabled:bg-surface-300',
@@ -49,7 +49,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
       {type === 'detail' && (
         <span
           data-on={props['data-on']}
-          className="transform transition-transform duration-1500 text-surface-600 on:rotate-180 data-[on=true]:rotate-180"
+          className="duration-1500 text-surface-600 on:rotate-180 transform transition-transform data-[on=true]:rotate-180"
         >
           <ChevronDown />
         </span>

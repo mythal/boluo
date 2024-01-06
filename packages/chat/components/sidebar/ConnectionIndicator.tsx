@@ -59,7 +59,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
-            className={clsx('w-[max-content] z-40')}
+            className={clsx('z-40 w-[max-content]')}
           >
             <FloatingBox>
               <div className="flex flex-col gap-4">

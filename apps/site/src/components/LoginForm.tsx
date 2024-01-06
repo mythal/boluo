@@ -58,7 +58,7 @@ const UsernameField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="Username or Email" />
         </label>
 
@@ -87,7 +87,7 @@ const PasswordField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="Password" />
         </label>
         <TextInput
@@ -120,7 +120,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       </div>
 
       {error && (
-        <div className="my-1 text-error-700">
+        <div className="text-error-700 my-1">
           <FormErrorDisplay error={error} />
         </div>
       )}

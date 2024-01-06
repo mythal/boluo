@@ -41,19 +41,19 @@ export const SelfPreviewSendHelpText = memo<Props>(({ me }) => {
   }
   if (composeError !== null) {
     return (
-      <div className="text-sm text-error-500">
+      <div className="text-error-500 text-sm">
         <Reason error={composeError} />
       </div>
     );
   }
   const key = settings?.enterSend ? '⏎' : isApple() ? '⌘ + ⏎' : 'Ctrl + ⏎';
   const sendNode = (
-    <button className="underline text-surface-600" onClick={send}>
+    <button className="text-surface-600 underline" onClick={send}>
       Send
     </button>
   );
   return (
-    <div className="text-sm text-surface-400">
+    <div className="text-surface-400 text-sm">
       <FormattedMessage defaultMessage="Press {key} to {send}" values={{ key, send: sendNode }} />
     </div>
   );

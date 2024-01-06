@@ -16,7 +16,7 @@ import { ExpandDiceSwitch } from './ExpandDiceSwitch';
 import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
 
-const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="font-bold mb-2">{children}</h3>;
+const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="mb-2 font-bold">{children}</h3>;
 
 const LanguageField = () => {
   const id = useId();
@@ -44,7 +44,7 @@ const ThemeField = () => {
 
 const ExpandDiceField = () => {
   return (
-    <label className="flex items-center justify-between gap-4 select-none">
+    <label className="flex select-none items-center justify-between gap-4">
       <FormattedMessage defaultMessage="Expand dice in the messages" />
       <ExpandDiceSwitch />
     </label>
@@ -68,11 +68,11 @@ const LogoutField = () => {
     return null;
   }
   return (
-    <div className="flex justify-between @md:items-center gap-4 select-none flex-col @md:flex-row">
+    <div className="@md:items-center @md:flex-row flex select-none flex-col justify-between gap-4">
       <div className="text-lg">
         {me.user.nickname} <span className="text-sm">({me.user.username})</span>
       </div>
-      <div className="flex gap-2 flex-none">
+      <div className="flex flex-none gap-2">
         <Button onClick={openProfile}>
           <User />
           <FormattedMessage defaultMessage="Profile" />
@@ -109,7 +109,7 @@ export const PaneSettings: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-4 flex flex-col gap-8 min-w-[18rem] max-w-lg">
+      <div className="flex min-w-[18rem] max-w-lg flex-col gap-8 p-4">
         <div className="flex flex-col gap-4">
           <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />

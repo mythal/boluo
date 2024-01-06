@@ -27,13 +27,13 @@
 
 @layer components {
   .link {
-    @apply text-brand-700 no-underline hover:text-brand-600 active:text-brand-500;
+    @apply text-brand-700 hover:text-brand-600 active:text-brand-500 no-underline;
   }
 
   .input {
-    @apply rounded-sm border-[1px] border-solid py-2
-      px-3 focus:outline-none
-      disabled:cursor-not-allowed disabled:brightness-125 dark:disabled:brightness-75 disabled:contrast-50;
+    @apply rounded-sm border-[1px] border-solid px-3
+      py-2 focus:outline-none
+      disabled:cursor-not-allowed disabled:brightness-125 disabled:contrast-50 dark:disabled:brightness-75;
   }
 
   .input-default {

@@ -64,18 +64,18 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       id={preview.key}
       editMode={editMode}
       onDrop={onDrop}
-      className="bg-brand-50 border-t border-b border-brand-200"
+      className="bg-brand-50 border-brand-200 border-b border-t"
     >
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member.channel} />
-      <div className="flex flex-col gap-1 h-full items-between">
+      <div className="items-between flex h-full flex-col gap-1">
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         <MessageMedia mediaFile={media} className="relative w-fit py-2">
-          <div className="absolute right-full -translate-x-1 top-2">
+          <div className="absolute right-full top-2 -translate-x-1">
             <RemoveMediaButton />
           </div>
         </MessageMedia>
         <Delay timeout={16} fallback={<div className="h-12"></div>}>
-          <SelfPreviewOperations className="flex gap-1 items-center h-12 transition-opacity duration-700 opacity-0 data-[enter='true']:opacity-100" />
+          <SelfPreviewOperations className="flex h-12 items-center gap-1 opacity-0 transition-opacity duration-700 data-[enter='true']:opacity-100" />
         </Delay>
         <div className="min-h-[1.5em]">
           <SelfPreviewSendHelpText me={member.user} />

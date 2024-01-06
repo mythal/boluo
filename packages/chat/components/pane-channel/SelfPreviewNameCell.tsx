@@ -22,17 +22,17 @@ const SaveAsCharacterName: FC<{ channelId: string; characterName: string }> = ({
   return (
     <button
       className={clsx(
-        'absolute left-0 bottom-full w-max bg-pin-brand-600 text-pin-lowest rounded-sm shadow-1/2 shadow-surface-400/50 px-2 py-1 -translate-x-2',
+        'bg-pin-brand-600 text-pin-lowest shadow-1/2 shadow-surface-400/50 absolute bottom-full left-0 w-max -translate-x-2 rounded-sm px-2 py-1',
         'opacity-40 hover:opacity-100 group-hover:opacity-100',
       )}
       onClick={() => trigger({ characterName })}
     >
       {isMutating ? (
-        <span className="text-sm animate-pulse text-pin-lowest">
+        <span className="text-pin-lowest animate-pulse text-sm">
           <FormattedMessage defaultMessage="Saving…" />
         </span>
       ) : (
-        <span className="text-sm flex-none">
+        <span className="flex-none text-sm">
           <Icon icon={Save} className="mr-1" />
           <FormattedMessage defaultMessage="Keep name" />
         </span>
@@ -44,8 +44,8 @@ const SaveAsCharacterName: FC<{ channelId: string; characterName: string }> = ({
 export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channelMember }) => {
   const { isMaster, characterName } = channelMember;
   return (
-    <div className="flex @2xl:flex-col pb-2 gap-y-1 gap-x-4 items-center @2xl:items-end justify-between @2xl:justify-start">
-      <div className="flex-grow flex-shrink-1 @2xl:flex-shrink-0 max-w-full relative">
+    <div className="@2xl:flex-col @2xl:items-end @2xl:justify-start flex items-center justify-between gap-x-4 gap-y-1 pb-2">
+      <div className="flex-shrink-1 @2xl:flex-shrink-0 relative max-w-full flex-grow">
         {!isAction ? <Name name={name} isMaster={isMaster} isPreview self /> : <IsActionIndicator />}
         <NameToolbox channelMember={channelMember} />
       </div>

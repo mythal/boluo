@@ -60,14 +60,14 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 
   if (whisperToMembers.length === 0) {
     return (
-      <span className="text-sm text-surface-600">
+      <span className="text-surface-600 text-sm">
         <FormattedMessage defaultMessage="Whisper to the Master only" /> {whisperToAdd}
       </span>
     );
   }
 
   return (
-    <span className="text-sm text-surface-600">
+    <span className="text-surface-600 text-sm">
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToMembers.map((member) => (
@@ -93,7 +93,7 @@ export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => 
   const { characterName } = member.channel;
   return (
     <button
-      className="border rounded bg-lowest px-1 border-surface-100 hover:border-surface-300 hover:line-through"
+      className="bg-lowest border-surface-100 hover:border-surface-300 rounded border px-1 hover:line-through"
       onClick={remove}
     >
       {inGame && characterName !== '' ? characterName : nickname}
@@ -112,7 +112,7 @@ export const WhisperToItemAdd: FC<{ members: Member[]; add: (username: string) =
     <select
       value=""
       onChange={handleChange}
-      className="border rounded appearance-none w-6 text-center bg-lowest hover:border-surface-400"
+      className="bg-lowest hover:border-surface-400 w-6 appearance-none rounded border text-center"
     >
       <option value="">+</option>
       {members.map((member) => {

@@ -14,7 +14,7 @@ interface Props {
 const UndecidedCocRoll: FC<{ node: CocRoll }> = ({ node }) => {
   let target: ReactNode = null;
   if (node.target && node.target.type === 'Num') {
-    target = <span className="ml-0.5 text-surface-500">≤{node.target.value}</span>;
+    target = <span className="text-surface-500 ml-0.5">≤{node.target.value}</span>;
   }
   return (
     <>
@@ -34,7 +34,7 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
       <span className="text-surface-500 mx-0.5 text-sm">
         (
         <Delay fallback={<FallbackIcon />}>
-          <Dice className="inline w-4 h-4" />
+          <Dice className="inline h-4 w-4" />
         </Delay>
         <span className="mr-1">{node.rolled}</span>
         {cocRollSubTypeDisplay(node.subType)}
@@ -44,7 +44,7 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
   }
   if (node.targetValue) {
     target = (
-      <span className="mx-0.5 text-surface-500">
+      <span className="text-surface-500 mx-0.5">
         {node.value <= node.targetValue ? '≤' : '>'}
         {node.targetValue}
       </span>
@@ -65,11 +65,11 @@ export const EntityExprCocRoll: FC<Props> = ({ node }) => {
   return (
     <RollBox>
       <Delay fallback={<FallbackIcon />}>
-        <FlexibleStar className="inline w-4 h-4 mr-0.5" />
+        <FlexibleStar className="mr-0.5 inline h-4 w-4" />
       </Delay>
 
       {node.subType !== 'NORMAL' && (
-        <span className="w-4 mx-0.5 inline-block text-center">{cocRollSubTypeDisplay(node.subType)}</span>
+        <span className="mx-0.5 inline-block w-4 text-center">{cocRollSubTypeDisplay(node.subType)}</span>
       )}
       {'value' in node ? <CocResult node={node} /> : <UndecidedCocRoll node={node} />}
     </RollBox>

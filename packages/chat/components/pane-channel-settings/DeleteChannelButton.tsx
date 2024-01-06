@@ -64,7 +64,7 @@ export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
         defaultMessage='Are you sure you want to delete the "{channelName}" channel?'
         values={{ channelName }}
       />
-      <div className="flex gap-1 justify-end pt-3">
+      <div className="flex justify-end gap-1 pt-3">
         <Button type="button" data-type="danger" onClick={confirm}>
           <FormattedMessage defaultMessage="Delete" />
         </Button>

@@ -24,7 +24,7 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   };
   const loginLink = (
     <span>
-      <Link href="/account/login" className="underline to-blue-600">
+      <Link href="/account/login" className="to-blue-600 underline">
         <FormattedMessage defaultMessage="log in" />
       </Link>
     </span>

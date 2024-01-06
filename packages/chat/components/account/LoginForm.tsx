@@ -38,7 +38,7 @@ const UsernameField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="Username or Email" />
         </label>
 
@@ -70,7 +70,7 @@ const PasswordField = () => {
   return (
     <>
       <div>
-        <label htmlFor={id} className="w-full block py-1">
+        <label htmlFor={id} className="block w-full py-1">
           <FormattedMessage defaultMessage="Password" />
         </label>
         <TextInput

@@ -67,7 +67,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
               defaultMessage='Are you sure to leave the "{spaceName}" space?'
               values={{ spaceName: space.name }}
             />
-            <div className="text-right pt-2">
+            <div className="pt-2 text-right">
               <Button data-type="danger" type="button" onClick={() => leave()} disabled={isLeaving}>
                 <FormattedMessage defaultMessage="Leave" />
               </Button>

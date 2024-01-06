@@ -62,7 +62,7 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
     <div className="p-4">
       <div className="text-xl font-bold">{space.name}</div>
       <div className="py-2">{title}</div>
-      {space.description !== '' && <div className="py-4 max-w-md whitespace-pre-line">{space.description}</div>}
+      {space.description !== '' && <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>}
       <div className="mt-4 space-x-2">
         <AcceptButton spaceId={spaceId} token={token} />
       </div>

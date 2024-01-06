@@ -26,8 +26,8 @@ export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, childre
   if (mediaFile && (!mediaFile.type.startsWith('image/') || !supportedMediaType.includes(mediaFile.type))) {
     return (
       <div className={className}>
-        <div className="h-[6rem] py-2 px-3 bg-surface-50 rounded border border-surface-200 flex flex-col justify-between">
-          <div className="flex gap-1 items-center text-lg font-mono">
+        <div className="bg-surface-50 border-surface-200 flex h-[6rem] flex-col justify-between rounded border px-3 py-2">
+          <div className="flex items-center gap-1 font-mono text-lg">
             <Paperclip />
             {mediaFile.name}
           </div>
@@ -42,13 +42,13 @@ export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, childre
       <div
         className={clsx(
           'h-[6rem] rounded-sm',
-          loadState === 'LOADING' ? 'w-[6rem] bg-surface-300 animate-pulse' : '',
-          loadState === 'ERROR' ? 'w-[6rem] bg-error-200' : '',
+          loadState === 'LOADING' ? 'bg-surface-300 w-[6rem] animate-pulse' : '',
+          loadState === 'ERROR' ? 'bg-error-200 w-[6rem]' : '',
         )}
       >
         {loadState === 'ERROR' ? (
           <button
-            className="h-full w-full flex items-center justify-center"
+            className="flex h-full w-full items-center justify-center"
             type="button"
             onClick={() => setLoadState('LOADING')}
           >

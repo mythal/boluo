@@ -15,7 +15,7 @@ export const SidebarHeaderButton = React.forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         onClick={isLoading ? undefined : onClick}
         className={clsx(
-          'hover:bg-surface-200/75  rounded-sm px-1.5 py-1.5 text-sm inline-flex gap-1 items-center',
+          'hover:bg-surface-200/75  inline-flex items-center gap-1 rounded-sm px-1.5 py-1.5 text-sm',
           'active:bg-surface-200',
           active && 'bg-surface-200',
           isLoading ? 'animate-pulse cursor-wait' : 'cursor-pointer',

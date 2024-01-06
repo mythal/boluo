@@ -8,7 +8,7 @@ interface Props {
 
 export const GoButtomButton = memo<Props>(({ onClick }) => {
   return (
-    <Button onClick={onClick} className="absolute right-6 bottom-4 text-lg">
+    <Button onClick={onClick} className="absolute bottom-4 right-6 text-lg">
       <ChevronsDown />
     </Button>
   );

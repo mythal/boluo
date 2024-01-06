@@ -41,7 +41,7 @@ export default async function Page({ params: { userId } }: { params: Params }) {
   return (
     <div className="p-4">
       <div className="text-xl">{user.nickname}</div>
-      {user.bio !== '' && <div className="whitespace-pre-line py-4 max-w-md">{user.bio}</div>}
+      {user.bio !== '' && <div className="max-w-md whitespace-pre-line py-4">{user.bio}</div>}
     </div>
   );
 }

@@ -29,7 +29,12 @@ const ErrorMessage: FC<{ error?: FieldError }> = ({ error }) => {
 const UsernameField = () => {
   const id = useId();
   const intl = useIntl();
-  const { register, formState: { errors: { username: error } } } = useFormContext<Inputs>();
+  const {
+    register,
+    formState: {
+      errors: { username: error },
+    },
+  } = useFormContext<Inputs>();
   return (
     <>
       <div>
@@ -56,7 +61,12 @@ const UsernameField = () => {
 const PasswordField = () => {
   const id = useId();
   const intl = useIntl();
-  const { register, formState: { errors: { password: error } } } = useFormContext<Inputs>();
+  const {
+    register,
+    formState: {
+      errors: { password: error },
+    },
+  } = useFormContext<Inputs>();
   return (
     <>
       <div>

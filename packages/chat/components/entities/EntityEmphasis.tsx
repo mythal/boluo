@@ -8,7 +8,13 @@ interface Props {
   cursorNode: ReactNode;
 }
 
-export const EntityEmphasis: FC<Props> = ({ source, entity: { child: { start, len } }, cursorNode }) => {
+export const EntityEmphasis: FC<Props> = ({
+  source,
+  entity: {
+    child: { start, len },
+  },
+  cursorNode,
+}) => {
   return (
     <em>
       <TextWithCursor text={source.substring(start, start + len)} start={start} len={len} cursorNode={cursorNode} />

@@ -19,10 +19,7 @@ export const SpaceMemberBadge: FC<Props> = ({ members, spaceId }) => {
   };
   return (
     <Badge icon={<Icon icon={Users} />} onClick={handleClick}>
-      <FormattedMessage
-        defaultMessage="{count} members"
-        values={{ count }}
-      />
+      <FormattedMessage defaultMessage="{count} members" values={{ count }} />
     </Badge>
   );
 };

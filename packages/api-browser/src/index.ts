@@ -102,9 +102,7 @@ export function upload(
   return appFetch(url, params);
 }
 
-export function editAvatar(
-  file: File,
-): Promise<Result<User, ApiError>> {
+export function editAvatar(file: File): Promise<Result<User, ApiError>> {
   const baseUrl = store.get(apiUrlAtom);
   const path = '/users/edit_avatar';
   const url = makeUri(baseUrl, path, { filename: file.name, mimeType: file.type });

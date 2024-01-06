@@ -100,7 +100,11 @@ function ChannelMemberButton({ className }: Props) {
   const [dialog, setDialog] = useState(false);
   const [leaveConfirmDialog, setLeaveConfirmDialog] = useState(false);
   const { leave, join, edit } = useChannelJoinLeave(channelId);
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>();
 
   const openDialog = () => setDialog(true);
   const dismissDialog = () => setDialog(false);

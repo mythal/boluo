@@ -424,27 +424,23 @@ const str = (s: string, appendText = false): P<string> =>
     return [s, { text, rest }];
   });
 
-const operator1: P<Operator> = regex(/^[-+]/).map(
-  ([op]): Operator => {
-    if (op === '+') {
-      return '+';
-    } else if (op === '-') {
-      return '-';
-    }
-    throw Error('unreachable');
-  },
-);
+const operator1: P<Operator> = regex(/^[-+]/).map(([op]): Operator => {
+  if (op === '+') {
+    return '+';
+  } else if (op === '-') {
+    return '-';
+  }
+  throw Error('unreachable');
+});
 
-const operator2: P<Operator> = regex(/^[*/×÷]/).map(
-  ([op]): Operator => {
-    if (op === '×' || op === '*') {
-      return '×';
-    } else if (op === '÷' || op === '/') {
-      return '÷';
-    }
-    throw Error('unreachable');
-  },
-);
+const operator2: P<Operator> = regex(/^[*/×÷]/).map(([op]): Operator => {
+  if (op === '×' || op === '*') {
+    return '×';
+  } else if (op === '÷' || op === '/') {
+    return '÷';
+  }
+  throw Error('unreachable');
+});
 
 const num: P<ExprNode> = regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
 
@@ -506,7 +502,10 @@ const atom = (disableRoll = false): P<ExprNode> => {
       .with(expr())
       .skip(regex(/^\s*\)/))
       .map(subExprMapper), // match (...)
-    regex(/^（\s*/).with(expr()).skip(regex(/^\s*）/)).map(subExprMapper), // match （...）
+    regex(/^（\s*/)
+      .with(expr())
+      .skip(regex(/^\s*）/))
+      .map(subExprMapper), // match （...）
     regex(/^\[\s*/)
       .with(expr())
       .skip(regex(/^\s*]/))
@@ -573,17 +572,19 @@ const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], e
   return [entity, { text: text + entire, rest }];
 });
 
-const exprNodeToEntity = (state: State) => ([node, next]: [ExprNode, State]): [Entity, State] => {
-  const offset = state.rest.length - next.rest.length;
-  const consumed = state.rest.substring(0, offset);
-  const entity: Expr = {
-    type: 'Expr',
-    start: state.text.length,
-    len: offset,
-    node,
+const exprNodeToEntity =
+  (state: State) =>
+  ([node, next]: [ExprNode, State]): [Entity, State] => {
+    const offset = state.rest.length - next.rest.length;
+    const consumed = state.rest.substring(0, offset);
+    const entity: Expr = {
+      type: 'Expr',
+      start: state.text.length,
+      len: offset,
+      node,
+    };
+    return [entity, { text: state.text + consumed, rest: next.rest }];
   };
-  return [entity, { text: state.text + consumed, rest: next.rest }];
-};
 
 const ROLL_COMMAND = /^[.。]r\s*/;
 

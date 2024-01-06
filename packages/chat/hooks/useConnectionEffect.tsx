@@ -73,45 +73,45 @@ export const useConnectionEffect = (mailboxId: string) => {
   const store = useStore();
   const dispatch = useSetAtom(chatAtom);
 
-  const onEvent = useCallback((event: ServerEvent) => {
-    switch (event.body.type) {
-      case 'CHANNEL_DELETED':
-        void mutate(['/channels/by_space', event.mailbox]);
-        void mutate(['/channels/query', event.body.channelId]);
-        return;
-      case 'CHANNEL_EDITED':
-        void mutate(['/channels/by_space', event.mailbox]);
-        void mutate(['/channels/query', event.body.channelId], event.body.channel);
-        return;
-      case 'SPACE_UPDATED':
-        const { space, channelMembers, channels } = event.body.spaceWithRelated;
-        void mutate(['/spaces/query', space.id], space);
-        void mutate(['/channels/by_space', space.id]);
-        return;
-      case 'MEMBERS':
-        const members = event.body.members;
-        void mutate<ChannelMembers>(
-          ['/channels/members', event.body.channelId],
-          (channelMembers) => {
+  const onEvent = useCallback(
+    (event: ServerEvent) => {
+      switch (event.body.type) {
+        case 'CHANNEL_DELETED':
+          void mutate(['/channels/by_space', event.mailbox]);
+          void mutate(['/channels/query', event.body.channelId]);
+          return;
+        case 'CHANNEL_EDITED':
+          void mutate(['/channels/by_space', event.mailbox]);
+          void mutate(['/channels/query', event.body.channelId], event.body.channel);
+          return;
+        case 'SPACE_UPDATED':
+          const { space, channelMembers, channels } = event.body.spaceWithRelated;
+          void mutate(['/spaces/query', space.id], space);
+          void mutate(['/channels/by_space', space.id]);
+          return;
+        case 'MEMBERS':
+          const members = event.body.members;
+          void mutate<ChannelMembers>(['/channels/members', event.body.channelId], (channelMembers) => {
             if (channelMembers != null) {
               return { ...channelMembers, members };
             }
-          },
-        );
-        return;
-      case 'STATUS_MAP':
-        console.debug('Status changed:', event.body);
-        void mutate<Record<string, UserStatus>>(['/spaces/users_status', event.body.spaceId], event.body.statusMap);
-        return;
-      case 'NEW_MESSAGE':
-      case 'MESSAGE_DELETED':
-      case 'MESSAGE_EDITED':
-      case 'MESSAGE_PREVIEW':
-      case 'INITIALIZED':
-      case 'APP_UPDATED':
-        return;
-    }
-  }, [mutate]);
+          });
+          return;
+        case 'STATUS_MAP':
+          console.debug('Status changed:', event.body);
+          void mutate<Record<string, UserStatus>>(['/spaces/users_status', event.body.spaceId], event.body.statusMap);
+          return;
+        case 'NEW_MESSAGE':
+        case 'MESSAGE_DELETED':
+        case 'MESSAGE_EDITED':
+        case 'MESSAGE_PREVIEW':
+        case 'INITIALIZED':
+        case 'APP_UPDATED':
+          return;
+      }
+    },
+    [mutate],
+  );
 
   useEffect(() => {
     if (mailboxId === '') return;

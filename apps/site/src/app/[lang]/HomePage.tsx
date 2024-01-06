@@ -72,9 +72,10 @@ const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
 
 const MySpaceList: FC = () => {
   const { data: spaces } = useQueryMySpaces();
-  const items = useMemo(() => (
-    (spaces ?? []).map(item => <MySpaceListItem key={item.space.id} space={item.space} />)
-  ), [spaces]);
+  const items = useMemo(
+    () => (spaces ?? []).map((item) => <MySpaceListItem key={item.space.id} space={item.space} />),
+    [spaces],
+  );
 
   return <div>{items}</div>;
 };

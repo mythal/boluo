@@ -61,7 +61,12 @@ const noticeStyle = css`
 
 function SignUp() {
   useTitle('注册账号');
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>();
   const [submitting, setSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<AppError | null>(null);
   const history = useHistory();

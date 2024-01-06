@@ -17,8 +17,8 @@ interface Props {
 
 export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const [state, setState] = useAtom(stateAtom);
-  const toggleMore = useCallback(() => setState(prev => prev === 'MORE' ? 'DEFAULT' : 'MORE'), [setState]);
-  const toggleFilterBar = useCallback(() => setState(prev => prev === 'FILTER' ? 'DEFAULT' : 'FILTER'), [setState]);
+  const toggleMore = useCallback(() => setState((prev) => (prev === 'MORE' ? 'DEFAULT' : 'MORE')), [setState]);
+  const toggleFilterBar = useCallback(() => setState((prev) => (prev === 'FILTER' ? 'DEFAULT' : 'FILTER')), [setState]);
   const me = useMe();
   const channelMember = useMyChannelMember(channel.id);
   let memberButton: ReactNode = null;

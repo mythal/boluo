@@ -11,9 +11,14 @@ interface Props {
   children?: ReactNode;
 }
 
-export const SidebarItem: FC<Props> = (
-  { onClick, icon, children, active = false, toggle = false, varant = 'default' },
-) => {
+export const SidebarItem: FC<Props> = ({
+  onClick,
+  icon,
+  children,
+  active = false,
+  toggle = false,
+  varant = 'default',
+}) => {
   const extraNode = useMemo(() => {
     if (toggle) {
       return (
@@ -42,9 +47,7 @@ export const SidebarItem: FC<Props> = (
         )}
       >
         {icon && <span className={active ? 'text-surface-600' : 'text-surface-400'}>{icon}</span>}
-        <span className={clsx('text-left flex-grow')}>
-          {children}
-        </span>
+        <span className={clsx('text-left flex-grow')}>{children}</span>
 
         {extraNode}
       </button>

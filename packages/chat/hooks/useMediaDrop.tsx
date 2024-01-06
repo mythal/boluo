@@ -9,18 +9,21 @@ interface MediaDropReturn {
 export const useMediaDrop = (): MediaDropReturn => {
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  const onDrop = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    if (event.dataTransfer.items) {
-      // Use DataTransferItemList interface to access the file(s)
-      if (event.dataTransfer.items[0]?.kind === 'file') {
-        const fileDropped = event.dataTransfer.items[0].getAsFile();
-        if (fileDropped) {
-          console.debug(fileDropped);
-          dispatch({ type: 'media', payload: { media: fileDropped } });
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      if (event.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        if (event.dataTransfer.items[0]?.kind === 'file') {
+          const fileDropped = event.dataTransfer.items[0].getAsFile();
+          if (fileDropped) {
+            console.debug(fileDropped);
+            dispatch({ type: 'media', payload: { media: fileDropped } });
+          }
         }
       }
-    }
-  }, [dispatch]);
+    },
+    [dispatch],
+  );
   return { onDrop };
 };

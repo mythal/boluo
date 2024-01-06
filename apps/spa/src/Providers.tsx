@@ -18,9 +18,7 @@ export function Providers({ children }: Props) {
         }}
       >
         <Suspense fallback={<ChatSkeleton placeholder="Loading..." />}>
-          <LocaleProvider>
-            {children}
-          </LocaleProvider>
+          <LocaleProvider>{children}</LocaleProvider>
         </Suspense>
       </SWRConfig>
     </JotaiProvider>

@@ -33,7 +33,11 @@ export const LocaleSelect: React.FC<Props> = ({ id, disabled = false }) => {
   );
   return (
     <Select id={id} value={locale} onChange={onChange} disabled={disabled}>
-      {items.map((item, key) => <option key={key} value={item.value}>{item.label}</option>)}
+      {items.map((item, key) => (
+        <option key={key} value={item.value}>
+          {item.label}
+        </option>
+      ))}
     </Select>
   );
 };

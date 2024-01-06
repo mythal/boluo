@@ -16,9 +16,8 @@ export interface ComposeState {
   defaultInGame: boolean;
   source: string;
   media: File | null;
-  whisperTo:
-    // Represents whisper to the Game Master
-    | null
+  whisperTo: // Represents whisper to the Game Master
+  | null
     // Represents whisper to users (Game Master always can read all whisper messages)
     | string[]
     // Represents disabled whisper
@@ -128,10 +127,7 @@ const handleBold = (state: ComposeState, { payload }: ComposeAction<'bold'>): Co
   return { ...state, source, range: [head.length + 2, head.length + insertText.length - 2] };
 };
 
-const handleSetInputedName = (
-  state: ComposeState,
-  { payload }: ComposeAction<'setInputedName'>,
-): ComposeState => {
+const handleSetInputedName = (state: ComposeState, { payload }: ComposeAction<'setInputedName'>): ComposeState => {
   const inputedName = payload.inputedName.trim().slice(0, 32);
   return { ...state, inputedName };
 };
@@ -208,10 +204,7 @@ const handleToggleWhisper = (
   return toggleModifier(state, whisper, command);
 };
 
-const handleToggleAction = (
-  state: ComposeState,
-  _: ComposeAction<'toggleAction'>,
-): ComposeState => {
+const handleToggleAction = (state: ComposeState, _: ComposeAction<'toggleAction'>): ComposeState => {
   const { source } = state;
   const { action } = parseModifiers(source);
   return toggleModifier(state, action, '.me');
@@ -263,7 +256,7 @@ const handleAddWhisperTarget = (
   if (whisper && !whisper.usernames.includes(username)) {
     mentionList = whisper.usernames.concat(username);
   }
-  const mentions = mentionList.map(u => `@${u}`).join(' ');
+  const mentions = mentionList.map((u) => `@${u}`).join(' ');
   const modifiedModifier = `.h(${mentions})`;
 
   return modifyModifier(state, whisper, modifiedModifier);
@@ -277,7 +270,10 @@ const handleRemoveWhisperTarget = (
   if (!whisper) {
     return state;
   }
-  const mentions = whisper.usernames.filter((u) => u !== username).map(u => `@${u}`).join(' ');
+  const mentions = whisper.usernames
+    .filter((u) => u !== username)
+    .map((u) => `@${u}`)
+    .join(' ');
   const modifiedModifier = `.h(${mentions})`;
 
   return modifyModifier(state, whisper, modifiedModifier);
@@ -326,25 +322,26 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
   }
 };
 
-export const checkCompose = (characterName: string) =>
-(
-  { source, inputedName, defaultInGame, media }: Pick<
-    ComposeState,
-    'source' | 'inputedName' | 'defaultInGame' | 'media'
-  >,
-): ComposeError | null => {
-  const { inGame } = parseModifiers(source);
-  if (inGame ? inGame.inGame : defaultInGame) {
-    if (inputedName.trim() === '' && characterName === '') {
-      return 'NO_NAME';
+export const checkCompose =
+  (characterName: string) =>
+  ({
+    source,
+    inputedName,
+    defaultInGame,
+    media,
+  }: Pick<ComposeState, 'source' | 'inputedName' | 'defaultInGame' | 'media'>): ComposeError | null => {
+    const { inGame } = parseModifiers(source);
+    if (inGame ? inGame.inGame : defaultInGame) {
+      if (inputedName.trim() === '' && characterName === '') {
+        return 'NO_NAME';
+      }
     }
-  }
-  const mediaResult = validateMedia(media);
-  if (mediaResult.isErr) {
-    return mediaResult.err;
-  }
-  if (source.trim() === '') {
-    return 'TEXT_EMPTY';
-  }
-  return null;
-};
+    const mediaResult = validateMedia(media);
+    if (mediaResult.isErr) {
+      return mediaResult.err;
+    }
+    if (source.trim() === '') {
+      return 'TEXT_EMPTY';
+    }
+    return null;
+  };

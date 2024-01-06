@@ -30,22 +30,20 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
   return (
     <PreviewBox id={preview.id} editMode={preview.editFor !== null} className="text-surface-600">
       <div className="flex @2xl:flex-col gap-1">
-        <div className="@2xl:text-right">
-          {isAction ? null : <>{nameNode}:</>}
-        </div>
+        <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>
       </div>
-      {preview.text === null
-        ? <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
-        : (
-          <Content
-            channelId={preview.channelId}
-            source={source}
-            entities={entities}
-            isAction={preview.isAction}
-            nameNode={nameNode}
-            isPreview
-          />
-        )}
+      {preview.text === null ? (
+        <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
+      ) : (
+        <Content
+          channelId={preview.channelId}
+          source={source}
+          entities={entities}
+          isAction={preview.isAction}
+          nameNode={nameNode}
+          isPreview
+        />
+      )}
     </PreviewBox>
   );
 };

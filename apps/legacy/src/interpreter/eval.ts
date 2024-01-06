@@ -238,9 +238,10 @@ const fateDiceToText = (dice: number): string => {
 export const nodeToText = (node: EvaluatedExprNode): string => {
   if (node.type === 'Roll') {
     const values = node.values.length > 1 ? `=[${node.values.join(', ')}]` : '';
-    const filtered = node.filter && node.filtered && node.filtered.length !== node.values.length
-      ? `| ${node.filter[0]} ${node.filter[1]}=[${node.filtered.join(', ')}]`
-      : '';
+    const filtered =
+      node.filter && node.filtered && node.filtered.length !== node.values.length
+        ? `| ${node.filter[0]} ${node.filter[1]}=[${node.filtered.join(', ')}]`
+        : '';
     return `${node.counter}d${node.face}${values}${filtered}=${node.value}`;
   } else if (node.type === 'Binary') {
     return `${nodeToText(node.l)}${node.op}${nodeToText(node.r)}=${node.value}`;
@@ -256,9 +257,10 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
     const { subType } = node;
     const typeDisplay = cocRollSubTypeDisplay(subType) || '';
     const modifier = node.subType === 'NORMAL' ? '' : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
-    const successLevel = node.targetValue === undefined
-      ? ''
-      : `: (基准${node.targetValue})${cocSuccessLevelDisplay(node.value, node.targetValue)}`;
+    const successLevel =
+      node.targetValue === undefined
+        ? ''
+        : `: (基准${node.targetValue})${cocSuccessLevelDisplay(node.value, node.targetValue)}`;
     return `${node.value}${modifier}${successLevel}`;
   } else if (node.type === 'Repeat') {
     const textList: string[] = node.evaluated.map(nodeToText);

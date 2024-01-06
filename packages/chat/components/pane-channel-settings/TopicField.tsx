@@ -4,8 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { HelpText } from 'ui/HelpText';
 import { TextArea } from 'ui/TextInput';
 
-interface Props {
-}
+interface Props {}
 
 export const TopicField: FC<Props> = ({}) => {
   const { register } = useFormContext();

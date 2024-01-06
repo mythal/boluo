@@ -159,12 +159,7 @@ function Design() {
       <section css={[flex, gap(2)]}>
         <Button onClick={() => setShowModel(true)}>打开对话框</Button>
         {showModel && (
-          <Dialog
-            mask
-            dismiss={() => setShowModel(false)}
-            confirm={() => setShowModel(false)}
-            title="Hello, world"
-          >
+          <Dialog mask dismiss={() => setShowModel(false)} confirm={() => setShowModel(false)} title="Hello, world">
             hello, world
           </Dialog>
         )}

@@ -21,16 +21,17 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const { data: channelWithMemberList } = useChannelList(spaceId);
   const channelIdFromPanes = useMemo(
-    () => panes.flatMap((pane) => pane.type === 'CHANNEL' ? [pane.channelId] : []),
+    () => panes.flatMap((pane) => (pane.type === 'CHANNEL' ? [pane.channelId] : [])),
     [panes],
   );
   const togglePane = usePaneToggle();
   const toggleCreateChannelPane = () => {
     togglePane({ type: 'CREATE_CHANNEL', spaceId });
   };
-  const isCreateChannelPaneOpened = useMemo(() => panes.find(pane => pane.type === 'CREATE_CHANNEL') !== undefined, [
-    panes,
-  ]);
+  const isCreateChannelPaneOpened = useMemo(
+    () => panes.find((pane) => pane.type === 'CREATE_CHANNEL') !== undefined,
+    [panes],
+  );
   const intl = useIntl();
   const toggleNotification = intl.formatMessage({ defaultMessage: 'Toggle Notification' });
   return (
@@ -40,15 +41,13 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
           <FormattedMessage defaultMessage="Channels" />
         </span>
       </div>
-      {channelWithMemberList == null
-        ? <SidebarItemSkeleton />
-        : channelWithMemberList?.map(({ channel }) => (
-          <SidebarChannelItem
-            key={channel.id}
-            channel={channel}
-            active={channelIdFromPanes.includes(channel.id)}
-          />
-        ))}
+      {channelWithMemberList == null ? (
+        <SidebarItemSkeleton />
+      ) : (
+        channelWithMemberList?.map(({ channel }) => (
+          <SidebarChannelItem key={channel.id} channel={channel} active={channelIdFromPanes.includes(channel.id)} />
+        ))
+      )}
       {mySpaceMember?.isAdmin && (
         <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={toggleCreateChannelPane}>
           <span className="text-surface-400 group-hover:text-surface-800">

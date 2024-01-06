@@ -1,8 +1,7 @@
 import type { FC } from 'react';
 import type { ChildrenProps } from 'utils';
 
-interface Props extends ChildrenProps {
-}
+interface Props extends ChildrenProps {}
 
 export const PaneSimpleBox: FC<Props> = ({ children }) => {
   return (

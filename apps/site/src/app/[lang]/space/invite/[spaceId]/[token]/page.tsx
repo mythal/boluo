@@ -20,9 +20,7 @@ const getSpace = React.cache(async (spaceId: string, token?: string): Promise<Re
   return await get('/spaces/query', { id: spaceId, token });
 });
 
-export async function generateMetadata(
-  { params }: { params: Params },
-): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const intl = getIntl(params);
   const spaceResult = await getSpace(params.spaceId);
   if (spaceResult.isErr || spaceResult.some == null) {
@@ -46,11 +44,7 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
       return notFound();
     } else if (err.code === 'NO_PERMISSION') {
       const invaild = intl.formatMessage({ defaultMessage: 'Invalid invitation link' });
-      return (
-        <div className="p-4">
-          {invaild}
-        </div>
-      );
+      return <div className="p-4">{invaild}</div>;
     }
     return <div>Unknown Error</div>;
   }
@@ -58,17 +52,16 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
   if (space == null) {
     return notFound();
   }
-  const title = intl.formatMessage({ defaultMessage: 'You have been invited to "{spaceName}".' }, {
-    spaceName: space.name,
-  });
+  const title = intl.formatMessage(
+    { defaultMessage: 'You have been invited to "{spaceName}".' },
+    {
+      spaceName: space.name,
+    },
+  );
   return (
     <div className="p-4">
-      <div className="text-xl font-bold">
-        {space.name}
-      </div>
-      <div className="py-2">
-        {title}
-      </div>
+      <div className="text-xl font-bold">{space.name}</div>
+      <div className="py-2">{title}</div>
       {space.description !== '' && <div className="py-4 max-w-md whitespace-pre-line">{space.description}</div>}
       <div className="mt-4 space-x-2">
         <AcceptButton spaceId={spaceId} token={token} />

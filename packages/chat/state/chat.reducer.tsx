@@ -102,16 +102,14 @@ const handleEventFromServer = (
   const lastEventId = event.id;
   if (event.body.type === 'BATCH') {
     const { encodedEvents } = event.body;
-    const events: Array<ServerEvent | null> = encodedEvents.map(
-      (encodedEvent) => {
-        try {
-          return JSON.parse(encodedEvent) as ServerEvent;
-        } catch {
-          console.error('Failed to parse event', encodedEvent);
-          return null;
-        }
-      },
-    );
+    const events: Array<ServerEvent | null> = encodedEvents.map((encodedEvent) => {
+      try {
+        return JSON.parse(encodedEvent) as ServerEvent;
+      } catch {
+        console.error('Failed to parse event', encodedEvent);
+        return null;
+      }
+    });
     let nextState = state;
     for (const event of events) {
       if (event === null) {

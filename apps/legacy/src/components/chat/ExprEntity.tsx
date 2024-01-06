@@ -145,8 +145,7 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
   return (
     <Roll onClick={handleMouse} className="roll">
       <Icon sprite={dicePoolIcon} />
-      {node.counter}d{node.face} {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒
-      {' '}
+      {node.counter}d{node.face} {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒{' '}
       {node.value}
       {additionCounter}
     </Roll>

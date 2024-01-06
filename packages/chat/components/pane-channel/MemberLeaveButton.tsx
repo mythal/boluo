@@ -43,10 +43,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
     setComfirmOpen(false);
     await trigger({});
   }, [trigger]);
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-  ]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (
     <>
       <SidebarHeaderButton
@@ -60,11 +57,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
       </SidebarHeaderButton>
       {isConfirmOpen && (
         <FloatingPortal>
-          <div
-            ref={refs.setFloating}
-            style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
-            {...getFloatingProps()}
-          >
+          <div ref={refs.setFloating} style={{ position: strategy, top: y ?? 0, left: x ?? 0 }} {...getFloatingProps()}>
             <FloatingBox>
               <div>
                 <FormattedMessage

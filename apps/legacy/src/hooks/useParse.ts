@@ -4,7 +4,7 @@ import { useSelector } from '../store';
 import { getDiceFace } from '../utils/game';
 import { useChannelId } from './useChannelId';
 
-export const useParse = (parseExpr = true): (source: string) => ParseResult => {
+export const useParse = (parseExpr = true): ((source: string) => ParseResult) => {
   const pane = useChannelId();
   const chatDiceType = useSelector((state) => state.chatStates.get(pane)?.channel.defaultDiceType);
   const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;

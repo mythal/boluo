@@ -38,10 +38,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   const operators = (
     <>
       {isMe && (
-        <SidebarHeaderButton
-          onClick={logout}
-          title={logoutLabel}
-        >
+        <SidebarHeaderButton onClick={logout} title={logoutLabel}>
           <LogOut />
           <span className="hidden @xs:inline">
             <FormattedMessage defaultMessage="Logout" />
@@ -49,11 +46,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
         </SidebarHeaderButton>
       )}
       {isMe && (
-        <SidebarHeaderButton
-          active={isEditing}
-          onClick={() => setIsEditing(toggle)}
-          title={editLabel}
-        >
+        <SidebarHeaderButton active={isEditing} onClick={() => setIsEditing(toggle)} title={editLabel}>
           <Edit />
           <span className="hidden @md:inline">
             <FormattedMessage defaultMessage="Edit" />
@@ -66,7 +59,8 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
     <PaneBox
       header={
         <PaneHeaderBox operators={operators} icon={isEditing ? <Edit /> : <User />}>
-          {user.nickname} {isMe && (
+          {user.nickname}{' '}
+          {isMe && (
             <span className="text-surface-500">
               <FormattedMessage defaultMessage="(me)" />
             </span>
@@ -74,9 +68,11 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
         </PaneHeaderBox>
       }
     >
-      {(isMe && isEditing)
-        ? <PaneProfileEdit onSuccess={() => setIsEditing(false)} me={me.user} />
-        : <PaneProfileView user={user} />}
+      {isMe && isEditing ? (
+        <PaneProfileEdit onSuccess={() => setIsEditing(false)} me={me.user} />
+      ) : (
+        <PaneProfileView user={user} />
+      )}
     </PaneBox>
   );
 };

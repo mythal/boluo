@@ -34,7 +34,11 @@ function NewSpace() {
   useTitle('新建位面');
   const [creationError, setCreationError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
-  const { register, handleSubmit, formState: { errors } } = useForm<CreateSpace>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateSpace>();
   const [submitting, setSubmitting] = useState(false);
 
   const history = useHistory();

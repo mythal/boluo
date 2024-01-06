@@ -30,26 +30,24 @@ export const Avatar: FC<Props> = (props) => {
   const variant = variants[name.charCodeAt(name.length - 1) % variants.length]!;
   return (
     <Suspense fallback={<EmptyAvatar {...props} />}>
-      {avatarId
-        ? (
-          <img
-            alt={name}
-            style={size != null ? { width: size, height: size } : undefined}
-            onClick={onClick}
-            className={className}
-            src={getMediaUrl(avatarId)}
-          />
-        )
-        : (
-          <BoringAvatar
-            size={size}
-            square={true}
-            variant={variant}
-            name={id + name}
-            className={className}
-            onClick={onClick}
-          />
-        )}
+      {avatarId ? (
+        <img
+          alt={name}
+          style={size != null ? { width: size, height: size } : undefined}
+          onClick={onClick}
+          className={className}
+          src={getMediaUrl(avatarId)}
+        />
+      ) : (
+        <BoringAvatar
+          size={size}
+          square={true}
+          variant={variant}
+          name={id + name}
+          className={className}
+          onClick={onClick}
+        />
+      )}
     </Suspense>
   );
 };

@@ -17,9 +17,7 @@ interface Props {
 const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   return (
     <div className={className}>
-      <div className="p-2">
-        …
-      </div>
+      <div className="p-2">…</div>
     </div>
   );
 };
@@ -30,7 +28,7 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
   const { data: membersData, error } = useQueryChannelMembers(channel.id);
   const toggleInvite = () => {
-    setUiState(x => x === 'MEMBER' ? 'INVITE' : 'MEMBER');
+    setUiState((x) => (x === 'MEMBER' ? 'INVITE' : 'MEMBER'));
   };
 
   const members: Member[] = useMemo(() => {
@@ -104,14 +102,9 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
 
       <div className="overflow-y-auto">
         {uiState === 'INVITE' && myMember != null && (
-          <MemberInvitation
-            members={members}
-            myMember={myMember}
-            channel={channel}
-            userStatusMap={userStatusMap}
-          />
+          <MemberInvitation members={members} myMember={myMember} channel={channel} userStatusMap={userStatusMap} />
         )}
-        {uiState === 'MEMBER' && (
+        {uiState === 'MEMBER' &&
           members.map((member) => (
             <MemberListItem
               key={member.user.id}
@@ -122,8 +115,7 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
               canIEditMaster={myMember?.space.isAdmin ?? false}
               status={userStatusMap?.[member.user.id]}
             />
-          ))
-        )}
+          ))}
       </div>
     </div>
   );

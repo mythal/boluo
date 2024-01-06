@@ -5,8 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import Icon from 'ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
-interface Props {
-}
+interface Props {}
 
 export const ChannelHeaderFilterShowArchive: FC<Props> = () => {
   const { showArchivedAtom } = useChannelAtoms();

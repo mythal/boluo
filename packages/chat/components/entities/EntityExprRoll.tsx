@@ -21,26 +21,25 @@ const RollFilter: FC<{ filter: Roll['filter'] | undefined | null }> = ({ filter 
         {type === 'HIGH' && <ArrowUpWideShort className="inline-block w-[1em] h-[1em]" />}
         {type === 'LOW' && <ArrowDownWideShort className="inline-block w-[1em] h-[1em]" />}
       </Delay>{' '}
-      {mount}
-      )
+      {mount})
     </span>
   );
 };
 
-const Undecided: FC = () => (
-  <span>
-    =??
-  </span>
-);
+const Undecided: FC = () => <span>=??</span>;
 
 const ShowRollResult: FC<{ node: RollResult }> = ({ node }) => {
   if (node.values.length <= 1) {
-    return <span className="">{'='}{node.value}</span>;
+    return (
+      <span className="">
+        {'='}
+        {node.value}
+      </span>
+    );
   }
   return (
     <>
-      =<span className="text-surface-500">[{node.values.join(', ')}]</span>
-      ={node.value}
+      =<span className="text-surface-500">[{node.values.join(', ')}]</span>={node.value}
     </>
   );
 };

@@ -52,7 +52,6 @@
       placeholder:text-warning-400 focus:border-warning-600
       hover-enabled:border-warning-600;
   }
-
 }
 
 @layer utilities {
@@ -88,7 +87,6 @@
     opacity: 100%;
   }
 }
-
 
 .cursor-blink {
   animation: cursor-blink 1s ease-in-out infinite;

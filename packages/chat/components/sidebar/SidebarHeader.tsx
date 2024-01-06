@@ -11,11 +11,7 @@ interface Props {
 export const SidebarHeader: FC<Props> = ({ toggleExpand }) => {
   const { isExpanded } = useSidebarState();
   return (
-    <div
-      className={clsx(
-        'h-pane-header flex justify-between gap-1 py-2 items-center select-none px-3',
-      )}
-    >
+    <div className={clsx('h-pane-header flex justify-between gap-1 py-2 items-center select-none px-3')}>
       <button
         className={clsx(
           'w-8 h-8 border rounded-md  cursor-pointer flex items-center justify-center',

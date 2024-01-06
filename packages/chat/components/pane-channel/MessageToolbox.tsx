@@ -30,7 +30,10 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
   const [state, setState] = useState<ToolboxState>('NORMAL');
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  useOutside(useCallback(() => setState('NORMAL'), []), boxRef);
+  useOutside(
+    useCallback(() => setState('NORMAL'), []),
+    boxRef,
+  );
   const handleDelete = async () => {
     setState('LOADING');
     const result = await post('/messages/delete', { id: message.id }, {});

@@ -36,12 +36,9 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
         <Delay fallback={<FallbackIcon />}>
           <Dice className="inline w-4 h-4" />
         </Delay>
-        <span className="mr-1">
-          {node.rolled}
-        </span>
+        <span className="mr-1">{node.rolled}</span>
         {cocRollSubTypeDisplay(node.subType)}
-        {node.modifiers.join(',')}
-        )
+        {node.modifiers.join(',')})
       </span>
     );
   }
@@ -54,7 +51,14 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
     );
     successLevel = <span className="ml-1 font-bold">{cocSuccessLevelDisplay(intl, node.value, node.targetValue)}</span>;
   }
-  return <>{modifiers}{node.value}{target}{successLevel}</>;
+  return (
+    <>
+      {modifiers}
+      {node.value}
+      {target}
+      {successLevel}
+    </>
+  );
 };
 
 export const EntityExprCocRoll: FC<Props> = ({ node }) => {
@@ -65,9 +69,7 @@ export const EntityExprCocRoll: FC<Props> = ({ node }) => {
       </Delay>
 
       {node.subType !== 'NORMAL' && (
-        <span className="w-4 mx-0.5 inline-block text-center">
-          {cocRollSubTypeDisplay(node.subType)}
-        </span>
+        <span className="w-4 mx-0.5 inline-block text-center">{cocRollSubTypeDisplay(node.subType)}</span>
       )}
       {'value' in node ? <CocResult node={node} /> : <UndecidedCocRoll node={node} />}
     </RollBox>

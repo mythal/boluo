@@ -5,8 +5,7 @@ import { Button } from 'ui/Button';
 import { chatAtom } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
 
-interface Props {
-}
+interface Props {}
 
 export const ConnectionIndicatorConnected: FC<Props> = ({}) => {
   const isDevMode = useAtomValue(devMode);

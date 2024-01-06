@@ -26,15 +26,7 @@ const AvatarPixel = ({ name, colors, size, square, ...props }: AvatarProps) => {
       height={size}
       {...props}
     >
-      <mask
-        id="mask__pixel"
-        mask-type="alpha"
-        maskUnits="userSpaceOnUse"
-        x={0}
-        y={0}
-        width={SIZE}
-        height={SIZE}
-      >
+      <mask id="mask__pixel" mask-type="alpha" maskUnits="userSpaceOnUse" x={0} y={0} width={SIZE} height={SIZE}>
         <rect width={SIZE} height={SIZE} rx={square ? undefined : SIZE * 2} fill="#FFFFFF" />
       </mask>
       <g mask="url(#mask__pixel)">

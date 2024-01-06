@@ -3,14 +3,9 @@ import { FormattedMessage } from 'react-intl';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
-interface Props {
-}
+interface Props {}
 
-export const Para = ({ children }: { children: ReactNode }) => (
-  <div className="py-2">
-    {children}
-  </div>
-);
+export const Para = ({ children }: { children: ReactNode }) => <div className="py-2">{children}</div>;
 
 export const PaneWelcome: FC<Props> = () => {
   return (

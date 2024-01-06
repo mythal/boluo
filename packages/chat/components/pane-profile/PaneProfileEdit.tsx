@@ -31,12 +31,11 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
   });
   const { mutate } = useSWRConfig();
   const key = ['/users/get_me'] as const;
-  const { trigger: editUser, error, isMutating } = useSWRMutation<
-    User,
-    ApiError,
-    typeof key,
-    ProfileEditSchema
-  >(
+  const {
+    trigger: editUser,
+    error,
+    isMutating,
+  } = useSWRMutation<User, ApiError, typeof key, ProfileEditSchema>(
     key,
     async (_, { arg: { avatar, nickname, bio } }) => {
       let avatarId: string | null | undefined = undefined;

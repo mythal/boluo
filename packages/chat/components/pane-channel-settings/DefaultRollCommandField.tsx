@@ -5,8 +5,7 @@ import { HelpText } from 'ui/HelpText';
 import { TextInput } from 'ui/TextInput';
 import { ChannelSettingsForm } from './form';
 
-interface Props {
-}
+interface Props {}
 
 export const DefaultRollCommandField: FC<Props> = ({}) => {
   const id = useId();

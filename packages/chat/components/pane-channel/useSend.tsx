@@ -26,14 +26,17 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
     return queryChannelMembers.members.find((member) => member.user.id === me.id) ?? null;
   }, [me.id, queryChannelMembers]);
 
-  const usernameListToUserIdList = useCallback((usernames: string[]): string[] => {
-    if (queryChannelMembers == null) return [];
-    return usernames.flatMap((username) => {
-      const member = queryChannelMembers.members.find((member) => member.user.username === username);
-      if (member == null) return [];
-      return [member.user.id];
-    });
-  }, [queryChannelMembers]);
+  const usernameListToUserIdList = useCallback(
+    (usernames: string[]): string[] => {
+      if (queryChannelMembers == null) return [];
+      return usernames.flatMap((username) => {
+        const member = queryChannelMembers.members.find((member) => member.user.username === username);
+        if (member == null) return [];
+        return [member.user.id];
+      });
+    },
+    [queryChannelMembers],
+  );
 
   const send = useCallback(async () => {
     if (myMember == null) {
@@ -107,11 +110,7 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
       content: (
         <div className="">
           <FormattedMessage defaultMessage="Error while sending a message, did you recover the message?" />
-          <Button
-            data-small
-            className="ml-2"
-            onClick={handleRecover}
-          >
+          <Button data-small className="ml-2" onClick={handleRecover}>
             <FormattedMessage defaultMessage="Recover" />
           </Button>
         </div>

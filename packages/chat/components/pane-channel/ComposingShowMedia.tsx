@@ -14,10 +14,7 @@ export const ComposingMediaInfo: FC<Props> = ({ className = '' }) => {
   const media = useComposingMedia();
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  const handleRemoveMedia = useCallback(
-    () => dispatch({ type: 'media', payload: { media: null } }),
-    [dispatch],
-  );
+  const handleRemoveMedia = useCallback(() => dispatch({ type: 'media', payload: { media: null } }), [dispatch]);
   const validateResult = useMemo(() => validateMedia(media), [media]);
   if (media == null) {
     return null;
@@ -28,9 +25,7 @@ export const ComposingMediaInfo: FC<Props> = ({ className = '' }) => {
         <span>
           <Paperclip />
         </span>
-        <span className="font-mono truncate">
-          {media.name}
-        </span>
+        <span className="font-mono truncate">{media.name}</span>
         <button
           onClick={handleRemoveMedia}
           className="p-1 text-surface-500 group-hover:text-text border border-transprent group-hover:border-surface-300 rounded hover:bg-surface-100"

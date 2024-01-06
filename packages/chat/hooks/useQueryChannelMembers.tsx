@@ -8,9 +8,5 @@ export const useQueryChannelMembers = (
   config?: SWRConfiguration<ChannelMembers, ApiError>,
 ): SWRResponse<ChannelMembers, ApiError> => {
   const key = ['/channels/members' as const, channelId] as const;
-  return useSWR<ChannelMembers, ApiError, typeof key>(
-    key,
-    ([path, id]) => get(path, { id }).then(unwrap),
-    config,
-  );
+  return useSWR<ChannelMembers, ApiError, typeof key>(key, ([path, id]) => get(path, { id }).then(unwrap), config);
 };

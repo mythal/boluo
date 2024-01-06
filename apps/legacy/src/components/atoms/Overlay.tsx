@@ -29,10 +29,8 @@ export interface AnchorPosition {
   selfY?: -1 | 0 | 1;
 }
 
-type Props =
-  & React.HTMLAttributes<HTMLDivElement>
-  & AnchorPosition
-  & {
+type Props = React.HTMLAttributes<HTMLDivElement> &
+  AnchorPosition & {
     anchor: React.RefObject<HTMLElement | null>;
     children: React.ReactChild;
     className?: string;

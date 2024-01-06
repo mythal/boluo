@@ -10,7 +10,7 @@ import { routeAtom } from './view.atoms';
 const baseChatAtom = atom(initialChatState);
 
 export const chatAtom = atom<ChatSpaceState, [ChatActionUnion], void>(
-  get => {
+  (get) => {
     const route = get(routeAtom);
     const chat = get(baseChatAtom);
     if (route.type === 'SPACE') {

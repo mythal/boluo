@@ -31,16 +31,18 @@ const deleteChannel: MutationFetcher<Channel, Empty, [string, string]> = async (
   return result.unwrap();
 };
 
-const closePanes = (channelId: string) => (panes: Pane[]): Pane[] =>
-  panes.filter((pane) => {
-    switch (pane.type) {
-      case 'CHANNEL':
-      case 'CHANNEL_SETTINGS':
-        return pane.channelId !== channelId;
-      default:
-        return true;
-    }
-  });
+const closePanes =
+  (channelId: string) =>
+  (panes: Pane[]): Pane[] =>
+    panes.filter((pane) => {
+      switch (pane.type) {
+        case 'CHANNEL':
+        case 'CHANNEL_SETTINGS':
+          return pane.channelId !== channelId;
+        default:
+          return true;
+      }
+    });
 
 export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
   const store = useStore();
@@ -59,7 +61,7 @@ export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
   return (
     <div>
       <FormattedMessage
-        defaultMessage="Are you sure you want to delete the &quot;{channelName}&quot; channel?"
+        defaultMessage='Are you sure you want to delete the "{channelName}" channel?'
         values={{ channelName }}
       />
       <div className="flex gap-1 justify-end pt-3">

@@ -50,7 +50,8 @@ const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
     result.map(({ members, ...rest }) => {
       members = { ...members, [user.id]: { space: action.member, user } };
       return { ...rest, members };
-    }));
+    }),
+  );
   return { ...state, spaceSet };
 };
 
@@ -63,15 +64,14 @@ const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, use
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [userId]: _, ...restMembers } = members;
       return { ...rest, members: restMembers };
-    }));
+    }),
+  );
   return { ...state, spaceSet };
 };
 
 const handleSpaceEdited = ({ spaceSet, ...state }: UiState, { space }: SpaceEdited): UiState => {
-  spaceSet = spaceSet.update(
-    space.id,
-    errLoading(),
-    (result) => result.map((spaceWithRelated) => ({ ...spaceWithRelated, space })),
+  spaceSet = spaceSet.update(space.id, errLoading(), (result) =>
+    result.map((spaceWithRelated) => ({ ...spaceWithRelated, space })),
   );
   return { ...state, spaceSet };
 };
@@ -127,7 +127,7 @@ const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppRe
         } else {
           return newSpace;
         }
-      })
+      }),
     );
     for (const member of Object.values(result.value.members)) {
       if (!member) {

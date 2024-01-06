@@ -19,8 +19,7 @@ import {
 } from '../../styles/atoms';
 import { dangerColor, primaryColor, textColor } from '../../styles/colors';
 
-const btnColor = (color: string) =>
-  css`
+const btnColor = (color: string) => css`
   background-color: ${color};
   border-color: ${lighten(0.075, color)};
 `;
@@ -47,13 +46,17 @@ export const outlineButtonStyle = css`
   ${[uiShadow, controlRounded, textBase]};
 
   &:hover {
-    box-shadow: ${uiShadowValue}, 0 -0.2em 0 0 ${primaryColor} inset;
+    box-shadow:
+      ${uiShadowValue},
+      0 -0.2em 0 0 ${primaryColor} inset;
   }
 
   &:active,
   &:focus:active {
     background-color: rgba(255, 255, 255, 0.1);
-    box-shadow: ${uiShadowValue}, 0 -0.2em 0 0 ${lighten(0.2, primaryColor)} inset;
+    box-shadow:
+      ${uiShadowValue},
+      0 -0.2em 0 0 ${lighten(0.2, primaryColor)} inset;
   }
 
   &:focus {

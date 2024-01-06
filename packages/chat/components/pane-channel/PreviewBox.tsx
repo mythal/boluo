@@ -13,11 +13,7 @@ interface Props {
 }
 
 export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode = false, onDrop }) => {
-  const {
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id, disabled: true });
+  const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
 
   const style = {
     transform: CSS.Transform.toString(transform),

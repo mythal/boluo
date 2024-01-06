@@ -14,7 +14,7 @@ const getChannel = (chatState: ChatSpaceState, channelId: string): ChannelState 
 export const useIsFullLoaded = (): boolean => {
   const channelId = useChannelId();
   const isFullLoadAtom = useMemo(
-    () => selectAtom(chatAtom, chat => getChannel(chat, channelId)?.fullLoaded),
+    () => selectAtom(chatAtom, (chat) => getChannel(chat, channelId)?.fullLoaded),
     [channelId],
   );
   return useAtomValue(isFullLoadAtom) || false;

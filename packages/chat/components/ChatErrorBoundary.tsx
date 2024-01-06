@@ -10,8 +10,7 @@ const Explain: FC<{ error: unknown }> = ({ error }) => {
   return <>{explain(error)}</>;
 };
 
-interface Props extends ChildrenProps, StyleProps {
-}
+interface Props extends ChildrenProps, StyleProps {}
 
 interface State {
   error: unknown;

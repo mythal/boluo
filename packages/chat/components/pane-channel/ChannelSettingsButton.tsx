@@ -16,18 +16,19 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
   const currentPaneKey = usePaneKey();
   const addPane = usePaneAdd();
   const [panes, setPanes] = useAtom(panesAtom);
-  const settingsPaneKey = panes
-    .find((pane) => pane.type === 'CHANNEL_SETTINGS' && pane.channelId === channelId)
-    ?.key;
-  const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
-    e.stopPropagation();
-    if (settingsPaneKey != null) {
-      setPanes(panes => panes.filter((pane) => pane.key !== settingsPaneKey));
-    } else {
-      const position = currentPaneKey ? { refKey: currentPaneKey, before: true } : undefined;
-      addPane({ type: 'CHANNEL_SETTINGS', channelId }, position);
-    }
-  }, [settingsPaneKey, setPanes, currentPaneKey, addPane, channelId]);
+  const settingsPaneKey = panes.find((pane) => pane.type === 'CHANNEL_SETTINGS' && pane.channelId === channelId)?.key;
+  const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (settingsPaneKey != null) {
+        setPanes((panes) => panes.filter((pane) => pane.key !== settingsPaneKey));
+      } else {
+        const position = currentPaneKey ? { refKey: currentPaneKey, before: true } : undefined;
+        addPane({ type: 'CHANNEL_SETTINGS', channelId }, position);
+      }
+    },
+    [settingsPaneKey, setPanes, currentPaneKey, addPane, channelId],
+  );
   return (
     <SidebarHeaderButton onClick={handleClick} active={settingsPaneKey != null}>
       <Settings />

@@ -40,14 +40,21 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     }
   };
 
-  const items = useMemo(() => [
-    { value: 'system', label: intl.formatMessage({ defaultMessage: 'Follow System' }) },
-    { value: 'light', label: intl.formatMessage({ defaultMessage: 'Light' }) },
-    { value: 'dark', label: intl.formatMessage({ defaultMessage: 'Dark' }) },
-  ], [intl]);
+  const items = useMemo(
+    () => [
+      { value: 'system', label: intl.formatMessage({ defaultMessage: 'Follow System' }) },
+      { value: 'light', label: intl.formatMessage({ defaultMessage: 'Light' }) },
+      { value: 'dark', label: intl.formatMessage({ defaultMessage: 'Dark' }) },
+    ],
+    [intl],
+  );
   return (
     <Select value={theme} onChange={handleChange} id={id}>
-      {items.map((item, key) => <option key={key} value={item.value}>{item.label}</option>)}
+      {items.map((item, key) => (
+        <option key={key} value={item.value}>
+          {item.label}
+        </option>
+      ))}
     </Select>
   );
 };

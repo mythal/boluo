@@ -5,8 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 
-interface Props {
-}
+interface Props {}
 
 export const AddDiceButton: FC<Props> = () => {
   const composeAtom = useComposeAtom();

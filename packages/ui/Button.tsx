@@ -3,9 +3,8 @@ import { ChevronDown } from 'icons';
 import React from 'react';
 import type { DataAttr } from 'utils';
 
-export type ButtonProps =
-  & React.ComponentPropsWithoutRef<'button'>
-  & DataAttr<{
+export type ButtonProps = React.ComponentPropsWithoutRef<'button'> &
+  DataAttr<{
     small?: boolean;
     type?: 'primary' | 'default' | 'switch' | 'danger' | 'detail';
     active?: boolean;
@@ -28,10 +27,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
           'hover-enabled:bg-surface-200 active-enabled:bg-surface-300',
           'disabled:text-surface-600 disabled:bg-surface-400',
         ],
-        type === 'danger' && [
-          'bg-error-600 text-lowest',
-          'hover-enabled:bg-error-500 active-enabled:bg-error-400',
-        ],
+        type === 'danger' && ['bg-error-600 text-lowest', 'hover-enabled:bg-error-500 active-enabled:bg-error-400'],
         type === 'primary' && [
           'bg-pin-brand-600 text-white',
           'hover-enabled:bg-pin-brand-500 active-enabled:bg-pin-brand-700',

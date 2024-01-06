@@ -5,6 +5,6 @@ import { useComposeAtom } from './useComposeAtom';
 
 export const useComposingMedia = () => {
   const composeAtom = useComposeAtom();
-  const mediaAtom = useMemo(() => selectAtom(composeAtom, compose => compose.media), [composeAtom]);
+  const mediaAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.media), [composeAtom]);
   return useAtomValue(mediaAtom);
 };

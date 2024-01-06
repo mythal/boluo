@@ -57,9 +57,11 @@ function ChannelChat({ channelId, focus }: Props) {
     <React.Fragment key={channelId}>
       <Header focus={focus} />
       <ChatList channelId={channelId} focus={focus} />
-      {initialized && myMember
-        ? <Compose channelId={channelId} member={myMember} />
-        : <div css={composePlaceHolder}>你现在没有权限发言</div>}
+      {initialized && myMember ? (
+        <Compose channelId={channelId} member={myMember} />
+      ) : (
+        <div css={composePlaceHolder}>你现在没有权限发言</div>
+      )}
     </React.Fragment>
   );
 }

@@ -7,9 +7,12 @@ export const useSwitchSpace = () => {
   const setRoute = useSetAtom(routeAtom);
   const setPanes = useSetAtom(panesAtom);
   const setSidebarContentState = useSetAtom(sidebarContentStateAtom);
-  return useCallback((spaceId: string) => {
-    setRoute({ type: 'SPACE', spaceId });
-    setPanes([]);
-    setSidebarContentState('CHANNELS');
-  }, [setPanes, setRoute, setSidebarContentState]);
+  return useCallback(
+    (spaceId: string) => {
+      setRoute({ type: 'SPACE', spaceId });
+      setPanes([]);
+      setSidebarContentState('CHANNELS');
+    },
+    [setPanes, setRoute, setSidebarContentState],
+  );
 };

@@ -5,10 +5,13 @@ import { insertPaneByPosition, NewPanePosition, Pane, PaneData } from '../state/
 
 export const usePaneAdd = () => {
   const setPanes = useSetAtom(panesAtom);
-  return useCallback((pane: PaneData, position: NewPanePosition = 'HEAD') =>
-    setPanes((panes) => {
-      const nextKey = findNextPaneKey(panes);
-      const newPane: Pane = { ...pane, key: nextKey };
-      return insertPaneByPosition(panes, newPane, position);
-    }), [setPanes]);
+  return useCallback(
+    (pane: PaneData, position: NewPanePosition = 'HEAD') =>
+      setPanes((panes) => {
+        const nextKey = findNextPaneKey(panes);
+        const newPane: Pane = { ...pane, key: nextKey };
+        return insertPaneByPosition(panes, newPane, position);
+      }),
+    [setPanes],
+  );
 };

@@ -18,10 +18,14 @@ export const ConnectionIndicatorClosed: FC<Props> = ({ countdown }) => {
         <FormattedMessage defaultMessage="Waiting for reconnection ({countdown}s)" values={{ countdown }} />
       </div>
       <div>
-        <button className="underline" onClick={immediatelyReconnect}>Reconnect Now</button>
+        <button className="underline" onClick={immediatelyReconnect}>
+          Reconnect Now
+        </button>
       </div>
       <div>
-        <button className="underline" onClick={() => window.location.reload()}>Refresh Page</button>
+        <button className="underline" onClick={() => window.location.reload()}>
+          Refresh Page
+        </button>
       </div>
     </div>
   );

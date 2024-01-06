@@ -31,16 +31,22 @@ const currentItemStyle = css`
 `;
 
 const nonCurrentItemStyle = css`
-  background-color: rgba(255,255,255,0.3);
+  background-color: rgba(255, 255, 255, 0.3);
 
   &:hover {
-    background-color: rgba(255,255,255,0.5);
+    background-color: rgba(255, 255, 255, 0.5);
   }
 `;
 
-const ProxyItem = (
-  { proxy, current, changeBaseUrl }: { proxy: Proxy; current: boolean; changeBaseUrl: (baseUrl: string) => void },
-) => {
+const ProxyItem = ({
+  proxy,
+  current,
+  changeBaseUrl,
+}: {
+  proxy: Proxy;
+  current: boolean;
+  changeBaseUrl: (baseUrl: string) => void;
+}) => {
   const delay = useBaseUrlDelay(proxy.url);
   return (
     <div
@@ -62,7 +68,7 @@ export const ConnectionSelectDialog = ({ dismiss }: Props) => {
   return (
     <Dialog title="选择线路" dismiss={dismiss} mask>
       <label>
-        <input type="checkbox" checked={autoSelect} onChange={e => setAutoSelect(e.target.checked)} /> 自动选择线路
+        <input type="checkbox" checked={autoSelect} onChange={(e) => setAutoSelect(e.target.checked)} /> 自动选择线路
       </label>
       <div css={[flexCol, gap(1), pT(2)]}>
         {proxyList.map((proxy) => (

@@ -74,8 +74,8 @@ export const useNotify = () => {
     if (prev < Date.parse(item.message.created)) {
       localStorage.setItem(storageKey, item.message.created);
       if (
-        (focusChannelList.includes(channelId) && document.visibilityState === 'visible')
-        || item.message.senderId === myId
+        (focusChannelList.includes(channelId) && document.visibilityState === 'visible') ||
+        item.message.senderId === myId
       ) {
         continue;
       }

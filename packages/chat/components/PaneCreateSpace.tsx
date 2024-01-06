@@ -8,8 +8,7 @@ import { CreateSpaceForm } from './CreateSpaceForm';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
-interface Props {
-}
+interface Props {}
 
 export const ChatCreateSpace: FC<Props> = () => {
   const switchSpace = useSwitchSpace();

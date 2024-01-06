@@ -44,10 +44,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
   const click = useClick(context, {});
 
   const dismiss = useDismiss(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-  ]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   if (space == null) return null;
   return (
     <>
@@ -62,9 +59,7 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
-            className={clsx(
-              'w-[max-content] z-40',
-            )}
+            className={clsx('w-[max-content] z-40')}
           >
             <FloatingBox>
               <div className="flex flex-col gap-4">

@@ -24,9 +24,16 @@ export interface VirtualListContext {
 const CONTINUOUS_TIME_MS = 5 * 60 * 1000;
 const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undefined): boolean => {
   if (
-    a == null || b == null || a.type !== 'MESSAGE' || b.type !== 'MESSAGE' // type
-    || a.senderId !== b.senderId || a.name !== b.name // sender
-    || a.folded || b.folded || a.whisperToUsers || b.whisperToUsers // other
+    a == null ||
+    b == null ||
+    a.type !== 'MESSAGE' ||
+    b.type !== 'MESSAGE' || // type
+    a.senderId !== b.senderId ||
+    a.name !== b.name || // sender
+    a.folded ||
+    b.folded ||
+    a.whisperToUsers ||
+    b.whisperToUsers // other
   ) {
     return false;
   }

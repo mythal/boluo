@@ -6,8 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import Icon from 'ui/Icon';
 import { useTooltip } from '../../hooks/useTooltip';
 
-interface Props {
-}
+interface Props {}
 
 export const GameMasterBadge: FC<Props> = React.memo(() => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();

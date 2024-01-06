@@ -39,18 +39,14 @@ export const makeInitialChannelState = (id: string): ChannelState => {
   };
 };
 
-const handleNewMessage = (
-  state: ChannelState,
-  { payload }: ChatAction<'receiveMessage'>,
-): ChannelState => {
+const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
   const prevMessageMap = state.messageMap;
   const message = makeMessageItem(payload.message);
   let { previewMap } = state;
   const previews = Object.values(previewMap);
-  if (payload.previewId && previews.find(preview => preview.id === payload.previewId)) {
+  if (payload.previewId && previews.find((preview) => preview.id === payload.previewId)) {
     previewMap = Object.fromEntries(
-      previews.filter(preview => preview.id !== payload.previewId)
-        .map(preview => [preview.senderId, preview]),
+      previews.filter((preview) => preview.id !== payload.previewId).map((preview) => [preview.senderId, preview]),
     );
   }
 
@@ -83,8 +79,10 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     console.log('Received empty messages list');
     return state;
   }
-  const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages]
-    .map(message => [message.id, makeMessageItem(message)]);
+  const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages].map((message) => [
+    message.id,
+    makeMessageItem(message),
+  ]);
   const minPos = payload.messages.at(-1)!.pos;
   if (state.messages.length === 0) {
     return { ...state, messageMap: Object.fromEntries(newMessageEntries) };
@@ -195,11 +193,11 @@ const handleGcCountdown = (state: ChannelState): ChannelState => {
 const handleGc = (state: ChannelState): ChannelState => {
   if (state.scheduledGc == null || state.scheduledGc.countdown > 0) return state;
   const { lowerPos } = state.scheduledGc;
-  const gcLowerIndex = state.messages.findIndex(message => message.pos >= lowerPos) - 1;
+  const gcLowerIndex = state.messages.findIndex((message) => message.pos >= lowerPos) - 1;
   if (gcLowerIndex <= MIN_START_GC_COUNT) return { ...state, scheduledGc: null };
   console.debug(`[Messages GC] Start GC. Lower index: ${gcLowerIndex} Power Pos: ${lowerPos}`);
   const messages = state.messages.slice(gcLowerIndex);
-  const messageMap = Object.fromEntries(messages.map(message => [message.id, message]));
+  const messageMap = Object.fromEntries(messages.map((message) => [message.id, message]));
   const scheduledGc = null;
   const fullLoaded = false;
   return { ...state, messageMap, messages, scheduledGc, fullLoaded };

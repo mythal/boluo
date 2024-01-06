@@ -56,29 +56,27 @@ export const SelfCursorToolbar = memo<Props>(({ contentRef }) => {
     };
   }, [contentRef, scrollerRef]);
   return createPortal(
-    (
-      <div
-        ref={ref}
-        data-flip="false"
-        data-hide="false"
-        className={clsx(
-          'inline-flex fixed transition-all ease-out duration-100 bg-surface-700 border border-surface-900 rounded-sm shadow-md',
-          'data-[flipped=true]:-translate-x-full',
-          'data-[hide=true]:hidden',
-          'opacity-40 hover:opacity-100',
-        )}
-      >
-        <SelfCursorButton onClick={handleAddDice}>
-          <Dice />
-        </SelfCursorButton>
-        <SelfCursorButton onClick={handleAddLink}>
-          <Link />
-        </SelfCursorButton>
-        <SelfCursorButton onClick={handleBold}>
-          <Bold />
-        </SelfCursorButton>
-      </div>
-    ),
+    <div
+      ref={ref}
+      data-flip="false"
+      data-hide="false"
+      className={clsx(
+        'inline-flex fixed transition-all ease-out duration-100 bg-surface-700 border border-surface-900 rounded-sm shadow-md',
+        'data-[flipped=true]:-translate-x-full',
+        'data-[hide=true]:hidden',
+        'opacity-40 hover:opacity-100',
+      )}
+    >
+      <SelfCursorButton onClick={handleAddDice}>
+        <Dice />
+      </SelfCursorButton>
+      <SelfCursorButton onClick={handleAddLink}>
+        <Link />
+      </SelfCursorButton>
+      <SelfCursorButton onClick={handleBold}>
+        <Bold />
+      </SelfCursorButton>
+    </div>,
     document.body,
   );
 });

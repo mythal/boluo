@@ -200,24 +200,23 @@ export const dismissFlash = (id: Id): DismissFlash => ({
   type: 'DISMISS_FLASH',
   id,
 });
-export const showFlash = (level: InformationLevel, content: ReactNode, timeout: number | null = 5000) =>
-(
-  dispatch: Dispatch,
-) => {
-  const id = newId();
-  dispatch({
-    type: 'SHOW_FLASH',
-    information: { content, level, id },
-  });
-  if (timeout !== null) {
-    setTimeout(() => {
-      dispatch({
-        type: 'DISMISS_FLASH',
-        id,
-      });
-    }, timeout);
-  }
-};
+export const showFlash =
+  (level: InformationLevel, content: ReactNode, timeout: number | null = 5000) =>
+  (dispatch: Dispatch) => {
+    const id = newId();
+    dispatch({
+      type: 'SHOW_FLASH',
+      information: { content, level, id },
+    });
+    if (timeout !== null) {
+      setTimeout(() => {
+        dispatch({
+          type: 'DISMISS_FLASH',
+          id,
+        });
+      }, timeout);
+    }
+  };
 
 export interface LoggedIn {
   type: 'LOGGED_IN';

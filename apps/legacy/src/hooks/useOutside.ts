@@ -10,7 +10,7 @@ export function useOutside(
    */
 
   const handleClickOutside = useCallback(
-    function(event: MouseEvent) {
+    function (event: MouseEvent) {
       const target = event.target as Element;
       if (!callback || !overlayRef.current || target === null) {
         return;

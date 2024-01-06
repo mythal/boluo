@@ -14,11 +14,7 @@ interface Props {
 }
 
 // See: https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
-const ALLOW_AVATAR_MIME = [
-  'image/gif',
-  'image/jpeg',
-  'image/png',
-];
+const ALLOW_AVATAR_MIME = ['image/gif', 'image/jpeg', 'image/png'];
 
 export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
   const intl = useIntl();
@@ -35,25 +31,23 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
   }, [avatar]);
   return (
     <div className="inline-flex @xs:float-right relative">
-      {selectedFileDataUrl
-        ? (
-          <img
-            alt={avatarLabel}
-            src={selectedFileDataUrl}
-            onClick={triggerUpload}
-            className="h-28 w-28 rounded-md cursor-pointer"
-          />
-        )
-        : (
-          <Avatar
-            id={userId}
-            name={nickname}
-            avatarId={typeof avatar === 'string' ? avatar : null}
-            size="6rem"
-            className="rounded-md cursor-pointer"
-            onClick={triggerUpload}
-          />
-        )}
+      {selectedFileDataUrl ? (
+        <img
+          alt={avatarLabel}
+          src={selectedFileDataUrl}
+          onClick={triggerUpload}
+          className="h-28 w-28 rounded-md cursor-pointer"
+        />
+      ) : (
+        <Avatar
+          id={userId}
+          name={nickname}
+          avatarId={typeof avatar === 'string' ? avatar : null}
+          size="6rem"
+          className="rounded-md cursor-pointer"
+          onClick={triggerUpload}
+        />
+      )}
       <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-75 hover:opacity-100 flex gap-1">
         <input
           hidden
@@ -71,21 +65,11 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
           ref={fileInputRef}
         />
         {avatar !== null && (
-          <Button
-            type="button"
-            data-small
-            aria-label={removeAvatarLabel}
-            onClick={removeAvatar}
-          >
+          <Button type="button" data-small aria-label={removeAvatarLabel} onClick={removeAvatar}>
             <X />
           </Button>
         )}
-        <Button
-          type="button"
-          data-small
-          aria-label={changeAvatarLabel}
-          onClick={triggerUpload}
-        >
+        <Button type="button" data-small aria-label={changeAvatarLabel} onClick={triggerUpload}>
           <Upload />
         </Button>
       </div>

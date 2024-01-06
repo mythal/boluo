@@ -43,9 +43,7 @@ export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ statu
             {...getFloatingProps()}
             className="px-2 py-1 text-sm bg-highest/75 shadow text-lowest rounded"
           >
-            <div className="font-bold">
-              {text}
-            </div>
+            <div className="font-bold">{text}</div>
           </div>
         </FloatingPortal>
       )}

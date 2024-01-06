@@ -2,7 +2,7 @@ export const hashCode = (name) => {
   var hash = 0;
   for (var i = 0; i < name.length; i++) {
     var character = name.charCodeAt(i);
-    hash = ((hash << 5) - hash) + character;
+    hash = (hash << 5) - hash + character;
     hash = hash & hash; // Convert to 32bit integer
   }
   return Math.abs(hash);
@@ -17,17 +17,17 @@ export const getDigit = (number, ntn) => {
 };
 
 export const getBoolean = (number, ntn) => {
-  return (!((getDigit(number, ntn)) % 2));
+  return !(getDigit(number, ntn) % 2);
 };
 
 export const getAngle = (x, y) => {
-  return Math.atan2(y, x) * 180 / Math.PI;
+  return (Math.atan2(y, x) * 180) / Math.PI;
 };
 
 export const getUnit = (number, range, index?: number) => {
   let value = number % range;
 
-  if (index && ((getDigit(number, index) % 2) === 0)) {
+  if (index && getDigit(number, index) % 2 === 0) {
     return -value;
   } else return value;
 };
@@ -48,8 +48,8 @@ export const getContrast = (hexcolor) => {
   var b = parseInt(hexcolor.substr(4, 2), 16);
 
   // Get YIQ ratio
-  var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  var yiq = (r * 299 + g * 587 + b * 114) / 1000;
 
   // Check contrast
-  return (yiq >= 128) ? '#000000' : '#FFFFFF';
+  return yiq >= 128 ? '#000000' : '#FFFFFF';
 };

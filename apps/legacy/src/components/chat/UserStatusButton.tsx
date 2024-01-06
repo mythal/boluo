@@ -24,9 +24,10 @@ export function isOnline(status: UserStatus | undefined | null): boolean {
 
 function MemberListButton({ className, spaceId, folded, active, toggle }: Props) {
   const spaceResult = useSelector((state) => state.ui.spaceSet.get(spaceId));
-  const totalCount = useMemo(() => (spaceResult?.isOk ? Object.keys(spaceResult.value.members).length : 0), [
-    spaceResult,
-  ]);
+  const totalCount = useMemo(
+    () => (spaceResult?.isOk ? Object.keys(spaceResult.value.members).length : 0),
+    [spaceResult],
+  );
   const onlineCount = useMemo(
     () => (spaceResult?.isOk ? Object.values(spaceResult.value.usersStatus).filter(isOnline).length : 0),
     [spaceResult],

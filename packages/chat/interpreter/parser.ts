@@ -314,10 +314,13 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
 });
 
 const spaces: P<null> = regex(/^\s*/).then(([match, state]) => {
-  return [null, {
-    text: state.text + match[0],
-    rest: state.rest,
-  }];
+  return [
+    null,
+    {
+      text: state.text + match[0],
+      rest: state.rest,
+    },
+  ];
 });
 
 const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
@@ -439,27 +442,23 @@ const str = (s: string, appendText = false): P<string> =>
     return [s, { text, rest }];
   });
 
-const operator1: P<Operator> = regex(/^[-+]/).map(
-  ([op]): Operator => {
-    if (op === '+') {
-      return '+';
-    } else if (op === '-') {
-      return '-';
-    }
-    throw Error('unreachable');
-  },
-);
+const operator1: P<Operator> = regex(/^[-+]/).map(([op]): Operator => {
+  if (op === '+') {
+    return '+';
+  } else if (op === '-') {
+    return '-';
+  }
+  throw Error('unreachable');
+});
 
-const operator2: P<Operator> = regex(/^[*/×÷]/).map(
-  ([op]): Operator => {
-    if (op === '×' || op === '*') {
-      return '×';
-    } else if (op === '÷' || op === '/') {
-      return '÷';
-    }
-    throw Error('unreachable');
-  },
-);
+const operator2: P<Operator> = regex(/^[*/×÷]/).map(([op]): Operator => {
+  if (op === '×' || op === '*') {
+    return '×';
+  } else if (op === '÷' || op === '/') {
+    return '÷';
+  }
+  throw Error('unreachable');
+});
 
 const num: P<ExprNode> = regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
 
@@ -521,7 +520,10 @@ const atom = (disableRoll = false): P<ExprNode> => {
       .with(expr())
       .skip(regex(/^\s*\)/))
       .map(subExprMapper), // match (...)
-    regex(/^（\s*/).with(expr()).skip(regex(/^\s*）/)).map(subExprMapper), // match （...）
+    regex(/^（\s*/)
+      .with(expr())
+      .skip(regex(/^\s*）/))
+      .map(subExprMapper), // match （...）
     regex(/^\[\s*/)
       .with(expr())
       .skip(regex(/^\s*]/))
@@ -588,17 +590,19 @@ const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], e
   return [entity, { text: text + entire, rest }];
 });
 
-const exprNodeToEntity = (state: State) => ([node, next]: [ExprNode, State]): [Entity, State] => {
-  const offset = state.rest.length - next.rest.length;
-  const consumed = state.rest.substring(0, offset);
-  const entity: Expr = {
-    type: 'Expr',
-    start: state.text.length,
-    len: offset,
-    node,
+const exprNodeToEntity =
+  (state: State) =>
+  ([node, next]: [ExprNode, State]): [Entity, State] => {
+    const offset = state.rest.length - next.rest.length;
+    const consumed = state.rest.substring(0, offset);
+    const entity: Expr = {
+      type: 'Expr',
+      start: state.text.length,
+      len: offset,
+      node,
+    };
+    return [entity, { text: state.text + consumed, rest: next.rest }];
   };
-  return [entity, { text: state.text + consumed, rest: next.rest }];
-};
 
 const ROLL_COMMAND = /^[.。]r\s*/;
 
@@ -700,12 +704,7 @@ interface MuteModifier {
   len: number;
 }
 
-export type Modifier =
-  | MeModifier
-  | RollModifier
-  | WhisperModifier
-  | MuteModifier
-  | InGameModifier;
+export type Modifier = MeModifier | RollModifier | WhisperModifier | MuteModifier | InGameModifier;
 
 const meModifier: P<Modifier> = regex(/^[.。][mM][eE]\s*/).then(([match, { text, rest }]) => {
   const [entire] = match;
@@ -729,20 +728,27 @@ const rollModifier: P<Modifier> = regex(/^[.。][rR]\s*/).then(([match, { text, 
   return [modifier, { text, rest }];
 });
 
-const mentionList: P<{ start: number; len: number; usernames: string[] }> = regex(/^\(\s*(.*?)\)\s*|^（\s*(.*?)）\s*/)
-  .then(([match, { text, rest }], env) => {
-    const [entire, a, b] = match;
-    const content = a || b;
-    if (!content) {
-      return [{ start: text.length, len: entire.length, usernames: [] }, { text: text + entire, rest }];
-    }
-    const result = many(mention).run({ text: '', rest: content }, env);
-    if (!result) {
-      return null;
-    }
-    const [usernames] = result;
-    return [{ start: text.length, len: entire.length, usernames }, { text: text + entire, rest }];
-  });
+const mentionList: P<{ start: number; len: number; usernames: string[] }> = regex(
+  /^\(\s*(.*?)\)\s*|^（\s*(.*?)）\s*/,
+).then(([match, { text, rest }], env) => {
+  const [entire, a, b] = match;
+  const content = a || b;
+  if (!content) {
+    return [
+      { start: text.length, len: entire.length, usernames: [] },
+      { text: text + entire, rest },
+    ];
+  }
+  const result = many(mention).run({ text: '', rest: content }, env);
+  if (!result) {
+    return null;
+  }
+  const [usernames] = result;
+  return [
+    { start: text.length, len: entire.length, usernames },
+    { text: text + entire, rest },
+  ];
+});
 
 const whisperModifier: P<WhisperModifier> = regex(/^[.。]([rR])[hH]\s*|^[.。][hH]([rR])?\s*/).then(
   ([match, state], env) => {
@@ -824,8 +830,8 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
   const action = modifiers.find((modifier): modifier is MeModifier => modifier.type === 'Me') || false;
   const mute = modifiers.find((modifier): modifier is MuteModifier => modifier.type === 'Mute') || false;
   const inGame = modifiers.find((modifier): modifier is InGameModifier => modifier.type === 'InGame') || false;
-  const isRoll = modifiers.some((modifier) =>
-    modifier.type === 'Roll' || (modifier.type === 'Whisper' && modifier.roll)
+  const isRoll = modifiers.some(
+    (modifier) => modifier.type === 'Roll' || (modifier.type === 'Whisper' && modifier.roll),
   );
   const whisper = modifiers.find((modifier): modifier is WhisperModifier => modifier.type === 'Whisper') || false;
   const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper');

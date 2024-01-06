@@ -40,8 +40,8 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
   const members = useSelector((state) => state.chatStates.get(pane)!.members);
   const { whisperToUsers } = message;
 
-  const canAccess = whisperToUsers === null
-    || (myMember && (myMember.isMaster || whisperToUsers.indexOf(myMember.userId) !== -1));
+  const canAccess =
+    whisperToUsers === null || (myMember && (myMember.isMaster || whisperToUsers.indexOf(myMember.userId) !== -1));
   const reveal = async () => {
     const result = await get('/messages/query', { id: message.id });
     if (result.isErr) {

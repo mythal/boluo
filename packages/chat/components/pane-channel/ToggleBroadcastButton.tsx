@@ -5,8 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from 'ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
-interface Props {
-}
+interface Props {}
 
 export const ToggleBroadcastButton: FC<Props> = () => {
   const { composeAtom, broadcastAtom } = useChannelAtoms();

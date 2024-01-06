@@ -33,7 +33,11 @@ function Settings() {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useSelector((state) => state.profile!.user);
   const settings = useSelector((state) => state.profile!.settings);
-  const { register, handleSubmit, formState: { errors } } = useForm<SettingsForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SettingsForm>();
   const [submitting, setSubmitting] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);

@@ -16,53 +16,57 @@ interface Props {
   self: boolean;
 }
 
-export const MessageBox: FC<Props> = (
-  { className = '', children, draggable = false, message, mini = false, optimistic = false, self },
-) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-    setActivatorNodeRef,
-  } = useSortable({ id: message.id, data: { message }, disabled: !draggable });
+export const MessageBox: FC<Props> = ({
+  className = '',
+  children,
+  draggable = false,
+  message,
+  mini = false,
+  optimistic = false,
+  self,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
+    id: message.id,
+    data: { message },
+    disabled: !draggable,
+  });
 
-  const style = useMemo(() => ({
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }), [transform, transition]);
-  const handle = useMemo(() => (
-    draggable
-      ? (
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+    }),
+    [transform, transition],
+  );
+  const handle = useMemo(
+    () =>
+      draggable ? (
         <MessageReorderHandle
           ref={setActivatorNodeRef}
           attributes={attributes}
           listeners={listeners}
           loading={optimistic}
         />
-      )
-      : <div className="col-span-1 row-span-full h-full" />
-  ), [
-    attributes,
-    draggable,
-    listeners,
-    optimistic,
-    setActivatorNodeRef,
-  ]);
-  const toolbox = useMemo(() => (
-    <Delay timeout={400}>
-      <div
-        className={clsx(
-          'absolute right-4 max-h-full z-10 group-hover:z-20 top-0',
-          'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-100 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
-        )}
-      >
-        <MessageToolbox message={message} />
-      </div>
-    </Delay>
-  ), [message]);
+      ) : (
+        <div className="col-span-1 row-span-full h-full" />
+      ),
+    [attributes, draggable, listeners, optimistic, setActivatorNodeRef],
+  );
+  const toolbox = useMemo(
+    () => (
+      <Delay timeout={400}>
+        <div
+          className={clsx(
+            'absolute right-4 max-h-full z-10 group-hover:z-20 top-0',
+            'pointer-events-none group-hover:pointer-events-auto group-hover:block opacity-0 transition-all duration-100 group-hover:opacity-100 ease-in -translate-y-2 group-hover:translate-y-1',
+          )}
+        >
+          <MessageToolbox message={message} />
+        </div>
+      </Delay>
+    ),
+    [message],
+  );
   return (
     <div
       className={clsx(

@@ -34,9 +34,7 @@ export const Oops: FC<Props> = ({ error, type = 'block' }) => {
         <div className="font-bold">
           <FormattedMessage defaultMessage="Oops" />
         </div>
-        <div>
-          {message}
-        </div>
+        <div>{message}</div>
       </div>
     </div>
   );

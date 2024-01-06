@@ -19,8 +19,7 @@ interface Props {
   dismiss?: () => void;
 }
 
-const colorStyle = (color: string) =>
-  css`
+const colorStyle = (color: string) => css`
   background-color: ${color};
   border: 1px solid ${lighten(0.15, color)};
 

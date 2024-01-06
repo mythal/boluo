@@ -6,8 +6,7 @@ import { shouldAutoSelectAtom, useAutoSelectProxy } from '../../hooks/useAutoSel
 import { useProxies } from '../../hooks/useProxies';
 import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 
-interface Props {
-}
+interface Props {}
 
 export const BaseUrlSelector: FC<Props> = () => {
   const proxies = useProxies();
@@ -23,11 +22,11 @@ export const BaseUrlSelector: FC<Props> = () => {
       <label className="block">
         <FormattedMessage defaultMessage="Change Connection Region" />
         <div className="text-surface-900 pt-1 flex flex-col gap-1">
-          {proxies.map(proxy => (
+          {proxies.map((proxy) => (
             <BaseUrlSelectorItem
               key={proxy.name}
               proxy={proxy}
-              result={testReuslt.find(item => item.proxy.name === proxy.name)?.result}
+              result={testReuslt.find((item) => item.proxy.name === proxy.name)?.result}
               selected={proxy.url === backendUrl}
               setUrl={handleSelect}
             />
@@ -36,7 +35,7 @@ export const BaseUrlSelector: FC<Props> = () => {
       </label>
 
       <label className="flex items-center gap-1 py-2">
-        <input type="checkbox" checked={shouldAutoSelect} onChange={e => setShouldAutoSelect(e.target.checked)} />
+        <input type="checkbox" checked={shouldAutoSelect} onChange={(e) => setShouldAutoSelect(e.target.checked)} />
         <FormattedMessage defaultMessage="Auto Select" />
       </label>
     </div>

@@ -8,6 +8,8 @@ interface Props {
 }
 
 export const BioField: FC<Props> = ({ className }) => {
-  const { field: { onChange, onBlur, value } } = useController<ProfileEditSchema, 'bio'>({ name: 'bio' });
+  const {
+    field: { onChange, onBlur, value },
+  } = useController<ProfileEditSchema, 'bio'>({ name: 'bio' });
   return <TextArea className={className} value={value} onChange={onChange} onBlur={onBlur} />;
 };

@@ -49,7 +49,6 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9090"
 
-
   store-init:
     image: quay.io/minio/mc
     depends_on:

@@ -79,28 +79,18 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox header={<PaneHeaderBox operators={operators}>{space.name}</PaneHeaderBox>}>
       <div className="p-4">
-        <div className="text-2xl pb-2 flex items-end gap-2">
-          {space.name}
-        </div>
+        <div className="text-2xl pb-2 flex items-end gap-2">{space.name}</div>
 
         <div className="py-2 flex gap-2">
           <Badge>
-            <Icon
-              icon={isPublic ? Globe : Key}
-            />
-            {isPublic
-              ? <FormattedMessage defaultMessage="Public" />
-              : <FormattedMessage defaultMessage="Private" />}
+            <Icon icon={isPublic ? Globe : Key} />
+            {isPublic ? <FormattedMessage defaultMessage="Public" /> : <FormattedMessage defaultMessage="Private" />}
           </Badge>
 
           <SpaceMemberBadge spaceId={spaceId} members={spaceMemberList} />
         </div>
 
-        {description !== '' && (
-          <div className="whitespace-pre-line max-w-md py-2">
-            {description}
-          </div>
-        )}
+        {description !== '' && <div className="whitespace-pre-line max-w-md py-2">{description}</div>}
       </div>
     </PaneBox>
   );

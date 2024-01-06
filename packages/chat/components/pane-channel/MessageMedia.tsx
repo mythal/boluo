@@ -31,9 +31,7 @@ export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, childre
             <Paperclip />
             {mediaFile.name}
           </div>
-          <div className="text-surface-600 text-right">
-            {showFileSize(mediaFile.size)}
-          </div>
+          <div className="text-surface-600 text-right">{showFileSize(mediaFile.size)}</div>
         </div>
         {children}
       </div>
@@ -48,31 +46,25 @@ export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, childre
           loadState === 'ERROR' ? 'w-[6rem] bg-error-200' : '',
         )}
       >
-        {loadState === 'ERROR'
-          ? (
-            <button
-              className="h-full w-full flex items-center justify-center"
-              type="button"
-              onClick={() => setLoadState('LOADING')}
-            >
-              <Icon icon={Refresh} />
-            </button>
-          )
-          : (
-            <a
-              href={src}
-              target="_blank"
-              className="block h-full w-fit overflow-hidden"
-            >
-              <img
-                src={src}
-                alt="media"
-                className="block h-full rounded-sm"
-                onError={() => setLoadState('ERROR')}
-                onLoad={() => setLoadState('LOADED')}
-              />
-            </a>
-          )}
+        {loadState === 'ERROR' ? (
+          <button
+            className="h-full w-full flex items-center justify-center"
+            type="button"
+            onClick={() => setLoadState('LOADING')}
+          >
+            <Icon icon={Refresh} />
+          </button>
+        ) : (
+          <a href={src} target="_blank" className="block h-full w-fit overflow-hidden">
+            <img
+              src={src}
+              alt="media"
+              className="block h-full rounded-sm"
+              onError={() => setLoadState('ERROR')}
+              onLoad={() => setLoadState('LOADED')}
+            />
+          </a>
+        )}
       </div>
 
       {children}

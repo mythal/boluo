@@ -11,7 +11,10 @@ interface Props {
 }
 
 export const ChannelNameField: FC<Props> = ({ spaceId, channelName }) => {
-  const { register, formState: { errors } } = useFormContext<{ name: string }>();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<{ name: string }>();
   const intl = useIntl();
   const id = useId();
   return (
@@ -26,11 +29,7 @@ export const ChannelNameField: FC<Props> = ({ spaceId, channelName }) => {
           {...register('name', channelNameValidation(intl, spaceId, channelName))}
         />
       </div>
-      {errors.name && (
-        <div className="pt-1 text-sm text-error-700">
-          {errors.name.message}
-        </div>
-      )}
+      {errors.name && <div className="pt-1 text-sm text-error-700">{errors.name.message}</div>}
     </div>
   );
 };

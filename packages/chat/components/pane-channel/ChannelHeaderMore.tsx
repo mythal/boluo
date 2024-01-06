@@ -15,24 +15,22 @@ interface Props {
   resetHeaderState: () => void;
 }
 
-export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
-  { member, edit },
-) => {
+export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = ({ member, edit }) => {
   return (
     <button
       onClick={edit}
       className={clsx('px-2 py-1 flex items-center gap-0.5 rounded-sm whitespace-nowrap', 'hover:bg-pin-brand-700/10')}
     >
-      {member.characterName
-        ? (
-          <>
-            <span className="text-sm text-surface-700 hidden @md:inline">
-              <FormattedMessage defaultMessage="Character Name:" />
-            </span>
-            {member.characterName}
-          </>
-        )
-        : <FormattedMessage defaultMessage="No Character Name" />}
+      {member.characterName ? (
+        <>
+          <span className="text-sm text-surface-700 hidden @md:inline">
+            <FormattedMessage defaultMessage="Character Name:" />
+          </span>
+          {member.characterName}
+        </>
+      ) : (
+        <FormattedMessage defaultMessage="No Character Name" />
+      )}
       <Icon icon={Edit} className="ml-1 text-brand-700" />
     </button>
   );
@@ -53,17 +51,12 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, resetHeaderState }) =>
   return (
     <div className="py-2 px-4 border-b flex gap-2 items-center">
       <div className="flex-1 overflow-hidden">
-        <CharacterName
-          member={member.channel}
-          edit={() => setUiState('EDIT_CHARACTER_NAME')}
-        />
+        <CharacterName member={member.channel} edit={() => setUiState('EDIT_CHARACTER_NAME')} />
       </div>
       <MemberLeaveButton me={me} channelId={channelId} onSuccess={resetHeaderState} />
       {member.space.isAdmin && (
         <div className="flex-none">
-          <ChannelSettingsButton
-            channelId={channelId}
-          />
+          <ChannelSettingsButton channelId={channelId} />
         </div>
       )}
     </div>

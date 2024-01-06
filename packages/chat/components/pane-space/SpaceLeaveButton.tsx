@@ -38,10 +38,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
   });
   const dismiss = useDismiss(context);
 
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-  ]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (
     <>
       <SidebarHeaderButton
@@ -51,9 +48,11 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
         {...getReferenceProps()}
       >
         <span className="">
-          {mySpaceMember == null
-            ? <FormattedMessage defaultMessage="Join Space" />
-            : <FormattedMessage defaultMessage="Leave Space" />}
+          {mySpaceMember == null ? (
+            <FormattedMessage defaultMessage="Join Space" />
+          ) : (
+            <FormattedMessage defaultMessage="Leave Space" />
+          )}
         </span>
       </SidebarHeaderButton>
       {isConfirmOpen && (
@@ -65,7 +64,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
         >
           <FloatingBox>
             <FormattedMessage
-              defaultMessage="Are you sure to leave the &quot;{spaceName}&quot; space?"
+              defaultMessage='Are you sure to leave the "{spaceName}" space?'
               values={{ spaceName: space.name }}
             />
             <div className="text-right pt-2">

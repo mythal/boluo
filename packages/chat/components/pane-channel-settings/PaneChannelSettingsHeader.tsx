@@ -13,10 +13,7 @@ export const PaneChannelSettingsHeader: FC<Props> = ({ channel }) => {
   return (
     <PaneHeaderBox icon={<Settings />}>
       <span className="overflow-hidden whitespace-nowrap overflow-ellipsis">
-        <FormattedMessage
-          defaultMessage="Settings of &quot;{channelName}&quot; Channel"
-          values={{ channelName: channel.name }}
-        />
+        <FormattedMessage defaultMessage='Settings of "{channelName}" Channel' values={{ channelName: channel.name }} />
       </span>
     </PaneHeaderBox>
   );

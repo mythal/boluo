@@ -21,11 +21,7 @@ import { PaneHeaderBox } from './PaneHeaderBox';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
-  return (
-    <ErrorMessageBox>
-      {explain(error)}
-    </ErrorMessageBox>
-  );
+  return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
 };
 
 export interface FormSchema {

@@ -19,9 +19,7 @@ const getUser = React.cache(async (userId: string): Promise<User | null> => {
   return result.unwrap();
 });
 
-export async function generateMetadata(
-  { params }: { params: Params },
-): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const intl = getIntl(params);
   const user = await getUser(params.userId);
   if (!user) {
@@ -42,14 +40,8 @@ export default async function Page({ params: { userId } }: { params: Params }) {
   }
   return (
     <div className="p-4">
-      <div className="text-xl">
-        {user.nickname}
-      </div>
-      {user.bio !== '' && (
-        <div className="whitespace-pre-line py-4 max-w-md">
-          {user.bio}
-        </div>
-      )}
+      <div className="text-xl">{user.nickname}</div>
+      {user.bio !== '' && <div className="whitespace-pre-line py-4 max-w-md">{user.bio}</div>}
     </div>
   );
 }

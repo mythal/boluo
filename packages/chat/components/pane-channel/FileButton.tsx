@@ -31,14 +31,7 @@ export const FileButton: FC<Props> = () => {
           <FormattedMessage defaultMessage="File" />
         </span>
       </Button>
-      <input
-        type="file"
-        ref={inputRef}
-        className="hidden"
-        aria-hidden
-        hidden
-        onChange={handleFileChange}
-      />
+      <input type="file" ref={inputRef} className="hidden" aria-hidden hidden onChange={handleFileChange} />
     </>
   );
 };

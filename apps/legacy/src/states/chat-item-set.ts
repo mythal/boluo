@@ -15,13 +15,15 @@ export interface MessageItem extends ChatNode {
   moving?: boolean;
 }
 
-export const makeMessageItem = (myId?: Id) => (message: Message): MessageItem => ({
-  id: message.id,
-  pos: message.pos,
-  mine: message.senderId === myId,
-  type: 'MESSAGE',
-  message,
-});
+export const makeMessageItem =
+  (myId?: Id) =>
+  (message: Message): MessageItem => ({
+    id: message.id,
+    pos: message.pos,
+    mine: message.senderId === myId,
+    type: 'MESSAGE',
+    message,
+  });
 
 export interface PreviewItem extends ChatNode {
   type: 'PREVIEW';

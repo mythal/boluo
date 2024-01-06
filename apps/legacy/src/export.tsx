@@ -55,51 +55,38 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
     };
   }
   return (message: Message): ExportMessage => {
-    const {
-      id,
-      senderId,
-      name,
-      mediaId,
-      inGame,
-      isAction,
-      isMaster,
-      folded,
-      created,
-      modified,
-      text,
-      entities,
-      seed,
-    } = message;
+    const { id, senderId, name, mediaId, inGame, isAction, isMaster, folded, created, modified, text, entities, seed } =
+      message;
     const rng = makeRng(seed);
     const exportEntities: ExportEntity[] = !rng
       ? []
       : entities.map((item): ExportEntity => {
-        const entity = 'offset' in item ? fromLegacyEntity(item) : item;
-        if (entity.type === 'Expr') {
-          const { type, start, len } = entity;
-          const node = evaluate(entity.node, rng);
-          return {
-            type,
-            start,
-            len,
-            node,
-            exprText: nodeToText(node),
-            text: text.substr(start, len).trimRight(),
-          };
-        } else if (entity.type === 'Link') {
-          return {
-            type: 'ExportLink',
-            text: text.substr(entity.start, entity.len),
-            href: typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len),
-            start: entity.start,
-            len: entity.len,
-          };
-        } else if (entity.type === 'Emphasis' || entity.type === 'Strong') {
-          return { ...entity, text: text.substring(entity.child.start, entity.child.start + entity.child.len) };
-        } else {
-          return { ...entity, text: text.substr(entity.start, entity.len) };
-        }
-      });
+          const entity = 'offset' in item ? fromLegacyEntity(item) : item;
+          if (entity.type === 'Expr') {
+            const { type, start, len } = entity;
+            const node = evaluate(entity.node, rng);
+            return {
+              type,
+              start,
+              len,
+              node,
+              exprText: nodeToText(node),
+              text: text.substr(start, len).trimRight(),
+            };
+          } else if (entity.type === 'Link') {
+            return {
+              type: 'ExportLink',
+              text: text.substr(entity.start, entity.len),
+              href: typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len),
+              start: entity.start,
+              len: entity.len,
+            };
+          } else if (entity.type === 'Emphasis' || entity.type === 'Strong') {
+            return { ...entity, text: text.substring(entity.child.start, entity.child.start + entity.child.len) };
+          } else {
+            return { ...entity, text: text.substr(entity.start, entity.len) };
+          }
+        });
     let whisperTo: ExportMessage['whisperTo'] = null;
     if (message.whisperToUsers) {
       whisperTo = message.whisperToUsers

@@ -5,8 +5,5 @@ import { unwrap } from 'utils';
 
 export const useQuerySpaceInvitationToken = (spaceId: string): SWRResponse<string, ApiError> => {
   const key = ['/spaces/token', spaceId] as const;
-  return useSWR<string, ApiError, typeof key>(
-    key,
-    ([path, id]) => get(path, { id }).then(unwrap),
-  );
+  return useSWR<string, ApiError, typeof key>(key, ([path, id]) => get(path, { id }).then(unwrap));
 };

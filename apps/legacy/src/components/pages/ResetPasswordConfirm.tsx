@@ -23,7 +23,12 @@ interface UrlParams {
 
 function ResetPasswordConfirm() {
   useTitle('重设密码');
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>();
   const [state, setState] = useState<'loading' | 'default'>('default');
   const { token } = useParams<UrlParams>();
   const history = useHistory();

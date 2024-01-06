@@ -13,12 +13,10 @@ export const useQuerySpaceWithRelated = (spaceId: string): SWRResponse<SpaceWith
     ['/spaces/query_with_related' as const, spaceId],
     ([path, id]) => get(path, { id }).then(unwrap),
     {
-      onSuccess: (({ space, channels }) => {
+      onSuccess: ({ space, channels }) => {
         void mutate(['/space/query', space.id], space, options);
-        void Promise.all(
-          channels.map((channel) => mutate(['/channels/query', channel.id], channel, options)),
-        );
-      }),
+        void Promise.all(channels.map((channel) => mutate(['/channels/query', channel.id], channel, options)));
+      },
     },
   );
 };

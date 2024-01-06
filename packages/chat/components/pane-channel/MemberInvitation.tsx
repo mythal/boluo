@@ -56,9 +56,7 @@ export const MemberInvitation: FC<Props> = ({ members, myMember, channel, userSt
           className="w-full"
         />
       </label>
-      <div>
-        {membersToInvite}
-      </div>
+      <div>{membersToInvite}</div>
     </div>
   );
 };

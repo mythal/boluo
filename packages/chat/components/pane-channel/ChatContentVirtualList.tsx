@@ -6,6 +6,7 @@ import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 
 interface Props {
+  iAmMaster: boolean;
   firstItemIndex: number;
   renderRangeRef: MutableRefObject<[number, number]>;
   virtuosoRef: MutableRefObject<VirtuosoHandle | null>;
@@ -43,6 +44,7 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undef
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
   const {
+    iAmMaster,
     firstItemIndex,
     renderRangeRef,
     virtuosoRef,
@@ -72,6 +74,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     prevItem = item;
     return (
       <ChatItemSwitch
+        iAmMaster={iAmMaster}
         key={item.key}
         myId={myId}
         chatItem={item}

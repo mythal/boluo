@@ -17,9 +17,10 @@ interface Props extends Pick<DndContextProps, 'onDragCancel' | 'onDragStart' | '
   children: ReactNode;
   active: DraggingItem | null;
   myId: string | null | undefined;
+  iAmMaster: boolean;
 }
 
-export const ChatListDndContext = memo<Props>(({ children, active, myId, ...rest }) => {
+export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, myId, ...rest }) => {
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor);
   const keyboardSensor = useSensor(KeyboardSensor);
@@ -28,7 +29,7 @@ export const ChatListDndContext = memo<Props>(({ children, active, myId, ...rest
     <DndContext sensors={sensors} collisionDetection={closestCenter} {...rest}>
       {children}
 
-      {createPortal(<DraggingOverlay active={active} myId={myId} />, document.body)}
+      {createPortal(<DraggingOverlay iAmMaster={iAmMaster} active={active} myId={myId} />, document.body)}
     </DndContext>
   );
 });

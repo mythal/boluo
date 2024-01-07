@@ -6,26 +6,30 @@ import { ChatItemPreview } from './ChatItemPreview';
 interface Props {
   chatItem: ChatItem;
   myId: string | undefined;
+  iAmMaster?: boolean;
   isMember: boolean;
   className?: string;
   continuous: boolean;
 }
 
-export const ChatItemSwitch = memo<Props>(({ chatItem, className = '', myId, continuous, isMember }) => {
-  switch (chatItem.type) {
-    case 'MESSAGE':
-      return (
-        <ChatItemMessage
-          self={isMember && myId === chatItem.senderId}
-          message={chatItem}
-          className={className}
-          continuous={continuous}
-        />
-      );
-    case 'PREVIEW':
-      return <ChatItemPreview preview={chatItem} className={className} />;
-    default:
-      return <div className={className}>Not implemented</div>;
-  }
-});
+export const ChatItemSwitch = memo<Props>(
+  ({ chatItem, className = '', myId, continuous, iAmMaster = false, isMember }) => {
+    switch (chatItem.type) {
+      case 'MESSAGE':
+        return (
+          <ChatItemMessage
+            self={isMember && myId === chatItem.senderId}
+            iAmMaster={iAmMaster}
+            message={chatItem}
+            className={className}
+            continuous={continuous}
+          />
+        );
+      case 'PREVIEW':
+        return <ChatItemPreview preview={chatItem} className={className} />;
+      default:
+        return <div className={className}>Not implemented</div>;
+    }
+  },
+);
 ChatItemSwitch.displayName = 'ChatItemSwitch';

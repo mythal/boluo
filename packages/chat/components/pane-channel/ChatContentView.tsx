@@ -288,9 +288,12 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
     scrollLockRef.current.end = bottom;
   };
 
+  const iAmMaster = myMember !== null && myMember !== 'LOADING' && myMember.channel.isMaster;
+
   return (
     <div className={className} ref={wrapperRef}>
       <ChatListDndContext
+        iAmMaster={iAmMaster}
         active={active}
         myId={myId}
         onDragCancel={handleDragCancel}
@@ -305,6 +308,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
               filteredMessagesCount={filteredMessagesCount}
               virtuosoRef={virtuosoRef}
               scrollerRef={scrollerRef}
+              iAmMaster={iAmMaster}
               chatList={chatList}
               handleBottomStateChange={handleBottomStateChange}
               me={me}

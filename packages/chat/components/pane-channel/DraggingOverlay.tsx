@@ -5,10 +5,11 @@ import { ChatItemMessage } from './ChatItemMessage';
 
 interface Props {
   active: DraggingItem | null;
+  iAmMaster: boolean;
   myId: string | null | undefined;
 }
 
-export const DraggingOverlay = memo<Props>(({ active, myId }) => {
+export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster }) => {
   if (!active) {
     return null;
   }
@@ -16,7 +17,9 @@ export const DraggingOverlay = memo<Props>(({ active, myId }) => {
   const { senderId } = message;
   return (
     <DragOverlay zIndex={15}>
-      {active && <ChatItemMessage message={message} self={senderId === myId} className="px-4 py-2" />}
+      {active && (
+        <ChatItemMessage message={message} iAmMaster={iAmMaster} self={senderId === myId} className="px-4 py-2" />
+      )}
     </DragOverlay>
   );
 });

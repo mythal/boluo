@@ -790,7 +790,7 @@ const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]\s*/).then(([mat
   return [modifier, { text, rest }];
 });
 
-const inOutGameModifier: P<Modifier> = regex(/^[.。](in)[\s$]|[.。](out)[\s$]/i).then(([match, { text, rest }]) => {
+const inOutGameModifier: P<Modifier> = regex(/^[.。](in)[\s$]|^[.。](out)[\s$]/i).then(([match, { text, rest }]) => {
   const [entire, inGame = ''] = match;
 
   const modifier: InGameModifier = {

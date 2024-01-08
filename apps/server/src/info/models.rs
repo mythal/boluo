@@ -18,7 +18,7 @@ pub struct DiskInfo {
     pub name: String,
     pub mount_point: String,
     pub available: u64,
-    pub free: u64,
+    pub total: u64,
 }
 
 #[derive(Debug, Serialize, Clone, TS)]
@@ -114,7 +114,7 @@ impl HealthCheck {
                     name: disk.name().to_string_lossy().to_string(),
                     mount_point: disk.mount_point().to_string_lossy().to_string(),
                     available: disk.available_space(),
-                    free: disk.available_space(),
+                    total: disk.total_space(),
                 })
                 .collect(),
             memory_total: system.total_memory(),

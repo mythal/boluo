@@ -4,6 +4,7 @@ use super::models::Proxy;
 use crate::{
     database::{self, Querist},
     error::AppError,
+    info::models::HealthCheck,
     interface::Response,
 };
 use hyper::{Body, Method, Request};
@@ -80,10 +81,31 @@ pub fn version() -> Response {
         .expect("Unexpected failture in build version response")
 }
 
+async fn get_healthcheck() -> HealthCheck {
+    use std::sync::OnceLock;
+    use tokio::sync::Mutex;
+    static HEALTH_CHECK: OnceLock<Mutex<Option<HealthCheck>>> = OnceLock::new();
+    let lock = HEALTH_CHECK.get_or_init(|| Mutex::new(None)).lock().await;
+    if let Some(health_check) = lock.as_ref() {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|x| x.as_secs())
+            .unwrap_or(0);
+        if now == health_check.timestamp_sec {
+            return health_check.clone();
+        }
+    }
+    std::mem::drop(lock);
+    let health_check = HealthCheck::new().await;
+    let mut lock = HEALTH_CHECK.get_or_init(|| Mutex::new(None)).lock().await;
+    *lock = Some(HealthCheck::new().await);
+    health_check
+}
+
 pub async fn healthcheck() -> Result<Response, AppError> {
     let task = tokio::spawn(async {
-        let health_check_result = super::models::HealthCheck::new().await;
-        serde_json::to_vec(&health_check_result)
+        let health_check: HealthCheck = get_healthcheck().await;
+        serde_json::to_vec(&health_check)
             .map_err(|err| {
                 log::error!("Unexpected failture in serialize healthcheck result: {:?}", err);
                 AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))

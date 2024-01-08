@@ -22,6 +22,20 @@ pub struct Connect<F: Factory> {
 }
 
 impl<F: Factory> Connect<F> {
+    pub fn connection_count(&self) -> usize {
+        let pool = self.pool.upgrade();
+        if let Some(pool) = pool {
+            if let Some(pool) = pool.inner.try_lock() {
+                pool.conns.len()
+            } else {
+                log::info!("Pool is busy, unable to get connection count.");
+                0
+            }
+        } else {
+            log::error!("Pool was dropped, unable to get connection count.");
+            0
+        }
+    }
     pub fn new(conn: F::Output) -> Connect<F> {
         Connect {
             connect: Some(conn),

@@ -80,9 +80,34 @@ pub fn version() -> Response {
         .expect("Unexpected failture in build version response")
 }
 
+pub async fn healthcheck() -> Result<Response, AppError> {
+    let task = tokio::spawn(async {
+        let health_check_result = super::models::HealthCheck::new().await;
+        serde_json::to_vec(&health_check_result)
+            .map_err(|err| {
+                log::error!("Unexpected failture in serialize healthcheck result: {:?}", err);
+                AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
+            })
+            .map(|bytes| Body::from(bytes))
+    });
+    let result = task
+        .await
+        .map_err(|_err| AppError::Unexpected(anyhow::anyhow!("Failed to join healthcheck task")))??;
+    let response = hyper::Response::builder()
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        .status(hyper::StatusCode::OK)
+        .body(result)
+        .map_err(|err| {
+            log::error!("Unexpected failture in build healthcheck response: {:?}", err);
+            AppError::Unexpected(anyhow::anyhow!("Failed to build healthcheck response"))
+        })?;
+    Ok(response)
+}
+
 pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
     match (path, req.method().clone()) {
         ("/proxies", Method::GET) => proxies().await,
+        ("/healthcheck", Method::GET) => healthcheck().await,
         _ => Ok(version()),
     }
 }

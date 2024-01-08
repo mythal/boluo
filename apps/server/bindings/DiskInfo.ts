@@ -4,5 +4,5 @@ export interface DiskInfo {
   name: string;
   mount_point: string;
   available: bigint;
-  free: bigint;
+  total: bigint;
 }

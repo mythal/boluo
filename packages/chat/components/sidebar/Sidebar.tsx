@@ -7,11 +7,11 @@ import { toggle } from 'utils';
 import { useSpace } from '../../hooks/useSpace';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
 import { SidebarChannelList } from './SidebarChannelList';
-import { SidebarHeader } from './SidebarHeader';
 import { SidebarSpaceList } from './SidebarSpaceList';
 import { SpaceOptions } from './SidebarSpaceOptions';
 import { SidebarUserOperations } from './SidebarUserOperations';
 import { SidebarStateContext } from './useSidebarState';
+import { ConnectionIndicatior } from './ConnectionIndicator';
 
 interface Props {
   className?: string;
@@ -45,13 +45,16 @@ export const Sidebar: FC<Props> = ({ className }) => {
   return (
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
       <div className={className}>
-        <SidebarHeader toggleExpand={toggleExpanded} />
         <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
           <div className="divide-surface-100 divide-y overflow-y-auto overflow-x-hidden">
             <SidebarContent />
           </div>
 
-          <SidebarUserOperations />
+          <div className="">
+            <SidebarUserOperations />
+
+            <ConnectionIndicatior />
+          </div>
         </div>
       </div>
     </SidebarStateContext.Provider>

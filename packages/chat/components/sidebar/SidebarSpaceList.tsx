@@ -10,16 +10,28 @@ import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 import { SidebarItemSkeleton } from './SidebarItemSkeleton';
+import clsx from 'clsx';
 
 interface Props {}
 
 const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
   const currentSpace = useSpace();
   const switchSpace = useSwitchSpace();
+  const isCurrent = currentSpace?.id === space.id;
   return (
-    <SidebarItem onClick={() => switchSpace(space.id)} active={currentSpace?.id === space.id}>
-      {space.name}
-    </SidebarItem>
+    <div className="px-2 py-1">
+      <button onClick={() => switchSpace(space.id)} className="hover:bg-surface-100 w-full px-1 py-1 text-left">
+        <div className={isCurrent ? 'text-surface-900' : 'text-surface-600'}>{space.name}</div>
+        <div
+          className={clsx(
+            'w-full overflow-hidden text-ellipsis text-nowrap text-xs',
+            isCurrent ? 'text-surface-700' : 'text-surface-500',
+          )}
+        >
+          {space.description}
+        </div>
+      </button>
+    </div>
   );
 };
 
@@ -44,7 +56,7 @@ export const SidebarSpaceList: FC<Props> = () => {
       {spacesWithMemberData?.map(({ space }) => <SidebarSpaceItem key={space.id} space={space} />)}
       <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>
         <span className="text-surface-400 group-hover:text-surface-800">
-          <FormattedMessage defaultMessage="Add New" />
+          <FormattedMessage defaultMessage="New Space" />
         </span>
       </SidebarItem>
     </div>

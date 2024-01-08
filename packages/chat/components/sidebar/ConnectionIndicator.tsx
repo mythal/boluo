@@ -19,20 +19,19 @@ import { BaseUrlSelector } from './BaseUrlSelector';
 import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
 import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
 import { ConnectionIndicatorConnecting } from './ConnectionIndicatorConnecting';
+import { FormattedMessage } from 'react-intl';
 
-interface Props {
-  className?: string;
-}
+interface Props {}
 
-export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
+export const ConnectionIndicatior: FC<Props> = ({}) => {
   const space = useSpace();
   const connectionState = useAtomValue(connectionStateAtom);
   const [isPopoverOpen, setPopoverOpen] = useState(false);
-  const middleware = useMemo(() => [offset(-6)], []);
+  const middleware = useMemo(() => [offset(-32)], []);
   const { x, y, strategy, refs, context } = useFloating({
     open: connectionState.type === 'CONNECTED' ? isPopoverOpen : true,
     strategy: 'fixed',
-    placement: 'bottom-start',
+    placement: 'right-end',
     middleware,
     onOpenChange: setPopoverOpen,
     whileElementsMounted: autoUpdate,
@@ -48,10 +47,41 @@ export const ConnectionIndicatior: FC<Props> = ({ className = '' }) => {
   if (space == null) return null;
   return (
     <>
-      <div className={className} ref={refs.setReference} {...getReferenceProps()}>
-        {connectionState.type === 'CLOSED' && <CloudOff />}
-        {connectionState.type === 'CONNECTING' && <Spinner />}
-        {connectionState.type === 'CONNECTED' && <Cloud />}
+      <div
+        className={clsx(
+          'group flex cursor-pointer select-none items-center gap-1 px-3 py-1 text-sm',
+          connectionState.type === 'CONNECTED' ? 'bg-green-100' : 'bg-surface-300',
+        )}
+        ref={refs.setReference}
+        {...getReferenceProps()}
+      >
+        {connectionState.type === 'CLOSED' && (
+          <>
+            <CloudOff />
+            <span>
+              <FormattedMessage defaultMessage="Offline" />
+            </span>
+          </>
+        )}
+        {connectionState.type === 'CONNECTING' && (
+          <>
+            <Spinner />
+            <span>…</span>
+          </>
+        )}
+        {connectionState.type === 'CONNECTED' && (
+          <>
+            <Cloud />
+            <span className="">
+              <FormattedMessage defaultMessage="Connected" />
+            </span>
+          </>
+        )}
+        <div className="flex-grow text-right">
+          <span className="group-hover:bg-surface-100 group-hover:border-surface-500 rounded border px-1 text-xs">
+            <FormattedMessage defaultMessage="Switch" />
+          </span>
+        </div>
       </div>
       {isPopoverOpen && (
         <FloatingPortal>

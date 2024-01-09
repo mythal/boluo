@@ -73,7 +73,6 @@
               filters = [
                 (path: _type: lib.hasInfix "/apps/server/src/" path)
                 craneLib.filterCargoSources
-                (path: _type: lib.hasSuffix "/version.json" path)
                 (path: _type: lib.hasSuffix "/apps/server/schema.sql" path)
               ];
             in

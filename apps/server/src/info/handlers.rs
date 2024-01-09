@@ -85,7 +85,7 @@ async fn get_healthcheck() -> HealthCheck {
     use std::sync::OnceLock;
     use tokio::sync::Mutex;
     static HEALTH_CHECK: OnceLock<Mutex<Option<HealthCheck>>> = OnceLock::new();
-    let lock = HEALTH_CHECK.get_or_init(|| Mutex::new(None)).lock().await;
+    let mut lock = HEALTH_CHECK.get_or_init(|| Mutex::new(None)).lock().await;
     if let Some(health_check) = lock.as_ref() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -95,9 +95,7 @@ async fn get_healthcheck() -> HealthCheck {
             return health_check.clone();
         }
     }
-    std::mem::drop(lock);
     let health_check = HealthCheck::new().await;
-    let mut lock = HEALTH_CHECK.get_or_init(|| Mutex::new(None)).lock().await;
     *lock = Some(HealthCheck::new().await);
     health_check
 }

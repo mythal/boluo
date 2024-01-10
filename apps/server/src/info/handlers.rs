@@ -74,10 +74,18 @@ pub async fn proxies() -> Result<Response, AppError> {
 }
 
 pub fn version() -> Response {
+    use std::sync::OnceLock;
+    static VERSION: OnceLock<String> = OnceLock::new();
+    let version = VERSION.get_or_init(|| {
+        let version = std::env::var("VERSION").unwrap_or_else(|_| "unknown".to_string());
+        let value = serde_json::json!({ "version": version });
+        serde_json::to_string(&value).expect("Unexpected failture in serialize version information")
+    });
+
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)
-        .body(Body::from("{}"))
+        .body(Body::from(version.as_str()))
         .expect("Unexpected failture in build version response")
 }
 

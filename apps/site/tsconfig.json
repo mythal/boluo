@@ -3,13 +3,6 @@
   "compilerOptions": {
     "plugins": [{ "name": "next" }]
   },
-  "include": [
-    "src/additional.d.ts",
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "../../packages/ui/types.d.ts"
-  ],
+  "include": ["src/additional.d.ts", "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

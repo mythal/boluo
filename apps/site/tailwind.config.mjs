@@ -1,4 +1,5 @@
-import defaultConfig from 'ui/tailwind.config';
+// Use relative path to work with hot reload
+import defaultConfig from '../../packages/ui/tailwind.config';
 
 /** @type {import('tailwindcss').Config} */
 const config = {

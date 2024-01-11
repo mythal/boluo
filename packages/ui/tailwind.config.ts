@@ -1,10 +1,20 @@
 import themeSwapper from 'tailwindcss-theme-swapper';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
-import { revertPalette as revert } from 'utils';
+import { revertPalette as revert, palette } from 'utils';
 import screens from './screens.json';
+import type { Config } from 'tailwindcss';
+const red = palette(colors.red);
+const neutral = palette(colors.neutral);
+const blue = palette(colors.blue);
+const green = palette(colors.green);
+const yellow = palette(colors.yellow);
+const white: string = colors.white;
+const black: string = colors.black;
+const gray = palette(colors.gray);
+const slate = palette(colors.slate);
+const lime = palette(colors.lime);
 
-const { red, neutral, blue, green, yellow, white, black, gray, slate, lime } = colors;
 const revRed = revert(red);
 const revNetral = revert(neutral);
 const revGreen = revert(green);
@@ -14,7 +24,6 @@ const revLime = revert(lime);
 const revSlate = revert(slate);
 const revBlue = revert(blue);
 
-/** @type {import('tailwindcss').Config["theme"]} */
 const lightTheme = {
   ringColor: {
     DEFAULT: green[400],
@@ -38,6 +47,7 @@ const lightTheme = {
     bg: neutral[50],
     text: black,
     brand: lime,
+    green,
     gray,
     error: red,
     warning: yellow,
@@ -70,7 +80,6 @@ const lightTheme = {
   },
 };
 
-/** @type {import('tailwindcss').Config["theme"]} */
 const darkTheme = {
   ringColor: {
     DEFAULT: blue[500],
@@ -87,7 +96,7 @@ const darkTheme = {
     },
     highest: white,
     lowest: black,
-    bg: slate[900],
+    bg: slate[700],
     text: neutral[50],
     brand: revBlue,
     gray: revert(gray),
@@ -123,14 +132,12 @@ const darkTheme = {
   },
 };
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+const config: Config = {
   content: [],
   darkMode: 'class',
   theme: {
     screens: Object.fromEntries(Object.entries(screens).map(([key, value]) => [key, `${value}px`])),
     colors: {
-      green: colors.green,
       blue: colors.blue,
       neutral: colors.neutral,
       slate: colors.slate,
@@ -195,3 +202,5 @@ module.exports = {
     }),
   ],
 };
+
+export default config;

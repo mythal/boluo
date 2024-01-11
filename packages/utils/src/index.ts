@@ -1,6 +1,6 @@
 export { sleep } from './async';
 export { getOS, isApple, stopPropagation } from './browser';
-export { revertPalette } from './color';
+export { revertPalette, palette } from './color';
 export { isDaytime, parseDate } from './date';
 export { parseBool } from './env';
 export { showFileSize } from './files';

@@ -42,49 +42,6 @@ const lightTheme = {
     error: red,
     warning: yellow,
     surface: neutral,
-    design: {
-      sidebar: gray['100'],
-      sortItem: green[200],
-      sortItemBorder: green[700],
-      popoverBox: gray['100'],
-    },
-    dialog: {
-      border: gray[300],
-      bg: gray[50],
-      shadow: 'rgba(0, 0, 0, 0.25)',
-    },
-    toast: {
-      default: gray[700],
-      warn: yellow[600],
-      error: red[700],
-      border: black,
-    },
-    select: {
-      button: {
-        bg: white,
-        text: black,
-        border: gray[300],
-        disabled: gray[100],
-        disabledText: gray[500],
-        hoverBorder: gray[500],
-        hover: gray[50],
-        openBorder: gray[500],
-        open: gray[200],
-      },
-      list: {
-        border: black,
-        text: black,
-      },
-      item: {
-        bg: gray[100],
-        text: black,
-        hover: gray[50],
-        highlighted: gray[50],
-        selectedHover: green[600],
-        selected: green[700],
-        selectedHighlighted: green[600],
-      },
-    },
     input: {
       default: {
         border: gray[300],
@@ -125,11 +82,11 @@ const darkTheme = {
     DEFAULT: neutral[700],
   },
   colors: {
-    highest: white,
-    lowest: black,
     pin: {
       brand: blue,
     },
+    highest: white,
+    lowest: black,
     bg: slate[900],
     text: neutral[50],
     brand: revBlue,
@@ -137,49 +94,7 @@ const darkTheme = {
     error: revRed,
     warning: revYellow,
     surface: revert(neutral),
-    design: {
-      sidebar: slate[800],
-      sortItem: green[700],
-      sortItemBorder: black,
-      popoverBox: gray[900],
-    },
-    dialog: {
-      border: gray[900],
-      bg: slate[800],
-      shadow: 'rgba(0, 0, 0, 0.03)',
-    },
-    toast: {
-      default: gray[900],
-      warn: yellow[700],
-      error: red[800],
-      border: white,
-    },
-    select: {
-      button: {
-        bg: gray[900],
-        text: white,
-        border: gray[600],
-        disabled: black,
-        disabledText: gray[500],
-        hoverBorder: gray[500],
-        hover: gray[800],
-        openBorder: gray[500],
-        open: black,
-      },
-      list: {
-        border: gray[600],
-        text: white,
-      },
-      item: {
-        bg: black,
-        text: white,
-        hover: gray[600],
-        highlighted: gray[600],
-        selectedHover: blue[600],
-        selected: blue[800],
-        selectedHighlighted: blue[600],
-      },
-    },
+    green: revGreen,
     input: {
       default: {
         border: gray[600],
@@ -249,9 +164,6 @@ module.exports = {
       boxShadow: {
         '1/2': '0.125rem 0.125rem 0',
         1: '0.25rem 0.25rem 0',
-        key: '0px 1px 0px 1px',
-        toast: '0.125rem 0.125rem 0 rgba(0, 0, 0, 0.25)',
-        menu: '0.25rem 0.25rem 0 rgba(0, 0, 0, 0.1)',
       },
       fontFamily: {
         pixel: ['Fusion-Pixel-12', 'monospace'],
@@ -265,13 +177,6 @@ module.exports = {
       addVariant('active-enabled', '&:is([data-active="true"],:active):not(:disabled)');
       addVariant('on', '&[data-on="true"]');
       addVariant('off', '&[data-on="false"]');
-      addVariant('state-on', '&[data-state="on"]');
-      addVariant('state-off', '&[data-state="off"]');
-      addVariant('state-open', '&[data-state="open"]');
-      addVariant('state-closed', '&[data-state="closed"]');
-      addVariant('state-checked', '&[data-state="checked"]');
-      addVariant('state-unchecked', '&[data-state="unchecked"]');
-      addVariant('hightlighted', '&[data-highlighted]');
     }),
     require('@tailwindcss/container-queries'),
     themeSwapper({

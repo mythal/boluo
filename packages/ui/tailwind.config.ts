@@ -1,3 +1,4 @@
+import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';

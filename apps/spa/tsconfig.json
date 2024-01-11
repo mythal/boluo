@@ -17,6 +17,6 @@
     "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src", "vite.config.ts", "tailwind.config.ts", "../../packages/ui/types.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

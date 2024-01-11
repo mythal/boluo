@@ -9,6 +9,6 @@
     "esModuleInterop": true,
     "sourceMap": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "tailwind.config.mjs"],
   "exclude": ["dist", "build", "node_modules"]
 }

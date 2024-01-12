@@ -50,7 +50,7 @@ export const ConnectionIndicatior: FC<Props> = ({}) => {
       <div
         className={clsx(
           'group flex cursor-pointer select-none items-center gap-1 px-3 py-1 text-sm',
-          connectionState.type === 'CONNECTED' ? 'bg-green-100' : 'bg-surface-300',
+          connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-surface-300',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -78,7 +78,7 @@ export const ConnectionIndicatior: FC<Props> = ({}) => {
           </>
         )}
         <div className="flex-grow text-right">
-          <span className="group-hover:bg-surface-100 group-hover:border-surface-500 rounded border px-1 text-xs">
+          <span className="rounded border bg-black/10 px-1 text-xs group-hover:bg-white/10">
             <FormattedMessage defaultMessage="Switch" />
           </span>
         </div>

@@ -1,6 +1,7 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
-import colors from 'tailwindcss/colors';
+import { mix } from 'color2k';
+import colors, { zinc } from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from 'utils';
 import screens from './screens.json';
@@ -51,6 +52,16 @@ const lightTheme = {
       active: blue[500],
     },
     bg: neutral[50],
+    pane: {
+      bg: neutral[100],
+      header: neutral[100],
+    },
+    sidebar: {
+      divider: neutral[200],
+    },
+    connect: {
+      success: green[300],
+    },
     text: black,
     brand: lime,
     green,
@@ -108,6 +119,16 @@ const darkTheme = {
       active: blue[200],
     },
     bg: neutral[800],
+    pane: {
+      bg: mix(zinc[800], zinc[700], 0.25),
+      header: neutral[800],
+    },
+    sidebar: {
+      divider: mix(neutral[700], neutral[800], 0.5),
+    },
+    connect: {
+      success: green[700],
+    },
     text: neutral[50],
     brand: revBlue,
     gray: revert(gray),

@@ -51,5 +51,5 @@
   "editor.quickSuggestions": {
     "strings": true
   },
-  "tailwindCSS.experimental.configFile": "packages/ui/tailwind.config.mjs"
+  "tailwindCSS.experimental.configFile": "packages/ui/tailwind.config.ts"
 }

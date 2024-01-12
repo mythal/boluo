@@ -73,7 +73,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
       </div>
       <div
         className={clsx(
-          'bg-surface-300 h-full w-[1px] group-hover:w-[2px] group-hover:bg-blue-300',
+          'bg-sidebar-divider h-full w-[1px] group-hover:w-[2px] group-hover:bg-blue-300',
           dragging && 'bg-blue-500',
         )}
       ></div>

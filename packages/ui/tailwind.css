@@ -27,7 +27,7 @@
 
 @layer components {
   .link {
-    @apply text-brand-700 hover:text-brand-600 active:text-brand-500 no-underline;
+    @apply text-link-normal hover:text-link-hover active:text-link-active no-underline;
   }
 
   .input {

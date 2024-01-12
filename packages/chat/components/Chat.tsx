@@ -61,7 +61,7 @@ const Chat: FC = () => {
         >
           <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
             <div className="view-height accent-brand-600 flex">
-              <Sidebar className="bg-lowest flex h-full flex-none flex-col" />
+              <Sidebar className="bg-bg flex h-full flex-none flex-col" />
               <div
                 onTouchStart={handleTouch}
                 className="relative flex h-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"

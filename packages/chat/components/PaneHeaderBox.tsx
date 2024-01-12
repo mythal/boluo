@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import { FC, ReactNode, useContext, useMemo } from 'react';
 import { stopPropagation } from 'utils';
 import { usePaneBanner } from '../hooks/useBanner';
-import { usePaneIsFocus } from '../hooks/usePaneIsFocus';
 import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from './PaneBanner';
@@ -27,7 +26,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
       <div
         className={clsx(
           'min-h-pane-header flex items-center px-4 text-lg',
-          'border-surface-100 bg-lowest justify-between border-b',
+          'border-surface-100 bg-pane-header justify-between border-b',
         )}
       >
         <div className="inline-flex min-w-0 flex-nowrap items-center gap-1">

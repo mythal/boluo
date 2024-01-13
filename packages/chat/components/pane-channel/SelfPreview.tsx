@@ -64,7 +64,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       id={preview.key}
       editMode={editMode}
       onDrop={onDrop}
-      className="bg-brand-50 border-brand-200 border-b border-t"
+      className="bg-preview-self/40 border-preview-self border-b border-t"
     >
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member.channel} />
       <div className="items-between flex h-full flex-col gap-1">

@@ -1,13 +1,14 @@
 import { GetMe } from 'api';
-import { useAtomValue, useSetAtom, useStore } from 'jotai';
+import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
+import clsx from 'clsx';
 
 interface Props {
   me: GetMe;
@@ -22,11 +23,22 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
-  const composeAtom = useComposeAtom();
+  const { composeAtom, parsedAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
   const store = useStore();
   const rangeAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.range), [composeAtom]);
+  const defaultInGameAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.defaultInGame), [composeAtom]);
+  const inGameAtom = useMemo(
+    () => atom((get) => get(parsedAtom).inGame ?? get(defaultInGameAtom) ?? false),
+    [defaultInGameAtom, parsedAtom],
+  );
+  const isWhisperAtom = useMemo(
+    () => selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null),
+    [parsedAtom],
+  );
+  const isWhisper = useAtomValue(isWhisperAtom);
+  const inGame = useAtomValue(inGameAtom);
   const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend === true;
   const lock = useRef(false);
@@ -135,7 +147,11 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}
-      className="input input-default h-full w-full resize-none"
+      className={clsx(
+        'input input-default h-full w-full resize-none',
+        isWhisper ? 'border-dashed' : '',
+        inGame ? 'bg-input-ingame-bg' : '',
+      )}
     ></textarea>
   );
 };

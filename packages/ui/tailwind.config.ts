@@ -77,6 +77,9 @@ const lightTheme = {
     warning: yellow,
     surface: neutral,
     input: {
+      ingame: {
+        bg: green[50],
+      },
       default: {
         border: gray[300],
         bg: white,
@@ -150,6 +153,9 @@ const darkTheme = {
     surface: revert(neutral),
     green: revGreen,
     input: {
+      ingame: {
+        bg: blue[950],
+      },
       default: {
         border: gray[600],
         bg: gray[900],

@@ -6,11 +6,7 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
 
 export const FloatingBox = React.forwardRef<HTMLDivElement, Props>(({ children, ...props }, ref) => {
   return (
-    <div
-      {...props}
-      className="bg-lowest shadow-1 shadow-surface-500/25 border-1/2 border-surface-800 rounded-sm p-3 text-sm"
-      ref={ref}
-    >
+    <div {...props} className="bg-lowest border-lowest rounded border p-3 text-sm shadow-lg" ref={ref}>
       {children}
     </div>
   );

@@ -65,7 +65,7 @@ export const MemberListItem: FC<Props> = ({ member, canIKick, myId, status, chan
         <span className={clsx(hasCharacterName ? '' : 'row-span-full', 'text-left')}>
           {
             <span
-              className={clsx(offline ? 'text-surface-400' : hasCharacterName ? 'text-surface-600' : '', 'truncate')}
+              className={clsx(offline ? 'text-text-light' : hasCharacterName ? 'text-surface-600' : '', 'truncate')}
             >
               {user.nickname}
             </span>

@@ -195,7 +195,7 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
     return (
       <div className="space-x-1">
         <span className="font-bold">{nickname}</span>
-        <span className="text-surface-400">{username}</span>
+        <span className="text-text-light">{username}</span>
       </div>
     );
   }
@@ -206,7 +206,7 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
       </div>
       <div className="space-x-1 text-sm">
         <span className="text-surface-600">{nickname}</span>
-        <span className="text-surface-400">{username}</span>
+        <span className="text-text-light">{username}</span>
       </div>
     </div>
   );

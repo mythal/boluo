@@ -22,8 +22,8 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
   }, [preview.text, preview.entities]);
 
   const nameNode = useMemo(() => {
-    return <Name name={name} isMaster={isMaster} isPreview self />;
-  }, [isMaster, name]);
+    return <Name inGame={preview.inGame} name={name} isMaster={isMaster} isPreview self />;
+  }, [isMaster, name, preview.inGame]);
 
   const { text: source, entities } = useDeferredValue(parsed);
 

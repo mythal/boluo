@@ -79,6 +79,9 @@ const lightTheme = {
     preview: {
       self: green[100],
     },
+    ingame: {
+      underline: gray[500],
+    },
     input: {
       ingame: {
         bg: green[50],
@@ -157,6 +160,9 @@ const darkTheme = {
     green: revGreen,
     preview: {
       self: blue[900],
+    },
+    ingame: {
+      underline: gray[500],
     },
     input: {
       ingame: {

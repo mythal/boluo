@@ -7,13 +7,14 @@ import { FallbackIcon } from '../FallbackIcon';
 
 interface Props {
   name: string | undefined | null;
+  inGame: boolean;
   isMaster: boolean;
   className?: string;
   self: boolean;
   isPreview?: boolean;
 }
 
-export const Name: FC<Props> = ({ name, className, isMaster, isPreview = false, self }) => {
+export const Name: FC<Props> = ({ name, className, isMaster, inGame, isPreview = false, self }) => {
   const isEmptyName = name === '' || name == null;
   const masterIcon = (
     <Delay fallback={<FallbackIcon />}>
@@ -22,7 +23,11 @@ export const Name: FC<Props> = ({ name, className, isMaster, isPreview = false, 
   );
   return (
     <span
-      className={clsx('@xl:w-[10rem] @2xl:w-[12rem] relative mr-1 w-[8rem] flex-none break-all font-bold', className)}
+      className={clsx(
+        '@xl:w-[10rem] @2xl:w-[12rem] relative mr-1 w-[8rem] flex-none break-all font-bold',
+        inGame ? 'underline decoration-gray-700 decoration-dotted' : '',
+        className,
+      )}
     >
       <span className="mr-1">
         {isEmptyName ? (

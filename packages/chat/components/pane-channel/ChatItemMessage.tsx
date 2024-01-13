@@ -29,8 +29,8 @@ export const ChatItemMessage: FC<Props> = ({
   const { isMaster, isAction, optimistic } = message;
 
   const nameNode = useMemo(
-    () => <Name name={message.name} isMaster={isMaster} self={self} />,
-    [isMaster, message.name, self],
+    () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={self} />,
+    [isMaster, message.name, message.inGame, self],
   );
   const parsed: ParseResult = useMemo((): ParseResult => {
     const text = message.text;

@@ -28,7 +28,7 @@ export const ComposingMediaInfo: FC<Props> = ({ className = '' }) => {
         <span className="truncate font-mono">{media.name}</span>
         <button
           onClick={handleRemoveMedia}
-          className="text-surface-500 group-hover:text-text border-transprent group-hover:border-surface-300 hover:bg-surface-100 rounded border p-1"
+          className="text-surface-500 group-hover:text-text-base border-transprent group-hover:border-surface-300 hover:bg-surface-100 rounded border p-1"
         >
           <Trash />
         </button>

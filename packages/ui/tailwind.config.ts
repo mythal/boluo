@@ -1,7 +1,7 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
 import { mix } from 'color2k';
-import colors, { zinc } from 'tailwindcss/colors';
+import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from 'utils';
 import screens from './screens.json';
@@ -14,6 +14,7 @@ const yellow = palette(colors.yellow);
 const white: string = colors.white;
 const black: string = colors.black;
 const gray = palette(colors.gray);
+const zinc = palette(colors.zinc);
 const slate = palette(colors.slate);
 const lime = palette(colors.lime);
 
@@ -62,7 +63,13 @@ const lightTheme = {
     connect: {
       success: green[300],
     },
-    text: black,
+    select: {
+      bg: neutral[50],
+    },
+    text: {
+      base: neutral[900],
+      light: neutral[600],
+    },
     brand: lime,
     green,
     gray,
@@ -95,7 +102,7 @@ const lightTheme = {
       },
     },
   },
-};
+} satisfies Config['theme'];
 
 const darkTheme = {
   ringColor: {
@@ -129,7 +136,13 @@ const darkTheme = {
     connect: {
       success: green[700],
     },
-    text: neutral[50],
+    select: {
+      bg: neutral[700],
+    },
+    text: {
+      base: white,
+      light: neutral[400],
+    },
     brand: revBlue,
     gray: revert(gray),
     error: revRed,

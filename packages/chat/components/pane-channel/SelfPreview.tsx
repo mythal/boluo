@@ -55,8 +55,8 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
     return member.channel.characterName;
   }, [compose.name, inGame, member.channel.characterName, member.user.nickname]);
   const nameNode = useMemo(() => {
-    return <Name name={name} isMaster={isMaster} isPreview self />;
-  }, [isMaster, name]);
+    return <Name inGame={inGame} name={name} isMaster={isMaster} isPreview self />;
+  }, [inGame, isMaster, name]);
   const { onDrop } = useMediaDrop();
 
   return (

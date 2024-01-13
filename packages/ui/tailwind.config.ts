@@ -76,6 +76,9 @@ const lightTheme = {
     error: red,
     warning: yellow,
     surface: neutral,
+    preview: {
+      self: green[100],
+    },
     input: {
       ingame: {
         bg: green[50],
@@ -152,6 +155,9 @@ const darkTheme = {
     warning: revYellow,
     surface: revert(neutral),
     green: revGreen,
+    preview: {
+      self: blue[900],
+    },
     input: {
       ingame: {
         bg: blue[950],

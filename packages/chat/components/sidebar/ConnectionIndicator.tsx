@@ -78,7 +78,7 @@ export const ConnectionIndicatior: FC<Props> = ({}) => {
           </>
         )}
         <div className="flex-grow text-right">
-          <span className="rounded border bg-black/10 px-1 text-xs group-hover:bg-white/10">
+          <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
             <FormattedMessage defaultMessage="Switch" />
           </span>
         </div>

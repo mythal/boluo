@@ -61,10 +61,10 @@ export const SelfCursorToolbar = memo<Props>(({ contentRef }) => {
       data-flip="false"
       data-hide="false"
       className={clsx(
-        'bg-surface-700 border-surface-900 fixed inline-flex rounded-sm border shadow-md transition-all duration-100 ease-out',
+        'bg-preview-toolbar fixed inline-flex rounded-sm border border-black shadow-md transition-all duration-100 ease-out',
         'data-[flipped=true]:-translate-x-full',
         'data-[hide=true]:hidden',
-        'opacity-40 hover:opacity-100',
+        'opacity-50 hover:opacity-100',
       )}
     >
       <SelfCursorButton onClick={handleAddDice}>

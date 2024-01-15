@@ -78,6 +78,7 @@ const lightTheme = {
     surface: neutral,
     preview: {
       self: green[100],
+      toolbar: neutral[100],
     },
     ingame: {
       underline: gray[500],
@@ -160,6 +161,7 @@ const darkTheme = {
     green: revGreen,
     preview: {
       self: blue[900],
+      toolbar: neutral[900],
     },
     ingame: {
       underline: gray[500],

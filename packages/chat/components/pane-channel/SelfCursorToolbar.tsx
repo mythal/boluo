@@ -1,83 +1,40 @@
-import clsx from 'clsx';
-import { Bold, Dice, Link } from 'icons';
-import { useSetAtom } from 'jotai';
-import { memo, RefObject, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { useScrollerRef } from '../../hooks/useScrollerRef';
-import { SelfCursorButton } from './SelfCursorButton';
+import { forwardRef, RefObject, useContext, useEffect, useImperativeHandle, useState } from 'react';
+import { shift, useFloating } from '@floating-ui/react';
+import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
+import { CursorContext } from '../entities/TextWithCursor';
 
 interface Props {
   contentRef: RefObject<HTMLDivElement | null>;
+  cursorRef: RefObject<HTMLElement | null>;
 }
 
-export const SelfCursorToolbar = memo<Props>(({ contentRef }) => {
-  const composeAtom = useComposeAtom();
-  const dispatch = useSetAtom(composeAtom);
-  const handleAddDice = () => dispatch({ type: 'addDice', payload: {} });
-  const handleAddLink = () => dispatch({ type: 'link', payload: { text: '', href: '' } });
-  const handleBold = () => dispatch({ type: 'bold', payload: { text: '' } });
-  const scrollerRef = useScrollerRef();
-  const ref = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const handle = window.setInterval(() => {
-      const content = contentRef.current;
-      if (!content) return;
-      const cursor = content.querySelector('.preview-cursor');
-      const toolbar = ref.current;
-      if (!cursor || !toolbar || toolbar.matches(':hover')) return;
+export interface CursorToolbarHandle {
+  update: () => void;
+}
 
-      const cursorRect = cursor.getBoundingClientRect();
-      const toolbarRect = toolbar.getBoundingClientRect();
+export const SelfCursorToolbar = forwardRef<CursorToolbarHandle, Props>(({ contentRef, cursorRef }, ref) => {
+  // `useContext` will trigger a re-render when the cursor state changes.
+  const cursorState = useContext(CursorContext);
 
-      toolbar.style.left = `${cursorRect.x - 4}px`;
-      toolbar.style.top = `${cursorRect.y + cursorRect.height + 4}px`;
+  const { update, floatingStyles, refs } = useFloating({
+    elements: {
+      reference: cursorRef.current,
+    },
+    middleware: [shift()],
+  });
+  useImperativeHandle(ref, () => ({ update }));
 
-      const scroller = scrollerRef.current;
-      if (!scroller) return;
-      const scrollerRect = scroller.getBoundingClientRect();
-      const scrollerRight = scrollerRect.left + scrollerRect.width;
-
-      const flipped = toolbar.getAttribute('data-flipped') === 'true';
-      if (toolbarRect.left + toolbarRect.width > scrollerRight) {
-        toolbar.setAttribute('data-flipped', 'true');
-      } else if (flipped && toolbarRect.right + toolbarRect.width + 64 < scrollerRight) {
-        toolbar.setAttribute('data-flipped', 'false');
-      }
-      const scrollerBottom = scrollerRect.top + scrollerRect.height;
-      if (cursorRect.top + cursorRect.height > scrollerBottom) {
-        toolbar.setAttribute('data-hide', 'true');
-      } else {
-        toolbar.setAttribute('data-hide', 'false');
-      }
-    }, 200);
-    return () => {
-      window.clearInterval(handle);
-    };
-  }, [contentRef, scrollerRef]);
-  return createPortal(
+  if (!cursorState) return null;
+  const [a, b] = cursorState.range;
+  return (
     <div
-      ref={ref}
-      data-flip="false"
-      data-hide="false"
-      className={clsx(
-        'bg-preview-toolbar fixed inline-flex rounded-sm border border-black shadow-md transition-all duration-100 ease-out',
-        'data-[flipped=true]:-translate-x-full',
-        'data-[hide=true]:hidden',
-        'opacity-50 hover:opacity-100',
-      )}
+      ref={refs.setFloating}
+      style={floatingStyles}
+      className="bg-lowest border-highest flex select-none items-center justify-center rounded-lg border-[2px] shadow"
     >
-      <SelfCursorButton onClick={handleAddDice}>
-        <Dice />
-      </SelfCursorButton>
-      <SelfCursorButton onClick={handleAddLink}>
-        <Link />
-      </SelfCursorButton>
-      <SelfCursorButton onClick={handleBold}>
-        <Bold />
-      </SelfCursorButton>
-    </div>,
-    document.body,
+      <SelfCursorToolbarButtons collapsed={a === b} />
+    </div>
   );
 });
+
 SelfCursorToolbar.displayName = 'SelfCursorToolbar';

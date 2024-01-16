@@ -58,6 +58,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
       )}
       <Content
         channelId={myMember.channelId}
+        cursorRef={cursorRef}
         cursorNode={cursorNode}
         source={deferredParsed.text}
         entities={deferredParsed.entities}

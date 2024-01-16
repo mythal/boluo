@@ -106,7 +106,7 @@ export const NameToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   return (
-    <div className="bg-lowest border-surface-200 absolute right-0 top-full z-30 flex w-max flex-col gap-1 rounded-sm border px-3 py-2 text-sm font-normal shadow-sm">
+    <div className="bg-lowest border-surface-200 flex w-max flex-col gap-1 rounded-sm border px-3 py-2 text-sm font-normal shadow-sm">
       <div className="flex items-center gap-2 text-sm">
         <NameHistory myId={myId} channelId={channelId} />
         <label>

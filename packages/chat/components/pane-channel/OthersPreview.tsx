@@ -40,6 +40,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
           source={source}
           entities={entities}
           isAction={preview.isAction}
+          isArchived={false}
           nameNode={nameNode}
           isPreview
         />

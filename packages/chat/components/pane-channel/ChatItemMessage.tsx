@@ -81,6 +81,7 @@ export const ChatItemMessage: FC<Props> = ({
             entities={parsed.entities}
             isAction={isAction}
             nameNode={nameNode}
+            isArchived={message.folded}
             isPreview={false}
             seed={message.seed}
           />

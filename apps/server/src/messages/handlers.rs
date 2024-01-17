@@ -77,23 +77,12 @@ async fn edit(req: Request<Body>) -> Result<Message, AppError> {
     if !channel.is_document && message.sender_id != session.user_id {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
-    if name.is_some() || text.is_some() || entities.is_some() || in_game.is_some() || is_action.is_some() {
-        let text = text.as_deref();
-        let name = name.as_deref();
-        message = Message::edit(
-            db,
-            name,
-            &message_id,
-            text,
-            entities,
-            in_game,
-            is_action,
-            None,
-            media_id,
-        )
+
+    let text = &*text;
+    let name = &*name;
+    message = Message::edit(db, name, &message_id, text, entities, in_game, is_action, media_id)
         .await?
         .ok_or_else(|| unexpected!("The message had been delete."))?;
-    }
     trans.commit().await?;
     Event::message_edited(space_member.space_id, message.clone());
     Ok(message)
@@ -179,8 +168,7 @@ async fn toggle_fold(req: Request<Body>) -> Result<Message, AppError> {
     if !channel.is_document && message.sender_id != session.user_id && !channel_member.is_master {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
-    let folded = Some(!message.folded);
-    let message = Message::edit(db, None, &message.id, None, None, None, None, folded, None)
+    let message = Message::set_folded(db, &message.id, !message.folded)
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
     Event::message_edited(channel.space_id, message.clone());
@@ -217,6 +205,8 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/query", Method::GET) => query(req).await.map(ok_response),
         ("/by_channel", Method::GET) => by_channel(req).await.map(ok_response),
         ("/send", Method::POST) => send(req).await.map(ok_response),
+        ("/edit", Method::POST) => edit(req).await.map(ok_response),
+        ("/edit", Method::PUT) => edit(req).await.map(ok_response),
         ("/edit", Method::PATCH) => edit(req).await.map(ok_response),
         ("/move_between", Method::POST) => move_between(req).await.map(ok_response),
         ("/toggle_fold", Method::POST) => toggle_fold(req).await.map(ok_response),

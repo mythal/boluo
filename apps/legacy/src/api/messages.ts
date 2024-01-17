@@ -47,12 +47,12 @@ export interface NewMessage {
 
 export interface EditMessage {
   messageId: Id;
-  name?: string;
-  text?: string;
-  entities?: Entity[];
-  inGame?: boolean;
-  isAction?: boolean;
-  mediaId?: Id | null;
+  name: string;
+  text: string;
+  entities: Entity[];
+  inGame: boolean;
+  isAction: boolean;
+  mediaId: Id | null;
 }
 
 export interface ByChannel {

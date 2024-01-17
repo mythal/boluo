@@ -143,7 +143,10 @@ function Compose({ channelId }: Props) {
       </div>
       {media && (
         <div css={mediaContainer}>
-          <MessageMedia file={media} />
+          <MessageMedia
+            file={media instanceof File ? media : undefined}
+            mediaId={typeof media === 'string' ? media : undefined}
+          />
         </div>
       )}
       <div css={sendContainer}>

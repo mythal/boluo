@@ -326,26 +326,31 @@ impl Message {
             (42, 1)
         }
     }
+    pub async fn set_folded<T: Querist>(db: &mut T, id: &Uuid, folded: bool) -> Result<Option<Message>, ModelError> {
+        let row = db.query_one(include_str!("sql/set_folded.sql"), &[id, &folded]).await?;
+        if let Some(row) = row {
+            Ok(Some(row.try_get(0)?))
+        } else {
+            Ok(None)
+        }
+    }
     pub async fn edit<T: Querist>(
         db: &mut T,
-        name: Option<&str>,
+        name: &str,
         id: &Uuid,
-        text: Option<&str>,
-        entities: Option<Vec<JsonValue>>,
-        in_game: Option<bool>,
-        is_action: Option<bool>,
-        folded: Option<bool>,
+        text: &str,
+        entities: Vec<JsonValue>,
+        in_game: bool,
+        is_action: bool,
         media_id: Option<Uuid>,
     ) -> Result<Option<Message>, ModelError> {
-        let entities = entities.map(JsonValue::Array);
-        let name = name.map(merge_blank);
-        if let Some(ref name) = name {
-            CHARACTER_NAME.run(name)?;
-        }
+        let entities = JsonValue::Array(entities);
+        let name = merge_blank(name);
+        CHARACTER_NAME.run(&name)?;
         let row = db
             .query_one(
                 include_str!("sql/edit.sql"),
-                &[id, &name, &text, &entities, &in_game, &is_action, &folded, &media_id],
+                &[id, &&*name, &text, &entities, &in_game, &is_action, &media_id],
             )
             .await?;
         if let Some(row) = row {
@@ -417,19 +422,9 @@ async fn message_test() -> Result<(), crate::error::AppError> {
     assert_eq!(message.text, text);
 
     let new_text = "cocona";
-    let edited = Message::edit(
-        db,
-        None,
-        &message.id,
-        Some(new_text),
-        Some(vec![]),
-        None,
-        None,
-        None,
-        None,
-    )
-    .await?
-    .unwrap();
+    let edited = Message::edit(db, "new name", &message.id, new_text, vec![], false, false, None)
+        .await?
+        .unwrap();
     assert_eq!(edited.text, "");
 
     let message = Message::get(db, &message.id, Some(&user.id)).await?.unwrap();

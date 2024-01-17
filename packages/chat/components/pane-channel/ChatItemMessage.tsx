@@ -75,7 +75,7 @@ export const ChatItemMessage: FC<Props> = ({
             seed={message.seed}
           />
         )}
-        {message.mediaId != null && <MessageMedia className="pt-2" mediaId={message.mediaId} />}
+        {message.mediaId != null && <MessageMedia className="pt-2" media={message.mediaId} />}
       </div>
     </MessageBox>
   );

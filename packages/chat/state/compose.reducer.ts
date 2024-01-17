@@ -15,7 +15,7 @@ export interface ComposeState {
   previewId: string;
   defaultInGame: boolean;
   source: string;
-  media: File | null;
+  media: File | string | null;
   whisperTo: // Represents whisper to the Game Master
   | null
     // Represents whisper to users (Game Master always can read all whisper messages)
@@ -154,12 +154,21 @@ const handleEditMessage = (
   state: ComposeState,
   { payload: { message } }: ComposeAction<'editMessage'>,
 ): ComposeState => {
-  const { id: previewId, modified: editFor, text: source, inGame, name } = message;
+  const { id: previewId, modified: editFor, text: source, inGame, name, mediaId } = message;
 
   const inputedName = inGame ? name : '';
   const range: ComposeState['range'] = [source.length, source.length];
 
-  return { ...makeInitialComposeState(), previewId, editFor, source, defaultInGame: inGame, inputedName, range };
+  return {
+    ...makeInitialComposeState(),
+    previewId,
+    editFor,
+    media: mediaId,
+    source,
+    defaultInGame: inGame,
+    inputedName,
+    range,
+  };
 };
 
 const modifyModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {

@@ -18,7 +18,13 @@ export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster }) => {
   return (
     <DragOverlay zIndex={15}>
       {active && (
-        <ChatItemMessage message={message} iAmMaster={iAmMaster} self={senderId === myId} className="px-4 py-2" />
+        <ChatItemMessage
+          message={message}
+          iAmMaster={iAmMaster}
+          iAmAdmin={false}
+          self={senderId === myId}
+          className="px-4 py-2"
+        />
       )}
     </DragOverlay>
   );

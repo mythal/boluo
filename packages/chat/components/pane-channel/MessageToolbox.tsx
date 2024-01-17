@@ -12,6 +12,9 @@ import { MessageToolboxButton } from './MessageToolboxButton';
 
 interface Props {
   className?: string;
+  self: boolean;
+  iAmAdmin: boolean;
+  iAmMaster: boolean;
   message: Message;
 }
 
@@ -24,7 +27,7 @@ const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode
 ));
 Box.displayName = 'MessageToolboxBox';
 
-export const MessageToolbox: FC<Props> = ({ className, message }) => {
+export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, iAmMaster }) => {
   const setBanner = useSetBanner();
   const boxRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<ToolboxState>('NORMAL');
@@ -81,15 +84,21 @@ export const MessageToolbox: FC<Props> = ({ className, message }) => {
       )}
       {state === 'NORMAL' && (
         <>
-          <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
-            <Archive />
-          </MessageToolboxButton>
-          <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
-            <Trash />
-          </MessageToolboxButton>
-          <MessageToolboxButton onClick={handleEditMessage}>
-            <Edit />
-          </MessageToolboxButton>
+          {(self || iAmMaster) && (
+            <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
+              <Archive />
+            </MessageToolboxButton>
+          )}
+          {(self || iAmAdmin) && (
+            <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
+              <Trash />
+            </MessageToolboxButton>
+          )}
+          {self && (
+            <MessageToolboxButton onClick={handleEditMessage}>
+              <Edit />
+            </MessageToolboxButton>
+          )}
         </>
       )}
     </Box>

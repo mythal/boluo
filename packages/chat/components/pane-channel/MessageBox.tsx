@@ -14,6 +14,8 @@ interface Props {
   mini?: boolean;
   optimistic?: boolean;
   self: boolean;
+  iAmMaster: boolean;
+  iAmAdmin: boolean;
 }
 
 export const MessageBox: FC<Props> = ({
@@ -24,6 +26,8 @@ export const MessageBox: FC<Props> = ({
   mini = false,
   optimistic = false,
   self,
+  iAmMaster,
+  iAmAdmin,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
     id: message.id,
@@ -61,11 +65,11 @@ export const MessageBox: FC<Props> = ({
             'pointer-events-none -translate-y-2 opacity-0 transition-all duration-100 ease-in group-hover:pointer-events-auto group-hover:block group-hover:translate-y-1 group-hover:opacity-100',
           )}
         >
-          <MessageToolbox message={message} />
+          <MessageToolbox message={message} self={self} iAmAdmin={iAmAdmin} iAmMaster={iAmMaster} />
         </div>
       </Delay>
     ),
-    [message],
+    [iAmAdmin, iAmMaster, message, self],
   );
   return (
     <div
@@ -82,7 +86,7 @@ export const MessageBox: FC<Props> = ({
     >
       {handle}
       {children}
-      {self && toolbox}
+      {(self || iAmMaster || iAmAdmin) && toolbox}
     </div>
   );
 };

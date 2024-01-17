@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
 import { Paperclip, Refresh } from 'icons';
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode, memo, useState } from 'react';
 import Icon from 'ui/Icon';
 import { showFileSize } from 'utils';
 import { getMediaUrl, supportedMediaType } from '../../media';
@@ -13,7 +13,7 @@ type Props = {
   children?: ReactNode;
 };
 
-export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, children = null }) => {
+export const MessageMedia = memo<Props>(({ mediaId, mediaFile, className, children = null }) => {
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
   let src: string | null = null;
   if (mediaFile != null) {
@@ -70,4 +70,6 @@ export const MessageMedia: FC<Props> = ({ mediaId, mediaFile, className, childre
       {children}
     </div>
   );
-};
+});
+
+MessageMedia.displayName = 'MessageMedia';

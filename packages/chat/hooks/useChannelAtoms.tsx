@@ -22,6 +22,7 @@ export interface ChannelAtoms {
   checkComposeAtom: Atom<ComposeError | null>;
   parsedAtom: Atom<ParseResult>;
   isActionAtom: Atom<boolean>;
+  hasMediaAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
   inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
@@ -57,6 +58,7 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
     const inputedNameAtom = selectAtom(composeAtom, ({ inputedName }) => inputedName);
     const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
     const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
+    const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
     const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
     const inGameAtom = atom((read) => {
       const { inGame } = read(parsedAtom);
@@ -73,6 +75,7 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
       parsedAtom,
       isActionAtom,
       inputedNameAtom,
+      hasMediaAtom,
       broadcastAtom,
       isWhisperAtom,
       inGameAtom,

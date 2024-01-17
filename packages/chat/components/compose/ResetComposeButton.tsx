@@ -3,6 +3,7 @@ import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { Button } from 'ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
+import Icon from 'ui/Icon';
 
 interface Props {}
 
@@ -14,7 +15,7 @@ export const ResetComposeButton: FC<Props> = () => {
   };
   return (
     <Button onClick={reset}>
-      <X />
+      <Icon icon={X} />
     </Button>
   );
 };

@@ -10,6 +10,7 @@ import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
 import { ResetComposeButton } from './ResetComposeButton';
 import { SendButton } from './SendButton';
+import { FileButton } from './FileButton';
 
 interface Props {
   me: GetMe;
@@ -39,8 +40,13 @@ export const Compose = ({ me, member, className }: Props) => {
           <div className="flex-shrink-0">
             <AddDiceButton />
           </div>
+          <div className="flex-shrink-0">
+            <FileButton />
+          </div>
           <div className="w-full flex-shrink flex-grow" />
-          {editMode && <ResetComposeButton />}
+          <div className="flex-shrink-0">
+            <ResetComposeButton />
+          </div>
           <div className="flex-shrink-0">
             <SendButton me={me} editMode={editMode} />
           </div>

@@ -9,6 +9,7 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 import { ChatSpaceState } from '../../state/chat.reducer';
 import { NameInput } from './NameInput';
+import { PersonRunning, SatelliteDish, Whisper } from 'icons';
 
 interface Props {}
 
@@ -98,27 +99,76 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
   );
 };
 
-export const NameToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
+export const SelfPreviewToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
   const myId = channelMember.userId;
   const { channelId } = channelMember;
-  const { inGameAtom, composeAtom, isActionAtom } = useChannelAtoms();
+  const { inGameAtom, composeAtom, isActionAtom, broadcastAtom, isWhisperAtom } = useChannelAtoms();
+  const intl = useIntl();
   const dispatch = useSetAtom(composeAtom);
   const isAction = useAtomValue(isActionAtom);
+  const broadcast = useAtomValue(broadcastAtom);
   const inGame = useAtomValue(inGameAtom);
+  const isWhisper = useAtomValue(isWhisperAtom);
+  const broadcastTitle = intl.formatMessage({ defaultMessage: 'Whether to broadcast your input' });
+  const actionTitle = intl.formatMessage({ defaultMessage: 'Describe an action' });
+  const whisperTitle = intl.formatMessage({ defaultMessage: 'Only certain people can read' });
   return (
-    <div className="bg-lowest border-surface-200 flex w-max flex-col gap-1 rounded-sm border px-3 py-2 text-sm font-normal shadow-sm">
+    <div className="bg-surface-100 border-lowest flex w-[14em] select-none flex-col gap-1 rounded border px-2 py-2 text-sm font-normal shadow">
+      <div className="flex justify-between gap-1">
+        <label className="block" title={actionTitle}>
+          <div className="text-xs leading-none">Action</div>
+          <div className="text-right">
+            <span className="ml-1">
+              <PersonRunning className="inline" />
+            </span>
+            <input
+              type="checkbox"
+              checked={isAction}
+              onChange={() => dispatch({ type: 'toggleAction', payload: {} })}
+            />
+          </div>
+        </label>
+
+        <label className="block" title={broadcastTitle}>
+          <div className="text-xs leading-none">Broadcast</div>
+          <div className="text-right">
+            <span className="mr-1">
+              <SatelliteDish className="inline" />
+            </span>
+            <input
+              type="checkbox"
+              checked={broadcast}
+              onChange={() => dispatch({ type: 'toggleBroadcast', payload: {} })}
+            />
+          </div>
+        </label>
+
+        <label className="block" title={whisperTitle}>
+          <div className="text-xs leading-none">Whisper</div>
+          <div className="text-right">
+            <span className="mr-1">
+              <Whisper className="inline" />
+            </span>
+            <input
+              type="checkbox"
+              checked={isWhisper}
+              onChange={() => dispatch({ type: 'toggleWhisper', payload: {} })}
+            />
+          </div>
+        </label>
+      </div>
       <div className="flex items-center gap-2 text-sm">
-        <NameHistory myId={myId} channelId={channelId} />
         <label>
-          <input type="checkbox" checked={isAction} onChange={() => dispatch({ type: 'toggleAction', payload: {} })} />
+          <input type="checkbox" checked={inGame} onChange={() => dispatch({ type: 'toggleInGame', payload: {} })} />
           <span className="ml-1">
-            <FormattedMessage defaultMessage="Action" />
+            <FormattedMessage defaultMessage="As" />
           </span>
         </label>
+        <NameHistory myId={myId} channelId={channelId} />
       </div>
       {inGame && (
         <div className="">
-          <NameInput className="w-[10rem]" />
+          <NameInput className="w-full" />
         </div>
       )}
     </div>

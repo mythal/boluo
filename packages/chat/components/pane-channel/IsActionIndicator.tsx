@@ -3,7 +3,7 @@ import { Delay } from '../Delay';
 
 export const IsActionIndicator = () => {
   return (
-    <span className="text-surface-400 select-none text-sm">
+    <span className="text-surface-400 mr-1 select-none text-sm">
       <Delay fallback={null}>
         <PersonRunning className="mr-1 inline" />
       </Delay>

@@ -1,5 +1,5 @@
 import { ChannelMember } from 'api';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { IsActionIndicator } from './IsActionIndicator';
 import { Name } from './Name';
 import { SelfPreviewToolbox } from './SelfPreviewToolbox';
@@ -29,6 +29,8 @@ export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channe
     whileElementsMounted: autoUpdate,
   });
 
+  const toolbox = useMemo(() => <SelfPreviewToolbox channelMember={channelMember} />, [channelMember]);
+
   return (
     <div className="@2xl:flex-col @2xl:items-end @2xl:justify-start flex items-center justify-between gap-x-4 gap-y-1 pb-2">
       <div className="flex-shrink-1 @2xl:flex-shrink-0 relative max-w-full flex-grow">
@@ -49,7 +51,7 @@ export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channe
           style={floatingStyles}
           className={`z-10 ${middlewareData.hide?.referenceHidden === true ? 'hidden' : ''}`}
         >
-          <SelfPreviewToolbox channelMember={channelMember} />
+          {toolbox}
         </div>
       )}
     </div>

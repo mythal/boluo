@@ -56,16 +56,16 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
     return <Name inGame={inGame} name={name} isMaster={isMaster} isPreview self />;
   }, [inGame, isMaster, name]);
   const { onDrop } = useMediaDrop();
-  const mediaNode = useMemo(
-    () => (
-      <MessageMedia mediaFile={media} className="relative w-fit py-2">
+  const mediaNode = useMemo(() => {
+    if (media == null) return null;
+    return (
+      <MessageMedia media={media} className="relative w-fit py-2">
         <div className="absolute right-full top-2 -translate-x-1">
           <RemoveMediaButton />
         </div>
       </MessageMedia>
-    ),
-    [media],
-  );
+    );
+  }, [media]);
 
   return (
     <PreviewBox

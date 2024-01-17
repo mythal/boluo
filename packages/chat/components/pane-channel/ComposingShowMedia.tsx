@@ -16,7 +16,7 @@ export const ComposingMediaInfo: FC<Props> = ({ className = '' }) => {
   const dispatch = useSetAtom(composeAtom);
   const handleRemoveMedia = useCallback(() => dispatch({ type: 'media', payload: { media: null } }), [dispatch]);
   const validateResult = useMemo(() => validateMedia(media), [media]);
-  if (media == null) {
+  if (!(media instanceof File)) {
     return null;
   }
   return (

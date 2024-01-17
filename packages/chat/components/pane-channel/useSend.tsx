@@ -66,6 +66,26 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
       }
     }
     const isEditing = compose.editFor !== null;
+
+    let uploadResult: Awaited<ReturnType<typeof upload>> | null = null;
+    if (compose.media instanceof File) {
+      uploadResult = await upload(compose.media);
+    }
+    if (uploadResult?.isOk === false) {
+      setBanner({
+        level: 'WARNING',
+        content: (
+          <div className="">
+            <FormattedMessage defaultMessage="Error while uploading a file, did you recover the message?" />
+            <Button data-small className="ml-2" onClick={handleRecover}>
+              <FormattedMessage defaultMessage="Recover" />
+            </Button>
+          </div>
+        ),
+      });
+      return;
+    }
+    const mediaId = uploadResult?.isOk ? uploadResult.some.mediaId : null;
     if (isEditing) {
       result = await patch('/messages/edit', null, {
         messageId: compose.previewId,
@@ -74,19 +94,9 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
         entities: parsed.entities,
         inGame,
         isAction: parsed.isAction,
-        mediaId: null,
+        mediaId,
       });
     } else {
-      let mediaId: string | null = null;
-      if (compose.media) {
-        const uploadResult = await upload(compose.media);
-        if (uploadResult.isOk) {
-          mediaId = uploadResult.some.mediaId;
-        } else {
-          // TODO: show error
-          return;
-        }
-      }
       result = await post('/messages/send', null, {
         messageId: null,
         previewId: compose.previewId,

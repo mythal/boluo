@@ -8,30 +8,27 @@ import { getMediaUrl, supportedMediaType } from '../../media';
 
 type Props = {
   className?: string;
-  mediaId?: string | null;
-  mediaFile?: File | null;
+  media: File | string;
   children?: ReactNode;
 };
 
-export const MessageMedia = memo<Props>(({ mediaId, mediaFile, className, children = null }) => {
+export const MessageMedia = memo<Props>(({ media, className, children = null }) => {
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
   let src: string | null = null;
-  if (mediaFile != null) {
-    src = URL.createObjectURL(mediaFile);
-  } else if (mediaId != null) {
-    src = getMediaUrl(mediaId);
+  if (media instanceof File) {
+    src = URL.createObjectURL(media);
   } else {
-    return null;
+    src = getMediaUrl(media);
   }
-  if (mediaFile && (!mediaFile.type.startsWith('image/') || !supportedMediaType.includes(mediaFile.type))) {
+  if (media instanceof File && (!media.type.startsWith('image/') || !supportedMediaType.includes(media.type))) {
     return (
       <div className={className}>
         <div className="bg-surface-50 border-surface-200 flex h-[6rem] flex-col justify-between rounded border px-3 py-2">
           <div className="flex items-center gap-1 font-mono text-lg">
             <Paperclip />
-            {mediaFile.name}
+            {media.name}
           </div>
-          <div className="text-surface-600 text-right">{showFileSize(mediaFile.size)}</div>
+          <div className="text-surface-600 text-right">{showFileSize(media.size)}</div>
         </div>
         {children}
       </div>

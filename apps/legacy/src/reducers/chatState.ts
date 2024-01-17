@@ -56,7 +56,7 @@ export interface Compose {
   sending: boolean;
   editFor: string | null;
   messageId: Id;
-  media: File | undefined;
+  media: File | string | undefined;
   source: string;
   whisperTo: UserItem[] | null | undefined;
   inGame: boolean;
@@ -164,6 +164,7 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
     isAction: message.isAction,
     inputName: message.inGame ? message.name : '',
     inGame: message.inGame,
+    media: message.mediaId ?? undefined,
     source: message.text,
     whisperTo,
   };

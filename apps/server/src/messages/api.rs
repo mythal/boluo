@@ -26,12 +26,12 @@ pub struct NewMessage {
 #[serde(rename_all = "camelCase")]
 pub struct EditMessage {
     pub message_id: Uuid,
-    pub name: Option<String>,
-    pub text: Option<String>,
-    #[ts(type = "Array<unknown> | undefined")]
-    pub entities: Option<Vec<JsonValue>>,
-    pub in_game: Option<bool>,
-    pub is_action: Option<bool>,
+    pub name: String,
+    pub text: String,
+    #[ts(type = "Array<unknown>")]
+    pub entities: Vec<JsonValue>,
+    pub in_game: bool,
+    pub is_action: bool,
     pub media_id: Option<Uuid>,
 }
 

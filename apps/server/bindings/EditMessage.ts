@@ -2,10 +2,10 @@
 
 export interface EditMessage {
   messageId: string;
-  name: string | null;
-  text: string | null;
-  entities: Array<unknown> | undefined;
-  inGame: boolean | null;
-  isAction: boolean | null;
+  name: string;
+  text: string;
+  entities: Array<unknown>;
+  inGame: boolean;
+  isAction: boolean;
   mediaId: string | null;
 }

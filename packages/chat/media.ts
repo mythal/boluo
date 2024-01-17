@@ -61,7 +61,10 @@ async function uploadImageToS3(file: File, presignedUrl: string): Promise<Result
 
 export type MediaError = 'MEDIA_TOO_LARGE' | 'MEDIA_TYPE_NOT_SUPPORTED';
 
-export const validateMedia = (file: File | null): Result<void, MediaError> => {
+export const validateMedia = (file: File | string | null): Result<void, MediaError> => {
+  if (typeof file === 'string') {
+    return new Ok(undefined);
+  }
   if (file == null) {
     return new Ok(undefined);
   }

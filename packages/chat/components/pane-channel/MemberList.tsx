@@ -66,7 +66,7 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
     return members;
   }, [membersData, userStatusMap]);
   if (error) {
-    // TODO: handle error
+    alert('Failed to fetch members');
     return null;
   }
 

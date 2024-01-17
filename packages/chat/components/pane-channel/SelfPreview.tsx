@@ -6,14 +6,12 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { PreviewItem } from '../../state/channel.types';
 import { ComposeState } from '../../state/compose.reducer';
-import { Delay } from '../Delay';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 import { PreviewBox } from './PreviewBox';
 import { RemoveMediaButton } from './RemoveMediaButton';
 import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewNameCell } from './SelfPreviewNameCell';
-import { SelfPreviewOperations } from './SelfPreviewOperations';
 import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
 
 type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & {
@@ -58,6 +56,16 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
     return <Name inGame={inGame} name={name} isMaster={isMaster} isPreview self />;
   }, [inGame, isMaster, name]);
   const { onDrop } = useMediaDrop();
+  const mediaNode = useMemo(
+    () => (
+      <MessageMedia mediaFile={media} className="relative w-fit py-2">
+        <div className="absolute right-full top-2 -translate-x-1">
+          <RemoveMediaButton />
+        </div>
+      </MessageMedia>
+    ),
+    [media],
+  );
 
   return (
     <PreviewBox
@@ -69,14 +77,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member.channel} />
       <div className="items-between flex h-full flex-col gap-1">
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
-        <MessageMedia mediaFile={media} className="relative w-fit py-2">
-          <div className="absolute right-full top-2 -translate-x-1">
-            <RemoveMediaButton />
-          </div>
-        </MessageMedia>
-        <Delay timeout={16} fallback={<div className="h-12"></div>}>
-          <SelfPreviewOperations className="flex h-12 items-center gap-1 opacity-0 transition-opacity duration-700 data-[enter='true']:opacity-100" />
-        </Delay>
+        {mediaNode}
         <div className="min-h-[1.5em]">
           <SelfPreviewSendHelpText me={member.user} />
         </div>

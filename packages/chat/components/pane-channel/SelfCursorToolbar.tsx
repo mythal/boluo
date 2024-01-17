@@ -1,5 +1,5 @@
 import { forwardRef, RefObject, useContext, useEffect, useImperativeHandle, useState } from 'react';
-import { shift, useFloating } from '@floating-ui/react';
+import { autoUpdate, shift, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
 
@@ -21,6 +21,7 @@ export const SelfCursorToolbar = forwardRef<CursorToolbarHandle, Props>(({ conte
       reference: cursorRef.current,
     },
     middleware: [shift()],
+    whileElementsMounted: autoUpdate,
   });
   useImperativeHandle(ref, () => ({ update }));
 

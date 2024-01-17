@@ -19,6 +19,7 @@ interface Props {
   source: string;
   entities: Entity[];
   isAction: boolean;
+  isArchived: boolean;
   self?: boolean;
   isPreview: boolean;
   seed?: number[];
@@ -33,6 +34,7 @@ export const Content = memo<Props>(
     source,
     entities,
     isAction,
+    isArchived,
     nameNode,
     seed,
     isPreview,
@@ -89,6 +91,7 @@ export const Content = memo<Props>(
             'relative h-full whitespace-pre-wrap break-all pr-6',
             self ? 'pb-12' : '',
             isPreview ? 'animate-pulse' : '',
+            isArchived ? 'line-through' : '',
           )}
         >
           {isAction && <span className="text-surface-400 mr-1">*</span>}

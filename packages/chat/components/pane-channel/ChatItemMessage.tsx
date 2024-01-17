@@ -12,6 +12,7 @@ import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 
 interface Props {
+  iAmAdmin: boolean;
   iAmMaster: boolean;
   message: MessageItem;
   className?: string;
@@ -24,7 +25,8 @@ export const ChatItemMessage: FC<Props> = ({
   className = '',
   self,
   continuous = false,
-  iAmMaster = false,
+  iAmAdmin,
+  iAmMaster,
 }) => {
   const { isMaster, isAction, optimistic } = message;
 
@@ -45,7 +47,15 @@ export const ChatItemMessage: FC<Props> = ({
   const draggable = self || iAmMaster;
 
   return (
-    <MessageBox self={self} message={message} draggable={draggable} mini={mini} optimistic={optimistic}>
+    <MessageBox
+      self={self}
+      iAmAdmin={iAmAdmin}
+      iAmMaster={iAmMaster}
+      message={message}
+      draggable={draggable}
+      mini={mini}
+      optimistic={optimistic}
+    >
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
         {!mini && <>{nameNode}:</>}
       </div>

@@ -56,6 +56,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     myMember,
   } = props;
   const totalCount = chatList.length;
+  const iAmAdmin = myMember !== null && myMember !== 'LOADING' && myMember.space.isAdmin;
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;
@@ -75,6 +76,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     return (
       <ChatItemSwitch
         iAmMaster={iAmMaster}
+        iAmAdmin={iAmAdmin}
         key={item.key}
         myId={myId}
         chatItem={item}

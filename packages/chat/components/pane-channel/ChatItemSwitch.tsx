@@ -6,19 +6,21 @@ import { ChatItemPreview } from './ChatItemPreview';
 interface Props {
   chatItem: ChatItem;
   myId: string | undefined;
-  iAmMaster?: boolean;
+  iAmAdmin: boolean;
+  iAmMaster: boolean;
   isMember: boolean;
   className?: string;
   continuous: boolean;
 }
 
 export const ChatItemSwitch = memo<Props>(
-  ({ chatItem, className = '', myId, continuous, iAmMaster = false, isMember }) => {
+  ({ chatItem, className = '', myId, continuous, iAmAdmin, iAmMaster, isMember }) => {
     switch (chatItem.type) {
       case 'MESSAGE':
         return (
           <ChatItemMessage
             self={isMember && myId === chatItem.senderId}
+            iAmAdmin={iAmAdmin}
             iAmMaster={iAmMaster}
             message={chatItem}
             className={className}

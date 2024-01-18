@@ -21,8 +21,11 @@ export const SelfCursorToolbar = forwardRef<CursorToolbarHandle, Props>(({ conte
       reference: cursorRef.current,
     },
     middleware: [shift()],
-    whileElementsMounted: autoUpdate,
   });
+  useEffect(() => {
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [update]);
   useImperativeHandle(ref, () => ({ update }));
 
   if (!cursorState) return null;

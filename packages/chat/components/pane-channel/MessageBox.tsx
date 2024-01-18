@@ -6,6 +6,7 @@ import { FC, ReactNode, useMemo } from 'react';
 import { Delay } from '../Delay';
 import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageToolbox } from './MessageToolbox';
+import { MessageTime } from './MessageTime';
 interface Props {
   className?: string;
   children: ReactNode;
@@ -61,8 +62,8 @@ export const MessageBox: FC<Props> = ({
       <Delay timeout={400}>
         <div
           className={clsx(
-            'absolute right-4 top-0 z-10 max-h-full group-hover:z-20',
-            'pointer-events-none -translate-y-2 opacity-0 transition-all duration-100 ease-in group-hover:pointer-events-auto group-hover:block group-hover:translate-y-1 group-hover:opacity-100',
+            'absolute -top-2 right-2 z-10 max-h-full group-hover:z-20',
+            'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:block group-hover:opacity-100',
           )}
         >
           <MessageToolbox message={message} self={self} iAmAdmin={iAmAdmin} iAmMaster={iAmMaster} />

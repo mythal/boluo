@@ -10,6 +10,8 @@ import { Content } from './Content';
 import { MessageBox } from './MessageBox';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
+import { MessageTime } from './MessageTime';
+import { Delay } from '../Delay';
 
 interface Props {
   iAmAdmin: boolean;
@@ -45,6 +47,7 @@ export const ChatItemMessage: FC<Props> = ({
   }, [message.entities, message.text]);
   const mini = continuous || isAction;
   const draggable = self || iAmMaster;
+  const time = useMemo(() => <MessageTime message={message} />, [message]);
 
   return (
     <MessageBox
@@ -57,6 +60,7 @@ export const ChatItemMessage: FC<Props> = ({
       optimistic={optimistic}
     >
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
+        <Delay>{time}</Delay>
         {!mini && <>{nameNode}:</>}
       </div>
       <div className="@2xl:pr-[6rem]">

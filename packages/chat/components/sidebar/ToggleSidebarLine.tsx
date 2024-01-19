@@ -58,15 +58,15 @@ export const ToggleSidebarLine: FC<Props> = () => {
   return (
     <button
       ref={buttonRef}
-      className="group absolute left-0 top-0 z-20 h-full w-2 cursor-pointer hover:w-5 hover:bg-blue-400/15 data-[near=true]:bg-blue-300/10"
+      className="group absolute left-0 top-0 z-20 h-full w-2 cursor-pointer hover:bg-blue-400/15 data-[near=true]:bg-blue-300/10"
       onMouseDown={handleMouseDown}
       title={title}
     >
       <div
         className={clsx(
-          'bg-lowest group-hover:border-transprent absolute z-30 box-content text-sm',
-          'h-[20px] w-[18px] -translate-x-[2px] -translate-y-[2px] cursor-pointer',
-          'shadow-surface-300 rounded-br-lg shadow-[0_0_0_1px] group-hover:shadow-[0_0_0_2px] group-hover:shadow-blue-300',
+          'bg-bg group-hover:border-transprent text absolute top-[20%] z-30 box-content flex items-center text-lg',
+          'h-[40px] w-[20px] -translate-x-[2px] -translate-y-[2px] cursor-pointer',
+          'shadow-surface-300 rounded-r-lg shadow-[0_0_0_1px] group-hover:shadow-[0_0_0_2px] group-hover:shadow-blue-300',
         )}
       >
         <Icon icon={isExpanded ? ChevronLeft : ChevronRight} />
@@ -77,7 +77,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
           dragging && 'bg-blue-500',
         )}
       ></div>
-      <div className="bg-highest text-lowest absolute left-4 top-8 z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 group-hover:block">
+      <div className="bg-lowest absolute left-4 top-[calc(20%-3rem)] z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
         <span>
           <Icon icon={Sidebar} />
         </span>

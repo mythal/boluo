@@ -9,5 +9,13 @@ interface Props {
 }
 
 export const EntityText: FC<Props> = ({ source, entity: { start, len }, cursorNode }) => {
-  return <TextWithCursor cursorNode={cursorNode} text={source.substring(start, start + len)} start={start} len={len} />;
+  return (
+    <TextWithCursor
+      withoutTailCursor
+      cursorNode={cursorNode}
+      text={source.substring(start, start + len)}
+      start={start}
+      len={len}
+    />
+  );
 };

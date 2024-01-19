@@ -12,6 +12,7 @@ import { memo, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';
+import { IsDraggingContext } from '../../hooks/useIsDragging';
 
 interface Props extends Pick<DndContextProps, 'onDragCancel' | 'onDragStart' | 'onDragEnd'> {
   children: ReactNode;
@@ -27,9 +28,11 @@ export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, my
   const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} {...rest}>
-      {children}
+      <IsDraggingContext.Provider value={!!active}>
+        {children}
 
-      {createPortal(<DraggingOverlay iAmMaster={iAmMaster} active={active} myId={myId} />, document.body)}
+        {createPortal(<DraggingOverlay iAmMaster={iAmMaster} active={active} myId={myId} />, document.body)}
+      </IsDraggingContext.Provider>
     </DndContext>
   );
 });

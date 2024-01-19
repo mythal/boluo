@@ -58,6 +58,8 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
     [inGameAtom, inputedNameAtom, nameHistory],
   );
   const selectedValue = useAtomValue(selectedValueAtom);
+  const historyCharacter = intl.formatMessage({ defaultMessage: 'History Character' });
+  const newName = intl.formatMessage({ defaultMessage: 'New…' });
 
   const dispatch = useSetAtom(useComposeAtom());
   const nameOptions = useMemo(
@@ -79,20 +81,15 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
     }
   };
   if (me == null) {
-    throw new Error('Unexpected: empty me');
+    alert('Unexpected error: You are not logged in.');
+    return null;
   }
   return (
     <div className="w-[6rem] flex-1">
       <Select value={selectedValue} title={title} onChange={handleChange}>
         <option value={OOC_STATE}>{me === 'LOADING' ? '…' : me.user.nickname}</option>
-        <option value="">
-          <FormattedMessage defaultMessage="New…" />
-        </option>
-        {nameOptions.length > 0 && (
-          <option disabled>
-            - <FormattedMessage defaultMessage="History Character" /> -
-          </option>
-        )}
+        <option value="">{newName}</option>
+        {nameOptions.length > 0 && <option disabled>- {historyCharacter} -</option>}
         {nameOptions}
       </Select>
     </div>

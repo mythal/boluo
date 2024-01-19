@@ -1,4 +1,5 @@
 import { DragOverlay } from '@dnd-kit/core';
+import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import { memo } from 'react';
 import { DraggingItem } from './ChatContentView';
 import { ChatItemMessage } from './ChatItemMessage';
@@ -16,15 +17,18 @@ export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster }) => {
   const { message } = active;
   const { senderId } = message;
   return (
-    <DragOverlay zIndex={15}>
+    <DragOverlay modifiers={[restrictToFirstScrollableAncestor]} zIndex={15}>
       {active && (
-        <ChatItemMessage
-          message={message}
-          iAmMaster={iAmMaster}
-          iAmAdmin={false}
-          self={senderId === myId}
-          className="px-4 py-2"
-        />
+        <div className="@container">
+          <ChatItemMessage
+            overlay={true}
+            message={message}
+            iAmMaster={iAmMaster}
+            iAmAdmin={false}
+            self={senderId === myId}
+            className="px-4 py-2"
+          />
+        </div>
       )}
     </DragOverlay>
   );

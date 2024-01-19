@@ -8,7 +8,8 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { memo, ReactNode } from 'react';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { memo, ReactNode, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';
@@ -26,8 +27,9 @@ export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, my
   const touchSensor = useSensor(TouchSensor);
   const keyboardSensor = useSensor(KeyboardSensor);
   const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
+  const modifiers = useMemo(() => [restrictToVerticalAxis], []);
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} {...rest}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={modifiers} {...rest}>
       <IsDraggingContext.Provider value={!!active}>
         {children}
 

@@ -292,15 +292,15 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
 
   return (
     <div className={className} ref={wrapperRef}>
-      <ChatListDndContext
-        iAmMaster={iAmMaster}
-        active={active}
-        myId={myId}
-        onDragCancel={handleDragCancel}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <ScrollerRefContext.Provider value={scrollerRef}>
+      <ScrollerRefContext.Provider value={scrollerRef}>
+        <ChatListDndContext
+          iAmMaster={iAmMaster}
+          active={active}
+          myId={myId}
+          onDragCancel={handleDragCancel}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
           <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
             <ChatContentVirtualList
               firstItemIndex={firstItemIndex}
@@ -316,8 +316,8 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
             />
             {showButton && <GoButtomButton onClick={goBottom} />}
           </SortableContext>
-        </ScrollerRefContext.Provider>
-      </ChatListDndContext>
+        </ChatListDndContext>
+      </ScrollerRefContext.Provider>
     </div>
   );
 };

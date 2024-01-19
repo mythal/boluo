@@ -1,5 +1,5 @@
-import { FC, RefObject, useContext, useEffect, useMemo } from 'react';
-import { shift, useFloating } from '@floating-ui/react';
+import { FC, useContext, useEffect, useMemo } from 'react';
+import { autoUpdate, shift, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
 import { Atom, useAtomValue } from 'jotai';
@@ -18,11 +18,8 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
       reference: cursorNode,
     },
     middleware: [shift()],
+    whileElementsMounted: autoUpdate,
   });
-  useEffect(() => {
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [update]);
   useEffect(() => {
     const hendle = window.setTimeout(() => {
       update();

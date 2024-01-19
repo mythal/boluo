@@ -15,8 +15,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "noUncheckedIndexedAccess": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
   },
   "include": ["src", "vite.config.ts", "tailwind.config.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [{ "path": "./tsconfig.node.json" }],
 }

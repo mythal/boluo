@@ -7,7 +7,7 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
+    "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {},
   },
 
   // Configure tool-specific properties.
@@ -20,9 +20,9 @@
         "mkhl.direnv",
         "dbaeumer.vscode-eslint",
         "jnoortheen.nix-ide",
-        "esbenp.prettier-vscode"
-      ]
-    }
+        "esbenp.prettier-vscode",
+      ],
+    },
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -36,13 +36,13 @@
   "containerUser": "dev",
   "portsAttributes": {
     "3000": {
-      "label": "server"
+      "label": "server",
     },
     "3100": {
-      "label": "site"
+      "label": "site",
     },
     "8080": {
-      "label": "legacy"
-    }
-  }
+      "label": "legacy",
+    },
+  },
 }

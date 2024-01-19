@@ -12,10 +12,18 @@ interface Props {
   text: string;
   start: number;
   cursorNode: ReactNode;
+  /** The top-level tail cursor will handle by `Content` */
+  withoutTailCursor?: boolean;
   len: number;
 }
 
-export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entityLen, cursorNode }) => {
+export const TextWithCursor: FC<Props> = ({
+  text,
+  start: entityStart,
+  len: entityLen,
+  cursorNode,
+  withoutTailCursor = false,
+}) => {
   const cursorState = useContext(CursorContext);
 
   if (!cursorState || !cursorState.range) {
@@ -32,6 +40,9 @@ export const TextWithCursor: FC<Props> = ({ text, start: entityStart, len: entit
     // ...teIxt...
     const leftText = text.substring(0, cursorStart - entityStart);
     const rightText = text.substring(cursorStart - entityStart);
+    if (withoutTailCursor && rightText.length === 0) {
+      return <>{leftText}</>;
+    }
     return (
       <>
         {leftText}

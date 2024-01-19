@@ -7,7 +7,7 @@ import { Delay } from '../Delay';
 import { EntityCode } from '../entities/EntityCode';
 import { EntityCodeBlock } from '../entities/EntityCodeBlock';
 import { EntityEmphasis } from '../entities/EntityEmphasis';
-import { EntityEmpty } from '../entities/EntityEmpty';
+import { EntityTail } from '../entities/EntityTail';
 import { EntityExpr } from '../entities/EntityExpr';
 import { EntityLink } from '../entities/EntityLink';
 import { EntityStrong } from '../entities/EntityStrong';
@@ -37,10 +37,7 @@ export const Content = memo<Props>(
     const cursorNode = useMemo(() => (isDragging ? null : <Cursor self atom={cursorAtom} />), [cursorAtom, isDragging]);
     const rng: Prando | undefined = useMemo(() => makeRng(seed), [seed]);
     const entityNodeList = useMemo(() => {
-      if (entities.length === 0) {
-        return <EntityEmpty cursorNode={cursorNode} />;
-      }
-      return entities.map((entity, index) => {
+      const nodeList = entities.map((entity, index) => {
         switch (entity.type) {
           case 'Text':
             return <EntityText cursorNode={cursorNode} key={index} source={source} entity={entity} />;
@@ -58,6 +55,8 @@ export const Content = memo<Props>(
             return <EntityExpr key={index} source={source} node={entity.node} rng={rng} />;
         }
       });
+      nodeList.push(<EntityTail key="tail" source={source} cursorNode={cursorNode} />);
+      return nodeList;
     }, [cursorNode, entities, rng, source]);
     return (
       <>

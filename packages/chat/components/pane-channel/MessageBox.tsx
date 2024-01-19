@@ -51,11 +51,15 @@ export const MessageBox: FC<Props> = ({
           attributes={attributes}
           listeners={listeners}
           loading={optimistic}
-        />
+        >
+          <MessageTime message={message} />
+        </MessageReorderHandle>
       ) : (
-        <div className="col-span-1 row-span-full h-full" />
+        <div className="text-surface-300 col-span-1 row-span-full text-right">
+          <MessageTime message={message} />
+        </div>
       ),
-    [attributes, draggable, listeners, optimistic, setActivatorNodeRef],
+    [attributes, draggable, listeners, message, optimistic, setActivatorNodeRef],
   );
   const toolbox = useMemo(
     () => (
@@ -76,8 +80,8 @@ export const MessageBox: FC<Props> = ({
     <div
       className={clsx(
         'hover:bg-surface-100 group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
-        'grid-cols-[2rem_minmax(0,1fr)]',
-        '@2xl:grid-cols-[2rem_12rem_minmax(0,1fr)]',
+        'grid-cols-[4rem_minmax(0,1fr)]',
+        '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
         isDragging && 'opacity-0',
         className,

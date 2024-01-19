@@ -51,5 +51,7 @@
   "editor.quickSuggestions": {
     "strings": true
   },
+  // https://github.com/lukeed/clsx#tailwind-support
+  "tailwindCSS.experimental.classRegex": [["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]],
   "tailwindCSS.experimental.configFile": "packages/ui/tailwind.config.ts"
 }

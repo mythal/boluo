@@ -7,12 +7,14 @@ import { Delay } from '../Delay';
 import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageToolbox } from './MessageToolbox';
 import { MessageTime } from './MessageTime';
+import { useScrollerRef } from '../../hooks/useScrollerRef';
 interface Props {
   className?: string;
   children: ReactNode;
   message: Message;
   draggable?: boolean;
   mini?: boolean;
+  overlay?: boolean;
   optimistic?: boolean;
   self: boolean;
   iAmMaster: boolean;
@@ -23,6 +25,7 @@ export const MessageBox: FC<Props> = ({
   className = '',
   children,
   draggable = false,
+  overlay = false,
   message,
   mini = false,
   optimistic = false,
@@ -30,6 +33,7 @@ export const MessageBox: FC<Props> = ({
   iAmMaster,
   iAmAdmin,
 }) => {
+  const scrollerRef = useScrollerRef();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
     id: message.id,
     data: { message },
@@ -78,11 +82,13 @@ export const MessageBox: FC<Props> = ({
   );
   return (
     <div
+      data-overlay={overlay}
       className={clsx(
         'hover:bg-surface-100 group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
+        'data-[overlay=true]:bg-surface-300/30 data-[overlay=true]:backdrop-blur-sm	',
         isDragging && 'opacity-0',
         className,
       )}

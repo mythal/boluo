@@ -20,6 +20,7 @@ interface Props {
   className?: string;
   self: boolean;
   continuous?: boolean;
+  overlay?: boolean;
 }
 
 export const ChatItemMessage: FC<Props> = ({
@@ -29,6 +30,7 @@ export const ChatItemMessage: FC<Props> = ({
   continuous = false,
   iAmAdmin,
   iAmMaster,
+  overlay = false,
 }) => {
   const { isMaster, isAction, optimistic } = message;
 
@@ -55,6 +57,7 @@ export const ChatItemMessage: FC<Props> = ({
       iAmMaster={iAmMaster}
       message={message}
       draggable={draggable}
+      overlay={overlay}
       mini={mini}
       optimistic={optimistic}
     >

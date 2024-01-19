@@ -7,6 +7,7 @@ import { autoUpdate, flip, hide, offset, shift, useFloating } from '@floating-ui
 import { Button } from 'ui/Button';
 import { Settings } from 'icons';
 import { atom, useAtom } from 'jotai';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 interface Props {
   inGame: boolean;
@@ -18,6 +19,7 @@ interface Props {
 const isOpenAtom = atom(true);
 
 export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channelMember }) => {
+  const isDragging = useIsDragging();
   const { isMaster, characterName } = channelMember;
   const [isOpen, setIsOpen] = useAtom(isOpenAtom);
 
@@ -45,7 +47,7 @@ export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channe
           <Settings />
         </button>
       </div>
-      {isOpen && (
+      {isOpen && !isDragging && (
         <div
           ref={refs.setFloating}
           style={floatingStyles}

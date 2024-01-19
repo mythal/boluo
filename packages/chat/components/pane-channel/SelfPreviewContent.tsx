@@ -3,12 +3,12 @@ import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, ReactNode, useDeferredValue, useEffect, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { Cursor } from '../entities/Cursor';
 import { CursorContext, CursorState } from '../entities/TextWithCursor';
 import { Content } from './Content';
 import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 interface Props {
   nameNode: ReactNode;
@@ -25,7 +25,8 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
 
   const scrollerRef = useScrollerRef();
   const cursorRef = useRef<HTMLSpanElement | null>(null);
-  const cursorNode = useMemo(() => <Cursor self ref={cursorRef} />, []);
+  const isDragging = useIsDragging();
+  const cursorNode = useMemo(() => (isDragging ? null : <Cursor self ref={cursorRef} />), [isDragging]);
   const prevRangeRef = useRef<[number, number] | null>(null);
 
   useEffect(() => {

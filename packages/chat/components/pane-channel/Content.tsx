@@ -13,6 +13,7 @@ import { EntityLink } from '../entities/EntityLink';
 import { EntityStrong } from '../entities/EntityStrong';
 import { EntityText } from '../entities/EntityText';
 import { CursorToolbarHandle, SelfCursorToolbar } from './SelfCursorToolbar';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 interface Props {
   channelId: string;
@@ -42,6 +43,7 @@ export const Content = memo<Props>(
     cursorNode = null,
     self = false,
   }) => {
+    const isDragging = useIsDragging();
     const ref = useRef<HTMLDivElement | null>(null);
     const toolbarHandle = useRef<CursorToolbarHandle | null>(null);
     useEffect(() => {
@@ -52,13 +54,13 @@ export const Content = memo<Props>(
       return () => window.clearTimeout(handle);
     });
     const cursorToolbar = useMemo(() => {
-      if (!isPreview || !self || !cursorRef) return null;
+      if (!isPreview || !self || !cursorRef || isDragging) return null;
       return (
         <Delay timeout={300}>
           <SelfCursorToolbar cursorRef={cursorRef} ref={toolbarHandle} contentRef={ref} />
         </Delay>
       );
-    }, [cursorRef, isPreview, self]);
+    }, [cursorRef, isDragging, isPreview, self]);
     const rng: Prando | undefined = useMemo(() => makeRng(seed), [seed]);
     const entityNodeList = useMemo(() => {
       if (entities.length === 0) {

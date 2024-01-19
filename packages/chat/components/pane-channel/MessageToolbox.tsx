@@ -9,6 +9,7 @@ import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useOutside } from '../../hooks/useOutside';
 import { MessageToolboxButton } from './MessageToolboxButton';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 interface Props {
   className?: string;
@@ -28,6 +29,7 @@ const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode
 Box.displayName = 'MessageToolboxBox';
 
 export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, iAmMaster }) => {
+  const isDragging = useIsDragging();
   const setBanner = useSetBanner();
   const boxRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<ToolboxState>('NORMAL');
@@ -62,6 +64,7 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
   const handleEditMessage = useCallback(() => {
     dispatch({ type: 'editMessage', payload: { message } });
   }, [dispatch, message]);
+  if (isDragging) return null;
   return (
     <Box className={className} ref={boxRef}>
       {state === 'DELETE_CONFRIM' && (

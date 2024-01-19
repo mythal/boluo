@@ -1,6 +1,6 @@
 import 'server-only';
 import type { IntlShape } from '@formatjs/intl';
-import { createIntl } from '@formatjs/intl';
+import { IntlErrorCode, createIntl } from '@formatjs/intl';
 import type { GetMe } from 'api';
 import { defaultLocale, localeList, toLocale } from 'common/locale';
 import type { IntlMessages, Locale } from 'common/locale';
@@ -95,8 +95,8 @@ export const getIntl = ({ lang }: LangParams): IntlShape<string> => {
     locale,
     messages,
     onError: (err) => {
-      if (err.code === 'MISSING_TRANSLATION') {
-        console.warn(err.message.trim());
+      if (err.code === IntlErrorCode.MISSING_TRANSLATION) {
+        console.debug(err.message.trim());
       } else {
         console.error(err);
       }

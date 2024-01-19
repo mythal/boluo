@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect, useMemo } from 'react';
-import { autoUpdate, shift, useFloating } from '@floating-ui/react';
+import { autoUpdate, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
 import { Atom, useAtomValue } from 'jotai';
@@ -17,7 +17,7 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
     elements: {
       reference: cursorNode,
     },
-    middleware: [shift()],
+    middleware: [],
     whileElementsMounted: autoUpdate,
   });
   useEffect(() => {
@@ -32,6 +32,7 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
     return a === b;
   }, [cursorState?.range]);
   const buttions = useMemo(() => <SelfCursorToolbarButtons collapsed={collapsed} />, [collapsed]);
+
   return (
     <div
       ref={refs.setFloating}

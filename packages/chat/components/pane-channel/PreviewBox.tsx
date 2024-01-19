@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { DragEventHandler, FC, ReactNode } from 'react';
+import { DragEventHandler, FC, ReactNode, useMemo } from 'react';
 import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
 
 interface Props {
@@ -19,6 +19,7 @@ export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode =
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  const handlePlaceHolder = useMemo(() => <PreviewHandlePlaceHolder editMode={editMode} />, [editMode]);
   return (
     <div
       className={clsx(
@@ -32,7 +33,7 @@ export const PreviewBox: FC<Props> = ({ id, children, className = '', editMode =
       onDrop={onDrop}
       onDragOver={(event) => event.preventDefault()}
     >
-      <PreviewHandlePlaceHolder editMode={editMode} />
+      {handlePlaceHolder}
       {children}
     </div>
   );

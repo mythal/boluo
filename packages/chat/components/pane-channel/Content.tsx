@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import Prando from 'prando';
-import { memo, ReactNode, RefObject, useEffect, useMemo, useRef } from 'react';
+import { memo, ReactNode, useMemo, useRef } from 'react';
 import type { Entity } from '../../interpreter/entities';
 import { makeRng } from '../../interpreter/eval';
 import { Delay } from '../Delay';
@@ -12,8 +12,10 @@ import { EntityExpr } from '../entities/EntityExpr';
 import { EntityLink } from '../entities/EntityLink';
 import { EntityStrong } from '../entities/EntityStrong';
 import { EntityText } from '../entities/EntityText';
-import { CursorToolbarHandle, SelfCursorToolbar } from './SelfCursorToolbar';
+import { SelfCursorToolbar } from './SelfCursorToolbar';
 import { useIsDragging } from '../../hooks/useIsDragging';
+import { Cursor } from '../entities/Cursor';
+import { atom } from 'jotai';
 
 interface Props {
   channelId: string;
@@ -24,43 +26,15 @@ interface Props {
   self?: boolean;
   isPreview: boolean;
   seed?: number[];
-  cursorRef?: RefObject<HTMLElement | null>;
-  cursorNode?: ReactNode;
   nameNode: ReactNode;
 }
 
 export const Content = memo<Props>(
-  ({
-    channelId,
-    source,
-    entities,
-    isAction,
-    isArchived,
-    nameNode,
-    seed,
-    isPreview,
-    cursorRef,
-    cursorNode = null,
-    self = false,
-  }) => {
+  ({ source, entities, isAction, isArchived, nameNode, seed, isPreview, self = false }) => {
     const isDragging = useIsDragging();
-    const ref = useRef<HTMLDivElement | null>(null);
-    const toolbarHandle = useRef<CursorToolbarHandle | null>(null);
-    useEffect(() => {
-      if (!isPreview || !self) return;
-      const handle = window.setTimeout(() => {
-        toolbarHandle.current?.update();
-      }, 8);
-      return () => window.clearTimeout(handle);
-    });
-    const cursorToolbar = useMemo(() => {
-      if (!isPreview || !self || !cursorRef || isDragging) return null;
-      return (
-        <Delay timeout={300}>
-          <SelfCursorToolbar cursorRef={cursorRef} ref={toolbarHandle} contentRef={ref} />
-        </Delay>
-      );
-    }, [cursorRef, isDragging, isPreview, self]);
+    const cursorAtom = useMemo(() => atom<HTMLElement | null>(null), []);
+
+    const cursorNode = useMemo(() => (isDragging ? null : <Cursor self atom={cursorAtom} />), [cursorAtom, isDragging]);
     const rng: Prando | undefined = useMemo(() => makeRng(seed), [seed]);
     const entityNodeList = useMemo(() => {
       if (entities.length === 0) {
@@ -88,7 +62,6 @@ export const Content = memo<Props>(
     return (
       <>
         <div
-          ref={ref}
           className={clsx(
             'relative h-full whitespace-pre-wrap break-all pr-6',
             self ? 'pb-12' : '',
@@ -101,7 +74,11 @@ export const Content = memo<Props>(
           {entityNodeList}
         </div>
 
-        {cursorToolbar}
+        {isPreview && self && !isDragging && (
+          <Delay timeout={300}>
+            <SelfCursorToolbar cursorAtom={cursorAtom} />
+          </Delay>
+        )}
       </>
     );
   },

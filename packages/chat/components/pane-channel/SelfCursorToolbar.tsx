@@ -1,24 +1,21 @@
-import { forwardRef, RefObject, useContext, useEffect, useImperativeHandle, useState } from 'react';
-import { autoUpdate, shift, useFloating } from '@floating-ui/react';
+import { FC, RefObject, useContext, useEffect, useMemo } from 'react';
+import { shift, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
+import { Atom, useAtomValue } from 'jotai';
 
 interface Props {
-  contentRef: RefObject<HTMLDivElement | null>;
-  cursorRef: RefObject<HTMLElement | null>;
+  cursorAtom: Atom<HTMLElement | null>;
 }
 
-export interface CursorToolbarHandle {
-  update: () => void;
-}
-
-export const SelfCursorToolbar = forwardRef<CursorToolbarHandle, Props>(({ contentRef, cursorRef }, ref) => {
+export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
   // `useContext` will trigger a re-render when the cursor state changes.
   const cursorState = useContext(CursorContext);
+  const cursorNode = useAtomValue(cursorAtom);
 
   const { update, floatingStyles, refs } = useFloating({
     elements: {
-      reference: cursorRef.current,
+      reference: cursorNode,
     },
     middleware: [shift()],
   });
@@ -26,19 +23,27 @@ export const SelfCursorToolbar = forwardRef<CursorToolbarHandle, Props>(({ conte
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, [update]);
-  useImperativeHandle(ref, () => ({ update }));
+  useEffect(() => {
+    const hendle = window.setTimeout(() => {
+      update();
+    }, 8);
+    return () => window.clearTimeout(hendle);
+  });
 
-  if (!cursorState) return null;
-  const [a, b] = cursorState.range;
+  const collapsed = useMemo(() => {
+    const [a, b] = cursorState?.range ?? [0, 0];
+    return a === b;
+  }, [cursorState?.range]);
+  const buttions = useMemo(() => <SelfCursorToolbarButtons collapsed={collapsed} />, [collapsed]);
   return (
     <div
       ref={refs.setFloating}
       style={floatingStyles}
       className="bg-lowest border-highest flex select-none items-center justify-center rounded-lg border-[2px] shadow"
     >
-      <SelfCursorToolbarButtons collapsed={a === b} />
+      {buttions}
     </div>
   );
-});
+};
 
 SelfCursorToolbar.displayName = 'SelfCursorToolbar';

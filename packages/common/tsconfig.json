@@ -7,8 +7,8 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "sourceMap": true
+    "sourceMap": true,
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["dist", "build", "node_modules"]
+  "exclude": ["dist", "build", "node_modules"],
 }

@@ -3,6 +3,7 @@ import { Message } from 'api';
 import clsx from 'clsx';
 import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 interface Props {
   message: Message;
@@ -24,9 +25,8 @@ export const MessageTime: FC<Props> = ({ message }) => {
   const [isOpen, setIsOpen] = useState(false);
   const date = new Date(message.created);
   const editedDate = new Date(message.modified);
-  const minutesStr = String(date.getMinutes());
-  const minutes = minutesStr.length === 1 ? `0${minutesStr}` : minutesStr;
   const edited = message.modified !== message.created;
+  const isDragging = useIsDragging();
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
@@ -43,16 +43,16 @@ export const MessageTime: FC<Props> = ({ message }) => {
     <>
       <time
         data-edited={edited}
-        className="float-left mr-1 self-start text-right text-xs decoration-dotted data-[edited=true]:underline"
+        className="mr-1 self-start text-right text-xs decoration-dotted data-[edited=true]:underline"
         dateTime={message.created}
         title={detailDate(date)}
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        {date.getHours()}:{minutes}
+        {pad(date.getHours())}:{pad(date.getMinutes())}
       </time>
 
-      {isOpen && (
+      {isOpen && !isDragging && (
         <div
           ref={refs.setFloating}
           style={floatingStyles}

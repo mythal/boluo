@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import { EvaluatedExprNode, ExprNode } from '../../interpreter/entities';
 import { EntityExprBinary } from './EntityExprBinary';
 import { EntityExprCocRoll } from './EntityExprCocRoll';
@@ -14,7 +14,7 @@ interface Props {
   node: ExprNode | EvaluatedExprNode;
 }
 
-export const EntityExprNode: FC<Props> = ({ node }) => {
+export const EntityExprNode = memo<Props>(({ node }) => {
   switch (node.type) {
     case 'Num':
       return <>{node.value}</>;
@@ -43,4 +43,6 @@ export const EntityExprNode: FC<Props> = ({ node }) => {
     default:
       return <EntityExprNodeUnknown />;
   }
-};
+});
+
+EntityExprNode.displayName = 'EntityExprNode';

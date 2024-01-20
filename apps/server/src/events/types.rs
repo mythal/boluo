@@ -100,6 +100,9 @@ pub enum EventBody {
         #[serde(rename = "spaceWithRelated")]
         space_with_related: SpaceWithRelated,
     },
+    Error {
+        reason: String,
+    },
     AppUpdated {
         version: String,
     },
@@ -129,6 +132,14 @@ impl Event {
             id: EventId::new(),
             // subsec: now.timestamp_subsec_millis(),
             body: EventBody::Batch { encoded_events },
+        }
+    }
+
+    pub fn error(mailbox: Uuid, reason: String) -> Event {
+        Event {
+            mailbox,
+            id: EventId::new(),
+            body: EventBody::Error { reason },
         }
     }
 

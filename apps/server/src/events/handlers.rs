@@ -152,35 +152,56 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: Stri
     Ok(())
 }
 
-async fn connect(req: Request) -> Result<Response, anyhow::Error> {
+fn ws_error(req: Request, mailbox: Option<Uuid>, reason: String) -> Response {
+    let mailbox = mailbox.unwrap_or_default();
+    let event = serde_json::to_string(&Event::error(mailbox, reason)).expect("Failed to serialize error event");
+    establish_web_socket(req, |ws_stream| async move {
+        let (mut outgoing, _incoming) = ws_stream.split();
+        outgoing.send(WsMessage::Text(event)).await.ok();
+    })
+}
+
+async fn connect(req: Request) -> Response {
     use futures::future;
 
-    let EventQuery {
+    let Ok(EventQuery {
         mailbox,
         token,
         after,
         seq,
-    } = parse_query(req.uri())?;
+    }) = parse_query(req.uri())
+    else {
+        return ws_error(req, None, "Invalid query".to_string());
+    };
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        let mut redis = cache::conn().await?;
+        let Ok(mut redis) = cache::conn().await else {
+            return ws_error(req, Some(mailbox), "Failed to connect to cache".to_string());
+        };
         let key = make_key(b"token", &token, b"user_id");
-        let data = redis.get(&key).await?;
+        let Ok(data) = redis.get(&key).await else {
+            return ws_error(req, Some(mailbox), "Failed to get token".to_string());
+        };
         if let Some(bytes) = data {
-            *user_id = Ok(Uuid::from_bytes(
-                bytes
-                    .try_into()
-                    .map_err(|_| anyhow!("can't convert user id in cache to UUID type"))?,
-            ))
+            let Ok(bytes) = bytes.try_into() else {
+                return ws_error(req, Some(mailbox), "Invalid token".to_string());
+            };
+            *user_id = Ok(Uuid::from_bytes(bytes));
         }
     }
 
-    let mut conn = database::get().await?;
+    let Ok(mut conn) = database::get().await else {
+        return ws_error(req, Some(mailbox), "Failed to connect to database".to_string());
+    };
     let db = &mut *conn;
-    let space = Space::get_by_id(db, &mailbox).await?;
+    let Ok(space) = Space::get_by_id(db, &mailbox).await else {
+        return ws_error(req, Some(mailbox), "Invalid mailbox".to_string());
+    };
     if let Some(space) = space.as_ref() {
-        check_permissions(db, space, &user_id).await?;
+        let Ok(_) = check_permissions(db, space, &user_id).await else {
+            return ws_error(req, Some(mailbox), "No permission".to_string());
+        };
     }
     let user_id = user_id.ok();
     establish_web_socket(req, move |ws_stream| async move {
@@ -228,9 +249,10 @@ async fn connect(req: Request) -> Result<Response, anyhow::Error> {
             }
         }
         if let (Some(user_id), Some(space)) = (user_id, space) {
-            Event::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await?;
+            if let Err(e) = Event::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await {
+                log::warn!("Failed to broadcast offline status: {}", e);
+            }
         }
-        Ok(())
     })
 }
 
@@ -252,12 +274,7 @@ pub async fn router(req: Request, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/connect", Method::GET) => connect(req).await.map_err(|e| {
-            e.downcast().unwrap_or_else(|e| {
-                log::error!("{}", &e);
-                AppError::Unexpected(e)
-            })
-        }),
+        ("/connect", Method::GET) => Ok(connect(req).await),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         _ => missing(),
     }

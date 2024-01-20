@@ -1,7 +1,7 @@
 import type { ParseResult } from './parse-result';
 import type { ParserArguments } from './parser-worker';
 
-const create = (): Worker => new Worker(new URL('./parser-worker.ts', import.meta.url));
+const create = (): Worker => new Worker(new URL('./parser-worker.ts', import.meta.url), { type: 'module' });
 
 const workerPool: Worker[] = [create(), create(), create(), create()];
 

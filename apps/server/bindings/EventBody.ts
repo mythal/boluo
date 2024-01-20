@@ -18,4 +18,5 @@ export type EventBody =
   | { type: 'INITIALIZED' }
   | { type: 'STATUS_MAP'; statusMap: Record<string, UserStatus>; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
+  | { type: 'ERROR'; reason: string }
   | { type: 'APP_UPDATED'; version: string };

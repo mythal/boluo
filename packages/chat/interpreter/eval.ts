@@ -183,10 +183,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   }
 };
 
-export const makeRng = (seed?: number[]): Prando | undefined => {
-  if (seed === undefined || seed.length !== 4) {
-    return undefined;
-  }
+export const makeRng = (seed: number[]): Prando => {
   let a = 0;
   for (const i of seed) {
     a = a * 256 + i;

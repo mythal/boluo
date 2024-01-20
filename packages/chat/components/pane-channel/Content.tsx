@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import Prando from 'prando';
 import { memo, ReactNode, useMemo, useRef } from 'react';
-import type { Entity } from '../../interpreter/entities';
-import { makeRng } from '../../interpreter/eval';
+import type { Entity, EvaluatedExprNode } from '../../interpreter/entities';
+import { evaluate, makeRng } from '../../interpreter/eval';
 import { Delay } from '../Delay';
 import { EntityCode } from '../entities/EntityCode';
 import { EntityCodeBlock } from '../entities/EntityCodeBlock';
@@ -16,6 +16,7 @@ import { SelfCursorToolbar } from './SelfCursorToolbar';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import { Cursor } from '../entities/Cursor';
 import { atom } from 'jotai';
+import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
 
 interface Props {
   channelId: string;
@@ -29,15 +30,32 @@ interface Props {
   nameNode: ReactNode;
 }
 
+export type EvaluatedExpr = { type: 'EvaluatedExpr'; node: EvaluatedExprNode };
+
 export const Content = memo<Props>(
   ({ source, entities, isAction, isArchived, nameNode, seed, isPreview, self = false }) => {
     const isDragging = useIsDragging();
     const cursorAtom = useMemo(() => atom<HTMLElement | null>(null), []);
 
     const cursorNode = useMemo(() => (isDragging ? null : <Cursor self atom={cursorAtom} />), [cursorAtom, isDragging]);
-    const rng: Prando | undefined = useMemo(() => makeRng(seed), [seed]);
+    const evaluatedEntities: Array<Entity | EvaluatedExpr> = useMemo(() => {
+      if (seed == null || seed.length !== 4) {
+        return entities;
+      }
+      const rng = makeRng(seed);
+      const extendedEntities: Array<Entity | EvaluatedExpr> = [];
+      for (const entity of entities) {
+        if (entity.type === 'Expr') {
+          const evaluated = evaluate(entity.node, rng);
+          extendedEntities.push({ type: 'EvaluatedExpr', node: evaluated });
+        } else {
+          extendedEntities.push(entity);
+        }
+      }
+      return extendedEntities;
+    }, [entities, seed]);
     const entityNodeList = useMemo(() => {
-      const nodeList = entities.map((entity, index) => {
+      const nodeList = evaluatedEntities.map((entity, index) => {
         switch (entity.type) {
           case 'Text':
             return <EntityText cursorNode={cursorNode} key={index} source={source} entity={entity} />;
@@ -52,12 +70,14 @@ export const Content = memo<Props>(
           case 'CodeBlock':
             return <EntityCodeBlock key={index} source={source} entity={entity} />;
           case 'Expr':
-            return <EntityExpr key={index} source={source} node={entity.node} rng={rng} />;
+            return <EntityExpr key={index} source={source} entity={entity} />;
+          case 'EvaluatedExpr':
+            return <EntityEvaluatedExpr key={index} source={source} entity={entity} />;
         }
       });
       nodeList.push(<EntityTail key="tail" source={source} cursorNode={cursorNode} />);
       return nodeList;
-    }, [cursorNode, entities, rng, source]);
+    }, [source, cursorNode, evaluatedEntities]);
     return (
       <>
         <div

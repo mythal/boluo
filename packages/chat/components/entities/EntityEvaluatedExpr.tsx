@@ -1,13 +1,13 @@
 import { FC } from 'react';
-import { Expr } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
+import { EvaluatedExpr } from '../pane-channel/Content';
 
 interface Props {
   source: string;
-  entity: Expr;
+  entity: EvaluatedExpr;
   level?: number;
 }
 
-export const EntityExpr: FC<Props> = ({ entity }) => {
+export const EntityEvaluatedExpr: FC<Props> = ({ entity }) => {
   return <EntityExprNode node={entity.node} />;
 };

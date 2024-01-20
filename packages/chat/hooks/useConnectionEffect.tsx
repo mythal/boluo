@@ -116,12 +116,18 @@ export const useConnectionEffect = (mailboxId: string) => {
   useEffect(() => {
     if (mailboxId === '') return;
     const chatState = store.get(chatAtom);
-    let ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
+    let ws: WebSocket | null = null;
     const unsub = store.sub(connectionStateAtom, () => {
       const chatState = store.get(chatAtom);
       ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
     });
+    const handle = window.setTimeout(() => {
+      if (ws == null) {
+        ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
+      }
+    });
     return () => {
+      window.clearTimeout(handle);
       unsub();
       if (ws) ws.close();
     };

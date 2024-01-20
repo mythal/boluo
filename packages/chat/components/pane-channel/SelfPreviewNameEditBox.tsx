@@ -34,7 +34,11 @@ const truncateName = (name: string) => {
   return `${name.slice(0, 18)}…`;
 };
 
-const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId }) => {
+const NameHistory: FC<{ defaultCharacterName: string; channelId: string; myId: string }> = ({
+  channelId,
+  myId,
+  defaultCharacterName,
+}) => {
   const me = useMe();
   const intl = useIntl();
   const store = useStore();
@@ -59,7 +63,8 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
   );
   const selectedValue = useAtomValue(selectedValueAtom);
   const historyCharacter = intl.formatMessage({ defaultMessage: 'History Character' });
-  const newName = intl.formatMessage({ defaultMessage: 'New…' });
+  const defaultInGameLabel =
+    defaultCharacterName === '' ? intl.formatMessage({ defaultMessage: 'New…' }) : defaultCharacterName;
 
   const dispatch = useSetAtom(useComposeAtom());
   const nameOptions = useMemo(
@@ -88,7 +93,7 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
     <div className="w-[6rem] flex-1">
       <Select value={selectedValue} title={title} onChange={handleChange}>
         <option value={OOC_STATE}>{me === 'LOADING' ? '…' : me.user.nickname}</option>
-        <option value="">{newName}</option>
+        <option value="">{defaultInGameLabel}</option>
         {nameOptions.length > 0 && <option disabled>- {historyCharacter} -</option>}
         {nameOptions}
       </Select>
@@ -98,7 +103,7 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
 
 export const SelfPreviewNameEditBox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
   const myId = channelMember.userId;
-  const { channelId } = channelMember;
+  const { channelId, characterName } = channelMember;
   const { inGameAtom, composeAtom, isActionAtom, broadcastAtom, isWhisperAtom } = useChannelAtoms();
   const intl = useIntl();
   const dispatch = useSetAtom(composeAtom);
@@ -118,13 +123,12 @@ export const SelfPreviewNameEditBox: FC<{ channelMember: ChannelMember }> = ({ c
             <FormattedMessage defaultMessage="As" />
           </span>
         </label>
-        <NameHistory myId={myId} channelId={channelId} />
+        <NameHistory myId={myId} channelId={channelId} defaultCharacterName={characterName} />
       </div>
-      {inGame && (
-        <div className="">
-          <NameInput className="w-full" />
-        </div>
-      )}
+
+      <div className="">
+        <NameInput disabled={!inGame} className="w-full" placeholder={''} />
+      </div>
     </div>
   );
 };

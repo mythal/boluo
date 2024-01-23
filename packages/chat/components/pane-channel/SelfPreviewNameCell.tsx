@@ -31,7 +31,10 @@ export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channe
     whileElementsMounted: autoUpdate,
   });
 
-  const toolbox = useMemo(() => <SelfPreviewToolbox channelMember={channelMember} />, [channelMember]);
+  const toolbox = useMemo(
+    () => <SelfPreviewToolbox channelMember={channelMember} dismiss={() => setIsOpen(false)} />,
+    [channelMember, setIsOpen],
+  );
 
   return (
     <div className="@2xl:flex-col @2xl:items-end @2xl:justify-start flex items-center justify-between gap-x-4 gap-y-1 pb-2">

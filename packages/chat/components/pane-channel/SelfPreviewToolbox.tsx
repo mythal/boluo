@@ -1,177 +1,65 @@
 import { ChannelMember } from 'api';
-import { useMe } from 'common';
-import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
-import { FC, useMemo } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { Select } from 'ui/Select';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { FC, useEffect } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { chatAtom } from '../../state/chat.atoms';
-import { ChatSpaceState } from '../../state/chat.reducer';
 import { NameInput } from './NameInput';
-import { PersonRunning, SatelliteDish, Whisper } from 'icons';
+import { Mask, PersonRunning, Platte, SatelliteDish, Whisper, X } from 'icons';
+import { SelfPreviewToolboxSwitch } from './SelfPreviewToolboxSwitch';
+import { SelfPreviewToolboxNameHistory } from './SelfPreviewToolboxNameHistory';
+import { SelfPreviewToolboxWhisper } from './SelfPreviewToolboxWhisper';
+import { SelfPreviewToolboxWhisperSwitch } from './SelfPreviewToolboxWhisperSwitch';
 
-interface Props {}
+interface Props {
+  channelMember: ChannelMember;
+  dismiss: () => void;
+}
 
-const chatStateToNameList = (state: ChatSpaceState, channelId: string, myId: string): string[] => {
-  const channelState = state.channels[channelId];
-  if (channelState == null) return [];
-  const names: string[] = [];
-
-  for (let i = channelState.messages.length - 1; i >= 0; i--) {
-    const message = channelState.messages[i]!;
-    if (!message.inGame || message.senderId !== myId || names.includes(message.name)) continue;
-    names.push(message.name);
-    if (names.length > 4) return names;
-  }
-  return names;
-};
-
-const OOC_STATE = 'BOLUO_OOC_STATE';
-
-const truncateName = (name: string) => {
-  if (name.length <= 24) return name;
-  return `${name.slice(0, 18)}…`;
-};
-
-const NameHistory: FC<{ defaultCharacterName: string; channelId: string; myId: string }> = ({
-  channelId,
-  myId,
-  defaultCharacterName,
-}) => {
-  const me = useMe();
-  const intl = useIntl();
-  const store = useStore();
-  const { inGameAtom, inputedNameAtom } = useChannelAtoms();
-  const title = intl.formatMessage({ defaultMessage: 'Select Character' });
-  const nameHistory = useMemo(
-    // In this case, we don't need to use `useAtom` hooks.
-    () => chatStateToNameList(store.get(chatAtom), channelId, myId),
-    [channelId, myId, store],
-  );
-  const selectedValueAtom = useMemo(
-    () =>
-      atom((read) => {
-        const inputedName = read(inputedNameAtom);
-        const inGame = read(inGameAtom);
-        if (!inGame) return OOC_STATE;
-        if (inputedName.trim() === '') return ''; // Custom
-        if (nameHistory.includes(inputedName)) return inputedName;
-        return '';
-      }),
-    [inGameAtom, inputedNameAtom, nameHistory],
-  );
-  const selectedValue = useAtomValue(selectedValueAtom);
-  const historyCharacter = intl.formatMessage({ defaultMessage: 'History Character' });
-  const defaultInGameLabel =
-    defaultCharacterName === '' ? intl.formatMessage({ defaultMessage: 'New…' }) : defaultCharacterName;
-
-  const dispatch = useSetAtom(useComposeAtom());
-  const nameOptions = useMemo(
-    () =>
-      nameHistory.map((name, key) => (
-        <option key={key} value={name}>
-          {truncateName(name)}
-        </option>
-      )),
-    [nameHistory],
-  );
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
-    if (value === OOC_STATE) {
-      dispatch({ type: 'toggleInGame', payload: { inGame: false } });
-    } else {
-      dispatch({ type: 'toggleInGame', payload: { inGame: true } });
-      dispatch({ type: 'setInputedName', payload: { inputedName: value } });
-    }
-  };
-  if (me == null) {
-    alert('Unexpected error: You are not logged in.');
-    return null;
-  }
-  return (
-    <div className="w-[6rem] flex-1">
-      <Select value={selectedValue} title={title} onChange={handleChange}>
-        <option value={OOC_STATE}>{me === 'LOADING' ? '…' : me.user.nickname}</option>
-        <option value="">{defaultInGameLabel}</option>
-        {nameOptions.length > 0 && <option disabled>- {historyCharacter} -</option>}
-        {nameOptions}
-      </Select>
-    </div>
-  );
-};
-
-export const SelfPreviewToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
+export const SelfPreviewToolbox: FC<Props> = ({ channelMember, dismiss }) => {
   const myId = channelMember.userId;
   const { channelId, characterName } = channelMember;
   const { inGameAtom, composeAtom, isActionAtom, broadcastAtom, isWhisperAtom } = useChannelAtoms();
-  const intl = useIntl();
   const dispatch = useSetAtom(composeAtom);
   const isAction = useAtomValue(isActionAtom);
   const broadcast = useAtomValue(broadcastAtom);
   const inGame = useAtomValue(inGameAtom);
-  const isWhisper = useAtomValue(isWhisperAtom);
-  const broadcastTitle = intl.formatMessage({ defaultMessage: 'Whether to broadcast your input' });
-  const actionTitle = intl.formatMessage({ defaultMessage: 'Describe an action' });
-  const whisperTitle = intl.formatMessage({ defaultMessage: 'Only certain people can read' });
   return (
-    <div className="bg-surface-100 border-lowest flex w-[14em] select-none flex-col gap-1 rounded border px-2 py-2 text-sm font-normal shadow">
-      <div className="flex justify-between gap-1">
-        <label className="block" title={actionTitle}>
-          <div className="text-xs leading-none">Action</div>
-          <div className="text-right">
-            <span className="ml-1">
-              <PersonRunning className="inline" />
-            </span>
-            <input
-              type="checkbox"
-              checked={isAction}
-              onChange={() => dispatch({ type: 'toggleAction', payload: {} })}
-            />
-          </div>
-        </label>
+    <div className="bg-surface-100 border-lowest relative grid w-[17em] select-none grid-cols-4 items-stretch gap-1 rounded border px-2 py-2 text-sm font-normal shadow">
+      <SelfPreviewToolboxSwitch
+        checked={inGame}
+        onChange={() => dispatch({ type: 'toggleInGame', payload: {} })}
+        icon={Mask}
+      >
+        <FormattedMessage defaultMessage="As" />
+      </SelfPreviewToolboxSwitch>
+      <SelfPreviewToolboxSwitch
+        checked={isAction}
+        onChange={() => dispatch({ type: 'toggleAction', payload: {} })}
+        icon={PersonRunning}
+      >
+        <FormattedMessage defaultMessage="Action" />
+      </SelfPreviewToolboxSwitch>
+      <SelfPreviewToolboxSwitch
+        checked={broadcast}
+        icon={SatelliteDish}
+        onChange={() => dispatch({ type: 'toggleBroadcast', payload: {} })}
+      >
+        <FormattedMessage defaultMessage="Live" />
+      </SelfPreviewToolboxSwitch>
 
-        <label className="block" title={broadcastTitle}>
-          <div className="text-xs leading-none">Broadcast</div>
-          <div className="text-right">
-            <span className="mr-1">
-              <SatelliteDish className="inline" />
-            </span>
-            <input
-              type="checkbox"
-              checked={broadcast}
-              onChange={() => dispatch({ type: 'toggleBroadcast', payload: {} })}
-            />
-          </div>
-        </label>
+      <SelfPreviewToolboxWhisperSwitch channelMember={channelMember} />
 
-        <label className="block" title={whisperTitle}>
-          <div className="text-xs leading-none">Whisper</div>
-          <div className="text-right">
-            <span className="mr-1">
-              <Whisper className="inline" />
-            </span>
-            <input
-              type="checkbox"
-              checked={isWhisper}
-              onChange={() => dispatch({ type: 'toggleWhisper', payload: {} })}
-            />
-          </div>
-        </label>
+      <SelfPreviewToolboxNameHistory myId={myId} channelId={channelId} defaultCharacterName={characterName} />
+      <div className="col-span-3 w-full">
+        <NameInput disabled={!inGame} className="w-full" defaultCharacterName={characterName} />
       </div>
-      <div className="flex items-center gap-2 text-sm">
-        <label>
-          <input type="checkbox" checked={inGame} onChange={() => dispatch({ type: 'toggleInGame', payload: {} })} />
-          <span className="ml-1">
-            <FormattedMessage defaultMessage="As" />
-          </span>
-        </label>
-        <NameHistory myId={myId} channelId={channelId} defaultCharacterName={characterName} />
-      </div>
-
-      <div className="">
-        <NameInput disabled={!inGame} className="w-full" placeholder={''} />
-      </div>
+      <button
+        className="absolute -bottom-2 -right-2 rounded-full border border-blue-600 bg-blue-300 p-1 text-lg"
+        onClick={() => alert('Work in Process')}
+      >
+        <Platte />
+        <input type="color" hidden />
+      </button>
     </div>
   );
 };

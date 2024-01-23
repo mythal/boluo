@@ -258,12 +258,15 @@ const handleAddWhisperTarget = (
   { payload: { username } }: ComposeAction<'addWhisperTarget'>,
 ): ComposeState => {
   const { whisper } = parseModifiers(state.source);
+  if (whisper === false) {
+    return state;
+  }
   username = username.trim();
   if (username === '') {
     return state;
   }
   let mentionList = [username];
-  if (whisper && !whisper.usernames.includes(username)) {
+  if (!whisper.usernames.includes(username)) {
     mentionList = whisper.usernames.concat(username);
   }
   const mentions = mentionList.map((u) => `@${u}`).join(' ');

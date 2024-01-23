@@ -6,7 +6,6 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { CursorContext, CursorState } from '../entities/TextWithCursor';
 import { Content } from './Content';
-import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
 
 interface Props {
   nameNode: ReactNode;
@@ -14,8 +13,7 @@ interface Props {
 }
 
 export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
-  const { composeAtom, parsedAtom, inGameAtom } = useChannelAtoms();
-  const inGame = useAtomValue(inGameAtom);
+  const { composeAtom, parsedAtom } = useChannelAtoms();
   const parsed = useAtomValue(parsedAtom);
   const cursorState: CursorState = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ source, range }) => ({ range: range, self: true })), [composeAtom]),
@@ -46,13 +44,6 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
   const deferredParsed = useDeferredValue(parsed);
   return (
     <CursorContext.Provider value={cursorState}>
-      {parsed.whisperToUsernames != null && (
-        <ContentWhisperTo
-          inGame={inGame}
-          channelId={myMember.channelId}
-          whisperToUsernames={parsed.whisperToUsernames}
-        />
-      )}
       <Content
         channelId={myMember.channelId}
         source={deferredParsed.text}

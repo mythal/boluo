@@ -117,19 +117,21 @@ export const useConnectionEffect = (mailboxId: string) => {
     if (mailboxId === '') return;
     const chatState = store.get(chatAtom);
     let ws: WebSocket | null = null;
+    // First connection
+    if (chatState.connection.type !== 'CONNECTED') {
+      ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
+    }
+    // On connection state change
     const unsub = store.sub(connectionStateAtom, () => {
       const chatState = store.get(chatAtom);
       ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
     });
-    const handle = window.setTimeout(() => {
-      if (ws == null) {
-        ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
-      }
-    });
     return () => {
-      window.clearTimeout(handle);
       unsub();
-      if (ws) ws.close();
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
     };
   }, [onEvent, mailboxId, store, webSocketEndpoint, dispatch]);
 };

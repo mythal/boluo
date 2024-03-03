@@ -5,8 +5,8 @@
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
-    "outDir": "dist/",
+    "outDir": "dist/"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "build", "node_modules"],
+  "exclude": ["dist", "build", "node_modules"]
 }

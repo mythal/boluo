@@ -5,6 +5,7 @@
     "jsx": "react-jsx",
     "declaration": true,
     "target": "ES2018",
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "jsxImportSource": "react"
   },

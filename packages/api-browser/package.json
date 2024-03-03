@@ -12,7 +12,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "api": "*",
-    "jotai": "^2.6.1",
+    "jotai": "^2.7.0",
     "store": "*",
     "utils": "*"
   },

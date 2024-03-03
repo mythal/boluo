@@ -60,7 +60,7 @@
           ];
 
           # Shared dependencies because we use monorepo
-          npmDepsHash = "sha256-LBzd5V23LSSSSdDWGyEIpwMUx48qf7uVpHAoZwR0Pu8=";
+          npmDepsHash = "sha256-E2QScvfKpQY4HKcbmV3i3PKwT94+cij3xt12pD68UjI=";
           # Uncomment this when you have to update dependencies
           # npmDepsHash = lib.fakeHash;
 

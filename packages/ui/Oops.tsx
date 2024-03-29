@@ -1,4 +1,4 @@
-import { useErrorExplain } from 'common';
+import { useErrorExplain } from '@boluo/common';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 

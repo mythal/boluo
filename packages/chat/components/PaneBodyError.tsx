@@ -1,7 +1,7 @@
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
-import { Oops } from 'ui/Oops';
-import type { ChildrenProps, StyleProps } from 'utils';
+import { Oops } from '@boluo/ui/Oops';
+import type { ChildrenProps, StyleProps } from '@boluo/utils';
 
 interface Props extends ChildrenProps, StyleProps {}
 

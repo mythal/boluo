@@ -1,11 +1,11 @@
-import { ApiError, Space, SpaceMemberWithUser, SpaceWithMember } from 'api';
-import { post } from 'api-browser';
-import { UserPlus, UserX } from 'icons';
+import { ApiError, Space, SpaceMemberWithUser, SpaceWithMember } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { UserPlus, UserX } from '@boluo/icons';
 import { FC } from 'react';
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {

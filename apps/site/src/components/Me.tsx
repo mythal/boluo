@@ -1,4 +1,4 @@
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 
 export const Me = () => {
   const me = useMe();

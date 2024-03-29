@@ -1,5 +1,5 @@
 import { FloatingPortal } from '@floating-ui/react';
-import { UserStatus } from 'api';
+import { UserStatus } from '@boluo/api';
 import clsx from 'clsx';
 import React, { FC } from 'react';
 import { useIntl } from 'react-intl';

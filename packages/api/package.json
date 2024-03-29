@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "@boluo/api",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,15 +11,15 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "server-bindings": "*",
-    "tsconfig": "*",
+    "@boluo/server-bindings": "*",
+    "@boluo/typescript-config": "*",
     "tslib": "^2.6.2",
-    "utils": "*"
+    "@boluo/utils": "*"
   },
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-custom": "*",
+    "@boluo/eslint-config": "*",
     "jotai": "^2.7.0",
     "typescript": "^5.3.3"
   },

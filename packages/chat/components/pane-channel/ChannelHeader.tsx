@@ -1,5 +1,5 @@
-import { Channel } from 'api';
-import { Hash, LockedHash } from 'icons';
+import { Channel } from '@boluo/api';
+import { Hash, LockedHash } from '@boluo/icons';
 import { atom } from 'jotai';
 import { FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';

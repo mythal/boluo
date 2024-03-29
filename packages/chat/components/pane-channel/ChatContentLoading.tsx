@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Loading } from 'ui/Loading';
+import { Loading } from '@boluo/ui/Loading';
 
 export const ChatListLoading: FC = () => {
   return (

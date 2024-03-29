@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useContext } from 'react';
 import { useEffect, useState } from 'react';
-import screens from 'ui/screens.json';
+import screens from '@boluo/ui/screens.json';
 
 type Screens = typeof screens;
 

@@ -1,12 +1,12 @@
 import { autoUpdate, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
-import { ApiError, Space, SpaceMemberWithUser } from 'api';
-import { post } from 'api-browser';
-import { UserPlus, UserX } from 'icons';
+import { ApiError, Space, SpaceMemberWithUser } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { UserPlus, UserX } from '@boluo/icons';
 import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
-import { Button } from 'ui/Button';
-import { unwrap } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { unwrap } from '@boluo/utils';
 import { FloatingBox } from '../common/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 

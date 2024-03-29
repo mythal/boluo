@@ -1,14 +1,14 @@
 'use client';
-import { patch } from 'api-browser';
-import { Locale, Settings, useMe } from 'common';
-import { ChangeLocaleContext } from 'common/hooks/useLocale';
-import { defaultLocale, IntlMessages, localeList, onIntlError } from 'common/locale';
+import { patch } from '@boluo/api-browser';
+import { Locale, Settings, useMe } from '@boluo/common';
+import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
+import { defaultLocale, IntlMessages, localeList, onIntlError } from '@boluo/common/locale';
 import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
 import { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { ChildrenProps, identity } from 'utils';
+import { ChildrenProps, identity } from '@boluo/utils';
 
 interface Props extends ChildrenProps {
   locale: Locale;

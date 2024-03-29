@@ -1,16 +1,16 @@
 'use client';
-import type { ApiError } from 'api';
-import { post } from 'api-browser';
-import { useErrorExplain } from 'common';
+import type { ApiError } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { useErrorExplain } from '@boluo/common';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
 import { FieldError, SubmitHandler, useFormState } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui/Button';
-import { ErrorMessageBox } from 'ui/ErrorMessageBox';
-import { TextInput } from 'ui/TextInput';
+import { Button } from '@boluo/ui/Button';
+import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
+import { TextInput } from '@boluo/ui/TextInput';
 import * as validations from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/

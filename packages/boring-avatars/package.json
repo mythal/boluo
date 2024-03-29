@@ -1,5 +1,5 @@
 {
-  "name": "boring-avatars",
+  "name": "@boluo/boring-avatars",
   "version": "0.0.0",
   "description": "",
   "main": "dist/index.js",

@@ -1,8 +1,8 @@
-import { isApiError } from 'api';
-import { useErrorExplain } from 'common';
+import { isApiError } from '@boluo/api';
+import { useErrorExplain } from '@boluo/common';
 import type { ErrorInfo, FC } from 'react';
 import React, { Component } from 'react';
-import type { ChildrenProps, StyleProps } from 'utils';
+import type { ChildrenProps, StyleProps } from '@boluo/utils';
 import { ChatSkeleton } from './ChatSkeleton';
 
 const Explain: FC<{ error: unknown }> = ({ error }) => {

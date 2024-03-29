@@ -1,5 +1,5 @@
 {
-  "name": "lang",
+  "name": "@boluo/lang",
   "version": "0.0.0",
   "scripts": {
     "generate": "formatjs extract '../../{apps,packages}/*/src/**/*.{ts,tsx,js,jsx}' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin",

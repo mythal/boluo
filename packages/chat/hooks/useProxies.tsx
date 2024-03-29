@@ -1,4 +1,4 @@
-import { Proxy } from 'api';
+import { Proxy } from '@boluo/api';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import useSWR from 'swr';

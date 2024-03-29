@@ -1,5 +1,5 @@
 import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
-import { Channel, SpaceMember, User, UserStatus } from 'api';
+import { Channel, SpaceMember, User, UserStatus } from '@boluo/api';
 import { FC, useState } from 'react';
 import { Avatar } from '../account/Avatar';
 import { MemberCard } from './MemberCard';

@@ -1,4 +1,4 @@
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 import { FC, ReactNode, useMemo } from 'react';
 import { ChatView } from './ChatView';
 import PaneLogin from './PaneLogin';

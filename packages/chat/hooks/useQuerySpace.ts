@@ -1,5 +1,5 @@
-import type { ApiError, Space } from 'api';
-import { get } from 'api-browser';
+import type { ApiError, Space } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 
 export const useQuerySpace = (

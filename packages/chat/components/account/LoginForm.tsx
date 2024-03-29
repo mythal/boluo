@@ -1,14 +1,14 @@
 'use client';
 
-import { ApiError } from 'api';
-import { post } from 'api-browser';
+import { ApiError } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import { FC, useId } from 'react';
 import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext, useFormState } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button } from 'ui/Button';
-import { TextInput } from 'ui/TextInput';
-import { StyleProps } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { TextInput } from '@boluo/ui/TextInput';
+import { StyleProps } from '@boluo/utils';
 
 interface Props extends StyleProps {
   onSuccess?: () => void;

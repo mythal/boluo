@@ -1,4 +1,4 @@
-import { ChannelMember } from 'api';
+import { ChannelMember } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, ReactNode, useDeferredValue, useEffect, useMemo, useRef } from 'react';

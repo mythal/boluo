@@ -1,5 +1,5 @@
 import { autoUpdate, useDismiss, useFloating, useHover, useInteractions, useRole } from '@floating-ui/react';
-import { Message } from 'api';
+import { Message } from '@boluo/api';
 import clsx from 'clsx';
 import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';

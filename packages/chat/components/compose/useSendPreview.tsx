@@ -1,7 +1,7 @@
-import { ClientEvent, PreviewPost } from 'api';
+import { ClientEvent, PreviewPost } from '@boluo/api';
 import { Atom, useAtomValue, useStore } from 'jotai';
 import { MutableRefObject, useEffect, useRef } from 'react';
-import { makeId } from 'utils';
+import { makeId } from '@boluo/utils';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { ParseResult } from '../../interpreter/parse-result';

@@ -1,6 +1,6 @@
-import { ChevronsDown } from 'icons';
+import { ChevronsDown } from '@boluo/icons';
 import { memo } from 'react';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 
 interface Props {
   onClick: () => void;

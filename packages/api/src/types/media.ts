@@ -1,3 +1,3 @@
-export type { Media } from 'server-bindings/Media';
-export type { PreSign } from 'server-bindings/PreSign';
-export type { PreSignResult } from 'server-bindings/PreSignResult';
+export type { Media } from '@boluo/server-bindings/Media';
+export type { PreSign } from '@boluo/server-bindings/PreSign';
+export type { PreSignResult } from '@boluo/server-bindings/PreSignResult';

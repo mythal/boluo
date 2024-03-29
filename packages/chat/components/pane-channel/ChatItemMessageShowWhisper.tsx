@@ -1,11 +1,11 @@
-import { ApiError, Message } from 'api';
-import { get } from 'api-browser';
+import { ApiError, Message } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { chatAtom } from '../../state/chat.atoms';
 

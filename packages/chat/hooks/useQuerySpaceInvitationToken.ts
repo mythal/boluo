@@ -1,7 +1,7 @@
-import { ApiError } from 'api';
-import { get } from 'api-browser';
+import { ApiError } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRResponse } from 'swr';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 
 export const useQuerySpaceInvitationToken = (spaceId: string): SWRResponse<string, ApiError> => {
   const key = ['/spaces/token', spaceId] as const;

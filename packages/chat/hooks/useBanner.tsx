@@ -1,6 +1,6 @@
-import type { ApiError } from 'api';
+import type { ApiError } from '@boluo/api';
 import { createContext, ReactNode, useContext } from 'react';
-import { empty } from 'utils';
+import { empty } from '@boluo/utils';
 
 export interface Banner {
   level?: 'ERROR' | 'WARNING' | 'INFO';

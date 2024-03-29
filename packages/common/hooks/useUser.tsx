@@ -1,7 +1,7 @@
-import type { ApiError, User } from 'api';
-import { get } from 'api-browser';
+import type { ApiError, User } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRResponse } from 'swr';
-import { Result } from 'utils';
+import { Result } from '@boluo/utils';
 
 export const useUser = (userId: string): SWRResponse<User | null, ApiError> => {
   return useSWR(['/users/query' as const, userId], async ([path, userId]): Promise<User | null> => {

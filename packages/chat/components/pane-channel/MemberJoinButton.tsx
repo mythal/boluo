@@ -1,12 +1,12 @@
-import { Channel, ChannelWithMember } from 'api';
-import { post } from 'api-browser';
-import { useMe } from 'common';
-import { UserPlus } from 'icons';
+import { Channel, ChannelWithMember } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { useMe } from '@boluo/common';
+import { UserPlus } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
-import { Button } from 'ui/Button';
-import { Spinner } from 'ui/Spinner';
+import { Button } from '@boluo/ui/Button';
+import { Spinner } from '@boluo/ui/Spinner';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';

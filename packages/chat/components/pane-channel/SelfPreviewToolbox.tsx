@@ -1,15 +1,15 @@
-import { ChannelMember } from 'api';
-import { useMe } from 'common';
+import { ChannelMember } from '@boluo/api';
+import { useMe } from '@boluo/common';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Select } from 'ui/Select';
+import { Select } from '@boluo/ui/Select';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 import { ChatSpaceState } from '../../state/chat.reducer';
 import { NameInput } from './NameInput';
-import { PersonRunning, SatelliteDish, Whisper } from 'icons';
+import { PersonRunning, SatelliteDish, Whisper } from '@boluo/icons';
 
 interface Props {}
 

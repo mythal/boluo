@@ -1,14 +1,14 @@
-import { Channel, ChannelMember, Member, SpaceMember, User, UserStatus } from 'api';
-import { post } from 'api-browser';
+import { Channel, ChannelMember, Member, SpaceMember, User, UserStatus } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { useMe } from 'common';
-import { Gamemaster, Mask, UserCog, UserPlus, UserX } from 'icons';
+import { useMe } from '@boluo/common';
+import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
-import { Badge } from 'ui/Badge';
-import { Button } from 'ui/Button';
-import Icon from 'ui/Icon';
+import { Badge } from '@boluo/ui/Badge';
+import { Button } from '@boluo/ui/Button';
+import Icon from '@boluo/ui/Icon';
 import { Avatar } from '../account/Avatar';
 import { FloatingBox } from '../common/FloatingBox';
 

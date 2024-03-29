@@ -1,13 +1,13 @@
-import { setConfiguration } from 'chat/configuration';
-import { makeMeidaPublicUrl } from 'chat/media';
-import { localeAtom, messagesAtom } from 'chat/state/locale';
-import { Locale } from 'common';
-import { ChangeLocaleContext } from 'common/hooks/useLocale';
-import { onIntlError } from 'common/locale';
+import { setConfiguration } from '@boluo/chat/configuration';
+import { makeMeidaPublicUrl } from '@boluo/chat/media';
+import { localeAtom, messagesAtom } from '@boluo/chat/state/locale';
+import { Locale } from '@boluo/common';
+import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
+import { onIntlError } from '@boluo/common/locale';
 import { useAtom, useAtomValue } from 'jotai';
 import { FC, useCallback, useEffect, useTransition } from 'react';
 import { IntlProvider } from 'react-intl';
-import { ChildrenProps } from 'utils';
+import { ChildrenProps } from '@boluo/utils';
 
 setConfiguration({
   app: 'spa',

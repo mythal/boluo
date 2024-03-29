@@ -1,4 +1,4 @@
-import { ChannelMember } from 'api';
+import { ChannelMember } from '@boluo/api';
 import { Atom, atom, PrimitiveAtom, WritableAtom } from 'jotai';
 import { atomWithReducer, atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo } from 'react';

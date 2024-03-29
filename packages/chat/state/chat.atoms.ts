@@ -1,8 +1,8 @@
-import { apiUrlAtom } from 'api-browser';
+import { apiUrlAtom } from '@boluo/api-browser';
 import { atom } from 'jotai';
 import type { useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { store } from 'store';
+import { store } from '@boluo/store';
 import { ChatActionUnion } from './chat.actions';
 import { chatReducer, ChatSpaceState, initialChatState, makeChatState } from './chat.reducer';
 import { routeAtom } from './view.atoms';

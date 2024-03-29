@@ -1,4 +1,4 @@
-import type { Close } from 'icons';
+import type { Close } from '@boluo/icons';
 import React from 'react';
 
 interface Props {

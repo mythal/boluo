@@ -1,4 +1,4 @@
-import { backendUrlAtom } from 'api-browser';
+import { backendUrlAtom } from '@boluo/api-browser';
 import { useAtom } from 'jotai';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';

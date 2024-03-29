@@ -1,10 +1,10 @@
-import { Message } from 'api';
-import { post } from 'api-browser';
-import { Archive, Edit, Trash, X } from 'icons';
+import { Message } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { Archive, Edit, Trash, X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Spinner } from 'ui/Spinner';
+import { Spinner } from '@boluo/ui/Spinner';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useOutside } from '../../hooks/useOutside';

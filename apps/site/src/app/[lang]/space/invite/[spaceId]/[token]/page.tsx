@@ -1,8 +1,8 @@
-import { ApiError, Space } from 'api';
+import { ApiError, Space } from '@boluo/api';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { Result } from 'utils';
+import { Result } from '@boluo/utils';
 import { get } from '../../../../../../api/server';
 import { getIntl, LangParams } from '../../../../../../server';
 import { AcceptButton } from './AcceptButton';

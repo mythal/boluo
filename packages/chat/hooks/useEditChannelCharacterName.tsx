@@ -1,5 +1,5 @@
-import { ApiError, ChannelMember } from 'api';
-import { post } from 'api-browser';
+import { ApiError, ChannelMember } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import useSWRMutation, { SWRMutationConfiguration, SWRMutationResponse } from 'swr/mutation';
 
 interface Arg {

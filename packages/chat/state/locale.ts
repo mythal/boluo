@@ -1,4 +1,4 @@
-import { Locale } from 'common';
+import { Locale } from '@boluo/common';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
@@ -8,10 +8,10 @@ export const messagesAtom = atom((get) => {
   const locale = get(localeAtom);
   switch (locale) {
     case 'ja':
-      return import('lang/compiled/ja_JP.json');
+      return import('@boluo/lang/compiled/ja_JP.json');
     case 'zh-CN':
-      return import('lang/compiled/zh_CN.json');
+      return import('@boluo/lang/compiled/zh_CN.json');
     default:
-      return import('lang/compiled/en.json');
+      return import('@boluo/lang/compiled/en.json');
   }
 });

@@ -1,8 +1,8 @@
-import { Dice } from 'icons';
+import { Dice } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 
 interface Props {}

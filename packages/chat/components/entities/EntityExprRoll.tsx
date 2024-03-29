@@ -1,4 +1,4 @@
-import { ArrowDownWideShort, ArrowUpWideShort, Dice } from 'icons';
+import { ArrowDownWideShort, ArrowUpWideShort, Dice } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Roll, RollResult } from '../../interpreter/entities';

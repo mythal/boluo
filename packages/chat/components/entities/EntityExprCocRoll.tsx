@@ -1,4 +1,4 @@
-import { Dice, FlexibleStar } from 'icons';
+import { Dice, FlexibleStar } from '@boluo/icons';
 import { FC, ReactNode } from 'react';
 import { useIntl } from 'react-intl';
 import { CocRoll, CocRollResult } from '../../interpreter/entities';

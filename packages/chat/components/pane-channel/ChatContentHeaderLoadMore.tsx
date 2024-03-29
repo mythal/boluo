@@ -1,10 +1,10 @@
-import { get } from 'api-browser';
+import { get } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { ChevronDown, CircleNotch } from 'icons';
+import { ChevronDown, CircleNotch } from '@boluo/icons';
 import { useSetAtom, useStore } from 'jotai';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';

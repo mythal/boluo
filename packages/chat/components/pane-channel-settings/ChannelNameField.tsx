@@ -1,8 +1,8 @@
-import { channelNameValidation } from 'common/validations';
+import { channelNameValidation } from '@boluo/common/validations';
 import { FC, useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { TextInput } from 'ui/TextInput';
+import { TextInput } from '@boluo/ui/TextInput';
 import { ChannelSettingsForm } from './form';
 
 interface Props {

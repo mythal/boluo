@@ -1,4 +1,4 @@
-import { HelpCircle } from 'icons';
+import { HelpCircle } from '@boluo/icons';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { ClosePaneButton } from './ClosePaneButton';

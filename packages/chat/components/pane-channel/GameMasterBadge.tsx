@@ -1,9 +1,9 @@
 import { FloatingPortal } from '@floating-ui/react';
-import { Gamemaster } from 'icons';
+import { Gamemaster } from '@boluo/icons';
 import { FC } from 'react';
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 import { useTooltip } from '../../hooks/useTooltip';
 
 interface Props {}

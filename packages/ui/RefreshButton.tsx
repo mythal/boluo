@@ -1,7 +1,7 @@
-import { Refresh } from 'icons';
+import { Refresh } from '@boluo/icons';
 import type { ReactNode } from 'react';
 import { useCallback } from 'react';
-import type { StyleProps } from 'utils';
+import type { StyleProps } from '@boluo/utils';
 import { Button } from './Button';
 import Icon from './Icon';
 

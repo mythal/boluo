@@ -1,4 +1,4 @@
-import { Message, Preview } from 'api';
+import { Message, Preview } from '@boluo/api';
 
 export type PreviewItem = Preview & {
   type: 'PREVIEW';

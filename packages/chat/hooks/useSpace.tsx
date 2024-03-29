@@ -1,4 +1,4 @@
-import { Space } from 'api';
+import { Space } from '@boluo/api';
 import React from 'react';
 
 /** The current space. */

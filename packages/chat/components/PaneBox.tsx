@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { FC, ReactNode, Suspense } from 'react';
-import { Loading } from 'ui/Loading';
-import { ChildrenProps, StyleProps } from 'utils';
+import { Loading } from '@boluo/ui/Loading';
+import { ChildrenProps, StyleProps } from '@boluo/utils';
 import { usePaneFocus } from '../hooks/usePaneFocus';
 import { usePaneIsFocus } from '../hooks/usePaneIsFocus';
 import { Delay } from './Delay';
@@ -22,7 +22,7 @@ export const PaneBox: FC<Props> = ({ className, header, children }) => {
     <div
       onClick={focus}
       className={clsx(
-        '@container md:contain-strict flex min-w-[22rem] flex-[1_1_100%] flex-col',
+        '@container flex min-w-[22rem] flex-[1_1_100%] flex-col md:contain-strict',
         isFocused ? 'max-md:h-0 max-md:flex-[1_1_100%]' : 'max-md:flex-[0_1_0]',
         className,
       )}

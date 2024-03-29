@@ -1,5 +1,5 @@
 {
-  "name": "common",
+  "name": "@boluo/common",
   "version": "0.0.0",
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
@@ -24,25 +24,25 @@
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
-    "api": "*",
+    "@boluo/api": "*",
     "eslint": "^8.56.0",
-    "eslint-config-custom": "*",
+    "@boluo/eslint-config": "*",
     "jotai": "^2.6.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-intl": "^6.6.1",
     "swr": "~2.1.5",
-    "theme": "*",
+    "@boluo/theme": "*",
     "ts-node": "^10.9.2",
-    "tsconfig": "*",
+    "@boluo/typescript-config": "*",
     "typescript": "^5.3.3",
-    "utils": "*"
+    "@boluo/utils": "*"
   },
   "dependencies": {
-    "api-browser": "*",
+    "@boluo/api-browser": "*",
     "clsx": "^2.1.0",
-    "icons": "*",
-    "lang": "*",
+    "@boluo/icons": "*",
+    "@boluo/lang": "*",
     "react-hook-form": "^7.49.2"
   }
 }

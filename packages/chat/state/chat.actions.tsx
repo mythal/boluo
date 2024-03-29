@@ -1,5 +1,5 @@
-import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from 'api';
-import type { Empty } from 'utils';
+import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from '@boluo/api';
+import type { Empty } from '@boluo/utils';
 import { MakeAction } from './actions';
 
 export type ChatActionMap = {

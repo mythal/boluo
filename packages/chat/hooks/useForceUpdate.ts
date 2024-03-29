@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { not } from 'utils';
+import { not } from '@boluo/utils';
 
 export function useForceUpdate() {
   const [, trigger] = useState(false);

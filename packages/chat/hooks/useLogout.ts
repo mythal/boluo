@@ -1,4 +1,4 @@
-import { get } from 'api-browser';
+import { get } from '@boluo/api-browser';
 import { useCallback } from 'react';
 import { useSWRConfig } from 'swr';
 

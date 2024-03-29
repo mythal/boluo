@@ -1,4 +1,4 @@
-import { GetMe, Member } from 'api';
+import { GetMe, Member } from '@boluo/api';
 import { FC, MutableRefObject } from 'react';
 import { ListRange, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';

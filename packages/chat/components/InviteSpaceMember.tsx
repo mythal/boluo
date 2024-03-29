@@ -1,13 +1,13 @@
-import { get, post } from 'api-browser';
-import { Clipboard, Refresh } from 'icons';
+import { get, post } from '@boluo/api-browser';
+import { Clipboard, Refresh } from '@boluo/icons';
 import { FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWR from 'swr';
-import { Button } from 'ui/Button';
-import Icon from 'ui/Icon';
-import { Loading } from 'ui/Loading';
-import { TextInput } from 'ui/TextInput';
-import { unwrap } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import Icon from '@boluo/ui/Icon';
+import { Loading } from '@boluo/ui/Loading';
+import { TextInput } from '@boluo/ui/TextInput';
+import { unwrap } from '@boluo/utils';
 
 interface Props {
   spaceId: string;

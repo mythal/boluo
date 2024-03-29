@@ -3,7 +3,7 @@
  */
 module.exports = {
   root: true,
-  extends: ['custom'],
+  extends: ['@boluo/eslint-config'],
   ignorePatterns: ['node_modules', 'dist'],
   parserOptions: {
     tsconfigRootDir: __dirname,

@@ -1,4 +1,4 @@
-import { Edit } from 'icons';
+import { Edit } from '@boluo/icons';
 import type { FC } from 'react';
 import { Delay } from '../Delay';
 

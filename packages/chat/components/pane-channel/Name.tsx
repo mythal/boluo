@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Gamemaster } from 'icons';
+import { Gamemaster } from '@boluo/icons';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Delay } from '../Delay';

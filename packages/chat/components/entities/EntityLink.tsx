@@ -1,4 +1,4 @@
-import { ExternalLink } from 'icons';
+import { ExternalLink } from '@boluo/icons';
 import type { FC, ReactNode } from 'react';
 import type { Link } from '../../interpreter/entities';
 import { EntityText } from './EntityText';

@@ -1,11 +1,11 @@
 import clsx from 'clsx';
-import { useMe } from 'common';
-import { HelpCircle, LogIn, Settings, User } from 'icons';
+import { useMe } from '@boluo/common';
+import { HelpCircle, LogIn, Settings, User } from '@boluo/icons';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { toggle } from 'utils';
+import { toggle } from '@boluo/utils';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { panesAtom } from '../../state/view.atoms';
 import { Avatar } from '../account/Avatar';

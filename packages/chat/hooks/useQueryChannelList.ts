@@ -1,7 +1,7 @@
-import type { ApiError, Channel, ChannelWithMaybeMember } from 'api';
-import { get } from 'api-browser';
+import type { ApiError, Channel, ChannelWithMaybeMember } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRResponse, useSWRConfig } from 'swr';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 
 export const useChannelList = (spaceId: string): SWRResponse<ChannelWithMaybeMember[], ApiError> => {
   const { mutate } = useSWRConfig();

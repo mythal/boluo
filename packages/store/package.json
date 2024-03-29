@@ -1,5 +1,5 @@
 {
-  "name": "store",
+  "name": "@boluo/store",
   "version": "0.0.0",
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
@@ -15,8 +15,8 @@
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-custom": "*",
-    "tsconfig": "*",
+    "@boluo/eslint-config": "*",
+    "@boluo/typescript-config": "*",
     "typescript": "^5.3.3"
   }
 }

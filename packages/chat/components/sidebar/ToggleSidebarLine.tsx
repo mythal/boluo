@@ -1,9 +1,9 @@
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, Sidebar } from 'icons';
+import { ChevronLeft, ChevronRight, Sidebar } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC, MouseEventHandler, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';
 
 interface Props {}

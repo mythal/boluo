@@ -1,4 +1,4 @@
-import { apiUrlAtom } from 'api-browser';
+import { apiUrlAtom } from '@boluo/api-browser';
 import { Atom, atom, useAtomValue } from 'jotai';
 
 export const webSocketUrlAtom: Atom<string> = atom((get) => {

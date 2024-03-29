@@ -1,5 +1,5 @@
-import { Channel } from 'api';
-import { useMe } from 'common';
+import { Channel } from '@boluo/api';
+import { useMe } from '@boluo/common';
 import { PrimitiveAtom, useAtom } from 'jotai';
 import { FC, ReactNode, useCallback } from 'react';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';

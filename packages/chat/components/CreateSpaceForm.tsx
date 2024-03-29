@@ -1,7 +1,7 @@
-import type { ApiError, CreateSpace, Space, SpaceWithMember } from 'api';
-import { post } from 'api-browser';
-import { useErrorExplain } from 'common';
-import { required } from 'common/validations';
+import type { ApiError, CreateSpace, Space, SpaceWithMember } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { useErrorExplain } from '@boluo/common';
+import { required } from '@boluo/common/validations';
 import type { FC } from 'react';
 import { useId } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
@@ -9,9 +9,9 @@ import { FormProvider, useController, useForm, useFormContext } from 'react-hook
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
-import { Button } from 'ui/Button';
-import { ErrorMessageBox } from 'ui/ErrorMessageBox';
-import { TextArea, TextInput } from 'ui/TextInput';
+import { Button } from '@boluo/ui/Button';
+import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
+import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { DiceSelect } from './DiceSelect';
 import { PaneFooterBox } from './PaneFooterBox';
 

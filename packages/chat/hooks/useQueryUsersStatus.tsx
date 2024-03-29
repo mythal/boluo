@@ -1,5 +1,5 @@
-import { ApiError, UserStatus } from 'api';
-import { get } from 'api-browser';
+import { ApiError, UserStatus } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRResponse } from 'swr';
 
 export const useQueryUsersStatus = (spaceId: string): SWRResponse<Record<string, UserStatus>, ApiError> => {

@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Message } from 'api';
+import { Message } from '@boluo/api';
 import clsx from 'clsx';
 import { FC, ReactNode, useMemo } from 'react';
 import { Delay } from '../Delay';

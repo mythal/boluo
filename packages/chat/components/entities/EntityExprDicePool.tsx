@@ -1,4 +1,4 @@
-import { Cubes, ThumbsDown, ThumbsUp } from 'icons';
+import { Cubes, ThumbsDown, ThumbsUp } from '@boluo/icons';
 import { FC, ReactNode } from 'react';
 import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

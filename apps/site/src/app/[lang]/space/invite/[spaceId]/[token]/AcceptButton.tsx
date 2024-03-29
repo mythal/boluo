@@ -1,13 +1,13 @@
 'use client';
 
-import { post } from 'api-browser';
-import { useMe } from 'common';
+import { post } from '@boluo/api-browser';
+import { useMe } from '@boluo/common';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
-import { Spinner } from 'ui/Spinner';
+import { Button } from '@boluo/ui/Button';
+import { Spinner } from '@boluo/ui/Spinner';
 
 interface Props {
   spaceId: string;

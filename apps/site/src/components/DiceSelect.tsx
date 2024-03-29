@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Select } from 'ui/Select';
+import { Select } from '@boluo/ui/Select';
 
 interface Props {
   value: string;

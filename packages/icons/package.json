@@ -1,5 +1,5 @@
 {
-  "name": "icons",
+  "name": "@boluo/icons",
   "version": "0.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -7,14 +7,13 @@
   "scripts": {
     "build": "svgr --config-file svgr.config.js -- icons && tsc --project tsconfig.json"
   },
-  "dependencies": {
-    "tsconfig": "*"
-  },
+  "dependencies": {},
   "sideEffects": false,
   "devDependencies": {
     "@babel/core": "^7.23.7",
     "@svgr/cli": "^8.1.0",
     "@types/react": "^18.2.46",
+    "@boluo/typescript-config": "*",
     "react": "^18.2.0",
     "typescript": "^5.3.3"
   }

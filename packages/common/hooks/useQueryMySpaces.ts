@@ -1,4 +1,4 @@
-import { ApiError, SpaceWithMember } from 'api';
+import { ApiError, SpaceWithMember } from '@boluo/api';
 import { SWRResponse } from 'swr';
 import { useGetQuery } from './useGetQuery';
 

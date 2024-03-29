@@ -1,6 +1,6 @@
 'use client';
-import type { ApiError, CreateSpace } from 'api';
-import { post } from 'api-browser';
+import type { ApiError, CreateSpace } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
@@ -8,9 +8,9 @@ import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button } from 'ui/Button';
-import { Oops } from 'ui/Oops';
-import { TextArea, TextInput } from 'ui/TextInput';
+import { Button } from '@boluo/ui/Button';
+import { Oops } from '@boluo/ui/Oops';
+import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required } from '../validations';
 import { DiceSelect } from './DiceSelect';
 

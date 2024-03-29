@@ -1,8 +1,8 @@
 'use client';
 
-import type { Space } from 'api';
-import { get } from 'api-browser';
-import { useMe, useQueryMySpaces } from 'common';
+import type { Space } from '@boluo/api';
+import { get } from '@boluo/api-browser';
+import { useMe, useQueryMySpaces } from '@boluo/common';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
@@ -10,8 +10,8 @@ import { useCallback } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Loading } from 'ui/Loading';
-import type { StyleProps } from 'utils';
+import { Loading } from '@boluo/ui/Loading';
+import type { StyleProps } from '@boluo/utils';
 import { Me } from '../../components/Me';
 
 const useLogout = () => {

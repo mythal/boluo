@@ -1,10 +1,10 @@
-import type { Channel } from 'api';
+import type { Channel } from '@boluo/api';
 import clsx from 'clsx';
-import { Hash, LockedHash, X } from 'icons';
+import { Hash, LockedHash, X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { FC, useCallback } from 'react';
 import { useIntl } from 'react-intl';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { panesAtom } from '../../state/view.atoms';

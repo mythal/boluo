@@ -1,8 +1,8 @@
-import { SatelliteDish } from 'icons';
+import { SatelliteDish } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {}

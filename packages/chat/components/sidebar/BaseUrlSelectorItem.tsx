@@ -1,4 +1,4 @@
-import { Proxy } from 'api';
+import { Proxy } from '@boluo/api';
 import clsx from 'clsx';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';

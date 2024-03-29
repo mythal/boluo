@@ -1,12 +1,12 @@
-import { patch } from 'api-browser';
-import { Settings } from 'common';
-import { toSettings } from 'common/settings';
+import { patch } from '@boluo/api-browser';
+import { Settings } from '@boluo/common';
+import { toSettings } from '@boluo/common/settings';
 import { FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { Kbd } from 'ui/Kbd';
-import { identity, isApple } from 'utils';
+import { Kbd } from '@boluo/ui/Kbd';
+import { identity, isApple } from '@boluo/utils';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { OptionBox } from './OptionBox';
 

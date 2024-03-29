@@ -1,9 +1,9 @@
-import { ChannelMember } from 'api';
+import { ChannelMember } from '@boluo/api';
 import { FC, useId } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
-import { TextInput } from 'ui/TextInput';
+import { Button } from '@boluo/ui/Button';
+import { TextInput } from '@boluo/ui/TextInput';
 import { useEditChannelCharacterName } from '../../hooks/useEditChannelCharacterName';
 
 interface Props {

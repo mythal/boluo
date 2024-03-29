@@ -1,4 +1,4 @@
-import { get } from 'api-browser';
+import { get } from '@boluo/api-browser';
 import type { RegisterOptions } from 'react-hook-form';
 import type { IntlShape } from 'react-intl';
 

@@ -1,12 +1,12 @@
-import { ApiError, Channel } from 'api';
-import { post } from 'api-browser';
+import { ApiError, Channel } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import { FC } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { MutationFetcher } from 'swr/mutation';
-import { Button } from 'ui/Button';
-import { Loading } from 'ui/Loading';
+import { Button } from '@boluo/ui/Button';
+import { Loading } from '@boluo/ui/Loading';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { DangerZone } from '../common/DangerZone';

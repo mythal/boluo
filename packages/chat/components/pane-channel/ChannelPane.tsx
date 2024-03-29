@@ -1,6 +1,6 @@
 import clsx from 'clsx';
-import { useMe } from 'common';
-import { Lock, LockedHash } from 'icons';
+import { useMe } from '@boluo/common';
+import { Lock, LockedHash } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
 import { memo } from 'react';

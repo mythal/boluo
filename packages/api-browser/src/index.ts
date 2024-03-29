@@ -1,8 +1,8 @@
-import { ApiError, appFetch, Get, makeUri, Media, Patch, Post, User } from 'api';
+import { ApiError, appFetch, Get, makeUri, Media, Patch, Post, User } from '@boluo/api';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { store } from 'store';
-import type { Result } from 'utils';
+import { store } from '@boluo/store';
+import type { Result } from '@boluo/utils';
 
 export const backendUrlAtom = atomWithStorage('BOLUO_BACKEND_API_URL', '');
 

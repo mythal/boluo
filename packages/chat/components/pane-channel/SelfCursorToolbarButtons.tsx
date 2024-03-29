@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSetAtom } from 'jotai';
 import { SelfCursorButton } from './SelfCursorButton';
-import { Bold, Dice, Link } from 'icons';
+import { Bold, Dice, Link } from '@boluo/icons';
 
 interface Props {
   collapsed: boolean;

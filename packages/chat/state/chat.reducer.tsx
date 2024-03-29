@@ -1,4 +1,4 @@
-import type { EventId, ServerEvent } from 'api';
+import type { EventId, ServerEvent } from '@boluo/api';
 import type { Reducer } from 'react';
 import { eventIdCompare } from '../sort';
 import type { ChannelState } from './channel.reducer';

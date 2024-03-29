@@ -1,6 +1,6 @@
-import { ChevronDown, Menu, Tool } from 'icons';
+import { ChevronDown, Menu, Tool } from '@boluo/icons';
 import { FC } from 'react';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {

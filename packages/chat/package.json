@@ -31,7 +31,7 @@
     "react-intl": "^6.6.2",
     "react-virtuoso": "^4.7.1",
     "@boluo/store": "*",
-    "swr": "~2.1.5",
+    "swr": "^2.2.5",
     "@boluo/theme": "*",
     "@boluo/ui": "*",
     "@boluo/utils": "*",

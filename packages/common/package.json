@@ -17,7 +17,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.51.0",
     "react-intl": "^6.6.2",
-    "swr": "~2.1.5"
+    "swr": "^2.2.5"
   },
   "devDependencies": {
     "@formatjs/intl": "^2.10.0",
@@ -31,7 +31,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-intl": "^6.6.1",
-    "swr": "~2.1.5",
+    "swr": "^2.2.5",
     "@boluo/theme": "*",
     "ts-node": "^10.9.2",
     "@boluo/typescript-config": "*",

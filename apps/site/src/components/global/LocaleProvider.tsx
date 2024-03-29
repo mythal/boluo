@@ -29,7 +29,7 @@ export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const router = useRouter();
 
   const key = ['/users/settings'] as const;
-  const localeUpdater: MutationFetcher<Settings, Locale, typeof key> = useCallback(async (_, { arg: locale }) => {
+  const localeUpdater: MutationFetcher<Settings, typeof key, Locale> = useCallback(async (_, { arg: locale }) => {
     const settings: Settings = { locale };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.unwrapOr({});

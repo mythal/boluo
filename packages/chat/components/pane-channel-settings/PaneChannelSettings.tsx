@@ -40,7 +40,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const close = usePaneClose();
 
   const key = ['/channels/query', channel.id] as const;
-  const editChannel: MutationFetcher<Channel, ChannelSettingsForm, typeof key> = async (
+  const editChannel: MutationFetcher<Channel, typeof key, ChannelSettingsForm> = async (
     [_, channelId],
     { arg: { name, defaultDiceType, topic, isSecret } },
   ): Promise<Channel> => {

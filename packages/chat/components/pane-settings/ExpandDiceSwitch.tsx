@@ -12,7 +12,7 @@ interface Props {}
 
 export const ExpandDiceSwitch: FC<Props> = () => {
   const key = ['/users/settings'] as const;
-  const updater: MutationFetcher<Settings, boolean, typeof key> = useCallback(async (url, { arg: expandDice }) => {
+  const updater: MutationFetcher<Settings, typeof key, boolean> = useCallback(async (url, { arg: expandDice }) => {
     const settings: Settings = { expandDice };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});

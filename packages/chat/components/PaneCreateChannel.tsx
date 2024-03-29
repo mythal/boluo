@@ -37,7 +37,7 @@ interface Props {
 }
 
 const key = ['/channel/create'];
-const createChannel: MutationFetcher<ChannelWithMember, FormSchema, typeof key> = async (
+const createChannel: MutationFetcher<ChannelWithMember, typeof key, FormSchema> = async (
   _,
   { arg: { isSecret, ...payload } },
 ) => {

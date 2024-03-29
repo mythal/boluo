@@ -1,10 +1,10 @@
-import type { Space } from 'api';
-import { Shuffle } from 'icons';
+import type { Space } from '@boluo/api';
+import { Shuffle } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import type { FC } from 'react';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { sidebarContentStateAtom } from '../../state/ui.atoms';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 import clsx from 'clsx';
 
 interface Props {

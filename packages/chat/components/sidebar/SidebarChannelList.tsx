@@ -1,9 +1,9 @@
-import { Bell, Plus } from 'icons';
+import { Bell, Plus } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useChannelList } from '../../hooks/useQueryChannelList';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';

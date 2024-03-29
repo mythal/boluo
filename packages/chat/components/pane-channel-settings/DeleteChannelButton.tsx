@@ -9,15 +9,15 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { Channel } from 'api';
-import { post } from 'api-browser';
+import { Channel } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import type { MutationFetcher } from 'swr/mutation';
-import { Button } from 'ui/Button';
-import { Empty } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { Empty } from '@boluo/utils';
 import { panesAtom } from '../../state/view.atoms';
 import { Pane } from '../../state/view.types';
 

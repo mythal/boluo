@@ -1,8 +1,8 @@
-import { Channel } from 'api';
-import { Users } from 'icons';
+import { Channel } from '@boluo/api';
+import { Users } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC, useMemo } from 'react';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';

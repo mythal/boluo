@@ -1,4 +1,4 @@
-import { User } from 'api';
+import { User } from '@boluo/api';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';

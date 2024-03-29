@@ -1,8 +1,8 @@
 'use client';
 
-import { Refresh } from 'icons';
+import { Refresh } from '@boluo/icons';
 import { useEffect } from 'react';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {

@@ -8,10 +8,10 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import clsx from 'clsx';
-import { Cloud, CloudOff } from 'icons';
+import { Cloud, CloudOff } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC, Suspense, useEffect, useMemo, useState } from 'react';
-import { Spinner } from 'ui/Spinner';
+import { Spinner } from '@boluo/ui/Spinner';
 import { useSpace } from '../../hooks/useSpace';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { FloatingBox } from '../common/FloatingBox';

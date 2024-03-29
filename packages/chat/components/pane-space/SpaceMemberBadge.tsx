@@ -1,9 +1,9 @@
-import { SpaceMemberWithUser } from 'api';
-import { Users } from 'icons';
+import { SpaceMemberWithUser } from '@boluo/api';
+import { Users } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Badge } from 'ui/Badge';
-import Icon from 'ui/Icon';
+import { Badge } from '@boluo/ui/Badge';
+import Icon from '@boluo/ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 
 interface Props {

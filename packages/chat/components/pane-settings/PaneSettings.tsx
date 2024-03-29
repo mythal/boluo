@@ -1,11 +1,11 @@
-import { useMe } from 'common';
-import { LogOut, Settings, User } from 'icons';
+import { useMe } from '@boluo/common';
+import { LogOut, Settings, User } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
-import { ChildrenProps } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { ChildrenProps } from '@boluo/utils';
 import { useLogout } from '../../hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { devMode as devModeAtom } from '../../state/dev.atoms';

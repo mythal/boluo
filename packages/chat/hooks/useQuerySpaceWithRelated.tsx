@@ -1,7 +1,7 @@
-import { ApiError, SpaceWithRelated } from 'api';
-import { get } from 'api-browser';
+import { ApiError, SpaceWithRelated } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRResponse, useSWRConfig } from 'swr';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 
 const options = { revalidate: false };
 

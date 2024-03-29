@@ -1,9 +1,9 @@
-import { ChannelMembers, EventId, isServerEvent, ServerEvent, UserStatus } from 'api';
-import { webSocketUrlAtom } from 'common';
+import { ChannelMembers, EventId, isServerEvent, ServerEvent, UserStatus } from '@boluo/api';
+import { webSocketUrlAtom } from '@boluo/common';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
-import { isUuid } from 'utils';
+import { isUuid } from '@boluo/utils';
 import { PING, PONG } from '../const';
 import { chatAtom, ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { ConnectionState } from '../state/connection.reducer';

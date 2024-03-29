@@ -1,4 +1,4 @@
-import { Locale } from 'common/locale';
+import { Locale } from '@boluo/common/locale';
 import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../components/global/Providers';

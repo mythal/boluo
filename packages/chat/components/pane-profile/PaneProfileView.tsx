@@ -1,4 +1,4 @@
-import type { User } from 'api';
+import type { User } from '@boluo/api';
 import clsx from 'clsx';
 import type { FC } from 'react';
 import { Avatar } from '../account/Avatar';

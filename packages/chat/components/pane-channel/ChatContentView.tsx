@@ -1,7 +1,7 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { GetMe, Member } from 'api';
-import { post } from 'api-browser';
+import type { GetMe, Member } from '@boluo/api';
+import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import type { FC, MutableRefObject, RefObject } from 'react';

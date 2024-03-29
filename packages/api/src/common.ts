@@ -1,5 +1,5 @@
-import type { Result } from 'utils';
-import { Err, Ok } from 'utils';
+import type { Result } from '@boluo/utils';
+import { Err, Ok } from '@boluo/utils';
 import { FetchFailError, NotJsonError, UnexpectedError } from './error-types';
 import { ApiError } from './errors';
 import { isAppResponse } from './request';

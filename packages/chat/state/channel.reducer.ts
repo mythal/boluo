@@ -1,4 +1,4 @@
-import type { Message } from 'api';
+import type { Message } from '@boluo/api';
 import { byPos } from '../sort';
 import { MessageItem, PreviewItem } from './channel.types';
 import { ChatAction, ChatActionUnion } from './chat.actions';

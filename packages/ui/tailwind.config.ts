@@ -3,7 +3,7 @@ import themeSwapper from 'tailwindcss-theme-swapper';
 import { mix } from 'color2k';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
-import { revertPalette as revert, palette } from 'utils';
+import { revertPalette as revert, palette } from '@boluo/utils';
 import screens from './screens.json';
 import type { Config } from 'tailwindcss';
 const red = palette(colors.red);

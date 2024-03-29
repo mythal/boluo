@@ -1,7 +1,7 @@
-import { ChevronDown, Filter } from 'icons';
+import { ChevronDown, Filter } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 

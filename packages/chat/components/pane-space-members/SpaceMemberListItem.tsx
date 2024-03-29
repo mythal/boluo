@@ -1,7 +1,7 @@
-import { SpaceMemberWithUser } from 'api';
+import { SpaceMemberWithUser } from '@boluo/api';
 import { FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Badge } from 'ui/Badge';
+import { Badge } from '@boluo/ui/Badge';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { Avatar } from '../account/Avatar';
 import { ExileButton } from './ExileButton';

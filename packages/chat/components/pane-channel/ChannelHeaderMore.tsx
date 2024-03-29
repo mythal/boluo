@@ -1,10 +1,10 @@
-import { ChannelMember } from 'api';
+import { ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
-import { useMe } from 'common';
-import { Edit } from 'icons';
+import { useMe } from '@boluo/common';
+import { Edit } from '@boluo/icons';
 import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ChannelHeaderCharacterNameEdit } from './ChannelHeaderCharacterNameEdit';
 import { ChannelSettingsButton } from './ChannelSettingsButton';

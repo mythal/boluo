@@ -1,6 +1,6 @@
-import { Space } from 'api';
-import { useQueryMySpaces } from 'common';
-import { Plus } from 'icons';
+import { Space } from '@boluo/api';
+import { useQueryMySpaces } from '@boluo/common';
+import { Plus } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';

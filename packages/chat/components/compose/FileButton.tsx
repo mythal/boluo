@@ -1,8 +1,8 @@
-import { Trash, Upload } from 'icons';
+import { Trash, Upload } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {

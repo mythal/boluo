@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC, ReactNode, useEffect } from 'react';
 import { Suspense } from 'react';
-import { Loading } from 'ui/Loading';
+import { Loading } from '@boluo/ui/Loading';
 import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { useQuerySpace } from '../hooks/useQuerySpace';

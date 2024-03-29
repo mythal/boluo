@@ -1,4 +1,4 @@
-import { ApiError, isApiError } from 'api';
+import { ApiError, isApiError } from '@boluo/api';
 import { useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 

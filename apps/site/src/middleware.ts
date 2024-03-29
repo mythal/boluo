@@ -1,4 +1,4 @@
-import { Locale, narrowLocale } from 'common/locale';
+import { Locale, narrowLocale } from '@boluo/common/locale';
 import Negotiator from 'negotiator';
 import { NextRequest, NextResponse } from 'next/server';
 

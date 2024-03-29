@@ -1,6 +1,6 @@
-import { ApiError } from 'api';
-import { post } from 'api-browser';
-import { Err, Ok, Result } from 'utils';
+import { ApiError } from '@boluo/api';
+import { post } from '@boluo/api-browser';
+import { Err, Ok, Result } from '@boluo/utils';
 import { getConfiguration } from './configuration';
 
 export const mediaMaxSizeMb = 8;

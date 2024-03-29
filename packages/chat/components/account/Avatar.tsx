@@ -11,7 +11,7 @@ interface Props {
   size?: number | string;
 }
 
-const BoringAvatar = React.lazy(() => import('boring-avatars'));
+const BoringAvatar = React.lazy(() => import('@boluo/boring-avatars'));
 
 const variants = [
   'marble',

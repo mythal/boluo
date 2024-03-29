@@ -1,6 +1,6 @@
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 import { FC, useMemo } from 'react';
-import { Loading } from 'ui/Loading';
+import { Loading } from '@boluo/ui/Loading';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { SpaceMemberListItem } from './SpaceMemberListItem';

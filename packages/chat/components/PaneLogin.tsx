@@ -1,6 +1,6 @@
-import { ApiError } from 'api';
-import { useErrorExplain } from 'common';
-import { LogIn } from 'icons';
+import { ApiError } from '@boluo/api';
+import { useErrorExplain } from '@boluo/common';
+import { LogIn } from '@boluo/icons';
 import { FC, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSetBanner } from '../hooks/useBanner';

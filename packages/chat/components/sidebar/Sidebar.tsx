@@ -1,9 +1,9 @@
 import clsx from 'clsx';
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useCallback } from 'react';
-import { toggle } from 'utils';
+import { toggle } from '@boluo/utils';
 import { useSpace } from '../../hooks/useSpace';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
 import { SidebarChannelList } from './SidebarChannelList';

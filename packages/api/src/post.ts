@@ -1,7 +1,7 @@
-import type { MoveMessageBetween } from 'server-bindings/MoveMessageBetween';
-import { PreSign } from 'server-bindings/PreSign';
-import { PreSignResult } from 'server-bindings/PreSignResult';
-import type { Empty } from 'utils';
+import type { MoveMessageBetween } from '@boluo/server-bindings/MoveMessageBetween';
+import { PreSign } from '@boluo/server-bindings/PreSign';
+import { PreSignResult } from '@boluo/server-bindings/PreSignResult';
+import type { Empty } from '@boluo/utils';
 import type {
   AddChannelMember,
   Channel,

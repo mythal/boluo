@@ -1,5 +1,5 @@
 {
-  "name": "api-browser",
+  "name": "@boluo/api-browser",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,16 +11,16 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "api": "*",
+    "@boluo/api": "*",
     "jotai": "^2.7.0",
-    "store": "*",
-    "utils": "*"
+    "@boluo/store": "*",
+    "@boluo/utils": "*"
   },
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-custom": "*",
-    "tsconfig": "*",
+    "@boluo/eslint-config": "*",
+    "@boluo/typescript-config": "*",
     "typescript": "^5.3.3"
   }
 }

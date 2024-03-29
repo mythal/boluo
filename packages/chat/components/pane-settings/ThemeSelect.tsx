@@ -1,15 +1,15 @@
 'use client';
-import { patch } from 'api-browser';
-import { Settings, useMe } from 'common';
+import { patch } from '@boluo/api-browser';
+import { Settings, useMe } from '@boluo/common';
 import { FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { setThemeToDom, Theme } from 'theme';
-import { useTheme } from 'theme/useTheme';
-import { Select } from 'ui/Select';
-import { identity } from 'utils';
+import { setThemeToDom, Theme } from '@boluo/theme';
+import { useTheme } from '@boluo/theme/useTheme';
+import { Select } from '@boluo/ui/Select';
+import { identity } from '@boluo/utils';
 
 interface Props {
   id?: string;

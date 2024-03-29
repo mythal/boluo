@@ -1,10 +1,10 @@
-import { SpaceMemberWithUser } from 'api';
-import { useMe } from 'common';
-import { Globe, Key, Settings, Users } from 'icons';
+import { SpaceMemberWithUser } from '@boluo/api';
+import { useMe } from '@boluo/common';
+import { Globe, Key, Settings, Users } from '@boluo/icons';
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Badge } from 'ui/Badge';
-import Icon from 'ui/Icon';
+import { Badge } from '@boluo/ui/Badge';
+import Icon from '@boluo/ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';

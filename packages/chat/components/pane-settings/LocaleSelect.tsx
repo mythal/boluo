@@ -1,7 +1,7 @@
-import { useLocale } from 'common';
-import { toLocale } from 'common/locale';
+import { useLocale } from '@boluo/common';
+import { toLocale } from '@boluo/common/locale';
 import React, { useMemo } from 'react';
-import { Select } from 'ui/Select';
+import { Select } from '@boluo/ui/Select';
 
 interface Props {
   id?: string;

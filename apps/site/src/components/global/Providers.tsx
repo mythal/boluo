@@ -1,15 +1,15 @@
 'use client';
 
-import type { GetMe } from 'api';
-import { setConfiguration } from 'chat/configuration';
-import { makeMeidaPublicUrl } from 'chat/media';
-import { IntlMessages, Locale } from 'common/locale';
+import type { GetMe } from '@boluo/api';
+import { setConfiguration } from '@boluo/chat/configuration';
+import { makeMeidaPublicUrl } from '@boluo/chat/media';
+import { IntlMessages, Locale } from '@boluo/common/locale';
 import { Provider as JotaiProvider } from 'jotai';
 import { FC, useEffect } from 'react';
-import { store } from 'store';
+import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
-import { clearWatchSystemTheme, getThemeFromCookie, setThemeToDom, watchSystemTheme } from 'theme';
-import type { ChildrenProps } from 'utils';
+import { clearWatchSystemTheme, getThemeFromCookie, setThemeToDom, watchSystemTheme } from '@boluo/theme';
+import type { ChildrenProps } from '@boluo/utils';
 import { LocaleProvider } from './LocaleProvider';
 
 interface Props extends ChildrenProps {

@@ -1,4 +1,4 @@
-import { Paperclip, Trash } from 'icons';
+import { Paperclip, Trash } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';

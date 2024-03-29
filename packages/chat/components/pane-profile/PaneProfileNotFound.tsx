@@ -1,4 +1,4 @@
-import { User } from 'icons';
+import { User } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { ClosePaneButton } from '../ClosePaneButton';

@@ -1,11 +1,11 @@
-import { patch } from 'api-browser';
-import { Settings } from 'common';
-import { toSettings } from 'common/settings';
+import { patch } from '@boluo/api-browser';
+import { Settings } from '@boluo/common';
+import { toSettings } from '@boluo/common/settings';
 import { FC, useCallback } from 'react';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { Button } from 'ui/Button';
-import { identity } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { identity } from '@boluo/utils';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 
 interface Props {}

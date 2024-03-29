@@ -1,9 +1,9 @@
-import { post } from 'api-browser';
+import { post } from '@boluo/api-browser';
 import type { FC } from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 
 export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ spaceId, spaceName }) => {
   const { mutate } = useSWRConfig();

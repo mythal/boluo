@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import React from 'react';
-import type { DataAttr } from 'utils';
+import type { DataAttr } from '@boluo/utils';
 
 type DataAttrProps = DataAttr<{
   state?: 'error' | 'default' | 'warning';

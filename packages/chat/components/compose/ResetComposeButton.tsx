@@ -1,9 +1,9 @@
-import { X } from 'icons';
+import { X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { FC } from 'react';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {}
 

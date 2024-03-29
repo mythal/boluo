@@ -1,6 +1,6 @@
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
-import type { ChildrenProps, StyleProps } from 'utils';
+import type { ChildrenProps, StyleProps } from '@boluo/utils';
 import type { OopsType } from './Oops';
 import { Oops } from './Oops';
 

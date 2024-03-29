@@ -1,4 +1,4 @@
-import { Member } from 'api';
+import { Member } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, useMemo } from 'react';

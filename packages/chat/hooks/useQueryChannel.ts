@@ -1,7 +1,7 @@
-import type { ApiError, Channel } from 'api';
-import { get } from 'api-browser';
+import type { ApiError, Channel } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRResponse } from 'swr';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 
 export const useQueryChannel = (channelId: string): SWRResponse<Channel, ApiError> => {
   const key = ['/channels/query', channelId] as const;

@@ -1,10 +1,10 @@
-import { ApiError, Message, User } from 'api';
-import { patch, post } from 'api-browser';
+import { ApiError, Message, User } from '@boluo/api';
+import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
-import { Result } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { Result } from '@boluo/utils';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';

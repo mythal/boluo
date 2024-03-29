@@ -1,7 +1,7 @@
-import { ApiError } from 'api';
-import { get } from 'api-browser';
-import { Settings } from 'common';
-import { defaultSettings, toSettings } from 'common/settings';
+import { ApiError } from '@boluo/api';
+import { get } from '@boluo/api-browser';
+import { Settings } from '@boluo/common';
+import { defaultSettings, toSettings } from '@boluo/common/settings';
 import useSWR, { SWRResponse } from 'swr';
 
 export const useQuerySettings = (): SWRResponse<Settings, ApiError> => {

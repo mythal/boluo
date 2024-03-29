@@ -1,4 +1,4 @@
-import { makeId } from 'utils';
+import { makeId } from '@boluo/utils';
 import { Modifier, parseModifiers } from '../interpreter/parser';
 import { MediaError, validateMedia } from '../media';
 import { ComposeAction, ComposeActionUnion } from './compose.actions';

@@ -1,9 +1,9 @@
 import 'server-only';
-import type { ApiError, Get, Post } from 'api';
-import { makeUri } from 'api';
-import { appFetch } from 'api';
+import type { ApiError, Get, Post } from '@boluo/api';
+import { makeUri } from '@boluo/api';
+import { appFetch } from '@boluo/api';
 import { cookies } from 'next/headers';
-import type { Result } from 'utils';
+import type { Result } from '@boluo/utils';
 
 let backEndUrl: string | undefined;
 

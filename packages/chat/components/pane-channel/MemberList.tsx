@@ -1,5 +1,5 @@
-import { Channel, Member } from 'api';
-import { UserPlus } from 'icons';
+import { Channel, Member } from '@boluo/api';
+import { UserPlus } from '@boluo/icons';
 import { FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';

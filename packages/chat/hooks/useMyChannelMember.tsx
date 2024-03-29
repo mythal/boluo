@@ -1,5 +1,5 @@
-import type { Member } from 'api';
-import { useMe } from 'common';
+import type { Member } from '@boluo/api';
+import { useMe } from '@boluo/common';
 import { useQueryChannelMembers } from './useQueryChannelMembers';
 
 export const useMyChannelMember = (channelId: string): Member | 'LOADING' | null => {

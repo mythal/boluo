@@ -1,7 +1,7 @@
-import type { ClientEvent } from 'server-bindings/ClientEvent';
-import type { Event as ServerEvent } from 'server-bindings/Event';
-import type { EventBody } from 'server-bindings/EventBody';
-import type { EventId } from 'server-bindings/EventId';
+import type { ClientEvent } from '@boluo/server-bindings/ClientEvent';
+import type { Event as ServerEvent } from '@boluo/server-bindings/Event';
+import type { EventBody } from '@boluo/server-bindings/EventBody';
+import type { EventId } from '@boluo/server-bindings/EventId';
 
 export function isServerEvent(object: unknown): object is ServerEvent {
   if (typeof object !== 'object' || object === null) {

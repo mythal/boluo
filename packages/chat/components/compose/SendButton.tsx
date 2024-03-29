@@ -1,8 +1,8 @@
-import type { GetMe } from 'api';
-import { Edit, PaperPlane } from 'icons';
+import type { GetMe } from '@boluo/api';
+import { Edit, PaperPlane } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
+import { Button } from '@boluo/ui/Button';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from '../pane-channel/useSend';
 

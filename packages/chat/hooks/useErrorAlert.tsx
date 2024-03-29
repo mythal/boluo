@@ -1,6 +1,6 @@
-import { ApiError } from 'api';
-import { useErrorExplain } from 'common';
-import { AlertCircle } from 'icons';
+import { ApiError } from '@boluo/api';
+import { useErrorExplain } from '@boluo/common';
+import { AlertCircle } from '@boluo/icons';
 import { useCallback } from 'react';
 import { useSetBanner } from './useBanner';
 

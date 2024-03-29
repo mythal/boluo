@@ -8,11 +8,11 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { Channel, Member, UserStatus } from 'api';
+import { Channel, Member, UserStatus } from '@boluo/api';
 import clsx from 'clsx';
-import { Mask } from 'icons';
+import { Mask } from '@boluo/icons';
 import { FC, useState } from 'react';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 import { Avatar } from '../account/Avatar';
 import { GameMasterBadge } from './GameMasterBadge';
 import { MemberCard } from './MemberCard';

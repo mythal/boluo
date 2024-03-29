@@ -1,5 +1,5 @@
 'use client';
-import type { ChannelMember, GetMe } from 'api';
+import type { ChannelMember, GetMe } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useMemo } from 'react';

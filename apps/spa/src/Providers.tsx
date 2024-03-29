@@ -1,7 +1,7 @@
-import { ChatSkeleton } from 'chat/components/ChatSkeleton';
+import { ChatSkeleton } from '@boluo/chat/components/ChatSkeleton';
 import { Provider as JotaiProvider } from 'jotai';
 import { ReactNode, Suspense } from 'react';
-import { store } from 'store';
+import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
 import { LocaleProvider } from './LocaleProvider';
 

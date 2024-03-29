@@ -1,5 +1,5 @@
 {
-  "name": "logo",
+  "name": "@boluo/logo",
   "version": "0.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -7,11 +7,10 @@
   "scripts": {
     "build": "svgr --config-file svgr.config.js -- svg && tsc --project tsconfig.json"
   },
-  "dependencies": {
-    "tsconfig": "*"
-  },
+  "dependencies": {},
   "sideEffects": false,
   "devDependencies": {
+    "@boluo/typescript-config": "*",
     "@babel/core": "^7.23.7",
     "@svgr/cli": "^8.1.0",
     "@types/react": "^18.2.46",

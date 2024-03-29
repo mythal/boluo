@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
-import { Paperclip, Refresh } from 'icons';
+import { Paperclip, Refresh } from '@boluo/icons';
 import { FC, ReactNode, memo, useState } from 'react';
-import Icon from 'ui/Icon';
-import { showFileSize } from 'utils';
+import Icon from '@boluo/ui/Icon';
+import { showFileSize } from '@boluo/utils';
 import { getMediaUrl, supportedMediaType } from '../../media';
 
 type Props = {

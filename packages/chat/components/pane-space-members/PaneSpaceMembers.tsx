@@ -1,7 +1,7 @@
-import { Users } from 'icons';
+import { Users } from '@boluo/icons';
 import { FC, Suspense, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Loading } from 'ui/Loading';
+import { Loading } from '@boluo/ui/Loading';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { ClosePaneButton } from '../ClosePaneButton';

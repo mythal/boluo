@@ -1,7 +1,7 @@
-import type { ApiError, ChannelMembers } from 'api';
-import { get } from 'api-browser';
+import type { ApiError, ChannelMembers } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 
 export const useQueryChannelMembers = (
   channelId: string,

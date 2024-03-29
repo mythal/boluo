@@ -1,8 +1,8 @@
-import { isApiError } from 'api';
+import { isApiError } from '@boluo/api';
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
-import { Oops } from 'ui/Oops';
-import type { ChildrenProps, StyleProps } from 'utils';
+import { Oops } from '@boluo/ui/Oops';
+import type { ChildrenProps, StyleProps } from '@boluo/utils';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';

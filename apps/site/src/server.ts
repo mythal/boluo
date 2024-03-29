@@ -1,17 +1,17 @@
 import 'server-only';
 import type { IntlShape } from '@formatjs/intl';
 import { IntlErrorCode, createIntl } from '@formatjs/intl';
-import type { GetMe } from 'api';
-import { defaultLocale, localeList, toLocale } from 'common/locale';
-import type { IntlMessages, Locale } from 'common/locale';
-import { toSettings } from 'common/settings';
-import en from 'lang/compiled/en.json';
-import ja from 'lang/compiled/ja_JP.json';
-import zh_CN from 'lang/compiled/zh_CN.json';
+import type { GetMe } from '@boluo/api';
+import { defaultLocale, localeList, toLocale } from '@boluo/common/locale';
+import type { IntlMessages, Locale } from '@boluo/common/locale';
+import { toSettings } from '@boluo/common/settings';
+import en from '@boluo/lang/compiled/en.json';
+import ja from '@boluo/lang/compiled/ja_JP.json';
+import zh_CN from '@boluo/lang/compiled/zh_CN.json';
 import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
-import { toTheme } from 'theme';
-import type { Theme } from 'theme';
+import { toTheme } from '@boluo/theme';
+import type { Theme } from '@boluo/theme';
 import { get } from './api/server';
 
 export interface LangParams {

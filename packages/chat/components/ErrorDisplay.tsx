@@ -1,7 +1,7 @@
-import { ApiError, isApiError } from 'api';
-import { useErrorExplain } from 'common';
+import { ApiError, isApiError } from '@boluo/api';
+import { useErrorExplain } from '@boluo/common';
 import { FC, ReactNode, useMemo } from 'react';
-import { ErrorMessageBox } from 'ui/ErrorMessageBox';
+import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 
 interface Props {
   error: unknown;

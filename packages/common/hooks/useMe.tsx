@@ -1,7 +1,7 @@
-import { ApiError, GetMe } from 'api';
-import { get } from 'api-browser';
+import { ApiError, GetMe } from '@boluo/api';
+import { get } from '@boluo/api-browser';
 import useSWR from 'swr';
-import { unwrap } from 'utils';
+import { unwrap } from '@boluo/utils';
 
 const key = ['/users/get_me'] as const;
 export const useMe = (): GetMe | 'LOADING' | null => {

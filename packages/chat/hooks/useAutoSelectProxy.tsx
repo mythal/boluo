@@ -1,9 +1,9 @@
-import { Proxy } from 'api';
-import { backendUrlAtom } from 'api-browser';
+import { Proxy } from '@boluo/api';
+import { backendUrlAtom } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import useSWR from 'swr';
-import { sleep } from 'utils';
+import { sleep } from '@boluo/utils';
 import { useProxies } from './useProxies';
 
 const timeout = async (): Promise<'TIMEOUT'> => {

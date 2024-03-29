@@ -1,10 +1,10 @@
-import { useMe } from 'common';
-import { Whisper } from 'icons';
+import { useMe } from '@boluo/common';
+import { Whisper } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from 'ui/Button';
-import Icon from 'ui/Icon';
+import { Button } from '@boluo/ui/Button';
+import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {}

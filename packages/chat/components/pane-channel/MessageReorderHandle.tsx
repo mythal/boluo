@@ -1,10 +1,10 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
-import { GripVertical, MoveVertical } from 'icons';
+import { GripVertical, MoveVertical } from '@boluo/icons';
 import { forwardRef } from 'react';
-import { Spinner } from 'ui/Spinner';
+import { Spinner } from '@boluo/ui/Spinner';
 import { Delay } from '../Delay';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 
 type UseSortableReturn = ReturnType<typeof useSortable>;
 

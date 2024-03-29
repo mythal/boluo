@@ -1,4 +1,4 @@
-import { GetMe } from 'api';
+import { GetMe } from '@boluo/api';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';

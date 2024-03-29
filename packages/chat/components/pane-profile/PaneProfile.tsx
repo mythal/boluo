@@ -1,10 +1,10 @@
-import { useMe, useUser } from 'common';
-import { Edit, LogOut, User } from 'icons';
+import { useMe, useUser } from '@boluo/common';
+import { Edit, LogOut, User } from '@boluo/icons';
 import { FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from 'ui/Button';
-import { Loading } from 'ui/Loading';
-import { toggle } from 'utils';
+import { Button } from '@boluo/ui/Button';
+import { Loading } from '@boluo/ui/Loading';
+import { toggle } from '@boluo/utils';
 import { useLogout } from '../../hooks/useLogout';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';

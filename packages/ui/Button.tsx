@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { ChevronDown } from 'icons';
+import { ChevronDown } from '@boluo/icons';
 import React from 'react';
-import type { DataAttr } from 'utils';
+import type { DataAttr } from '@boluo/utils';
 
 export type ButtonProps = React.ComponentPropsWithoutRef<'button'> &
   DataAttr<{

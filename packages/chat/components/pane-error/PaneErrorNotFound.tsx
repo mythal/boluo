@@ -1,5 +1,5 @@
-import { NotFoundError } from 'api';
-import { AlertCircle } from 'icons';
+import { NotFoundError } from '@boluo/api';
+import { AlertCircle } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { ClosePaneButton } from '../ClosePaneButton';

@@ -1,8 +1,8 @@
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useIntl } from 'react-intl';
-import { TextInput } from 'ui/TextInput';
+import { TextInput } from '@boluo/ui/TextInput';
 import { ProfileEditSchema } from './PaneProfileEdit';
 
 interface Props {}

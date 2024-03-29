@@ -1,4 +1,4 @@
-import { StatusKind } from 'api';
+import { StatusKind } from '@boluo/api';
 import { useAtomValue, useStore } from 'jotai';
 import { useEffect, useRef } from 'react';
 import { connectionStateAtom } from '../state/chat.atoms';

@@ -1,5 +1,5 @@
-import { Space } from 'api';
-import { Plus } from 'icons';
+import { Space } from '@boluo/api';
+import { Plus } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { usePaneClose } from '../hooks/usePaneClose';

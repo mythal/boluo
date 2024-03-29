@@ -1,11 +1,11 @@
-import { ChannelMember } from 'api';
+import { ChannelMember } from '@boluo/api';
 import { memo, useMemo } from 'react';
 import { IsActionIndicator } from './IsActionIndicator';
 import { Name } from './Name';
 import { SelfPreviewToolbox } from './SelfPreviewToolbox';
 import { autoUpdate, flip, hide, offset, shift, useFloating } from '@floating-ui/react';
-import { Button } from 'ui/Button';
-import { Settings } from 'icons';
+import { Button } from '@boluo/ui/Button';
+import { Settings } from '@boluo/icons';
 import { atom, useAtom } from 'jotai';
 import { useIsDragging } from '../../hooks/useIsDragging';
 

@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'icons';
+import { AlertTriangle } from '@boluo/icons';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';

@@ -1,7 +1,7 @@
-import { User } from 'api';
+import { User } from '@boluo/api';
 import { FC, memo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { isApple } from 'utils';
+import { isApple } from '@boluo/utils';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { mediaMaxSizeMb } from '../../media';

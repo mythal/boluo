@@ -1,4 +1,4 @@
-import { Proxy } from 'api';
+import { Proxy } from '@boluo/api';
 import { atom } from 'jotai';
 
 export const proxiesAtom = atom(async (get): Promise<Proxy[]> => {

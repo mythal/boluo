@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithHash } from 'jotai-location';
 import { selectAtom } from 'jotai/utils';
-import { isUuid } from 'utils';
+import { isUuid } from '@boluo/utils';
 import { Pane, Route } from './view.types';
 
 const routeDeserialize = (raw: string): string => {

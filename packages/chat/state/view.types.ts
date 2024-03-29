@@ -1,4 +1,4 @@
-import { makeId } from 'utils';
+import { makeId } from '@boluo/utils';
 
 export interface SpacePane {
   type: 'SPACE';

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Loading } from 'ui/Loading';
-import { Spinner } from 'ui/Spinner';
+import { Loading } from '@boluo/ui/Loading';
+import { Spinner } from '@boluo/ui/Spinner';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 

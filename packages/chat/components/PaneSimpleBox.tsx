@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { ChildrenProps } from 'utils';
+import type { ChildrenProps } from '@boluo/utils';
 
 interface Props extends ChildrenProps {}
 

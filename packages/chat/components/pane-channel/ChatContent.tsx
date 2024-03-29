@@ -1,4 +1,4 @@
-import type { GetMe } from 'api';
+import type { GetMe } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import React, { FC } from 'react';
 import { Suspense } from 'react';

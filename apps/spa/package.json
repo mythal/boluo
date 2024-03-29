@@ -24,7 +24,7 @@
     "react-dom": "^18.2.0",
     "react-intl": "^6.6.1",
     "@boluo/store": "*",
-    "swr": "~2.1.5",
+    "swr": "^2.2.5",
     "@boluo/ui": "*",
     "@boluo/utils": "*"
   },

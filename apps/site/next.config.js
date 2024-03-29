@@ -21,7 +21,7 @@ const config = {
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
   },
-  transpilePackages: ['ui', 'chat', 'common'],
+  transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },

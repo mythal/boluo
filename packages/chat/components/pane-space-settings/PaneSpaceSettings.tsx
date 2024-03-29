@@ -181,7 +181,7 @@ const spaceToForm = (space: Space): FormSchema => ({
 
 const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space, close }) => {
   const key = ['/spaces/query', space.id] as const;
-  const updater: MutationFetcher<Space, EditSpace, typeof key> = useCallback(async ([_, spaceId], { arg }) => {
+  const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
     const space = result.unwrap();
     return space;

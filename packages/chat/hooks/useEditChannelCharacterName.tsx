@@ -10,8 +10,8 @@ type Key = ['/channels/members', string];
 
 export const useEditChannelCharacterName = (
   channelId: string,
-  config?: SWRMutationConfiguration<ChannelMember, ApiError, Arg, Key>,
-): SWRMutationResponse<ChannelMember, ApiError, Arg, Key> => {
+  config?: SWRMutationConfiguration<ChannelMember, ApiError, Key, Arg>,
+): SWRMutationResponse<ChannelMember, ApiError, Key, Arg> => {
   return useSWRMutation<ChannelMember, ApiError, Key, Arg>(
     ['/channels/members', channelId],
     async ([, channelId], { arg: { characterName } }) => {

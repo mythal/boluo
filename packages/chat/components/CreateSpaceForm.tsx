@@ -133,7 +133,7 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
   });
   const { handleSubmit } = form;
   const key = ['/spaces/create'] as const;
-  const createSpace: MutationFetcher<SpaceWithMember, CreateSpace, typeof key> = async (_, { arg: params }) => {
+  const createSpace: MutationFetcher<SpaceWithMember, typeof key, CreateSpace> = async (_, { arg: params }) => {
     const result = await post('/spaces/create', null, params);
     return result.unwrap();
   };

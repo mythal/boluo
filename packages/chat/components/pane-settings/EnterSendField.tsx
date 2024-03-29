@@ -14,7 +14,7 @@ interface Props {}
 
 export const EneterSendField: FC<Props> = () => {
   const key = ['/users/settings'] as const;
-  const updater: MutationFetcher<Settings, boolean, typeof key> = useCallback(async (_, { arg: enterSend }) => {
+  const updater: MutationFetcher<Settings, typeof key, boolean> = useCallback(async (_, { arg: enterSend }) => {
     const settings: Settings = { enterSend };
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});

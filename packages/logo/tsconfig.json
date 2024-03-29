@@ -1,9 +1,0 @@
-{
-  "extends": "@boluo/typescript-config/react-library.json",
-  "compilerOptions": {
-    "outDir": "./dist/",
-    "target": "ESNext"
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "build.ts"],
-  "exclude": ["dist", "build", "node_modules"]
-}

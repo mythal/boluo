@@ -84,7 +84,6 @@ export const Content = memo<Props>(
           className={clsx(
             'relative h-full whitespace-pre-wrap break-all pr-6',
             self ? 'pb-12' : '',
-            isPreview ? 'animate-pulse' : '',
             isArchived ? 'line-through' : '',
           )}
         >

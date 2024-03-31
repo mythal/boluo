@@ -77,7 +77,7 @@ const lightTheme = {
     warning: yellow,
     surface: neutral,
     preview: {
-      self: green[100],
+      self: blue[200],
       toolbar: neutral[100],
     },
     ingame: {

@@ -200,7 +200,7 @@ impl UserExt {
 #[tokio::test]
 async fn user_test() -> Result<(), crate::error::AppError> {
     use crate::database::Client;
-    use crate::media::Media;
+    use crate::media::models::Media;
 
     let mut client = Client::new().await?;
     let mut trans = client.transaction().await.unwrap();

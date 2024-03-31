@@ -141,7 +141,7 @@ async fn get(req: Request<Body>) -> Result<Response, AppError> {
         .header(header::LOCATION, url)
         .body(Body::empty())
         .map_err(error_unexpected!("Failed to build media redirect response"))?;
-    return Ok(response);
+    Ok(response)
 }
 
 async fn delete(_req: Request<Body>) -> Result<(), AppError> {

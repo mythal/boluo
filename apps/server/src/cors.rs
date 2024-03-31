@@ -60,7 +60,7 @@ pub fn preflight_requests(res: Request<Body>) -> Response<Body> {
     let headers = res.headers();
     let allow_headers = headers
         .get(ACCESS_CONTROL_REQUEST_HEADERS)
-        .map(Clone::clone)
+        .cloned()
         .unwrap_or_else(|| HeaderValue::from_static(""));
     let response = Response::builder()
         .header(

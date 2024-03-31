@@ -299,7 +299,7 @@ impl Querist for Transaction<'_> {
 pub async fn initialize() {
     let mut client = Client::new().await.unwrap();
     let transaction = client.client.transaction().await.expect("Failed to create transaction");
-    let _ = transaction
+    transaction
         .batch_execute(include_str!("../schema.sql"))
         .await
         .expect("Failed to execute schema");

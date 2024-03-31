@@ -124,7 +124,7 @@ pub fn add_session_cookie(session: &Uuid, host: Option<&HeaderValue>, response_h
     if host.ends_with(session_cookie_domain) {
         builder = builder.domain(session_cookie_domain);
     }
-    let session_cookie = builder.finish().to_string();
+    let session_cookie = builder.build().to_string();
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
 }
 
@@ -143,7 +143,7 @@ pub fn add_settings_cookie(settings: &serde_json::Value, response_header: &mut H
             let cookie = CookieBuilder::new("boluo-locale", locale)
                 .path("/")
                 .max_age(max_age)
-                .finish()
+                .build()
                 .to_string();
             response_header.append(
                 SET_COOKIE,
@@ -157,7 +157,7 @@ pub fn add_settings_cookie(settings: &serde_json::Value, response_header: &mut H
             let cookie = CookieBuilder::new("boluo-theme", theme)
                 .path("/")
                 .max_age(max_age)
-                .finish()
+                .build()
                 .to_string();
             response_header.append(
                 SET_COOKIE,
@@ -188,7 +188,7 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
                     .domain(domain())
                     .path("/")
                     .max_age(zero)
-                    .finish()
+                    .build()
                     .to_string(),
             )
             .unwrap(),
@@ -197,7 +197,7 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
                     .http_only(true)
                     .path("/")
                     .max_age(zero)
-                    .finish()
+                    .build()
                     .to_string(),
             )
             .unwrap(),
@@ -206,7 +206,7 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
                     .http_only(true)
                     .path("/api/")
                     .max_age(zero)
-                    .finish()
+                    .build()
                     .to_string(),
             )
             .unwrap(),
@@ -215,7 +215,7 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
                     .http_only(true)
                     .path("/")
                     .max_age(zero)
-                    .finish()
+                    .build()
                     .to_string(),
             )
             .unwrap(),

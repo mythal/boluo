@@ -22,7 +22,7 @@ impl Connection {
         self.inner.set(key, value).await
     }
 
-    pub async fn set_with_expiration(&mut self, key: &[u8], value: &[u8], seconds: usize) -> Result<(), CacheError> {
+    pub async fn set_with_expiration(&mut self, key: &[u8], value: &[u8], seconds: u64) -> Result<(), CacheError> {
         self.inner.set_ex(key, value, seconds).await
     }
 
@@ -68,7 +68,7 @@ pub async fn conn() -> redis::RedisResult<Connection> {
         redis::Client::open(&*url).expect("Unable to open redis")
     });
 
-    let connection_manager = client.get_tokio_connection_manager().await?;
+    let connection_manager = client.get_connection_manager().await?;
     Ok(Connection::new(connection_manager))
 }
 

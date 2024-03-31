@@ -115,7 +115,7 @@ pub async fn healthcheck() -> Result<Response, AppError> {
                 log::error!("Unexpected failture in serialize healthcheck result: {:?}", err);
                 AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
             })
-            .map(|bytes| Body::from(bytes))
+            .map(Body::from)
     });
     let result = task
         .await

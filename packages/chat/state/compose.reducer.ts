@@ -339,7 +339,7 @@ export const checkCompose =
     defaultInGame,
     media,
   }: Pick<ComposeState, 'source' | 'inputedName' | 'defaultInGame' | 'media'>): ComposeError | null => {
-    const { inGame } = parseModifiers(source);
+    const { inGame, rest } = parseModifiers(source);
     if (inGame ? inGame.inGame : defaultInGame) {
       if (inputedName.trim() === '' && characterName === '') {
         return 'NO_NAME';
@@ -349,7 +349,7 @@ export const checkCompose =
     if (mediaResult.isErr) {
       return mediaResult.err;
     }
-    if (source.trim() === '') {
+    if (rest.trim() === '') {
       return 'TEXT_EMPTY';
     }
     return null;

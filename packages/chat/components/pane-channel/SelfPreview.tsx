@@ -12,7 +12,7 @@ import { PreviewBox } from './PreviewBox';
 import { RemoveMediaButton } from './RemoveMediaButton';
 import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewNameCell } from './SelfPreviewNameCell';
-import { SelfPreviewSendHelpText } from './SelfPreviewSendHelpText';
+import { SelfPreviewToolbar } from './SelfPreviewToolbar';
 
 type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & {
   editMode: boolean;
@@ -71,6 +71,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
     <PreviewBox
       id={preview.key}
       editMode={editMode}
+      isSelf
       onDrop={onDrop}
       className="bg-preview-self/20 border-preview-self border-b border-t"
     >
@@ -78,10 +79,8 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       <div className="items-between flex h-full flex-col gap-1">
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         {mediaNode}
-        <div className="min-h-[1.5em]">
-          <SelfPreviewSendHelpText me={member.user} />
-        </div>
       </div>
+      <SelfPreviewToolbar currentUser={member.user} />
     </PreviewBox>
   );
 };

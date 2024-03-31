@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import Prando from 'prando';
 import { memo, ReactNode, useMemo, useRef } from 'react';
 import type { Entity, EvaluatedExprNode } from '../../interpreter/entities';
 import { evaluate, makeRng } from '../../interpreter/eval';

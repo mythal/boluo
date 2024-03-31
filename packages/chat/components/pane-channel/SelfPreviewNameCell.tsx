@@ -2,9 +2,8 @@ import { ChannelMember } from '@boluo/api';
 import { memo, useMemo } from 'react';
 import { IsActionIndicator } from './IsActionIndicator';
 import { Name } from './Name';
-import { SelfPreviewToolbox } from './SelfPreviewToolbox';
+import { SelfPreviewNameEditBox } from './SelfPreviewNameEditBox';
 import { autoUpdate, flip, hide, offset, shift, useFloating } from '@floating-ui/react';
-import { Button } from '@boluo/ui/Button';
 import { Settings } from '@boluo/icons';
 import { atom, useAtom } from 'jotai';
 import { useIsDragging } from '../../hooks/useIsDragging';
@@ -31,7 +30,7 @@ export const SelfPreviewNameCell = memo<Props>(({ inGame, name, isAction, channe
     whileElementsMounted: autoUpdate,
   });
 
-  const toolbox = useMemo(() => <SelfPreviewToolbox channelMember={channelMember} />, [channelMember]);
+  const toolbox = useMemo(() => <SelfPreviewNameEditBox channelMember={channelMember} />, [channelMember]);
 
   return (
     <div className="@2xl:flex-col @2xl:items-end @2xl:justify-start flex items-center justify-between gap-x-4 gap-y-1 pb-2">

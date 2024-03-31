@@ -28,7 +28,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
   const { text: source, entities } = useDeferredValue(parsed);
 
   return (
-    <PreviewBox id={preview.id} editMode={preview.editFor !== null} className="text-surface-600">
+    <PreviewBox id={preview.id} editMode={preview.editFor !== null} isSelf={false} className="text-surface-600">
       <div className="@2xl:flex-col flex gap-1">
         <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>
       </div>

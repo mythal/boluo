@@ -14,12 +14,15 @@ export const SelfCursorToolbarButtons: FC<Props> = ({ collapsed }) => {
   const handleAddDice = () => dispatch({ type: 'addDice', payload: {} });
   const handleAddLink = () => dispatch({ type: 'link', payload: { text: '', href: '' } });
   const handleBold = () => dispatch({ type: 'bold', payload: { text: '' } });
+
   return (
     <>
       {collapsed && (
-        <SelfCursorButton onClick={handleAddDice}>
-          <Dice />
-        </SelfCursorButton>
+        <>
+          <SelfCursorButton onClick={handleAddDice}>
+            <Dice />
+          </SelfCursorButton>
+        </>
       )}
       {!collapsed && (
         <>

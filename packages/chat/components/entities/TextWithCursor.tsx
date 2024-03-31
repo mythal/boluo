@@ -61,7 +61,7 @@ export const TextWithCursor: FC<Props> = ({
   return (
     <>
       {a}
-      <span className="bg-blue-100">{b}</span>
+      <span className="bg-blue-600/25">{b}</span>
       {cursorBetweenBC && cursorNode}
       {c}
     </>

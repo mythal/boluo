@@ -37,7 +37,7 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
     <div
       ref={refs.setFloating}
       style={floatingStyles}
-      className="bg-lowest border-highest flex select-none items-center justify-center rounded-lg border-[2px] shadow"
+      className="bg-lowest border-highest z-10 flex select-none items-center justify-center rounded-lg border-[2px] shadow"
     >
       {buttions}
     </div>

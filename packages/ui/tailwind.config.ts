@@ -83,6 +83,9 @@ const lightTheme = {
     ingame: {
       underline: gray[500],
     },
+    expr: {
+      bg: neutral[200],
+    },
     input: {
       ingame: {
         bg: green[50],
@@ -166,6 +169,9 @@ const darkTheme = {
     ingame: {
       underline: gray[500],
     },
+    expr: {
+      bg: neutral[900],
+    },
     input: {
       ingame: {
         bg: blue[950],
@@ -245,7 +251,6 @@ const config: Config = {
   plugins: [
     plugin(function ({ addVariant }) {
       addVariant('enabled', '&:not(:disabled)');
-      addVariant('hover-enabled', '&:hover:not(:disabled)');
       addVariant('active-enabled', '&:is([data-active="true"],:active):not(:disabled)');
       addVariant('on', '&[data-on="true"]');
       addVariant('off', '&[data-on="false"]');

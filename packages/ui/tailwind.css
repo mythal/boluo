@@ -38,19 +38,19 @@
 
   .input-default {
     @apply border-surface-400 bg-lowest placeholder:text-surface-400
-      focus:border-brand-900 hover-enabled:border-surface-600 focus:ring-surface-300;
+      focus:border-brand-900 hover:enabled:border-surface-600 focus:ring-surface-300;
   }
 
   .input-error {
     @apply border-error-300 bg-error-50 ring-error-100
       placeholder:text-error-500 focus:border-error-500
-      hover-enabled:border-error-500;
+      hover:enabled:border-error-500;
   }
 
   .input-warning {
     @apply border-warning-300 bg-warning-50 ring-warning-100
       placeholder:text-warning-400 focus:border-warning-600
-      hover-enabled:border-warning-600;
+      hover:enabled:border-warning-600;
   }
 }
 

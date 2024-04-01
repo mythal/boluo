@@ -84,7 +84,7 @@ export const MessageBox: FC<Props> = ({
     <div
       data-overlay={overlay}
       className={clsx(
-        'hover:bg-surface-100 group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
+        'hover:bg-surface-500/5 group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',

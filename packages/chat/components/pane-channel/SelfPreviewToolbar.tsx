@@ -25,8 +25,8 @@ const ToolbarButton = React.forwardRef<
       ref={ref}
       disabled={disabled}
       className={clsx(
-        'bg-lowest hover:enabled:bg-surface-200 inline-flex items-center gap-0.5 rounded-sm border border-gray-500 px-1 py-0.5 text-xs shadow-sm',
-        'data-[active="true"]:bg-surface-300 data-[active="true"]:translate-y-px',
+        'bg-lowest hover:enabled:bg-surface-100 inline-flex items-center gap-0.5 rounded-sm border border-gray-500 px-1 py-0.5 text-xs shadow-sm',
+        'data-[active="true"]:border-brand-600 data-[active="true"]:bg-brand-50 data-[active="true"]:translate-y-px ',
         'disabled:text-text-light disabled:bg-surface-200 disabled:cursor-not-allowed',
       )}
     >
@@ -76,7 +76,7 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
         <FormattedMessage defaultMessage="Send" />
       </ToolbarButton>
       {composeError && (
-        <div className="bg-lowest absolute right-0 top-[calc(100%+0.25rem)] z-10 rounded-sm border px-2 py-1 text-sm shadow">
+        <div className="bg-lowest absolute right-0 top-0 z-10 -translate-y-[calc(100%+0.25rem)] rounded-sm border px-2 py-1 text-sm shadow">
           <ComposeErrorReason error={composeError} />
         </div>
       )}
@@ -102,7 +102,7 @@ export const SelfPreviewToolbar: FC<Props> = ({ currentUser }) => {
   const actionButton = useMemo(() => <ActionButton />, []);
   const sendButton = useMemo(() => <SendButton currentUser={currentUser} />, [currentUser]);
   return (
-    <div className="absolute right-2 z-10 flex -translate-y-5 justify-end gap-1">
+    <div className="relative flex justify-end gap-1 pr-6">
       {whisperButton}
       {muteButton}
       {actionButton}

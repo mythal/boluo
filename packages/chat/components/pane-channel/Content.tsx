@@ -82,7 +82,7 @@ export const Content = memo<Props>(
         <div
           className={clsx(
             'relative h-full whitespace-pre-wrap break-all pr-6',
-            self ? 'pb-12' : '',
+            self ? 'pb-1' : '',
             isArchived ? 'line-through' : '',
           )}
         >

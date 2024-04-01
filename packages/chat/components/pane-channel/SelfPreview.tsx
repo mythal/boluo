@@ -79,8 +79,8 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       <div className="items-between flex h-full flex-col gap-1">
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         {mediaNode}
+        <SelfPreviewToolbar currentUser={member.user} />
       </div>
-      <SelfPreviewToolbar currentUser={member.user} />
     </PreviewBox>
   );
 };

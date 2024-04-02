@@ -76,7 +76,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member })
       className="bg-preview-self/20 border-preview-self border-b border-t"
     >
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member.channel} />
-      <div className="items-between flex h-full flex-col gap-1">
+      <div className="items-between pr-messageRight flex h-full flex-col gap-1">
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
         {mediaNode}
         <SelfPreviewToolbar currentUser={member.user} />

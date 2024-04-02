@@ -86,7 +86,7 @@ const lightTheme = {
       underline: gray[500],
     },
     expr: {
-      bg: neutral[200],
+      bg: lime[50],
     },
     input: {
       ingame: {

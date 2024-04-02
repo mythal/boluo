@@ -221,7 +221,8 @@ const handleToggleAction = (state: ComposeState, _: ComposeAction<'toggleAction'
 
 const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState => {
   const modifiersParseResult = parseModifiers(state.source);
-  let source = '';
+  const nextDefaultInGame = modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame;
+  let source = nextDefaultInGame ? '.in ' : '.out ';
   if (modifiersParseResult.mute) {
     source = '.mute ';
   }
@@ -230,7 +231,7 @@ const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState
   }
   return {
     ...state,
-    defaultInGame: modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame,
+    defaultInGame: nextDefaultInGame,
     previewId: makeId(),
     editFor: null,
     range: [source.length, source.length],

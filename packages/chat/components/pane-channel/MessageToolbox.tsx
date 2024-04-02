@@ -1,8 +1,8 @@
 import { Message } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Archive, Edit, EllipsisVertical, Trash, X } from '@boluo/icons';
-import { useSetAtom } from 'jotai';
-import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { FC, forwardRef, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Spinner } from '@boluo/ui/Spinner';
 import { useSetBanner } from '../../hooks/useBanner';
@@ -19,8 +19,6 @@ interface Props {
   message: Message;
 }
 
-type ToolboxState = 'NORMAL' | 'MORE' | 'LOADING';
-
 const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode }>(({ className, children }, ref) => (
   <div
     ref={ref}
@@ -31,21 +29,23 @@ const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode
 ));
 Box.displayName = 'MessageToolboxBox';
 
+const expandToolboxAtom = atom<string>('');
+
 export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, iAmMaster }) => {
   const isDragging = useIsDragging();
   const setBanner = useSetBanner();
   const boxRef = useRef<HTMLDivElement>(null);
-  const [state, setState] = useState<ToolboxState>('NORMAL');
+  const [isLoading, setIsLoading] = useState(false);
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  useOutside(
-    useCallback(() => setState('NORMAL'), []),
-    boxRef,
-  );
+  const toolboxId = useId();
+  const setExpandedId = useSetAtom(expandToolboxAtom);
+  const expandedAtom = useMemo(() => atom((get) => get(expandToolboxAtom) === toolboxId), [toolboxId]);
+  const expanded = useAtomValue(expandedAtom);
   const intl = useIntl();
 
   const handleDelete = async () => {
-    setState('LOADING');
+    setIsLoading(true);
     const MAX_LENGTH = 128;
     let { text } = message;
     if (text.length > MAX_LENGTH) {
@@ -55,7 +55,7 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
       intl.formatMessage({ defaultMessage: 'Are you sure to delete this message:' }) + `\n\n${text}`,
     );
     if (!sure) {
-      setState('NORMAL');
+      setIsLoading(false);
       return;
     }
     const result = await post('/messages/delete', { id: message.id }, {});
@@ -65,7 +65,6 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
         level: 'ERROR',
         content: <FormattedMessage defaultMessage="Failed to delete message ({ errorCode })" values={{ errorCode }} />,
       });
-      setState('NORMAL');
       return;
     } else {
       return;
@@ -73,9 +72,9 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
   };
 
   const handleArchiveMessage = useCallback(async () => {
-    setState('LOADING');
+    setIsLoading(true);
     await post('/messages/toggle_fold', { id: message.id }, {});
-    setState('NORMAL');
+    setIsLoading(false);
   }, [message.id]);
 
   const handleEditMessage = useCallback(() => {
@@ -84,42 +83,37 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
   if (isDragging) return null;
   return (
     <Box className={className} ref={boxRef}>
-      {state === 'LOADING' && (
+      {isLoading ? (
         <MessageToolboxButton>
           <Spinner />
         </MessageToolboxButton>
-      )}
-      {state === 'MORE' && (
+      ) : (
         <>
-          {(self || iAmAdmin) && (
-            <MessageToolboxButton onClick={handleDelete}>
-              <Trash className="text-text-danger" />
-            </MessageToolboxButton>
+          {expanded && (
+            <>
+              {(self || iAmMaster) && (
+                <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
+                  <Archive />
+                </MessageToolboxButton>
+              )}
+              {(self || iAmAdmin) && (
+                <MessageToolboxButton onClick={handleDelete}>
+                  <Trash className="text-text-danger" />
+                </MessageToolboxButton>
+              )}
+            </>
           )}
           {self && (
             <MessageToolboxButton onClick={handleEditMessage}>
               <Edit />
             </MessageToolboxButton>
           )}
-          {(self || iAmMaster) && (
-            <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
-              <Archive />
-            </MessageToolboxButton>
-          )}
-        </>
-      )}
-      {state === 'NORMAL' && (
-        <>
-          {self && (
-            <MessageToolboxButton onClick={handleEditMessage}>
-              <Edit />
-            </MessageToolboxButton>
-          )}
-          {(self || iAmAdmin) && (
-            <MessageToolboxButton onClick={() => setState('MORE')}>
-              <EllipsisVertical />
-            </MessageToolboxButton>
-          )}
+          <MessageToolboxButton
+            onMouseEnter={() => setExpandedId(toolboxId)}
+            onClick={() => setExpandedId(expanded ? '' : toolboxId)}
+          >
+            <EllipsisVertical />
+          </MessageToolboxButton>
         </>
       )}
     </Box>

@@ -64,7 +64,7 @@ export const ChatItemMessage: FC<Props> = ({
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
         {!mini && <>{nameNode}:</>}
       </div>
-      <div className="@2xl:pr-[6rem]">
+      <div className="@2xl:pr-messageRight">
         {message.whisperToUsers != null && (
           <span className="text-surface-600 text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />

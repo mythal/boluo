@@ -108,6 +108,17 @@ test('parse code block', () => {
   ]);
 });
 
+test('parse modifier', () => {
+  expect(originalParse('hello').broadcast).toBe(true);
+  expect(originalParse('.mute').broadcast).toBe(false);
+  expect(originalParse('.Mute').broadcast).toBe(false);
+  expect(originalParse('.in ').inGame).toBe(true);
+  expect(originalParse('.In ').inGame).toBe(true);
+  expect(originalParse('.Ins').inGame).toBe(null);
+  // expect(originalParse('.out').inGame).toBe(false);
+  // expect(originalParse('.OUT').inGame).toBe(false);
+});
+
 test('parse roll', () => {
   expect(parse('1d20')).toEqual<Entity[]>([]);
   expect(parse('{1d20}')).toEqual<Entity[]>([

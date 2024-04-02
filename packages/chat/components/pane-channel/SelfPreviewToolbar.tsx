@@ -2,7 +2,7 @@ import React, { FC, ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom } from 'jotai';
 import Icon from '@boluo/ui/Icon';
-import { PaperPlane, PersonRunning, TowerBroadcast, Whisper } from '@boluo/icons';
+import { PaperPlane, PersonRunning, TowerBroadcast, TriangleAlert, Whisper } from '@boluo/icons';
 import { FormattedMessage } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from './useSend';
@@ -76,7 +76,8 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
         <FormattedMessage defaultMessage="Send" />
       </ToolbarButton>
       {composeError && (
-        <div className="bg-lowest absolute right-0 top-0 z-10 -translate-y-[calc(100%+0.25rem)] rounded-sm border px-2 py-1 text-sm shadow">
+        <div className="bg-lowest border-text-wanring absolute right-0 top-0 z-10 -translate-y-[calc(100%-2px)] rounded-sm border px-2 py-1 text-sm">
+          <Icon icon={TriangleAlert} className="text-text-wanring mr-1" />
           <ComposeErrorReason error={composeError} />
         </div>
       )}

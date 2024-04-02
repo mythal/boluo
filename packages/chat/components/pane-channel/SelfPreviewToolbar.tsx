@@ -2,13 +2,15 @@ import React, { FC, ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom } from 'jotai';
 import Icon from '@boluo/ui/Icon';
-import { PaperPlane, PersonRunning, TowerBroadcast, TriangleAlert, Whisper } from '@boluo/icons';
+import { Edit, PaperPlane, PersonRunning, TowerBroadcast, TriangleAlert, Whisper, X } from '@boluo/icons';
 import { FormattedMessage } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from './useSend';
 import { User } from '@boluo/api';
 import clsx from 'clsx';
 import { ComposeErrorReason } from '../compose/ComposeErrorReason';
+import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { selectAtom } from 'jotai/utils';
 
 interface Props {
   currentUser: User;
@@ -67,14 +69,23 @@ const ActionButton = () => {
 };
 
 const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
+  const composeAtom = useComposeAtom();
+  const dispatch = useSetAtom(composeAtom);
+  const editForAtom = useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor), [composeAtom]);
+  const editMode = useAtomValue(editForAtom) !== null;
   const composeError = useComposeError();
   const send = useSend(currentUser, composeError);
   return (
     <>
       <ToolbarButton disabled={composeError !== null} onClick={send}>
-        <Icon icon={PaperPlane} />
-        <FormattedMessage defaultMessage="Send" />
+        <Icon icon={editMode ? Edit : PaperPlane} />
+        {editMode ? <FormattedMessage defaultMessage="Edit" /> : <FormattedMessage defaultMessage="Send" />}
       </ToolbarButton>
+      {editMode && (
+        <ToolbarButton onClick={() => dispatch({ type: 'reset', payload: {} })}>
+          <Icon icon={X} />
+        </ToolbarButton>
+      )}
       {composeError && (
         <div className="bg-lowest border-text-wanring absolute right-0 top-0 z-10 -translate-y-[calc(100%-2px)] rounded-sm border px-2 py-1 text-sm">
           <Icon icon={TriangleAlert} className="text-text-wanring mr-1" />

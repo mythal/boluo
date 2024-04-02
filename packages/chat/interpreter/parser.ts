@@ -706,7 +706,7 @@ interface MuteModifier {
 
 export type Modifier = MeModifier | RollModifier | WhisperModifier | MuteModifier | InGameModifier;
 
-const meModifier: P<Modifier> = regex(/^[.。][mM][eE]\s*/).then(([match, { text, rest }]) => {
+const meModifier: P<Modifier> = regex(/^[.。]me\b/i).then(([match, { text, rest }]) => {
   const [entire] = match;
   const modifier: MeModifier = {
     type: 'Me',
@@ -717,7 +717,7 @@ const meModifier: P<Modifier> = regex(/^[.。][mM][eE]\s*/).then(([match, { text
   return [modifier, { text, rest }];
 });
 
-const rollModifier: P<Modifier> = regex(/^[.。][rR]\s*/).then(([match, { text, rest }]) => {
+const rollModifier: P<Modifier> = regex(/^[.。]r\b/i).then(([match, { text, rest }]) => {
   const [entire] = match;
   const modifier: RollModifier = {
     type: 'Roll',
@@ -750,36 +750,34 @@ const mentionList: P<{ start: number; len: number; usernames: string[] }> = rege
   ];
 });
 
-const whisperModifier: P<WhisperModifier> = regex(/^[.。]([rR])[hH]\s*|^[.。][hH]([rR])?\s*/).then(
-  ([match, state], env) => {
-    const [entire, g1, g2] = match;
-    const rollMatch = g1 || g2 || '';
-    const roll = rollMatch.toLowerCase() === 'r';
-    const memtionListResult = mentionList.run({ text: state.text + entire, rest: state.rest }, env);
-    if (!memtionListResult) {
-      const modifier: WhisperModifier = {
-        type: 'Whisper',
-        start: state.text.length,
-        usernames: [],
-        roll,
-        len: entire.length,
-      };
-      return [modifier, { text: state.text + entire, rest: state.rest }];
-    } else {
-      const [mentionList, state2] = memtionListResult;
-      const modifier: WhisperModifier = {
-        type: 'Whisper',
-        start: state.text.length,
-        usernames: mentionList.usernames,
-        roll,
-        len: entire.length + mentionList.len,
-      };
-      return [modifier, state2];
-    }
-  },
-);
+const whisperModifier: P<WhisperModifier> = regex(/^[.。](r)h\b|^[.。]h(r)?\b/i).then(([match, state], env) => {
+  const [entire, g1, g2] = match;
+  const rollMatch = g1 || g2 || '';
+  const roll = rollMatch.toLowerCase() === 'r';
+  const memtionListResult = mentionList.run({ text: state.text + entire, rest: state.rest }, env);
+  if (!memtionListResult) {
+    const modifier: WhisperModifier = {
+      type: 'Whisper',
+      start: state.text.length,
+      usernames: [],
+      roll,
+      len: entire.length,
+    };
+    return [modifier, { text: state.text + entire, rest: state.rest }];
+  } else {
+    const [mentionList, state2] = memtionListResult;
+    const modifier: WhisperModifier = {
+      type: 'Whisper',
+      start: state.text.length,
+      usernames: mentionList.usernames,
+      roll,
+      len: entire.length + mentionList.len,
+    };
+    return [modifier, state2];
+  }
+});
 
-const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]\s*/).then(([match, { text, rest }]) => {
+const muteModifier: P<Modifier> = regex(/^[.。]mute\b/i).then(([match, { text, rest }]) => {
   const [entire] = match;
   const modifier: MuteModifier = {
     type: 'Mute',
@@ -790,14 +788,28 @@ const muteModifier: P<Modifier> = regex(/^[.。][mM][uU][tT][eE]\s*/).then(([mat
   return [modifier, { text, rest }];
 });
 
-const inOutGameModifier: P<Modifier> = regex(/^[.。](in)[\s$]|^[.。](out)[\s$]/i).then(([match, { text, rest }]) => {
-  const [entire, inGame = ''] = match;
+const inGameModifier: P<Modifier> = regex(/^[.。]in\b/i).then(([match, { text, rest }]) => {
+  const [entire] = match;
 
   const modifier: InGameModifier = {
     type: 'InGame',
     start: text.length,
     len: entire.length,
-    inGame: inGame.toLowerCase() === 'in',
+    inGame: true,
+    characterName: '',
+  };
+  text += entire;
+  return [modifier, { text, rest }];
+});
+
+const outGameModifier: P<Modifier> = regex(/^[.。]out\b/i).then(([match, { text, rest }]) => {
+  const [entire] = match;
+
+  const modifier: InGameModifier = {
+    type: 'InGame',
+    start: text.length,
+    len: entire.length,
+    inGame: false,
     characterName: '',
   };
   text += entire;
@@ -818,7 +830,9 @@ interface ParseModifersResult {
 export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModifersResult => {
   const state: State = { text: '', rest: source };
   const parser: P<Modifier[]> = many(
-    spaces.with(choice([meModifier, whisperModifier, rollModifier, muteModifier, inOutGameModifier])),
+    spaces
+      .with(choice([meModifier, whisperModifier, rollModifier, inGameModifier, outGameModifier, muteModifier]))
+      .skip(spaces),
   );
 
   const result = parser.run(state, env);

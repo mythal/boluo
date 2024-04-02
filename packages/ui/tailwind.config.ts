@@ -69,6 +69,7 @@ const lightTheme = {
     text: {
       base: neutral[900],
       light: neutral[600],
+      danger: red[600],
     },
     brand: lime,
     green,
@@ -155,6 +156,7 @@ const darkTheme = {
     text: {
       base: white,
       light: neutral[400],
+      danger: red[300],
     },
     brand: revBlue,
     gray: revert(gray),
@@ -237,7 +239,7 @@ const config: Config = {
         'pane-header': '3rem',
       },
       padding: {
-        messageRight: '2rem',
+        messageRight: '4rem',
       },
       minHeight: {
         'pane-header': '3rem',

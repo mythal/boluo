@@ -32,7 +32,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '' }) => {
       id={preview.id}
       editMode={preview.editFor !== null}
       isSelf={false}
-      className="text-surface-600 pr-messageRight"
+      className="text-surface-600 @2xl:pr-messageRight"
     >
       <div className="@2xl:flex-col flex gap-1">
         <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>

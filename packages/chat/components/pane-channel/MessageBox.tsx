@@ -7,7 +7,6 @@ import { Delay } from '../Delay';
 import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageToolbox } from './MessageToolbox';
 import { MessageTime } from './MessageTime';
-import { useScrollerRef } from '../../hooks/useScrollerRef';
 interface Props {
   className?: string;
   children: ReactNode;
@@ -33,7 +32,6 @@ export const MessageBox: FC<Props> = ({
   iAmMaster,
   iAmAdmin,
 }) => {
-  const scrollerRef = useScrollerRef();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
     id: message.id,
     data: { message },
@@ -68,12 +66,7 @@ export const MessageBox: FC<Props> = ({
   const toolbox = useMemo(
     () => (
       <Delay timeout={400}>
-        <div
-          className={clsx(
-            'absolute -top-2 right-2 z-10 max-h-full group-hover:z-20',
-            'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:block group-hover:opacity-100',
-          )}
-        >
+        <div className={clsx('absolute right-2 top-1 z-10 max-h-full group-hover:z-20')}>
           <MessageToolbox message={message} self={self} iAmAdmin={iAmAdmin} iAmMaster={iAmMaster} />
         </div>
       </Delay>
@@ -84,7 +77,7 @@ export const MessageBox: FC<Props> = ({
     <div
       data-overlay={overlay}
       className={clsx(
-        'hover:bg-surface-500/5 group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
+        'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',

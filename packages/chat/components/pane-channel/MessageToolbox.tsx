@@ -1,9 +1,9 @@
 import { Message } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Archive, Edit, Trash, X } from '@boluo/icons';
+import { Archive, Edit, EllipsisVertical, Trash, X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Spinner } from '@boluo/ui/Spinner';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
@@ -19,10 +19,13 @@ interface Props {
   message: Message;
 }
 
-type ToolboxState = 'NORMAL' | 'DELETE_CONFRIM' | 'LOADING';
+type ToolboxState = 'NORMAL' | 'MORE' | 'LOADING';
 
 const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode }>(({ className, children }, ref) => (
-  <div ref={ref} className="bg-surface-200 flex items-stretch rounded-sm text-base shadow">
+  <div
+    ref={ref}
+    className="bg-lowest border-surface-200 group-hover:border-surface-500 flex items-stretch rounded-sm border text-base shadow-sm"
+  >
     {children}
   </div>
 ));
@@ -39,8 +42,22 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
     useCallback(() => setState('NORMAL'), []),
     boxRef,
   );
+  const intl = useIntl();
+
   const handleDelete = async () => {
     setState('LOADING');
+    const MAX_LENGTH = 128;
+    let { text } = message;
+    if (text.length > MAX_LENGTH) {
+      text = text.slice(0, MAX_LENGTH - 4) + '...';
+    }
+    const sure = window.confirm(
+      intl.formatMessage({ defaultMessage: 'Are you sure to delete this message:' }) + `\n\n${text}`,
+    );
+    if (!sure) {
+      setState('NORMAL');
+      return;
+    }
     const result = await post('/messages/delete', { id: message.id }, {});
     if (result.isErr) {
       const errorCode = result.err.code;
@@ -67,39 +84,40 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
   if (isDragging) return null;
   return (
     <Box className={className} ref={boxRef}>
-      {state === 'DELETE_CONFRIM' && (
-        <>
-          <MessageToolboxButton type="DANGER" onClick={handleDelete}>
-            <Trash className="inline-block" />
-            <span>
-              <FormattedMessage defaultMessage="Confirm Delete" />
-            </span>
-          </MessageToolboxButton>
-          <MessageToolboxButton onClick={() => setState('NORMAL')}>
-            <X />
-          </MessageToolboxButton>
-        </>
-      )}
       {state === 'LOADING' && (
         <MessageToolboxButton>
           <Spinner />
         </MessageToolboxButton>
       )}
-      {state === 'NORMAL' && (
+      {state === 'MORE' && (
         <>
-          {(self || iAmMaster) && (
-            <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
-              <Archive />
-            </MessageToolboxButton>
-          )}
           {(self || iAmAdmin) && (
-            <MessageToolboxButton onClick={() => setState('DELETE_CONFRIM')}>
-              <Trash />
+            <MessageToolboxButton onClick={handleDelete}>
+              <Trash className="text-text-danger" />
             </MessageToolboxButton>
           )}
           {self && (
             <MessageToolboxButton onClick={handleEditMessage}>
               <Edit />
+            </MessageToolboxButton>
+          )}
+          {(self || iAmMaster) && (
+            <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
+              <Archive />
+            </MessageToolboxButton>
+          )}
+        </>
+      )}
+      {state === 'NORMAL' && (
+        <>
+          {self && (
+            <MessageToolboxButton onClick={handleEditMessage}>
+              <Edit />
+            </MessageToolboxButton>
+          )}
+          {(self || iAmAdmin) && (
+            <MessageToolboxButton onClick={() => setState('MORE')}>
+              <EllipsisVertical />
             </MessageToolboxButton>
           )}
         </>

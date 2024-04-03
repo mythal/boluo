@@ -112,7 +112,7 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
             onMouseEnter={() => setExpandedId(toolboxId)}
             onClick={() => setExpandedId(expanded ? '' : toolboxId)}
           >
-            <EllipsisVertical />
+            <EllipsisVertical className={expanded ? 'text-text-light' : ''} />
           </MessageToolboxButton>
         </>
       )}

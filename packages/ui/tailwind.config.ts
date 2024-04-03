@@ -80,12 +80,26 @@ const lightTheme = {
     surface: neutral,
     preview: {
       self: neutral[200],
-      toolbar: neutral[100],
-      hint: rgba(0, 0, 0, 0.2),
+      hint: rgba(0, 0, 0, 0.125),
+      toolbar: {
+        hover: neutral[100],
+        active: {
+          border: neutral[600],
+          bg: lime[100],
+          bgHover: lime[50],
+        },
+      },
     },
     message: {
       inGame: {
         bg: mix(neutral[100], lime[100], 0.25),
+      },
+      action: neutral[400],
+      toolbox: {
+        active: {
+          bg: lime[600],
+        },
+        danger: red[600],
       },
     },
     expr: {
@@ -167,13 +181,27 @@ const darkTheme = {
     surface: revert(neutral),
     green: revGreen,
     preview: {
-      self: blue[900],
-      toolbar: neutral[900],
-      hint: rgba(255, 255, 255, 0.25),
+      self: mix(neutral[700], blue[500], 0.4),
+      hint: rgba(255, 255, 255, 0.125),
+      toolbar: {
+        hover: neutral[900],
+        active: {
+          border: neutral[400],
+          bg: blue[900],
+          bgHover: blue[800],
+        },
+      },
     },
     message: {
       inGame: {
         bg: mix(neutral[900], blue[400], 0.25),
+      },
+      action: neutral[600],
+      toolbox: {
+        active: {
+          bg: blue[400],
+        },
+        danger: red[500],
       },
     },
     expr: {

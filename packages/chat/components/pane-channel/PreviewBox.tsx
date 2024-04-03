@@ -39,9 +39,8 @@ export const PreviewBox: FC<Props> = ({
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
         isSelf ? 'border-preview-self border-b border-t' : '',
-        'data-[in-game=true]:bg-message-inGame-bg bg-[length:200%_200%]',
-        isSelf ? 'animate-[bg-x-move_60s_linear_infinite_reverse]' : 'animate-[bg-x-move_100s_linear_infinite]',
-        'bg-[repeating-linear-gradient(var(--bg-angle),transparent_0,transparent_5px,var(--colors-preview-hint)_6px)]',
+        'data-[in-game=true]:bg-message-inGame-bg',
+        'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',
         className,
       )}
       ref={setNodeRef}

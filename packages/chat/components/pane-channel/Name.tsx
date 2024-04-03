@@ -23,11 +23,7 @@ export const Name: FC<Props> = ({ name, className, isMaster, inGame, isPreview =
   );
   return (
     <span
-      className={clsx(
-        '@xl:w-[10rem] @2xl:w-[12rem] relative mr-1 w-[8rem] flex-none break-all font-bold',
-        inGame ? 'underline decoration-gray-700 decoration-dotted' : '',
-        className,
-      )}
+      className={clsx('@xl:w-[10rem] @2xl:w-[12rem] relative mr-1 w-[8rem] flex-none break-all font-bold', className)}
     >
       <span className="mr-1">
         {isEmptyName ? (

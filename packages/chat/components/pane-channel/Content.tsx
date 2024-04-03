@@ -83,10 +83,10 @@ export const Content = memo<Props>(
           className={clsx(
             'relative h-full whitespace-pre-wrap break-all',
             self ? 'pb-1' : '',
-            isArchived ? 'line-through' : '',
+            isArchived ? 'decoration-highest/50 line-through' : '',
           )}
         >
-          {isAction && <span className="text-surface-400 mr-1">*</span>}
+          {isAction && <span className="text-message-action mr-1">*</span>}
           {isAction && nameNode}
           {entityNodeList}
         </div>

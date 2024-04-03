@@ -1,28 +1,32 @@
 import { Message } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Archive, Edit, EllipsisVertical, Trash, X } from '@boluo/icons';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { Archive, Edit, EllipsisVertical, Trash } from '@boluo/icons';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { FC, forwardRef, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Spinner } from '@boluo/ui/Spinner';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { useOutside } from '../../hooks/useOutside';
 import { MessageToolboxButton } from './MessageToolboxButton';
 import { useIsDragging } from '../../hooks/useIsDragging';
+import clsx from 'clsx';
 
 interface Props {
-  className?: string;
   self: boolean;
   iAmAdmin: boolean;
   iAmMaster: boolean;
   message: Message;
 }
 
-const Box = forwardRef<HTMLDivElement, { className?: string; children: ReactNode }>(({ className, children }, ref) => (
+const Box = forwardRef<HTMLDivElement, { children: ReactNode; expanded: boolean }>(({ children, expanded }, ref) => (
   <div
     ref={ref}
-    className="bg-lowest border-surface-200 group-hover:border-surface-500 flex items-stretch rounded-sm border text-base shadow-sm"
+    aria-expanded={expanded}
+    className={clsx(
+      'transition-colors duration-100',
+      'bg-lowest/30 text-highest/60 group-hover:bg-lowest group-hover:text-highest flex items-stretch rounded-sm text-base shadow-sm',
+      'aria-expanded:text-highest aria-expanded:bg-lowest',
+    )}
   >
     {children}
   </div>
@@ -31,7 +35,7 @@ Box.displayName = 'MessageToolboxBox';
 
 const expandToolboxAtom = atom<string>('');
 
-export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, iAmMaster }) => {
+export const MessageToolbox: FC<Props> = ({ message, self, iAmAdmin, iAmMaster }) => {
   const isDragging = useIsDragging();
   const setBanner = useSetBanner();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -82,7 +86,7 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
   }, [dispatch, message]);
   if (isDragging) return null;
   return (
-    <Box className={className} ref={boxRef}>
+    <Box ref={boxRef} expanded={expanded}>
       {isLoading ? (
         <MessageToolboxButton>
           <Spinner />
@@ -112,7 +116,7 @@ export const MessageToolbox: FC<Props> = ({ className, message, self, iAmAdmin, 
             onMouseEnter={() => setExpandedId(toolboxId)}
             onClick={() => setExpandedId(expanded ? '' : toolboxId)}
           >
-            <EllipsisVertical className={expanded ? 'text-text-light' : ''} />
+            <EllipsisVertical className={expanded ? 'text-message-toolbox-active-bg' : ''} />
           </MessageToolboxButton>
         </>
       )}

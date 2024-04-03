@@ -27,8 +27,8 @@ const ToolbarButton = React.forwardRef<
       ref={ref}
       disabled={disabled}
       className={clsx(
-        'bg-lowest hover:enabled:bg-surface-100 inline-flex items-center gap-0.5 rounded-sm border border-gray-200 px-1 py-0.5 text-xs shadow-sm group-hover:enabled:border-gray-500',
-        'data-[active="true"]:border-brand-600 data-[active="true"]:bg-brand-50 data-[active="true"]:translate-y-px ',
+        'bg-lowest hover:enabled:bg-preview-toolbar-hover border-transprent inline-flex items-center gap-0.5 rounded-sm border px-1 py-0.5 text-xs shadow-sm ',
+        'data-[active="true"]:border-preview-toolbar-active-border data-[active="true"]:bg-preview-toolbar-active-bg data-[active="true"]:hover:enabled:bg-preview-toolbar-active-bgHover data-[active="true"]:translate-y-px ',
         'disabled:text-text-light disabled:bg-surface-200 disabled:cursor-not-allowed',
       )}
     >

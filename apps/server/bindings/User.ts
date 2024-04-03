@@ -7,4 +7,5 @@ export interface User {
   bio: string;
   joined: string;
   avatarId: string | null;
+  defaultColor: string;
 }

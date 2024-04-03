@@ -68,7 +68,8 @@ CREATE TABLE users
     "joined"      timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "deactivated" boolean   NOT NULL DEFAULT false,
     "avatar_id"   uuid               DEFAULT NULL
-        CONSTRAINT "user_avatar" REFERENCES media (id) ON DELETE SET NULL
+        CONSTRAINT "user_avatar" REFERENCES media (id) ON DELETE SET NULL,
+    "default_color"      text      NOT NULL DEFAULT ''
 );
 
 ALTER TABLE media
@@ -169,6 +170,7 @@ CREATE TABLE messages
     -- [user1, user2]: both master, user1 and user2 are able to read the message.
     "whisper_to_users"  uuid[]             DEFAULT null,
     "entities"          jsonb     NOT NULL DEFAULT '[]',
+    "color"             text      NOT NULL DEFAULT '',
     "created"           timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "modified"          timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "order_date"        timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),

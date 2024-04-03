@@ -49,6 +49,13 @@ pub struct Message {
     pub modified: DateTime<Utc>,
     pub order_date: DateTime<Utc>,
     pub order_offset: i32,
+    /// The color of the message
+    ///
+    /// The string is not always a hex color, it can be a preset color name like "preset:orange",
+    /// or refer to a character's name like "char:DM".
+    ///
+    /// If the string contains a semicolon, the second part is for the dark mode.
+    pub color: String,
     pub pos: f64,
     pub pos_p: i32,
     pub pos_q: i32,

@@ -8,4 +8,5 @@ export interface EditMessage {
   inGame: boolean;
   isAction: boolean;
   mediaId: string | null;
+  color: string;
 }

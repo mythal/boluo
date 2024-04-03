@@ -24,6 +24,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
         media_id,
         whisper_to_users,
         pos: request_pos,
+        color,
     } = interface::parse_body(req).await?;
     let mut conn = database::get().await?;
     let db = &mut *conn;
@@ -47,6 +48,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
         whisper_to_users,
         media_id,
         request_pos,
+        color,
     )
     .await?;
     Event::new_message(space_member.space_id, message.clone(), preview_id);
@@ -63,6 +65,7 @@ async fn edit(req: Request<Body>) -> Result<Message, AppError> {
         in_game,
         is_action,
         media_id,
+        color,
     } = interface::parse_body(req).await?;
     let mut db = database::get().await?;
     let mut trans = db.transaction().await?;
@@ -80,9 +83,19 @@ async fn edit(req: Request<Body>) -> Result<Message, AppError> {
 
     let text = &*text;
     let name = &*name;
-    message = Message::edit(db, name, &message_id, text, entities, in_game, is_action, media_id)
-        .await?
-        .ok_or_else(|| unexpected!("The message had been delete."))?;
+    message = Message::edit(
+        db,
+        name,
+        &message_id,
+        text,
+        entities,
+        in_game,
+        is_action,
+        media_id,
+        color,
+    )
+    .await?
+    .ok_or_else(|| unexpected!("The message had been delete."))?;
     trans.commit().await?;
     Event::message_edited(space_member.space_id, message.clone());
     Ok(message)

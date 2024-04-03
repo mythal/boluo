@@ -12,4 +12,5 @@ export interface NewMessage {
   mediaId: string | null;
   whisperToUsers: Array<string> | null;
   pos: [number, number] | null;
+  color: string;
 }

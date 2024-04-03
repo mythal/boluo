@@ -148,6 +148,7 @@ impl Message {
         whisper_to: Option<Vec<Uuid>>,
         media_id: Option<Uuid>,
         request_pos: Option<(i32, i32)>,
+        color: String,
     ) -> Result<Message, AppError> {
         use postgres_types::Type;
         let pos: (i32, i32) = match (request_pos, preview_id) {
@@ -180,6 +181,7 @@ impl Message {
             Type::UUID,
             Type::INT4,
             Type::INT4,
+            Type::TEXT,
         ];
         let mut row = db
             .query_exactly_one_typed(
@@ -198,6 +200,7 @@ impl Message {
                     &media_id,
                     &pos.0,
                     &pos.1,
+                    &color,
                 ],
             )
             .await;
@@ -350,6 +353,7 @@ impl Message {
         in_game: bool,
         is_action: bool,
         media_id: Option<Uuid>,
+        color: String,
     ) -> Result<Option<Message>, ModelError> {
         let entities = JsonValue::Array(entities);
         let name = merge_blank(name);
@@ -357,7 +361,7 @@ impl Message {
         let row = db
             .query_one(
                 include_str!("sql/edit.sql"),
-                &[id, &&*name, &text, &entities, &in_game, &is_action, &media_id],
+                &[id, &&*name, &text, &entities, &in_game, &is_action, &media_id, &color],
             )
             .await?;
         if let Some(row) = row {
@@ -420,6 +424,7 @@ async fn message_test() -> Result<(), crate::error::AppError> {
         Some(vec![]),
         Some(Uuid::nil()),
         None,
+        String::new(),
     )
     .await
     .unwrap();
@@ -429,9 +434,19 @@ async fn message_test() -> Result<(), crate::error::AppError> {
     assert_eq!(message.text, text);
 
     let new_text = "cocona";
-    let edited = Message::edit(db, "new name", &message.id, new_text, vec![], false, false, None)
-        .await?
-        .unwrap();
+    let edited = Message::edit(
+        db,
+        "new name",
+        &message.id,
+        new_text,
+        vec![],
+        false,
+        false,
+        None,
+        String::new(),
+    )
+    .await?
+    .unwrap();
     assert_eq!(edited.text, "");
 
     let message = Message::get(db, &message.id, Some(&user.id)).await?.unwrap();
@@ -463,6 +478,7 @@ async fn message_test() -> Result<(), crate::error::AppError> {
         None,
         Some(Uuid::nil()),
         None,
+        String::new(),
     )
     .await
     .unwrap();
@@ -486,6 +502,7 @@ async fn message_test() -> Result<(), crate::error::AppError> {
         None,
         Some(Uuid::nil()),
         None,
+        String::new(),
     )
     .await
     .unwrap();

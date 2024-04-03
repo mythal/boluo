@@ -1,0 +1,4 @@
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS "default_color" text NOT NULL DEFAULT '';
+ALTER TABLE messages
+    ADD COLUMN IF NOT EXISTS "color" text NOT NULL DEFAULT '';

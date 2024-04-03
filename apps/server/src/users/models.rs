@@ -25,6 +25,8 @@ pub struct User {
     #[serde(skip)]
     pub deactivated: bool,
     pub avatar_id: Option<Uuid>,
+    /// See `Message::color`
+    pub default_color: String,
 }
 
 impl User {

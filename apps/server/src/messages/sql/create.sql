@@ -10,7 +10,8 @@ INSERT INTO messages (
     whisper_to_users,
     media_id,
     pos_p,
-    pos_q
+    pos_q,
+    color
 )
 VALUES (
     $1,
@@ -24,6 +25,7 @@ VALUES (
     $9,
     $10,
     $11,
-    $12
+    $12,
+    $13
 )
 RETURNING messages;

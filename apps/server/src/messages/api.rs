@@ -19,6 +19,8 @@ pub struct NewMessage {
     pub media_id: Option<Uuid>,
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub pos: Option<(i32, i32)>,
+    #[serde(default)]
+    pub color: String,
 }
 
 #[derive(Deserialize, Debug, TS)]
@@ -33,6 +35,8 @@ pub struct EditMessage {
     pub in_game: bool,
     pub is_action: bool,
     pub media_id: Option<Uuid>,
+    #[serde(default)]
+    pub color: String,
 }
 
 #[derive(Deserialize, Debug, TS)]

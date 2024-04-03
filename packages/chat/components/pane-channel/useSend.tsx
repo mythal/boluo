@@ -95,6 +95,7 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
         inGame,
         isAction: parsed.isAction,
         mediaId,
+        color: '',
       });
     } else {
       result = await post('/messages/send', null, {
@@ -109,6 +110,7 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
         mediaId,
         pos: null,
         whisperToUsers: whisperToUsernames ? usernameListToUserIdList(whisperToUsernames) : null,
+        color: '',
       });
     }
 

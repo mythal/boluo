@@ -5,6 +5,7 @@ SET name         = $2,
     in_game      = $5,
     is_action    = $6,
     media_id     = $7,
-    modified     = (now() at time zone 'utc')
+    modified     = (now() at time zone 'utc'),
+    color        = $8
 WHERE id = $1
 RETURNING messages;

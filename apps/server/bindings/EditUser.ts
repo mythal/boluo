@@ -4,4 +4,5 @@ export interface EditUser {
   nickname: string | null;
   bio: string | null;
   avatar: string | null;
+  defaultColor: string | null;
 }

@@ -82,6 +82,7 @@ pub struct EditUser {
     pub nickname: Option<String>,
     pub bio: Option<String>,
     pub avatar: Option<Uuid>,
+    pub default_color: Option<String>,
 }
 
 #[derive(Debug, Deserialize, TS)]

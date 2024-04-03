@@ -151,9 +151,14 @@ pub async fn logout(req: Request<Body>) -> Result<Response, AppError> {
 pub async fn edit(req: Request<Body>) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
-    let EditUser { nickname, bio, avatar }: EditUser = parse_body(req).await?;
+    let EditUser {
+        nickname,
+        bio,
+        avatar,
+        default_color,
+    }: EditUser = parse_body(req).await?;
     let mut db = database::get().await?;
-    User::edit(&mut *db, &session.user_id, nickname, bio, avatar)
+    User::edit(&mut *db, &session.user_id, nickname, bio, avatar, default_color)
         .await
         .map_err(Into::into)
 }
@@ -198,7 +203,7 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
     let media = upload(req, media_id, params, 1024 * 1024).await?;
     let mut db = database::get().await?;
     let media = media.create(&mut *db, session.user_id, "avatar").await?;
-    User::edit(&mut *db, &session.user_id, None, None, Some(media.id))
+    User::edit(&mut *db, &session.user_id, None, None, Some(media.id), None)
         .await
         .map_err(Into::into)
 }

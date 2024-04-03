@@ -136,6 +136,7 @@ impl User {
         nickname: Option<String>,
         bio: Option<String>,
         avatar: Option<Uuid>,
+        default_color: Option<String>,
     ) -> Result<User, ModelError> {
         use crate::validators::{BIO, DISPLAY_NAME};
         let nickname = nickname.map(|s| merge_blank(&s));
@@ -147,7 +148,10 @@ impl User {
             BIO.run(bio)?;
         }
         let row = db
-            .query_exactly_one(include_str!("sql/edit.sql"), &[id, &nickname, &bio, &avatar])
+            .query_exactly_one(
+                include_str!("sql/edit.sql"),
+                &[id, &nickname, &bio, &avatar, &default_color],
+            )
             .await?;
         row.try_get(0).map_err(Into::into)
     }
@@ -238,6 +242,7 @@ async fn user_test() -> Result<(), crate::error::AppError> {
         Some(new_nickname.to_string()),
         Some(bio.to_string()),
         Some(avatar.id),
+        None,
     )
     .await?;
     assert_eq!(user_altered.nickname, new_nickname);

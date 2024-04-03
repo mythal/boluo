@@ -30,8 +30,8 @@ export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
   previewId: makeId(),
-  defaultInGame: false,
-  source: '',
+  defaultInGame: true,
+  source: '.out ',
   media: null,
   range: [0, 0],
   focused: false,
@@ -221,8 +221,8 @@ const handleToggleAction = (state: ComposeState, _: ComposeAction<'toggleAction'
 
 const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState => {
   const modifiersParseResult = parseModifiers(state.source);
-  const nextDefaultInGame = modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame;
-  let source = nextDefaultInGame ? '.in ' : '.out ';
+  const nextDefaultInGame = !(modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame);
+  let source = nextDefaultInGame ? '.out ' : '.in ';
   if (modifiersParseResult.mute) {
     source = '.mute ';
   }

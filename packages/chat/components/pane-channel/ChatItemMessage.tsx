@@ -53,6 +53,7 @@ export const ChatItemMessage: FC<Props> = ({
   return (
     <MessageBox
       self={self}
+      inGame={message.inGame}
       iAmAdmin={iAmAdmin}
       iAmMaster={iAmMaster}
       message={message}

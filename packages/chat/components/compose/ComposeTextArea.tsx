@@ -150,7 +150,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
       className={clsx(
         'input input-default h-full w-full resize-none',
         isWhisper ? 'border-dashed' : '',
-        inGame ? 'bg-input-ingame-bg' : '',
+        inGame ? 'bg-message-inGame-bg' : '',
       )}
     ></textarea>
   );

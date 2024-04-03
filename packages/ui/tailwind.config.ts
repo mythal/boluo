@@ -1,6 +1,6 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
-import { mix } from 'color2k';
+import { mix, rgba, transparentize } from 'color2k';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from '@boluo/utils';
@@ -79,19 +79,19 @@ const lightTheme = {
     warning: yellow,
     surface: neutral,
     preview: {
-      self: blue[200],
+      self: neutral[200],
       toolbar: neutral[100],
+      hint: rgba(0, 0, 0, 0.2),
     },
-    ingame: {
-      underline: gray[500],
+    message: {
+      inGame: {
+        bg: mix(neutral[100], lime[100], 0.25),
+      },
     },
     expr: {
       bg: lime[50],
     },
     input: {
-      ingame: {
-        bg: green[50],
-      },
       default: {
         border: gray[300],
         bg: white,
@@ -169,17 +169,17 @@ const darkTheme = {
     preview: {
       self: blue[900],
       toolbar: neutral[900],
+      hint: rgba(255, 255, 255, 0.25),
     },
-    ingame: {
-      underline: gray[500],
+    message: {
+      inGame: {
+        bg: mix(neutral[900], blue[400], 0.25),
+      },
     },
     expr: {
       bg: neutral[900],
     },
     input: {
-      ingame: {
-        bg: blue[950],
-      },
       default: {
         border: gray[600],
         bg: gray[900],

@@ -18,10 +18,12 @@ interface Props {
   self: boolean;
   iAmMaster: boolean;
   iAmAdmin: boolean;
+  inGame: boolean;
 }
 
 export const MessageBox: FC<Props> = ({
   className = '',
+  inGame,
   children,
   draggable = false,
   overlay = false,
@@ -76,12 +78,14 @@ export const MessageBox: FC<Props> = ({
   return (
     <div
       data-overlay={overlay}
+      data-in-game={inGame}
       className={clsx(
         'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
-        'data-[overlay=true]:bg-surface-300/30 data-[overlay=true]:backdrop-blur-sm	',
+        'data-[in-game=true]:bg-message-inGame-bg',
+        'data-[overlay=true]:bg-surface-300/30 data-[overlay=true]:data-[in-game=true]:bg-message-inGame-bg/75 data-[overlay=true]:backdrop-blur-sm',
         isDragging && 'opacity-0',
         className,
       )}

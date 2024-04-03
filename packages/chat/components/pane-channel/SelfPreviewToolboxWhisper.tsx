@@ -4,8 +4,8 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { selectAtom } from 'jotai/utils';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
-import { ChannelMember, Member } from 'api';
-import { X } from 'icons';
+import { ChannelMember, Member } from '@boluo/api';
+import { X } from '@boluo/icons';
 import { WhisperToItemAdd } from './SelfPreviewToolboxWhisperToAdd';
 
 interface Props {

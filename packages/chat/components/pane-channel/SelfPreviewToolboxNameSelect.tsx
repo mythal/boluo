@@ -13,11 +13,11 @@ import {
   FloatingList,
 } from '@floating-ui/react';
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp } from 'icons';
+import { ChevronDown, ChevronUp } from '@boluo/icons';
 import { Atom, useAtomValue } from 'jotai';
 import React, { FC, ReactNode, useCallback, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import Icon from 'ui/Icon';
+import Icon from '@boluo/ui/Icon';
 
 interface SelectContextValue {
   activeIndex: number | null;

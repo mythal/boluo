@@ -1,4 +1,4 @@
-import { Member } from 'api';
+import { Member } from '@boluo/api';
 import { FC } from 'react';
 
 interface Props {

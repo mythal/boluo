@@ -1,9 +1,8 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { TextInput } from '@boluo/ui/TextInput';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 
 interface Props {
   id?: string;

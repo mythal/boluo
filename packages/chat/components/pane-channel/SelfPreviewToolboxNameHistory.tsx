@@ -1,4 +1,4 @@
-import { useMe } from 'common';
+import { useMe } from '@boluo/common';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { FC, useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

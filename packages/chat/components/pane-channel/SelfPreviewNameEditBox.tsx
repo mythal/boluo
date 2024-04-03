@@ -101,7 +101,7 @@ const NameHistory: FC<{ defaultCharacterName: string; channelId: string; myId: s
   );
 };
 
-export const SelfPreviewToolbox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
+export const SelfPreviewNameEditBox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
   const myId = channelMember.userId;
   const { channelId, characterName } = channelMember;
   const { inGameAtom, composeAtom, isActionAtom, broadcastAtom, isWhisperAtom } = useChannelAtoms();
@@ -170,7 +170,7 @@ export const SelfPreviewToolbox: FC<{ channelMember: ChannelMember }> = ({ chann
       </div>
 
       <div className="">
-        <NameInput disabled={!inGame} className="w-full" placeholder={''} />
+        <NameInput disabled={!inGame} className="w-full" defaultCharacterName={characterName} />
       </div>
     </div>
   );

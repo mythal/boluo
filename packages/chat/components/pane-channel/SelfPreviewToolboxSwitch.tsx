@@ -1,4 +1,4 @@
-import type { SatelliteDish } from 'icons';
+import type { SatelliteDish } from '@boluo/icons';
 import { memo, type FC, type ReactNode } from 'react';
 
 interface Props {

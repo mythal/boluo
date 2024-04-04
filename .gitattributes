@@ -1,3 +1,2 @@
 # https://github.com/github-linguist/linguist/blob/master/docs/overrides.md#vendored-code
 apps/server/bindings/* linguist-generated
-packages/boring-avatars/**/* linguist-vendored

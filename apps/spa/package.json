@@ -13,7 +13,6 @@
   "dependencies": {
     "@boluo/api": "*",
     "@boluo/api-browser": "*",
-    "@boluo/boring-avatars": "*",
     "@boluo/chat": "*",
     "clsx": "^2.1.0",
     "@boluo/common": "*",

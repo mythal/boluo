@@ -16,7 +16,6 @@
     "@floating-ui/react": "^0.26.9",
     "@boluo/api": "*",
     "@boluo/api-browser": "*",
-    "@boluo/boring-avatars": "*",
     "clsx": "^2.1.0",
     "@boluo/common": "*",
     "@boluo/icons": "*",

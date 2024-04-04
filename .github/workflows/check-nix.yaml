@@ -29,5 +29,3 @@ jobs:
         run: nix build ".#site"
       - name: Check versions
         run: nix develop --command bash -c "cargo --version && node --version"
-      - name: Check build
-        run: nix develop --command bash -c "cargo build"

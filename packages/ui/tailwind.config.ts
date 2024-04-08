@@ -27,6 +27,8 @@ const revLime = revert(lime);
 const revSlate = revert(slate);
 const revBlue = revert(blue);
 
+const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
+
 const lightTheme = {
   ringColor: {
     DEFAULT: green[400],
@@ -44,6 +46,12 @@ const lightTheme = {
       surface: neutral,
       brand: lime,
       gray: gray,
+    },
+    light: {
+      bg: neutral[100],
+    },
+    dark: {
+      bg: darkPaneBg,
     },
     highest: black,
     lowest: white,
@@ -156,7 +164,7 @@ const darkTheme = {
     },
     bg: neutral[800],
     pane: {
-      bg: mix(zinc[800], zinc[700], 0.25),
+      bg: darkPaneBg,
       header: neutral[800],
     },
     sidebar: {

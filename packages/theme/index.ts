@@ -124,3 +124,10 @@ export const observeTheme = (callback: (theme: Theme) => void): (() => void) => 
   observer.observe(node, config);
   return () => observer.disconnect();
 };
+
+export const resolveSystemTheme = (theme: Theme): 'dark' | 'light' => {
+  if (theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return theme;
+};

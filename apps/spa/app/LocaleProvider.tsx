@@ -1,3 +1,4 @@
+'use client';
 import { setConfiguration } from '@boluo/chat/configuration';
 import { makeMeidaPublicUrl } from '@boluo/chat/media';
 import { localeAtom, messagesAtom } from '@boluo/chat/state/locale';
@@ -11,8 +12,8 @@ import { ChildrenProps } from '@boluo/utils';
 
 setConfiguration({
   app: 'spa',
-  development: import.meta.env.DEV,
-  mediaUrl: makeMeidaPublicUrl(import.meta.env.PUBLIC_MEDIA_URL),
+  development: process.env.NODE_ENV === 'development',
+  mediaUrl: makeMeidaPublicUrl(process.env.PUBLIC_MEDIA_URL),
 });
 
 export const LocaleProvider: FC<ChildrenProps> = ({ children }) => {

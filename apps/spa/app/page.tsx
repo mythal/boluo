@@ -1,3 +1,5 @@
+import { App } from '../components/App';
+
 export default function Page(): JSX.Element {
-  return <div>hello, world</div>;
+  return <App />;
 }

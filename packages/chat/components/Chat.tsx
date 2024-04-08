@@ -1,3 +1,4 @@
+'use client';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC, ReactNode, useEffect } from 'react';
 import { Suspense } from 'react';

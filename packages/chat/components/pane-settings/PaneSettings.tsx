@@ -1,5 +1,5 @@
 import { useMe } from '@boluo/common';
-import { LogOut, Settings, User } from '@boluo/icons';
+import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC } from 'react';
 import { useId } from 'react';
@@ -15,6 +15,8 @@ import { EneterSendField } from './EnterSendField';
 import { ExpandDiceSwitch } from './ExpandDiceSwitch';
 import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
+import { User } from '@boluo/api';
+import { EditDefaultColor } from './EditDefaultColor';
 
 const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="mb-2 font-bold">{children}</h3>;
 
@@ -51,30 +53,21 @@ const ExpandDiceField = () => {
   );
 };
 
-const LogoutField = () => {
+const LogoutField: FC<{ currentUser: User }> = ({ currentUser }) => {
   const logout = useLogout();
-  const me = useMe();
   const addPane = usePaneAdd();
   const openProfile = () => {
-    if (me != null && me !== 'LOADING') {
-      addPane({ type: 'PROFILE', userId: me.user.id });
-    }
+    addPane({ type: 'PROFILE', userId: currentUser.id });
   };
-  if (me == null) {
-    console.error("Unexpected null value for 'me'");
-    return null;
-  }
-  if (me === 'LOADING') {
-    return null;
-  }
+
   return (
     <div className="@md:items-center @md:flex-row flex select-none flex-col justify-between gap-4">
       <div className="text-lg">
-        {me.user.nickname} <span className="text-sm">({me.user.username})</span>
+        {currentUser.nickname} <span className="text-sm">({currentUser.username})</span>
       </div>
       <div className="flex flex-none gap-2">
         <Button onClick={openProfile}>
-          <User />
+          <UserIcon />
           <FormattedMessage defaultMessage="Profile" />
         </Button>
         <Button onClick={logout}>
@@ -86,14 +79,16 @@ const LogoutField = () => {
   );
 };
 
-const AccountFields = () => {
+const AccountFields: FC<{ currentUser: User }> = ({ currentUser }) => {
   return (
     <div className="flex flex-col gap-4">
       <SectionTitle>
         <FormattedMessage defaultMessage="Account" />
       </SectionTitle>
 
-      <LogoutField />
+      <LogoutField currentUser={currentUser} />
+
+      <EditDefaultColor currentUser={currentUser} />
     </div>
   );
 };
@@ -116,10 +111,10 @@ export const PaneSettings: FC = () => {
           </SectionTitle>
           <LanguageField />
           <ThemeField />
-          {me && <EneterSendField />}
-          {me && <ExpandDiceField />}
+          {me && me !== 'LOADING' && <EneterSendField />}
+          {me && me !== 'LOADING' && <ExpandDiceField />}
         </div>
-        {me && <AccountFields />}
+        {me && me !== 'LOADING' && <AccountFields currentUser={me.user} />}
         <div>
           <SectionTitle>Developer Mode</SectionTitle>
           <div>

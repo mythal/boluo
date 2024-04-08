@@ -6,14 +6,15 @@ const rewrites = async () => [
     destination: `${process.env.BACKEND_URL}/api/:path*`, // Proxy to Backend
   },
 ];
+
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
   poweredByHeader: false,
-  output: 'export',
+  output: process.env.NODE_ENV === 'development' ? undefined : 'export',
   swcMinify: false,
   transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
-  rewrites: process.env.NODE_ENV === 'production' ? undefined : rewrites,
+  rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
   },

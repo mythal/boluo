@@ -3,14 +3,16 @@ import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import { memo } from 'react';
 import { DraggingItem } from './ChatContentView';
 import { ChatItemMessage } from './ChatItemMessage';
+import { ResolvedTheme } from '@boluo/theme';
 
 interface Props {
   active: DraggingItem | null;
   iAmMaster: boolean;
   myId: string | null | undefined;
+  theme: ResolvedTheme;
 }
 
-export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster }) => {
+export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster, theme }) => {
   if (!active) {
     return null;
   }
@@ -22,6 +24,7 @@ export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster }) => {
         <div className="@container">
           <ChatItemMessage
             overlay={true}
+            theme={theme}
             message={message}
             iAmMaster={iAmMaster}
             iAmAdmin={false}

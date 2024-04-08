@@ -22,6 +22,8 @@ import { chatAtom } from '../../state/chat.atoms';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';
+import { useTheme } from '@boluo/theme/useTheme';
+import { resolveSystemTheme } from '@boluo/theme';
 
 interface Props {
   me: GetMe | 'LOADING' | null;
@@ -273,6 +275,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
+  const theme = resolveSystemTheme(useTheme());
   useEffect(() => {
     if (scheduledGcLowerPos === null) return;
     const [a] = renderRangeRef.current;
@@ -300,6 +303,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
           onDragCancel={handleDragCancel}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          theme={theme}
         >
           <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
             <ChatContentVirtualList
@@ -313,6 +317,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
               handleBottomStateChange={handleBottomStateChange}
               me={me}
               myMember={myMember}
+              theme={theme}
             />
             {showButton && <GoButtomButton onClick={goBottom} />}
           </SortableContext>

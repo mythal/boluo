@@ -14,15 +14,17 @@ import { createPortal } from 'react-dom';
 import { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';
 import { IsDraggingContext } from '../../hooks/useIsDragging';
+import { ResolvedTheme } from '@boluo/theme';
 
 interface Props extends Pick<DndContextProps, 'onDragCancel' | 'onDragStart' | 'onDragEnd'> {
   children: ReactNode;
   active: DraggingItem | null;
   myId: string | null | undefined;
   iAmMaster: boolean;
+  theme: ResolvedTheme;
 }
 
-export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, myId, ...rest }) => {
+export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, myId, theme, ...rest }) => {
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor);
   const keyboardSensor = useSensor(KeyboardSensor);
@@ -33,7 +35,10 @@ export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, my
       <IsDraggingContext.Provider value={!!active}>
         {children}
 
-        {createPortal(<DraggingOverlay iAmMaster={iAmMaster} active={active} myId={myId} />, document.body)}
+        {createPortal(
+          <DraggingOverlay theme={theme} iAmMaster={iAmMaster} active={active} myId={myId} />,
+          document.body,
+        )}
       </IsDraggingContext.Provider>
     </DndContext>
   );

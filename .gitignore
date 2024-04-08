@@ -10,6 +10,7 @@ docker-compose.override.yml
 
 # compiled output
 **/dist
+**/out
 tmp
 /out-tsc
 **/.next

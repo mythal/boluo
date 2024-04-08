@@ -14,6 +14,9 @@ module.exports = {
   swcMinify: false,
   transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
   rewrites: process.env.NODE_ENV === 'production' ? undefined : rewrites,
+  env: {
+    PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
+  },
   webpack: (config) => {
     if (ANALYZE) {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');

@@ -10,8 +10,9 @@ import { Content } from './Content';
 import { MessageBox } from './MessageBox';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
-import { MessageTime } from './MessageTime';
-import { Delay } from '../Delay';
+import { useUser } from '@boluo/common';
+import { useMessageColor } from '../../hooks/useMessageColor';
+import { ResolvedTheme } from '@boluo/theme';
 
 interface Props {
   iAmAdmin: boolean;
@@ -21,6 +22,7 @@ interface Props {
   self: boolean;
   continuous?: boolean;
   overlay?: boolean;
+  theme: ResolvedTheme;
 }
 
 export const ChatItemMessage: FC<Props> = ({
@@ -31,12 +33,16 @@ export const ChatItemMessage: FC<Props> = ({
   iAmAdmin,
   iAmMaster,
   overlay = false,
+  theme,
 }) => {
   const { isMaster, isAction, optimistic } = message;
+  const { data: user } = useUser(message.senderId);
+
+  const color = useMessageColor(theme, user, message.inGame, message.color);
 
   const nameNode = useMemo(
-    () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={self} />,
-    [isMaster, message.name, message.inGame, self],
+    () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={self} color={color} />,
+    [message.inGame, message.name, isMaster, self, color],
   );
   const parsed: ParseResult = useMemo((): ParseResult => {
     const text = message.text;

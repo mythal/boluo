@@ -4,6 +4,7 @@ import { ListRange, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
+import { ResolvedTheme } from '@boluo/theme';
 
 interface Props {
   iAmMaster: boolean;
@@ -16,6 +17,7 @@ interface Props {
   handleBottomStateChange: (bottom: boolean) => void;
   me: GetMe | 'LOADING' | null;
   myMember: Member | 'LOADING' | null;
+  theme: ResolvedTheme;
 }
 
 export interface VirtualListContext {
@@ -54,6 +56,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     handleBottomStateChange,
     me,
     myMember,
+    theme,
   } = props;
   const totalCount = chatList.length;
   const iAmAdmin = myMember !== null && myMember !== 'LOADING' && myMember.space.isAdmin;
@@ -82,6 +85,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
         chatItem={item}
         isMember={myMember !== null && myMember !== 'LOADING'}
         continuous={continuous}
+        theme={theme}
       />
     );
   };

@@ -125,7 +125,9 @@ export const observeTheme = (callback: (theme: Theme) => void): (() => void) => 
   return () => observer.disconnect();
 };
 
-export const resolveSystemTheme = (theme: Theme): 'dark' | 'light' => {
+export type ResolvedTheme = Exclude<Theme, 'system'>;
+
+export const resolveSystemTheme = (theme: Theme): ResolvedTheme => {
   if (theme === 'system') {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }

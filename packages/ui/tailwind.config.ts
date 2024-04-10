@@ -292,6 +292,7 @@ const config: Config = {
       },
       padding: {
         messageRight: '4rem',
+        pane: '1.75rem',
       },
       minHeight: {
         'pane-header': '3rem',

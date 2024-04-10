@@ -25,7 +25,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
     <div className={paneBanner.content || extra ? '' : ''}>
       <div
         className={clsx(
-          'min-h-pane-header flex items-center px-4 text-lg',
+          'min-h-pane-header pl-pane flex items-center pr-4 text-lg',
           'border-surface-100 bg-pane-header justify-between border-b',
         )}
       >

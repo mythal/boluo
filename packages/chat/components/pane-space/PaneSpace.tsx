@@ -1,6 +1,6 @@
 import { SpaceMemberWithUser } from '@boluo/api';
 import { useMe } from '@boluo/common';
-import { Globe, Key, Settings, Users } from '@boluo/icons';
+import { Globe, Key, Settings } from '@boluo/icons';
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
@@ -78,7 +78,7 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
   const { description, isPublic } = space;
   return (
     <PaneBox header={<PaneHeaderBox operators={operators}>{space.name}</PaneHeaderBox>}>
-      <div className="p-4">
+      <div className="p-pane">
         <div className="flex items-end gap-2 pb-2 text-2xl">{space.name}</div>
 
         <div className="flex gap-2 py-2">

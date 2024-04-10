@@ -69,12 +69,12 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
   return (
     <FormProvider {...form}>
       {error && (
-        <div className="px-4 py-2">
+        <div className="px-pane py-2">
           <ErrorDisplay error={error} type="banner" />
         </div>
       )}
       <form onSubmit={form.handleSubmit((formData) => editUser(formData))}>
-        <div className="p-4">
+        <div className="p-pane">
           <div className="group pb-12">
             <Controller<ProfileEditSchema>
               name="avatar"

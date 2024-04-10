@@ -2,7 +2,6 @@ import { Channel } from '@boluo/api';
 import { Settings } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 
 interface Props {

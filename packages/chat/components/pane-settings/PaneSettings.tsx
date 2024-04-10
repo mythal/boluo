@@ -104,7 +104,7 @@ export const PaneSettings: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="flex min-w-[18rem] max-w-lg flex-col gap-8 p-4">
+      <div className="p-pane flex min-w-[18rem] max-w-lg flex-col gap-8">
         <div className="flex flex-col gap-4">
           <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />

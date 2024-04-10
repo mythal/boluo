@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { FC, Suspense } from 'react';
-import React from 'react';
+import { FC, useMemo } from 'react';
 import { getMediaUrl } from '../../media';
 interface Props {
   id: string;
@@ -11,37 +10,19 @@ interface Props {
   size?: number | string;
 }
 
-const variants = [
-  'marble',
-  'beam',
-  // 'sunset',
-  'ring',
-  'pixel',
-  'bauhaus',
-] as const;
-
-const EmptyAvatar: FC<Props> = ({ className }) => <div className={className} />;
-
+// TODO: loading style
 export const Avatar: FC<Props> = (props) => {
   const { id, size = '1em', name, className, avatarId, onClick } = props;
-  const avatarSrc = () => {
-    const key = id + name;
-    const encoded = encodeURIComponent(key);
-    return `https://avatars.boluo.chat/${encoded}`;
-  };
-  return (
-    <Suspense fallback={<EmptyAvatar {...props} />}>
-      {avatarId ? (
-        <img
-          alt={name}
-          style={size != null ? { width: size, height: size } : undefined}
-          onClick={onClick}
-          className={className}
-          src={getMediaUrl(avatarId)}
-        />
-      ) : (
-        <img className={className} onClick={onClick} alt={name} src={avatarSrc()} />
-      )}
-    </Suspense>
-  );
+  const style = useMemo(() => {
+    if (size == null || size === '') {
+      return undefined;
+    }
+    return { width: size };
+  }, [size]);
+  if (avatarId) {
+    return <img alt={name} style={style} onClick={onClick} className={className} src={getMediaUrl(avatarId)} />;
+  }
+
+  const src = `https://avatars.boluo.chat/${encodeURIComponent(id + name)}`;
+  return <img className={className} style={style} onClick={onClick} alt={name} src={src} />;
 };

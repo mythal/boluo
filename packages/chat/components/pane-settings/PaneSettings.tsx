@@ -87,8 +87,6 @@ const AccountFields: FC<{ currentUser: User }> = ({ currentUser }) => {
       </SectionTitle>
 
       <LogoutField currentUser={currentUser} />
-
-      <EditDefaultColor currentUser={currentUser} />
     </div>
   );
 };
@@ -104,7 +102,7 @@ export const PaneSettings: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane flex min-w-[18rem] max-w-lg flex-col gap-8">
+      <div className="p-pane flex min-w-[18rem] max-w-lg flex-col gap-16">
         <div className="flex flex-col gap-4">
           <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />
@@ -114,7 +112,13 @@ export const PaneSettings: FC = () => {
           {me && me !== 'LOADING' && <EneterSendField />}
           {me && me !== 'LOADING' && <ExpandDiceField />}
         </div>
-        {me && me !== 'LOADING' && <AccountFields currentUser={me.user} />}
+        {me && me !== 'LOADING' && (
+          <>
+            <AccountFields currentUser={me.user} />
+
+            <EditDefaultColor currentUser={me.user} />
+          </>
+        )}
         <div>
           <SectionTitle>Developer Mode</SectionTitle>
           <div>

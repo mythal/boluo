@@ -88,6 +88,9 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
               <BioField className="min-h-[8rem] max-w-md" />
             </div>
           </div>
+          <div className="text-text-lighter">
+            <FormattedMessage defaultMessage="You can change default message color in the Settings." />
+          </div>
         </div>
 
         <PaneFooterBox>

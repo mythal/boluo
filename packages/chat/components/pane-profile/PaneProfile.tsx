@@ -60,7 +60,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
         <PaneHeaderBox operators={operators} icon={isEditing ? <Edit /> : <User />}>
           {user.nickname}{' '}
           {isMe && (
-            <span className="text-surface-500">
+            <span className="text-text-lighter">
               <FormattedMessage defaultMessage="(me)" />
             </span>
           )}

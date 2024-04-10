@@ -21,7 +21,7 @@ const lime = palette(colors.lime);
 const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   const $ = <T, U>(inLight: T, inDark: U): T | U => (name === 'light' ? inLight : inDark);
   const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
-  const brand = $(lime, blue);
+  const brand = $(lime, revert(blue));
   return {
     ringColor: {
       DEFAULT: $(green[400], blue[500]),
@@ -65,10 +65,16 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         header: {
           bg: $(neutral[100], neutral[800]),
           border: $(neutral[200], neutral[700]),
+          shadow: $(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.25)),
         },
       },
       sidebar: {
         divider: $(neutral[200], mix(neutral[700], neutral[800], 0.5)),
+        border: $(neutral[200], neutral[700]),
+        toggler: {
+          hover: $(blue[300], blue[600]),
+          active: $(blue[500], blue[500]),
+        },
       },
       connect: {
         success: $(green[300], green[700]),
@@ -109,6 +115,70 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       expr: {
         bg: $(lime[50], neutral[900]),
+      },
+      button: {
+        default: {
+          bg: $(neutral[200], neutral[700]),
+          text: $(black, white),
+          hover: {
+            bg: $(neutral[200], neutral[700]),
+          },
+          active: {
+            bg: $(neutral[300], neutral[600]),
+          },
+          disabled: {
+            bg: $(neutral[400], neutral[500]),
+            text: $(neutral[600], neutral[400]),
+          },
+        },
+        danger: {
+          bg: $(red[600], red[500]),
+          text: $(white, black),
+          hover: {
+            bg: $(red[500], red[400]),
+          },
+          active: {
+            bg: $(red[400], red[300]),
+          },
+        },
+        primary: {
+          bg: brand[600],
+          text: white,
+          hover: {
+            bg: brand[500],
+          },
+          active: {
+            bg: brand[700],
+          },
+          disabled: {
+            bg: brand[700],
+            text: neutral[300],
+          },
+        },
+        switch: {
+          bg: $(neutral[200], neutral[700]),
+          text: $(black, white),
+          on: {
+            hint: brand[400],
+            bg: $(neutral[300], neutral[600]),
+          },
+          off: {
+            hint: $(neutral[400], neutral[500]),
+          },
+          hover: {
+            bg: $(neutral[200], neutral[700]),
+          },
+          active: {
+            bg: $(neutral[300], neutral[600]),
+          },
+          disabled: {
+            bg: $(neutral[400], neutral[600]),
+            text: $(neutral[600], neutral[400]),
+          },
+          detail: {
+            icon: $(neutral[600], neutral[400]),
+          },
+        },
       },
       input: {
         normal: {

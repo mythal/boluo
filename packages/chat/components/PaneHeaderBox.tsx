@@ -22,12 +22,9 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
     return <ClosePaneButton />;
   }, [withoutDefaultOperators, canClose]);
   return (
-    <div className={paneBanner.content || extra ? '' : ''}>
+    <div className="">
       <div
-        className={clsx(
-          'min-h-pane-header pl-pane flex items-center pr-4 text-lg',
-          'border-surface-100 bg-pane-header justify-between border-b',
-        )}
+        className={clsx('min-h-pane-header pl-pane bg-pane-header-bg flex items-center justify-between pr-4 text-lg')}
       >
         <div className="inline-flex min-w-0 flex-nowrap items-center gap-1">
           {icon && (
@@ -50,7 +47,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
         )}
       </div>
 
-      <div className="bg-lowest divide-surface-100 divide-y">
+      <div className="">
         {paneBanner.content && <PaneBanner banner={paneBanner} />}
         {extra}
       </div>

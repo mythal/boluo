@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 import {
   palette,
   paletteKeys,
@@ -35,11 +35,7 @@ const ColorCell: FC<{
 export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => {
   const theme = resolveSystemTheme(useTheme());
   const key = ['/users/get_me'] as const;
-  const {
-    trigger: editDefaultColor,
-    error,
-    isMutating,
-  } = useSWRMutation<User, ApiError, typeof key, string>(
+  const { trigger, error, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
     key,
     async (_, { arg: color }) => {
       const editResult = await post('/users/edit', null, { defaultColor: color });
@@ -52,6 +48,16 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
       },
     },
   );
+
+  const handleEditDefaultColor = useCallback(
+    (color: string) => () => {
+      if (color !== currentUser.defaultColor) {
+        void trigger(color);
+      }
+    },
+    [currentUser.defaultColor, trigger],
+  );
+
   const parsedColors = useMemo(() => parseGameColor(currentUser.defaultColor), [currentUser.defaultColor]);
   const computedColors = useMemo(() => computeColors(currentUser.id, parsedColors), [currentUser.id, parsedColors]);
   const parsedColor = parsedColors[theme];
@@ -69,42 +75,32 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
           <FormattedMessage defaultMessage="In Dark Mode" />
         </div>
       </div>
-      <div>
-        <div className="py-1 text-sm font-bold">
-          <FormattedMessage defaultMessage="Random Color" />
-        </div>
-        <div className="flex items-center gap-2">
-          <ColorCell
-            color={generateColor(currentUser.id + randomColorSeedSuffix)}
-            selected={parsedColors[theme].type === 'random'}
-            onClick={() => editDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
-            isLoading={isMutating}
-          />
-          <Button onClick={() => editDefaultColor(RANDOM_PREFIX + Math.random().toString())}>
-            <FormattedMessage defaultMessage="Shuffle" />
-          </Button>
-        </div>
+
+      <div className="flex items-center gap-2 py-2">
+        <ColorCell
+          color={generateColor(currentUser.id + randomColorSeedSuffix)}
+          selected={parsedColors[theme].type === 'random'}
+          onClick={handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
+          isLoading={isMutating}
+        />
+        <Button onClick={handleEditDefaultColor(RANDOM_PREFIX + Math.random().toString())}>
+          <FormattedMessage defaultMessage="Shuffle Random Color" />
+        </Button>
       </div>
 
-      <div>
-        <div className="py-1 text-sm font-bold">
-          <FormattedMessage defaultMessage="Palette" />
-        </div>
-
-        <div className="flex gap-1">
-          {paletteKeys.map((color) => {
-            const selected = currentUser.defaultColor === `${PALETTE_PREFIX}${color}`;
-            return (
-              <ColorCell
-                key={color}
-                color={palette[color][theme]}
-                selected={selected}
-                onClick={() => editDefaultColor(`${PALETTE_PREFIX}${color}`)}
-                isLoading={isMutating}
-              />
-            );
-          })}
-        </div>
+      <div className="flex gap-1 py-2">
+        {paletteKeys.map((color) => {
+          const selected = currentUser.defaultColor === `${PALETTE_PREFIX}${color}`;
+          return (
+            <ColorCell
+              key={color}
+              color={palette[color][theme]}
+              selected={selected}
+              onClick={handleEditDefaultColor(`${PALETTE_PREFIX}${color}`)}
+              isLoading={isMutating}
+            />
+          );
+        })}
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
     >
       <Suspense fallback={<Loading />}>
         {tab === 'INVITATION' && (
-          <div className="p-4">
+          <div className="p-pane">
             <InviteSpaceMember spaceId={spaceId} />
           </div>
         )}

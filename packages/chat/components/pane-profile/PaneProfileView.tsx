@@ -10,7 +10,7 @@ interface Props {
 
 export const PaneProfileView: FC<Props> = ({ user }) => {
   return (
-    <div className="p-4">
+    <div className="p-pane">
       <div className="">
         <Avatar
           id={user.id}

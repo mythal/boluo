@@ -214,7 +214,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
         </div>
       )}
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="flex h-full max-w-md flex-col gap-8 p-4">
+        <div className="p-pane flex h-full max-w-md flex-col gap-8">
           <div className="flex flex-col gap-2">
             <SectionTitle>
               <FormattedMessage defaultMessage="Basic" />

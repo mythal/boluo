@@ -16,7 +16,7 @@ export const PaneHelp: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-4">Coming soon</div>
+      <div className="p-pane">Coming soon</div>
     </PaneBox>
   );
 };

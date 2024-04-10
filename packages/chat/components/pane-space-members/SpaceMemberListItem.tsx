@@ -34,7 +34,7 @@ export const SpaceMemberListItem: FC<Props> = ({
   const thisIsMe = myId === user.id;
 
   return (
-    <div className="group grid grid-flow-col grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-1 px-4 py-2">
+    <div className="px-pane group grid grid-flow-col grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-1 py-2">
       <a href={profileUrl} className="row-span-full" onClick={openProfile}>
         <Avatar id={user.id} name={user.nickname} avatarId={user.avatarId} size="3rem" className="rounded-sm" />
       </a>

@@ -77,6 +77,7 @@ const lightTheme = {
     text: {
       base: neutral[900],
       light: neutral[600],
+      lighter: neutral[500],
       danger: red[600],
       wanring: yellow[600],
     },
@@ -186,6 +187,7 @@ const darkTheme = {
     text: {
       base: white,
       light: neutral[400],
+      lighter: neutral[500],
       danger: red[300],
       warning: yellow[300],
     },

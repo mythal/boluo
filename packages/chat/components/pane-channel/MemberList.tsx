@@ -7,11 +7,12 @@ import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
+import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 
 interface Props {
   className?: string;
   channel: Channel;
-  myMember: Member | 'LOADING' | null;
+  myMember: MyChannelMemberResult;
 }
 
 const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
@@ -70,17 +71,17 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
     return null;
   }
 
-  if (membersData == null || myMember === 'LOADING') {
+  if (membersData == null || (myMember.isErr && myMember.err === 'LOADING')) {
     return <MemberListLoading />;
   }
   let canIKick = false;
   let myId: string | null = null;
-  if (myMember != null) {
-    canIKick = myMember.channel.isMaster || myMember.space.isAdmin;
-    myId = myMember.user.id;
+  if (myMember.isOk) {
+    canIKick = myMember.some.channel.isMaster || myMember.some.space.isAdmin;
+    myId = myMember.some.user.id;
   }
 
-  const canInvite = myMember != null && (myMember.channel.isMaster || myMember.space.isAdmin);
+  const canInvite = myMember.isOk && (myMember.some.channel.isMaster || myMember.some.space.isAdmin);
 
   return (
     <div className="border-surface-100 flex flex-col border-l">
@@ -101,8 +102,13 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
       </div>
 
       <div className="overflow-y-auto">
-        {uiState === 'INVITE' && myMember != null && (
-          <MemberInvitation members={members} myMember={myMember} channel={channel} userStatusMap={userStatusMap} />
+        {uiState === 'INVITE' && myMember.isOk && (
+          <MemberInvitation
+            members={members}
+            myMember={myMember.some}
+            channel={channel}
+            userStatusMap={userStatusMap}
+          />
         )}
         {uiState === 'MEMBER' &&
           members.map((member) => (
@@ -112,7 +118,7 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
               channel={channel}
               member={member}
               canIKick={canIKick}
-              canIEditMaster={myMember?.space.isAdmin ?? false}
+              canIEditMaster={(myMember.isOk && myMember.some.space.isAdmin) ?? false}
               status={userStatusMap?.[member.user.id]}
             />
           ))}

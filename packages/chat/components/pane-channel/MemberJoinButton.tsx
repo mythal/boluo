@@ -43,7 +43,7 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
       alert(intl.formatMessage({ defaultMessage: 'You must first join the space to join a channel.' }));
       return;
     }
-    if (channelMember != null) {
+    if (channelMember.isOk) {
       alert(intl.formatMessage({ defaultMessage: 'You are already a member of this channel.' }));
       return;
     }

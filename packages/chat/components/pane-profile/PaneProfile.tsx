@@ -1,4 +1,4 @@
-import { useMe, useUser } from '@boluo/common';
+import { useMe, useQueryUser } from '@boluo/common';
 import { Edit, LogOut, User } from '@boluo/icons';
 import { FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -19,7 +19,7 @@ interface Props {
 
 export const PaneProfile: FC<Props> = ({ userId }) => {
   const me = useMe();
-  const { isLoading, data: user, error } = useUser(userId);
+  const { isLoading, data: user, error } = useQueryUser(userId);
   const isMe = me != null && me !== 'LOADING' && me.user.id === userId;
   const [isEditing, setIsEditing] = useState(false);
   const intl = useIntl();

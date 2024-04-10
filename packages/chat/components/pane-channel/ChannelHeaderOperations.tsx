@@ -19,15 +19,12 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const [state, setState] = useAtom(stateAtom);
   const toggleMore = useCallback(() => setState((prev) => (prev === 'MORE' ? 'DEFAULT' : 'MORE')), [setState]);
   const toggleFilterBar = useCallback(() => setState((prev) => (prev === 'FILTER' ? 'DEFAULT' : 'FILTER')), [setState]);
-  const me = useMe();
   const channelMember = useMyChannelMember(channel.id);
   let memberButton: ReactNode = null;
-  if (me && channelMember !== 'LOADING') {
-    if (channelMember) {
-      memberButton = <ChannelHeaderMoreButton on={state === 'MORE'} toggle={toggleMore} />;
-    } else {
-      memberButton = <MemberJoinButton channel={channel} />;
-    }
+  if (channelMember.isErr && channelMember.err === 'NOT_FOUND_MEMBER') {
+    memberButton = <MemberJoinButton channel={channel} />;
+  } else if (channelMember.isOk) {
+    memberButton = <ChannelHeaderMoreButton on={state === 'MORE'} toggle={toggleMore} />;
   }
   return (
     <>

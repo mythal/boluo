@@ -1,6 +1,6 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { GetMe, Member } from '@boluo/api';
+import type { GetMe } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -24,10 +24,11 @@ import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';
 import { useTheme } from '@boluo/theme/useTheme';
 import { resolveSystemTheme } from '@boluo/theme';
+import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 
 interface Props {
   me: GetMe | 'LOADING' | null;
-  myMember: Member | 'LOADING' | null;
+  myMember: MyChannelMemberResult;
   className?: string;
 }
 
@@ -291,7 +292,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
     scrollLockRef.current.end = bottom;
   };
 
-  const iAmMaster = myMember !== null && myMember !== 'LOADING' && myMember.channel.isMaster;
+  const iAmMaster = myMember.isOk && myMember.some.channel.isMaster;
 
   return (
     <div className={className} ref={wrapperRef}>

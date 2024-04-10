@@ -1,4 +1,4 @@
-import type { GetMe } from '@boluo/api';
+import type { User } from '@boluo/api';
 import { Edit, PaperPlane } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -7,13 +7,13 @@ import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from '../pane-channel/useSend';
 
 interface Props {
-  me: GetMe;
+  currentUser: User;
   editMode?: boolean;
 }
 
-export const SendButton: FC<Props> = ({ me, editMode = false }) => {
+export const SendButton: FC<Props> = ({ currentUser, editMode = false }) => {
   const composeError = useComposeError();
-  const send = useSend(me.user, composeError);
+  const send = useSend(currentUser, composeError);
   return (
     <Button onClick={() => send()} disabled={composeError !== null}>
       {editMode ? <FormattedMessage defaultMessage="Edit" /> : <FormattedMessage defaultMessage="Send" />}

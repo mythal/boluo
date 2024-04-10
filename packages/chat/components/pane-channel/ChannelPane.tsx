@@ -38,13 +38,13 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const me = useMe();
   const member = useMyChannelMember(channelId);
-  const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member !== 'LOADING' ? member?.channel ?? null : null);
+  const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member.isOk ? member.some.channel : null);
   const nickname = me != null && me !== 'LOADING' ? me.user.nickname : undefined;
   const { data: channel, isLoading, error } = useQueryChannel(channelId);
   useSendPreview(
     channelId,
     nickname,
-    member == null || member === 'LOADING' ? '' : member.channel.characterName,
+    member.isOk ? member.some.channel.characterName : '',
     atoms.composeAtom,
     atoms.parsedAtom,
   );
@@ -56,7 +56,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
       </div>
     );
   }
-  if (channel == null || (!channel.isPublic && member === 'LOADING')) {
+  if (isLoading || channel == null || (!channel.isPublic && member.isErr && member.err === 'LOADING')) {
     return <PaneLoading />;
   }
   if (!channel.isPublic && member == null) {
@@ -83,9 +83,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
         >
           <ChatContent className="relative" me={me} channelId={channelId} />
           {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
-          {me && me !== 'LOADING' && member !== 'LOADING' && member != null ? (
-            <Compose me={me} className={clsx('col-span-full border-t p-2')} member={member.channel} />
-          ) : null}
+          {member.isOk ? <Compose className={clsx('col-span-full border-t p-2')} member={member.some} /> : null}
         </div>
       </PaneBox>
     </ChannelAtomsContext.Provider>

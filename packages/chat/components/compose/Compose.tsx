@@ -1,5 +1,5 @@
 'use client';
-import type { ChannelMember, GetMe } from '@boluo/api';
+import type { GetMe, Member } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useMemo } from 'react';
@@ -13,12 +13,11 @@ import { SendButton } from './SendButton';
 import { FileButton } from './FileButton';
 
 interface Props {
-  me: GetMe;
-  member: ChannelMember;
+  member: Member;
   className?: string;
 }
 
-export const Compose = ({ me, member, className }: Props) => {
+export const Compose = ({ member, className }: Props) => {
   const composeAtom = useComposeAtom();
 
   const { onDrop } = useMediaDrop();
@@ -48,10 +47,10 @@ export const Compose = ({ me, member, className }: Props) => {
             <ResetComposeButton />
           </div>
           <div className="flex-shrink-0">
-            <SendButton me={me} editMode={editMode} />
+            <SendButton currentUser={member.user} editMode={editMode} />
           </div>
         </div>
-        <ComposeTextArea me={me} />
+        <ComposeTextArea currentUser={member.user} />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight, Sidebar } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { FC, MouseEventHandler, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';
@@ -32,33 +32,10 @@ export const ToggleSidebarLine: FC<Props> = () => {
     window.addEventListener('mouseup', listener);
     return () => window.removeEventListener('mouseup', listener);
   }, [toggleSidebar]);
-
-  const previousTriggerTime = useRef(new Date().getTime());
-  useEffect(() => {
-    const listener = (e: MouseEvent) => {
-      if (buttonRef.current == null) return;
-      const now = new Date().getTime();
-      if (now - previousTriggerTime.current < 16) return;
-      const NEAR_DISTANCE = 100;
-      const near = buttonRef.current.getAttribute('data-near') === 'true';
-      let distance = e.clientX;
-      if (isExpandedRef.current) {
-        const x = buttonRef.current.getBoundingClientRect().x;
-        distance = Math.abs(e.clientX - x);
-      }
-      if (near && distance > NEAR_DISTANCE) {
-        buttonRef.current.removeAttribute('data-near');
-      } else if (!near && distance < NEAR_DISTANCE) {
-        buttonRef.current.setAttribute('data-near', 'true');
-      }
-    };
-    document.addEventListener('mousemove', listener, { passive: true });
-    return () => document.removeEventListener('mousemove', listener);
-  }, []);
   return (
     <button
       ref={buttonRef}
-      className="group absolute left-0 top-0 z-20 h-full w-2 cursor-pointer hover:bg-blue-400/15 data-[near=true]:bg-blue-300/10"
+      className="group absolute left-0 top-0 z-20 h-full w-[14px] cursor-pointer hover:bg-blue-400/15"
       onMouseDown={handleMouseDown}
       title={title}
     >
@@ -77,7 +54,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
           dragging && 'bg-blue-500',
         )}
       ></div>
-      <div className="bg-lowest absolute left-4 top-[calc(20%-3rem)] z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
+      <div className="bg-lowest absolute left-2 top-[calc(20%-3rem)] z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
         <span>
           <Icon icon={Sidebar} />
         </span>

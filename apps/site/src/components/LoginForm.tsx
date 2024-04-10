@@ -66,7 +66,7 @@ const UsernameField = () => {
           className="w-full"
           id={id}
           autoComplete="username"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('username', required(intl))}
         />
       </div>
@@ -95,7 +95,7 @@ const PasswordField = () => {
           type="password"
           autoComplete="current-password"
           className="w-full"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('password', required(intl))}
         />
       </div>

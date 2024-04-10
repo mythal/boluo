@@ -9,6 +9,7 @@ import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import clsx from 'clsx';
+import { TextArea } from '@boluo/ui/TextInput';
 
 interface Props {
   me: GetMe;
@@ -137,7 +138,7 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
   }, [enterSend]);
 
   return (
-    <textarea
+    <TextArea
       ref={ref}
       value={source}
       onChange={handleChange}
@@ -147,11 +148,12 @@ export const ComposeTextArea: FC<Props> = ({ me }) => {
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}
+      variant="normal"
       className={clsx(
-        'input input-default h-full w-full resize-none',
+        'h-full w-full resize-none',
         isWhisper ? 'border-dashed' : '',
         inGame ? 'bg-message-inGame-bg' : '',
       )}
-    ></textarea>
+    />
   );
 };

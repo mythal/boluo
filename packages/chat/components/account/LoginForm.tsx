@@ -48,7 +48,7 @@ const UsernameField = () => {
           autoCapitalize="off"
           autoCorrect="off"
           autoComplete="username"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('username', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
         />
 
@@ -78,7 +78,7 @@ const PasswordField = () => {
           type="password"
           autoComplete="current-password"
           className="w-full"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('password', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
         />
         <ErrorMessage error={error} />

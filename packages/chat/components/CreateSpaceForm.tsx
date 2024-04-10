@@ -50,7 +50,7 @@ const NameField: FC = () => {
       <TextInput
         className="w-full"
         id={id}
-        data-state={error ? 'error' : 'default'}
+        variant={error ? 'error' : 'normal'}
         {...register('name', required(intl))}
       />
       <FieldErrorDisplay error={error} />
@@ -98,7 +98,7 @@ const FirstChannelNameField: FC = () => {
       <TextInput
         className="w-full"
         id={id}
-        data-state={error ? 'error' : 'default'}
+        variant={error ? 'error' : 'normal'}
         {...register('firstChannelName', required(intl))}
       />
       <FieldErrorDisplay error={error} />
@@ -107,7 +107,6 @@ const FirstChannelNameField: FC = () => {
 };
 
 const DescriptionField: FC = () => {
-  const intl = useIntl();
   const id = useId();
   const {
     register,
@@ -120,7 +119,7 @@ const DescriptionField: FC = () => {
       <label htmlFor={id} className="block pb-1">
         <FormattedMessage defaultMessage="Description" />
       </label>
-      <TextArea className="w-full" data-state={error ? 'error' : 'default'} {...register('description')} />
+      <TextArea className="w-full" variant={error ? 'error' : 'normal'} {...register('description')} />
       <FieldErrorDisplay error={error} />
     </div>
   );

@@ -32,6 +32,9 @@ const sendPreview = (
     if (!previewId) {
       return;
     }
+    const doNotBroadcast = !broadcast || whisperToUsernames !== null;
+    const resetPreview = parsed.text === '' || parsed.entities.length === 0;
+    const text: string | null = doNotBroadcast ? null : parsed.text;
     const preview: PreviewPost = {
       id: previewId || makeId(),
       channelId,
@@ -39,9 +42,9 @@ const sendPreview = (
       mediaId: null,
       inGame,
       isAction,
-      text: (broadcast && !whisperToUsernames) || parsed.text === '' ? parsed.text : null,
+      text: resetPreview ? '' : text,
       clear: false,
-      entities: broadcast && !whisperToUsernames ? parsed.entities : [],
+      entities: doNotBroadcast || resetPreview ? [] : parsed.entities,
       editFor,
     };
 

@@ -1,6 +1,6 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
-import { mix, rgba, transparentize } from 'color2k';
+import { mix, rgba } from 'color2k';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from '@boluo/utils';
@@ -114,28 +114,35 @@ const lightTheme = {
       bg: lime[50],
     },
     input: {
-      default: {
-        border: gray[300],
+      normal: {
         bg: white,
+        ring: gray[700],
         placeholder: gray[400],
-        focusBorder: gray[600],
-        hoverBorder: gray[600],
+        border: {
+          default: gray[400],
+          focus: lime[900],
+          hover: gray[600],
+        },
       },
       error: {
-        border: red[500],
         bg: red[100],
         ring: red[100],
-        placeholder: red[600],
-        focusBorder: red[400],
-        hoverBorder: red[400],
+        placeholder: red[500],
+        border: {
+          default: red[300],
+          focus: red[500],
+          hover: red[500],
+        },
       },
       warning: {
-        border: yellow[500],
-        bg: yellow[100],
-        ring: yellow[50],
-        placeholder: yellow[600],
-        focusBorder: yellow[300],
-        hoverBorder: yellow[300],
+        bg: yellow[50],
+        ring: yellow[100],
+        placeholder: yellow[400],
+        border: {
+          default: yellow[300],
+          focus: yellow[600],
+          hover: yellow[600],
+        },
       },
     },
   },
@@ -216,28 +223,35 @@ const darkTheme = {
       bg: neutral[900],
     },
     input: {
-      default: {
-        border: gray[600],
-        bg: gray[900],
+      normal: {
+        bg: black,
+        ring: gray[300],
         placeholder: gray[700],
-        focusBorder: gray[400],
-        hoverBorder: gray[400],
+        border: {
+          default: gray[600],
+          focus: gray[400],
+          hover: gray[400],
+        },
       },
       error: {
-        border: red[500],
         bg: red[900],
         ring: red[800],
         placeholder: red[600],
-        focusBorder: red[600],
-        hoverBorder: red[600],
+        border: {
+          default: red[500],
+          focus: red[600],
+          hover: red[600],
+        },
       },
       warning: {
-        border: yellow[500],
         bg: yellow[100],
         ring: yellow[50],
         placeholder: yellow[600],
-        focusBorder: yellow[300],
-        hoverBorder: yellow[300],
+        border: {
+          default: yellow[500],
+          focus: yellow[300],
+          hover: yellow[300],
+        },
       },
     },
   },

@@ -54,7 +54,7 @@ const UsernameField = () => {
           className="w-full"
           id={id}
           autoComplete="username"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('username', validations.username(intl))}
         />
       </div>
@@ -84,7 +84,7 @@ const EmailField = () => {
           type="email"
           id={id}
           autoComplete="email"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('email', validations.email(intl))}
         />
       </div>
@@ -112,7 +112,7 @@ const NicknameField = () => {
           className="w-full"
           id={id}
           autoComplete="nickname"
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('nickname', validations.nickname(intl))}
         />
       </div>
@@ -148,7 +148,7 @@ const PasswordField = () => {
           type={show ? 'text' : 'password'}
           autoComplete="new-password"
           id={id}
-          data-state={error ? 'error' : 'default'}
+          variant={error ? 'error' : 'normal'}
           {...register('password', validations.password(intl))}
         />
       </div>

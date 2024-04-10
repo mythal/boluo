@@ -10,7 +10,7 @@ export const ChannelHeaderEditCharacter: FC<{ channelId: string; exitEdit: () =>
   const member = useMyChannelMember(channelId);
 
   return (
-    <div className="bg-pane-header px-pane flex gap-2 border-b py-2">
+    <div className="bg-pane-header-bg px-pane flex gap-2 py-2">
       {member.isErr ? (
         member.err === 'LOADING' ? (
           <FormattedMessage defaultMessage="Loading..." />

@@ -45,7 +45,7 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   const member = memberResult.some;
 
   return (
-    <div className="bg-pane-header px-pane flex items-center gap-2 border-b py-2">
+    <div className="bg-pane-header-bg px-pane flex items-center gap-2 py-2">
       <div className="flex-1 overflow-hidden">
         <CharacterName member={member.channel} edit={() => setHeaderState('CHARACTER')} />
       </div>

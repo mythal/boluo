@@ -23,22 +23,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
         'm-0 gap-1 rounded-sm',
         isSmall ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'text-baese px-4 py-2',
         (type === 'default' || type === 'detail') && [
-          'bg-surface-200 text-highest',
-          'hover:enabled:bg-surface-200 active-enabled:bg-surface-300',
-          'disabled:text-surface-600 disabled:bg-surface-400',
+          'bg-button-default-bg text-button-default-text',
+          'hover:enabled:bg-button-default-hover-bg active-enabled:bg-button-default-active-bg',
+          'disabled:text-button-default-disabled-text disabled:bg-button-default-disabled-bg',
         ],
-        type === 'danger' && ['bg-error-600 text-lowest', 'hover:enabled:bg-error-500 active-enabled:bg-error-400'],
+        type === 'danger' &&
+          'bg-button-danger-bg text-button-danger-text hover:enabled:bg-button-danger-hover-bg active-enabled:bg-button-danger-active-bg',
         type === 'primary' && [
-          'bg-pin-brand-600 text-white',
-          'hover:enabled:bg-pin-brand-500 active-enabled:bg-pin-brand-700',
-          'disabled:bg-brand-700 disabled:text-surface-300',
+          'bg-button-primary-bg text-button-primary-text',
+          'hover:enabled:bg-button-primary-hover-bg active-enabled:bg-button-primary-active-bg',
+          'disabled:bg-button-primary-disabled-bg disabled:text-button-primary-text',
         ],
         type === 'switch' && [
-          'bg-surface-200 text-highest',
-          'hover:enabled:bg-surface-200 active-enabled:bg-surface-300',
-          'border-r-1 border-r-surface-400',
-          'on:border-r-brand-400 on:bg-surface-300 on:hover:enabled:bg-surface-300',
-          'disabled:text-surface-600 disabled:bg-surface-400',
+          'bg-button-switch-bg text-button-switch-text',
+          'hover:enabled:bg-button-switch-hover-bg active-enabled:bg-button-switch-active-bg',
+          'border-r-1 border-r-button-switch-off-hint',
+          'on:border-r-button-switch-on-hint on:bg-button-switch-on-bg on:hover:enabled:to-button-switch-bg',
+          'disabled:text-button-switch-disabled-text disabled:bg-button-switch-disabled-bg',
         ],
         className,
       )}
@@ -49,7 +50,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
       {type === 'detail' && (
         <span
           data-on={props['data-on']}
-          className="duration-1500 text-surface-600 on:rotate-180 transform transition-transform data-[on=true]:rotate-180"
+          className="duration-1500 text-button-switch-detail-icon on:rotate-180 transform transition-transform data-[on=true]:rotate-180"
         >
           <ChevronDown />
         </span>

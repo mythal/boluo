@@ -31,7 +31,7 @@ export const PaneBox: FC<Props> = ({ className, header, children }) => {
       <div
         onFocus={focus}
         className={clsx(
-          'bg-pane-bg flex-grow overflow-y-auto overflow-x-hidden shadow-[0_12px_16px_-24px_inset] shadow-black',
+          'bg-pane-bg shadow-pane-header-shadow flex-grow overflow-y-auto overflow-x-hidden shadow-[0_9px_1px_-8px_inset]',
           isFocused ? '' : 'max-md:hidden',
         )}
       >

@@ -18,245 +18,132 @@ const zinc = palette(colors.zinc);
 const slate = palette(colors.slate);
 const lime = palette(colors.lime);
 
-const revRed = revert(red);
-const revNetral = revert(neutral);
-const revGreen = revert(green);
-const revYellow = revert(yellow);
-const revGray = revert(gray);
-const revLime = revert(lime);
-const revSlate = revert(slate);
-const revBlue = revert(blue);
-
-const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
-
-const lightTheme = {
-  ringColor: {
-    DEFAULT: green[400],
-  },
-  ringOffsetColor: {
-    DEFAULT: neutral[50],
-  },
-  borderColor: {
-    DEFAULT: neutral[200],
-  },
-  colors: {
-    pin: {
-      highest: black,
-      lowest: white,
-      surface: neutral,
-      brand: lime,
-      gray: gray,
+const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
+  const $ = <T, U>(inLight: T, inDark: U): T | U => (name === 'light' ? inLight : inDark);
+  const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
+  const brand = $(lime, blue);
+  return {
+    ringColor: {
+      DEFAULT: $(green[400], blue[500]),
     },
-    light: {
-      bg: neutral[100],
+    ringOffsetColor: {
+      DEFAULT: $(neutral[50], slate[900]),
     },
-    dark: {
-      bg: darkPaneBg,
+    borderColor: {
+      DEFAULT: $(neutral[200], neutral[700]),
     },
-    highest: black,
-    lowest: white,
-    link: {
-      normal: blue[700],
-      hover: blue[600],
-      active: blue[500],
-    },
-    bg: neutral[50],
-    pane: {
-      bg: neutral[100],
-      header: neutral[100],
-    },
-    sidebar: {
-      divider: neutral[200],
-    },
-    connect: {
-      success: green[300],
-    },
-    select: {
-      bg: neutral[50],
-    },
-    text: {
-      base: neutral[900],
-      light: neutral[600],
-      lighter: neutral[500],
-      danger: red[600],
-      wanring: yellow[600],
-    },
-    brand: lime,
-    green,
-    gray,
-    error: red,
-    warning: yellow,
-    surface: neutral,
-    preview: {
-      self: neutral[200],
-      hint: rgba(0, 0, 0, 0.125),
-      toolbar: {
-        hover: neutral[100],
-        active: {
-          border: neutral[600],
-          bg: lime[100],
-          bgHover: lime[50],
+    colors: {
+      brand,
+      green: $(green, revert(green)),
+      gray: $(gray, revert(gray)),
+      error: $(red, revert(red)),
+      warning: $(yellow, revert(yellow)),
+      surface: $(neutral, revert(neutral)),
+      pin: {
+        highest: black,
+        lowest: white,
+        surface: neutral,
+        brand: lime,
+        gray,
+      },
+      light: {
+        bg: neutral[100],
+      },
+      dark: {
+        bg: darkPaneBg,
+      },
+      highest: $(black, white),
+      lowest: $(white, black),
+      link: {
+        normal: $(blue[700], blue[400]),
+        hover: $(blue[600], blue[300]),
+        active: $(blue[500], blue[200]),
+      },
+      bg: $(neutral[50], neutral[800]),
+      pane: {
+        bg: $(neutral[100], darkPaneBg),
+        header: {
+          bg: $(neutral[100], neutral[800]),
+          border: $(neutral[200], neutral[700]),
+        },
+      },
+      sidebar: {
+        divider: $(neutral[200], mix(neutral[700], neutral[800], 0.5)),
+      },
+      connect: {
+        success: $(green[300], green[700]),
+      },
+      select: {
+        bg: $(neutral[50], neutral[700]),
+      },
+      text: {
+        base: $(neutral[900], white),
+        light: $(neutral[600], neutral[400]),
+        lighter: $(neutral[500], neutral[500]),
+        danger: $(red[600], red[300]),
+        wanring: $(yellow[600], yellow[300]),
+      },
+      preview: {
+        self: $(neutral[200], mix(neutral[700], blue[500], 0.4)),
+        hint: $(rgba(0, 0, 0, 0.125), rgba(255, 255, 255, 0.125)),
+        toolbar: {
+          hover: $(neutral[100], neutral[900]),
+          active: {
+            border: $(neutral[600], neutral[400]),
+            bg: $(lime[100], blue[900]),
+            bgHover: $(lime[50], blue[800]),
+          },
+        },
+      },
+      message: {
+        inGame: {
+          bg: $(mix(neutral[100], lime[100], 0.25), mix(neutral[900], blue[400], 0.25)),
+        },
+        action: $(neutral[400], neutral[600]),
+        toolbox: {
+          active: {
+            bg: $(lime[600], blue[400]),
+          },
+          danger: $(red[600], red[500]),
+        },
+      },
+      expr: {
+        bg: $(lime[50], neutral[900]),
+      },
+      input: {
+        normal: {
+          bg: $(white, black),
+          ring: $(gray[700], gray[300]),
+          placeholder: $(gray[400], gray[700]),
+          border: {
+            default: $(gray[400], gray[600]),
+            focus: $(lime[900], gray[400]),
+            hover: $(gray[600], gray[400]),
+          },
+        },
+        error: {
+          bg: $(red[100], red[900]),
+          ring: $(red[100], red[800]),
+          placeholder: $(red[500], red[600]),
+          border: {
+            default: $(red[300], red[500]),
+            focus: $(red[500], red[600]),
+            hover: $(red[500], red[600]),
+          },
+        },
+        warning: {
+          bg: $(yellow[50], yellow[100]),
+          ring: $(yellow[100], yellow[50]),
+          placeholder: $(yellow[400], yellow[600]),
+          border: {
+            default: $(yellow[300], yellow[500]),
+            focus: $(yellow[600], yellow[300]),
+            hover: $(yellow[600], yellow[300]),
+          },
         },
       },
     },
-    message: {
-      inGame: {
-        bg: mix(neutral[100], lime[100], 0.25),
-      },
-      action: neutral[400],
-      toolbox: {
-        active: {
-          bg: lime[600],
-        },
-        danger: red[600],
-      },
-    },
-    expr: {
-      bg: lime[50],
-    },
-    input: {
-      normal: {
-        bg: white,
-        ring: gray[700],
-        placeholder: gray[400],
-        border: {
-          default: gray[400],
-          focus: lime[900],
-          hover: gray[600],
-        },
-      },
-      error: {
-        bg: red[100],
-        ring: red[100],
-        placeholder: red[500],
-        border: {
-          default: red[300],
-          focus: red[500],
-          hover: red[500],
-        },
-      },
-      warning: {
-        bg: yellow[50],
-        ring: yellow[100],
-        placeholder: yellow[400],
-        border: {
-          default: yellow[300],
-          focus: yellow[600],
-          hover: yellow[600],
-        },
-      },
-    },
-  },
-} satisfies Config['theme'];
-
-const darkTheme = {
-  ringColor: {
-    DEFAULT: blue[500],
-  },
-  ringOffsetColor: {
-    DEFAULT: slate[900],
-  },
-  borderColor: {
-    DEFAULT: neutral[700],
-  },
-  colors: {
-    pin: {
-      brand: blue,
-    },
-    highest: white,
-    lowest: black,
-    link: {
-      normal: blue[400],
-      hover: blue[300],
-      active: blue[200],
-    },
-    bg: neutral[800],
-    pane: {
-      bg: darkPaneBg,
-      header: neutral[800],
-    },
-    sidebar: {
-      divider: mix(neutral[700], neutral[800], 0.5),
-    },
-    connect: {
-      success: green[700],
-    },
-    select: {
-      bg: neutral[700],
-    },
-    text: {
-      base: white,
-      light: neutral[400],
-      lighter: neutral[500],
-      danger: red[300],
-      warning: yellow[300],
-    },
-    brand: revBlue,
-    gray: revert(gray),
-    error: revRed,
-    warning: revYellow,
-    surface: revert(neutral),
-    green: revGreen,
-    preview: {
-      self: mix(neutral[700], blue[500], 0.4),
-      hint: rgba(255, 255, 255, 0.125),
-      toolbar: {
-        hover: neutral[900],
-        active: {
-          border: neutral[400],
-          bg: blue[900],
-          bgHover: blue[800],
-        },
-      },
-    },
-    message: {
-      inGame: {
-        bg: mix(neutral[900], blue[400], 0.25),
-      },
-      action: neutral[600],
-      toolbox: {
-        active: {
-          bg: blue[400],
-        },
-        danger: red[500],
-      },
-    },
-    expr: {
-      bg: neutral[900],
-    },
-    input: {
-      normal: {
-        bg: black,
-        ring: gray[300],
-        placeholder: gray[700],
-        border: {
-          default: gray[600],
-          focus: gray[400],
-          hover: gray[400],
-        },
-      },
-      error: {
-        bg: red[900],
-        ring: red[800],
-        placeholder: red[600],
-        border: {
-          default: red[500],
-          focus: red[600],
-          hover: red[600],
-        },
-      },
-      warning: {
-        bg: yellow[100],
-        ring: yellow[50],
-        placeholder: yellow[600],
-        border: {
-          default: yellow[500],
-          focus: yellow[300],
-          hover: yellow[300],
-        },
-      },
-    },
-  },
+  };
 };
 
 const config: Config = {
@@ -321,12 +208,12 @@ const config: Config = {
         {
           name: 'base',
           selectors: [':root'],
-          theme: lightTheme,
+          theme: makeTheme('light'),
         },
         {
           name: 'dark',
           selectors: ['.dark'],
-          theme: darkTheme,
+          theme: makeTheme('dark'),
         },
       ],
     }),

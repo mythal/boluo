@@ -1,4 +1,4 @@
-import { GetMe } from '@boluo/api';
+import { GetMe, User } from '@boluo/api';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -12,15 +12,15 @@ import clsx from 'clsx';
 import { TextArea } from '@boluo/ui/TextInput';
 
 interface Props {
-  me: GetMe;
+  currentUser: User;
 }
 
 const focusAction: ComposeActionUnion & { type: 'focus' } = { type: 'focus', payload: {} };
 const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payload: {} };
 
-export const ComposeTextArea: FC<Props> = ({ me }) => {
+export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
   const composeError = useComposeError();
-  const send = useSend(me.user, composeError);
+  const send = useSend(currentUser, composeError);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);

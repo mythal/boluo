@@ -1,8 +1,9 @@
 import { PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 import { ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderFilterBar } from './ChannelHeaderFilterBar';
 import { ChannelHeaderMore } from './ChannelHeaderMore';
+import { ChannelHeaderEditCharacter } from './ChannelHeaderEditCharacter';
 
 interface Props {
   channelId: string;
@@ -11,13 +12,14 @@ interface Props {
 
 export const ChannelHeaderExtra: FC<Props> = ({ stateAtom, channelId }) => {
   const [headerState, setHeaderState] = useAtom(stateAtom);
-  const resetHeaderState = useCallback(() => {
-    setHeaderState('DEFAULT');
-  }, [setHeaderState]);
-  if (headerState === 'MORE') {
-    return <ChannelHeaderMore channelId={channelId} resetHeaderState={resetHeaderState} />;
-  } else if (headerState === 'FILTER') {
-    return <ChannelHeaderFilterBar />;
+  switch (headerState) {
+    case 'CHARACTER':
+      return <ChannelHeaderEditCharacter channelId={channelId} exitEdit={() => setHeaderState('DEFAULT')} />;
+    case 'MORE':
+      return <ChannelHeaderMore channelId={channelId} setHeaderState={setHeaderState} />;
+    case 'FILTER':
+      return <ChannelHeaderFilterBar />;
+    default:
+      return null;
   }
-  return null;
 };

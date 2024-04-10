@@ -32,10 +32,11 @@ export const ChatItemMessageShowWhisper: FC<Props> = ({ messageId, userIdList, c
       },
     },
   );
-  const member = useMyChannelMember(channelId);
-  if (member == null || member === 'LOADING') {
+  const memberResult = useMyChannelMember(channelId);
+  if (memberResult.isErr) {
     return null;
   }
+  const member = memberResult.some;
   if (!member.channel.isMaster && !userIdList.includes(member.user.id)) {
     return (
       <span className={className}>

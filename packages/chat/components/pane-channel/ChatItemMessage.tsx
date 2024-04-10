@@ -10,7 +10,7 @@ import { Content } from './Content';
 import { MessageBox } from './MessageBox';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
-import { useUser } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { useMessageColor } from '../../hooks/useMessageColor';
 import { ResolvedTheme } from '@boluo/theme';
 
@@ -36,7 +36,7 @@ export const ChatItemMessage: FC<Props> = ({
   theme,
 }) => {
   const { isMaster, isAction, optimistic } = message;
-  const { data: user } = useUser(message.senderId);
+  const { data: user } = useQueryUser(message.senderId);
 
   const color = useMessageColor(theme, user, message.inGame, message.color);
 

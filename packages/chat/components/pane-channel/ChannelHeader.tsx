@@ -9,7 +9,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { ChannelHeaderExtra } from './ChannelHeaderExtra';
 import { ChannelHeaderOperations } from './ChannelHeaderOperations';
 
-export type ChannelHeaderState = 'DEFAULT' | 'MORE' | 'FILTER';
+export type ChannelHeaderState = 'DEFAULT' | 'MORE' | 'FILTER' | 'CHARACTER';
 
 const ChannelName: FC<{ channel: Channel | undefined }> = ({ channel }) => {
   return <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">{channel?.name ?? '...'}</span>;

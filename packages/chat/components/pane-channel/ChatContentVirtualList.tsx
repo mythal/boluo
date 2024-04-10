@@ -1,10 +1,11 @@
-import { GetMe, Member } from '@boluo/api';
+import { GetMe } from '@boluo/api';
 import { FC, MutableRefObject } from 'react';
 import { ListRange, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { ResolvedTheme } from '@boluo/theme';
+import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 
 interface Props {
   iAmMaster: boolean;
@@ -16,7 +17,7 @@ interface Props {
   filteredMessagesCount: number;
   handleBottomStateChange: (bottom: boolean) => void;
   me: GetMe | 'LOADING' | null;
-  myMember: Member | 'LOADING' | null;
+  myMember: MyChannelMemberResult;
   theme: ResolvedTheme;
 }
 
@@ -59,7 +60,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     theme,
   } = props;
   const totalCount = chatList.length;
-  const iAmAdmin = myMember !== null && myMember !== 'LOADING' && myMember.space.isAdmin;
+  const iAmAdmin = myMember.isOk && myMember.some.space.isAdmin;
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;
@@ -83,7 +84,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
         key={item.key}
         myId={myId}
         chatItem={item}
-        isMember={myMember !== null && myMember !== 'LOADING'}
+        isMember={myMember.isOk}
         continuous={continuous}
         theme={theme}
       />

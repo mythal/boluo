@@ -8,7 +8,7 @@ import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
 import { PreviewBox } from './PreviewBox';
 import { ResolvedTheme } from '@boluo/theme';
 import { useMessageColor } from '../../hooks/useMessageColor';
-import { useUser } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 
 interface Props {
   preview: PreviewItem;
@@ -24,7 +24,7 @@ export const OthersPreview: FC<Props> = ({ preview, className = '', theme }) => 
     const entities = fromRawEntities(text, preview.entities);
     return { ...initParseResult, text, entities };
   }, [preview.text, preview.entities]);
-  const { data: sender } = useUser(preview.senderId);
+  const { data: sender } = useQueryUser(preview.senderId);
 
   const color = useMessageColor(theme, sender, preview.inGame, null);
 

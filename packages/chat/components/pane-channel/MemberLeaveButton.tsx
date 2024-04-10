@@ -15,7 +15,6 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 
 interface Props {
   channelId: string;
-  me: GetMe;
   onSuccess?: () => void;
 }
 
@@ -23,7 +22,7 @@ const leave: MutationFetcher<void, [string, string], Empty> = async ([_, channel
   await post('/channels/leave', { id: channelId }, {});
 };
 
-export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
+export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
   const channelMember = useMyChannelMember(channelId);
   const { data: channel, isLoading } = useQueryChannel(channelId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, { onSuccess });
@@ -48,7 +47,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess, me }) => {
     <>
       <SidebarHeaderButton
         ref={refs.setReference}
-        disabled={!channelMember || channelMember === 'LOADING' || isMutating || isLoading}
+        disabled={channelMember.isErr || isMutating || isLoading}
         className="hover:bg-error-700/10 text-error-800 flex flex-none items-center gap-1 rounded-sm px-2 py-1"
         {...getReferenceProps()}
       >

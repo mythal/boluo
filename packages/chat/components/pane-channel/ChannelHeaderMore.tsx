@@ -2,17 +2,17 @@ import { ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
 import { useMe } from '@boluo/common';
 import { Edit } from '@boluo/icons';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
-import { ChannelHeaderCharacterNameEdit } from './ChannelHeaderCharacterNameEdit';
 import { ChannelSettingsButton } from './ChannelSettingsButton';
 import { MemberLeaveButton } from './MemberLeaveButton';
+import { ChannelHeaderState } from './ChannelHeader';
 
 interface Props {
   channelId: string;
-  resetHeaderState: () => void;
+  setHeaderState: (state: ChannelHeaderState) => void;
 }
 
 export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = ({ member, edit }) => {
@@ -36,24 +36,20 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
   );
 };
 
-export const ChannelHeaderMore: FC<Props> = ({ channelId, resetHeaderState }) => {
-  const me = useMe();
-  const member = useMyChannelMember(channelId);
-  const [uiState, setUiState] = useState<'DEFAULT' | 'EDIT_CHARACTER_NAME'>('DEFAULT');
-  if (me === 'LOADING' || me == null || member === 'LOADING' || member == null) return null;
-  if (uiState === 'EDIT_CHARACTER_NAME') {
-    return (
-      <div className="flex gap-2 border-b px-4 py-2">
-        <ChannelHeaderCharacterNameEdit member={member.channel} exitEdit={() => setUiState('DEFAULT')} />
-      </div>
-    );
+export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
+  const memberResult = useMyChannelMember(channelId);
+  if (memberResult.isErr) {
+    console.warn('Failed to load channel member information:', memberResult.err);
+    return null;
   }
+  const member = memberResult.some;
+
   return (
-    <div className="flex items-center gap-2 border-b px-4 py-2">
+    <div className="bg-pane-header px-pane flex items-center gap-2 border-b py-2">
       <div className="flex-1 overflow-hidden">
-        <CharacterName member={member.channel} edit={() => setUiState('EDIT_CHARACTER_NAME')} />
+        <CharacterName member={member.channel} edit={() => setHeaderState('CHARACTER')} />
       </div>
-      <MemberLeaveButton me={me} channelId={channelId} onSuccess={resetHeaderState} />
+      <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />
       {member.space.isAdmin && (
         <div className="flex-none">
           <ChannelSettingsButton channelId={channelId} />

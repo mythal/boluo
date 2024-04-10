@@ -25,7 +25,7 @@ export const ChannelHeaderFilter: FC<Props> = () => {
         <span className="mr-1">
           <Filter />
         </span>
-        <span className="mr-2">
+        <span className="mr-2 flex-none">
           <FormattedMessage defaultMessage="Filter" />
         </span>
         <Select value={filter} onChange={(e) => setFilter(e.target.value as ChannelFilter)}>

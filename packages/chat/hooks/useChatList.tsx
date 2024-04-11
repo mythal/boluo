@@ -83,7 +83,7 @@ const makeDummyPreview = (
   isAction: false,
   isMaster: false,
   clear: false,
-  text: 'dummy',
+  text: 'You should not seen this message, Please report a bug.',
   whisperToUsers: null,
   entities: [],
   editFor,

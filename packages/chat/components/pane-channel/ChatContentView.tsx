@@ -256,8 +256,8 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
   let myId: string | undefined;
-  if (me && me !== 'LOADING') {
-    myId = me.user.id;
+  if (myMember.isOk) {
+    myId = myMember.some.user.id;
   }
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
   const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(

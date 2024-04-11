@@ -1,22 +1,52 @@
-import { FC, useId } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { FC, useId, useMemo } from 'react';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
 import { NameInput } from './NameInput';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
+import { Button } from '@boluo/ui/Button';
+import { ChatSpaceState } from '../../state/chat.reducer';
+import { chatAtom } from '../../state/chat.atoms';
 
 interface Props {
   myId: string;
   channelId: string;
 }
 
-export const NameEditContent: FC<Props> = ({ myId, channelId }) => {
+const chatStateToNameList = (
+  state: ChatSpaceState,
+  channelId: string,
+  myId: string,
+  defaultName?: string,
+): string[] => {
+  const channelState = state.channels[channelId];
+  if (channelState == null) return [];
+  const names: string[] = defaultName == null || defaultName === '' ? [] : [defaultName];
+
+  for (let i = channelState.messages.length - 1; i >= 0; i--) {
+    const message = channelState.messages[i]!;
+    if (!message.inGame || message.senderId !== myId || names.includes(message.name)) continue;
+    names.push(message.name);
+    if (names.length > 4) return names;
+  }
+  return names;
+};
+
+export const NameEditContent: FC<Props> = ({ channelId }) => {
   const memberResult = useMyChannelMember(channelId);
   const myMember = memberResult.unwrap();
+  const myId = myMember.user.id;
   const { inGameAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const inGame = useAtomValue(inGameAtom);
   const baseId = useId();
+  const store = useStore();
+  const defaultCharacterName = myMember.channel.characterName;
+  const nameHistory = useMemo(
+    // In this case, we don't need to use `useAtom` hooks.
+    () => chatStateToNameList(store.get(chatAtom), channelId, myId, defaultCharacterName),
+    [channelId, defaultCharacterName, myId, store],
+  );
   const id = {
     inputName: baseId + 'input-name',
     inGame: baseId + 'in-game',
@@ -28,7 +58,7 @@ export const NameEditContent: FC<Props> = ({ myId, channelId }) => {
     dispatch({ type: 'toggleInGame', payload: { inGame: false } });
   };
   return (
-    <div className=" grid w-52 grid-cols-[auto_auto] gap-x-1 gap-y-2">
+    <div className="grid w-52 grid-cols-[auto_auto] gap-x-1 gap-y-2">
       <div>
         <input
           id={id.inputName}
@@ -45,7 +75,22 @@ export const NameEditContent: FC<Props> = ({ myId, channelId }) => {
         <label htmlFor={id.inputName} className="block cursor-pointer select-none">
           <FormattedMessage defaultMessage="In Character" />
         </label>
-        <NameInput className="w-full" />
+        <NameInput placeholder={myMember.channel.characterName} className="w-full" />
+        {nameHistory.length > 0 && (
+          <div className="space-x-1 py-1">
+            {nameHistory.map((name) => (
+              <button
+                key={name}
+                className="bg-preview-name-history-bg hover:bg-preview-name-history-hover-bg inline-block rounded-sm border px-2 py-1 text-sm shadow-sm"
+                onClick={() => {
+                  dispatch({ type: 'setInputedName', payload: { inputedName: name, setInGame: true } });
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
@@ -61,7 +106,10 @@ export const NameEditContent: FC<Props> = ({ myId, channelId }) => {
         />
       </div>
       <label className="block cursor-pointer select-none" htmlFor={id.inGame}>
-        <FormattedMessage defaultMessage="Out of Character" />
+        <div>
+          <FormattedMessage defaultMessage="Out of Character" />
+          <span className="text-text-light ml-1">({myMember.user.nickname})</span>
+        </div>
       </label>
     </div>
   );

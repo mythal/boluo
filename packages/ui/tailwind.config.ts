@@ -118,6 +118,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
             bgHover: $(lime[50], blue[800]),
           },
         },
+        name: {
+          history: {
+            bg: $(neutral[50], neutral[900]),
+            hover: {
+              bg: $(neutral[100], neutral[800]),
+            },
+          },
+        },
       },
       message: {
         inGame: {

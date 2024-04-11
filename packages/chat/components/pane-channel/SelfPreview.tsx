@@ -7,7 +7,6 @@ import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { PreviewItem } from '../../state/channel.types';
 import { ComposeState } from '../../state/compose.reducer';
 import { MessageMedia } from './MessageMedia';
-import { Name } from './Name';
 import { PreviewBox } from './PreviewBox';
 import { RemoveMediaButton } from './RemoveMediaButton';
 import { SelfPreviewContent } from './SelfPreviewContent';
@@ -15,6 +14,7 @@ import { SelfPreviewNameCell } from './SelfPreviewNameCell';
 import { SelfPreviewToolbar } from './SelfPreviewToolbar';
 import { useMessageColor } from '../../hooks/useMessageColor';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
+import { NameEditable } from './NameEditable';
 
 type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & {
   editMode: boolean;
@@ -34,13 +34,12 @@ const selector = ({ defaultInGame: inGame, inputedName, source, editFor, media }
 };
 
 interface Props {
-  className?: string;
   preview: PreviewItem;
   myMember: Member;
   theme: 'light' | 'dark';
 }
 
-export const SelfPreview: FC<Props> = ({ preview, className, myMember: member, theme }) => {
+export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme }) => {
   const isFocused = usePaneIsFocus();
   const isMaster = member.channel.isMaster;
   const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
@@ -58,8 +57,19 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member, t
     return member.channel.characterName;
   }, [compose.name, inGame, member.channel.characterName, member.user.nickname]);
   const nameNode = useMemo(() => {
-    return <Name inGame={inGame} name={name} isMaster={isMaster} color={color} isPreview self />;
-  }, [color, inGame, isMaster, name]);
+    return (
+      <NameEditable
+        inGame={inGame}
+        name={name}
+        isMaster={isMaster}
+        color={color}
+        isPreview
+        self
+        channelId={member.channel.channelId}
+        myId={member.channel.userId}
+      />
+    );
+  }, [color, inGame, isMaster, member.channel.channelId, member.channel.userId, name]);
   const { onDrop } = useMediaDrop();
   const mediaNode = useMemo(() => {
     if (media == null) return null;
@@ -74,7 +84,7 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member, t
 
   return (
     <PreviewBox id={preview.key} inGame={inGame} editMode={editMode} isSelf onDrop={onDrop}>
-      <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member} theme={theme} />
+      <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
       <div>
         <div className="items-between @2xl:pr-messageRight flex h-full flex-col gap-1">
           <SelfPreviewContent isFocused={isFocused} myMember={member.channel} nameNode={nameNode} />

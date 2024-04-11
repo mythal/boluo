@@ -99,16 +99,9 @@ const NameHistory: FC<{ channelId: string; myId: string }> = ({ channelId, myId 
 export const SelfPreviewNameEditBox: FC<{ channelMember: ChannelMember }> = ({ channelMember }) => {
   const myId = channelMember.userId;
   const { channelId } = channelMember;
-  const { inGameAtom, composeAtom, isActionAtom, broadcastAtom, isWhisperAtom } = useChannelAtoms();
-  const intl = useIntl();
+  const { inGameAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
-  const isAction = useAtomValue(isActionAtom);
-  const broadcast = useAtomValue(broadcastAtom);
   const inGame = useAtomValue(inGameAtom);
-  const isWhisper = useAtomValue(isWhisperAtom);
-  const broadcastTitle = intl.formatMessage({ defaultMessage: 'Whether to broadcast your input' });
-  const actionTitle = intl.formatMessage({ defaultMessage: 'Describe an action' });
-  const whisperTitle = intl.formatMessage({ defaultMessage: 'Only certain people can read' });
   return (
     <div className="bg-surface-100 border-lowest flex w-[14em] select-none flex-col gap-1 rounded border px-2 py-2 text-sm font-normal shadow">
       <div className="flex items-center gap-2 text-sm">

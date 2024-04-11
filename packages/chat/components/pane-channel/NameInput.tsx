@@ -6,9 +6,10 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 interface Props {
   id?: string;
   className?: string;
+  setInGame?: boolean;
 }
 
-export const NameInput: FC<Props> = ({ id, className }) => {
+export const NameInput: FC<Props> = ({ id, className, setInGame = false }) => {
   const composeAtom = useComposeAtom();
   const [compose, dispatch] = useAtom(composeAtom);
   return (
@@ -16,7 +17,7 @@ export const NameInput: FC<Props> = ({ id, className }) => {
       id={id}
       value={compose.inputedName}
       className={className}
-      onChange={(e) => dispatch({ type: 'setInputedName', payload: { inputedName: e.target.value } })}
+      onChange={(e) => dispatch({ type: 'setInputedName', payload: { inputedName: e.target.value, setInGame } })}
     />
   );
 };

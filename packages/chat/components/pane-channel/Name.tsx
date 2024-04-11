@@ -1,9 +1,7 @@
-import clsx from 'clsx';
 import { Gamemaster } from '@boluo/icons';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Delay } from '../Delay';
-import { FallbackIcon } from '../FallbackIcon';
+import { NameBox } from './NameBox';
 
 interface Props {
   name: string | undefined | null;
@@ -17,26 +15,16 @@ interface Props {
 
 export const Name: FC<Props> = ({ name, className, isMaster, inGame, color, isPreview = false, self }) => {
   const isEmptyName = name === '' || name == null;
-  const masterIcon = (
-    <Delay fallback={<FallbackIcon />}>
-      <Gamemaster className="inline-block h-[1em] w-[1em]" />
-    </Delay>
-  );
+  const masterIcon = <Gamemaster className="inline-block h-[1em] w-[1em]" />;
   return (
-    <span
-      style={{ color: inGame ? color : undefined }}
-      className={clsx('@xl:w-[10rem] @2xl:w-[12rem] relative mr-1 w-[8rem] flex-none break-all font-bold', className)}
-    >
-      <span className="mr-1">
-        {isEmptyName ? (
-          <span className="text-error-400 italic">
-            #<FormattedMessage defaultMessage="No Name" />#
-          </span>
-        ) : (
-          name
-        )}
-      </span>
-      {isMaster && masterIcon}
-    </span>
+    <NameBox color={inGame ? color : undefined} icon={isMaster ? masterIcon : undefined}>
+      {isEmptyName ? (
+        <span className="text-error-400 italic">
+          <FormattedMessage defaultMessage="No Name" />
+        </span>
+      ) : (
+        name
+      )}
+    </NameBox>
   );
 };

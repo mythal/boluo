@@ -86,7 +86,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme }) => 
     <PreviewBox id={preview.key} inGame={inGame} editMode={editMode} isSelf onDrop={onDrop}>
       <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
       <div>
-        <div className="items-between @2xl:pr-messageRight flex h-full flex-col gap-1">
+        <div className="items-between @2xl:pr-messageRight flex h-full min-h-8 flex-col gap-1">
           <SelfPreviewContent isFocused={isFocused} myMember={member.channel} nameNode={nameNode} />
           {mediaNode}
         </div>

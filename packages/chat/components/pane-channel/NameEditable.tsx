@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp } from '@boluo/icons';
+import { ChevronDown } from '@boluo/icons';
 import { useState, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
@@ -31,11 +31,16 @@ interface Props {
 export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, myId, channelId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isEmptyName = name === '' || name == null;
-  const iconClassName = 'inline-block text h-[1em] w-[1em]';
-  const icon: ReactNode = isOpen ? (
-    <ChevronUp className={iconClassName} />
-  ) : (
-    <ChevronDown className={clsx(iconClassName, 'text-text-lighter')} />
+  if (inGame && isEmptyName && !isOpen) {
+    setIsOpen(true);
+  }
+  const icon: ReactNode = (
+    <ChevronDown
+      className={clsx(
+        'text inline-block h-[1em] w-[1em] transition-all duration-100',
+        isOpen ? 'rotate-180' : 'text-text-lighter',
+      )}
+    />
   );
 
   const { refs, floatingStyles, middlewareData, context } = useFloating({
@@ -56,7 +61,7 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, myId, c
       <NameBox editable color={inGame ? color : undefined} ref={refs.setReference} icon={icon} {...getReferenceProps()}>
         {isEmptyName ? (
           <span className="text-error-400 italic">
-            <FormattedMessage defaultMessage="Click To Edit" />
+            <FormattedMessage defaultMessage="Need A Name" />
           </span>
         ) : (
           name

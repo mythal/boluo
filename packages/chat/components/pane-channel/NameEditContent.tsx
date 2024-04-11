@@ -71,13 +71,13 @@ export const NameEditContent: FC<Props> = ({ channelId }) => {
           }}
         />
       </div>
-      <div onFocus={switchToInGame}>
+      <div onFocus={switchToInGame} className="flex flex-col gap-1">
         <label htmlFor={id.inputName} className="block cursor-pointer select-none">
-          <FormattedMessage defaultMessage="In Character" />
+          <FormattedMessage defaultMessage="As the character of …" />
         </label>
         <NameInput placeholder={myMember.channel.characterName} className="w-full" />
         {nameHistory.length > 0 && (
-          <div className="space-x-1 py-1">
+          <div className="space-x-1">
             {nameHistory.map((name) => (
               <button
                 key={name}

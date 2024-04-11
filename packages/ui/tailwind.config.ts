@@ -61,12 +61,22 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         active: $(blue[500], blue[200]),
       },
       bg: $(neutral[50], neutral[800]),
+      floating: {
+        bg: $(neutral[50], neutral[900]),
+      },
       pane: {
         bg: $(white, darkPaneBg),
         header: {
           bg: $(neutral[50], neutral[900]),
           border: $(neutral[100], neutral[800]),
-          shadow: $(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.25)),
+          shadow: $(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
+        },
+        tab: {
+          bg: $(neutral[100], neutral[950]),
+          text: $(neutral[500], neutral[400]),
+          active: {
+            text: $(black, white),
+          },
         },
       },
       sidebar: {

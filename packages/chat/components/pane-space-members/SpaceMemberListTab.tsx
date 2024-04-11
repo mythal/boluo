@@ -28,7 +28,7 @@ export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
   }
   const members = Object.values(membersMap);
   return (
-    <div>
+    <div className="py-4">
       {members.map((member) => (
         <SpaceMemberListItem
           myId={myId}

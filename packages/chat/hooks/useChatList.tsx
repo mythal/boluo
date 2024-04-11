@@ -154,7 +154,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     });
     const filteredMessagesCount = messages.length - itemList.length;
     const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
-    if (myId && isFocused && composeSlice.show) {
+    if (myId && composeSlice.show) {
       const existsPreview = optimisticPreviewMap[myId];
       if (existsPreview && existsPreview.id !== composeSlice.previewId) {
         delete optimisticPreviewMap[myId];
@@ -186,8 +186,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     for (const preview of Object.values(optimisticPreviewMap)) {
       const isFiltered = !filter(filterType, preview);
       if (isFiltered) continue;
-      else if (isFocused && preview.senderId === myId) {
-        /* Always show preview when the compose is focused */
+      else if (preview.senderId === myId) {
+        /* Always show the user's own preview */
       } else if (preview.text === '' || preview.id === composeSlice.prevPreviewId) {
         continue;
       }
@@ -234,7 +234,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     composeSlice.previewId,
     composeSlice.show,
     filterType,
-    isFocused,
     messageMap,
     messages,
     myId,

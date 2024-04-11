@@ -11,9 +11,10 @@ import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
 interface Props {
   nameNode: ReactNode;
   myMember: ChannelMember;
+  isFocused: boolean;
 }
 
-export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
+export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused }) => {
   const { composeAtom, parsedAtom, inGameAtom } = useChannelAtoms();
   const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
@@ -62,6 +63,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
         nameNode={nameNode}
         self
         isPreview
+        isFocused={isFocused}
       />
     </CursorContext.Provider>
   );

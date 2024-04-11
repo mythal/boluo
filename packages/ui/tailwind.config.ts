@@ -21,6 +21,7 @@ const lime = palette(colors.lime);
 const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   const $ = <T, U>(inLight: T, inDark: U): T | U => (name === 'light' ? inLight : inDark);
   const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
+  const inGameMessageBg = $(mix(lime[50], white, 0.6), zinc[950]);
   const brand = $(lime, revert(blue));
   return {
     ringColor: {
@@ -61,10 +62,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       bg: $(neutral[50], neutral[800]),
       pane: {
-        bg: $(neutral[100], darkPaneBg),
+        bg: $(white, darkPaneBg),
         header: {
-          bg: $(neutral[100], neutral[800]),
-          border: $(neutral[200], neutral[700]),
+          bg: $(neutral[50], neutral[900]),
+          border: $(neutral[100], neutral[800]),
           shadow: $(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.25)),
         },
       },
@@ -90,9 +91,16 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         wanring: $(yellow[600], yellow[300]),
       },
       preview: {
-        self: $(neutral[200], mix(neutral[700], blue[500], 0.4)),
+        self: $(neutral[100], mix(neutral[700], blue[500], 0.4)),
         hint: $(rgba(0, 0, 0, 0.125), rgba(255, 255, 255, 0.125)),
+        out: {
+          bg: $(neutral[50], zinc[800]),
+        },
+        in: {
+          bg: inGameMessageBg,
+        },
         toolbar: {
+          bg: $(neutral[50], neutral[900]),
           hover: $(neutral[100], neutral[900]),
           active: {
             border: $(neutral[600], neutral[400]),
@@ -103,10 +111,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       message: {
         inGame: {
-          bg: $(mix(neutral[100], lime[100], 0.25), mix(neutral[900], blue[400], 0.25)),
+          bg: inGameMessageBg,
         },
         action: $(neutral[400], neutral[600]),
         toolbox: {
+          bg: $(neutral[50], neutral[900]),
           active: {
             bg: $(lime[600], blue[400]),
           },

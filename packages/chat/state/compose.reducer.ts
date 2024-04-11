@@ -129,7 +129,12 @@ const handleBold = (state: ComposeState, { payload }: ComposeAction<'bold'>): Co
 
 const handleSetInputedName = (state: ComposeState, { payload }: ComposeAction<'setInputedName'>): ComposeState => {
   const inputedName = payload.inputedName.trim().slice(0, 32);
-  return { ...state, inputedName };
+  const nextState = { ...state, inputedName };
+  if (payload.setInGame) {
+    return handleToggleInGame(nextState, { type: 'toggleInGame', payload: { inGame: true } });
+  } else {
+    return nextState;
+  }
 };
 
 const handleSetRange = (state: ComposeState, { payload: { range } }: ComposeAction<'setRange'>): ComposeState => {

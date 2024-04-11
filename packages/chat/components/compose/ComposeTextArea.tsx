@@ -1,4 +1,4 @@
-import { GetMe, User } from '@boluo/api';
+import type { User } from '@boluo/api';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
@@ -69,7 +69,7 @@ export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
           return;
         }
         lock.current = true;
-        textArea.focus();
+        // textArea.focus();
         setTimeout(() => {
           textArea.setSelectionRange(a, b);
           lock.current = false;

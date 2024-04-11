@@ -14,6 +14,7 @@ import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewNameCell } from './SelfPreviewNameCell';
 import { SelfPreviewToolbar } from './SelfPreviewToolbar';
 import { useMessageColor } from '../../hooks/useMessageColor';
+import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 
 type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & {
   editMode: boolean;
@@ -40,6 +41,7 @@ interface Props {
 }
 
 export const SelfPreview: FC<Props> = ({ preview, className, myMember: member, theme }) => {
+  const isFocused = usePaneIsFocus();
   const isMaster = member.channel.isMaster;
   const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
   const compose: ComposeDrived = useAtomValue(useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]));
@@ -75,10 +77,11 @@ export const SelfPreview: FC<Props> = ({ preview, className, myMember: member, t
       <SelfPreviewNameCell isAction={isAction} inGame={inGame} name={name} channelMember={member} theme={theme} />
       <div>
         <div className="items-between @2xl:pr-messageRight flex h-full flex-col gap-1">
-          <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
+          <SelfPreviewContent isFocused={isFocused} myMember={member.channel} nameNode={nameNode} />
           {mediaNode}
         </div>
-        <SelfPreviewToolbar currentUser={member.user} />
+
+        <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
       </div>
     </PreviewBox>
   );

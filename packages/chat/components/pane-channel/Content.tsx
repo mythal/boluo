@@ -26,17 +26,21 @@ interface Props {
   self?: boolean;
   isPreview: boolean;
   seed?: number[];
+  isFocused?: boolean;
   nameNode: ReactNode;
 }
 
 export type EvaluatedExpr = { type: 'EvaluatedExpr'; node: EvaluatedExprNode };
 
 export const Content = memo<Props>(
-  ({ source, entities, isAction, isArchived, nameNode, seed, isPreview, self = false }) => {
+  ({ source, entities, isAction, isArchived, nameNode, seed, isPreview, self = false, isFocused = false }) => {
     const isDragging = useIsDragging();
     const cursorAtom = useMemo(() => atom<HTMLElement | null>(null), []);
 
-    const cursorNode = useMemo(() => (isDragging ? null : <Cursor self atom={cursorAtom} />), [cursorAtom, isDragging]);
+    const cursorNode = useMemo(
+      () => (isDragging || !isFocused ? null : <Cursor self atom={cursorAtom} />),
+      [cursorAtom, isDragging, isFocused],
+    );
     const evaluatedEntities: Array<Entity | EvaluatedExpr> = useMemo(() => {
       if (seed == null || seed.length !== 4) {
         return entities;
@@ -91,7 +95,7 @@ export const Content = memo<Props>(
           {entityNodeList}
         </div>
 
-        {isPreview && self && !isDragging && (
+        {isPreview && isFocused && self && !isDragging && (
           <Delay timeout={300}>
             <SelfCursorToolbar cursorAtom={cursorAtom} />
           </Delay>

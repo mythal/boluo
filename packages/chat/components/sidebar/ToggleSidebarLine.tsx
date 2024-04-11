@@ -41,7 +41,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
     >
       <div
         className={clsx(
-          'bg-bg group-hover:border-transprent text absolute top-[20%] z-30 box-content flex items-center justify-center text-lg',
+          'bg-bg group-hover:border-transprent text absolute top-[30%] z-30 box-content flex items-center justify-center text-lg',
           'h-[40px] w-[26px] -translate-x-[2px] -translate-y-[2px] cursor-pointer',
           'shadow-sidebar-border group-hover:shadow-sidebar-toggler-hover rounded-r-lg shadow-[0_0_0_1px] group-hover:shadow-[0_0_0_2px]',
         )}

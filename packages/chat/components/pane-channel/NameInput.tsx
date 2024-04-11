@@ -7,9 +7,10 @@ interface Props {
   id?: string;
   className?: string;
   setInGame?: boolean;
+  placeholder?: string;
 }
 
-export const NameInput: FC<Props> = ({ id, className, setInGame = false }) => {
+export const NameInput: FC<Props> = ({ id, className, setInGame = false, placeholder }) => {
   const composeAtom = useComposeAtom();
   const [compose, dispatch] = useAtom(composeAtom);
   return (
@@ -17,6 +18,7 @@ export const NameInput: FC<Props> = ({ id, className, setInGame = false }) => {
       id={id}
       value={compose.inputedName}
       className={className}
+      placeholder={placeholder}
       onChange={(e) => dispatch({ type: 'setInputedName', payload: { inputedName: e.target.value, setInGame } })}
     />
   );

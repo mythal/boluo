@@ -24,7 +24,7 @@ const Box = forwardRef<HTMLDivElement, { children: ReactNode; expanded: boolean 
     aria-expanded={expanded}
     className={clsx(
       'transition-colors duration-100',
-      'bg-lowest/30 text-highest/60 group-hover:bg-lowest group-hover:text-highest flex items-stretch rounded-sm text-base shadow-sm',
+      'bg-message-toolbox-bg/70 text-highest/60 group-hover:bg-message-toolbox-bg group-hover:text-highest flex items-stretch rounded-sm text-base shadow-sm',
       'aria-expanded:text-highest aria-expanded:bg-lowest',
     )}
   >

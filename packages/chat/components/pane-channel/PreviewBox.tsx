@@ -38,8 +38,7 @@ export const PreviewBox: FC<Props> = ({
         'group grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
-        isSelf ? 'border-preview-self border-b border-t' : '',
-        'data-[in-game=true]:bg-message-inGame-bg',
+        'data-[in-game=true]:bg-preview-in-bg data-[in-game=false]:bg-preview-out-bg',
         'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',
         className,
       )}

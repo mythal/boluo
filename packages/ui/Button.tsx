@@ -43,6 +43,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
         ],
         className,
       )}
+      aria-pressed={type === 'switch' ? props['data-on'] : undefined}
       ref={ref}
       {...props}
     >

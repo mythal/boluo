@@ -64,7 +64,9 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
       const { inGame } = read(parsedAtom);
       const { defaultInGame } = read(composeAtom);
       if (inGame == null) {
-        return defaultInGame;
+        // By default, the `defaultInGame` are set as reverse of
+        // the default in/off game command in the compose source.
+        return !defaultInGame;
       } else {
         return inGame;
       }

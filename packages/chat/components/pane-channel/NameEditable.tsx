@@ -16,6 +16,7 @@ import {
 } from '@floating-ui/react';
 import { NameBox } from './NameBox';
 import { NameEditContent } from './NameEditContent';
+import { Member } from '@boluo/api';
 
 interface Props {
   name: string | undefined | null;
@@ -24,11 +25,10 @@ interface Props {
   isMaster: boolean;
   self: boolean;
   isPreview?: boolean;
-  myId: string;
-  channelId: string;
+  member: Member;
 }
 
-export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, myId, channelId }) => {
+export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isEmptyName = name === '' || name == null;
   if (inGame && isEmptyName && !isOpen) {
@@ -58,7 +58,14 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, myId, c
 
   return (
     <>
-      <NameBox editable color={inGame ? color : undefined} ref={refs.setReference} icon={icon} {...getReferenceProps()}>
+      <NameBox
+        editable
+        pressed={isOpen}
+        color={inGame ? color : undefined}
+        ref={refs.setReference}
+        icon={icon}
+        {...getReferenceProps()}
+      >
         {isEmptyName ? (
           <span className="text-error-400 italic">
             <FormattedMessage defaultMessage="Need A Name" />
@@ -79,7 +86,7 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, myId, c
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            <NameEditContent myId={myId} channelId={channelId} />
+            <NameEditContent member={member} />
           </div>
         </FloatingPortal>
       )}

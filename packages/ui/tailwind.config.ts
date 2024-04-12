@@ -1,6 +1,6 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
-import { mix, rgba } from 'color2k';
+import { mix, rgba, transparentize } from 'color2k';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from '@boluo/utils';
@@ -119,6 +119,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         name: {
+          editable: {
+            hover: $(transparentize(neutral[200], 0.5), transparentize(neutral[900], 0.5)),
+          },
           history: {
             bg: $(neutral[50], neutral[900]),
             hover: {

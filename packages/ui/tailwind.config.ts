@@ -109,6 +109,19 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         danger: $(red[600], red[300]),
         wanring: $(yellow[600], yellow[300]),
       },
+
+      name: {
+        bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[900], 0.65)),
+        editable: {
+          hover: $(transparentize(neutral[300], 0.5), transparentize(neutral[800], 0.5)),
+        },
+        history: {
+          bg: $(neutral[50], neutral[900]),
+          hover: {
+            bg: $(neutral[100], neutral[800]),
+          },
+        },
+      },
       preview: {
         self: $(neutral[100], mix(neutral[700], blue[500], 0.4)),
         hint: $(rgba(0, 0, 0, 0.125), rgba(255, 255, 255, 0.125)),
@@ -125,17 +138,6 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
             border: $(neutral[600], neutral[400]),
             bg: $(lime[100], blue[900]),
             bgHover: $(lime[50], blue[800]),
-          },
-        },
-        name: {
-          editable: {
-            hover: $(transparentize(neutral[200], 0.5), transparentize(neutral[900], 0.5)),
-          },
-          history: {
-            bg: $(neutral[50], neutral[900]),
-            hover: {
-              bg: $(neutral[100], neutral[800]),
-            },
           },
         },
       },

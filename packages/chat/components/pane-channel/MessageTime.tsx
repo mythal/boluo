@@ -1,6 +1,5 @@
 import { autoUpdate, useDismiss, useFloating, useHover, useInteractions, useRole } from '@floating-ui/react';
 import { Message } from '@boluo/api';
-import clsx from 'clsx';
 import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useIsDragging } from '../../hooks/useIsDragging';
@@ -56,7 +55,7 @@ export const MessageTime: FC<Props> = ({ message }) => {
         <div
           ref={refs.setFloating}
           style={floatingStyles}
-          className="bg-highest text-lowest rounded px-2 py-1 text-left text-sm"
+          className="bg-highest text-lowest z-10 rounded px-2 py-1 text-left text-sm"
           {...getFloatingProps()}
         >
           <div>

@@ -78,7 +78,7 @@ export const NameEditContent: FC<Props> = ({ member }) => {
             {nameHistory.map((name) => (
               <button
                 key={name}
-                className="bg-preview-name-history-bg hover:bg-preview-name-history-hover-bg inline-block rounded-sm border px-2 py-1 text-sm shadow-sm"
+                className="bg-name-history-bg hover:bg-name-history-hover-bg inline-block rounded-sm border px-2 py-1 text-sm shadow-sm"
                 onClick={() => {
                   dispatch({ type: 'setInputedName', payload: { inputedName: name, setInGame: true } });
                 }}

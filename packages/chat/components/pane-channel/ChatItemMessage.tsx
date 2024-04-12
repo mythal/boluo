@@ -38,11 +38,11 @@ export const ChatItemMessage: FC<Props> = ({
   const { isMaster, isAction, optimistic } = message;
   const { data: user } = useQueryUser(message.senderId);
 
-  const color = useMessageColor(theme, user, message.inGame, message.color);
-
   const nameNode = useMemo(
-    () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={self} color={color} />,
-    [message.inGame, message.name, isMaster, self, color],
+    () => (
+      <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={self} user={user} theme={theme} />
+    ),
+    [message.inGame, message.name, isMaster, self, user, theme],
   );
   const parsed: ParseResult = useMemo((): ParseResult => {
     const text = message.text;

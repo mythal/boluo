@@ -7,16 +7,14 @@ import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
 import { PreviewBox } from './PreviewBox';
 import { ResolvedTheme } from '@boluo/theme';
-import { useMessageColor } from '../../hooks/useMessageColor';
 import { useQueryUser } from '@boluo/common';
 
 interface Props {
   preview: PreviewItem;
-  className?: string;
   theme: ResolvedTheme;
 }
 
-export const OthersPreview: FC<Props> = ({ preview, className = '', theme }) => {
+export const OthersPreview: FC<Props> = ({ preview, theme }) => {
   const { isMaster, isAction, name } = preview;
 
   const parsed: ParseResult = useMemo(() => {
@@ -26,11 +24,9 @@ export const OthersPreview: FC<Props> = ({ preview, className = '', theme }) => 
   }, [preview.text, preview.entities]);
   const { data: sender } = useQueryUser(preview.senderId);
 
-  const color = useMessageColor(theme, sender, preview.inGame, null);
-
   const nameNode = useMemo(() => {
-    return <Name inGame={preview.inGame} name={name} isMaster={isMaster} color={color} isPreview self />;
-  }, [color, isMaster, name, preview.inGame]);
+    return <Name inGame={preview.inGame} name={name} isMaster={isMaster} user={sender} theme={theme} isPreview self />;
+  }, [isMaster, name, preview.inGame, sender, theme]);
 
   const { text: source, entities } = useDeferredValue(parsed);
 

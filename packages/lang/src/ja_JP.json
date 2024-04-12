@@ -1,4 +1,7 @@
 {
+  "++9PoL": {
+    "message": "Remove File"
+  },
   "+CI3C/": {
     "message": "When you type 1{value}, you can simplify it to 1d."
   },
@@ -11,8 +14,17 @@
   "+a+2ug": {
     "message": "Members"
   },
+  "/+v5jy": {
+    "message": "{seconds} seconds ago"
+  },
   "/3UTYF": {
     "message": "Use {key} to send messages."
+  },
+  "/I//hN": {
+    "message": "Failed to load messages ({errorCode})"
+  },
+  "/caJLq": {
+    "message": "Open in new pane"
   },
   "/iUStU": {
     "message": "e.g. Gandalf"
@@ -20,32 +32,50 @@
   "01eQoz": {
     "message": "Change Connection Region"
   },
-  "2gujDD": {
-    "message": "これらはコンポーネントの設計とデバッグに使用されるページです"
+  "0Azlrb": {
+    "message": "Manage"
+  },
+  "0EJGBZ": {
+    "message": "Are you sure you want to kick {nickname} ({username})?"
+  },
+  "0JXAsk": {
+    "message": "Away"
+  },
+  "0pT/2d": {
+    "message": "No Character Name"
+  },
+  "2J8G6R": {
+    "message": "File size must be less than {sizeLimit}M"
   },
   "2pzTGC": {
     "message": "Critical"
+  },
+  "2s3EZW": {
+    "message": "Need A Name"
   },
   "39AHJm": {
     "message": "新規登録"
   },
   "3VI9mt": {
-    "message": "変更を保存"
+    "message": "Save Changes"
   },
   "3cc4Ct": {
-    "message": "ライト"
+    "message": "Light"
   },
   "47FYwb": {
-    "message": "キャンセル"
+    "message": "Cancel"
   },
   "4l6vz1": {
-    "message": "コピー"
+    "message": "Copy"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
   },
   "5WZlnV": {
-    "message": "名前で検索"
+    "message": "Find By Name"
+  },
+  "5jeq8P": {
+    "message": "Unknown"
   },
   "5sg7KC": {
     "message": "パスワード"
@@ -54,49 +84,67 @@
     "message": "少なくとも {min} 文字以上でなければなりません。"
   },
   "6PgVSe": {
-    "message": "再生成"
+    "message": "Regenerate"
   },
   "6QRlW8": {
-    "message": "再接続を待っています ({countdown}s)"
+    "message": "Waiting for reconnection ({countdown}s)"
   },
   "6q3tCn": {
-    "message": "接続中"
+    "message": "Connecting"
   },
   "7G8Ojg": {
-    "message": "メッセージを送信できません"
+    "message": "Unable to send message"
+  },
+  "7UOvbT": {
+    "message": "Offline"
   },
   "7q87xo": {
     "message": "Channel Settings"
   },
+  "88cMEG": {
+    "message": "Destory Space"
+  },
   "973Dls": {
-    "message": "招待された人だけがこの次元に参加できます"
+    "message": "Only invited people can join this space"
+  },
+  "9NDg1Z": {
+    "message": "(Whisper)"
   },
   "9Obw6C": {
-    "message": "絞り込み"
+    "message": "Filter"
   },
   "9WRlF4": {
-    "message": "送信"
+    "message": "Send"
   },
   "9kvEKC": {
-    "message": "サイコロを追加"
+    "message": "Add Dice"
   },
   "9to/Le": {
-    "message": "アバターの変更"
+    "message": "Change Avatar"
   },
   "AVI/0j": {
-    "message": "分割"
+    "message": "Split"
+  },
+  "AtML1q": {
+    "message": "Master"
   },
   "AyGauy": {
     "message": "ログイン"
+  },
+  "Bc5LE6": {
+    "message": "Size must be less than {mediaMaxSizeMb}M."
+  },
+  "Bp3LVS": {
+    "message": "Space not found"
   },
   "BzWmz8": {
     "message": "次元名"
   },
   "C81/uG": {
-    "message": "ログアウト"
+    "message": "Logout"
   },
   "CW7jWC": {
-    "message": "(自分)"
+    "message": "(me)"
   },
   "Ciussb": {
     "message": "Secret channels are only accessible by invitation."
@@ -111,40 +159,79 @@
     "message": "Create Channel"
   },
   "D3idYv": {
-    "message": "設定"
+    "message": "Settings"
+  },
+  "D3x69s": {
+    "message": "Whisper to the Master only"
+  },
+  "DBP+Od": {
+    "message": "Echo"
+  },
+  "Euftjf": {
+    "message": "Error while uploading a file, did you recover the message?"
+  },
+  "GEhexi": {
+    "message": "In Dark Mode"
   },
   "GMPXuF": {
-    "message": "誰でもこの次元に参加できます"
+    "message": "Everyone can join this space"
   },
   "GYTzXV": {
-    "message": "通知の切り替え"
+    "message": "Toggle Notification"
   },
-  "H2WXs6": {
-    "message": "次元を破壊する"
+  "GbWVAh": {
+    "message": "Yes, Kick"
+  },
+  "H6JcM0": {
+    "message": "Are you sure to delete this message:"
   },
   "HSaR2M": {
     "message": "Is secret channel?"
   },
   "HTmh5Q": {
-    "message": "目標"
+    "message": "target"
+  },
+  "HlQPHQ": {
+    "message": "Join Space"
   },
   "HpyhN3": {
     "message": "パイン"
   },
+  "I90sbW": {
+    "message": "just now"
+  },
+  "IEBWYE": {
+    "message": "Exile"
+  },
+  "IN8rCW": {
+    "message": "Invalid invitation link"
+  },
+  "INVcoD": {
+    "message": "It's currently in active development and everything is unstable."
+  },
+  "IQwWyF": {
+    "message": "You must be logged in to join a channel."
+  },
   "IW0/M8": {
-    "message": "自動選択"
+    "message": "Auto Select"
+  },
+  "Iueqgt": {
+    "message": "Failed to delete message ({ errorCode })"
   },
   "IvBid4": {
-    "message": "{enter} キーを使ってメッセージを送信する。"
+    "message": "Use the {enter} key to send messages"
   },
   "IvjoDS": {
-    "message": "接続されました"
+    "message": "Connected"
   },
   "JCIgkj": {
     "message": "ユーザー名"
   },
   "JQt0RP": {
-    "message": "引いて読み込む"
+    "message": "Pull to Load"
+  },
+  "Jxxkva": {
+    "message": "You can change default message color in the Settings."
   },
   "K3r6DQ": {
     "message": "Delete"
@@ -152,26 +239,38 @@
   "K7AkdL": {
     "message": "表示"
   },
+  "KhLK4z": {
+    "message": "You do not have permission to view this space."
+  },
+  "Kp8wZw": {
+    "message": "Have not set a bio yet"
+  },
   "LUrJwE": {
-    "message": "チャンネル"
+    "message": "Channels"
+  },
+  "LX5+L+": {
+    "message": "Show Archived"
   },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
   },
   "MoZLbF": {
-    "message": "未対応"
+    "message": "Unsupported"
+  },
+  "MqRkT1": {
+    "message": "Unsupported media type"
+  },
+  "Mqn9K5": {
+    "message": "Person not found"
   },
   "Mtd9LO": {
-    "message": "タイムアウト"
+    "message": "Timeout"
   },
   "O5epsB": {
-    "message": "取る"
+    "message": "take"
   },
   "OLFHJL": {
     "message": "Extreme Success"
-  },
-  "OSS58q": {
-    "message": "Are you sure you want to delete the &quot;{channelName}&quot; channel?"
   },
   "OWhbRI": {
     "message": "The command that will be inserted when the button is pressed."
@@ -179,47 +278,74 @@
   "OYT4m/": {
     "message": "Message cannot be empty"
   },
+  "OhIqLr": {
+    "message": "Edited"
+  },
   "P6PLpi": {
-    "message": "参加する"
+    "message": "Join"
+  },
+  "PHZ3YP": {
+    "message": "Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
+  },
+  "PO83gc": {
+    "message": "Last seen"
   },
   "Pe0ogR": {
-    "message": "テーマ"
+    "message": "Theme"
+  },
+  "PwaN2o": {
+    "message": "Welcome"
   },
   "Q8Qw5B": {
     "message": "説明"
   },
+  "QFfPEN": {
+    "message": "Failded to load channel member information."
+  },
+  "QOvY19": {
+    "message": "Whisper to the Master and"
+  },
+  "QdsAIR": {
+    "message": "Members of \"{spaceName}\" Space"
+  },
   "QlsDcr": {
-    "message": "動作"
+    "message": "Action"
   },
   "R59CS8": {
-    "message": "アイコンを削除"
-  },
-  "RYulBW": {
-    "message": "Settings of &quot;{channelName}&quot; Channel"
+    "message": "Remove Avatar"
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
   },
   "RvUa7+": {
-    "message": "名前なし"
+    "message": "No Name"
   },
   "SBkvpf": {
     "message": "ニックネーム"
   },
   "SENRqu": {
-    "message": "ヘルプ"
+    "message": "Help"
+  },
+  "SEg47O": {
+    "message": "Are you sure you want to exile this member?"
   },
   "Sf+ebw": {
-    "message": "ペインを閉じる"
+    "message": "Close pane"
   },
   "SqVNRz": {
     "message": "次元を作成する"
   },
+  "StUScz": {
+    "message": "{count} members"
+  },
   "TThIOM": {
     "message": "Not found"
   },
+  "TdbPNK": {
+    "message": "Me"
+  },
   "TwyMau": {
-    "message": "アカウント"
+    "message": "Account"
   },
   "UIVqKu": {
     "message": "Recover"
@@ -230,23 +356,44 @@
   "Ujs8Kg": {
     "message": "Message from server"
   },
-  "UvDPcD": {
-    "message": "Work in progress"
-  },
   "VA/Z1S": {
     "message": "非表示"
   },
+  "VeLEVu": {
+    "message": "Character Name:"
+  },
   "VnXp8Z": {
-    "message": "アバター"
+    "message": "Avatar"
   },
   "VzzYJk": {
     "message": "作成する"
   },
+  "WASph7": {
+    "message": "Kick this member"
+  },
+  "Wa3nyB": {
+    "message": "Settings of \"{channelName}\" Channel"
+  },
+  "We16k/": {
+    "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
   "X5rIjZ": {
-    "message": "危険な操作"
+    "message": "Danger Zone"
+  },
+  "Xs60po": {
+    "message": "{hours} hours ago"
+  },
+  "Xt6aW0": {
+    "message": "No one to invite"
+  },
+  "XzgtzD": {
+    "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
+  },
+  "Y78Gyb": {
+    "message": "{minutes} minutes ago"
   },
   "YETHtM": {
-    "message": "インターフェース"
+    "message": "Interface"
   },
   "YNPiTV": {
     "message": "Are you sure you want to leave {channelName}?"
@@ -254,8 +401,11 @@
   "YQwJw3": {
     "message": "Default Roll Command"
   },
+  "Yf3xiD": {
+    "message": "{days} days ago"
+  },
   "YtexzU": {
-    "message": "{paneName} を閉じる"
+    "message": "Close {paneName}"
   },
   "ZKBnrB": {
     "message": "Character name is required"
@@ -264,7 +414,13 @@
     "message": "Release to Load"
   },
   "a+BhVZ": {
-    "message": "再生成しました"
+    "message": "Regenerated"
+  },
+  "aLncO3": {
+    "message": "Secret Channel"
+  },
+  "aifEPM": {
+    "message": "This is a secret channel. You must be invited to join this channel."
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."
@@ -273,31 +429,40 @@
     "message": "e.g. A group of kobolds tried to attack us"
   },
   "bGay8d": {
-    "message": "次元の設定"
+    "message": "Space Settings"
+  },
+  "bT0FEQ": {
+    "message": "Are you sure you want to delete the \"{channelName}\" channel?"
   },
   "beLe/F": {
     "message": "Broadcast"
   },
+  "c1nBz9": {
+    "message": "As the character of …"
+  },
   "cCTI4h": {
-    "message": "インターネット上の誰もがこの次元を閲覧できるようにするか"
+    "message": "Whether to allow everyone on the Internet to view this space"
   },
   "cLIHUg": {
     "message": "Hard Success"
   },
+  "ccU6l/": {
+    "message": "Online"
+  },
   "clpFBW": {
-    "message": "次元のパブリシティ"
+    "message": "Space Publicity"
   },
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
   "dMEGZV": {
-    "message": "分割ペイン"
+    "message": "Split pane"
   },
   "dVoumD": {
     "message": "My Character Name in the Channel (Optional)"
   },
-  "dYaE6J": {
-    "message": "Members of &quot;{spaceName}&quot; Space"
+  "domxPs": {
+    "message": "Whisper"
   },
   "dzosaH": {
     "message": "Delete Channel"
@@ -305,20 +470,56 @@
   "e+eb5F": {
     "message": "Broadcast has been turned off"
   },
+  "e2+131": {
+    "message": "You have been invited to \"{spaceName}\"."
+  },
   "e3Ttmb": {
     "message": "In Game"
   },
+  "eHA8Ex": {
+    "message": "Whisper to …"
+  },
+  "ea+WlP": {
+    "message": "You must be invited to join a private channel."
+  },
   "fNCCY7": {
-    "message": "ベーシック"
+    "message": "Basic"
   },
   "fnihsY": {
     "message": "Leave"
   },
+  "fsU2v+": {
+    "message": "Switch Spaces"
+  },
+  "gEes7R": {
+    "message": "You need to {loginLink} to accept the invitation."
+  },
+  "gduNan": {
+    "message": "In Light Mode"
+  },
+  "gjBiyj": {
+    "message": "Loading..."
+  },
+  "gyrIEl": {
+    "message": "File"
+  },
   "hCMGkK": {
     "message": "You are not logged in"
   },
+  "hSOOaa": {
+    "message": "You have been invited to \"{spaceName}\""
+  },
+  "hYOE+U": {
+    "message": "Invite"
+  },
   "hh0xW7": {
     "message": "Channel Name"
+  },
+  "i6rxnh": {
+    "message": "You must first join the space to join a channel."
+  },
+  "iHN12u": {
+    "message": "Admin"
   },
   "iLUQIP": {
     "message": "Invite Link"
@@ -326,8 +527,17 @@
   "itPgxd": {
     "message": "Profile"
   },
+  "iySl5e": {
+    "message": "You are already a member of this channel."
+  },
+  "jvo0vs": {
+    "message": "Save"
+  },
   "k1s9UW": {
     "message": "Not Found"
+  },
+  "kFck7X": {
+    "message": "Game Master"
   },
   "kIUNDX": {
     "message": "デフォルトのサイコロ"
@@ -335,41 +545,56 @@
   "kMogDE": {
     "message": "メールアドレスのフォーマットが不正です。"
   },
+  "kaKiV5": {
+    "message": "Character Name"
+  },
+  "kh4wt0": {
+    "message": "Toggle Sidebar"
+  },
   "lJePcp": {
     "message": "Failure"
   },
   "lKv8ex": {
     "message": "Default"
   },
+  "lx+ssX": {
+    "message": "Leave Space"
+  },
+  "mYgmal": {
+    "message": "Out of Character"
+  },
   "muMPUp": {
     "message": "Fumble"
+  },
+  "n1Whvj": {
+    "message": "Switch"
   },
   "nmSKJK": {
     "message": "入力必須です。"
   },
-  "noZdV2": {
-    "message": "Deleting..."
-  },
   "oVARYX": {
     "message": "少なくとも {max} 文字以上でなければなりません。"
   },
+  "onmBf2": {
+    "message": "Shuffle Random Color"
+  },
   "q7JBy1": {
-    "message": "設定を変更"
+    "message": "Change Settings"
   },
   "qGHWyb": {
     "message": "{count} filtered messages"
   },
   "qbB8pg": {
-    "message": "次元の説明"
+    "message": "Space Description"
   },
   "qj1uhz": {
     "message": "Disconnect"
   },
   "qoUUiA": {
-    "message": "観覧を許可"
+    "message": "Allow Spectator"
   },
   "qvc9uM": {
-    "message": "この操作は元に戻すことができません。"
+    "message": "This cannot be undone."
   },
   "qwN+HQ": {
     "message": "Error while sending a message, did you recover the message?"
@@ -377,17 +602,20 @@
   "r2rV1X": {
     "message": "Out-Of-Character"
   },
-  "rELDbB": {
-    "message": "再読み込み"
-  },
   "rK7cTy": {
     "message": "最初のチャネル名"
   },
+  "rYQKZm": {
+    "message": "log in"
+  },
   "rYtHKT": {
-    "message": "システムに従う"
+    "message": "Follow System"
+  },
+  "rbrahO": {
+    "message": "Close"
   },
   "s+ixvA": {
-    "message": "「 {spaceName}」を破壊します"
+    "message": "Sure, Destroy {spaceName}"
   },
   "sMAAlN": {
     "message": "Add New"
@@ -395,56 +623,77 @@
   "sjzLbX": {
     "message": "Accept"
   },
-  "sloBpe": {
-    "message": "Press {key} to {send}"
-  },
   "sol2mE": {
     "message": "Not found, Perhaps resource was deleted."
   },
-  "t/BlH4": {
-    "message": "Confirm Delete"
+  "t5xj3B": {
+    "message": "New Space"
   },
   "tOdNiY": {
-    "message": "ダーク"
+    "message": "Dark"
+  },
+  "tYDBKv": {
+    "message": "Failed to move message ({errorCode})"
   },
   "uhu5aG": {
-    "message": "公開"
+    "message": "Public"
+  },
+  "v3aFf1": {
+    "message": "Create Space"
+  },
+  "vRORF/": {
+    "message": "Settings of \"{spaceName}\" Space"
   },
   "vXCeIi": {
     "message": "Failed"
   },
   "viXE32": {
-    "message": "非公開"
+    "message": "Private"
   },
   "wEQDC6": {
     "message": "Edit"
   },
-  "wR2FW8": {
-    "message": "「{spaceName}」次元の設定"
+  "wV1fJ2": {
+    "message": "Default Color"
   },
   "wb3MSp": {
     "message": "このユーザー名は既に使われています。"
   },
   "x0pAb7": {
-    "message": "{paneName} を開く"
+    "message": "Open {paneName}"
   },
   "x32Fvf": {
-    "message": "メッセージ内のサイコロを展開"
+    "message": "Expand dice in the messages"
+  },
+  "x82IOl": {
+    "message": "Mute"
   },
   "xMnH8F": {
     "message": "Load More"
+  },
+  "xWN20+": {
+    "message": "You can't see"
+  },
+  "xmcVZ0": {
+    "message": "Search"
   },
   "xrKHS6": {
     "message": "Success"
   },
   "y1Z3or": {
-    "message": "言語"
+    "message": "Language"
   },
   "y63e7m": {
     "message": "メール"
   },
+  "z/ipXX": {
+    "message": "Oops"
+  },
+  "zINlao": {
+    "message": "Owner"
+  },
   "zNnjeF": {
-    "message": "本当に「{spaceName}」を削除しますか？"
+    "message": "Are you sure you want to delete {spaceName}?"
   },
   "zQvVDJ": {
     "message": "All"

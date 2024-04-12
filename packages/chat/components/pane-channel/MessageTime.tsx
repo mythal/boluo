@@ -42,7 +42,7 @@ export const MessageTime: FC<Props> = ({ message }) => {
     <>
       <time
         data-edited={edited}
-        className="mr-1 self-start text-right text-xs decoration-dotted data-[edited=true]:underline"
+        className="mr-1 h-full self-start text-right text-xs decoration-dotted data-[edited=true]:underline"
         dateTime={message.created}
         title={detailDate(date)}
         ref={refs.setReference}

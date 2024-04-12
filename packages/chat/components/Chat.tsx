@@ -17,6 +17,7 @@ import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
 import { ToggleSidebarLine } from './sidebar/ToggleSidebarLine';
+import { useSetThemeColor } from '../hooks/useSetThemeColor';
 
 const SpaceProvider: FC<{ spaceId: string | null; children: ReactNode }> = ({ spaceId, children }) => {
   const { data: space, isLoading } = useQuerySpace(spaceId);
@@ -34,6 +35,7 @@ const Chat: FC = () => {
   const route = useAtomValue(routeAtom);
   useAutoSelectProxy(60 * 1000);
   const setSidebarExpanded = useSetAtom(isSidebarExpandedAtom);
+  useSetThemeColor();
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';

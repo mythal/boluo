@@ -58,18 +58,9 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme }) => 
   }, [compose.name, inGame, member.channel.characterName, member.user.nickname]);
   const nameNode = useMemo(() => {
     return (
-      <NameEditable
-        inGame={inGame}
-        name={name}
-        isMaster={isMaster}
-        color={color}
-        isPreview
-        self
-        channelId={member.channel.channelId}
-        myId={member.channel.userId}
-      />
+      <NameEditable inGame={inGame} name={name} member={member} isMaster={isMaster} color={color} isPreview self />
     );
-  }, [color, inGame, isMaster, member.channel.channelId, member.channel.userId, name]);
+  }, [color, inGame, isMaster, member, name]);
   const { onDrop } = useMediaDrop();
   const mediaNode = useMemo(() => {
     if (media == null) return null;

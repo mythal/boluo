@@ -3,14 +3,12 @@ import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
 import { NameInput } from './NameInput';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
-import { Button } from '@boluo/ui/Button';
 import { ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
+import { Member } from '@boluo/api';
 
 interface Props {
-  myId: string;
-  channelId: string;
+  member: Member;
 }
 
 const chatStateToNameList = (
@@ -32,16 +30,15 @@ const chatStateToNameList = (
   return names;
 };
 
-export const NameEditContent: FC<Props> = ({ channelId }) => {
-  const memberResult = useMyChannelMember(channelId);
-  const myMember = memberResult.unwrap();
-  const myId = myMember.user.id;
+export const NameEditContent: FC<Props> = ({ member }) => {
   const { inGameAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const inGame = useAtomValue(inGameAtom);
   const baseId = useId();
   const store = useStore();
-  const defaultCharacterName = myMember.channel.characterName;
+  const myId = member.user.id;
+  const channelId = member.channel.channelId;
+  const defaultCharacterName = member.channel.characterName;
   const nameHistory = useMemo(
     // In this case, we don't need to use `useAtom` hooks.
     () => chatStateToNameList(store.get(chatAtom), channelId, myId, defaultCharacterName),
@@ -75,7 +72,7 @@ export const NameEditContent: FC<Props> = ({ channelId }) => {
         <label htmlFor={id.inputName} className="block cursor-pointer select-none">
           <FormattedMessage defaultMessage="As the character of …" />
         </label>
-        <NameInput placeholder={myMember.channel.characterName} className="w-full" />
+        <NameInput placeholder={defaultCharacterName} className="w-full" />
         {nameHistory.length > 0 && (
           <div className="space-x-1">
             {nameHistory.map((name) => (
@@ -108,7 +105,7 @@ export const NameEditContent: FC<Props> = ({ channelId }) => {
       <label className="block cursor-pointer select-none" htmlFor={id.inGame}>
         <div>
           <FormattedMessage defaultMessage="Out of Character" />
-          <span className="text-text-light ml-1">({myMember.user.nickname})</span>
+          <span className="text-text-light ml-1">({member.user.nickname})</span>
         </div>
       </label>
     </div>

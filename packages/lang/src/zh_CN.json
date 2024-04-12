@@ -1,4 +1,7 @@
 {
+  "++9PoL": {
+    "message": "Remove File"
+  },
   "+CI3C/": {
     "message": "When you type 1{value}, you can simplify it to 1d."
   },
@@ -6,46 +9,73 @@
     "message": "这个邮箱地址已经被使用。"
   },
   "+PG3ZZ": {
-    "message": "骰池"
+    "message": "Dice Pool"
   },
   "+a+2ug": {
-    "message": "成员"
+    "message": "Members"
+  },
+  "/+v5jy": {
+    "message": "{seconds} seconds ago"
   },
   "/3UTYF": {
-    "message": "使用 {key} 键发送消息."
+    "message": "Use {key} to send messages."
+  },
+  "/I//hN": {
+    "message": "Failed to load messages ({errorCode})"
+  },
+  "/caJLq": {
+    "message": "Open in new pane"
   },
   "/iUStU": {
-    "message": "例如: 哪吒"
+    "message": "e.g. Gandalf"
   },
   "01eQoz": {
-    "message": "更换线路"
+    "message": "Change Connection Region"
   },
-  "2gujDD": {
-    "message": "这些是用于设计和调试组件的页面"
+  "0Azlrb": {
+    "message": "Manage"
+  },
+  "0EJGBZ": {
+    "message": "Are you sure you want to kick {nickname} ({username})?"
+  },
+  "0JXAsk": {
+    "message": "Away"
+  },
+  "0pT/2d": {
+    "message": "No Character Name"
+  },
+  "2J8G6R": {
+    "message": "File size must be less than {sizeLimit}M"
   },
   "2pzTGC": {
-    "message": "大成功"
+    "message": "Critical"
+  },
+  "2s3EZW": {
+    "message": "Need A Name"
   },
   "39AHJm": {
     "message": "注册"
   },
   "3VI9mt": {
-    "message": "保存更改"
+    "message": "Save Changes"
   },
   "3cc4Ct": {
-    "message": "亮色"
+    "message": "Light"
   },
   "47FYwb": {
-    "message": "取消"
+    "message": "Cancel"
   },
   "4l6vz1": {
-    "message": "复制"
+    "message": "Copy"
   },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
   },
   "5WZlnV": {
-    "message": "按名称查找"
+    "message": "Find By Name"
+  },
+  "5jeq8P": {
+    "message": "Unknown"
   },
   "5sg7KC": {
     "message": "密码"
@@ -54,49 +84,67 @@
     "message": "至少需要 {min} 个字符。"
   },
   "6PgVSe": {
-    "message": "重新生成"
+    "message": "Regenerate"
   },
   "6QRlW8": {
-    "message": "正在等待重新连接 ({countdown}s)"
+    "message": "Waiting for reconnection ({countdown}s)"
   },
   "6q3tCn": {
-    "message": "正在连接"
+    "message": "Connecting"
   },
   "7G8Ojg": {
-    "message": "无法发送信息"
+    "message": "Unable to send message"
+  },
+  "7UOvbT": {
+    "message": "Offline"
   },
   "7q87xo": {
     "message": "Channel Settings"
   },
+  "88cMEG": {
+    "message": "Destory Space"
+  },
   "973Dls": {
-    "message": "只有接受邀请的人能够加入此位面"
+    "message": "Only invited people can join this space"
+  },
+  "9NDg1Z": {
+    "message": "(Whisper)"
   },
   "9Obw6C": {
-    "message": "筛选"
+    "message": "Filter"
   },
   "9WRlF4": {
-    "message": "发送"
+    "message": "Send"
   },
   "9kvEKC": {
-    "message": "添加骰子"
+    "message": "Add Dice"
   },
   "9to/Le": {
-    "message": "更改头像"
+    "message": "Change Avatar"
   },
   "AVI/0j": {
-    "message": "拆分"
+    "message": "Split"
+  },
+  "AtML1q": {
+    "message": "Master"
   },
   "AyGauy": {
     "message": "登录"
+  },
+  "Bc5LE6": {
+    "message": "Size must be less than {mediaMaxSizeMb}M."
+  },
+  "Bp3LVS": {
+    "message": "找不到位面"
   },
   "BzWmz8": {
     "message": "位面名"
   },
   "C81/uG": {
-    "message": "登出"
+    "message": "Logout"
   },
   "CW7jWC": {
-    "message": "(自己)"
+    "message": "(me)"
   },
   "Ciussb": {
     "message": "Secret channels are only accessible by invitation."
@@ -105,46 +153,85 @@
     "message": "用户名或邮箱"
   },
   "CoTP+E": {
-    "message": "您不是该频道的成员"
+    "message": "You are not a member of this channel"
   },
   "CuNepY": {
-    "message": "创建频道"
+    "message": "Create Channel"
   },
   "D3idYv": {
-    "message": "设置"
+    "message": "Settings"
+  },
+  "D3x69s": {
+    "message": "Whisper to the Master only"
+  },
+  "DBP+Od": {
+    "message": "Echo"
+  },
+  "Euftjf": {
+    "message": "Error while uploading a file, did you recover the message?"
+  },
+  "GEhexi": {
+    "message": "In Dark Mode"
   },
   "GMPXuF": {
-    "message": "每个人都可以加入这个位面"
+    "message": "Everyone can join this space"
   },
   "GYTzXV": {
-    "message": "切换通知"
+    "message": "Toggle Notification"
   },
-  "H2WXs6": {
-    "message": "摧毁位面"
+  "GbWVAh": {
+    "message": "Yes, Kick"
+  },
+  "H6JcM0": {
+    "message": "Are you sure to delete this message:"
   },
   "HSaR2M": {
     "message": "Is secret channel?"
   },
   "HTmh5Q": {
-    "message": "目标"
+    "message": "target"
+  },
+  "HlQPHQ": {
+    "message": "Join Space"
   },
   "HpyhN3": {
     "message": "菠萝"
   },
+  "I90sbW": {
+    "message": "just now"
+  },
+  "IEBWYE": {
+    "message": "Exile"
+  },
+  "IN8rCW": {
+    "message": "无效的邀请链接"
+  },
+  "INVcoD": {
+    "message": "It's currently in active development and everything is unstable."
+  },
+  "IQwWyF": {
+    "message": "You must be logged in to join a channel."
+  },
   "IW0/M8": {
-    "message": "自动选择"
+    "message": "Auto Select"
+  },
+  "Iueqgt": {
+    "message": "Failed to delete message ({ errorCode })"
   },
   "IvBid4": {
-    "message": "使用 {enter} 键发送消息"
+    "message": "Use the {enter} key to send messages"
   },
   "IvjoDS": {
-    "message": "已连接"
+    "message": "Connected"
   },
   "JCIgkj": {
     "message": "用户名"
   },
   "JQt0RP": {
-    "message": "下拉刷新"
+    "message": "Pull to Load"
+  },
+  "Jxxkva": {
+    "message": "You can change default message color in the Settings."
   },
   "K3r6DQ": {
     "message": "Delete"
@@ -152,77 +239,116 @@
   "K7AkdL": {
     "message": "显示"
   },
+  "KhLK4z": {
+    "message": "You do not have permission to view this space."
+  },
+  "Kp8wZw": {
+    "message": "Have not set a bio yet"
+  },
   "LUrJwE": {
-    "message": "频道"
+    "message": "Channels"
+  },
+  "LX5+L+": {
+    "message": "Show Archived"
   },
   "MoRJdV": {
-    "message": "用哪个按键发送消息？"
+    "message": "Which key to use to send a message?"
   },
   "MoZLbF": {
-    "message": "暂不支持"
+    "message": "Unsupported"
+  },
+  "MqRkT1": {
+    "message": "Unsupported media type"
+  },
+  "Mqn9K5": {
+    "message": "找不到人"
   },
   "Mtd9LO": {
-    "message": "超时"
+    "message": "Timeout"
   },
   "O5epsB": {
-    "message": "取"
+    "message": "take"
   },
   "OLFHJL": {
-    "message": "极难成功"
-  },
-  "OSS58q": {
-    "message": "Are you sure you want to delete the &quot;{channelName}&quot; channel?"
+    "message": "Extreme Success"
   },
   "OWhbRI": {
     "message": "The command that will be inserted when the button is pressed."
   },
   "OYT4m/": {
-    "message": "消息不能为空"
+    "message": "Message cannot be empty"
+  },
+  "OhIqLr": {
+    "message": "Edited"
   },
   "P6PLpi": {
-    "message": "加入"
+    "message": "Join"
+  },
+  "PHZ3YP": {
+    "message": "Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
+  },
+  "PO83gc": {
+    "message": "Last seen"
   },
   "Pe0ogR": {
-    "message": "主题"
+    "message": "Theme"
+  },
+  "PwaN2o": {
+    "message": "Welcome"
   },
   "Q8Qw5B": {
     "message": "描述"
   },
+  "QFfPEN": {
+    "message": "Failded to load channel member information."
+  },
+  "QOvY19": {
+    "message": "Whisper to the Master and"
+  },
+  "QdsAIR": {
+    "message": "Members of \"{spaceName}\" Space"
+  },
   "QlsDcr": {
-    "message": "动作"
+    "message": "Action"
   },
   "R59CS8": {
-    "message": "移除头像"
-  },
-  "RYulBW": {
-    "message": "Settings of &quot;{channelName}&quot; Channel"
+    "message": "Remove Avatar"
   },
   "RraqCg": {
     "message": "帐号与密码不匹配"
   },
   "RvUa7+": {
-    "message": "无名称"
+    "message": "No Name"
   },
   "SBkvpf": {
     "message": "昵称"
   },
   "SENRqu": {
-    "message": "帮助"
+    "message": "Help"
+  },
+  "SEg47O": {
+    "message": "Are you sure you want to exile this member?"
   },
   "Sf+ebw": {
-    "message": "关闭窗格"
+    "message": "Close pane"
   },
   "SqVNRz": {
     "message": "创建位面"
   },
+  "StUScz": {
+    "message": "{count} members"
+  },
   "TThIOM": {
-    "message": "未找到"
+    "message": "Not found"
+  },
+  "TdbPNK": {
+    "message": "Me"
   },
   "TwyMau": {
-    "message": "账号"
+    "message": "Account"
   },
   "UIVqKu": {
-    "message": "恢复"
+    "message": "Recover"
   },
   "UdtpV7": {
     "message": "Topic"
@@ -230,41 +356,71 @@
   "Ujs8Kg": {
     "message": "Message from server"
   },
-  "UvDPcD": {
-    "message": "正在开发"
-  },
   "VA/Z1S": {
     "message": "隐藏"
   },
+  "VeLEVu": {
+    "message": "Character Name:"
+  },
   "VnXp8Z": {
-    "message": "头像"
+    "message": "Avatar"
   },
   "VzzYJk": {
     "message": "创建"
   },
+  "WASph7": {
+    "message": "Kick this member"
+  },
+  "Wa3nyB": {
+    "message": "Settings of \"{channelName}\" Channel"
+  },
+  "We16k/": {
+    "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
   "X5rIjZ": {
-    "message": "危险操作"
+    "message": "Danger Zone"
+  },
+  "Xs60po": {
+    "message": "{hours} hours ago"
+  },
+  "Xt6aW0": {
+    "message": "No one to invite"
+  },
+  "XzgtzD": {
+    "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
+  },
+  "Y78Gyb": {
+    "message": "{minutes} minutes ago"
   },
   "YETHtM": {
-    "message": "界面"
+    "message": "Interface"
   },
   "YNPiTV": {
-    "message": "确定要离开「{channelName}」吗？"
+    "message": "Are you sure you want to leave {channelName}?"
   },
   "YQwJw3": {
     "message": "Default Roll Command"
   },
+  "Yf3xiD": {
+    "message": "{days} days ago"
+  },
   "YtexzU": {
-    "message": "关闭 {paneName}"
+    "message": "Close {paneName}"
   },
   "ZKBnrB": {
-    "message": "必须填写角色名"
+    "message": "Character name is required"
   },
   "ZvI2/H": {
-    "message": "释放加载"
+    "message": "Release to Load"
   },
   "a+BhVZ": {
-    "message": "重新生成"
+    "message": "Regenerated"
+  },
+  "aLncO3": {
+    "message": "Secret Channel"
+  },
+  "aifEPM": {
+    "message": "This is a secret channel. You must be invited to join this channel."
   },
   "aw8eqe": {
     "message": "Use {key} to make a line break."
@@ -273,31 +429,40 @@
     "message": "e.g. A group of kobolds tried to attack us"
   },
   "bGay8d": {
-    "message": "位面设置"
+    "message": "Space Settings"
+  },
+  "bT0FEQ": {
+    "message": "Are you sure you want to delete the \"{channelName}\" channel?"
   },
   "beLe/F": {
     "message": "Broadcast"
   },
+  "c1nBz9": {
+    "message": "As the character of …"
+  },
   "cCTI4h": {
-    "message": "是否允许互联网上的任何人查看此位面"
+    "message": "Whether to allow everyone on the Internet to view this space"
   },
   "cLIHUg": {
     "message": "Hard Success"
   },
+  "ccU6l/": {
+    "message": "Online"
+  },
   "clpFBW": {
-    "message": "位面公开性"
+    "message": "Space Publicity"
   },
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
   "dMEGZV": {
-    "message": "分割窗格"
+    "message": "Split pane"
   },
   "dVoumD": {
     "message": "My Character Name in the Channel (Optional)"
   },
-  "dYaE6J": {
-    "message": "Members of &quot;{spaceName}&quot; Space"
+  "domxPs": {
+    "message": "Whisper"
   },
   "dzosaH": {
     "message": "Delete Channel"
@@ -305,20 +470,56 @@
   "e+eb5F": {
     "message": "Broadcast has been turned off"
   },
+  "e2+131": {
+    "message": "你被邀请到「{spaceName}」。"
+  },
   "e3Ttmb": {
     "message": "In Game"
   },
+  "eHA8Ex": {
+    "message": "Whisper to …"
+  },
+  "ea+WlP": {
+    "message": "You must be invited to join a private channel."
+  },
   "fNCCY7": {
-    "message": "基本"
+    "message": "Basic"
   },
   "fnihsY": {
     "message": "Leave"
   },
+  "fsU2v+": {
+    "message": "Switch Spaces"
+  },
+  "gEes7R": {
+    "message": "为了接受邀请，你需要先 {loginLink}。"
+  },
+  "gduNan": {
+    "message": "In Light Mode"
+  },
+  "gjBiyj": {
+    "message": "Loading..."
+  },
+  "gyrIEl": {
+    "message": "File"
+  },
   "hCMGkK": {
     "message": "You are not logged in"
   },
+  "hSOOaa": {
+    "message": "你被邀请到「{spaceName}」"
+  },
+  "hYOE+U": {
+    "message": "Invite"
+  },
   "hh0xW7": {
     "message": "Channel Name"
+  },
+  "i6rxnh": {
+    "message": "You must first join the space to join a channel."
+  },
+  "iHN12u": {
+    "message": "Admin"
   },
   "iLUQIP": {
     "message": "Invite Link"
@@ -326,8 +527,17 @@
   "itPgxd": {
     "message": "Profile"
   },
+  "iySl5e": {
+    "message": "You are already a member of this channel."
+  },
+  "jvo0vs": {
+    "message": "Save"
+  },
   "k1s9UW": {
     "message": "Not Found"
+  },
+  "kFck7X": {
+    "message": "Game Master"
   },
   "kIUNDX": {
     "message": "默认使用的骰子"
@@ -335,41 +545,56 @@
   "kMogDE": {
     "message": "请输入合法的邮箱地址。"
   },
+  "kaKiV5": {
+    "message": "Character Name"
+  },
+  "kh4wt0": {
+    "message": "Toggle Sidebar"
+  },
   "lJePcp": {
     "message": "Failure"
   },
   "lKv8ex": {
     "message": "Default"
   },
+  "lx+ssX": {
+    "message": "Leave Space"
+  },
+  "mYgmal": {
+    "message": "Out of Character"
+  },
   "muMPUp": {
     "message": "Fumble"
+  },
+  "n1Whvj": {
+    "message": "Switch"
   },
   "nmSKJK": {
     "message": "不能为空。"
   },
-  "noZdV2": {
-    "message": "Deleting..."
-  },
   "oVARYX": {
     "message": "至多 {max} 个字符。"
   },
+  "onmBf2": {
+    "message": "Shuffle Random Color"
+  },
   "q7JBy1": {
-    "message": "更改设置"
+    "message": "Change Settings"
   },
   "qGHWyb": {
     "message": "{count} filtered messages"
   },
   "qbB8pg": {
-    "message": "位面描述"
+    "message": "Space Description"
   },
   "qj1uhz": {
     "message": "Disconnect"
   },
   "qoUUiA": {
-    "message": "允许旁观者"
+    "message": "Allow Spectator"
   },
   "qvc9uM": {
-    "message": "此操作不可撤销。"
+    "message": "This cannot be undone."
   },
   "qwN+HQ": {
     "message": "Error while sending a message, did you recover the message?"
@@ -377,74 +602,98 @@
   "r2rV1X": {
     "message": "Out-Of-Character"
   },
-  "rELDbB": {
-    "message": "刷新"
-  },
   "rK7cTy": {
     "message": "初始频道名称"
   },
+  "rYQKZm": {
+    "message": "登录"
+  },
   "rYtHKT": {
-    "message": "依照系统设定"
+    "message": "Follow System"
+  },
+  "rbrahO": {
+    "message": "Close"
   },
   "s+ixvA": {
-    "message": "确定，摧毁「{spaceName}」"
+    "message": "Sure, Destroy {spaceName}"
   },
   "sMAAlN": {
     "message": "Add New"
   },
   "sjzLbX": {
-    "message": "Accept"
-  },
-  "sloBpe": {
-    "message": "Press {key} to {send}"
+    "message": "接受"
   },
   "sol2mE": {
     "message": "Not found, Perhaps resource was deleted."
   },
-  "t/BlH4": {
-    "message": "Confirm Delete"
+  "t5xj3B": {
+    "message": "New Space"
   },
   "tOdNiY": {
-    "message": "暗色"
+    "message": "Dark"
+  },
+  "tYDBKv": {
+    "message": "Failed to move message ({errorCode})"
   },
   "uhu5aG": {
-    "message": "公开"
+    "message": "Public"
+  },
+  "v3aFf1": {
+    "message": "建立位面"
+  },
+  "vRORF/": {
+    "message": "Settings of \"{spaceName}\" Space"
   },
   "vXCeIi": {
     "message": "Failed"
   },
   "viXE32": {
-    "message": "非公开"
+    "message": "Private"
   },
   "wEQDC6": {
     "message": "Edit"
   },
-  "wR2FW8": {
-    "message": "「{spaceName}」位面设置"
+  "wV1fJ2": {
+    "message": "Default Color"
   },
   "wb3MSp": {
     "message": "此用户名已被占用。"
   },
   "x0pAb7": {
-    "message": "打开 {paneName}"
+    "message": "Open {paneName}"
   },
   "x32Fvf": {
-    "message": "自动展开消息中的骰子"
+    "message": "Expand dice in the messages"
+  },
+  "x82IOl": {
+    "message": "Mute"
   },
   "xMnH8F": {
     "message": "Load More"
+  },
+  "xWN20+": {
+    "message": "You can't see"
+  },
+  "xmcVZ0": {
+    "message": "Search"
   },
   "xrKHS6": {
     "message": "Success"
   },
   "y1Z3or": {
-    "message": "语言"
+    "message": "Language"
   },
   "y63e7m": {
     "message": "邮箱"
   },
+  "z/ipXX": {
+    "message": "Oops"
+  },
+  "zINlao": {
+    "message": "Owner"
+  },
   "zNnjeF": {
-    "message": "确定要删除「{spaceName}」吗？"
+    "message": "Are you sure you want to delete {spaceName}?"
   },
   "zQvVDJ": {
     "message": "All"

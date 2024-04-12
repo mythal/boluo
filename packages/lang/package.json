@@ -2,7 +2,7 @@
   "name": "@boluo/lang",
   "version": "0.0.0",
   "scripts": {
-    "generate": "formatjs extract '../../{apps,packages}/*/src/**/*.{ts,tsx,js,jsx}' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin",
+    "generate": "formatjs extract '../../{apps,packages}/{site,chat,ui}/**/*.{ts,tsx,js,jsx}' --ignore '**/node_modules/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin",
     "build": "formatjs compile-folder --ast --format crowdin ./src ./compiled"
   },
   "license": "GPL-3.0",

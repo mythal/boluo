@@ -23,6 +23,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
   const inGameMessageBg = $(mix(lime[50], white, 0.6), zinc[950]);
   const brand = $(lime, revert(blue));
+  const themeColor = {
+    light: neutral[50],
+    dark: neutral[900],
+  };
   return {
     ringColor: {
       DEFAULT: $(green[400], blue[500]),
@@ -34,6 +38,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       DEFAULT: $(neutral[200], neutral[700]),
     },
     colors: {
+      theme: {
+        light: themeColor.light,
+        dark: themeColor.dark,
+        system: $(themeColor.light, themeColor.dark),
+      },
       brand,
       green: $(green, revert(green)),
       gray: $(gray, revert(gray)),

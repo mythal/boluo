@@ -48,12 +48,13 @@ module.exports = {
     static: {
       directory: path.resolve(__dirname, 'public'),
     },
-    proxy: {
-      '/api': {
+    proxy: [
+      {
+        context: ['/api'],
         target: 'http://127.0.0.1:3000',
         ws: true,
       },
-    },
+    ],
     hot: true,
     compress: true,
     historyApiFallback: true,

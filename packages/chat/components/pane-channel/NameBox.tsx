@@ -19,8 +19,8 @@ export const NameBox = React.forwardRef<HTMLSpanElement, Props>(
         role={interactive ? 'button' : undefined}
         aria-pressed={pressed}
         className={clsx(
-          '@xl:w-[10rem] @2xl:w-[12rem] aria-[pressed=true]:bg-preview-name-editable-hover relative mr-1 w-[8rem] flex-none break-all rounded-sm font-bold',
-          interactive && 'hover:bg-preview-name-editable-hover cursor-pointer select-none',
+          '@xl:w-[10rem] @2xl:w-[12rem] bg-name-bg aria-[pressed=true]:bg-name-editable-hover relative mr-1 w-[8rem] flex-none break-all rounded-sm font-bold',
+          interactive && 'hover:bg-name-editable-hover cursor-pointer select-none',
         )}
         {...props}
       >

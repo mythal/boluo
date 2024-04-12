@@ -21,7 +21,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
         'select-none appearance-none focus-visible:outline-none',
         'inline-flex items-center justify-center focus:ring',
         'm-0 gap-1 rounded-sm',
-        isSmall ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'text-baese px-4 py-2',
+        isSmall ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
         (type === 'default' || type === 'detail') && [
           'bg-button-default-bg text-button-default-text',
           'hover:enabled:bg-button-default-hover-bg active-enabled:bg-button-default-active-bg',

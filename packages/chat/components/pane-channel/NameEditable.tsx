@@ -59,7 +59,7 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member 
   return (
     <>
       <NameBox
-        editable
+        interactive
         pressed={isOpen}
         color={inGame ? color : undefined}
         ref={refs.setReference}

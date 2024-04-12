@@ -7,20 +7,20 @@ interface Props extends React.HTMLAttributes<HTMLSpanElement> {
   color?: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
-  editable?: boolean;
+  interactive?: boolean;
   pressed?: boolean;
 }
 
 export const NameBox = React.forwardRef<HTMLSpanElement, Props>(
-  ({ children, color, icon = null, editable = false, pressed, ...props }, ref) => {
+  ({ children, color, icon = null, interactive = false, pressed, ...props }, ref) => {
     return (
       <span
         ref={ref}
-        role={editable ? 'button' : undefined}
+        role={interactive ? 'button' : undefined}
         aria-pressed={pressed}
         className={clsx(
           '@xl:w-[10rem] @2xl:w-[12rem] aria-[pressed=true]:bg-preview-name-editable-hover relative mr-1 w-[8rem] flex-none break-all rounded-sm font-bold',
-          editable && 'hover:bg-preview-name-editable-hover cursor-pointer select-none',
+          interactive && 'hover:bg-preview-name-editable-hover cursor-pointer select-none',
         )}
         {...props}
       >

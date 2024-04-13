@@ -20,10 +20,14 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    napalm = {
+      url = "github:nix-community/napalm";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    inputs @ { flake-parts, crane, ... }:
+    inputs @ { flake-parts, crane, napalm, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         inputs.devshell.flakeModule
@@ -58,11 +62,6 @@
             caCertificates
             fakeNss
           ];
-
-          # Shared dependencies because we use monorepo
-          npmDepsHash = "sha256-D+97NoLeEh+3S0S+5liTFmN7/QuH1B2xpMxM+0fyym0=";
-          # Uncomment this when you have to update dependencies
-          # npmDepsHash = lib.fakeHash;
 
           certEnv = [
             "GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -127,6 +126,8 @@
               };
             };
 
+
+
             site =
               let
                 filters = [
@@ -144,12 +145,10 @@
                   filter =
                     path: type: builtins.any (f: f path type) filters;
                 };
-                site-package = pkgs.buildNpmPackage {
+                site-package = napalm.legacyPackages."${system}".buildPackage src {
                   pname = "boluo-site";
                   version = "0.0.0";
-                  src = src;
-                  npmBuildScript = "build:site";
-                  inherit npmDepsHash;
+                  npmCommands = [ "npm install --loglevel verbose --nodedir=${pkgs.nodejs}/include/node" "npm run build:site" ];
                   # TODO: remove this
                   PUBLIC_MEDIA_URL = "https://media.boluo.chat";
                   installPhase = ''
@@ -189,12 +188,10 @@
                     path: type: builtins.any (f: f path type) filters;
                 };
               in
-              pkgs.buildNpmPackage {
+              napalm.legacyPackages."${system}".buildPackage src {
                 pname = "boluo-legacy";
                 version = "0.0.0";
-                src = src;
-                npmBuildScript = "build:legacy";
-                inherit npmDepsHash;
+                npmCommands = [ "npm install --loglevel verbose --nodedir=${pkgs.nodejs}/include/node" "npm run build:legacy" ];
                 installPhase = ''
                   mkdir $out
                   cp -r apps/legacy/dist/* $out

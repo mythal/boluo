@@ -17,7 +17,7 @@ export const Avatar: FC<Props> = (props) => {
     if (size == null || size === '') {
       return undefined;
     }
-    return { width: size };
+    return { width: size, height: size };
   }, [size]);
   if (avatarId) {
     return <img alt={name} style={style} onClick={onClick} className={className} src={getMediaUrl(avatarId)} />;

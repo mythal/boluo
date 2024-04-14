@@ -30,7 +30,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
   previewId: makeId(),
-  defaultInGame: true,
+  defaultInGame: false,
   source: '.out ',
   media: null,
   range: [0, 0],

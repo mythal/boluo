@@ -1,10 +1,8 @@
-import type { User } from '@boluo/api';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef } from 'react';
+import { ChangeEventHandler, FC, KeyboardEvent, useEffect, useMemo, useRef, useTransition } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { ComposeActionUnion } from '../../state/compose.actions';
-import { useSend } from '../pane-channel/useSend';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import clsx from 'clsx';
 import { inputStyle } from '@boluo/ui/TextInput';
@@ -60,6 +58,7 @@ const useReflectRangeChange = (
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
   const { composeAtom, inGameAtom } = useChannelAtoms();
+  const [, startTransition] = useTransition();
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
@@ -69,19 +68,17 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
   const isWhisper = parsed.whisperToUsernames !== null;
   const inGame = useAtomValue(inGameAtom);
   const lock = useRef(false);
-  const updateRangeTimeout = useRef<number | undefined>(undefined);
   useEnterKeyHint(enterSend, ref);
 
-  const updateRange = useCallback(() => {
-    window.clearTimeout(updateRangeTimeout.current);
-    updateRangeTimeout.current = window.setTimeout(() => {
+  const updateRange = () => {
+    startTransition(() => {
       if (lock.current) return;
       const textArea = ref.current;
       if (!textArea) return;
       const { selectionStart, selectionEnd } = textArea;
       dispatch({ type: 'setRange', payload: { range: [selectionStart, selectionEnd] } });
-    }, 30);
-  }, [dispatch]);
+    });
+  };
 
   useReflectRangeChange(composeAtom, lock, ref);
 

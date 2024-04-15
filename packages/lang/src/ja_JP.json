@@ -3,13 +3,13 @@
     "message": "ファイルを削除"
   },
   "+CI3C/": {
-    "message": "When you type 1{value}, you can simplify it to 1d."
+    "message": "1 {value} と入力すると、1dに単純化できます。"
   },
   "+OyBM6": {
     "message": "このメールアドレスは既に使用されています。"
   },
   "+PG3ZZ": {
-    "message": "Dice Pool"
+    "message": "サイコロプール"
   },
   "+a+2ug": {
     "message": "メンバー"
@@ -27,7 +27,7 @@
     "message": "新しいペインで開く"
   },
   "/iUStU": {
-    "message": "e.g. Gandalf"
+    "message": "例: Gandalf"
   },
   "01eQoz": {
     "message": "接続地域の変更"
@@ -36,7 +36,7 @@
     "message": "管理"
   },
   "0EJGBZ": {
-    "message": "Are you sure you want to kick {nickname} ({username})?"
+    "message": "{nickname} ({username})をキックしてもよろしいですか？"
   },
   "0JXAsk": {
     "message": "不在"
@@ -45,10 +45,10 @@
     "message": "キャラクター名なし"
   },
   "2J8G6R": {
-    "message": "File size must be less than {sizeLimit}M"
+    "message": "ファイルサイズは {size_limit} より小さい必要があります"
   },
   "2pzTGC": {
-    "message": "Critical"
+    "message": "クリティカル"
   },
   "2s3EZW": {
     "message": "名前が必要"
@@ -108,7 +108,7 @@
     "message": "招待された人だけがこの次元に参加できます"
   },
   "9NDg1Z": {
-    "message": "(Whisper)"
+    "message": "(ささやき)"
   },
   "9Obw6C": {
     "message": "絞り込み"
@@ -132,10 +132,10 @@
     "message": "ログイン"
   },
   "Bc5LE6": {
-    "message": "Size must be less than {mediaMaxSizeMb}M."
+    "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
   },
   "Bp3LVS": {
-    "message": "Space not found"
+    "message": "スペースは見つかりません"
   },
   "BzWmz8": {
     "message": "次元名"
@@ -147,13 +147,13 @@
     "message": "(自分)"
   },
   "Ciussb": {
-    "message": "Secret channels are only accessible by invitation."
+    "message": "シークレットチャンネルは招待でのみアクセスできます。"
   },
   "CoEsov": {
     "message": "ユーザー名またはメール"
   },
   "CoTP+E": {
-    "message": "You are not a member of this channel"
+    "message": "あなたはこのチャンールのメンバーではありません"
   },
   "CuNepY": {
     "message": "チャネルを作成"
@@ -162,7 +162,7 @@
     "message": "設定"
   },
   "D3x69s": {
-    "message": "Whisper to the Master only"
+    "message": "マスターへのささやき"
   },
   "DBP+Od": {
     "message": "エコー"

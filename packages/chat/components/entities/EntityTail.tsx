@@ -12,7 +12,7 @@ export const EntityTail: FC<Props> = ({ cursorNode, source }) => {
     return null;
   }
   const [a, b] = cursorState.range;
-  if (b !== source.length) {
+  if (b < source.length) {
     return null;
   }
   return <>{cursorNode} </>;

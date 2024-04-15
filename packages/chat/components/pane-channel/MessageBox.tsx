@@ -59,7 +59,7 @@ export const MessageBox: FC<Props> = ({
           <MessageTime message={message} />
         </MessageReorderHandle>
       ) : (
-        <div className="text-surface-300 col-span-1 row-span-full text-right">
+        <div className="text-message-time-text col-span-1 row-span-full h-full text-right">
           <MessageTime message={message} />
         </div>
       ),

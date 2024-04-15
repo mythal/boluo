@@ -1,9 +1,10 @@
 import { Trash, Upload } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC, useRef } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
+import { InComposeButton } from './InComposeButton';
 
 interface Props {
   className?: string;
@@ -11,6 +12,7 @@ interface Props {
 
 export const FileButton: FC<Props> = () => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const intl = useIntl();
   const { composeAtom, hasMediaAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const hasMedia = useAtomValue(hasMediaAtom);
@@ -31,14 +33,14 @@ export const FileButton: FC<Props> = () => {
       inputRef.current?.click();
     }
   };
+  const title = hasMedia
+    ? intl.formatMessage({ defaultMessage: 'Remove File' })
+    : intl.formatMessage({ defaultMessage: 'Add File' });
   return (
     <>
-      <Button onClick={handleClick}>
+      <InComposeButton onClick={handleClick} title={title}>
         {hasMedia ? <Trash /> : <Upload />}
-        <span className="@md:inline hidden">
-          {hasMedia ? <FormattedMessage defaultMessage="Remove File" /> : <FormattedMessage defaultMessage="File" />}
-        </span>
-      </Button>
+      </InComposeButton>
       <input type="file" ref={inputRef} className="hidden" aria-hidden hidden onChange={handleFileChange} />
     </>
   );

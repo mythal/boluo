@@ -1,9 +1,9 @@
 import type { User } from '@boluo/api';
 import { Edit, PaperPlane } from '@boluo/icons';
 import { FC } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { Button } from '@boluo/ui/Button';
+import { useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
+import { InComposeButton } from './InComposeButton';
 
 interface Props {
   currentUser: User;
@@ -12,11 +12,14 @@ interface Props {
 }
 
 export const SendButton: FC<Props> = ({ currentUser, editMode = false, send }) => {
+  const intl = useIntl();
   const composeError = useComposeError();
+  const title = editMode
+    ? intl.formatMessage({ defaultMessage: 'Edit' })
+    : intl.formatMessage({ defaultMessage: 'Send' });
   return (
-    <Button onClick={() => send()} disabled={composeError !== null}>
-      {editMode ? <FormattedMessage defaultMessage="Edit" /> : <FormattedMessage defaultMessage="Send" />}
+    <InComposeButton onClick={() => send()} disabled={composeError !== null} title={title}>
       {editMode ? <Edit /> : <PaperPlane />}
-    </Button>
+    </InComposeButton>
   );
 };

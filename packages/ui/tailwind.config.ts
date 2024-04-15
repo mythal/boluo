@@ -29,8 +29,8 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   };
   const text = {
     base: $(neutral[900], white),
-    light: $(neutral[600], neutral[400]),
-    lighter: $(neutral[500], neutral[500]),
+    light: $(neutral[600], neutral[300]),
+    lighter: $(neutral[500], neutral[400]),
     danger: $(red[600], red[300]),
     wanring: $(yellow[600], yellow[300]),
   };
@@ -175,6 +175,16 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         bg: $(lime[50], neutral[900]),
       },
       compose: {
+        outer: {
+          bg: $(neutral[50], neutral[900]),
+        },
+        bg: $(white, black),
+        button: {
+          bg: $(neutral[100], neutral[800]),
+          hover: {
+            bg: $(neutral[200], neutral[700]),
+          },
+        },
         highlight: {
           modifiers: {
             text: text.lighter,

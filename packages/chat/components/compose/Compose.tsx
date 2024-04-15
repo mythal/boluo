@@ -7,7 +7,6 @@ import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
-import { ResetComposeButton } from './ResetComposeButton';
 import { SendButton } from './SendButton';
 import { FileButton } from './FileButton';
 import { ChannelAtoms } from '../../hooks/useChannelAtoms';
@@ -16,12 +15,11 @@ import { useSend } from '../pane-channel/useSend';
 
 interface Props {
   member: Member;
-  parsedAtom: ChannelAtoms['parsedAtom'];
-  composeAtom: ChannelAtoms['composeAtom'];
-  className?: string;
+  channelAtoms: ChannelAtoms;
 }
 
-export const Compose = ({ member, className, parsedAtom, composeAtom }: Props) => {
+export const Compose = ({ member, channelAtoms }: Props) => {
+  const { composeAtom, inGameAtom, isWhisperAtom, parsedAtom } = channelAtoms;
   const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend === true;
   const send = useSend(member.user);
@@ -38,29 +36,29 @@ export const Compose = ({ member, className, parsedAtom, composeAtom }: Props) =
     () => <ComposeTextArea send={send} enterSend={enterSend} parsed={parsed} />,
     [enterSend, parsed, send],
   );
+  const inGame = useAtomValue(inGameAtom);
+  const isWhisper = useAtomValue(isWhisperAtom);
   return (
-    <div className={className} onDrop={onDrop} onDragOver={handleDragOver}>
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1 ">
-          <div className="flex-shrink-0">
-            <InGameSwitchButton />
-          </div>
+    <div
+      onDrop={onDrop}
+      onDragOver={handleDragOver}
+      data-in-game={inGame}
+      data-whisper={isWhisper}
+      className="bg-compose-bg focus-within:border-surface-400 border-lowest data-[in-game=true]:bg-message-inGame-bg flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
+    >
+      <div className="flex-shrink-0 py-1 pl-1">
+        <FileButton />
+      </div>
+      <div className="flex-shrink-0 py-1">
+        <InGameSwitchButton />
+      </div>
+      {compose}
 
-          <div className="flex-shrink-0">
-            <AddDiceButton />
-          </div>
-          <div className="flex-shrink-0">
-            <FileButton />
-          </div>
-          <div className="w-full flex-shrink flex-grow" />
-          <div className="flex-shrink-0">
-            <ResetComposeButton />
-          </div>
-          <div className="flex-shrink-0">
-            <SendButton send={send} currentUser={member.user} editMode={editMode} />
-          </div>
-        </div>
-        {compose}
+      <div className="flex-shrink-0 self-end py-1">
+        <AddDiceButton />
+      </div>
+      <div className="flex-shrink-0 self-end py-1 pr-1">
+        <SendButton send={send} currentUser={member.user} editMode={editMode} />
       </div>
     </div>
   );

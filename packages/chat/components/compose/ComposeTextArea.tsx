@@ -56,8 +56,13 @@ const useReflectRangeChange = (
   }, [lock, rangeAtom, ref, store]);
 };
 
+const style: React.CSSProperties = {
+  width: '100%',
+  maxHeight: '8rem',
+};
+
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
-  const { composeAtom, inGameAtom } = useChannelAtoms();
+  const { composeAtom } = useChannelAtoms();
   const [, startTransition] = useTransition();
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
@@ -65,8 +70,6 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
   const dispatch = useSetAtom(composeAtom);
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
 
-  const isWhisper = parsed.whisperToUsernames !== null;
-  const inGame = useAtomValue(inGameAtom);
   const lock = useRef(false);
   useEnterKeyHint(enterSend, ref);
 
@@ -126,8 +129,10 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
       onKeyDown={handleKeyDown}
       data-variant="normal"
       onSelectionChange={updateRange}
-      style={{ width: '100%', height: '4rem' }}
-      className={clsx(inputStyle('normal'), isWhisper ? 'border-dashed' : '', inGame ? 'bg-message-inGame-bg' : '')}
+      style={style}
+      autoHeight
+      rows={1}
+      className="resize-none px-2 py-2 outline-none"
     >
       {composeRender(parsed)}
     </RichTextarea>

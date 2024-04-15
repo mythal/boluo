@@ -8,6 +8,7 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
 import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
+import { FailedBanner } from '../common/FailedBanner';
 
 interface Props {
   className?: string;
@@ -66,9 +67,12 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
     });
     return members;
   }, [membersData, userStatusMap]);
-  if (error) {
-    alert('Failed to fetch members');
-    return null;
+  if (error && membersData == null) {
+    return (
+      <FailedBanner error={error}>
+        <FormattedMessage defaultMessage="Failed to query members of the channel" />
+      </FailedBanner>
+    );
   }
 
   if (membersData == null || (myMember.isErr && myMember.err === 'LOADING')) {

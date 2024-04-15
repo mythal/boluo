@@ -1,6 +1,6 @@
 'use client';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, ReactNode, useEffect } from 'react';
+import { FC, ReactNode, useEffect, useRef } from 'react';
 import { Suspense } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { BreakpointProvider } from '../breakpoint';
@@ -18,6 +18,7 @@ import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
 import { ToggleSidebarLine } from './sidebar/ToggleSidebarLine';
 import { useSetThemeColor } from '../hooks/useSetThemeColor';
+import { BannerContext } from '../hooks/useBannerNode';
 
 const SpaceProvider: FC<{ spaceId: string | null; children: ReactNode }> = ({ spaceId, children }) => {
   const { data: space, isLoading } = useQuerySpace(spaceId);
@@ -32,6 +33,7 @@ const SpaceProvider: FC<{ spaceId: string | null; children: ReactNode }> = ({ sp
 };
 
 const Chat: FC = () => {
+  const bannerRef = useRef<HTMLDivElement | null>(null);
   const route = useAtomValue(routeAtom);
   useAutoSelectProxy(60 * 1000);
   const setSidebarExpanded = useSetAtom(isSidebarExpandedAtom);
@@ -53,34 +55,37 @@ const Chat: FC = () => {
   };
 
   return (
-    <BreakpointProvider>
-      <ChatErrorBoundary>
-        <Suspense
-          fallback={
-            <ChatSkeleton>
-              <Loading />
-            </ChatSkeleton>
-          }
-        >
-          <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
-            <div className="view-height accent-brand-600 flex">
-              <Sidebar className="bg-bg flex h-full flex-none flex-col" />
-              <div
-                onTouchStart={handleTouch}
-                className="relative flex h-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
-              >
-                <ToggleSidebarLine />
-                <Suspense fallback={<PaneLoading />}>
-                  {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
-                  {route.type === 'NOT_FOUND' && <ChatNotFound />}
-                  {route.type === 'ROOT' && <ChatRoot />}
-                </Suspense>
+    <BannerContext.Provider value={bannerRef}>
+      <BreakpointProvider>
+        <ChatErrorBoundary>
+          <Suspense
+            fallback={
+              <ChatSkeleton>
+                <Loading />
+              </ChatSkeleton>
+            }
+          >
+            <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
+              <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
+                <div ref={bannerRef} className="col-span-full"></div>
+                <Sidebar className="bg-bg flex h-full flex-none flex-col" />
+                <div
+                  onTouchStart={handleTouch}
+                  className="relative col-end-[-1] flex h-full w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
+                >
+                  <ToggleSidebarLine />
+                  <Suspense fallback={<PaneLoading />}>
+                    {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
+                    {route.type === 'NOT_FOUND' && <ChatNotFound />}
+                    {route.type === 'ROOT' && <ChatRoot />}
+                  </Suspense>
+                </div>
               </div>
-            </div>
-          </SpaceProvider>
-        </Suspense>
-      </ChatErrorBoundary>
-    </BreakpointProvider>
+            </SpaceProvider>
+          </Suspense>
+        </ChatErrorBoundary>
+      </BreakpointProvider>
+    </BannerContext.Provider>
   );
 };
 

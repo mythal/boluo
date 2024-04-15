@@ -21,6 +21,7 @@ import { ChannelSettingsForm } from './form';
 import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
+import { Failed } from '../common/Failed';
 
 interface Props {
   channelId: string;
@@ -117,8 +118,8 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
   const { data: channel, error } = useQueryChannel(channelId);
 
-  if (error) {
-    return <ErrorDisplay type="block" error={error} />;
+  if (error && channel == null) {
+    return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />;
   } else if (!channel) {
     return <Loading />;
   }

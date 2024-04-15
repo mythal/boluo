@@ -10,13 +10,14 @@ import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { Compose } from '../compose/Compose';
 import { useSendPreview } from '../compose/useSendPreview';
-import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneLoading } from '../PaneLoading';
 import { ChannelHeader } from './ChannelHeader';
 import { ChatContent } from './ChatContent';
 import { MemberList } from './MemberList';
+import { FailedBanner } from '../common/FailedBanner';
+import { Failed } from '../common/Failed';
 
 interface Props {
   channelId: string;
@@ -49,15 +50,22 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     atoms.parsedAtom,
   );
   const memberListState = useAtomValue(atoms.memberListStateAtom);
+  let errorNode = null;
   if (error) {
-    return (
-      <div className="p-4">
-        <ErrorDisplay error={error} />
-      </div>
-    );
+    const title = <FormattedMessage defaultMessage="Failed to query the channel" />;
+    errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
+    if (channel == null) {
+      return (
+        <Failed
+          error={error}
+          title={title}
+          message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
+        />
+      );
+    }
   }
   if (isLoading || channel == null || (!channel.isPublic && member.isErr && member.err === 'LOADING')) {
-    return <PaneLoading />;
+    return <PaneLoading>{errorNode}</PaneLoading>;
   }
   if (!channel.isPublic && member == null) {
     return (
@@ -68,6 +76,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
           </PaneHeaderBox>
         }
       >
+        {errorNode}
         <SecretChannelInfo className="p-4" />
       </PaneBox>
     );
@@ -75,6 +84,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   return (
     <ChannelAtomsContext.Provider value={atoms}>
       <PaneBox header={<ChannelHeader />}>
+        {errorNode}
         <div
           className={clsx(
             'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',

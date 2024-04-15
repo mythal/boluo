@@ -1,7 +1,8 @@
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
-import { Oops } from '@boluo/ui/Oops';
 import type { ChildrenProps, StyleProps } from '@boluo/utils';
+import { Failed, FailedUnexpected } from './common/Failed';
+import { FormattedMessage } from 'react-intl';
 
 interface Props extends ChildrenProps, StyleProps {}
 
@@ -29,7 +30,7 @@ export class PaneBodyError extends Component<Props, State> {
     if (this.state.error) {
       return (
         <div className="h-full">
-          <Oops error={this.state.error} type="block" />
+          <FailedUnexpected error={this.state.error} />
         </div>
       );
     } else {

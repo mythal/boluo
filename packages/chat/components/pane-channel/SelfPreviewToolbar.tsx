@@ -74,7 +74,7 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
   const editForAtom = useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor), [composeAtom]);
   const editMode = useAtomValue(editForAtom) !== null;
   const composeError = useComposeError();
-  const send = useSend(currentUser, composeError);
+  const send = useSend(currentUser);
   return (
     <>
       <ToolbarButton disabled={composeError !== null} onClick={send}>

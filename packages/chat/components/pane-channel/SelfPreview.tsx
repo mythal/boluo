@@ -16,21 +16,17 @@ import { useMessageColor } from '../../hooks/useMessageColor';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { NameEditable } from './NameEditable';
 
-type ComposeDrived = Pick<ComposeState, 'source' | 'defaultInGame' | 'media'> & {
+type ComposeDrived = Pick<ComposeState, 'media'> & {
   editMode: boolean;
   name: string;
 };
 
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
-  a.source === b.source &&
-  a.editMode === b.editMode &&
-  a.defaultInGame === b.defaultInGame &&
-  a.name === b.name &&
-  a.media === b.media;
+  a.editMode === b.editMode && a.name === b.name && a.media === b.media;
 
 const selector = ({ defaultInGame: inGame, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
   const editMode = editFor !== null;
-  return { defaultInGame: inGame, name: inputedName.trim(), source, editMode, media };
+  return { name: inputedName.trim(), editMode, media };
 };
 
 interface Props {

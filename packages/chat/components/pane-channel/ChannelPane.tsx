@@ -93,7 +93,14 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
         >
           <ChatContent className="relative" me={me} channelId={channelId} />
           {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
-          {member.isOk ? <Compose className={clsx('col-span-full border-t p-2')} member={member.some} /> : null}
+          {member.isOk ? (
+            <Compose
+              composeAtom={atoms.composeAtom}
+              parsedAtom={atoms.parsedAtom}
+              className={clsx('col-span-full border-t p-2')}
+              member={member.some}
+            />
+          ) : null}
         </div>
       </PaneBox>
     </ChannelAtomsContext.Provider>

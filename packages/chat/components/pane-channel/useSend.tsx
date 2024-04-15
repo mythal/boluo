@@ -1,7 +1,7 @@
 import { ApiError, Message, User } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
-import { useStore } from 'jotai';
-import { useCallback, useMemo } from 'react';
+import { Atom, useStore } from 'jotai';
+import { useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { Result } from '@boluo/utils';
@@ -12,31 +12,30 @@ import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
-import { ComposeError } from '../../state/compose.reducer';
 
-export const useSend = (me: User, composeError: ComposeError | null) => {
+export const useSend = (me: User) => {
   const channelId = useChannelId();
+  const { composeAtom, parsedAtom, checkComposeAtom } = useChannelAtoms();
   const store = useStore();
-  const { composeAtom, parsedAtom } = useChannelAtoms();
   const setBanner = useSetBanner();
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
+  const queryChannelMembersRef = useRef(queryChannelMembers);
+  queryChannelMembersRef.current = queryChannelMembers;
   const { nickname } = me;
   const myMember = useMemo(() => {
     if (queryChannelMembers == null) return null;
     return queryChannelMembers.members.find((member) => member.user.id === me.id) ?? null;
   }, [me.id, queryChannelMembers]);
 
-  const usernameListToUserIdList = useCallback(
-    (usernames: string[]): string[] => {
-      if (queryChannelMembers == null) return [];
-      return usernames.flatMap((username) => {
-        const member = queryChannelMembers.members.find((member) => member.user.username === username);
-        if (member == null) return [];
-        return [member.user.id];
-      });
-    },
-    [queryChannelMembers],
-  );
+  const usernameListToUserIdList = useCallback((usernames: string[]): string[] => {
+    const queryChannelMembers = queryChannelMembersRef.current;
+    if (queryChannelMembers == null) return [];
+    return usernames.flatMap((username) => {
+      const member = queryChannelMembers.members.find((member) => member.user.username === username);
+      if (member == null) return [];
+      return [member.user.id];
+    });
+  }, []);
 
   const send = useCallback(async () => {
     if (myMember == null) {
@@ -45,7 +44,7 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
     }
     const compose = store.get(composeAtom);
     const parsed = store.get(parsedAtom);
-    if (composeError !== null) return;
+    if (store.get(checkComposeAtom) !== null) return;
     const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const handleRecover = () => {
@@ -130,8 +129,8 @@ export const useSend = (me: User, composeError: ComposeError | null) => {
     });
   }, [
     channelId,
+    checkComposeAtom,
     composeAtom,
-    composeError,
     myMember,
     nickname,
     parsedAtom,

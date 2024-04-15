@@ -1,9 +1,8 @@
 'use client';
-import type { GetMe, Member } from '@boluo/api';
+import type { Member } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { useMemo } from 'react';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useDeferredValue, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
@@ -11,15 +10,21 @@ import { InGameSwitchButton } from './InGameSwitchButton';
 import { ResetComposeButton } from './ResetComposeButton';
 import { SendButton } from './SendButton';
 import { FileButton } from './FileButton';
+import { ChannelAtoms } from '../../hooks/useChannelAtoms';
+import { useQuerySettings } from '../../hooks/useQuerySettings';
+import { useSend } from '../pane-channel/useSend';
 
 interface Props {
   member: Member;
+  parsedAtom: ChannelAtoms['parsedAtom'];
+  composeAtom: ChannelAtoms['composeAtom'];
   className?: string;
 }
 
-export const Compose = ({ member, className }: Props) => {
-  const composeAtom = useComposeAtom();
-
+export const Compose = ({ member, className, parsedAtom, composeAtom }: Props) => {
+  const { data: settings } = useQuerySettings();
+  const enterSend = settings?.enterSend === true;
+  const send = useSend(member.user);
   const { onDrop } = useMediaDrop();
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -27,6 +32,11 @@ export const Compose = ({ member, className }: Props) => {
   };
   const editMode = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor !== null), [composeAtom]),
+  );
+  const parsed = useDeferredValue(useAtomValue(parsedAtom));
+  const compose = useMemo(
+    () => <ComposeTextArea send={send} enterSend={enterSend} parsed={parsed} />,
+    [enterSend, parsed, send],
   );
   return (
     <div className={className} onDrop={onDrop} onDragOver={handleDragOver}>
@@ -47,10 +57,10 @@ export const Compose = ({ member, className }: Props) => {
             <ResetComposeButton />
           </div>
           <div className="flex-shrink-0">
-            <SendButton currentUser={member.user} editMode={editMode} />
+            <SendButton send={send} currentUser={member.user} editMode={editMode} />
           </div>
         </div>
-        <ComposeTextArea currentUser={member.user} />
+        {compose}
       </div>
     </div>
   );

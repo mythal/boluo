@@ -1,4 +1,5 @@
 import type { Entity } from './entities';
+import { Modifier } from './parser';
 
 export interface ParseResult {
   text: string;
@@ -7,6 +8,7 @@ export interface ParseResult {
   isRoll: boolean;
   inGame: boolean | null;
   characterName: string;
+  modifiers: Modifier[];
   whisperToUsernames: string[] | null;
   broadcast: boolean;
 }
@@ -18,6 +20,7 @@ export const initParseResult: ParseResult = {
   isRoll: false,
   inGame: null,
   characterName: '',
+  modifiers: [],
   whisperToUsernames: null,
   broadcast: false,
 };

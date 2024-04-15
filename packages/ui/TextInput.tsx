@@ -8,7 +8,7 @@ interface Variant {
 type InputProps = React.ComponentPropsWithoutRef<'input'> & Variant;
 type TextAreaProps = React.ComponentPropsWithoutRef<'textarea'> & Variant;
 
-const inputStyle = (variant: Variant['variant'] = 'normal') =>
+export const inputStyle = (variant: Variant['variant'] = 'normal') =>
   clsx(
     'rounded-sm border-[1px] border-solid px-3 py-2 focus:outline-none disabled:cursor-not-allowed disabled:brightness-125 disabled:contrast-50 dark:disabled:brightness-75',
     variant === 'normal' &&

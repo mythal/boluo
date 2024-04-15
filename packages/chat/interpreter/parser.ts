@@ -642,7 +642,7 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
 
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
   const modifiersParseResult = parseModifiers(source, env);
-  const { action, isRoll, mute, whisper, inGame } = modifiersParseResult;
+  const { action, isRoll, mute, whisper, inGame, modifiers } = modifiersParseResult;
   let state: State = { text: modifiersParseResult.text, rest: modifiersParseResult.rest };
 
   let result: [Entity[], State] | null = null;
@@ -662,6 +662,7 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   return {
     text: state.text,
     entities,
+    modifiers,
     isRoll,
     inGame: inGame ? inGame.inGame : null,
     characterName: '',
@@ -825,6 +826,7 @@ interface ParseModifersResult {
   isRoll: boolean;
   inGame: InGameModifier | false;
   isWhisper: boolean;
+  modifiers: Modifier[];
 }
 
 export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModifersResult => {
@@ -858,5 +860,6 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
     mute,
     whisper,
     inGame,
+    modifiers,
   };
 };

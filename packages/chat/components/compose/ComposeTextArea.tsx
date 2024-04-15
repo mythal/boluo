@@ -9,7 +9,9 @@ import { ComposeActionUnion } from '../../state/compose.actions';
 import { useSend } from '../pane-channel/useSend';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import clsx from 'clsx';
-import { TextArea } from '@boluo/ui/TextInput';
+import { inputStyle } from '@boluo/ui/TextInput';
+import { RichTextarea, RichTextareaHandle } from 'rich-textarea';
+import { composeRender } from './render';
 
 interface Props {
   currentUser: User;
@@ -21,7 +23,7 @@ const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payloa
 export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
   const composeError = useComposeError();
   const send = useSend(currentUser, composeError);
-  const ref = useRef<HTMLTextAreaElement | null>(null);
+  const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
   const { composeAtom, parsedAtom } = useChannelAtoms();
@@ -34,11 +36,8 @@ export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
     () => atom((get) => get(parsedAtom).inGame ?? get(defaultInGameAtom) ?? false),
     [defaultInGameAtom, parsedAtom],
   );
-  const isWhisperAtom = useMemo(
-    () => selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null),
-    [parsedAtom],
-  );
-  const isWhisper = useAtomValue(isWhisperAtom);
+  const parsed = useAtomValue(parsedAtom);
+  const isWhisper = parsed.whisperToUsernames !== null;
   const inGame = useAtomValue(inGameAtom);
   const { data: settings } = useQuerySettings();
   const enterSend = settings?.enterSend === true;
@@ -89,18 +88,6 @@ export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
     },
     [channelId, dispatch, updateRange],
   );
-  useEffect(() => {
-    const handle = (e: Event) => {
-      const selection = document.getSelection();
-      if (!selection) return;
-      const textArea = ref.current;
-      if (!textArea) return;
-      if (document.activeElement !== textArea) return;
-      updateRange();
-    };
-    document.addEventListener('selectionchange', handle);
-    return () => document.removeEventListener('selectionchange', handle);
-  }, [updateRange]);
 
   const handlePaste: React.ClipboardEventHandler<HTMLTextAreaElement> = useCallback(
     (e) => {
@@ -138,7 +125,7 @@ export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
   }, [enterSend]);
 
   return (
-    <TextArea
+    <RichTextarea
       ref={ref}
       value={source}
       onChange={handleChange}
@@ -148,12 +135,12 @@ export const ComposeTextArea: FC<Props> = ({ currentUser }) => {
       onCompositionStart={() => (isCompositionRef.current = true)}
       onCompositionEnd={() => (isCompositionRef.current = false)}
       onKeyDown={handleKeyDown}
-      variant="normal"
-      className={clsx(
-        'h-full w-full resize-none',
-        isWhisper ? 'border-dashed' : '',
-        inGame ? 'bg-message-inGame-bg' : '',
-      )}
-    />
+      data-variant="normal"
+      onSelectionChange={updateRange}
+      style={{ width: '100%', height: '4rem' }}
+      className={clsx(inputStyle('normal'), isWhisper ? 'border-dashed' : '', inGame ? 'bg-message-inGame-bg' : '')}
+    >
+      {composeRender(parsed)}
+    </RichTextarea>
   );
 };

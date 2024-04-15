@@ -109,7 +109,13 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         danger: $(red[600], red[300]),
         wanring: $(yellow[600], yellow[300]),
       },
-
+      failed: {
+        icon: $(yellow[600], yellow[500]),
+        banner: {
+          bg: $(yellow[100], yellow[950]),
+          border: $(yellow[200], yellow[900]),
+        },
+      },
       name: {
         bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[900], 0.65)),
         editable: {

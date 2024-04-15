@@ -23,6 +23,7 @@ import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
+import { Failed } from '../common/Failed';
 
 interface Props {
   spaceId: string;
@@ -266,8 +267,10 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const close = usePaneClose();
   const me = useMe();
 
-  if (error) {
-    return <ErrorDisplay error={error} />;
+  if (error != null) {
+    if (space == null) {
+      return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the space" />} />;
+    }
   }
   if (!space) {
     return <Loading />;

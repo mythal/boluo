@@ -31,6 +31,8 @@ export const useErrorExplain = () => {
     (error: unknown): string => {
       if (isApiError(error)) {
         return apiErrorMap[error.code] || defaultMessage;
+      } else if (typeof error === 'string') {
+        return error;
       }
       return defaultMessage;
     },

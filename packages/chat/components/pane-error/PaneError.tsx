@@ -1,11 +1,12 @@
 import { isApiError } from '@boluo/api';
 import type { ErrorInfo } from 'react';
 import React, { Component } from 'react';
-import { Oops } from '@boluo/ui/Oops';
 import type { ChildrenProps, StyleProps } from '@boluo/utils';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';
+import { FormattedMessage } from 'react-intl';
+import { Failed, FailedUnexpected } from '../common/Failed';
 
 interface Props extends ChildrenProps, StyleProps {}
 
@@ -35,9 +36,15 @@ export class PaneError extends Component<Props, State> {
       return <PaneErrorNotFound error={error} />;
     } else if (error) {
       return (
-        <PaneBox header={<PaneHeaderBox>Oops</PaneHeaderBox>}>
+        <PaneBox
+          header={
+            <PaneHeaderBox>
+              <FormattedMessage defaultMessage="Oops!" />
+            </PaneHeaderBox>
+          }
+        >
           <div className="h-full">
-            <Oops error={this.state.error} type="block" />
+            <FailedUnexpected error={error} />
           </div>
         </PaneBox>
       );

@@ -41,6 +41,9 @@
   "0JXAsk": {
     "message": "Away"
   },
+  "0QeqCg": {
+    "message": "An unexpected error occurred. Please try again later."
+  },
   "0pT/2d": {
     "message": "No Character Name"
   },
@@ -79,6 +82,9 @@
   },
   "5sg7KC": {
     "message": "Password"
+  },
+  "6CVXeu": {
+    "message": "Failed to query the channel"
   },
   "6JNvt/": {
     "message": "Must be at least {min} characters."
@@ -130,6 +136,9 @@
   },
   "AyGauy": {
     "message": "Login"
+  },
+  "BEbOqj": {
+    "message": "Oops!"
   },
   "Bc5LE6": {
     "message": "Size must be less than {mediaMaxSizeMb}M."
@@ -184,6 +193,9 @@
   },
   "H6JcM0": {
     "message": "Are you sure to delete this message:"
+  },
+  "HH8O0c": {
+    "message": "Request failed, possible network anomaly."
   },
   "HSaR2M": {
     "message": "Is secret channel?"
@@ -251,6 +263,12 @@
   "LX5+L+": {
     "message": "Show Archived"
   },
+  "MWO2zy": {
+    "message": "Something going wrong."
+  },
+  "MgRaWS": {
+    "message": "Channel name cannot be empty."
+  },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
   },
@@ -266,6 +284,9 @@
   "Mtd9LO": {
     "message": "Timeout"
   },
+  "N97hnL": {
+    "message": "No permission."
+  },
   "O5epsB": {
     "message": "take"
   },
@@ -280,6 +301,9 @@
   },
   "OhIqLr": {
     "message": "Edited"
+  },
+  "P57vjw": {
+    "message": "Channel name must be at most 32 characters."
   },
   "P6PLpi": {
     "message": "Join"
@@ -298,6 +322,9 @@
   },
   "Q8Qw5B": {
     "message": "Description"
+  },
+  "QBYqL5": {
+    "message": "Failed to query members of the space"
   },
   "QFfPEN": {
     "message": "Failded to load channel member information."
@@ -320,6 +347,9 @@
   "RvUa7+": {
     "message": "No Name"
   },
+  "Ryulue": {
+    "message": "Failed to query the space"
+  },
   "SBkvpf": {
     "message": "Nickname"
   },
@@ -329,6 +359,9 @@
   "SEg47O": {
     "message": "Are you sure you want to exile this member?"
   },
+  "SHMAcP": {
+    "message": "Please check your network connection and try again."
+  },
   "Sf+ebw": {
     "message": "Close pane"
   },
@@ -337,6 +370,9 @@
   },
   "StUScz": {
     "message": "{count} members"
+  },
+  "TDaF6J": {
+    "message": "Dismiss"
   },
   "TThIOM": {
     "message": "Not found"
@@ -362,6 +398,9 @@
   "VeLEVu": {
     "message": "Character Name:"
   },
+  "VlTrY6": {
+    "message": "Failed to query members of the channel"
+  },
   "VnXp8Z": {
     "message": "Avatar"
   },
@@ -376,6 +415,9 @@
   },
   "We16k/": {
     "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
+  "X2YA3V": {
+    "message": "The data submitted did not pass validation."
   },
   "X5rIjZ": {
     "message": "Danger Zone"
@@ -410,6 +452,9 @@
   "ZKBnrB": {
     "message": "Character name is required"
   },
+  "ZgsEsn": {
+    "message": "No permission"
+  },
   "ZvI2/H": {
     "message": "Release to Load"
   },
@@ -428,6 +473,9 @@
   "b2XKbY": {
     "message": "e.g. A group of kobolds tried to attack us"
   },
+  "bF0HPN": {
+    "message": "There is a resource conflict."
+  },
   "bGay8d": {
     "message": "Space Settings"
   },
@@ -439,6 +487,9 @@
   },
   "c1nBz9": {
     "message": "As the character of …"
+  },
+  "c65UQI": {
+    "message": "Channel name must be at least 2 characters."
   },
   "cCTI4h": {
     "message": "Whether to allow everyone on the Internet to view this space"
@@ -506,6 +557,9 @@
   "hCMGkK": {
     "message": "You are not logged in"
   },
+  "hFIEcy": {
+    "message": "Malformed request."
+  },
   "hSOOaa": {
     "message": "You have been invited to \"{spaceName}\""
   },
@@ -551,6 +605,9 @@
   "kh4wt0": {
     "message": "Toggle Sidebar"
   },
+  "kiU3pa": {
+    "message": "Oops! Something went wrong"
+  },
   "lJePcp": {
     "message": "Failure"
   },
@@ -569,6 +626,12 @@
   "n1Whvj": {
     "message": "Switch"
   },
+  "n9f3pm": {
+    "message": "Limit exceeded."
+  },
+  "nKu0Ba": {
+    "message": "Must be logged in."
+  },
   "nmSKJK": {
     "message": "Can't be empty."
   },
@@ -577,6 +640,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "pm/HIR": {
+    "message": "Channel name is required."
   },
   "q7JBy1": {
     "message": "Change Settings"
@@ -617,6 +683,9 @@
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
   },
+  "s6Rg3u": {
+    "message": "Oops! Something went wrong, but it wasn't your fault"
+  },
   "sMAAlN": {
     "message": "Add New"
   },
@@ -638,8 +707,14 @@
   "uhu5aG": {
     "message": "Public"
   },
+  "ulAzZl": {
+    "message": "Failed to query the user"
+  },
   "v3aFf1": {
     "message": "Create Space"
+  },
+  "vMrnt6": {
+    "message": "An error occurred while parsing the data."
   },
   "vRORF/": {
     "message": "Settings of \"{spaceName}\" Space"
@@ -673,6 +748,12 @@
   },
   "xWN20+": {
     "message": "You can't see"
+  },
+  "xgZgnO": {
+    "message": "Wrong request method."
+  },
+  "xil+Fb": {
+    "message": "This channel name is already taken."
   },
   "xmcVZ0": {
     "message": "Search"

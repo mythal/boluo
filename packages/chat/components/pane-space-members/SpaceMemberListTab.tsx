@@ -4,6 +4,8 @@ import { Loading } from '@boluo/ui/Loading';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { SpaceMemberListItem } from './SpaceMemberListItem';
+import { Failed } from '../common/Failed';
+import { FormattedMessage } from 'react-intl';
 
 interface Props {
   spaceId: string;
@@ -20,8 +22,8 @@ export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
     if (membersMap == null) return false;
     return membersMap[myId]?.space.isAdmin ?? false;
   }, [myId, membersMap, spaceOwnerId]);
-  if (error != null) {
-    return <ErrorDisplay error={error} type="block" />;
+  if (error != null && membersMap == null) {
+    return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query members of the space" />} />;
   }
   if (membersMap == null) {
     return <Loading />;

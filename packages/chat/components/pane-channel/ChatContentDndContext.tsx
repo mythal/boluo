@@ -9,7 +9,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { memo, ReactNode, useMemo } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';
@@ -24,7 +24,7 @@ interface Props extends Pick<DndContextProps, 'onDragCancel' | 'onDragStart' | '
   theme: ResolvedTheme;
 }
 
-export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, myId, theme, ...rest }) => {
+export const ChatListDndContext: FC<Props> = ({ children, iAmMaster, active, myId, theme, ...rest }) => {
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor);
   const keyboardSensor = useSensor(KeyboardSensor);
@@ -42,5 +42,4 @@ export const ChatListDndContext = memo<Props>(({ children, iAmMaster, active, my
       </IsDraggingContext.Provider>
     </DndContext>
   );
-});
-ChatListDndContext.displayName = 'ChatListDndContext';
+};

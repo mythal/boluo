@@ -153,7 +153,7 @@
     "message": "ユーザー名またはメール"
   },
   "CoTP+E": {
-    "message": "あなたはこのチャンールのメンバーではありません"
+    "message": "あなたはこのチャンネルのメンバーではありません"
   },
   "CuNepY": {
     "message": "チャネルを作成"
@@ -207,10 +207,10 @@
     "message": "無効な招待リンク"
   },
   "INVcoD": {
-    "message": "It's currently in active development and everything is unstable."
+    "message": "現在開発中なので、全てでか安定ではない。"
   },
   "IQwWyF": {
-    "message": "You must be logged in to join a channel."
+    "message": "チャンネルに参加するにはログインが必要です。"
   },
   "IW0/M8": {
     "message": "自動選択"
@@ -231,7 +231,7 @@
     "message": "引いて読み込む"
   },
   "Jxxkva": {
-    "message": "You can change default message color in the Settings."
+    "message": "メッセージの色を変更できます。"
   },
   "K3r6DQ": {
     "message": "削除"
@@ -243,7 +243,7 @@
     "message": "この次元を表示する権限がありません．"
   },
   "Kp8wZw": {
-    "message": "Have not set a bio yet"
+    "message": "プロフィールはまだ設定していません"
   },
   "LUrJwE": {
     "message": "チャンネル"

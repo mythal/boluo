@@ -142,6 +142,15 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         },
       },
       message: {
+        time: {
+          text: $(neutral[300], neutral[600]),
+        },
+        handle: {
+          text: $(neutral[500], neutral[500]),
+          hover: {
+            text: $(neutral[700], neutral[400]),
+          },
+        },
         inGame: {
           bg: inGameMessageBg,
         },

@@ -1,10 +1,9 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
-import { GripVertical, MoveVertical } from '@boluo/icons';
+import { MoveVertical } from '@boluo/icons';
 import { forwardRef } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { Delay } from '../Delay';
-import Icon from '@boluo/ui/Icon';
 
 type UseSortableReturn = ReturnType<typeof useSortable>;
 
@@ -27,8 +26,8 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
         {...listeners}
         {...attributes}
         className={clsx(
-          'text-surface-500 col-span-1 row-span-full h-full items-center rounded-sm  pl-2 text-right',
-          !loading && ' hover:text-surface-700 cursor-move',
+          'text-message-handle-text col-span-1 row-span-full h-full items-center rounded-sm pl-2 text-right',
+          !loading && 'hover:text-message-handle-hover-text cursor-move',
           loading && 'cursor-not-allowed',
         )}
       >

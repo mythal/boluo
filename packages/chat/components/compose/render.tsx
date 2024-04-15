@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { ParseResult } from '../../interpreter/parse-result';
 
+// Note: The `parsed` is possibly stale due to the delay in the `useDeferredValue` hook.
 export const composeRender =
   (parsed: ParseResult) =>
   (text: string): ReactNode[] => {
@@ -57,6 +58,9 @@ export const composeRender =
       }
       prevEnd = end;
       key += 1;
+    }
+    if (prevEnd < text.length) {
+      nodes.push(<span key={key}>{text.slice(prevEnd)}</span>);
     }
     return nodes;
   };

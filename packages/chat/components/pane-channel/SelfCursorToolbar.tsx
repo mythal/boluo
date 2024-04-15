@@ -33,6 +33,8 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
   }, [cursorState?.range]);
   const buttions = useMemo(() => <SelfCursorToolbarButtons collapsed={collapsed} />, [collapsed]);
 
+  if (!cursorNode) return null;
+
   return (
     <div
       ref={refs.setFloating}

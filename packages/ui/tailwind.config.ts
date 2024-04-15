@@ -27,6 +27,13 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
     light: neutral[50],
     dark: neutral[900],
   };
+  const text = {
+    base: $(neutral[900], white),
+    light: $(neutral[600], neutral[400]),
+    lighter: $(neutral[500], neutral[500]),
+    danger: $(red[600], red[300]),
+    wanring: $(yellow[600], yellow[300]),
+  };
   return {
     ringColor: {
       DEFAULT: $(green[400], blue[500]),
@@ -102,13 +109,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       select: {
         bg: $(neutral[50], neutral[700]),
       },
-      text: {
-        base: $(neutral[900], white),
-        light: $(neutral[600], neutral[400]),
-        lighter: $(neutral[500], neutral[500]),
-        danger: $(red[600], red[300]),
-        wanring: $(yellow[600], yellow[300]),
-      },
+      text,
       failed: {
         icon: $(yellow[600], yellow[500]),
         banner: {
@@ -116,6 +117,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           border: $(yellow[200], yellow[900]),
         },
       },
+
       name: {
         bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[900], 0.65)),
         editable: {
@@ -171,6 +173,25 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       expr: {
         bg: $(lime[50], neutral[900]),
+      },
+      compose: {
+        highlight: {
+          modifiers: {
+            text: text.lighter,
+          },
+          strong: {
+            bg: $(neutral[100], neutral[800]),
+          },
+          link: {
+            underline: $(blue[300], blue[600]),
+          },
+          code: {
+            bg: $(neutral[100], neutral[700]),
+          },
+          expr: {
+            bg: $(blue[100], blue[900]),
+          },
+        },
       },
       button: {
         default: {

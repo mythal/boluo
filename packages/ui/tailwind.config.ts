@@ -176,7 +176,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       compose: {
         outer: {
-          bg: $(neutral[50], neutral[900]),
+          bg: $(neutral[50], neutral[800]),
         },
         bg: $(white, black),
         button: {

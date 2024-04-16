@@ -3,7 +3,7 @@ import { Atom, atom, PrimitiveAtom, WritableAtom } from 'jotai';
 import { atomWithReducer, atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
-import { initParseResult, ParseResult } from '../interpreter/parse-result';
+import { composeInitialParseResult, ParseResult } from '../interpreter/parse-result';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import {
   checkCompose,
@@ -47,7 +47,7 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
         return await asyncParse(source, signal);
       }),
     );
-    let cachedParseResult: ParseResult = initParseResult;
+    let cachedParseResult: ParseResult = composeInitialParseResult;
     const parsedAtom = atom((get) => {
       const loadableParsed = get(loadableParsedAtom);
       if (loadableParsed.state === 'hasData') {

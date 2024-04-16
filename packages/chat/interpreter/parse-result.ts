@@ -1,5 +1,6 @@
+import { DEFAULT_COMPOSE_SOURCE } from '../const';
 import type { Entity } from './entities';
-import { Modifier } from './parser';
+import type { Modifier } from './parser';
 
 export interface ParseResult {
   text: string;
@@ -13,7 +14,7 @@ export interface ParseResult {
   broadcast: boolean;
 }
 
-export const initParseResult: ParseResult = {
+export const emptyParseResult: ParseResult = {
   text: '',
   entities: [],
   isAction: false,
@@ -21,6 +22,18 @@ export const initParseResult: ParseResult = {
   inGame: null,
   characterName: '',
   modifiers: [],
+  whisperToUsernames: null,
+  broadcast: false,
+};
+
+export const composeInitialParseResult: ParseResult = {
+  text: DEFAULT_COMPOSE_SOURCE,
+  entities: [],
+  isAction: false,
+  isRoll: false,
+  inGame: false,
+  characterName: '',
+  modifiers: [{ type: 'InGame', inGame: false, start: 0, len: 4, characterName: '' }],
   whisperToUsernames: null,
   broadcast: false,
 };

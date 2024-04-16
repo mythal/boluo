@@ -1,6 +1,6 @@
 import { FC, useDeferredValue, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
-import { initParseResult, ParseResult } from '../../interpreter/parse-result';
+import { emptyParseResult, ParseResult } from '../../interpreter/parse-result';
 import { PreviewItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { Name } from './Name';
@@ -20,7 +20,7 @@ export const OthersPreview: FC<Props> = ({ preview, theme }) => {
   const parsed: ParseResult = useMemo(() => {
     const text = preview.text || '';
     const entities = fromRawEntities(text, preview.entities);
-    return { ...initParseResult, text, entities };
+    return { ...emptyParseResult, text, entities };
   }, [preview.text, preview.entities]);
   const { data: sender } = useQueryUser(preview.senderId);
 

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { fromRawEntities } from '../../interpreter/entities';
-import { initParseResult, ParseResult } from '../../interpreter/parse-result';
+import { emptyParseResult, ParseResult } from '../../interpreter/parse-result';
 import { MessageItem } from '../../state/channel.types';
 import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
@@ -48,10 +48,10 @@ export const ChatItemMessage: FC<Props> = ({
     const text = message.text;
     const rawEntities = message.entities;
     if (!Array.isArray(rawEntities) || text === null) {
-      return initParseResult;
+      return emptyParseResult;
     }
     const entities = fromRawEntities(text, rawEntities);
-    return { ...initParseResult, text, entities };
+    return { ...emptyParseResult, text, entities };
   }, [message.entities, message.text]);
   const mini = continuous || isAction;
   const draggable = self || iAmMaster;

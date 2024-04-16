@@ -175,6 +175,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         bg: $(lime[50], neutral[900]),
       },
       compose: {
+        media: {
+          bg: $(neutral[100], neutral[700]),
+        },
         outer: {
           bg: $(neutral[50], neutral[800]),
         },

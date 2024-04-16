@@ -11,8 +11,8 @@ import { MessageBox } from './MessageBox';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 import { useQueryUser } from '@boluo/common';
-import { useMessageColor } from '../../hooks/useMessageColor';
 import { ResolvedTheme } from '@boluo/theme';
+import { messageToParsed } from '../../interpreter/to-parsed';
 
 interface Props {
   iAmAdmin: boolean;
@@ -44,15 +44,10 @@ export const ChatItemMessage: FC<Props> = ({
     ),
     [message.inGame, message.name, isMaster, self, user, theme],
   );
-  const parsed: ParseResult = useMemo((): ParseResult => {
-    const text = message.text;
-    const rawEntities = message.entities;
-    if (!Array.isArray(rawEntities) || text === null) {
-      return emptyParseResult;
-    }
-    const entities = fromRawEntities(text, rawEntities);
-    return { ...emptyParseResult, text, entities };
-  }, [message.entities, message.text]);
+  const parsed: ParseResult = useMemo(
+    (): ParseResult => messageToParsed(message.text, message.entities),
+    [message.entities, message.text],
+  );
   const mini = continuous || isAction;
   const draggable = self || iAmMaster;
 

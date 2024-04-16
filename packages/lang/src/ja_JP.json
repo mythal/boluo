@@ -27,7 +27,7 @@
     "message": "新しいペインで開く"
   },
   "/iUStU": {
-    "message": "例: Gandalf"
+    "message": "例: 霧雨魔理沙"
   },
   "01eQoz": {
     "message": "接続地域の変更"
@@ -48,7 +48,7 @@
     "message": "キャラクター名なし"
   },
   "2J8G6R": {
-    "message": "ファイルサイズは {size_limit} より小さい必要があります"
+    "message": "ファイルサイズは {sizeLimit} より小さい必要があります"
   },
   "2pzTGC": {
     "message": "クリティカル"
@@ -144,7 +144,7 @@
     "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
   },
   "Bp3LVS": {
-    "message": "スペースは見つかりません"
+    "message": "次元は見つかりません"
   },
   "BzWmz8": {
     "message": "次元名"
@@ -243,7 +243,7 @@
     "message": "引いて読み込む"
   },
   "Jxxkva": {
-    "message": "メッセージの色を変更できます。"
+    "message": "設定でデフォルトのメッセージの色を変更できます。"
   },
   "K3r6DQ": {
     "message": "削除"
@@ -255,7 +255,7 @@
     "message": "この次元を表示する権限がありません．"
   },
   "Kp8wZw": {
-    "message": "プロフィールはまだ設定していません"
+    "message": "バイオはまだ設定していません"
   },
   "LUrJwE": {
     "message": "チャンネル"

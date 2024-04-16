@@ -4,14 +4,14 @@ import { ChangeEventHandler, FC, KeyboardEvent, useEffect, useMemo, useRef, useT
 import { useChannelId } from '../../hooks/useChannelId';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import clsx from 'clsx';
-import { inputStyle } from '@boluo/ui/TextInput';
 import { RichTextarea, RichTextareaHandle } from 'rich-textarea';
 import { composeRender } from './render';
 import { ParseResult } from '../../interpreter/parse-result';
 import { ComposeAtom } from '../../hooks/useComposeAtom';
+import { chatAtom } from '../../state/chat.atoms';
 
 interface Props {
+  myId: string;
   parsed: ParseResult;
   enterSend: boolean;
   send: () => Promise<void>;
@@ -61,13 +61,23 @@ const style: React.CSSProperties = {
   maxHeight: '8rem',
 };
 
-export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
-  const { composeAtom } = useChannelAtoms();
+export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
+  const { composeAtom, parsedAtom } = useChannelAtoms();
   const [, startTransition] = useTransition();
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
   const dispatch = useSetAtom(composeAtom);
+  const store = useStore();
+  const lastMessageAtom = useMemo(
+    () =>
+      selectAtom(chatAtom, (chat) => {
+        const channel = chat.channels[channelId];
+        if (!channel) return null;
+        return channel.messages.findLast((message) => message.senderId === myId) ?? null;
+      }),
+    [channelId, myId],
+  );
   const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
 
   const lock = useRef(false);
@@ -103,6 +113,22 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send }) => {
   };
 
   const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isCompositionRef.current) {
+      return;
+    }
+    const compose = store.get(composeAtom);
+    if (e.code === 'Escape' && compose.editFor != null) {
+      dispatch({ type: 'reset', payload: {} });
+      return;
+    }
+    if (e.code === 'ArrowUp' && compose.editFor == null) {
+      const parsed = store.get(parsedAtom);
+      const lastMessage = store.get(lastMessageAtom);
+      if (parsed.entities.length === 0 && lastMessage) {
+        e.preventDefault();
+        dispatch({ type: 'editMessage', payload: { message: lastMessage } });
+      }
+    }
     if (isCompositionRef.current || e.key !== 'Enter') {
       return;
     }

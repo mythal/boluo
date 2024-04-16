@@ -36,8 +36,8 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const composeMedia = useAtomValue(useMemo(() => selectAtom(composeAtom, ({ media }) => media), [composeAtom]));
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
   const compose = useMemo(
-    () => <ComposeTextArea send={send} enterSend={enterSend} parsed={parsed} />,
-    [enterSend, parsed, send],
+    () => <ComposeTextArea myId={member.user.id} send={send} enterSend={enterSend} parsed={parsed} />,
+    [enterSend, member.user.id, parsed, send],
   );
   const inGame = useAtomValue(inGameAtom);
   const isWhisper = useAtomValue(isWhisperAtom);

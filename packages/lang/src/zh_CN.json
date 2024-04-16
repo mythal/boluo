@@ -41,6 +41,9 @@
   "0JXAsk": {
     "message": "离开"
   },
+  "0QeqCg": {
+    "message": "An unexpected error occurred. Please try again later."
+  },
   "0pT/2d": {
     "message": "无角色名"
   },
@@ -79,6 +82,9 @@
   },
   "5sg7KC": {
     "message": "密码"
+  },
+  "6CVXeu": {
+    "message": "Failed to query the channel"
   },
   "6JNvt/": {
     "message": "至少需要 {min} 个字符。"
@@ -130,6 +136,9 @@
   },
   "AyGauy": {
     "message": "登录"
+  },
+  "BEbOqj": {
+    "message": "Oops!"
   },
   "Bc5LE6": {
     "message": "尺寸必须小于{mediaMaxSizeMb}M。"
@@ -184,6 +193,9 @@
   },
   "H6JcM0": {
     "message": "你确定删除这条消息吗："
+  },
+  "HH8O0c": {
+    "message": "Request failed, possible network anomaly."
   },
   "HSaR2M": {
     "message": "是否为秘密频道？"
@@ -251,6 +263,12 @@
   "LX5+L+": {
     "message": "显示已归档"
   },
+  "MWO2zy": {
+    "message": "Something going wrong."
+  },
+  "MgRaWS": {
+    "message": "Channel name cannot be empty."
+  },
   "MoRJdV": {
     "message": "用哪个按键发送消息？"
   },
@@ -266,6 +284,9 @@
   "Mtd9LO": {
     "message": "超时"
   },
+  "N97hnL": {
+    "message": "No permission."
+  },
   "O5epsB": {
     "message": "取"
   },
@@ -280,6 +301,9 @@
   },
   "OhIqLr": {
     "message": "已编辑"
+  },
+  "P57vjw": {
+    "message": "Channel name must be at most 32 characters."
   },
   "P6PLpi": {
     "message": "加入"
@@ -298,6 +322,9 @@
   },
   "Q8Qw5B": {
     "message": "描述"
+  },
+  "QBYqL5": {
+    "message": "Failed to query members of the space"
   },
   "QFfPEN": {
     "message": "加载频道成员信息失败"
@@ -320,6 +347,9 @@
   "RvUa7+": {
     "message": "无名称"
   },
+  "Ryulue": {
+    "message": "Failed to query the space"
+  },
   "SBkvpf": {
     "message": "昵称"
   },
@@ -329,6 +359,9 @@
   "SEg47O": {
     "message": "您确定要放逐这个成员吗？"
   },
+  "SHMAcP": {
+    "message": "Please check your network connection and try again."
+  },
   "Sf+ebw": {
     "message": "关闭窗格"
   },
@@ -337,6 +370,9 @@
   },
   "StUScz": {
     "message": "{count} 位成员"
+  },
+  "TDaF6J": {
+    "message": "Dismiss"
   },
   "TThIOM": {
     "message": "未找到"
@@ -362,6 +398,9 @@
   "VeLEVu": {
     "message": "角色名："
   },
+  "VlTrY6": {
+    "message": "Failed to query members of the channel"
+  },
   "VnXp8Z": {
     "message": "头像"
   },
@@ -376,6 +415,9 @@
   },
   "We16k/": {
     "message": "确认要离开「{spaceName}」位面吗？"
+  },
+  "X2YA3V": {
+    "message": "The data submitted did not pass validation."
   },
   "X5rIjZ": {
     "message": "危险操作"
@@ -410,6 +452,9 @@
   "ZKBnrB": {
     "message": "必须填写角色名"
   },
+  "ZgsEsn": {
+    "message": "No permission"
+  },
   "ZvI2/H": {
     "message": "释放加载"
   },
@@ -428,6 +473,9 @@
   "b2XKbY": {
     "message": "例如：一群狗头人试图攻击我们"
   },
+  "bF0HPN": {
+    "message": "There is a resource conflict."
+  },
   "bGay8d": {
     "message": "位面设置"
   },
@@ -439,6 +487,9 @@
   },
   "c1nBz9": {
     "message": "以 … 角色"
+  },
+  "c65UQI": {
+    "message": "Channel name must be at least 2 characters."
   },
   "cCTI4h": {
     "message": "是否允许互联网上的任何人查看此位面"
@@ -506,6 +557,9 @@
   "hCMGkK": {
     "message": "您尚未登录"
   },
+  "hFIEcy": {
+    "message": "Malformed request."
+  },
   "hSOOaa": {
     "message": "你被邀请到「{spaceName}」"
   },
@@ -551,6 +605,9 @@
   "kh4wt0": {
     "message": "切换侧边栏"
   },
+  "kiU3pa": {
+    "message": "Oops! Something went wrong"
+  },
   "lJePcp": {
     "message": "失败"
   },
@@ -569,6 +626,12 @@
   "n1Whvj": {
     "message": "切换"
   },
+  "n9f3pm": {
+    "message": "Limit exceeded."
+  },
+  "nKu0Ba": {
+    "message": "Must be logged in."
+  },
   "nmSKJK": {
     "message": "不能为空。"
   },
@@ -577,6 +640,9 @@
   },
   "onmBf2": {
     "message": "换一个随机颜色"
+  },
+  "pm/HIR": {
+    "message": "Channel name is required."
   },
   "q7JBy1": {
     "message": "更改设置"
@@ -617,6 +683,9 @@
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
   },
+  "s6Rg3u": {
+    "message": "Oops! Something went wrong, but it wasn't your fault"
+  },
   "sMAAlN": {
     "message": "新增"
   },
@@ -638,8 +707,14 @@
   "uhu5aG": {
     "message": "公开"
   },
+  "ulAzZl": {
+    "message": "Failed to query the user"
+  },
   "v3aFf1": {
     "message": "建立位面"
+  },
+  "vMrnt6": {
+    "message": "An error occurred while parsing the data."
   },
   "vRORF/": {
     "message": "「{spaceName}」位面设置"
@@ -673,6 +748,12 @@
   },
   "xWN20+": {
     "message": "你不能看"
+  },
+  "xgZgnO": {
+    "message": "Wrong request method."
+  },
+  "xil+Fb": {
+    "message": "This channel name is already taken."
   },
   "xmcVZ0": {
     "message": "搜索"

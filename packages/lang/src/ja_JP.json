@@ -41,6 +41,9 @@
   "0JXAsk": {
     "message": "不在"
   },
+  "0QeqCg": {
+    "message": "An unexpected error occurred. Please try again later."
+  },
   "0pT/2d": {
     "message": "キャラクター名なし"
   },
@@ -79,6 +82,9 @@
   },
   "5sg7KC": {
     "message": "パスワード"
+  },
+  "6CVXeu": {
+    "message": "Failed to query the channel"
   },
   "6JNvt/": {
     "message": "少なくとも {min} 文字以上でなければなりません。"
@@ -130,6 +136,9 @@
   },
   "AyGauy": {
     "message": "ログイン"
+  },
+  "BEbOqj": {
+    "message": "Oops!"
   },
   "Bc5LE6": {
     "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
@@ -184,6 +193,9 @@
   },
   "H6JcM0": {
     "message": "このメッセージを削除してもよろしいですか:"
+  },
+  "HH8O0c": {
+    "message": "Request failed, possible network anomaly."
   },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
@@ -251,6 +263,12 @@
   "LX5+L+": {
     "message": "アーカイブを表示"
   },
+  "MWO2zy": {
+    "message": "Something going wrong."
+  },
+  "MgRaWS": {
+    "message": "Channel name cannot be empty."
+  },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
   },
@@ -266,6 +284,9 @@
   "Mtd9LO": {
     "message": "タイムアウト"
   },
+  "N97hnL": {
+    "message": "No permission."
+  },
   "O5epsB": {
     "message": "取る"
   },
@@ -280,6 +301,9 @@
   },
   "OhIqLr": {
     "message": "編集済み"
+  },
+  "P57vjw": {
+    "message": "Channel name must be at most 32 characters."
   },
   "P6PLpi": {
     "message": "参加する"
@@ -298,6 +322,9 @@
   },
   "Q8Qw5B": {
     "message": "説明"
+  },
+  "QBYqL5": {
+    "message": "Failed to query members of the space"
   },
   "QFfPEN": {
     "message": "チャンネルメンバー情報の読み込みに失敗しました。"
@@ -320,6 +347,9 @@
   "RvUa7+": {
     "message": "名前なし"
   },
+  "Ryulue": {
+    "message": "Failed to query the space"
+  },
   "SBkvpf": {
     "message": "ニックネーム"
   },
@@ -329,6 +359,9 @@
   "SEg47O": {
     "message": "Are you sure you want to exile this member?"
   },
+  "SHMAcP": {
+    "message": "Please check your network connection and try again."
+  },
   "Sf+ebw": {
     "message": "ペインを閉じる"
   },
@@ -337,6 +370,9 @@
   },
   "StUScz": {
     "message": "{count} 名"
+  },
+  "TDaF6J": {
+    "message": "Dismiss"
   },
   "TThIOM": {
     "message": "見つかりません"
@@ -362,6 +398,9 @@
   "VeLEVu": {
     "message": "キャラクター名:"
   },
+  "VlTrY6": {
+    "message": "Failed to query members of the channel"
+  },
   "VnXp8Z": {
     "message": "アバター"
   },
@@ -376,6 +415,9 @@
   },
   "We16k/": {
     "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
+  "X2YA3V": {
+    "message": "The data submitted did not pass validation."
   },
   "X5rIjZ": {
     "message": "危険な操作"
@@ -410,6 +452,9 @@
   "ZKBnrB": {
     "message": "キャラクター名が必要です"
   },
+  "ZgsEsn": {
+    "message": "No permission"
+  },
   "ZvI2/H": {
     "message": "指を離して読み込む"
   },
@@ -428,6 +473,9 @@
   "b2XKbY": {
     "message": "例：コボルトのグループが私たちを攻撃しようとしました"
   },
+  "bF0HPN": {
+    "message": "There is a resource conflict."
+  },
   "bGay8d": {
     "message": "次元の設定"
   },
@@ -439,6 +487,9 @@
   },
   "c1nBz9": {
     "message": "As the character of …"
+  },
+  "c65UQI": {
+    "message": "Channel name must be at least 2 characters."
   },
   "cCTI4h": {
     "message": "インターネット上の誰もがこの次元を閲覧できるようにするか"
@@ -506,6 +557,9 @@
   "hCMGkK": {
     "message": "ログインしていません"
   },
+  "hFIEcy": {
+    "message": "Malformed request."
+  },
   "hSOOaa": {
     "message": "あなたは「{spaceName}」に招待されました"
   },
@@ -551,6 +605,9 @@
   "kh4wt0": {
     "message": "サイドバーを切り替える"
   },
+  "kiU3pa": {
+    "message": "Oops! Something went wrong"
+  },
   "lJePcp": {
     "message": "失敗"
   },
@@ -569,6 +626,12 @@
   "n1Whvj": {
     "message": "切り替え"
   },
+  "n9f3pm": {
+    "message": "Limit exceeded."
+  },
+  "nKu0Ba": {
+    "message": "Must be logged in."
+  },
   "nmSKJK": {
     "message": "入力必須です。"
   },
@@ -577,6 +640,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "pm/HIR": {
+    "message": "Channel name is required."
   },
   "q7JBy1": {
     "message": "設定を変更"
@@ -617,6 +683,9 @@
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
+  "s6Rg3u": {
+    "message": "Oops! Something went wrong, but it wasn't your fault"
+  },
   "sMAAlN": {
     "message": "新規"
   },
@@ -638,8 +707,14 @@
   "uhu5aG": {
     "message": "公開"
   },
+  "ulAzZl": {
+    "message": "Failed to query the user"
+  },
   "v3aFf1": {
     "message": "次元を作成"
+  },
+  "vMrnt6": {
+    "message": "An error occurred while parsing the data."
   },
   "vRORF/": {
     "message": "「{spaceName}」次元の設定"
@@ -673,6 +748,12 @@
   },
   "xWN20+": {
     "message": "見えません"
+  },
+  "xgZgnO": {
+    "message": "Wrong request method."
+  },
+  "xil+Fb": {
+    "message": "This channel name is already taken."
   },
   "xmcVZ0": {
     "message": "検索"

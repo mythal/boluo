@@ -7,19 +7,19 @@ import { InComposeButton } from './InComposeButton';
 
 interface Props {
   currentUser: User;
-  editMode?: boolean;
+  isEditing?: boolean;
   send: () => Promise<void>;
 }
 
-export const SendButton: FC<Props> = ({ currentUser, editMode = false, send }) => {
+export const SendButton: FC<Props> = ({ currentUser, isEditing = false, send }) => {
   const intl = useIntl();
   const composeError = useComposeError();
-  const title = editMode
+  const title = isEditing
     ? intl.formatMessage({ defaultMessage: 'Edit' })
     : intl.formatMessage({ defaultMessage: 'Send' });
   return (
     <InComposeButton onClick={() => send()} disabled={composeError !== null} title={title}>
-      {editMode ? <Edit /> : <PaperPlane />}
+      {isEditing ? <Edit /> : <PaperPlane />}
     </InComposeButton>
   );
 };

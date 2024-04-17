@@ -31,28 +31,30 @@ interface Props {
 export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isEmptyName = name === '' || name == null;
-  if (inGame && isEmptyName && !isOpen) {
-    setIsOpen(true);
+  const forceOpen = inGame && isEmptyName;
+  let shouldOpen = isOpen;
+  if (forceOpen && !isOpen) {
+    shouldOpen = true;
   }
   const icon: ReactNode = (
     <ChevronDown
       className={clsx(
         'text inline-block h-[1em] w-[1em] transition-all duration-100',
-        isOpen ? 'rotate-180' : 'text-text-lighter',
+        shouldOpen ? 'rotate-180' : 'text-text-lighter',
       )}
     />
   );
 
   const { refs, floatingStyles, middlewareData, context } = useFloating({
-    open: isOpen,
+    open: shouldOpen,
     onOpenChange: setIsOpen,
     placement: 'top-end',
     middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 4, crossAxis: -4 }), hide()],
     whileElementsMounted: autoUpdate,
   });
 
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
+  const click = useClick(context, { enabled: !forceOpen });
+  const dismiss = useDismiss(context, { enabled: !forceOpen });
 
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
@@ -60,7 +62,7 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member 
     <>
       <NameBox
         interactive
-        pressed={isOpen}
+        pressed={shouldOpen}
         color={inGame ? color : undefined}
         ref={refs.setReference}
         icon={icon}
@@ -75,7 +77,7 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member 
         )}
       </NameBox>
 
-      {isOpen && (
+      {shouldOpen && (
         <FloatingPortal>
           <div
             ref={refs.setFloating}

@@ -138,7 +138,7 @@
     "message": "ログイン"
   },
   "BEbOqj": {
-    "message": "Oops!"
+    "message": "おっとっと！"
   },
   "Bc5LE6": {
     "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
@@ -270,7 +270,7 @@
     "message": "Channel name cannot be empty."
   },
   "MoRJdV": {
-    "message": "Which key to use to send a message?"
+    "message": "メッセージを送信するには、どのキーを使用しますか？"
   },
   "MoZLbF": {
     "message": "未対応"
@@ -285,7 +285,7 @@
     "message": "タイムアウト"
   },
   "N97hnL": {
-    "message": "No permission."
+    "message": "権限がありません"
   },
   "O5epsB": {
     "message": "取る"
@@ -537,7 +537,7 @@
     "message": "ベーシック"
   },
   "fnihsY": {
-    "message": "Leave"
+    "message": "退出する"
   },
   "fsU2v+": {
     "message": "次元の切り替え"
@@ -606,7 +606,7 @@
     "message": "サイドバーを切り替える"
   },
   "kiU3pa": {
-    "message": "Oops! Something went wrong"
+    "message": "おっと！何かがうまくいかなかった"
   },
   "lJePcp": {
     "message": "失敗"

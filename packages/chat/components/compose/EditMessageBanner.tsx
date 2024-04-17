@@ -75,7 +75,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
   } else {
     content = (
       <div className="relative flex items-center gap-2">
-        <div className="text-text-light w-[5rem] flex-initial text-sm">
+        <div className="text-text-light w-[4.5rem] flex-initial text-sm">
           <Icon className="mr-1" icon={Edit} />
           <FormattedMessage defaultMessage="Editing" />
         </div>
@@ -101,5 +101,5 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
       </div>
     );
   }
-  return <div className="border-transprent border px-1 pb-2">{content}</div>;
+  return <div className="border-transprent border px-1 pb-1">{content}</div>;
 };

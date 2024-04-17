@@ -177,6 +177,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       compose: {
         media: {
           bg: $(neutral[100], neutral[700]),
+          remove: {
+            text: $(red[600], red[400]),
+            hover: $(red[500], red[500]),
+          },
+          invalid: $(red[600], red[400]),
         },
         outer: {
           bg: $(neutral[50], neutral[800]),

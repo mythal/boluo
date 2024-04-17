@@ -12,8 +12,8 @@ import { Name } from '../pane-channel/Name';
 import { resolveSystemTheme } from '@boluo/theme';
 import { useTheme } from '@boluo/theme/useTheme';
 import { InComposeButton } from './InComposeButton';
-import { X } from '@boluo/icons';
-import { ComposeMedia } from './ComposeMedia';
+import { Edit, X } from '@boluo/icons';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   currentUser: User;
@@ -24,7 +24,6 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
   const channelId = useChannelId();
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
-  const composeMediaAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.media), [composeAtom]);
   const targetMessageIdAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.previewId), [composeAtom]);
   const targetMessageAtom = useMemo(
     () =>
@@ -37,7 +36,6 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
       }),
     [channelId, targetMessageIdAtom],
   );
-  const composeMedia = useAtomValue(composeMediaAtom);
   const message = useAtomValue(targetMessageAtom);
   const intl = useIntl();
   const cancelEditTitle = intl.formatMessage({ defaultMessage: 'Cancel edit' });
@@ -75,19 +73,14 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
       </div>
     );
   } else {
-    let composeMediaNode: ReactNode = null;
-    if (composeMedia) {
-      composeMediaNode = (
-        <ComposeMedia className="bg-compose-media-bg absolute bottom-0 z-20 rounded p-0.5" media={composeMedia} />
-      );
-    }
     content = (
-      <div className="relative flex items-end gap-2">
-        <div className="relative w-[4.5rem] flex-none self-stretch">{composeMediaNode}</div>
+      <div className="relative flex items-center gap-2">
+        <div className="text-text-light w-[5rem] flex-initial text-sm">
+          <Icon className="mr-1" icon={Edit} />
+          <FormattedMessage defaultMessage="Editing" />
+        </div>
         <div className="flex-grow">
-          <div className="text-text-light text-xs">
-            <FormattedMessage defaultMessage="Edit message" />
-          </div>
+          <div className="text-text-light text-xs"></div>
           <div className="text-text-light max-h-[3rem] overflow-y-auto text-sm">
             <Content
               channelId={message.channelId}
@@ -100,7 +93,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
             />
           </div>
         </div>
-        <div>
+        <div className="text-sm">
           <InComposeButton title={cancelEditTitle} onClick={handleCanelEdit}>
             <X />
           </InComposeButton>

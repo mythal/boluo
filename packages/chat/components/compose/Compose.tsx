@@ -1,8 +1,8 @@
 'use client';
-import type { Member } from '@boluo/api';
+import type { Member, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { useDeferredValue, useMemo } from 'react';
+import { FC, useDeferredValue, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
@@ -20,6 +20,20 @@ interface Props {
   channelAtoms: ChannelAtoms;
 }
 
+const DeferredComposeTextArea: FC<{
+  parsedAtom: ChannelAtoms['parsedAtom'];
+  currentUser: User;
+  enterSend: boolean;
+  send: () => Promise<void>;
+}> = ({ parsedAtom, currentUser, send, enterSend }) => {
+  const parsed = useDeferredValue(useAtomValue(parsedAtom));
+  const compose = useMemo(
+    () => <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />,
+    [currentUser.id, enterSend, parsed, send],
+  );
+  return compose;
+};
+
 export const Compose = ({ member, channelAtoms }: Props) => {
   const { composeAtom, inGameAtom, isWhisperAtom, parsedAtom } = channelAtoms;
   const { data: settings } = useQuerySettings();
@@ -33,17 +47,20 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const isEditing = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor != null), [composeAtom]),
   );
-  const parsed = useDeferredValue(useAtomValue(parsedAtom));
-  const compose = useMemo(
-    () => <ComposeTextArea myId={member.user.id} send={send} enterSend={enterSend} parsed={parsed} />,
-    [enterSend, member.user.id, parsed, send],
-  );
   const inGame = useAtomValue(inGameAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
   const editMessageBanner = useMemo(() => {
     if (!isEditing) return null;
     return <EditMessageBanner currentUser={member.user} />;
   }, [isEditing, member.user]);
+  const fileButton = useMemo(() => <FileButton />, []);
+  const inGameSwitchButton = useMemo(() => <InGameSwitchButton />, []);
+  const addDiceButton = useMemo(() => <AddDiceButton />, []);
+  const sendButton = useMemo(
+    () => <SendButton send={send} currentUser={member.user} isEditing={isEditing} />,
+    [isEditing, member.user, send],
+  );
+  const mediaLine = useMemo(() => <MediaLine />, []);
   return (
     <div onDrop={onDrop} onDragOver={handleDragOver} className="bg-compose-outer-bg col-span-full border-t p-2">
       {editMessageBanner}
@@ -52,24 +69,14 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         data-whisper={isWhisper}
         className="bg-compose-bg focus-within:border-surface-400 border-lowest data-[in-game=true]:bg-message-inGame-bg relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
       >
-        <div className="relative flex-shrink-0 py-1 pl-1">
-          <FileButton />
-        </div>
-        <div className="flex-shrink-0 py-1">
-          <InGameSwitchButton />
-        </div>
-        {compose}
+        <div className="relative flex-shrink-0 py-1 pl-1">{fileButton}</div>
+        <div className="flex-shrink-0 py-1">{inGameSwitchButton}</div>
+        <DeferredComposeTextArea parsedAtom={parsedAtom} currentUser={member.user} enterSend={enterSend} send={send} />
 
-        <div className="flex-shrink-0 self-end py-1">
-          <AddDiceButton />
-        </div>
-        <div className="flex-shrink-0 self-end py-1 pr-1">
-          <SendButton send={send} currentUser={member.user} isEditing={isEditing} />
-        </div>
+        <div className="flex-shrink-0 self-end py-1">{addDiceButton}</div>
+        <div className="flex-shrink-0 self-end py-1 pr-1">{sendButton}</div>
       </div>
-      <div>
-        <MediaLine />
-      </div>
+      <div>{mediaLine}</div>
     </div>
   );
 };

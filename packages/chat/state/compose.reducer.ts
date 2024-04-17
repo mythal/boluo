@@ -23,6 +23,7 @@ export interface ComposeState {
     | undefined;
   focused: boolean;
   range: ComposeRange;
+  backup?: ComposeState;
 }
 
 export const makeInitialComposeState = (): ComposeState => ({
@@ -36,6 +37,9 @@ export const makeInitialComposeState = (): ComposeState => ({
   focused: false,
   whisperTo: undefined,
 });
+
+export const clearBackup = (state: ComposeState): ComposeState =>
+  state.backup === undefined ? state : { ...state, backup: undefined };
 
 const QUICK_CHECK_REGEX = /[.。](in|out)\b/i;
 
@@ -181,6 +185,7 @@ const handleEditMessage = (
     defaultInGame: inGame,
     inputedName,
     range,
+    backup: clearBackup(state),
   };
 };
 
@@ -262,7 +267,16 @@ const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeSta
 
 const handleBlur = (state: ComposeState, _: ComposeAction<'blur'>): ComposeState => ({ ...state, focused: false });
 
-const handleReset = (): ComposeState => {
+const handleReset = (state: ComposeState, { payload: { restore } }: ComposeAction<'reset'>): ComposeState => {
+  if (restore === false) {
+    return makeInitialComposeState();
+  }
+  if (restore === true && state.backup != null) {
+    return state.backup;
+  }
+  if (state.editFor != null && state.backup != null) {
+    return state.backup;
+  }
   return makeInitialComposeState();
 };
 
@@ -323,7 +337,7 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
     case 'editMessage':
       return handleEditMessage(state, action);
     case 'reset':
-      return handleReset();
+      return handleReset(state, action);
     case 'sent':
       return handleSent(state, action);
     case 'toggleAction':

@@ -9,6 +9,7 @@ import { Button } from '@boluo/ui/Button';
 import { unwrap } from '@boluo/utils';
 import { FloatingBox } from '../common/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { useSWRConfig } from 'swr';
 
 interface Props {
   space: Space;
@@ -16,13 +17,17 @@ interface Props {
 }
 
 export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
+  const { mutate } = useSWRConfig();
   const [isConfirmOpen, setComfirmOpen] = useState(false);
-  const key = ['/spaces/members', space.id] as const;
+  const key = ['/spaces/my_space_member', space.id] as const;
   const { trigger: leave, isMutating: isLeaving } = useSWRMutation<true, ApiError, typeof key>(
     key,
     ([_, id]) => post('/spaces/leave', { id }, {}).then(unwrap),
     {
-      onSuccess: () => setComfirmOpen(false),
+      onSuccess: () => {
+        void mutate(['/spaces/members', space.id]);
+        setComfirmOpen(false);
+      },
     },
   );
   const { x, y, strategy, refs, context } = useFloating({

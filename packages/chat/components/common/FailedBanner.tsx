@@ -8,23 +8,34 @@ import { AlertCircle } from '@boluo/icons';
 
 interface Props {
   icon?: ReactNode;
-  error: unknown;
+  error?: unknown;
   children: ReactNode;
+  onDissmiss?: () => void;
 }
 
-export const FailedBanner: FC<Props> = ({ icon, error, children }) => {
+export const FailedBanner: FC<Props> = ({ icon, error, children, onDissmiss }) => {
   const [show, setShow] = useState(true);
   const banner = useBannerNode();
+  const handleDismiss = () => {
+    setShow(false);
+    if (onDissmiss) {
+      onDissmiss();
+    }
+  };
   if (!show || !banner) return null;
   return ReactDOM.createPortal(
     <div className="bg-failed-banner-bg border-failed-banner-border flex items-center gap-2 border-y px-3 py-2">
       <span className="text-text-lighter">{icon ?? <AlertCircle />}</span>
       {children}
 
-      <div className="text-text-lighter flex-grow text-sm">
-        <ErrorDisplay error={error} />
-      </div>
-      <Button data-small onClick={() => setShow(false)}>
+      {error != null ? (
+        <div className="text-text-lighter flex-grow text-sm">
+          <ErrorDisplay error={error} />
+        </div>
+      ) : (
+        <div className="flex-grow" />
+      )}
+      <Button data-small onClick={handleDismiss}>
         <FormattedMessage defaultMessage="Dismiss" />
       </Button>
     </div>,

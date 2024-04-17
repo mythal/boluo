@@ -2,7 +2,7 @@ import { FC, useId, useMemo } from 'react';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
-import { NameInput } from './NameInput';
+import { NameEditInput } from './NameInput';
 import { ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
 import { Member } from '@boluo/api';
@@ -108,7 +108,7 @@ export const NameEditContent: FC<Props> = ({ member }) => {
         <label htmlFor={id.inputName} className="block cursor-pointer select-none">
           <FormattedMessage defaultMessage="As the character of …" />
         </label>
-        <NameInput placeholder={defaultCharacterName} className="w-full" />
+        <NameEditInput channelId={member.channel.channelId} defaultName={defaultCharacterName} />
         {nameHistory.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {nameHistory.map((name) => (

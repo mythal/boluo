@@ -237,7 +237,10 @@ const handleToggleAction = (state: ComposeState, _: ComposeAction<'toggleAction'
   return toggleModifier(state, action, '.me');
 };
 
-const handleSent = (state: ComposeState, _: ComposeAction<'sent'>): ComposeState => {
+const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeAction<'sent'>): ComposeState => {
+  if (edit && state.backup) {
+    return state.backup;
+  }
   const modifiersParseResult = parseModifiers(state.source);
   const nextDefaultInGame = !(modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame);
   let source = nextDefaultInGame ? '.out ' : '.in ';

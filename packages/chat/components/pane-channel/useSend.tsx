@@ -51,7 +51,8 @@ export const useSend = (me: User) => {
       dispatch({ type: 'recoverState', payload: backupComposeState });
       setBanner(null);
     };
-    dispatch({ type: 'sent', payload: {} });
+    const isEditing = compose.editFor !== null;
+    dispatch({ type: 'sent', payload: { edit: isEditing } });
     const { text, entities, whisperToUsernames } = parse(compose.source);
     let result: Result<Message, ApiError>;
     let name = nickname;
@@ -64,7 +65,6 @@ export const useSend = (me: User) => {
         name = inputedName;
       }
     }
-    const isEditing = compose.editFor !== null;
 
     let uploadResult: Awaited<ReturnType<typeof upload>> | null = null;
     if (compose.media instanceof File) {

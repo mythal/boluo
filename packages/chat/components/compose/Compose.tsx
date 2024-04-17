@@ -13,7 +13,7 @@ import { ChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
-import { ComposeMedia } from './ComposeMedia';
+import { MediaLine } from './MediaLine';
 
 interface Props {
   member: Member;
@@ -33,7 +33,6 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const isEditing = useAtomValue(
     useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor != null), [composeAtom]),
   );
-  const composeMedia = useAtomValue(useMemo(() => selectAtom(composeAtom, ({ media }) => media), [composeAtom]));
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
   const compose = useMemo(
     () => <ComposeTextArea myId={member.user.id} send={send} enterSend={enterSend} parsed={parsed} />,
@@ -53,16 +52,10 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         data-whisper={isWhisper}
         className="bg-compose-bg focus-within:border-surface-400 border-lowest data-[in-game=true]:bg-message-inGame-bg relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
       >
-        <div className="relative flex-shrink-0 self-start py-1 pl-1">
-          {composeMedia != null && !isEditing && (
-            <div className="absolute bottom-full left-0 z-20 h-max w-max">
-              <ComposeMedia className="bg-compose-media-bg rounded px-1 py-1 shadow" media={composeMedia} />
-            </div>
-          )}
-
+        <div className="relative flex-shrink-0 py-1 pl-1">
           <FileButton />
         </div>
-        <div className="flex-shrink-0 self-start py-1">
+        <div className="flex-shrink-0 py-1">
           <InGameSwitchButton />
         </div>
         {compose}
@@ -73,6 +66,9 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         <div className="flex-shrink-0 self-end py-1 pr-1">
           <SendButton send={send} currentUser={member.user} isEditing={isEditing} />
         </div>
+      </div>
+      <div>
+        <MediaLine />
       </div>
     </div>
   );

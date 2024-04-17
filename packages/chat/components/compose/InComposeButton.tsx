@@ -14,7 +14,7 @@ export const InComposeButton = ({ onClick, children, title, pressed, disabled = 
       disabled={disabled}
       title={title}
       aria-pressed={pressed}
-      className="bg-compose-button-bg disabled:bg-transprent disabled:text-text-lighter hover:enabled:bg-compose-button-hover-bg rounded-sm p-2 disabled:cursor-not-allowed"
+      className="bg-compose-button-bg disabled:bg-transprent disabled:text-text-lighter hover:enabled:bg-compose-button-hover-bg rounded-sm p-[0.5em] disabled:cursor-not-allowed"
       onClick={onClick}
     >
       {children}

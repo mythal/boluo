@@ -119,9 +119,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
 
       name: {
-        bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[900], 0.65)),
+        bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[600], 0.65)),
         editable: {
-          hover: $(transparentize(neutral[300], 0.5), transparentize(neutral[800], 0.5)),
+          hover: $(transparentize(neutral[300], 0.5), transparentize(neutral[500], 0.5)),
         },
         history: {
           bg: $(neutral[50], neutral[900]),

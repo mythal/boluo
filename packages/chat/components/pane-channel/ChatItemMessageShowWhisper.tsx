@@ -1,9 +1,8 @@
 import { ApiError, Message } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import { useSetAtom } from 'jotai';
-import { FC } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
-import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
@@ -17,6 +16,29 @@ interface Props {
 }
 
 export const ChatItemMessageShowWhisper: FC<Props> = ({ messageId, userIdList, channelId, className }) => {
+  const memberResult = useMyChannelMember(channelId);
+  if (memberResult.isErr) {
+    return null;
+  }
+  const member = memberResult.some;
+  if (!member.channel.isMaster && !userIdList.includes(member.user.id)) {
+    return (
+      <span className={className}>
+        <span className="italic">
+          <FormattedMessage defaultMessage="You can't see" />
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span className={className}>
+      <ShowButton messageId={messageId} channelId={channelId} />
+    </span>
+  );
+};
+
+const ShowButton: FC<{ messageId: string; channelId: string }> = ({ messageId, channelId }) => {
   const key = ['/messages/query', messageId] as const;
   const dispatch = useSetAtom(chatAtom);
   const { trigger, isMutating } = useSWRMutation<Message | null, ApiError, typeof key>(
@@ -32,25 +54,30 @@ export const ChatItemMessageShowWhisper: FC<Props> = ({ messageId, userIdList, c
       },
     },
   );
-  const memberResult = useMyChannelMember(channelId);
-  if (memberResult.isErr) {
-    return null;
-  }
-  const member = memberResult.some;
-  if (!member.channel.isMaster && !userIdList.includes(member.user.id)) {
-    return (
-      <span className={className}>
-        <span className="italic">
-          <FormattedMessage defaultMessage="You can't see" />
-        </span>
-      </span>
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            void trigger();
+          }
+        });
+      },
+      { rootMargin: '0px 0px 100px 0px' },
     );
-  }
+    observer.observe(button);
+    return () => {
+      observer.unobserve(button);
+    };
+  }, [trigger]);
+
   return (
-    <span className={className}>
-      <Button type="button" data-small disabled={isMutating} onClick={() => trigger()}>
-        <FormattedMessage defaultMessage="Show" />
-      </Button>
-    </span>
+    <Button ref={buttonRef} type="button" data-small disabled={isMutating} onClick={() => trigger()}>
+      <FormattedMessage defaultMessage="Show" />
+    </Button>
   );
 };

@@ -15,7 +15,7 @@ export type ComposeActionMap = {
   media: { media: File | null };
   editMessage: { message: Message };
   sent: Empty;
-  reset: Empty;
+  reset: { restore?: boolean };
   focus: Empty;
   blur: Empty;
   setRange: { range: [number, number] | null };

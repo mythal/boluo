@@ -6,10 +6,31 @@ import { NameInput } from './NameInput';
 import { ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
 import { Member } from '@boluo/api';
+import { ChannelState } from '../../state/channel.reducer';
 
 interface Props {
   member: Member;
 }
+
+const NAME_HISTORY_MAX = 5;
+
+const searchChannelForNames = (names: string[], channelState: ChannelState, userId: string, messageLimit: number) => {
+  const searchLimit = Math.min(channelState.messages.length - 1, messageLimit);
+
+  for (let i = searchLimit; i >= 0; i--) {
+    const message = channelState.messages[i]!;
+    if (
+      !message.inGame ||
+      message.folded ||
+      message.senderId !== userId ||
+      message.name === '' ||
+      names.includes(message.name)
+    )
+      continue;
+    names.push(message.name);
+    if (names.length > NAME_HISTORY_MAX) return;
+  }
+};
 
 const chatStateToNameList = (
   state: ChatSpaceState,
@@ -17,16 +38,31 @@ const chatStateToNameList = (
   myId: string,
   defaultName?: string,
 ): string[] => {
-  const channelState = state.channels[channelId];
-  if (channelState == null) return [];
   const names: string[] = defaultName == null || defaultName === '' ? [] : [defaultName];
 
-  for (let i = channelState.messages.length - 1; i >= 0; i--) {
-    const message = channelState.messages[i]!;
-    if (!message.inGame || message.senderId !== myId || names.includes(message.name)) continue;
-    names.push(message.name);
-    if (names.length > 4) return names;
+  const currentChannel = state.channels[channelId];
+  if (currentChannel != null) {
+    searchChannelForNames(names, currentChannel, myId, 2000);
   }
+
+  const channels = Object.values(state.channels).filter(
+    (channel) => channel.id !== currentChannel?.id && channel.messages.length > 0,
+  );
+  // sort by last message time
+  channels.sort((a, b) => {
+    const aCreated = a.messages[a.messages.length - 1]!.created;
+    const bCreated = b.messages[b.messages.length - 1]!.created;
+    const aTime = new Date(aCreated).getTime();
+    const bTime = new Date(bCreated).getTime();
+    return bTime - aTime;
+  });
+  console.log(channels);
+
+  for (const channel of channels) {
+    searchChannelForNames(names, channel, myId, 100);
+    if (names.length > NAME_HISTORY_MAX) return names;
+  }
+
   return names;
 };
 
@@ -74,11 +110,11 @@ export const NameEditContent: FC<Props> = ({ member }) => {
         </label>
         <NameInput placeholder={defaultCharacterName} className="w-full" />
         {nameHistory.length > 0 && (
-          <div className="space-x-1">
+          <div className="flex flex-wrap gap-1">
             {nameHistory.map((name) => (
               <button
                 key={name}
-                className="bg-name-history-bg hover:bg-name-history-hover-bg inline-block rounded-sm border px-2 py-1 text-sm shadow-sm"
+                className="bg-name-history-bg hover:bg-name-history-hover-bg inline-block max-w-[10rem] truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
                 onClick={() => {
                   dispatch({ type: 'setInputedName', payload: { inputedName: name, setInGame: true } });
                 }}

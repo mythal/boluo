@@ -1,6 +1,8 @@
 # Boluo
 
-A chat tool made for play RPG.
+A chat application designed specifically for playing RPGs.
+
+![screenshot](https://media.boluo.chat/3e98ead0-fcda-11ee-80b6-08fef1be550e)
 
 This repository is a monorepo, which contains the following applications:
 

@@ -32,7 +32,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   defaultInGame: true,
   source: DEFAULT_COMPOSE_SOURCE,
   media: null,
-  range: [0, 0],
+  range: [DEFAULT_COMPOSE_SOURCE.length, DEFAULT_COMPOSE_SOURCE.length],
   focused: false,
   whisperTo: undefined,
 });

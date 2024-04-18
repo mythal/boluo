@@ -339,7 +339,7 @@ const config: Config = {
         '24px': '24px',
       },
       width: {
-        sidebar: '12rem',
+        sidebar: '14rem',
       },
       height: {
         'pane-header': '3rem',

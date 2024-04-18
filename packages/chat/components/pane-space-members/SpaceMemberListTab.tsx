@@ -1,8 +1,7 @@
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { FC, useMemo } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
-import { ErrorDisplay } from '../ErrorDisplay';
 import { SpaceMemberListItem } from './SpaceMemberListItem';
 import { Failed } from '../common/Failed';
 import { FormattedMessage } from 'react-intl';
@@ -14,8 +13,8 @@ interface Props {
 
 export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
   const { data: membersMap, error } = useQuerySpaceMembers(spaceId);
-  const me = useMe();
-  const myId: string | null = me == null || me === 'LOADING' ? null : me.user.id;
+  const { data: currentUser } = useQueryUser();
+  const myId: string | null = currentUser?.id ?? null;
   const amIAdmin: boolean = useMemo(() => {
     if (myId == null) return false;
     if (spaceOwnerId === myId) return true;

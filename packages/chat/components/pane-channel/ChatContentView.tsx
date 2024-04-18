@@ -1,6 +1,6 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { GetMe } from '@boluo/api';
+import type { GetMe, User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -27,7 +27,7 @@ import { resolveSystemTheme } from '@boluo/theme';
 import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 
 interface Props {
-  me: GetMe | 'LOADING' | null;
+  currentUser: User | undefined | null;
   myMember: MyChannelMemberResult;
   className?: string;
   setIsScrolling: (isScrolling: boolean) => void;
@@ -251,7 +251,7 @@ const useScrollLock = (
   return scrollLockRef;
 };
 
-export const ChatContentView: FC<Props> = ({ className = '', me, myMember, setIsScrolling }) => {
+export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMember, setIsScrolling }) => {
   const channelId = useChannelId();
   const store = useStore();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -318,7 +318,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember, setIs
               iAmMaster={iAmMaster}
               chatList={chatList}
               handleBottomStateChange={handleBottomStateChange}
-              me={me}
+              currentUser={currentUser}
               myMember={myMember}
               theme={theme}
             />

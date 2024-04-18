@@ -1,27 +1,23 @@
-import { useMe } from '@boluo/common';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
 import { ProfileEditSchema } from './PaneProfileEdit';
 
-interface Props {}
+interface Props {
+  nickname: string;
+}
 
-export const NicknameField: FC<Props> = () => {
-  const me = useMe();
+export const NicknameField: FC<Props> = ({ nickname }) => {
   const intl = useIntl();
   const {
     register,
     formState: { errors },
   } = useFormContext<ProfileEditSchema>();
-  if (me === 'LOADING' || me == null) {
-    console.error('Unexpected null me in NicknameField.');
-    return null;
-  }
   return (
     <div>
       <TextInput
-        defaultValue={me?.user.nickname ?? ''}
+        defaultValue={nickname}
         {...register('nickname', {
           required: intl.formatMessage({ defaultMessage: "Can't be empty." }),
         })}

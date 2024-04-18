@@ -1,4 +1,4 @@
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { Whisper } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
@@ -10,12 +10,12 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 interface Props {}
 
 export const WhisperButton: FC<Props> = ({}) => {
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   const { isWhisperAtom, composeAtom } = useChannelAtoms();
   const isWhisper = useAtomValue(isWhisperAtom);
   const dispatch = useSetAtom(composeAtom);
   const handleClick = () => {
-    dispatch({ type: 'toggleWhisper', payload: me != null && me !== 'LOADING' ? { username: me.user.username } : {} });
+    dispatch({ type: 'toggleWhisper', payload: currentUser != null ? { username: currentUser.username } : {} });
   };
   return (
     <Button data-small type="button" data-type="switch" data-on={isWhisper} onClick={handleClick}>

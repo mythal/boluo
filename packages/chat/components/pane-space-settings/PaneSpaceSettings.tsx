@@ -1,6 +1,6 @@
 import type { ApiError, EditSpace, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { Settings } from '@boluo/icons';
 import { FC, useCallback, useState } from 'react';
 import { useId } from 'react';
@@ -262,20 +262,20 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
 };
 
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
+  const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
   const { data: space, error } = useQuerySpace(spaceId);
 
   const close = usePaneClose();
-  const me = useMe();
 
   if (error != null) {
     if (space == null) {
       return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the space" />} />;
     }
   }
-  if (!space) {
+  if (!space || isQueryingUser) {
     return <Loading />;
   }
-  if (!me) {
+  if (!currentUser) {
     return (
       <PaneBox
         header={

@@ -1,4 +1,4 @@
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC } from 'react';
@@ -92,7 +92,7 @@ const AccountFields: FC<{ currentUser: User }> = ({ currentUser }) => {
 };
 
 export const PaneSettings: FC = () => {
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   const [devMode, setDevMode] = useAtom(devModeAtom);
   return (
     <PaneBox
@@ -109,14 +109,14 @@ export const PaneSettings: FC = () => {
           </SectionTitle>
           <LanguageField />
           <ThemeField />
-          {me && me !== 'LOADING' && <EneterSendField />}
-          {me && me !== 'LOADING' && <ExpandDiceField />}
+          {currentUser && <EneterSendField />}
+          {currentUser && <ExpandDiceField />}
         </div>
-        {me && me !== 'LOADING' && (
+        {currentUser && (
           <>
-            <AccountFields currentUser={me.user} />
+            <AccountFields currentUser={currentUser} />
 
-            <EditDefaultColor currentUser={me.user} />
+            <EditDefaultColor currentUser={currentUser} />
           </>
         )}
         <div>

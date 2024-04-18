@@ -1,10 +1,11 @@
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight, Sidebar } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';
+import { useIsTouch } from '../../hooks/useIsTouch';
 
 interface Props {}
 
@@ -13,39 +14,22 @@ export const ToggleSidebarLine: FC<Props> = () => {
   const isExpandedRef = useRef(isExpanded);
   isExpandedRef.current = isExpanded;
   const intl = useIntl();
-  const [isTouch, setIsTouch] = useState(false);
-  useEffect(() => {
-    const listener = () => setIsTouch(true);
-    window.addEventListener('touchstart', listener);
-    return () => window.removeEventListener('touchstart', listener);
-  });
+  const isTouch = useIsTouch();
   const title = intl.formatMessage({ defaultMessage: 'Toggle Sidebar' });
-  const [dragging, setDragging] = useState(false);
-  const draggingRef = useRef(dragging);
-  draggingRef.current = dragging;
-  const handleMouseDown = () => {
-    setDragging(true);
-  };
   const toggleSidebar = useCallback(() => setExpand((x) => !x), [setExpand]);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    const listener = () => {
-      if (draggingRef.current) {
-        setDragging(false);
-        toggleSidebar();
-      }
-    };
-    window.addEventListener('mouseup', listener);
-    return () => window.removeEventListener('mouseup', listener);
-  }, [toggleSidebar]);
   return (
     <button
       ref={buttonRef}
+      onTouchStart={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleSidebar();
+      }}
       className={clsx(
         'group absolute left-0 top-0 z-20 h-full w-[14px] cursor-pointer',
         isTouch ? '' : 'hover:bg-sidebar-toggler-hover/15',
       )}
-      onMouseDown={handleMouseDown}
       title={title}
     >
       <div
@@ -63,7 +47,6 @@ export const ToggleSidebarLine: FC<Props> = () => {
         className={clsx(
           'bg-sidebar-divider h-full w-[1px]',
           isTouch ? '' : 'group-hover:bg-sidebar-toggler-hover group-hover:w-[2px]',
-          dragging && 'bg-sidebar-toggler-active',
         )}
       ></div>
       {!isTouch && (

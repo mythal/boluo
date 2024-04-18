@@ -39,74 +39,6 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
   const setBanner = useSetBanner();
 
-  useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => {
-      isTouchDeviceRef.current = true;
-      if (!isVisibleRef.current) return;
-      const { touches } = e;
-      if (touches.length !== 1) return;
-      setTouchState('START');
-      const touch = touches[0]!;
-      touchStartPoint.current = { x: touch.screenX, y: touch.screenY };
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isVisibleRef.current) return;
-      if (e.changedTouches.length !== 1) return;
-      const start = touchStartPoint.current;
-      if (start === null) return;
-      const touch = e.changedTouches[0]!;
-      if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
-        setTouchState('WILL_LOAD');
-      } else {
-        setTouchState('START');
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      setTouchState('NONE');
-      if (!isVisibleRef.current) return;
-      if (e.changedTouches.length !== 1) return;
-      const start = touchStartPoint.current;
-      if (start === null) return;
-      const touch = e.changedTouches[0]!;
-      if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
-        setTimeout(() => {
-          loadMoreRef.current?.click();
-        }, 100);
-      }
-    };
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchend', handleTouchEnd);
-    window.addEventListener('touchmove', handleTouchMove);
-
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
-
-  const autoLoadTimeoutRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.length === 0) return;
-        const entry = entries[0]!;
-        isVisibleRef.current = entry.isIntersecting;
-        window.clearTimeout(autoLoadTimeoutRef.current);
-        if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
-          loadMoreRef.current?.click();
-        }
-      },
-      { threshold: [0.75] },
-    );
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
   const loadMore = useCallback(async () => {
     if (isLoadingRef.current || !mountedRef.current) return;
     const chatState = store.get(chatAtom);
@@ -143,6 +75,75 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
     });
     setIsLoading(false);
   }, [channelId, dispatch, mountedRef, setBanner, store]);
+
+  const autoLoadTimeoutRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.length === 0) return;
+        const entry = entries[0]!;
+        isVisibleRef.current = entry.isIntersecting;
+        window.clearTimeout(autoLoadTimeoutRef.current);
+        if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
+          void loadMore();
+        }
+      },
+      { threshold: [0.75] },
+    );
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMore]);
+
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      isTouchDeviceRef.current = true;
+      if (!isVisibleRef.current) return;
+      const { touches } = e;
+      if (touches.length !== 1) return;
+      setTouchState('START');
+      const touch = touches[0]!;
+      touchStartPoint.current = { x: touch.screenX, y: touch.screenY };
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isVisibleRef.current) return;
+      if (e.changedTouches.length !== 1) return;
+      const start = touchStartPoint.current;
+      if (start === null) return;
+      const touch = e.changedTouches[0]!;
+      if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
+        setTouchState('WILL_LOAD');
+      } else {
+        setTouchState('START');
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      setTouchState('NONE');
+      if (!isVisibleRef.current) return;
+      if (e.changedTouches.length !== 1) return;
+      const start = touchStartPoint.current;
+      if (start === null) return;
+      const touch = e.changedTouches[0]!;
+      if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
+        setTimeout(() => {
+          void loadMore();
+        }, 100);
+      }
+    };
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchmove', handleTouchMove);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [loadMore]);
 
   const willLoad = touchState === 'WILL_LOAD';
   return (

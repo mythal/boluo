@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useMe } from '@boluo/common';
+import { useMe, useQueryUser } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import { useCallback } from 'react';
@@ -20,18 +20,18 @@ interface Props {
 const SidebarContent: FC = () => {
   const space = useSpace();
   const contentState = useAtomValue(sidebarContentStateAtom);
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   if (space == null) {
-    if (me == null || me === 'LOADING') {
+    if (currentUser == null) {
       return null;
     }
-    return <SidebarSpaceList />;
+    return <SidebarSpaceList currentUser={currentUser} />;
   }
   return (
     <>
-      <SpaceOptions space={space} />
+      <SpaceOptions space={space} currentUser={currentUser} />
       {contentState === 'CHANNELS' && <SidebarChannelList spaceId={space.id} />}
-      {contentState === 'SPACES' && <SidebarSpaceList />}
+      {contentState === 'SPACES' && <SidebarSpaceList currentUser={currentUser} />}
     </>
   );
 };

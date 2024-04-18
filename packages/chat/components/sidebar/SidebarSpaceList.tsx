@@ -1,4 +1,4 @@
-import { Space } from '@boluo/api';
+import { Space, User } from '@boluo/api';
 import { useQueryMySpaces } from '@boluo/common';
 import { Plus } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
@@ -12,7 +12,9 @@ import { SidebarItem } from './SidebarItem';
 import { SidebarItemSkeleton } from './SidebarItemSkeleton';
 import clsx from 'clsx';
 
-interface Props {}
+interface Props {
+  currentUser: User | null | undefined;
+}
 
 const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
   const currentSpace = useSpace();
@@ -35,8 +37,8 @@ const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
   );
 };
 
-export const SidebarSpaceList: FC<Props> = () => {
-  const { data: spacesWithMemberData } = useQueryMySpaces();
+export const SidebarSpaceList: FC<Props> = ({ currentUser }) => {
+  const { data: spacesWithMemberData, error, isLoading } = useQueryMySpaces();
   const panes = useAtomValue(panesAtom);
 
   const togglePane = usePaneToggle();
@@ -52,13 +54,21 @@ export const SidebarSpaceList: FC<Props> = () => {
           <FormattedMessage defaultMessage="Switch Spaces" />
         </span>
       </div>
-      {spacesWithMemberData == null && <SidebarItemSkeleton />}
-      {spacesWithMemberData?.map(({ space }) => <SidebarSpaceItem key={space.id} space={space} />)}
-      <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>
-        <span className="text-surface-400 group-hover:text-surface-800">
-          <FormattedMessage defaultMessage="New Space" />
-        </span>
-      </SidebarItem>
+      {spacesWithMemberData == null && isLoading && <SidebarItemSkeleton />}
+      {spacesWithMemberData == null || spacesWithMemberData.length === 0 ? (
+        <SidebarItem>
+          <div className="text-text-lighter text-center">- Ø -</div>
+        </SidebarItem>
+      ) : (
+        spacesWithMemberData.map(({ space }) => <SidebarSpaceItem key={space.id} space={space} />)
+      )}
+      {currentUser != null && (
+        <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>
+          <span className="text-surface-400 group-hover:text-surface-800">
+            <FormattedMessage defaultMessage="New Space" />
+          </span>
+        </SidebarItem>
+      )}
     </div>
   );
 };

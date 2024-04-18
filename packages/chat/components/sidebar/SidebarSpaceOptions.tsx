@@ -1,4 +1,4 @@
-import type { Space } from '@boluo/api';
+import type { Space, User } from '@boluo/api';
 import { Shuffle } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import type { FC } from 'react';
@@ -9,9 +9,10 @@ import clsx from 'clsx';
 
 interface Props {
   space: Space;
+  currentUser: User | null | undefined;
 }
 
-export const SpaceOptions: FC<Props> = ({ space }) => {
+export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
   const togglePane = usePaneToggle();
   const [sidebarState, setSidebarState] = useAtom(sidebarContentStateAtom);
   const handleToggleSpacePane = () => {

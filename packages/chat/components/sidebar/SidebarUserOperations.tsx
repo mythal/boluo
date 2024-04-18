@@ -1,6 +1,5 @@
 import clsx from 'clsx';
-import { useMe } from '@boluo/common';
-import { HelpCircle, LogIn, Settings, User } from '@boluo/icons';
+import { HelpCircle, LogIn, Settings, User as UserIcon } from '@boluo/icons';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { FC, useCallback, useMemo } from 'react';
@@ -11,8 +10,11 @@ import { panesAtom } from '../../state/view.atoms';
 import { Avatar } from '../account/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
+import { User } from '@boluo/api';
 
-interface Props {}
+interface Props {
+  currentUser: User | null | undefined;
+}
 
 export const isUserOperationsFoldedAtom = atomWithStorage('isUserOperationsFolded:v0', false);
 
@@ -35,8 +37,7 @@ export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {
   const panes = get(panesAtom);
   return (id: string) => panes.findIndex((pane) => pane.type === 'PROFILE' && pane.userId === id) !== -1;
 });
-export const SidebarUserOperations: FC<Props> = () => {
-  const me = useMe();
+export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
   const isLoginOpen = useAtomValue(isLoginOpenAtom);
   const isHelpOpen = useAtomValue(isHelpOpenAtom);
   const isSettingsOpen = useAtomValue(isSettingsOpenAtom);
@@ -45,21 +46,21 @@ export const SidebarUserOperations: FC<Props> = () => {
   const toggleFolded = useCallback(() => setFolded(toggle), [setFolded]);
   const togglePane = usePaneToggle();
   const handleToggleLogin = useCallback(() => {
-    if (me) {
+    if (currentUser != null) {
       return;
     }
     togglePane({ type: 'LOGIN' });
-  }, [me, togglePane]);
+  }, [currentUser, togglePane]);
   const handleToggleSettings = useCallback(() => {
     togglePane({ type: 'SETTINGS' });
   }, [togglePane]);
   const handleToggleProfile = useCallback(() => {
-    if (!me || me === 'LOADING') {
+    if (!currentUser) {
       return;
     }
-    togglePane({ type: 'PROFILE', userId: me.user.id });
-  }, [me, togglePane]);
-  const loginItem = !me && (
+    togglePane({ type: 'PROFILE', userId: currentUser.id });
+  }, [currentUser, togglePane]);
+  const loginItem = !currentUser && (
     <SidebarItem icon={<LogIn />} toggle onClick={handleToggleLogin} active={isLoginOpen}>
       <FormattedMessage defaultMessage="Login" />
     </SidebarItem>
@@ -78,31 +79,28 @@ export const SidebarUserOperations: FC<Props> = () => {
     ),
     [isHelpOpen, toggleHelp],
   );
-  if (me === 'LOADING') {
-    return <div className="" />;
-  }
   return (
     <div className={'pt-2'}>
-      {!folded && me && (
+      {!folded && currentUser && (
         <>
           {settingsItem}
           {helpItem}
-          <SidebarItem icon={<User />} active={isProfileOpen(me.user.id)} toggle onClick={handleToggleProfile}>
+          <SidebarItem icon={<UserIcon />} active={isProfileOpen(currentUser.id)} toggle onClick={handleToggleProfile}>
             <FormattedMessage defaultMessage="Profile" />
           </SidebarItem>
         </>
       )}
 
-      {me ? (
+      {currentUser ? (
         <SidebarGroupHeader folded={folded} toggle={toggleFolded}>
           <Avatar
             size={32}
-            id={me.user.id}
-            name={me.user.nickname}
-            avatarId={me.user.avatarId}
+            id={currentUser.id}
+            name={currentUser.nickname}
+            avatarId={currentUser.avatarId}
             className={clsx('h-6 w-6 rounded')}
           />
-          <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{me.user.nickname}</div>
+          <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{currentUser.nickname}</div>
         </SidebarGroupHeader>
       ) : (
         <>

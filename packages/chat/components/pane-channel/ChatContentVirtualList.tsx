@@ -20,6 +20,7 @@ interface Props {
   me: GetMe | 'LOADING' | null;
   myMember: MyChannelMemberResult;
   theme: ResolvedTheme;
+  setIsScrolling: (isScrolling: boolean) => void;
 }
 
 export interface VirtualListContext {
@@ -74,6 +75,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     scrollerRef,
     filteredMessagesCount,
     handleBottomStateChange,
+    setIsScrolling,
     me,
     myMember,
     theme,
@@ -120,6 +122,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       scrollerRef={(ref) => {
         if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
       }}
+      isScrolling={setIsScrolling}
       rangeChanged={handleRangeChange}
       alignToBottom
       context={{ filteredMessagesCount }}

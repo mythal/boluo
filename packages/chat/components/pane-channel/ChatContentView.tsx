@@ -30,6 +30,7 @@ interface Props {
   me: GetMe | 'LOADING' | null;
   myMember: MyChannelMemberResult;
   className?: string;
+  setIsScrolling: (isScrolling: boolean) => void;
 }
 
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 2000;
@@ -250,7 +251,7 @@ const useScrollLock = (
   return scrollLockRef;
 };
 
-export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => {
+export const ChatContentView: FC<Props> = ({ className = '', me, myMember, setIsScrolling }) => {
   const channelId = useChannelId();
   const store = useStore();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -309,6 +310,7 @@ export const ChatContentView: FC<Props> = ({ className = '', me, myMember }) => 
           <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
             <ChatContentVirtualList
               firstItemIndex={firstItemIndex}
+              setIsScrolling={setIsScrolling}
               renderRangeRef={renderRangeRef}
               filteredMessagesCount={filteredMessagesCount}
               virtuosoRef={virtuosoRef}

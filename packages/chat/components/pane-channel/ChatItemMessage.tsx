@@ -13,6 +13,7 @@ import { Name } from './Name';
 import { useQueryUser } from '@boluo/common';
 import { ResolvedTheme } from '@boluo/theme';
 import { messageToParsed } from '../../interpreter/to-parsed';
+import { useIsScrolling } from '../../hooks/useIsScrolling';
 
 interface Props {
   iAmAdmin: boolean;
@@ -35,6 +36,7 @@ export const ChatItemMessage: FC<Props> = ({
   overlay = false,
   theme,
 }) => {
+  const isScrolling = useIsScrolling();
   const { isMaster, isAction, optimistic } = message;
   const { data: user } = useQueryUser(message.senderId);
 
@@ -60,6 +62,7 @@ export const ChatItemMessage: FC<Props> = ({
       message={message}
       draggable={draggable}
       overlay={overlay}
+      isScrolling={isScrolling}
       mini={mini}
       optimistic={optimistic}
     >

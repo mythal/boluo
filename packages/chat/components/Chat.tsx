@@ -68,10 +68,10 @@ const Chat: FC = () => {
             <SpaceProvider spaceId={route.type === 'SPACE' ? route.spaceId : null}>
               <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
                 <div ref={bannerRef} className="col-span-full"></div>
-                <Sidebar className="bg-bg flex h-full flex-none flex-col" />
+                <Sidebar className="bg-bg flex h-full min-h-0 flex-none flex-col" />
                 <div
                   onTouchStart={handleTouch}
-                  className="relative col-end-[-1] flex h-full w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
+                  className="relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
                 >
                   <ToggleSidebarLine />
                   <Suspense fallback={<PaneLoading />}>

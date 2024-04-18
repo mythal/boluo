@@ -1,11 +1,10 @@
-import { useMe, useQueryUser } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { Edit, LogOut, User } from '@boluo/icons';
 import { FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Loading } from '@boluo/ui/Loading';
 import { toggle } from '@boluo/utils';
 import { useLogout } from '../../hooks/useLogout';
-import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
@@ -19,9 +18,9 @@ interface Props {
 }
 
 export const PaneProfile: FC<Props> = ({ userId }) => {
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   const { isLoading, data: user, error } = useQueryUser(userId);
-  const isMe = me != null && me !== 'LOADING' && me.user.id === userId;
+  const isMe = currentUser?.id === userId;
   const [isEditing, setIsEditing] = useState(false);
   const intl = useIntl();
   const logoutLabel = intl.formatMessage({ defaultMessage: 'Logout' });
@@ -69,7 +68,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
       }
     >
       {isMe && isEditing ? (
-        <PaneProfileEdit onSuccess={() => setIsEditing(false)} me={me.user} />
+        <PaneProfileEdit onSuccess={() => setIsEditing(false)} me={currentUser} />
       ) : (
         <PaneProfileView user={user} />
       )}

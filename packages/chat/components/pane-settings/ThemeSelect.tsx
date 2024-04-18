@@ -1,6 +1,6 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Settings, useMe } from '@boluo/common';
+import { Settings, useQueryUser } from '@boluo/common';
 import { FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
@@ -16,8 +16,8 @@ interface Props {
 }
 
 export const ThemeSelect: FC<Props> = ({ id }) => {
-  const me = useMe();
   const theme = useTheme();
+  const { data: currentUser } = useQueryUser();
   const intl = useIntl();
 
   const key = ['/users/settings'] as const;
@@ -35,7 +35,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     const value = event.target.value;
     const theme = setThemeToDom(value);
     document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
-    if (me && me !== 'LOADING') {
+    if (currentUser) {
       void trigger(theme);
     }
   };

@@ -1,4 +1,4 @@
-import { GetMe } from '@boluo/api';
+import { GetMe, User } from '@boluo/api';
 import { FC, MutableRefObject, RefObject, useLayoutEffect, useRef } from 'react';
 import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
@@ -17,7 +17,7 @@ interface Props {
   chatList: ChatItem[];
   filteredMessagesCount: number;
   handleBottomStateChange: (bottom: boolean) => void;
-  me: GetMe | 'LOADING' | null;
+  currentUser: User | undefined | null;
   myMember: MyChannelMemberResult;
   theme: ResolvedTheme;
   setIsScrolling: (isScrolling: boolean) => void;
@@ -77,7 +77,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     filteredMessagesCount,
     handleBottomStateChange,
     setIsScrolling,
-    me,
+    currentUser,
     myMember,
     theme,
   } = props;
@@ -86,10 +86,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;
-  let myId: string | undefined;
-  if (me && me !== 'LOADING') {
-    myId = me.user.id;
-  }
+  const myId: string | undefined = currentUser?.id ?? undefined;
   const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
   const itemContent = (offsetIndex: number, item: ChatItem) => {
     let continuous = false;

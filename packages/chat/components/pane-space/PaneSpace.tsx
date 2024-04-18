@@ -1,5 +1,5 @@
 import { SpaceMemberWithUser } from '@boluo/api';
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { Globe, Key, Settings } from '@boluo/icons';
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -21,10 +21,10 @@ interface Props {
 }
 
 export const PaneSpace: FC<Props> = ({ spaceId }) => {
+  const { data: currentUser } = useQueryUser();
   const { data: space, isLoading } = useQuerySpace(spaceId);
   const { data: spaceMembers, isLoading: isSpaceMembersLoading } = useQuerySpaceMembers(spaceId);
-  const me = useMe();
-  const myId = me === 'LOADING' || me == null ? null : me.user.id;
+  const myId = currentUser?.id ?? null;
   const spaceMemberList = useMemo(() => {
     if (spaceMembers == null) {
       return null;

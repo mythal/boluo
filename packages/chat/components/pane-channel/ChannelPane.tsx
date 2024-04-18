@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
@@ -37,10 +37,10 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 };
 
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   const member = useMyChannelMember(channelId);
   const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member.isOk ? member.some.channel : null);
-  const nickname = me != null && me !== 'LOADING' ? me.user.nickname : undefined;
+  const nickname = currentUser?.nickname ?? undefined;
   const { data: channel, isLoading, error } = useQueryChannel(channelId);
   useSendPreview(
     channelId,
@@ -91,7 +91,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
             memberListState === 'CLOSED' ? 'grid-cols-1' : '@md:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
           )}
         >
-          <ChatContent className="relative" me={me} channelId={channelId} />
+          <ChatContent className="relative" currentUser={currentUser} channelId={channelId} />
           {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
           {member.isOk ? <Compose channelAtoms={atoms} member={member.some} /> : null}
         </div>

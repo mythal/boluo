@@ -1,5 +1,5 @@
 import { post } from '@boluo/api-browser';
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
@@ -10,14 +10,14 @@ import { useChannelId } from '../../hooks/useChannelId';
 const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="py-2 text-center">{children}</div>;
 
 export const GuestCompose = () => {
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   const channelId = useChannelId();
   const { mutate } = useSWRConfig();
   const join = async () => {
     await post('/channels/join', null, { channelId, characterName: '' });
     await mutate(['/channels/members', channelId]);
   };
-  if (!me) {
+  if (!currentUser) {
     return (
       <GuestComposeBox>
         <FormattedMessage defaultMessage="You are not logged in" />

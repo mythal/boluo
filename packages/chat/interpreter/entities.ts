@@ -231,3 +231,25 @@ export const fromRawEntities = (text: string, rawEntities: unknown[]): Entity[] 
     return [{ type: 'Text', start: 0, len: text.length }];
   }
 };
+
+export const toSimpleText = (source: string, entities: Entity[]): string => {
+  let text = '';
+  for (const entity of entities) {
+    switch (entity.type) {
+      case 'Text':
+      case 'Strong':
+      case 'Emphasis':
+        text += source.slice(entity.start, entity.start + entity.len);
+        break;
+      case 'Link':
+        text += '🔗';
+        break;
+      case 'Expr':
+        text += '🎲';
+        break;
+      default:
+        text += '…';
+    }
+  }
+  return text;
+};

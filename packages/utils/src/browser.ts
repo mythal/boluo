@@ -10,7 +10,13 @@ export function getOS(): 'macOS' | 'iOS' | 'Windows' | 'Android' | 'Linux' | nul
   let os: ReturnType<typeof getOS> = null;
 
   if (macosPlatforms.test(userAgent)) {
-    os = 'macOS';
+    // Fuck Apple
+    // https://stackoverflow.com/a/57924983
+    if (navigator.maxTouchPoints > 1) {
+      os = 'iOS';
+    } else {
+      os = 'macOS';
+    }
   } else if (iosPlatforms.test(userAgent)) {
     os = 'iOS';
   } else if (windowsPlatforms.test(userAgent)) {

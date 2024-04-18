@@ -49,8 +49,9 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undef
 
 const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | null>, originalFirstItemIndex: number) => {
   const os = getOS();
-  // In iOS, the behavior of firstItemIndex is weird, use a fallback method to fix it
+  // In iOS/iPadOS, the behavior of `firstItemIndex` is weird, use a fallback method to fix it
   const workaroundOnLoad = os === 'iOS';
+
   const firstItemIndex = workaroundOnLoad ? 0 : originalFirstItemIndex;
 
   const prevFirstItemIndex = useRef(originalFirstItemIndex);

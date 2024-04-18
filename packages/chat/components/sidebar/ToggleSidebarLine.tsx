@@ -13,6 +13,12 @@ export const ToggleSidebarLine: FC<Props> = () => {
   const isExpandedRef = useRef(isExpanded);
   isExpandedRef.current = isExpanded;
   const intl = useIntl();
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const listener = () => setIsTouch(true);
+    window.addEventListener('touchstart', listener);
+    return () => window.removeEventListener('touchstart', listener);
+  });
   const title = intl.formatMessage({ defaultMessage: 'Toggle Sidebar' });
   const [dragging, setDragging] = useState(false);
   const draggingRef = useRef(dragging);
@@ -35,33 +41,41 @@ export const ToggleSidebarLine: FC<Props> = () => {
   return (
     <button
       ref={buttonRef}
-      className="hover:bg-sidebar-toggler-hover/15 group absolute left-0 top-0 z-20 h-full w-[14px] cursor-pointer"
+      className={clsx(
+        'group absolute left-0 top-0 z-20 h-full w-[14px] cursor-pointer',
+        isTouch ? '' : 'hover:bg-sidebar-toggler-hover/15',
+      )}
       onMouseDown={handleMouseDown}
       title={title}
     >
       <div
         className={clsx(
-          'bg-bg group-hover:border-transprent text absolute top-[30%] z-30 box-content flex items-center justify-center text-lg',
-          'h-[40px] w-[26px] -translate-x-[2px] -translate-y-[2px] cursor-pointer',
-          'shadow-sidebar-border group-hover:shadow-sidebar-toggler-hover rounded-r-lg shadow-[0_0_0_1px] group-hover:shadow-[0_0_0_2px]',
+          'bg-bg  text absolute top-[26%] z-30 box-content flex items-center justify-center text-lg',
+          isTouch ? '' : 'group-hover:border-transprent',
+          'h-[64px] w-[26px] -translate-x-[2px] -translate-y-[2px] cursor-pointer',
+          'shadow-sidebar-border rounded-r-lg shadow-[0_0_0_1px]',
+          isTouch ? '' : 'group-hover:shadow-sidebar-toggler-hover group-hover:shadow-[0_0_0_2px]',
         )}
       >
         <Icon icon={isExpanded ? ChevronLeft : ChevronRight} />
       </div>
       <div
         className={clsx(
-          'bg-sidebar-divider group-hover:bg-sidebar-toggler-hover h-full w-[1px] group-hover:w-[2px]',
+          'bg-sidebar-divider h-full w-[1px]',
+          isTouch ? '' : 'group-hover:bg-sidebar-toggler-hover group-hover:w-[2px]',
           dragging && 'bg-sidebar-toggler-active',
         )}
       ></div>
-      <div className="bg-lowest absolute left-2 top-[calc(20%-3rem)] z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
-        <span>
-          <Icon icon={Sidebar} />
-        </span>
-        <span>
-          <FormattedMessage defaultMessage="Toggle Sidebar" />
-        </span>
-      </div>
+      {!isTouch && (
+        <div className="bg-lowest absolute left-2 top-[calc(20%-3rem)] z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
+          <span>
+            <Icon icon={Sidebar} />
+          </span>
+          <span>
+            <FormattedMessage defaultMessage="Toggle Sidebar" />
+          </span>
+        </div>
+      )}
     </button>
   );
 };

@@ -1,11 +1,12 @@
 import { GetMe } from '@boluo/api';
-import { FC, MutableRefObject } from 'react';
+import { FC, MutableRefObject, RefObject, useEffect, useLayoutEffect, useRef } from 'react';
 import { ListRange, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { ResolvedTheme } from '@boluo/theme';
 import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
+import { getOS } from '@boluo/utils';
 
 interface Props {
   iAmMaster: boolean;
@@ -45,10 +46,28 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undef
   return timeDiff < CONTINUOUS_TIME_MS;
 };
 
+const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | null>, originalFirstItemIndex: number) => {
+  const os = getOS();
+  // In iOS, the behavior of firstItemIndex is weird, use a fallback method to fix it
+  const workaroundOnLoad = os === 'iOS';
+  const firstItemIndex = workaroundOnLoad ? 0 : originalFirstItemIndex;
+
+  const prevFirstItemIndex = useRef(originalFirstItemIndex);
+  useLayoutEffect(() => {
+    if (!workaroundOnLoad || virtuosoRef.current == null) return;
+    const virtuoso = virtuosoRef.current;
+    if (prevFirstItemIndex.current > originalFirstItemIndex) {
+      const diff = prevFirstItemIndex.current - originalFirstItemIndex;
+      virtuoso.scrollToIndex({ index: Math.max(0, diff - 1), align: 'start' });
+    }
+    prevFirstItemIndex.current = originalFirstItemIndex;
+  }, [originalFirstItemIndex, virtuosoRef, workaroundOnLoad]);
+  return firstItemIndex;
+};
+
 export const ChatContentVirtualList: FC<Props> = (props) => {
   const {
     iAmMaster,
-    firstItemIndex,
     renderRangeRef,
     virtuosoRef,
     chatList,
@@ -68,7 +87,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   if (me && me !== 'LOADING') {
     myId = me.user.id;
   }
-
+  const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
   const itemContent = (offsetIndex: number, item: ChatItem) => {
     let continuous = false;
     if (offsetIndex - 1 === prevOffsetIndex) {
@@ -96,8 +115,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   return (
     <Virtuoso<ChatItem, VirtualListContext>
       className="overflow-x-hidden"
-      style={{ overflowY: 'scroll' }}
-      firstItemIndex={firstItemIndex}
+      style={{ overflowY: 'scroll', overscrollBehavior: 'none' }}
       ref={virtuosoRef}
       scrollerRef={(ref) => {
         if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
@@ -114,6 +132,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       itemContent={itemContent}
       followOutput="auto"
       atBottomStateChange={handleBottomStateChange}
+      firstItemIndex={firstItemIndex}
     />
   );
 };

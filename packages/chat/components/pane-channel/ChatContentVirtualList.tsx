@@ -1,6 +1,6 @@
 import { GetMe } from '@boluo/api';
 import { FC, MutableRefObject, RefObject, useLayoutEffect, useRef } from 'react';
-import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle, VirtuosoProps } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
@@ -47,7 +47,10 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undef
   return timeDiff < CONTINUOUS_TIME_MS;
 };
 
-const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | null>, originalFirstItemIndex: number) => {
+const useIosWorkaround = (
+  virtuosoRef: RefObject<VirtuosoHandle | null>,
+  originalFirstItemIndex: number,
+): { firstItemIndex: number } => {
   const os = getOS();
   // In iOS/iPadOS, the behavior of `firstItemIndex` is weird, use a fallback method to fix it
   const workaroundOnLoad = os === 'iOS';
@@ -64,7 +67,7 @@ const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | nul
     }
     prevFirstItemIndex.current = originalFirstItemIndex;
   }, [originalFirstItemIndex, virtuosoRef, workaroundOnLoad]);
-  return firstItemIndex;
+  return { firstItemIndex };
 };
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
@@ -81,6 +84,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     myMember,
     theme,
   } = props;
+  const windowHeight = useRef(window.innerHeight);
   const totalCount = chatList.length;
   const iAmAdmin = myMember.isOk && myMember.some.space.isAdmin;
 
@@ -90,7 +94,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   if (me && me !== 'LOADING') {
     myId = me.user.id;
   }
-  const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
+  const { firstItemIndex } = useIosWorkaround(virtuosoRef, props.firstItemIndex);
   const itemContent = (offsetIndex: number, item: ChatItem) => {
     let continuous = false;
     if (offsetIndex - 1 === prevOffsetIndex) {
@@ -141,8 +145,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       data={chatList}
       initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
       atBottomThreshold={64}
-      increaseViewportBy={{ top: 512, bottom: 128 }}
-      overscan={{ main: 128, reverse: 512 }}
+      overscan={windowHeight.current * 3}
       itemContent={itemContent}
       followOutput="auto"
       atBottomStateChange={handleBottomStateChange}

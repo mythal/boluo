@@ -9,8 +9,9 @@ import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom } from '../../state/chat.atoms';
+import { useIsScrolling } from '../../hooks/useIsScrolling';
 
-const LOAD_MESSAGE_LIMIT = 51;
+const LOAD_MESSAGE_LIMIT = 21;
 const AUTO_LOAD = true;
 
 interface Point {
@@ -28,6 +29,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const channelId = useChannelId();
   const isTouchDeviceRef = useRef(false);
   const mountedRef = useMountedRef();
+  const isScrolling = useIsScrolling();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
   const dispatch = useSetAtom(chatAtom);
@@ -104,6 +106,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       if (!isVisibleRef.current) return;
       const { touches } = e;
       if (touches.length !== 1) return;
+      if (isScrolling) return;
       setTouchState('START');
       const touch = touches[0]!;
       touchStartPoint.current = { x: touch.screenX, y: touch.screenY };
@@ -143,7 +146,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [loadMore]);
+  }, [isScrolling, loadMore]);
 
   const willLoad = touchState === 'WILL_LOAD';
   return (

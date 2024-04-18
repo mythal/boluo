@@ -18,6 +18,7 @@ interface Props {
   self: boolean;
   iAmMaster: boolean;
   iAmAdmin: boolean;
+  isScrolling: boolean;
   inGame: boolean;
 }
 
@@ -29,6 +30,7 @@ export const MessageBox: FC<Props> = ({
   overlay = false,
   message,
   mini = false,
+  isScrolling,
   optimistic = false,
   self,
   iAmMaster,
@@ -37,7 +39,7 @@ export const MessageBox: FC<Props> = ({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
     id: message.id,
     data: { message },
-    disabled: !draggable,
+    disabled: !draggable || isScrolling,
   });
 
   const style = useMemo(
@@ -49,7 +51,7 @@ export const MessageBox: FC<Props> = ({
   );
   const handle = useMemo(
     () =>
-      draggable ? (
+      draggable && !isScrolling ? (
         <MessageReorderHandle
           ref={setActivatorNodeRef}
           attributes={attributes}
@@ -60,10 +62,10 @@ export const MessageBox: FC<Props> = ({
         </MessageReorderHandle>
       ) : (
         <div className="text-message-time-text col-span-1 row-span-full h-full text-right">
-          <MessageTime message={message} />
+          {!isScrolling && <MessageTime message={message} />}
         </div>
       ),
-    [attributes, draggable, listeners, message, optimistic, setActivatorNodeRef],
+    [attributes, draggable, isScrolling, listeners, message, optimistic, setActivatorNodeRef],
   );
   const toolbox = useMemo(
     () => (
@@ -94,7 +96,7 @@ export const MessageBox: FC<Props> = ({
     >
       {handle}
       {children}
-      {(self || iAmMaster || iAmAdmin) && toolbox}
+      {(self || iAmMaster || iAmAdmin) && !isScrolling && toolbox}
     </div>
   );
 };

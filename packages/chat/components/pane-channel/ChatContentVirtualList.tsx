@@ -1,6 +1,6 @@
 import { GetMe } from '@boluo/api';
-import { FC, MutableRefObject, RefObject, useEffect, useLayoutEffect, useRef } from 'react';
-import { ListRange, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { FC, MutableRefObject, RefObject, useLayoutEffect, useRef } from 'react';
+import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
@@ -126,7 +126,17 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       rangeChanged={handleRangeChange}
       alignToBottom
       context={{ filteredMessagesCount }}
-      components={{ Header: ChatContentHeader }}
+      components={{ Header: ChatContentHeader, ScrollSeekPlaceholder }}
+      scrollSeekConfiguration={{
+        enter: (velocity) => {
+          return (
+            Math.abs(velocity) > 600 &&
+            /* High velocity also can be triggered by load messages */
+            velocity < 1200
+          );
+        },
+        exit: (velocity) => Math.abs(velocity) < 100,
+      }}
       data={chatList}
       initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
       atBottomThreshold={64}
@@ -139,3 +149,25 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     />
   );
 };
+
+const placeHolderColors = [
+  'bg-text-lighter/30',
+  'bg-text-lighter/30',
+  'bg-text-lighter/50',
+  'bg-text-lighter/10',
+  'bg-text-lighter/30',
+  'bg-text-lighter/60',
+];
+
+const ScrollSeekPlaceholder: FC<ScrollSeekPlaceholderProps> = ({ height, index }) => (
+  <div
+    className={`@2xl:pl-[17.5rem] py-2 pl-20 pr-4 ${index % 2 === 0 ? 'bg-message-inGame-bg' : ''}`}
+    style={{
+      height,
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+    }}
+  >
+    <div className={`${placeHolderColors[index % placeHolderColors.length]} h-full rounded`}></div>
+  </div>
+);

@@ -1,4 +1,4 @@
-import type { Channel } from '@boluo/api';
+import type { Channel, Message } from '@boluo/api';
 import clsx from 'clsx';
 import { Hash, LockedHash, X } from '@boluo/icons';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
@@ -21,39 +21,45 @@ interface Props {
 
 export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   const replacePane = usePaneReplace();
+  const intl = useIntl();
   const setPane = useSetAtom(panesAtom);
   const addPane = usePaneAdd();
   const latestMessageAtom = useMemo(
     () =>
-      selectAtom(chatAtom, (chat) => {
+      selectAtom(chatAtom, (chat): Message | 'EMPTY' | 'UNLOAD' => {
         const channelState = chat.channels[channel.id];
-        const messages = channelState?.messages ?? [];
+        if (!channelState) return 'UNLOAD';
+        const messages = channelState.messages ?? [];
         if (messages.length === 0) {
-          return null;
+          if (channelState.fullLoaded) return 'EMPTY';
+          return 'UNLOAD';
         }
-        return messages[messages.length - 1];
+        return messages[messages.length - 1]!;
       }),
     [channel.id],
   );
   const latestMessage = useAtomValue(latestMessageAtom);
   const latestMessageText: string = useMemo(() => {
-    if (latestMessage == null) {
+    if (typeof latestMessage === 'string') {
       return '';
+    }
+    if (latestMessage.whisperToUsers !== null) {
+      return `[${intl.formatMessage({ defaultMessage: 'Whisper' })}]`;
     }
     const parsed = messageToParsed(latestMessage.text, latestMessage.entities);
     return toSimpleText(parsed.text, parsed.entities);
-  }, [latestMessage]);
+  }, [intl, latestMessage]);
   const isUnread = useAtomValue(
     useMemo(() => {
       const ReadPositionAtom = channelReadFamily(channel.id);
       return atom((get) => {
         const latestMessage = get(latestMessageAtom);
         const readPosition = get(ReadPositionAtom);
-        return latestMessage ? readPosition < latestMessage.pos : false;
+        if (latestMessage === 'EMPTY' || latestMessage === 'UNLOAD') return false;
+        return readPosition < latestMessage.pos;
       });
     }, [channel.id, latestMessageAtom]),
   );
-  const intl = useIntl();
   const titleClose = intl.formatMessage({ defaultMessage: 'Close' });
   const titleOpenNew = intl.formatMessage({ defaultMessage: 'Open in new pane' });
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback(
@@ -111,17 +117,21 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
           </button>
         </div>
 
-        {latestMessage && latestMessageText ? (
-          <div data-unread={isUnread} className="col-start-2 truncate text-sm data-[unread=true]:font-bold">
+        {typeof latestMessage !== 'string' && (
+          <div
+            data-unread={isUnread}
+            data-is-action={latestMessage.isAction}
+            className="col-start-2 truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
+          >
             <span className="text-text-light group-hover:text-text-base mr-1">
               {latestMessage.name}
               {latestMessage.isAction ? '' : ':'}
             </span>
-            <span className="text-text-lighter group-hover:text-text-light">{latestMessageText}</span>
+            <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
           </div>
-        ) : (
-          <div className="bg-text-lighter/20 col-start-2 h-full w-full rounded-md"></div>
         )}
+        {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 col-start-2 h-full w-full rounded-md"></div>}
+        {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
       </a>
     </div>
   );

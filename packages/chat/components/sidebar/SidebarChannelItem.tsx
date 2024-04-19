@@ -1,7 +1,7 @@
 import type { Channel } from '@boluo/api';
 import clsx from 'clsx';
 import { Hash, LockedHash, X } from '@boluo/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
@@ -12,6 +12,7 @@ import { chatAtom } from '../../state/chat.atoms';
 import { selectAtom } from 'jotai/utils';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
+import { channelReadFamily } from '../../state/unread.atoms';
 
 interface Props {
   channel: Channel;
@@ -42,6 +43,16 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
     const parsed = messageToParsed(latestMessage.text, latestMessage.entities);
     return toSimpleText(parsed.text, parsed.entities);
   }, [latestMessage]);
+  const isUnread = useAtomValue(
+    useMemo(() => {
+      const ReadPositionAtom = channelReadFamily(channel.id);
+      return atom((get) => {
+        const latestMessage = get(latestMessageAtom);
+        const readPosition = get(ReadPositionAtom);
+        return latestMessage ? readPosition < latestMessage.pos : false;
+      });
+    }, [channel.id, latestMessageAtom]),
+  );
   const intl = useIntl();
   const titleClose = intl.formatMessage({ defaultMessage: 'Close' });
   const titleOpenNew = intl.formatMessage({ defaultMessage: 'Open in new pane' });
@@ -101,7 +112,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         </div>
 
         {latestMessage && latestMessageText ? (
-          <div className="col-start-2 truncate text-sm">
+          <div data-unread={isUnread} className="col-start-2 truncate text-sm data-[unread=true]:font-bold">
             <span className="text-text-light group-hover:text-text-base mr-1">
               {latestMessage.name}
               {latestMessage.isAction ? '' : ':'}

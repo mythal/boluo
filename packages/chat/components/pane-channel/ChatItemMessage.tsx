@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { fromRawEntities } from '../../interpreter/entities';
 import { emptyParseResult, ParseResult } from '../../interpreter/parse-result';
@@ -14,6 +14,7 @@ import { useQueryUser } from '@boluo/common';
 import { ResolvedTheme } from '@boluo/theme';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
+import { useReadObserve } from '../../hooks/useReadObserve';
 
 interface Props {
   iAmAdmin: boolean;
@@ -39,6 +40,12 @@ export const ChatItemMessage: FC<Props> = ({
   const isScrolling = useIsScrolling();
   const { isMaster, isAction, optimistic } = message;
   const { data: user } = useQueryUser(message.senderId);
+  const registerRead = useReadObserve();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current == null) return;
+    return registerRead(ref.current);
+  }, [registerRead]);
 
   const nameNode = useMemo(
     () => (
@@ -69,7 +76,7 @@ export const ChatItemMessage: FC<Props> = ({
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
         {!mini && <>{nameNode}:</>}
       </div>
-      <div className="@2xl:pr-messageRight">
+      <div className="@2xl:pr-messageRight" ref={ref} data-pos={message.pos}>
         {message.whisperToUsers != null && (
           <span className="text-surface-600 text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />

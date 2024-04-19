@@ -2,7 +2,7 @@ import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { GetMe, User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useStore } from 'jotai';
+import { useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import type { FC, MutableRefObject, RefObject } from 'react';
 import { useMemo } from 'react';
@@ -25,6 +25,8 @@ import { GoButtomButton } from './GoBottomButton';
 import { useTheme } from '@boluo/theme/useTheme';
 import { resolveSystemTheme } from '@boluo/theme';
 import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
+import { channelReadFamily } from '../../state/unread.atoms';
+import { ReadObserverContext } from '../../hooks/useReadObserve';
 
 interface Props {
   currentUser: User | undefined | null;
@@ -275,6 +277,46 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const positionObserverRef = useRef<IntersectionObserver | null>(null);
+  const readObserve = useCallback(
+    (node: Element): (() => void) => {
+      if (positionObserverRef.current === null) {
+        // Initialize the observer
+        const scroller = scrollerRef.current;
+        if (!scroller) {
+          console.warn('Scroller is not ready');
+          return () => {};
+        }
+        positionObserverRef.current = new IntersectionObserver(
+          (entries) => {
+            window.setTimeout(() => {
+              const posList = [];
+              for (const entry of entries) {
+                if (entry.intersectionRatio > 0.8) {
+                  const rawPos = entry.target.getAttribute('data-pos');
+                  if (!rawPos) continue;
+                  const pos = parseFloat(rawPos);
+                  if (Number.isNaN(pos)) continue;
+                  posList.push(pos);
+                }
+              }
+              const maxPos = Math.max(...posList);
+              const prevReadPos = store.get(channelReadFamily(channelId));
+              if (maxPos > prevReadPos) {
+                store.set(channelReadFamily(channelId), maxPos);
+              }
+            }, 30);
+          },
+          { root: scroller, threshold: 1.0 },
+        );
+      }
+      positionObserverRef.current.observe(node);
+      return () => {
+        positionObserverRef.current?.unobserve(node);
+      };
+    },
+    [channelId, store],
+  );
 
   const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
   const theme = resolveSystemTheme(useTheme());
@@ -298,33 +340,35 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
   return (
     <div className={className} ref={wrapperRef}>
       <ScrollerRefContext.Provider value={scrollerRef}>
-        <ChatListDndContext
-          iAmMaster={iAmMaster}
-          active={active}
-          myId={myId}
-          onDragCancel={handleDragCancel}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          theme={theme}
-        >
-          <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
-            <ChatContentVirtualList
-              firstItemIndex={firstItemIndex}
-              setIsScrolling={setIsScrolling}
-              renderRangeRef={renderRangeRef}
-              filteredMessagesCount={filteredMessagesCount}
-              virtuosoRef={virtuosoRef}
-              scrollerRef={scrollerRef}
-              iAmMaster={iAmMaster}
-              chatList={chatList}
-              handleBottomStateChange={handleBottomStateChange}
-              currentUser={currentUser}
-              myMember={myMember}
-              theme={theme}
-            />
-            {showButton && <GoButtomButton onClick={goBottom} />}
-          </SortableContext>
-        </ChatListDndContext>
+        <ReadObserverContext.Provider value={readObserve}>
+          <ChatListDndContext
+            iAmMaster={iAmMaster}
+            active={active}
+            myId={myId}
+            onDragCancel={handleDragCancel}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            theme={theme}
+          >
+            <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
+              <ChatContentVirtualList
+                firstItemIndex={firstItemIndex}
+                setIsScrolling={setIsScrolling}
+                renderRangeRef={renderRangeRef}
+                filteredMessagesCount={filteredMessagesCount}
+                virtuosoRef={virtuosoRef}
+                scrollerRef={scrollerRef}
+                iAmMaster={iAmMaster}
+                chatList={chatList}
+                handleBottomStateChange={handleBottomStateChange}
+                currentUser={currentUser}
+                myMember={myMember}
+                theme={theme}
+              />
+              {showButton && <GoButtomButton onClick={goBottom} />}
+            </SortableContext>
+          </ChatListDndContext>
+        </ReadObserverContext.Provider>
       </ScrollerRefContext.Provider>
     </div>
   );

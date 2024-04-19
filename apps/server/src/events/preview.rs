@@ -74,7 +74,7 @@ impl PreviewPost {
                 should_finish = true;
             }
         }
-        let start: i32 = if edit_for.is_some() {
+        let start: i32 = if edit_for.is_some() || should_finish {
             0
         } else {
             crate::pos::pos(db, cache, channel_id, id).await?

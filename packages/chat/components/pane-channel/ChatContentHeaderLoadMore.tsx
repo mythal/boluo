@@ -85,7 +85,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
         isVisibleRef.current = entry.isIntersecting;
         window.clearTimeout(autoLoadTimeoutRef.current);
         if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
-          void loadMore();
+          autoLoadTimeoutRef.current = window.setTimeout(loadMore, 100);
         }
       },
       { threshold: [0.75] },

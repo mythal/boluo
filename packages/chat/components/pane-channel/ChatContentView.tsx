@@ -372,7 +372,7 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
                 myMember={myMember}
                 theme={theme}
               />
-              {showButton && <GoButtomButton onClick={goBottom} />}
+              {showButton && <GoButtomButton channelId={channelId} chatList={chatList} onClick={goBottom} />}
             </SortableContext>
           </ChatListDndContext>
         </ReadObserverContext.Provider>

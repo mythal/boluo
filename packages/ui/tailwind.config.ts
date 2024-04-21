@@ -149,6 +149,12 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
       },
+      bottom: {
+        badge: {
+          bg: brand[600],
+          text: white,
+        },
+      },
       message: {
         time: {
           text: $(neutral[300], neutral[600]),

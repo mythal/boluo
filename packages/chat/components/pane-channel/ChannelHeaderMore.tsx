@@ -45,9 +45,7 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
 
   return (
     <div className="bg-pane-header-bg px-pane flex items-center gap-2 py-2">
-      <div className="flex-1 overflow-hidden">
-        <CharacterName member={member.channel} edit={() => setHeaderState('CHARACTER')} />
-      </div>
+      <div className="flex-grow"></div>
       <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />
       {member.space.isAdmin && (
         <div className="flex-none">

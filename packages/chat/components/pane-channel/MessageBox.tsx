@@ -51,7 +51,7 @@ export const MessageBox: FC<Props> = ({
   );
   const handle = useMemo(
     () =>
-      draggable && !isScrolling ? (
+      draggable ? (
         <MessageReorderHandle
           ref={setActivatorNodeRef}
           attributes={attributes}
@@ -62,15 +62,19 @@ export const MessageBox: FC<Props> = ({
         </MessageReorderHandle>
       ) : (
         <div className="text-message-time-text col-span-1 row-span-full h-full text-right">
-          {!isScrolling && <MessageTime message={message} />}
+          <MessageTime message={message} />
         </div>
       ),
-    [attributes, draggable, isScrolling, listeners, message, optimistic, setActivatorNodeRef],
+    [attributes, draggable, listeners, message, optimistic, setActivatorNodeRef],
   );
   const toolbox = useMemo(
     () => (
       <Delay timeout={400}>
-        <div className={clsx('absolute right-2 top-1 z-10 max-h-full group-hover:z-20')}>
+        <div
+          className={clsx(
+            'absolute right-3 top-0 z-10 hidden max-h-full -translate-y-4 group-hover:z-20 group-hover:block',
+          )}
+        >
           <MessageToolbox message={message} self={self} iAmAdmin={iAmAdmin} iAmMaster={iAmMaster} />
         </div>
       </Delay>
@@ -82,11 +86,11 @@ export const MessageBox: FC<Props> = ({
       data-overlay={overlay}
       data-in-game={inGame}
       className={clsx(
-        'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
+        'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-6',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
-        'data-[in-game=true]:bg-message-inGame-bg',
+        inGame ? 'bg-message-inGame-bg hover:bg-message-inGame-hover-bg' : 'hover:bg-message-hover-bg',
         'data-[overlay=true]:bg-surface-300/30 data-[overlay=true]:data-[in-game=true]:bg-message-inGame-bg/75 data-[overlay=true]:backdrop-blur-sm',
         isDragging && 'opacity-0',
         className,
@@ -96,7 +100,7 @@ export const MessageBox: FC<Props> = ({
     >
       {handle}
       {children}
-      {(self || iAmMaster || iAmAdmin) && !isScrolling && toolbox}
+      {(self || iAmMaster || iAmAdmin) && toolbox}
     </div>
   );
 };

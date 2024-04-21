@@ -156,6 +156,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         },
       },
       message: {
+        hover: {
+          bg: $(transparentize(neutral[50], 0.25), neutral[800]),
+        },
         time: {
           text: $(neutral[300], neutral[600]),
         },
@@ -167,6 +170,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         },
         inGame: {
           bg: inGameMessageBg,
+          hover: {
+            bg: $(mix(lime[50], white, 0.175), zinc[900]),
+          },
         },
         action: $(neutral[400], neutral[600]),
         toolbox: {

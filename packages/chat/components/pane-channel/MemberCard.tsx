@@ -269,7 +269,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
   ) => {
     const { data: currentUser } = useQueryUser();
     const thisIsMe = user.id === currentUser?.id;
-    const canIManage = canIKick || canIInvite || canIEditMaster || thisIsMe;
+    const canIManage = canIKick || canIInvite || canIEditMaster;
     const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>('VIEW');
     const intl = useIntl();
     let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
@@ -316,11 +316,13 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
               <Badges thisIsMe={thisIsMe} isAdmin={spaceMember.isAdmin} isMaster={channelMember?.isMaster ?? false} />
             </div>
           </div>
-          <div className="py-4">
-            <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
-          </div>
+          {user.bio !== '' && (
+            <div className="pt-4">
+              <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
+            </div>
+          )}
           {uiState === 'VIEW' && canIManage && (
-            <div className="space-x-1 text-right">
+            <div className="space-x-1 pt-4 text-right">
               {thisIsMe && channelMember != null && (
                 <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
                   <Icon icon={UserX} />
@@ -338,7 +340,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
           )}
 
           {uiState === 'MANAGE' && (
-            <div className="py-2">
+            <div className="pb-2 pt-4">
               {canIEditMaster && channelMember?.channelId === channel.id && (
                 <EditMasterCheckBox channelMember={channelMember} />
               )}
@@ -346,7 +348,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
           )}
 
           {uiState === 'MANAGE' && (
-            <div className="space-x-1">
+            <div className="space-x-1 pt-4">
               {canIKick && !thisIsMe && (
                 <Button data-small onClick={() => setUiState('CONFIRM_KICK')}>
                   <Icon icon={UserX} />

@@ -21,7 +21,7 @@ export const GoButtomButton = memo<Props>(({ onClick, channelId, chatList }) => 
     [chatList, readPosition],
   );
   return (
-    <Button onClick={onClick} className="absolute bottom-4 right-1/2 z-30 translate-x-1/2 text-lg">
+    <Button onClick={onClick} className="absolute bottom-4 right-1/2 z-30 translate-x-1/2 text-lg shadow">
       {unreadCount > 0 ? (
         <>
           <ChevronsDown />

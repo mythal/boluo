@@ -225,7 +225,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       button: {
         default: {
-          bg: $(neutral[200], neutral[700]),
+          bg: $(neutral[100], neutral[700]),
           text: $(black, white),
           hover: {
             bg: $(neutral[200], neutral[700]),
@@ -252,7 +252,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           bg: brand[600],
           text: white,
           hover: {
-            bg: brand[500],
+            bg: brand[700],
           },
           active: {
             bg: brand[700],
@@ -263,7 +263,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         switch: {
-          bg: $(neutral[200], neutral[700]),
+          bg: $(neutral[100], neutral[700]),
           text: $(black, white),
           on: {
             hint: brand[400],

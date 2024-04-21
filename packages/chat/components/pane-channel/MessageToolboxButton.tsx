@@ -14,7 +14,7 @@ export const MessageToolboxButton: FC<Props> = ({ children, onClick, onMouseEnte
   return (
     <button
       className={clsx(
-        'flex items-center gap-1 p-2 first-of-type:rounded-l-sm last-of-type:rounded-r-sm',
+        'flex items-center gap-1 px-2 py-1 first-of-type:rounded-l last-of-type:rounded-r',
         on ? 'bg-message-toolbox-active-bg hover:bg-message-toolbox-active-bg/85 text-lowest' : 'hover:bg-highest/10',
         danger && 'text-message-toolbox-danger',
       )}

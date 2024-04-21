@@ -10,6 +10,7 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { MessageToolboxButton } from './MessageToolboxButton';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import clsx from 'clsx';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   self: boolean;
@@ -24,8 +25,8 @@ const Box = forwardRef<HTMLDivElement, { children: ReactNode; expanded: boolean 
     aria-expanded={expanded}
     className={clsx(
       'transition-colors duration-100',
-      'bg-message-toolbox-bg/70 text-highest/60 group-hover:bg-message-toolbox-bg group-hover:text-highest flex items-stretch rounded-sm text-base shadow-sm',
-      'aria-expanded:text-highest aria-expanded:bg-lowest',
+      'bg-message-toolbox-bg text-highest/60 group-hover:text-highest flex items-stretch rounded text-base shadow',
+      'aria-expanded:text-highest',
     )}
   >
     {children}
@@ -93,31 +94,21 @@ export const MessageToolbox: FC<Props> = ({ message, self, iAmAdmin, iAmMaster }
         </MessageToolboxButton>
       ) : (
         <>
-          {expanded && (
-            <>
-              {(self || iAmMaster) && (
-                <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
-                  <Archive />
-                </MessageToolboxButton>
-              )}
-              {(self || iAmAdmin) && (
-                <MessageToolboxButton onClick={handleDelete}>
-                  <Trash className="text-text-danger" />
-                </MessageToolboxButton>
-              )}
-            </>
+          {(self || iAmAdmin) && (
+            <MessageToolboxButton onClick={handleDelete}>
+              <Icon icon={Trash} className="text-text-danger" />
+            </MessageToolboxButton>
+          )}
+          {(self || iAmMaster) && (
+            <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
+              <Icon icon={Archive} />
+            </MessageToolboxButton>
           )}
           {self && (
             <MessageToolboxButton onClick={handleEditMessage}>
               <Edit />
             </MessageToolboxButton>
           )}
-          <MessageToolboxButton
-            onMouseEnter={() => setExpandedId(toolboxId)}
-            onClick={() => setExpandedId(expanded ? '' : toolboxId)}
-          >
-            <EllipsisVertical className={expanded ? 'text-message-toolbox-active-bg' : ''} />
-          </MessageToolboxButton>
         </>
       )}
     </Box>

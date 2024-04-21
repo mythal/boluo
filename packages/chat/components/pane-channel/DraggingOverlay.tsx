@@ -27,6 +27,7 @@ export const DraggingOverlay = memo<Props>(({ active, myId, iAmMaster, theme }) 
             theme={theme}
             message={message}
             iAmMaster={iAmMaster}
+            isLast={false}
             iAmAdmin={false}
             self={senderId === myId}
             className="px-4 py-2"

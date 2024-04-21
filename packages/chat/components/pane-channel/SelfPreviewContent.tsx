@@ -1,5 +1,5 @@
 import { ChannelMember } from '@boluo/api';
-import { useAtomValue } from 'jotai';
+import { atom, useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { FC, ReactNode, useDeferredValue, useEffect, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
@@ -15,6 +15,7 @@ interface Props {
 }
 
 export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused }) => {
+  const store = useStore();
   const { composeAtom, parsedAtom, inGameAtom } = useChannelAtoms();
   const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
@@ -22,8 +23,8 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused })
     useMemo(() => selectAtom(composeAtom, ({ source, range }) => ({ range: range, self: true })), [composeAtom]),
   );
 
+  const cursorAtom = useMemo(() => atom<HTMLElement | null>(null), []);
   const scrollerRef = useScrollerRef();
-  const cursorRef = useRef<HTMLSpanElement | null>(null);
   const prevRangeRef = useRef<[number, number] | null>(null);
 
   useEffect(() => {
@@ -33,14 +34,16 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused })
     const [a0, b0] = prevRange;
     const [a1, b1] = cursorState.range;
     if (a0 === a1 && b0 === b1) return;
-    const cursor = cursorRef.current;
-    if (cursor === null) return;
+    const cursorWrapper = store.get(cursorAtom)?.parentElement;
+    if (cursorWrapper == null) return;
     const scroller = scrollerRef.current;
-    if (scroller === null) return;
+    if (scroller == null) return;
     const scrollerRect = scroller.getBoundingClientRect();
-    const cursorRect = cursor.getBoundingClientRect();
-    if (cursorRect.bottom > scrollerRect.bottom || cursorRect.top < scrollerRect.top) {
-      cursor.scrollIntoView();
+    const cursorRect = cursorWrapper.getBoundingClientRect();
+    if (cursorRect.bottom > scrollerRect.bottom) {
+      cursorWrapper.scrollIntoView({ block: 'end' });
+    } else if (cursorRect.top < scrollerRect.top) {
+      cursorWrapper.scrollIntoView({ block: 'start' });
     }
   });
 
@@ -63,6 +66,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused })
         nameNode={nameNode}
         self
         isPreview
+        cursorAtom={cursorAtom}
         isFocused={isFocused}
       />
     </CursorContext.Provider>

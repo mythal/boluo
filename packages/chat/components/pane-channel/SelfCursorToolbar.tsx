@@ -3,6 +3,7 @@ import { autoUpdate, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
 import { Atom, useAtomValue } from 'jotai';
+import clsx from 'clsx';
 
 interface Props {
   cursorAtom: Atom<HTMLElement | null>;
@@ -33,13 +34,14 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
   }, [cursorState?.range]);
   const buttions = useMemo(() => <SelfCursorToolbarButtons collapsed={collapsed} />, [collapsed]);
 
-  if (!cursorNode) return null;
-
   return (
     <div
       ref={refs.setFloating}
       style={floatingStyles}
-      className="bg-lowest border-highest z-10 flex select-none items-center justify-center rounded-lg border-[2px] shadow"
+      className={clsx(
+        !cursorNode && 'hidden',
+        'bg-lowest border-highest z-10 flex select-none items-center justify-center rounded-lg border-[2px] shadow',
+      )}
     >
       {buttions}
     </div>

@@ -12,9 +12,10 @@ import { useQueryUser } from '@boluo/common';
 interface Props {
   preview: PreviewItem;
   theme: ResolvedTheme;
+  isLast: boolean;
 }
 
-export const OthersPreview: FC<Props> = ({ preview, theme }) => {
+export const OthersPreview: FC<Props> = ({ preview, theme, isLast }) => {
   const { isMaster, isAction, name } = preview;
 
   const parsed: ParseResult = useMemo(() => {
@@ -36,6 +37,7 @@ export const OthersPreview: FC<Props> = ({ preview, theme }) => {
       editMode={preview.editFor !== null}
       isSelf={false}
       inGame={preview.inGame}
+      isLast={isLast}
       className="text-surface-600 @2xl:pr-messageRight"
     >
       <div className="@2xl:flex-col flex gap-1">

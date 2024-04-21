@@ -33,9 +33,10 @@ interface Props {
   preview: PreviewItem;
   myMember: Member;
   theme: 'light' | 'dark';
+  isLast: boolean;
 }
 
-export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme }) => {
+export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme, isLast }) => {
   const isFocused = usePaneIsFocus();
   const isMaster = member.channel.isMaster;
   const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
@@ -70,7 +71,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme }) => 
   }, [media]);
 
   return (
-    <PreviewBox id={preview.key} inGame={inGame} editMode={editMode} isSelf onDrop={onDrop}>
+    <PreviewBox isLast={isLast} id={preview.key} inGame={inGame} editMode={editMode} isSelf onDrop={onDrop}>
       <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
       <div>
         <div className="items-between @2xl:pr-messageRight flex h-full min-h-8 flex-col gap-1">

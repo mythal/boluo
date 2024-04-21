@@ -11,16 +11,18 @@ interface Props {
   iAmMaster: boolean;
   isMember: boolean;
   className?: string;
+  isLast: boolean;
   continuous: boolean;
   theme: ResolvedTheme;
 }
 
 export const ChatItemSwitch = memo<Props>(
-  ({ chatItem, className = '', myId, continuous, iAmAdmin, iAmMaster, isMember, theme }) => {
+  ({ chatItem, className = '', myId, continuous, iAmAdmin, iAmMaster, isMember, theme, isLast }) => {
     switch (chatItem.type) {
       case 'MESSAGE':
         return (
           <ChatItemMessage
+            isLast={isLast}
             self={isMember && myId === chatItem.senderId}
             iAmAdmin={iAmAdmin}
             iAmMaster={iAmMaster}
@@ -31,7 +33,7 @@ export const ChatItemSwitch = memo<Props>(
           />
         );
       case 'PREVIEW':
-        return <ChatItemPreview preview={chatItem} className={className} theme={theme} />;
+        return <ChatItemPreview isLast={isLast} preview={chatItem} className={className} theme={theme} />;
       default:
         return <div className={className}>Not implemented</div>;
     }

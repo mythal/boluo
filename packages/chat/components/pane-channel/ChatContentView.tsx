@@ -1,8 +1,8 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { GetMe, User } from '@boluo/api';
+import type { User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useSetAtom, useStore } from 'jotai';
+import { useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import type { FC, MutableRefObject, RefObject } from 'react';
 import { useMemo } from 'react';
@@ -47,7 +47,6 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
   // ref: https://virtuoso.dev/stick-to-bottom/
   const [showButton, setShowButton] = useState(false);
   const showButtonTimeoutRef = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(showButtonTimeoutRef.current));
   const onBottomStateChange = useCallback((bottom: boolean) => {
     window.clearTimeout(showButtonTimeoutRef.current);
     if (bottom) {
@@ -60,7 +59,7 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
   const goBottom = useCallback(() => {
     const virtuoso = virtuosoRef.current;
     if (!virtuoso) return;
-    virtuoso.scrollToIndex({ index: 'LAST', behavior: 'smooth' });
+    virtuoso.scrollToIndex({ index: 'LAST' });
   }, [virtuosoRef]);
   return { showButton, onBottomStateChange, goBottom };
 };
@@ -278,6 +277,8 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
+  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
+
   const readObserve = useCallback(
     (node: Element): (() => void) => {
       if (positionObserverRef.current === null) {
@@ -285,15 +286,28 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
         const scroller = scrollerRef.current;
         if (!scroller) {
           console.warn('Scroller is not ready');
+
           return () => {};
         }
         positionObserverRef.current = new IntersectionObserver(
           (entries) => {
+            for (const entry of entries) {
+              if (entry.target.getAttribute('data-is-last') === 'true') {
+                if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+                  scrollLockRef.current.end = true;
+                  goBottomButtonOnBottomChange(true);
+                }
+                if (!entry.isIntersecting && entry.intersectionRatio < 0.1) {
+                  scrollLockRef.current.end = false;
+                  goBottomButtonOnBottomChange(false);
+                }
+              }
+            }
             window.setTimeout(() => {
               const posList = [];
               for (const entry of entries) {
-                if (entry.intersectionRatio > 0.8) {
-                  const rawPos = entry.target.getAttribute('data-pos');
+                if (entry.intersectionRatio > 0.7 && entry.isIntersecting) {
+                  const rawPos = entry.target.getAttribute('data-read-position');
                   if (!rawPos) continue;
                   const pos = parseFloat(rawPos);
                   if (Number.isNaN(pos)) continue;
@@ -307,7 +321,7 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
               }
             }, 30);
           },
-          { root: scroller, threshold: 1.0 },
+          { root: scroller, threshold: [0, 0.8] },
         );
       }
       positionObserverRef.current.observe(node);
@@ -315,10 +329,9 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
         positionObserverRef.current?.unobserve(node);
       };
     },
-    [channelId, store],
+    [channelId, goBottomButtonOnBottomChange, scrollLockRef, store],
   );
 
-  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
   const theme = resolveSystemTheme(useTheme());
   useEffect(() => {
     if (scheduledGcLowerPos === null) return;
@@ -329,11 +342,6 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
       store.set(chatAtom, { type: 'resetGc', payload: { pos: chatItem.pos } });
     }
   });
-
-  const handleBottomStateChange = (bottom: boolean) => {
-    goBottomButtonOnBottomChange(bottom);
-    scrollLockRef.current.end = bottom;
-  };
 
   const iAmMaster = myMember.isOk && myMember.some.channel.isMaster;
 
@@ -360,7 +368,6 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
                 scrollerRef={scrollerRef}
                 iAmMaster={iAmMaster}
                 chatList={chatList}
-                handleBottomStateChange={handleBottomStateChange}
                 currentUser={currentUser}
                 myMember={myMember}
                 theme={theme}

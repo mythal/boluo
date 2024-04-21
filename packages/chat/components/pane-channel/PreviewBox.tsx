@@ -1,8 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { DragEventHandler, FC, ReactNode, useMemo } from 'react';
+import { DragEventHandler, FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
+import { useReadObserve } from '../../hooks/useReadObserve';
 
 interface Props {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface Props {
   className?: string;
   editMode?: boolean;
   isSelf?: boolean;
+  isLast: boolean;
   inGame: boolean;
   onDrop?: DragEventHandler;
 }
@@ -21,8 +23,15 @@ export const PreviewBox: FC<Props> = ({
   editMode = false,
   inGame,
   isSelf = false,
+  isLast,
   onDrop,
 }) => {
+  const readObserve = useReadObserve();
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (boxRef.current == null) return;
+    return readObserve(boxRef.current);
+  }, [readObserve]);
   const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
 
   const style = {
@@ -33,6 +42,8 @@ export const PreviewBox: FC<Props> = ({
   const handlePlaceHolder = useMemo(() => <PreviewHandlePlaceHolder editMode={editMode} />, [editMode]);
   return (
     <div
+      data-id={id}
+      data-is-last={isLast}
       data-in-game={inGame}
       className={clsx(
         'group grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
@@ -42,7 +53,10 @@ export const PreviewBox: FC<Props> = ({
         'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',
         className,
       )}
-      ref={setNodeRef}
+      ref={(ref) => {
+        setNodeRef(ref);
+        boxRef.current = ref;
+      }}
       style={style}
       onDrop={onDrop}
       onDragOver={(event) => event.preventDefault()}

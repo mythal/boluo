@@ -131,9 +131,9 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       scrollSeekConfiguration={{
         enter: (velocity) => {
           return (
-            Math.abs(velocity) > 600 &&
+            Math.abs(velocity) > 1200 &&
             /* High velocity also can be triggered by load messages */
-            velocity < 1200
+            velocity < 1600
           );
         },
         exit: (velocity) => Math.abs(velocity) < 100,

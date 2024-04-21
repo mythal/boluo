@@ -16,7 +16,7 @@ interface Props {
   scrollerRef: MutableRefObject<HTMLDivElement | null>;
   chatList: ChatItem[];
   filteredMessagesCount: number;
-  handleBottomStateChange: (bottom: boolean) => void;
+  handleBottomStateChange?: (bottom: boolean) => void;
   currentUser: User | undefined | null;
   myMember: MyChannelMemberResult;
   theme: ResolvedTheme;
@@ -89,6 +89,8 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   const myId: string | undefined = currentUser?.id ?? undefined;
   const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
   const itemContent = (offsetIndex: number, item: ChatItem) => {
+    const isLast = totalCount - 1 === offsetIndex - firstItemIndex;
+
     let continuous = false;
     if (offsetIndex - 1 === prevOffsetIndex) {
       continuous = isContinuous(prevItem, item);
@@ -98,6 +100,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     prevItem = item;
     return (
       <ChatItemSwitch
+        isLast={isLast}
         iAmMaster={iAmMaster}
         iAmAdmin={iAmAdmin}
         key={item.key}

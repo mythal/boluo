@@ -22,6 +22,7 @@ interface Props {
   message: MessageItem;
   className?: string;
   self: boolean;
+  isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
   theme: ResolvedTheme;
@@ -29,23 +30,23 @@ interface Props {
 
 export const ChatItemMessage: FC<Props> = ({
   message,
-  className = '',
   self,
   continuous = false,
   iAmAdmin,
   iAmMaster,
   overlay = false,
   theme,
+  isLast,
 }) => {
   const isScrolling = useIsScrolling();
   const { isMaster, isAction, optimistic } = message;
   const { data: user } = useQueryUser(message.senderId);
-  const registerRead = useReadObserve();
+  const readObserve = useReadObserve();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (ref.current == null) return;
-    return registerRead(ref.current);
-  }, [registerRead]);
+    return readObserve(ref.current);
+  }, [readObserve]);
 
   const nameNode = useMemo(
     () => (
@@ -76,7 +77,7 @@ export const ChatItemMessage: FC<Props> = ({
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
         {!mini && <>{nameNode}:</>}
       </div>
-      <div className="@2xl:pr-messageRight" ref={ref} data-pos={message.pos}>
+      <div className="@2xl:pr-messageRight" ref={ref} data-read-position={message.pos} data-is-last={isLast}>
         {message.whisperToUsers != null && (
           <span className="text-surface-600 text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />

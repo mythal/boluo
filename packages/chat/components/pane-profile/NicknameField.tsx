@@ -15,12 +15,13 @@ export const NicknameField: FC<Props> = ({ nickname }) => {
     formState: { errors },
   } = useFormContext<ProfileEditSchema>();
   return (
-    <div>
+    <div className="">
       <TextInput
         defaultValue={nickname}
         {...register('nickname', {
           required: intl.formatMessage({ defaultMessage: "Can't be empty." }),
         })}
+        className="max-w-full"
       ></TextInput>
 
       {errors.nickname && <div className="text-error-600 py-1 text-sm">{errors.nickname.message}</div>}

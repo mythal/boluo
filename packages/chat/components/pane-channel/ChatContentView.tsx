@@ -200,56 +200,8 @@ const useScrollLock = (
   rangeRef: MutableRefObject<[number, number]>,
   chatList: ChatItem[],
 ): MutableRefObject<ScrollLockState> => {
-  const composeAtom = useComposeAtom();
-  const store = useStore();
   const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
-  const modifiedAtom = useMemo(() => selectAtom(composeAtom, ({ range }) => range), [composeAtom]);
   const prevChatListLength = useRef(chatList.length);
-
-  useEffect(
-    () =>
-      store.sub(modifiedAtom, () => {
-        const { previewId } = store.get(composeAtom);
-        if (previewId === null) return;
-        scrollLockRef.current.id = previewId;
-        scrollLockRef.current.modified = new Date().getTime();
-      }),
-    [composeAtom, modifiedAtom, store],
-  );
-
-  useEffect(() => {
-    const ensureSelfPreviewAreRendered = () => {
-      const virtuoso = virtuosoRef.current;
-      if (!virtuoso) return;
-      const scrollLock = scrollLockRef.current;
-      const { modified, end } = scrollLock;
-      const now = new Date().getTime();
-      // lock on a preview only if it is recently modified
-      const id = scrollLock.id;
-      if (now - modified > PREVIEW_LOCK_TIMEOUT || id == null) {
-        return;
-      }
-      const index = chatList.findIndex((item) => item.type === 'PREVIEW' && item.id === id);
-      const [a, b] = rangeRef.current;
-      // If the preview is not rendered, scroll to it
-      // The more precisly scrolling will be done by the cursor element
-      if (index >= 0 && (index < a || index > b)) {
-        virtuoso.scrollToIndex({ index, behavior: 'auto' });
-      }
-    };
-    const scroller = scrollerRef.current;
-    const wrapper = wrapperRef.current;
-    const resizeObserver = new ResizeObserver((entries) => {
-      ensureSelfPreviewAreRendered();
-    });
-    if (scroller) resizeObserver.observe(scroller);
-    if (wrapper) resizeObserver.observe(wrapper);
-    const handle = window.setInterval(ensureSelfPreviewAreRendered, 2000);
-    return () => {
-      window.clearInterval(handle);
-      resizeObserver.disconnect();
-    };
-  });
 
   useEffect(() => {
     if (chatList.length !== prevChatListLength.current) {

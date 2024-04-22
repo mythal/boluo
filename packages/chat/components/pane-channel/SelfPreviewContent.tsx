@@ -7,6 +7,7 @@ import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { CursorContext, CursorState } from '../entities/TextWithCursor';
 import { Content } from './Content';
 import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
+import { useIsTouch } from '../../hooks/useIsTouch';
 
 interface Props {
   nameNode: ReactNode;
@@ -15,7 +16,6 @@ interface Props {
 }
 
 export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused }) => {
-  const store = useStore();
   const { composeAtom, parsedAtom, inGameAtom } = useChannelAtoms();
   const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
@@ -24,28 +24,6 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused })
   );
 
   const cursorAtom = useMemo(() => atom<HTMLElement | null>(null), []);
-  const scrollerRef = useScrollerRef();
-  const prevRangeRef = useRef<[number, number] | null>(null);
-
-  useEffect(() => {
-    const prevRange = prevRangeRef.current;
-    prevRangeRef.current = cursorState.range;
-    if (prevRange === null) return;
-    const [a0, b0] = prevRange;
-    const [a1, b1] = cursorState.range;
-    if (a0 === a1 && b0 === b1) return;
-    const cursorWrapper = store.get(cursorAtom)?.parentElement;
-    if (cursorWrapper == null) return;
-    const scroller = scrollerRef.current;
-    if (scroller == null) return;
-    const scrollerRect = scroller.getBoundingClientRect();
-    const cursorRect = cursorWrapper.getBoundingClientRect();
-    if (cursorRect.bottom > scrollerRect.bottom) {
-      cursorWrapper.scrollIntoView({ block: 'end' });
-    } else if (cursorRect.top < scrollerRect.top) {
-      cursorWrapper.scrollIntoView({ block: 'start' });
-    }
-  });
 
   const deferredParsed = useDeferredValue(parsed);
   return (

@@ -204,6 +204,8 @@ const useScrollLock = (
   const store = useStore();
   const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
   const modifiedAtom = useMemo(() => selectAtom(composeAtom, ({ range }) => range), [composeAtom]);
+  const prevChatListLength = useRef(chatList.length);
+
   useEffect(
     () =>
       store.sub(modifiedAtom, () => {
@@ -216,38 +218,46 @@ const useScrollLock = (
   );
 
   useEffect(() => {
-    const callback = () => {
+    const ensureSelfPreviewAreRendered = () => {
       const virtuoso = virtuosoRef.current;
       if (!virtuoso) return;
       const scrollLock = scrollLockRef.current;
       const { modified, end } = scrollLock;
       const now = new Date().getTime();
       // lock on a preview only if it is recently modified
-      const id: string | null = now - modified < PREVIEW_LOCK_TIMEOUT ? scrollLock.id : null;
-      if (id !== null) {
-        const index = chatList.findIndex((item) => item.type === 'PREVIEW' && item.id === id);
-        const [a, b] = rangeRef.current;
-        // If the preview is not rendered, scroll to it
-        // The more precisly scrolling will be done by the cursor element
-        if (index >= 0 && (index < a || index > b)) {
-          virtuoso.scrollToIndex({ index, behavior: 'auto' });
-        }
-      } else if (end) {
-        virtuoso.scrollToIndex({ index: 'LAST', behavior: 'auto', align: 'end' });
+      const id = scrollLock.id;
+      if (now - modified > PREVIEW_LOCK_TIMEOUT || id == null) {
+        return;
+      }
+      const index = chatList.findIndex((item) => item.type === 'PREVIEW' && item.id === id);
+      const [a, b] = rangeRef.current;
+      // If the preview is not rendered, scroll to it
+      // The more precisly scrolling will be done by the cursor element
+      if (index >= 0 && (index < a || index > b)) {
+        virtuoso.scrollToIndex({ index, behavior: 'auto' });
       }
     };
     const scroller = scrollerRef.current;
     const wrapper = wrapperRef.current;
     const resizeObserver = new ResizeObserver((entries) => {
-      callback();
+      ensureSelfPreviewAreRendered();
     });
     if (scroller) resizeObserver.observe(scroller);
     if (wrapper) resizeObserver.observe(wrapper);
-    const handle = window.setInterval(callback, 2000);
+    const handle = window.setInterval(ensureSelfPreviewAreRendered, 2000);
     return () => {
       window.clearInterval(handle);
       resizeObserver.disconnect();
     };
+  });
+
+  useEffect(() => {
+    if (chatList.length !== prevChatListLength.current) {
+      const virtuoso = virtuosoRef.current;
+      if (!virtuoso || !scrollLockRef.current.end) return;
+      virtuoso.scrollToIndex({ index: 'LAST' });
+    }
+    prevChatListLength.current = chatList.length;
   });
   return scrollLockRef;
 };

@@ -59,6 +59,7 @@ const useReflectRangeChange = (
 const style: React.CSSProperties = {
   width: '100%',
   maxHeight: '8rem',
+  scrollbarWidth: 'none',
 };
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {

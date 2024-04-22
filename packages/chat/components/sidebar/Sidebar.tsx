@@ -11,9 +11,9 @@ import { SidebarStateContext } from './useSidebarState';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { User } from '@boluo/api';
+import { ToggleSidebarLine } from './ToggleSidebarLine';
 
 interface Props {
-  className?: string;
   spaceId?: string;
 }
 
@@ -32,22 +32,27 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
   );
 };
 
-export const Sidebar: FC<Props> = ({ className, spaceId }) => {
+export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
+  const foldedNode = (
+    <div className="relative w-0">
+      <ToggleSidebarLine />
+    </div>
+  );
   if (!isExpanded) {
-    return null;
+    return foldedNode;
   }
-  let content: ReactNode = null;
+  let content: ReactNode = foldedNode;
   if (spaceId == null) {
-    content = currentUser == null ? null : <SidebarSpaceList currentUser={currentUser} />;
+    content = currentUser == null ? foldedNode : <SidebarSpaceList currentUser={currentUser} />;
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
   }
 
   return (
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
-      <div className={className}>
+      <div className="bg-bg relative flex h-full min-h-0 flex-none flex-col">
         <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
           <div className="overflow-y-auto overflow-x-hidden">{content}</div>
 
@@ -57,6 +62,7 @@ export const Sidebar: FC<Props> = ({ className, spaceId }) => {
             <ConnectionIndicatior />
           </div>
         </div>
+        <ToggleSidebarLine />
       </div>
     </SidebarStateContext.Provider>
   );

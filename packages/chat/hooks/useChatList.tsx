@@ -1,13 +1,12 @@
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { Dispatch, SetStateAction, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
-import { ChannelState, ScheduledGc } from '../state/channel.reducer';
+import { ChannelState } from '../state/channel.reducer';
 import { ChatItem, MessageItem, PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { ComposeState } from '../state/compose.reducer';
 import { ChannelFilter, useChannelAtoms } from './useChannelAtoms';
-import { usePaneIsFocus } from './usePaneIsFocus';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
 
@@ -28,16 +27,13 @@ export const START_INDEX = 100000000;
 
 type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
   prevPreviewId: string | null;
-  show: boolean;
   inGame: boolean;
 };
 
 const selectComposeSlice = (
-  { source, previewId, editFor, focused, defaultInGame }: ComposeState,
+  { previewId, editFor, defaultInGame }: ComposeState,
   prevSlice: ComposeSlice | null | undefined,
 ): ComposeSlice => {
-  const empty = source.trim().length === 0;
-
   let prevPreviewId: string | null = null;
   if (prevSlice) {
     if (prevSlice.previewId !== previewId) {
@@ -47,11 +43,11 @@ const selectComposeSlice = (
     }
   }
 
-  return { previewId, editFor, prevPreviewId, show: !empty || focused, inGame: defaultInGame };
+  return { previewId, editFor, prevPreviewId, inGame: defaultInGame };
 };
 
 const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) =>
-  a.previewId === b.previewId && a.show === b.show && a.inGame === b.inGame && a.editFor === b.editFor;
+  a.previewId === b.previewId && a.inGame === b.inGame && a.editFor === b.editFor;
 
 const filter = (type: ChannelFilter, item: ChatItem) => {
   if (type === 'OOC' && item.inGame) return false;
@@ -93,12 +89,15 @@ const makeDummyPreview = (
 });
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
-  const { composeAtom, filterAtom, showArchivedAtom } = useChannelAtoms();
+  const store = useStore();
+  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom } = useChannelAtoms();
   const showArchived = useAtomValue(showArchivedAtom);
   const filterType = useAtomValue(filterAtom);
-  const isFocused = usePaneIsFocus();
   const composeSliceAtom = useMemo(() => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq), [composeAtom]);
   const composeSlice = useAtomValue(composeSliceAtom);
+
+  // Intentionally quit reactivity
+  const isEmpty = store.get(parsedAtom).entities.length === 0;
 
   const messagesAtom = useMemo(
     () =>
@@ -154,9 +153,9 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     });
     const filteredMessagesCount = messages.length - itemList.length;
     const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
-    if (myId && composeSlice.show) {
+    if (myId) {
       const existsPreview = optimisticPreviewMap[myId];
-      if (existsPreview && existsPreview.id !== composeSlice.previewId) {
+      if (existsPreview && (existsPreview.id !== composeSlice.previewId || isEmpty)) {
         delete optimisticPreviewMap[myId];
       }
       if (!(myId in optimisticPreviewMap)) {
@@ -232,8 +231,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     composeSlice.inGame,
     composeSlice.prevPreviewId,
     composeSlice.previewId,
-    composeSlice.show,
     filterType,
+    isEmpty,
     messageMap,
     messages,
     myId,

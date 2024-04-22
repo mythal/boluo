@@ -27,18 +27,15 @@ export const ToggleSidebarLine: FC<Props> = () => {
         toggleSidebar();
       }}
       className={clsx(
-        'group absolute left-0 top-0 z-20 h-full w-[14px] cursor-pointer',
+        'group absolute left-full top-0 z-20 h-full w-[14px] cursor-pointer',
         isTouch ? '' : 'hover:bg-sidebar-toggler-hover/15',
       )}
       title={title}
     >
       <div
         className={clsx(
-          'bg-bg  text absolute top-[26%] z-30 box-content flex items-center justify-center text-lg',
-          isTouch ? '' : 'group-hover:border-transprent',
-          'h-[64px] w-[26px] -translate-x-[2px] -translate-y-[2px] cursor-pointer',
-          'shadow-sidebar-border rounded-r-lg shadow-[0_0_0_1px]',
-          isTouch ? '' : 'group-hover:shadow-sidebar-toggler-hover group-hover:shadow-[0_0_0_2px]',
+          'bg-transprent text-text-lighter group-hover:text-text-base absolute top-[26%] z-30 box-border flex items-center justify-center text-lg',
+          'h-[64px] w-[26px] -translate-y-[2px] cursor-pointer rounded-lg',
         )}
       >
         <Icon icon={isExpanded ? ChevronLeft : ChevronRight} />
@@ -50,7 +47,7 @@ export const ToggleSidebarLine: FC<Props> = () => {
         )}
       ></div>
       {!isTouch && (
-        <div className="bg-lowest absolute left-2 top-[calc(20%-3rem)] z-30 hidden w-max space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
+        <div className="bg-lowest absolute left-2 top-[26%] z-30 hidden w-max -translate-y-4 space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
           <span>
             <Icon icon={Sidebar} />
           </span>

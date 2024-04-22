@@ -55,16 +55,12 @@ const Chat: FC = () => {
             >
               <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
                 <div ref={bannerRef} className="col-span-full"></div>
-                <Sidebar
-                  spaceId={route.type === 'SPACE' ? route.spaceId : undefined}
-                  className="bg-bg flex h-full min-h-0 flex-none flex-col"
-                />
+                <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
                 <div
                   onTouchStart={autoFoldSidebar}
                   onClick={autoFoldSidebar}
                   className="relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
                 >
-                  <ToggleSidebarLine />
                   <Suspense fallback={<PaneLoading />}>
                     {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
                     {route.type === 'NOT_FOUND' && <ChatNotFound />}

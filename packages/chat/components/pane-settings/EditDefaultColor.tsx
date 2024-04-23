@@ -34,7 +34,7 @@ const ColorCell: FC<{
 
 export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => {
   const theme = resolveSystemTheme(useTheme());
-  const key = ['/users/get_me'] as const;
+  const key = ['/users/query', null] as const;
   const { trigger, error, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
     key,
     async (_, { arg: color }) => {
@@ -43,7 +43,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
     },
     {
       onSuccess: async () => {
-        await mutate(['/users/get_me']);
+        await mutate(['/users/query', null]);
         await mutate(['/users/query', currentUser.id]);
       },
     },

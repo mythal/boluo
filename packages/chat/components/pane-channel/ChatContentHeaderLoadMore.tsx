@@ -69,6 +69,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       payload: {
         before,
         channelId,
+        timestamp: new Date().getTime(),
         messages: newMessages,
         fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
       },

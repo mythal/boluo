@@ -13,6 +13,7 @@ const MIN_START_GC_COUNT = 4;
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
+  loadTimestamp: number;
   messageMap: Record<string, MessageItem>;
   /** Values of the messageMap, sorted */
   messages: MessageItem[];
@@ -31,6 +32,7 @@ const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
     id,
+    loadTimestamp: 0,
     messages: [],
     messageMap: {},
     fullLoaded: false,
@@ -76,7 +78,7 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     state = { ...state, fullLoaded };
   }
   if (payload.messages.length === 0) {
-    console.log('Received empty messages list');
+    console.trace('Received empty messages list');
     return state;
   }
   const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages].map((message) => [
@@ -84,8 +86,9 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     makeMessageItem(message),
   ]);
   const minPos = payload.messages.at(-1)!.pos;
+  const loadTimestamp = payload.timestamp;
   if (state.messages.length === 0) {
-    return { ...state, messageMap: Object.fromEntries(newMessageEntries) };
+    return { ...state, messageMap: Object.fromEntries(newMessageEntries), loadTimestamp };
   }
   if (state.messages[0]!.pos <= minPos) {
     console.warn('Received messages that are older than the ones already loaded');
@@ -95,7 +98,7 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
   for (const [id, item] of newMessageEntries) {
     messageMap[id] = item;
   }
-  return { ...state, messageMap };
+  return { ...state, messageMap, loadTimestamp };
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {

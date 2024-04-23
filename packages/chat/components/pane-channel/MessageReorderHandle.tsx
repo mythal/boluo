@@ -21,22 +21,24 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
       attributes = undefined;
     }
     return (
-      <div
-        ref={ref}
-        {...listeners}
-        {...attributes}
-        className={clsx(
-          'text-message-handle-text col-span-1 row-span-full h-full items-center rounded-sm pl-2 text-right',
-          !loading && 'hover:text-message-handle-hover-text cursor-move',
-          loading && 'cursor-not-allowed',
-        )}
-      >
-        <Delay>
-          <div>
-            {loading ? <Spinner className="inline text-xs" /> : <MoveVertical className="inline text-xs" />}
-            {children}
-          </div>
-        </Delay>
+      <div className="col-span-1 row-span-full h-full">
+        <div
+          ref={ref}
+          {...listeners}
+          {...attributes}
+          className={clsx(
+            'text-message-handle-text rounded-sm pl-2 text-right',
+            !loading && 'hover:text-message-handle-hover-text cursor-move',
+            loading && 'cursor-not-allowed',
+          )}
+        >
+          <Delay>
+            <div>
+              {loading ? <Spinner className="inline text-xs" /> : <MoveVertical className="inline text-xs" />}
+              {children}
+            </div>
+          </Delay>
+        </div>
       </div>
     );
   },

@@ -12,7 +12,6 @@ import { Cloud, CloudOff } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC, Suspense, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
-import { useSpace } from '../../hooks/useSpace';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { FloatingBox } from '../common/FloatingBox';
 import { BaseUrlSelector } from './BaseUrlSelector';
@@ -20,11 +19,13 @@ import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
 import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
 import { ConnectionIndicatorConnecting } from './ConnectionIndicatorConnecting';
 import { FormattedMessage } from 'react-intl';
+import { useQuerySpace } from '../../hooks/useQuerySpace';
 
-interface Props {}
+interface Props {
+  spaceId: string | null | undefined;
+}
 
-export const ConnectionIndicatior: FC<Props> = ({}) => {
-  const space = useSpace();
+export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
   const connectionState = useAtomValue(connectionStateAtom);
   const [isPopoverOpen, setPopoverOpen] = useState(false);
   const middleware = useMemo(() => [offset(-32)], []);
@@ -44,7 +45,7 @@ export const ConnectionIndicatior: FC<Props> = ({}) => {
 
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
-  if (space == null) return null;
+  if (spaceId == null) return null;
   return (
     <>
       <div

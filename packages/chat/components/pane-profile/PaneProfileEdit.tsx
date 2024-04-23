@@ -30,7 +30,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
     defaultValues: { nickname: me.nickname, avatar: me.avatarId, bio: me.bio },
   });
   const { mutate } = useSWRConfig();
-  const key = ['/users/get_me'] as const;
+  const key = ['/users/query', null] as const;
   const {
     trigger: editUser,
     error,
@@ -59,7 +59,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
     },
     {
       onSuccess: async () => {
-        await mutate(['/users/get_me']);
+        await mutate(['/users/query', null]);
         await mutate(['/users/query', me.id]);
         onSuccess();
       },

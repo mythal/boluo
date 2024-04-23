@@ -39,7 +39,7 @@ const tester = async (proxies: Proxy[]): Promise<ProxyTestResult[]> => {
   return await Promise.all(proxies.map(proxyTimer));
 };
 
-export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select', true);
+export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select', process.env.NODE_ENV !== 'development');
 
 export const useAutoSelectProxy = (interval: number) => {
   const proxies = useProxies();

@@ -39,8 +39,9 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
           error={error}
         />
       );
+    } else {
+      errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
     }
-    errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
   }
   if (!space && isLoading) {
     return (

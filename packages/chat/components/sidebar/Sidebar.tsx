@@ -18,16 +18,20 @@ interface Props {
 }
 
 const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null }> = ({ spaceId, currentUser }) => {
-  const { data: space } = useQuerySpace(spaceId);
+  const { data: space, error, isLoading } = useQuerySpace(spaceId);
   const contentState = useAtomValue(sidebarContentStateAtom);
   if (space == null) {
-    return null;
+    if (isLoading) {
+      return null;
+    } else {
+      return <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />;
+    }
   }
   return (
     <>
       <SpaceOptions space={space} currentUser={currentUser} />
       {contentState === 'CHANNELS' && <SidebarChannelList spaceId={space.id} />}
-      {contentState === 'SPACES' && <SidebarSpaceList currentUser={currentUser} />}
+      {contentState === 'SPACES' && <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />}
     </>
   );
 };
@@ -45,7 +49,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   }
   let content: ReactNode = foldedNode;
   if (spaceId == null) {
-    content = currentUser == null ? foldedNode : <SidebarSpaceList currentUser={currentUser} />;
+    content = currentUser == null ? foldedNode : <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
   }

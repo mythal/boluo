@@ -4,7 +4,6 @@ import { atom } from 'jotai';
 import { FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
-import { useSpace } from '../../hooks/useSpace';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { ChannelHeaderExtra } from './ChannelHeaderExtra';
 import { ChannelHeaderOperations } from './ChannelHeaderOperations';

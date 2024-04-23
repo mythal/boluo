@@ -4,14 +4,14 @@ import { FC, ReactNode } from 'react';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { FormattedMessage } from 'react-intl';
 
-interface Props {
+export interface FailedProps {
   title?: ReactNode;
   message?: ReactNode;
   icon?: ReactNode;
   error?: unknown;
 }
 
-export const Failed: FC<Props> = ({ title, message, error, icon }) => (
+export const Failed: FC<FailedProps> = ({ title, message, error, icon }) => (
   <div className="flex flex-col gap-2 p-4">
     {title && (
       <h1 className="text-lg">

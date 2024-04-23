@@ -13,8 +13,8 @@ export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ 
     const result = await post('/spaces/delete', { id: spaceId }, {});
     setIsMutating(false);
     if (result.isOk) {
-      await mutate('/spaces/my');
-      // TODO: redirect
+      void mutate('/spaces/my');
+      void mutate(['/spaces/query', spaceId]);
     }
   };
   return (

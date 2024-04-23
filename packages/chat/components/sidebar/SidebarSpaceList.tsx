@@ -5,7 +5,6 @@ import { useAtomValue } from 'jotai';
 import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
-import { useSpace } from '../../hooks/useSpace';
 import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
@@ -13,13 +12,13 @@ import { SidebarItemSkeleton } from './SidebarItemSkeleton';
 import clsx from 'clsx';
 
 interface Props {
+  currentSpaceId: string | null;
   currentUser: User | null | undefined;
 }
 
-const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
-  const currentSpace = useSpace();
+const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({ space, currentSpaceId }) => {
   const switchSpace = useSwitchSpace();
-  const isCurrent = currentSpace?.id === space.id;
+  const isCurrent = currentSpaceId === space.id;
   return (
     <div className="px-2 py-1">
       <button onClick={() => switchSpace(space.id)} className="hover:bg-surface-100 w-full px-1 py-1 text-left">
@@ -37,7 +36,7 @@ const SidebarSpaceItem: FC<{ space: Space }> = ({ space }) => {
   );
 };
 
-export const SidebarSpaceList: FC<Props> = ({ currentUser }) => {
+export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => {
   const { data: spacesWithMemberData, error, isLoading } = useQueryMySpaces();
   const panes = useAtomValue(panesAtom);
 
@@ -60,7 +59,9 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser }) => {
           <div className="text-text-lighter text-center">- Ø -</div>
         </SidebarItem>
       ) : (
-        spacesWithMemberData.map(({ space }) => <SidebarSpaceItem key={space.id} space={space} />)
+        spacesWithMemberData.map(({ space }) => (
+          <SidebarSpaceItem key={space.id} space={space} currentSpaceId={currentSpaceId} />
+        ))
       )}
       {currentUser != null && (
         <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>

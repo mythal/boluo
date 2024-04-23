@@ -8,6 +8,8 @@ import { PaneSpace } from './pane-space/PaneSpace';
 import { PaneLoading } from './PaneLoading';
 import { FailedBanner } from './common/FailedBanner';
 import { Failed } from './common/Failed';
+import { PaneError } from './pane-error/PaneError';
+import { PaneFailed } from './pane-failed/PaneFailed';
 
 interface Props {
   spaceId: string;
@@ -16,22 +18,22 @@ interface Props {
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
   useConnectionEffect(spaceId);
 
-  const { data: space, error } = useQuerySpace(spaceId);
-  const defaultPane = useMemo(() => <PaneSpace spaceId={spaceId} />, [spaceId]);
+  const { data: space, error, isLoading } = useQuerySpace(spaceId);
+  let defaultPane = useMemo(() => <PaneSpace spaceId={spaceId} />, [spaceId]);
   let errorNode = null;
 
   if (error) {
     const title = <FormattedMessage defaultMessage="Failed to query the space" />;
     if (error.code === 'NO_PERMISSION') {
-      return (
-        <Failed
+      defaultPane = (
+        <PaneFailed
           title={<FormattedMessage defaultMessage="No permission" />}
           message={<FormattedMessage defaultMessage="You do not have permission to view this space." />}
         />
       );
     } else if (!space) {
-      return (
-        <Failed
+      defaultPane = (
+        <PaneFailed
           title={title}
           message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
           error={error}
@@ -40,7 +42,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
     }
     errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
   }
-  if (!space) {
+  if (!space && isLoading) {
     return (
       <>
         {errorNode}

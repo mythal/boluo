@@ -239,6 +239,7 @@ export const toSimpleText = (source: string, entities: Entity[]): string => {
       case 'Text':
         text += source.slice(entity.start, entity.start + entity.len);
         break;
+      case 'Code':
       case 'Strong':
       case 'Emphasis':
         text += source.slice(entity.child.start, entity.child.start + entity.child.len);

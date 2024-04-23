@@ -12,15 +12,12 @@ interface Props {
   iAmMaster: boolean;
   firstItemIndex: number;
   renderRangeRef: MutableRefObject<[number, number]>;
-  virtuosoRef: MutableRefObject<VirtuosoHandle | null>;
   scrollerRef: MutableRefObject<HTMLDivElement | null>;
   chatList: ChatItem[];
   filteredMessagesCount: number;
-  handleBottomStateChange?: (bottom: boolean) => void;
   currentUser: User | undefined | null;
   myMember: MyChannelMemberResult;
   theme: ResolvedTheme;
-  setIsScrolling: (isScrolling: boolean) => void;
 }
 
 export interface VirtualListContext {
@@ -68,35 +65,24 @@ const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | nul
 };
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
-  const {
-    iAmMaster,
-    renderRangeRef,
-    virtuosoRef,
-    chatList,
-    scrollerRef,
-    filteredMessagesCount,
-    handleBottomStateChange,
-    setIsScrolling,
-    currentUser,
-    myMember,
-    theme,
-  } = props;
+  const { iAmMaster, renderRangeRef, chatList, scrollerRef, filteredMessagesCount, currentUser, myMember, theme } =
+    props;
   const totalCount = chatList.length;
   const iAmAdmin = myMember.isOk && myMember.some.space.isAdmin;
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;
   const myId: string | undefined = currentUser?.id ?? undefined;
-  const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
-  const itemContent = (offsetIndex: number, item: ChatItem) => {
-    const isLast = totalCount - 1 === offsetIndex - firstItemIndex;
+  const firstItemIndex = 0;
+  const itemContent = (item: ChatItem, index: number) => {
+    const isLast = totalCount - 1 === index;
 
     let continuous = false;
-    if (offsetIndex - 1 === prevOffsetIndex) {
+    if (index - 1 === prevOffsetIndex) {
       continuous = isContinuous(prevItem, item);
     }
 
-    prevOffsetIndex = offsetIndex;
+    prevOffsetIndex = index;
     prevItem = item;
     return (
       <ChatItemSwitch
@@ -116,38 +102,10 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];
   };
   return (
-    <Virtuoso<ChatItem, VirtualListContext>
-      className="overflow-x-hidden"
-      style={{ overflowY: 'scroll', overscrollBehavior: 'none' }}
-      ref={virtuosoRef}
-      scrollerRef={(ref) => {
-        if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
-      }}
-      isScrolling={setIsScrolling}
-      rangeChanged={handleRangeChange}
-      alignToBottom
-      context={{ filteredMessagesCount }}
-      components={{ Header: ChatContentHeader, ScrollSeekPlaceholder }}
-      scrollSeekConfiguration={{
-        enter: (velocity) => {
-          return (
-            Math.abs(velocity) > 1200 &&
-            /* High velocity also can be triggered by load messages */
-            velocity < 1600
-          );
-        },
-        exit: (velocity) => Math.abs(velocity) < 100,
-      }}
-      data={chatList}
-      initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
-      atBottomThreshold={64}
-      increaseViewportBy={{ top: 512, bottom: 128 }}
-      overscan={{ main: 128, reverse: 512 }}
-      itemContent={itemContent}
-      followOutput="auto"
-      atBottomStateChange={handleBottomStateChange}
-      firstItemIndex={firstItemIndex}
-    />
+    <div ref={scrollerRef} className="flex h-full min-h-0 flex-col overflow-y-scroll">
+      <ChatContentHeader context={{ filteredMessagesCount }} />
+      {chatList.map((item, index) => itemContent(item, index))}
+    </div>
   );
 };
 

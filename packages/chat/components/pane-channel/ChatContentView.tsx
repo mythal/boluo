@@ -43,7 +43,7 @@ interface UseScrollToBottom {
   goBottom: () => void;
 }
 
-const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseScrollToBottom => {
+const useScrollToBottom = (): UseScrollToBottom => {
   // ref: https://virtuoso.dev/stick-to-bottom/
   const [showButton, setShowButton] = useState(false);
   const showButtonTimeoutRef = useRef<number | undefined>(undefined);
@@ -57,10 +57,8 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
   }, []);
 
   const goBottom = useCallback(() => {
-    const virtuoso = virtuosoRef.current;
-    if (!virtuoso) return;
-    virtuoso.scrollToIndex({ index: 'LAST' });
-  }, [virtuosoRef]);
+    // TODO
+  }, []);
   return { showButton, onBottomStateChange, goBottom };
 };
 
@@ -194,7 +192,6 @@ interface ScrollLockState {
 const PREVIEW_LOCK_TIMEOUT = 1000;
 
 const useScrollLock = (
-  virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,
   wrapperRef: RefObject<HTMLDivElement | null>,
   rangeRef: MutableRefObject<[number, number]>,
@@ -205,9 +202,9 @@ const useScrollLock = (
 
   useEffect(() => {
     if (chatList.length !== prevChatListLength.current) {
-      const virtuoso = virtuosoRef.current;
-      if (!virtuoso || !scrollLockRef.current.end) return;
-      virtuoso.scrollToIndex({ index: 'LAST' });
+      if (!scrollLockRef.current.end) return;
+
+      // Go to the bottom
     }
     prevChatListLength.current = chatList.length;
   });
@@ -217,13 +214,12 @@ const useScrollLock = (
 export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMember, setIsScrolling }) => {
   const channelId = useChannelId();
   const store = useStore();
-  const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
   let myId: string | undefined;
   if (myMember.isOk) {
     myId = myMember.some.user.id;
   }
-  const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
+  const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom();
   const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
     channelId,
     myId,
@@ -239,7 +235,7 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
-  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
+  const scrollLockRef = useScrollLock(scrollerRef, wrapperRef, renderRangeRef, chatList);
 
   const readObserve = useCallback(
     (node: Element): (() => void) => {
@@ -323,10 +319,8 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
             <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
               <ChatContentVirtualList
                 firstItemIndex={firstItemIndex}
-                setIsScrolling={setIsScrolling}
                 renderRangeRef={renderRangeRef}
                 filteredMessagesCount={filteredMessagesCount}
-                virtuosoRef={virtuosoRef}
                 scrollerRef={scrollerRef}
                 iAmMaster={iAmMaster}
                 chatList={chatList}

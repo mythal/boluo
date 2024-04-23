@@ -103,25 +103,21 @@ pub async fn get_session_from_old_version_cookies(headers: &HeaderMap<HeaderValu
     get_session_from_token(token).await.ok()
 }
 
-pub fn add_session_cookie(session: &Uuid, host: Option<&HeaderValue>, response_header: &mut HeaderMap<HeaderValue>) {
+pub fn add_session_cookie(session: &Uuid, is_debug: bool, response_header: &mut HeaderMap<HeaderValue>) {
     use cookie::time::Duration;
     use cookie::{CookieBuilder, SameSite};
     use hyper::header::SET_COOKIE;
 
-    let host = host.and_then(|value| value.to_str().ok()).unwrap_or("").to_lowercase();
-    let internal_start = ["localhost", "127.0.0.1", "0.0.0.0", "192.168"];
-    let is_local = internal_start.iter().any(|start| host.starts_with(start));
-
     let token = token(session);
     let mut builder = CookieBuilder::new(SESSION_COOKIE_KEY, token)
         .same_site(SameSite::Lax)
-        .secure(!is_local)
+        .secure(!is_debug)
         .http_only(true)
         .path("/")
         .max_age(Duration::days(30));
 
     let session_cookie_domain = domain();
-    if host.ends_with(session_cookie_domain) {
+    if !is_debug {
         builder = builder.domain(session_cookie_domain);
     }
     let session_cookie = builder.build().to_string();

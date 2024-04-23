@@ -6,7 +6,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSetBanner } from '../hooks/useBanner';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { LoginForm } from './account/LoginForm';
-import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 
@@ -35,7 +34,7 @@ export const PaneLogin: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="flex p-4">
+      <div className="p-pane flex">
         <LoginForm onSuccess={close} onError={handleError} className="w-full" />
       </div>
     </PaneBox>

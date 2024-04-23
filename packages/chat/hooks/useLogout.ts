@@ -8,6 +8,6 @@ export function useLogout(): () => void {
     await get('/users/logout', null);
     localStorage.clear();
     sessionStorage.clear();
-    await mutate(['/users/get_me'], null);
+    await mutate(['/users/query', null], null);
   }, [mutate]);
 }

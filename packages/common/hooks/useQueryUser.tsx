@@ -9,11 +9,11 @@ import { Result } from '@boluo/utils';
  * @returns null if user is not found
  */
 export const useQueryUser = (
-  userId?: string,
+  userId?: string | undefined | null,
   config?: SWRConfiguration<User | null, ApiError>,
 ): SWRResponse<User | null, ApiError> => {
   return useSWR(
-    ['/users/query' as const, userId],
+    ['/users/query' as const, userId ?? null],
     async ([path, userId]): Promise<User | null> => {
       const result: Result<User, ApiError> = await get(path, { id: userId ?? null });
       if (result.isOk) {

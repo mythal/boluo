@@ -1,7 +1,7 @@
 import type { ApiError, CreateSpace, Space, SpaceWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useErrorExplain } from '@boluo/common';
-import { required } from '@boluo/common/validations';
+import { channelNameValidation, required } from '@boluo/common/validations';
 import type { FC } from 'react';
 import { useId } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
@@ -99,7 +99,7 @@ const FirstChannelNameField: FC = () => {
         className="w-full"
         id={id}
         variant={error ? 'error' : 'normal'}
-        {...register('firstChannelName', required(intl))}
+        {...register('firstChannelName', channelNameValidation(intl))}
       />
       <FieldErrorDisplay error={error} />
     </div>

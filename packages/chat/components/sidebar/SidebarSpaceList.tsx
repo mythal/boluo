@@ -47,7 +47,7 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => 
   );
   const handleToggleCreateSpacePane = () => togglePane({ type: 'CREATE_SPACE' });
   return (
-    <div>
+    <div className="flex-1 overflow-y-auto">
       <div className="text-surface-600 flex items-center justify-between px-3 py-2 text-sm">
         <span>
           <FormattedMessage defaultMessage="Switch Spaces" />

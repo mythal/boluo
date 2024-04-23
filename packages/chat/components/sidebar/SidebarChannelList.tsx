@@ -34,7 +34,7 @@ export const SidebarChannelList: FC<Props> = ({ spaceId }) => {
   const intl = useIntl();
   const toggleNotification = intl.formatMessage({ defaultMessage: 'Toggle Notification' });
   return (
-    <div>
+    <div className="flex-1 overflow-y-auto">
       <div className="text-surface-600 flex items-center justify-between px-3 py-2 text-sm">
         <span>
           <FormattedMessage defaultMessage="Channels" />

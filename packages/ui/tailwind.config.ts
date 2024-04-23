@@ -100,6 +100,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         border: $(neutral[200], neutral[700]),
         toggler: {
           hover: $(blue[300], blue[600]),
+          touch: $(transparentize(blue[100], 0.5), blue[800]),
           active: $(blue[500], blue[500]),
         },
       },

@@ -34,16 +34,20 @@ export const ToggleSidebarLine: FC<Props> = () => {
     >
       <div
         className={clsx(
-          'bg-transprent text-text-lighter group-hover:text-text-base absolute top-[26%] z-30 box-border flex items-center justify-center text-lg',
-          'h-[64px] w-[26px] -translate-y-[2px] cursor-pointer rounded-lg',
+          'text-text-lighter group-hover:text-text-base absolute top-[26%] z-30 box-border flex items-center justify-center text-lg',
+          'h-[64px] w-[24x] -translate-y-[2px] translate-x-[4px] cursor-pointer rounded-r-lg',
+          isTouch ? (isExpanded ? 'hidden' : 'bg-sidebar-toggler-touch') : 'bg-transprent',
         )}
       >
         <Icon icon={isExpanded ? ChevronLeft : ChevronRight} />
       </div>
       <div
+        aria-expanded={isExpanded}
         className={clsx(
           'bg-sidebar-divider h-full w-[1px]',
-          isTouch ? '' : 'group-hover:bg-sidebar-toggler-hover group-hover:w-[2px]',
+          isTouch
+            ? 'bg-sidebar-toggler-touch w-[4px] aria-expanded:w-[1px]'
+            : 'group-hover:bg-sidebar-toggler-hover group-hover:w-[2px]',
         )}
       ></div>
       {!isTouch && (

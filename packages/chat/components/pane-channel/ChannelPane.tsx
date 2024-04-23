@@ -17,7 +17,7 @@ import { ChannelHeader } from './ChannelHeader';
 import { ChatContent } from './ChatContent';
 import { MemberList } from './MemberList';
 import { FailedBanner } from '../common/FailedBanner';
-import { Failed } from '../common/Failed';
+import { PaneFailed } from '../pane-failed/PaneFailed';
 
 interface Props {
   channelId: string;
@@ -56,7 +56,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
     if (channel == null) {
       return (
-        <Failed
+        <PaneFailed
           error={error}
           title={title}
           message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}

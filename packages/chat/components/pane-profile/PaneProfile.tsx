@@ -11,7 +11,7 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { PaneProfileEdit } from './PaneProfileEdit';
 import { PaneProfileNotFound } from './PaneProfileNotFound';
 import { PaneProfileView } from './PaneProfileView';
-import { Failed } from '../common/Failed';
+import { PaneFailed } from '../pane-failed/PaneFailed';
 
 interface Props {
   userId: string;
@@ -30,7 +30,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   if (isLoading) {
     return <Loading />;
   } else if (error != null && user == null) {
-    return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the user" />} />;
+    return <PaneFailed error={error} title={<FormattedMessage defaultMessage="Failed to query the user" />} />;
   } else if (user == null) {
     return <PaneProfileNotFound />;
   }

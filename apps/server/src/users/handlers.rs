@@ -85,8 +85,8 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
                 }));
                 if is_authenticate_use_cookie(req.headers()) {
                     // refresh session cookie
-                    let host = req.headers().get("host");
-                    add_session_cookie(&session.id, host, response.headers_mut())
+                    let is_debug = req.headers().get("X-Debug").is_some();
+                    add_session_cookie(&session.id, is_debug, response.headers_mut())
                 }
                 Ok(response)
             } else {
@@ -111,7 +111,7 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
 pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
     use crate::session;
 
-    let host = req.headers().get("host").cloned();
+    let is_debug = req.headers().get("X-Debug").is_some();
     let form: Login = interface::parse_body(req).await?;
     let mut conn = database::get().await?;
     let db = &mut *conn;
@@ -132,7 +132,7 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
     };
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
-    add_session_cookie(&session, host.as_ref(), headers);
+    add_session_cookie(&session, is_debug, headers);
     add_settings_cookie(&settings, headers);
     Ok(response)
 }

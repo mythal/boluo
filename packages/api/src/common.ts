@@ -6,6 +6,15 @@ import { isAppResponse } from './request';
 
 export async function appFetch<T>(url: string, params: RequestInit): Promise<Result<T, ApiError>> {
   let result: Result<T, ApiError>;
+  if (process.env.NODE_ENV === 'development') {
+    if (!params.headers) {
+      params.headers = new Headers({ 'X-Debug': 'true' });
+    } else {
+      const headers = new Headers(params.headers);
+      headers.set('X-Debug', 'true');
+      params.headers = headers;
+    }
+  }
   try {
     const response = await fetch(url, params);
     let data: unknown;

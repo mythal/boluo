@@ -5,7 +5,7 @@
   "license": "GPL-3.0",
   "homepage": "https://github.com/mythal/boluo-mono",
   "scripts": {
-    "dev": "next dev -p 3100",
+    "dev": "next dev --hostname 0.0.0.0 --port 3100",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

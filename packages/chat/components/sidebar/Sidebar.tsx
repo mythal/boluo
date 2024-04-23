@@ -58,7 +58,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
     <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
       <div className="bg-bg relative flex h-full min-h-0 flex-none flex-col">
         <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
-          <div className="overflow-y-auto overflow-x-hidden">{content}</div>
+          {content}
 
           <div className="">
             {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}

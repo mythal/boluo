@@ -59,7 +59,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
           <div className="">
             {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}
 
-            <ConnectionIndicatior />
+            <ConnectionIndicatior spaceId={spaceId} />
           </div>
         </div>
         <ToggleSidebarLine />

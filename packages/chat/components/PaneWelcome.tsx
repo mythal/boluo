@@ -16,7 +16,7 @@ export const PaneWelcome: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-4">
+      <div className="p-pane">
         <Para>
           <FormattedMessage defaultMessage="This is Boluo, a chat app designed for tabletop roleplaying games." />
         </Para>

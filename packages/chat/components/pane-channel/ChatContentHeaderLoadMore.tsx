@@ -10,8 +10,8 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom } from '../../state/chat.atoms';
 
-const LOAD_MESSAGE_LIMIT = 51;
-const AUTO_LOAD = true;
+const LOAD_MESSAGE_LIMIT = 101;
+const AUTO_LOAD = false;
 
 interface Point {
   x: number;
@@ -22,9 +22,10 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
-interface Props {}
-
-export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
+export const ChatContentHeaderLoadMore: FC<{ isTopChunk: boolean; chunkUp: () => void }> = ({
+  isTopChunk,
+  chunkUp,
+}) => {
   const channelId = useChannelId();
   const isTouchDeviceRef = useRef(false);
   const mountedRef = useMountedRef();
@@ -34,13 +35,15 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
   isLoadingRef.current = isLoading;
-  const [touchState, setTouchState] = useState<'NONE' | 'START' | 'WILL_LOAD'>('NONE');
   const isVisibleRef = useRef(false);
-  const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
   const setBanner = useSetBanner();
 
   const loadMore = useCallback(async () => {
     if (isLoadingRef.current || !mountedRef.current) return;
+    if (!isTopChunk) {
+      chunkUp();
+      return;
+    }
     const chatState = store.get(chatAtom);
     const channelState = chatState.channels[channelId];
     setIsLoading(true);
@@ -75,7 +78,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
       },
     });
     setIsLoading(false);
-  }, [channelId, dispatch, mountedRef, setBanner, store]);
+  }, [channelId, chunkUp, dispatch, mountedRef, isTopChunk, setBanner, store]);
 
   const autoLoadTimeoutRef = useRef<number | undefined>(undefined);
   useEffect(() => {
@@ -85,8 +88,8 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
         const entry = entries[0]!;
         isVisibleRef.current = entry.isIntersecting;
         window.clearTimeout(autoLoadTimeoutRef.current);
-        if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
-          autoLoadTimeoutRef.current = window.setTimeout(loadMore, 100);
+        if (AUTO_LOAD && !isTopChunk && entry.isIntersecting && !isTouchDeviceRef.current) {
+          autoLoadTimeoutRef.current = window.setTimeout(chunkUp, 100);
         }
       },
       { threshold: [0.75] },
@@ -97,69 +100,19 @@ export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
     return () => {
       observer.disconnect();
     };
-  }, [loadMore]);
+  }, [chunkUp, isTopChunk]);
 
-  useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => {
-      isTouchDeviceRef.current = true;
-      if (!isVisibleRef.current) return;
-      const { touches } = e;
-      if (touches.length !== 1) return;
-      setTouchState('START');
-      const touch = touches[0]!;
-      touchStartPoint.current = { x: touch.screenX, y: touch.screenY };
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isVisibleRef.current) return;
-      if (e.changedTouches.length !== 1) return;
-      const start = touchStartPoint.current;
-      if (start === null) return;
-      const touch = e.changedTouches[0]!;
-      if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
-        setTouchState('WILL_LOAD');
-      } else {
-        setTouchState('START');
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      setTouchState('NONE');
-      if (!isVisibleRef.current) return;
-      if (e.changedTouches.length !== 1) return;
-      const start = touchStartPoint.current;
-      if (start === null) return;
-      const touch = e.changedTouches[0]!;
-      if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
-        setTimeout(() => {
-          void loadMore();
-        }, 100);
-      }
-    };
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchend', handleTouchEnd);
-    window.addEventListener('touchmove', handleTouchMove);
-
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [loadMore]);
-
-  const willLoad = touchState === 'WILL_LOAD';
   return (
     <Button ref={loadMoreRef} disabled={isLoading} onClick={loadMore}>
       <div className="flex w-36 items-center justify-between gap-1">
         {isLoading ? (
           <CircleNotch className="animate-spin" />
         ) : (
-          <ChevronDown className={clsx('transition-transform duration-300', willLoad && 'rotate-180')} />
+          <ChevronDown className={clsx('transition-transform duration-300')} />
         )}
 
         <div className="flex-grow text-center">
-          {touchState === 'START' && <FormattedMessage defaultMessage="Pull to Load" />}
-          {willLoad && <FormattedMessage defaultMessage="Release to Load" />}
-          {touchState === 'NONE' && <FormattedMessage defaultMessage="Load More" />}
+          <FormattedMessage defaultMessage="Load More" />
         </div>
       </div>
     </Button>

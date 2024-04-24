@@ -16,6 +16,7 @@ interface UseChatListReturn {
   firstItemIndex: number;
   filteredMessagesCount: number;
   scheduledGcLowerPos: number | null;
+  messageLoadTimestamp: number;
 }
 
 export interface OptimisticItem {
@@ -269,5 +270,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     firstItemIndex: firstItemIndex.current,
     filteredMessagesCount,
     scheduledGcLowerPos,
+    messageLoadTimestamp: store.get(chatAtom).channels[channelId]?.loadTimestamp ?? 0,
   };
 };

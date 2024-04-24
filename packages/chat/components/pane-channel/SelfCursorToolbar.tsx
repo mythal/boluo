@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect, useMemo } from 'react';
-import { autoUpdate, useFloating } from '@floating-ui/react';
+import { autoUpdate, hide, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
 import { Atom, useAtomValue } from 'jotai';
@@ -14,11 +14,11 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
   const cursorState = useContext(CursorContext);
   const cursorNode = useAtomValue(cursorAtom);
 
-  const { update, floatingStyles, refs } = useFloating({
+  const { update, floatingStyles, refs, middlewareData } = useFloating({
     elements: {
       reference: cursorNode,
     },
-    middleware: [],
+    middleware: [hide()],
     whileElementsMounted: autoUpdate,
   });
   useEffect(() => {
@@ -39,7 +39,7 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
       ref={refs.setFloating}
       style={floatingStyles}
       className={clsx(
-        !cursorNode && 'hidden',
+        (!cursorNode || middlewareData.hide?.referenceHidden) && 'hidden',
         'bg-lowest border-highest z-10 flex select-none items-center justify-center rounded-lg border-[2px] shadow',
       )}
     >

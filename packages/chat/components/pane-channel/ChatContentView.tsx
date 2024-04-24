@@ -3,19 +3,15 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
-import { selectAtom } from 'jotai/utils';
 import type { FC, MutableRefObject, RefObject } from 'react';
-import { useMemo } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { ChatItem, MessageItem } from '../../state/channel.types';
 import { chatAtom } from '../../state/chat.atoms';
@@ -220,10 +216,14 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
     myId = myMember.some.user.id;
   }
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom();
-  const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
-    channelId,
-    myId,
-  );
+  const {
+    chatList,
+    setOptimisticItems,
+    firstItemIndex,
+    filteredMessagesCount,
+    scheduledGcLowerPos,
+    messageLoadTimestamp,
+  } = useChatList(channelId, myId);
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,
@@ -327,6 +327,7 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
                 currentUser={currentUser}
                 myMember={myMember}
                 theme={theme}
+                messageLoadTimestamp={messageLoadTimestamp}
               />
               {showButton && <GoButtomButton channelId={channelId} chatList={chatList} onClick={goBottom} />}
             </SortableContext>

@@ -21,6 +21,7 @@ export function useSendStatus() {
   const store = useStore();
   const connectionState = useAtomValue(connectionStateAtom);
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (connectionState.type !== 'CONNECTED') {
       return;
     }

@@ -26,7 +26,7 @@ const config = {
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  rewrites: process.env.NODE_ENV === 'production' ? undefined : rewrites,
+  rewrites,
   webpack: (config) => {
     if (ANALYZE) {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');

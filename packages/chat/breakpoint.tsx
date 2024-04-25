@@ -17,6 +17,9 @@ export const compareBreakpoint = (a: Breakpoint, b: Breakpoint): number => {
 };
 
 const windowBreakpoint = (): Breakpoint => {
+  if (typeof window === 'undefined') {
+    return 'xs';
+  }
   const { innerWidth } = window;
 
   const screensEntries = Object.entries(screens);

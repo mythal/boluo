@@ -2,7 +2,8 @@ export const stopPropagation = <T extends { stopPropagation: () => void }>(e: T)
   e.stopPropagation();
 };
 
-export function getOS(): 'macOS' | 'iOS' | 'Windows' | 'Android' | 'Linux' | null {
+export function getOS(): 'macOS' | 'iOS' | 'Windows' | 'Android' | 'Linux' | 'SSR' | null {
+  if (typeof window === 'undefined') return 'SSR';
   const userAgent = window.navigator.userAgent.toLowerCase(),
     macosPlatforms = /(macintosh|macintel|macppc|mac68k|macos)/i,
     windowsPlatforms = /(win32|win64|windows|wince)/i,

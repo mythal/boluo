@@ -9,6 +9,9 @@ export const backendUrlAtom = atomWithStorage('BOLUO_BACKEND_API_URL', '');
 export const apiUrlAtom = atom((get) => {
   const url = get(backendUrlAtom).trim();
   if (url === '') {
+    if (typeof window === 'undefined') {
+      return process?.env?.BACKEND_URL ?? '';
+    }
     return window.location.origin + '/api';
   } else if (url.endsWith('/api')) {
     return url;

@@ -16,8 +16,9 @@ export const useProxies = () => {
   });
   const intl = useIntl();
   return useMemo(() => {
+    if (typeof window === 'undefined') return [];
     const defaultProxies: Proxy[] = [
-      { name: intl.formatMessage({ defaultMessage: 'Default' }), url: location.origin, region: '' },
+      { name: intl.formatMessage({ defaultMessage: 'Default' }), url: window.location.origin, region: '' },
       // { name: intl.formatMessage({ defaultMessage: 'Dummy' }), url: 'example.com', region: 'Global' },
     ];
     return defaultProxies.concat(proxies || []);

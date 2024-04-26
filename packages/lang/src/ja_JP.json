@@ -20,6 +20,9 @@
   "/3UTYF": {
     "message": "{key} キーを使ってメッセージを送信する。"
   },
+  "/DfISw": {
+    "message": "編集をキャンセル"
+  },
   "/I//hN": {
     "message": "メッセージの読み込みに失敗しました ({errorCode})"
   },
@@ -42,7 +45,10 @@
     "message": "不在"
   },
   "0QeqCg": {
-    "message": "An unexpected error occurred. Please try again later."
+    "message": "想定外のエラーが発生しました。後でもう一度やり直してください。"
+  },
+  "0ah2ud": {
+    "message": "次元"
   },
   "0pT/2d": {
     "message": "キャラクター名なし"
@@ -83,8 +89,14 @@
   "5sg7KC": {
     "message": "パスワード"
   },
+  "60KMrS": {
+    "message": "デフォルトとして"
+  },
   "6CVXeu": {
-    "message": "Failed to query the channel"
+    "message": "チャンネルの照会に失敗しました"
+  },
+  "6DeXXB": {
+    "message": "TRPGをプレイするために特別に設計されたチャットアプリ。"
   },
   "6JNvt/": {
     "message": "少なくとも {min} 文字以上でなければなりません。"
@@ -236,6 +248,9 @@
   "IvjoDS": {
     "message": "接続されました"
   },
+  "JBWS0c": {
+    "message": "リンク"
+  },
   "JCIgkj": {
     "message": "ユーザー名"
   },
@@ -264,7 +279,7 @@
     "message": "アーカイブを表示"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "何か問題が起きています."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
@@ -291,7 +306,7 @@
     "message": "取る"
   },
   "OLFHJL": {
-    "message": "Extreme Success"
+    "message": "極限成功"
   },
   "OWhbRI": {
     "message": "The command that will be inserted when the button is pressed."
@@ -325,9 +340,6 @@
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
-  },
-  "QFfPEN": {
-    "message": "チャンネルメンバー情報の読み込みに失敗しました。"
   },
   "QOvY19": {
     "message": "Whisper to the Master and"
@@ -365,6 +377,9 @@
   "Sf+ebw": {
     "message": "ペインを閉じる"
   },
+  "SpLs8U": {
+    "message": "You must first join the {space} to join a channel."
+  },
   "SqVNRz": {
     "message": "次元を作成する"
   },
@@ -388,6 +403,9 @@
   },
   "UdtpV7": {
     "message": "トピック"
+  },
+  "UhsO+i": {
+    "message": "Message not found"
   },
   "Ujs8Kg": {
     "message": "サーバーからのメッセージ"
@@ -453,7 +471,7 @@
     "message": "キャラクター名が必要です"
   },
   "ZgsEsn": {
-    "message": "No permission"
+    "message": "権限がありません"
   },
   "ZvI2/H": {
     "message": "指を離して読み込む"
@@ -513,7 +531,7 @@
     "message": "My Character Name in the Channel (Optional)"
   },
   "domxPs": {
-    "message": "Whisper"
+    "message": "ささやき"
   },
   "dzosaH": {
     "message": "チャンネルを削除"
@@ -530,11 +548,17 @@
   "eHA8Ex": {
     "message": "Whisper to …"
   },
+  "eLCAEP": {
+    "message": "Attachment"
+  },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
   },
   "fNCCY7": {
     "message": "ベーシック"
+  },
+  "fc2iho": {
+    "message": "Add File"
   },
   "fnihsY": {
     "message": "退出する"
@@ -542,14 +566,14 @@
   "fsU2v+": {
     "message": "次元の切り替え"
   },
+  "ftsMiH": {
+    "message": "Toggle In Game"
+  },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
   },
   "gduNan": {
     "message": "ライトモード中"
-  },
-  "gjBiyj": {
-    "message": "読み込み中…"
   },
   "gyrIEl": {
     "message": "ファイル"
@@ -569,9 +593,6 @@
   "hh0xW7": {
     "message": "チャンネル名"
   },
-  "i6rxnh": {
-    "message": "You must first join the space to join a channel."
-  },
   "iHN12u": {
     "message": "管理者"
   },
@@ -583,6 +604,9 @@
   },
   "iySl5e": {
     "message": "You are already a member of this channel."
+  },
+  "jRANBd": {
+    "message": "Edit message"
   },
   "jvo0vs": {
     "message": "保存"
@@ -640,6 +664,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "pBQ5bd": {
+    "message": "Editing"
   },
   "pm/HIR": {
     "message": "Channel name is required."

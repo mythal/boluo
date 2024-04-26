@@ -2,6 +2,7 @@ import { ChannelMember } from '@boluo/api';
 import { Atom, atom, PrimitiveAtom, WritableAtom } from 'jotai';
 import { atomWithReducer, atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo } from 'react';
+import { asyncParse } from '../interpreter/async-parse';
 import { composeInitialParseResult, ParseResult } from '../interpreter/parse-result';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import {
@@ -43,7 +44,6 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
     const loadableParsedAtom = loadable(
       atom(async (get, { signal }): Promise<ParseResult> => {
         const { source } = get(composeAtom);
-        const { asyncParse } = await import('../interpreter/async-parse');
         return await asyncParse(source, signal);
       }),
     );

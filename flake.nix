@@ -170,8 +170,8 @@
                       pkgs.cacert
                     ];
 
-                    # TODO: remove this
                     PUBLIC_MEDIA_URL = "https://media.boluo.chat";
+                    BACKEND_URL = "https://boluo.chat";
 
                     configurePhase = ''
                       runHook preConfigure

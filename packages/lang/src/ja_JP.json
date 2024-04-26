@@ -21,7 +21,7 @@
     "message": "{key} キーを使ってメッセージを送信する。"
   },
   "/DfISw": {
-    "message": "Cancel edit"
+    "message": "編集をキャンセル"
   },
   "/I//hN": {
     "message": "メッセージの読み込みに失敗しました ({errorCode})"
@@ -45,10 +45,10 @@
     "message": "不在"
   },
   "0QeqCg": {
-    "message": "An unexpected error occurred. Please try again later."
+    "message": "想定外のエラーが発生しました。後でもう一度やり直してください。"
   },
   "0ah2ud": {
-    "message": "Space"
+    "message": "次元"
   },
   "0pT/2d": {
     "message": "キャラクター名なし"
@@ -90,13 +90,13 @@
     "message": "パスワード"
   },
   "60KMrS": {
-    "message": "As Default"
+    "message": "デフォルトとして"
   },
   "6CVXeu": {
-    "message": "Failed to query the channel"
+    "message": "チャンネルの照会に失敗しました"
   },
   "6DeXXB": {
-    "message": "A chat application designed specifically for playing RPGs."
+    "message": "TRPGをプレイするために特別に設計されたチャットアプリ。"
   },
   "6JNvt/": {
     "message": "少なくとも {min} 文字以上でなければなりません。"
@@ -249,7 +249,7 @@
     "message": "接続されました"
   },
   "JBWS0c": {
-    "message": "Link"
+    "message": "リンク"
   },
   "JCIgkj": {
     "message": "ユーザー名"
@@ -279,7 +279,7 @@
     "message": "アーカイブを表示"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "何か問題が起きています."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
@@ -306,7 +306,7 @@
     "message": "取る"
   },
   "OLFHJL": {
-    "message": "Extreme Success"
+    "message": "極限成功"
   },
   "OWhbRI": {
     "message": "The command that will be inserted when the button is pressed."
@@ -471,7 +471,7 @@
     "message": "キャラクター名が必要です"
   },
   "ZgsEsn": {
-    "message": "No permission"
+    "message": "権限がありません"
   },
   "ZvI2/H": {
     "message": "指を離して読み込む"
@@ -531,7 +531,7 @@
     "message": "My Character Name in the Channel (Optional)"
   },
   "domxPs": {
-    "message": "Whisper"
+    "message": "ささやき"
   },
   "dzosaH": {
     "message": "チャンネルを削除"

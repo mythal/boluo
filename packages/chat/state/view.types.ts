@@ -17,6 +17,10 @@ export interface LoginPane {
   type: 'LOGIN';
 }
 
+export interface WelcomePane {
+  type: 'WELCOME';
+}
+
 export interface HelpPane {
   type: 'HELP';
 }
@@ -60,6 +64,7 @@ export type PaneData =
   | EmptyPane
   | SettingsPane
   | HelpPane
+  | WelcomePane
   | SpaceSettingsPane
   | ChannelSettingsPane
   | CreateChannelPane

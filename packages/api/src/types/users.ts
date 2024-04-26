@@ -12,6 +12,7 @@ import type { User } from '@boluo/server-bindings/User';
 export interface LoginData {
   username: string;
   password: string;
+  withToken?: boolean;
 }
 
 export interface Settings {

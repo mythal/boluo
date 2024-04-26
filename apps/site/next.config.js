@@ -22,6 +22,7 @@ const config = {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     BACKEND_URL: process.env.BACKEND_URL,
     APP_URL: process.env.APP_URL,
+    DOMAIN: process.env.DOMAIN,
   },
   transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
   experimental: {

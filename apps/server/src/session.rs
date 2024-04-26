@@ -267,7 +267,7 @@ pub async fn authenticate(req: &hyper::Request<hyper::Body>) -> Result<Session, 
     let authorization = headers.get(AUTHORIZATION).map(HeaderValue::to_str);
 
     let token = if let Some(Ok(t)) = authorization {
-        t
+        t.trim_start_matches("Bearer ").trim()
     } else {
         let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::NoData)?;
         match parse_cookie(cookie) {

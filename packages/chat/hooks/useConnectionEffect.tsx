@@ -8,7 +8,7 @@ import { PING, PONG } from '../const';
 import { chatAtom, ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { ConnectionState } from '../state/connection.reducer';
 
-const createMailboxConnection = (baseUrl: string, id: string, token?: string, after?: EventId): WebSocket => {
+const createMailboxConnection = (baseUrl: string, id: string, token?: string | null, after?: EventId): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
   if (token) paramsObject.token = token;
   if (after) {
@@ -27,6 +27,7 @@ const connect = (
   after: EventId,
   onEvent: (event: ServerEvent) => void,
   dispatch: ChatDispatch,
+  token: string | undefined | null,
 ): WebSocket | null => {
   if (!isUuid(mailboxId)) return null;
   if (connectionState.type !== 'CLOSED') return null;
@@ -37,7 +38,7 @@ const connect = (
   console.info(`establishing new connection for ${mailboxId}`);
   dispatch({ type: 'connecting', payload: { mailboxId } });
 
-  const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, undefined, after);
+  const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, token, after);
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
     dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
@@ -67,7 +68,7 @@ const connect = (
   return newConnection;
 };
 
-export const useConnectionEffect = (mailboxId: string) => {
+export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, token: string | undefined | null) => {
   const { mutate } = useSWRConfig();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
   const store = useStore();
@@ -115,15 +116,24 @@ export const useConnectionEffect = (mailboxId: string) => {
 
   useEffect(() => {
     if (mailboxId === '') return;
+    if (isTokenLoading) return;
     const chatState = store.get(chatAtom);
     let ws: WebSocket | null = null;
     const unsub = store.sub(connectionStateAtom, () => {
       const chatState = store.get(chatAtom);
-      ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
+      ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch, token);
     });
     const handle = window.setTimeout(() => {
       if (ws == null) {
-        ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch);
+        ws = connect(
+          webSocketEndpoint,
+          mailboxId,
+          chatState.connection,
+          chatState.lastEventId,
+          onEvent,
+          dispatch,
+          token,
+        );
       }
     });
     return () => {
@@ -131,5 +141,5 @@ export const useConnectionEffect = (mailboxId: string) => {
       unsub();
       if (ws) ws.close();
     };
-  }, [onEvent, mailboxId, store, webSocketEndpoint, dispatch]);
+  }, [onEvent, mailboxId, store, webSocketEndpoint, dispatch, token, isTokenLoading]);
 };

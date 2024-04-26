@@ -13,7 +13,6 @@ use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
 use crate::{cache, database};
-use anyhow::anyhow;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
 use hyper::upgrade::Upgraded;
@@ -51,14 +50,7 @@ async fn check_permissions<T: Querist>(
     Ok(())
 }
 
-// false positive
-#[allow(clippy::needless_pass_by_ref_mut)]
-async fn push_events(
-    mailbox: Uuid,
-    outgoing: &mut Sender,
-    after: Option<i64>,
-    seq: Option<u16>,
-) -> Result<(), anyhow::Error> {
+async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;
     use tokio::time::interval;
@@ -70,10 +62,12 @@ async fn push_events(
             match outgoing.send(message).await {
                 Ok(_) => (),
                 Err(ConnectionClosed) | Err(AlreadyClosed) => break,
-                Err(e) => return Err(e),
+                Err(e) => {
+                    log::warn!("Failed to send message to client: {}", e);
+                    break;
+                }
             }
         }
-        Ok(())
     };
 
     let push = async {
@@ -90,28 +84,40 @@ async fn push_events(
                 .map(|events| Event::batch(mailbox, events.collect()))
                 .map(|batch_event| serde_json::to_string(&batch_event))
                 .collect();
-            for message in messages {
-                tx.send(WsMessage::Text(message?)).await?;
+            for message in messages.into_iter().flatten() {
+                if let Err(e) = tx.send(WsMessage::Text(message)).await {
+                    log::warn!("Failed to send cached messages to client: {}", e);
+                    return;
+                };
             }
         }
         let initialized = Event::initialized(mailbox);
-        let initialized = serde_json::to_string(&initialized).expect("Failed to serialize initialized event");
-        tx.send(WsMessage::Text(initialized)).await.ok();
+        let Ok(initialized) = serde_json::to_string(&initialized) else {
+            log::warn!("Failed to serialize initialized event");
+            return;
+        };
+        if let Err(e) = tx.send(WsMessage::Text(initialized)).await {
+            log::warn!("Failed to send initialized event to client: {}", e);
+            return;
+        };
 
         loop {
             let message = match mailbox_rx.recv().await {
                 Ok(event) => WsMessage::Text(event.encoded.clone()),
                 Err(RecvError::Lagged(lagged)) => {
-                    log::warn!("lagged {} at {}", lagged, mailbox);
+                    log::warn!("lagged {} at mailbox {}", lagged, mailbox);
                     continue;
                 }
-                Err(RecvError::Closed) => return Err(anyhow!("broadcast ({}) is closed.", mailbox)),
+                Err(RecvError::Closed) => {
+                    log::error!("The mailbox {} channel closed", mailbox);
+                    return;
+                }
             };
-            if tx.send(message).await.is_err() {
-                break;
+            if let Err(e) = tx.send(message).await {
+                log::error!("Failed to send broadcast message to client: {}", e);
+                return;
             }
         }
-        Ok(())
     };
 
     let ping = IntervalStream::new(interval(Duration::from_secs(3))).for_each(|_| async {
@@ -121,35 +127,36 @@ async fn push_events(
     });
 
     tokio::select! {
-        r = message_sender => { r? },
+        r = message_sender => { r },
         _ = ping => {},
-        r = push => { r? },
-    }
-
-    Ok(())
+        r = push => { r },
+    };
 }
 
-async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: String) -> Result<(), anyhow::Error> {
+async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: String) {
     let event: Result<ClientEvent, _> = serde_json::from_str(&message);
     if let Err(event) = event {
-        log::debug!("failed to parse event from client: {}", event);
-        return Ok(());
+        log::debug!("Failed to parse event from client: {}", event);
+        return;
     }
     let event = event.unwrap();
     match event {
         ClientEvent::Preview { preview } => {
-            let user_id = user_id.ok_or(AppError::NoPermission(
-                "You must be logged in to send a Preview.".to_string(),
-            ))?;
-            preview.broadcast(mailbox, user_id).await?;
+            let Some(user_id) = user_id else {
+                return;
+            };
+            if let Err(e) = preview.broadcast(mailbox, user_id).await {
+                log::warn!("Failed to broadcast preview: {}", e);
+            }
         }
         ClientEvent::Status { kind, focus } => {
             if let Some(user_id) = user_id {
-                Event::status(mailbox, user_id, kind, timestamp(), focus).await?;
+                if let Err(e) = Event::status(mailbox, user_id, kind, timestamp(), focus).await {
+                    log::warn!("Failed to broadcast status: {}", e)
+                }
             }
         }
     }
-    Ok(())
 }
 
 fn ws_error(req: Request, mailbox: Option<Uuid>, reason: String) -> Response {
@@ -208,9 +215,7 @@ async fn connect(req: Request) -> Response {
         let (mut outgoing, incoming) = ws_stream.split();
 
         let server_push_events = async move {
-            if let Err(e) = push_events(mailbox, &mut outgoing, after, seq).await {
-                log::warn!("Failed to push events: {}", e);
-            }
+            push_events(mailbox, &mut outgoing, after, seq).await;
             outgoing.close().await.ok();
         };
 
@@ -222,14 +227,11 @@ async fn connect(req: Request) -> Response {
             })
             .and_then(future::ready)
             .try_for_each(|message: WsMessage| async move {
-                // log::debug!("Received a message from client: {:?}", message);
                 if let WsMessage::Text(message) = message {
                     if message == "♡" {
                         return Ok(());
                     }
-                    if let Err(e) = handle_client_event(mailbox, user_id, message).await {
-                        log::warn!("Failed to handle the event from client: {}", e);
-                    }
+                    handle_client_event(mailbox, user_id, message).await
                 }
                 Ok(())
             });

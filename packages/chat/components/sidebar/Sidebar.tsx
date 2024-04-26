@@ -22,7 +22,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
   const contentState = useAtomValue(sidebarContentStateAtom);
   if (space == null) {
     if (isLoading) {
-      return null;
+      return <div>{/* placeholder */}</div>;
     } else {
       return <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />;
     }

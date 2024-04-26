@@ -131,10 +131,19 @@ pub async fn healthcheck() -> Result<Response, AppError> {
     Ok(response)
 }
 
+pub fn echo(req: Request<Body>) -> Response {
+    hyper::Response::builder()
+        .header(hyper::header::CONTENT_TYPE, "text/plain")
+        .status(hyper::StatusCode::OK)
+        .body(Body::from(format!("{:?}", req.headers())))
+        .unwrap_or(hyper::Response::default())
+}
+
 pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
     match (path, req.method().clone()) {
         ("/proxies", Method::GET) => proxies().await,
         ("/healthcheck", Method::GET) => healthcheck().await,
+        ("/echo", Method::GET) => Ok(echo(req)),
         _ => Ok(version()),
     }
 }

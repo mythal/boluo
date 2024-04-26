@@ -1,7 +1,13 @@
 {
   "name": "Boluo RPG",
   "short_name": "Boluo",
-  "icons": [],
+  "start_url": "/en",
+  "icons": [
+    {
+      "src": "icons/app.svg",
+      "sizes": "72x72"
+    }
+  ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "display": "standalone"

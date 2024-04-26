@@ -1,0 +1,14 @@
+{
+  "name": "菠萝RPG",
+  "short_name": "菠萝",
+  "start_url": "/zh-CN",
+  "icons": [
+    {
+      "src": "icons/app.svg",
+      "sizes": "72x72"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

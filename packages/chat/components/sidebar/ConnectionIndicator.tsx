@@ -19,7 +19,6 @@ import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
 import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
 import { ConnectionIndicatorConnecting } from './ConnectionIndicatorConnecting';
 import { FormattedMessage } from 'react-intl';
-import { useQuerySpace } from '../../hooks/useQuerySpace';
 
 interface Props {
   spaceId: string | null | undefined;

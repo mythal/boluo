@@ -1,24 +1,15 @@
 'use client';
 
-import React from 'react';
-import { Providers } from '../app/Providers';
-import { Suspense, useEffect, useState } from 'react';
-
-const Chat = React.lazy(() => import('@boluo/chat/components/Chat'));
+import React, { useEffect, useState } from 'react';
+import Chat from '@boluo/chat/components/Chat';
+import { ChatSkeleton } from '@boluo/chat/components/ChatSkeleton';
 
 export const App = () => {
-  const [mounted, setMounted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    setIsClient(true);
   }, []);
-  if (!mounted) {
-    return null;
-  }
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Providers>
-        <Chat />
-      </Providers>
-    </Suspense>
-  );
+  if (!isClient) return <ChatSkeleton />;
+
+  return <Chat />;
 };

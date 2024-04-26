@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { FormattedMessage } from 'react-intl';
 import { LoginForm } from '../../../../components/LoginForm';
-import { getIntl, LangParams } from '../../../../server';
+import { getIntl, LangParams } from '@boluo/common/server';
 import { Footer } from './Footer';
 
 export function generateMetadata({ params }: { params: LangParams }): Metadata {

@@ -2,8 +2,8 @@ import { User } from '@boluo/api';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { get } from '../../../../api/server';
-import { getIntl, LangParams } from '../../../../server';
+import { get } from '@boluo/common/server/api';
+import { getIntl, LangParams } from '@boluo/common/server';
 
 interface Params extends LangParams {
   userId: string;

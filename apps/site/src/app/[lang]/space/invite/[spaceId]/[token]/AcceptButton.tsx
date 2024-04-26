@@ -3,9 +3,8 @@
 import { post } from '@boluo/api-browser';
 import { useMe } from '@boluo/common';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
 
@@ -15,12 +14,12 @@ interface Props {
 }
 
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
-  const router = useRouter();
   const me = useMe();
+  const intl = useIntl();
   const handleClick = async () => {
     const result = await post('/spaces/join', { spaceId, token }, {});
     const { space } = result.unwrap();
-    router.push(`/chat/#${space.id}/`);
+    window.open(`${process.env.APP_URL}/${intl.locale}/#${space.id}/`, '_blank');
   };
   const loginLink = (
     <span>

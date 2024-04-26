@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Loading } from '@boluo/ui/Loading';
 import type { StyleProps } from '@boluo/utils';
@@ -61,9 +61,10 @@ const UserOperations = ({ className }: StyleProps) => {
 };
 
 const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
+  const intl = useIntl();
   return (
     <div>
-      <Link href={`/chat#route="${space.id}"`} className="link">
+      <Link href={`${process.env.APP_URL}/${intl.locale}/#route="${space.id}"`} className="link" target="_blank">
         {space.name}
       </Link>
     </div>

@@ -2,6 +2,7 @@ import type { Locale } from '@boluo/common/locale';
 import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { Providers } from './Providers';
+import '@boluo/ui/tailwind.css';
 
 export const metadata: Metadata = {
   title: 'Boluo',

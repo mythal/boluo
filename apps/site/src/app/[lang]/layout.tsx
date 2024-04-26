@@ -10,6 +10,7 @@ export function generateMetadata({ params }: { params: LangParams }): Metadata {
 
   return {
     title,
+    description: intl.formatMessage({ defaultMessage: 'A chat application designed specifically for playing RPGs.' }),
   };
 }
 

@@ -1,0 +1,14 @@
+{
+  "name": "パインRPG",
+  "short_name": "パイン",
+  "start_url": "/ja",
+  "icons": [
+    {
+      "src": "icons/app.svg",
+      "sizes": "72x72"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

@@ -1,7 +1,6 @@
 import { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Err, Ok, Result } from '@boluo/utils';
-import { getConfiguration } from './configuration';
 
 export const mediaMaxSizeMb = 8;
 export const mediaMaxSizeByte = mediaMaxSizeMb * 1024 * 1024;
@@ -30,7 +29,7 @@ export const makeMeidaPublicUrl = (raw: unknown) => {
 };
 
 const getMediaPublicUrl = () => {
-  const url = getConfiguration().mediaUrl;
+  const url = makeMeidaPublicUrl(process.env.PUBLIC_MEDIA_URL);
   if (url == null) {
     throw new Error('PUBLIC_MEDIA_URL is not defined');
   }

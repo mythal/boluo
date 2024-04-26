@@ -20,7 +20,8 @@ const config = {
   output: 'standalone',
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
-    BACKEND_URL: process.env.BACKEND_URL || 'https://boluo.chat',
+    BACKEND_URL: process.env.BACKEND_URL,
+    APP_URL: process.env.APP_URL,
   },
   transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
   experimental: {

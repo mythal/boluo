@@ -2,7 +2,7 @@ import { Locale } from '@boluo/common/locale';
 import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../components/global/Providers';
-import { getIntl, getMessages, LangParams } from '../../server';
+import { getIntl, getMessages, LangParams } from '@boluo/common/server';
 
 export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);

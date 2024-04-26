@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { Result } from '@boluo/utils';
-import { get } from '../../../../../../api/server';
-import { getIntl, LangParams } from '../../../../../../server';
+import { get } from '@boluo/common/server/api';
+import { getIntl, LangParams } from '@boluo/common/server';
 import { AcceptButton } from './AcceptButton';
 
 interface Params extends LangParams {

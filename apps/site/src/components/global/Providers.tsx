@@ -1,8 +1,6 @@
 'use client';
 
 import type { GetMe } from '@boluo/api';
-import { setConfiguration } from '@boluo/chat/configuration';
-import { makeMeidaPublicUrl } from '@boluo/chat/media';
 import { IntlMessages, Locale } from '@boluo/common/locale';
 import { Provider as JotaiProvider } from 'jotai';
 import { FC, useEffect } from 'react';
@@ -17,12 +15,6 @@ interface Props extends ChildrenProps {
   messages: IntlMessages;
   me: GetMe | null;
 }
-
-setConfiguration({
-  app: 'site',
-  development: process.env.NODE_ENV === 'development',
-  mediaUrl: makeMeidaPublicUrl(process.env.PUBLIC_MEDIA_URL),
-});
 
 export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) => {
   useEffect(() => {

@@ -12,7 +12,7 @@ import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
 import { toTheme } from '@boluo/theme';
 import type { Theme } from '@boluo/theme';
-import { get } from './api/server';
+import { get } from './api';
 
 export interface LangParams {
   lang?: string;

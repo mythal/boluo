@@ -123,8 +123,16 @@ export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => 
       }
       return;
     }
-    const { me, token } = result.some;
+    const { me } = result.some;
     await mutate(['/users/query', null], me.user);
+    await mutate(
+      (key) => {
+        if (!Array.isArray(key)) return false;
+        return key[0] === '/channels/by_space';
+      },
+      undefined,
+      { revalidate: true },
+    );
     if (onSuccess) {
       onSuccess();
     }

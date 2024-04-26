@@ -15,11 +15,32 @@
     transition-property: background-color, border-bottom-color, border-top-color, border-left-color, border-right-color,
       outline-color;
   }
-  @font-face {
-    font-family: Fusion-Pixel-12;
-    src: url('./fonts/fusion-pixel.woff2');
-  }
 
+  @font-face {
+    font-family: fusion-pixel-ja;
+    src: url('./fonts/fusion-pixel-10px-monospaced-ja.woff2');
+  }
+  :lang(ja) .font-pixel {
+    font-family: fusion-pixel-ja, monospace;
+  }
+  @font-face {
+    font-family: fusion-pixel-latin;
+    src: url('./fonts/fusion-pixel-10px-monospaced-latin.woff2');
+  }
+  :lang(en) .font-pixel {
+    font-family: fusion-pixel-latin, monospace;
+  }
+  @font-face {
+    font-family: fusion-pixel-zh-hans;
+    src: url('./fonts/fusion-pixel-10px-monospaced-zh_hans.woff2');
+  }
+  :lang(zh-CN) .font-pixel {
+    font-family: fusion-pixel-zh-hans, monospace;
+  }
+  @font-face {
+    font-family: fusion-pixel-zh-hant;
+    src: url('./fonts/fusion-pixel-10px-monospaced-zh_hans.woff2');
+  }
   #__next {
     height: 100%;
   }
@@ -41,7 +62,6 @@
   .contain-size {
     contain: size;
   }
-
   .view-height {
     height: 100vh;
     height: 100dvh;

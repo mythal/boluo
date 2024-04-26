@@ -51,3 +51,7 @@ cargo test
 npm install
 npm build
 ```
+
+### Credits
+
+- [缝合像素字体 / Fusion Pixel Font](https://github.com/TakWolf/fusion-pixel-font/)

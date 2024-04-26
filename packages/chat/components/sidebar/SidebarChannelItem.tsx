@@ -34,6 +34,13 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
           if (channelState.fullLoaded) return 'EMPTY';
           return 'UNLOAD';
         }
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const message = messages[i];
+          if (!message) continue;
+          if (!message.folded) {
+            return messages[i]!;
+          }
+        }
         return messages[messages.length - 1]!;
       }),
     [channel.id],

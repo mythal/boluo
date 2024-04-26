@@ -21,7 +21,7 @@
     "message": "使用 {key} 键发送消息."
   },
   "/DfISw": {
-    "message": "Cancel edit"
+    "message": "取消编辑"
   },
   "/I//hN": {
     "message": "载入消息失败 ({errorCode})"
@@ -48,7 +48,7 @@
     "message": "发生意外错误。请稍后再试。"
   },
   "0ah2ud": {
-    "message": "Space"
+    "message": "位面"
   },
   "0pT/2d": {
     "message": "无角色名"
@@ -90,13 +90,13 @@
     "message": "密码"
   },
   "60KMrS": {
-    "message": "As Default"
+    "message": "设作默认"
   },
   "6CVXeu": {
     "message": "查询频道失败"
   },
   "6DeXXB": {
-    "message": "A chat application designed specifically for playing RPGs."
+    "message": "专为游玩 TRPG 设计的聊天应用"
   },
   "6JNvt/": {
     "message": "至少需要 {min} 个字符。"
@@ -249,7 +249,7 @@
     "message": "已连接"
   },
   "JBWS0c": {
-    "message": "Link"
+    "message": "链接"
   },
   "JCIgkj": {
     "message": "用户名"
@@ -378,7 +378,7 @@
     "message": "关闭窗格"
   },
   "SpLs8U": {
-    "message": "You must first join the {space} to join a channel."
+    "message": "您必须先加入 {space} 才能加入频道。"
   },
   "SqVNRz": {
     "message": "创建位面"
@@ -405,7 +405,7 @@
     "message": "主题"
   },
   "UhsO+i": {
-    "message": "Message not found"
+    "message": "未找到消息"
   },
   "Ujs8Kg": {
     "message": "来自服务器的消息"
@@ -549,7 +549,7 @@
     "message": "悄悄话给 …"
   },
   "eLCAEP": {
-    "message": "Attachment"
+    "message": "附件"
   },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
@@ -558,7 +558,7 @@
     "message": "基本"
   },
   "fc2iho": {
-    "message": "Add File"
+    "message": "添加文件"
   },
   "fnihsY": {
     "message": "离开"
@@ -567,7 +567,7 @@
     "message": "位面间跳跃"
   },
   "ftsMiH": {
-    "message": "Toggle In Game"
+    "message": "游戏内/外"
   },
   "gEes7R": {
     "message": "为了接受邀请，你需要先 {loginLink}。"
@@ -606,7 +606,7 @@
     "message": "你已经加入了该频道。"
   },
   "jRANBd": {
-    "message": "Edit message"
+    "message": "编辑消息"
   },
   "jvo0vs": {
     "message": "保存"
@@ -666,7 +666,7 @@
     "message": "换一个随机颜色"
   },
   "pBQ5bd": {
-    "message": "Editing"
+    "message": "编辑中"
   },
   "pm/HIR": {
     "message": "必须填写频道名。"

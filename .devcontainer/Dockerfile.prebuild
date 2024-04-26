@@ -3,7 +3,7 @@ RUN apt update -y
 RUN \
   apt install -y curl xz-utils git pkg-config libssl-dev build-essential ;\
   mkdir /nix ;\
-  useradd -m -s /bin/bash -u 1000 dev ;\
+  useradd -m -s /bin/bash -u 1101 dev ;\
   chown dev /nix ;\
   mkdir -p /etc/nix ;\
   echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf

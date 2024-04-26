@@ -34,4 +34,6 @@ export interface Get {
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
   '/messages/query': { query: { id: string }; result: Message | null };
+  // events
+  '/events/token': { query: null; result: { token: string | null } };
 }

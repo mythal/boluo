@@ -1,7 +1,7 @@
 'use client';
 
 import { ApiError } from '@boluo/api';
-import { post } from '@boluo/api-browser';
+import { login, post, setToken } from '@boluo/api-browser';
 import { FC, useId } from 'react';
 import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext, useFormState } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -116,14 +116,14 @@ export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => 
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
-    const result = await post('/users/login', null, { password, username });
+    const result = await login(username, password);
     if (result.isErr) {
       if (onError) {
         onError(result.err);
       }
       return;
     }
-    const { me } = result.some;
+    const { me, token } = result.some;
     await mutate(['/users/query', null], me.user);
     if (onSuccess) {
       onSuccess();

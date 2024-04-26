@@ -10,13 +10,15 @@ import { FailedBanner } from './common/FailedBanner';
 import { Failed } from './common/Failed';
 import { PaneError } from './pane-error/PaneError';
 import { PaneFailed } from './pane-failed/PaneFailed';
+import { useQueryConnectionToken } from '../hooks/useQueryConnectionToken';
 
 interface Props {
   spaceId: string;
 }
 
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
-  useConnectionEffect(spaceId);
+  const { data: token, isLoading: isTokenLoading } = useQueryConnectionToken();
+  useConnectionEffect(spaceId, isTokenLoading, token?.token);
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);
   let defaultPane = useMemo(() => <PaneSpace spaceId={spaceId} />, [spaceId]);

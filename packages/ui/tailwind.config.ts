@@ -187,6 +187,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       expr: {
         bg: $(lime[50], neutral[900]),
       },
+      code: {
+        bg: $(neutral[100], black),
+        border: $(neutral[300], neutral[700]),
+        text: $(black, yellow[300]),
+      },
       compose: {
         media: {
           bg: $(neutral[100], neutral[700]),

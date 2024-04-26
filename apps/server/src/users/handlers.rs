@@ -39,11 +39,31 @@ pub async fn query_user(req: Request<Body>) -> Result<User, AppError> {
     let id = if let Some(id) = id {
         id
     } else {
-        authenticate(&req).await?.user_id
+        authenticate(&req)
+            .await
+            .map_err(|err| match err {
+                AppError::Unauthenticated(_) => AppError::NotFound("current user"),
+                x => x,
+            })?
+            .user_id
     };
 
     let mut db = database::get().await?;
     User::get_by_id(&mut *db, &id).await.or_not_found()
+}
+
+pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
+    use crate::session::authenticate;
+
+    let session = authenticate(&req).await;
+    match session {
+        Ok(session) => {
+            let mut db = database::get().await?;
+            Ok(Some(User::get_by_id(&mut *db, &session.user_id).await.or_not_found()?))
+        }
+        Err(AppError::Unauthenticated(_)) => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 pub async fn query_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
@@ -338,6 +358,7 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/register", Method::POST) => register(req).await.map(ok_response),
         ("/logout", _) => logout(req).await,
         ("/query", Method::GET) => query_user(req).await.map(ok_response),
+        ("/query_self", Method::GET) => query_self(req).await.map(ok_response),
         ("/get_me", Method::GET) => get_me(req).await,
         ("/settings", Method::GET) => query_settings(req).await.map(ok_response),
         ("/edit", Method::POST) => edit(req).await.map(ok_response),

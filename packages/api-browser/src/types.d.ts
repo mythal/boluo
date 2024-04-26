@@ -2,7 +2,7 @@ declare const process:
   | {
       env:
         | {
-            BACKEND_URL: string | undefined;
+            PUBLIC_BACKEND_URL: string | undefined;
           }
         | undefined;
     }

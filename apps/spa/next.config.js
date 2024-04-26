@@ -17,6 +17,7 @@ module.exports = {
   rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
+    PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,
   },
   webpack: (config) => {
     if (ANALYZE) {

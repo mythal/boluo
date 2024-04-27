@@ -343,6 +343,7 @@
                   clang
                   gnumake
                   nixpkgs-fmt
+                  sqlx-cli
                 ];
               in
               common ++ darwinInputs;

@@ -21,7 +21,8 @@ mod channels;
 mod context;
 mod cors;
 mod csrf;
-mod database;
+mod database; // old
+mod db; // new
 mod events;
 mod info;
 mod interface;

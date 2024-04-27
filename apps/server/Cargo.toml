@@ -11,6 +11,9 @@ edition = "2021"
 name = "server"
 path = "src/server.rs"
 
+[profile.dev.package.sqlx-macros]
+opt-level = 3
+
 [dependencies]
 anyhow = "1"
 async-trait = "0.1"
@@ -41,6 +44,15 @@ sysinfo = "0.30.5"
 thiserror = "1.0"
 tokio-stream = "0.1"
 tokio-tungstenite = "0.21"
+sqlx = { version = "0.7", features = [
+  "runtime-tokio",
+  "tls-rustls",
+  "postgres",
+  "uuid",
+  "chrono",
+  "json",
+] }
+
 
 [dependencies.ts-rs]
 version = "7"

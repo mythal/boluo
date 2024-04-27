@@ -1,4 +1,5 @@
 const path = require('path');
+const withBundleAnalyzer = require('@next/bundle-analyzer')();
 
 const ANALYZE = Boolean(process.env.ANALYZE);
 
@@ -30,14 +31,6 @@ const config = {
   },
   rewrites,
   webpack: (config) => {
-    if (ANALYZE) {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      const plugin = new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-      });
-      config.plugins.push(plugin);
-    }
-
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller
     // https://github.com/vercel/next.js/issues/30434
@@ -47,4 +40,4 @@ const config = {
   },
 };
 
-module.exports = config;
+module.exports = process.env.ANALYZE === 'true' ? withBundleAnalyzer(config) : config;

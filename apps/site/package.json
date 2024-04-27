@@ -45,6 +45,7 @@
     "@cloudflare/next-on-pages": "^1.11.1",
     "@mdx-js/loader": "^3.0.0",
     "@mdx-js/react": "^3.0.0",
+    "@next/bundle-analyzer": "^14.2.3",
     "@types/mdx": "^2.0.10",
     "@types/negotiator": "^0.6.3",
     "@types/node": "^20.11.5",
@@ -58,7 +59,6 @@
     "tailwindcss": "^3.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "webpack": "^5.89.0",
-    "webpack-bundle-analyzer": "^4.10.1"
+    "webpack": "^5.89.0"
   }
 }

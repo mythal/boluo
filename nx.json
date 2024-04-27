@@ -1,9 +1,6 @@
 {
   "extends": "nx/presets/npm.json",
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "affected": {
-    "defaultBase": "master"
-  },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build", "^gererate"],
@@ -30,5 +27,7 @@
     "test": {
       "cache": true
     }
-  }
+  },
+  "useInferencePlugins": false,
+  "defaultBase": "master"
 }

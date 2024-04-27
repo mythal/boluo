@@ -182,7 +182,11 @@
                       runHook preBuild
                       cp -r ${nodeDeps}/_napalm-install/node_modules .
                       chmod -R u+w .
-                      npm run build:site
+
+                      # Workaround for nx issue
+                      # https://github.com/nrwl/nx/issues/22445#issuecomment-2057097871
+                      ${pkgs.util-linux}/bin/script -c "npm run build:site" /dev/null
+
                       runHook postBuild
                     '';
                     installPhase = ''
@@ -239,7 +243,9 @@
                     runHook preBuild
                     cp -r ${nodeDeps}/_napalm-install/node_modules .
                     chmod -R u+w .
-                    npm run build:legacy
+                    # Workaround for nx issue
+                    # https://github.com/nrwl/nx/issues/22445#issuecomment-2057097871
+                    ${pkgs.util-linux}/bin/script -c "npm run build:legacy" /dev/null
                     runHook postBuild
                   '';
                   installPhase = ''

@@ -5,6 +5,7 @@ on:
       - master
     paths:
       - '.devcontainer/**'
+      - '.github/workflows/dev-image.yaml'
       - 'flake.nix'
       - 'flake.lock'
       - 'rust-toolchain.toml'

@@ -1,17 +1,16 @@
 use chrono::prelude::*;
 use postgres_types::FromSql;
 use serde::Serialize;
+use sqlx::{query_file_scalar, query_scalar};
 use ts_rs::TS;
 use uuid::Uuid;
 
-use crate::database::Querist;
-use crate::error::{DbError, ModelError};
-use crate::utils::{inner_result_map, merge_blank};
+use crate::error::ModelError;
+use crate::utils::merge_blank;
 
-#[derive(Debug, Serialize, FromSql, Clone, TS)]
+#[derive(Debug, Serialize, Clone, TS, FromSql)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
-#[postgres(name = "users")]
 pub struct User {
     pub id: Uuid,
     #[serde(skip)]
@@ -29,18 +28,65 @@ pub struct User {
     pub default_color: String,
 }
 
+// Expand from `sqlx::Type` to workaround
+// https://github.com/launchbadge/sqlx/issues/1031
+impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for User {
+    fn decode(
+        value: ::sqlx::postgres::PgValueRef<'r>,
+    ) -> ::std::result::Result<
+        Self,
+        ::std::boxed::Box<dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync>,
+    > {
+        let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
+        let id = decoder.try_decode::<Uuid>()?;
+        let email = decoder.try_decode::<String>()?;
+        let username = decoder.try_decode::<String>()?;
+        let nickname = decoder.try_decode::<String>()?;
+        let password = decoder.try_decode::<String>()?;
+        let bio = decoder.try_decode::<String>()?;
+        let joined = decoder.try_decode::<DateTime<Utc>>()?;
+        let deactivated = decoder.try_decode::<bool>()?;
+        let default_color = decoder.try_decode::<String>()?;
+        let avatar_id = decoder.try_decode::<Option<Uuid>>()?;
+        ::std::result::Result::Ok(User {
+            id,
+            email,
+            username,
+            nickname,
+            password,
+            bio,
+            joined,
+            deactivated,
+            default_color,
+            avatar_id,
+        })
+    }
+}
+
+impl sqlx::Type<sqlx::Postgres> for User {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        sqlx::postgres::PgTypeInfo::with_name("users")
+    }
+}
+
+// impl<'r> sqlx::Decode<'r, sqlx::Postgres> for User
+// where
+//     &'r str: sqlx::Decode<'r, sqlx::Postgres>,
+// {
+//     fn decode(
+//         value: sqlx::postgres::PgValueRef<'r>,
+//     ) -> Result<User, Box<dyn std::error::Error + 'static + Send + Sync>> {
+//         todo!()
+//     }
+// }
+
 impl User {
-    pub async fn all<T: Querist>(db: &mut T) -> Result<Vec<User>, DbError> {
-        let rows = db.query_typed(include_str!("sql/all.sql"), &[], &[]).await?;
-        let mut users = vec![];
-        for row in rows {
-            users.push(row.try_get(0)?);
-        }
-        Ok(users)
+    pub async fn all<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<User>, sqlx::Error> {
+        query_file_scalar!("sql/users/all.sql").fetch_all(db).await
     }
 
-    pub async fn register<T: Querist>(
-        db: &mut T,
+    pub async fn register<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         email: &str,
         username: &str,
         nickname: &str,
@@ -56,82 +102,103 @@ impl User {
         NAME.run(username)?;
         PASSWORD.run(password)?;
 
-        let row = db
-            .query_exactly_one(
-                include_str!("sql/create.sql"),
-                &[&email, &username, &&*nickname, &password],
-            )
-            .await?;
-        row.try_get(0).map_err(Into::into)
+        sqlx::query_file_scalar!("sql/users/create.sql", email, username, nickname, password)
+            .fetch_one(db)
+            .await
+            .map_err(Into::into)
     }
 
-    async fn get<T: Querist>(
-        db: &mut T,
+    async fn get<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         id: Option<&Uuid>,
         email: Option<&str>,
         username: Option<&str>,
-    ) -> Result<Option<User>, DbError> {
-        use postgres_types::Type;
-
+    ) -> Result<Option<User>, sqlx::Error> {
         let email = email.map(|s| s.to_ascii_lowercase());
-        let row = db
-            .query_one_typed(
-                include_str!("sql/get.sql"),
-                &[Type::UUID, Type::TEXT, Type::TEXT],
-                &[&id, &email, &username],
-            )
-            .await;
-        inner_result_map(row, |row| row.try_get(0))
+
+        if let Some(id) = id {
+            User::get_by_id(db, id).await
+        } else if let Some(email) = email {
+            User::get_by_email(db, &*email).await
+        } else if let Some(username) = username {
+            User::get_by_username(db, username).await
+        } else {
+            Ok(None)
+        }
     }
 
-    pub async fn login<T: Querist>(db: &mut T, username: &str, password: &str) -> Result<Option<User>, DbError> {
-        use postgres_types::Type;
-
-        let row = db
-            .query_one_typed(
-                include_str!("sql/login.sql"),
-                &[Type::TEXT, Type::TEXT],
-                &[&username, &password],
-            )
+    pub async fn login<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        username: &str,
+        password: &str,
+    ) -> Result<Option<User>, sqlx::Error> {
+        let result = sqlx::query_file!("sql/users/login.sql", username, password)
+            .fetch_optional(db)
             .await?;
-
-        let result = row.and_then(|row| if row.get(0) { Some(row.get(1)) } else { None });
-        Ok(result)
+        if let Some(result) = result {
+            if result.password_match {
+                Ok(Some(result.user))
+            } else {
+                Ok(None)
+            }
+        } else {
+            Ok(None)
+        }
     }
 
-    pub async fn get_by_id<T: Querist>(db: &mut T, id: &Uuid) -> Result<Option<User>, DbError> {
-        User::get(db, Some(id), None, None).await
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<User>, sqlx::Error> {
+        query_scalar!(
+            r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
+            id
+        )
+        .fetch_optional(db)
+        .await
     }
 
-    pub async fn get_by_email<T: Querist>(db: &mut T, email: &str) -> Result<Option<User>, DbError> {
-        User::get(db, None, Some(email), None).await
+    pub async fn get_by_email<'c, T: sqlx::PgExecutor<'c>>(db: T, email: &str) -> Result<Option<User>, sqlx::Error> {
+        query_scalar!(
+            r#"SELECT users as "users!: User" FROM users WHERE email = $1 AND deactivated = false LIMIT 1"#,
+            email
+        )
+        .fetch_optional(db)
+        .await
     }
 
-    pub async fn get_by_username<T: Querist>(db: &mut T, username: &str) -> Result<Option<User>, DbError> {
-        User::get(db, None, None, Some(username)).await
+    pub async fn get_by_username<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        username: &str,
+    ) -> Result<Option<User>, sqlx::Error> {
+        query_scalar!(
+            r#"SELECT users as "users!: User" FROM users WHERE username = $1 AND deactivated = false LIMIT 1"#,
+            username
+        )
+        .fetch_optional(db)
+        .await
     }
 
-    pub async fn reset_password<T: Querist>(db: &mut T, id: Uuid, password: &str) -> Result<(), ModelError> {
+    pub async fn reset_password<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: Uuid,
+        password: &str,
+    ) -> Result<(), ModelError> {
         use crate::validators::PASSWORD;
-        use postgres_types::Type;
 
         PASSWORD.run(password)?;
-
-        db.execute_typed(
-            include_str!("sql/reset_password.sql"),
-            &[Type::UUID, Type::TEXT],
-            &[&id, &password],
-        )
-        .await?;
+        sqlx::query_file!("sql/users/reset_password.sql", id, password)
+            .execute(db)
+            .await?;
         Ok(())
     }
 
-    pub async fn deactivated<T: Querist>(db: &mut T, id: &Uuid) -> Result<u64, DbError> {
-        db.execute(include_str!("sql/deactivated.sql"), &[id]).await
+    pub async fn deactivated<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
+        sqlx::query_file!("sql/users/deactivated.sql", id)
+            .execute(db)
+            .await
+            .map(|res| res.rows_affected())
     }
 
-    pub async fn edit<T: Querist>(
-        db: &mut T,
+    pub async fn edit<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         id: &Uuid,
         nickname: Option<String>,
         bio: Option<String>,
@@ -147,58 +214,57 @@ impl User {
         if let Some(bio) = bio {
             BIO.run(bio)?;
         }
-        let row = db
-            .query_exactly_one(
-                include_str!("sql/edit.sql"),
-                &[id, &nickname, &bio, &avatar, &default_color],
-            )
-            .await?;
-        row.try_get(0).map_err(Into::into)
+        query_file_scalar!("sql/users/edit.sql", id, nickname, bio, avatar, default_color)
+            .fetch_one(db)
+            .await
+            .map_err(Into::into)
     }
-    pub async fn remove_avatar<T: Querist>(db: &mut T, id: &Uuid) -> Result<User, ModelError> {
-        let row = db
-            .query_exactly_one(include_str!("sql/remove_avatar.sql"), &[id])
-            .await?;
-        row.try_get(0).map_err(Into::into)
+    pub async fn remove_avatar<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<User, ModelError> {
+        sqlx::query_file_scalar!("sql/users/remove_avatar.sql", id)
+            .fetch_one(db)
+            .await
+            .map_err(Into::into)
     }
 }
 
-#[derive(Debug, Serialize, FromSql, Clone)]
+#[derive(Debug, Serialize, Clone, sqlx::Type)]
 #[serde(rename_all = "camelCase")]
-#[postgres(name = "users_extension")]
+#[sqlx(type_name = "users_extension")]
 pub struct UserExt {
     pub user_id: Uuid,
     pub settings: serde_json::Value,
 }
 
 impl UserExt {
-    pub async fn get_settings<T: Querist>(db: &mut T, user_id: Uuid) -> Result<serde_json::Value, DbError> {
-        let user_ext = db
-            .query_one(include_str!("sql/get_settings.sql"), &[&user_id])
-            .await?
-            .map(|row| row.get(0));
-        Ok(user_ext.unwrap_or_else(|| serde_json::Value::Object(serde_json::Map::new())))
+    pub async fn get_settings<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<serde_json::Value, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/users/get_settings.sql", user_id)
+            .fetch_optional(db)
+            .await
+            .map(|settings| settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())))
     }
 
-    pub async fn update_settings<T: Querist>(
-        db: &mut T,
+    pub async fn update_settings<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: Uuid,
         settings: serde_json::Value,
-    ) -> Result<serde_json::Value, DbError> {
-        let row = db
-            .query_exactly_one(include_str!("sql/set_settings.sql"), &[&user_id, &settings])
-            .await?;
-        row.try_get(0).map_err(Into::into)
+    ) -> Result<serde_json::Value, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/users/set_settings.sql", user_id, settings)
+            .fetch_one(db)
+            .await
+            .map_err(Into::into)
     }
 
-    pub async fn partial_update_settings<T: Querist>(
-        db: &mut T,
+    pub async fn partial_update_settings<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: Uuid,
         settings: serde_json::Value,
-    ) -> Result<serde_json::Value, DbError> {
-        let row = db
-            .query_exactly_one(include_str!("sql/partial_set_settings.sql"), &[&user_id, &settings])
-            .await?;
-        row.try_get(0).map_err(Into::into)
+    ) -> Result<serde_json::Value, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/users/partial_set_settings.sql", user_id, settings)
+            .fetch_one(db)
+            .await
+            .map_err(Into::into)
     }
 }

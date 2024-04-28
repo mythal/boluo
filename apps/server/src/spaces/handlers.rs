@@ -5,13 +5,13 @@ use super::models::{space_users_status, UserStatus};
 use super::{Space, SpaceMember};
 use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
-use crate::database;
 use crate::error::{AppError, Find};
 use crate::events::Event;
 use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Response};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
+use crate::{database, db};
 use hyper::{Body, Request};
 use uuid::Uuid;
 
@@ -121,11 +121,12 @@ async fn create(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
         first_channel_name,
     }: CreateSpace = interface::parse_body(req).await?;
 
+    let pool = db::get().await;
     let mut conn = database::get().await?;
     let mut trans = conn.transaction().await?;
     let db = &mut trans;
     let default_dice_type = default_dice_type.as_deref();
-    let user = User::get_by_id(db, &session.user_id)
+    let user = User::get_by_id(&pool, &session.user_id)
         .await?
         .ok_or(AppError::NotFound("user"))?;
     let space = Space::create(db, name, &user.id, description, password, default_dice_type).await?;
@@ -194,6 +195,7 @@ async fn join(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
     let JoinSpace { space_id, token } = parse_query(req.uri())?;
 
+    let pool = db::get().await;
     let mut db = database::get().await?;
     let db = &mut *db;
 
@@ -204,7 +206,7 @@ async fn join(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
         ));
     }
     let user_id = &session.user_id;
-    let user = User::get_by_id(db, user_id)
+    let user = User::get_by_id(&pool, user_id)
         .await?
         .ok_or_else(|| unexpected!("No such user found."))?;
     let member = if &space.owner_id == user_id {

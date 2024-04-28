@@ -1,4 +1,4 @@
-SELECT users
+SELECT users as "users!: User"
 FROM users
 WHERE CASE
           WHEN $1 IS NOT NULL THEN id = $1

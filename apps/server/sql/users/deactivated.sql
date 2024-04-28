@@ -1,3 +1,7 @@
-UPDATE users
-SET deactivated = true
-WHERE id = $1;
+UPDATE
+    users
+SET
+    deactivated = TRUE
+WHERE
+    id = $1;
+

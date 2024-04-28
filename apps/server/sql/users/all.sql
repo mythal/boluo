@@ -1,3 +1,7 @@
-SELECT users as "users!: User"
-FROM users
-WHERE deactivated = false;
+SELECT
+    users AS "users!: User"
+FROM
+    users
+WHERE
+    deactivated = FALSE;
+

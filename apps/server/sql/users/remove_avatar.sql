@@ -1,4 +1,9 @@
-UPDATE users
-SET avatar_id = null
-WHERE id = $1
-RETURNING users as "users!: User";
+UPDATE
+    users
+SET
+    avatar_id = NULL
+WHERE
+    id = $1
+RETURNING
+    users AS "users!: User";
+

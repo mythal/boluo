@@ -1,13 +1,9 @@
 use std::cell::RefCell;
 
 use super::models::Proxy;
-use crate::{
-    database::{self, Querist},
-    error::AppError,
-    info::models::HealthCheck,
-    interface::Response,
-};
+use crate::{db, error::AppError, info::models::HealthCheck, interface::Response};
 use hyper::{Body, Method, Request};
+use sqlx::query_as;
 
 #[derive(Debug, Clone, Default)]
 pub struct ProxiesCache {
@@ -37,24 +33,15 @@ pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
         }
     }
 
-    let mut db = database::get().await.expect("Unexpected failture in get database");
-    let result = db.query(include_str!("sql/proxies.sql"), &[]).await;
-    let proxies: Vec<Proxy> = match result {
-        Ok(rows) => rows
-            .into_iter()
-            .map(|row| {
-                let name: String = row.get(0);
-                let url: String = row.get(1);
-                let region: String = row.get(2);
-                Proxy { name, url, region }
-            })
-            .collect(),
+    let pool = db::get().await;
 
-        Err(err) => {
-            log::warn!("Unexpected failture in query proxies: {:?}", err);
-            vec![]
-        }
-    };
+    let proxies: Vec<Proxy> = query_as!(
+        Proxy,
+        r#"SELECT "name", "url", "region" FROM "proxies" WHERE "is_enabled" = TRUE;"#
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(AppError::from)?;
     PROXIES.with(|x| {
         x.borrow_mut().proxies = proxies.clone();
         x.borrow_mut().timestamp = Some(now);

@@ -119,7 +119,7 @@ impl User {
         if let Some(id) = id {
             User::get_by_id(db, id).await
         } else if let Some(email) = email {
-            User::get_by_email(db, &*email).await
+            User::get_by_email(db, &email).await
         } else if let Some(username) = username {
             User::get_by_username(db, username).await
         } else {

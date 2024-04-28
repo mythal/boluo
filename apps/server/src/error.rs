@@ -9,6 +9,8 @@ pub use tokio_postgres::Error as DbError;
 pub enum AppError {
     #[error("An unexpected database error occurred: {source}")]
     Database { source: DbError },
+    #[error("An unexpected database error occurred: {source}")]
+    Db { source: sqlx::Error },
     #[error("An unexpected cache database error occurred: {source}")]
     Cache {
         #[from]
@@ -116,6 +118,12 @@ impl From<DbError> for AppError {
     }
 }
 
+impl From<sqlx::Error> for AppError {
+    fn from(e: sqlx::Error) -> AppError {
+        ModelError::from(e).into()
+    }
+}
+
 macro_rules! unexpected {
     ($msg: expr) => {{
         let msg = $msg.to_string();
@@ -149,6 +157,8 @@ pub enum ModelError {
     Validation(#[from] ValidationFailed),
     #[error("{0}")]
     Database(DbError),
+    #[error("{0}")]
+    Db(#[from] sqlx::Error),
     #[error("{0} already exists")]
     Conflict(String),
 }
@@ -158,6 +168,7 @@ impl From<ModelError> for AppError {
         match e {
             ModelError::Validation(e) => AppError::Validation(e),
             ModelError::Database(source) => AppError::Database { source },
+            ModelError::Db(source) => AppError::Db { source },
             ModelError::Conflict(type_) => AppError::Conflict(type_),
         }
     }
@@ -214,6 +225,21 @@ impl<T> Find<T> for Result<Option<T>, DbError> {
     fn or_not_found(self) -> Result<T, AppError> {
         match self {
             Err(source) => Err(AppError::Database { source }),
+            Ok(x) => x.or_not_found(),
+        }
+    }
+}
+
+impl<T> Find<T> for Result<Option<T>, sqlx::Error> {
+    fn or_no_permission(self) -> Result<T, AppError> {
+        match self {
+            Err(source) => Err(AppError::Db { source }),
+            Ok(x) => x.or_no_permission(),
+        }
+    }
+    fn or_not_found(self) -> Result<T, AppError> {
+        match self {
+            Err(source) => Err(AppError::Db { source }),
             Ok(x) => x.or_not_found(),
         }
     }

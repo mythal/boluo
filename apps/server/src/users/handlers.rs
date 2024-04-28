@@ -5,7 +5,7 @@ use crate::session::{
     add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie,
     remove_session, remove_session_cookie, revoke_session,
 };
-use crate::{cache, database, mail};
+use crate::{cache, database, db, mail};
 
 use crate::channels::Channel;
 use crate::error::{AppError, Find, ValidationFailed};
@@ -222,7 +222,8 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
     let media_id = id();
     let media = upload(req, media_id, params, 1024 * 1024).await?;
     let mut db = database::get().await?;
-    let media = media.create(&mut *db, session.user_id, "avatar").await?;
+    let pool = db::get().await;
+    let media = media.create(&pool, session.user_id, "avatar").await?;
     User::edit(&mut *db, &session.user_id, None, None, Some(media.id), None)
         .await
         .map_err(Into::into)

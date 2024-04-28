@@ -1,8 +1,5 @@
-use crate::error::DbError;
-use crate::utils::inner_result_map;
-use crate::{context::media_path, database::Querist};
+use crate::context::media_path;
 use chrono::prelude::*;
-use postgres_types::FromSql;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use ts_rs::TS;
@@ -19,7 +16,12 @@ pub struct MediaFile {
 }
 
 impl MediaFile {
-    pub async fn create<T: Querist>(self, db: &mut T, user_id: Uuid, source: &str) -> Result<Media, DbError> {
+    pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
+        self,
+        db: T,
+        user_id: Uuid,
+        source: &str,
+    ) -> Result<Media, sqlx::Error> {
         Media::create(
             db,
             &self.id,
@@ -35,10 +37,10 @@ impl MediaFile {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, FromSql, TS)]
+#[derive(Debug, Serialize, Deserialize, TS, sqlx::Type)]
+#[sqlx(type_name = "media")]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
-#[postgres(name = "media")]
 pub struct Media {
     pub id: Uuid,
     pub mime_type: String,
@@ -59,20 +61,25 @@ impl Media {
         path
     }
 
-    pub async fn get_by_id<T: Querist>(db: &mut T, media_id: &Uuid) -> Result<Option<Media>, DbError> {
-        let result = db.query_one(include_str!("sql/get_by_id.sql"), &[media_id]).await;
-        inner_result_map(result, |row| row.try_get(0))
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, media_id: &Uuid) -> Result<Option<Media>, sqlx::Error> {
+        let media = sqlx::query_file_scalar!("sql/media/get_by_id.sql", media_id)
+            .fetch_optional(db)
+            .await?;
+        Ok(media)
     }
 
-    pub async fn get_by_filename<T: Querist>(db: &mut T, filename: &str) -> Result<Option<Media>, DbError> {
-        let result = db
-            .query_one(include_str!("sql/get_by_filename.sql"), &[&filename])
-            .await;
-        inner_result_map(result, |row| row.try_get(0))
+    pub async fn get_by_filename<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        filename: &str,
+    ) -> Result<Option<Media>, sqlx::Error> {
+        let media = sqlx::query_file_scalar!("sql/media/get_by_filename.sql", filename)
+            .fetch_optional(db)
+            .await?;
+        Ok(media)
     }
 
-    pub async fn create<T: Querist>(
-        db: &mut T,
+    pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         media_id: &Uuid,
         mime_type: &str,
         uploader_id: Uuid,
@@ -81,22 +88,19 @@ impl Media {
         hash: String,
         size: i32,
         source: &str,
-    ) -> Result<Media, DbError> {
-        let row = db
-            .query_exactly_one(
-                include_str!("sql/create.sql"),
-                &[
-                    &media_id,
-                    &mime_type,
-                    &uploader_id,
-                    &filename,
-                    &original_filename,
-                    &hash,
-                    &size,
-                    &source,
-                ],
-            )
-            .await?;
-        row.try_get(0)
+    ) -> Result<Media, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/media/create.sql",
+            media_id,
+            mime_type,
+            uploader_id,
+            filename,
+            original_filename,
+            hash,
+            size,
+            source
+        )
+        .fetch_one(db)
+        .await
     }
 }

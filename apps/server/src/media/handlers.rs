@@ -2,7 +2,7 @@ use super::api::Upload;
 use super::models::Media;
 use crate::context::media_public_url;
 use crate::csrf::authenticate;
-use crate::database;
+use crate::db;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
@@ -94,11 +94,8 @@ async fn media_upload(req: Request<Body>) -> Result<Media, AppError> {
     let params = upload_params(req.uri())?;
     let media_id = id();
     let media_file = upload(req, media_id, params, 1024 * 1024 * 16).await?;
-    let mut conn = database::get().await?;
-    media_file
-        .create(&mut *conn, session.user_id, "")
-        .await
-        .map_err(Into::into)
+    let pool = db::get().await;
+    media_file.create(&pool, session.user_id, "").await.map_err(Into::into)
 }
 
 async fn send_file(path: PathBuf, mut sender: hyper::body::Sender) -> Result<(), anyhow::Error> {
@@ -125,13 +122,12 @@ async fn get(req: Request<Body>) -> Result<Response, AppError> {
     } = parse_query(req.uri())?;
     let _method = req.method().clone();
 
-    let mut conn = database::get().await?;
-    let db = &mut *conn;
+    let pool = db::get().await;
     let mut media: Option<Media> = None;
     if let Some(id) = id {
-        media = Some(Media::get_by_id(db, &id).await.or_not_found()?);
+        media = Some(Media::get_by_id(&pool, &id).await.or_not_found()?);
     } else if let Some(filename) = filename {
-        media = Some(Media::get_by_filename(db, &filename).await.or_not_found()?);
+        media = Some(Media::get_by_filename(&pool, &filename).await.or_not_found()?);
     }
     let media = media.ok_or_else(|| AppError::BadRequest("Filename or media id must be specified.".to_string()))?;
 
@@ -206,7 +202,7 @@ async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
     } = parse_query(req.uri())?;
     let client = s3::get_client();
 
-    let mut db = database::get().await?;
+    let db = db::get().await;
     if size <= 0 {
         return Err(ValidationFailed("File size must be greater than 0.").into());
     }
@@ -215,7 +211,7 @@ async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
     }
     let media_id = id();
     let media = Media::create(
-        &mut *db,
+        &db,
         &media_id,
         &mime_type,
         session.user_id,

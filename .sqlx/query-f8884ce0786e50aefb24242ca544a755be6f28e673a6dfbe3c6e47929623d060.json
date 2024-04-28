@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE users\nSET avatar_id = null\nWHERE id = $1\nRETURNING users as \"users!: User\";\n",
+  "query": "UPDATE\n    users\nSET\n    avatar_id = NULL\nWHERE\n    id = $1\nRETURNING\n    users AS \"users!: User\";\n\n",
   "describe": {
     "columns": [
       {
@@ -66,5 +66,5 @@
       null
     ]
   },
-  "hash": "1ba4b481026b387058471333f08c67f1bd160c635812e6d3d7f7020cc65b7ce3"
+  "hash": "f8884ce0786e50aefb24242ca544a755be6f28e673a6dfbe3c6e47929623d060"
 }

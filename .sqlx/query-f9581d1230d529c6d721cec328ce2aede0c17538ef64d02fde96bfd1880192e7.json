@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO users_extension (user_id, settings)\nVALUES ($1, $2)\nON CONFLICT (user_id) DO UPDATE SET settings = $2\nRETURNING users_extension.settings;\n",
+  "query": "INSERT INTO users_extension(user_id, settings)\n    VALUES ($1, $2)\nON CONFLICT (user_id)\n    DO UPDATE SET\n        settings = $2\n    RETURNING\n        users_extension.settings;\n\n",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       false
     ]
   },
-  "hash": "ac6d7e8b565c4a2ec56a4831403921776b6cd97676e3e1055250549c53c7855f"
+  "hash": "f9581d1230d529c6d721cec328ce2aede0c17538ef64d02fde96bfd1880192e7"
 }

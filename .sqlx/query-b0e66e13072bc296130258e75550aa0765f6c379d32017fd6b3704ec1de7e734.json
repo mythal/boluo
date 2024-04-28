@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT settings\nFROM users_extension\nWHERE user_id = $1;\n",
+  "query": "SELECT\n    settings\nFROM\n    users_extension\nWHERE\n    user_id = $1;\n\n",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       false
     ]
   },
-  "hash": "121b91156de3230327a7ebcdfd33fb047da5f385ab1c1867884bc13c2f6aaed6"
+  "hash": "b0e66e13072bc296130258e75550aa0765f6c379d32017fd6b3704ec1de7e734"
 }

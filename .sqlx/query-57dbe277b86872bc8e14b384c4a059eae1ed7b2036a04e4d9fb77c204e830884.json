@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT users as \"users!: User\"\nFROM users\nWHERE deactivated = false;\n",
+  "query": "INSERT INTO users(email, username, nickname, PASSWORD)\n    VALUES ($1, $2, $3, crypt($4, gen_salt('bf')))\nRETURNING\n    users AS \"users!: User\";\n\n",
   "describe": {
     "columns": [
       {
@@ -58,11 +58,16 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "fd09ee91a17e6af2d9bb0934146966b90d8b2bba3267cfbd0e74144c39db7837"
+  "hash": "57dbe277b86872bc8e14b384c4a059eae1ed7b2036a04e4d9fb77c204e830884"
 }

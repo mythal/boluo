@@ -1,16 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT (password = crypt($2, password)) as \"password_match!\", users as \"user!: User\"\nFROM users\nWHERE (username = $1 OR email = lower($1))\n  AND deactivated = false\nLIMIT 1;\n",
+  "query": "SELECT\n    users AS \"users!: User\"\nFROM\n    users\nWHERE\n    deactivated = FALSE;\n\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "password_match!",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 1,
-        "name": "user!: User",
+        "name": "users!: User",
         "type_info": {
           "Custom": {
             "name": "users",
@@ -63,15 +58,11 @@
       }
     ],
     "parameters": {
-      "Left": [
-        "Text",
-        "Text"
-      ]
+      "Left": []
     },
     "nullable": [
-      null,
       null
     ]
   },
-  "hash": "b91154ca28636b2590cad6c89cbd950f917416c9e4c360f89eeb0cf6d3bd61b7"
+  "hash": "3556d2d8db4181d26a82cb45dd946249d9230906f23615eb1554c7e53f07e038"
 }

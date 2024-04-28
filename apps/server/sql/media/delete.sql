@@ -1,4 +1,5 @@
-DELETE
-FROM media
+DELETE FROM media
 WHERE id = $1
-RETURNING media as "media!: Media";
+RETURNING
+    media AS "media!: Media";
+

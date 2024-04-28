@@ -1,6 +1,15 @@
-UPDATE messages
+UPDATE
+    messages
 SET
-  (pos_p, pos_q) = (select p as pos_p, q as pos_q from find_intermediate($2, $3, $4, $5))
+    (pos_p,
+        pos_q) = (
+        SELECT
+            p AS pos_p,
+            q AS pos_q
+        FROM
+            find_intermediate ($2, $3, $4, $5))
 WHERE
-  id = $1
-RETURNING messages as "message!: Message";
+    id = $1
+RETURNING
+    messages AS "message!: Message";
+

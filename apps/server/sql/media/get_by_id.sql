@@ -1,4 +1,8 @@
-SELECT media as "media!: Media"
-FROM media
-WHERE id = $1
+SELECT
+    media AS "media!: Media"
+FROM
+    media
+WHERE
+    id = $1
 LIMIT 1;
+

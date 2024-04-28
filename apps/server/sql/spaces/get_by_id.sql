@@ -1,5 +1,9 @@
-SELECT s as "space!: Space"
-FROM spaces s
-WHERE s.id = $1
-  AND deleted = false
+SELECT
+    s AS "space!: Space"
+FROM
+    spaces s
+WHERE
+    s.id = $1
+    AND deleted = FALSE
 LIMIT 1;
+

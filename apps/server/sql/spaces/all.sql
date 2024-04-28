@@ -1,3 +1,8 @@
-SELECT spaces as "space!: Space"
-FROM spaces
-WHERE deleted = false AND explorable = true;
+SELECT
+    spaces AS "space!: Space"
+FROM
+    spaces
+WHERE
+    deleted = FALSE
+    AND explorable = TRUE;
+

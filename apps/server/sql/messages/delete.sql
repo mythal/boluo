@@ -1,3 +1,7 @@
-UPDATE messages
-SET deleted = true
-WHERE id = $1;
+UPDATE
+    messages
+SET
+    deleted = TRUE
+WHERE
+    id = $1;
+

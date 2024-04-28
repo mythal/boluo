@@ -1,4 +1,5 @@
-UPDATE channels
+UPDATE
+    channels
 SET
     name = COALESCE($2, name),
     topic = COALESCE($3, topic),
@@ -6,5 +7,9 @@ SET
     default_roll_command = COALESCE($5, default_roll_command),
     is_public = COALESCE($6, is_public),
     is_document = COALESCE($7, is_document)
-WHERE id = $1 AND deleted = false
-RETURNING channels as "channel!: Channel";
+WHERE
+    id = $1
+    AND deleted = FALSE
+RETURNING
+    channels AS "channel!: Channel";
+

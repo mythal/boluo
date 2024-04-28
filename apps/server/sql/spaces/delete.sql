@@ -1,3 +1,7 @@
-UPDATE spaces
-SET deleted = true
-WHERE id = $1;
+UPDATE
+    spaces
+SET
+    deleted = TRUE
+WHERE
+    id = $1;
+

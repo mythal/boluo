@@ -11,8 +11,6 @@ edition = "2021"
 name = "server"
 path = "src/server.rs"
 
-[profile.dev.package.sqlx-macros]
-opt-level = 3
 
 [dependencies]
 anyhow = "1"

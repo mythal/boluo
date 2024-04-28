@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users (email, username, nickname, password)\nVALUES ($1, $2, $3, crypt($4, gen_salt('bf')))\nRETURNING users as \"users!: User\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "users!: User",
+        "type_info": {
+          "Custom": {
+            "name": "users",
+            "kind": {
+              "Composite": [
+                ["id", "Uuid"],
+                ["email", "Text"],
+                ["username", "Text"],
+                ["nickname", "Text"],
+                ["password", "Text"],
+                ["bio", "Text"],
+                ["joined", "Timestamptz"],
+                ["deactivated", "Bool"],
+                ["avatar_id", "Uuid"],
+                ["default_color", "Text"]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": ["Text", "Text", "Text", "Text"]
+    },
+    "nullable": [null]
+  },
+  "hash": "2cc4d220ac3cd58e9a7190ea25ef98579b3400ba68ca09554b9548d6ff5baa67"
+}

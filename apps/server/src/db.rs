@@ -1,16 +1,7 @@
 use std::sync::OnceLock;
 
 pub fn get_postgres_url() -> String {
-    let key = if cfg!(test) {
-        dotenv::dotenv().ok();
-        dotenv::from_filename(".env.local").ok();
-        dotenv::from_filename(".env.test.local").ok();
-        "TEST_DATABASE_URL"
-    } else {
-        "DATABASE_URL"
-    };
-
-    std::env::var(key).expect("Failed to load Postgres connect URL")
+    std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
 }
 
 pub async fn get() -> sqlx::Pool<sqlx::Postgres> {

@@ -10,6 +10,7 @@ use hyper::header::ORIGIN;
 use hyper::server::conn::AddrStream;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Server};
+use redis::AsyncCommands as _;
 use tokio::signal::unix::{signal, SignalKind};
 
 #[macro_use]
@@ -149,6 +150,9 @@ async fn main() {
     let addr = SocketAddr::new(IpAddr::V4(addr), port);
 
     let make_svc = make_service_fn(|_: &AddrStream| async { Ok::<_, hyper::Error>(service_fn(handler)) });
+
+    let mut cache = crate::cache::conn().await.unwrap();
+    let _result: Option<String> = cache.inner.get("hello").await.expect("Failed to get cache");
 
     let server = Server::bind(&addr).serve(make_svc);
     events::tasks::start();

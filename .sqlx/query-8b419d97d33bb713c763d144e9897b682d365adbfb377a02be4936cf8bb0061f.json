@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    media AS \"media!: Media\"\nFROM\n    media\nWHERE\n    filename = $1\nLIMIT 1;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "media!: Media",
+        "type_info": {
+          "Custom": {
+            "name": "media",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "mime_type",
+                  "Text"
+                ],
+                [
+                  "uploader_id",
+                  "Uuid"
+                ],
+                [
+                  "filename",
+                  "Text"
+                ],
+                [
+                  "original_filename",
+                  "Text"
+                ],
+                [
+                  "hash",
+                  "Text"
+                ],
+                [
+                  "size",
+                  "Int4"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "source",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8b419d97d33bb713c763d144e9897b682d365adbfb377a02be4936cf8bb0061f"
+}

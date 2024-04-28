@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    spaces\nSET\n    invite_token = gen_random_uuid ()\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    invite_token;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "invite_token",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "825528c558b9af31fd8132cfbaa97a218381e29c28502f7f70c35f066ccfd44c"
+}

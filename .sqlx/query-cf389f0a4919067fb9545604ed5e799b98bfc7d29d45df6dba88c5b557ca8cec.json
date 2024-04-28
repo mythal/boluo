@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    spaces\nSET\n    name = COALESCE($2, name),\n    description = COALESCE($3, description),\n    default_dice_type = COALESCE($4, default_dice_type),\n    explorable = COALESCE($5, explorable),\n    is_public = COALESCE($6, is_public),\n    allow_spectator = COALESCE($7, allow_spectator)\nWHERE\n    id = $1\nRETURNING\n    spaces AS \"space!: Space\";\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space!: Space",
+        "type_info": {
+          "Custom": {
+            "name": "spaces",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "language",
+                  "Text"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
+                ],
+                [
+                  "explorable",
+                  "Bool"
+                ],
+                [
+                  "allow_spectator",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "cf389f0a4919067fb9545604ed5e799b98bfc7d29d45df6dba88c5b557ca8cec"
+}

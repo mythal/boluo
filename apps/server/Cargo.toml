@@ -67,10 +67,6 @@ features = ["server", "http1", "http2", "runtime", "stream"]
 version = "1.0"
 features = ["derive", "rc"]
 
-[dependencies.tokio-postgres]
-version = "0.7"
-features = ["with-chrono-0_4", "with-uuid-1", "with-serde_json-1"]
-
 [dependencies.uuid]
 version = "1"
 features = ["serde", "v1", "v4"]

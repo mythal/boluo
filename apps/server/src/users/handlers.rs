@@ -133,7 +133,7 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
     let form: Login = interface::parse_body(req).await?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
-    let user = User::login(&pool, &form.username, &form.password)
+    let user = User::login(&mut *conn, &form.username, &form.password)
         .await
         .or_no_permission()?;
     let session = session::start(&user.id).await.map_err(error_unexpected!())?;
@@ -220,8 +220,9 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
     let media_id = id();
     let media = upload(req, media_id, params, 1024 * 1024).await?;
     let pool = db::get().await;
-    let media = media.create(&pool, session.user_id, "avatar").await?;
-    User::edit(&pool, &session.user_id, None, None, Some(media.id), None)
+    let mut conn = pool.acquire().await?;
+    let media = media.create(&mut *conn, session.user_id, "avatar").await?;
+    User::edit(&mut *conn, &session.user_id, None, None, Some(media.id), None)
         .await
         .map_err(Into::into)
 }
@@ -335,6 +336,7 @@ pub async fn reset_password_token_check(req: Request<Body>) -> Result<bool, AppE
 pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> {
     let ResetPasswordConfirm { token, password } = parse_body(req).await?;
     let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
     let email = cache::conn()
         .await?
         .get(token_key(&token).as_slice())
@@ -342,10 +344,10 @@ pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> 
         .map(String::from_utf8)
         .ok_or(AppError::NotFound("token"))?
         .map_err(|e| AppError::Unexpected(e.into()))?;
-    let user = User::get_by_email(&pool, &email)
+    let user = User::get_by_email(&mut *conn, &email)
         .await?
         .ok_or(AppError::NotFound("user"))?;
-    User::reset_password(&pool, user.id, &password).await?;
+    User::reset_password(&mut *conn, user.id, &password).await?;
     Ok(())
 }
 

@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE channels\nSET\n    name = COALESCE($2, name),\n    topic = COALESCE($3, topic),\n    default_dice_type = COALESCE($4, default_dice_type),\n    default_roll_command = COALESCE($5, default_roll_command),\n    is_public = COALESCE($6, is_public),\n    is_document = COALESCE($7, is_document)\nWHERE id = $1 AND deleted = false\nRETURNING channels as \"channel!: Channel\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel!: Channel",
+        "type_info": {
+          "Custom": {
+            "name": "channels",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "topic",
+                  "Text"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "default_roll_command",
+                  "Text"
+                ],
+                [
+                  "is_document",
+                  "Bool"
+                ],
+                [
+                  "old_name",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d0ba7faae6d9d7ee5d59b426f55462daed1c4e1f3a8561aa8bc48ac564874d5e"
+}

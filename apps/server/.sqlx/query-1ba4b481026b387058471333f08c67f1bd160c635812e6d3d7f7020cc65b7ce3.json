@@ -11,16 +11,46 @@
             "name": "users",
             "kind": {
               "Composite": [
-                ["id", "Uuid"],
-                ["email", "Text"],
-                ["username", "Text"],
-                ["nickname", "Text"],
-                ["password", "Text"],
-                ["bio", "Text"],
-                ["joined", "Timestamptz"],
-                ["deactivated", "Bool"],
-                ["avatar_id", "Uuid"],
-                ["default_color", "Text"]
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "email",
+                  "Text"
+                ],
+                [
+                  "username",
+                  "Text"
+                ],
+                [
+                  "nickname",
+                  "Text"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "bio",
+                  "Text"
+                ],
+                [
+                  "joined",
+                  "Timestamptz"
+                ],
+                [
+                  "deactivated",
+                  "Bool"
+                ],
+                [
+                  "avatar_id",
+                  "Uuid"
+                ],
+                [
+                  "default_color",
+                  "Text"
+                ]
               ]
             }
           }
@@ -28,9 +58,13 @@
       }
     ],
     "parameters": {
-      "Left": ["Uuid"]
+      "Left": [
+        "Uuid"
+      ]
     },
-    "nullable": [null]
+    "nullable": [
+      null
+    ]
   },
   "hash": "1ba4b481026b387058471333f08c67f1bd160c635812e6d3d7f7020cc65b7ce3"
 }

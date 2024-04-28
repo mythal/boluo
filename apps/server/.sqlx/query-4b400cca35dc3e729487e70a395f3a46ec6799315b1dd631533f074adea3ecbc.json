@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT pos_p, pos_q\nFROM messages msg\nWHERE channel_id = $1\nORDER BY msg.pos DESC\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pos_p",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "pos_q",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4b400cca35dc3e729487e70a395f3a46ec6799315b1dd631533f074adea3ecbc"
+}

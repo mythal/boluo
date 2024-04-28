@@ -1,22 +1,19 @@
 use chrono::prelude::*;
-use postgres_types::FromSql;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
-use crate::database::Querist;
-use crate::error::{DbError, ModelError};
+use crate::error::ModelError;
 use crate::spaces::{Space, SpaceMember};
 use crate::users::User;
-use crate::utils::{inner_result_map, merge_blank};
+use crate::utils::merge_blank;
 use std::collections::HashMap;
-use tokio_postgres::Row;
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromSql, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS, sqlx::Type)]
+#[sqlx(type_name = "channels")]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
-#[postgres(name = "channels")]
 pub struct Channel {
     pub id: Uuid,
     pub name: String,
@@ -33,8 +30,8 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub async fn create<T: Querist>(
-        db: &mut T,
+    pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         space_id: &Uuid,
         name: &str,
         is_public: bool,
@@ -47,74 +44,77 @@ impl Channel {
         if let Some(default_dice_type) = default_dice_type {
             validators::DICE.run(default_dice_type)?;
         }
-
-        let row = db
-            .query_exactly_one(
-                include_str!("sql/create_channel.sql"),
-                &[space_id, &name, &is_public, &default_dice_type],
-            )
-            .await?;
-
-        Ok(row.try_get(0)?)
+        sqlx::query_file_scalar!(
+            "sql/channels/create_channel.sql",
+            space_id,
+            name,
+            is_public,
+            default_dice_type
+        )
+        .fetch_one(db)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn get_by_id<T: Querist>(db: &mut T, id: &Uuid) -> Result<Option<Channel>, DbError> {
-        let result = db.query_one(include_str!("sql/fetch_channel.sql"), &[&id]).await;
-        inner_result_map(result, |row| row.try_get(0))
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<Channel>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
+            .fetch_optional(db)
+            .await
     }
 
-    pub async fn get_by_name<T: Querist>(db: &mut T, space_id: Uuid, name: &str) -> Result<Option<Channel>, DbError> {
-        let result = db
-            .query_one(include_str!("sql/get_channel_by_name.sql"), &[&space_id, &name])
-            .await;
-        inner_result_map(result, |row| row.try_get(0))
+    pub async fn get_by_name<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        name: &str,
+    ) -> Result<Option<Channel>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/get_channel_by_name.sql", space_id, name)
+            .fetch_optional(db)
+            .await
     }
 
-    pub async fn get_with_space<T: Querist>(db: &mut T, id: &Uuid) -> Result<Option<(Channel, Space)>, DbError> {
-        let row = db
-            .query_one(include_str!("sql/fetch_channel_with_space.sql"), &[&id])
-            .await?;
-        if let Some(row) = row {
-            Ok(Some((row.try_get(0)?, row.try_get(1)?)))
-        } else {
-            Ok(None)
-        }
+    pub async fn get_with_space<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<(Channel, Space)>, sqlx::Error> {
+        sqlx::query_file!("sql/channels/fetch_channel_with_space.sql", id)
+            .fetch_optional(db)
+            .await
+            .map(|row| row.map(|record| (record.channel, record.space)))
     }
 
-    pub async fn get_by_space<T: Querist>(db: &mut T, space_id: &Uuid) -> Result<Vec<Channel>, DbError> {
-        let rows = db.query(include_str!("sql/get_by_space.sql"), &[space_id]).await?;
-        Ok(rows.into_iter().map(|row| row.get(0)).collect())
+    pub async fn get_by_space<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: &Uuid,
+    ) -> Result<Vec<Channel>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
+            .fetch_all(db)
+            .await
     }
 
-    pub async fn get_by_space_and_user<T: Querist>(
-        db: &mut T,
+    pub async fn get_by_space_and_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         space_id: &Uuid,
         user_id: &Uuid,
-    ) -> Result<Vec<ChannelWithMaybeMember>, DbError> {
-        let rows = db
-            .query(include_str!("sql/get_by_space_and_user.sql"), &[space_id, user_id])
-            .await?;
-        let mut channels: Vec<ChannelWithMaybeMember> = Vec::new();
-        for row in rows.into_iter() {
-            let Ok(channel) = row.try_get::<_, Channel>(0) else {
-                log::warn!("Failed to serilze channel of space {space_id} for user {user_id}");
-                continue;
-            };
-            let Ok(member) = row.try_get::<_, Option<ChannelMember>>(1) else {
-                log::warn!("Failed to serilize channel member of space {space_id} for user {user_id}");
-                continue;
-            };
-            channels.push(ChannelWithMaybeMember { channel, member });
-        }
-        Ok(channels)
+    ) -> Result<Vec<ChannelWithMaybeMember>, sqlx::Error> {
+        sqlx::query_file_as!(
+            ChannelWithMaybeMember,
+            "sql/channels/get_by_space_and_user.sql",
+            space_id,
+            user_id
+        )
+        .fetch_all(db)
+        .await
     }
 
-    pub async fn delete<T: Querist>(db: &mut T, id: &Uuid) -> Result<u64, DbError> {
-        db.execute(include_str!("sql/delete_channel.sql"), &[id]).await
+    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/delete_channel.sql", id)
+            .execute(db)
+            .await
+            .map(|r| r.rows_affected())
     }
 
-    pub async fn edit<T: Querist>(
-        db: &mut T,
+    pub async fn edit<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         id: &Uuid,
         name: Option<&str>,
         topic: Option<&str>,
@@ -135,48 +135,41 @@ impl Channel {
         if let Some(dice) = default_dice_type {
             validators::DICE.run(dice)?;
         }
-        let row = db
-            .query_exactly_one(
-                include_str!("sql/edit_channel.sql"),
-                &[
-                    id,
-                    &name,
-                    &topic,
-                    &default_dice_type,
-                    &default_roll_command,
-                    &is_public,
-                    &is_document,
-                ],
-            )
-            .await?;
-        Ok(row.try_get(0)?)
+        sqlx::query_file_scalar!(
+            "sql/channels/edit_channel.sql",
+            id,
+            name,
+            topic,
+            default_dice_type,
+            default_roll_command,
+            is_public,
+            is_document
+        )
+        .fetch_one(db)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn max_pos<T: Querist>(db: &mut T) -> Result<Vec<(Uuid, f64)>, DbError> {
-        let rows = db.query(include_str!("sql/channel_max_pos.sql"), &[]).await?;
-        let result: Vec<(Uuid, f64)> = rows.into_iter().map(|row| (row.get(0), row.get(1))).collect();
-        Ok(result)
+    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<(Uuid, f64)>, sqlx::Error> {
+        let rows = sqlx::query_file!("sql/channels/channel_max_pos.sql")
+            .fetch_all(db)
+            .await?;
+        Ok(rows.into_iter().map(|row| (row.channel_id, row.max_pos)).collect())
     }
 
-    pub async fn get_by_user<T: Querist>(db: &mut T, user_id: Uuid) -> Result<Vec<ChannelWithMember>, DbError> {
-        let rows = db
-            .query(include_str!("sql/get_channels_by_user.sql"), &[&user_id])
-            .await?;
-        let joined_channels = rows
-            .into_iter()
-            .map(|row| ChannelWithMember {
-                channel: row.get(0),
-                member: row.get(1),
-            })
-            .collect();
-        Ok(joined_channels)
+    pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<Vec<ChannelWithMember>, sqlx::Error> {
+        sqlx::query_file_as!(ChannelWithMember, "sql/channels/get_channels_by_user.sql", user_id)
+            .fetch_all(db)
+            .await
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, FromSql, Clone, TS)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
-#[postgres(name = "channel_members")]
 pub struct ChannelMember {
     pub user_id: Uuid,
     pub channel_id: Uuid,
@@ -188,9 +181,41 @@ pub struct ChannelMember {
     pub is_joined: bool,
 }
 
+impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for ChannelMember {
+    fn decode(
+        value: ::sqlx::postgres::PgValueRef<'r>,
+    ) -> ::std::result::Result<
+        Self,
+        ::std::boxed::Box<dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync>,
+    > {
+        let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
+        let user_id = decoder.try_decode::<Uuid>()?;
+        let channel_id = decoder.try_decode::<Uuid>()?;
+        let join_date = decoder.try_decode::<DateTime<Utc>>()?;
+        let character_name = decoder.try_decode::<String>()?;
+        let is_master = decoder.try_decode::<bool>()?;
+        let text_color = decoder.try_decode::<Option<String>>()?;
+        let is_joined = decoder.try_decode::<bool>()?;
+        ::std::result::Result::Ok(ChannelMember {
+            user_id,
+            channel_id,
+            join_date,
+            character_name,
+            is_master,
+            text_color,
+            is_joined,
+        })
+    }
+}
+impl ::sqlx::Type<::sqlx::Postgres> for ChannelMember {
+    fn type_info() -> ::sqlx::postgres::PgTypeInfo {
+        ::sqlx::postgres::PgTypeInfo::with_name("channel_members")
+    }
+}
+
 impl ChannelMember {
-    pub async fn add_user<T: Querist>(
-        db: &mut T,
+    pub async fn add_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
         character_name: &str,
@@ -202,56 +227,52 @@ impl ChannelMember {
         if !character_name.is_empty() {
             validators::CHARACTER_NAME.run(character_name)?;
         }
-        let row = db
-            .query_exactly_one(
-                include_str!("sql/add_user_to_channel.sql"),
-                &[user_id, channel_id, &character_name, &is_master],
-            )
-            .await?;
-        Ok(row.try_get(1)?)
+        sqlx::query_file!(
+            "sql/channels/add_user_to_channel.sql",
+            user_id,
+            channel_id,
+            character_name,
+            is_master
+        )
+        .fetch_one(db)
+        .await
+        .map_err(Into::into)
+        .map(|record| record.member)
     }
 
-    pub async fn get_color_list<T: Querist>(db: &mut T, channel_id: &Uuid) -> Result<HashMap<Uuid, String>, DbError> {
-        let rows = db.query(include_str!("sql/get_color_list.sql"), &[channel_id]).await?;
-        Ok(rows.into_iter().map(|row| (row.get(0), row.get(1))).collect())
+    pub async fn get_color_list<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        channel_id: &Uuid,
+    ) -> Result<HashMap<Uuid, String>, sqlx::Error> {
+        sqlx::query_file!("sql/channels/get_color_list.sql", channel_id)
+            .fetch_all(db)
+            .await
+            .map(|rows| rows.into_iter().map(|row| (row.user_id, row.color)).collect())
     }
 
-    pub async fn get_by_user_and_space<T: Querist>(
-        db: &mut T,
+    pub async fn get_by_user_and_space<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         space_id: &Uuid,
         user_id: &Uuid,
-    ) -> Result<Vec<ChannelMember>, DbError> {
-        let rows = db
-            .query(
-                include_str!("sql/get_channel_member_list_by_user_and_space.sql"),
-                &[user_id, space_id],
-            )
-            .await?;
-        let mut members: Vec<ChannelMember> = Vec::new();
-        for row in rows {
-            let Ok(member) = row.try_get(0) else {
-                log::warn!(
-                    "Failed to get channel member of space {} for user {}",
-                    space_id,
-                    user_id
-                );
-                continue;
-            };
-            members.push(member);
-        }
-        Ok(members)
+    ) -> Result<Vec<ChannelMember>, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/channels/get_channel_member_list_by_user_and_space.sql",
+            user_id,
+            space_id
+        )
+        .fetch_all(db)
+        .await
     }
 
-    pub async fn get_by_space<T: Querist>(
-        db: &mut T,
+    pub async fn get_by_space<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         space_id: &Uuid,
-    ) -> Result<HashMap<Uuid, Vec<ChannelMember>>, DbError> {
-        let rows = db
-            .query(include_str!("sql/get_channel_member_list_by_space.sql"), &[space_id])
+    ) -> Result<HashMap<Uuid, Vec<ChannelMember>>, sqlx::Error> {
+        let members = sqlx::query_file_scalar!("sql/channels/get_channel_member_list_by_space.sql", space_id)
+            .fetch_all(db)
             .await?;
         let mut channel_member_map: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
-        for row in rows {
-            let member: ChannelMember = row.try_get(0)?;
+        for member in members {
             let id = member.channel_id;
             if let std::collections::hash_map::Entry::Vacant(e) = channel_member_map.entry(id) {
                 e.insert(vec![member]);
@@ -263,73 +284,75 @@ impl ChannelMember {
         Ok(channel_member_map)
     }
 
-    pub async fn get_by_channel<T: Querist>(
-        db: &mut T,
+    pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         channel: &Uuid,
         include_leave: bool,
-    ) -> Result<Vec<ChannelMemberWithUser>, DbError> {
-        let rows = db
-            .query(
-                include_str!("sql/get_channel_member_list.sql"),
-                &[channel, &include_leave],
-            )
-            .await?;
-        let mapper = |row: Row| ChannelMemberWithUser {
-            member: row.get(0),
-            user: row.get(1),
-        };
-        Ok(rows.into_iter().map(mapper).collect())
+    ) -> Result<Vec<ChannelMemberWithUser>, sqlx::Error> {
+        sqlx::query_file_as!(
+            ChannelMemberWithUser,
+            "sql/channels/get_channel_member_list.sql",
+            channel,
+            include_leave
+        )
+        .fetch_all(db)
+        .await
     }
 
-    pub async fn is_master<T: Querist>(db: &mut T, user_id: &Uuid, channel_id: &Uuid) -> Result<bool, DbError> {
-        let is_master = db
-            .query(include_str!("sql/is_master.sql"), &[user_id, channel_id])
-            .await?
-            .into_iter()
-            .next()
-            .map(|row| row.get(0))
-            .unwrap_or(false);
-        Ok(is_master)
-    }
-
-    pub async fn get_with_space_member<T: Querist>(
-        db: &mut T,
+    pub async fn is_master<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
-    ) -> Result<Option<(ChannelMember, SpaceMember)>, DbError> {
-        let mut rows = db
-            .query(include_str!("sql/get_with_space_member.sql"), &[user_id, channel_id])
-            .await?;
-        Ok(rows.pop().map(|row| (row.get(0), row.get(1))))
-    }
-
-    pub async fn get<T: Querist>(db: &mut T, user: &Uuid, channel: &Uuid) -> Result<Option<ChannelMember>, DbError> {
-        let row = db
-            .query_one(include_str!("sql/get_channel_member.sql"), &[user, channel])
-            .await?;
-        Ok(row.map(|row| row.get(0)))
-    }
-
-    pub async fn remove_user<T: Querist>(db: &mut T, user_id: &Uuid, channel_id: &Uuid) -> Result<u64, DbError> {
-        db.execute(include_str!("sql/remove_user_from_channel.sql"), &[user_id, channel_id])
+    ) -> Result<bool, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/is_master.sql", user_id, channel_id)
+            .fetch_one(db)
             .await
     }
 
-    pub async fn remove_user_by_space<T: Querist>(
-        db: &mut T,
+    pub async fn get_with_space_member<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: &Uuid,
-        space_id: &Uuid,
-    ) -> Result<Vec<Uuid>, DbError> {
-        let channels = db
-            .query(include_str!("sql/remove_user_by_space.sql"), &[user_id, space_id])
-            .await?
-            .into_iter()
-            .map(|row| row.get(0));
-        Ok(channels.collect())
+        channel_id: &Uuid,
+    ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
+        sqlx::query_file!("sql/channels/get_with_space_member.sql", user_id, channel_id)
+            .fetch_optional(db)
+            .await
+            .map(|row| row.map(|record| (record.channel, record.space)))
     }
 
-    pub async fn edit<T: Querist>(
-        db: &mut T,
+    pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user: &Uuid,
+        channel: &Uuid,
+    ) -> Result<Option<ChannelMember>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/get_channel_member.sql", user, channel)
+            .fetch_optional(db)
+            .await
+    }
+
+    pub async fn remove_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: &Uuid,
+        channel_id: &Uuid,
+    ) -> Result<u64, sqlx::Error> {
+        sqlx::query_file!("sql/channels/remove_user_from_channel.sql", user_id, channel_id)
+            .execute(db)
+            .await
+            .map(|r| r.rows_affected())
+    }
+
+    pub async fn remove_user_by_space<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: &Uuid,
+        space_id: &Uuid,
+    ) -> Result<Vec<Uuid>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/remove_user_by_space.sql", user_id, space_id)
+            .fetch_all(db)
+            .await
+    }
+
+    pub async fn edit<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: Uuid,
         channel_id: Uuid,
         character_name: Option<&str>,
@@ -346,17 +369,20 @@ impl ChannelMember {
                 validators::CHARACTER_NAME.run(character_name)?;
             }
         }
-        let row = db
-            .query_one(
-                include_str!("sql/edit_member.sql"),
-                &[&user_id, &channel_id, &character_name, &text_color],
-            )
-            .await?;
-        Ok(row.map(|row| row.get(0)))
+        sqlx::query_file_scalar!(
+            "sql/channels/edit_member.sql",
+            user_id,
+            channel_id,
+            character_name,
+            text_color
+        )
+        .fetch_optional(db)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn set_name<T: Querist>(
-        db: &mut T,
+    pub async fn set_name<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
         character_name: &str,
@@ -364,8 +390,8 @@ impl ChannelMember {
         ChannelMember::edit(db, *user_id, *channel_id, Some(character_name), None).await
     }
 
-    pub async fn set_color<T: Querist>(
-        db: &mut T,
+    pub async fn set_color<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
         color: &str,
@@ -373,16 +399,15 @@ impl ChannelMember {
         ChannelMember::edit(db, *user_id, *channel_id, None, Some(color)).await
     }
 
-    pub async fn set_master<T: Querist>(
-        db: &mut T,
+    pub async fn set_master<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
         is_master: bool,
-    ) -> Result<Option<ChannelMember>, DbError> {
-        let result = db
-            .query_one(include_str!("sql/set_master.sql"), &[user_id, channel_id, &is_master])
-            .await;
-        inner_result_map(result, |row| row.try_get(0))
+    ) -> Result<Option<ChannelMember>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/set_master.sql", user_id, channel_id, is_master)
+            .fetch_optional(db)
+            .await
     }
 }
 
@@ -396,23 +421,16 @@ pub struct Member {
 }
 
 impl Member {
-    fn mapper(row: tokio_postgres::Row) -> Member {
-        let channel: ChannelMember = row.get(0);
-        let space: SpaceMember = row.get(1);
-        let user: User = row.get(2);
-        Member { channel, space, user }
-    }
-
-    pub async fn get_by_channel<T: Querist>(db: &mut T, channel_id: Uuid) -> Result<Vec<Member>, DbError> {
-        use postgres_types::Type;
-        let none_uuid: Option<Uuid> = None;
-        let rows = db
-            .query_typed(
-                include_str!("sql/get_members_information_by_channel.sql"),
-                &[Type::UUID, Type::UUID],
-                &[&channel_id, &none_uuid],
-            )
-            .await?;
-        Ok(rows.into_iter().map(Member::mapper).collect())
+    pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        channel_id: Uuid,
+    ) -> Result<Vec<Member>, sqlx::Error> {
+        sqlx::query_file_as!(
+            Member,
+            "sql/channels/get_members_information_by_channel.sql",
+            channel_id,
+        )
+        .fetch_all(db)
+        .await
     }
 }

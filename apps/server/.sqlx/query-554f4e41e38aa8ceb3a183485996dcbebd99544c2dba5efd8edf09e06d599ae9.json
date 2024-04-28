@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ch as \"channel!: Channel\"\nFROM channels ch\nWHERE ch.id = $1\n  AND deleted = false\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel!: Channel",
+        "type_info": {
+          "Custom": {
+            "name": "channels",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "topic",
+                  "Text"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "default_roll_command",
+                  "Text"
+                ],
+                [
+                  "is_document",
+                  "Bool"
+                ],
+                [
+                  "old_name",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "554f4e41e38aa8ceb3a183485996dcbebd99544c2dba5efd8edf09e06d599ae9"
+}

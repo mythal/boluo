@@ -1,0 +1,133 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH nearest AS (\n    SELECT pos_p, pos_q\n    FROM messages\n    WHERE pos > $3::INT4::float8 / $4::INT4::float8 AND channel_id = $1\n    ORDER BY pos ASC\n    LIMIT 1\n), initial AS (\n    SELECT 1 AS pos_p, 0 AS pos_q\n), bottom AS (\n    SELECT COALESCE(nearest.pos_p, initial.pos_p) AS pos_p, COALESCE(nearest.pos_q, initial.pos_q) AS pos_q\n    FROM nearest RIGHT JOIN initial ON TRUE\n)\nUPDATE messages\nSET (pos_p, pos_q) = (select p as pos_p, q as pos_q from find_intermediate($3::INT4, $4::INT4, bottom.pos_p, bottom.pos_q))\nFROM bottom\nWHERE channel_id = $1 AND id = $2\nRETURNING messages as \"message!: Message\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message!: Message",
+        "type_info": {
+          "Custom": {
+            "name": "messages",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "sender_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "parent_message_id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "media_id",
+                  "Uuid"
+                ],
+                [
+                  "seed",
+                  "Bytea"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "in_game",
+                  "Bool"
+                ],
+                [
+                  "is_action",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "pinned",
+                  "Bool"
+                ],
+                [
+                  "tags",
+                  "TextArray"
+                ],
+                [
+                  "folded",
+                  "Bool"
+                ],
+                [
+                  "text",
+                  "Text"
+                ],
+                [
+                  "whisper_to_users",
+                  "UuidArray"
+                ],
+                [
+                  "entities",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "order_date",
+                  "Timestamptz"
+                ],
+                [
+                  "order_offset",
+                  "Int4"
+                ],
+                [
+                  "pos_p",
+                  "Int4"
+                ],
+                [
+                  "pos_q",
+                  "Int4"
+                ],
+                [
+                  "pos",
+                  "Float8"
+                ],
+                [
+                  "color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c7c7a2e4526630049d2db9afec199fbacc7b01d767adf8564e04bd0ada1f9560"
+}

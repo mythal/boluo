@@ -21,8 +21,7 @@ mod channels;
 mod context;
 mod cors;
 mod csrf;
-mod database; // old
-mod db; // new
+mod db;
 mod events;
 mod info;
 mod interface;
@@ -30,7 +29,6 @@ mod logger;
 mod mail;
 mod media;
 mod messages;
-mod pool;
 mod pos;
 mod s3;
 mod session;
@@ -137,11 +135,6 @@ async fn main() {
     dotenv::dotenv().ok();
     logger::setup_logger(debug()).unwrap();
 
-    let args = Args::parse();
-    if args.init {
-        database::initialize().await;
-        return;
-    }
     let port: u16 = env::var("PORT")
         .expect("PORT must be set")
         .parse()

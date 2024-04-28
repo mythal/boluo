@@ -1,0 +1,137 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT msg as \"message!: Message\", (msg.whisper_to_users IS NOT NULL AND cm.is_master IS NOT true AND ($2 IS NULL OR $2 <> ALL (msg.whisper_to_users))) as \"should_hide!\"\nFROM messages msg\n         LEFT JOIN channel_members cm ON cm.channel_id = msg.channel_id AND cm.user_id = $2\nWHERE msg.id = $1\n  AND msg.deleted = false\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message!: Message",
+        "type_info": {
+          "Custom": {
+            "name": "messages",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "sender_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "parent_message_id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "media_id",
+                  "Uuid"
+                ],
+                [
+                  "seed",
+                  "Bytea"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "in_game",
+                  "Bool"
+                ],
+                [
+                  "is_action",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "pinned",
+                  "Bool"
+                ],
+                [
+                  "tags",
+                  "TextArray"
+                ],
+                [
+                  "folded",
+                  "Bool"
+                ],
+                [
+                  "text",
+                  "Text"
+                ],
+                [
+                  "whisper_to_users",
+                  "UuidArray"
+                ],
+                [
+                  "entities",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "order_date",
+                  "Timestamptz"
+                ],
+                [
+                  "order_offset",
+                  "Int4"
+                ],
+                [
+                  "pos_p",
+                  "Int4"
+                ],
+                [
+                  "pos_q",
+                  "Int4"
+                ],
+                [
+                  "pos",
+                  "Float8"
+                ],
+                [
+                  "color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "should_hide!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "bc76af584d53379e2b8f922277c97c1dc2b36491240260e9f8ac354924b56c4a"
+}

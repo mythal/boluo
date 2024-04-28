@@ -1,5 +1,4 @@
 use chrono::prelude::*;
-use postgres_types::FromSql;
 use serde::Serialize;
 use sqlx::{query_file_scalar, query_scalar};
 use ts_rs::TS;
@@ -8,7 +7,7 @@ use uuid::Uuid;
 use crate::error::ModelError;
 use crate::utils::merge_blank;
 
-#[derive(Debug, Serialize, Clone, TS, FromSql)]
+#[derive(Debug, Serialize, Clone, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
@@ -68,17 +67,6 @@ impl sqlx::Type<sqlx::Postgres> for User {
         sqlx::postgres::PgTypeInfo::with_name("users")
     }
 }
-
-// impl<'r> sqlx::Decode<'r, sqlx::Postgres> for User
-// where
-//     &'r str: sqlx::Decode<'r, sqlx::Postgres>,
-// {
-//     fn decode(
-//         value: sqlx::postgres::PgValueRef<'r>,
-//     ) -> Result<User, Box<dyn std::error::Error + 'static + Send + Sync>> {
-//         todo!()
-//     }
-// }
 
 impl User {
     pub async fn all<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<User>, sqlx::Error> {

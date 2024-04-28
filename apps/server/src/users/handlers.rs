@@ -5,7 +5,7 @@ use crate::session::{
     add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie,
     remove_session, remove_session_cookie, revoke_session,
 };
-use crate::{cache, database, db, mail};
+use crate::{cache, db, mail};
 
 use crate::channels::Channel;
 use crate::error::{AppError, Find, ValidationFailed};
@@ -87,14 +87,13 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
 
     match session {
         Ok(session) => {
-            let mut conn = database::get().await?;
-            let db = &mut *conn;
             let pool = db::get().await;
-            let user = User::get_by_id(&pool, &session.user_id).await?;
+            let mut conn = pool.acquire().await?;
+            let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
-                let my_spaces = Space::get_by_user(db, &user.id).await?;
-                let my_channels = Channel::get_by_user(db, user.id).await?;
-                let settings = UserExt::get_settings(&pool, user.id).await?;
+                let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+                let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
+                let settings = UserExt::get_settings(&mut *conn, user.id).await?;
 
                 let mut response = ok_response(Some(GetMe {
                     user,
@@ -132,18 +131,17 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
 
     let is_debug = req.headers().get("X-Debug").is_some();
     let form: Login = interface::parse_body(req).await?;
-    let mut conn = database::get().await?;
     let pool = db::get().await;
-    let db = &mut *conn;
+    let mut conn = pool.acquire().await?;
     let user = User::login(&pool, &form.username, &form.password)
         .await
         .or_no_permission()?;
     let session = session::start(&user.id).await.map_err(error_unexpected!())?;
     let token = session::token(&session);
     let token = if form.with_token { Some(token) } else { None };
-    let my_spaces = Space::get_by_user(db, &user.id).await?;
-    let my_channels = Channel::get_by_user(db, user.id).await?;
-    let settings = UserExt::get_settings(&pool, user.id).await?;
+    let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+    let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
+    let settings = UserExt::get_settings(&mut *conn, user.id).await?;
     let me = GetMe {
         user,
         settings: settings.clone(),

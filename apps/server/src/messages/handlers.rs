@@ -7,7 +7,7 @@ use crate::events::Event;
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
 use crate::spaces::SpaceMember;
-use crate::{database, interface};
+use crate::{db, interface};
 use hyper::{Body, Request};
 
 async fn send(req: Request<Body>) -> Result<Message, AppError> {
@@ -26,14 +26,15 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
         pos: request_pos,
         color,
     } = interface::parse_body(req).await?;
-    let mut conn = database::get().await?;
-    let db = &mut *conn;
-    let (channel_member, space_member) = ChannelMember::get_with_space_member(db, &session.user_id, &channel_id)
-        .await
-        .or_no_permission()?;
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    let (channel_member, space_member) =
+        ChannelMember::get_with_space_member(&mut *conn, &session.user_id, &channel_id)
+            .await
+            .or_no_permission()?;
     let mut cache = crate::cache::conn().await?;
     let message = Message::create(
-        db,
+        &mut *conn,
         &mut cache,
         preview_id.as_ref(),
         &channel_id,
@@ -67,14 +68,15 @@ async fn edit(req: Request<Body>) -> Result<Message, AppError> {
         media_id,
         color,
     } = interface::parse_body(req).await?;
-    let mut db = database::get().await?;
-    let mut trans = db.transaction().await?;
-    let db = &mut trans;
-    let mut message = Message::get(db, &message_id, Some(&session.user_id))
+    let pool = db::get().await;
+    let mut trans = pool.begin().await?;
+    let mut message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
         .await?
         .or_not_found()?;
-    let channel = Channel::get_by_id(db, &message.channel_id).await.or_not_found()?;
-    let (_, space_member) = ChannelMember::get_with_space_member(db, &session.user_id, &message.channel_id)
+    let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
+        .await
+        .or_not_found()?;
+    let (_, space_member) = ChannelMember::get_with_space_member(&mut *trans, &session.user_id, &message.channel_id)
         .await
         .or_no_permission()?;
     if !channel.is_document && message.sender_id != session.user_id {
@@ -84,7 +86,7 @@ async fn edit(req: Request<Body>) -> Result<Message, AppError> {
     let text = &*text;
     let name = &*name;
     message = Message::edit(
-        db,
+        &mut *trans,
         name,
         &message_id,
         text,
@@ -109,14 +111,15 @@ async fn move_between(req: Request<Body>) -> Result<bool, AppError> {
         range,
     } = interface::parse_body(req).await?;
 
-    let mut db = database::get().await?;
-    let mut trans = db.transaction().await?;
-    let db = &mut trans;
-    let message = Message::get(db, &message_id, Some(&session.user_id))
+    let pool = db::get().await;
+    let mut trans = pool.begin().await?;
+    let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    let channel = Channel::get_by_id(db, &message.channel_id).await.or_not_found()?;
-    let channel_member = ChannelMember::get(db, &session.user_id, &message.channel_id)
+    let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
+        .await
+        .or_not_found()?;
+    let channel_member = ChannelMember::get(&mut *trans, &session.user_id, &message.channel_id)
         .await
         .or_no_permission()?;
     if !channel.is_document && !channel_member.is_master && message.sender_id != session.user_id {
@@ -127,10 +130,10 @@ async fn move_between(req: Request<Body>) -> Result<bool, AppError> {
 
     let mut message = match range {
         (None, None) => return Err(AppError::BadRequest("a and b cannot both be null".to_string())),
-        (Some(a), _) => Message::move_bottom(db, &channel_id, &message_id, a)
+        (Some(a), _) => Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
             .await?
             .or_not_found()?,
-        (None, Some(b)) => Message::move_above(db, &channel_id, &message_id, b)
+        (None, Some(b)) => Message::move_above(&mut *trans, &channel_id, &message_id, b)
             .await?
             .or_not_found()?,
     };
@@ -145,25 +148,27 @@ async fn move_between(req: Request<Body>) -> Result<bool, AppError> {
 
 async fn query(req: Request<Body>) -> Result<Message, AppError> {
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let mut conn = database::get().await?;
-    let db = &mut *conn;
     let user_id = authenticate(&req).await.ok().map(|session| session.user_id);
-    Message::get(db, &id, user_id.as_ref()).await.or_not_found()
+    Message::get(&db::get().await, &id, user_id.as_ref())
+        .await
+        .or_not_found()
 }
 
 async fn delete(req: Request<Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let mut conn = database::get().await?;
-    let db = &mut *conn;
-    let message = Message::get(db, &id, Some(&session.user_id)).await.or_not_found()?;
-    let space_member = SpaceMember::get_by_channel(db, &session.user_id, &message.channel_id)
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    let message = Message::get(&mut *conn, &id, Some(&session.user_id))
+        .await
+        .or_not_found()?;
+    let space_member = SpaceMember::get_by_channel(&mut *conn, &session.user_id, &message.channel_id)
         .await
         .or_no_permission()?;
     if !space_member.is_admin && message.sender_id != session.user_id {
         return Err(AppError::NoPermission("user id mismatch".to_string()));
     }
-    Message::delete(db, &id).await?;
+    Message::delete(&mut *conn, &id).await?;
     Event::message_deleted(space_member.space_id, message.channel_id, message.id);
     Ok(message)
 }
@@ -171,17 +176,21 @@ async fn delete(req: Request<Body>) -> Result<Message, AppError> {
 async fn toggle_fold(req: Request<Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let mut conn = database::get().await?;
-    let db = &mut *conn;
-    let message = Message::get(db, &id, Some(&session.user_id)).await.or_not_found()?;
-    let channel = Channel::get_by_id(db, &message.channel_id).await.or_not_found()?;
-    let channel_member = ChannelMember::get(db, &session.user_id, &message.channel_id)
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    let message = Message::get(&mut *conn, &id, Some(&session.user_id))
+        .await
+        .or_not_found()?;
+    let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
+        .await
+        .or_not_found()?;
+    let channel_member = ChannelMember::get(&mut *conn, &session.user_id, &message.channel_id)
         .await
         .or_no_permission()?;
     if !channel.is_document && message.sender_id != session.user_id && !channel_member.is_master {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
-    let message = Message::set_folded(db, &message.id, !message.folded)
+    let message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
     Event::message_edited(channel.space_id, message.clone());
@@ -195,18 +204,18 @@ async fn by_channel(req: Request<Body>) -> Result<Vec<Message>, AppError> {
         before,
     } = parse_query(req.uri())?;
 
-    let mut db = database::get().await?;
-    let db = &mut *db;
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
 
-    let channel = Channel::get_by_id(db, &channel_id).await.or_not_found()?;
+    let channel = Channel::get_by_id(&mut *conn, &channel_id).await.or_not_found()?;
     if !channel.is_public {
         let session = authenticate(&req).await?;
-        ChannelMember::get(db, &session.user_id, &channel_id)
+        ChannelMember::get(&mut *conn, &session.user_id, &channel_id)
             .await
             .or_no_permission()?;
     }
     let limit = limit.unwrap_or(128);
-    Message::get_by_channel(db, &channel_id, before, limit)
+    Message::get_by_channel(&mut *conn, &channel_id, before, limit)
         .await
         .map_err(Into::into)
 }

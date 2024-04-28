@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT is_master\nFROM channel_members cm\nWHERE cm.user_id = $1 AND cm.channel_id = $2 AND cm.is_joined\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "is_master",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "46295614759c22920a050b3465878f9af1cb068816cfd9af2f8b69c40875cbc5"
+}

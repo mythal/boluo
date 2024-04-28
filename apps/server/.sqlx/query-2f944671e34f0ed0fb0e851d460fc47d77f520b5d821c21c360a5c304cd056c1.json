@@ -1,0 +1,144 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ch as \"channel!: Channel\", s as \"space!: Space\"\nFROM channels ch INNER JOIN spaces s ON ch.space_id = s.id\nWHERE ch.id = $1\n  AND ch.deleted = false\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel!: Channel",
+        "type_info": {
+          "Custom": {
+            "name": "channels",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "topic",
+                  "Text"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "default_roll_command",
+                  "Text"
+                ],
+                [
+                  "is_document",
+                  "Bool"
+                ],
+                [
+                  "old_name",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "space!: Space",
+        "type_info": {
+          "Custom": {
+            "name": "spaces",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "language",
+                  "Text"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
+                ],
+                [
+                  "explorable",
+                  "Bool"
+                ],
+                [
+                  "allow_spectator",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "2f944671e34f0ed0fb0e851d460fc47d77f520b5d821c21c360a5c304cd056c1"
+}

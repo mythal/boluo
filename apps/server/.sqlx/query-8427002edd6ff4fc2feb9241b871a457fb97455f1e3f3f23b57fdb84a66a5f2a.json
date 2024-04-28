@@ -11,16 +11,46 @@
             "name": "media",
             "kind": {
               "Composite": [
-                ["id", "Uuid"],
-                ["mime_type", "Text"],
-                ["uploader_id", "Uuid"],
-                ["filename", "Text"],
-                ["original_filename", "Text"],
-                ["hash", "Text"],
-                ["size", "Int4"],
-                ["description", "Text"],
-                ["source", "Text"],
-                ["created", "Timestamptz"]
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "mime_type",
+                  "Text"
+                ],
+                [
+                  "uploader_id",
+                  "Uuid"
+                ],
+                [
+                  "filename",
+                  "Text"
+                ],
+                [
+                  "original_filename",
+                  "Text"
+                ],
+                [
+                  "hash",
+                  "Text"
+                ],
+                [
+                  "size",
+                  "Int4"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "source",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ]
               ]
             }
           }
@@ -28,9 +58,20 @@
       }
     ],
     "parameters": {
-      "Left": ["Uuid", "Text", "Uuid", "Text", "Text", "Text", "Int4", "Text"]
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Text"
+      ]
     },
-    "nullable": [null]
+    "nullable": [
+      null
+    ]
   },
   "hash": "8427002edd6ff4fc2feb9241b871a457fb97455f1e3f3f23b57fdb84a66a5f2a"
 }

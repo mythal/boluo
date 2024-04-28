@@ -3,7 +3,6 @@ use super::types::EventQuery;
 use super::Event;
 use crate::cache::make_key;
 use crate::csrf::authenticate;
-use crate::database::Querist;
 use crate::error::{AppError, Find};
 use crate::events::context::get_mailbox_broadcast_rx;
 use crate::events::types::ClientEvent;
@@ -12,7 +11,7 @@ use crate::spaces::models::StatusKind;
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
-use crate::{cache, database};
+use crate::{cache, db};
 use anyhow::anyhow;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
@@ -26,8 +25,8 @@ use uuid::Uuid;
 const CHUNK_SIZE: usize = 16;
 type Sender = SplitSink<WebSocketStream<Upgraded>, tungstenite::Message>;
 
-async fn check_permissions<T: Querist>(
-    db: &mut T,
+async fn check_permissions(
+    db: &mut sqlx::PgConnection,
     space: &Space,
     user_id: &Result<Uuid, AppError>,
 ) -> Result<(), AppError> {
@@ -36,7 +35,9 @@ async fn check_permissions<T: Querist>(
     }
     match user_id {
         Ok(user_id) => {
-            SpaceMember::get(db, user_id, &space.id).await.or_no_permission()?;
+            SpaceMember::get(&mut *db, user_id, &space.id)
+                .await
+                .or_no_permission()?;
         }
         Err(err) => {
             log::warn!(
@@ -191,15 +192,15 @@ async fn connect(req: Request) -> Response {
         }
     }
 
-    let Ok(mut conn) = database::get().await else {
-        return ws_error(req, Some(mailbox), "Failed to connect to database".to_string());
+    let pool = db::get().await;
+    let Ok(mut conn) = pool.acquire().await else {
+        return ws_error(req, Some(mailbox), "Failed to acquire connection".to_string());
     };
-    let db = &mut *conn;
-    let Ok(space) = Space::get_by_id(db, &mailbox).await else {
+    let Ok(space) = Space::get_by_id(&mut *conn, &mailbox).await else {
         return ws_error(req, Some(mailbox), "Invalid mailbox".to_string());
     };
     if let Some(space) = space.as_ref() {
-        let Ok(_) = check_permissions(db, space, &user_id).await else {
+        let Ok(_) = check_permissions(&mut *conn, space, &user_id).await else {
             return ws_error(req, Some(mailbox), "No permission".to_string());
         };
     }

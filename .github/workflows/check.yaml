@@ -46,19 +46,6 @@ jobs:
       CI: true
     runs-on: ubuntu-latest
 
-    services:
-      redis:
-        image: redis
-        ports:
-          - '6379:6379'
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: boluo
-        ports:
-          - '5432:5432'
-
     steps:
       - uses: actions/checkout@v4
 
@@ -76,19 +63,10 @@ jobs:
       - name: Clippy
         run: cargo clippy
 
-      - name: Initialize database
-        run: cargo run -p server -- --init
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
-
       - name: Test
         run: cargo test
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
           SECRET: SOME_SECRET
-          REDIS_URL: redis://localhost/
           DEBUG: 1
           PORT: 3000
 

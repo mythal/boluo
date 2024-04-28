@@ -95,7 +95,12 @@ jobs:
   cargo-fmt:
     name: Style (Rust)
     runs-on: ubuntu-latest
-    container: rust:slim
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
       - run: cargo fmt --all --check

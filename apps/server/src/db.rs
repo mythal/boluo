@@ -50,7 +50,7 @@ pub async fn check() {
     .fetch_one(&mut *trans)
     .await
     .expect("Cannot set settings");
-    let user_ext = sqlx::query_scalar!(
+    let _user_ext = sqlx::query_scalar!(
         r#"SELECT users_extension AS "ext!: UserExt" FROM users_extension WHERE user_id = $1"#,
         user.id
     )
@@ -104,7 +104,7 @@ pub async fn check() {
     .await
     .expect("Cannot create media");
 
-    let message = sqlx::query_file_scalar!(
+    let _message = sqlx::query_file_scalar!(
         "sql/messages/create.sql",
         user.id,
         channel.id,

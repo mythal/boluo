@@ -27,7 +27,7 @@ pub async fn check() {
     use crate::users::{User, UserExt};
     use serde_json::json;
     let pool = get().await;
-    sqlx::query!("SELECT 1 AS x")
+    sqlx::query("SELECT 1 AS x")
         .fetch_one(&pool)
         .await
         .expect("Cannot connect to database");
@@ -50,13 +50,12 @@ pub async fn check() {
     .fetch_one(&mut *trans)
     .await
     .expect("Cannot set settings");
-    let _user_ext = sqlx::query_scalar!(
-        r#"SELECT users_extension AS "ext!: UserExt" FROM users_extension WHERE user_id = $1"#,
-        user.id
-    )
-    .fetch_one(&mut *trans)
-    .await
-    .expect("Cannot get user extension");
+    let _user_ext: UserExt =
+        sqlx::query_scalar(r#"SELECT users_extension AS "ext!: UserExt" FROM users_extension WHERE user_id = $1"#)
+            .bind(user.id)
+            .fetch_one(&mut *trans)
+            .await
+            .expect("Cannot get user extension");
 
     let space = sqlx::query_file_scalar!("sql/spaces/create.sql", "Low of Cycles", user.id, "", "d20", "")
         .fetch_one(&mut *trans)

@@ -15,5 +15,5 @@ ENV TMPDIR=/home/dev/.tmp
 RUN curl -L https://nixos.org/nix/install | sh -s -- --no-daemon;
 ENV PATH="/home/dev/.nix-profile/bin:${PATH}"
 
-COPY --chown=dev:dev flake.lock flake.nix rust-toolchain.toml ./
-RUN nix develop --command bash -c "true" && rm flake.lock flake.nix rust-toolchain.toml
+COPY --chown=dev:dev flake.lock flake.nix ./
+RUN nix develop --command bash -c "true" && rm flake.lock flake.nix

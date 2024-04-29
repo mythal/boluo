@@ -7,7 +7,6 @@ on:
       - 'flake.nix'
       - 'Cargo.lock'
       - 'Cargo.toml'
-      - 'rust-toolchain.toml'
       - 'package-lock.json'
       - '.github/workflows/check-nix.yaml'
 

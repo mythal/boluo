@@ -46,6 +46,19 @@ jobs:
       CI: true
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis
+        ports:
+          - '6379:6379'
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: boluo
+        ports:
+          - '5432:5432'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -57,8 +70,13 @@ jobs:
       - name: Setup rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Build
+      - name: Build (Database Offline Mode)
         run: cargo build
+
+      - name: Initialize database
+        run: cargo run --bin init
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
 
       - name: Clippy
         run: cargo clippy
@@ -68,6 +86,22 @@ jobs:
         env:
           SECRET: SOME_SECRET
           DEBUG: 1
+          PORT: 3000
+
+      - name: Build (Database Online Mode)
+        run: |
+          rm -rf .sqlx
+          cargo clean -p server
+          cargo build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+
+      - name: Check
+        run: cargo run -p server -- --check
+        env:
+          SECRET: SOME_SECRET
+          DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
+          REDIS_URL: redis://localhost/
           PORT: 3000
 
   cargo-fmt:

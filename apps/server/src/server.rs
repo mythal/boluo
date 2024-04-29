@@ -125,8 +125,8 @@ async fn check() {
 
 #[derive(Parser)]
 struct Args {
-    #[clap(long, help = "init database")]
-    init: bool,
+    #[clap(long, help = "check only", default_value = "false")]
+    check: bool,
 }
 
 #[tokio::main]
@@ -134,6 +134,8 @@ async fn main() {
     dotenv::from_filename(".env.local").ok();
     dotenv::dotenv().ok();
     logger::setup_logger(debug()).unwrap();
+
+    let args = Args::parse();
 
     let port: u16 = env::var("PORT")
         .expect("PORT must be set")
@@ -154,6 +156,10 @@ async fn main() {
     log::info!("Cache is ready");
     db::check().await;
     log::info!("Database is ready");
+
+    if args.check {
+        return;
+    }
 
     let server = Server::bind(&addr).serve(make_svc);
     events::tasks::start();

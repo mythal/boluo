@@ -11,6 +11,10 @@ edition = "2021"
 name = "server"
 path = "src/server.rs"
 
+[[bin]]
+name = "init"
+path = "src/init.rs"
+
 
 [dependencies]
 anyhow = "1"

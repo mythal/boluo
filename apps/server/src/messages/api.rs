@@ -63,5 +63,6 @@ pub struct MoveMessageBetween {
 pub struct GetMessagesByChannel {
     pub channel_id: Uuid,
     pub before: Option<f64>,
+    #[ts(type = "number | null")]
     pub limit: Option<i64>,
 }

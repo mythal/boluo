@@ -21,8 +21,8 @@ export interface Message {
   modified: string;
   orderDate: string;
   orderOffset: number;
-  color: string;
-  pos: number;
   posP: number;
   posQ: number;
+  pos: number;
+  color: string;
 }

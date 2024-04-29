@@ -21,6 +21,7 @@ pub struct Channel {
     pub space_id: Uuid,
     pub created: DateTime<Utc>,
     pub is_public: bool,
+    #[serde(skip)]
     pub deleted: bool,
     pub default_dice_type: String,
     pub default_roll_command: String,

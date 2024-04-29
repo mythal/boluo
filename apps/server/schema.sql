@@ -96,8 +96,8 @@ CREATE TABLE spaces
     "password"          text      NOT NULL DEFAULT '',    -- plain text
     "language"          text      NOT NULL DEFAULT '',    -- ISO 639-1
     "default_dice_type" text      NOT NULL DEFAULT 'd20', -- d20, d100, FATE ...
-    "invite_token"      uuid      NOT NULL DEFAULT gen_random_uuid(),
     "explorable"        boolean   NOT NULL DEFAULT false,
+    "invite_token"      uuid      NOT NULL DEFAULT gen_random_uuid(),
     "allow_spectator"   boolean   NOT NULL DEFAULT true
 );
 

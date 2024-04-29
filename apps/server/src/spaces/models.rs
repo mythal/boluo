@@ -79,9 +79,9 @@ pub struct Space {
     pub password: String,
     pub language: String,
     pub default_dice_type: String,
+    pub explorable: bool,
     #[serde(skip)]
     pub invite_token: Uuid,
-    pub explorable: bool,
     pub allow_spectator: bool,
 }
 

@@ -103,6 +103,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost/boluo
           REDIS_URL: redis://localhost/
           PORT: 3000
+          CI: true
 
   cargo-fmt:
     name: Style (Rust)

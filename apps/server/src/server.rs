@@ -110,7 +110,11 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
     Ok(response)
 }
 
-async fn check() {
+async fn storage_check() {
+    // Skip in CI
+    if context::ci() {
+        return;
+    }
     let s3_client = s3::get_client();
     let _put_object_output = s3_client
         .put_object()
@@ -141,7 +145,7 @@ async fn main() {
         .expect("PORT must be set")
         .parse()
         .expect("PORT must be a number");
-    check().await;
+    storage_check().await;
 
     let addr: Ipv4Addr = env::var("HOST")
         .unwrap_or("127.0.0.1".to_string())

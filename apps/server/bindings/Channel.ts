@@ -7,8 +7,7 @@ export interface Channel {
   spaceId: string;
   created: string;
   isPublic: boolean;
-  isDocument: boolean;
-  oldName: string;
   defaultDiceType: string;
   defaultRollCommand: string;
+  isDocument: boolean;
 }

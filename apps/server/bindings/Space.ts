@@ -2,14 +2,14 @@
 
 export interface Space {
   id: string;
-  ownerId: string;
-  created: number;
-  modified: number;
   name: string;
   description: string;
+  created: number;
+  modified: number;
+  ownerId: string;
+  isPublic: boolean;
   language: string;
   defaultDiceType: string;
-  isPublic: boolean;
   explorable: boolean;
   allowSpectator: boolean;
 }

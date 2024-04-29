@@ -65,22 +65,22 @@ pub async fn space_users_status(
 #[serde(rename_all = "camelCase")]
 pub struct Space {
     pub id: Uuid,
-    pub owner_id: Uuid,
-    #[serde(skip)]
-    pub invite_token: Uuid,
+    pub name: String,
+    pub description: String,
     #[ts(type = "number")]
     pub created: DateTime<Utc>,
     #[ts(type = "number")]
     pub modified: DateTime<Utc>,
-    pub name: String,
-    pub description: String,
+    pub owner_id: Uuid,
+    pub is_public: bool,
+    #[serde(skip)]
+    pub deleted: bool,
     #[serde(skip)]
     pub password: String,
     pub language: String,
     pub default_dice_type: String,
-    pub is_public: bool,
     #[serde(skip)]
-    pub deleted: bool,
+    pub invite_token: Uuid,
     pub explorable: bool,
     pub allow_spectator: bool,
 }

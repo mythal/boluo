@@ -21,12 +21,12 @@ pub struct Channel {
     pub space_id: Uuid,
     pub created: DateTime<Utc>,
     pub is_public: bool,
-    pub is_document: bool,
-    pub old_name: String,
-    #[serde(skip)]
     pub deleted: bool,
     pub default_dice_type: String,
     pub default_roll_command: String,
+    pub is_document: bool,
+    #[serde(skip)]
+    pub old_name: String,
 }
 
 impl Channel {
@@ -193,9 +193,9 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for ChannelMember {
         let channel_id = decoder.try_decode::<Uuid>()?;
         let join_date = decoder.try_decode::<DateTime<Utc>>()?;
         let character_name = decoder.try_decode::<String>()?;
-        let is_master = decoder.try_decode::<bool>()?;
         let text_color = decoder.try_decode::<Option<String>>()?;
         let is_joined = decoder.try_decode::<bool>()?;
+        let is_master = decoder.try_decode::<bool>()?;
         ::std::result::Result::Ok(ChannelMember {
             user_id,
             channel_id,

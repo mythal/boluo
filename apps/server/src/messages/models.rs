@@ -45,6 +45,9 @@ pub struct Message {
     pub modified: DateTime<Utc>,
     pub order_date: DateTime<Utc>,
     pub order_offset: i32,
+    pub pos_p: i32,
+    pub pos_q: i32,
+    pub pos: f64,
     /// The color of the message
     ///
     /// The string is not always a hex color, it can be a preset color name like "preset:orange",
@@ -52,9 +55,6 @@ pub struct Message {
     ///
     /// If the string contains a semicolon, the second part is for the dark mode.
     pub color: String,
-    pub pos: f64,
-    pub pos_p: i32,
-    pub pos_q: i32,
 }
 
 // Expand from `sqlx::Type` to workaround
@@ -88,10 +88,10 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for Message {
         let modified = decoder.try_decode::<DateTime<Utc>>()?;
         let order_date = decoder.try_decode::<DateTime<Utc>>()?;
         let order_offset = decoder.try_decode::<i32>()?;
-        let color = decoder.try_decode::<String>()?;
-        let pos = decoder.try_decode::<f64>()?;
         let pos_p = decoder.try_decode::<i32>()?;
         let pos_q = decoder.try_decode::<i32>()?;
+        let pos = decoder.try_decode::<f64>()?;
+        let color = decoder.try_decode::<String>()?;
         ::std::result::Result::Ok(Message {
             id,
             sender_id,
@@ -123,7 +123,7 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for Message {
 }
 impl ::sqlx::Type<::sqlx::Postgres> for Message {
     fn type_info() -> ::sqlx::postgres::PgTypeInfo {
-        ::sqlx::postgres::PgTypeInfo::with_name("message")
+        ::sqlx::postgres::PgTypeInfo::with_name("messages")
     }
 }
 

@@ -45,8 +45,8 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for User {
         let bio = decoder.try_decode::<String>()?;
         let joined = decoder.try_decode::<DateTime<Utc>>()?;
         let deactivated = decoder.try_decode::<bool>()?;
-        let default_color = decoder.try_decode::<String>()?;
         let avatar_id = decoder.try_decode::<Option<Uuid>>()?;
+        let default_color = decoder.try_decode::<String>()?;
         ::std::result::Result::Ok(User {
             id,
             email,

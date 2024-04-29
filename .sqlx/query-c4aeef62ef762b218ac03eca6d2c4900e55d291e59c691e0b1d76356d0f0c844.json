@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH ADD (\n    channel_members\n) AS (\nINSERT INTO channel_members (user_id, channel_id, character_name, is_master, is_joined)\n        VALUES ($1, $2, $3, $4, TRUE)\n    ON CONFLICT (user_id, channel_id)\n        DO UPDATE SET\n            is_joined = TRUE, character_name = $3\n        RETURNING\n            channel_members)\n        SELECT\n            TRUE AS \"created!\",\n            channel_members AS \"member!: ChannelMember\"\n        FROM\n            ADD\n        UNION ALL\n        SELECT\n            FALSE AS \"created!\",\n            channel_members AS \"member!: ChannelMember\"\n        FROM\n            channel_members\n        WHERE\n            user_id = $1\n            AND channel_id = $2\n        LIMIT 1;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "created!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "member!: ChannelMember",
+        "type_info": {
+          "Custom": {
+            "name": "channel_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ],
+                [
+                  "character_name",
+                  "Text"
+                ],
+                [
+                  "text_color",
+                  "Text"
+                ],
+                [
+                  "is_joined",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c4aeef62ef762b218ac03eca6d2c4900e55d291e59c691e0b1d76356d0f0c844"
+}

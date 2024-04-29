@@ -2,7 +2,7 @@ use crate::events::context::{get_broadcast_table, get_heartbeat_map};
 use crate::events::Event;
 use crate::spaces::Space;
 use crate::utils::timestamp;
-use crate::{cache, database};
+use crate::{cache, db};
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::mem::swap;
@@ -21,11 +21,9 @@ pub fn start() {
 async fn push_status() {
     IntervalStream::new(interval(Duration::from_secs(4)))
         .for_each(|_| async {
-            let spaces = match database::get().await {
-                Ok(mut db) => match Space::all(&mut *db).await {
-                    Ok(all_space) => all_space.into_iter().map(|space| space.id).collect(),
-                    _ => vec![],
-                },
+            let pool = db::get().await;
+            let spaces = match Space::all(&pool).await {
+                Ok(all_space) => all_space.into_iter().map(|space| space.id).collect(),
                 _ => vec![],
             };
 

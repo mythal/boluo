@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    channels\nSET\n    deleted = TRUE,\n    old_name = name,\n    name = uuid_generate_v4 ()::text\nWHERE\n    id = $1\n    AND deleted = FALSE;\n\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "66cffcb75b75d7d8892f72be7c8d0cb6ad4a8df50bcda93c494215f4ea8adf3c"
+}

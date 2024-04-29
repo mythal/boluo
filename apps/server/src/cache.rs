@@ -86,10 +86,7 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
     buffer
 }
 
-#[tokio::test]
-async fn cache_test() -> anyhow::Result<()> {
-    let mut cache = crate::cache::conn().await.unwrap();
-
-    let _result: Option<String> = cache.inner.get("hello").await.unwrap();
-    Ok(())
+pub async fn check() {
+    let mut cache = conn().await.unwrap();
+    let _result: Option<String> = cache.inner.get("hello").await.expect("Failed to get cache");
 }

@@ -14,15 +14,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
-  db-test:
-    image: postgres:latest
-    restart: unless-stopped
-    volumes:
-      - ../apps/server/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
   pgadmin:
     image: dpage/pgadmin4
     restart: unless-stopped

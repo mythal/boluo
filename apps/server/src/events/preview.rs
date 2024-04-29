@@ -1,5 +1,5 @@
 use crate::channels::ChannelMember;
-use crate::database;
+use crate::db;
 use crate::error::AppError;
 use crate::events::Event;
 use crate::{cache, error::Find};
@@ -64,10 +64,10 @@ impl PreviewPost {
             edit_for,
             clear,
         } = self;
-        let mut conn = database::get().await?;
+        let pool = db::get().await;
+        let mut conn = pool.acquire().await?;
         let mut cache = cache::conn().await?;
         let cache = &mut cache;
-        let db = &mut *conn;
         let mut should_finish = false;
         if let Some(text) = text.as_ref() {
             if text.trim().is_empty() && edit_for.is_none() {
@@ -77,9 +77,9 @@ impl PreviewPost {
         let start: i32 = if edit_for.is_some() || should_finish {
             0
         } else {
-            crate::pos::pos(db, cache, channel_id, id).await?
+            crate::pos::pos(&mut conn, cache, channel_id, id).await?
         };
-        let is_master = ChannelMember::get(db, &user_id, &channel_id)
+        let is_master = ChannelMember::get(&mut *conn, &user_id, &channel_id)
             .await
             .or_no_permission()?
             .is_master;

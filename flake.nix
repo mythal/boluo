@@ -341,8 +341,10 @@
                   nil
                   nodejs
                   clang
+                  pgformatter
                   gnumake
                   nixpkgs-fmt
+                  sqlx-cli
                 ];
               in
               common ++ darwinInputs;

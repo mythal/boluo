@@ -11,6 +11,10 @@ fn env_bool<T: AsRef<str>>(s: T) -> bool {
     !(s.is_empty() || s == "0" || s.to_ascii_lowercase() == "false")
 }
 
+pub fn ci() -> bool {
+    env::var("CI").map(env_bool).unwrap_or(false)
+}
+
 pub fn debug() -> bool {
     *DEBUG.get_or_init(|| env::var("DEBUG").map(env_bool).unwrap_or(false))
 }

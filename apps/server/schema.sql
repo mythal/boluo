@@ -96,8 +96,8 @@ CREATE TABLE spaces
     "password"          text      NOT NULL DEFAULT '',    -- plain text
     "language"          text      NOT NULL DEFAULT '',    -- ISO 639-1
     "default_dice_type" text      NOT NULL DEFAULT 'd20', -- d20, d100, FATE ...
-    "invite_token"      uuid      NOT NULL DEFAULT gen_random_uuid(),
     "explorable"        boolean   NOT NULL DEFAULT false,
+    "invite_token"      uuid      NOT NULL DEFAULT gen_random_uuid(),
     "allow_spectator"   boolean   NOT NULL DEFAULT true
 );
 
@@ -170,14 +170,14 @@ CREATE TABLE messages
     -- [user1, user2]: both master, user1 and user2 are able to read the message.
     "whisper_to_users"  uuid[]             DEFAULT null,
     "entities"          jsonb     NOT NULL DEFAULT '[]',
-    "color"             text      NOT NULL DEFAULT '',
     "created"           timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "modified"          timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "order_date"        timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "order_offset"      integer   NOT NULL DEFAULT 0,
     "pos_p"             integer   NOT NULL,
     "pos_q"             integer   NOT NULL,
-    "pos"               float8 GENERATED ALWAYS AS (pos_p::float8 / pos_q) STORED
+    "pos"               float8 GENERATED ALWAYS AS (pos_p::float8 / pos_q) STORED,
+    "color"             text NOT NULL DEFAULT ''
 );
 
 ALTER TABLE messages

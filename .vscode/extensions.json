@@ -3,6 +3,7 @@
     "editorconfig.editorconfig",
     "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "bradymholt.pgformatter"
   ]
 }

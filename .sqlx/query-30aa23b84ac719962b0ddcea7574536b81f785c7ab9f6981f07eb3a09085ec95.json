@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO spaces (\"name\", owner_id, \"password\", default_dice_type, \"description\")\n    VALUES ($1, $2, COALESCE($3, ''), COALESCE($4, 'd20'), $5)\nRETURNING\n    spaces AS \"space!: Space\";\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space!: Space",
+        "type_info": {
+          "Custom": {
+            "name": "spaces",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "language",
+                  "Text"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
+                ],
+                [
+                  "explorable",
+                  "Bool"
+                ],
+                [
+                  "allow_spectator",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "30aa23b84ac719962b0ddcea7574536b81f785c7ab9f6981f07eb3a09085ec95"
+}

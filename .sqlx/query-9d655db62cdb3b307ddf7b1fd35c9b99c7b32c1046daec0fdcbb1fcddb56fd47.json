@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    cm AS \"channel!: ChannelMember\",\n    sm AS \"space!: SpaceMember\"\nFROM\n    channel_members cm\n    INNER JOIN channels ch ON cm.channel_id = ch.id\n        AND ch.deleted = FALSE\n    INNER JOIN space_members sm ON sm.space_id = ch.space_id\n        AND sm.user_id = cm.user_id\nWHERE\n    cm.user_id = $1\n    AND cm.channel_id = $2\n    AND cm.is_joined\nLIMIT 1;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel!: ChannelMember",
+        "type_info": {
+          "Custom": {
+            "name": "channel_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ],
+                [
+                  "character_name",
+                  "Text"
+                ],
+                [
+                  "text_color",
+                  "Text"
+                ],
+                [
+                  "is_joined",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "space!: SpaceMember",
+        "type_info": {
+          "Custom": {
+            "name": "space_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "is_admin",
+                  "Bool"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "9d655db62cdb3b307ddf7b1fd35c9b99c7b32c1046daec0fdcbb1fcddb56fd47"
+}

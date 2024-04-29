@@ -1,14 +1,13 @@
-use crate::{pool::PoolError, session::AuthenticateFail};
+use crate::session::AuthenticateFail;
 use hyper::{StatusCode, Uri};
 pub use redis::RedisError as CacheError;
 use std::error::Error;
 use thiserror::Error;
-pub use tokio_postgres::Error as DbError;
 
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("An unexpected database error occurred: {source}")]
-    Database { source: DbError },
+    Db { source: sqlx::Error },
     #[error("An unexpected cache database error occurred: {source}")]
     Cache {
         #[from]
@@ -104,14 +103,8 @@ impl AppError {
     }
 }
 
-impl From<PoolError> for AppError {
-    fn from(e: PoolError) -> AppError {
-        AppError::Unexpected(e.into())
-    }
-}
-
-impl From<DbError> for AppError {
-    fn from(e: DbError) -> AppError {
+impl From<sqlx::Error> for AppError {
+    fn from(e: sqlx::Error) -> AppError {
         ModelError::from(e).into()
     }
 }
@@ -148,7 +141,7 @@ pub enum ModelError {
     #[error("{0}")]
     Validation(#[from] ValidationFailed),
     #[error("{0}")]
-    Database(DbError),
+    Db(sqlx::Error),
     #[error("{0} already exists")]
     Conflict(String),
 }
@@ -157,23 +150,24 @@ impl From<ModelError> for AppError {
     fn from(e: ModelError) -> Self {
         match e {
             ModelError::Validation(e) => AppError::Validation(e),
-            ModelError::Database(source) => AppError::Database { source },
+            ModelError::Db(source) => AppError::Db { source },
             ModelError::Conflict(type_) => AppError::Conflict(type_),
         }
     }
 }
 
-impl From<DbError> for ModelError {
-    fn from(e: DbError) -> Self {
-        use tokio_postgres::error::{DbError as DatabaseError, SqlState};
-
-        let db_error: Option<&DatabaseError> = e.source().and_then(<dyn Error>::downcast_ref);
-        if let Some(e) = db_error {
-            if e.code() == &SqlState::UNIQUE_VIOLATION {
+impl From<sqlx::Error> for ModelError {
+    fn from(e: sqlx::Error) -> Self {
+        if let Some(e) = e.as_database_error() {
+            if e.is_unique_violation() {
                 return ModelError::Conflict(e.table().unwrap_or("Unknown").to_string());
+            } else if e.is_check_violation() {
+                return ModelError::Validation(ValidationFailed("Check constraint violation"));
+            } else if e.is_foreign_key_violation() {
+                return ModelError::Validation(ValidationFailed("Foreign key constraint violation"));
             }
         }
-        ModelError::Database(e)
+        ModelError::Db(e)
     }
 }
 
@@ -204,16 +198,16 @@ pub trait Find<T: Sized> {
     fn or_not_found(self) -> Result<T, AppError>;
 }
 
-impl<T> Find<T> for Result<Option<T>, DbError> {
+impl<T> Find<T> for Result<Option<T>, sqlx::Error> {
     fn or_no_permission(self) -> Result<T, AppError> {
         match self {
-            Err(source) => Err(AppError::Database { source }),
+            Err(source) => Err(AppError::Db { source }),
             Ok(x) => x.or_no_permission(),
         }
     }
     fn or_not_found(self) -> Result<T, AppError> {
         match self {
-            Err(source) => Err(AppError::Database { source }),
+            Err(source) => Err(AppError::Db { source }),
             Ok(x) => x.or_not_found(),
         }
     }

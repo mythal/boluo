@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH ADD (\n    space_members\n) AS (\nINSERT INTO space_members (user_id, space_id, is_admin)\n        VALUES ($1, $2, $3)\n    ON CONFLICT\n        DO NOTHING\n    RETURNING\n        space_members)\n    SELECT\n        TRUE AS \"created!\",\n        space_members AS \"member!: SpaceMember\"\n    FROM\n        ADD\n    UNION ALL\n    SELECT\n        FALSE AS \"created!\",\n        space_members AS \"member!: SpaceMember\"\n    FROM\n        space_members\n    WHERE\n        user_id = $1\n            AND space_id = $2\n        LIMIT 1;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "created!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "member!: SpaceMember",
+        "type_info": {
+          "Custom": {
+            "name": "space_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "is_admin",
+                  "Bool"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "fef73bafff90197ff3013a049cf7a81c86337431e8afe75756c59e72aa3f4579"
+}

@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    sm AS \"space_member!: SpaceMember\"\nFROM\n    space_members sm\n    INNER JOIN channels c ON c.space_id = sm.space_id\nWHERE\n    sm.user_id = $1\n    AND c.id = $2;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space_member!: SpaceMember",
+        "type_info": {
+          "Custom": {
+            "name": "space_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "is_admin",
+                  "Bool"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "897c2d7594388d25c2c1ebc028118aee94abaa7601723e1a2d9a863ce5d554ac"
+}

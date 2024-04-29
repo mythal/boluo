@@ -1,11 +1,11 @@
-use postgres_types::FromSql;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-#[derive(Debug, Serialize, Deserialize, FromSql, Clone, TS)]
+use crate::db;
+
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
-#[postgres(name = "proxies")]
 pub struct Proxy {
     pub name: String,
     pub url: String,
@@ -79,17 +79,13 @@ impl ConnectionState {
     }
 
     pub async fn database() -> Result<ConnectionState, String> {
-        use crate::database::Querist;
         let start = std::time::Instant::now();
-        let mut db = crate::database::get()
+        let pool = db::get().await;
+        let count = pool.size() as usize;
+        sqlx::query!("SELECT 1 as x;")
+            .fetch_one(&pool)
             .await
-            .map_err(|err| format!("Failed to connect to database: {:?}", err))?;
-        let count = db.connection_count();
-        let conn = &mut *db;
-        let _db_result = conn
-            .query_one("SELECT 1", &[])
-            .await
-            .map_err(|err| format!("Failed to query database: {:?}", err));
+            .map_err(|err| format!("Failed to query database: {:?}", err))?;
         let rtt_ms = start.elapsed().as_millis() as u64;
         Ok(ConnectionState { rtt_ms, count })
     }

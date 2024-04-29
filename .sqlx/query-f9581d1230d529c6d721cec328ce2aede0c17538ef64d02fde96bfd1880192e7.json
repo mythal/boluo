@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users_extension(user_id, settings)\n    VALUES ($1, $2)\nON CONFLICT (user_id)\n    DO UPDATE SET\n        settings = $2\n    RETURNING\n        users_extension.settings;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "settings",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f9581d1230d529c6d721cec328ce2aede0c17538ef64d02fde96bfd1880192e7"
+}

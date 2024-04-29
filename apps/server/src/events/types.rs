@@ -7,7 +7,7 @@ use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use crate::spaces::models::{space_users_status, StatusKind, UserStatus};
-use crate::{cache, database};
+use crate::{cache, db};
 use chrono::Utc;
 use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
@@ -279,12 +279,12 @@ impl Event {
     }
 
     async fn fire_members(channel_id: Uuid) -> Result<(), anyhow::Error> {
-        let mut conn = database::get().await?;
-        let db = &mut *conn;
-        let channel = Channel::get_by_id(db, &channel_id)
+        let pool = db::get().await;
+        let mut conn = pool.acquire().await?;
+        let channel = Channel::get_by_id(&mut *conn, &channel_id)
             .await?
             .ok_or(anyhow::anyhow!("channel not found"))?;
-        let members = Member::get_by_channel(db, channel_id).await?;
+        let members = Member::get_by_channel(&mut *conn, channel_id).await?;
         drop(conn);
         let event = SyncEvent::new(Event {
             mailbox: channel.space_id,

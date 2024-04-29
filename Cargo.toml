@@ -1,8 +1,9 @@
 [workspace]
 resolver = "2"
-members = [
-  "apps/server",
-]
+members = ["apps/server"]
 
 [profile.release]
 panic = "abort"
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3

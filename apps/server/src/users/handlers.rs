@@ -5,7 +5,7 @@ use crate::session::{
     add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie,
     remove_session, remove_session_cookie, revoke_session,
 };
-use crate::{cache, database, mail};
+use crate::{cache, db, mail};
 
 use crate::channels::Channel;
 use crate::error::{AppError, Find, ValidationFailed};
@@ -25,8 +25,8 @@ async fn register(req: Request<Body>) -> Result<User, AppError> {
         nickname,
         password,
     }: Register = interface::parse_body(req).await?;
-    let mut db = database::get().await?;
-    let user = User::register(&mut *db, &email, &username, &nickname, &password).await?;
+    let pool = db::get().await;
+    let user = User::register(&pool, &email, &username, &nickname, &password).await?;
     log::info!("{} ({}) was registered.", user.username, user.email);
     Ok(user)
 }
@@ -48,8 +48,8 @@ pub async fn query_user(req: Request<Body>) -> Result<User, AppError> {
             .user_id
     };
 
-    let mut db = database::get().await?;
-    User::get_by_id(&mut *db, &id).await.or_not_found()
+    let pool = db::get().await;
+    User::get_by_id(&pool, &id).await.or_not_found()
 }
 
 pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
@@ -58,8 +58,8 @@ pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
     let session = authenticate(&req).await;
     match session {
         Ok(session) => {
-            let mut db = database::get().await?;
-            Ok(Some(User::get_by_id(&mut *db, &session.user_id).await.or_not_found()?))
+            let pool = db::get().await;
+            Ok(Some(User::get_by_id(&pool, &session.user_id).await.or_not_found()?))
         }
         Err(AppError::Unauthenticated(_)) => Ok(None),
         Err(e) => Err(e),
@@ -70,10 +70,8 @@ pub async fn query_settings(req: Request<Body>) -> Result<serde_json::Value, App
     use crate::session::authenticate;
     let session = authenticate(&req).await?;
 
-    let mut conn = database::get().await?;
-
-    let db = &mut *conn;
-    let settings = UserExt::get_settings(db, session.user_id).await?;
+    let pool = db::get().await;
+    let settings = UserExt::get_settings(&pool, session.user_id).await?;
     Ok(settings)
 }
 
@@ -89,13 +87,13 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
 
     match session {
         Ok(session) => {
-            let mut conn = database::get().await?;
-            let db = &mut *conn;
-            let user = User::get_by_id(db, &session.user_id).await?;
+            let pool = db::get().await;
+            let mut conn = pool.acquire().await?;
+            let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
-                let my_spaces = Space::get_by_user(db, &user.id).await?;
-                let my_channels = Channel::get_by_user(db, user.id).await?;
-                let settings = UserExt::get_settings(db, user.id).await?;
+                let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+                let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
+                let settings = UserExt::get_settings(&mut *conn, user.id).await?;
 
                 let mut response = ok_response(Some(GetMe {
                     user,
@@ -133,17 +131,17 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
 
     let is_debug = req.headers().get("X-Debug").is_some();
     let form: Login = interface::parse_body(req).await?;
-    let mut conn = database::get().await?;
-    let db = &mut *conn;
-    let user = User::login(db, &form.username, &form.password)
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    let user = User::login(&mut *conn, &form.username, &form.password)
         .await
         .or_no_permission()?;
     let session = session::start(&user.id).await.map_err(error_unexpected!())?;
     let token = session::token(&session);
     let token = if form.with_token { Some(token) } else { None };
-    let my_spaces = Space::get_by_user(db, &user.id).await?;
-    let my_channels = Channel::get_by_user(db, user.id).await?;
-    let settings = UserExt::get_settings(db, user.id).await?;
+    let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+    let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
+    let settings = UserExt::get_settings(&mut *conn, user.id).await?;
     let me = GetMe {
         user,
         settings: settings.clone(),
@@ -177,8 +175,8 @@ pub async fn edit(req: Request<Body>) -> Result<User, AppError> {
         avatar,
         default_color,
     }: EditUser = parse_body(req).await?;
-    let mut db = database::get().await?;
-    User::edit(&mut *db, &session.user_id, nickname, bio, avatar, default_color)
+    let pool = db::get().await;
+    User::edit(&pool, &session.user_id, nickname, bio, avatar, default_color)
         .await
         .map_err(Into::into)
 }
@@ -196,8 +194,8 @@ pub async fn update_settings(req: Request<Body>) -> Result<serde_json::Value, Ap
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
-    let mut db = database::get().await?;
-    UserExt::update_settings(&mut *db, session.user_id, settings)
+    let pool = db::get().await;
+    UserExt::update_settings(&pool, session.user_id, settings)
         .await
         .map_err(Into::into)
 }
@@ -206,8 +204,8 @@ pub async fn partial_update_settings(req: Request<Body>) -> Result<serde_json::V
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
-    let mut db = database::get().await?;
-    UserExt::partial_update_settings(&mut *db, session.user_id, settings)
+    let pool = db::get().await;
+    UserExt::partial_update_settings(&pool, session.user_id, settings)
         .await
         .map_err(Into::into)
 }
@@ -221,9 +219,10 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
     }
     let media_id = id();
     let media = upload(req, media_id, params, 1024 * 1024).await?;
-    let mut db = database::get().await?;
-    let media = media.create(&mut *db, session.user_id, "avatar").await?;
-    User::edit(&mut *db, &session.user_id, None, None, Some(media.id), None)
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    let media = media.create(&mut *conn, session.user_id, "avatar").await?;
+    User::edit(&mut *conn, &session.user_id, None, None, Some(media.id), None)
         .await
         .map_err(Into::into)
 }
@@ -231,23 +230,22 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
 pub async fn remove_avatar(req: Request<Body>) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
-    let mut db = database::get().await?;
-    User::remove_avatar(&mut *db, &session.user_id)
-        .await
-        .map_err(Into::into)
+
+    let pool = db::get().await;
+    User::remove_avatar(&pool, &session.user_id).await.map_err(Into::into)
 }
 
 pub async fn check_email_exists(req: Request<Body>) -> Result<bool, AppError> {
     let CheckEmailExists { email } = parse_query(req.uri())?;
-    let mut db = database::get().await?;
-    let user = User::get_by_email(&mut *db, &email).await?;
+    let pool = db::get().await;
+    let user = User::get_by_email(&pool, &email).await?;
     Ok(user.is_some())
 }
 
 pub async fn check_username_exists(req: Request<Body>) -> Result<bool, AppError> {
     let CheckUsernameExists { username } = parse_query(req.uri())?;
-    let mut db = database::get().await?;
-    let user = User::get_by_username(&mut *db, &username).await?;
+    let pool = db::get().await;
+    let user = User::get_by_username(&pool, &username).await?;
     Ok(user.is_some())
 }
 
@@ -293,8 +291,8 @@ pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
     let ResetPassword { email } = parse_body(req).await?;
     email_limit(&mut cache, &email).await?;
 
-    let mut db = database::get().await?;
-    User::get_by_email(&mut *db, &email)
+    let pool = db::get().await;
+    User::get_by_email(&pool, &email)
         .await?
         .ok_or(AppError::NotFound("email"))?;
     let token = uuid::Uuid::new_v4().to_string();
@@ -337,7 +335,8 @@ pub async fn reset_password_token_check(req: Request<Body>) -> Result<bool, AppE
 
 pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> {
     let ResetPasswordConfirm { token, password } = parse_body(req).await?;
-    let mut db = database::get().await?;
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
     let email = cache::conn()
         .await?
         .get(token_key(&token).as_slice())
@@ -345,10 +344,10 @@ pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> 
         .map(String::from_utf8)
         .ok_or(AppError::NotFound("token"))?
         .map_err(|e| AppError::Unexpected(e.into()))?;
-    let user = User::get_by_email(&mut *db, &email)
+    let user = User::get_by_email(&mut *conn, &email)
         .await?
         .ok_or(AppError::NotFound("user"))?;
-    User::reset_password(&mut *db, user.id, &password).await?;
+    User::reset_password(&mut *conn, user.id, &password).await?;
     Ok(())
 }
 

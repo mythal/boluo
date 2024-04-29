@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO media (id, mime_type, uploader_id, filename, original_filename, hash, size, source)\n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\nRETURNING\n    media AS \"media!: Media\";\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "media!: Media",
+        "type_info": {
+          "Custom": {
+            "name": "media",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "mime_type",
+                  "Text"
+                ],
+                [
+                  "uploader_id",
+                  "Uuid"
+                ],
+                [
+                  "filename",
+                  "Text"
+                ],
+                [
+                  "original_filename",
+                  "Text"
+                ],
+                [
+                  "hash",
+                  "Text"
+                ],
+                [
+                  "size",
+                  "Int4"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "source",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "dad5d46e3a15b662f4c2810286ed4626c8e52df588b19dbac78800b69fc114ef"
+}

@@ -1,4 +1,3 @@
-use crate::database::Querist;
 use crate::error::CacheError;
 use redis::AsyncCommands;
 use uuid::Uuid;
@@ -11,8 +10,8 @@ fn create_pos_key(channel_id: Uuid, message_id: Uuid) -> String {
     format!("channel:{channel_id}:preview:{message_id}:pos")
 }
 
-pub async fn alloc_new_pos<T: Querist>(
-    db: &mut T,
+pub async fn alloc_new_pos(
+    db: &mut sqlx::PgConnection,
     cache: &mut crate::cache::Connection,
     channel_id: Uuid,
 ) -> Result<i32, CacheError> {
@@ -28,8 +27,8 @@ pub async fn alloc_new_pos<T: Querist>(
     cache.inner.incr(&max_pos_key, 1).await
 }
 
-pub async fn pos<T: Querist>(
-    db: &mut T,
+pub async fn pos(
+    db: &mut sqlx::PgConnection,
     cache: &mut crate::cache::Connection,
     channel_id: Uuid,
     message_id: Uuid,

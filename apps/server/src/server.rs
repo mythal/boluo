@@ -21,7 +21,7 @@ mod channels;
 mod context;
 mod cors;
 mod csrf;
-mod database;
+mod db;
 mod events;
 mod info;
 mod interface;
@@ -29,7 +29,6 @@ mod logger;
 mod mail;
 mod media;
 mod messages;
-mod pool;
 mod pos;
 mod s3;
 mod session;
@@ -111,7 +110,11 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
     Ok(response)
 }
 
-async fn check() {
+async fn storage_check() {
+    // Skip in CI
+    if context::ci() {
+        return;
+    }
     let s3_client = s3::get_client();
     let _put_object_output = s3_client
         .put_object()
@@ -126,8 +129,8 @@ async fn check() {
 
 #[derive(Parser)]
 struct Args {
-    #[clap(long, help = "init database")]
-    init: bool,
+    #[clap(long, help = "check only", default_value = "false")]
+    check: bool,
 }
 
 #[tokio::main]
@@ -137,15 +140,12 @@ async fn main() {
     logger::setup_logger(debug()).unwrap();
 
     let args = Args::parse();
-    if args.init {
-        database::initialize().await;
-        return;
-    }
+
     let port: u16 = env::var("PORT")
         .expect("PORT must be set")
         .parse()
         .expect("PORT must be a number");
-    check().await;
+    storage_check().await;
 
     let addr: Ipv4Addr = env::var("HOST")
         .unwrap_or("127.0.0.1".to_string())
@@ -155,6 +155,15 @@ async fn main() {
     let addr = SocketAddr::new(IpAddr::V4(addr), port);
 
     let make_svc = make_service_fn(|_: &AddrStream| async { Ok::<_, hyper::Error>(service_fn(handler)) });
+
+    cache::check().await;
+    log::info!("Cache is ready");
+    db::check().await;
+    log::info!("Database is ready");
+
+    if args.check {
+        return;
+    }
 
     let server = Server::bind(&addr).serve(make_svc);
     events::tasks::start();

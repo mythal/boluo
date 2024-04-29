@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    user_id,\n    text_color AS \"color!\"\nFROM\n    channel_members cm\nWHERE\n    cm.channel_id = $1\n    AND cm.text_color IS NOT NULL;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "color!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "484093f304fdf147fc81ded579802f9bb8b439ac6e28f96112a0721dbdbc3348"
+}

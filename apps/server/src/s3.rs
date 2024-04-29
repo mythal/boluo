@@ -5,7 +5,7 @@ use aws_sdk_s3::Config;
 fn make_config() -> Config {
     use aws_credential_types::Credentials;
     use std::env;
-    let access_key = env::var("S3_ACCESS_KEY_ID").expect("S3_ACCESS_KEY is not set");
+    let access_key = env::var("S3_ACCESS_KEY_ID").expect("S3_ACCESS_KEY_ID is not set");
     let secret_access_key = env::var("S3_SECRET_ACCESS_KEY").expect("S3_SECRET_ACCESS_KEY is not set");
     let endpoint_url = env::var("S3_ENDPOINT_URL").expect("S3_ENDPOINT_URL is not set");
 

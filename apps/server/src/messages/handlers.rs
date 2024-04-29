@@ -34,7 +34,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
             .or_no_permission()?;
     let mut cache = crate::cache::conn().await?;
     let message = Message::create(
-        &mut *conn,
+        &mut conn,
         &mut cache,
         preview_id.as_ref(),
         &channel_id,

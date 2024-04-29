@@ -218,7 +218,7 @@ async fn leave(req: Request<Body>) -> Result<bool, AppError> {
 
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
-    SpaceMember::remove_user(&mut *trans, &session.user_id, &id).await?;
+    SpaceMember::remove_user(&mut trans, &session.user_id, &id).await?;
     trans.commit().await?;
     Event::space_updated(id);
     Ok(true)
@@ -242,7 +242,7 @@ async fn kick(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, 
     if !my_member.is_admin {
         return Err(AppError::NoPermission("A non-admin tries to kick".to_string()));
     }
-    SpaceMember::remove_user(&mut *trans, &user_id, &space_id).await?;
+    SpaceMember::remove_user(&mut trans, &user_id, &space_id).await?;
     trans.commit().await?;
     Event::space_updated(space_id);
     Ok(SpaceMemberWithUser::get_by_space(&pool, &space_id).await?)

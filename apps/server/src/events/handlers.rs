@@ -200,7 +200,7 @@ async fn connect(req: Request) -> Response {
         return ws_error(req, Some(mailbox), "Invalid mailbox".to_string());
     };
     if let Some(space) = space.as_ref() {
-        let Ok(_) = check_permissions(&mut *conn, space, &user_id).await else {
+        let Ok(_) = check_permissions(&mut conn, space, &user_id).await else {
             return ws_error(req, Some(mailbox), "No permission".to_string());
         };
     }

@@ -77,7 +77,7 @@ impl PreviewPost {
         let start: i32 = if edit_for.is_some() || should_finish {
             0
         } else {
-            crate::pos::pos(&mut *conn, cache, channel_id, id).await?
+            crate::pos::pos(&mut conn, cache, channel_id, id).await?
         };
         let is_master = ChannelMember::get(&mut *conn, &user_id, &channel_id)
             .await

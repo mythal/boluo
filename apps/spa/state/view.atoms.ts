@@ -17,7 +17,11 @@ export const setHash = (searchParams: string) => {
 const routeDeserialize = (raw: string): string => {
   if (raw === '' || raw === '/') {
     return '';
-  } else if (isUuid(raw)) {
+  }
+  if (raw.startsWith('"') && raw.endsWith('"')) {
+    raw = raw.slice(1, -1);
+  }
+  if (isUuid(raw)) {
     return raw;
   } else {
     return '404';

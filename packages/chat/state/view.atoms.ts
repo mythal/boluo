@@ -4,6 +4,16 @@ import { selectAtom } from 'jotai/utils';
 import { isUuid } from '@boluo/utils';
 import { Pane, Route } from './view.types';
 
+export const setHash = (searchParams: string) => {
+  const parsed = new URLSearchParams(searchParams);
+  for (const key of parsed.keys()) {
+    if (parsed.get(key) === '') {
+      parsed.delete(key);
+    }
+  }
+  window.location.hash = String(parsed);
+};
+
 const routeDeserialize = (raw: string): string => {
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -13,7 +23,7 @@ const routeDeserialize = (raw: string): string => {
   }
 };
 
-const routeHashAtom = atomWithHash<string>('route', '', { deserialize: routeDeserialize });
+const routeHashAtom = atomWithHash<string>('route', '', { deserialize: routeDeserialize, setHash });
 
 export const routeAtom = atom<Route, [Route], void>(
   (get): Route => {
@@ -79,7 +89,18 @@ const paneDeserialize = (raw: string): Pane[] => {
   }
 };
 
-export const panesAtom = atomWithHash<Pane[]>('panes', [], { deserialize: paneDeserialize });
+const paneSerialize = (panes: Pane[]): string => {
+  if (panes.length === 0) {
+    return '';
+  }
+  return JSON.stringify(panes);
+};
+
+export const panesAtom = atomWithHash<Pane[]>('panes', [], {
+  deserialize: paneDeserialize,
+  serialize: paneSerialize,
+  setHash,
+});
 
 export const panesCreationTimeMapAtom = selectAtom(
   panesAtom,

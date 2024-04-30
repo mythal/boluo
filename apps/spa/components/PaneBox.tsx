@@ -25,18 +25,22 @@ export const PaneBox: FC<Props> = ({ className, header, children }) => {
       <div
         onClick={focus}
         className={clsx(
-          '@container flex min-w-[22rem] flex-[1_1_100%] flex-col md:contain-strict',
+          '@container relative flex min-w-[22rem] flex-[1_1_100%] flex-col md:contain-strict',
           isFocused ? 'max-md:h-0 max-md:flex-[1_1_100%]' : 'max-md:flex-[0_1_0]',
           className,
         )}
       >
         {header}
         <div ref={bannerRef}></div>
+
+        <div className="relative">
+          <div className="bg-pane-header-border absolute z-10 h-[2px] w-full"></div>
+        </div>
+
         <div
           onFocus={focus}
           className={clsx(
-            'bg-pane-bg flex-grow overflow-y-auto overflow-x-hidden',
-            Boolean(header) ? 'shadow-pane-header-shadow shadow-[0_9px_1px_-8px_inset]' : '',
+            'bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden',
             isFocused ? '' : 'max-md:hidden',
           )}
         >

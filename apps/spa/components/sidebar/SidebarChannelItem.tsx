@@ -95,7 +95,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         href="#" // TODO: link to channel
         className={clsx(
           'cursor-eointer group grid w-full grid-cols-[auto_1fr_auto] grid-rows-2 items-start gap-x-2 gap-y-1 rounded-sm px-1 py-1 text-sm',
-          active ? 'bg-surface-100 hover:bg-surface-50' : 'hover:bg-surface-50',
+          active
+            ? 'bg-sidebar-channels-active-bg hover:bg-sidebar-channels-active-hover'
+            : 'hover:bg-sidebar-channels-hover',
         )}
         onClick={handleClick}
       >
@@ -113,9 +115,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
             onClick={handleClickInnerButton}
             title={active ? titleClose : titleOpenNew}
             className={clsx(
-              ' inline-flex items-center justify-center',
-              active ? 'text-surface-400' : 'text-surface-300',
-              'group-hover:text-brand-600 group-hover:bg-surface-200/50 h-5 w-5 rounded-sm',
+              'inline-flex items-center justify-center',
+              active ? 'text-sidebar-channels-button-active-text' : 'text-sidebar-channels-button-text',
+              'group-hover:text-sidebar-channels-button-groupHover-text group-hover:bg-sidebar-channels-button-groupHover-bg h-6 w-6 rounded-sm',
             )}
           >
             <span className={clsx('transform transition-transform duration-100 ', active ? 'rotate-0' : 'rotate-45')}>

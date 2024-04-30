@@ -11,6 +11,7 @@ import { PaneSpace } from './pane-space/PaneSpace';
 import { PaneEmpty } from './PaneEmpty';
 import { PaneLoading } from './PaneLoading';
 import { PaneWelcome } from './PaneWelcome';
+import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
@@ -32,6 +33,7 @@ const PANE_MAP = {
   SETTINGS: PaneSettings,
   HELP: PaneHelp,
   SPACE_SETTINGS: PaneSpaceSettings,
+  SPACE_GREETING: PaneSpaceGreeting,
   CREATE_CHANNEL: PaneCreateChannel,
   CREATE_SPACE: PaneCreateSpace,
   LOGIN: PaneLogin,
@@ -65,6 +67,8 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneProfile userId={pane.userId} />;
     case 'SPACE_MEMBERS':
       return <PaneSpaceMembers spaceId={pane.spaceId} />;
+    case 'SPACE_GREETING':
+      return <PaneSpaceGreeting spaceId={pane.spaceId} />;
     default:
       const Component = PANE_MAP[pane.type] ?? PaneEmpty;
       return <Component />;

@@ -10,6 +10,8 @@ import { PaneFailed } from './pane-failed/PaneFailed';
 import { useQueryConnectionToken } from '../hooks/useQueryConnectionToken';
 import { ChatView } from './ChatView';
 import { useTitle } from '../hooks/useTitle';
+import { PaneEmpty } from './PaneEmpty';
+import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 
 interface Props {
   spaceId: string;
@@ -22,7 +24,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
   const { data: space, error, isLoading } = useQuerySpace(spaceId);
   useTitle(space);
 
-  let defaultPane = useMemo(() => <PaneSpace spaceId={spaceId} />, [spaceId]);
+  let defaultPane = useMemo(() => <PaneSpaceGreeting spaceId={spaceId} />, [spaceId]);
   let errorNode = null;
 
   if (error) {

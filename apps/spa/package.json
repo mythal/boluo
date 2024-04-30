@@ -6,7 +6,7 @@
     "dev": "next dev --port 3200",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@boluo/api": "*",

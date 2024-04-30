@@ -12,7 +12,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Loading } from '@boluo/ui/Loading';
 import type { StyleProps } from '@boluo/utils';
-import { Me } from '../../components/Me';
+import { Me } from '../../../components/Me';
 
 const useLogout = () => {
   const router = useRouter();

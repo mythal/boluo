@@ -1,6 +1,6 @@
 'use client';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useMemo, useRef } from 'react';
 import { Suspense } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { BreakpointProvider } from '../breakpoint';
@@ -18,11 +18,28 @@ import { useSetThemeColor } from '../hooks/useSetThemeColor';
 import { BannerContext } from '../hooks/useBannerNode';
 import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
+import { getThemeFromCookie, setThemeToDom, writeThemeToCookie } from '@boluo/theme';
+import { useQuerySettings } from '../hooks/useQuerySettings';
+
+const useSetThemeScheme = () => {
+  const themeFromCookie = useMemo(getThemeFromCookie, []);
+  const { data: settings } = useQuerySettings();
+  useEffect(() => {
+    if (settings?.theme) {
+      writeThemeToCookie(settings.theme);
+    }
+    if (themeFromCookie) {
+      setThemeToDom(themeFromCookie);
+    }
+  }, []);
+};
+
 const Chat: FC = () => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const route = useAtomValue(routeAtom);
   useAutoSelectProxy(60 * 1000);
   const setSidebarExpanded = useSetAtom(isSidebarExpandedAtom);
+  useSetThemeScheme();
   useSetThemeColor();
 
   useEffect(() => {

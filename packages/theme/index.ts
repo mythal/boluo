@@ -14,6 +14,17 @@ export const toTheme = (value: string): Theme => {
   }
 };
 
+export const writeThemeToCookie = (data: unknown) => {
+  if (typeof data !== 'string') {
+    return;
+  }
+  const theme = toTheme(data);
+  if (!theme) {
+    return;
+  }
+  document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
+};
+
 export const getThemeFromCookie = (): Theme | null => {
   const themeMatch = /boluo-theme=([^;]+)/.exec(document.cookie);
   if (themeMatch == null || themeMatch[1] == null) {
@@ -85,25 +96,39 @@ export const clearWatchSystemTheme = () => {
 export const setThemeToDom = (value: string): Theme => {
   const html = window.document.documentElement;
   const theme = toTheme(value);
-  const colorScheme: HTMLMetaElement | null = document.querySelector('meta[name="color-scheme"]');
+  let colorScheme: string;
   switch (theme) {
     case 'light':
       html.classList.remove('system');
       html.classList.add('light');
       html.classList.remove('dark');
-      if (colorScheme) colorScheme.content = 'light';
+      colorScheme = 'light';
       break;
     case 'dark':
       html.classList.remove('system');
       html.classList.remove('light');
       html.classList.add('dark');
-      if (colorScheme) colorScheme.content = 'dark';
+      colorScheme = 'dark';
       break;
     case 'system':
       html.classList.add('system');
       setThemeByMediaQuery(window.matchMedia(DARK_MEDIA_QUERY));
-      if (colorScheme) colorScheme.content = 'light dark';
+      colorScheme = 'light dark';
       break;
+  }
+
+  const colorSchemeNode: HTMLMetaElement | null = document.querySelector('meta[name="color-scheme"]');
+  if (colorSchemeNode) {
+    colorSchemeNode.content = colorScheme;
+  } else {
+    const newColorScheme = document.createElement('meta');
+    newColorScheme.name = 'color-scheme';
+    newColorScheme.content = 'light dark';
+
+    const head = document.querySelector('head');
+    if (head) {
+      head.appendChild(newColorScheme);
+    }
   }
   return theme;
 };

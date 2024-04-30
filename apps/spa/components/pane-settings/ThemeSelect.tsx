@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { setThemeToDom, Theme } from '@boluo/theme';
+import { setThemeToDom, Theme, writeThemeToCookie } from '@boluo/theme';
 import { useTheme } from '@boluo/theme/useTheme';
 import { Select } from '@boluo/ui/Select';
 import { identity } from '@boluo/utils';
@@ -34,7 +34,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   const handleChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
     const value = event.target.value;
     const theme = setThemeToDom(value);
-    document.cookie = `boluo-theme=${theme}; path=/;max-age=31536000`;
+    writeThemeToCookie(theme);
     if (currentUser) {
       void trigger(theme);
     }

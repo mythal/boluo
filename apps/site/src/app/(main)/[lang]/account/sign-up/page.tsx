@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { LoginForm } from '../../../../components/LoginForm';
+import { SignUpForm } from '../../../../../components/SignUpForm';
 import { getIntl, LangParams } from '@boluo/common/server';
 import { Footer } from './Footer';
 
@@ -7,14 +7,14 @@ export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);
 
   return {
-    title: intl.formatMessage({ defaultMessage: 'Login' }),
+    title: intl.formatMessage({ defaultMessage: 'Sign Up' }),
   };
 }
 
 export default function Page() {
   return (
     <div>
-      <LoginForm />
+      <SignUpForm />
       <Footer />
     </div>
   );

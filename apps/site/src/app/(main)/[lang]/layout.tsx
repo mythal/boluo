@@ -1,8 +1,9 @@
 import { Locale } from '@boluo/common/locale';
 import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { ClientProviders } from '../../components/global/Providers';
+import { ClientProviders } from '../../../components/global/Providers';
 import { getIntl, getMessages, LangParams } from '@boluo/common/server';
+import '@boluo/ui/tailwind.css';
 
 export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);

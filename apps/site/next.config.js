@@ -25,7 +25,7 @@ const config = {
     APP_URL: process.env.APP_URL,
     DOMAIN: process.env.DOMAIN,
   },
-  transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
+  transpilePackages: ['@boluo/ui', '@boluo/common'],
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },

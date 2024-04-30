@@ -15,7 +15,6 @@
     "@babel/preset-env": "^7.23.7",
     "@boluo/api": "*",
     "@boluo/api-browser": "*",
-    "@boluo/chat": "*",
     "@boluo/common": "*",
     "@boluo/icons": "*",
     "@boluo/lang": "*",

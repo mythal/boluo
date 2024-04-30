@@ -14,11 +14,10 @@ import { ChatSkeleton } from './ChatSkeleton';
 import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
-import { ToggleSidebarLine } from './sidebar/ToggleSidebarLine';
 import { useSetThemeColor } from '../hooks/useSetThemeColor';
 import { BannerContext } from '../hooks/useBannerNode';
 import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
-
+import screens from '@boluo/ui/screens.json';
 const Chat: FC = () => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const route = useAtomValue(routeAtom);
@@ -36,7 +35,7 @@ const Chat: FC = () => {
   }, []);
   const isTouch = useDetectIsTouch();
   const autoFoldSidebar = () => {
-    if (window.innerWidth < 560) {
+    if (window.innerWidth < screens.sm) {
       setSidebarExpanded(false);
     }
   };
@@ -59,7 +58,7 @@ const Chat: FC = () => {
                 <div
                   onTouchStart={autoFoldSidebar}
                   onClick={autoFoldSidebar}
-                  className="relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
+                  className="md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
                 >
                   <Suspense fallback={<PaneLoading />}>
                     {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}

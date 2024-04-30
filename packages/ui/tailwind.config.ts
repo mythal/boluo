@@ -83,10 +83,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       pane: {
         bg: $(white, darkPaneBg),
         header: {
-          bg: $(neutral[50], neutral[900]),
-          border: $(neutral[100], neutral[800]),
+          bg: $(white, neutral[800]),
+          border: $(transparentize(neutral[400], 0.95), transparentize(neutral[900], 0.5)),
           shadow: $(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
         },
+        divide: $(neutral[50], neutral[950]),
         tab: {
           bg: $(neutral[100], neutral[950]),
           text: $(neutral[500], neutral[400]),
@@ -96,8 +97,28 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         },
       },
       sidebar: {
-        divider: $(neutral[200], mix(neutral[700], neutral[800], 0.5)),
+        divider: $(neutral[100], mix(neutral[800], neutral[900], 0.3)),
         border: $(neutral[200], neutral[700]),
+        channels: {
+          hover: $(neutral[100], neutral[950]),
+
+          active: {
+            bg: $(neutral[100], neutral[900]),
+            hover: $(neutral[200], neutral[950]),
+          },
+
+          button: {
+            text: $(neutral[300], neutral[600]),
+            active: {
+              text: $(neutral[400], neutral[500]),
+            },
+            groupHover: {
+              text: $(brand[600], brand[400]),
+              bg: $(white, neutral[900]),
+            },
+            hover: {},
+          },
+        },
         toggler: {
           hover: $(blue[300], blue[600]),
           touch: $(transparentize(blue[100], 0.5), blue[800]),

@@ -2,19 +2,16 @@ import { Settings } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC, MouseEventHandler, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from '@boluo/ui/Button';
-import { usePaneAdd } from '../../hooks/usePaneAdd';
-import { usePaneKey } from '../../hooks/usePaneKey';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { usePaneReplace } from '../../hooks/usePaneReplace';
 
 interface Props {
   channelId: string;
 }
 
 export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
-  const currentPaneKey = usePaneKey();
-  const addPane = usePaneAdd();
+  const replacePane = usePaneReplace();
   const [panes, setPanes] = useAtom(panesAtom);
   const settingsPaneKey = panes.find((pane) => pane.type === 'CHANNEL_SETTINGS' && pane.channelId === channelId)?.key;
   const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(
@@ -23,11 +20,10 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
       if (settingsPaneKey != null) {
         setPanes((panes) => panes.filter((pane) => pane.key !== settingsPaneKey));
       } else {
-        const position = currentPaneKey ? { refKey: currentPaneKey, before: true } : undefined;
-        addPane({ type: 'CHANNEL_SETTINGS', channelId }, position);
+        replacePane({ type: 'CHANNEL_SETTINGS', channelId });
       }
     },
-    [settingsPaneKey, setPanes, currentPaneKey, addPane, channelId],
+    [settingsPaneKey, setPanes, replacePane, channelId],
   );
   return (
     <SidebarHeaderButton onClick={handleClick} active={settingsPaneKey != null}>

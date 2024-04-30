@@ -9,7 +9,7 @@ import { PaneBodyError } from './PaneBodyError';
 import { BannerContext } from '../hooks/useBannerNode';
 
 interface Props extends ChildrenProps, StyleProps {
-  header: ReactNode;
+  header?: ReactNode;
 }
 
 const Placeholder = () => {
@@ -35,7 +35,8 @@ export const PaneBox: FC<Props> = ({ className, header, children }) => {
         <div
           onFocus={focus}
           className={clsx(
-            'bg-pane-bg shadow-pane-header-shadow flex-grow overflow-y-auto overflow-x-hidden shadow-[0_9px_1px_-8px_inset]',
+            'bg-pane-bg flex-grow overflow-y-auto overflow-x-hidden',
+            Boolean(header) ? 'shadow-pane-header-shadow shadow-[0_9px_1px_-8px_inset]' : '',
             isFocused ? '' : 'max-md:hidden',
           )}
         >

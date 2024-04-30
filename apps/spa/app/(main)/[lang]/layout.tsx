@@ -1,4 +1,4 @@
-import type { Locale } from '@boluo/common/locale';
+import { localeList, type Locale } from '@boluo/common/locale';
 import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { Providers } from './Providers';
@@ -30,6 +30,11 @@ export default function RootLayout({
   return (
     <Providers lang={lang}>
       <html lang={lang} className="bg-bg text-text-base">
+        <head>
+          {localeList.map((locale) => (
+            <link key={locale} rel="alternate" hrefLang={locale} href={`/${locale}`} />
+          ))}
+        </head>
         <body>{children}</body>
       </html>
     </Providers>

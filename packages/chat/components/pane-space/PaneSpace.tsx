@@ -5,7 +5,6 @@ import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import Icon from '@boluo/ui/Icon';
-import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { PaneBox } from '../PaneBox';
@@ -15,6 +14,7 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { SpaceJoinButton } from './SpaceJoinButton';
 import { SpaceLeaveButton } from './SpaceLeaveButton';
 import { SpaceMemberBadge } from './SpaceMemberBadge';
+import { usePaneReplace } from '../../hooks/usePaneReplace';
 
 interface Props {
   spaceId: string;
@@ -42,10 +42,10 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     }
     return null;
   }, [myId, spaceMembers]);
-  const addPane = usePaneAdd();
+  const replacePane = usePaneReplace();
   const openSettings = useCallback(() => {
-    addPane({ type: 'SPACE_SETTINGS', spaceId });
-  }, [addPane, spaceId]);
+    replacePane({ type: 'SPACE_SETTINGS', spaceId });
+  }, [replacePane, spaceId]);
   const operators = useMemo(() => {
     if (space == null || myId == null) {
       return null;

@@ -24,6 +24,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 import { Failed } from '../common/Failed';
+import { usePaneReplace } from '../../hooks/usePaneReplace';
 
 interface Props {
   spaceId: string;
@@ -180,7 +181,7 @@ const spaceToForm = (space: Space): FormSchema => ({
   allowSpectator: space.allowSpectator,
 });
 
-const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space, close }) => {
+const PaneSpaceSettingsForm: FC<{ space: Space; backToSpace: () => void }> = ({ space, backToSpace }) => {
   const key = ['/spaces/query', space.id] as const;
   const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
@@ -248,8 +249,8 @@ const PaneSpaceSettingsForm: FC<{ space: Space; close: () => void }> = ({ space,
         </div>
         <PaneFooterBox>
           {isMutating && <Spinner />}
-          <Button type="button" onClick={close}>
-            <FormattedMessage defaultMessage="Cancel" />
+          <Button type="button" onClick={backToSpace}>
+            <FormattedMessage defaultMessage="Back" />
           </Button>
 
           <Button type="submit" data-type="primary" disabled={isMutating || !form.formState.isDirty}>
@@ -266,6 +267,8 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const { data: space, error } = useQuerySpace(spaceId);
 
   const close = usePaneClose();
+  const paneReplace = usePaneReplace();
+  const backToSpace = useCallback(() => paneReplace({ type: 'SPACE', spaceId }), [paneReplace, spaceId]);
 
   if (error != null) {
     if (space == null) {
@@ -302,7 +305,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
       }
     >
       <div className="relative">
-        <PaneSpaceSettingsForm space={space} close={close} />
+        <PaneSpaceSettingsForm space={space} backToSpace={backToSpace} />
       </div>
     </PaneBox>
   );

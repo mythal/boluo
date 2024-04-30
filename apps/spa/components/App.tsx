@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Chat from '@boluo/chat/components/Chat';
-import { ChatSkeleton } from '@boluo/chat/components/ChatSkeleton';
+import Chat from './Chat';
+import { ChatSkeleton } from './ChatSkeleton';
 
 export const App = () => {
   const [isClient, setIsClient] = useState(false);

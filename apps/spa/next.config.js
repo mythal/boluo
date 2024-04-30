@@ -7,7 +7,7 @@ const config = {
   poweredByHeader: false,
   output: 'export',
   swcMinify: false,
-  transpilePackages: ['@boluo/ui', '@boluo/chat', '@boluo/common'],
+  transpilePackages: ['@boluo/ui', '@boluo/common'],
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,

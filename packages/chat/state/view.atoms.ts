@@ -15,19 +15,26 @@ export const setHash = (searchParams: string) => {
 };
 
 const routeDeserialize = (raw: string): string => {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return typeof parsed === 'string' ? parsed : '404';
-  } catch (e) {
+  if (raw === '' || raw === '/') {
+    return '';
+  } else if (isUuid(raw)) {
+    return raw;
+  } else {
     return '404';
   }
 };
 
-const routeHashAtom = atomWithHash<string>('route', '', { deserialize: routeDeserialize, setHash });
+const routeSerialize = (route: string): string => route;
+
+const routeHashAtom = atomWithHash<string>('route', '', {
+  deserialize: routeDeserialize,
+  serialize: routeSerialize,
+  setHash,
+});
 
 export const routeAtom = atom<Route, [Route], void>(
   (get): Route => {
-    const raw = get(routeHashAtom).trim();
+    const raw = get(routeHashAtom);
     if (raw === '/' || raw === '') {
       return { type: 'ROOT' };
     } else if (isUuid(raw)) {

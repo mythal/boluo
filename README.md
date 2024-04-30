@@ -42,12 +42,11 @@ cd services
 docker-compose up
 ```
 
-To compile the server, you need to set up the DATABASE_URL environment variable. You can just `export DATABASE_URL=...` in the shell or use direnv (see the `.envrc.recommanded` file).
+To compile the server, you need to set up the DATABASE_URL environment variable in the `.env.local`.
 
 ### Check The Environment
 
 ```bash
-export DATABASE_URL=...
 cargo test
 # Web
 npm install

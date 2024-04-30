@@ -22,6 +22,7 @@ import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 import { Failed } from '../common/Failed';
+import { usePaneReplace } from '../../hooks/usePaneReplace';
 
 interface Props {
   channelId: string;
@@ -38,7 +39,8 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
     },
   });
 
-  const close = usePaneClose();
+  const replacePane = usePaneReplace();
+  const returnChannel = () => replacePane({ type: 'CHANNEL', channelId: channel.id });
 
   const key = ['/channels/query', channel.id] as const;
   const editChannel: MutationFetcher<Channel, typeof key, ChannelSettingsForm> = async (
@@ -80,7 +82,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
         </div>
       )}
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="p-pane flex flex-col gap-4">
+        <div className="p-pane flex max-w-md flex-col gap-4">
           <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
           <DefaultDiceField />
           <DefaultRollCommandField />
@@ -103,8 +105,8 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           </DangerZone>
         </div>
         <PaneFooterBox>
-          <Button type="button" onClick={close}>
-            <FormattedMessage defaultMessage="Cancel" />
+          <Button type="button" onClick={returnChannel}>
+            <FormattedMessage defaultMessage="Back" />
           </Button>
           <Button type="submit" data-type="primary" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
             <FormattedMessage defaultMessage="Save Changes" />

@@ -64,7 +64,7 @@ const MySpaceListItem: FC<{ space: Space }> = ({ space }) => {
   const intl = useIntl();
   return (
     <div>
-      <Link href={`${process.env.APP_URL}/${intl.locale}/#route="${space.id}"`} className="link" target="_blank">
+      <Link href={`${process.env.APP_URL}/${intl.locale}/#route=${space.id}`} className="link" target="_blank">
         {space.name}
       </Link>
     </div>

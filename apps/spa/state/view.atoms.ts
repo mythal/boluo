@@ -4,14 +4,25 @@ import { selectAtom } from 'jotai/utils';
 import { isUuid } from '@boluo/utils';
 import { Pane, Route } from './view.types';
 
-export const setHash = (searchParams: string) => {
+let hashNavigate = (hash: string) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.location.hash = hash;
+};
+
+export const setHashNavigate = (navigate: (hash: string) => void) => {
+  hashNavigate = navigate;
+};
+
+const setHash = (searchParams: string) => {
   const parsed = new URLSearchParams(searchParams);
   for (const key of parsed.keys()) {
     if (parsed.get(key) === '') {
       parsed.delete(key);
     }
   }
-  window.location.hash = String(parsed);
+  hashNavigate(String(parsed));
 };
 
 const routeDeserialize = (raw: string): string => {

@@ -7,6 +7,7 @@ import { get } from '@boluo/common/server/api';
 import { getIntl, LangParams } from '@boluo/common/server';
 import { AcceptButton } from './AcceptButton';
 import { BackLink } from '../../../../../../components/BackLink';
+import { Oops } from '@boluo/ui/Oops';
 
 interface Params extends LangParams {
   spaceId: string;
@@ -47,7 +48,7 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
       const invaild = intl.formatMessage({ defaultMessage: 'Invalid invitation link' });
       return <div className="p-4">{invaild}</div>;
     }
-    return <div>Unknown Error</div>;
+    return <Oops error={err} />;
   }
   const space = spaceResult.some;
   if (space == null) {

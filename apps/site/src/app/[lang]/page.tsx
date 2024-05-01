@@ -23,7 +23,7 @@ const Para: FC<{ children: ReactNode; className?: string }> = ({ children, class
 export default function Page({ params }: { params: LangParams }) {
   const intl = getIntl(params);
   return (
-    <div className="grid max-w-3xl grid-cols-1 grid-rows-[auto_auto_auto] gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 grid-rows-[auto_auto_auto] gap-2 sm:grid-cols-2 lg:grid-cols-3">
       <Card className="row-span-3">
         <Para className="text-sm">
           {intl.formatMessage({ defaultMessage: 'A chat application designed specifically for playing RPGs.' })}

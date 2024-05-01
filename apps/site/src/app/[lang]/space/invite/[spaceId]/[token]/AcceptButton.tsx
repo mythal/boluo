@@ -1,12 +1,11 @@
 'use client';
 
 import { post } from '@boluo/api-browser';
-import { useMe } from '@boluo/common';
+import { useQueryUser } from '@boluo/common';
 import Link from 'next/link';
 import type { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
-import { Spinner } from '@boluo/ui/Spinner';
 
 interface Props {
   spaceId: string;
@@ -14,7 +13,7 @@ interface Props {
 }
 
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
-  const me = useMe();
+  const { data: currentUser, isLoading } = useQueryUser();
   const intl = useIntl();
   const handleClick = async () => {
     const result = await post('/spaces/join', { spaceId, token }, {});
@@ -28,22 +27,20 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
       </Link>
     </span>
   );
+  if (isLoading) {
+    return null;
+  }
   return (
     <div>
-      {me == null && (
+      {currentUser == null && (
         <div className="py-2">
           <FormattedMessage defaultMessage="You need to {loginLink} to accept the invitation." values={{ loginLink }} />
         </div>
       )}
       <div>
-        <Button data-type="primary" onClick={handleClick} disabled={me === 'LOADING' || me == null}>
+        <Button data-type="primary" onClick={handleClick} disabled={currentUser == null}>
           <FormattedMessage defaultMessage="Accept" />
         </Button>
-        {me === 'LOADING' && (
-          <span className="pl-2">
-            <Spinner />
-          </span>
-        )}
       </div>
     </div>
   );

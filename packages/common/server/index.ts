@@ -1,10 +1,8 @@
 import 'server-only';
 import type { IntlShape } from '@formatjs/intl';
 import { IntlErrorCode, createIntl } from '@formatjs/intl';
-import type { GetMe } from '@boluo/api';
 import { defaultLocale, localeList, toLocale } from '@boluo/common/locale';
 import type { IntlMessages, Locale } from '@boluo/common/locale';
-import { toSettings } from '@boluo/common/settings';
 import en from '@boluo/lang/compiled/en.json';
 import ja from '@boluo/lang/compiled/ja_JP.json';
 import zh_CN from '@boluo/lang/compiled/zh_CN.json';
@@ -12,15 +10,10 @@ import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
 import { toTheme } from '@boluo/theme';
 import type { Theme } from '@boluo/theme';
-import { get } from './api';
 
 export interface LangParams {
   lang?: string;
 }
-
-export const getMe = cache(async (): Promise<GetMe | null> => {
-  return (await get('/users/get_me', null)).unwrapOr(null);
-});
 
 const getLocaleFromAcceptLanguage = (): Locale => {
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
@@ -47,14 +40,8 @@ export const getLocaleFromHeaders = cache((): Locale => {
   return toLocale(cookieLocale);
 });
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const getLocale = cache(async (): Promise<Locale> => {
-  const me = await getMe();
-  if (me) {
-    const settings = toSettings(me.settings);
-    if (settings.locale) {
-      return settings.locale;
-    }
-  }
   return getLocaleFromHeaders();
 });
 
@@ -66,14 +53,8 @@ export const getThemeFromHeaders = cache((): Theme => {
   return toTheme(cookieTheme);
 });
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const getTheme = cache(async (): Promise<Theme> => {
-  const me = await getMe();
-  if (me) {
-    const settings = toSettings(me.settings);
-    if (settings.theme) {
-      return settings.theme;
-    }
-  }
   return getThemeFromHeaders();
 });
 

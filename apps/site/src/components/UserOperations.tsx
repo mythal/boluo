@@ -15,7 +15,6 @@ const useLogout = () => {
   return useCallback(async () => {
     await get('/users/logout', null);
     await mutate(['/users/query'], null);
-    await mutate(['/users/get_me'], null);
     router.refresh();
   }, [mutate, router]);
 };

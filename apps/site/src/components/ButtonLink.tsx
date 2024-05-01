@@ -1,12 +1,11 @@
-import NextLink from 'next/link';
+import NextLink, { LinkProps } from 'next/link';
 import { ReactNode } from 'react';
 
-interface Props {
-  href: string;
+interface Props extends LinkProps {
   children: ReactNode;
 }
 
-export function Link({ href, children }: Props) {
+export function ButtonLink({ href, children }: Props) {
   return (
     <NextLink
       href={href}

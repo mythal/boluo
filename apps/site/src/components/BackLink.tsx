@@ -1,16 +1,16 @@
 'use client';
 import { ChevronLeft } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
-import Link from 'next/link';
 import { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { ButtonLink } from './ButtonLink';
 
 export const BackLink: FC = () => {
   const intl = useIntl();
   return (
-    <Link href={`/${intl.locale}`} className="link">
+    <ButtonLink href={`/${intl.locale}`}>
       <Icon icon={ChevronLeft} />
       <FormattedMessage defaultMessage="Boluo" />
-    </Link>
+    </ButtonLink>
   );
 };

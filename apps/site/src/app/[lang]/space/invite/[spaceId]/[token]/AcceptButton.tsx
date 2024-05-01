@@ -31,7 +31,7 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
     return null;
   }
   return (
-    <div>
+    <div className="text-right">
       {currentUser == null && (
         <div className="py-2">
           <FormattedMessage defaultMessage="You need to {loginLink} to accept the invitation." values={{ loginLink }} />

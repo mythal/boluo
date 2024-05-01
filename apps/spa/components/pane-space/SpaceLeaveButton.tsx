@@ -65,7 +65,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
           style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
           ref={refs.setFloating}
           {...getFloatingProps()}
-          className="w-48"
+          className="z-20 w-48"
         >
           <FloatingBox>
             <FormattedMessage

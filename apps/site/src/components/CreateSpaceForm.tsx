@@ -42,7 +42,7 @@ const NameField: FC = () => {
   } = useFormContext<CreateSpace>();
   return (
     <div>
-      <label htmlFor={id}>
+      <label className="block py-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Space Name" />
       </label>
 
@@ -57,11 +57,6 @@ const NameField: FC = () => {
   );
 };
 
-const dices = [
-  { label: 'D20', value: 'd20' },
-  { label: 'D100', value: 'd100' },
-];
-
 const DefaultDiceField: FC = () => {
   const id = useId();
   const {
@@ -73,7 +68,7 @@ const DefaultDiceField: FC = () => {
   });
   return (
     <div>
-      <label htmlFor={id}>
+      <label className="block py-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Default Dice" />
       </label>
       <div>
@@ -95,7 +90,7 @@ const FirstChannelNameField: FC = () => {
   } = useFormContext<CreateSpace>();
   return (
     <div>
-      <label htmlFor={id}>
+      <label className="block py-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Initial Channel Name" />
       </label>
 
@@ -121,7 +116,7 @@ const DescriptionField: FC = () => {
   } = useFormContext<CreateSpace>();
   return (
     <div>
-      <label htmlFor={id}>
+      <label className="block py-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Description" />
       </label>
       <TextArea className="w-full" variant={error ? 'error' : 'normal'} {...register('description')} />
@@ -151,7 +146,7 @@ export const CreateSpaceForm: FC<Props> = () => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div>
+        <div className="flex flex-col gap-2">
           <NameField />
           <FirstChannelNameField />
           <DescriptionField />

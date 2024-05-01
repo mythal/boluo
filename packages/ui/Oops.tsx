@@ -1,3 +1,4 @@
+'use client';
 import { useErrorExplain } from '@boluo/common';
 import type { FC } from 'react';
 import { FormattedMessage } from 'react-intl';

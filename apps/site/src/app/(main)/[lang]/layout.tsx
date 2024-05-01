@@ -38,3 +38,5 @@ export default function RootLayout({ children, params: { lang } }: { children: R
 export function generateStaticParams() {
   return [{ lang: 'zh-CN' }, { lang: 'ja' }, { lang: 'en' }];
 }
+
+export const runtime = 'edge';

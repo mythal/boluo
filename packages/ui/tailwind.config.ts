@@ -80,6 +80,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       floating: {
         bg: $(neutral[50], neutral[900]),
       },
+      card: {
+        bg: $(white, neutral[900]),
+        border: $(neutral[200], neutral[800]),
+        shadow: $(neutral[100], neutral[900]),
+      },
       pane: {
         bg: $(white, darkPaneBg),
         header: {

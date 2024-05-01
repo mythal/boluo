@@ -53,7 +53,7 @@ export async function get<P extends keyof Get>(
     //
     // In the `makeHeader()` above, `cookies()` are called, however, in recent
     // versions this has become cached by default, which may be a bug in Next.js.
-    cache: 'no-cache',
+    // cache: 'no-cache',
   });
 }
 

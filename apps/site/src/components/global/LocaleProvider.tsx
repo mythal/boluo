@@ -1,9 +1,9 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Locale, Settings, useMe } from '@boluo/common';
+import { Locale, Settings, useQueryUser } from '@boluo/common';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 import { defaultLocale, IntlMessages, localeList, onIntlError } from '@boluo/common/locale';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
 import { MutationFetcher } from 'swr/mutation';
@@ -25,7 +25,7 @@ const removeLocalePrefix = (pathname: string) => {
 };
 
 export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
-  const me = useMe();
+  const { data: currentUser } = useQueryUser();
   const router = useRouter();
 
   const key = ['/users/settings'] as const;
@@ -41,13 +41,13 @@ export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
 
   const handleChangeLocale = useCallback(
     (locale: Locale) => {
-      if (me) {
+      if (currentUser != null) {
         void updateLocale(locale);
       }
       document.cookie = `boluo-locale=${locale}; path=/;max-age=31536000`;
       router.refresh();
     },
-    [me, router, updateLocale],
+    [currentUser, router, updateLocale],
   );
   return (
     <IntlProvider locale={locale} messages={messages} defaultLocale={defaultLocale} onError={onIntlError}>

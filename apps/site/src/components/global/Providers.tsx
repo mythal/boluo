@@ -1,6 +1,5 @@
 'use client';
 
-import type { GetMe } from '@boluo/api';
 import { IntlMessages, Locale } from '@boluo/common/locale';
 import { Provider as JotaiProvider } from 'jotai';
 import { FC, useEffect } from 'react';
@@ -13,10 +12,9 @@ import { LocaleProvider } from './LocaleProvider';
 interface Props extends ChildrenProps {
   locale: Locale;
   messages: IntlMessages;
-  me: GetMe | null;
 }
 
-export const ClientProviders: FC<Props> = ({ children, locale, messages, me }) => {
+export const ClientProviders: FC<Props> = ({ children, locale, messages }) => {
   useEffect(() => {
     const theme = getThemeFromCookie();
     if (theme != null) {

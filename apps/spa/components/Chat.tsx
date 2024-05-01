@@ -24,15 +24,16 @@ import { ChatInvite } from './ChatInvite';
 
 const useSetThemeScheme = () => {
   const themeFromCookie = useMemo(getThemeFromCookie, []);
-  const { data: settings } = useQuerySettings();
+  const settings = useQuerySettings().data;
+  const themeFromSettings = settings?.theme;
   useEffect(() => {
-    if (settings?.theme) {
-      writeThemeToCookie(settings.theme);
-    }
-    if (themeFromCookie) {
+    if (themeFromSettings) {
+      writeThemeToCookie(themeFromSettings);
+      setThemeToDom(themeFromSettings);
+    } else if (themeFromCookie) {
       setThemeToDom(themeFromCookie);
     }
-  }, []);
+  }, [themeFromCookie, themeFromSettings]);
 };
 
 const Chat: FC = () => {

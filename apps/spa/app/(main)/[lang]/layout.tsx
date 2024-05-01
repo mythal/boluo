@@ -9,7 +9,7 @@ interface Params {
   lang: Locale;
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export function generateMetadata({ params }: { params: Params }): Metadata {
   const intl = getIntl(params);
   const boluo = intl.formatMessage({ defaultMessage: 'Boluo' });
   return {

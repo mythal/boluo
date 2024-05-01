@@ -27,7 +27,7 @@ export default function RootLayout({ children, params: { lang } }: { children: R
     <html lang={lang} className={theme}>
       <body className="bg-bg text-text-base">
         <ClientProviders locale={lang} messages={messages}>
-          {children}
+          <div className="p-4 md:container md:mx-auto md:p-8">{children}</div>
           <div id="portal" />
         </ClientProviders>
       </body>

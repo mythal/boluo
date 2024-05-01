@@ -4,6 +4,7 @@
 module.exports = {
   root: true,
   extends: ['@boluo/eslint-config'],
+  ignorePatterns: ['out'],
 
   overrides: [
     {

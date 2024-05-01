@@ -108,7 +108,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
   const { isDirty, isSubmitting } = useFormState();
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-2xl">
+      <div className="text-center text-xl">
         <FormattedMessage defaultMessage="Login" />
       </div>
 

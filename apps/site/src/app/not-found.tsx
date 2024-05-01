@@ -9,7 +9,7 @@ export default function NotFound() {
   return (
     <html lang="en">
       <body className="bg-bg text-text-base">
-        <div className="bg-lowest mx-auto mt-20 flex flex-col gap-4 p-6 md:w-[20em]">
+        <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow mx-auto mt-20 flex flex-col gap-4 border p-6 md:w-[20em]">
           <h2 className="text-4xl">Not Found</h2>
 
           <p className="">

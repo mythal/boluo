@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import React from 'react';
 import { get } from '@boluo/common/server/api';
 import { getIntl, LangParams } from '@boluo/common/server';
+import { BackLink } from '../../../../components/BackLink';
 
 interface Params extends LangParams {
   userId: string;
@@ -39,8 +40,11 @@ export default async function Page({ params: { userId } }: { params: Params }) {
     return notFound();
   }
   return (
-    <div className="p-4">
-      <div className="text-xl">{user.nickname}</div>
+    <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
+      <div>
+        <BackLink />
+      </div>
+      <div className="text-center text-xl">{user.nickname}</div>
       {user.bio !== '' && <div className="max-w-md whitespace-pre-line py-4">{user.bio}</div>}
     </div>
   );

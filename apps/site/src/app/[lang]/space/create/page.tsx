@@ -17,17 +17,15 @@ export default function Page({ params }: { params: LangParams }) {
   const intl = getIntl(params);
   const title = intl.formatMessage({ defaultMessage: 'Create a Space' });
   return (
-    <div className="mx-auto p-4 md:container md:p-8">
-      <main className="bg-card-bg shadow-1 border-card-border shadow-card-shadow container max-w-md rounded-sm border p-6">
-        <div>
-          <Link href={`/${params.lang}`} className="link">
-            <Icon icon={ChevronLeft} />
-            {intl.formatMessage({ defaultMessage: 'Boluo' })}
-          </Link>
-        </div>
-        <h1 className="mb-2 text-center text-xl">{title}</h1>
-        <CreateSpaceForm />
-      </main>
-    </div>
+    <main className="bg-card-bg shadow-1 border-card-border shadow-card-shadow container max-w-md rounded-sm border p-6">
+      <div>
+        <Link href={`/${params.lang}`} className="link">
+          <Icon icon={ChevronLeft} />
+          {intl.formatMessage({ defaultMessage: 'Boluo' })}
+        </Link>
+      </div>
+      <h1 className="mb-2 text-center text-xl">{title}</h1>
+      <CreateSpaceForm />
+    </main>
   );
 }

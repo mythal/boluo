@@ -64,15 +64,13 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
     },
   );
   return (
-    <div className="mx-auto p-4 md:container md:p-8">
-      <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
-        <div className="py-2 italic">{title}</div>
-        <div className="py-4 text-center text-xl font-bold">{space.name}</div>
-        {space.description !== '' && <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>}
-        <div className="mt-8 flex items-end justify-between">
-          <BackLink />
-          <AcceptButton spaceId={spaceId} token={token} />
-        </div>
+    <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
+      <div className="py-2 italic">{title}</div>
+      <div className="py-4 text-center text-xl font-bold">{space.name}</div>
+      {space.description !== '' && <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>}
+      <div className="mt-8 flex items-end justify-between">
+        <BackLink />
+        <AcceptButton spaceId={spaceId} token={token} />
       </div>
     </div>
   );

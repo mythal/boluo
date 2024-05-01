@@ -1,7 +1,7 @@
 import { Locale } from '@boluo/common/locale';
 import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { ClientProviders } from '../../../components/global/Providers';
+import { ClientProviders } from '../../components/global/Providers';
 import { getIntl, getMessages, LangParams } from '@boluo/common/server';
 import '@boluo/ui/tailwind.css';
 
@@ -38,5 +38,3 @@ export default function RootLayout({ children, params: { lang } }: { children: R
 export function generateStaticParams() {
   return [{ lang: 'zh-CN' }, { lang: 'ja' }, { lang: 'en' }];
 }
-
-export const runtime = 'edge';

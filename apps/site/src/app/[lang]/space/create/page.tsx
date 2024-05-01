@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { getIntl, LangParams } from '@boluo/common/server';
-import { CreateSpaceForm } from '../../../../../components/CreateSpaceForm';
+import { CreateSpaceForm } from '../../../../components/CreateSpaceForm';
 
 export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);

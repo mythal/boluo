@@ -191,6 +191,9 @@
   "Euftjf": {
     "message": "Error while uploading a file, did you recover the message?"
   },
+  "FN6jdd": {
+    "message": "Hi, {username}!"
+  },
   "GEhexi": {
     "message": "In Dark Mode"
   },
@@ -302,6 +305,9 @@
   "N97hnL": {
     "message": "No permission."
   },
+  "NZyhSX": {
+    "message": "News"
+  },
   "O5epsB": {
     "message": "take"
   },
@@ -386,6 +392,9 @@
   "StUScz": {
     "message": "{count} members"
   },
+  "TAyWna": {
+    "message": "You have been invited to the space"
+  },
   "TDaF6J": {
     "message": "Dismiss"
   },
@@ -410,6 +419,9 @@
   "Ujs8Kg": {
     "message": "Message from server"
   },
+  "UyfeTd": {
+    "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
+  },
   "VA/Z1S": {
     "message": "Hide"
   },
@@ -427,6 +439,9 @@
   },
   "WASph7": {
     "message": "Kick this member"
+  },
+  "WU+nEq": {
+    "message": "A chat application"
   },
   "Wa3nyB": {
     "message": "Settings of \"{channelName}\" Channel"
@@ -524,6 +539,9 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
+  "cyR7Kh": {
+    "message": "Back"
+  },
   "dMEGZV": {
     "message": "Split pane"
   },
@@ -538,9 +556,6 @@
   },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
-  },
-  "e2+131": {
-    "message": "You have been invited to \"{spaceName}\"."
   },
   "e3Ttmb": {
     "message": "In Game"
@@ -718,6 +733,9 @@
   },
   "sjzLbX": {
     "message": "Accept"
+  },
+  "snqrYf": {
+    "message": "You are not logged in, {signUp} or {login}."
   },
   "sol2mE": {
     "message": "Not found, Perhaps resource was deleted."

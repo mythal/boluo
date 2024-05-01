@@ -90,11 +90,17 @@ interface SpaceRoute {
   spaceId: string;
 }
 
+interface InviteRoute {
+  type: 'INVITE';
+  spaceId: string;
+  token: string;
+}
+
 interface NotFoundRoute {
   type: 'NOT_FOUND';
 }
 
-export type Route = RootRoute | SpaceRoute | NotFoundRoute;
+export type Route = RootRoute | SpaceRoute | NotFoundRoute | InviteRoute;
 
 export type NewPanePosition = 'HEAD' | 'TAIL' | { refKey: number; before?: boolean };
 

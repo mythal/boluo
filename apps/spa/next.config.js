@@ -11,6 +11,7 @@ const config = {
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,
+    SITE_URL: process.env.SITE_URL,
     DOMAIN: process.env.DOMAIN,
   },
   webpack: (config) => {

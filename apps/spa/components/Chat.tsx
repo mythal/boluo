@@ -20,6 +20,7 @@ import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
 import { getThemeFromCookie, setThemeToDom, writeThemeToCookie } from '@boluo/theme';
 import { useQuerySettings } from '../hooks/useQuerySettings';
+import { ChatInvite } from './ChatInvite';
 
 const useSetThemeScheme = () => {
   const themeFromCookie = useMemo(getThemeFromCookie, []);
@@ -81,6 +82,7 @@ const Chat: FC = () => {
                     {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
                     {route.type === 'NOT_FOUND' && <ChatNotFound />}
                     {route.type === 'ROOT' && <ChatRoot />}
+                    {route.type === 'INVITE' && <ChatInvite spaceId={route.spaceId} token={route.token} />}
                   </Suspense>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import { get, post } from '@boluo/api-browser';
 import { Clipboard, Refresh } from '@boluo/icons';
 import { FC, useCallback, useId, useRef, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import useSWR from 'swr';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
@@ -17,6 +17,7 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   const { data: token, mutate } = useSWR(['/spaces/token' as const, spaceId], ([path, id]) =>
     get(path, { id }).then(unwrap),
   );
+  const intl = useIntl();
   const id = useId();
   const inviteLinkRef = useRef<HTMLInputElement>(null);
   const copy = useCallback(() => {
@@ -44,7 +45,13 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
     );
   }
 
-  const link = `${window.location.origin}/space/invite/${spaceId}/${token}`;
+  let link;
+  if (process.env.SITE_URL) {
+    link = `${process.env.SITE_URL}/space/invite/${spaceId}/${token}`;
+  } else {
+    const base = typeof window !== 'undefined' ? window.location.origin : process.env.APP_URL;
+    link = `${base}/${intl.locale}#route=invite?spaceId=${spaceId}&token=${token}`;
+  }
   return (
     <div className="flex max-w-lg flex-col gap-4">
       <div>

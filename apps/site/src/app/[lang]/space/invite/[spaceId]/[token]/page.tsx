@@ -6,6 +6,7 @@ import { Result } from '@boluo/utils';
 import { get } from '@boluo/common/server/api';
 import { getIntl, LangParams } from '@boluo/common/server';
 import { AcceptButton } from './AcceptButton';
+import { BackLink } from '../../../../../../components/BackLink';
 
 interface Params extends LangParams {
   spaceId: string;
@@ -53,18 +54,21 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
     return notFound();
   }
   const title = intl.formatMessage(
-    { defaultMessage: 'You have been invited to "{spaceName}".' },
+    { defaultMessage: 'You have been invited to the space' },
     {
       spaceName: space.name,
     },
   );
   return (
-    <div className="p-4">
-      <div className="text-xl font-bold">{space.name}</div>
-      <div className="py-2">{title}</div>
-      {space.description !== '' && <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>}
-      <div className="mt-4 space-x-2">
-        <AcceptButton spaceId={spaceId} token={token} />
+    <div className="mx-auto p-4 md:container md:p-8">
+      <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
+        <div className="py-2 italic">{title}</div>
+        <div className="py-4 text-center text-xl font-bold">{space.name}</div>
+        {space.description !== '' && <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>}
+        <div className="mt-8 flex items-end justify-between">
+          <BackLink />
+          <AcceptButton spaceId={spaceId} token={token} />
+        </div>
       </div>
     </div>
   );

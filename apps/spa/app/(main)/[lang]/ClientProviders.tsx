@@ -4,7 +4,7 @@ import { ReactNode, useCallback } from 'react';
 import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
 import type { IntlMessages, Locale } from '@boluo/common/locale';
-import { IntlProvider, type ResolvedIntlConfig } from 'react-intl';
+import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 
 interface Props {
@@ -18,7 +18,7 @@ export function ClientProviders({ children, lang, messages }: Props) {
     location.href = `/${locale}${location.hash}`;
   }, []);
   const handleIntlError: ResolvedIntlConfig['onError'] = useCallback((err) => {
-    if (err.code === 'MISSING_TRANSLATION') {
+    if (err.code === ReactIntlErrorCode.MISSING_TRANSLATION) {
       return;
     }
     console.warn(err);

@@ -15,11 +15,6 @@ export interface LoginData {
   withToken?: boolean;
 }
 
-export interface Settings {
-  enterSend?: boolean;
-  expandDice?: boolean;
-}
-
 export {
   CheckEmail,
   CheckUsername,

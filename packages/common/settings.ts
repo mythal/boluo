@@ -1,5 +1,5 @@
-import type { Theme } from '../theme/dist';
 import type { Locale } from './locale';
+import type { Theme } from '@boluo/theme';
 
 export interface Settings {
   locale?: Locale;

@@ -191,6 +191,9 @@
   "Euftjf": {
     "message": "上传文件出错，是否恢复消息？"
   },
+  "FN6jdd": {
+    "message": "Hi, {username}!"
+  },
   "GEhexi": {
     "message": "在暗色模式"
   },
@@ -302,6 +305,9 @@
   "N97hnL": {
     "message": "没有权限"
   },
+  "NZyhSX": {
+    "message": "News"
+  },
   "O5epsB": {
     "message": "取"
   },
@@ -386,6 +392,9 @@
   "StUScz": {
     "message": "{count} 位成员"
   },
+  "TAyWna": {
+    "message": "You have been invited to the space"
+  },
   "TDaF6J": {
     "message": "知道了"
   },
@@ -410,6 +419,9 @@
   "Ujs8Kg": {
     "message": "来自服务器的消息"
   },
+  "UyfeTd": {
+    "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
+  },
   "VA/Z1S": {
     "message": "隐藏"
   },
@@ -427,6 +439,9 @@
   },
   "WASph7": {
     "message": "踢走这个成员"
+  },
+  "WU+nEq": {
+    "message": "A chat application"
   },
   "Wa3nyB": {
     "message": "「{channelName}」频道设置"
@@ -524,6 +539,9 @@
   "cpFKi9": {
     "message": "主题可以用来记录和提醒您当前关注的内容。"
   },
+  "cyR7Kh": {
+    "message": "Back"
+  },
   "dMEGZV": {
     "message": "拆分窗格"
   },
@@ -538,9 +556,6 @@
   },
   "e+eb5F": {
     "message": "广播已关闭"
-  },
-  "e2+131": {
-    "message": "你被邀请到「{spaceName}」。"
   },
   "e3Ttmb": {
     "message": "游戏内"
@@ -718,6 +733,9 @@
   },
   "sjzLbX": {
     "message": "接受"
+  },
+  "snqrYf": {
+    "message": "You are not logged in, {signUp} or {login}."
   },
   "sol2mE": {
     "message": "未找到，记录可能已删除。"

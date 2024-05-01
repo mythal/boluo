@@ -191,6 +191,9 @@
   "Euftjf": {
     "message": "Error while uploading a file, did you recover the message?"
   },
+  "FN6jdd": {
+    "message": "Hi, {username}!"
+  },
   "GEhexi": {
     "message": "ダークモード中"
   },
@@ -302,6 +305,9 @@
   "N97hnL": {
     "message": "権限がありません"
   },
+  "NZyhSX": {
+    "message": "News"
+  },
   "O5epsB": {
     "message": "取る"
   },
@@ -386,6 +392,9 @@
   "StUScz": {
     "message": "{count} 名"
   },
+  "TAyWna": {
+    "message": "You have been invited to the space"
+  },
   "TDaF6J": {
     "message": "Dismiss"
   },
@@ -410,6 +419,9 @@
   "Ujs8Kg": {
     "message": "サーバーからのメッセージ"
   },
+  "UyfeTd": {
+    "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
+  },
   "VA/Z1S": {
     "message": "非表示"
   },
@@ -427,6 +439,9 @@
   },
   "WASph7": {
     "message": "このメンバーをキックする"
+  },
+  "WU+nEq": {
+    "message": "A chat application"
   },
   "Wa3nyB": {
     "message": "「{channelName}」チャンネルの設定"
@@ -524,6 +539,9 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
+  "cyR7Kh": {
+    "message": "Back"
+  },
   "dMEGZV": {
     "message": "分割ペイン"
   },
@@ -538,9 +556,6 @@
   },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
-  },
-  "e2+131": {
-    "message": "あなたは「{spaceName}」に招待されました。"
   },
   "e3Ttmb": {
     "message": "ゲーム内"
@@ -718,6 +733,9 @@
   },
   "sjzLbX": {
     "message": "承認する"
+  },
+  "snqrYf": {
+    "message": "You are not logged in, {signUp} or {login}."
   },
   "sol2mE": {
     "message": "見つかりません。リソースが削除された可能性があります。"

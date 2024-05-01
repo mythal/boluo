@@ -19,17 +19,22 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   const handleClick = async () => {
     const result = await post('/spaces/join', { spaceId, token }, {});
     const { space } = result.unwrap();
-    window.open(`${process.env.APP_URL}/${intl.locale}/#${space.id}/`, '_blank');
+    window.open(`${process.env.APP_URL}/${intl.locale}/#route=${space.id}`, '_blank');
   };
   const loginLink = (
     <span>
-      <Link href="/account/login" className="to-blue-600 underline">
+      <Link href="/account/login" className="link">
         <FormattedMessage defaultMessage="log in" />
       </Link>
     </span>
   );
   return (
     <div>
+      {me == null && (
+        <div className="py-2">
+          <FormattedMessage defaultMessage="You need to {loginLink} to accept the invitation." values={{ loginLink }} />
+        </div>
+      )}
       <div>
         <Button data-type="primary" onClick={handleClick} disabled={me === 'LOADING' || me == null}>
           <FormattedMessage defaultMessage="Accept" />
@@ -40,11 +45,6 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
           </span>
         )}
       </div>
-      {me == null && (
-        <div className="py-2">
-          <FormattedMessage defaultMessage="You need to {loginLink} to accept the invitation." values={{ loginLink }} />
-        </div>
-      )}
     </div>
   );
 };

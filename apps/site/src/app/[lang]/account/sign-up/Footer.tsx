@@ -1,17 +1,17 @@
 'use client';
 import { ChevronLeft } from '@boluo/icons';
 import { FormattedMessage } from 'react-intl';
-import { Link } from '../Link';
+import { ButtonLink } from '../../../../components/ButtonLink';
 
 interface Props {}
 
 export function Footer(props: Props) {
   return (
     <div>
-      <Link href="/account/login">
+      <ButtonLink href="/account/login">
         <ChevronLeft />
         <FormattedMessage defaultMessage="Login" />
-      </Link>
+      </ButtonLink>
     </div>
   );
 }

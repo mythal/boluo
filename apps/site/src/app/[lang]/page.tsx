@@ -7,7 +7,7 @@ const Card: FC<{ children: ReactNode; className?: string }> = ({ children, class
   return (
     <div
       className={[
-        'bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-6',
+        'bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-lg rounded-sm border p-6',
         className,
       ].join(' ')}
     >
@@ -23,16 +23,16 @@ const Para: FC<{ children: ReactNode; className?: string }> = ({ children, class
 export default function Page({ params }: { params: LangParams }) {
   const intl = getIntl(params);
   return (
-    <div className="grid max-w-3xl grid-cols-1 grid-rows-[auto_auto_auto] gap-2 sm:grid-cols-2 ">
+    <div className="grid max-w-3xl grid-cols-1 grid-rows-[auto_auto_auto] gap-2 sm:grid-cols-2 lg:grid-cols-3">
       <Card className="row-span-3">
-        <Para className="italic">{intl.formatMessage({ defaultMessage: 'A chat application' })}</Para>
+        <Para className="text-sm">
+          {intl.formatMessage({ defaultMessage: 'A chat application designed specifically for playing RPGs.' })}
+        </Para>
         <h1 className="py-2 text-center text-xl">{intl.formatMessage({ defaultMessage: 'Boluo' })}</h1>
 
         <div className="py-2">
           <div className="bg-highest/5 flex h-20 w-full items-center justify-center italic">An Awesome Logo</div>
         </div>
-
-        <div>Some introduction text here.</div>
       </Card>
 
       <Card>

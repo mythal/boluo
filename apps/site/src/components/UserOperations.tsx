@@ -1,23 +1,9 @@
 'use client';
 
-import { get } from '@boluo/api-browser';
 import { useQueryUser } from '@boluo/common';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useSWRConfig } from 'swr';
-
-const useLogout = () => {
-  const router = useRouter();
-  const { mutate } = useSWRConfig();
-
-  return useCallback(async () => {
-    await get('/users/logout', null);
-    await mutate(['/users/query'], null);
-    router.refresh();
-  }, [mutate, router]);
-};
+import { useLogout } from '../hooks/useLogout';
 
 export const UserOperations = () => {
   const intl = useIntl();

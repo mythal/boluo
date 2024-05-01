@@ -47,6 +47,8 @@ export default async function Page({ params: { spaceId, token, lang } }: Props) 
     } else if (err.code === 'NO_PERMISSION') {
       const invaild = intl.formatMessage({ defaultMessage: 'Invalid invitation link' });
       return <div className="p-4">{invaild}</div>;
+    } else if (err.code === 'FETCH_FAIL') {
+      throw err.cause;
     }
     return spaceResult.unwrap();
   }

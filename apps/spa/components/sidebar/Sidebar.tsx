@@ -47,9 +47,9 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   if (!isExpanded) {
     return foldedNode;
   }
-  let content: ReactNode = foldedNode;
+  let content: ReactNode;
   if (spaceId == null) {
-    content = currentUser == null ? foldedNode : <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
+    content = <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
   }

@@ -36,7 +36,7 @@ export const SidebarItem: FC<Props> = ({
     return null;
   }, [active, toggle]);
   return (
-    <div className="px-2 py-0.5">
+    <div className="px-3 py-0.5">
       <button
         onClick={onClick}
         className={clsx(

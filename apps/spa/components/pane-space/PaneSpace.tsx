@@ -77,7 +77,7 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
   }
   const { description, isPublic } = space;
   return (
-    <PaneBox header={<PaneHeaderBox operators={operators}>{space.name}</PaneHeaderBox>}>
+    <PaneBox grow header={<PaneHeaderBox operators={operators}>{space.name}</PaneHeaderBox>}>
       <div className="p-pane">
         <div className="flex items-end gap-2 pb-2 text-2xl">{space.name}</div>
 

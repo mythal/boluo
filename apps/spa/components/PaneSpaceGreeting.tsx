@@ -9,7 +9,7 @@ interface Props {
 export const PaneSpaceGreeting: FC<Props> = ({ spaceId }) => {
   const { data: space } = useQuerySpace(spaceId);
   return (
-    <PaneBox header={null}>
+    <PaneBox header={null} grow>
       <div className="p-pane text-text-lighter flex h-full items-center justify-center">{space?.name || '...'}</div>
     </PaneBox>
   );

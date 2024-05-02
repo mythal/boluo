@@ -1,14 +1,12 @@
 import clsx from 'clsx';
-import { FC, ReactNode, Suspense, use, useContext, useMemo, useRef } from 'react';
+import { FC, ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
 import { Loading } from '@boluo/ui/Loading';
-import { ChildrenProps, StyleProps } from '@boluo/utils';
+import { ChildrenProps } from '@boluo/utils';
 import { usePaneFocus } from '../hooks/usePaneFocus';
-import { usePaneIsFocus } from '../hooks/usePaneIsFocus';
 import { Delay } from './Delay';
 import { PaneBodyError } from './PaneBodyError';
 import { BannerContext } from '../hooks/useBannerNode';
 import { selectAtom } from 'jotai/utils';
-import { usePaneKey } from '../hooks/usePaneKey';
 import { PaneContext } from '../state/view.context';
 import { panesAtom } from '../state/view.atoms';
 import { PaneData } from '../state/view.types';
@@ -18,13 +16,14 @@ import { ChildPaneSwitch } from './PaneSwitch';
 
 interface Props extends ChildrenProps {
   header?: ReactNode;
+  grow?: boolean;
 }
 
 const Placeholder = () => {
   return <div className="h-full"></div>;
 };
 
-export const PaneBox: FC<Props> = ({ header, children }) => {
+export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   const { key: paneKey, focused: isFocused } = useContext(PaneContext);
   const focus = usePaneFocus();
   const bannerRef = useRef<HTMLDivElement | null>(null);
@@ -42,14 +41,7 @@ export const PaneBox: FC<Props> = ({ header, children }) => {
   );
   const childPane: PaneData | undefined = useAtomValue(childPaneAtom);
   const content = (
-    <div
-      onClick={focus}
-      className={
-        '@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col'
-        // '@container relative flex min-w-[22rem] flex-[1_1_100%] flex-col md:contain-strict',
-        // isFocused ? 'max-md:h-0 max-md:flex-[1_1_100%]' : 'max-md:flex-[0_1_0]',
-      }
-    >
+    <div onClick={focus} className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col">
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
       {header}
       <div ref={bannerRef}></div>
@@ -86,7 +78,7 @@ export const PaneBox: FC<Props> = ({ header, children }) => {
   }
   return (
     <BannerContext.Provider value={bannerRef}>
-      <div className="PaneBox flex h-full min-w-[22rem] flex-[1_1_100%] flex-col">
+      <div className={`PaneBox flex h-full min-w-[22rem] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}>
         {content}
         {childPane && (
           <IsChildPaneContext.Provider value={true}>

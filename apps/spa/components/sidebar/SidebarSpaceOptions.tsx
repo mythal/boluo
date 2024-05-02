@@ -30,8 +30,8 @@ export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
         </button>
         <button
           className={clsx(
-            'h-8 w-8 rounded-md border',
-            sidebarState === 'SPACES' ? 'border-surface-500' : 'hover:border-surface-300',
+            'h-8 w-8 rounded-sm',
+            sidebarState === 'SPACES' ? 'bg-sidebar-folder-active-bg' : 'hover:bg-sidebar-folder-hover-bg',
           )}
           onClick={handleClickSwitchSpace}
         >

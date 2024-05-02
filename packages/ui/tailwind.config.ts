@@ -129,6 +129,15 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           touch: $(transparentize(blue[100], 0.5), blue[800]),
           active: $(blue[500], blue[500]),
         },
+        folder: {
+          bg: $(neutral[50], neutral[900]),
+          hover: {
+            bg: $(neutral[100], neutral[800]),
+          },
+          active: {
+            bg: $(neutral[200], neutral[700]),
+          },
+        },
       },
       connect: {
         success: $(green[300], green[700]),

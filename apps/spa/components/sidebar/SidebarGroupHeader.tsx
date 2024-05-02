@@ -20,8 +20,8 @@ export const SidebarGroupHeader: FC<Props> = ({ folded, toggle, children, disabl
       {!disabled && (
         <span
           className={clsx(
-            'bg-surface-50 group-hover:border-surface-500 group-hover:bg-surface-100 inline-flex h-8 w-8 flex-none items-center justify-center rounded-md border text-sm',
-            folded ? '' : 'border-surface-400',
+            'inline-flex h-8 w-8 flex-none items-center justify-center rounded-sm text-sm',
+            folded ? 'group-hover:bg-sidebar-folder-hover-bg' : 'bg-sidebar-folder-active-bg',
           )}
         >
           {Icon == null ? folded ? <ChevronDown /> : <ChevronUp /> : <Icon />}

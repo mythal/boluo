@@ -27,16 +27,15 @@ export const ToggleSidebarLine: FC<Props> = () => {
         toggleSidebar();
       }}
       className={clsx(
-        'group absolute left-full top-0 z-20 h-full w-[14px] cursor-pointer',
+        'group absolute left-full top-0 z-20 h-full w-[18px] cursor-pointer',
         isTouch ? '' : 'hover:bg-sidebar-toggler-hover/15',
       )}
       title={title}
     >
       <div
         className={clsx(
-          'text-text-lighter group-hover:text-text-base absolute top-[26%] z-30 box-border flex items-center justify-center text-lg',
-          'h-[64px] w-[24x] -translate-y-[2px] translate-x-[4px] cursor-pointer rounded-r-lg',
-          isTouch ? (isExpanded ? 'hidden' : 'bg-sidebar-toggler-touch') : 'bg-transprent',
+          'text-text-lighter group-hover:text-text-base absolute -right-2 top-[6px] z-30 box-border flex items-center justify-center text-lg group-hover:shadow',
+          'bg-surface-50 cursor-pointer rounded px-2',
         )}
       >
         <Icon icon={isExpanded ? ChevronLeft : ChevronRight} />
@@ -50,16 +49,6 @@ export const ToggleSidebarLine: FC<Props> = () => {
             : 'group-hover:bg-sidebar-toggler-hover group-hover:w-[2px]',
         )}
       ></div>
-      {!isTouch && (
-        <div className="bg-lowest absolute left-2 top-[26%] z-30 hidden w-max -translate-y-4 space-x-1 rounded-sm px-2 py-1 shadow-md group-hover:block">
-          <span>
-            <Icon icon={Sidebar} />
-          </span>
-          <span>
-            <FormattedMessage defaultMessage="Toggle Sidebar" />
-          </span>
-        </div>
-      )}
     </button>
   );
 };

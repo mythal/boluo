@@ -1,7 +1,7 @@
 import { SpaceMemberWithUser } from '@boluo/api';
 import { useQueryUser } from '@boluo/common';
-import { Globe, Key, Settings } from '@boluo/icons';
-import { FC, ReactNode, useCallback, useMemo } from 'react';
+import { Globe, Key } from '@boluo/icons';
+import { FC, ReactNode, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import Icon from '@boluo/ui/Icon';
@@ -10,11 +10,10 @@ import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneLoading } from '../PaneLoading';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { SpaceJoinButton } from './SpaceJoinButton';
 import { SpaceLeaveButton } from './SpaceLeaveButton';
 import { SpaceMemberBadge } from './SpaceMemberBadge';
-import { usePaneOpenChild } from '../../hooks/usePaneOpenChild';
+import { SpaceSettingsButton } from './SpaceSettingsButton';
 
 interface Props {
   spaceId: string;
@@ -42,10 +41,6 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     }
     return null;
   }, [myId, spaceMembers]);
-  const openChild = usePaneOpenChild();
-  const openSettings = useCallback(() => {
-    openChild({ type: 'SPACE_SETTINGS', spaceId });
-  }, [openChild, spaceId]);
   const operators = useMemo(() => {
     if (space == null || myId == null) {
       return null;
@@ -62,16 +57,10 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     return (
       <>
         {toggleMembershipButton}
-        {(space.ownerId === myId || mySpaceMember?.space.isAdmin) && (
-          <SidebarHeaderButton icon={<Settings />} onClick={openSettings}>
-            <span className="@xl:inline hidden">
-              <FormattedMessage defaultMessage="Space Settings" />
-            </span>
-          </SidebarHeaderButton>
-        )}
+        {(space.ownerId === myId || mySpaceMember?.space.isAdmin) && <SpaceSettingsButton spaceId={space.id} />}
       </>
     );
-  }, [isSpaceMembersLoading, myId, mySpaceMember, openSettings, space]);
+  }, [isSpaceMembersLoading, myId, mySpaceMember, space]);
   if (isLoading || !space) {
     return <PaneLoading />;
   }

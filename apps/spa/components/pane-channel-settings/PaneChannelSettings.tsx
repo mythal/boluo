@@ -40,8 +40,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
     },
   });
 
-  const replacePane = usePaneReplace();
-  const returnChannel = () => replacePane({ type: 'CHANNEL', channelId: channel.id });
+  const cancel = usePaneClose();
 
   const key = ['/channels/query', channel.id] as const;
   const editChannel: MutationFetcher<Channel, typeof key, ChannelSettingsForm> = async (
@@ -106,8 +105,8 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           </DangerZone>
         </div>
         <PaneFooterBox>
-          <Button type="button" onClick={returnChannel}>
-            <FormattedMessage defaultMessage="Back" />
+          <Button type="button" onClick={cancel}>
+            <FormattedMessage defaultMessage="Cancel" />
           </Button>
           <Button type="submit" data-type="primary" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
             <FormattedMessage defaultMessage="Save Changes" />

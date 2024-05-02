@@ -79,7 +79,7 @@ export type PaneData =
   | ProfilePane
   | SpaceMembersPane;
 
-export type Pane = PaneData & { key: number };
+export type Pane = PaneData & { key: number; child?: PaneData };
 
 interface RootRoute {
   type: 'ROOT';

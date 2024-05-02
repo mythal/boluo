@@ -3,7 +3,7 @@ import { memo, Suspense } from 'react';
 import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
-import { Pane } from '../state/view.types';
+import { Pane, PaneData } from '../state/view.types';
 import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
 import { ChatPaneChannel } from './pane-channel/ChannelPane';
 import { PaneError } from './pane-error/PaneError';
@@ -74,6 +74,11 @@ const Switch: FC<Props> = ({ pane }) => {
       return <Component />;
   }
 };
+
+export const ChildPaneSwitch = memo<{ pane: PaneData }>(({ pane }) => {
+  return <Switch pane={{ ...pane, key: 0 }} />;
+});
+ChildPaneSwitch.displayName = 'ChildPaneSwitch';
 
 export const ChatPaneSwitch = memo<Props>(({ pane }) => {
   const [banner, setBanner] = useState<Banner | null>(emptyBanner);

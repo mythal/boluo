@@ -78,7 +78,9 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   }
   return (
     <BannerContext.Provider value={bannerRef}>
-      <div className={`PaneBox flex h-full min-w-[22rem] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}>
+      <div
+        className={`PaneBox flex h-full min-w-[22rem] max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
+      >
         {content}
         {childPane && (
           <IsChildPaneContext.Provider value={true}>

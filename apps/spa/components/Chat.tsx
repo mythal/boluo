@@ -77,7 +77,7 @@ const Chat: FC = () => {
                 <div
                   onTouchStart={autoFoldSidebar}
                   onClick={autoFoldSidebar}
-                  className="md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:flex-col max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
+                  className="md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
                 >
                   <Suspense fallback={<PaneLoading />}>
                     {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}

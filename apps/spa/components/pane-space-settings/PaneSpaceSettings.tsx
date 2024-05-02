@@ -182,13 +182,14 @@ const spaceToForm = (space: Space): FormSchema => ({
   allowSpectator: space.allowSpectator,
 });
 
-const PaneSpaceSettingsForm: FC<{ space: Space; backToSpace: () => void }> = ({ space, backToSpace }) => {
+const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
   const key = ['/spaces/query', space.id] as const;
   const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(async ([_, spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
     const space = result.unwrap();
     return space;
   }, []);
+  const cancel = usePaneClose();
 
   const {
     trigger: editSpace,
@@ -250,8 +251,8 @@ const PaneSpaceSettingsForm: FC<{ space: Space; backToSpace: () => void }> = ({ 
         </div>
         <PaneFooterBox>
           {isMutating && <Spinner />}
-          <Button type="button" onClick={backToSpace}>
-            <FormattedMessage defaultMessage="Back" />
+          <Button type="button" onClick={cancel}>
+            <FormattedMessage defaultMessage="Cancel" />
           </Button>
 
           <Button type="submit" data-type="primary" disabled={isMutating || !form.formState.isDirty}>
@@ -267,10 +268,6 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
   const { data: space, error } = useQuerySpace(spaceId);
   const isChild = useIsChildPane();
-
-  const close = usePaneClose();
-  const paneReplace = usePaneReplace();
-  const backToSpace = useCallback(() => paneReplace({ type: 'SPACE', spaceId }), [paneReplace, spaceId]);
 
   if (error != null) {
     if (space == null) {
@@ -309,7 +306,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
       }
     >
       <div className="relative">
-        <PaneSpaceSettingsForm space={space} backToSpace={backToSpace} />
+        <PaneSpaceSettingsForm space={space} />
       </div>
     </PaneBox>
   );

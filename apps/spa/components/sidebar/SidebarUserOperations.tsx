@@ -11,6 +11,7 @@ import { Avatar } from '../account/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 import { User } from '@boluo/api';
+import { usePaneLimit } from '../../hooks/useMaxPane';
 
 interface Props {
   currentUser: User | null | undefined;
@@ -45,6 +46,8 @@ export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
   const [folded, setFolded] = useAtom(isUserOperationsFoldedAtom);
   const toggleFolded = useCallback(() => setFolded(toggle), [setFolded]);
   const togglePane = usePaneToggle();
+  const maxPane = usePaneLimit();
+  const canToggle = maxPane > 1;
   const handleToggleLogin = useCallback(() => {
     if (currentUser != null) {
       return;
@@ -61,23 +64,23 @@ export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
     togglePane({ type: 'PROFILE', userId: currentUser.id });
   }, [currentUser, togglePane]);
   const loginItem = !currentUser && (
-    <SidebarItem icon={<LogIn />} toggle onClick={handleToggleLogin} active={isLoginOpen}>
+    <SidebarItem icon={<LogIn />} toggle={canToggle} onClick={handleToggleLogin} active={isLoginOpen}>
       <FormattedMessage defaultMessage="Login" />
     </SidebarItem>
   );
   const settingsItem = (
-    <SidebarItem icon={<Settings />} active={isSettingsOpen} toggle onClick={handleToggleSettings}>
+    <SidebarItem icon={<Settings />} active={isSettingsOpen} toggle={canToggle} onClick={handleToggleSettings}>
       <FormattedMessage defaultMessage="Settings" />
     </SidebarItem>
   );
   const toggleHelp = useCallback(() => togglePane({ type: 'HELP' }), [togglePane]);
   const helpItem = useMemo(
     () => (
-      <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle onClick={toggleHelp}>
+      <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle={canToggle} onClick={toggleHelp}>
         <FormattedMessage defaultMessage="Help" />
       </SidebarItem>
     ),
-    [isHelpOpen, toggleHelp],
+    [canToggle, isHelpOpen, toggleHelp],
   );
   return (
     <div className={'pt-2'}>
@@ -85,7 +88,12 @@ export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
         <>
           {settingsItem}
           {helpItem}
-          <SidebarItem icon={<UserIcon />} active={isProfileOpen(currentUser.id)} toggle onClick={handleToggleProfile}>
+          <SidebarItem
+            icon={<UserIcon />}
+            active={isProfileOpen(currentUser.id)}
+            toggle={canToggle}
+            onClick={handleToggleProfile}
+          >
             <FormattedMessage defaultMessage="Profile" />
           </SidebarItem>
         </>

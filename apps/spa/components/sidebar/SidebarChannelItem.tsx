@@ -13,6 +13,7 @@ import { selectAtom } from 'jotai/utils';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { channelReadFamily } from '../../state/unread.atoms';
+import { usePaneLimit } from '../../hooks/useMaxPane';
 
 interface Props {
   channel: Channel;
@@ -22,6 +23,7 @@ interface Props {
 export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
+  const maxPane = usePaneLimit();
   const setPane = useSetAtom(panesAtom);
   const addPane = usePaneAdd();
   const latestMessageAtom = useMemo(
@@ -110,21 +112,23 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
           <Icon icon={channel.isPublic ? Hash : LockedHash} />
         </div>
         <span className="text-left">{channel.name}</span>
-        <div className="row-span-2">
-          <button
-            onClick={handleClickInnerButton}
-            title={active ? titleClose : titleOpenNew}
-            className={clsx(
-              'inline-flex items-center justify-center',
-              active ? 'text-sidebar-channels-button-active-text' : 'text-sidebar-channels-button-text',
-              'group-hover:text-sidebar-channels-button-groupHover-text group-hover:bg-sidebar-channels-button-groupHover-bg h-6 w-6 rounded-sm',
-            )}
-          >
-            <span className={clsx('transform transition-transform duration-100 ', active ? 'rotate-0' : 'rotate-45')}>
-              <Icon icon={X} />
-            </span>
-          </button>
-        </div>
+        {maxPane > 1 && (
+          <div className="row-span-2">
+            <button
+              onClick={handleClickInnerButton}
+              title={active ? titleClose : titleOpenNew}
+              className={clsx(
+                'inline-flex items-center justify-center',
+                active ? 'text-sidebar-channels-button-active-text' : 'text-sidebar-channels-button-text',
+                'group-hover:text-sidebar-channels-button-groupHover-text group-hover:bg-sidebar-channels-button-groupHover-bg h-6 w-6 rounded-sm',
+              )}
+            >
+              <span className={clsx('transform transition-transform duration-100 ', active ? 'rotate-0' : 'rotate-45')}>
+                <Icon icon={X} />
+              </span>
+            </button>
+          </div>
+        )}
 
         {typeof latestMessage !== 'string' && (
           <div
@@ -140,7 +144,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
           </div>
         )}
         {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 col-start-2 h-full w-full rounded-md"></div>}
-        {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
+        {latestMessage === 'EMPTY' && <div className="text-text-lighter col-start-2">-</div>}
       </a>
     </div>
   );

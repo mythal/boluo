@@ -8,6 +8,7 @@ import { ChannelHeaderMoreButton } from './ChannelHeaderMenuButton';
 import { ChannelHeaderSplitPaneButton } from './ChannelHeaderSplitPaneButton';
 import { ChannelMembersButton } from './ChannelMembersButton';
 import { MemberJoinButton } from './MemberJoinButton';
+import { usePaneLimit } from '../../hooks/useMaxPane';
 
 interface Props {
   stateAtom: PrimitiveAtom<ChannelHeaderState>;
@@ -18,6 +19,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const [state, setState] = useAtom(stateAtom);
   const toggleMore = useCallback(() => setState((prev) => (prev === 'MORE' ? 'DEFAULT' : 'MORE')), [setState]);
   const toggleFilterBar = useCallback(() => setState((prev) => (prev === 'FILTER' ? 'DEFAULT' : 'FILTER')), [setState]);
+  const paneLimit = usePaneLimit();
   const channelMember = useMyChannelMember(channel.id);
   let memberButton: ReactNode = null;
   if (channelMember.isErr && channelMember.err === 'NOT_FOUND_MEMBER') {
@@ -29,7 +31,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
     <>
       {memberButton}
       <ChannelHeaderFilterButton on={state === 'FILTER'} toggle={toggleFilterBar} />
-      <ChannelHeaderSplitPaneButton />
+      {paneLimit > 1 && <ChannelHeaderSplitPaneButton />}
       <ChannelMembersButton spaceId={channel.spaceId} channelId={channel.id} />
     </>
   );

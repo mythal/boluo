@@ -1,14 +1,19 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 import { findNextPaneKey, focusPaneAtom, panesAtom } from '../state/view.atoms';
 import { Pane, PaneData } from '../state/view.types';
+import { usePaneLimit } from './useMaxPane';
 
 export const usePaneReplace = () => {
   const key = useAtomValue(focusPaneAtom);
   const setPanes = useSetAtom(panesAtom);
+  const maxPane = usePaneLimit();
   return useCallback(
     (newPane: PaneData, shouldReplace?: (pane: Pane) => boolean) =>
       setPanes((panes) => {
+        if (maxPane === 1) {
+          return [{ ...newPane, key: 0 }];
+        }
         const newPaneKey = findNextPaneKey(panes);
         const nextPanes = [...panes];
         const pane: Pane = { ...newPane, key: newPaneKey };
@@ -40,6 +45,6 @@ export const usePaneReplace = () => {
         }
         return nextPanes;
       }),
-    [key, setPanes],
+    [key, maxPane, setPanes],
   );
 };

@@ -18,7 +18,7 @@ export const PaneLoading: FC<Props> = ({ children }) => {
     [],
   );
   return (
-    <PaneBox header={header}>
+    <PaneBox grow header={header}>
       <Loading />
       {children}
     </PaneBox>

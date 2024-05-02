@@ -10,6 +10,7 @@ export const Para = ({ children }: { children: ReactNode }) => <div className="p
 export const PaneWelcome: FC<Props> = () => {
   return (
     <PaneBox
+      grow
       header={
         <PaneHeaderBox>
           <FormattedMessage defaultMessage="Welcome" />

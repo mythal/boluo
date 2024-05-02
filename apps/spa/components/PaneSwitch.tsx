@@ -76,7 +76,13 @@ const Switch: FC<Props> = ({ pane }) => {
 };
 
 export const ChildPaneSwitch = memo<{ pane: PaneData }>(({ pane }) => {
-  return <Switch pane={{ ...pane, key: 0 }} />;
+  return (
+    <Suspense fallback={<PaneLoading />}>
+      <PaneError>
+        <Switch pane={{ ...pane, key: 0 }} />
+      </PaneError>
+    </Suspense>
+  );
 });
 ChildPaneSwitch.displayName = 'ChildPaneSwitch';
 

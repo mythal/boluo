@@ -29,7 +29,7 @@ const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({
             isCurrent ? 'text-surface-700' : 'text-surface-500',
           )}
         >
-          {space.description}
+          {space.description || '-'}
         </div>
       </button>
     </div>

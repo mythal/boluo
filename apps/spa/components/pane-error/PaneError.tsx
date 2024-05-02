@@ -37,6 +37,7 @@ export class PaneError extends Component<Props, State> {
     } else if (error) {
       return (
         <PaneBox
+          grow
           header={
             <PaneHeaderBox>
               <FormattedMessage defaultMessage="Oops!" />

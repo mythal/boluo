@@ -9,6 +9,7 @@ import { AlertTriangle } from '@boluo/icons';
 export const PaneFailed: FC<FailedProps> = ({ title, ...props }) => {
   return (
     <PaneBox
+      grow
       header={
         <PaneHeaderBox icon={props.icon ?? <Icon icon={AlertTriangle} className="text-failed-icon" />}>
           {title ?? <FormattedMessage defaultMessage="Oops!" />}

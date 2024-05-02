@@ -74,7 +74,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback(
     (e) => {
       e.preventDefault();
-      replacePane({ type: 'CHANNEL', channelId: channel.id }, (pane) => pane.type === 'CHANNEL');
+      replacePane({ type: 'CHANNEL', channelId: channel.id });
     },
     [channel.id, replacePane],
   );

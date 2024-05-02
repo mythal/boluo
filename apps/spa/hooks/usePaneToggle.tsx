@@ -3,15 +3,34 @@ import { useCallback } from 'react';
 import { findNextPaneKey, panesAtom } from '../state/view.atoms';
 import { insertPaneByPosition, NewPanePosition, Pane, PaneData } from '../state/view.types';
 import { usePaneLimit } from './useMaxPane';
+import { usePaneKey } from './usePaneKey';
 
-export const usePaneToggle = () => {
+interface Props {
+  child?: boolean;
+}
+
+export const usePaneToggle = (props?: Props) => {
+  const { child = false } = props || {};
   const setPanes = useSetAtom(panesAtom);
-  const maxPane = usePaneLimit();
+  const paneLimit = usePaneLimit();
+  const paneKey = usePaneKey();
   return useCallback(
     (pane: PaneData, position: NewPanePosition = 'HEAD') =>
       setPanes((panes) => {
+        if (child) {
+          const index = panes.findIndex((x) => x.key === paneKey);
+          if (index === -1) return panes;
+          const currentPane = panes[index]!;
+          const nextPanes = [...panes];
+          if (currentPane.child && currentPane.child.type === pane.type) {
+            nextPanes[index] = { ...currentPane, child: undefined };
+          } else {
+            nextPanes[index] = { ...currentPane, child: pane };
+          }
+          return nextPanes;
+        }
         if (pane.type === 'EMPTY') return panes;
-        if (maxPane === 1) {
+        if (paneLimit === 1) {
           return [{ ...pane, key: 0 }];
         }
         let index: number = -1;
@@ -32,6 +51,6 @@ export const usePaneToggle = () => {
 
         return insertPaneByPosition(panes, newPane, position);
       }),
-    [maxPane, setPanes],
+    [child, paneKey, paneLimit, setPanes],
   );
 };

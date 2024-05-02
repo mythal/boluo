@@ -148,7 +148,7 @@ export const panesCreationTimeMapAtom = selectAtom(
 
 export const findNextPaneKey = (panes: Pane[]) => {
   if (panes.length === 0) {
-    return 1;
+    return 0;
   }
   // TODO: reuse empty position
   return Math.max(...panes.map((pane) => pane.key)) + 1;

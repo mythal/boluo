@@ -22,7 +22,6 @@ import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 import { Failed } from '../common/Failed';
-import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { useIsChildPane } from '../../hooks/useIsChildPane';
 
 interface Props {

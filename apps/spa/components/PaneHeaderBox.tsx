@@ -23,9 +23,7 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
   }, [withoutDefaultOperators, canClose]);
   return (
     <div className="">
-      <div
-        className={clsx('min-h-pane-header pl-pane bg-pane-header-bg flex items-center justify-between pr-4 text-lg')}
-      >
+      <div className={clsx('min-h-pane-header pl-pane bg-pane-header-bg flex items-center justify-between pr-4')}>
         <div className="inline-flex min-w-0 flex-nowrap items-center gap-1">
           {icon && (
             <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>{icon}</div>

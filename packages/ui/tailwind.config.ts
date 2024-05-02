@@ -386,14 +386,14 @@ const config: Config = {
         sidebar: '14rem',
       },
       height: {
-        'pane-header': '3rem',
+        'pane-header': '2.5rem',
       },
       padding: {
         messageRight: '4rem',
-        pane: '1.75rem',
+        pane: '2rem',
       },
       minHeight: {
-        'pane-header': '3rem',
+        'pane-header': '2.5rem',
       },
       boxShadow: {
         '1/2': '0.125rem 0.125rem 0',

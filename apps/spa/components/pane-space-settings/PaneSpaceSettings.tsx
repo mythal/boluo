@@ -24,7 +24,6 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 import { Failed } from '../common/Failed';
-import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { useIsChildPane } from '../../hooks/useIsChildPane';
 
 interface Props {

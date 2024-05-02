@@ -4,7 +4,7 @@ import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import Icon from '@boluo/ui/Icon';
-import { usePaneOpenChild } from '../../hooks/usePaneOpenChild';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
 
 interface Props {
   spaceId: string;
@@ -13,9 +13,9 @@ interface Props {
 
 export const SpaceMemberBadge: FC<Props> = ({ members, spaceId }) => {
   const count = members == null ? '...' : members.length;
-  const openChildPane = usePaneOpenChild();
+  const toggleChild = usePaneToggle({ child: true });
   const handleClick = () => {
-    openChildPane({ type: 'SPACE_MEMBERS', spaceId });
+    toggleChild({ type: 'SPACE_MEMBERS', spaceId });
   };
   return (
     <Badge icon={<Icon icon={Users} />} onClick={handleClick}>

@@ -12,7 +12,7 @@ export const usePaneReplace = () => {
     (newPane: PaneData, shouldReplace?: (pane: Pane) => boolean) =>
       setPanes((panes) => {
         if (maxPane === 1) {
-          return [{ ...newPane, key: 0 }];
+          return [{ ...newPane, key: panes[0]?.key ?? 0 }];
         }
         const newPaneKey = findNextPaneKey(panes);
         const nextPanes = [...panes];
@@ -39,7 +39,7 @@ export const usePaneReplace = () => {
           replace = false;
         }
         if (replace) {
-          nextPanes[index] = { ...newPane, key: newPaneKey };
+          nextPanes[index] = { ...newPane, key: oldPane?.key ?? newPaneKey };
         } else {
           nextPanes.unshift({ ...newPane, key: newPaneKey });
         }

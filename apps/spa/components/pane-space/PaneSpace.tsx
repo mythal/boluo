@@ -14,7 +14,7 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { SpaceJoinButton } from './SpaceJoinButton';
 import { SpaceLeaveButton } from './SpaceLeaveButton';
 import { SpaceMemberBadge } from './SpaceMemberBadge';
-import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { usePaneOpenChild } from '../../hooks/usePaneOpenChild';
 
 interface Props {
   spaceId: string;
@@ -42,10 +42,10 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     }
     return null;
   }, [myId, spaceMembers]);
-  const replacePane = usePaneReplace();
+  const openChild = usePaneOpenChild();
   const openSettings = useCallback(() => {
-    replacePane({ type: 'SPACE_SETTINGS', spaceId });
-  }, [replacePane, spaceId]);
+    openChild({ type: 'SPACE_SETTINGS', spaceId });
+  }, [openChild, spaceId]);
   const operators = useMemo(() => {
     if (space == null || myId == null) {
       return null;

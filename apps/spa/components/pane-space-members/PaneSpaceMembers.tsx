@@ -1,10 +1,9 @@
 import { Users } from '@boluo/icons';
-import { FC, Suspense, useMemo, useState } from 'react';
+import { FC, Suspense, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Loading } from '@boluo/ui/Loading';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
-import { ClosePaneButton } from '../ClosePaneButton';
 import { HeaderTab, TabItem } from '../HeaderTab';
 import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';
@@ -32,9 +31,7 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
   if (mySpaceMember?.isAdmin !== true) {
     return (
       <PaneBox header={<PaneHeaderBox icon={<Users />}>{title}</PaneHeaderBox>}>
-        <Suspense fallback={<Loading />}>
-          <SpaceMemberListTab spaceId={spaceId} spaceOwnerId={space?.ownerId} />
-        </Suspense>
+        <SpaceMemberListTab spaceId={spaceId} spaceOwnerId={space?.ownerId} />
       </PaneBox>
     );
   }
@@ -47,14 +44,12 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
         </PaneHeaderBox>
       }
     >
-      <Suspense fallback={<Loading />}>
-        {tab === 'INVITATION' && (
-          <div className="p-pane">
-            <InviteSpaceMember spaceId={spaceId} />
-          </div>
-        )}
-        {tab === 'LIST' && <SpaceMemberListTab spaceId={spaceId} spaceOwnerId={space?.ownerId} />}
-      </Suspense>
+      {tab === 'INVITATION' && (
+        <div className="p-pane">
+          <InviteSpaceMember spaceId={spaceId} />
+        </div>
+      )}
+      {tab === 'LIST' && <SpaceMemberListTab spaceId={spaceId} spaceOwnerId={space?.ownerId} />}
     </PaneBox>
   );
 };

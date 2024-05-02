@@ -5,6 +5,7 @@ import { PaneContext } from '../state/view.context';
 
 export const usePaneSplit = () => {
   const { key } = useContext(PaneContext);
+
   const setPanes = useSetAtom(panesAtom);
   return useCallback(
     () =>

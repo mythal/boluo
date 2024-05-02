@@ -2,13 +2,18 @@ import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 import { findNextPaneKey, panesAtom } from '../state/view.atoms';
 import { insertPaneByPosition, NewPanePosition, Pane, PaneData } from '../state/view.types';
+import { usePaneLimit } from './useMaxPane';
 
 export const usePaneToggle = () => {
   const setPanes = useSetAtom(panesAtom);
+  const maxPane = usePaneLimit();
   return useCallback(
     (pane: PaneData, position: NewPanePosition = 'HEAD') =>
       setPanes((panes) => {
         if (pane.type === 'EMPTY') return panes;
+        if (maxPane === 1) {
+          return [{ ...pane, key: 0 }];
+        }
         let index: number = -1;
         if (pane.type === 'CHANNEL') {
           index = panes.findIndex((x) => x.type === 'CHANNEL' && x.channelId === pane.channelId);
@@ -27,6 +32,6 @@ export const usePaneToggle = () => {
 
         return insertPaneByPosition(panes, newPane, position);
       }),
-    [setPanes],
+    [maxPane, setPanes],
   );
 };

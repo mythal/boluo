@@ -25,6 +25,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 import { Failed } from '../common/Failed';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { useIsChildPane } from '../../hooks/useIsChildPane';
 
 interface Props {
   spaceId: string;
@@ -265,6 +266,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space; backToSpace: () => void }> = ({ 
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
   const { data: space, error } = useQuerySpace(spaceId);
+  const isChild = useIsChildPane();
 
   const close = usePaneClose();
   const paneReplace = usePaneReplace();
@@ -299,9 +301,11 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox icon={<Settings />}>
-          <FormattedMessage defaultMessage='Settings of "{spaceName}" Space' values={{ spaceName: space.name }} />
-        </PaneHeaderBox>
+        isChild ? null : (
+          <PaneHeaderBox icon={<Settings />}>
+            <FormattedMessage defaultMessage='Settings of "{spaceName}" Space' values={{ spaceName: space.name }} />
+          </PaneHeaderBox>
+        )
       }
     >
       <div className="relative">

@@ -13,7 +13,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
-import { Oops } from '@boluo/ui/Oops';
 import { TextInput } from '@boluo/ui/TextInput';
 import type { StyleProps } from '@boluo/utils';
 import { required } from '../validations';
@@ -135,7 +134,6 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
 };
 
 export const LoginForm: FC<Props> = () => {
-  const router = useRouter();
   const { mutate } = useSWRConfig();
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
@@ -146,7 +144,7 @@ export const LoginForm: FC<Props> = () => {
       return setError(result.err);
     }
     setError(null);
-    router.push('/');
+    void mutate(() => true, undefined, { revalidate: true });
   };
 
   return (

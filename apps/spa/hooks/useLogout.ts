@@ -8,14 +8,6 @@ export function useLogout(): () => void {
     await get('/users/logout', null);
     localStorage.clear();
     sessionStorage.clear();
-    await mutate(['/users/query', null], null);
-    await mutate(
-      (key) => {
-        if (!Array.isArray(key)) return false;
-        return key[0] === '/channels/by_space';
-      },
-      undefined,
-      { revalidate: true },
-    );
+    await mutate(() => true, undefined, { revalidate: true });
   }, [mutate]);
 }

@@ -83,7 +83,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   }
   return (
     <ChannelAtomsContext.Provider value={atoms}>
-      <PaneBox header={<ChannelHeader />}>
+      <PaneBox header={<ChannelHeader />} grow>
         {errorNode}
         <div
           className={clsx(

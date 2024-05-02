@@ -383,7 +383,7 @@ const config: Config = {
         '24px': '24px',
       },
       width: {
-        sidebar: '14rem',
+        sidebar: '16rem',
       },
       height: {
         'pane-header': '2.5rem',

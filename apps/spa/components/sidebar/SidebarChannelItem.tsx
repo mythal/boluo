@@ -1,6 +1,6 @@
 import type { Channel, Message } from '@boluo/api';
 import clsx from 'clsx';
-import { Hash, LockedHash, X } from '@boluo/icons';
+import { Hash, LockedHash, Plus, X } from '@boluo/icons';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
@@ -23,7 +23,7 @@ interface Props {
 export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
-  const maxPane = usePaneLimit();
+  const paneLimit = usePaneLimit();
   const setPane = useSetAtom(panesAtom);
   const addPane = usePaneAdd();
   const latestMessageAtom = useMemo(
@@ -80,6 +80,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   );
   const handleClickInnerButton = useCallback(
     (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      if (paneLimit < 2) {
+        return;
+      }
       e.stopPropagation();
       e.preventDefault();
       if (active) {
@@ -88,7 +91,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         addPane({ type: 'CHANNEL', channelId: channel.id });
       }
     },
-    [active, addPane, channel.id, setPane],
+    [active, addPane, channel.id, paneLimit, setPane],
   );
 
   return (
@@ -103,32 +106,24 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         )}
         onClick={handleClick}
       >
-        <div
+        <button
           className={clsx(
-            'row-span-2 self-center',
+            'group/icon relative row-span-2 h-full self-center text-base',
             active ? 'text-surface-900' : 'text-surface-400 group-hover:text-surface-700',
           )}
+          onClick={handleClickInnerButton}
+          title={active ? titleClose : titleOpenNew}
         >
-          <Icon icon={channel.isPublic ? Hash : LockedHash} />
-        </div>
+          <Icon
+            className={paneLimit < 2 ? '' : 'group-hover/icon:opacity-0'}
+            icon={channel.isPublic ? Hash : LockedHash}
+          />
+          <Icon
+            className={`absolute left-0 opacity-0 ${paneLimit < 2 ? '' : 'group-hover/icon:opacity-100'}`}
+            icon={active ? X : Plus}
+          />
+        </button>
         <span className="text-left">{channel.name}</span>
-        {maxPane > 1 && (
-          <div className="row-span-2">
-            <button
-              onClick={handleClickInnerButton}
-              title={active ? titleClose : titleOpenNew}
-              className={clsx(
-                'inline-flex items-center justify-center',
-                active ? 'text-sidebar-channels-button-active-text' : 'text-sidebar-channels-button-text',
-                'group-hover:text-sidebar-channels-button-groupHover-text group-hover:bg-sidebar-channels-button-groupHover-bg h-6 w-6 rounded-sm',
-              )}
-            >
-              <span className={clsx('transform transition-transform duration-100 ', active ? 'rotate-0' : 'rotate-45')}>
-                <Icon icon={X} />
-              </span>
-            </button>
-          </div>
-        )}
 
         {typeof latestMessage !== 'string' && (
           <div

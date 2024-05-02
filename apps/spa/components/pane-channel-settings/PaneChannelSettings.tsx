@@ -23,6 +23,7 @@ import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 import { Failed } from '../common/Failed';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { useIsChildPane } from '../../hooks/useIsChildPane';
 
 interface Props {
   channelId: string;
@@ -119,6 +120,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 
 export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
   const { data: channel, error } = useQueryChannel(channelId);
+  const isChild = useIsChildPane();
 
   if (error && channel == null) {
     return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />;
@@ -127,7 +129,7 @@ export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
   }
 
   return (
-    <PaneBox header={<PaneChannelSettingsHeader channel={channel} />}>
+    <PaneBox header={isChild ? null : <PaneChannelSettingsHeader channel={channel} />}>
       <PaneChannelSettingsForm channel={channel} />
     </PaneBox>
   );

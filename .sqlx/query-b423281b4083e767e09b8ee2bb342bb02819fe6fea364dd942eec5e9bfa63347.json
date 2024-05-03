@@ -54,6 +54,10 @@
                 [
                   "old_name",
                   "Text"
+                ],
+                [
+                  "type",
+                  "Text"
                 ]
               ]
             }

@@ -1,4 +1,7 @@
-use super::models::{Channel, ChannelMember};
+use super::{
+    models::{Channel, ChannelMember},
+    ChannelType,
+};
 use crate::channels::models::Member;
 use crate::spaces::Space;
 use crate::users::User;
@@ -18,6 +21,8 @@ pub struct CreateChannel {
     pub character_name: String,
     pub default_dice_type: Option<String>,
     pub is_public: bool,
+    #[serde(rename = "type")]
+    pub _type: Option<ChannelType>,
 }
 
 #[derive(Deserialize, Debug, TS)]
@@ -35,6 +40,8 @@ pub struct EditChannel {
     pub remove_masters: Vec<Uuid>,
     pub is_public: Option<bool>,
     pub is_document: Option<bool>,
+    #[serde(rename = "type")]
+    pub _type: Option<ChannelType>,
 }
 
 #[derive(Deserialize, Debug, TS)]

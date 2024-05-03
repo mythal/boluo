@@ -1,5 +1,7 @@
 use std::sync::OnceLock;
 
+use crate::channels::ChannelType;
+
 pub fn get_postgres_url() -> String {
     std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
 }
@@ -72,10 +74,17 @@ pub async fn check() {
         .expect("Cannot get space members");
     assert_eq!(space_members.len(), 1);
     assert_eq!(space_members[0].user.id, space_member.user_id);
-    let channel = sqlx::query_file_scalar!("sql/channels/create_channel.sql", space.id, "General", true, "d20")
-        .fetch_one(&mut *trans)
-        .await
-        .expect("Cannot create channel");
+    let channel = sqlx::query_file_scalar!(
+        "sql/channels/create_channel.sql",
+        space.id,
+        "General",
+        true,
+        "d20",
+        ChannelType::InGame.to_str(),
+    )
+    .fetch_one(&mut *trans)
+    .await
+    .expect("Cannot create channel");
     let _channel_member = sqlx::query_file!(
         "sql/channels/add_user_to_channel.sql",
         user.id,

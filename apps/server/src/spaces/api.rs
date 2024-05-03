@@ -5,6 +5,7 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 use super::models::UserStatus;
+use crate::channels::ChannelType;
 
 #[derive(Deserialize, Debug, TS)]
 #[ts(export)]
@@ -15,6 +16,7 @@ pub struct CreateSpace {
     pub description: String,
     pub default_dice_type: Option<String>,
     pub first_channel_name: String,
+    pub first_channel_type: Option<ChannelType>,
 }
 
 #[derive(Deserialize, Debug, TS)]

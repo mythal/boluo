@@ -56,12 +56,12 @@
                   "Text"
                 ],
                 [
-                  "invite_token",
-                  "Uuid"
-                ],
-                [
                   "explorable",
                   "Bool"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
                 ],
                 [
                   "allow_spectator",

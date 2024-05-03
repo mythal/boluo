@@ -41,7 +41,7 @@ const createChannel: MutationFetcher<ChannelWithMember, typeof key, FormSchema> 
   _,
   { arg: { isSecret, ...payload } },
 ) => {
-  const result = await post('/channels/create', null, { ...payload, isPublic: !isSecret });
+  const result = await post('/channels/create', null, { ...payload, isPublic: !isSecret, type: 'IN_GAME' });
   return result.unwrap();
 };
 

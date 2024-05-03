@@ -5,7 +5,7 @@ use crate::channels::api::{
     AddChannelMember, ChannelMemberWithUser, ChannelWithMember, ChannelWithRelated, CheckChannelName,
     EditChannelMember, Export, GrantOrRevoke, JoinChannel, KickFromChannel,
 };
-use crate::channels::models::Member;
+use crate::channels::models::{ChannelType, Member};
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
@@ -103,6 +103,7 @@ async fn create(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
         character_name,
         default_dice_type,
         is_public,
+        _type,
     } = interface::parse_body(req).await?;
 
     let pool = db::get().await;
@@ -112,7 +113,15 @@ async fn create(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
         .ok_or_else(|| AppError::BadRequest("The space not found".to_string()))?;
     admin_only(&mut *trans, &session.user_id, &space_id).await?;
 
-    let channel = Channel::create(&mut *trans, &space_id, &name, is_public, default_dice_type.as_deref()).await?;
+    let channel = Channel::create(
+        &mut *trans,
+        &space_id,
+        &name,
+        is_public,
+        default_dice_type.as_deref(),
+        _type.unwrap_or(ChannelType::InGame),
+    )
+    .await?;
     let channel_member =
         ChannelMember::add_user(&mut *trans, &session.user_id, &channel.id, &character_name, true).await?;
     trans.commit().await?;
@@ -130,6 +139,7 @@ async fn edit(req: Request<Body>) -> Result<Channel, AppError> {
         channel_id,
         name,
         topic,
+        _type,
         default_dice_type,
         default_roll_command,
         grant_masters,
@@ -156,6 +166,7 @@ async fn edit(req: Request<Body>) -> Result<Channel, AppError> {
         default_roll_command.as_deref(),
         is_public,
         is_document,
+        _type,
     )
     .await?;
     let push_members = !(grant_masters.is_empty() && remove_masters.is_empty());

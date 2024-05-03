@@ -10,6 +10,26 @@ use crate::users::User;
 use crate::utils::merge_blank;
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, TS, sqlx::Type)]
+#[ts(export)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "text", rename_all = "snake_case")]
+pub enum ChannelType {
+    InGame,
+    OutOfGame,
+    Document,
+}
+
+impl ChannelType {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            ChannelType::InGame => "in_game",
+            ChannelType::OutOfGame => "out_of_game",
+            ChannelType::Document => "document",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS, sqlx::Type)]
 #[sqlx(type_name = "channels")]
 #[ts(export)]
@@ -28,6 +48,7 @@ pub struct Channel {
     pub is_document: bool,
     #[serde(skip)]
     pub old_name: String,
+    pub r#type: ChannelType,
 }
 
 impl Channel {
@@ -37,6 +58,7 @@ impl Channel {
         name: &str,
         is_public: bool,
         default_dice_type: Option<&str>,
+        _type: ChannelType,
     ) -> Result<Channel, ModelError> {
         use crate::validators;
 
@@ -50,7 +72,8 @@ impl Channel {
             space_id,
             name,
             is_public,
-            default_dice_type
+            default_dice_type,
+            _type.to_str(),
         )
         .fetch_one(db)
         .await
@@ -123,6 +146,7 @@ impl Channel {
         default_roll_command: Option<&str>,
         is_public: Option<bool>,
         is_document: Option<bool>,
+        _type: Option<ChannelType>,
     ) -> Result<Channel, ModelError> {
         use crate::validators;
 
@@ -144,7 +168,8 @@ impl Channel {
             default_dice_type,
             default_roll_command,
             is_public,
-            is_document
+            is_document,
+            _type.as_ref().map(ChannelType::to_str)
         )
         .fetch_one(db)
         .await

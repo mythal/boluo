@@ -126,21 +126,23 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         </button>
         <span className="text-left">{channel.name}</span>
 
-        {typeof latestMessage !== 'string' && (
-          <div
-            data-unread={isUnread}
-            data-is-action={latestMessage.isAction}
-            className="col-start-2 truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
-          >
-            <span className="text-text-light group-hover:text-text-base mr-1">
-              {latestMessage.name}
-              {latestMessage.isAction ? '' : ':'}
-            </span>
-            <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
-          </div>
-        )}
-        {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 col-start-2 min-h-4 w-full rounded-md"></div>}
-        {latestMessage === 'EMPTY' && <div className="text-text-lighter col-start-2">-</div>}
+        <div className="col-start-2 h-5 w-full overflow-hidden">
+          {typeof latestMessage !== 'string' && (
+            <div
+              data-unread={isUnread}
+              data-is-action={latestMessage.isAction}
+              className="truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
+            >
+              <span className="text-text-light group-hover:text-text-base mr-1">
+                {latestMessage.name}
+                {latestMessage.isAction ? '' : ':'}
+              </span>
+              <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
+            </div>
+          )}
+          {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 h-4 w-full rounded-md"></div>}
+          {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
+        </div>
       </a>
     </div>
   );

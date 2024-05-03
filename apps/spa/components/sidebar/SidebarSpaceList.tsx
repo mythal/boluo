@@ -19,9 +19,17 @@ interface Props {
 const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({ space, currentSpaceId }) => {
   const switchSpace = useSwitchSpace();
   const isCurrent = currentSpaceId === space.id;
+  const handleClick: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
+    e.preventDefault();
+    switchSpace(space.id);
+  };
   return (
     <div className="px-3 py-1">
-      <button onClick={() => switchSpace(space.id)} className="hover:bg-surface-100 w-full px-1 py-1 text-left">
+      <a
+        href={`#route=${space.id}`}
+        onClick={handleClick}
+        className="hover:bg-surface-100 block w-full rounded px-1 py-1 text-left"
+      >
         <div className={`truncate ${isCurrent ? '' : 'text-text-light'}`}>{space.name}</div>
         <div
           className={clsx(
@@ -31,7 +39,7 @@ const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({
         >
           {space.description || '-'}
         </div>
-      </button>
+      </a>
     </div>
   );
 };

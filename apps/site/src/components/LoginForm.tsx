@@ -138,6 +138,7 @@ export const LoginForm: FC<Props> = () => {
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
   const [error, setError] = useState<ApiError | null>(null);
+  const router = useRouter();
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
     const result = await post('/users/login', null, { password, username });
     if (result.isErr) {
@@ -145,6 +146,7 @@ export const LoginForm: FC<Props> = () => {
     }
     setError(null);
     void mutate(() => true, undefined, { revalidate: true });
+    router.push('/');
   };
 
   return (

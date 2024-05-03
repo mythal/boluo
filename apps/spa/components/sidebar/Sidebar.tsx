@@ -7,7 +7,6 @@ import { SidebarChannelList } from './SidebarChannelList';
 import { SidebarSpaceList } from './SidebarSpaceList';
 import { SpaceOptions } from './SidebarSpaceOptions';
 import { SidebarUserOperations } from './SidebarUserOperations';
-import { SidebarStateContext } from './useSidebarState';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { User } from '@boluo/api';
@@ -18,7 +17,7 @@ interface Props {
 }
 
 const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null }> = ({ spaceId, currentUser }) => {
-  const { data: space, error, isLoading } = useQuerySpace(spaceId);
+  const { data: space, isLoading } = useQuerySpace(spaceId);
   const contentState = useAtomValue(sidebarContentStateAtom);
   if (space == null) {
     if (isLoading) {
@@ -38,7 +37,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
 
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
-  const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
+  const [isExpanded] = useAtom(isSidebarExpandedAtom);
   const foldedNode = (
     <div className="relative w-0">
       <ToggleSidebarLine />
@@ -55,19 +54,17 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   }
 
   return (
-    <SidebarStateContext.Provider value={{ isExpanded: isExpanded }}>
-      <div className="bg-bg relative flex h-full min-h-0 flex-none flex-col">
-        <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
-          {content}
+    <div className="bg-bg relative flex h-full min-h-0 flex-none flex-col">
+      <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
+        {content}
 
-          <div className="">
-            {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}
+        <div className="">
+          {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}
 
-            <ConnectionIndicatior spaceId={spaceId} />
-          </div>
+          <ConnectionIndicatior spaceId={spaceId} />
         </div>
-        <ToggleSidebarLine />
       </div>
-    </SidebarStateContext.Provider>
+      <ToggleSidebarLine />
+    </div>
   );
 };

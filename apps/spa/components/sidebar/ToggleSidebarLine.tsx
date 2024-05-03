@@ -1,8 +1,8 @@
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, Sidebar } from '@boluo/icons';
+import { PanelLeftOpen } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC, useCallback, useRef } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';
 import { useIsTouch } from '../../hooks/useIsTouch';
@@ -32,14 +32,17 @@ export const ToggleSidebarLine: FC<Props> = () => {
       )}
       title={title}
     >
-      <div
-        className={clsx(
-          'text-text-lighter group-hover:text-text-base absolute -right-2 top-[6px] z-30 box-border flex items-center justify-center text-lg group-hover:shadow',
-          'bg-surface-50 cursor-pointer rounded px-2',
-        )}
-      >
-        <Icon icon={isExpanded ? ChevronLeft : ChevronRight} />
-      </div>
+      {!isExpanded && (
+        <button
+          className={clsx(
+            'text-text-lighter group-hover:text-text-base absolute left-1 top-2 z-30 box-border flex items-center justify-center text-base group-hover:shadow',
+            'bg-sidebar-toggler-button-bg cursor-pointer rounded px-1',
+          )}
+        >
+          <Icon icon={PanelLeftOpen} />
+        </button>
+      )}
+
       <div
         aria-expanded={isExpanded}
         className={clsx(

@@ -99,7 +99,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
       <a
         href="#" // TODO: link to channel
         className={clsx(
-          'cursor-eointer group grid w-full grid-cols-[auto_1fr_auto] grid-rows-2 items-start gap-x-2 gap-y-1 rounded px-1 py-1 text-sm',
+          'cursor-eointer group grid w-full grid-cols-[1rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
           active
             ? 'bg-sidebar-channels-active-bg hover:bg-sidebar-channels-active-hover'
             : 'hover:bg-sidebar-channels-hover',
@@ -108,7 +108,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
       >
         <button
           className={clsx(
-            'group/icon relative row-span-2 h-full self-center text-base',
+            'group/icon relative row-span-2 h-full self-center',
             active ? 'text-surface-900' : 'text-surface-400 group-hover:text-surface-700',
           )}
           onClick={handleClickInnerButton}

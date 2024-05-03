@@ -22,7 +22,7 @@ const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({
   return (
     <div className="px-3 py-1">
       <button onClick={() => switchSpace(space.id)} className="hover:bg-surface-100 w-full px-1 py-1 text-left">
-        <div className={isCurrent ? 'text-surface-900' : 'text-surface-600'}>{space.name}</div>
+        <div className={`truncate ${isCurrent ? '' : 'text-text-light'}`}>{space.name}</div>
         <div
           className={clsx(
             'w-full overflow-hidden text-ellipsis text-nowrap text-xs',
@@ -47,8 +47,8 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => 
   );
   const handleToggleCreateSpacePane = () => togglePane({ type: 'CREATE_SPACE' });
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="text-surface-600 flex items-center justify-between px-4 py-2 text-sm">
+    <div className="SidebarSpaceList flex-1 overflow-y-auto">
+      <div className="text-text-light h-pane-header flex items-center justify-between px-4 py-2 text-sm">
         <span>
           <FormattedMessage defaultMessage="Switch Spaces" />
         </span>

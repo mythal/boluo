@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
 use super::models::{space_users_status, UserStatus};
 use super::{Space, SpaceMember};
-use crate::channels::{Channel, ChannelMember};
+use crate::channels::{Channel, ChannelMember, ChannelType};
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
@@ -117,6 +117,7 @@ async fn create(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
         description,
         default_dice_type,
         first_channel_name,
+        first_channel_type,
     }: CreateSpace = interface::parse_body(req).await?;
 
     let pool = db::get().await;
@@ -127,7 +128,17 @@ async fn create(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
         .ok_or(AppError::NotFound("user"))?;
     let space = Space::create(&mut *trans, name, &user.id, description, password, default_dice_type).await?;
     let member = SpaceMember::add_admin(&mut *trans, &user.id, &space.id).await?;
-    let channel = Channel::create(&mut *trans, &space.id, &first_channel_name, true, default_dice_type).await?;
+    let _type = first_channel_type.unwrap_or(ChannelType::OutOfGame);
+    let channel = Channel::create(
+        &mut *trans,
+        &space.id,
+        &first_channel_name,
+        true,
+        default_dice_type,
+        _type,
+    )
+    .await?;
+    assert_eq!(channel.r#type, _type);
     ChannelMember::add_user(&mut *trans, &user.id, &channel.id, "", true).await?;
     trans.commit().await?;
     log::info!("a space ({}) was just created", space.id);

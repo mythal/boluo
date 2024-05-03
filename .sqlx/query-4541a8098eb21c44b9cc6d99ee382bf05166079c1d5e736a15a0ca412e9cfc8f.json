@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    channels\nSET\n    name = COALESCE($2, name),\n    topic = COALESCE($3, topic),\n    default_dice_type = COALESCE($4, default_dice_type),\n    default_roll_command = COALESCE($5, default_roll_command),\n    is_public = COALESCE($6, is_public),\n    is_document = COALESCE($7, is_document)\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    channels AS \"channel!: Channel\";\n\n",
+  "query": "INSERT INTO channels (space_id, name, is_public, default_dice_type, \"type\")\n    VALUES ($1, $2, $3, COALESCE($4, 'd20'), $5)\nRETURNING\n    channels AS \"channel!: Channel\";\n\n",
   "describe": {
     "columns": [
       {
@@ -54,6 +54,10 @@
                 [
                   "old_name",
                   "Text"
+                ],
+                [
+                  "type",
+                  "Text"
                 ]
               ]
             }
@@ -65,16 +69,14 @@
       "Left": [
         "Uuid",
         "Text",
-        "Text",
-        "Text",
-        "Text",
         "Bool",
-        "Bool"
+        "Text",
+        "Text"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "e414df75d50ca0047896eb65560d4c548501f271ecf9cab64a90aead172026ed"
+  "hash": "4541a8098eb21c44b9cc6d99ee382bf05166079c1d5e736a15a0ca412e9cfc8f"
 }

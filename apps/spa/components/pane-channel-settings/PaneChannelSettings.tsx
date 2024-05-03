@@ -56,6 +56,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
       grantMasters: [],
       removeMasters: [],
       isDocument: null,
+      type: null,
     });
     return result.unwrap();
   };

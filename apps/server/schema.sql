@@ -126,6 +126,7 @@ CREATE TABLE channels
     "default_roll_command" text      NOT NULL DEFAULT 'd',
     "is_document"          bool      NOT NULL DEFAULT false,
     "old_name"             text      NOT NULL DEFAULT '',
+    "type"                 text      NOT NULL DEFAULT 'in_game',
     CONSTRAINT "unique_channel_name_in_space" UNIQUE (space_id, name)
 );
 

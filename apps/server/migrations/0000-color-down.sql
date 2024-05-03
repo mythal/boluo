@@ -1,2 +1,0 @@
-ALTER TABLE users DROP COLUMN IF EXISTS "default_color";
-ALTER TABLE messages DROP COLUMN IF EXISTS "color";

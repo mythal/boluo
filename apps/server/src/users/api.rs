@@ -90,6 +90,7 @@ pub struct EditUser {
 #[serde(rename_all = "camelCase")]
 pub struct ResetPassword {
     pub email: String,
+    pub lang: Option<String>,
 }
 
 #[derive(Debug, Deserialize, TS)]

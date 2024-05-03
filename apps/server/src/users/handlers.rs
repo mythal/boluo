@@ -288,7 +288,7 @@ pub async fn email_limit(cache: &mut cache::Connection, email: &str) -> Result<(
 pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
     let mut cache = cache::conn().await?;
     ip_limit(&mut cache, &req).await?;
-    let ResetPassword { email } = parse_body(req).await?;
+    let ResetPassword { email, lang } = parse_body(req).await?;
     email_limit(&mut cache, &email).await?;
 
     let pool = db::get().await;
@@ -301,20 +301,33 @@ pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
     cache
         .set_with_expiration(key.as_slice(), email.as_bytes(), 60 * 60)
         .await?;
-    mail::send(
-        &email,
-        "Boluo password reset",
-        &format!(
-            "
-            <p>
-                You have requested to reset your password.
-                <a href=\"https://boluo.chat/confirm-password-reset/{token}\">Click here</a> to reset your password.
-            </p>
-            <p>If you did not request to reset your password, please ignore this email.</p>
-        "
-        ),
-    )
-    .await
+    let lang = lang.as_deref().unwrap_or("en");
+    match lang {
+        "zh" | "zh-CN" | "zh_CN" => {
+            mail::send(
+                &email,
+                include_str!("../../text/reset-password/title.zh-CN.txt").trim(),
+                &format!(include_str!("../../text/reset-password/content.zh-CN.html"), token),
+            )
+            .await
+        }
+        "ja" => {
+            mail::send(
+                &email,
+                include_str!("../../text/reset-password/title.ja.txt").trim(),
+                &format!(include_str!("../../text/reset-password/content.ja.html"), token),
+            )
+            .await
+        }
+        _ => {
+            mail::send(
+                &email,
+                include_str!("../../text/reset-password/title.en.txt").trim(),
+                &format!(include_str!("../../text/reset-password/content.en.html"), token),
+            )
+            .await
+        }
+    }
     .map_err(AppError::Unexpected)?;
     Ok(())
 }

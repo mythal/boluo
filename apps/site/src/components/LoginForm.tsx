@@ -124,7 +124,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
         </div>
       )}
 
-      <div className="mt-2 flex justify-end">
+      <div className="flex justify-end py-2">
         <Button data-type="primary" type="submit" disabled={!isDirty || isSubmitting}>
           <FormattedMessage defaultMessage="Login" />
         </Button>
@@ -149,7 +149,7 @@ export const LoginForm: FC<Props> = () => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="py-6">
         <FormContent error={error} />
       </form>
     </FormProvider>

@@ -2,4 +2,5 @@
 
 export interface ResetPassword {
   email: string;
+  lang: string | null;
 }

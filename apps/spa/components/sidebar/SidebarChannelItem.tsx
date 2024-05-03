@@ -139,7 +139,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
             <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
           </div>
         )}
-        {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 col-start-2 h-full w-full rounded-md"></div>}
+        {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 col-start-2 min-h-4 w-full rounded-md"></div>}
         {latestMessage === 'EMPTY' && <div className="text-text-lighter col-start-2">-</div>}
       </a>
     </div>

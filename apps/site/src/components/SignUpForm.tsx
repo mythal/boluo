@@ -198,7 +198,7 @@ export const SignUpForm = () => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="py-6">
         <FormContent error={error} />
       </form>
     </FormProvider>

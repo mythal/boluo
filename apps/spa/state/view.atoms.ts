@@ -139,6 +139,11 @@ export const findNextPaneKey = (panes: Pane[]) => {
   if (panes.length === 0) {
     return 0;
   }
-  // TODO: reuse empty position
+  // This is quadratic, but the number of panes is expected to be small
+  for (let i = 0; i <= panes.length; i++) {
+    if (panes.findIndex((pane) => pane.key === i) === -1) {
+      return i;
+    }
+  }
   return Math.max(...panes.map((pane) => pane.key)) + 1;
 };

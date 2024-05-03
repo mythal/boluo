@@ -140,10 +140,6 @@ async fn get(req: Request<Body>) -> Result<Response, AppError> {
     Ok(response)
 }
 
-async fn delete(_req: Request<Body>) -> Result<(), AppError> {
-    todo!()
-}
-
 async fn put_object(
     client: &aws_sdk_s3::Client,
     bucket: &str,

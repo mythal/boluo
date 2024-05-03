@@ -75,6 +75,7 @@
                 (path: _type: lib.hasInfix "/.sqlx/" path)
                 (path: _type: lib.hasInfix "/apps/server/sql/" path)
                 (path: _type: lib.hasInfix "/apps/server/src/" path)
+                (path: _type: lib.hasInfix "/apps/server/text/" path)
                 craneLib.filterCargoSources
                 (path: _type: lib.hasSuffix "/apps/server/schema.sql" path)
               ];

@@ -93,11 +93,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
     },
     [active, addPane, channel.id, paneLimit, setPane],
   );
+  const paneUrlPart = encodeURIComponent(JSON.stringify([{ type: 'CHANNEL', channelId: channel.id, key: 0 }]));
 
   return (
     <div className="px-3 py-0.5">
       <a
-        href="#" // TODO: link to channel
+        href={`#route=${channel.spaceId}&panes=${paneUrlPart}`}
         className={clsx(
           'cursor-eointer group grid w-full grid-cols-[1rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
           active

@@ -16,7 +16,7 @@ import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
 const PaneProfile = React.lazy(() => import('./pane-profile/PaneProfile'));
-const PaneCreateChannel = React.lazy(() => import('./PaneCreateChannel'));
+const PaneCreateChannel = React.lazy(() => import('./pane-create-channel/PaneCreateChannel'));
 const PaneCreateSpace = React.lazy(() => import('./PaneCreateSpace'));
 const PaneSettings = React.lazy(() => import('./pane-settings/PaneSettings'));
 const PaneLogin = React.lazy(() => import('./PaneLogin'));

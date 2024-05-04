@@ -14,6 +14,7 @@ import type { Export } from '@boluo/server-bindings/Export';
 import type { JoinChannel } from '@boluo/server-bindings/JoinChannel';
 import type { KickFromChannel } from '@boluo/server-bindings/KickFromChannel';
 import type { Member } from '@boluo/server-bindings/Member';
+import type { ChannelType } from '@boluo/server-bindings/ChannelType';
 export type { GrantOrRemoveChannelMaster } from '@boluo/server-bindings/GrantOrRemoveChannelMaster';
 
 export {
@@ -31,6 +32,7 @@ export {
   EditChannelMember,
   Export,
   JoinChannel,
+  ChannelType,
   KickFromChannel,
   Member,
 };

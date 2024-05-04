@@ -267,6 +267,15 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
       },
+      selectBox: {
+        bg: $(neutral[50], neutral[900]),
+        hover: {
+          bg: $(neutral[100], neutral[800]),
+        },
+        active: {
+          bg: $(lime[50], blue[900]),
+        },
+      },
       button: {
         default: {
           bg: $(neutral[100], neutral[700]),

@@ -9,7 +9,7 @@ export type ComposeActionMap = {
   toggleInGame: { defaultInGame: boolean };
   setInGame: { inGame: boolean };
   toggleBroadcast: Empty;
-  addDice: Empty;
+  addDice: { defaultRollCommand: string };
   link: { text: string; href: string };
   bold: { text: string };
   recoverState: ComposeState;

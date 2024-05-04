@@ -42,16 +42,13 @@ export const useMakeChannelAtoms = (
 ): ChannelAtoms => {
   const defaultDiceFaceRef = useRef(defaultDiceFace);
   defaultDiceFaceRef.current = defaultDiceFace;
-  const defaultInGameRef = useRef(defaultInGame);
-  defaultInGameRef.current = defaultInGame;
-  const characterNameRef = useRef(member?.characterName ?? '');
-  characterNameRef.current = member?.characterName ?? '';
+  const characterName = member?.characterName ?? '';
   const composeAtom = useMemo(() => atomWithReducer(makeInitialComposeState(), composeReducer), []);
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
-    () => selectAtom(composeAtom, checkCompose(characterNameRef.current, defaultInGameRef.current)),
-    [composeAtom],
+    () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
+    [characterName, composeAtom, defaultInGame],
   );
-  return useMemo(() => {
+  const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> = useMemo(() => {
     const loadableParsedAtom = loadable(
       atom(async (get, { signal }): Promise<ParseResult> => {
         const { source } = get(composeAtom);
@@ -71,29 +68,33 @@ export const useMakeChannelAtoms = (
     const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
     const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
     const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
-    const inGameAtom = atom((read) => {
-      const { inGame } = read(parsedAtom);
-      if (inGame == null) {
-        return defaultInGameRef.current;
-      } else {
-        return inGame;
-      }
-    });
+
     return {
       composeAtom,
-      checkComposeAtom,
       parsedAtom,
       isActionAtom,
       inputedNameAtom,
       hasMediaAtom,
       broadcastAtom,
       isWhisperAtom,
-      inGameAtom,
       filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
       showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
       memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
     };
-  }, [channelId, checkComposeAtom, composeAtom]);
+  }, [channelId, composeAtom]);
+  const inGameAtom = useMemo(
+    () =>
+      atom((read) => {
+        const { inGame } = read(atoms.parsedAtom);
+        if (inGame == null) {
+          return defaultInGame;
+        } else {
+          return inGame;
+        }
+      }),
+    [atoms.parsedAtom, defaultInGame],
+  );
+  return { ...atoms, checkComposeAtom, composeAtom, inGameAtom };
 };
 
 export const useChannelAtoms = (): ChannelAtoms => {

@@ -53,6 +53,9 @@
   "0pT/2d": {
     "message": "キャラクター名なし"
   },
+  "1iEPTM": {
+    "message": "General"
+  },
   "2J8G6R": {
     "message": "ファイルサイズは {sizeLimit} より小さい必要があります"
   },
@@ -67,6 +70,9 @@
   },
   "3VI9mt": {
     "message": "変更を保存"
+  },
+  "3c9Xiy": {
+    "message": "An unknown error occurred."
   },
   "3cc4Ct": {
     "message": "ライト"
@@ -194,6 +200,9 @@
   "FN6jdd": {
     "message": "Hi, {username}!"
   },
+  "FazwRl": {
+    "message": "Try again"
+  },
   "GEhexi": {
     "message": "ダークモード中"
   },
@@ -269,11 +278,17 @@
   "K7AkdL": {
     "message": "表示"
   },
+  "K8uxGU": {
+    "message": "The password reset email has been sent."
+  },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
   },
   "Kp8wZw": {
     "message": "バイオはまだ設定していません"
+  },
+  "L01rMU": {
+    "message": "By default member will speak on their own behalf."
   },
   "LUrJwE": {
     "message": "チャンネル"
@@ -341,6 +356,9 @@
   "PwaN2o": {
     "message": "ようこそ"
   },
+  "Q+Af6H": {
+    "message": "Out of Game"
+  },
   "Q8Qw5B": {
     "message": "説明"
   },
@@ -355,6 +373,9 @@
   },
   "QlsDcr": {
     "message": "動作"
+  },
+  "Qm+Ijg": {
+    "message": "The email address is not registered."
   },
   "R59CS8": {
     "message": "アイコンを削除"
@@ -422,6 +443,9 @@
   "UyfeTd": {
     "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
   },
+  "V/JHlm": {
+    "message": "Forgot password?"
+  },
   "VA/Z1S": {
     "message": "非表示"
   },
@@ -440,14 +464,14 @@
   "WASph7": {
     "message": "このメンバーをキックする"
   },
-  "WU+nEq": {
-    "message": "A chat application"
-  },
   "Wa3nyB": {
     "message": "「{channelName}」チャンネルの設定"
   },
   "We16k/": {
     "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
+  "WwpJ5A": {
+    "message": "Send Password Reset Email"
   },
   "X2YA3V": {
     "message": "The data submitted did not pass validation."
@@ -481,6 +505,9 @@
   },
   "YtexzU": {
     "message": "{paneName} を閉じる"
+  },
+  "Yy/yDL": {
+    "message": "Reset password"
   },
   "ZKBnrB": {
     "message": "キャラクター名が必要です"
@@ -539,9 +566,6 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
-  "cyR7Kh": {
-    "message": "Back"
-  },
   "dMEGZV": {
     "message": "分割ペイン"
   },
@@ -566,11 +590,17 @@
   "eLCAEP": {
     "message": "Attachment"
   },
+  "eOqhbq": {
+    "message": "Unable to reset your password, invalid reset link."
+  },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
   },
   "fNCCY7": {
     "message": "ベーシック"
+  },
+  "fTHhSB": {
+    "message": "New password"
   },
   "fc2iho": {
     "message": "Add File"
@@ -740,6 +770,12 @@
   "sol2mE": {
     "message": "見つかりません。リソースが削除された可能性があります。"
   },
+  "sy+pv5": {
+    "message": "Email"
+  },
+  "t0WZaq": {
+    "message": "The channel where the game is played. By default member will speak as a character."
+  },
   "t5xj3B": {
     "message": "New Space"
   },
@@ -799,6 +835,9 @@
   },
   "xil+Fb": {
     "message": "This channel name is already taken."
+  },
+  "xl27nc": {
+    "message": "Reset Password"
   },
   "xmcVZ0": {
     "message": "検索"

@@ -33,14 +33,14 @@ export const ToggleSidebarLine: FC<Props> = () => {
       title={title}
     >
       {!isExpanded && (
-        <button
+        <div
           className={clsx(
             'text-text-lighter group-hover:text-text-base absolute left-1 top-2 z-30 box-border flex items-center justify-center text-base group-hover:shadow',
             'bg-sidebar-toggler-button-bg cursor-pointer rounded px-1',
           )}
         >
           <Icon icon={PanelLeftOpen} />
-        </button>
+        </div>
       )}
 
       <div

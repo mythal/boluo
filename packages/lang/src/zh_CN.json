@@ -53,6 +53,9 @@
   "0pT/2d": {
     "message": "无角色名"
   },
+  "1iEPTM": {
+    "message": "General"
+  },
   "2J8G6R": {
     "message": "文件大小不能超过 {sizeLimit}M"
   },
@@ -67,6 +70,9 @@
   },
   "3VI9mt": {
     "message": "保存更改"
+  },
+  "3c9Xiy": {
+    "message": "An unknown error occurred."
   },
   "3cc4Ct": {
     "message": "亮色"
@@ -194,6 +200,9 @@
   "FN6jdd": {
     "message": "贵安，{username}！"
   },
+  "FazwRl": {
+    "message": "Try again"
+  },
   "GEhexi": {
     "message": "在暗色模式"
   },
@@ -269,11 +278,17 @@
   "K7AkdL": {
     "message": "显示"
   },
+  "K8uxGU": {
+    "message": "The password reset email has been sent."
+  },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
   },
   "Kp8wZw": {
     "message": "还没有设置简介"
+  },
+  "L01rMU": {
+    "message": "By default member will speak on their own behalf."
   },
   "LUrJwE": {
     "message": "频道"
@@ -341,6 +356,9 @@
   "PwaN2o": {
     "message": "欢迎"
   },
+  "Q+Af6H": {
+    "message": "Out of Game"
+  },
   "Q8Qw5B": {
     "message": "描述"
   },
@@ -355,6 +373,9 @@
   },
   "QlsDcr": {
     "message": "动作"
+  },
+  "Qm+Ijg": {
+    "message": "The email address is not registered."
   },
   "R59CS8": {
     "message": "移除头像"
@@ -422,6 +443,9 @@
   "UyfeTd": {
     "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
+  "V/JHlm": {
+    "message": "Forgot password?"
+  },
   "VA/Z1S": {
     "message": "隐藏"
   },
@@ -440,14 +464,14 @@
   "WASph7": {
     "message": "踢走这个成员"
   },
-  "WU+nEq": {
-    "message": "一个聊天App"
-  },
   "Wa3nyB": {
     "message": "「{channelName}」频道设置"
   },
   "We16k/": {
     "message": "确认要离开「{spaceName}」位面吗？"
+  },
+  "WwpJ5A": {
+    "message": "Send Password Reset Email"
   },
   "X2YA3V": {
     "message": "提交的数据没有通过核查。"
@@ -481,6 +505,9 @@
   },
   "YtexzU": {
     "message": "关闭 {paneName}"
+  },
+  "Yy/yDL": {
+    "message": "Reset password"
   },
   "ZKBnrB": {
     "message": "必须填写角色名"
@@ -539,9 +566,6 @@
   "cpFKi9": {
     "message": "主题可以用来记录和提醒您当前关注的内容。"
   },
-  "cyR7Kh": {
-    "message": "返回"
-  },
   "dMEGZV": {
     "message": "拆分窗格"
   },
@@ -566,11 +590,17 @@
   "eLCAEP": {
     "message": "附件"
   },
+  "eOqhbq": {
+    "message": "Unable to reset your password, invalid reset link."
+  },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
   },
   "fNCCY7": {
     "message": "基本"
+  },
+  "fTHhSB": {
+    "message": "New password"
   },
   "fc2iho": {
     "message": "添加文件"
@@ -740,6 +770,12 @@
   "sol2mE": {
     "message": "未找到，记录可能已删除。"
   },
+  "sy+pv5": {
+    "message": "Email"
+  },
+  "t0WZaq": {
+    "message": "The channel where the game is played. By default member will speak as a character."
+  },
   "t5xj3B": {
     "message": "新位面"
   },
@@ -799,6 +835,9 @@
   },
   "xil+Fb": {
     "message": "此频道名已被占用。"
+  },
+  "xl27nc": {
+    "message": "Reset Password"
   },
   "xmcVZ0": {
     "message": "搜索"

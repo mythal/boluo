@@ -19,6 +19,7 @@ import { MemberList } from './MemberList';
 import { FailedBanner } from '../common/FailedBanner';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
+import { parseDiceFace } from '../../dice';
 
 interface Props {
   channelId: string;
@@ -43,7 +44,12 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const nickname = currentUser?.nickname ?? undefined;
   const { data: channel, isLoading, error } = useQueryChannel(channelId);
   const defaultInGame = channel?.type === 'IN_GAME';
-  const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member.isOk ? member.some.channel : null, defaultInGame);
+  const atoms: ChannelAtoms = useMakeChannelAtoms(
+    channelId,
+    member.isOk ? member.some.channel : null,
+    defaultInGame,
+    parseDiceFace(channel?.defaultDiceType),
+  );
   useSendPreview(
     channelId,
     nickname,
@@ -68,7 +74,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     }
   }
   if (isLoading || channel == null || (!channel.isPublic && member.isErr && member.err === 'LOADING')) {
-    return <PaneLoading>{errorNode}</PaneLoading>;
+    return <PaneLoading grow>{errorNode}</PaneLoading>;
   }
   if (!channel.isPublic && member == null) {
     return (

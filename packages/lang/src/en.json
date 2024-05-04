@@ -53,6 +53,9 @@
   "0pT/2d": {
     "message": "No Character Name"
   },
+  "1iEPTM": {
+    "message": "General"
+  },
   "2J8G6R": {
     "message": "File size must be less than {sizeLimit}M"
   },
@@ -67,6 +70,9 @@
   },
   "3VI9mt": {
     "message": "Save Changes"
+  },
+  "3c9Xiy": {
+    "message": "An unknown error occurred."
   },
   "3cc4Ct": {
     "message": "Light"
@@ -194,6 +200,9 @@
   "FN6jdd": {
     "message": "Hi, {username}!"
   },
+  "FazwRl": {
+    "message": "Try again"
+  },
   "GEhexi": {
     "message": "In Dark Mode"
   },
@@ -269,11 +278,17 @@
   "K7AkdL": {
     "message": "Show"
   },
+  "K8uxGU": {
+    "message": "The password reset email has been sent."
+  },
   "KhLK4z": {
     "message": "You do not have permission to view this space."
   },
   "Kp8wZw": {
     "message": "Have not set a bio yet"
+  },
+  "L01rMU": {
+    "message": "By default member will speak on their own behalf."
   },
   "LUrJwE": {
     "message": "Channels"
@@ -341,6 +356,9 @@
   "PwaN2o": {
     "message": "Welcome"
   },
+  "Q+Af6H": {
+    "message": "Out of Game"
+  },
   "Q8Qw5B": {
     "message": "Description"
   },
@@ -355,6 +373,9 @@
   },
   "QlsDcr": {
     "message": "Action"
+  },
+  "Qm+Ijg": {
+    "message": "The email address is not registered."
   },
   "R59CS8": {
     "message": "Remove Avatar"
@@ -422,6 +443,9 @@
   "UyfeTd": {
     "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
   },
+  "V/JHlm": {
+    "message": "Forgot password?"
+  },
   "VA/Z1S": {
     "message": "Hide"
   },
@@ -440,14 +464,14 @@
   "WASph7": {
     "message": "Kick this member"
   },
-  "WU+nEq": {
-    "message": "A chat application"
-  },
   "Wa3nyB": {
     "message": "Settings of \"{channelName}\" Channel"
   },
   "We16k/": {
     "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
+  "WwpJ5A": {
+    "message": "Send Password Reset Email"
   },
   "X2YA3V": {
     "message": "The data submitted did not pass validation."
@@ -481,6 +505,9 @@
   },
   "YtexzU": {
     "message": "Close {paneName}"
+  },
+  "Yy/yDL": {
+    "message": "Reset password"
   },
   "ZKBnrB": {
     "message": "Character name is required"
@@ -539,9 +566,6 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
-  "cyR7Kh": {
-    "message": "Back"
-  },
   "dMEGZV": {
     "message": "Split pane"
   },
@@ -566,11 +590,17 @@
   "eLCAEP": {
     "message": "Attachment"
   },
+  "eOqhbq": {
+    "message": "Unable to reset your password, invalid reset link."
+  },
   "ea+WlP": {
     "message": "You must be invited to join a private channel."
   },
   "fNCCY7": {
     "message": "Basic"
+  },
+  "fTHhSB": {
+    "message": "New password"
   },
   "fc2iho": {
     "message": "Add File"
@@ -740,6 +770,12 @@
   "sol2mE": {
     "message": "Not found, Perhaps resource was deleted."
   },
+  "sy+pv5": {
+    "message": "Email"
+  },
+  "t0WZaq": {
+    "message": "The channel where the game is played. By default member will speak as a character."
+  },
   "t5xj3B": {
     "message": "New Space"
   },
@@ -799,6 +835,9 @@
   },
   "xil+Fb": {
     "message": "This channel name is already taken."
+  },
+  "xl27nc": {
+    "message": "Reset Password"
   },
   "xmcVZ0": {
     "message": "Search"

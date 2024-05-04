@@ -1,5 +1,4 @@
 import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
-import { GetMe } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { UserX } from '@boluo/icons';
 import { FC, useCallback, useState } from 'react';

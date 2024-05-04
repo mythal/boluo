@@ -34,11 +34,15 @@ export interface ChannelAtoms {
 
 export const ChannelAtomsContext = createContext<ChannelAtoms | null>(null);
 
-export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | null): ChannelAtoms => {
+export const useMakeChannelAtoms = (
+  channelId: string,
+  member: ChannelMember | null,
+  defaultInGame: boolean,
+): ChannelAtoms => {
   const composeAtom = useMemo(() => atomWithReducer(makeInitialComposeState(), composeReducer), []);
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
-    () => selectAtom(composeAtom, checkCompose(member?.characterName ?? '')),
-    [composeAtom, member?.characterName],
+    () => selectAtom(composeAtom, checkCompose(member?.characterName ?? '', defaultInGame)),
+    [composeAtom, defaultInGame, member?.characterName],
   );
   return useMemo(() => {
     const loadableParsedAtom = loadable(
@@ -62,7 +66,6 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
     const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
     const inGameAtom = atom((read) => {
       const { inGame } = read(parsedAtom);
-      const { defaultInGame } = read(composeAtom);
       if (inGame == null) {
         return defaultInGame;
       } else {
@@ -83,7 +86,7 @@ export const useMakeChannelAtoms = (channelId: string, member: ChannelMember | n
       showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
       memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
     };
-  }, [channelId, checkComposeAtom, composeAtom]);
+  }, [channelId, checkComposeAtom, composeAtom, defaultInGame]);
 };
 
 export const useChannelAtoms = (): ChannelAtoms => {

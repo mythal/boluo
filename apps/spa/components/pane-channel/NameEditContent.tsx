@@ -85,10 +85,10 @@ export const NameEditContent: FC<Props> = ({ member }) => {
     inGame: baseId + 'in-game',
   };
   const switchToInGame = () => {
-    dispatch({ type: 'toggleInGame', payload: { inGame: true } });
+    dispatch({ type: 'setInGame', payload: { inGame: true } });
   };
   const switchToOutOfGame = () => {
-    dispatch({ type: 'toggleInGame', payload: { inGame: false } });
+    dispatch({ type: 'setInGame', payload: { inGame: false } });
   };
   return (
     <div className="grid w-52 grid-cols-[auto_auto] gap-x-1 gap-y-2">

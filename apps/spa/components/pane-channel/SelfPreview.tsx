@@ -24,7 +24,7 @@ type ComposeDrived = Pick<ComposeState, 'media'> & {
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
   a.editMode === b.editMode && a.name === b.name && a.media === b.media;
 
-const selector = ({ defaultInGame: inGame, inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
+const selector = ({ inputedName, source, editFor, media }: ComposeState): ComposeDrived => {
   const editMode = editFor !== null;
   return { name: inputedName.trim(), editMode, media };
 };

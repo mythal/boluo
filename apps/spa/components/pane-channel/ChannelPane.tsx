@@ -39,15 +39,17 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const { data: currentUser } = useQueryUser();
   const member = useMyChannelMember(channelId);
-  const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member.isOk ? member.some.channel : null);
   const nickname = currentUser?.nickname ?? undefined;
   const { data: channel, isLoading, error } = useQueryChannel(channelId);
+  const defaultInGame = channel?.type === 'IN_GAME';
+  const atoms: ChannelAtoms = useMakeChannelAtoms(channelId, member.isOk ? member.some.channel : null, defaultInGame);
   useSendPreview(
     channelId,
     nickname,
     member.isOk ? member.some.channel.characterName : '',
     atoms.composeAtom,
     atoms.parsedAtom,
+    defaultInGame,
   );
   const memberListState = useAtomValue(atoms.memberListStateAtom);
   let errorNode = null;

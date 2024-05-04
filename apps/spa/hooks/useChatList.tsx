@@ -27,11 +27,10 @@ export const START_INDEX = 100000000;
 
 type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
   prevPreviewId: string | null;
-  inGame: boolean;
 };
 
 const selectComposeSlice = (
-  { previewId, editFor, defaultInGame }: ComposeState,
+  { previewId, editFor }: ComposeState,
   prevSlice: ComposeSlice | null | undefined,
 ): ComposeSlice => {
   let prevPreviewId: string | null = null;
@@ -43,11 +42,10 @@ const selectComposeSlice = (
     }
   }
 
-  return { previewId, editFor, prevPreviewId, inGame: defaultInGame };
+  return { previewId, editFor, prevPreviewId };
 };
 
-const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) =>
-  a.previewId === b.previewId && a.inGame === b.inGame && a.editFor === b.editFor;
+const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) => a.previewId === b.previewId && a.editFor === b.editFor;
 
 const filter = (type: ChannelFilter, item: ChatItem) => {
   if (type === 'OOC' && item.inGame) return false;
@@ -174,7 +172,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           composeSlice.previewId,
           myId,
           channelId,
-          composeSlice.inGame,
+          true,
           composeSlice.editFor,
           pos,
           posP,
@@ -228,7 +226,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   }, [
     channelId,
     composeSlice.editFor,
-    composeSlice.inGame,
     composeSlice.prevPreviewId,
     composeSlice.previewId,
     filterType,

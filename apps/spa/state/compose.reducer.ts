@@ -12,7 +12,6 @@ export interface ComposeState {
   editFor: string | null;
   inputedName: string;
   previewId: string;
-  defaultInGame: boolean;
   source: string;
   media: File | string | null;
   whisperTo: // Represents whisper to the Game Master
@@ -30,7 +29,6 @@ export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
   previewId: makeId(),
-  defaultInGame: true,
   source: DEFAULT_COMPOSE_SOURCE,
   media: null,
   range: [DEFAULT_COMPOSE_SOURCE.length, DEFAULT_COMPOSE_SOURCE.length],
@@ -45,42 +43,46 @@ const QUICK_CHECK_REGEX = /[.。](in|out)\b/i;
 
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
   const { source } = action.payload;
-  let { previewId, defaultInGame } = state;
-  if (QUICK_CHECK_REGEX.exec(source)) {
-    const modifiersResult = parseModifiers(source);
-    if (modifiersResult.inGame) {
-      // Flip the default in-game state if the source has a explicit in-game modifier
-      // So that users can flip the state by deleting the modifier
-      defaultInGame = !modifiersResult.inGame.inGame;
-    }
-  }
+  let { previewId } = state;
   if ((source === '' || state.source === '') && state.editFor === null) {
     previewId = makeId();
   }
-  return { ...state, source: action.payload.source, previewId, defaultInGame };
+  return { ...state, source: action.payload.source, previewId };
 };
 
-const handleToggleInGame = (state: ComposeState, action: ComposeAction<'toggleInGame'>): ComposeState => {
-  const { inGame: modifier } = parseModifiers(state.source);
-  if (action.payload.inGame != null) {
-    // Do nothing if the payload is the same as the current state
-    if (!modifier && state.defaultInGame === action.payload.inGame) {
-      return state;
-    }
-    if (modifier !== false && modifier.inGame === action.payload.inGame) {
-      return state;
-    }
-  }
+const handleToggleInGame = (state: ComposeState, { payload }: ComposeAction<'toggleInGame'>): ComposeState => {
   const { source } = state;
-  let nextSource = source;
+  const { inGame: modifier } = parseModifiers(source);
+  let nextSource;
   if (!modifier) {
     const startsWithSpace = source.startsWith(' ');
-    const command = state.defaultInGame ? '.out' : '.in';
+    const command = payload.defaultInGame ? '.out' : '.in';
     nextSource = (startsWithSpace ? command : `${command} `) + source;
   } else {
     const before = source.substring(0, modifier.start);
     const after = source.substring(modifier.start + modifier.len);
-    nextSource = (modifier.inGame ? '.out ' : '.in ') + (before + after).trimStart();
+    const command = modifier.inGame ? '.out ' : '.in ';
+    nextSource = command + (before + after).trimStart();
+  }
+  return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
+};
+
+const handleSetInGame = (state: ComposeState, { payload }: ComposeAction<'setInGame'>): ComposeState => {
+  const { source } = state;
+  const { inGame: modifier } = parseModifiers(source);
+  if (modifier !== false && modifier.inGame === payload.inGame) {
+    return state;
+  }
+  let nextSource;
+  if (!modifier) {
+    const startsWithSpace = source.startsWith(' ');
+    const command = payload.inGame ? '.in' : '.out';
+    nextSource = (startsWithSpace ? command : `${command} `) + source;
+  } else {
+    const before = source.substring(0, modifier.start);
+    const after = source.substring(modifier.start + modifier.len);
+    const command = payload.inGame ? '.in ' : '.out ';
+    nextSource = command + (before + after).trimStart();
   }
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
@@ -143,7 +145,7 @@ const handleSetInputedName = (state: ComposeState, { payload }: ComposeAction<'s
   const inputedName = payload.inputedName.trim().slice(0, 32);
   const nextState = { ...state, inputedName };
   if (payload.setInGame) {
-    return handleToggleInGame(nextState, { type: 'toggleInGame', payload: { inGame: true } });
+    return handleSetInGame(nextState, { type: 'setInGame', payload: { inGame: true } });
   } else {
     return nextState;
   }
@@ -182,7 +184,6 @@ const handleEditMessage = (
     editFor,
     media: mediaId,
     source,
-    defaultInGame: inGame,
     inputedName,
     range,
     backup: clearBackup(state),
@@ -242,8 +243,7 @@ const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeA
     return state.backup;
   }
   const modifiersParseResult = parseModifiers(state.source);
-  const nextDefaultInGame = !(modifiersParseResult.inGame ? modifiersParseResult.inGame.inGame : state.defaultInGame);
-  let source = nextDefaultInGame ? '.out ' : '.in ';
+  let source = '';
   if (modifiersParseResult.mute) {
     source = '.mute ';
   }
@@ -252,7 +252,6 @@ const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeA
   }
   return {
     ...state,
-    defaultInGame: nextDefaultInGame,
     previewId: makeId(),
     editFor: null,
     range: [source.length, source.length],
@@ -327,6 +326,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleSetInputedName(state, action);
     case 'toggleInGame':
       return handleToggleInGame(state, action);
+    case 'setInGame':
+      return handleSetInGame(state, action);
     case 'recoverState':
       return handleRecoverState(state, action);
     case 'addDice':
@@ -363,13 +364,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
 };
 
 export const checkCompose =
-  (characterName: string) =>
-  ({
-    source,
-    inputedName,
-    defaultInGame,
-    media,
-  }: Pick<ComposeState, 'source' | 'inputedName' | 'defaultInGame' | 'media'>): ComposeError | null => {
+  (characterName: string, defaultInGame: boolean) =>
+  ({ source, inputedName, media }: Pick<ComposeState, 'source' | 'inputedName' | 'media'>): ComposeError | null => {
     const { inGame, rest } = parseModifiers(source);
     if (inGame ? inGame.inGame : defaultInGame) {
       if (inputedName.trim() === '' && characterName === '') {

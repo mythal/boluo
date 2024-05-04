@@ -21,13 +21,14 @@ const sendPreview = (
   parsed: ParseResult,
   connection: WebSocket,
   sendTimeoutRef: MutableRefObject<number | undefined>,
+  defaultInGame: boolean,
 ): void => {
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { defaultInGame: composeInGame, previewId, inputedName, editFor } = compose;
+    const { previewId, inputedName, editFor } = compose;
     const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame } = parsed;
-    const inGame = parsedInGame ?? composeInGame;
+    const inGame = parsedInGame ?? defaultInGame;
     const inGameName = inputedName || characterName;
     if (!previewId) {
       return;
@@ -59,6 +60,7 @@ export const useSendPreview = (
   characterName: string,
   composeAtom: ComposeAtom,
   parsedAtom: Atom<ParseResult>,
+  defaultInGame: boolean,
 ) => {
   const store = useStore();
   const sendTimoutRef = useRef<number | undefined>(undefined);
@@ -74,7 +76,16 @@ export const useSendPreview = (
       }
       const composeState = store.get(composeAtom);
       const parsed = store.get(parsedAtom);
-      sendPreview(channelId, nickname, characterName, composeState, parsed, connectionState.connection, sendTimoutRef);
+      sendPreview(
+        channelId,
+        nickname,
+        characterName,
+        composeState,
+        parsed,
+        connectionState.connection,
+        sendTimoutRef,
+        defaultInGame,
+      );
     });
-  }, [channelId, characterName, composeAtom, connectionState, isFocused, nickname, parsedAtom, store]);
+  }, [channelId, characterName, composeAtom, connectionState, defaultInGame, isFocused, nickname, parsedAtom, store]);
 };

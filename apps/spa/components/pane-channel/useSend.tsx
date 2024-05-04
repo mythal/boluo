@@ -12,9 +12,12 @@ import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
+import { useQueryChannel } from '../../hooks/useQueryChannel';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
+  const { data: channel } = useQueryChannel(channelId);
+  const defaultInGame = channel?.type === 'IN_GAME';
   const { composeAtom, parsedAtom, checkComposeAtom } = useChannelAtoms();
   const store = useStore();
   const setBanner = useSetBanner();
@@ -56,7 +59,7 @@ export const useSend = (me: User) => {
     const { text, entities, whisperToUsernames } = parse(compose.source);
     let result: Result<Message, ApiError>;
     let name = nickname;
-    const inGame = parsed.inGame ?? compose.defaultInGame;
+    const inGame = parsed.inGame ?? defaultInGame;
     if (inGame) {
       const inputedName = compose.inputedName.trim();
       if (inputedName === '') {
@@ -131,6 +134,7 @@ export const useSend = (me: User) => {
     channelId,
     checkComposeAtom,
     composeAtom,
+    defaultInGame,
     myMember,
     nickname,
     parsedAtom,

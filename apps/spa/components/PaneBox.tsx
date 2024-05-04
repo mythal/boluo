@@ -24,7 +24,7 @@ const Placeholder = () => {
 };
 
 export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
-  const { key: paneKey, focused: isFocused } = useContext(PaneContext);
+  const { key: paneKey } = useContext(PaneContext);
   const focus = usePaneFocus();
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const isChildPane = useIsChildPane();
@@ -50,13 +50,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
         <div className="bg-pane-header-border absolute z-10 h-[2px] w-full"></div>
       </div>
 
-      <div
-        onFocus={focus}
-        className={clsx(
-          'bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden',
-          isFocused ? '' : 'max-md:hidden',
-        )}
-      >
+      <div onFocus={focus} className="bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden">
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center">

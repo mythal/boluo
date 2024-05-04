@@ -718,7 +718,7 @@ const meModifier: P<Modifier> = regex(/^[.。]me\b/i).then(([match, { text, rest
   return [modifier, { text, rest }];
 });
 
-const rollModifier: P<Modifier> = regex(/^[.。]r\b/i).then(([match, { text, rest }]) => {
+const rollModifier: P<Modifier> = regex(/^[.。]r/i).then(([match, { text, rest }]) => {
   const [entire] = match;
   const modifier: RollModifier = {
     type: 'Roll',

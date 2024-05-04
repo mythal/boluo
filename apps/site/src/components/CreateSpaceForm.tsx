@@ -126,9 +126,13 @@ const DescriptionField: FC = () => {
 };
 
 export const CreateSpaceForm: FC<Props> = () => {
+  const intl = useIntl();
   const { mutate } = useSWRConfig();
   const methods = useForm<CreateSpace>({
-    defaultValues: {},
+    defaultValues: {
+      firstChannelName: intl.formatMessage({ defaultMessage: 'General' }),
+      firstChannelType: 'OUT_OF_GAME',
+    },
   });
   const { handleSubmit } = methods;
   const [error, setError] = useState<ApiError | null>(null);

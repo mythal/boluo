@@ -4,14 +4,12 @@ import { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 
-interface Props {
-  channelId: string;
-}
+interface Props {}
 
-export const InGameSwitchButton: FC<Props> = ({ channelId }) => {
-  const { data: channel } = useQueryChannel(channelId);
+export const InGameSwitchButton: FC<Props> = () => {
+  const defaultInGame = useDefaultInGame();
   const { inGameAtom, composeAtom } = useChannelAtoms();
   const intl = useIntl();
   const inGame = useAtomValue(inGameAtom);
@@ -24,7 +22,7 @@ export const InGameSwitchButton: FC<Props> = ({ channelId }) => {
         dispatch({
           type: 'toggleInGame',
           payload: {
-            defaultInGame: channel?.type === 'IN_GAME',
+            defaultInGame,
           },
         })
       }

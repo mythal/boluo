@@ -54,10 +54,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
     return <EditMessageBanner currentUser={member.user} />;
   }, [isEditing, member.user]);
   const fileButton = useMemo(() => <FileButton />, []);
-  const inGameSwitchButton = useMemo(
-    () => <InGameSwitchButton channelId={member.channel.channelId} />,
-    [member.channel.channelId],
-  );
+  const inGameSwitchButton = useMemo(() => <InGameSwitchButton />, []);
   const addDiceButton = useMemo(() => <AddDiceButton />, []);
   const sendButton = useMemo(
     () => <SendButton send={send} currentUser={member.user} isEditing={isEditing} />,

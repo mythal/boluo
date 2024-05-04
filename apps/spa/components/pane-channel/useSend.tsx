@@ -12,12 +12,11 @@ import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
-  const { data: channel } = useQueryChannel(channelId);
-  const defaultInGame = channel?.type === 'IN_GAME';
+  const defaultInGame = useDefaultInGame();
   const { composeAtom, parsedAtom, checkComposeAtom } = useChannelAtoms();
   const store = useStore();
   const setBanner = useSetBanner();

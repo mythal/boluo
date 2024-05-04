@@ -126,9 +126,13 @@ const DescriptionField: FC = () => {
 };
 
 export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
+  const intl = useIntl();
   const { mutate } = useSWRConfig();
   const form = useForm<CreateSpace>({
-    defaultValues: {},
+    defaultValues: {
+      firstChannelName: intl.formatMessage({ defaultMessage: 'General' }),
+      firstChannelType: 'OUT_OF_GAME',
+    },
   });
   const { handleSubmit } = form;
   const key = ['/spaces/create'] as const;

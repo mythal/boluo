@@ -1,4 +1,3 @@
-import { DEFAULT_COMPOSE_SOURCE } from '../const';
 import type { Entity } from './entities';
 import type { Modifier } from './parser';
 
@@ -27,13 +26,13 @@ export const emptyParseResult: ParseResult = {
 };
 
 export const composeInitialParseResult: ParseResult = {
-  text: DEFAULT_COMPOSE_SOURCE,
+  text: '',
   entities: [],
   isAction: false,
   isRoll: false,
-  inGame: false,
+  inGame: null,
   characterName: '',
-  modifiers: [{ type: 'InGame', inGame: false, start: 0, len: 4, characterName: '' }],
+  modifiers: [],
   whisperToUsernames: null,
   broadcast: false,
 };

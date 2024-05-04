@@ -3,5 +3,3 @@ export const IS_SAFARI = IS_BROWSER && /^((?!chrome|android).)*safari/i.test(nav
 
 export const PING = '♥';
 export const PONG = '♡';
-
-export const DEFAULT_COMPOSE_SOURCE = '.out ';

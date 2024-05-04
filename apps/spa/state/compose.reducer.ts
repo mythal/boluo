@@ -2,7 +2,6 @@ import { makeId } from '@boluo/utils';
 import { Modifier, parseModifiers } from '../interpreter/parser';
 import { MediaError, validateMedia } from '../media';
 import { ComposeAction, ComposeActionUnion } from './compose.actions';
-import { DEFAULT_COMPOSE_SOURCE } from '../const';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
 
@@ -29,9 +28,9 @@ export const makeInitialComposeState = (): ComposeState => ({
   editFor: null,
   inputedName: '',
   previewId: makeId(),
-  source: DEFAULT_COMPOSE_SOURCE,
+  source: '',
   media: null,
-  range: [DEFAULT_COMPOSE_SOURCE.length, DEFAULT_COMPOSE_SOURCE.length],
+  range: [0, 0],
   focused: false,
   whisperTo: undefined,
 });
@@ -245,13 +244,16 @@ const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeA
   if (edit && state.backup) {
     return state.backup;
   }
-  const modifiersParseResult = parseModifiers(state.source);
+  const modifiers = parseModifiers(state.source);
   let source = '';
-  if (modifiersParseResult.mute) {
-    source = '.mute ';
+  if (modifiers.inGame) {
+    source += modifiers.inGame.inGame ? '.in ' : '.out ';
   }
-  if (modifiersParseResult.action) {
-    source = '.me ';
+  if (modifiers.mute) {
+    source += '.mute ';
+  }
+  if (modifiers.action) {
+    source += '.me ';
   }
   return {
     ...state,

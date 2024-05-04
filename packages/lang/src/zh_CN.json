@@ -54,7 +54,7 @@
     "message": "无角色名"
   },
   "1iEPTM": {
-    "message": "General"
+    "message": "通用"
   },
   "2J8G6R": {
     "message": "文件大小不能超过 {sizeLimit}M"
@@ -72,7 +72,7 @@
     "message": "保存更改"
   },
   "3c9Xiy": {
-    "message": "An unknown error occurred."
+    "message": "发生了未知错误。"
   },
   "3cc4Ct": {
     "message": "亮色"
@@ -201,7 +201,7 @@
     "message": "贵安，{username}！"
   },
   "FazwRl": {
-    "message": "Try again"
+    "message": "再试一次"
   },
   "GEhexi": {
     "message": "在暗色模式"
@@ -279,7 +279,7 @@
     "message": "显示"
   },
   "K8uxGU": {
-    "message": "The password reset email has been sent."
+    "message": "密码重置邮件已发送。"
   },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
@@ -288,7 +288,7 @@
     "message": "还没有设置简介"
   },
   "L01rMU": {
-    "message": "By default member will speak on their own behalf."
+    "message": "成员默认将作为本人发言。"
   },
   "LUrJwE": {
     "message": "频道"
@@ -357,7 +357,7 @@
     "message": "欢迎"
   },
   "Q+Af6H": {
-    "message": "Out of Game"
+    "message": "游戏外"
   },
   "Q8Qw5B": {
     "message": "描述"
@@ -375,7 +375,7 @@
     "message": "动作"
   },
   "Qm+Ijg": {
-    "message": "The email address is not registered."
+    "message": "该邮箱尚未注册"
   },
   "R59CS8": {
     "message": "移除头像"
@@ -444,7 +444,7 @@
     "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
   "V/JHlm": {
-    "message": "Forgot password?"
+    "message": "忘记密码?"
   },
   "VA/Z1S": {
     "message": "隐藏"
@@ -471,7 +471,7 @@
     "message": "确认要离开「{spaceName}」位面吗？"
   },
   "WwpJ5A": {
-    "message": "Send Password Reset Email"
+    "message": "发送密码重置邮件"
   },
   "X2YA3V": {
     "message": "提交的数据没有通过核查。"
@@ -507,7 +507,7 @@
     "message": "关闭 {paneName}"
   },
   "Yy/yDL": {
-    "message": "Reset password"
+    "message": "重置密码"
   },
   "ZKBnrB": {
     "message": "必须填写角色名"
@@ -591,7 +591,7 @@
     "message": "附件"
   },
   "eOqhbq": {
-    "message": "Unable to reset your password, invalid reset link."
+    "message": "无法重置密码，重置链接无效。"
   },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
@@ -600,7 +600,7 @@
     "message": "基本"
   },
   "fTHhSB": {
-    "message": "New password"
+    "message": "新密码"
   },
   "fc2iho": {
     "message": "添加文件"
@@ -771,10 +771,10 @@
     "message": "未找到，记录可能已删除。"
   },
   "sy+pv5": {
-    "message": "Email"
+    "message": "邮箱"
   },
   "t0WZaq": {
-    "message": "The channel where the game is played. By default member will speak as a character."
+    "message": "进行游戏的频道，成员默认以角色身份发言"
   },
   "t5xj3B": {
     "message": "新位面"
@@ -837,7 +837,7 @@
     "message": "此频道名已被占用。"
   },
   "xl27nc": {
-    "message": "Reset Password"
+    "message": "重置密码"
   },
   "xmcVZ0": {
     "message": "搜索"

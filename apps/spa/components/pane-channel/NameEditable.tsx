@@ -45,11 +45,12 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member 
     />
   );
 
-  const { refs, floatingStyles, middlewareData, context } = useFloating({
+  const { refs, floatingStyles, context } = useFloating({
     open: shouldOpen,
     onOpenChange: setIsOpen,
     placement: 'top-end',
-    middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 4, crossAxis: -4 }), hide()],
+    // The hide middleware will cause the keyboard flickering in Android
+    middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 4, crossAxis: -4 })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -81,10 +82,7 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member 
         <FloatingPortal>
           <div
             ref={refs.setFloating}
-            className={clsx(
-              'bg-pane-bg z-20 rounded-sm border px-4 py-3 shadow-lg',
-              middlewareData.hide?.referenceHidden === true && 'hidden',
-            )}
+            className="bg-pane-bg z-20 rounded-sm border px-4 py-3 shadow-lg"
             style={floatingStyles}
             {...getFloatingProps()}
           >

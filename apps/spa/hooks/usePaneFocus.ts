@@ -7,7 +7,7 @@ export const usePaneFocus = () => {
   const store = useStore();
   const { key } = useContext(PaneContext);
   return useCallback(() => {
-    if (key) {
+    if (key != null) {
       store.set(focusPaneAtom, key);
     }
   }, [key, store]);

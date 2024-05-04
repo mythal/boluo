@@ -62,7 +62,7 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     );
   }, [isSpaceMembersLoading, myId, mySpaceMember, space]);
   if (isLoading || !space) {
-    return <PaneLoading />;
+    return <PaneLoading grow />;
   }
   const { description, isPublic } = space;
   return (

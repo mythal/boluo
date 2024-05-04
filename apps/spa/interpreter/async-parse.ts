@@ -13,7 +13,7 @@ const putBack = (worker: Worker): void => {
   }
 };
 
-export const asyncParse = (input: string, signal?: AbortSignal): Promise<ParseResult> => {
+export const asyncParse = (parserArguments: ParserArguments, signal?: AbortSignal): Promise<ParseResult> => {
   const worker = workerPool.pop() ?? create();
   const promise = new Promise<ParseResult>((resolve, reject) => {
     if (signal?.aborted) {
@@ -34,6 +34,6 @@ export const asyncParse = (input: string, signal?: AbortSignal): Promise<ParseRe
     });
     worker.addEventListener('message', handleMessage);
   });
-  worker.postMessage({ source: input } as ParserArguments);
+  worker.postMessage(parserArguments);
   return promise;
 };

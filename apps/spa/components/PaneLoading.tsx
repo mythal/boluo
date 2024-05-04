@@ -6,9 +6,10 @@ import { PaneHeaderBox } from './PaneHeaderBox';
 
 interface Props {
   children?: React.ReactNode;
+  grow?: boolean;
 }
 
-export const PaneLoading: FC<Props> = ({ children }) => {
+export const PaneLoading: FC<Props> = ({ children, grow = false }) => {
   const header = useMemo(
     () => (
       <PaneHeaderBox withoutDefaultOperators icon={<Spinner />}>
@@ -18,7 +19,7 @@ export const PaneLoading: FC<Props> = ({ children }) => {
     [],
   );
   return (
-    <PaneBox grow header={header}>
+    <PaneBox grow={grow} header={header}>
       <Loading />
       {children}
     </PaneBox>

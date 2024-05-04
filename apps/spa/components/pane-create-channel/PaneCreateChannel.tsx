@@ -1,9 +1,9 @@
-import { ApiError, ChannelWithMember } from '@boluo/api';
+import { ApiError, ChannelWithMember, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useErrorExplain } from '@boluo/common';
 import { Plus } from '@boluo/icons';
-import type { FC, ReactNode } from 'react';
-import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
+import type { FC } from 'react';
+import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
@@ -20,6 +20,9 @@ import { PaneFooterBox } from '../PaneFooterBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { ChannelType } from '@boluo/api';
 import { ChannelTypeField } from './ChannelTypeField';
+import { useQuerySpace } from '../../hooks/useQuerySpace';
+import { PaneLoading } from '../PaneLoading';
+import { PaneFailed } from '../pane-failed/PaneFailed';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
@@ -33,10 +36,6 @@ export interface FormSchema {
   characterName: string;
   isSecret: boolean;
   type: ChannelType;
-}
-
-interface Props {
-  spaceId: string;
 }
 
 const key = ['/channel/create'];
@@ -61,19 +60,16 @@ const CharacterNameField: FC = () => {
   );
 };
 
-interface Props {
-  spaceId: string;
-}
-
-export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
+export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
   const close = usePaneClose();
+  const spaceId = space.id;
   const { mutate } = useSWRConfig();
   const replacePane = usePaneReplace();
   const form = useForm<FormSchema>({
     defaultValues: {
       name: '',
       spaceId,
-      defaultDiceType: 'd20',
+      defaultDiceType: space.defaultDiceType || 'd20',
       characterName: '',
       isSecret: false,
       type: 'IN_GAME',
@@ -123,6 +119,23 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
       </div>
     </PaneBox>
   );
+};
+
+export const PaneCreateChannel: FC<{
+  spaceId: string;
+}> = ({ spaceId }) => {
+  const { data: space, isLoading, error } = useQuerySpace(spaceId);
+  if (!space) {
+    if (isLoading) {
+      return <PaneLoading />;
+    } else if (error) {
+      return <PaneFailed title={<FormattedMessage defaultMessage="Failed to load the space" />} error={error} />;
+    } else {
+      // Unreachable
+      return null;
+    }
+  }
+  return <CreateChannelForm space={space} />;
 };
 
 export default PaneCreateChannel;

@@ -1,7 +1,7 @@
 import { ChannelMember } from '@boluo/api';
 import { Atom, atom, PrimitiveAtom, WritableAtom } from 'jotai';
 import { atomWithReducer, atomWithStorage, loadable, selectAtom } from 'jotai/utils';
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
 import { composeInitialParseResult, ParseResult } from '../interpreter/parse-result';
 import type { ComposeActionUnion } from '../state/compose.actions';
@@ -38,17 +38,24 @@ export const useMakeChannelAtoms = (
   channelId: string,
   member: ChannelMember | null,
   defaultInGame: boolean,
+  defaultDiceFace: number,
 ): ChannelAtoms => {
+  const defaultDiceFaceRef = useRef(defaultDiceFace);
+  defaultDiceFaceRef.current = defaultDiceFace;
+  const defaultInGameRef = useRef(defaultInGame);
+  defaultInGameRef.current = defaultInGame;
+  const characterNameRef = useRef(member?.characterName ?? '');
+  characterNameRef.current = member?.characterName ?? '';
   const composeAtom = useMemo(() => atomWithReducer(makeInitialComposeState(), composeReducer), []);
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
-    () => selectAtom(composeAtom, checkCompose(member?.characterName ?? '', defaultInGame)),
-    [composeAtom, defaultInGame, member?.characterName],
+    () => selectAtom(composeAtom, checkCompose(characterNameRef.current, defaultInGameRef.current)),
+    [composeAtom],
   );
   return useMemo(() => {
     const loadableParsedAtom = loadable(
       atom(async (get, { signal }): Promise<ParseResult> => {
         const { source } = get(composeAtom);
-        return await asyncParse(source, signal);
+        return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
       }),
     );
     let cachedParseResult: ParseResult = composeInitialParseResult;
@@ -67,7 +74,7 @@ export const useMakeChannelAtoms = (
     const inGameAtom = atom((read) => {
       const { inGame } = read(parsedAtom);
       if (inGame == null) {
-        return defaultInGame;
+        return defaultInGameRef.current;
       } else {
         return inGame;
       }
@@ -86,7 +93,7 @@ export const useMakeChannelAtoms = (
       showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
       memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
     };
-  }, [channelId, checkComposeAtom, composeAtom, defaultInGame]);
+  }, [channelId, checkComposeAtom, composeAtom]);
 };
 
 export const useChannelAtoms = (): ChannelAtoms => {

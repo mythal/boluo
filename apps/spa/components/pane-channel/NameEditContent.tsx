@@ -56,7 +56,6 @@ const chatStateToNameList = (
     const bTime = new Date(bCreated).getTime();
     return bTime - aTime;
   });
-  console.log(channels);
 
   for (const channel of channels) {
     searchChannelForNames(names, channel, myId, 100);

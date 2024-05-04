@@ -23,6 +23,7 @@ import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 import { Failed } from '../common/Failed';
 import { useIsChildPane } from '../../hooks/useIsChildPane';
+import { ChannelTypeField } from '../pane-create-channel/ChannelTypeField';
 
 interface Props {
   channelId: string;
@@ -36,6 +37,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
       topic: channel.topic,
       defaultRollCommand: channel.defaultRollCommand,
       isSecret: !channel.isPublic,
+      type: channel.type || 'IN_GAME',
     },
   });
 
@@ -44,7 +46,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const key = ['/channels/query', channel.id] as const;
   const editChannel: MutationFetcher<Channel, typeof key, ChannelSettingsForm> = async (
     [_, channelId],
-    { arg: { name, defaultDiceType, topic, isSecret } },
+    { arg: { name, defaultDiceType, topic, isSecret, type } },
   ): Promise<Channel> => {
     const result = await post('/channels/edit', null, {
       name,
@@ -56,7 +58,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
       grantMasters: [],
       removeMasters: [],
       isDocument: null,
-      type: null,
+      type,
     });
     return result.unwrap();
   };
@@ -84,6 +86,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="p-pane flex max-w-md flex-col gap-4">
           <ChannelNameField spaceId={channel.spaceId} channelName={channel.name} />
+          <ChannelTypeField />
           <DefaultDiceField />
           <DefaultRollCommandField />
           <TopicField />

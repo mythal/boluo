@@ -2,22 +2,24 @@ import { ApiError, ChannelWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useErrorExplain } from '@boluo/common';
 import { Plus } from '@boluo/icons';
-import type { FC } from 'react';
-import { FormProvider, useForm, useFormContext } from 'react-hook-form';
+import type { FC, ReactNode } from 'react';
+import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
-import { usePaneClose } from '../hooks/usePaneClose';
-import { usePaneReplace } from '../hooks/usePaneReplace';
-import { ChannelNameField } from './pane-channel-settings/ChannelNameField';
-import { DefaultDiceField } from './pane-channel-settings/DefaultDiceField';
-import { IsSecretField } from './pane-channel-settings/IsPrivateField';
-import { PaneBox } from './PaneBox';
-import { PaneFooterBox } from './PaneFooterBox';
-import { PaneHeaderBox } from './PaneHeaderBox';
+import { usePaneClose } from '../../hooks/usePaneClose';
+import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { ChannelNameField } from '../pane-channel-settings/ChannelNameField';
+import { DefaultDiceField } from '../pane-channel-settings/DefaultDiceField';
+import { IsSecretField } from '../pane-channel-settings/IsPrivateField';
+import { PaneBox } from '../PaneBox';
+import { PaneFooterBox } from '../PaneFooterBox';
+import { PaneHeaderBox } from '../PaneHeaderBox';
+import { ChannelType } from '@boluo/api';
+import { ChannelTypeField } from './ChannelTypeField';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
@@ -30,6 +32,7 @@ export interface FormSchema {
   defaultDiceType: string;
   characterName: string;
   isSecret: boolean;
+  type: ChannelType;
 }
 
 interface Props {
@@ -41,7 +44,7 @@ const createChannel: MutationFetcher<ChannelWithMember, typeof key, FormSchema> 
   _,
   { arg: { isSecret, ...payload } },
 ) => {
-  const result = await post('/channels/create', null, { ...payload, isPublic: !isSecret, type: 'IN_GAME' });
+  const result = await post('/channels/create', null, { ...payload, isPublic: !isSecret });
   return result.unwrap();
 };
 
@@ -73,6 +76,7 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
       defaultDiceType: 'd20',
       characterName: '',
       isSecret: false,
+      type: 'IN_GAME',
     },
   });
   const { trigger, isMutating, error } = useSWRMutation<ChannelWithMember, ApiError, typeof key, FormSchema>(
@@ -98,9 +102,10 @@ export const PaneCreateChannel: FC<Props> = ({ spaceId }) => {
       <div className="relative">
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="p-pane flex h-full max-w-md flex-col gap-2">
+            <div className="p-pane flex h-full max-w-md flex-col gap-4">
               <ChannelNameField spaceId={spaceId} />
               <CharacterNameField />
+              <ChannelTypeField />
               <IsSecretField />
               <DefaultDiceField />
               {error && <FormErrorDispay error={error} />}

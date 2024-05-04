@@ -91,21 +91,24 @@ const handleRecoverState = (state: ComposeState, action: ComposeAction<'recoverS
   return { ...action.payload, previewId: makeId(), media: null };
 };
 
-const handleAddDice = (state: ComposeState, action: ComposeAction<'addDice'>): ComposeState => {
+const handleAddDice = (
+  state: ComposeState,
+  { payload: { defaultRollCommand } }: ComposeAction<'addDice'>,
+): ComposeState => {
   let { source } = state;
   let range = state.range;
   if (source.trim().length === 0) {
-    source = '{d} ';
+    source = `{${defaultRollCommand}} `;
     range = [source.length, source.length];
   } else if (!state.range) {
-    source += ' {d} ';
+    source += ` {${defaultRollCommand}} `;
     range = [source.length, source.length];
   } else {
     const [a, b] = state.range;
     if (a === b) {
       const left = source.substring(0, a);
       const right = source.substring(a);
-      source = `${left} {d} `;
+      source = `${left} {${defaultRollCommand}} `;
       range = [source.length, source.length];
       source += right;
     }

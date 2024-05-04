@@ -25,20 +25,18 @@ import { Failed } from '../common/Failed';
 import { useIsChildPane } from '../../hooks/useIsChildPane';
 import { ChannelTypeField } from '../pane-create-channel/ChannelTypeField';
 
-interface Props {
-  channelId: string;
-}
+const channelToInitialValues = (channel: Channel): ChannelSettingsForm => ({
+  name: channel.name,
+  defaultDiceType: channel.defaultDiceType,
+  topic: channel.topic,
+  defaultRollCommand: channel.defaultRollCommand,
+  isSecret: !channel.isPublic,
+  type: channel.type || 'IN_GAME',
+});
 
 const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const form = useForm<ChannelSettingsForm>({
-    defaultValues: {
-      name: channel.name,
-      defaultDiceType: channel.defaultDiceType,
-      topic: channel.topic,
-      defaultRollCommand: channel.defaultRollCommand,
-      isSecret: !channel.isPublic,
-      type: channel.type || 'IN_GAME',
-    },
+    defaultValues: channelToInitialValues(channel),
   });
 
   const closePane = usePaneClose();
@@ -66,8 +64,8 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
     ['/channels/query', channel.id],
     editChannel,
     {
-      onSuccess: () => {
-        closePane();
+      onSuccess: (channel: Channel) => {
+        form.reset(channelToInitialValues(channel));
       },
       populateCache: (channel) => channel,
       revalidate: false,
@@ -123,7 +121,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   );
 };
 
-export const PaneChannelSettings: FC<Props> = ({ channelId }) => {
+export const PaneChannelSettings: FC<{ channelId: string }> = ({ channelId }) => {
   const { data: channel, error } = useQueryChannel(channelId);
   const isChild = useIsChildPane();
 

@@ -98,7 +98,8 @@ CREATE TABLE spaces
     "default_dice_type" text      NOT NULL DEFAULT 'd20', -- d20, d100, FATE ...
     "explorable"        boolean   NOT NULL DEFAULT false,
     "invite_token"      uuid      NOT NULL DEFAULT gen_random_uuid(),
-    "allow_spectator"   boolean   NOT NULL DEFAULT true
+    "allow_spectator"   boolean   NOT NULL DEFAULT true,
+    "latest_activity"   timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
 CREATE TABLE space_members

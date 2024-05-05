@@ -127,6 +127,10 @@
                 [
                   "allow_spectator",
                   "Bool"
+                ],
+                [
+                  "latest_activity",
+                  "Timestamptz"
                 ]
               ]
             }

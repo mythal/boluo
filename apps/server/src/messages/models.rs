@@ -278,6 +278,11 @@ impl Message {
             crate::pos::finished(cache, *channel_id, *preview_id).await?;
         }
         message.hide();
+        tokio::spawn(async move {
+            let created = message.created;
+            let channel_id = message.channel_id;
+            super::tasks::WAIT_UPDATE.lock().await.insert(channel_id, created);
+        });
         Ok(message)
     }
 

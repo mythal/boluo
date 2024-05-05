@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    spaces AS \"space!: Space\"\nFROM\n    spaces\nWHERE\n    deleted = FALSE\n    AND explorable = TRUE;\n\n",
+  "query": "SELECT\n    spaces AS \"space!: Space\"\nFROM\n    spaces\nWHERE\n    deleted = FALSE\n    AND explorable = TRUE\nORDER BY\n    latest_activity DESC\nLIMIT\n    512;\n",
   "describe": {
     "columns": [
       {
@@ -66,6 +66,10 @@
                 [
                   "allow_spectator",
                   "Bool"
+                ],
+                [
+                  "latest_activity",
+                  "Timestamptz"
                 ]
               ]
             }
@@ -80,5 +84,5 @@
       null
     ]
   },
-  "hash": "afd683b66efde351ad1a35a8b41996ad92119de7893ea208799d1163382f6955"
+  "hash": "035efc3e3c2be06384e558f4be2e1b7acca1aa204e9f5f133af27e06ab57a641"
 }

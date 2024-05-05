@@ -8,5 +8,7 @@ FROM
         AND s.deleted = FALSE
     INNER JOIN users u ON u.id = $1
 WHERE
-    sm.user_id = $1;
+    sm.user_id = $1
+ORDER BY
+    s.latest_activity DESC;
 

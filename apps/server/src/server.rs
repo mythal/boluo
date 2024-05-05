@@ -167,6 +167,7 @@ async fn main() {
 
     let server = Server::bind(&addr).serve(make_svc);
     events::tasks::start();
+    messages::tasks::start();
     // https://tokio.rs/tokio/topics/shutdown
     let mut stream = signal(SignalKind::terminate()).unwrap();
 

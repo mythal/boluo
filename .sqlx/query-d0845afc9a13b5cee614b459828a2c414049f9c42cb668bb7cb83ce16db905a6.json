@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    s AS \"space!: Space\",\n    sm AS \"member!: SpaceMember\",\n    u AS \"user!: User\"\nFROM\n    space_members sm\n    INNER JOIN spaces s ON sm.space_id = s.id\n        AND s.deleted = FALSE\n    INNER JOIN users u ON u.id = $1\nWHERE\n    sm.user_id = $1;\n\n",
+  "query": "SELECT\n    s AS \"space!: Space\",\n    sm AS \"member!: SpaceMember\",\n    u AS \"user!: User\"\nFROM\n    space_members sm\n    INNER JOIN spaces s ON sm.space_id = s.id\n        AND s.deleted = FALSE\n    INNER JOIN users u ON u.id = $1\nWHERE\n    sm.user_id = $1\nORDER BY\n    s.latest_activity DESC;\n\n",
   "describe": {
     "columns": [
       {
@@ -66,6 +66,10 @@
                 [
                   "allow_spectator",
                   "Bool"
+                ],
+                [
+                  "latest_activity",
+                  "Timestamptz"
                 ]
               ]
             }
@@ -166,5 +170,5 @@
       null
     ]
   },
-  "hash": "9da32454a08897e7f9bbffb3913661e4dd113aebb1293141ae855f4e44279360"
+  "hash": "d0845afc9a13b5cee614b459828a2c414049f9c42cb668bb7cb83ce16db905a6"
 }

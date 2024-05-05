@@ -83,6 +83,7 @@ pub struct Space {
     #[serde(skip)]
     pub invite_token: Uuid,
     pub allow_spectator: bool,
+    pub latest_activity: DateTime<Utc>,
 }
 
 impl Space {

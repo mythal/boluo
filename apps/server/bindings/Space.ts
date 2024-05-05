@@ -12,4 +12,5 @@ export interface Space {
   defaultDiceType: string;
   explorable: boolean;
   allowSpectator: boolean;
+  latestActivity: string;
 }

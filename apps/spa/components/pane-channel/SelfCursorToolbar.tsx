@@ -18,6 +18,7 @@ export const SelfCursorToolbar: FC<Props> = ({ cursorAtom }) => {
     elements: {
       reference: cursorNode,
     },
+    placement: 'top',
     middleware: [],
     whileElementsMounted: autoUpdate,
   });

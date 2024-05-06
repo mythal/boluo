@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { FC, ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
+import { FC, ReactNode, Suspense, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { ChildrenProps } from '@boluo/utils';
 import { usePaneFocus } from '../hooks/usePaneFocus';
@@ -13,6 +13,7 @@ import { PaneData } from '../state/view.types';
 import { useAtomValue } from 'jotai';
 import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
 import { ChildPaneSwitch } from './PaneSwitch';
+import { PaneSize, PaneSizeContext } from '../hooks/usePaneSize';
 
 interface Props extends ChildrenProps {
   header?: ReactNode;
@@ -26,6 +27,7 @@ const Placeholder = () => {
 export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   const { key: paneKey } = useContext(PaneContext);
   const focus = usePaneFocus();
+  const boxRef = useRef<HTMLDivElement | null>(null);
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const isChildPane = useIsChildPane();
   const childPaneAtom = useMemo(
@@ -40,6 +42,28 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     [isChildPane, paneKey],
   );
   const childPane: PaneData | undefined = useAtomValue(childPaneAtom);
+  const [size, setSize] = useState<PaneSize>('NORMAL');
+  useEffect(() => {
+    const box = boxRef.current;
+    if (box == null) {
+      console.warn('No pane box');
+      return;
+    }
+    const POINT = 672;
+    setSize(box.clientWidth > POINT ? 'NORMAL' : 'SMALL');
+
+    const sizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry == null) {
+        console.warn('Unreachable');
+      }
+      setSize(box.clientWidth > POINT ? 'NORMAL' : 'SMALL');
+    });
+    sizeObserver.observe(box);
+    return () => {
+      sizeObserver.disconnect();
+    };
+  }, []);
   const content = (
     <div onClick={focus} className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col">
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
@@ -72,16 +96,19 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   }
   return (
     <BannerContext.Provider value={bannerRef}>
-      <div
-        className={`PaneBox flex h-full min-w-[22rem] max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
-      >
-        {content}
-        {childPane && (
-          <IsChildPaneContext.Provider value={true}>
-            <ChildPaneSwitch pane={childPane} />
-          </IsChildPaneContext.Provider>
-        )}
-      </div>
+      <PaneSizeContext.Provider value={size}>
+        <div
+          ref={boxRef}
+          className={`PaneBox flex h-full min-w-[22rem] max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
+        >
+          {content}
+          {childPane && (
+            <IsChildPaneContext.Provider value={true}>
+              <ChildPaneSwitch pane={childPane} />
+            </IsChildPaneContext.Provider>
+          )}
+        </div>
+      </PaneSizeContext.Provider>
     </BannerContext.Provider>
   );
 };

@@ -323,6 +323,38 @@ const handleRemoveWhisperTarget = (
   return modifyModifier(state, whisper, modifiedModifier);
 };
 
+const handleSetVisibility = (
+  state: ComposeState,
+  { payload: { visibility } }: ComposeAction<'setVisibility'>,
+): ComposeState => {
+  const modifiers = parseModifiers(state.source);
+  console.log(modifiers);
+  let nextState = state;
+  if (visibility === 'BROADCAST') {
+    if (modifiers.mute) {
+      nextState = modifyModifier(nextState, modifiers.mute, '');
+    }
+    if (modifiers.whisper) {
+      nextState = modifyModifier(nextState, modifiers.whisper, '');
+    }
+  } else if (visibility === 'MUTE') {
+    if (modifiers.whisper) {
+      nextState = modifyModifier(nextState, modifiers.whisper, '');
+    }
+    if (!modifiers.mute) {
+      nextState = modifyModifier(nextState, modifiers.mute, '.mute');
+    }
+  } else if (visibility === 'WHISPER') {
+    if (modifiers.mute) {
+      nextState = modifyModifier(nextState, modifiers.mute, '');
+    }
+    if (!modifiers.whisper) {
+      nextState = modifyModifier(nextState, modifiers.whisper, '.h');
+    }
+  }
+  return nextState;
+};
+
 export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
@@ -365,6 +397,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleAddWhisperTarget(state, action);
     case 'removeWhisperTarget':
       return handleRemoveWhisperTarget(state, action);
+    case 'setVisibility':
+      return handleSetVisibility(state, action);
   }
 };
 

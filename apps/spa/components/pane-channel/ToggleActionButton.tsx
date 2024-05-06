@@ -1,26 +1,27 @@
 import { PersonRunning } from '@boluo/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { selectAtom } from 'jotai/utils';
-import { memo, useCallback, useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { Button } from '@boluo/ui/Button';
+import { useSetAtom } from 'jotai';
+import { memo, useCallback } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
+import { useIntl } from 'react-intl';
 
-interface Props {}
+interface Props {
+  isAction: boolean;
+}
 
-export const ToggleActionButton = memo<Props>(() => {
-  const { composeAtom, isActionAtom } = useChannelAtoms();
+export const ToggleActionButton = memo<Props>(({ isAction }) => {
+  const { composeAtom } = useChannelAtoms();
+  const intl = useIntl();
   const dispatch = useSetAtom(composeAtom);
-  const isAction = useAtomValue(isActionAtom);
   const toggle = useCallback(() => dispatch({ type: 'toggleAction', payload: {} }), [dispatch]);
   return (
-    <Button data-small data-type="switch" data-on={isAction} onClick={toggle}>
+    <button
+      aria-pressed={isAction}
+      onClick={toggle}
+      title={intl.formatMessage({ defaultMessage: 'Toggle Action' })}
+      className={`${isAction ? 'bg-preview-button-hover-bg' : 'bg-preview-button-bg'} rounded-sm p-1 text-sm`}
+    >
       <PersonRunning />
-      <span className="@md:inline hidden">
-        <FormattedMessage defaultMessage="Action" />
-      </span>
-    </Button>
+    </button>
   );
 });
 ToggleActionButton.displayName = 'ToggleActionButton';

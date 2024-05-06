@@ -17,6 +17,7 @@ import { Cursor } from '../entities/Cursor';
 import { PrimitiveAtom } from 'jotai';
 import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
 import { EntityHead } from '../entities/EntityHead';
+import { ZERO_WIDTH_SPACE } from '../../const';
 
 interface Props {
   channelId: string;
@@ -30,9 +31,12 @@ interface Props {
   isFocused?: boolean;
   nameNode: ReactNode;
   cursorAtom?: PrimitiveAtom<HTMLElement | null>;
+  startNode?: ReactNode;
 }
 
 export type EvaluatedExpr = { type: 'EvaluatedExpr'; node: EvaluatedExprNode; start: number; len: number };
+
+const Placeholder = () => <span>{ZERO_WIDTH_SPACE}</span>;
 
 export const Content = memo<Props>(
   ({
@@ -46,6 +50,7 @@ export const Content = memo<Props>(
     self = false,
     isFocused = false,
     cursorAtom,
+    startNode,
   }) => {
     const isDragging = useIsDragging();
 
@@ -70,6 +75,13 @@ export const Content = memo<Props>(
       return extendedEntities;
     }, [entities, seed]);
     const entityNodeList = useMemo(() => {
+      if (evaluatedEntities.length === 0) {
+        return (
+          <>
+            <Placeholder />
+          </>
+        );
+      }
       const nodeList = [
         <EntityHead cursorNode={cursorNode} key="head" firstEntityStart={evaluatedEntities[0]?.start ?? 0} />,
       ];
@@ -113,6 +125,7 @@ export const Content = memo<Props>(
         >
           {isAction && <span className="text-message-action mr-1">*</span>}
           {isAction && nameNode}
+          {startNode}
           {entityNodeList}
         </div>
 

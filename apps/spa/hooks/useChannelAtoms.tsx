@@ -17,6 +17,8 @@ export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
 export type ChannelMemberListState = 'CLOSED' | 'RIGHT';
 
+export type VisibilityAtom = Atom<'WHISPER' | 'BROADCAST' | 'MUTE'>;
+
 export interface ChannelAtoms {
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
   checkComposeAtom: Atom<ComposeError | null>;
@@ -24,6 +26,7 @@ export interface ChannelAtoms {
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
+  visibilityAtom: VisibilityAtom;
   inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
   inGameAtom: Atom<boolean>;
@@ -68,6 +71,13 @@ export const useMakeChannelAtoms = (
     const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
     const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
     const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
+    const visibilityAtom = selectAtom(parsedAtom, ({ broadcast, whisperToUsernames }) => {
+      if (whisperToUsernames !== null) {
+        return 'WHISPER';
+      } else {
+        return broadcast ? 'BROADCAST' : 'MUTE';
+      }
+    });
 
     return {
       composeAtom,
@@ -77,6 +87,7 @@ export const useMakeChannelAtoms = (
       hasMediaAtom,
       broadcastAtom,
       isWhisperAtom,
+      visibilityAtom,
       filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
       showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
       memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),

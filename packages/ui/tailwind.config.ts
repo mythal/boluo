@@ -187,6 +187,13 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
             bgHover: $(lime[50], blue[800]),
           },
         },
+
+        button: {
+          bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[600], 0.65)),
+          hover: {
+            bg: $(transparentize(neutral[300], 0.5), transparentize(neutral[500], 0.5)),
+          },
+        },
       },
       bottom: {
         badge: {

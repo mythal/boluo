@@ -9,6 +9,7 @@ export type ComposeActionMap = {
   toggleInGame: { defaultInGame: boolean };
   setInGame: { inGame: boolean };
   toggleBroadcast: Empty;
+  setVisibility: { visibility: 'BROADCAST' | 'MUTE' | 'WHISPER' };
   addDice: { defaultRollCommand: string };
   link: { text: string; href: string };
   bold: { text: string };

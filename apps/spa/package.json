@@ -21,6 +21,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@floating-ui/react": "^0.26.13",
+    "@sentry/react": "^7.113.0",
     "clsx": "^2.1.0",
     "jotai": "^2.8.0",
     "jotai-location": "^0.5.5",

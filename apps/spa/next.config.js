@@ -1,4 +1,5 @@
 const ANALYZE = Boolean(process.env.ANALYZE);
+const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN;
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
 
 /** @type {import('next').NextConfig} */
@@ -23,6 +24,16 @@ const config = {
         analyzerMode: 'static',
       });
       config.plugins.push(plugin);
+    }
+    if (SENTRY_AUTH_TOKEN) {
+      const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
+      config.plugins.push(
+        sentryWebpackPlugin({
+          org: 'mythal-0s',
+          project: 'boluo',
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+        }),
+      );
     }
 
     // `react-intl` without parser

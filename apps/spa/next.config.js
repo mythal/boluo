@@ -9,6 +9,7 @@ const config = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: 'export',
+  productionBrowserSourceMaps: true,
   swcMinify: false,
   transpilePackages: ['@boluo/ui', '@boluo/common'],
   env: {

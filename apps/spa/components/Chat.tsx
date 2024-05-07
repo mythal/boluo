@@ -36,13 +36,13 @@ const useSetThemeScheme = () => {
   }, [themeFromCookie, themeFromSettings]);
 };
 
-if (typeof window !== 'undefined' && process.env.SENTRY_DSN && window.location.hostname.endsWith('.boluo.chat')) {
+if (typeof window !== 'undefined' && process.env.SENTRY_DSN) {
   import('@sentry/react')
     .then((Sentry) => {
       Sentry.init({
         environment: process.env.NODE_ENV,
         dsn: process.env.SENTRY_DSN,
-        tunnel: '/tunnel/',
+        tunnel: process.env.SENTRY_TUNNEL,
         integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
         // Performance Monitoring
         tracesSampleRate: 1.0, //  Capture 100% of the transactions

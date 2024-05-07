@@ -1,5 +1,7 @@
 const ANALYZE = Boolean(process.env.ANALYZE);
 const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN;
+const SENTRY_ORG = process.env.SENTRY_ORG;
+const SENTRY_PROJECT = process.env.SENTRY_PROJECT;
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
 
 /** @type {import('next').NextConfig} */
@@ -25,13 +27,13 @@ const config = {
       });
       config.plugins.push(plugin);
     }
-    if (SENTRY_AUTH_TOKEN) {
+    if (SENTRY_AUTH_TOKEN && SENTRY_ORG && SENTRY_PROJECT) {
       const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
       config.plugins.push(
         sentryWebpackPlugin({
-          org: 'mythal-0s',
-          project: 'boluo',
-          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: SENTRY_ORG,
+          project: SENTRY_PROJECT,
+          authToken: SENTRY_AUTH_TOKEN,
         }),
       );
     }

@@ -1,4 +1,4 @@
-import type { GetMe, User } from '@boluo/api';
+import type { User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import React, { FC, useMemo, useState } from 'react';
 import { Suspense } from 'react';
@@ -6,7 +6,7 @@ import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { isChatInitializedAtom } from '../../state/chat.atoms';
 import { ChatListLoading } from './ChatContentLoading';
 import { IsScrollingContext } from '../../hooks/useIsScrolling';
-import { useQueryUser } from '@boluo/common';
+import { ChatContentErrorBoundry } from './ChatContentErrorBoundry';
 
 const ChatContentView = React.lazy(() => import('./ChatContentView'));
 
@@ -23,12 +23,14 @@ export const ChatContent: FC<Props> = ({ className, currentUser, channelId }) =>
   const [isScrolling, setIsScrolling] = useState(false);
   const view = useMemo(
     () => (
-      <ChatContentView
-        setIsScrolling={setIsScrolling}
-        className={className}
-        currentUser={currentUser}
-        myMember={member}
-      />
+      <ChatContentErrorBoundry>
+        <ChatContentView
+          setIsScrolling={setIsScrolling}
+          className={className}
+          currentUser={currentUser}
+          myMember={member}
+        />
+      </ChatContentErrorBoundry>
     ),
     [className, currentUser, member],
   );

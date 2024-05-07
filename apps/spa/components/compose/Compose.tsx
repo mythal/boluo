@@ -14,6 +14,7 @@ import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
+import { ComposeErrorBoundry } from './ComposeErrorBoundry';
 
 interface Props {
   member: Member;
@@ -62,21 +63,28 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   );
   const mediaLine = useMemo(() => <MediaLine />, []);
   return (
-    <div onDrop={onDrop} onDragOver={handleDragOver} className="bg-compose-outer-bg col-span-full border-t p-2">
-      {editMessageBanner}
-      <div
-        data-in-game={inGame}
-        data-whisper={isWhisper}
-        className="bg-compose-bg focus-within:border-surface-400 border-lowest data-[in-game=true]:bg-message-inGame-bg relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
-      >
-        <div className="relative flex-shrink-0 py-1 pl-1">{fileButton}</div>
-        <div className="flex-shrink-0 py-1">{inGameSwitchButton}</div>
-        <DeferredComposeTextArea parsedAtom={parsedAtom} currentUser={member.user} enterSend={enterSend} send={send} />
+    <ComposeErrorBoundry>
+      <div onDrop={onDrop} onDragOver={handleDragOver} className="bg-compose-outer-bg col-span-full border-t p-2">
+        {editMessageBanner}
+        <div
+          data-in-game={inGame}
+          data-whisper={isWhisper}
+          className="bg-compose-bg focus-within:border-surface-400 border-lowest data-[in-game=true]:bg-message-inGame-bg relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
+        >
+          <div className="relative flex-shrink-0 py-1 pl-1">{fileButton}</div>
+          <div className="flex-shrink-0 py-1">{inGameSwitchButton}</div>
+          <DeferredComposeTextArea
+            parsedAtom={parsedAtom}
+            currentUser={member.user}
+            enterSend={enterSend}
+            send={send}
+          />
 
-        <div className="flex-shrink-0 self-end py-1">{addDiceButton}</div>
-        <div className="flex-shrink-0 self-end py-1 pr-1">{sendButton}</div>
+          <div className="flex-shrink-0 self-end py-1">{addDiceButton}</div>
+          <div className="flex-shrink-0 self-end py-1 pr-1">{sendButton}</div>
+        </div>
+        <div>{mediaLine}</div>
       </div>
-      <div>{mediaLine}</div>
-    </div>
+    </ComposeErrorBoundry>
   );
 };

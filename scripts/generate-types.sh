@@ -4,3 +4,4 @@
 cargo test export_bindings_
 
 npm exec prettier -- --write ./apps/server/bindings/**/*
+cargo sqlx prepare --workspace

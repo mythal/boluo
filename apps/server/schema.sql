@@ -102,6 +102,14 @@ CREATE TABLE spaces
     "latest_activity"   timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
+CREATE TABLE spaces_extension
+(
+    "space_id"  uuid  NOT NULL PRIMARY KEY
+        CONSTRAINT "extension_space" REFERENCES spaces (id) ON DELETE CASCADE,
+    "settings" jsonb NOT NULL DEFAULT '{}'
+);
+
+
 CREATE TABLE space_members
 (
     "user_id"   uuid      NOT NULL

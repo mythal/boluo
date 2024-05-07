@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE spaces_extension\nSET settings = $2\nWHERE space_id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdf9f28945c1fbeddf2ebc4d00fc25dde78ca0f064247e7d77e64b4f8ee25267"
+}

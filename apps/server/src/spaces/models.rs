@@ -235,6 +235,26 @@ impl Space {
             .fetch_all(db)
             .await
     }
+
+    pub async fn get_settings<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+    ) -> Result<serde_json::Value, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
+            .fetch_optional(db)
+            .await
+            .map(|record| record.unwrap_or(serde_json::json!({})))
+    }
+    pub async fn put_settings<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        settings: &serde_json::Value,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query_file_scalar!("sql/spaces/put_settings.sql", space_id, settings)
+            .execute(db)
+            .await?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]

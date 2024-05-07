@@ -1,4 +1,3 @@
-const ANALYZE = Boolean(process.env.ANALYZE);
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
 
 /** @type {import('next').NextConfig} */
@@ -18,13 +17,6 @@ const config = {
     SENTRY_TUNNEL: process.env.SENTRY_TUNNEL,
   },
   webpack: (config) => {
-    if (ANALYZE) {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      const plugin = new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-      });
-      config.plugins.push(plugin);
-    }
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller
     // https://github.com/vercel/next.js/issues/30434

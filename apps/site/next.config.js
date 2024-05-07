@@ -1,8 +1,6 @@
 const path = require('path');
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
 
-const ANALYZE = Boolean(process.env.ANALYZE);
-
 const rewrites = async () => [
   {
     source: '/api/:path*',

@@ -14,6 +14,7 @@ const config = {
     SITE_URL: process.env.SITE_URL,
     DOMAIN: process.env.DOMAIN,
     SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_TUNNEL: process.env.SENTRY_TUNNEL,
   },
   webpack: (config) => {
     if (ANALYZE) {

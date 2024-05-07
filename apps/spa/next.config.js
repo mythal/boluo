@@ -13,6 +13,7 @@ const config = {
     PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,
     SITE_URL: process.env.SITE_URL,
     DOMAIN: process.env.DOMAIN,
+    SENTRY_DSN: process.env.SENTRY_DSN,
   },
   webpack: (config) => {
     if (ANALYZE) {

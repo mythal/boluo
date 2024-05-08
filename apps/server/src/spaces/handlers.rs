@@ -305,6 +305,38 @@ async fn delete(req: Request<Body>) -> Result<Space, AppError> {
     Err(AppError::NoPermission("failed to delete".to_string()))
 }
 
+async fn space_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+    let IdQuery { id } = parse_query(req.uri())?;
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    // TODO: check whether the user is a member of the space
+    let extension = Space::get_settings(&mut *conn, id).await?;
+    Ok(extension)
+}
+
+async fn update_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+    let session = authenticate(&req).await?;
+    let IdQuery { id } = parse_query(req.uri())?;
+    let settings: serde_json::Value = interface::parse_body(req).await?;
+    if !settings.is_object() {
+        return Err(AppError::BadRequest("Invalid settings".to_string()));
+    }
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+
+    let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
+        .await?
+        .map(|space_member| space_member.is_admin)
+        .unwrap_or(false);
+    if !is_admin {
+        return Err(AppError::NoPermission(
+            "A non-admin tries to update settings".to_string(),
+        ));
+    }
+    Space::put_settings(&mut *conn, id, &settings).await?;
+    Ok(settings)
+}
+
 pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
@@ -313,6 +345,9 @@ pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError
         ("/query", Method::GET) => query(req).await.map(ok_response),
         ("/users_status", Method::GET) => users_status(req).await.map(ok_response),
         ("/query_with_related", Method::GET) => query_with_related(req).await.map(ok_response),
+        ("/settings", Method::GET) => space_settings(req).await.map(ok_response),
+        ("/update_settings", Method::POST) => update_settings(req).await.map(ok_response),
+        ("/update_settings", Method::PUT) => update_settings(req).await.map(ok_response),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         ("/refresh_token", Method::POST) => refresh_token(req).await.map(ok_response),
         ("/my", Method::GET) => my_spaces(req).await.map(ok_response),

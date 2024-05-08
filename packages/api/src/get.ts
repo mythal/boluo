@@ -26,6 +26,7 @@ export interface Get {
   '/spaces/my_space_member': { query: { id: string }; result: SpaceMember | null };
   '/spaces/members': { query: { id: string }; result: Record<string, SpaceMemberWithUser> };
   '/spaces/token': { query: { id: string }; result: string };
+  '/spaces/settings': { query: { id: string }; result: unknown };
   // channels
   '/channels/query': { query: { id: string }; result: Channel };
   '/channels/by_space': { query: { id: string }; result: ChannelWithMaybeMember[] };

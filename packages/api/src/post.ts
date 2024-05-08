@@ -49,6 +49,7 @@ export interface Post {
   '/spaces/join': { payload: Empty; result: SpaceWithMember; query: { spaceId: string; token?: string } };
   '/spaces/leave': { payload: Empty; query: { id: string }; result: true };
   '/spaces/kick': { payload: Empty; query: KickFromSpace; result: Record<string, SpaceMemberWithUser> };
+  '/spaces/update_settings': { payload: unknown; query: { id: string }; result: unknown };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };

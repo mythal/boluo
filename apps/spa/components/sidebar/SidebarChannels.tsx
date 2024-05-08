@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import React, { Suspense, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
-import { useChannelList } from '../../hooks/useQueryChannelList';
+import { useQueryChannelList } from '../../hooks/useQueryChannelList';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
@@ -21,7 +21,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
   const panes = useAtomValue(panesAtom);
   const [isReordering, setIsReordering] = useState(false);
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
-  const { data: channelWithMemberList } = useChannelList(spaceId);
+  const { data: channelWithMemberList } = useQueryChannelList(spaceId);
   const togglePane = usePaneToggle();
   const toggleCreateChannelPane = () => {
     togglePane({ type: 'CREATE_CHANNEL', spaceId });

@@ -76,7 +76,8 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   if (isLoading || channel == null || (!channel.isPublic && member.isErr && member.err === 'LOADING')) {
     return <PaneLoading grow>{errorNode}</PaneLoading>;
   }
-  if (!channel.isPublic && member == null) {
+  const iAmMember = member.isOk && member.some.channel.channelId === channelId;
+  if (!channel.isPublic && (member == null || !iAmMember)) {
     return (
       <PaneBox
         header={

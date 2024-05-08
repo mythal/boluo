@@ -19,10 +19,10 @@ interface Props {
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
   const { data: token, isLoading: isTokenLoading } = useQueryConnectionToken();
   useConnectionEffect(spaceId, isTokenLoading, token?.token);
-  useNotify();
+  useNotify(spaceId);
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);
-  useTitle(space);
+  useTitle(spaceId, space);
 
   let defaultPane = useMemo(() => <PaneSpaceGreeting spaceId={spaceId} />, [spaceId]);
   let errorNode = null;

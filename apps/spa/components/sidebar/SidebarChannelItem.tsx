@@ -87,7 +87,6 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
   const titleOpenNew = intl.formatMessage({ defaultMessage: 'Open in new pane' });
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback(
     (e) => {
-      console.log('???');
       e.preventDefault();
       if (isReordering) {
         return;

@@ -3,13 +3,10 @@ import clsx from 'clsx';
 import { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useNotificationSwitch } from '../../hooks/useNotificationSwitch';
+import { User } from '@boluo/api';
 
-export const AppOperations: FC = () => {
-  return (
-    <div className="flex justify-end px-4 pt-4">
-      <NotificationSwitch />
-    </div>
-  );
+export const AppOperations: FC<{ currentUser: User | null | undefined }> = ({ currentUser }) => {
+  return <div className="flex justify-end px-4 pt-4">{currentUser != null && <NotificationSwitch />}</div>;
 };
 
 export const NotificationSwitch: FC = () => {

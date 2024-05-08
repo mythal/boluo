@@ -1,29 +1,50 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAtomValue, useStore } from 'jotai';
-import { Message } from '@boluo/api';
+import { ChannelWithMember, Message } from '@boluo/api';
 import { chatAtom } from '../state/chat.atoms';
 import { notificationEnableAtom } from '../state/notification.atoms';
 import { useIntl } from 'react-intl';
 import { toSimpleText } from '../interpreter/entities';
 import { messageToParsed } from '../interpreter/to-parsed';
-import { useQueryUser } from '@boluo/common';
 import { panesAtom } from '../state/view.atoms';
+import { useQueryChannelList } from './useQueryChannelList';
 
-export const useNotify = () => {
+export const useNotify = (spaceId: string) => {
   const store = useStore();
   const intl = useIntl();
-  const { data: currentUser } = useQueryUser();
   const enabled = useAtomValue(notificationEnableAtom);
-  const myId = currentUser?.id;
+  const { data: channelWithMaybeMemberList } = useQueryChannelList(spaceId);
+  const joinedChannels = useMemo(() => {
+    if (!channelWithMaybeMemberList || channelWithMaybeMemberList.length === 0) {
+      return [];
+    }
+    const channelWithMemberList: ChannelWithMember[] = [];
+    for (const { channel, member } of channelWithMaybeMemberList) {
+      if (member) {
+        channelWithMemberList.push({ channel, member });
+      }
+    }
+    return channelWithMemberList;
+  }, [channelWithMaybeMemberList]);
   useEffect(() => {
-    if (!enabled) {
+    if (joinedChannels.length === 0 || !enabled) {
+      return;
+    }
+    const myId = joinedChannels.find(({ member }) => member != null)?.member.userId;
+    if (!myId) {
       return;
     }
     let startTime = new Date().getTime();
     const handle = window.setInterval(() => {
       const newMessages: Message[] = [];
       const chatState = store.get(chatAtom);
+      if (!chatState || !chatState.context.initialized) {
+        return;
+      }
       for (const channelState of Object.values(chatState.channels)) {
+        if (joinedChannels.findIndex(({ channel }) => channel.id === channelState.id) === -1) {
+          continue;
+        }
         const length = channelState.messages.length;
         for (let i = length - 1; i >= Math.max(0, length - 100); i--) {
           const message = channelState.messages[i]!;
@@ -67,5 +88,5 @@ export const useNotify = () => {
       startTime = new Date().getTime();
     }, 1000);
     return () => window.clearInterval(handle);
-  }, [enabled, intl, myId, store]);
+  }, [enabled, intl, store, joinedChannels]);
 };

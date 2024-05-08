@@ -60,7 +60,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
         {content}
 
         <div className="">
-          <AppOperations />
+          <AppOperations currentUser={currentUser} />
           {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}
 
           <ConnectionIndicatior spaceId={spaceId} />

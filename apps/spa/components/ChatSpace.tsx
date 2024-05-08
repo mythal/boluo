@@ -1,17 +1,16 @@
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
-import { PaneSpace } from './pane-space/PaneSpace';
 import { PaneLoading } from './PaneLoading';
 import { FailedBanner } from './common/FailedBanner';
 import { PaneFailed } from './pane-failed/PaneFailed';
 import { useQueryConnectionToken } from '../hooks/useQueryConnectionToken';
 import { ChatView } from './ChatView';
 import { useTitle } from '../hooks/useTitle';
-import { PaneEmpty } from './PaneEmpty';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
+import { useNotify } from '../hooks/useNotify';
 
 interface Props {
   spaceId: string;
@@ -20,6 +19,7 @@ interface Props {
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
   const { data: token, isLoading: isTokenLoading } = useQueryConnectionToken();
   useConnectionEffect(spaceId, isTokenLoading, token?.token);
+  useNotify();
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);
   useTitle(space);

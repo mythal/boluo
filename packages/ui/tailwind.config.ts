@@ -293,6 +293,18 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           bg: $(lime[50], blue[900]),
         },
       },
+      switch: {
+        bg: $(white, neutral[600]),
+        indicator: $(neutral[400], neutral[800]),
+        hover: {
+          bg: $(neutral[100], neutral[700]),
+        },
+        pressed: {
+          bg: $(neutral[600], neutral[900]),
+          text: white,
+          indicator: $(green[500], green[500]),
+        },
+      },
       button: {
         default: {
           bg: $(neutral[100], neutral[700]),

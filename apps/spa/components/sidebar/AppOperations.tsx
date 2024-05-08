@@ -34,7 +34,9 @@ export const NotificationSwitch: FC = () => {
       title={title}
       className={clsx(
         'relative rounded p-2',
-        canNotify ? 'bg-surface-600 text-text-reverse shadow-inner' : 'hover:bg-surface-100 bg-white shadow-sm',
+        canNotify
+          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
+          : 'hover:bg-switch-hover-bg bg-switch-bg shadow-sm',
       )}
     >
       <Bell />
@@ -42,7 +44,7 @@ export const NotificationSwitch: FC = () => {
         aria-hidden
         className={clsx(
           'absolute right-1 top-1 block h-1 w-1 rounded-full',
-          canNotify ? 'bg-green-400' : 'bg-surface-300',
+          canNotify ? 'bg-switch-pressed-indicator' : 'bg-switch-indicator',
         )}
       />
     </button>

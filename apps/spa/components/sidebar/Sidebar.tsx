@@ -11,6 +11,7 @@ import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { User } from '@boluo/api';
 import { ToggleSidebarLine } from './ToggleSidebarLine';
+import { AppOperations } from './AppOperations';
 
 interface Props {
   spaceId?: string;
@@ -59,6 +60,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
         {content}
 
         <div className="">
+          <AppOperations />
           {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}
 
           <ConnectionIndicatior spaceId={spaceId} />

@@ -30,8 +30,6 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
     () => panes.find((pane) => pane.type === 'CREATE_CHANNEL') !== undefined,
     [panes],
   );
-  const intl = useIntl();
-  const toggleNotification = intl.formatMessage({ defaultMessage: 'Toggle Notification' });
 
   return (
     <div className="flex-1 overflow-y-auto">

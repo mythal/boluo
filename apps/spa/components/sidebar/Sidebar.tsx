@@ -3,7 +3,7 @@ import { useQueryUser } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
 import type { FC, ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
-import { SidebarChannelList } from './SidebarChannelList';
+import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
 import { SpaceOptions } from './SidebarSpaceOptions';
 import { SidebarUserOperations } from './SidebarUserOperations';
@@ -29,7 +29,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
   return (
     <>
       <SpaceOptions space={space} currentUser={currentUser} />
-      {contentState === 'CHANNELS' && <SidebarChannelList spaceId={space.id} />}
+      {contentState === 'CHANNELS' && <SidebarChannels spaceId={space.id} />}
       {contentState === 'SPACES' && <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />}
     </>
   );

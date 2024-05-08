@@ -29,6 +29,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   };
   const text = {
     base: $(neutral[900], white),
+    reverse: $(white, neutral[900]),
     light: $(neutral[600], neutral[300]),
     lighter: $(neutral[500], neutral[400]),
     danger: $(red[600], red[300]),
@@ -106,6 +107,22 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         border: $(neutral[200], neutral[700]),
         channels: {
           hover: $(neutral[100], neutral[950]),
+          placeholder: {
+            random1: $(neutral[100], neutral[800]),
+            random2: $(neutral[200], neutral[700]),
+            random3: $(neutral[300], neutral[600]),
+          },
+          reorderButton: {
+            text: text.lighter,
+            hover: {
+              text: text.base,
+              bg: $(neutral[200], neutral[700]),
+            },
+            active: {
+              bg: $(neutral[600], neutral[400]),
+              text: $(white, black),
+            },
+          },
 
           active: {
             bg: $(neutral[100], neutral[900]),

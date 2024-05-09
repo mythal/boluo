@@ -1,8 +1,8 @@
-import { ChannelWithMaybeMember, ChannelWithMember, Space } from '@boluo/api';
-import { useStore, type createStore } from 'jotai';
-import { useEffect } from 'react';
+import { ChannelWithMaybeMember, Space } from '@boluo/api';
+import { atom, useStore, type createStore } from 'jotai';
+import { useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
-import { chatAtom } from '../state/chat.atoms';
+import { chatAtom, notifyTimestampAtom } from '../state/chat.atoms';
 import { channelReadFamily } from '../state/unread.atoms';
 import { useQueryChannelList } from './useQueryChannelList';
 
@@ -43,22 +43,38 @@ export const useTitle = (spaceId: string, space: Space | null | undefined) => {
   const { data: channelWithMaybeMemberList } = useQueryChannelList(spaceId);
   const store = useStore();
   const intl = useIntl();
+  const readPosMapAtom = useMemo(
+    () =>
+      atom((read): Record<string, number> => {
+        if (!channelWithMaybeMemberList || channelWithMaybeMemberList.length === 0) return {};
+        const posMap: Record<string, number> = {};
+        for (const { channel } of channelWithMaybeMemberList) {
+          const pos = read(channelReadFamily(channel.id));
+          posMap[channel.id] = pos;
+        }
+        return posMap;
+      }),
+    [channelWithMaybeMemberList],
+  );
   useEffect(() => {
     if (!space) {
       document.title = intl.formatMessage({ defaultMessage: 'Boluo' });
       return;
     }
-
-    const handle = window.setInterval(() => {
+    const update = () => {
       const chatState = store.get(chatAtom);
 
       if (!chatState || !chatState.context.initialized) {
         return false;
       }
       document.title = (hasUnreadMessages(store, channelWithMaybeMemberList) ? '(*) ' : '') + space.name;
-    }, 3000);
-    return () => {
-      clearInterval(handle);
     };
-  }, [intl, space, store, channelWithMaybeMemberList]);
+    update();
+    const unsubNotificationTimestamp = store.sub(notifyTimestampAtom, update);
+    const unsubReadPosMap = store.sub(readPosMapAtom, update);
+    return () => {
+      unsubNotificationTimestamp();
+      unsubReadPosMap();
+    };
+  }, [intl, space, store, channelWithMaybeMemberList, readPosMapAtom]);
 };

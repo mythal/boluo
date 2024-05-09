@@ -37,6 +37,8 @@ export const chatAtom = atom<ChatSpaceState, [ChatActionUnion], void>(
 );
 export const isChatInitializedAtom = selectAtom(chatAtom, (chat) => chat.context.initialized);
 
+export const notifyTimestampAtom = selectAtom(chatAtom, (chat) => chat.notifyTimestamp);
+
 const LOG_CHAT_STATE = false;
 
 store.sub(chatAtom, () => {

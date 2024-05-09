@@ -41,7 +41,7 @@ export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
       >
         <Icon icon={Shuffle} />
         <span className="ml-1 text-xs">
-          <FormattedMessage defaultMessage="Switch" />
+          <FormattedMessage defaultMessage="Spaces" />
         </span>
       </button>
 

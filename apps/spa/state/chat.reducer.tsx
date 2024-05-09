@@ -17,6 +17,11 @@ export interface ChatSpaceState {
   channels: Record<string, ChannelState>;
   context: ChatReducerContext;
   lastEventId: EventId;
+  /**
+   * A timestamp is used to trigger the responsive system to check
+   * if an event has occurred that is worth notifying the user about.
+   */
+  notifyTimestamp: number;
 }
 
 export const zeroEventId: EventId = { timestamp: 0, seq: 0, node: 0 };
@@ -33,6 +38,7 @@ export const initialChatState: ChatSpaceState = {
     initialized: false,
   },
   lastEventId: zeroEventId,
+  notifyTimestamp: 0,
 };
 
 const channelsReducer = (
@@ -80,6 +86,7 @@ export const makeChatState = (spaceId: string): ChatSpaceState => ({
     initialized: false,
   },
   lastEventId: zeroEventId,
+  notifyTimestamp: 0,
 });
 
 const handleChannelDeleted = (
@@ -136,7 +143,6 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   if (action.type === 'eventFromServer') {
     return handleEventFromServer(state, action);
   }
-  console.debug(`action: ${action.type}`, action.payload);
   if (action.type === 'spaceUpdated') {
     return handleSpaceUpdated(state, action);
   } else if (action.type === 'enterSpace') {
@@ -153,10 +159,18 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   }
 
   const { channels, connection, ...rest } = state;
+  let { notifyTimestamp } = state;
+  if (action.type === 'receiveMessage') {
+    const created = Date.parse(action.payload.message.created);
+    if (!Number.isNaN(created)) {
+      notifyTimestamp = Math.max(notifyTimestamp, created);
+    }
+  }
 
   return {
     connection: connectionReducer(connection, action, context),
     channels: channelsReducer(channels, action, context),
     ...rest,
+    notifyTimestamp,
   };
 };

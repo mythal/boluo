@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useAtomValue, useStore } from 'jotai';
 import { ChannelWithMember, Message } from '@boluo/api';
-import { chatAtom } from '../state/chat.atoms';
+import { chatAtom, notifyTimestampAtom } from '../state/chat.atoms';
 import { notificationEnableAtom } from '../state/notification.atoms';
 import { useIntl } from 'react-intl';
 import { toSimpleText } from '../interpreter/entities';
@@ -35,7 +35,7 @@ export const useNotify = (spaceId: string) => {
       return;
     }
     let startTime = new Date().getTime();
-    const handle = window.setInterval(() => {
+    return store.sub(notifyTimestampAtom, () => {
       const newMessages: Message[] = [];
       const chatState = store.get(chatAtom);
       if (!chatState || !chatState.context.initialized) {
@@ -86,7 +86,6 @@ export const useNotify = (spaceId: string) => {
         };
       }
       startTime = new Date().getTime();
-    }, 1000);
-    return () => window.clearInterval(handle);
+    });
   }, [enabled, intl, store, joinedChannels]);
 };

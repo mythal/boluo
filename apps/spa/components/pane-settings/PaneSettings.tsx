@@ -110,7 +110,7 @@ export const PaneSettings: FC = () => {
           <LanguageField />
           <ThemeField />
           {currentUser && <EneterSendField />}
-          {currentUser && <ExpandDiceField />}
+          {/* {currentUser && <ExpandDiceField />} */}
         </div>
         {currentUser && (
           <>

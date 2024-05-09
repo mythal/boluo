@@ -80,6 +80,9 @@
   "47FYwb": {
     "message": "Cancel"
   },
+  "4KGRux": {
+    "message": "Turn on notification"
+  },
   "4l6vz1": {
     "message": "Copy"
   },
@@ -115,6 +118,9 @@
   },
   "6q3tCn": {
     "message": "Connecting"
+  },
+  "72vKlS": {
+    "message": "Failed to load the space"
   },
   "7G8Ojg": {
     "message": "Unable to send message"
@@ -208,9 +214,6 @@
   },
   "GMPXuF": {
     "message": "Everyone can join this space"
-  },
-  "GYTzXV": {
-    "message": "Toggle Notification"
   },
   "GbWVAh": {
     "message": "Yes, Kick"
@@ -319,6 +322,9 @@
   },
   "N97hnL": {
     "message": "No permission."
+  },
+  "NXv+Ue": {
+    "message": "Turn off notification"
   },
   "NZyhSX": {
     "message": "News"
@@ -464,6 +470,9 @@
   "WASph7": {
     "message": "Kick this member"
   },
+  "WJSlkx": {
+    "message": "New message from {name}"
+  },
   "Wa3nyB": {
     "message": "Settings of \"{channelName}\" Channel"
   },
@@ -512,6 +521,9 @@
   "ZKBnrB": {
     "message": "Character name is required"
   },
+  "ZMoczs": {
+    "message": "Spaces"
+  },
   "ZgsEsn": {
     "message": "No permission"
   },
@@ -523,6 +535,9 @@
   },
   "aLncO3": {
     "message": "Secret Channel"
+  },
+  "aTCgvQ": {
+    "message": "Your last input was:"
   },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."
@@ -659,8 +674,14 @@
   "k1s9UW": {
     "message": "Not Found"
   },
+  "k7IL+w": {
+    "message": "The input box crashed."
+  },
   "kFck7X": {
     "message": "Game Master"
+  },
+  "kGQJcD": {
+    "message": "Reorder"
   },
   "kIUNDX": {
     "message": "Default Dice"
@@ -707,6 +728,9 @@
   "oVARYX": {
     "message": "Must be at most {max} characters."
   },
+  "oaP8SV": {
+    "message": "You have denied notification permission."
+  },
   "onmBf2": {
     "message": "Shuffle Random Color"
   },
@@ -752,6 +776,9 @@
   "rbrahO": {
     "message": "Close"
   },
+  "rl4pg7": {
+    "message": "Reorder channel"
+  },
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
   },
@@ -788,6 +815,9 @@
   "uhu5aG": {
     "message": "Public"
   },
+  "uk/RDu": {
+    "message": "Unexpected error when displaying chat content"
+  },
   "ulAzZl": {
     "message": "Failed to query the user"
   },
@@ -805,6 +835,9 @@
   },
   "viXE32": {
     "message": "Private"
+  },
+  "w00UiA": {
+    "message": "Your device does not support sending notifications."
   },
   "wEQDC6": {
     "message": "Edit"

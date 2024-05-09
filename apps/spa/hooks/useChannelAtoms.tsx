@@ -12,6 +12,8 @@ import {
   ComposeState,
   makeInitialComposeState,
 } from '../state/compose.reducer';
+import { usePaneKey } from './usePaneKey';
+import { composeAtomFamily } from '../state/compose.atoms';
 
 export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
@@ -40,10 +42,14 @@ export const useMakeChannelAtoms = (
   defaultInGame: boolean,
   defaultDiceFace: number,
 ): ChannelAtoms => {
+  const paneKey = usePaneKey();
+  if (paneKey === null) {
+    throw new Error('Access channel atoms outside pane');
+  }
   const defaultDiceFaceRef = useRef(defaultDiceFace);
   defaultDiceFaceRef.current = defaultDiceFace;
   const characterName = member?.characterName ?? '';
-  const composeAtom = useMemo(() => atomWithReducer(makeInitialComposeState(), composeReducer), []);
+  const composeAtom = composeAtomFamily({ channelId, paneKey });
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
     [characterName, composeAtom, defaultInGame],

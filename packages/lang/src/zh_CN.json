@@ -80,6 +80,9 @@
   "47FYwb": {
     "message": "取消"
   },
+  "4KGRux": {
+    "message": "Turn on notification"
+  },
   "4l6vz1": {
     "message": "复制"
   },
@@ -115,6 +118,9 @@
   },
   "6q3tCn": {
     "message": "正在连接"
+  },
+  "72vKlS": {
+    "message": "Failed to load the space"
   },
   "7G8Ojg": {
     "message": "无法发送信息"
@@ -208,9 +214,6 @@
   },
   "GMPXuF": {
     "message": "每个人都可以加入这个位面"
-  },
-  "GYTzXV": {
-    "message": "切换通知"
   },
   "GbWVAh": {
     "message": "是的，踢走"
@@ -319,6 +322,9 @@
   },
   "N97hnL": {
     "message": "没有权限"
+  },
+  "NXv+Ue": {
+    "message": "Turn off notification"
   },
   "NZyhSX": {
     "message": "新闻"
@@ -464,6 +470,9 @@
   "WASph7": {
     "message": "踢走这个成员"
   },
+  "WJSlkx": {
+    "message": "New message from {name}"
+  },
   "Wa3nyB": {
     "message": "「{channelName}」频道设置"
   },
@@ -512,6 +521,9 @@
   "ZKBnrB": {
     "message": "必须填写角色名"
   },
+  "ZMoczs": {
+    "message": "Spaces"
+  },
   "ZgsEsn": {
     "message": "没有权限"
   },
@@ -523,6 +535,9 @@
   },
   "aLncO3": {
     "message": "秘密频道"
+  },
+  "aTCgvQ": {
+    "message": "Your last input was:"
   },
   "aifEPM": {
     "message": "这是一个秘密频道。需要邀请才能进入此频道。"
@@ -659,8 +674,14 @@
   "k1s9UW": {
     "message": "未找到"
   },
+  "k7IL+w": {
+    "message": "The input box crashed."
+  },
   "kFck7X": {
     "message": "游戏主持人"
+  },
+  "kGQJcD": {
+    "message": "Reorder"
   },
   "kIUNDX": {
     "message": "默认使用的骰子"
@@ -707,6 +728,9 @@
   "oVARYX": {
     "message": "至多 {max} 个字符。"
   },
+  "oaP8SV": {
+    "message": "You have denied notification permission."
+  },
   "onmBf2": {
     "message": "换一个随机颜色"
   },
@@ -752,6 +776,9 @@
   "rbrahO": {
     "message": "关闭"
   },
+  "rl4pg7": {
+    "message": "Reorder channel"
+  },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
   },
@@ -788,6 +815,9 @@
   "uhu5aG": {
     "message": "公开"
   },
+  "uk/RDu": {
+    "message": "Unexpected error when displaying chat content"
+  },
   "ulAzZl": {
     "message": "查询用户失败"
   },
@@ -805,6 +835,9 @@
   },
   "viXE32": {
     "message": "非公开"
+  },
+  "w00UiA": {
+    "message": "Your device does not support sending notifications."
   },
   "wEQDC6": {
     "message": "编辑"

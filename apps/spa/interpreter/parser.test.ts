@@ -1,4 +1,3 @@
-import { expect, test } from 'vitest';
 import type { Entity } from './entities';
 import { Env, parse as originalParse } from './parser';
 

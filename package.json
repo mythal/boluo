@@ -6,7 +6,6 @@
     "build": "nx run-many --target=build --all --output-style='stream'",
     "build:legacy": "nx run-many --target=build --projects=legacy --output-style='stream'",
     "build:site": "nx run-many --target=build --projects=site --output-style='stream'",
-    "publish:site": "nx run-many --target=build --projects=site --output-style='stream' && next-on-pages",
     "build:spa": "nx run-many --target=build --projects=spa --output-style='stream'",
     "build:affected": "nx affected -t build",
     "check": "nx run-many --target=check --all",

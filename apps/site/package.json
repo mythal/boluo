@@ -41,7 +41,6 @@
     "@babel/core": "^7.23.7",
     "@boluo/eslint-config": "*",
     "@boluo/typescript-config": "*",
-    "@cloudflare/next-on-pages": "^1.11.1",
     "@mdx-js/loader": "^3.0.0",
     "@mdx-js/react": "^3.0.0",
     "@next/bundle-analyzer": "^14.2.3",

@@ -1,1 +1,10 @@
-{ "projectId": "_", "orgId": "_", "settings": { "framework": "nextjs", "rootDirectory": "apps/site/" } }
+{
+  "projectId": "_",
+  "orgId": "_",
+  "settings": {
+    "framework": "nextjs",
+    "rootDirectory": null,
+    "outputDirectory": "apps/site/.next",
+    "buildCommand": "npm run build:site"
+  }
+}

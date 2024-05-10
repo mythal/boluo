@@ -1,5 +1,9 @@
 const path = require('path');
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
+const BACKEND_URL = process.env.BACKEND_URL;
+if (!BACKEND_URL) {
+  throw new Error('BACKEND_URL is required');
+}
 
 const rewrites = async () => [
   {

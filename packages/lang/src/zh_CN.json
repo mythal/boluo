@@ -81,7 +81,7 @@
     "message": "取消"
   },
   "4KGRux": {
-    "message": "Turn on notification"
+    "message": "启用通知"
   },
   "4l6vz1": {
     "message": "复制"
@@ -120,7 +120,7 @@
     "message": "正在连接"
   },
   "72vKlS": {
-    "message": "Failed to load the space"
+    "message": "载入位面失败"
   },
   "7G8Ojg": {
     "message": "无法发送信息"
@@ -324,7 +324,7 @@
     "message": "没有权限"
   },
   "NXv+Ue": {
-    "message": "Turn off notification"
+    "message": "关闭通知"
   },
   "NZyhSX": {
     "message": "新闻"
@@ -471,7 +471,7 @@
     "message": "踢走这个成员"
   },
   "WJSlkx": {
-    "message": "New message from {name}"
+    "message": "来自「{name}」的新消息"
   },
   "Wa3nyB": {
     "message": "「{channelName}」频道设置"
@@ -522,7 +522,7 @@
     "message": "必须填写角色名"
   },
   "ZMoczs": {
-    "message": "Spaces"
+    "message": "位面"
   },
   "ZgsEsn": {
     "message": "没有权限"
@@ -537,7 +537,7 @@
     "message": "秘密频道"
   },
   "aTCgvQ": {
-    "message": "Your last input was:"
+    "message": "您的最后的输入内容是："
   },
   "aifEPM": {
     "message": "这是一个秘密频道。需要邀请才能进入此频道。"
@@ -675,13 +675,13 @@
     "message": "未找到"
   },
   "k7IL+w": {
-    "message": "The input box crashed."
+    "message": "输入框已崩溃。"
   },
   "kFck7X": {
     "message": "游戏主持人"
   },
   "kGQJcD": {
-    "message": "Reorder"
+    "message": "排序"
   },
   "kIUNDX": {
     "message": "默认使用的骰子"
@@ -729,7 +729,7 @@
     "message": "至多 {max} 个字符。"
   },
   "oaP8SV": {
-    "message": "You have denied notification permission."
+    "message": "您已拒绝通知权限。"
   },
   "onmBf2": {
     "message": "换一个随机颜色"
@@ -777,7 +777,7 @@
     "message": "关闭"
   },
   "rl4pg7": {
-    "message": "Reorder channel"
+    "message": "重排频道"
   },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
@@ -816,7 +816,7 @@
     "message": "公开"
   },
   "uk/RDu": {
-    "message": "Unexpected error when displaying chat content"
+    "message": "显示聊天内容时发生意外错误"
   },
   "ulAzZl": {
     "message": "查询用户失败"
@@ -837,7 +837,7 @@
     "message": "非公开"
   },
   "w00UiA": {
-    "message": "Your device does not support sending notifications."
+    "message": "您的设备不支持发送通知。"
   },
   "wEQDC6": {
     "message": "编辑"

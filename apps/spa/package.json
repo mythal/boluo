@@ -6,7 +6,8 @@
     "dev": "next dev --port 3200",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "jest"
   },
   "dependencies": {
     "@boluo/api": "*",
@@ -43,11 +44,13 @@
     "@next/bundle-analyzer": "^14.2.3",
     "@next/eslint-plugin-next": "^14.1.1",
     "@types/eslint": "^8.56.5",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.57.0",
+    "jest": "^29.7.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3",

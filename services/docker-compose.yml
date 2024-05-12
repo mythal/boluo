@@ -21,7 +21,6 @@ services:
       - ../services/servers.json:/pgadmin4/servers.json:ro
     depends_on:
       - db
-      - db-test
     environment:
       - PGADMIN_DEFAULT_EMAIL=example@example.com
       - PGADMIN_DEFAULT_PASSWORD=8932rhku32rhui

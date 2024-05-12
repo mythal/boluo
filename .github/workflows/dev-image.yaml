@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - devcontainer
     paths:
       - '.devcontainer/**'
       - '.github/workflows/dev-image.yaml'

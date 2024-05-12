@@ -1,2 +1,1 @@
-export DATABASE_URL=postgresql://boluo:boluo@127.0.0.1:5432/boluo?sslmode=disable
 use flake

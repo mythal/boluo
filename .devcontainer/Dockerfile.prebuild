@@ -1,7 +1,7 @@
 FROM ubuntu:latest
 RUN apt update -y
 RUN \
-  apt install -y curl xz-utils git pkg-config libssl-dev build-essential ;\
+  apt install -y curl wget xz-utils git pkg-config libssl-dev build-essential ;\
   mkdir /nix ;\
   useradd -m -s /bin/bash -u 1101 dev ;\
   chown dev /nix ;\
@@ -12,7 +12,7 @@ USER dev
 WORKDIR /home/dev
 RUN mkdir .tmp
 ENV TMPDIR=/home/dev/.tmp
-RUN curl -L https://nixos.org/nix/install | sh -s -- --no-daemon;
+RUN wget -O- https://nixos.org/nix/install | sh -s -- --no-daemon;
 ENV PATH="/home/dev/.nix-profile/bin:${PATH}"
 
 COPY --chown=dev:dev flake.lock flake.nix ./

@@ -1,5 +1,5 @@
 import { ChannelWithMaybeMember } from '@boluo/api';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { IsReorderingContext } from '../../hooks/useIsReordering';
 import { SidebarChannelItem } from './SidebarChannelItem';
 import { useAtomValue } from 'jotai';
@@ -7,6 +7,7 @@ import { panesAtom } from '../../state/view.atoms';
 import {
   DndContext,
   DragEndEvent,
+  DragOverlay,
   DragStartEvent,
   MouseSensor,
   TouchSensor,
@@ -73,6 +74,17 @@ export const SidebarChannelList: FC<Props> = ({
     [channelWithMemberList, spaceSettings, trigger],
   );
   const handleDragCancel = useCallback(() => setActiveId(null), []);
+  const overlay: ReactNode = useMemo(() => {
+    const activeChannel = channelWithMemberList.find(({ channel }) => channel.id === activeId);
+    if (!activeChannel) return null;
+    return (
+      <SidebarChannelItem
+        channel={activeChannel.channel}
+        active={channelIdFromPanes.includes(activeChannel.channel.id)}
+        overlay
+      />
+    );
+  }, [activeId, channelIdFromPanes, channelWithMemberList]);
 
   if (isLoading || spaceSettings == null) {
     return <SidebarChannelListSkeleton />;
@@ -91,6 +103,7 @@ export const SidebarChannelList: FC<Props> = ({
           {channelWithMemberList.map(({ channel }) => (
             <SidebarChannelItem key={channel.id} channel={channel} active={channelIdFromPanes.includes(channel.id)} />
           ))}
+          <DragOverlay>{overlay}</DragOverlay>
         </SortableContext>
       </DndContext>
     </IsReorderingContext.Provider>

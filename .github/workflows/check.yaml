@@ -81,7 +81,7 @@ jobs:
         run: cargo test
         env:
           SECRET: SOME_SECRET
-          DEBUG: 1
+          BOLUO_DEBUG: 1
           PORT: 3000
 
       - name: Build (Database Online Mode)

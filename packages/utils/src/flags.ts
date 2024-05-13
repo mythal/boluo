@@ -10,4 +10,4 @@ const getBoolFlag = (key: string, defaultValue = false): boolean => {
   }
 };
 
-export const IS_DEBUG = getBoolFlag('DEBUG');
+export const IS_DEBUG = getBoolFlag('BOLUO_DEBUG');

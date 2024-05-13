@@ -16,7 +16,7 @@ pub fn ci() -> bool {
 }
 
 pub fn debug() -> bool {
-    *DEBUG.get_or_init(|| env::var("DEBUG").map(env_bool).unwrap_or(false))
+    *DEBUG.get_or_init(|| env::var("BOLUO_DEBUG").map(env_bool).unwrap_or(false))
 }
 
 pub fn get_domain() -> String {

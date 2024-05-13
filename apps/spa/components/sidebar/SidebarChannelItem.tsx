@@ -21,9 +21,10 @@ import { CSS } from '@dnd-kit/utilities';
 interface Props {
   channel: Channel;
   active: boolean;
+  overlay?: boolean;
 }
 
-export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
+export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
   const paneLimit = usePaneLimit();
@@ -160,7 +161,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active }) => {
         style={style}
         {...attributes}
         {...listeners}
-        className={`px-3 py-0.5 ${isDragging ? 'relative z-10 cursor-grabbing' : 'cursor-grab'}`}
+        className={`px-3 py-0.5 ${isDragging ? 'opacity-0' : ''} ${overlay ? 'cursor-grabbing opacity-75' : 'cursor-grab'}`}
       >
         <span
           className={clsx(

@@ -1,6 +1,8 @@
 import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
 import { MakeAction } from './actions';
+import type { ParseResult } from '../interpreter/parse-result';
+import type { ComposeState } from './compose.reducer';
 
 export type ChatActionMap = {
   receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
@@ -8,6 +10,16 @@ export type ChatActionMap = {
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;
   messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
+  messageSending: {
+    channelId: string;
+    previewId: string;
+    parsed: ParseResult;
+    inGame: boolean;
+    name: string;
+    compose: ComposeState;
+  };
+  messageSendFailed: { channelId: string; previewId: string };
+  messageSent: { channelId: string; message: Message };
   messageEdited: { message: Message; channelId: string };
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };

@@ -9,6 +9,6 @@ export type PreviewItem = Preview & {
   timestamp: number;
 };
 
-export type MessageItem = Message & { type: 'MESSAGE'; optimistic?: true; key: string };
+export type MessageItem = Message & { type: 'MESSAGE'; optimistic?: true; sending?: boolean; key: string };
 
 export type ChatItem = PreviewItem | MessageItem;

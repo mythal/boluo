@@ -1,6 +1,6 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Settings, useQueryUser } from '@boluo/common';
+import { Settings, useQueryCurrentUser, useQueryUser } from '@boluo/common';
 import { FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
@@ -17,7 +17,7 @@ interface Props {
 
 export const ThemeSelect: FC<Props> = ({ id }) => {
   const theme = useTheme();
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const intl = useIntl();
 
   const key = ['/users/settings'] as const;

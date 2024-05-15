@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
 import type { FC, ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
@@ -37,7 +37,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
 };
 
 export const Sidebar: FC<Props> = ({ spaceId }) => {
-  const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
+  const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const [isExpanded] = useAtom(isSidebarExpandedAtom);
   const foldedNode = (
     <div className="relative w-0">

@@ -1,13 +1,13 @@
 'use client';
 
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLogout } from '../hooks/useLogout';
 
 export const UserOperations = () => {
   const intl = useIntl();
-  const { data: currentUser, isLoading } = useQueryUser();
+  const { data: currentUser, isLoading } = useQueryCurrentUser();
   const logout = useLogout();
   const appUrl = process.env.APP_URL || '';
   if (!appUrl) {

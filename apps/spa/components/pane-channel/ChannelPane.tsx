@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
@@ -39,7 +39,7 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 };
 
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const member = useMyChannelMember(channelId);
   const nickname = currentUser?.nickname ?? undefined;
   const { data: channel, isLoading, error } = useQueryChannel(channelId);

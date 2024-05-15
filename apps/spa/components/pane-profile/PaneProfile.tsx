@@ -1,4 +1,4 @@
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
 import { Edit, LogOut, User } from '@boluo/icons';
 import { FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export const PaneProfile: FC<Props> = ({ userId }) => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const { isLoading, data: user, error } = useQueryUser(userId);
   const isMe = currentUser?.id === userId;
   const [isEditing, setIsEditing] = useState(false);

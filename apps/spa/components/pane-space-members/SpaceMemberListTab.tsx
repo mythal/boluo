@@ -1,4 +1,4 @@
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { FC, useMemo } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
@@ -13,7 +13,7 @@ interface Props {
 
 export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
   const { data: membersMap, error } = useQuerySpaceMembers(spaceId);
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const myId: string | null = currentUser?.id ?? null;
   const amIAdmin: boolean = useMemo(() => {
     if (myId == null) return false;

@@ -9,21 +9,21 @@ import { Result } from '@boluo/utils';
  * @returns null if user is not found
  */
 export const useQueryUser = (
-  userId?: string | undefined | null,
-  config?: SWRConfiguration<User | null, ApiError>,
-): SWRResponse<User | null, ApiError> => {
+  userId: string,
+  config?: SWRConfiguration<User, ApiError>,
+): SWRResponse<User, ApiError> => {
   return useSWR(
-    ['/users/query' as const, userId ?? null],
-    async ([path, userId]): Promise<User | null> => {
-      const result: Result<User, ApiError> = await get(path, { id: userId ?? null });
-      if (result.isOk) {
+    ['/users/query' as const, userId],
+    async ([path, userId]): Promise<User> => {
+      const result: Result<User | null, ApiError> = await get(path, { id: userId });
+      if (result.isErr) {
+        throw result.err;
+      } else if (result.some == null) {
+        const userNotFound: ApiError = { code: 'NOT_FOUND', message: `User (${userId}) not found` };
+        throw userNotFound;
+      } else {
         return result.some;
       }
-      const error = result.err;
-      if (error.code === 'NOT_FOUND') {
-        return null;
-      }
-      throw error;
     },
     config,
   );

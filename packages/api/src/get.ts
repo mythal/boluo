@@ -12,7 +12,7 @@ import type { CheckEmail, CheckUsername, GetMe, User } from './types/users';
 
 export interface Get {
   // users
-  '/users/query': { query: { id: string | null }; result: User };
+  '/users/query': { query: { id: string | null }; result: User | null };
   '/users/query_self': { query: null; result: User | null };
   '/users/logout': { query: null; result: true };
   '/users/settings': { query: null; result: unknown };

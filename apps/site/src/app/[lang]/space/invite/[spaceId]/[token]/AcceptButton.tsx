@@ -1,7 +1,7 @@
 'use client';
 
 import { post } from '@boluo/api-browser';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import Link from 'next/link';
 import type { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
-  const { data: currentUser, isLoading } = useQueryUser();
+  const { data: currentUser, isLoading } = useQueryCurrentUser();
   const intl = useIntl();
   const handleClick = async () => {
     const result = await post('/spaces/join', { spaceId, token }, {});

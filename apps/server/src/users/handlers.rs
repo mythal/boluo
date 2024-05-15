@@ -31,7 +31,7 @@ async fn register(req: Request<Body>) -> Result<User, AppError> {
     Ok(user)
 }
 
-pub async fn query_user(req: Request<Body>) -> Result<User, AppError> {
+pub async fn query_user(req: Request<Body>) -> Result<Option<User>, AppError> {
     use crate::session::authenticate;
 
     let QueryUser { id } = parse_query(req.uri())?;
@@ -39,17 +39,15 @@ pub async fn query_user(req: Request<Body>) -> Result<User, AppError> {
     let id = if let Some(id) = id {
         id
     } else {
-        authenticate(&req)
-            .await
-            .map_err(|err| match err {
-                AppError::Unauthenticated(_) => AppError::NotFound("current user"),
-                x => x,
-            })?
-            .user_id
+        match authenticate(&req).await {
+            Ok(session) => session.user_id,
+            Err(AppError::Unauthenticated(_)) => return Ok(None),
+            Err(e) => return Err(e),
+        }
     };
 
     let pool = db::get().await;
-    User::get_by_id(&pool, &id).await.or_not_found()
+    User::get_by_id(&pool, &id).await.or_not_found().map(Some)
 }
 
 pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
@@ -68,7 +66,9 @@ pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
 
 pub async fn query_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
     use crate::session::authenticate;
-    let session = authenticate(&req).await?;
+    let Ok(session) = authenticate(&req).await else {
+        return Ok(serde_json::json!({}));
+    };
 
     let pool = db::get().await;
     let settings = UserExt::get_settings(&pool, session.user_id).await?;

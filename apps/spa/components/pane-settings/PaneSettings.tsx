@@ -1,4 +1,4 @@
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { FC } from 'react';
@@ -92,7 +92,7 @@ const AccountFields: FC<{ currentUser: User }> = ({ currentUser }) => {
 };
 
 export const PaneSettings: FC = () => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const [devMode, setDevMode] = useAtom(devModeAtom);
   return (
     <PaneBox

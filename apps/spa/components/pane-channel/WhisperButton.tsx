@@ -1,4 +1,4 @@
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { Whisper } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
@@ -10,7 +10,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 interface Props {}
 
 export const WhisperButton: FC<Props> = ({}) => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const { isWhisperAtom, composeAtom } = useChannelAtoms();
   const isWhisper = useAtomValue(isWhisperAtom);
   const dispatch = useSetAtom(composeAtom);

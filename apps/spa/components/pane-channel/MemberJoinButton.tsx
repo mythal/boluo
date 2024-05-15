@@ -1,6 +1,6 @@
 import { Channel, ChannelWithMember, SpaceMember, User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { UserPlus } from '@boluo/icons';
 import { FC, ReactNode, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -47,7 +47,7 @@ const check = (
 };
 
 export const MemberJoinButton: FC<Props> = ({ channel }) => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channel.id], join);
   const { data: spaceMember } = useMySpaceMember(channel.spaceId);
   const channelMember = useMyChannelMember(channel.id);

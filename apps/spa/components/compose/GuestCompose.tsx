@@ -1,5 +1,5 @@
 import { post } from '@boluo/api-browser';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
@@ -10,7 +10,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="py-2 text-center">{children}</div>;
 
 export const GuestCompose = () => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const channelId = useChannelId();
   const { mutate } = useSWRConfig();
   const join = async () => {

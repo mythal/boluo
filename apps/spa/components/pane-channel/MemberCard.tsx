@@ -1,7 +1,7 @@
-import { Channel, ChannelMember, Member, SpaceMember, User, UserStatus } from '@boluo/api';
+import { Channel, ChannelMember, SpaceMember, User, UserStatus } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -267,7 +267,7 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
     },
     ref,
   ) => {
-    const { data: currentUser } = useQueryUser();
+    const { data: currentUser } = useQueryCurrentUser();
     const thisIsMe = user.id === currentUser?.id;
     const canIManage = canIKick || canIInvite || canIEditMaster;
     const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>('VIEW');

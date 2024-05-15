@@ -1,6 +1,6 @@
 import type { ApiError, EditSpace, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
 import { Settings } from '@boluo/icons';
 import { FC, useCallback, useState } from 'react';
 import { useId } from 'react';
@@ -264,7 +264,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
 };
 
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
-  const { data: currentUser, isLoading: isQueryingUser } = useQueryUser();
+  const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const { data: space, error } = useQuerySpace(spaceId);
   const isChild = useIsChildPane();
 

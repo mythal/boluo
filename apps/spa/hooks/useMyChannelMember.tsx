@@ -1,5 +1,5 @@
 import type { ApiError, Member } from '@boluo/api';
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { useQueryChannelMembers } from './useQueryChannelMembers';
 import { Result, Err, Ok } from '@boluo/utils';
 
@@ -9,7 +9,7 @@ export type MyChannelMemberResult = Result<
 >;
 
 export const useMyChannelMember = (channelId: string): MyChannelMemberResult => {
-  const { data: currentUser, isLoading: isCurrentUserLoading, error: fetchUserError } = useQueryUser();
+  const { data: currentUser, isLoading: isCurrentUserLoading, error: fetchUserError } = useQueryCurrentUser();
   const { data: members, isLoading, error: fetchMembersError } = useQueryChannelMembers(channelId, {});
   if (isCurrentUserLoading || isLoading) {
     return new Err('LOADING');

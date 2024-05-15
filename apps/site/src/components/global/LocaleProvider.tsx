@@ -1,6 +1,6 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Locale, Settings, useQueryUser } from '@boluo/common';
+import { Locale, Settings, useQueryCurrentUser } from '@boluo/common';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 import { defaultLocale, IntlMessages, localeList, onIntlError } from '@boluo/common/locale';
 import { useRouter } from 'next/navigation';
@@ -25,7 +25,7 @@ const removeLocalePrefix = (pathname: string) => {
 };
 
 export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
-  const { data: currentUser } = useQueryUser();
+  const { data: currentUser } = useQueryCurrentUser();
   const router = useRouter();
 
   const key = ['/users/settings'] as const;

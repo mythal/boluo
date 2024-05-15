@@ -1,11 +1,11 @@
-import { useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { FC, ReactNode, useMemo } from 'react';
 import { ChatView } from './ChatView';
 import PaneLogin from './PaneLogin';
 import { PaneWelcome } from './PaneWelcome';
 
 export const ChatInvite: FC<{ spaceId: string; token: string }> = () => {
-  const { data: currentUser, isLoading } = useQueryUser();
+  const { data: currentUser, isLoading } = useQueryCurrentUser();
   const defaultPane: ReactNode = useMemo(() => {
     if (isLoading) {
       return null;

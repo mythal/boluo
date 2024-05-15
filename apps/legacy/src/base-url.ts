@@ -9,9 +9,9 @@ export const getBaseUrlList = async (): Promise<string[]> => {
   if (urlListCache.length > 0) {
     return urlListCache;
   }
-  const response = await fetch('/api/info/proxies');
+  const response = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`);
   const proxies = (await response.json()) as Proxy[];
-  const urls = [location.origin, ...proxies.map((proxy) => proxy.url)];
+  const urls = [getDefaultBaseUrl(), ...proxies.map((proxy) => proxy.url)];
   urlListCache = urls;
   return urls;
 };
@@ -19,6 +19,10 @@ export const getBaseUrlList = async (): Promise<string[]> => {
 const FAILED = Number.MAX_SAFE_INTEGER;
 
 export const getDefaultBaseUrl = (): string => {
+  const BASE_URL = process.env.PUBLIC_BACKEND_URL;
+  if (typeof BASE_URL === 'string') {
+    return BASE_URL;
+  }
   return location.origin;
 };
 

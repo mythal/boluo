@@ -235,41 +235,54 @@ function messageMetaDataText(message: ExportMessage): string {
   return span;
 }
 
-export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean): Blob {
+export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean, headerAfterWrap: boolean): Blob {
   let text = '';
   for (const message of messages) {
     const name = messageName(message, simple);
     const { isAction } = message;
-    let line = '';
+    let header = '';
     if (!simple || !isAction) {
-      line = '[color=silver]';
+      header = '[color=silver]';
       if (!simple) {
-        line += dateTimeFormat(parseDateString(message.created)) + ' ';
+        header += dateTimeFormat(parseDateString(message.created)) + ' ';
       }
       if (!isAction) {
-        line += `<${name}>`;
+        header += `<${name}>`;
       }
-      line += '[/color] ';
+      header += '[/color] ';
       if (!simple) {
-        line += ' ' + messageMetaDataText(message);
+        header += ' ' + messageMetaDataText(message);
       }
     }
-    line += `[color=${message.sender.color}]`;
-    if (message.isAction) {
-      line += `* ${name} `;
-    }
+    const lines: string[] = [];
     for (const entity of message.entities) {
-      line += entityBbCode(entity, message.sender.color);
+      const fragment = entityBbCode(entity, message.sender.color);
+      if (!headerAfterWrap) {
+        lines.push(fragment);
+      } else if (entity.type === 'Text') {
+        lines.push(...fragment.split('\n'));
+      } else {
+        lines.push(fragment);
+      }
     }
-    text += line + '[/color]\n';
+    console.log(lines);
+    let entry =
+      lines
+        .map((line) => {
+          const actionHead = message.isAction ? `* ${name} ` : '';
+          return `${header}[color=${message.sender.color}]${actionHead}${line}[/color]`;
+        })
+        .join('\n') + '\n';
+
     if (message.mediaUrl && !simple) {
-      text += `[img]${message.mediaUrl}[/img]\n`;
+      entry += `[img]${message.mediaUrl}[/img]\n`;
     }
+    text += entry;
   }
   return new Blob([text], { type: 'text/plain;charset=utf-8;' });
 }
 
-export function txtBlob(messages: ExportMessage[], simple: boolean): Blob {
+export function txtBlob(messages: ExportMessage[], simple: boolean, headerAfterWrap: boolean): Blob {
   let text = '';
   for (const message of messages) {
     const name = messageName(message, simple);

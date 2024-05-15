@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    spaces\nSET\n    latest_activity = $2\nFROM\n    channels\nWHERE\n    spaces.id = channels.space_id\n    AND channels.id = $1;\n\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d9d92c28ee5103b69b108c3d67a6eef7b930a5bcc8ce8610f43da5ef1cf0a7fd"
+}

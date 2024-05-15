@@ -33,6 +33,9 @@
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
+  "[sql]": {
+    "editor.formatOnSave": false
+  },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },

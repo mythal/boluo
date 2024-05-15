@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO spaces_extension (space_id, settings)\n    VALUES ($1, $2)\nON CONFLICT (space_id)\n    DO UPDATE SET\n        settings = EXCLUDED.settings;\n\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2fa6817447f8a13f564a29354d62c0bbe2920abd0e55629bcf62b697b3771db1"
+}

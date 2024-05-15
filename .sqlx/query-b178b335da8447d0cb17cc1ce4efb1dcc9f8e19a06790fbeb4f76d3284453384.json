@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    spaces AS \"space!: Space\"\nFROM\n    spaces\nWHERE\n    deleted = FALSE\n    AND explorable = TRUE\nORDER BY\n    latest_activity DESC\nLIMIT\n    512;\n",
+  "query": "SELECT\n    spaces AS \"space!: Space\"\nFROM\n    spaces\nWHERE\n    deleted = FALSE\n    AND explorable = TRUE\nORDER BY\n    latest_activity DESC\nLIMIT 512;\n\n",
   "describe": {
     "columns": [
       {
@@ -84,5 +84,5 @@
       null
     ]
   },
-  "hash": "035efc3e3c2be06384e558f4be2e1b7acca1aa204e9f5f133af27e06ab57a641"
+  "hash": "b178b335da8447d0cb17cc1ce4efb1dcc9f8e19a06790fbeb4f76d3284453384"
 }

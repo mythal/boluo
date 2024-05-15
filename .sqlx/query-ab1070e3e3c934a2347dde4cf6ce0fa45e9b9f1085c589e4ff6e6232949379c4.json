@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n  (PASSWORD = crypt($2, PASSWORD)) AS \"password_match!\",\n  users AS \"user!: User\"\nFROM\n  users\nWHERE (username = $1\n  OR email = lower($1))\nAND deactivated = FALSE\nLIMIT 1;\n\n",
+  "query": "SELECT\n    (PASSWORD = crypt($2, PASSWORD)) AS \"password_match!\",\n    users AS \"user!: User\"\nFROM\n    users\nWHERE (username = $1\n    OR email = lower($1))\nAND deactivated = FALSE\nLIMIT 1;\n\n",
   "describe": {
     "columns": [
       {
@@ -73,5 +73,5 @@
       null
     ]
   },
-  "hash": "9c5017b167c765c6cb5c576fb648abcac992b8d6a75918ae6e83d732de1bd34a"
+  "hash": "ab1070e3e3c934a2347dde4cf6ce0fa45e9b9f1085c589e4ff6e6232949379c4"
 }

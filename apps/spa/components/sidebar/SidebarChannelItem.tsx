@@ -1,6 +1,6 @@
 import type { Channel, Message } from '@boluo/api';
 import clsx from 'clsx';
-import { Hash, LockedHash, MoveVertical, Plus, X } from '@boluo/icons';
+import { Drama, Hash, Lock, MoveVertical, Plus, X } from '@boluo/icons';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
@@ -122,10 +122,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       onClick={handleClickButton}
       title={isReordering ? titleReorder : active ? titleClose : titleOpenNew}
     >
-      <Icon
-        className={paneLimit < 2 || isReordering ? '' : 'group-hover/icon:opacity-0'}
-        icon={isReordering ? MoveVertical : channel.isPublic ? Hash : LockedHash}
-      />
+      <ChannelItemIcon channel={channel} interactive={paneLimit >= 2} isReordering={isReordering} />
       {!isReordering && (
         <Icon
           className={`absolute left-0 opacity-0 ${paneLimit < 2 ? '' : 'group-hover/icon:opacity-100'}`}
@@ -134,7 +131,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       )}
     </button>
   );
-  const channelName = <span className="text-left">{channel.name}</span>;
+  const channelName = (
+    <span className="text-left">
+      {channel.isPublic ? '' : <Icon className="text-text-light mr-1" icon={Lock} />}
+      {channel.name}
+    </span>
+  );
   const messagePreview = (
     <div className="col-start-2 h-5 w-full overflow-hidden">
       {typeof latestMessage !== 'string' && (
@@ -198,4 +200,18 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       </a>
     </div>
   );
+};
+
+const ChannelItemIcon: FC<{ channel: Channel; interactive: boolean; isReordering: boolean }> = ({
+  channel,
+  interactive,
+  isReordering,
+}) => {
+  let icon = Hash;
+  if (isReordering) {
+    icon = MoveVertical;
+  } else if (channel.type === 'IN_GAME') {
+    icon = Drama;
+  }
+  return <Icon className={!interactive || isReordering ? '' : 'group-hover/icon:opacity-0'} icon={icon} />;
 };

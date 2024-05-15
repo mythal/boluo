@@ -1,3 +1,7 @@
-SELECT settings
-FROM spaces_extension
-WHERE space_id = $1;
+SELECT
+    settings
+FROM
+    spaces_extension
+WHERE
+    space_id = $1;
+

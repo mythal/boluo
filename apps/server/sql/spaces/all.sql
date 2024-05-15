@@ -7,5 +7,5 @@ WHERE
     AND explorable = TRUE
 ORDER BY
     latest_activity DESC
-LIMIT
-    512;
+LIMIT 512;
+

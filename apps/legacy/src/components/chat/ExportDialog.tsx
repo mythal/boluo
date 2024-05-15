@@ -45,6 +45,7 @@ function ExportDialog({ dismiss, channel }: Props) {
   const [filterOutGame, setFilterOutGame] = useState(false);
   const [filterFolded, setFilterFolded] = useState(false);
   const [simple, setSimple] = useState(false);
+  const [headerAfterWrap, setHeaderAfterWrap] = useState(false);
   const dispatch = useDispatch();
   const now = new Date();
   let filename = `${fileNameDateTimeFormat(now)}_${channel.name}`;
@@ -86,9 +87,9 @@ function ExportDialog({ dismiss, channel }: Props) {
     if (format.value === 'JSON') {
       blob = jsonBlob(messages);
     } else if (format.value === 'TXT') {
-      blob = txtBlob(messages, simple);
+      blob = txtBlob(messages, simple, headerAfterWrap);
     } else if (format.value === 'BBCODE') {
-      blob = bbCodeTextBlob(messages, simple);
+      blob = bbCodeTextBlob(messages, simple, headerAfterWrap);
     } else if (format.value === 'CSV') {
       blob = csvBlob(messages);
     }
@@ -142,6 +143,12 @@ function ExportDialog({ dismiss, channel }: Props) {
         <Label>
           <input checked={simple} onChange={(e) => setSimple(e.target.checked)} type="checkbox" />{' '}
           只导出基本的名字和内容
+        </Label>
+      )}
+      {format.value === 'BBCODE' && (
+        <Label>
+          <input checked={headerAfterWrap} onChange={(e) => setHeaderAfterWrap(e.target.checked)} type="checkbox" />{' '}
+          换行后加上消息头
         </Label>
       )}
       <a hidden href="#" ref={linkRef} download={filename} />

@@ -5,6 +5,7 @@ require('dotenv').config();
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
@@ -28,6 +29,9 @@ module.exports = {
   },
 
   plugins: [
+    new CopyPlugin({
+      patterns: [{ from: 'public/_redirects', to: '.' }],
+    }),
     new HtmlWebpackPlugin({
       template: path.resolve(rootPath, PRODUCTION ? 'public/index.html' : 'public/index.dev.html'),
       inject: true,

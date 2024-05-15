@@ -79,7 +79,7 @@ export const request = async <T>(
     'Content-Type': contentType,
   });
   if (DEBUG) {
-    headers.append('development', '');
+    headers.append('X-Debug', '1');
   }
   const result = await fetch(path, {
     method,

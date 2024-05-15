@@ -1,1 +1,2 @@
-/api/* https://production.boluo.chat/api/:splat
+/api/* https://production.boluo.chat/api/:splat 200
+/* /index.html 200

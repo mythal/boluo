@@ -1,7 +1,7 @@
 import { DragOverlay } from '@dnd-kit/core';
 import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import { memo } from 'react';
-import { DraggingItem } from './ChatContentView';
+import type { DraggingItem } from './ChatContentView';
 import { ChatItemMessage } from './ChatItemMessage';
 import { ResolvedTheme } from '@boluo/theme';
 

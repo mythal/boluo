@@ -86,7 +86,7 @@ export const MessageBox: FC<Props> = ({
       data-overlay={overlay}
       data-in-game={inGame}
       className={clsx(
-        'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-6',
+        'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
         'grid-cols-[4rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',

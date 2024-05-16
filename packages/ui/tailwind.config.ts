@@ -461,7 +461,8 @@ const config: Config = {
         'pane-header': paneHeight,
       },
       padding: {
-        messageRight: '4rem',
+        message: '5rem',
+        ['message-small']: '1rem',
         pane: panePadding,
       },
       minHeight: {

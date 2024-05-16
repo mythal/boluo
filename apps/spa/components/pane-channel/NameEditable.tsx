@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { ChevronDown } from '@boluo/icons';
-import { useState, type FC, type ReactNode } from 'react';
+import { useMemo, useState, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   FloatingPortal,
@@ -17,6 +17,7 @@ import {
 import { NameBox } from './NameBox';
 import { NameEditContent } from './NameEditContent';
 import { Member } from '@boluo/api';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   name: string | undefined | null;
@@ -36,14 +37,17 @@ export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member 
   if (forceOpen && !isOpen) {
     shouldOpen = true;
   }
-  const icon: ReactNode = (
-    <ChevronDown
-      className={clsx(
-        'text inline-block h-[1em] w-[1em] transition-all duration-100',
-        shouldOpen ? 'rotate-180' : 'text-text-lighter',
-      )}
-    />
-  );
+  const icon: ReactNode = useMemo(() => {
+    return (
+      <Icon
+        icon={ChevronDown}
+        className={clsx(
+          'text inline-block h-[1em] w-[1em] transition-all duration-100',
+          shouldOpen ? 'rotate-180' : 'text-text-lighter',
+        )}
+      />
+    );
+  }, [shouldOpen]);
 
   const { refs, floatingStyles, context } = useFloating({
     open: shouldOpen,

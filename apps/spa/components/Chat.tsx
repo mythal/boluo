@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { isSidebarExpandedAtom } from '../state/ui.atoms';
-import { routeAtom } from '../state/view.atoms';
+import { isNoPaneAtom, routeAtom } from '../state/view.atoms';
 import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
 import { ChatRoot } from './ChatRoot';
@@ -101,6 +101,7 @@ const Chat: FC = () => {
 
 export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
   const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
+  const noPane = useAtomValue(isNoPaneAtom);
   const [shouldAutoFold, setShouldAutoFold] = useState(typeof window !== 'undefined' && window.innerWidth < screens.sm);
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -114,7 +115,7 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       setSidebarExpanded(false);
     }
   };
-  const showMask = isSidebarExpanded && shouldAutoFold;
+  const showMask = isSidebarExpanded && shouldAutoFold && !noPane;
   return (
     <div
       onTouchStart={autoFoldSidebar}

@@ -114,6 +114,10 @@ export const panesAtom = atomWithHash<Pane[]>('panes', [], {
   setHash,
 });
 
+export const panesCountAtom = selectAtom(panesAtom, (panes) => panes.length);
+
+export const isNoPaneAtom = selectAtom(panesCountAtom, (count) => count === 0);
+
 export const panesCreationTimeMapAtom = selectAtom(
   panesAtom,
   (panes, prevMap: Map<number, number> | undefined): Map<number, number> => {

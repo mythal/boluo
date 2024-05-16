@@ -2,9 +2,9 @@ import { Proxy } from '@boluo/api';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import useSWR from 'swr';
+import { BACKEND_URL } from '../const';
 
-const DEFAULT_BACKEND_URL =
-  process.env.PUBLIC_BACKEND_URL || (typeof window === 'undefined' ? '' : window.location.origin);
+const DEFAULT_BACKEND_URL = BACKEND_URL || (typeof window === 'undefined' ? '' : window.location.origin);
 
 const fetcher = async (): Promise<Proxy[]> => {
   const res = await fetch(`${DEFAULT_BACKEND_URL}/api/info/proxies`);

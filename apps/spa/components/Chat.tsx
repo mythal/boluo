@@ -21,6 +21,7 @@ import { useQuerySettings } from '../hooks/useQuerySettings';
 import { ChatInvite } from './ChatInvite';
 import { PaneEmpty } from './PaneEmpty';
 import { useIsClient } from '../hooks/useIsClient';
+import { IS_DEVELOPMENT, SENTRY_DSN, SENTRY_TUNNEL } from '../const';
 
 const useSetThemeScheme = () => {
   const settings = useQuerySettings().data;
@@ -36,13 +37,13 @@ const useSetThemeScheme = () => {
   }, [themeFromSettings]);
 };
 
-if (typeof window !== 'undefined' && process.env.SENTRY_DSN) {
+if (typeof window !== 'undefined' && SENTRY_DSN) {
   import('@sentry/react')
     .then((Sentry) => {
       Sentry.init({
-        environment: process.env.NODE_ENV,
-        dsn: process.env.SENTRY_DSN,
-        tunnel: process.env.SENTRY_TUNNEL,
+        environment: IS_DEVELOPMENT ? 'development' : 'production',
+        dsn: SENTRY_DSN,
+        tunnel: SENTRY_TUNNEL,
         integrations: [],
       });
       console.log('Sentry ready');

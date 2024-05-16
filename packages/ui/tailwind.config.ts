@@ -307,8 +307,8 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           bg: $(neutral[100], neutral[700]),
         },
         pressed: {
-          bg: $(neutral[600], neutral[900]),
-          text: white,
+          bg: $(neutral[200], neutral[900]),
+          text: $(black, white),
           indicator: $(green[500], green[500]),
         },
       },
@@ -420,7 +420,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   };
 };
 
-const panePadding = '1.75rem';
+const panePadding = '2rem';
 const paneHeight = '2.25rem';
 const config: Config = {
   content: [],

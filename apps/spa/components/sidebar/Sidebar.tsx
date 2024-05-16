@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
-import type { FC, ReactNode } from 'react';
+import { useEffect, type FC, type ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
 import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
@@ -10,9 +10,9 @@ import { SidebarUserOperations } from './SidebarUserOperations';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { User } from '@boluo/api';
-import { ToggleSidebarLine } from './ToggleSidebarLine';
 import { AppOperations } from './AppOperations';
 import { useIsClient } from '../../hooks/useIsClient';
+import { isApple } from '@boluo/utils';
 
 interface Props {
   spaceId?: string;
@@ -40,12 +40,23 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const isClient = useIsClient();
-  const [isExpanded] = useAtom(isSidebarExpandedAtom);
-  const foldedNode = (
-    <div className="relative w-0">
-      <ToggleSidebarLine />
-    </div>
-  );
+  const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === '/') {
+        if (isApple() && e.metaKey) {
+          setExpanded((x) => !x);
+        } else if (e.ctrlKey) {
+          setExpanded((x) => !x);
+        }
+      }
+    };
+    window.addEventListener('keydown', listener);
+    return () => {
+      window.removeEventListener('keydown', listener);
+    };
+  }, [setExpanded]);
+  const foldedNode = <div className="relative w-0"></div>;
   if (!isExpanded) {
     return foldedNode;
   }
@@ -70,7 +81,6 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
           {isClient && <ConnectionIndicatior spaceId={spaceId} />}
         </div>
       </div>
-      <ToggleSidebarLine />
     </div>
   );
 };

@@ -1,8 +1,8 @@
 import type { Space, User } from '@boluo/api';
-import { PanelLeftClose, Shuffle } from '@boluo/icons';
-import { useAtom, useSetAtom } from 'jotai';
+import { Shuffle } from '@boluo/icons';
+import { useAtom } from 'jotai';
 import { type FC } from 'react';
-import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
+import { sidebarContentStateAtom } from '../../state/ui.atoms';
 import Icon from '@boluo/ui/Icon';
 import clsx from 'clsx';
 import { FormattedMessage } from 'react-intl';
@@ -15,7 +15,6 @@ interface Props {
 
 export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
   const openPane = usePaneReplace();
-  const setExpanded = useSetAtom(isSidebarExpandedAtom);
   const [sidebarState, setSidebarState] = useAtom(sidebarContentStateAtom);
   const handleClickSpaceName = () => {
     openPane({ type: 'SPACE', spaceId: space.id });
@@ -43,10 +42,6 @@ export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
         <span className="ml-1 text-xs">
           <FormattedMessage defaultMessage="Spaces" />
         </span>
-      </button>
-
-      <button className="bg-sidebar-folder-active-bg rounded-sm px-1 text-base" onClick={() => setExpanded(false)}>
-        <Icon icon={PanelLeftClose} />
       </button>
     </div>
   );

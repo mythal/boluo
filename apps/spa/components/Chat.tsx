@@ -1,6 +1,6 @@
 'use client';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, useEffect, useRef } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { Suspense } from 'react';
 import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
@@ -22,6 +22,7 @@ import { ChatInvite } from './ChatInvite';
 import { PaneEmpty } from './PaneEmpty';
 import { useIsClient } from '../hooks/useIsClient';
 import { IS_DEVELOPMENT, SENTRY_DSN, SENTRY_TUNNEL } from '../const';
+import clsx from 'clsx';
 
 const useSetThemeScheme = () => {
   const settings = useQuerySettings().data;
@@ -58,7 +59,6 @@ const Chat: FC = () => {
   const route = useAtomValue(routeAtom);
   const isClient = useIsClient();
   useAutoSelectProxy(60 * 1000);
-  const setSidebarExpanded = useSetAtom(isSidebarExpandedAtom);
   useSetThemeScheme();
   useSetThemeColor();
 
@@ -71,12 +71,6 @@ const Chat: FC = () => {
     };
   }, []);
   const isTouch = useDetectIsTouch();
-  const autoFoldSidebar = () => {
-    if (window.innerWidth < screens.sm) {
-      setSidebarExpanded(false);
-    }
-  };
-
   return (
     <BannerContext.Provider value={bannerRef}>
       <IsTouchContext.Provider value={isTouch}>
@@ -85,11 +79,7 @@ const Chat: FC = () => {
             <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
               <div ref={bannerRef} className="col-span-full"></div>
               <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
-              <div
-                onTouchStart={autoFoldSidebar}
-                onClick={autoFoldSidebar}
-                className="md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
-              >
+              <ChatContentBox>
                 {!isClient ? (
                   <PaneEmpty />
                 ) : (
@@ -100,12 +90,43 @@ const Chat: FC = () => {
                     {route.type === 'INVITE' && <ChatInvite spaceId={route.spaceId} token={route.token} />}
                   </Suspense>
                 )}
-              </div>
+              </ChatContentBox>
             </div>
           </ChatErrorBoundary>
         </BreakpointProvider>
       </IsTouchContext.Provider>
     </BannerContext.Provider>
+  );
+};
+
+export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
+  const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
+  const [shouldAutoFold, setShouldAutoFold] = useState(typeof window !== 'undefined' && window.innerWidth < screens.sm);
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      setShouldAutoFold(entries[0]!.contentRect.width < screens.sm);
+    });
+    observer.observe(document.body);
+    return () => observer.disconnect();
+  }, []);
+  const autoFoldSidebar = () => {
+    if (shouldAutoFold) {
+      setSidebarExpanded(false);
+    }
+  };
+  const showMask = isSidebarExpanded && shouldAutoFold;
+  return (
+    <div
+      onTouchStart={autoFoldSidebar}
+      onClick={autoFoldSidebar}
+      className={clsx(
+        'md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
+        showMask &&
+          "after:content-[' '] after:absolute after:inset-0 after:z-10 after:block after:bg-black after:bg-opacity-25",
+      )}
+    >
+      {children}
+    </div>
   );
 };
 

@@ -5,6 +5,7 @@ import { atomWithStorage } from 'jotai/utils';
 import useSWR from 'swr';
 import { sleep } from '@boluo/utils';
 import { useProxies } from './useProxies';
+import { IS_DEVELOPMENT } from '../const';
 
 const timeout = async (): Promise<'TIMEOUT'> => {
   await sleep(1500);
@@ -39,7 +40,7 @@ const tester = async (proxies: Proxy[]): Promise<ProxyTestResult[]> => {
   return await Promise.all(proxies.map(proxyTimer));
 };
 
-export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select', process.env.NODE_ENV !== 'development');
+export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select', IS_DEVELOPMENT);
 
 export const useAutoSelectProxy = (interval: number) => {
   const proxies = useProxies();

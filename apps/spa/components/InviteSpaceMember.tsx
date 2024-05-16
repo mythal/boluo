@@ -8,6 +8,7 @@ import Icon from '@boluo/ui/Icon';
 import { Loading } from '@boluo/ui/Loading';
 import { TextInput } from '@boluo/ui/TextInput';
 import { unwrap } from '@boluo/utils';
+import { APP_URL, SITE_URL } from '../const';
 
 interface Props {
   spaceId: string;
@@ -46,10 +47,10 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   }
 
   let link;
-  if (process.env.SITE_URL) {
-    link = `${process.env.SITE_URL}/space/invite/${spaceId}/${token}`;
+  if (SITE_URL) {
+    link = `${SITE_URL}/space/invite/${spaceId}/${token}`;
   } else {
-    const base = typeof window !== 'undefined' ? window.location.origin : process.env.APP_URL;
+    const base = typeof window !== 'undefined' ? window.location.origin : APP_URL;
     link = `${base}/${intl.locale}#route=invite?spaceId=${spaceId}&token=${token}`;
   }
   return (

@@ -11,6 +11,7 @@ import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { FloatingBox } from '../common/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   channelId: string;
@@ -47,17 +48,21 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
       <SidebarHeaderButton
         ref={refs.setReference}
         disabled={channelMember.isErr || isMutating || isLoading}
-        className="hover:bg-error-700/10 text-error-800 flex flex-none items-center gap-1 rounded-sm px-2 py-1"
+        size="small"
         {...getReferenceProps()}
       >
-        {isMutating || isLoading ? <Spinner /> : <UserX />}
+        {isMutating || isLoading ? <Spinner /> : <Icon icon={UserX} />}
         <FormattedMessage defaultMessage="Leave" />
       </SidebarHeaderButton>
       {isConfirmOpen && (
         <FloatingPortal>
-          <div ref={refs.setFloating} style={{ position: strategy, top: y ?? 0, left: x ?? 0 }} {...getFloatingProps()}>
+          <div
+            ref={refs.setFloating}
+            style={{ position: strategy, top: y ?? 0, left: x ?? 0, zIndex: 30 }}
+            {...getFloatingProps()}
+          >
             <FloatingBox>
-              <div>
+              <div className="max-w-xs">
                 <FormattedMessage
                   defaultMessage="Are you sure you want to leave {channelName}?"
                   values={{ channelName: channel?.name }}

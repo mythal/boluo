@@ -8,6 +8,11 @@ import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ChannelSettingsButton } from './ChannelSettingsButton';
 import { MemberLeaveButton } from './MemberLeaveButton';
 import { ChannelHeaderState } from './ChannelHeader';
+import { ChannelHeaderFilter } from './ChannelHeaderFilter';
+import { ChannelHeaderFilterShowArchive } from './ChannelHeaderFilterShowArchive';
+import { MemberJoinButton } from './MemberJoinButton';
+import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryCurrentUser } from '@boluo/common';
 
 interface Props {
   channelId: string;
@@ -36,18 +41,27 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
 };
 
 export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
+  const { isLoading, data: channel } = useQueryChannel(channelId);
+  const { data: currentUser } = useQueryCurrentUser();
   const memberResult = useMyChannelMember(channelId);
-  if (memberResult.isErr) {
-    console.warn('Failed to load channel member information:', memberResult.err);
-    return null;
+  const member = memberResult.isOk ? memberResult.some : null;
+
+  let memberButton = null;
+  if (currentUser == null) {
+    // Keep the button hidden
+  } else if (member) {
+    memberButton = <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />;
+  } else if (channel != null) {
+    memberButton = <MemberJoinButton channel={channel} />;
   }
-  const member = memberResult.some;
 
   return (
-    <div className="bg-pane-header-bg px-pane flex items-center gap-2 py-2">
-      <div className="flex-grow"></div>
-      <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />
-      {member.space.isAdmin && (
+    <div className="bg-pane-header-bg px-pane flex items-baseline gap-x-2 gap-y-1 py-2 text-xs">
+      <ChannelHeaderFilter />
+      <ChannelHeaderFilterShowArchive />
+      <div className="flex-grow" />
+      {memberButton}
+      {member?.space.isAdmin && (
         <div className="flex-none">
           <ChannelSettingsButton channelId={channelId} />
         </div>

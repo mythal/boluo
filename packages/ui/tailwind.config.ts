@@ -64,6 +64,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         brand: lime,
         gray,
       },
+      dot: {
+        normal: blue[600],
+      },
       light: {
         bg: neutral[100],
       },

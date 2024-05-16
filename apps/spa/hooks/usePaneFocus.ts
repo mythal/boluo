@@ -1,14 +1,18 @@
 import { useStore } from 'jotai';
-import { useCallback, useContext } from 'react';
+import { RefObject, useCallback, useContext } from 'react';
 import { focusPaneAtom } from '../state/view.atoms';
 import { PaneContext } from '../state/view.context';
 
-export const usePaneFocus = () => {
+export const usePaneFocus = (ref: RefObject<HTMLDivElement>) => {
   const store = useStore();
   const { key } = useContext(PaneContext);
   return useCallback(() => {
-    if (key != null) {
-      store.set(focusPaneAtom, key);
+    if (key == null) {
+      return;
     }
-  }, [key, store]);
+    store.set(focusPaneAtom, key);
+    const paneBox = ref.current;
+    if (paneBox == null) return;
+    paneBox.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+  }, [key, ref, store]);
 };

@@ -25,8 +25,9 @@ const Placeholder = () => {
 
 export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   const { key: paneKey } = useContext(PaneContext);
-  const focus = usePaneFocus();
+  const paneBoxRef = useRef<HTMLDivElement | null>(null);
   const bannerRef = useRef<HTMLDivElement | null>(null);
+  const focus = usePaneFocus(paneBoxRef);
   const isChildPane = useIsChildPane();
   const childPaneAtom = useMemo(
     () =>
@@ -41,7 +42,11 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   );
   const childPane: PaneData | undefined = useAtomValue(childPaneAtom);
   const content = (
-    <div onClick={focus} className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col">
+    <div
+      ref={isChildPane ? paneBoxRef : undefined}
+      onClick={focus}
+      className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col"
+    >
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
       {header}
       <div ref={bannerRef} className="border-pane-header-border border-b"></div>
@@ -69,6 +74,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   return (
     <BannerContext.Provider value={bannerRef}>
       <div
+        ref={paneBoxRef}
         className={`PaneBox flex h-full min-w-[22rem] max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
       >
         {content}

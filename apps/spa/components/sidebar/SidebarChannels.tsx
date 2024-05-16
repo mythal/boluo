@@ -10,6 +10,7 @@ import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 import Icon from '@boluo/ui/Icon';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
+import clsx from 'clsx';
 
 const SidebarChannelList = React.lazy(() => import('./SidebarChannelList'));
 
@@ -41,11 +42,18 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
         {mySpaceMember?.isAdmin && (
           <button
             aria-pressed={isReordering}
-            className="text-text-lighter hover:text-text-base hover:bg-sidebar-channels-reorderButton-hover-bg aria-pressed:bg-sidebar-channels-reorderButton-active-bg aria-pressed:text-text-reverse rounded-sm px-1"
+            className={clsx(
+              'rounded-sm px-1',
+              isReordering
+                ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
+                : 'hover:bg-switch-hover-bg text-text-lighter hover:text-text-base',
+            )}
             onClick={() => setIsReordering((prev) => !prev)}
           >
             <Icon icon={ArrowDownWideShort} className="mr-1" />
-            <FormattedMessage defaultMessage="Reorder" />
+            <span className="text-xs">
+              <FormattedMessage defaultMessage="Reorder" />
+            </span>
           </button>
         )}
       </div>

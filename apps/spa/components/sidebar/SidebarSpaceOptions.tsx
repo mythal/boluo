@@ -7,6 +7,7 @@ import Icon from '@boluo/ui/Icon';
 import clsx from 'clsx';
 import { FormattedMessage } from 'react-intl';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { SidebarButton } from './SidebarButton';
 
 interface Props {
   space: Space;
@@ -43,6 +44,7 @@ export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
           <FormattedMessage defaultMessage="Spaces" />
         </span>
       </button>
+      <SidebarButton />
     </div>
   );
 };

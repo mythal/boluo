@@ -2,7 +2,8 @@
 import clsx from 'clsx';
 import { FC, useEffect, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ParseResult } from '../../interpreter/parse-result';
+import { fromRawEntities } from '../../interpreter/entities';
+import { emptyParseResult, ParseResult } from '../../interpreter/parse-result';
 import { MessageItem } from '../../state/channel.types';
 import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
@@ -14,14 +15,6 @@ import { ResolvedTheme } from '@boluo/theme';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';
-import { Delay } from '../Delay';
-import { FallbackIcon } from '../FallbackIcon';
-import Icon from '@boluo/ui/Icon';
-import { Edit } from '@boluo/icons';
-import React from 'react';
-import { Message } from '@boluo/api';
-import { useSetAtom } from 'jotai';
-import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 interface Props {
   iAmAdmin: boolean;
@@ -67,7 +60,6 @@ export const ChatItemMessage: FC<Props> = ({
   );
   const mini = continuous || isAction;
   const draggable = self || iAmMaster;
-  const tailNode = useMemo(() => (self ? <InlineEditButton message={message} /> : null), [message, self]);
 
   return (
     <MessageBox
@@ -115,32 +107,10 @@ export const ChatItemMessage: FC<Props> = ({
             isArchived={message.folded}
             isPreview={false}
             seed={message.seed}
-            tailNode={tailNode}
           />
         )}
         {message.mediaId != null && <MessageMedia className="pt-2" media={message.mediaId} />}
       </div>
     </MessageBox>
-  );
-};
-
-const InlineEditButton = ({ message }: { message: Message }) => {
-  const { composeAtom } = useChannelAtoms();
-  const dispatch = useSetAtom(composeAtom);
-  const handleClick = () => {
-    dispatch({ type: 'editMessage', payload: { message } });
-  };
-  return (
-    <button
-      className="bg-preview-toolbar-bg text-text-light hover:text-text-base ml-1 select-none rounded-sm px-1 py-px text-xs opacity-60 shadow-sm group-hover:opacity-100"
-      onClick={handleClick}
-    >
-      <Delay fallback={<FallbackIcon />}>
-        <Icon icon={Edit} />
-      </Delay>
-      <span className="ml-0.5">
-        <FormattedMessage defaultMessage="Edit" />
-      </span>
-    </button>
   );
 };

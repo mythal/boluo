@@ -75,7 +75,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
   } else {
     content = (
       <div className="relative flex items-center gap-2">
-        <div className="text-text-light w-[4.5rem] flex-none text-sm">
+        <div className="text-text-light w-[4.5rem] flex-initial text-sm">
           <Icon className="mr-1" icon={Edit} />
           <FormattedMessage defaultMessage="Editing" />
         </div>

@@ -246,6 +246,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
           danger: $(red[600], red[500]),
         },
+        menu: {
+          button: {
+            bg: $(white, neutral[900]),
+          },
+        },
       },
       expr: {
         bg: $(lime[50], neutral[900]),
@@ -462,7 +467,7 @@ const config: Config = {
       },
       padding: {
         message: '5rem',
-        ['message-small']: '1rem',
+        ['message-small']: '2rem',
         pane: panePadding,
       },
       minHeight: {

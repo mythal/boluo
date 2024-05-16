@@ -30,6 +30,7 @@ interface Props {
   isFocused?: boolean;
   nameNode: ReactNode;
   cursorAtom?: PrimitiveAtom<HTMLElement | null>;
+  tailNode?: ReactNode;
 }
 
 export type EvaluatedExpr = { type: 'EvaluatedExpr'; node: EvaluatedExprNode; start: number; len: number };
@@ -46,6 +47,7 @@ export const Content = memo<Props>(
     self = false,
     isFocused = false,
     cursorAtom,
+    tailNode,
   }) => {
     const isDragging = useIsDragging();
 
@@ -114,6 +116,7 @@ export const Content = memo<Props>(
           {isAction && <span className="text-message-action mr-1">*</span>}
           {isAction && nameNode}
           {entityNodeList}
+          {tailNode}
         </div>
 
         {isPreview && isFocused && self && !isDragging && cursorAtom && (

@@ -123,7 +123,7 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       className={clsx(
         'md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
         showMask &&
-          "after:content-[' '] after:absolute after:inset-0 after:z-10 after:block after:bg-black after:bg-opacity-25",
+          "after:content-[' '] after:absolute after:inset-0 after:z-20 after:block after:bg-black after:bg-opacity-25 after:dark:bg-opacity-50",
       )}
     >
       {children}

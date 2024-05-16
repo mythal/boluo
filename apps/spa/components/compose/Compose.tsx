@@ -69,7 +69,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         <div
           data-in-game={inGame}
           data-whisper={isWhisper}
-          className="bg-compose-bg focus-within:border-surface-400 border-lowest data-[in-game=true]:bg-message-inGame-bg relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
+          className="bg-compose-bg focus-within:border-compose-focused-border data-[in-game=true]:bg-message-inGame-bg border-compose-border relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
         >
           {fileButton}
           {inGameSwitchButton}

@@ -21,7 +21,8 @@ const lime = palette(colors.lime);
 const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   const $ = <T, U>(inLight: T, inDark: U): T | U => (name === 'light' ? inLight : inDark);
   const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
-  const inGameMessageBg = $(mix(lime[50], white, 0.6), zinc[950]);
+  const inGameMessageBg = $('#fbfdf6', zinc[700]);
+  console.log('inGameMessageBg', inGameMessageBg);
   const brand = $(lime, revert(blue));
   const themeColor = {
     light: neutral[50],
@@ -234,7 +235,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         inGame: {
           bg: inGameMessageBg,
           hover: {
-            bg: $(mix(lime[50], white, 0.175), zinc[900]),
+            bg: $('#f8fceb', mix(zinc[600], zinc[700], 0.5)),
           },
         },
         action: $(neutral[400], neutral[600]),
@@ -255,6 +256,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         text: $(black, yellow[300]),
       },
       compose: {
+        border: $(neutral[200], black),
+        focused: {
+          border: $(neutral[400], neutral[600]),
+        },
         media: {
           bg: $(neutral[100], neutral[700]),
           remove: {

@@ -13,6 +13,7 @@ import { User } from '@boluo/api';
 import { AppOperations } from './AppOperations';
 import { useIsClient } from '../../hooks/useIsClient';
 import { isApple } from '@boluo/utils';
+import { isNoPaneAtom } from '../../state/view.atoms';
 
 interface Props {
   spaceId?: string;
@@ -39,6 +40,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
 
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
+  const noPane = useAtomValue(isNoPaneAtom);
   const isClient = useIsClient();
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
   useEffect(() => {
@@ -57,7 +59,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
     };
   }, [setExpanded]);
   const foldedNode = <div className="relative w-0"></div>;
-  if (!isExpanded) {
+  if (!noPane && !isExpanded) {
     return foldedNode;
   }
   let content: ReactNode;

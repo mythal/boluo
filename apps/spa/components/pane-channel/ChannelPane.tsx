@@ -99,10 +99,10 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
           <div
             className={clsx(
               'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
-              memberListState === 'CLOSED' ? 'grid-cols-1' : '@md:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
+              memberListState === 'CLOSED' ? 'grid-cols-1' : '@2xl:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
             )}
           >
-            <ChatContent className="relative" currentUser={currentUser} channelId={channelId} />
+            <ChatContent className="@container relative" currentUser={currentUser} channelId={channelId} />
             {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
             {member.isOk ? <Compose channelAtoms={atoms} member={member.some} /> : null}
           </div>

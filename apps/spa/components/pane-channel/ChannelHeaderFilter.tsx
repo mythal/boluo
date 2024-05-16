@@ -4,6 +4,7 @@ import { FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Select } from '@boluo/ui/Select';
 import { ChannelFilter, useChannelAtoms } from '../../hooks/useChannelAtoms';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {}
 
@@ -20,14 +21,13 @@ export const ChannelHeaderFilter: FC<Props> = () => {
   const { filterAtom } = useChannelAtoms();
   const [filter, setFilter] = useAtom(filterAtom);
   return (
-    <div className="flex-none">
-      <label className="flex items-center">
-        <span className="mr-1">
-          <Filter />
-        </span>
-        <span className="mr-2 flex-none">
-          <FormattedMessage defaultMessage="Filter" />
-        </span>
+    <label className="flex items-center gap-1">
+      <Icon icon={Filter} />
+
+      <span className="@xl:inline hidden flex-none">
+        <FormattedMessage defaultMessage="Filter" />
+      </span>
+      <div className="w-20">
         <Select value={filter} onChange={(e) => setFilter(e.target.value as ChannelFilter)}>
           {items.map((item) => (
             <option key={item.value} value={item.value}>
@@ -35,7 +35,7 @@ export const ChannelHeaderFilter: FC<Props> = () => {
             </option>
           ))}
         </Select>
-      </label>
-    </div>
+      </div>
+    </label>
   );
 };

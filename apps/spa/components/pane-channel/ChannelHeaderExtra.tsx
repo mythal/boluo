@@ -1,7 +1,6 @@
 import { PrimitiveAtom, useAtom } from 'jotai';
 import { FC } from 'react';
 import { ChannelHeaderState } from './ChannelHeader';
-import { ChannelHeaderFilterBar } from './ChannelHeaderFilterBar';
 import { ChannelHeaderMore } from './ChannelHeaderMore';
 
 interface Props {
@@ -14,8 +13,6 @@ export const ChannelHeaderExtra: FC<Props> = ({ stateAtom, channelId }) => {
   switch (headerState) {
     case 'MORE':
       return <ChannelHeaderMore channelId={channelId} setHeaderState={setHeaderState} />;
-    case 'FILTER':
-      return <ChannelHeaderFilterBar />;
     default:
       return null;
   }

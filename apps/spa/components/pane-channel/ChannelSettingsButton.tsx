@@ -6,6 +6,7 @@ import { usePaneKey } from '../../hooks/usePaneKey';
 import { atom, useAtomValue } from 'jotai';
 import { panesAtom } from '../../state/view.atoms';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   channelId: string;
@@ -33,9 +34,11 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
     [toggleChild, channelId],
   );
   return (
-    <SidebarHeaderButton onClick={handleClick} active={opened}>
-      <Settings />
-      <FormattedMessage defaultMessage="Channel Settings" />
+    <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
+      <Icon icon={Settings} />
+      <span className="">
+        <FormattedMessage defaultMessage="Channel Settings" />
+      </span>
     </SidebarHeaderButton>
   );
 };

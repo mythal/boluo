@@ -10,7 +10,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 type UseInteractionsReturn = ReturnType<typeof useInteractions>;
 
@@ -20,6 +20,7 @@ interface UseTooltipReturn {
   getReferenceProps: UseInteractionsReturn['getReferenceProps'];
   getFloatingProps: UseInteractionsReturn['getFloatingProps'];
   refs: UseFloatingReturn['refs'];
+  dismiss: () => void;
 }
 
 export const useTooltip = (placement: Placement = 'bottom', offsetMount: number = 4): UseTooltipReturn => {
@@ -33,7 +34,7 @@ export const useTooltip = (placement: Placement = 'bottom', offsetMount: number 
     whileElementsMounted: autoUpdate,
   });
 
-  const hover = useHover(context, {});
+  const hover = useHover(context, { delay: { open: 50, close: 200 } });
   const dismiss = useDismiss(context, {});
   const role = useRole(context, { role: 'tooltip' });
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss, role]);
@@ -43,5 +44,6 @@ export const useTooltip = (placement: Placement = 'bottom', offsetMount: number 
     getReferenceProps,
     getFloatingProps,
     refs,
+    dismiss: useCallback(() => setShowTooltip(false), []),
   };
 };

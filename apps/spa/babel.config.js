@@ -9,6 +9,7 @@ module.exports = {
         },
       },
     ],
+    'jotai/babel/preset',
   ],
   plugins: [
     [
@@ -18,6 +19,5 @@ module.exports = {
         ast: true,
       },
     ],
-    ['jotai/babel/plugin-react-refresh'],
   ],
 };

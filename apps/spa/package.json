@@ -25,6 +25,7 @@
     "@sentry/react": "^8.0.0",
     "clsx": "^2.1.0",
     "jotai": "^2.8.0",
+    "jotai-devtools": "^0.9.1",
     "jotai-location": "^0.5.5",
     "next": "^14.1.1",
     "prando": "^6.0.1",

@@ -123,8 +123,6 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 
 export const PaneChannelSettings: FC<{ channelId: string }> = ({ channelId }) => {
   const { data: channel, error } = useQueryChannel(channelId);
-  const isChild = useIsChildPane();
-
   if (error && channel == null) {
     return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />;
   } else if (!channel) {
@@ -132,7 +130,7 @@ export const PaneChannelSettings: FC<{ channelId: string }> = ({ channelId }) =>
   }
 
   return (
-    <PaneBox header={isChild ? null : <PaneChannelSettingsHeader channel={channel} />}>
+    <PaneBox header={<PaneChannelSettingsHeader channel={channel} />}>
       <PaneChannelSettingsForm channel={channel} />
     </PaneBox>
   );

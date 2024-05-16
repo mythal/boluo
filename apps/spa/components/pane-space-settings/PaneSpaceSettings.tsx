@@ -266,8 +266,6 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
 export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const { data: space, error } = useQuerySpace(spaceId);
-  const isChild = useIsChildPane();
-
   if (error != null) {
     if (space == null) {
       return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the space" />} />;
@@ -297,11 +295,9 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox
       header={
-        isChild ? null : (
-          <PaneHeaderBox icon={<Settings />}>
-            <FormattedMessage defaultMessage='Settings of "{spaceName}" Space' values={{ spaceName: space.name }} />
-          </PaneHeaderBox>
-        )
+        <PaneHeaderBox icon={<Settings />}>
+          <FormattedMessage defaultMessage='Settings of "{spaceName}" Space' values={{ spaceName: space.name }} />
+        </PaneHeaderBox>
       }
     >
       <div className="relative">

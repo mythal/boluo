@@ -11,7 +11,8 @@ export const setHash = (searchParams: string) => {
       parsed.delete(key);
     }
   }
-  window.location.hash = String(parsed);
+  const hash = parsed.toString();
+  window.location.hash = hash;
 };
 
 const routeDeserialize = (raw: string): string => {

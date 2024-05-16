@@ -1,6 +1,6 @@
 'use client';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { Suspense } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { BreakpointProvider } from '../breakpoint';
@@ -21,19 +21,21 @@ import screens from '@boluo/ui/screens.json';
 import { getThemeFromCookie, setThemeToDom, writeThemeToCookie } from '@boluo/theme';
 import { useQuerySettings } from '../hooks/useQuerySettings';
 import { ChatInvite } from './ChatInvite';
+import { PaneEmpty } from './PaneEmpty';
+import { useIsClient } from '../hooks/useIsClient';
 
 const useSetThemeScheme = () => {
-  const themeFromCookie = useMemo(getThemeFromCookie, []);
   const settings = useQuerySettings().data;
   const themeFromSettings = settings?.theme;
   useEffect(() => {
+    const themeFromCookie = getThemeFromCookie();
     if (themeFromSettings) {
       writeThemeToCookie(themeFromSettings);
       setThemeToDom(themeFromSettings);
     } else if (themeFromCookie) {
       setThemeToDom(themeFromCookie);
     }
-  }, [themeFromCookie, themeFromSettings]);
+  }, [themeFromSettings]);
 };
 
 if (typeof window !== 'undefined' && process.env.SENTRY_DSN) {
@@ -55,6 +57,7 @@ if (typeof window !== 'undefined' && process.env.SENTRY_DSN) {
 const Chat: FC = () => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const route = useAtomValue(routeAtom);
+  const isClient = useIsClient();
   useAutoSelectProxy(60 * 1000);
   const setSidebarExpanded = useSetAtom(isSidebarExpandedAtom);
   useSetThemeScheme();
@@ -80,30 +83,26 @@ const Chat: FC = () => {
       <IsTouchContext.Provider value={isTouch}>
         <BreakpointProvider>
           <ChatErrorBoundary>
-            <Suspense
-              fallback={
-                <ChatSkeleton>
-                  <Loading />
-                </ChatSkeleton>
-              }
-            >
-              <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
-                <div ref={bannerRef} className="col-span-full"></div>
-                <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
-                <div
-                  onTouchStart={autoFoldSidebar}
-                  onClick={autoFoldSidebar}
-                  className="md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
-                >
+            <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
+              <div ref={bannerRef} className="col-span-full"></div>
+              <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
+              <div
+                onTouchStart={autoFoldSidebar}
+                onClick={autoFoldSidebar}
+                className="md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto"
+              >
+                {!isClient ? (
+                  <PaneEmpty />
+                ) : (
                   <Suspense fallback={<PaneLoading grow />}>
                     {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
                     {route.type === 'NOT_FOUND' && <ChatNotFound />}
                     {route.type === 'ROOT' && <ChatRoot />}
                     {route.type === 'INVITE' && <ChatInvite spaceId={route.spaceId} token={route.token} />}
                   </Suspense>
-                </div>
+                )}
               </div>
-            </Suspense>
+            </div>
           </ChatErrorBoundary>
         </BreakpointProvider>
       </IsTouchContext.Provider>

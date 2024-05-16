@@ -12,6 +12,7 @@ import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { User } from '@boluo/api';
 import { ToggleSidebarLine } from './ToggleSidebarLine';
 import { AppOperations } from './AppOperations';
+import { useIsClient } from '../../hooks/useIsClient';
 
 interface Props {
   spaceId?: string;
@@ -38,6 +39,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
 
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
+  const isClient = useIsClient();
   const [isExpanded] = useAtom(isSidebarExpandedAtom);
   const foldedNode = (
     <div className="relative w-0">
@@ -48,7 +50,9 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
     return foldedNode;
   }
   let content: ReactNode;
-  if (spaceId == null) {
+  if (!isClient) {
+    content = <div>{/* Placeholder */}</div>;
+  } else if (spaceId == null) {
     content = <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
@@ -63,7 +67,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
           <AppOperations currentUser={currentUser} />
           {!isQueryingUser && <SidebarUserOperations currentUser={currentUser} />}
 
-          <ConnectionIndicatior spaceId={spaceId} />
+          {isClient && <ConnectionIndicatior spaceId={spaceId} />}
         </div>
       </div>
       <ToggleSidebarLine />

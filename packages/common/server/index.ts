@@ -10,6 +10,7 @@ import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
 import { toTheme } from '@boluo/theme';
 import type { Theme } from '@boluo/theme';
+import { getMessages } from './get-messages';
 
 export interface LangParams {
   lang?: string;
@@ -58,17 +59,6 @@ export const getTheme = cache(async (): Promise<Theme> => {
   return getThemeFromHeaders();
 });
 
-export const getMessages = (locale: Locale): IntlMessages => {
-  switch (locale) {
-    case 'en':
-      return en;
-    case 'ja':
-      return ja;
-    case 'zh-CN':
-      return zh_CN;
-  }
-};
-
 export const getIntl = ({ lang }: LangParams): IntlShape<string> => {
   const locale = toLocale(lang);
   const messages = getMessages(locale);
@@ -88,3 +78,5 @@ export const getIntl = ({ lang }: LangParams): IntlShape<string> => {
 export const title = (intl: IntlShape<string>, prefix: string): string => {
   return prefix + ' - ' + intl.formatMessage({ defaultMessage: 'Boluo' });
 };
+
+export { getMessages };

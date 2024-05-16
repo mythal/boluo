@@ -1,8 +1,7 @@
 'use client';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { Suspense } from 'react';
-import { Loading } from '@boluo/ui/Loading';
 import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { isSidebarExpandedAtom } from '../state/ui.atoms';
@@ -10,7 +9,6 @@ import { routeAtom } from '../state/view.atoms';
 import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
 import { ChatRoot } from './ChatRoot';
-import { ChatSkeleton } from './ChatSkeleton';
 import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';

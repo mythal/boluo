@@ -1,5 +1,5 @@
 import { Gamemaster } from '@boluo/icons';
-import { useState, type FC } from 'react';
+import { useMemo, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NameBox } from './NameBox';
 import { User } from '@boluo/api';
@@ -18,6 +18,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { UserCard } from '../common/UserCard';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   name: string | undefined | null;
@@ -44,7 +45,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, theme, messageCo
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   const isEmptyName = name === '' || name == null;
   const color = useMessageColor(theme, user, inGame, messageColor);
-  const masterIcon = <Gamemaster className="inline-block h-[1em] w-[1em]" />;
+  const masterIcon = useMemo(() => <Icon icon={Gamemaster} className="inline-block h-[1em] w-[1em]" />, []);
   return (
     <>
       <NameBox

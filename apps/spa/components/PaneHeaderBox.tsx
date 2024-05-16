@@ -5,13 +5,11 @@ import { usePaneBanner } from '../hooks/useBanner';
 import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from './PaneBanner';
-import { PanelLeftClose, PanelLeftOpen, Square } from '@boluo/icons';
-import { atom, useAtom, useAtomValue } from 'jotai';
-import { isSidebarExpandedAtom } from '../state/ui.atoms';
+import { Square } from '@boluo/icons';
+import { atom, useAtomValue } from 'jotai';
 import { panesAtom } from '../state/view.atoms';
-import { useTooltip } from '../hooks/useTooltip';
-import { TooltipBox } from './common/TooltipBox';
-import { FormattedMessage } from 'react-intl';
+import { SidebarButton } from './sidebar/SidebarButton';
+import { isSidebarExpandedAtom } from '../state/ui.atoms';
 
 interface Props {
   withoutDefaultOperators?: boolean;
@@ -29,19 +27,21 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
     return <ClosePaneButton />;
   }, [withoutDefaultOperators, canClose]);
   icon = icon ?? <Square />;
-  const isFirstPane = useAtomValue(
+  const showSidebarButton = useAtomValue(
     useMemo(
       () =>
         atom((read) => {
           const panes = read(panesAtom);
+          const isSidebarExpanded = read(isSidebarExpandedAtom);
+          if (isSidebarExpanded) return false;
           return panes.length > 0 && panes[0]!.key === key;
         }),
       [key],
     ),
   );
   const sidebarButton = useMemo(
-    () => <div className="w-8 px-1">{isFirstPane && <PaneHeaderSidebarButton />}</div>,
-    [isFirstPane],
+    () => <div className="w-8">{showSidebarButton && <SidebarButton />}</div>,
+    [showSidebarButton],
   );
   return (
     <div className="">
@@ -79,36 +79,5 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
         {extra}
       </div>
     </div>
-  );
-};
-
-const PaneHeaderSidebarButton: FC = ({}) => {
-  const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
-
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, dismiss, floatingStyles } =
-    useTooltip('bottom-start');
-
-  return (
-    <>
-      <button
-        aria-pressed={isSidebarExpanded}
-        className={clsx(
-          'inline-flex h-6 w-6 items-center justify-center rounded px-1 py-1 aria-pressed:shadow-inner',
-          isSidebarExpanded ? 'bg-switch-pressed-bg text-switch-pressed-text' : 'hover:bg-switch-hover-bg',
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          setSidebarExpanded((x) => !x);
-          dismiss();
-        }}
-        ref={refs.setReference}
-        {...getReferenceProps()}
-      >
-        {isSidebarExpanded ? <PanelLeftClose /> : <PanelLeftOpen />}
-      </button>
-      <TooltipBox show={showTooltip} ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()} defaultStyle>
-        <FormattedMessage defaultMessage="Toggle Sidebar" />
-      </TooltipBox>
-    </>
   );
 };

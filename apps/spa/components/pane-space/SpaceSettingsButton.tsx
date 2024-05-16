@@ -26,7 +26,7 @@ export const SpaceSettingsButton: FC<{ spaceId: string }> = ({ spaceId }) => {
 
   return (
     <SidebarHeaderButton icon={<Settings />} onClick={handleClick} active={opened}>
-      <span className="@xl:inline hidden">
+      <span className="@xl:inline hidden text-xs">
         <FormattedMessage defaultMessage="Space Settings" />
       </span>
     </SidebarHeaderButton>

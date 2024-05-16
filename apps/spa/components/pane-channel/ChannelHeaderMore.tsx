@@ -56,7 +56,7 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   }
 
   return (
-    <div className="bg-pane-header-bg px-pane flex items-baseline gap-x-2 gap-y-1 py-2 text-xs">
+    <div className="bg-pane-header-bg pl-pane flex items-baseline gap-x-2 gap-y-1 py-2 pr-2 text-xs">
       <ChannelHeaderFilter />
       <ChannelHeaderFilterShowArchive />
       <div className="flex-grow" />

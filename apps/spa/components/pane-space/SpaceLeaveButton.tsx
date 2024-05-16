@@ -52,7 +52,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        <span className="">
+        <span className="text-xs">
           {mySpaceMember == null ? (
             <FormattedMessage defaultMessage="Join Space" />
           ) : (

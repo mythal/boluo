@@ -44,11 +44,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     <div onClick={focus} className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col">
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
       {header}
-      <div ref={bannerRef}></div>
-
-      <div className="relative">
-        <div className="bg-pane-header-border absolute z-10 h-[2px] w-full"></div>
-      </div>
+      <div ref={bannerRef} className="border-pane-header-border border-b"></div>
 
       <div onFocus={focus} className="bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden">
         <Suspense

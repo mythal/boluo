@@ -5,6 +5,7 @@ import { usePaneBanner } from '../hooks/useBanner';
 import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from './PaneBanner';
+import { Square } from '@boluo/icons';
 
 interface Props {
   withoutDefaultOperators?: boolean;
@@ -21,13 +22,19 @@ export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, wit
     if (withoutDefaultOperators || canClose === false) return null;
     return <ClosePaneButton />;
   }, [withoutDefaultOperators, canClose]);
+  icon = icon ?? <Square />;
   return (
     <div className="">
-      <div className={clsx('min-h-pane-header pl-pane bg-pane-header-bg flex items-center justify-between pr-4')}>
-        <div className="inline-flex min-w-0 flex-nowrap items-center gap-1">
-          {icon && (
-            <div className={clsx('flex-shrink-0', isFocused ? 'text-brand-700' : 'text-surface-300')}>{icon}</div>
+      <div className="min-h-pane-header pl-pane bg-pane-header-bg flex items-center pr-[6px] text-sm">
+        <span
+          className={clsx(
+            'inline-flex flex-shrink-0 items-center justify-center pr-1',
+            isFocused ? 'text-text-lighter' : 'text-text-lighter/50',
           )}
+        >
+          {icon}
+        </span>
+        <div className="inline-flex min-w-0 flex-grow flex-nowrap items-center">
           <div
             className={clsx(
               'flex-shrink overflow-hidden text-ellipsis whitespace-nowrap',

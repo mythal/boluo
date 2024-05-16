@@ -97,7 +97,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         bg: $(white, darkPaneBg),
         header: {
           bg: $(white, neutral[800]),
-          border: $(transparentize(neutral[400], 0.95), transparentize(neutral[900], 0.5)),
+          border: $(neutral[100], transparentize(neutral[900], 0.5)),
           shadow: $(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
         },
         divide: $(neutral[50], neutral[950]),
@@ -412,6 +412,8 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   };
 };
 
+const panePadding = '1.75rem';
+const paneHeight = '2.25rem';
 const config: Config = {
   content: [],
   darkMode: 'class',
@@ -440,16 +442,17 @@ const config: Config = {
       },
       width: {
         sidebar: '16rem',
+        panePadding,
       },
       height: {
-        'pane-header': '2.5rem',
+        'pane-header': paneHeight,
       },
       padding: {
         messageRight: '4rem',
-        pane: '2rem',
+        pane: panePadding,
       },
       minHeight: {
-        'pane-header': '2.5rem',
+        'pane-header': paneHeight,
       },
       boxShadow: {
         '1/2': '0.125rem 0.125rem 0',

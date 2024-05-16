@@ -1,6 +1,6 @@
 import { ApiError, Message, User } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
-import { Atom, useStore } from 'jotai';
+import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
@@ -13,6 +13,8 @@ import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
+import { ChatActionUnion } from '../../state/chat.actions';
+import { chatAtom } from '../../state/chat.atoms';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
@@ -48,13 +50,14 @@ export const useSend = (me: User) => {
     const parsed = store.get(parsedAtom);
     if (store.get(checkComposeAtom) !== null) return;
     const backupComposeState = compose;
-    const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
+    const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
+    const composeDispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const handleRecover = () => {
-      dispatch({ type: 'recoverState', payload: backupComposeState });
+      composeDispatch({ type: 'recoverState', payload: backupComposeState });
       setBanner(null);
     };
     const isEditing = compose.editFor !== null;
-    dispatch({ type: 'sent', payload: { edit: isEditing } });
+    composeDispatch({ type: 'sent', payload: { edit: isEditing } });
     const { text, entities, whisperToUsernames } = parse(compose.source);
     let result: Result<Message, ApiError>;
     let name = nickname;
@@ -67,12 +70,17 @@ export const useSend = (me: User) => {
         name = inputedName;
       }
     }
+    chatDispatch({
+      type: 'messageSending',
+      payload: { channelId, previewId: compose.previewId, parsed, inGame, name, compose },
+    });
 
     let uploadResult: Awaited<ReturnType<typeof upload>> | null = null;
     if (compose.media instanceof File) {
       uploadResult = await upload(compose.media);
     }
     if (uploadResult?.isOk === false) {
+      chatDispatch({ type: 'messageSendFailed', payload: { channelId, previewId: compose.previewId } });
       setBanner({
         level: 'WARNING',
         content: (
@@ -116,8 +124,10 @@ export const useSend = (me: User) => {
     }
 
     if (result.isOk) {
+      chatDispatch({ type: 'messageSent', payload: { channelId, message: result.some } });
       return;
     }
+    chatDispatch({ type: 'messageSendFailed', payload: { channelId, previewId: compose.previewId } });
     setBanner({
       level: 'WARNING',
       content: (

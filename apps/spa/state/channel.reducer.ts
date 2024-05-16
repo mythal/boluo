@@ -161,6 +161,14 @@ const handleResetGc = (state: ChannelState, { payload: { pos } }: ChatAction<'re
   return { ...state, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
 };
 
+const handleMessageSending = (state: ChannelState, { payload }: ChatAction<'messageSending'>): ChannelState => {
+  return state;
+};
+
+const handleMessageSent = (state: ChannelState, { payload }: ChatAction<'messageSent'>): ChannelState => {
+  return state;
+};
+
 const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initialized: boolean): ChannelState => {
   switch (action.type) {
     case 'messagePreview':
@@ -171,6 +179,10 @@ const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initializ
       return handleMessageEdited(state, action);
     case 'messageDeleted':
       return handleMessageDeleted(state, action);
+    case 'messageSending':
+      return handleMessageSending(state, action);
+    case 'messageSent':
+      return handleMessageSent(state, action);
     case 'messagesLoaded':
       // This action is triggered by the user
       // and should be ignored if the chat state

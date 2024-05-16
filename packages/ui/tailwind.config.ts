@@ -313,6 +313,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         },
       },
       button: {
+        light: {
+          hover: {
+            bg: transparentize($(neutral[200], neutral[700]), 0.75),
+          },
+          active: {
+            bg: $(neutral[200], neutral[700]),
+          },
+        },
         default: {
           bg: $(neutral[100], neutral[700]),
           text: $(black, white),

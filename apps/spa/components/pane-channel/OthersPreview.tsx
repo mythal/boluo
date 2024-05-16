@@ -38,7 +38,7 @@ export const OthersPreview: FC<Props> = ({ preview, theme, isLast }) => {
       isSelf={false}
       inGame={preview.inGame}
       isLast={isLast}
-      className="text-surface-600 @2xl:pr-messageRight"
+      className="text-text-light pr-message-small @2xl:pr-message"
     >
       <div className="@2xl:flex-col flex gap-1">
         <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>

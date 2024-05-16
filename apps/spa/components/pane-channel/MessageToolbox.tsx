@@ -1,13 +1,11 @@
 import { Message } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Archive, Edit, EllipsisVertical, Trash } from '@boluo/icons';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { FC, forwardRef, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
+import { EllipsisVertical } from '@boluo/icons';
+import { atom, useAtom, useSetAtom } from 'jotai';
+import { FC, forwardRef, ReactNode, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Spinner } from '@boluo/ui/Spinner';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { MessageToolboxButton } from './MessageToolboxButton';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import clsx from 'clsx';
 import Icon from '@boluo/ui/Icon';
@@ -44,9 +42,8 @@ export const MessageToolbox: FC<Props> = ({ message, self, iAmAdmin, iAmMaster }
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
   const toolboxId = useId();
-  const setExpandedId = useSetAtom(expandToolboxAtom);
-  const expandedAtom = useMemo(() => atom((get) => get(expandToolboxAtom) === toolboxId), [toolboxId]);
-  const expanded = useAtomValue(expandedAtom);
+  const [expandedId, setExpandedId] = useAtom(expandToolboxAtom);
+  const expanded = expandedId === toolboxId;
   const intl = useIntl();
 
   const handleDelete = async () => {
@@ -87,30 +84,19 @@ export const MessageToolbox: FC<Props> = ({ message, self, iAmAdmin, iAmMaster }
   }, [dispatch, message]);
   if (isDragging) return null;
   return (
-    <Box ref={boxRef} expanded={expanded}>
-      {isLoading ? (
-        <MessageToolboxButton>
-          <Spinner />
-        </MessageToolboxButton>
-      ) : (
-        <>
-          {(self || iAmAdmin) && (
-            <MessageToolboxButton onClick={handleDelete}>
-              <Icon icon={Trash} className="text-text-danger" />
-            </MessageToolboxButton>
-          )}
-          {(self || iAmMaster) && (
-            <MessageToolboxButton onClick={handleArchiveMessage} on={message.folded}>
-              <Icon icon={Archive} />
-            </MessageToolboxButton>
-          )}
-          {self && (
-            <MessageToolboxButton onClick={handleEditMessage}>
-              <Edit />
-            </MessageToolboxButton>
-          )}
-        </>
-      )}
-    </Box>
+    <div>
+      <button
+        aria-pressed={expanded}
+        className={clsx(
+          'border-transprent h-6 w-6 rounded-sm border text-sm ',
+          expanded
+            ? 'bg-switch-pressed-bg text-text-base shadow-inner'
+            : 'text-text-light group-hover:bg-message-menu-button-bg group-hover:border-surface-200 group-hover:shadow-sm',
+        )}
+        onClick={() => setExpandedId((prev) => (prev === toolboxId ? '' : toolboxId))}
+      >
+        <Icon icon={EllipsisVertical} />
+      </button>
+    </div>
   );
 };

@@ -70,11 +70,7 @@ export const MessageBox: FC<Props> = ({
   const toolbox = useMemo(
     () => (
       <Delay timeout={400}>
-        <div
-          className={clsx(
-            'absolute right-3 top-0 z-10 hidden max-h-full -translate-y-4 group-hover:z-20 group-hover:block',
-          )}
-        >
+        <div className="absolute right-3 top-2 z-10 max-h-full group-hover:z-20">
           <MessageToolbox message={message} self={self} iAmAdmin={iAmAdmin} iAmMaster={iAmMaster} />
         </div>
       </Delay>

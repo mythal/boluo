@@ -426,7 +426,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
 };
 
 const panePadding = '2rem';
-const paneHeight = '2.25rem';
+const paneHeight = '2.5rem';
 const config: Config = {
   content: [],
   darkMode: 'class',

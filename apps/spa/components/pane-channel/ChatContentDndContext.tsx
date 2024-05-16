@@ -11,7 +11,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { FC, ReactNode, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { DraggingItem } from './ChatContentView';
+import type { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';
 import { IsDraggingContext } from '../../hooks/useIsDragging';
 import { ResolvedTheme } from '@boluo/theme';

@@ -5,10 +5,13 @@ import { useIntl } from 'react-intl';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { InComposeButton } from './InComposeButton';
 import { useDefaultRollCommand } from '../../hooks/useDefaultRollCommand';
+import { useTooltip } from '../../hooks/useTooltip';
+import { TooltipBox } from '../common/TooltipBox';
 
 interface Props {}
 
 export const AddDiceButton: FC<Props> = () => {
+  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('top-end');
   const defaultRollCommand = useDefaultRollCommand();
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
@@ -20,10 +23,15 @@ export const AddDiceButton: FC<Props> = () => {
         defaultRollCommand,
       },
     });
-  const title = intl.formatMessage({ defaultMessage: 'Add Dice' });
+  const title = intl.formatMessage({ defaultMessage: 'Add a dice roll' });
   return (
-    <InComposeButton onClick={handleAddDice} title={title}>
-      <Dice />
-    </InComposeButton>
+    <div className="flex-shrink-0 self-end py-1" ref={refs.setReference} {...getReferenceProps()}>
+      <InComposeButton onClick={handleAddDice} title={title}>
+        <Dice />
+      </InComposeButton>
+      <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>
+        {title}
+      </TooltipBox>
+    </div>
   );
 };

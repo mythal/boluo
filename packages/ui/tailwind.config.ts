@@ -67,6 +67,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       dot: {
         normal: blue[600],
       },
+      tooltip: {
+        bg: black,
+        text: white,
+      },
       light: {
         bg: neutral[100],
       },
@@ -419,7 +423,6 @@ const config: Config = {
       slate: colors.slate,
       black: '#000',
       white: '#FFF',
-      tooltip: colors.yellow[100],
       transprent: 'transparent',
     },
     borderWidth: {

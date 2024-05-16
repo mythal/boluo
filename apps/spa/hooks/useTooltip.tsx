@@ -1,5 +1,6 @@
 import {
   autoUpdate,
+  offset,
   Placement,
   shift,
   useDismiss,
@@ -21,13 +22,13 @@ interface UseTooltipReturn {
   refs: UseFloatingReturn['refs'];
 }
 
-export const useTooltip = (placement: Placement = 'bottom'): UseTooltipReturn => {
+export const useTooltip = (placement: Placement = 'bottom', offsetMount: number = 4): UseTooltipReturn => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
     open: showTooltip,
     onOpenChange: setShowTooltip,
-    middleware: [shift()],
+    middleware: [shift({ padding: offsetMount }), offset({ mainAxis: offsetMount })],
     placement,
     whileElementsMounted: autoUpdate,
   });

@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import React, { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useTooltip } from '../../hooks/useTooltip';
+import { TooltipBox } from '../common/TooltipBox';
 
 export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ status }) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
@@ -25,29 +26,18 @@ export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ statu
   if (status.kind === 'OFFLINE') return null;
 
   return (
-    <>
+    <div className="inline-flex h-6 items-center" ref={refs.setReference} {...getReferenceProps()}>
       <span
-        ref={refs.setReference}
         className={clsx(
           'box-content inline-block h-[0.5em] w-[0.5em] rounded-full border-[0.125em]',
           status.kind === 'ONLINE' && 'border-green-500 bg-green-400',
         )}
         aria-label={text}
-        {...getReferenceProps()}
       />
-      {showTooltip && (
-        <FloatingPortal>
-          <div
-            ref={refs.setFloating}
-            style={floatingStyles}
-            {...getFloatingProps()}
-            className="bg-highest/75 text-lowest rounded px-2 py-1 text-sm shadow"
-          >
-            <div className="font-bold">{text}</div>
-          </div>
-        </FloatingPortal>
-      )}
-    </>
+      <TooltipBox show={showTooltip} ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()} defaultStyle>
+        <div className="font-bold">{text}</div>
+      </TooltipBox>
+    </div>
   );
 });
 MemberStatusBadge.displayName = 'MemberStatusBadge';

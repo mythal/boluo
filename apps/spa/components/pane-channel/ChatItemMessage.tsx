@@ -158,15 +158,11 @@ const MessageBox: FC<{
           attributes={attributes}
           listeners={listeners}
           loading={optimistic}
-        >
-          <MessageTime message={message} />
-        </MessageReorderHandle>
+        />
       ) : (
-        <div className="text-message-time-text col-span-1 row-span-full h-full text-right">
-          <MessageTime message={message} />
-        </div>
+        <div className="text-message-time-text col-span-1 row-span-full h-full text-right"></div>
       ),
-    [attributes, draggable, listeners, message, optimistic, setActivatorNodeRef],
+    [attributes, draggable, listeners, optimistic, setActivatorNodeRef],
   );
   const toolbox = useMemo(
     () => (
@@ -188,10 +184,10 @@ const MessageBox: FC<{
       data-in-game={inGame}
       className={clsx(
         'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
-        'grid-cols-[4rem_minmax(0,1fr)]',
-        '@2xl:grid-cols-[4rem_12rem_minmax(0,1fr)]',
+        'grid-cols-[1.5rem_minmax(0,1fr)]',
+        '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
-        inGame ? 'bg-message-inGame-bg hover:bg-message-inGame-hover-bg' : 'hover:bg-message-hover-bg',
+        inGame ? 'bg-message-inGame-bg' : '',
         'data-[overlay=true]:bg-surface-300/30 data-[overlay=true]:data-[in-game=true]:bg-message-inGame-bg/75 data-[overlay=true]:backdrop-blur-sm',
         isDragging && 'opacity-0',
         className,
@@ -202,6 +198,9 @@ const MessageBox: FC<{
       {handle}
       {children}
       {(self || iAmMaster || iAmAdmin) && toolbox}
+      <div className="absolute bottom-1 right-2">
+        <MessageTime message={message} />
+      </div>
     </div>
   );
 };

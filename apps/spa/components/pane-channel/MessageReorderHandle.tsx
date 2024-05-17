@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
-  ({ listeners, attributes, loading = false, children = null }, ref) => {
+  ({ listeners, attributes, loading = false }, ref) => {
     if (loading) {
       listeners = undefined;
       attributes = undefined;
@@ -33,10 +33,7 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
           )}
         >
           <Delay>
-            <div>
-              {loading ? <Spinner className="inline text-xs" /> : <MoveVertical className="inline text-xs" />}
-              {children}
-            </div>
+            <div>{loading ? <Spinner className="inline text-xs" /> : <MoveVertical className="inline text-xs" />}</div>
           </Delay>
         </div>
       </div>

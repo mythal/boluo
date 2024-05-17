@@ -462,7 +462,7 @@ const config: Config = {
       },
       padding: {
         message: '5rem',
-        ['message-small']: '1rem',
+        ['message-small']: '2rem',
         pane: panePadding,
       },
       minHeight: {

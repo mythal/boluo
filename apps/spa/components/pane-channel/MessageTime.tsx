@@ -1,4 +1,12 @@
-import { autoUpdate, useDismiss, useFloating, useHover, useInteractions, useRole } from '@floating-ui/react';
+import {
+  FloatingPortal,
+  autoUpdate,
+  useDismiss,
+  useFloating,
+  useHover,
+  useInteractions,
+  useRole,
+} from '@floating-ui/react';
 import { Message } from '@boluo/api';
 import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -29,10 +37,10 @@ export const MessageTime: FC<Props> = ({ message }) => {
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
-    placement: 'top-start',
+    placement: 'top-end',
     whileElementsMounted: autoUpdate,
   });
-  const hover = useHover(context, { move: false });
+  const hover = useHover(context, { move: false, delay: { open: 200 } });
   const dismiss = useDismiss(context);
   const role = useRole(context, {
     role: 'tooltip',
@@ -42,7 +50,7 @@ export const MessageTime: FC<Props> = ({ message }) => {
     <>
       <time
         data-edited={edited}
-        className="mr-1 h-full self-start text-right text-xs decoration-dotted data-[edited=true]:underline"
+        className="text-text-lighter text-xs decoration-dotted data-[edited=true]:underline"
         dateTime={message.created}
         title={detailDate(date)}
         ref={refs.setReference}
@@ -52,21 +60,23 @@ export const MessageTime: FC<Props> = ({ message }) => {
       </time>
 
       {isOpen && !isDragging && (
-        <div
-          ref={refs.setFloating}
-          style={floatingStyles}
-          className="bg-highest text-lowest z-10 rounded px-2 py-1 text-left text-sm"
-          {...getFloatingProps()}
-        >
-          <div>
-            {edited && (
-              <span>
-                {detailDate(editedDate)} <FormattedMessage defaultMessage="Edited" />
-              </span>
-            )}
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            className="bg-highest text-lowest z-10 rounded px-2 py-1 text-left text-sm"
+            {...getFloatingProps()}
+          >
+            <div>
+              {edited && (
+                <span>
+                  {detailDate(editedDate)} <FormattedMessage defaultMessage="Edited" />
+                </span>
+              )}
+            </div>
+            <div>{detailDate(date)}</div>
           </div>
-          <div>{detailDate(date)}</div>
-        </div>
+        </FloatingPortal>
       )}
     </>
   );

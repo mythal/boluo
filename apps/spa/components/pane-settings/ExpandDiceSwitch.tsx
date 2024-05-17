@@ -6,7 +6,7 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { identity } from '@boluo/utils';
-import { useQuerySettings } from '../../hooks/useQuerySettings';
+import { useSettings } from '../../hooks/useSettings';
 
 interface Props {}
 
@@ -21,7 +21,7 @@ export const ExpandDiceSwitch: FC<Props> = () => {
     populateCache: identity,
     revalidate: false,
   });
-  const { data: settings } = useQuerySettings();
+  const settings = useSettings();
   const expandDice = settings?.expandDice ?? false;
   const toggle = () => trigger(!expandDice);
   return (

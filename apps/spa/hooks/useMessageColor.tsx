@@ -1,14 +1,14 @@
 import { User } from '@boluo/api';
 import { useMemo } from 'react';
 import { computeColors, parseGameColor } from '../color';
-import { ResolvedTheme } from '@boluo/theme';
+import { useResolvedTheme } from './useResolvedTheme';
 
 export const useMessageColor = (
-  theme: ResolvedTheme,
   user: User | null | undefined,
   inGame: boolean,
   messageColor: string | null | undefined,
 ): string => {
+  const theme = useResolvedTheme();
   return useMemo(() => {
     if (!inGame || user == null) {
       return theme === 'light' ? '#000' : '#FFF';

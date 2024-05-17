@@ -20,6 +20,7 @@ import { FailedBanner } from '../common/FailedBanner';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
 import { parseDiceFace } from '../../dice';
+import { MemberContext } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
@@ -92,23 +93,25 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     );
   }
   return (
-    <ChannelContext.Provider value={channel}>
-      <ChannelAtomsContext.Provider value={atoms}>
-        <PaneBox header={<ChannelHeader />} grow>
-          {errorNode}
-          <div
-            className={clsx(
-              'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
-              memberListState === 'CLOSED' ? 'grid-cols-1' : '@2xl:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
-            )}
-          >
-            <ChatContent className="@container relative" currentUser={currentUser} channelId={channelId} />
-            {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
-            {member.isOk ? <Compose channelAtoms={atoms} member={member.some} /> : null}
-          </div>
-        </PaneBox>
-      </ChannelAtomsContext.Provider>
-    </ChannelContext.Provider>
+    <MemberContext.Provider value={member.isOk ? member.some : null}>
+      <ChannelContext.Provider value={channel}>
+        <ChannelAtomsContext.Provider value={atoms}>
+          <PaneBox header={<ChannelHeader />} grow>
+            {errorNode}
+            <div
+              className={clsx(
+                'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
+                memberListState === 'CLOSED' ? 'grid-cols-1' : '@2xl:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
+              )}
+            >
+              <ChatContent />
+              {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
+              {member.isOk ? <Compose channelAtoms={atoms} member={member.some} /> : null}
+            </div>
+          </PaneBox>
+        </ChannelAtomsContext.Provider>
+      </ChannelContext.Provider>
+    </MemberContext.Provider>
   );
 });
 ChatPaneChannel.displayName = 'ChatPaneChannel';

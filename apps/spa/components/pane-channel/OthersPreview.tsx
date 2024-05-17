@@ -11,11 +11,10 @@ import { useQueryUser } from '@boluo/common';
 
 interface Props {
   preview: PreviewItem;
-  theme: ResolvedTheme;
   isLast: boolean;
 }
 
-export const OthersPreview: FC<Props> = ({ preview, theme, isLast }) => {
+export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
   const { isMaster, isAction, name } = preview;
 
   const parsed: ParseResult = useMemo(() => {
@@ -26,8 +25,8 @@ export const OthersPreview: FC<Props> = ({ preview, theme, isLast }) => {
   const { data: sender } = useQueryUser(preview.senderId);
 
   const nameNode = useMemo(() => {
-    return <Name inGame={preview.inGame} name={name} isMaster={isMaster} user={sender} theme={theme} isPreview self />;
-  }, [isMaster, name, preview.inGame, sender, theme]);
+    return <Name inGame={preview.inGame} name={name} isMaster={isMaster} user={sender} isPreview self />;
+  }, [isMaster, name, preview.inGame, sender]);
 
   const { text: source, entities } = useDeferredValue(parsed);
 

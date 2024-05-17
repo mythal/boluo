@@ -1,15 +1,13 @@
-import { GetMe, User } from '@boluo/api';
+import { User } from '@boluo/api';
 import { FC, MutableRefObject, RefObject, useLayoutEffect, useRef } from 'react';
 import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { ResolvedTheme } from '@boluo/theme';
-import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 import { getOS } from '@boluo/utils';
 
 interface Props {
-  iAmMaster: boolean;
   firstItemIndex: number;
   renderRangeRef: MutableRefObject<[number, number]>;
   virtuosoRef: MutableRefObject<VirtuosoHandle | null>;
@@ -17,9 +15,6 @@ interface Props {
   chatList: ChatItem[];
   filteredMessagesCount: number;
   handleBottomStateChange?: (bottom: boolean) => void;
-  currentUser: User | undefined | null;
-  myMember: MyChannelMemberResult;
-  theme: ResolvedTheme;
   setIsScrolling: (isScrolling: boolean) => void;
 }
 
@@ -66,7 +61,6 @@ const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | nul
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
   const {
-    iAmMaster,
     renderRangeRef,
     virtuosoRef,
     chatList,
@@ -74,16 +68,11 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     filteredMessagesCount,
     handleBottomStateChange,
     setIsScrolling,
-    currentUser,
-    myMember,
-    theme,
   } = props;
   const totalCount = chatList.length;
-  const iAmAdmin = myMember.isOk && myMember.some.space.isAdmin;
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;
-  const myId: string | undefined = currentUser?.id ?? undefined;
   const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
   const itemContent = (offsetIndex: number, item: ChatItem) => {
     const isLast = totalCount - 1 === offsetIndex - firstItemIndex;
@@ -95,19 +84,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
 
     prevOffsetIndex = offsetIndex;
     prevItem = item;
-    return (
-      <ChatItemSwitch
-        isLast={isLast}
-        iAmMaster={iAmMaster}
-        iAmAdmin={iAmAdmin}
-        key={item.key}
-        myId={myId}
-        chatItem={item}
-        isMember={myMember.isOk}
-        continuous={continuous}
-        theme={theme}
-      />
-    );
+    return <ChatItemSwitch isLast={isLast} key={item.key} chatItem={item} continuous={continuous} />;
   };
   const handleRangeChange = (range: ListRange) => {
     renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];

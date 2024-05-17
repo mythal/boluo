@@ -1,6 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { ParseResult } from '../../interpreter/parse-result';
 import { MessageItem } from '../../state/channel.types';
@@ -9,7 +8,6 @@ import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 import { useQueryUser } from '@boluo/common';
-import { ResolvedTheme } from '@boluo/theme';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';
@@ -17,22 +15,22 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Message } from '@boluo/api';
 import { ReactNode } from 'react';
-import { Delay } from '../Delay';
 import { MessageReorderHandle } from './MessageReorderHandle';
-import { MessageToolbox } from './MessageToolbox';
 import { MessageTime } from './MessageTime';
+import { offset, useFloating, useHover, useInteractions } from '@floating-ui/react';
+import { Archive, Edit, EllipsisVertical } from '@boluo/icons';
+import { useMember } from '../../hooks/useMember';
 
 export const ChatItemMessage: FC<{
-  iAmAdmin: boolean;
-  iAmMaster: boolean;
   message: MessageItem;
   className?: string;
-  self: boolean;
   isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
-  theme: ResolvedTheme;
-}> = ({ message, self, continuous = false, iAmAdmin, iAmMaster, overlay = false, theme, isLast }) => {
+}> = ({ message, continuous = false, overlay = false, isLast }) => {
+  const member = useMember();
+  const sendBySelf = member?.user.id === message.senderId;
+  const iAmMaster = member?.channel.isMaster || false;
   const isScrolling = useIsScrolling();
   const { isMaster, isAction, optimistic } = message;
   const { data: user } = useQueryUser(message.senderId);
@@ -44,24 +42,20 @@ export const ChatItemMessage: FC<{
   }, [readObserve]);
 
   const nameNode = useMemo(
-    () => (
-      <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={self} user={user} theme={theme} />
-    ),
-    [message.inGame, message.name, isMaster, self, user, theme],
+    () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={sendBySelf} user={user} />,
+    [message.inGame, message.name, isMaster, sendBySelf, user],
   );
   const parsed: ParseResult = useMemo(
     (): ParseResult => messageToParsed(message.text, message.entities),
     [message.entities, message.text],
   );
   const mini = continuous || isAction;
-  const draggable = self || iAmMaster;
+  const draggable = sendBySelf || iAmMaster;
 
   return (
     <MessageBox
-      self={self}
+      sendBySelf={sendBySelf}
       inGame={message.inGame}
-      iAmAdmin={iAmAdmin}
-      iAmMaster={iAmMaster}
       message={message}
       draggable={draggable}
       overlay={overlay}
@@ -118,9 +112,7 @@ const MessageBox: FC<{
   mini?: boolean;
   overlay?: boolean;
   optimistic?: boolean;
-  self: boolean;
-  iAmMaster: boolean;
-  iAmAdmin: boolean;
+  sendBySelf: boolean;
   isScrolling: boolean;
   inGame: boolean;
 }> = ({
@@ -133,15 +125,31 @@ const MessageBox: FC<{
   mini = false,
   isScrolling,
   optimistic = false,
-  self,
-  iAmMaster,
-  iAmAdmin,
+  sendBySelf,
 }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
     id: message.id,
     data: { message },
     disabled: !draggable || isScrolling,
   });
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { refs, floatingStyles, context } = useFloating({
+    open: isMenuOpen,
+    onOpenChange: setIsMenuOpen,
+    placement: 'top-end',
+    middleware: [offset({ mainAxis: -20, crossAxis: -4 })],
+  });
+  const hover = useHover(context, {
+    enabled: !isDragging && !overlay,
+  });
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover]);
+
+  const setRef = (node: HTMLDivElement | null) => {
+    ref.current = node;
+    refs.setReference(node);
+    setNodeRef(node);
+  };
 
   const style = useMemo(
     () => ({
@@ -164,43 +172,56 @@ const MessageBox: FC<{
       ),
     [attributes, draggable, listeners, optimistic, setActivatorNodeRef],
   );
-  const toolbox = useMemo(
-    () => (
-      <Delay timeout={400}>
-        <div
-          className={clsx(
-            'absolute right-3 top-0 z-10 hidden max-h-full -translate-y-4 group-hover:z-20 group-hover:block',
-          )}
-        >
-          <MessageToolbox message={message} self={self} iAmAdmin={iAmAdmin} iAmMaster={iAmMaster} />
-        </div>
-      </Delay>
-    ),
-    [iAmAdmin, iAmMaster, message, self],
-  );
   return (
     <div
       data-overlay={overlay}
       data-in-game={inGame}
       className={clsx(
-        'group relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
+        'relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
         !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
-        inGame ? 'bg-message-inGame-bg' : '',
-        'data-[overlay=true]:bg-surface-300/30 data-[overlay=true]:data-[in-game=true]:bg-message-inGame-bg/75 data-[overlay=true]:backdrop-blur-sm',
+        inGame ? 'bg-message-inGame-bg' : 'bg-lowest',
+        'data-[overlay=true]:shadow-lg',
         isDragging && 'opacity-0',
         className,
       )}
-      ref={setNodeRef}
+      ref={setRef}
       style={style}
+      {...getReferenceProps()}
     >
       {handle}
       {children}
-      {(self || iAmMaster || iAmAdmin) && toolbox}
-      <div className="absolute bottom-1 right-2">
+      {/* {(self || iAmMaster || iAmAdmin) && toolbox} */}
+      <div className="absolute right-2 top-1">
         <MessageTime message={message} />
       </div>
+      {isMenuOpen && !isDragging && !overlay && (
+        <div
+          ref={refs.setFloating}
+          style={floatingStyles}
+          {...getFloatingProps()}
+          className="border-surface-300 flex gap-1 rounded-sm border bg-white p-2 shadow-sm"
+        >
+          <MessageToolbar sendBySelf={sendBySelf} />
+        </div>
+      )}
     </div>
+  );
+};
+
+const MessageToolbar: FC<{ sendBySelf: boolean }> = ({ sendBySelf }) => {
+  const member = useMember();
+  const admin = member?.space.isAdmin || false;
+  const master = member?.channel.isMaster || false;
+  const permsArchive = admin || master || sendBySelf;
+  const permsDelete = admin || sendBySelf;
+  const permsEdit = sendBySelf;
+  return (
+    <>
+      {permsArchive && <Archive />}
+      {permsEdit && <Edit />}
+      <EllipsisVertical />
+    </>
   );
 };

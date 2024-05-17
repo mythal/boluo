@@ -20,7 +20,6 @@ interface Props {
 }
 
 export const EditMessageBanner = ({ currentUser }: Props) => {
-  const theme = resolveSystemTheme(useTheme());
   const channelId = useChannelId();
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
@@ -52,10 +51,9 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
         isMaster={message.isMaster}
         self={currentUser.id === message.senderId}
         user={null}
-        theme={theme}
       />
     );
-  }, [message, currentUser, theme]);
+  }, [message, currentUser]);
   const parsed = useMemo(() => {
     if (!message) return null;
     return messageToParsed(message.text, message.entities);

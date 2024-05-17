@@ -40,7 +40,7 @@ export const MessageTime: FC<Props> = ({ message }) => {
     placement: 'top-end',
     whileElementsMounted: autoUpdate,
   });
-  const hover = useHover(context, { move: false, delay: { open: 200 } });
+  const hover = useHover(context, { move: false, restMs: 200 });
   const dismiss = useDismiss(context);
   const role = useRole(context, {
     role: 'tooltip',

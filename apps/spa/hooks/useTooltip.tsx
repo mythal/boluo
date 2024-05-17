@@ -34,7 +34,7 @@ export const useTooltip = (placement: Placement = 'bottom', offsetMount: number 
     whileElementsMounted: autoUpdate,
   });
 
-  const hover = useHover(context, { delay: { open: 50, close: 200 } });
+  const hover = useHover(context, { restMs: 50, move: false });
   const dismiss = useDismiss(context, {});
   const role = useRole(context, { role: 'tooltip' });
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss, role]);

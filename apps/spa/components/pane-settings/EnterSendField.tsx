@@ -7,8 +7,8 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Kbd } from '@boluo/ui/Kbd';
 import { identity, isApple } from '@boluo/utils';
-import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { OptionBox } from './OptionBox';
+import { useSettings } from '../../hooks/useSettings';
 
 interface Props {}
 
@@ -23,8 +23,8 @@ export const EneterSendField: FC<Props> = () => {
     populateCache: identity,
     revalidate: false,
   });
-  const { data: settings } = useQuerySettings();
-  const enterSend = settings?.enterSend ?? false;
+  const settings = useSettings();
+  const enterSend = settings.enterSend ?? false;
   const handleChange = (enterSend: boolean) => trigger(enterSend);
   const useCommand = isApple();
   const setEnterSend = () => {

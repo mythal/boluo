@@ -10,11 +10,11 @@ import { InGameSwitchButton } from './InGameSwitchButton';
 import { SendButton } from './SendButton';
 import { FileButton } from './FileButton';
 import { ChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useQuerySettings } from '../../hooks/useQuerySettings';
 import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
 import { ComposeErrorBoundry } from './ComposeErrorBoundry';
+import { useSettings } from '../../hooks/useSettings';
 
 interface Props {
   member: Member;
@@ -37,7 +37,7 @@ const DeferredComposeTextArea: FC<{
 
 export const Compose = ({ member, channelAtoms }: Props) => {
   const { composeAtom, inGameAtom, isWhisperAtom, parsedAtom } = channelAtoms;
-  const { data: settings } = useQuerySettings();
+  const settings = useSettings();
   const enterSend = settings?.enterSend === true;
   const send = useSend(member.user);
   const { onDrop } = useMediaDrop();

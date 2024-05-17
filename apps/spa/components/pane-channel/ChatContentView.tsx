@@ -1,11 +1,8 @@
 import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
-import { selectAtom } from 'jotai/utils';
 import type { FC, MutableRefObject, RefObject } from 'react';
-import { useMemo } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
@@ -15,7 +12,6 @@ import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { ChatItem, MessageItem } from '../../state/channel.types';
 import { chatAtom } from '../../state/chat.atoms';
@@ -24,14 +20,11 @@ import { ChatContentVirtualList } from './ChatContentVirtualList';
 import { GoButtomButton } from './GoBottomButton';
 import { useTheme } from '@boluo/theme/useTheme';
 import { resolveSystemTheme } from '@boluo/theme';
-import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { ReadObserverContext } from '../../hooks/useReadObserve';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
-  currentUser: User | undefined | null;
-  myMember: MyChannelMemberResult;
-  className?: string;
   setIsScrolling: (isScrolling: boolean) => void;
 }
 
@@ -214,15 +207,13 @@ const useScrollLock = (
   return scrollLockRef;
 };
 
-export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMember, setIsScrolling }) => {
+export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
   const channelId = useChannelId();
   const store = useStore();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+  const myMember = useMember();
 
-  let myId: string | undefined;
-  if (myMember.isOk) {
-    myId = myMember.some.user.id;
-  }
+  const myId: string | undefined = myMember?.user.id;
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
   const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
     channelId,
@@ -294,7 +285,6 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
     [channelId, goBottomButtonOnBottomChange, scrollLockRef, store],
   );
 
-  const theme = resolveSystemTheme(useTheme());
   useEffect(() => {
     if (scheduledGcLowerPos === null) return;
     const [a] = renderRangeRef.current;
@@ -305,20 +295,15 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
     }
   });
 
-  const iAmMaster = myMember.isOk && myMember.some.channel.isMaster;
-
   return (
-    <div className={className} ref={wrapperRef}>
+    <div className="@container relative" ref={wrapperRef}>
       <ScrollerRefContext.Provider value={scrollerRef}>
         <ReadObserverContext.Provider value={readObserve}>
           <ChatListDndContext
-            iAmMaster={iAmMaster}
             active={active}
-            myId={myId}
             onDragCancel={handleDragCancel}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            theme={theme}
           >
             <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
               <ChatContentVirtualList
@@ -328,11 +313,7 @@ export const ChatContentView: FC<Props> = ({ className = '', currentUser, myMemb
                 filteredMessagesCount={filteredMessagesCount}
                 virtuosoRef={virtuosoRef}
                 scrollerRef={scrollerRef}
-                iAmMaster={iAmMaster}
                 chatList={chatList}
-                currentUser={currentUser}
-                myMember={myMember}
-                theme={theme}
               />
               {showButton && <GoButtomButton channelId={channelId} chatList={chatList} onClick={goBottom} />}
             </SortableContext>

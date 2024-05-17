@@ -27,11 +27,10 @@ interface Props {
   isMaster: boolean;
   self: boolean;
   isPreview?: boolean;
-  theme: ResolvedTheme;
   messageColor?: string | null | undefined;
 }
 
-export const Name: FC<Props> = ({ name, isMaster, inGame, user, theme, messageColor }) => {
+export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, middlewareData, context } = useFloating({
     open: isOpen,
@@ -44,7 +43,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, theme, messageCo
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   const isEmptyName = name === '' || name == null;
-  const color = useMessageColor(theme, user, inGame, messageColor);
+  const color = useMessageColor(user, inGame, messageColor);
   const masterIcon = useMemo(() => <Icon icon={Gamemaster} className="inline-block h-[1em] w-[1em]" />, []);
   return (
     <>

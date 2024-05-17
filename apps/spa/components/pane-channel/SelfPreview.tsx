@@ -32,11 +32,10 @@ const selector = ({ inputedName, source, editFor, media }: ComposeState): Compos
 interface Props {
   preview: PreviewItem;
   myMember: Member;
-  theme: 'light' | 'dark';
   isLast: boolean;
 }
 
-export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme, isLast }) => {
+export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) => {
   const isFocused = usePaneIsFocus();
   const isMaster = member.channel.isMaster;
   const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
@@ -44,7 +43,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, theme, isLas
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   const { editMode, media } = compose;
-  const color = useMessageColor(theme, member.user, inGame, null);
+  const color = useMessageColor(member.user, inGame, null);
   const name = useMemo(() => {
     if (!inGame) {
       return member.user.nickname;

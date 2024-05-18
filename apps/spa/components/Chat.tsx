@@ -32,7 +32,7 @@ import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
 import { Settings } from '@boluo/common';
-import Sentry from '@sentry/react';
+import * as Sentry from '@sentry/react';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;

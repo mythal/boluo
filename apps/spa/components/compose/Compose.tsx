@@ -64,7 +64,11 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const mediaLine = useMemo(() => <MediaLine />, []);
   return (
     <ComposeErrorBoundry>
-      <div onDrop={onDrop} onDragOver={handleDragOver} className="bg-compose-outer-bg col-span-full border-t p-2">
+      <div
+        onDrop={onDrop}
+        onDragOver={handleDragOver}
+        className="bg-compose-outer-bg standalone-bottom-padding col-span-full border-t p-2"
+      >
         {editMessageBanner}
         <div
           data-in-game={inGame}

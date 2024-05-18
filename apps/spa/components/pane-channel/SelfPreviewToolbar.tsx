@@ -23,6 +23,11 @@ const ToolbarButton = React.forwardRef<
   return (
     <button
       onClick={onClick}
+      onTouchEnd={(e) => {
+        // https://stackoverflow.com/a/71725297
+        e.preventDefault();
+        onClick();
+      }}
       data-active={active}
       ref={ref}
       disabled={disabled}

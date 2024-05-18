@@ -125,8 +125,12 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
   const noPane = useAtomValue(isNoPaneAtom);
   const [shouldAutoFold, setShouldAutoFold] = useState(typeof window !== 'undefined' && window.innerWidth < screens.sm);
   useEffect(() => {
+    let timeout: number | undefined;
     const observer = new ResizeObserver((entries) => {
-      setShouldAutoFold(entries[0]!.contentRect.width < screens.sm);
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        setShouldAutoFold(entries[0]!.contentRect.width < screens.sm);
+      }, 100);
     });
     observer.observe(document.body);
     return () => observer.disconnect();

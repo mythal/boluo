@@ -10,16 +10,16 @@ interface Props {
   icon?: ReactNode;
   error?: unknown;
   children: ReactNode;
-  onDissmiss?: () => void;
+  onDismiss?: () => void;
 }
 
-export const FailedBanner: FC<Props> = ({ icon, error, children, onDissmiss }) => {
+export const FailedBanner: FC<Props> = ({ icon, error, children, onDismiss }) => {
   const [show, setShow] = useState(true);
   const banner = useBannerNode();
   const handleDismiss = () => {
     setShow(false);
-    if (onDissmiss) {
-      onDissmiss();
+    if (onDismiss) {
+      onDismiss();
     }
   };
   if (!show || !banner) return null;

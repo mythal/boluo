@@ -97,7 +97,7 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
         content = <FormattedMessage defaultMessage="You are already a member of this channel." />;
         break;
     }
-    errorNode = <FailedBanner onDissmiss={() => setShowError(false)}>{content}</FailedBanner>;
+    errorNode = <FailedBanner onDismiss={() => setShowError(false)}>{content}</FailedBanner>;
   }
 
   return (

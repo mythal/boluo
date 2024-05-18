@@ -87,8 +87,8 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
         </ToolbarButton>
       )}
       {composeError && composeError !== 'TEXT_EMPTY' && (
-        <div className="bg-lowest border-text-wanring absolute right-0 top-0 z-10 -translate-y-[calc(100%-2px)] rounded-sm border px-2 py-1 text-sm">
-          <Icon icon={TriangleAlert} className="text-text-wanring mr-1" />
+        <div className="bg-lowest border-text-warning absolute right-0 top-0 z-10 -translate-y-[calc(100%-2px)] rounded-sm border px-2 py-1 text-sm">
+          <Icon icon={TriangleAlert} className="text-text-warning mr-1" />
           <ComposeErrorReason error={composeError} />
         </div>
       )}

@@ -2,6 +2,7 @@ import { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Err, Ok, Result } from '@boluo/utils';
 import { MEDIA_URL } from './const';
+import { recordError, recordWarn } from './error';
 
 export const mediaMaxSizeMb = 8;
 export const mediaMaxSizeByte = mediaMaxSizeMb * 1024 * 1024;
@@ -53,7 +54,7 @@ async function uploadImageToS3(file: File, presignedUrl: string): Promise<Result
   });
 
   if (!response.ok) {
-    console.warn('failed to upload image to s3', response);
+    recordWarn('Failed to upload the image to S3', { response });
     return new Err({ type: 'S3_ERROR', err: response });
   }
   return new Ok(undefined);
@@ -100,7 +101,7 @@ export const upload = async (file: File): Promise<Result<{ mediaId: string }, Up
     {},
   );
   if (!presignResult.isOk) {
-    console.warn('failed to get presigned url', presignResult.err);
+    recordError('Failed to get presigned url', { error: presignResult.err });
     return new Err({ type: 'PRESIGN_FAIL', err: presignResult.err });
   }
   const { url, mediaId } = presignResult.some;

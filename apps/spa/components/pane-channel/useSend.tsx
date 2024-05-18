@@ -13,6 +13,7 @@ import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
+import { recordWarn } from '../../error';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
@@ -41,7 +42,7 @@ export const useSend = (me: User) => {
 
   const send = useCallback(async () => {
     if (myMember == null) {
-      console.warn('Cannot find my channel member');
+      recordWarn('Cannot find my channel member');
       return;
     }
     const compose = store.get(composeAtom);

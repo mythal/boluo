@@ -7,6 +7,7 @@ import type { IntlMessages, Locale } from '@boluo/common/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 import { IS_DEVELOPMENT } from '../const';
+import { recordWarn } from '../error';
 
 interface Props {
   lang: Locale;
@@ -25,7 +26,7 @@ export function ClientProviders({ children, lang, messages }: Props) {
     if (err.code === ReactIntlErrorCode.MISSING_TRANSLATION) {
       return;
     }
-    console.warn(err);
+    recordWarn('IntlError', { error: err });
   }, []);
 
   return (

@@ -21,6 +21,7 @@ import { GoButtomButton } from './GoBottomButton';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { ReadObserverContext } from '../../hooks/useReadObserve';
 import { useMember } from '../../hooks/useMember';
+import { recordWarn } from '../../error';
 
 interface Props {
   setIsScrolling: (isScrolling: boolean) => void;
@@ -114,7 +115,7 @@ const useDndHandles = (
       resetDragging();
       const targetItem = chatList[targetIndex];
       if (!targetItem) {
-        console.warn('Lost the target item when drag end');
+        recordWarn('Lost the target item when drag end');
         return;
       }
       const timestamp = new Date().getTime();
@@ -236,6 +237,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
         // Initialize the observer
         const scroller = scrollerRef.current;
         if (!scroller) {
+          // FIXME: This should not happen
           console.warn('Scroller is not ready');
 
           return () => {};

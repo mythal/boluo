@@ -7,6 +7,7 @@ import { ChatItem, MessageItem, PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { ComposeState } from '../state/compose.reducer';
 import { ChannelFilter, useChannelAtoms } from './useChannelAtoms';
+import { recordWarn } from '../error';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
 
@@ -251,7 +252,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         if (prevFirstItemNewIndex !== -1) {
           firstItemIndex.current = prevFirstItemIndex - prevFirstItemNewIndex;
         } else {
-          console.warn('Lost the previous first item');
+          recordWarn('Lost the previous first item');
           const lengthDiff = chatList.length - prevChatList.length;
           firstItemIndex.current = prevFirstItemIndex - lengthDiff;
         }

@@ -6,6 +6,7 @@ import { channelReducer, makeInitialChannelState } from './channel.reducer';
 import { ChatAction, ChatActionUnion, eventToChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';
+import { recordError } from '../error';
 
 export interface ChatReducerContext {
   spaceId: string;
@@ -113,7 +114,7 @@ const handleEventFromServer = (
       try {
         return JSON.parse(encodedEvent) as ServerEvent;
       } catch {
-        console.error('Failed to parse event', encodedEvent);
+        recordError('Failed to parse event', { event: encodedEvent });
         return null;
       }
     });

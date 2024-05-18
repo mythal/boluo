@@ -12,7 +12,6 @@ import { ChatRoot } from './ChatRoot';
 import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
-import { useSetThemeColor } from '../hooks/useSetThemeColor';
 import { BannerContext } from '../hooks/useBannerNode';
 import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
@@ -79,7 +78,6 @@ const Chat: FC = () => {
   const isClient = useIsClient();
   useAutoSelectProxy(60 * 1000);
   const resolvedTheme = useThemeSetup(settings);
-  useSetThemeColor();
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';

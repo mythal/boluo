@@ -14,6 +14,7 @@ import { AppOperations } from './AppOperations';
 import { useIsClient } from '../../hooks/useIsClient';
 import { isApple } from '@boluo/utils';
 import { SidebarButton } from './SidebarButton';
+import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 
 interface Props {
   spaceId?: string;
@@ -37,11 +38,15 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
     </>
   );
 };
-
+function isRunningStandalone() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(display-mode: standalone)').matches;
+}
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const isClient = useIsClient();
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
+  useSetThemeColor(isExpanded);
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       if (e.key === '/') {
@@ -69,9 +74,10 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
   }
+  const standalone = isRunningStandalone();
 
   return (
-    <div className="bg-bg relative flex h-full min-h-0 flex-none flex-col">
+    <div className={clsx('bg-bg standalone-bottom-padding relative flex h-full min-h-0 flex-none flex-col')}>
       <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
         {content}
 

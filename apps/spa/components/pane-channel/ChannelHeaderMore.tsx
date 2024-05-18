@@ -13,6 +13,7 @@ import { ChannelHeaderFilterShowArchive } from './ChannelHeaderFilterShowArchive
 import { MemberJoinButton } from './MemberJoinButton';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { useQueryCurrentUser } from '@boluo/common';
+import { ChannelExportButton } from './ChannelExportButton';
 
 interface Props {
   channelId: string;
@@ -64,6 +65,11 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
       {member?.space.isAdmin && (
         <div className="flex-none">
           <ChannelSettingsButton channelId={channelId} />
+        </div>
+      )}
+      {member?.channel.isMaster && (
+        <div className="flex-none">
+          <ChannelExportButton channelId={channelId} />
         </div>
       )}
     </div>

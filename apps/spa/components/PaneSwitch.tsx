@@ -12,6 +12,7 @@ import { PaneEmpty } from './PaneEmpty';
 import { PaneLoading } from './PaneLoading';
 import { PaneWelcome } from './PaneWelcome';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
+import { PaneChannelExport } from './pane-channel-export/PaneChannelExport';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
@@ -40,6 +41,7 @@ const PANE_MAP = {
   PROFILE: PaneProfile,
   SPACE_MEMBERS: PaneSpaceMembers,
   CHANNEL_SETTINGS: PaneChannelSettings,
+  CHANNEL_EXPORT: PaneChannelExport,
   EMPTY: PaneEmpty,
 } satisfies Record<Pane['type'], unknown>;
 
@@ -69,6 +71,8 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneSpaceMembers spaceId={pane.spaceId} />;
     case 'SPACE_GREETING':
       return <PaneSpaceGreeting spaceId={pane.spaceId} />;
+    case 'CHANNEL_EXPORT':
+      return <PaneChannelExport channelId={pane.channelId} />;
     default:
       const Component = PANE_MAP[pane.type] ?? PaneEmpty;
       return <Component />;

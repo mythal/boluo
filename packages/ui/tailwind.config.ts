@@ -172,12 +172,19 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       select: {
         bg: $(neutral[50], neutral[700]),
+        border: $(neutral[100], neutral[700]),
+        hover: {
+          border: $(neutral[200], neutral[600]),
+        },
+        open: {
+          border: $(lime[500], blue[500]),
+        },
       },
       text,
       failed: {
         icon: $(yellow[600], yellow[500]),
         banner: {
-          bg: $(yellow[100], yellow[950]),
+          bg: $(yellow[50], yellow[950]),
           border: $(yellow[200], yellow[900]),
         },
       },

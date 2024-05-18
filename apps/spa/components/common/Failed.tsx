@@ -13,7 +13,7 @@ export interface FailedProps {
 }
 
 export const Failed: FC<FailedProps> = ({ title, message, error, icon, eventId }) => (
-  <div className="flex flex-col gap-2 p-4">
+  <div className="flex flex-col gap-2">
     {title && (
       <h1 className="text-lg">
         {icon ?? <Icon icon={AlertTriangle} className="text-failed-icon" />} {title}

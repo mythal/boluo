@@ -1,7 +1,7 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
 import { mix, rgba, transparentize } from 'color2k';
-import colors, { sky } from 'tailwindcss/colors';
+import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from '@boluo/utils';
 import screens from './screens.json';
@@ -50,6 +50,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         light: themeColor.light,
         dark: themeColor.dark,
         system: $(themeColor.light, themeColor.dark),
+      },
+      kbd: {
+        bg: $(white, neutral[700]),
+        text: $(black, white),
+        shadow: $(neutral[200], neutral[800]),
       },
       brand,
       green: $(green, revert(green)),
@@ -148,13 +153,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
             hover: {},
           },
         },
-        toggler: {
-          hover: $(blue[100], blue[900]),
-          button: {
-            bg: $(neutral[50], neutral[800]),
-          },
-          touch: $(transparentize(blue[100], 0.5), blue[800]),
-          active: $(blue[500], blue[500]),
+        float: {
+          bg: $(transparentize(neutral[100], 0.25), transparentize(neutral[500], 0.5)),
+          text: $(neutral[800], white),
         },
         folder: {
           bg: $(neutral[50], neutral[900]),

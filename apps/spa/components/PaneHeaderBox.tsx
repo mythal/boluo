@@ -6,10 +6,6 @@ import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from './PaneBanner';
 import { Square } from '@boluo/icons';
-import { atom, useAtomValue } from 'jotai';
-import { panesAtom } from '../state/view.atoms';
-import { SidebarButton } from './sidebar/SidebarButton';
-import { isSidebarExpandedAtom } from '../state/ui.atoms';
 
 interface Props {
   withoutDefaultOperators?: boolean;
@@ -20,34 +16,16 @@ interface Props {
 }
 
 export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, withoutDefaultOperators = false }) => {
-  const { focused: isFocused, canClose, key } = useContext(PaneContext);
+  const { focused: isFocused, canClose } = useContext(PaneContext);
   const paneBanner = usePaneBanner();
   const defaultOperators: ReactNode = useMemo(() => {
     if (withoutDefaultOperators || canClose === false) return null;
     return <ClosePaneButton />;
   }, [withoutDefaultOperators, canClose]);
   icon = icon ?? <Square />;
-  const showSidebarButton = useAtomValue(
-    useMemo(
-      () =>
-        atom((read) => {
-          const panes = read(panesAtom);
-          const isSidebarExpanded = read(isSidebarExpandedAtom);
-          if (isSidebarExpanded) return false;
-          return panes.length > 0 && panes[0]!.key === key;
-        }),
-      [key],
-    ),
-  );
-  const sidebarButton = useMemo(
-    () => <div className="w-8">{showSidebarButton && <SidebarButton />}</div>,
-    [showSidebarButton],
-  );
   return (
     <div className="">
-      <div className="min-h-pane-header bg-pane-header-bg flex items-center pr-[6px] text-sm">
-        {sidebarButton}
-
+      <div className="min-h-pane-header bg-pane-header-bg pl-pane flex items-center pr-[6px] text-sm">
         <span
           className={clsx(
             'inline-flex flex-shrink-0 items-center justify-center pr-1',

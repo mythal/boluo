@@ -89,24 +89,22 @@ const Chat: FC = () => {
         <BannerContext.Provider value={bannerRef}>
           <IsTouchContext.Provider value={isTouch}>
             <BreakpointProvider>
-              <ChatErrorBoundary>
-                <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
-                  <div ref={bannerRef} className="col-span-full"></div>
-                  <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
-                  <ChatContentBox>
-                    {!isClient ? (
-                      <PaneEmpty />
-                    ) : (
-                      <Suspense fallback={<PaneLoading grow />}>
-                        {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
-                        {route.type === 'NOT_FOUND' && <ChatNotFound />}
-                        {route.type === 'ROOT' && <ChatRoot />}
-                        {route.type === 'INVITE' && <ChatInvite spaceId={route.spaceId} token={route.token} />}
-                      </Suspense>
-                    )}
-                  </ChatContentBox>
-                </div>
-              </ChatErrorBoundary>
+              <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
+                <div ref={bannerRef} className="col-span-full"></div>
+                <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
+                <ChatContentBox>
+                  {!isClient ? (
+                    <PaneEmpty />
+                  ) : (
+                    <Suspense fallback={<PaneLoading grow />}>
+                      {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
+                      {route.type === 'NOT_FOUND' && <ChatNotFound />}
+                      {route.type === 'ROOT' && <ChatRoot />}
+                      {route.type === 'INVITE' && <ChatInvite spaceId={route.spaceId} token={route.token} />}
+                    </Suspense>
+                  )}
+                </ChatContentBox>
+              </div>
             </BreakpointProvider>
           </IsTouchContext.Provider>
         </BannerContext.Provider>

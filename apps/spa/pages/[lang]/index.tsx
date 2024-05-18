@@ -8,6 +8,7 @@ import { useIntl } from 'react-intl';
 import { useEffect } from 'react';
 import '@boluo/ui/tailwind.css';
 import Chat from '../../components/Chat';
+import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 
 export const getStaticPaths = (() => {
   return {
@@ -53,7 +54,9 @@ export default function Page({ lang, messages }: Props): JSX.Element {
   return (
     <ClientProviders lang={lang} messages={messages}>
       <PageHead />
-      <Chat />
+      <ChatErrorBoundary>
+        <Chat />
+      </ChatErrorBoundary>
     </ClientProviders>
   );
 }

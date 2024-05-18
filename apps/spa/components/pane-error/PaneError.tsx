@@ -6,10 +6,10 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';
 import { FormattedMessage } from 'react-intl';
 import { Failed, FailedUnexpected } from '../common/Failed';
-import { ErrorBoundary } from '@sentry/react';
+import { ErrorBoundary, FallbackRender } from '@sentry/react';
 
 export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const fallback = (error: unknown) => {
+  const fallback: FallbackRender = ({ error, eventId }) => {
     if (isApiError(error)) {
       if (error.code === 'NOT_FOUND') {
         return <PaneErrorNotFound error={error} />;
@@ -27,7 +27,7 @@ export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
         }
       >
         <div className="p-pane">
-          <FailedUnexpected error={error} />
+          <FailedUnexpected error={error} eventId={eventId} />
         </div>
       </PaneBox>
     );

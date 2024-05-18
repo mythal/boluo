@@ -1,4 +1,3 @@
-import type { User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import React, { FC, useMemo, useState } from 'react';
 import { Suspense } from 'react';

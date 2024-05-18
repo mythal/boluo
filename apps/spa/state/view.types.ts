@@ -40,6 +40,11 @@ export interface SpaceGreetingPane {
   spaceId: string;
 }
 
+export interface ChannelExportPane {
+  type: 'CHANNEL_EXPORT';
+  channelId: string;
+}
+
 export interface ChannelSettingsPane {
   type: 'CHANNEL_SETTINGS';
   channelId: string;
@@ -77,6 +82,7 @@ export type PaneData =
   | CreateSpacePane
   | LoginPane
   | ProfilePane
+  | ChannelExportPane
   | SpaceMembersPane;
 
 export type Pane = PaneData & { key: number; child?: PaneData };

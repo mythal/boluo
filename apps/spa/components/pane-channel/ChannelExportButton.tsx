@@ -1,4 +1,4 @@
-import { Settings } from '@boluo/icons';
+import { ScrollText, Settings } from '@boluo/icons';
 import { FC, MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
@@ -12,7 +12,7 @@ interface Props {
   channelId: string;
 }
 
-export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
+export const ChannelExportButton: FC<Props> = ({ channelId }) => {
   const toggleChild = usePaneToggle({ child: true });
   const paneKey = usePaneKey();
   const opened = useAtomValue(
@@ -20,24 +20,28 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
       () =>
         atom((read) => {
           const panes = read(panesAtom);
-          const currentPane = panes.find((pane) => pane.key === paneKey);
-          return currentPane?.child?.type === 'CHANNEL_SETTINGS';
+          const pane = panes.find(
+            (pane) =>
+              (pane.key === paneKey && pane.child?.type === 'CHANNEL_EXPORT' && pane.child.channelId === channelId) ||
+              (pane.type === 'CHANNEL_EXPORT' && pane.channelId === channelId),
+          );
+          return Boolean(pane);
         }),
-      [paneKey],
+      [channelId, paneKey],
     ),
   );
   const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       e.stopPropagation();
-      toggleChild({ type: 'CHANNEL_SETTINGS', channelId });
+      toggleChild({ type: 'CHANNEL_EXPORT', channelId });
     },
     [toggleChild, channelId],
   );
   return (
     <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
-      <Icon icon={Settings} />
+      <Icon icon={ScrollText} />
       <span className="@xl:inline hidden">
-        <FormattedMessage defaultMessage="Channel Settings" />
+        <FormattedMessage defaultMessage="Export" />
       </span>
     </SidebarHeaderButton>
   );

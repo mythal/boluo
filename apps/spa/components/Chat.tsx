@@ -63,7 +63,7 @@ if (typeof window !== 'undefined' && SENTRY_DSN) {
     tunnel: SENTRY_TUNNEL,
     integrations: [],
   });
-  console.trace('Sentry ready');
+  console.debug('Sentry ready');
 }
 
 const Chat: FC = () => {

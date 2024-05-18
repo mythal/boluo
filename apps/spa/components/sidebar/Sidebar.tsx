@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
-import { useEffect, type FC, type ReactNode } from 'react';
+import { useEffect, useState, type FC, type ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
 import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
@@ -74,7 +74,6 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
   }
-  const standalone = isRunningStandalone();
 
   return (
     <div className={clsx('bg-bg standalone-bottom-padding relative flex h-full min-h-0 flex-none flex-col')}>

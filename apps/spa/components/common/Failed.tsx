@@ -9,9 +9,10 @@ export interface FailedProps {
   message?: ReactNode;
   icon?: ReactNode;
   error?: unknown;
+  eventId?: string;
 }
 
-export const Failed: FC<FailedProps> = ({ title, message, error, icon }) => (
+export const Failed: FC<FailedProps> = ({ title, message, error, icon, eventId }) => (
   <div className="flex flex-col gap-2 p-4">
     {title && (
       <h1 className="text-lg">
@@ -24,13 +25,15 @@ export const Failed: FC<FailedProps> = ({ title, message, error, icon }) => (
         <ErrorDisplay error={error} />
       </div>
     )}
+    {eventId && <div className="text-text-lighter font-mono text-xs">{eventId}</div>}
   </div>
 );
 
-export const FailedUnexpected: FC<{ error?: unknown }> = ({ error }) => (
+export const FailedUnexpected: FC<{ error?: unknown; eventId?: string }> = ({ error, eventId }) => (
   <Failed
     title={<FormattedMessage defaultMessage="Oops! Something went wrong" />}
     message={<FormattedMessage defaultMessage="An unexpected error occurred. Please try again later." />}
     error={error}
+    eventId={eventId}
   />
 );

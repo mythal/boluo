@@ -1,7 +1,7 @@
 import './types.d';
 import themeSwapper from 'tailwindcss-theme-swapper';
 import { mix, rgba, transparentize } from 'color2k';
-import colors from 'tailwindcss/colors';
+import colors, { sky } from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from '@boluo/utils';
 import screens from './screens.json';
@@ -34,7 +34,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
     light: $(neutral[600], neutral[300]),
     lighter: $(neutral[500], neutral[400]),
     danger: $(red[600], red[300]),
-    wanring: $(yellow[600], yellow[300]),
+    warning: $(yellow[600], yellow[300]),
   };
   return {
     ringColor: {
@@ -239,6 +239,17 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         action: $(neutral[400], neutral[600]),
+        toolbar: {
+          bg: $(white, neutral[800]),
+          border: $(neutral[200], neutral[700]),
+          hover: {
+            border: $(neutral[400], neutral[600]),
+          },
+          more: {
+            bg: $(white, neutral[800]),
+            border: $(neutral[200], neutral[700]),
+          },
+        },
         toolbox: {
           bg: $(neutral[50], neutral[900]),
           active: {
@@ -312,7 +323,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           bg: $(neutral[100], neutral[700]),
         },
         pressed: {
-          bg: $(neutral[200], neutral[900]),
+          bg: $(neutral[200], black),
           text: $(black, white),
           indicator: $(green[500], green[500]),
         },

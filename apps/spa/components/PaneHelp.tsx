@@ -1,16 +1,20 @@
 import { HelpCircle } from '@boluo/icons';
-import type { FC } from 'react';
+import { useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { devMode } from '../state/dev.atoms';
 import { useAtomValue } from 'jotai';
+import { Button } from '@boluo/ui/Button';
 
 interface Props {}
 
 export const PaneHelp: FC<Props> = () => {
   const dev = useAtomValue(devMode);
+  const [crashOnRendering, setCrashOnRendering] = useState(false);
+  if (crashOnRendering) {
+    throw new Error('Crash on rendering');
+  }
   return (
     <PaneBox
       header={
@@ -19,19 +23,21 @@ export const PaneHelp: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane">Coming soon</div>
-
-      {dev && (
-        <div>
-          <button
-            onClick={() => {
-              throw new Error('Crash!');
-            }}
-          >
-            Crash!
-          </button>
-        </div>
-      )}
+      <div className="p-pane">
+        Coming soon
+        {dev && (
+          <div className="flex gap-1">
+            <Button
+              onClick={() => {
+                throw new Error('Crash!');
+              }}
+            >
+              Crash!
+            </Button>
+            <Button onClick={() => setCrashOnRendering(true)}>Crash on rendering</Button>
+          </div>
+        )}
+      </div>
     </PaneBox>
   );
 };

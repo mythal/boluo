@@ -22,7 +22,6 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
   const $ = <T, U>(inLight: T, inDark: U): T | U => (name === 'light' ? inLight : inDark);
   const darkPaneBg = mix(zinc[800], zinc[700], 0.25);
   const inGameMessageBg = $('#fbfdf6', zinc[700]);
-  console.log('inGameMessageBg', inGameMessageBg);
   const brand = $(lime, revert(blue));
   const themeColor = {
     light: neutral[50],

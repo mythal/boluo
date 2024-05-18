@@ -25,4 +25,4 @@ const config = {
     return config;
   },
 };
-module.exports = process.env.ANALYZE === 'true' ? withBundleAnalyzer(config) : config;
+module.exports = process.env.ANALYZE ? withBundleAnalyzer(config) : config;

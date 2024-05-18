@@ -32,6 +32,7 @@ import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
 import { Settings } from '@boluo/common';
+import Sentry from '@sentry/react';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;
@@ -56,19 +57,13 @@ const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => 
 };
 
 if (typeof window !== 'undefined' && SENTRY_DSN) {
-  import('@sentry/react')
-    .then((Sentry) => {
-      Sentry.init({
-        environment: IS_DEVELOPMENT ? 'development' : 'production',
-        dsn: SENTRY_DSN,
-        tunnel: SENTRY_TUNNEL,
-        integrations: [],
-      });
-      console.log('Sentry ready');
-    })
-    .catch((err) => {
-      console.warn('Failed to load Sentry', err);
-    });
+  Sentry.init({
+    environment: IS_DEVELOPMENT ? 'development' : 'production',
+    dsn: SENTRY_DSN,
+    tunnel: SENTRY_TUNNEL,
+    integrations: [],
+  });
+  console.trace('Sentry ready');
 }
 
 const Chat: FC = () => {

@@ -1,3 +1,4 @@
+import { recordError } from '../error';
 import { Env, parse } from './parser';
 
 export interface ParserArguments {
@@ -14,6 +15,6 @@ worker.addEventListener('message', ({ data: { source, defaultDiceFace } }: Messa
     }
     worker.postMessage(parse(source, true, env));
   } catch (e) {
-    console.error('Error in parsing: ', e);
+    recordError('Error in parsing: ', { source, error: e });
   }
 });

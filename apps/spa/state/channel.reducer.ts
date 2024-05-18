@@ -3,6 +3,7 @@ import { byPos } from '../sort';
 import { MessageItem, PreviewItem } from './channel.types';
 import { ChatAction, ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
+import { recordWarn } from '../error';
 
 export type UserId = string;
 
@@ -60,7 +61,7 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
     return state;
   }
   if (message.id in prevMessageMap) {
-    console.warn('Received a duplicate new message.');
+    recordWarn('Received a duplicate new message.', { message, prevMessage: prevMessageMap[message.id] });
     return state;
   }
   const messageMap = { ...prevMessageMap, [message.id]: message };
@@ -88,7 +89,7 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     return { ...state, messageMap: Object.fromEntries(newMessageEntries) };
   }
   if (state.messages[0]!.pos <= minPos) {
-    console.warn('Received messages that are older than the ones already loaded');
+    recordWarn('Received messages that are older than the ones already loaded');
     return state;
   }
   const messageMap = { ...state.messageMap };
@@ -186,7 +187,6 @@ const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initializ
 const handleGcCountdown = (state: ChannelState): ChannelState => {
   const { scheduledGc } = state;
   if (scheduledGc == null || scheduledGc.countdown <= 0) return state;
-  // console.debug('[Messages GC] Countdown: ', scheduledGc.countdown - 1);
   return { ...state, scheduledGc: { ...scheduledGc, countdown: scheduledGc.countdown - 1 } };
 };
 

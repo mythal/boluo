@@ -274,7 +274,6 @@ const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
 const mention: P<string> = regex(/^@([\w_\d]{3,32})\s*/).then(([match, { text, rest }]) => {
   const [entire, username] = match;
   if (!username) {
-    console.warn('Failed to parse username: ' + entire);
     return null;
   }
   return [username, { text: text + entire, rest }];
@@ -555,11 +554,6 @@ const repeat = (): P<ExprNode> =>
       next,
     ];
   });
-
-const logResult = <T>(result: T): T => {
-  console.log(result);
-  return result;
-};
 
 const expr2 = (): P<ExprNode> =>
   chainl1<ExprNode, Operator>(operator2, atom, (op, l, r) => ({ type: 'Binary', l, r, op }));

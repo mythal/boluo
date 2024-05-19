@@ -336,7 +336,7 @@
     "message": "極限成功"
   },
   "OWhbRI": {
-    "message": "The command that will be inserted when the button is pressed."
+    "message": "ボタンが押されたと、このコマンドは挿入される。"
   },
   "OYT4m/": {
     "message": "メッセージは空にできません"
@@ -345,16 +345,16 @@
     "message": "編集済み"
   },
   "P57vjw": {
-    "message": "Channel name must be at most 32 characters."
+    "message": "チャンネル名は32文字以内で入力してください。"
   },
   "P6PLpi": {
     "message": "参加する"
   },
   "PHZ3YP": {
-    "message": "Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
+    "message": "絶対成功: {critical}, 絶対失敗: {fumble}, 成功: {success}, 追加: {addition}"
   },
   "PO83gc": {
-    "message": "Last seen"
+    "message": "最近の活動時間"
   },
   "Pe0ogR": {
     "message": "テーマ"
@@ -363,7 +363,7 @@
     "message": "ようこそ"
   },
   "Q+Af6H": {
-    "message": "Out of Game"
+    "message": "ゲーム外"
   },
   "Q8Qw5B": {
     "message": "説明"

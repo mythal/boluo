@@ -54,7 +54,7 @@
     "message": "キャラクター名なし"
   },
   "1iEPTM": {
-    "message": "General"
+    "message": "全般"
   },
   "2J8G6R": {
     "message": "ファイルサイズは {sizeLimit} より小さい必要があります"
@@ -72,7 +72,7 @@
     "message": "変更を保存"
   },
   "3c9Xiy": {
-    "message": "An unknown error occurred."
+    "message": "不明なエラー"
   },
   "3cc4Ct": {
     "message": "ライト"
@@ -81,7 +81,7 @@
     "message": "キャンセル"
   },
   "4KGRux": {
-    "message": "Turn on notification"
+    "message": "通知をオンにする"
   },
   "4l6vz1": {
     "message": "コピー"
@@ -120,7 +120,7 @@
     "message": "接続中"
   },
   "72vKlS": {
-    "message": "Failed to load the space"
+    "message": "スペースの読み込みに失敗しました"
   },
   "7G8Ojg": {
     "message": "メッセージを送信できません"
@@ -201,13 +201,13 @@
     "message": "エコー"
   },
   "Euftjf": {
-    "message": "Error while uploading a file, did you recover the message?"
+    "message": "ファイルのアップロード中にエラーが発生しました。メッセージを復元しますか？"
   },
   "FN6jdd": {
-    "message": "Hi, {username}!"
+    "message": "こんにちは、{username}！"
   },
   "FazwRl": {
-    "message": "Try again"
+    "message": "リトライ"
   },
   "GEhexi": {
     "message": "ダークモード中"
@@ -222,7 +222,7 @@
     "message": "このメッセージを削除してもよろしいですか:"
   },
   "HH8O0c": {
-    "message": "Request failed, possible network anomaly."
+    "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
@@ -282,7 +282,7 @@
     "message": "表示"
   },
   "K8uxGU": {
-    "message": "The password reset email has been sent."
+    "message": "パスワードリセットのメールは送信しました。"
   },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
@@ -291,7 +291,7 @@
     "message": "バイオはまだ設定していません"
   },
   "L01rMU": {
-    "message": "By default member will speak on their own behalf."
+    "message": "デフォルトでは、メンバーは自分として話す。"
   },
   "LUrJwE": {
     "message": "チャンネル"
@@ -303,7 +303,7 @@
     "message": "何か問題が起きています."
   },
   "MgRaWS": {
-    "message": "Channel name cannot be empty."
+    "message": "チャンネル名は空になることはできません"
   },
   "MoRJdV": {
     "message": "メッセージを送信するには、どのキーを使用しますか？"
@@ -315,7 +315,7 @@
     "message": "サポート外のメディア種別"
   },
   "Mqn9K5": {
-    "message": "Person not found"
+    "message": "ユーザーが見つかりません"
   },
   "Mtd9LO": {
     "message": "タイムアウト"
@@ -324,10 +324,10 @@
     "message": "権限がありません"
   },
   "NXv+Ue": {
-    "message": "Turn off notification"
+    "message": "通知をオフにしる"
   },
   "NZyhSX": {
-    "message": "News"
+    "message": "新着情報"
   },
   "O5epsB": {
     "message": "取る"

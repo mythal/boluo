@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common';
 import { useAtom, useAtomValue } from 'jotai';
-import { useEffect, useState, type FC, type ReactNode } from 'react';
+import { useEffect, type FC, type ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
 import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
@@ -15,6 +15,8 @@ import { useIsClient } from '../../hooks/useIsClient';
 import { isApple } from '@boluo/utils';
 import { SidebarButton } from './SidebarButton';
 import { useSetThemeColor } from '../../hooks/useSetThemeColor';
+import { SidebarGuestContent } from './SidebarGuestContent';
+import { SidebarContentLoading } from './SidebarContentLoading';
 
 interface Props {
   spaceId?: string;
@@ -38,10 +40,6 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
     </>
   );
 };
-function isRunningStandalone() {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(display-mode: standalone)').matches;
-}
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const isClient = useIsClient();
@@ -66,11 +64,17 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   if (!isExpanded) {
     return foldedNode;
   }
-  let content: ReactNode;
+  let content: ReactNode = <SidebarContentLoading />;
   if (!isClient) {
-    content = <div>{/* Placeholder */}</div>;
+    content = <SidebarContentLoading />;
   } else if (spaceId == null) {
-    content = <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
+    if (isQueryingUser) {
+      content = <SidebarContentLoading />;
+    } else if (currentUser == null) {
+      content = <SidebarGuestContent />;
+    } else {
+      content = <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
+    }
   } else {
     content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
   }

@@ -1,0 +1,12 @@
+{
+  "name": "Boluo",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "action": {
+    "title": "Chat",
+    "icon": "/icon.png",
+    "popover": "/en",
+    "height": 800,
+    "width": 500
+  }
+}

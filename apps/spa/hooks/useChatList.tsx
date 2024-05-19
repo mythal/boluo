@@ -197,15 +197,18 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         }
         const index = binarySearchPos(itemList, message.pos);
         if (message.id !== itemList[index]?.id) {
-          throw new Error('Failed binary search');
-        }
-        if (message.pos === preview.pos) {
+          // Maybe the original message be filtered
+          // Just treat it as a normal preview
+        } else if (message.pos === preview.pos) {
+          // In-place replace
           itemList[index] = preview;
           continue;
         } else {
+          // Remove the original message
           itemList.splice(index, 1);
         }
       } else if (preview.editFor) {
+        // The preview is editing a message that is not loaded.
         continue;
       }
       // Insert the preview to item list

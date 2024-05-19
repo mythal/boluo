@@ -22,7 +22,6 @@ import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 import { Failed } from '../common/Failed';
-import { useIsChildPane } from '../../hooks/useIsChildPane';
 import { ChannelTypeField } from '../pane-create-channel/ChannelTypeField';
 
 const channelToInitialValues = (channel: Channel): ChannelSettingsForm => ({
@@ -74,7 +73,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 
   const onSubmit: SubmitHandler<ChannelSettingsForm> = async (data) => {
     await trigger(data);
-    close();
+    closePane();
   };
 
   return (

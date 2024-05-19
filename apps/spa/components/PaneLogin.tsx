@@ -8,6 +8,7 @@ import { usePaneClose } from '../hooks/usePaneClose';
 import { LoginForm } from './account/LoginForm';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
+import { Todo } from './common/Todo';
 
 interface Props {}
 
@@ -34,8 +35,11 @@ export const PaneLogin: FC<Props> = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane flex">
+      <div className="p-pane">
         <LoginForm onSuccess={close} onError={handleError} className="w-full" />
+        <div>
+          <Todo>Sign Up</Todo>
+        </div>
       </div>
     </PaneBox>
   );

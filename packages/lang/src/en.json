@@ -41,6 +41,9 @@
   "0EJGBZ": {
     "message": "Are you sure you want to kick {nickname} ({username})?"
   },
+  "0HT+Ib": {
+    "message": "Archived"
+  },
   "0JXAsk": {
     "message": "Away"
   },
@@ -101,6 +104,9 @@
   "60KMrS": {
     "message": "As Default"
   },
+  "64sfSN": {
+    "message": "Nevermind"
+  },
   "6CVXeu": {
     "message": "Failed to query the channel"
   },
@@ -131,6 +137,9 @@
   "7q87xo": {
     "message": "Channel Settings"
   },
+  "8+j66D": {
+    "message": "Are you sure you want to delete this message?"
+  },
   "88cMEG": {
     "message": "Destory Space"
   },
@@ -146,14 +155,14 @@
   "9WRlF4": {
     "message": "Send"
   },
-  "9kvEKC": {
-    "message": "Add Dice"
-  },
   "9to/Le": {
     "message": "Change Avatar"
   },
   "AVI/0j": {
     "message": "Split"
+  },
+  "AbXVP4": {
+    "message": "Created at"
   },
   "AtML1q": {
     "message": "Master"
@@ -166,6 +175,9 @@
   },
   "Bc5LE6": {
     "message": "Size must be less than {mediaMaxSizeMb}M."
+  },
+  "Bm9rWe": {
+    "message": "Failed to delete the message"
   },
   "Bp3LVS": {
     "message": "Space not found"
@@ -187,6 +199,9 @@
   },
   "CoTP+E": {
     "message": "You are not a member of this channel"
+  },
+  "CtZMCP": {
+    "message": "Secret"
   },
   "CuNepY": {
     "message": "Create Channel"
@@ -218,9 +233,6 @@
   "GbWVAh": {
     "message": "Yes, Kick"
   },
-  "H6JcM0": {
-    "message": "Are you sure to delete this message:"
-  },
   "HH8O0c": {
     "message": "Request failed, possible network anomaly."
   },
@@ -235,6 +247,9 @@
   },
   "HpyhN3": {
     "message": "Boluo"
+  },
+  "I5NMJ8": {
+    "message": "More"
   },
   "I90sbW": {
     "message": "just now"
@@ -253,9 +268,6 @@
   },
   "IW0/M8": {
     "message": "Auto Select"
-  },
-  "Iueqgt": {
-    "message": "Failed to delete message ({ errorCode })"
   },
   "IvBid4": {
     "message": "Use the {enter} key to send messages"
@@ -295,9 +307,6 @@
   },
   "LUrJwE": {
     "message": "Channels"
-  },
-  "LX5+L+": {
-    "message": "Show Archived"
   },
   "MWO2zy": {
     "message": "Something going wrong."
@@ -340,9 +349,6 @@
   },
   "OYT4m/": {
     "message": "Message cannot be empty"
-  },
-  "OhIqLr": {
-    "message": "Edited"
   },
   "P57vjw": {
     "message": "Channel name must be at most 32 characters."
@@ -431,6 +437,9 @@
   "TdbPNK": {
     "message": "Me"
   },
+  "Tuwpkq": {
+    "message": "Add a dice roll"
+  },
   "TwyMau": {
     "message": "Account"
   },
@@ -487,6 +496,9 @@
   },
   "X5rIjZ": {
     "message": "Danger Zone"
+  },
+  "XTqS60": {
+    "message": "Please send {errorCode} to the system administrator."
   },
   "Xs60po": {
     "message": "{hours} hours ago"
@@ -575,6 +587,9 @@
   "ccU6l/": {
     "message": "Online"
   },
+  "ceSWhW": {
+    "message": "Show archived messages"
+  },
   "clpFBW": {
     "message": "Space Publicity"
   },
@@ -610,6 +625,9 @@
   },
   "ea+WlP": {
     "message": "You must be invited to join a private channel."
+  },
+  "f0Sf6g": {
+    "message": "Add a file"
   },
   "fNCCY7": {
     "message": "Basic"
@@ -652,6 +670,9 @@
   },
   "hh0xW7": {
     "message": "Channel Name"
+  },
+  "hrgo+E": {
+    "message": "Archive"
   },
   "iHN12u": {
     "message": "Admin"
@@ -752,6 +773,9 @@
   "qj1uhz": {
     "message": "Disconnect"
   },
+  "qnWbsU": {
+    "message": "Failed to archive the message"
+  },
   "qoUUiA": {
     "message": "Allow Spectator"
   },
@@ -803,6 +827,9 @@
   "t0WZaq": {
     "message": "The channel where the game is played. By default member will speak as a character."
   },
+  "t44Zkc": {
+    "message": "Copy Source"
+  },
   "t5xj3B": {
     "message": "New Space"
   },
@@ -814,9 +841,6 @@
   },
   "uhu5aG": {
     "message": "Public"
-  },
-  "uk/RDu": {
-    "message": "Unexpected error when displaying chat content"
   },
   "ulAzZl": {
     "message": "Failed to query the user"
@@ -886,6 +910,9 @@
   },
   "z/ipXX": {
     "message": "Oops"
+  },
+  "z9LRLa": {
+    "message": "Edited at"
   },
   "zINlao": {
     "message": "Owner"

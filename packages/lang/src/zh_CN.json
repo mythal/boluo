@@ -41,6 +41,9 @@
   "0EJGBZ": {
     "message": "你确认要踢走 {nickname} ({username}) 吗？"
   },
+  "0HT+Ib": {
+    "message": "已归档"
+  },
   "0JXAsk": {
     "message": "离开"
   },
@@ -101,6 +104,9 @@
   "60KMrS": {
     "message": "设作默认"
   },
+  "64sfSN": {
+    "message": "罢了"
+  },
   "6CVXeu": {
     "message": "查询频道失败"
   },
@@ -131,6 +137,9 @@
   "7q87xo": {
     "message": "频道设置"
   },
+  "8+j66D": {
+    "message": "确实要删除这条消息？"
+  },
   "88cMEG": {
     "message": "摧毁位面"
   },
@@ -146,14 +155,14 @@
   "9WRlF4": {
     "message": "发送"
   },
-  "9kvEKC": {
-    "message": "添加骰子"
-  },
   "9to/Le": {
     "message": "更改头像"
   },
   "AVI/0j": {
     "message": "拆分"
+  },
+  "AbXVP4": {
+    "message": "创建于"
   },
   "AtML1q": {
     "message": "主持人"
@@ -166,6 +175,9 @@
   },
   "Bc5LE6": {
     "message": "尺寸必须小于{mediaMaxSizeMb}M。"
+  },
+  "Bm9rWe": {
+    "message": "删除消息失败"
   },
   "Bp3LVS": {
     "message": "找不到位面"
@@ -187,6 +199,9 @@
   },
   "CoTP+E": {
     "message": "您不是该频道的成员"
+  },
+  "CtZMCP": {
+    "message": "秘密"
   },
   "CuNepY": {
     "message": "创建频道"
@@ -218,9 +233,6 @@
   "GbWVAh": {
     "message": "是的，踢走"
   },
-  "H6JcM0": {
-    "message": "你确定删除这条消息吗："
-  },
   "HH8O0c": {
     "message": "请求失败，可能是网络异常。"
   },
@@ -235,6 +247,9 @@
   },
   "HpyhN3": {
     "message": "菠萝"
+  },
+  "I5NMJ8": {
+    "message": "更多"
   },
   "I90sbW": {
     "message": "刚刚"
@@ -253,9 +268,6 @@
   },
   "IW0/M8": {
     "message": "自动选择"
-  },
-  "Iueqgt": {
-    "message": "载入消息失败 ({ errorCode })"
   },
   "IvBid4": {
     "message": "使用 {enter} 键发送消息"
@@ -295,9 +307,6 @@
   },
   "LUrJwE": {
     "message": "频道"
-  },
-  "LX5+L+": {
-    "message": "显示已归档"
   },
   "MWO2zy": {
     "message": "出了点问题。"
@@ -340,9 +349,6 @@
   },
   "OYT4m/": {
     "message": "消息不能为空"
-  },
-  "OhIqLr": {
-    "message": "已编辑"
   },
   "P57vjw": {
     "message": "频道名称最多不能超过 32 字符。"
@@ -431,6 +437,9 @@
   "TdbPNK": {
     "message": "自己"
   },
+  "Tuwpkq": {
+    "message": "添加投骰"
+  },
   "TwyMau": {
     "message": "账号"
   },
@@ -487,6 +496,9 @@
   },
   "X5rIjZ": {
     "message": "危险操作"
+  },
+  "XTqS60": {
+    "message": "请将 {errorCode} 告诉系统管理员。"
   },
   "Xs60po": {
     "message": "{hours} 小时前"
@@ -575,6 +587,9 @@
   "ccU6l/": {
     "message": "在线"
   },
+  "ceSWhW": {
+    "message": "显示已存档的消息"
+  },
   "clpFBW": {
     "message": "位面公开性"
   },
@@ -610,6 +625,9 @@
   },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
+  },
+  "f0Sf6g": {
+    "message": "添加文件"
   },
   "fNCCY7": {
     "message": "基本"
@@ -652,6 +670,9 @@
   },
   "hh0xW7": {
     "message": "频道名"
+  },
+  "hrgo+E": {
+    "message": "归档"
   },
   "iHN12u": {
     "message": "管理员"
@@ -752,6 +773,9 @@
   "qj1uhz": {
     "message": "断开连接"
   },
+  "qnWbsU": {
+    "message": "归档消息失败"
+  },
   "qoUUiA": {
     "message": "允许旁观者"
   },
@@ -803,6 +827,9 @@
   "t0WZaq": {
     "message": "进行游戏的频道，成员默认以角色身份发言"
   },
+  "t44Zkc": {
+    "message": "复制源文本"
+  },
   "t5xj3B": {
     "message": "新位面"
   },
@@ -814,9 +841,6 @@
   },
   "uhu5aG": {
     "message": "公开"
-  },
-  "uk/RDu": {
-    "message": "显示聊天内容时发生意外错误"
   },
   "ulAzZl": {
     "message": "查询用户失败"
@@ -886,6 +910,9 @@
   },
   "z/ipXX": {
     "message": "糟糕！"
+  },
+  "z9LRLa": {
+    "message": "修改于"
   },
   "zINlao": {
     "message": "所有者"

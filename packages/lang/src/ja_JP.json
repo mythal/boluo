@@ -41,6 +41,9 @@
   "0EJGBZ": {
     "message": "{nickname} ({username})をキックしてもよろしいですか？"
   },
+  "0HT+Ib": {
+    "message": "アーカイブ済"
+  },
   "0JXAsk": {
     "message": "不在"
   },
@@ -54,7 +57,7 @@
     "message": "キャラクター名なし"
   },
   "1iEPTM": {
-    "message": "General"
+    "message": "全般"
   },
   "2J8G6R": {
     "message": "ファイルサイズは {sizeLimit} より小さい必要があります"
@@ -72,7 +75,7 @@
     "message": "変更を保存"
   },
   "3c9Xiy": {
-    "message": "An unknown error occurred."
+    "message": "不明なエラー"
   },
   "3cc4Ct": {
     "message": "ライト"
@@ -81,7 +84,7 @@
     "message": "キャンセル"
   },
   "4KGRux": {
-    "message": "Turn on notification"
+    "message": "通知をオンにする"
   },
   "4l6vz1": {
     "message": "コピー"
@@ -100,6 +103,9 @@
   },
   "60KMrS": {
     "message": "デフォルトとして"
+  },
+  "64sfSN": {
+    "message": "やめる"
   },
   "6CVXeu": {
     "message": "チャンネルの照会に失敗しました"
@@ -120,7 +126,7 @@
     "message": "接続中"
   },
   "72vKlS": {
-    "message": "Failed to load the space"
+    "message": "次元の読み込みに失敗しました"
   },
   "7G8Ojg": {
     "message": "メッセージを送信できません"
@@ -130,6 +136,9 @@
   },
   "7q87xo": {
     "message": "チャンネル設定"
+  },
+  "8+j66D": {
+    "message": "このメッセージを削除しますか？"
   },
   "88cMEG": {
     "message": "次元を破壊する"
@@ -146,14 +155,14 @@
   "9WRlF4": {
     "message": "送信"
   },
-  "9kvEKC": {
-    "message": "サイコロを追加"
-  },
   "9to/Le": {
     "message": "アバターの変更"
   },
   "AVI/0j": {
     "message": "分割"
+  },
+  "AbXVP4": {
+    "message": "作成"
   },
   "AtML1q": {
     "message": "マスター"
@@ -166,6 +175,9 @@
   },
   "Bc5LE6": {
     "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
+  },
+  "Bm9rWe": {
+    "message": "メッセージの削除に失敗しました"
   },
   "Bp3LVS": {
     "message": "次元は見つかりません"
@@ -188,6 +200,9 @@
   "CoTP+E": {
     "message": "あなたはこのチャンネルのメンバーではありません"
   },
+  "CtZMCP": {
+    "message": "秘密"
+  },
   "CuNepY": {
     "message": "チャネルを作成"
   },
@@ -201,13 +216,13 @@
     "message": "エコー"
   },
   "Euftjf": {
-    "message": "Error while uploading a file, did you recover the message?"
+    "message": "ファイルのアップロード中にエラーが発生しました。メッセージを復元しますか？"
   },
   "FN6jdd": {
-    "message": "Hi, {username}!"
+    "message": "こんにちは、{username}！"
   },
   "FazwRl": {
-    "message": "Try again"
+    "message": "リトライ"
   },
   "GEhexi": {
     "message": "ダークモード中"
@@ -218,11 +233,8 @@
   "GbWVAh": {
     "message": "キックする"
   },
-  "H6JcM0": {
-    "message": "このメッセージを削除してもよろしいですか:"
-  },
   "HH8O0c": {
-    "message": "Request failed, possible network anomaly."
+    "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
@@ -235,6 +247,9 @@
   },
   "HpyhN3": {
     "message": "パイン"
+  },
+  "I5NMJ8": {
+    "message": "さらに表示"
   },
   "I90sbW": {
     "message": "ただ今"
@@ -253,9 +268,6 @@
   },
   "IW0/M8": {
     "message": "自動選択"
-  },
-  "Iueqgt": {
-    "message": "メッセージの削除に失敗しました ({ errorCode })"
   },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
@@ -282,7 +294,7 @@
     "message": "表示"
   },
   "K8uxGU": {
-    "message": "The password reset email has been sent."
+    "message": "パスワードリセットのメールは送信しました。"
   },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
@@ -291,19 +303,16 @@
     "message": "バイオはまだ設定していません"
   },
   "L01rMU": {
-    "message": "By default member will speak on their own behalf."
+    "message": "デフォルトでは、メンバーは自分として話す。"
   },
   "LUrJwE": {
     "message": "チャンネル"
-  },
-  "LX5+L+": {
-    "message": "アーカイブを表示"
   },
   "MWO2zy": {
     "message": "何か問題が起きています."
   },
   "MgRaWS": {
-    "message": "Channel name cannot be empty."
+    "message": "チャンネル名は空になることはできません"
   },
   "MoRJdV": {
     "message": "メッセージを送信するには、どのキーを使用しますか？"
@@ -315,7 +324,7 @@
     "message": "サポート外のメディア種別"
   },
   "Mqn9K5": {
-    "message": "Person not found"
+    "message": "ユーザーが見つかりません"
   },
   "Mtd9LO": {
     "message": "タイムアウト"
@@ -324,10 +333,10 @@
     "message": "権限がありません"
   },
   "NXv+Ue": {
-    "message": "Turn off notification"
+    "message": "通知をオフにしる"
   },
   "NZyhSX": {
-    "message": "News"
+    "message": "新着情報"
   },
   "O5epsB": {
     "message": "取る"
@@ -336,25 +345,22 @@
     "message": "極限成功"
   },
   "OWhbRI": {
-    "message": "The command that will be inserted when the button is pressed."
+    "message": "ボタンが押されたと、このコマンドは挿入される。"
   },
   "OYT4m/": {
     "message": "メッセージは空にできません"
   },
-  "OhIqLr": {
-    "message": "編集済み"
-  },
   "P57vjw": {
-    "message": "Channel name must be at most 32 characters."
+    "message": "チャンネル名は32文字以内で入力してください。"
   },
   "P6PLpi": {
     "message": "参加する"
   },
   "PHZ3YP": {
-    "message": "Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
+    "message": "絶対成功: {critical}, 絶対失敗: {fumble}, 成功: {success}, 追加: {addition}"
   },
   "PO83gc": {
-    "message": "Last seen"
+    "message": "最近の活動時間"
   },
   "Pe0ogR": {
     "message": "テーマ"
@@ -363,7 +369,7 @@
     "message": "ようこそ"
   },
   "Q+Af6H": {
-    "message": "Out of Game"
+    "message": "ゲーム外"
   },
   "Q8Qw5B": {
     "message": "説明"
@@ -372,16 +378,16 @@
     "message": "Failed to query members of the space"
   },
   "QOvY19": {
-    "message": "Whisper to the Master and"
+    "message": "マスターにささやき、"
   },
   "QdsAIR": {
-    "message": "Members of \"{spaceName}\" Space"
+    "message": "「{spaceName}」のメンバーについて"
   },
   "QlsDcr": {
     "message": "動作"
   },
   "Qm+Ijg": {
-    "message": "The email address is not registered."
+    "message": "このメールアドレスは登録されていません"
   },
   "R59CS8": {
     "message": "アイコンを削除"
@@ -393,7 +399,7 @@
     "message": "名前なし"
   },
   "Ryulue": {
-    "message": "Failed to query the space"
+    "message": "スペースの読み込みが失敗しました"
   },
   "SBkvpf": {
     "message": "ニックネーム"
@@ -402,7 +408,7 @@
     "message": "ヘルプ"
   },
   "SEg47O": {
-    "message": "Are you sure you want to exile this member?"
+    "message": "このメンバーを削除してもよろしいですか？"
   },
   "SHMAcP": {
     "message": "Please check your network connection and try again."
@@ -420,16 +426,19 @@
     "message": "{count} 名"
   },
   "TAyWna": {
-    "message": "You have been invited to the space"
+    "message": "あなたは次元に招待されています"
   },
   "TDaF6J": {
-    "message": "Dismiss"
+    "message": "消去"
   },
   "TThIOM": {
     "message": "見つかりません"
   },
   "TdbPNK": {
     "message": "自分"
+  },
+  "Tuwpkq": {
+    "message": "サイコロロールを追加"
   },
   "TwyMau": {
     "message": "アカウント"
@@ -488,6 +497,9 @@
   "X5rIjZ": {
     "message": "危険な操作"
   },
+  "XTqS60": {
+    "message": "Please send {errorCode} to the system administrator."
+  },
   "Xs60po": {
     "message": "{hours} 時間前"
   },
@@ -516,7 +528,7 @@
     "message": "{paneName} を閉じる"
   },
   "Yy/yDL": {
-    "message": "Reset password"
+    "message": "パスワードをリセット"
   },
   "ZKBnrB": {
     "message": "キャラクター名が必要です"
@@ -537,7 +549,7 @@
     "message": "秘密チャンネル"
   },
   "aTCgvQ": {
-    "message": "Your last input was:"
+    "message": "最後に入力したのは:"
   },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."
@@ -575,6 +587,9 @@
   "ccU6l/": {
     "message": "オンライン"
   },
+  "ceSWhW": {
+    "message": "Show archived messages"
+  },
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
@@ -611,14 +626,17 @@
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
   },
+  "f0Sf6g": {
+    "message": "ファイルを追加"
+  },
   "fNCCY7": {
     "message": "ベーシック"
   },
   "fTHhSB": {
-    "message": "New password"
+    "message": "新パスワード"
   },
   "fc2iho": {
-    "message": "Add File"
+    "message": "ファイルを追加"
   },
   "fnihsY": {
     "message": "退出する"
@@ -627,7 +645,7 @@
     "message": "次元の切り替え"
   },
   "ftsMiH": {
-    "message": "Toggle In Game"
+    "message": "ゲーム内の切り替え"
   },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
@@ -652,6 +670,9 @@
   },
   "hh0xW7": {
     "message": "チャンネル名"
+  },
+  "hrgo+E": {
+    "message": "Archive"
   },
   "iHN12u": {
     "message": "管理者"
@@ -752,6 +773,9 @@
   "qj1uhz": {
     "message": "切断"
   },
+  "qnWbsU": {
+    "message": "Failed to archive the message"
+  },
   "qoUUiA": {
     "message": "観覧を許可"
   },
@@ -803,6 +827,9 @@
   "t0WZaq": {
     "message": "The channel where the game is played. By default member will speak as a character."
   },
+  "t44Zkc": {
+    "message": "Copy Source"
+  },
   "t5xj3B": {
     "message": "New Space"
   },
@@ -814,9 +841,6 @@
   },
   "uhu5aG": {
     "message": "公開"
-  },
-  "uk/RDu": {
-    "message": "Unexpected error when displaying chat content"
   },
   "ulAzZl": {
     "message": "Failed to query the user"
@@ -886,6 +910,9 @@
   },
   "z/ipXX": {
     "message": "おっとっと！"
+  },
+  "z9LRLa": {
+    "message": "Edited at"
   },
   "zINlao": {
     "message": "所有者"

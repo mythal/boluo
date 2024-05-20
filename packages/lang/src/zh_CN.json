@@ -42,7 +42,7 @@
     "message": "你确认要踢走 {nickname} ({username}) 吗？"
   },
   "0HT+Ib": {
-    "message": "Archived"
+    "message": "已归档"
   },
   "0JXAsk": {
     "message": "离开"
@@ -105,7 +105,7 @@
     "message": "设作默认"
   },
   "64sfSN": {
-    "message": "Nevermind"
+    "message": "罢了"
   },
   "6CVXeu": {
     "message": "查询频道失败"
@@ -138,7 +138,7 @@
     "message": "频道设置"
   },
   "8+j66D": {
-    "message": "Are you sure you want to delete this message?"
+    "message": "确实要删除这条消息？"
   },
   "88cMEG": {
     "message": "摧毁位面"
@@ -162,7 +162,7 @@
     "message": "拆分"
   },
   "AbXVP4": {
-    "message": "Created at"
+    "message": "创建于"
   },
   "AtML1q": {
     "message": "主持人"
@@ -177,7 +177,7 @@
     "message": "尺寸必须小于{mediaMaxSizeMb}M。"
   },
   "Bm9rWe": {
-    "message": "Failed to delete the message"
+    "message": "删除消息失败"
   },
   "Bp3LVS": {
     "message": "找不到位面"
@@ -201,7 +201,7 @@
     "message": "您不是该频道的成员"
   },
   "CtZMCP": {
-    "message": "Secret"
+    "message": "秘密"
   },
   "CuNepY": {
     "message": "创建频道"
@@ -249,7 +249,7 @@
     "message": "菠萝"
   },
   "I5NMJ8": {
-    "message": "More"
+    "message": "更多"
   },
   "I90sbW": {
     "message": "刚刚"
@@ -438,7 +438,7 @@
     "message": "自己"
   },
   "Tuwpkq": {
-    "message": "Add a dice roll"
+    "message": "添加投骰"
   },
   "TwyMau": {
     "message": "账号"
@@ -498,7 +498,7 @@
     "message": "危险操作"
   },
   "XTqS60": {
-    "message": "Please send {errorCode} to the system administrator."
+    "message": "请将 {errorCode} 告诉系统管理员。"
   },
   "Xs60po": {
     "message": "{hours} 小时前"
@@ -588,7 +588,7 @@
     "message": "在线"
   },
   "ceSWhW": {
-    "message": "Show archived messages"
+    "message": "显示已存档的消息"
   },
   "clpFBW": {
     "message": "位面公开性"
@@ -627,7 +627,7 @@
     "message": "加入私人频道需要邀请"
   },
   "f0Sf6g": {
-    "message": "Add a file"
+    "message": "添加文件"
   },
   "fNCCY7": {
     "message": "基本"
@@ -672,7 +672,7 @@
     "message": "频道名"
   },
   "hrgo+E": {
-    "message": "Archive"
+    "message": "归档"
   },
   "iHN12u": {
     "message": "管理员"
@@ -774,7 +774,7 @@
     "message": "断开连接"
   },
   "qnWbsU": {
-    "message": "Failed to archive the message"
+    "message": "归档消息失败"
   },
   "qoUUiA": {
     "message": "允许旁观者"
@@ -828,7 +828,7 @@
     "message": "进行游戏的频道，成员默认以角色身份发言"
   },
   "t44Zkc": {
-    "message": "Copy Source"
+    "message": "复制源文本"
   },
   "t5xj3B": {
     "message": "新位面"
@@ -912,7 +912,7 @@
     "message": "糟糕！"
   },
   "z9LRLa": {
-    "message": "Edited at"
+    "message": "修改于"
   },
   "zINlao": {
     "message": "所有者"

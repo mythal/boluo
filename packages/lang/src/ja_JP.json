@@ -375,13 +375,13 @@
     "message": "マスターにささやき、"
   },
   "QdsAIR": {
-    "message": "Members of \"{spaceName}\" Space"
+    "message": "「{spaceName}」のメンバーについて"
   },
   "QlsDcr": {
     "message": "動作"
   },
   "Qm+Ijg": {
-    "message": "The email address is not registered."
+    "message": "このメールアドレスは登録されていません"
   },
   "R59CS8": {
     "message": "アイコンを削除"
@@ -393,7 +393,7 @@
     "message": "名前なし"
   },
   "Ryulue": {
-    "message": "Failed to query the space"
+    "message": "スペースの読み込みが失敗しました"
   },
   "SBkvpf": {
     "message": "ニックネーム"
@@ -402,7 +402,7 @@
     "message": "ヘルプ"
   },
   "SEg47O": {
-    "message": "Are you sure you want to exile this member?"
+    "message": "このメンバーを削除してもよろしいですか？"
   },
   "SHMAcP": {
     "message": "Please check your network connection and try again."

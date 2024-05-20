@@ -41,6 +41,9 @@
   "0EJGBZ": {
     "message": "{nickname} ({username})をキックしてもよろしいですか？"
   },
+  "0HT+Ib": {
+    "message": "Archived"
+  },
   "0JXAsk": {
     "message": "不在"
   },
@@ -101,6 +104,9 @@
   "60KMrS": {
     "message": "デフォルトとして"
   },
+  "64sfSN": {
+    "message": "Nevermind"
+  },
   "6CVXeu": {
     "message": "チャンネルの照会に失敗しました"
   },
@@ -131,6 +137,9 @@
   "7q87xo": {
     "message": "チャンネル設定"
   },
+  "8+j66D": {
+    "message": "Are you sure you want to delete this message?"
+  },
   "88cMEG": {
     "message": "次元を破壊する"
   },
@@ -146,14 +155,14 @@
   "9WRlF4": {
     "message": "送信"
   },
-  "9kvEKC": {
-    "message": "サイコロを追加"
-  },
   "9to/Le": {
     "message": "アバターの変更"
   },
   "AVI/0j": {
     "message": "分割"
+  },
+  "AbXVP4": {
+    "message": "Created at"
   },
   "AtML1q": {
     "message": "マスター"
@@ -166,6 +175,9 @@
   },
   "Bc5LE6": {
     "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
+  },
+  "Bm9rWe": {
+    "message": "Failed to delete the message"
   },
   "Bp3LVS": {
     "message": "次元は見つかりません"
@@ -187,6 +199,9 @@
   },
   "CoTP+E": {
     "message": "あなたはこのチャンネルのメンバーではありません"
+  },
+  "CtZMCP": {
+    "message": "Secret"
   },
   "CuNepY": {
     "message": "チャネルを作成"
@@ -218,9 +233,6 @@
   "GbWVAh": {
     "message": "キックする"
   },
-  "H6JcM0": {
-    "message": "このメッセージを削除してもよろしいですか:"
-  },
   "HH8O0c": {
     "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
@@ -235,6 +247,9 @@
   },
   "HpyhN3": {
     "message": "パイン"
+  },
+  "I5NMJ8": {
+    "message": "More"
   },
   "I90sbW": {
     "message": "ただ今"
@@ -253,9 +268,6 @@
   },
   "IW0/M8": {
     "message": "自動選択"
-  },
-  "Iueqgt": {
-    "message": "メッセージの削除に失敗しました ({ errorCode })"
   },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
@@ -295,9 +307,6 @@
   },
   "LUrJwE": {
     "message": "チャンネル"
-  },
-  "LX5+L+": {
-    "message": "アーカイブを表示"
   },
   "MWO2zy": {
     "message": "何か問題が起きています."
@@ -340,9 +349,6 @@
   },
   "OYT4m/": {
     "message": "メッセージは空にできません"
-  },
-  "OhIqLr": {
-    "message": "編集済み"
   },
   "P57vjw": {
     "message": "チャンネル名は32文字以内で入力してください。"
@@ -431,6 +437,9 @@
   "TdbPNK": {
     "message": "自分"
   },
+  "Tuwpkq": {
+    "message": "Add a dice roll"
+  },
   "TwyMau": {
     "message": "アカウント"
   },
@@ -487,6 +496,9 @@
   },
   "X5rIjZ": {
     "message": "危険な操作"
+  },
+  "XTqS60": {
+    "message": "Please send {errorCode} to the system administrator."
   },
   "Xs60po": {
     "message": "{hours} 時間前"
@@ -575,6 +587,9 @@
   "ccU6l/": {
     "message": "オンライン"
   },
+  "ceSWhW": {
+    "message": "Show archived messages"
+  },
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
@@ -610,6 +625,9 @@
   },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
+  },
+  "f0Sf6g": {
+    "message": "Add a file"
   },
   "fNCCY7": {
     "message": "ベーシック"
@@ -652,6 +670,9 @@
   },
   "hh0xW7": {
     "message": "チャンネル名"
+  },
+  "hrgo+E": {
+    "message": "Archive"
   },
   "iHN12u": {
     "message": "管理者"
@@ -752,6 +773,9 @@
   "qj1uhz": {
     "message": "切断"
   },
+  "qnWbsU": {
+    "message": "Failed to archive the message"
+  },
   "qoUUiA": {
     "message": "観覧を許可"
   },
@@ -803,6 +827,9 @@
   "t0WZaq": {
     "message": "The channel where the game is played. By default member will speak as a character."
   },
+  "t44Zkc": {
+    "message": "Copy Source"
+  },
   "t5xj3B": {
     "message": "New Space"
   },
@@ -814,9 +841,6 @@
   },
   "uhu5aG": {
     "message": "公開"
-  },
-  "uk/RDu": {
-    "message": "Unexpected error when displaying chat content"
   },
   "ulAzZl": {
     "message": "Failed to query the user"
@@ -886,6 +910,9 @@
   },
   "z/ipXX": {
     "message": "おっとっと！"
+  },
+  "z9LRLa": {
+    "message": "Edited at"
   },
   "zINlao": {
     "message": "所有者"

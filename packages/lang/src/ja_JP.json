@@ -42,7 +42,7 @@
     "message": "{nickname} ({username})をキックしてもよろしいですか？"
   },
   "0HT+Ib": {
-    "message": "Archived"
+    "message": "アーカイブ済"
   },
   "0JXAsk": {
     "message": "不在"
@@ -105,7 +105,7 @@
     "message": "デフォルトとして"
   },
   "64sfSN": {
-    "message": "Nevermind"
+    "message": "やめる"
   },
   "6CVXeu": {
     "message": "チャンネルの照会に失敗しました"
@@ -126,7 +126,7 @@
     "message": "接続中"
   },
   "72vKlS": {
-    "message": "スペースの読み込みに失敗しました"
+    "message": "次元の読み込みに失敗しました"
   },
   "7G8Ojg": {
     "message": "メッセージを送信できません"
@@ -138,7 +138,7 @@
     "message": "チャンネル設定"
   },
   "8+j66D": {
-    "message": "Are you sure you want to delete this message?"
+    "message": "このメッセージを削除しますか？"
   },
   "88cMEG": {
     "message": "次元を破壊する"
@@ -162,7 +162,7 @@
     "message": "分割"
   },
   "AbXVP4": {
-    "message": "Created at"
+    "message": "作成"
   },
   "AtML1q": {
     "message": "マスター"
@@ -177,7 +177,7 @@
     "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
   },
   "Bm9rWe": {
-    "message": "Failed to delete the message"
+    "message": "メッセージの削除に失敗しました"
   },
   "Bp3LVS": {
     "message": "次元は見つかりません"
@@ -201,7 +201,7 @@
     "message": "あなたはこのチャンネルのメンバーではありません"
   },
   "CtZMCP": {
-    "message": "Secret"
+    "message": "秘密"
   },
   "CuNepY": {
     "message": "チャネルを作成"
@@ -249,7 +249,7 @@
     "message": "パイン"
   },
   "I5NMJ8": {
-    "message": "More"
+    "message": "さらに表示"
   },
   "I90sbW": {
     "message": "ただ今"
@@ -426,10 +426,10 @@
     "message": "{count} 名"
   },
   "TAyWna": {
-    "message": "You have been invited to the space"
+    "message": "あなたは次元に招待されています"
   },
   "TDaF6J": {
-    "message": "Dismiss"
+    "message": "消去"
   },
   "TThIOM": {
     "message": "見つかりません"
@@ -438,7 +438,7 @@
     "message": "自分"
   },
   "Tuwpkq": {
-    "message": "Add a dice roll"
+    "message": "サイコロロールを追加"
   },
   "TwyMau": {
     "message": "アカウント"
@@ -528,7 +528,7 @@
     "message": "{paneName} を閉じる"
   },
   "Yy/yDL": {
-    "message": "Reset password"
+    "message": "パスワードをリセット"
   },
   "ZKBnrB": {
     "message": "キャラクター名が必要です"
@@ -549,7 +549,7 @@
     "message": "秘密チャンネル"
   },
   "aTCgvQ": {
-    "message": "Your last input was:"
+    "message": "最後に入力したのは:"
   },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."
@@ -627,16 +627,16 @@
     "message": "プライベートチャンネルに招待する必要があります。"
   },
   "f0Sf6g": {
-    "message": "Add a file"
+    "message": "ファイルを追加"
   },
   "fNCCY7": {
     "message": "ベーシック"
   },
   "fTHhSB": {
-    "message": "New password"
+    "message": "新パスワード"
   },
   "fc2iho": {
-    "message": "Add File"
+    "message": "ファイルを追加"
   },
   "fnihsY": {
     "message": "退出する"
@@ -645,7 +645,7 @@
     "message": "次元の切り替え"
   },
   "ftsMiH": {
-    "message": "Toggle In Game"
+    "message": "ゲーム内の切り替え"
   },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."

@@ -444,22 +444,22 @@
     "message": "アカウント"
   },
   "UIVqKu": {
-    "message": "Recover"
+    "message": "リカバリー"
   },
   "UdtpV7": {
     "message": "トピック"
   },
   "UhsO+i": {
-    "message": "Message not found"
+    "message": "メッセージが見つかりません"
   },
   "Ujs8Kg": {
     "message": "サーバーからのメッセージ"
   },
   "UyfeTd": {
-    "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
+    "message": "これは最新バージョンのBoluo、現在も開発中です。旧バージョンはこちらです。"
   },
   "V/JHlm": {
-    "message": "Forgot password?"
+    "message": "パスワードを忘れましたか?"
   },
   "VA/Z1S": {
     "message": "非表示"
@@ -480,7 +480,7 @@
     "message": "このメンバーをキックする"
   },
   "WJSlkx": {
-    "message": "New message from {name}"
+    "message": "{name} からの新しいメッセージ"
   },
   "Wa3nyB": {
     "message": "「{channelName}」チャンネルの設定"
@@ -489,7 +489,7 @@
     "message": "Are you sure to leave the \"{spaceName}\" space?"
   },
   "WwpJ5A": {
-    "message": "Send Password Reset Email"
+    "message": "パスワードリセット用メールを送信する"
   },
   "X2YA3V": {
     "message": "The data submitted did not pass validation."
@@ -672,7 +672,7 @@
     "message": "チャンネル名"
   },
   "hrgo+E": {
-    "message": "Archive"
+    "message": "アーカイブ"
   },
   "iHN12u": {
     "message": "管理者"
@@ -702,7 +702,7 @@
     "message": "ゲームマスター"
   },
   "kGQJcD": {
-    "message": "Reorder"
+    "message": "並べ替え"
   },
   "kIUNDX": {
     "message": "デフォルトのサイコロ"
@@ -741,7 +741,7 @@
     "message": "Limit exceeded."
   },
   "nKu0Ba": {
-    "message": "Must be logged in."
+    "message": "ログインしてください。"
   },
   "nmSKJK": {
     "message": "入力必須です。"
@@ -786,7 +786,7 @@
     "message": "Error while sending a message, did you recover the message?"
   },
   "r2rV1X": {
-    "message": "Out-Of-Character"
+    "message": "キャラクター外"
   },
   "rK7cTy": {
     "message": "最初のチャネル名"

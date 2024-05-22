@@ -519,7 +519,7 @@
     "message": "Are you sure you want to leave {channelName}?"
   },
   "YQwJw3": {
-    "message": "Default Roll Command"
+    "message": "デフォルトロールコマンド"
   },
   "Yf3xiD": {
     "message": "{days} 日前"
@@ -534,7 +534,7 @@
     "message": "キャラクター名が必要です"
   },
   "ZMoczs": {
-    "message": "Spaces"
+    "message": "スペース"
   },
   "ZgsEsn": {
     "message": "権限がありません"
@@ -600,7 +600,7 @@
     "message": "分割ペイン"
   },
   "dVoumD": {
-    "message": "My Character Name in the Channel (Optional)"
+    "message": "チャンネル内の自分のキャラクター名 (オプション)"
   },
   "domxPs": {
     "message": "ささやき"

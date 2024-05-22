@@ -687,7 +687,7 @@
     "message": "You are already a member of this channel."
   },
   "jRANBd": {
-    "message": "Edit message"
+    "message": "メッセージを編集"
   },
   "jvo0vs": {
     "message": "保存"
@@ -822,7 +822,7 @@
     "message": "見つかりません。リソースが削除された可能性があります。"
   },
   "sy+pv5": {
-    "message": "Email"
+    "message": "メール"
   },
   "t0WZaq": {
     "message": "The channel where the game is played. By default member will speak as a character."

@@ -1,10 +1,13 @@
-import { FC, useEffect, useState } from 'react';
+'use client';
+import { FC, startTransition, useEffect, useState } from 'react';
 
 export const LoadingText: FC = () => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
-      setCount((count) => count + 1);
+      startTransition(() => {
+        setCount((count) => count + 1);
+      });
     }, 500);
     return () => clearInterval(interval);
   }, []);

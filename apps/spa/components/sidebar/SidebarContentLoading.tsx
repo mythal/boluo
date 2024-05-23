@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { LoadingText } from '../common/LoadingText';
+import { LoadingText } from '@boluo/ui/LoadingText';
 
 export const SidebarContentLoading: FC = () => {
   return (

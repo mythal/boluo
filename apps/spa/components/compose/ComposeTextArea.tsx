@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { ChangeEventHandler, FC, KeyboardEvent, useEffect, useMemo, useRef, useTransition } from 'react';
+import { ChangeEventHandler, FC, KeyboardEvent, startTransition, useEffect, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { ComposeActionUnion } from '../../state/compose.actions';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
@@ -64,7 +64,6 @@ const style: React.CSSProperties = {
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
   const { composeAtom, parsedAtom } = useChannelAtoms();
-  const [, startTransition] = useTransition();
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);

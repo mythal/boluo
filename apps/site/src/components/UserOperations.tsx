@@ -4,6 +4,7 @@ import { useQueryCurrentUser } from '@boluo/common';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLogout } from '../hooks/useLogout';
+import { LoadingText } from '@boluo/ui/LoadingText';
 
 export const UserOperations = () => {
   const intl = useIntl();
@@ -14,7 +15,12 @@ export const UserOperations = () => {
     alert('Please set the APP_URL environment variable.');
     return null;
   }
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading)
+    return (
+      <div>
+        <LoadingText />
+      </div>
+    );
   if (!currentUser)
     return (
       <div>

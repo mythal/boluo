@@ -3,6 +3,7 @@ import { Loading } from '@boluo/ui/Loading';
 import { Spinner } from '@boluo/ui/Spinner';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
+import { LoadingText } from '@boluo/ui/LoadingText';
 
 interface Props {
   children?: React.ReactNode;
@@ -13,7 +14,7 @@ export const PaneLoading: FC<Props> = ({ children, grow = false }) => {
   const header = useMemo(
     () => (
       <PaneHeaderBox withoutDefaultOperators icon={<Spinner />}>
-        Loading...
+        <LoadingText />
       </PaneHeaderBox>
     ),
     [],

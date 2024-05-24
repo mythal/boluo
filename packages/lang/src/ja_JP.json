@@ -399,7 +399,7 @@
     "message": "名前なし"
   },
   "Ryulue": {
-    "message": "スペースの読み込みが失敗しました"
+    "message": "次元の読み込みが失敗しました"
   },
   "SBkvpf": {
     "message": "ニックネーム"
@@ -408,7 +408,7 @@
     "message": "ヘルプ"
   },
   "SEg47O": {
-    "message": "このメンバーを削除してもよろしいですか？"
+    "message": "このメンバーを追放してもよろしいですか？"
   },
   "SHMAcP": {
     "message": "Please check your network connection and try again."
@@ -510,7 +510,7 @@
     "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
   },
   "Y78Gyb": {
-    "message": "{minutes} minutes ago"
+    "message": "{minutes}分前"
   },
   "YETHtM": {
     "message": "インターフェース"
@@ -519,7 +519,7 @@
     "message": "Are you sure you want to leave {channelName}?"
   },
   "YQwJw3": {
-    "message": "Default Roll Command"
+    "message": "デフォルトロールコマンド"
   },
   "Yf3xiD": {
     "message": "{days} 日前"
@@ -534,7 +534,7 @@
     "message": "キャラクター名が必要です"
   },
   "ZMoczs": {
-    "message": "Spaces"
+    "message": "次元"
   },
   "ZgsEsn": {
     "message": "権限がありません"
@@ -570,7 +570,7 @@
     "message": "Are you sure you want to delete the \"{channelName}\" channel?"
   },
   "beLe/F": {
-    "message": "Broadcast"
+    "message": "ブロードキャスト"
   },
   "c1nBz9": {
     "message": "As the character of …"
@@ -600,7 +600,7 @@
     "message": "分割ペイン"
   },
   "dVoumD": {
-    "message": "My Character Name in the Channel (Optional)"
+    "message": "チャンネル内の自分のキャラクター名 (オプション)"
   },
   "domxPs": {
     "message": "ささやき"
@@ -618,7 +618,7 @@
     "message": "Whisper to …"
   },
   "eLCAEP": {
-    "message": "Attachment"
+    "message": "添付ファイル"
   },
   "eOqhbq": {
     "message": "Unable to reset your password, invalid reset link."
@@ -687,7 +687,7 @@
     "message": "You are already a member of this channel."
   },
   "jRANBd": {
-    "message": "Edit message"
+    "message": "メッセージを編集"
   },
   "jvo0vs": {
     "message": "保存"
@@ -738,7 +738,7 @@
     "message": "切り替え"
   },
   "n9f3pm": {
-    "message": "Limit exceeded."
+    "message": "制限を超過しました。"
   },
   "nKu0Ba": {
     "message": "ログインしてください。"
@@ -756,7 +756,7 @@
     "message": "Shuffle Random Color"
   },
   "pBQ5bd": {
-    "message": "Editing"
+    "message": "編集中"
   },
   "pm/HIR": {
     "message": "Channel name is required."
@@ -822,7 +822,7 @@
     "message": "見つかりません。リソースが削除された可能性があります。"
   },
   "sy+pv5": {
-    "message": "Email"
+    "message": "メール"
   },
   "t0WZaq": {
     "message": "The channel where the game is played. By default member will speak as a character."
@@ -894,7 +894,7 @@
     "message": "This channel name is already taken."
   },
   "xl27nc": {
-    "message": "Reset Password"
+    "message": "パスワードをリセット"
   },
   "xmcVZ0": {
     "message": "検索"

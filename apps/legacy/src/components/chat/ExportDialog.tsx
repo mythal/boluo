@@ -41,9 +41,9 @@ function ExportDialog({ dismiss, channel }: Props) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const [loading, setLoading] = useState(false);
   const [format, setFormat] = useState<Option>(options[0]);
-  const [afterDays, setAfterDays] = useState<DaysOption>(daysOptions[0]);
+  const [afterDays, setAfterDays] = useState<DaysOption>(daysOptions[3]);
   const [filterOutGame, setFilterOutGame] = useState(false);
-  const [filterFolded, setFilterFolded] = useState(false);
+  const [filterFolded, setFilterFolded] = useState(true);
   const [simple, setSimple] = useState(false);
   const [headerAfterWrap, setHeaderAfterWrap] = useState(false);
   const dispatch = useDispatch();
@@ -148,7 +148,7 @@ function ExportDialog({ dismiss, channel }: Props) {
       {format.value === 'BBCODE' && (
         <Label>
           <input checked={headerAfterWrap} onChange={(e) => setHeaderAfterWrap(e.target.checked)} type="checkbox" />{' '}
-          换行后加上消息头
+          单条消息内的换行后加上名字等前缀
         </Label>
       )}
       <a hidden href="#" ref={linkRef} download={filename} />

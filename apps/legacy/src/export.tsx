@@ -76,12 +76,17 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
           } else if (entity.type === 'Link') {
             return {
               type: 'ExportLink',
-              text: text.substr(entity.start, entity.len),
+              text: text.substr(entity.child.start, entity.child.len),
               href: typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len),
               start: entity.start,
               len: entity.len,
             };
-          } else if (entity.type === 'Emphasis' || entity.type === 'Strong') {
+          } else if (
+            entity.type === 'Emphasis' ||
+            entity.type === 'Strong' ||
+            entity.type === 'Code' ||
+            entity.type === 'CodeBlock'
+          ) {
             return { ...entity, text: text.substring(entity.child.start, entity.child.start + entity.child.len) };
           } else {
             return { ...entity, text: text.substr(entity.start, entity.len) };
@@ -146,6 +151,7 @@ function entityBbCode(entity: ExportEntity, color: string): string {
     case 'Emphasis':
       return `[i]${entity.text}[/i]`;
     case 'ExportLink':
+      console.log(entity);
       return `[url=${entity.href}]${entity.text}[/url]`;
     case 'Strong':
       return `[b]${entity.text}[/b]`;
@@ -255,17 +261,32 @@ export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean, heade
       }
     }
     const lines: string[] = [];
+    let currentLine = '';
     for (const entity of message.entities) {
       const fragment = entityBbCode(entity, message.sender.color);
       if (!headerAfterWrap) {
-        lines.push(fragment);
+        currentLine += fragment;
       } else if (entity.type === 'Text') {
-        lines.push(...fragment.split('\n'));
+        const fragments = fragment.split('\n');
+        if (fragments.length === 0) {
+          continue;
+        } else if (fragments.length === 1) {
+          currentLine += fragment;
+        } else if (fragments.length === 2) {
+          lines.push(currentLine + fragments[0]);
+          currentLine = fragments[1];
+        } else if (fragments.length > 2) {
+          lines.push(currentLine + fragments[0]);
+          for (let i = 1; i < fragments.length - 1; i++) {
+            lines.push(fragments[i]);
+          }
+          currentLine = fragments[fragments.length - 1];
+        }
       } else {
-        lines.push(fragment);
+        currentLine += fragment;
       }
     }
-    console.log(lines);
+    lines.push(currentLine);
     let entry =
       lines
         .map((line) => {

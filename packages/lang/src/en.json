@@ -53,6 +53,9 @@
   "0ah2ud": {
     "message": "Space"
   },
+  "0eanrB": {
+    "message": "Include archived messages"
+  },
   "0pT/2d": {
     "message": "No Character Name"
   },
@@ -88,6 +91,9 @@
   },
   "4l6vz1": {
     "message": "Copy"
+  },
+  "4udfbj": {
+    "message": "Export Channel"
   },
   "5HUwAy": {
     "message": "Only letters, numbers, and underscores are allowed."
@@ -145,6 +151,9 @@
   },
   "973Dls": {
     "message": "Only invited people can join this space"
+  },
+  "98c0D6": {
+    "message": "Include out-of-game messages"
   },
   "9NDg1Z": {
     "message": "(Whisper)"
@@ -296,6 +305,9 @@
   "K8uxGU": {
     "message": "The password reset email has been sent."
   },
+  "KIAp17": {
+    "message": "Without rich-text informations"
+  },
   "KhLK4z": {
     "message": "You do not have permission to view this space."
   },
@@ -413,6 +425,12 @@
   "SHMAcP": {
     "message": "Please check your network connection and try again."
   },
+  "SVwJTM": {
+    "message": "Export"
+  },
+  "ScDFqs": {
+    "message": "Add a header after a line break in the message"
+  },
   "Sf+ebw": {
     "message": "Close pane"
   },
@@ -466,6 +484,9 @@
   },
   "VeLEVu": {
     "message": "Character Name:"
+  },
+  "Vl357u": {
+    "message": "Time Range"
   },
   "VlTrY6": {
     "message": "Failed to query members of the channel"
@@ -523,6 +544,9 @@
   },
   "Yf3xiD": {
     "message": "{days} days ago"
+  },
+  "Yq91Dy": {
+    "message": "Export \"{channelName}\""
   },
   "YtexzU": {
     "message": "Close {paneName}"
@@ -797,6 +821,9 @@
   "rYtHKT": {
     "message": "Follow System"
   },
+  "rZgHVT": {
+    "message": "Failed to export the channel"
+  },
   "rbrahO": {
     "message": "Close"
   },
@@ -919,6 +946,9 @@
   },
   "zNnjeF": {
     "message": "Are you sure you want to delete {spaceName}?"
+  },
+  "zQLEfz": {
+    "message": "Format"
   },
   "zQvVDJ": {
     "message": "All"

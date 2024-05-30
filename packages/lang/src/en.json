@@ -86,6 +86,9 @@
   "47FYwb": {
     "message": "Cancel"
   },
+  "4FbTT8": {
+    "message": "Is Master"
+  },
   "4KGRux": {
     "message": "Turn on notification"
   },
@@ -242,6 +245,9 @@
   "GbWVAh": {
     "message": "Yes, Kick"
   },
+  "HAlOn1": {
+    "message": "Name"
+  },
   "HH8O0c": {
     "message": "Request failed, possible network anomaly."
   },
@@ -293,6 +299,9 @@
   "JQt0RP": {
     "message": "Pull to Load"
   },
+  "Jq3FDz": {
+    "message": "Content"
+  },
   "Jxxkva": {
     "message": "You can change default message color in the Settings."
   },
@@ -319,6 +328,9 @@
   },
   "LUrJwE": {
     "message": "Channels"
+  },
+  "LXxsbk": {
+    "message": "Anonymous"
   },
   "MWO2zy": {
     "message": "Something going wrong."
@@ -377,6 +389,9 @@
   "Pe0ogR": {
     "message": "Theme"
   },
+  "PiX/VH": {
+    "message": "Split the message into multiple ones at line breaks"
+  },
   "PwaN2o": {
     "message": "Welcome"
   },
@@ -427,9 +442,6 @@
   },
   "SVwJTM": {
     "message": "Export"
-  },
-  "ScDFqs": {
-    "message": "Add a header after a line break in the message"
   },
   "Sf+ebw": {
     "message": "Close pane"
@@ -518,6 +530,9 @@
   "X5rIjZ": {
     "message": "Danger Zone"
   },
+  "XOi37d": {
+    "message": "Plain Text"
+  },
   "XTqS60": {
     "message": "Please send {errorCode} to the system administrator."
   },
@@ -568,6 +583,9 @@
   },
   "a+BhVZ": {
     "message": "Regenerated"
+  },
+  "a5msuh": {
+    "message": "Yes"
   },
   "aLncO3": {
     "message": "Secret Channel"
@@ -625,6 +643,9 @@
   },
   "dVoumD": {
     "message": "My Character Name in the Channel (Optional)"
+  },
+  "dlu6r1": {
+    "message": "Spreadsheet"
   },
   "domxPs": {
     "message": "Whisper"
@@ -698,6 +719,9 @@
   "hrgo+E": {
     "message": "Archive"
   },
+  "iDRoI+": {
+    "message": "Left Member"
+  },
   "iHN12u": {
     "message": "Admin"
   },
@@ -770,6 +794,9 @@
   "nmSKJK": {
     "message": "Can't be empty."
   },
+  "oUWADl": {
+    "message": "No"
+  },
   "oVARYX": {
     "message": "Must be at most {max} characters."
   },
@@ -782,6 +809,9 @@
   "pBQ5bd": {
     "message": "Editing"
   },
+  "pJ78jg": {
+    "message": "OOC"
+  },
   "pm/HIR": {
     "message": "Channel name is required."
   },
@@ -790,6 +820,9 @@
   },
   "qGHWyb": {
     "message": "{count} filtered messages"
+  },
+  "qQ4pEa": {
+    "message": "Whisper to {targets}"
   },
   "qbB8pg": {
     "message": "Space Description"
@@ -865,6 +898,9 @@
   },
   "tYDBKv": {
     "message": "Failed to move message ({errorCode})"
+  },
+  "ug01Mk": {
+    "message": "Time"
   },
   "uhu5aG": {
     "message": "Public"

@@ -1,6 +1,6 @@
 import { Message } from '@boluo/api';
 import { FC, useContext } from 'react';
-import { generateDetailDate, pad } from '../../date';
+import { generateDetailDate, pad2 } from '../../date';
 import { useSetAtom } from 'jotai';
 import { DisplayContext as ToolbarDisplayContext } from './MessageToolbar';
 
@@ -24,7 +24,7 @@ export const MessageTime: FC<Props> = ({ message }) => {
         setToolbarDisplay({ type: 'MORE' });
       }}
     >
-      {pad(date.getHours())}:{pad(date.getMinutes())}
+      {pad2(date.getHours())}:{pad2(date.getMinutes())}
     </time>
   );
 };

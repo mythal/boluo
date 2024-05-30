@@ -67,7 +67,7 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
           <ChannelSettingsButton channelId={channelId} />
         </div>
       )}
-      {member?.channel.isMaster && (
+      {member?.channel.channelId === channelId && (
         <div className="flex-none">
           <ChannelExportButton channelId={channelId} />
         </div>

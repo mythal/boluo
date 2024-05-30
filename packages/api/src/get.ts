@@ -1,4 +1,4 @@
-import type { Channel, ChannelMembers, ChannelWithMaybeMember } from './types/channels';
+import type { Channel, ChannelMemberWithUser, ChannelMembers, ChannelWithMaybeMember, Export } from './types/channels';
 import type { GetMessagesByChannel, Message } from './types/messages';
 import type {
   Space,
@@ -31,7 +31,9 @@ export interface Get {
   '/channels/query': { query: { id: string }; result: Channel };
   '/channels/by_space': { query: { id: string }; result: ChannelWithMaybeMember[] };
   '/channels/members': { query: { id: string }; result: ChannelMembers };
+  '/channels/all_members': { query: { id: string }; result: ChannelMemberWithUser[] };
   '/channels/check_name': { query: { name: string; spaceId: string }; result: boolean };
+  '/channels/export': { query: Export; result: Message[] };
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
   '/messages/query': { query: { id: string }; result: Message | null };

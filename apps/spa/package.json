@@ -24,6 +24,7 @@
     "@floating-ui/react": "^0.26.13",
     "@sentry/react": "^8.0.0",
     "clsx": "^2.1.0",
+    "color2k": "^2.0.3",
     "jotai": "^2.8.0",
     "jotai-devtools": "^0.9.1",
     "jotai-location": "^0.5.5",

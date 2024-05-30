@@ -1,7 +1,7 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { Failed } from '../common/Failed';
-import { FC, ReactNode, useId, useState } from 'react';
+import { FC, ReactNode, useId, useRef, useState } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneBox } from '../PaneBox';
 import { Channel } from '@boluo/api';
@@ -12,9 +12,9 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';
-import { sleep } from '@boluo/utils';
 import * as Sentry from '@sentry/browser';
 import { PaneFooterBox } from '../PaneFooterBox';
+import { ExportOptions, exportChannel } from './export';
 
 export interface ExportSchema {
   format: string;
@@ -22,16 +22,7 @@ export interface ExportSchema {
   includeOutGame: boolean;
   includeArchived: boolean;
   simple: boolean;
-  headerAfterLineBreak: boolean;
-}
-
-export interface ExportOptions {
-  format: 'txt' | 'csv' | 'json';
-  range: '30d' | '7d' | '1d' | 'all';
-  includeOutGame: boolean;
-  includeArchived: boolean;
-  simple: boolean;
-  headerAfterLineBreak: boolean;
+  splitByLineBreak: boolean;
 }
 
 const defaultValues = {
@@ -40,7 +31,7 @@ const defaultValues = {
   includeOutGame: true,
   includeArchived: false,
   simple: false,
-  headerAfterLineBreak: false,
+  splitByLineBreak: false,
 } satisfies ExportSchema;
 
 const parseExportOptions = (schema: ExportSchema): ExportOptions => {
@@ -49,6 +40,7 @@ const parseExportOptions = (schema: ExportSchema): ExportOptions => {
   switch (schema.format) {
     case 'txt':
     case 'csv':
+    case 'bbcode':
     case 'json':
       format = schema.format;
       break;
@@ -64,26 +56,33 @@ const parseExportOptions = (schema: ExportSchema): ExportOptions => {
   return { ...schema, format, range };
 };
 
-export const exportChannel = async (channel: Channel, options: ExportOptions) => {
-  await sleep(1000);
-  throw new Error('Not implemented');
-  return [];
-};
-
 const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
+  const intl = useIntl();
   const id = useId();
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const [error, setError] = useState<unknown>(null);
   const {
     register,
     handleSubmit,
+    watch,
     formState: { isSubmitting, isSubmitSuccessful },
   } = useForm<ExportSchema>({ defaultValues });
+  const format = watch('format');
   const onSubmit = async (options: ExportSchema) => {
     if (isSubmitting) return;
     setError(null);
     const exportOptions = parseExportOptions(options);
     try {
-      await exportChannel(channel, exportOptions);
+      const { blob, filename } = await exportChannel(intl, channel, exportOptions);
+      const url = URL.createObjectURL(blob);
+      const link = linkRef.current;
+      if (!link) {
+        throw new Error('link element is not found');
+      }
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       setError(error);
       Sentry.captureException(error, { extra: { channel, options } });
@@ -98,6 +97,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <a hidden ref={linkRef} />
       <div className="p-pane mx-auto grid max-w-screen-sm grid-cols-[auto_1fr] items-baseline gap-2">
         {error != null && (
           <div className="bg-failed-banner-bg col-span-full rounded-sm px-4 py-2">
@@ -108,8 +108,13 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           <FormattedMessage defaultMessage="Format" />
         </label>
         <Select id={id + 'format'} {...register('format')}>
-          <option value="txt">Plain Text</option>
-          <option value="csv">CSV</option>
+          <option value="txt">
+            <FormattedMessage defaultMessage="Plain Text" />
+          </option>
+          <option value="bbcode">BBCode</option>
+          <option value="csv">
+            <FormattedMessage defaultMessage="Spreadsheet" /> (CSV)
+          </option>
           <option value="json">JSON</option>
         </Select>
         <label htmlFor={id + 'range'} className="select-none justify-self-end">
@@ -129,13 +134,23 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
         <label htmlFor={id + 'out-game'} className="select-none">
           <FormattedMessage defaultMessage="Include out-of-game messages" />
         </label>
-        <input id={id + 'simple'} type="checkbox" className="justify-self-end" {...register('simple')} />
+        <input
+          id={id + 'simple'}
+          type="checkbox"
+          className="justify-self-end"
+          {...register('simple', { disabled: format !== 'txt' && format !== 'bbcode' })}
+        />
         <label htmlFor={id + 'simple'} className="select-none">
           <FormattedMessage defaultMessage="Without rich-text informations" />
         </label>
-        <input id={id + 'header'} type="checkbox" className="justify-self-end" {...register('headerAfterLineBreak')} />
-        <label htmlFor={id + 'header'} className="select-none">
-          <FormattedMessage defaultMessage="Add a header after a line break in the message" />
+        <input
+          id={id + 'split'}
+          type="checkbox"
+          className="justify-self-end"
+          {...register('splitByLineBreak', { disabled: format !== 'txt' && format !== 'bbcode' })}
+        />
+        <label htmlFor={id + 'split'} className="select-none">
+          <FormattedMessage defaultMessage="Split the message into multiple ones at line breaks" />
         </label>
       </div>
       <PaneFooterBox>

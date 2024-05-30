@@ -37,7 +37,7 @@ const SpaceName = styled.h2(textXl, p(0), m(0), fontNormal);
 
 function truncate(description: string): string {
   const length = 32;
-  const firstLine = description.split('\n', 1)[0];
+  const firstLine = description.split(/\r?\n/, 1)[0];
   if (firstLine.length > length) {
     return firstLine.substr(0, length) + '…';
   }

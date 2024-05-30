@@ -53,6 +53,9 @@
   "0ah2ud": {
     "message": "位面"
   },
+  "0eanrB": {
+    "message": "Include archived messages"
+  },
   "0pT/2d": {
     "message": "无角色名"
   },
@@ -83,11 +86,17 @@
   "47FYwb": {
     "message": "取消"
   },
+  "4FbTT8": {
+    "message": "Is Master"
+  },
   "4KGRux": {
     "message": "启用通知"
   },
   "4l6vz1": {
     "message": "复制"
+  },
+  "4udfbj": {
+    "message": "Export Channel"
   },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
@@ -145,6 +154,9 @@
   },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
+  },
+  "98c0D6": {
+    "message": "Include out-of-game messages"
   },
   "9NDg1Z": {
     "message": "(悄悄话)"
@@ -233,6 +245,9 @@
   "GbWVAh": {
     "message": "是的，踢走"
   },
+  "HAlOn1": {
+    "message": "Name"
+  },
   "HH8O0c": {
     "message": "请求失败，可能是网络异常。"
   },
@@ -284,6 +299,9 @@
   "JQt0RP": {
     "message": "下拉刷新"
   },
+  "Jq3FDz": {
+    "message": "Content"
+  },
   "Jxxkva": {
     "message": "可以在设置中更改默认消息颜色。"
   },
@@ -296,6 +314,9 @@
   "K8uxGU": {
     "message": "密码重置邮件已发送。"
   },
+  "KIAp17": {
+    "message": "Without rich-text informations"
+  },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
   },
@@ -307,6 +328,9 @@
   },
   "LUrJwE": {
     "message": "频道"
+  },
+  "LXxsbk": {
+    "message": "Anonymous"
   },
   "MWO2zy": {
     "message": "出了点问题。"
@@ -365,6 +389,9 @@
   "Pe0ogR": {
     "message": "主题"
   },
+  "PiX/VH": {
+    "message": "Split the message into multiple ones at line breaks"
+  },
   "PwaN2o": {
     "message": "欢迎"
   },
@@ -412,6 +439,9 @@
   },
   "SHMAcP": {
     "message": "请检查你的网络连接并重试。"
+  },
+  "SVwJTM": {
+    "message": "Export"
   },
   "Sf+ebw": {
     "message": "关闭窗格"
@@ -467,6 +497,9 @@
   "VeLEVu": {
     "message": "角色名："
   },
+  "Vl357u": {
+    "message": "Time Range"
+  },
   "VlTrY6": {
     "message": "查询频道成员失败"
   },
@@ -497,6 +530,9 @@
   "X5rIjZ": {
     "message": "危险操作"
   },
+  "XOi37d": {
+    "message": "Plain Text"
+  },
   "XTqS60": {
     "message": "请将 {errorCode} 告诉系统管理员。"
   },
@@ -524,6 +560,9 @@
   "Yf3xiD": {
     "message": "{days} 天前"
   },
+  "Yq91Dy": {
+    "message": "Export \"{channelName}\""
+  },
   "YtexzU": {
     "message": "关闭 {paneName}"
   },
@@ -544,6 +583,9 @@
   },
   "a+BhVZ": {
     "message": "重新生成"
+  },
+  "a5msuh": {
+    "message": "Yes"
   },
   "aLncO3": {
     "message": "秘密频道"
@@ -601,6 +643,9 @@
   },
   "dVoumD": {
     "message": "我在频道中的角色名（可选）"
+  },
+  "dlu6r1": {
+    "message": "Spreadsheet"
   },
   "domxPs": {
     "message": "悄悄话"
@@ -674,6 +719,9 @@
   "hrgo+E": {
     "message": "归档"
   },
+  "iDRoI+": {
+    "message": "Left Member"
+  },
   "iHN12u": {
     "message": "管理员"
   },
@@ -746,6 +794,9 @@
   "nmSKJK": {
     "message": "不能为空。"
   },
+  "oUWADl": {
+    "message": "No"
+  },
   "oVARYX": {
     "message": "至多 {max} 个字符。"
   },
@@ -758,6 +809,9 @@
   "pBQ5bd": {
     "message": "编辑中"
   },
+  "pJ78jg": {
+    "message": "OOC"
+  },
   "pm/HIR": {
     "message": "必须填写频道名。"
   },
@@ -766,6 +820,9 @@
   },
   "qGHWyb": {
     "message": "{count}条消息已过滤"
+  },
+  "qQ4pEa": {
+    "message": "Whisper to {targets}"
   },
   "qbB8pg": {
     "message": "位面描述"
@@ -796,6 +853,9 @@
   },
   "rYtHKT": {
     "message": "依照系统设定"
+  },
+  "rZgHVT": {
+    "message": "Failed to export the channel"
   },
   "rbrahO": {
     "message": "关闭"
@@ -838,6 +898,9 @@
   },
   "tYDBKv": {
     "message": "移动消息失败 ({errorCode})"
+  },
+  "ug01Mk": {
+    "message": "Time"
   },
   "uhu5aG": {
     "message": "公开"
@@ -919,6 +982,9 @@
   },
   "zNnjeF": {
     "message": "确定要删除「{spaceName}」吗？"
+  },
+  "zQLEfz": {
+    "message": "Format"
   },
   "zQvVDJ": {
     "message": "所有"

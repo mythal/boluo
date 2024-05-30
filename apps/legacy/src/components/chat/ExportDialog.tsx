@@ -148,7 +148,7 @@ function ExportDialog({ dismiss, channel }: Props) {
       {format.value === 'BBCODE' && (
         <Label>
           <input checked={headerAfterWrap} onChange={(e) => setHeaderAfterWrap(e.target.checked)} type="checkbox" />{' '}
-          单条消息内的换行后加上名字等前缀
+          在换行处拆分成多条
         </Label>
       )}
       <a hidden href="#" ref={linkRef} download={filename} />

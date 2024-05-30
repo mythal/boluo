@@ -13,3 +13,4 @@ export { selectRandom, shuffle } from './random';
 export { Err, expect, Ok, unwrap } from './result';
 export type { Result } from './result';
 export type { ChildrenProps, DataAttr, Empty, StyleProps } from './types';
+export { splitByLine } from './string';

@@ -1,3 +1,4 @@
+import { hsla, toHex } from 'color2k';
 import Prando from 'prando';
 
 // References:
@@ -45,7 +46,7 @@ export function generateColor(seed: string, lightnessDelta = 0.0): string {
   const h = rng.next(0, 365);
   const s = rng.next();
   const l = rng.next(0.5, 0.8) + lightnessDelta;
-  return `hsl(${h}deg ${s * 100}% ${l * 100}%)`;
+  return toHex(hsla(h, s, l, 1)).toUpperCase();
 }
 
 export const PALETTE_PREFIX = 'palette:';
@@ -86,7 +87,7 @@ export const parseGameColor = (color: string): ByTheme<GameColor> => {
 const computeColor = (userId: string, color: GameColor, theme: 'light' | 'dark'): string => {
   switch (color.type) {
     case 'hex':
-      return color.color;
+      return color.color.toUpperCase();
     case 'palette':
       return palette[color.key][theme];
     case 'random':

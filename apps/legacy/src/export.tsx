@@ -151,7 +151,6 @@ function entityBbCode(entity: ExportEntity, color: string): string {
     case 'Emphasis':
       return `[i]${entity.text}[/i]`;
     case 'ExportLink':
-      console.log(entity);
       return `[url=${entity.href}]${entity.text}[/url]`;
     case 'Strong':
       return `[b]${entity.text}[/b]`;
@@ -267,7 +266,7 @@ export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean, heade
       if (!headerAfterWrap) {
         currentLine += fragment;
       } else if (entity.type === 'Text') {
-        const fragments = fragment.split('\n');
+        const fragments = fragment.split(/\r?\n/);
         if (fragments.length === 0) {
           continue;
         } else if (fragments.length === 1) {

@@ -115,6 +115,12 @@ const useDndHandles = (
       resetDragging();
       const targetItem = chatList[targetIndex];
       if (!targetItem) {
+        setBanner({
+          level: 'WARNING',
+          content: (
+            <FormattedMessage defaultMessage="Failed to move the message, the target is lost. Please try again." />
+          ),
+        });
         recordWarn('Lost the target item when drag end');
         return;
       }

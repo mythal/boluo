@@ -77,7 +77,6 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     state = { ...state, fullLoaded };
   }
   if (payload.messages.length === 0) {
-    console.log('Received empty messages list');
     return state;
   }
   const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages].map((message) => [

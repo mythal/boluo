@@ -121,10 +121,18 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           <FormattedMessage defaultMessage="Time Range" />
         </label>
         <Select id={id + 'range'} {...register('range')}>
-          <option value="30d">Last 30 days</option>
-          <option value="7d">Last 7 days</option>
-          <option value="1d">Last 1 day</option>
-          <option value="all">All Time</option>
+          <option value="30d">
+            <FormattedMessage defaultMessage="Last {day} days" values={{ day: 30 }} />
+          </option>
+          <option value="7d">
+            <FormattedMessage defaultMessage="Last {day} days" values={{ day: 7 }} />
+          </option>
+          <option value="1d">
+            <FormattedMessage defaultMessage="Last 1 day" />
+          </option>
+          <option value="all">
+            <FormattedMessage defaultMessage="All" />
+          </option>
         </Select>
         <input id={id + 'archived'} type="checkbox" className="justify-self-end" {...register('includeArchived')} />
         <label className="select-none" htmlFor={id + 'archived'}>

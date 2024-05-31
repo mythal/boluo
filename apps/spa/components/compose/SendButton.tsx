@@ -1,10 +1,13 @@
 import { Edit, PaperPlane } from '@boluo/icons';
 import { type FC } from 'react';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { InComposeButton } from './InComposeButton';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '../common/TooltipBox';
+import { useSettings } from '../../hooks/useSettings';
+import { Kbd } from '@boluo/ui/Kbd';
+import { isApple } from '@boluo/utils';
 
 interface Props {
   isEditing?: boolean;
@@ -14,6 +17,7 @@ interface Props {
 export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
   const intl = useIntl();
 
+  const { enterSend } = useSettings();
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('top-end');
   const composeError = useComposeError();
   const title = isEditing
@@ -25,7 +29,19 @@ export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
         {isEditing ? <Edit /> : <PaperPlane />}
       </InComposeButton>
       <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>
-        {title}
+        <div className="text-base">{title}</div>
+        <div className="pb-1 text-sm">
+          <span>
+            <FormattedMessage defaultMessage="Press" />{' '}
+          </span>
+          {enterSend ? (
+            <Kbd variant="small">↵</Kbd>
+          ) : (
+            <>
+              <Kbd variant="small">{isApple() ? '⌘' : '↵'}</Kbd> + <Kbd variant="small">↵</Kbd>
+            </>
+          )}
+        </div>
       </TooltipBox>
     </div>
   );

@@ -1,6 +1,6 @@
 import type { ApiError, EditSpace, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { Settings } from '@boluo/icons';
 import { FC, useCallback, useState } from 'react';
 import { useId } from 'react';
@@ -24,7 +24,6 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 import { Failed } from '../common/Failed';
-import { useIsChildPane } from '../../hooks/useIsChildPane';
 
 interface Props {
   spaceId: string;
@@ -150,7 +149,6 @@ const PublicityField: FC = () => {
 const FieldDefaultDice: FC = () => {
   const {
     field: { onChange, value },
-    fieldState: { error },
   } = useController<FormSchema, 'defaultDiceType'>({
     name: 'defaultDiceType',
     defaultValue: 'd20',
@@ -183,7 +181,7 @@ const spaceToForm = (space: Space): FormSchema => ({
 
 const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
   const key = ['/spaces/query', space.id] as const;
-  const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(async ([_, spaceId], { arg }) => {
+  const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(async ([_, _spaceId], { arg }) => {
     const result = await post('/spaces/edit', null, arg);
     const space = result.unwrap();
     return space;

@@ -9,7 +9,7 @@ interface Props {
   isExpand: boolean;
 }
 
-export const SettingsToggleButton: FC<Props> = ({ on, isExpand }) => {
+export const SettingsToggleButton: FC<Props> = ({ on }) => {
   const intl = useIntl();
   const togglePane = usePaneToggle();
   const paneName = intl.formatMessage({ defaultMessage: 'Settings' });

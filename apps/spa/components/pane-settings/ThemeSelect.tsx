@@ -1,6 +1,6 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Settings, useQueryCurrentUser, useQueryUser } from '@boluo/common';
+import { Settings, useQueryCurrentUser } from '@boluo/common';
 import { FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';

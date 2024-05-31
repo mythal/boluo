@@ -1,5 +1,5 @@
 import { SpaceMemberWithUser } from '@boluo/api';
-import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common';
 import { Globe, Key, MoonStar } from '@boluo/icons';
 import { FC, ReactNode, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';

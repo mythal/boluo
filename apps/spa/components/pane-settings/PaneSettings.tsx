@@ -12,7 +12,6 @@ import { devMode as devModeAtom } from '../../state/dev.atoms';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { EneterSendField } from './EnterSendField';
-import { ExpandDiceSwitch } from './ExpandDiceSwitch';
 import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
 import { User } from '@boluo/api';
@@ -41,15 +40,6 @@ const ThemeField = () => {
       </label>
       <ThemeSelect id={id} />
     </div>
-  );
-};
-
-const ExpandDiceField = () => {
-  return (
-    <label className="flex select-none items-center justify-between gap-4">
-      <FormattedMessage defaultMessage="Expand dice in the messages" />
-      <ExpandDiceSwitch />
-    </label>
   );
 };
 

@@ -11,14 +11,7 @@ interface Props {
   children?: ReactNode;
 }
 
-export const SidebarItem: FC<Props> = ({
-  onClick,
-  icon,
-  children,
-  active = false,
-  toggle = false,
-  varant = 'default',
-}) => {
+export const SidebarItem: FC<Props> = ({ onClick, icon, children, active = false, toggle = false }) => {
   const extraNode = useMemo(() => {
     if (toggle) {
       return (

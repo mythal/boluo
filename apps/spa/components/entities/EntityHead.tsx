@@ -11,7 +11,7 @@ export const EntityHead: FC<Props> = ({ cursorNode, firstEntityStart }) => {
   if (cursorState == null) {
     return null;
   }
-  const [a, b] = cursorState.range;
+  const [_a, b] = cursorState.range;
   if (b >= firstEntityStart) {
     return null;
   }

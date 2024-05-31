@@ -78,13 +78,7 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
   if (membersData == null || (myMember.isErr && myMember.err === 'LOADING')) {
     return <MemberListLoading />;
   }
-  let canIKick = false;
-  let myId: string | null = null;
-  if (myMember.isOk) {
-    canIKick = myMember.some.channel.isMaster || myMember.some.space.isAdmin;
-    myId = myMember.some.user.id;
-  }
-
+  const canIKick = myMember.isOk ? myMember.some.channel.isMaster || myMember.some.space.isAdmin : false;
   const canInvite = myMember.isOk && (myMember.some.channel.isMaster || myMember.some.space.isAdmin);
 
   return (
@@ -118,7 +112,6 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
           members.map((member) => (
             <MemberListItem
               key={member.user.id}
-              myId={myId}
               channel={channel}
               member={member}
               canIKick={canIKick}

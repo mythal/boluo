@@ -1,12 +1,10 @@
 import { Channel } from '@boluo/api';
 import { PrimitiveAtom, useAtom } from 'jotai';
-import { FC, ReactNode, useCallback } from 'react';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
+import { FC, useCallback } from 'react';
 import { ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderMoreButton } from './ChannelHeaderMenuButton';
 import { ChannelHeaderSplitPaneButton } from './ChannelHeaderSplitPaneButton';
 import { ChannelMembersButton } from './ChannelMembersButton';
-import { MemberJoinButton } from './MemberJoinButton';
 import { usePaneLimit } from '../../hooks/useMaxPane';
 
 interface Props {

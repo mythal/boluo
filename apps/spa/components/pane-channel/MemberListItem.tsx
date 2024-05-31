@@ -2,7 +2,6 @@ import {
   autoUpdate,
   FloatingPortal,
   offset,
-  shift,
   useClick,
   useDismiss,
   useFloating,
@@ -20,14 +19,13 @@ import { MemberStatusBadge } from './MemberStatusBadge';
 
 interface Props {
   member: Member;
-  myId: string | null;
   channel: Channel;
   canIKick: boolean;
   canIEditMaster: boolean;
   status: UserStatus | undefined;
 }
 
-export const MemberListItem: FC<Props> = ({ member, canIKick, myId, status, channel, canIEditMaster }) => {
+export const MemberListItem: FC<Props> = ({ member, canIKick, status, channel, canIEditMaster }) => {
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,

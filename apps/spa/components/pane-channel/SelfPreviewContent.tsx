@@ -1,13 +1,11 @@
 import { ChannelMember } from '@boluo/api';
-import { atom, useAtomValue, useStore } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, ReactNode, useDeferredValue, useEffect, useMemo, useRef } from 'react';
+import { FC, ReactNode, useDeferredValue, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { CursorContext, CursorState } from '../entities/TextWithCursor';
 import { Content } from './Content';
 import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
-import { useIsTouch } from '../../hooks/useIsTouch';
 
 interface Props {
   nameNode: ReactNode;
@@ -20,7 +18,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused })
   const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
   const cursorState: CursorState = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ source, range }) => ({ range: range, self: true })), [composeAtom]),
+    useMemo(() => selectAtom(composeAtom, ({ range }) => ({ range: range, self: true })), [composeAtom]),
   );
 
   const cursorAtom = useMemo(() => atom<HTMLElement | null>(null), []);

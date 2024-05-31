@@ -1,4 +1,3 @@
-import type { User } from '@boluo/api';
 import { Edit, PaperPlane } from '@boluo/icons';
 import { FC } from 'react';
 import { useIntl } from 'react-intl';
@@ -8,12 +7,11 @@ import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '../common/TooltipBox';
 
 interface Props {
-  currentUser: User;
   isEditing?: boolean;
   send: () => Promise<void>;
 }
 
-export const SendButton: FC<Props> = ({ currentUser, isEditing = false, send }) => {
+export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
   const intl = useIntl();
 
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('top-end');

@@ -1,4 +1,4 @@
-import { FC, memo } from 'react';
+import { memo } from 'react';
 import { EvaluatedExprNode, ExprNode } from '../../interpreter/entities';
 import { EntityExprBinary } from './EntityExprBinary';
 import { EntityExprCocRoll } from './EntityExprCocRoll';

@@ -3,7 +3,6 @@ import { useMemo, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NameBox } from './NameBox';
 import { User } from '@boluo/api';
-import { ResolvedTheme } from '@boluo/theme';
 import { useMessageColor } from '../../hooks/useMessageColor';
 import {
   FloatingPortal,

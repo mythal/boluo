@@ -34,7 +34,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
   }
   return (
     <>
-      <SpaceOptions space={space} currentUser={currentUser} />
+      <SpaceOptions space={space} />
       {contentState === 'CHANNELS' && <SidebarChannels spaceId={space.id} />}
       {contentState === 'SPACES' && <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />}
     </>

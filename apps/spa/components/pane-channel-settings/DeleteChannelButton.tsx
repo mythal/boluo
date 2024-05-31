@@ -1,18 +1,7 @@
-import {
-  autoUpdate,
-  flip,
-  FloatingPortal,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-} from '@floating-ui/react';
 import { Channel } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import type { MutationFetcher } from 'swr/mutation';
@@ -46,7 +35,7 @@ const closePanes =
 
 export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
   const store = useStore();
-  const { trigger, isMutating } = useSWRMutation<Channel, Empty, [string, string], Empty>(
+  const { trigger } = useSWRMutation<Channel, Empty, [string, string], Empty>(
     ['/channels/query', channelId],
     deleteChannel,
     {

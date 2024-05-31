@@ -47,7 +47,6 @@ export const ChatItemMessage: FC<{
     return readObserve(ref.current);
   }, [readObserve]);
 
-  const toolbarDisplayAtom = useMemo(makeMessageToolbarDisplayAtom, []);
   const nameNode = useMemo(
     () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={sendBySelf} user={user} />,
     [message.inGame, message.name, isMaster, sendBySelf, user],

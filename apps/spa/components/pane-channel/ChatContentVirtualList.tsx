@@ -1,10 +1,8 @@
-import { User } from '@boluo/api';
 import { FC, MutableRefObject, RefObject, useLayoutEffect, useRef } from 'react';
 import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
-import { ResolvedTheme } from '@boluo/theme';
 import { getOS } from '@boluo/utils';
 
 interface Props {

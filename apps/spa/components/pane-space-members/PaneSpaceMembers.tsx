@@ -1,7 +1,6 @@
 import { Users } from '@boluo/icons';
-import { FC, Suspense, useState } from 'react';
+import { FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Loading } from '@boluo/ui/Loading';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { HeaderTab, TabItem } from '../HeaderTab';

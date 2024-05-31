@@ -6,7 +6,6 @@ import { Content } from './Content';
 import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
 import { PreviewBox } from './PreviewBox';
-import { ResolvedTheme } from '@boluo/theme';
 import { useQueryUser } from '@boluo/common';
 
 interface Props {

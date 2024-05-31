@@ -45,7 +45,7 @@ const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({
 };
 
 export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => {
-  const { data: spacesWithMemberData, error, isLoading } = useQueryMySpaces();
+  const { data: spacesWithMemberData, isLoading } = useQueryMySpaces();
   const panes = useAtomValue(panesAtom);
 
   const togglePane = usePaneToggle();

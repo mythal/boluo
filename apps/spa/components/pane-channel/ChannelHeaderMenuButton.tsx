@@ -4,7 +4,6 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';
 import { useTooltip } from '../../hooks/useTooltip';
-import { FloatingPortal } from '@floating-ui/react';
 import { FormattedMessage } from 'react-intl';
 import { TooltipBox } from '../common/TooltipBox';
 

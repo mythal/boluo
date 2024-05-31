@@ -45,15 +45,6 @@ const ShowRollResult: FC<{ node: RollResult }> = ({ node }) => {
 };
 
 export const EntityExprRoll: FC<Props> = ({ node }) => {
-  let result: string = '=??';
-  if ('value' in node) {
-    result = '';
-    if (node.values.length > 1) {
-      result += `=[${node.values.join(', ')}]`;
-    }
-    result += `=${node.value}`;
-  }
-
   return (
     <RollBox>
       <span className="mr-0.5">

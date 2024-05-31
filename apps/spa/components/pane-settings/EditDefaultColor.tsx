@@ -35,7 +35,7 @@ const ColorCell: FC<{
 export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => {
   const theme = resolveSystemTheme(useTheme());
   const key = ['/users/query', null] as const;
-  const { trigger, error, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
+  const { trigger, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
     key,
     async (_, { arg: color }) => {
       const editResult = await post('/users/edit', null, { defaultColor: color });

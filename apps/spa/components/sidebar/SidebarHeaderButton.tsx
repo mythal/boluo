@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import React from 'react';
-import { FC, MouseEventHandler, ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;

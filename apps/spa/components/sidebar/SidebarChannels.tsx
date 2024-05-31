@@ -2,7 +2,7 @@ import { ArrowDownWideShort, Plus } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import React, { Suspense, useMemo, useState } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useQueryChannelList } from '../../hooks/useQueryChannelList';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';

@@ -9,7 +9,7 @@ interface Props {
   isExpand: boolean;
 }
 
-export const HelpToggleButton: FC<Props> = ({ on, isExpand }) => {
+export const HelpToggleButton: FC<Props> = ({ on }) => {
   const intl = useIntl();
   const togglePane = usePaneToggle();
   const paneName = intl.formatMessage({ defaultMessage: 'Help' });

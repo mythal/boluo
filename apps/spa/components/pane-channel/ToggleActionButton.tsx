@@ -1,11 +1,9 @@
 import { PersonRunning } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { selectAtom } from 'jotai/utils';
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useComposeAtom } from '../../hooks/useComposeAtom';
 
 interface Props {}
 

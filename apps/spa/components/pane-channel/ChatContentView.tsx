@@ -183,8 +183,6 @@ interface ScrollLockState {
   modified: number;
 }
 
-const PREVIEW_LOCK_TIMEOUT = 1000;
-
 const useScrollLock = (
   virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,

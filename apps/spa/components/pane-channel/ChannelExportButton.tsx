@@ -1,4 +1,4 @@
-import { ScrollText, Settings } from '@boluo/icons';
+import { ScrollText } from '@boluo/icons';
 import { FC, MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';

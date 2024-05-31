@@ -9,8 +9,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Content } from '../pane-channel/Content';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { Name } from '../pane-channel/Name';
-import { resolveSystemTheme } from '@boluo/theme';
-import { useTheme } from '@boluo/theme/useTheme';
 import { InComposeButton } from './InComposeButton';
 import { Edit, X } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';

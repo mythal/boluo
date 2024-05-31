@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { memo, ReactNode, useMemo, useRef } from 'react';
+import { memo, ReactNode, useMemo } from 'react';
 import type { Entity, EvaluatedExprNode } from '../../interpreter/entities';
 import { evaluate, makeRng } from '../../interpreter/eval';
 import { Delay } from '../Delay';

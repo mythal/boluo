@@ -6,7 +6,6 @@ import {
   FloatingPortal,
   autoUpdate,
   flip,
-  hide,
   offset,
   shift,
   useClick,
@@ -29,7 +28,7 @@ interface Props {
   member: Member;
 }
 
-export const NameEditable: FC<Props> = ({ name, isMaster, inGame, color, member }) => {
+export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isEmptyName = name === '' || name == null;
   const forceOpen = inGame && isEmptyName;

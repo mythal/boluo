@@ -24,7 +24,7 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
 
 interface Props {}
 
-export const ChatContentHeaderLoadMore: FC<Props> = (props) => {
+export const ChatContentHeaderLoadMore: FC<Props> = () => {
   const channelId = useChannelId();
   const isTouchDeviceRef = useRef(false);
   const mountedRef = useMountedRef();

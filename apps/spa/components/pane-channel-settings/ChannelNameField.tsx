@@ -3,7 +3,6 @@ import { FC, useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
-import { ChannelSettingsForm } from './form';
 
 interface Props {
   spaceId: string;

@@ -1,6 +1,6 @@
 import { ApiError, Message, User } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
-import { Atom, useStore } from 'jotai';
+import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';

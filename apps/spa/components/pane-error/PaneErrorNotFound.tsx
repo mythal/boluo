@@ -2,7 +2,6 @@ import { NotFoundError } from '@boluo/api';
 import { AlertCircle } from '@boluo/icons';
 import { FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ClosePaneButton } from '../ClosePaneButton';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 

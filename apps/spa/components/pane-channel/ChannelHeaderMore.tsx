@@ -42,7 +42,7 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
 };
 
 export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
-  const { isLoading, data: channel } = useQueryChannel(channelId);
+  const { data: channel } = useQueryChannel(channelId);
   const { data: currentUser } = useQueryCurrentUser();
   const memberResult = useMyChannelMember(channelId);
   const member = memberResult.isOk ? memberResult.some : null;

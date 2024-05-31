@@ -6,11 +6,9 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useComposingMedia } from '../../hooks/useComposingMedia';
 import { mediaMaxSizeByte, mediaMaxSizeMb, supportedMediaType, validateMedia } from '../../media';
 
-interface Props {
-  className?: string;
-}
+interface Props {}
 
-export const ComposingMediaInfo: FC<Props> = ({ className = '' }) => {
+export const ComposingMediaInfo: FC<Props> = () => {
   const media = useComposingMedia();
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);

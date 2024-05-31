@@ -25,7 +25,7 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
     },
   );
   return (
-    <SidebarHeaderButton icon={<UserPlus />} onClick={() => join()}>
+    <SidebarHeaderButton isLoading={isJoining} icon={<UserPlus />} onClick={() => join()}>
       <span className="text-xs">
         <FormattedMessage defaultMessage="Join Space" />
       </span>

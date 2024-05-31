@@ -10,7 +10,7 @@ export const ChatErrorBoundary: FC<{ children: ReactNode }> = ({ children }) => 
   );
 };
 
-const ChatError: FC<{ error: unknown; eventId: string }> = ({ error, eventId }) => {
+const ChatError: FC<{ error: unknown; eventId: string }> = ({ eventId }) => {
   return (
     <div className="flex flex-col gap-2 p-8">
       <h1 className="font-bold">Oops</h1>

@@ -1,4 +1,4 @@
-import type { Space, User } from '@boluo/api';
+import type { Space } from '@boluo/api';
 import { Shuffle } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { type FC } from 'react';
@@ -10,10 +10,9 @@ import { usePaneReplace } from '../../hooks/usePaneReplace';
 
 interface Props {
   space: Space;
-  currentUser: User | null | undefined;
 }
 
-export const SpaceOptions: FC<Props> = ({ space, currentUser }) => {
+export const SpaceOptions: FC<Props> = ({ space }) => {
   const openPane = usePaneReplace();
   const [sidebarState, setSidebarState] = useAtom(sidebarContentStateAtom);
   const handleClickSpaceName = () => {

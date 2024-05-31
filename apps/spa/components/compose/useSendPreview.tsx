@@ -9,9 +9,6 @@ import { connectionStateAtom } from '../../state/chat.atoms';
 import { ComposeState } from '../../state/compose.reducer';
 
 const SEND_PREVIEW_TIMEOUT_MS = 250;
-const isVaildName = (name: string) => {
-  return name.trim().length > 0;
-};
 
 const sendPreview = (
   channelId: string,

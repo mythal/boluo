@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import type { FC } from 'react';
 import { Avatar } from '../account/Avatar';
 import { ShowUsername } from './ShowUsername';
-import { FormattedDate, FormattedMessage } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 interface Props {
   user: User;

@@ -1,7 +1,7 @@
 'use client';
 
 import { ApiError } from '@boluo/api';
-import { login, post, setToken } from '@boluo/api-browser';
+import { login } from '@boluo/api-browser';
 import { FC, useId } from 'react';
 import { FieldError, FormProvider, SubmitHandler, useForm, useFormContext, useFormState } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';

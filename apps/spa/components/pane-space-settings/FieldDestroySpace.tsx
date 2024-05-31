@@ -7,7 +7,7 @@ import { Button } from '@boluo/ui/Button';
 
 export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ spaceId, spaceName }) => {
   const { mutate } = useSWRConfig();
-  const [isMutating, setIsMutating] = useState(false);
+  const [_isMutating, setIsMutating] = useState(false);
   const deleteSpace = async () => {
     setIsMutating(true);
     const result = await post('/spaces/delete', { id: spaceId }, {});

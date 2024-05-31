@@ -57,10 +57,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const fileButton = useMemo(() => <FileButton />, []);
   const inGameSwitchButton = useMemo(() => <InGameSwitchButton />, []);
   const addDiceButton = useMemo(() => <AddDiceButton />, []);
-  const sendButton = useMemo(
-    () => <SendButton send={send} currentUser={member.user} isEditing={isEditing} />,
-    [isEditing, member.user, send],
-  );
+  const sendButton = useMemo(() => <SendButton send={send} isEditing={isEditing} />, [isEditing, send]);
   const mediaLine = useMemo(() => <MediaLine />, []);
   return (
     <ComposeErrorBoundry>

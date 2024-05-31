@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
 import { IS_DEVELOPMENT } from '../../const';
 
 export const Todo: FC<{ children: string }> = ({ children }) => {

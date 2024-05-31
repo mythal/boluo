@@ -135,7 +135,7 @@
     "message": "正在连接"
   },
   "70Tngj": {
-    "message": "Close the pane"
+    "message": "关闭窗格"
   },
   "72vKlS": {
     "message": "载入位面失败"
@@ -735,7 +735,7 @@
     "message": "编辑消息"
   },
   "jtLNcT": {
-    "message": "Failed to move the message, the target is lost. Please try again."
+    "message": "移动消息失败，找不到目的地，请再试一下。"
   },
   "jvo0vs": {
     "message": "保存"

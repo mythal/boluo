@@ -17,6 +17,7 @@ import { Cursor } from '../entities/Cursor';
 import { type PrimitiveAtom } from 'jotai';
 import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
 import { EntityHead } from '../entities/EntityHead';
+import { ZERO_WIDTH_SPACE } from '../../const';
 
 interface Props {
   channelId: string;
@@ -70,6 +71,9 @@ export const Content = memo<Props>(
       return extendedEntities;
     }, [entities, seed]);
     const entityNodeList = useMemo(() => {
+      if (evaluatedEntities.length === 0) {
+        return <span>{ZERO_WIDTH_SPACE}</span>;
+      }
       const nodeList = [
         <EntityHead cursorNode={cursorNode} key="head" firstEntityStart={evaluatedEntities[0]?.start ?? 0} />,
       ];

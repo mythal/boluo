@@ -44,13 +44,15 @@ export const PreviewBox: FC<Props> = ({
     <div
       data-id={id}
       data-is-last={isLast}
-      data-in-game={inGame}
       className={clsx(
         'group grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
-        'data-[in-game=true]:bg-preview-in-bg data-[in-game=false]:bg-preview-out-bg',
         'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',
+        'shadow-[0_0_12px_10px_inset] ',
+        inGame
+          ? 'bg-preview-in-bg shadow-[var(--colors-preview-in-bg)]'
+          : 'bg-preview-out-bg shadow-[var(--colors-preview-out-bg)]',
         className,
       )}
       ref={(ref) => {

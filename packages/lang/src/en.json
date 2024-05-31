@@ -17,9 +17,6 @@
   "/+v5jy": {
     "message": "{seconds} seconds ago"
   },
-  "/3UTYF": {
-    "message": "Use {key} to send messages."
-  },
   "/DfISw": {
     "message": "Cancel edit"
   },
@@ -232,6 +229,9 @@
   },
   "Euftjf": {
     "message": "Error while uploading a file, did you recover the message?"
+  },
+  "F3Wc9W": {
+    "message": "Last {day} days"
   },
   "FN6jdd": {
     "message": "Hi, {username}!"
@@ -509,6 +509,9 @@
   "VzzYJk": {
     "message": "Create"
   },
+  "W14DRL": {
+    "message": "Use {key} to send messages"
+  },
   "WASph7": {
     "message": "Kick this member"
   },
@@ -664,6 +667,9 @@
   },
   "eOqhbq": {
     "message": "Unable to reset your password, invalid reset link."
+  },
+  "eVYdrD": {
+    "message": "Last 1 day"
   },
   "ea+WlP": {
     "message": "You must be invited to join a private channel."

@@ -54,7 +54,7 @@
     "message": "位面"
   },
   "0eanrB": {
-    "message": "Include archived messages"
+    "message": "包括已存档的消息"
   },
   "0pT/2d": {
     "message": "无角色名"
@@ -87,7 +87,7 @@
     "message": "取消"
   },
   "4FbTT8": {
-    "message": "Is Master"
+    "message": "是主持人"
   },
   "4KGRux": {
     "message": "启用通知"
@@ -96,7 +96,7 @@
     "message": "复制"
   },
   "4udfbj": {
-    "message": "Export Channel"
+    "message": "导出频道"
   },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
@@ -134,6 +134,9 @@
   "6q3tCn": {
     "message": "正在连接"
   },
+  "70Tngj": {
+    "message": "Close the pane"
+  },
   "72vKlS": {
     "message": "载入位面失败"
   },
@@ -156,7 +159,7 @@
     "message": "只有接受邀请的人能够加入此位面"
   },
   "98c0D6": {
-    "message": "Include out-of-game messages"
+    "message": "包括游戏外消息"
   },
   "9NDg1Z": {
     "message": "(悄悄话)"
@@ -246,7 +249,7 @@
     "message": "是的，踢走"
   },
   "HAlOn1": {
-    "message": "Name"
+    "message": "名字"
   },
   "HH8O0c": {
     "message": "请求失败，可能是网络异常。"
@@ -300,7 +303,7 @@
     "message": "下拉刷新"
   },
   "Jq3FDz": {
-    "message": "Content"
+    "message": "内容"
   },
   "Jxxkva": {
     "message": "可以在设置中更改默认消息颜色。"
@@ -315,7 +318,7 @@
     "message": "密码重置邮件已发送。"
   },
   "KIAp17": {
-    "message": "Without rich-text informations"
+    "message": "不带富文本信息"
   },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
@@ -330,7 +333,7 @@
     "message": "频道"
   },
   "LXxsbk": {
-    "message": "Anonymous"
+    "message": "匿名"
   },
   "MWO2zy": {
     "message": "出了点问题。"
@@ -390,7 +393,7 @@
     "message": "主题"
   },
   "PiX/VH": {
-    "message": "Split the message into multiple ones at line breaks"
+    "message": "在换行处将消息拆分成多条"
   },
   "PwaN2o": {
     "message": "欢迎"
@@ -441,10 +444,7 @@
     "message": "请检查你的网络连接并重试。"
   },
   "SVwJTM": {
-    "message": "Export"
-  },
-  "Sf+ebw": {
-    "message": "关闭窗格"
+    "message": "导出"
   },
   "SpLs8U": {
     "message": "您必须先加入 {space} 才能加入频道。"
@@ -498,7 +498,7 @@
     "message": "角色名："
   },
   "Vl357u": {
-    "message": "Time Range"
+    "message": "时间范围"
   },
   "VlTrY6": {
     "message": "查询频道成员失败"
@@ -531,7 +531,7 @@
     "message": "危险操作"
   },
   "XOi37d": {
-    "message": "Plain Text"
+    "message": "纯文本"
   },
   "XTqS60": {
     "message": "请将 {errorCode} 告诉系统管理员。"
@@ -561,10 +561,7 @@
     "message": "{days} 天前"
   },
   "Yq91Dy": {
-    "message": "Export \"{channelName}\""
-  },
-  "YtexzU": {
-    "message": "关闭 {paneName}"
+    "message": "导出「{channelName}」"
   },
   "Yy/yDL": {
     "message": "重置密码"
@@ -585,7 +582,7 @@
     "message": "重新生成"
   },
   "a5msuh": {
-    "message": "Yes"
+    "message": "是"
   },
   "aLncO3": {
     "message": "秘密频道"
@@ -645,7 +642,7 @@
     "message": "我在频道中的角色名（可选）"
   },
   "dlu6r1": {
-    "message": "Spreadsheet"
+    "message": "电子表格"
   },
   "domxPs": {
     "message": "悄悄话"
@@ -737,6 +734,9 @@
   "jRANBd": {
     "message": "编辑消息"
   },
+  "jtLNcT": {
+    "message": "Failed to move the message, the target is lost. Please try again."
+  },
   "jvo0vs": {
     "message": "保存"
   },
@@ -795,7 +795,7 @@
     "message": "不能为空。"
   },
   "oUWADl": {
-    "message": "No"
+    "message": "否"
   },
   "oVARYX": {
     "message": "至多 {max} 个字符。"
@@ -810,7 +810,7 @@
     "message": "编辑中"
   },
   "pJ78jg": {
-    "message": "OOC"
+    "message": "游戏外"
   },
   "pm/HIR": {
     "message": "必须填写频道名。"
@@ -822,7 +822,7 @@
     "message": "{count}条消息已过滤"
   },
   "qQ4pEa": {
-    "message": "Whisper to {targets}"
+    "message": "对 {targets} 悄悄话"
   },
   "qbB8pg": {
     "message": "位面描述"
@@ -855,7 +855,7 @@
     "message": "依照系统设定"
   },
   "rZgHVT": {
-    "message": "Failed to export the channel"
+    "message": "导出频道失败"
   },
   "rbrahO": {
     "message": "关闭"
@@ -900,7 +900,7 @@
     "message": "移动消息失败 ({errorCode})"
   },
   "ug01Mk": {
-    "message": "Time"
+    "message": "时间"
   },
   "uhu5aG": {
     "message": "公开"
@@ -934,12 +934,6 @@
   },
   "wb3MSp": {
     "message": "此用户名已被占用。"
-  },
-  "x0pAb7": {
-    "message": "打开 {paneName}"
-  },
-  "x32Fvf": {
-    "message": "自动展开消息中的骰子"
   },
   "x82IOl": {
     "message": "不广播"

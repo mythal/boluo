@@ -47,6 +47,9 @@ const sendPreview = (
     };
 
     const clientEvent: ClientEvent = { type: 'PREVIEW', preview };
+    if (connection.readyState !== WebSocket.OPEN) {
+      return;
+    }
     connection.send(JSON.stringify(clientEvent));
   }, SEND_PREVIEW_TIMEOUT_MS);
 };

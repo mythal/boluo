@@ -26,7 +26,7 @@ export const AddDiceButton: FC<Props> = () => {
   const title = intl.formatMessage({ defaultMessage: 'Add a dice roll' });
   return (
     <div className="flex-shrink-0 self-end py-1" ref={refs.setReference} {...getReferenceProps()}>
-      <InComposeButton onClick={handleAddDice} title={title}>
+      <InComposeButton onClick={handleAddDice} label={title}>
         <Dice />
       </InComposeButton>
       <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>

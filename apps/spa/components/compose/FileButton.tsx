@@ -40,7 +40,7 @@ export const FileButton: FC<Props> = () => {
     : intl.formatMessage({ defaultMessage: 'Add File' });
   return (
     <div ref={refs.setReference} {...getReferenceProps()} className="relative flex-shrink-0 py-1 pl-1">
-      <InComposeButton onClick={handleClick} title={title}>
+      <InComposeButton onClick={handleClick} label={title}>
         {hasMedia ? <Trash /> : <Upload />}
       </InComposeButton>
       <input type="file" ref={inputRef} className="hidden" aria-hidden hidden onChange={handleFileChange} />

@@ -7,8 +7,8 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Kbd } from '@boluo/ui/Kbd';
 import { identity, isApple } from '@boluo/utils';
-import { OptionBox } from './OptionBox';
 import { useSettings } from '../../hooks/useSettings';
+import { SelectBox } from '../common/SelectBox';
 
 interface Props {}
 
@@ -19,8 +19,9 @@ export const EneterSendField: FC<Props> = () => {
     const settingsResult = await patch('/users/update_settings', null, settings);
     return settingsResult.map(toSettings).unwrapOr({});
   }, []);
-  const { trigger, isMutating } = useSWRMutation(key, updater, {
+  const { trigger } = useSWRMutation(key, updater, {
     populateCache: identity,
+    rollbackOnError: true,
     revalidate: false,
   });
   const settings = useSettings();
@@ -34,35 +35,39 @@ export const EneterSendField: FC<Props> = () => {
     if (enterSend) void handleChange(false);
   };
   return (
-    <div className="">
-      <div className="pb-1">
+    <div className="flex flex-col gap-2">
+      <div className="">
         <FormattedMessage defaultMessage="Which key to use to send a message?" />
       </div>
-      <OptionBox className="mb-1" active={enterSend} onClick={setEnterSend} disabled={isMutating}>
-        <div>
+      <SelectBox
+        selected={enterSend}
+        onSelected={setEnterSend}
+        title={
           <FormattedMessage
             defaultMessage="Use the {enter} key to send messages"
             values={{ enter: <Kbd>Enter</Kbd> }}
           />
-        </div>
-        <div className="text-sm text-neutral-500">
+        }
+        description={
           <FormattedMessage
             defaultMessage="Use {key} to make a line break."
             values={{
               key: (
                 <>
-                  <Kbd>Shift</Kbd> + <Kbd>Enter</Kbd>
+                  <Kbd variant="small">Shift</Kbd> + <Kbd variant="small">Enter</Kbd>
                 </>
               ),
             }}
           />
-        </div>
-      </OptionBox>
+        }
+      />
 
-      <OptionBox active={!enterSend} onClick={setCtrlEnterSend} disabled={isMutating}>
-        <div>
+      <SelectBox
+        selected={!enterSend}
+        onSelected={setCtrlEnterSend}
+        title={
           <FormattedMessage
-            defaultMessage="Use {key} to send messages."
+            defaultMessage="Use {key} to send messages"
             values={{
               key: (
                 <>
@@ -71,8 +76,8 @@ export const EneterSendField: FC<Props> = () => {
               ),
             }}
           />
-        </div>
-      </OptionBox>
+        }
+      />
     </div>
   );
 };

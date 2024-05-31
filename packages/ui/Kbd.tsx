@@ -1,8 +1,19 @@
 import type { FC } from 'react';
-import type { ChildrenProps } from '@boluo/utils';
+import clsx from 'clsx';
 
-export const Kbd: FC<ChildrenProps> = ({ children }) => (
-  <kbd className="text-kbd-text bg-kbd-bg shadow-kbd-shadow rounded-sm px-1 py-0.5 font-mono text-sm shadow-[0_1px_0_2px]">
+interface Props {
+  children: string;
+  variant?: 'small' | 'normal';
+}
+
+export const Kbd: FC<Props> = ({ children, variant = 'normal' }) => (
+  <kbd
+    className={clsx(
+      'text-kbd-text bg-kbd-bg shadow-kbd-shadow rounded-sm font-mono font-normal shadow-[0_1px_0_2px]',
+      variant === 'small' && 'px-0.5 py-px text-xs',
+      variant === 'normal' && 'px-1 py-0.5 text-sm',
+    )}
+  >
     {children}
   </kbd>
 );

@@ -134,6 +134,9 @@
   "6q3tCn": {
     "message": "Connecting"
   },
+  "70Tngj": {
+    "message": "Close the pane"
+  },
   "72vKlS": {
     "message": "Failed to load the space"
   },
@@ -443,9 +446,6 @@
   "SVwJTM": {
     "message": "Export"
   },
-  "Sf+ebw": {
-    "message": "Close pane"
-  },
   "SpLs8U": {
     "message": "You must first join the {space} to join a channel."
   },
@@ -562,9 +562,6 @@
   },
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
-  },
-  "YtexzU": {
-    "message": "Close {paneName}"
   },
   "Yy/yDL": {
     "message": "Reset password"
@@ -736,6 +733,9 @@
   },
   "jRANBd": {
     "message": "Edit message"
+  },
+  "jtLNcT": {
+    "message": "Failed to move the message, the target is lost. Please try again."
   },
   "jvo0vs": {
     "message": "Save"
@@ -934,12 +934,6 @@
   },
   "wb3MSp": {
     "message": "This username is already taken."
-  },
-  "x0pAb7": {
-    "message": "Open {paneName}"
-  },
-  "x32Fvf": {
-    "message": "Expand dice in the messages"
   },
   "x82IOl": {
     "message": "Mute"

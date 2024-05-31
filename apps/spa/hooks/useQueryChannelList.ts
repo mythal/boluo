@@ -1,4 +1,4 @@
-import type { ApiError, Channel, ChannelWithMaybeMember } from '@boluo/api';
+import type { ApiError, ChannelWithMaybeMember } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import useSWR, { type SWRResponse, useSWRConfig } from 'swr';
 import { unwrap } from '@boluo/utils';

@@ -10,6 +10,6 @@ const areEqual = (a: Key, b: Key) => a.channelId === b.channelId && a.paneKey ==
 
 // TODO: clean up
 export const composeAtomFamily = atomFamily(
-  (key: Key) => atomWithReducer(makeInitialComposeState(), composeReducer),
+  (_key: Key) => atomWithReducer(makeInitialComposeState(), composeReducer),
   areEqual,
 );

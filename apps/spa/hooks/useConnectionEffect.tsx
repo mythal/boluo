@@ -86,7 +86,7 @@ export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, 
           void mutate(['/channels/query', event.body.channelId], event.body.channel);
           return;
         case 'SPACE_UPDATED':
-          const { space, channelMembers, channels } = event.body.spaceWithRelated;
+          const { space } = event.body.spaceWithRelated;
           void mutate(['/spaces/query', space.id], space);
           void mutate(['/channels/by_space', space.id]);
           return;

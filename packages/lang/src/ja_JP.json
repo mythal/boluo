@@ -53,6 +53,9 @@
   "0ah2ud": {
     "message": "次元"
   },
+  "0eanrB": {
+    "message": "Include archived messages"
+  },
   "0pT/2d": {
     "message": "キャラクター名なし"
   },
@@ -83,11 +86,17 @@
   "47FYwb": {
     "message": "キャンセル"
   },
+  "4FbTT8": {
+    "message": "Is Master"
+  },
   "4KGRux": {
     "message": "通知をオンにする"
   },
   "4l6vz1": {
     "message": "コピー"
+  },
+  "4udfbj": {
+    "message": "Export Channel"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
@@ -125,6 +134,9 @@
   "6q3tCn": {
     "message": "接続中"
   },
+  "70Tngj": {
+    "message": "Close the pane"
+  },
   "72vKlS": {
     "message": "次元の読み込みに失敗しました"
   },
@@ -145,6 +157,9 @@
   },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
+  },
+  "98c0D6": {
+    "message": "Include out-of-game messages"
   },
   "9NDg1Z": {
     "message": "(ささやき)"
@@ -233,6 +248,9 @@
   "GbWVAh": {
     "message": "キックする"
   },
+  "HAlOn1": {
+    "message": "Name"
+  },
   "HH8O0c": {
     "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
@@ -284,6 +302,9 @@
   "JQt0RP": {
     "message": "引いて読み込む"
   },
+  "Jq3FDz": {
+    "message": "Content"
+  },
   "Jxxkva": {
     "message": "設定でデフォルトのメッセージの色を変更できます。"
   },
@@ -296,6 +317,9 @@
   "K8uxGU": {
     "message": "パスワードリセットのメールは送信しました。"
   },
+  "KIAp17": {
+    "message": "Without rich-text informations"
+  },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
   },
@@ -307,6 +331,9 @@
   },
   "LUrJwE": {
     "message": "チャンネル"
+  },
+  "LXxsbk": {
+    "message": "Anonymous"
   },
   "MWO2zy": {
     "message": "何か問題が起きています."
@@ -365,6 +392,9 @@
   "Pe0ogR": {
     "message": "テーマ"
   },
+  "PiX/VH": {
+    "message": "Split the message into multiple ones at line breaks"
+  },
   "PwaN2o": {
     "message": "ようこそ"
   },
@@ -413,8 +443,8 @@
   "SHMAcP": {
     "message": "Please check your network connection and try again."
   },
-  "Sf+ebw": {
-    "message": "ペインを閉じる"
+  "SVwJTM": {
+    "message": "Export"
   },
   "SpLs8U": {
     "message": "You must first join the {space} to join a channel."
@@ -467,6 +497,9 @@
   "VeLEVu": {
     "message": "キャラクター名:"
   },
+  "Vl357u": {
+    "message": "Time Range"
+  },
   "VlTrY6": {
     "message": "Failed to query members of the channel"
   },
@@ -497,6 +530,9 @@
   "X5rIjZ": {
     "message": "危険な操作"
   },
+  "XOi37d": {
+    "message": "Plain Text"
+  },
   "XTqS60": {
     "message": "Please send {errorCode} to the system administrator."
   },
@@ -524,8 +560,8 @@
   "Yf3xiD": {
     "message": "{days} 日前"
   },
-  "YtexzU": {
-    "message": "{paneName} を閉じる"
+  "Yq91Dy": {
+    "message": "Export \"{channelName}\""
   },
   "Yy/yDL": {
     "message": "パスワードをリセット"
@@ -544,6 +580,9 @@
   },
   "a+BhVZ": {
     "message": "再生成しました"
+  },
+  "a5msuh": {
+    "message": "Yes"
   },
   "aLncO3": {
     "message": "秘密チャンネル"
@@ -601,6 +640,9 @@
   },
   "dVoumD": {
     "message": "チャンネル内の自分のキャラクター名 (オプション)"
+  },
+  "dlu6r1": {
+    "message": "Spreadsheet"
   },
   "domxPs": {
     "message": "ささやき"
@@ -674,6 +716,9 @@
   "hrgo+E": {
     "message": "アーカイブ"
   },
+  "iDRoI+": {
+    "message": "Left Member"
+  },
   "iHN12u": {
     "message": "管理者"
   },
@@ -688,6 +733,9 @@
   },
   "jRANBd": {
     "message": "メッセージを編集"
+  },
+  "jtLNcT": {
+    "message": "Failed to move the message, the target is lost. Please try again."
   },
   "jvo0vs": {
     "message": "保存"
@@ -746,6 +794,9 @@
   "nmSKJK": {
     "message": "入力必須です。"
   },
+  "oUWADl": {
+    "message": "No"
+  },
   "oVARYX": {
     "message": "少なくとも {max} 文字以上でなければなりません。"
   },
@@ -758,6 +809,9 @@
   "pBQ5bd": {
     "message": "編集中"
   },
+  "pJ78jg": {
+    "message": "OOC"
+  },
   "pm/HIR": {
     "message": "Channel name is required."
   },
@@ -766,6 +820,9 @@
   },
   "qGHWyb": {
     "message": "{count} filtered messages"
+  },
+  "qQ4pEa": {
+    "message": "Whisper to {targets}"
   },
   "qbB8pg": {
     "message": "次元の説明"
@@ -796,6 +853,9 @@
   },
   "rYtHKT": {
     "message": "システムに従う"
+  },
+  "rZgHVT": {
+    "message": "Failed to export the channel"
   },
   "rbrahO": {
     "message": "閉じる"
@@ -839,6 +899,9 @@
   "tYDBKv": {
     "message": "メッセージの移動に失敗しました ({errorCode})"
   },
+  "ug01Mk": {
+    "message": "Time"
+  },
   "uhu5aG": {
     "message": "公開"
   },
@@ -871,12 +934,6 @@
   },
   "wb3MSp": {
     "message": "このユーザー名は既に使われています。"
-  },
-  "x0pAb7": {
-    "message": "{paneName} を開く"
-  },
-  "x32Fvf": {
-    "message": "メッセージ内のサイコロを展開"
   },
   "x82IOl": {
     "message": "ミュート"
@@ -919,6 +976,9 @@
   },
   "zNnjeF": {
     "message": "本当に「{spaceName}」を削除しますか？"
+  },
+  "zQLEfz": {
+    "message": "Format"
   },
   "zQvVDJ": {
     "message": "全て"

@@ -53,6 +53,9 @@
   "0ah2ud": {
     "message": "位面"
   },
+  "0eanrB": {
+    "message": "包括已存档的消息"
+  },
   "0pT/2d": {
     "message": "无角色名"
   },
@@ -83,11 +86,17 @@
   "47FYwb": {
     "message": "取消"
   },
+  "4FbTT8": {
+    "message": "是主持人"
+  },
   "4KGRux": {
     "message": "启用通知"
   },
   "4l6vz1": {
     "message": "复制"
+  },
+  "4udfbj": {
+    "message": "导出频道"
   },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
@@ -125,6 +134,9 @@
   "6q3tCn": {
     "message": "正在连接"
   },
+  "70Tngj": {
+    "message": "关闭窗格"
+  },
   "72vKlS": {
     "message": "载入位面失败"
   },
@@ -145,6 +157,9 @@
   },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
+  },
+  "98c0D6": {
+    "message": "包括游戏外消息"
   },
   "9NDg1Z": {
     "message": "(悄悄话)"
@@ -233,6 +248,9 @@
   "GbWVAh": {
     "message": "是的，踢走"
   },
+  "HAlOn1": {
+    "message": "名字"
+  },
   "HH8O0c": {
     "message": "请求失败，可能是网络异常。"
   },
@@ -284,6 +302,9 @@
   "JQt0RP": {
     "message": "下拉刷新"
   },
+  "Jq3FDz": {
+    "message": "内容"
+  },
   "Jxxkva": {
     "message": "可以在设置中更改默认消息颜色。"
   },
@@ -296,6 +317,9 @@
   "K8uxGU": {
     "message": "密码重置邮件已发送。"
   },
+  "KIAp17": {
+    "message": "不带富文本信息"
+  },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
   },
@@ -307,6 +331,9 @@
   },
   "LUrJwE": {
     "message": "频道"
+  },
+  "LXxsbk": {
+    "message": "匿名"
   },
   "MWO2zy": {
     "message": "出了点问题。"
@@ -365,6 +392,9 @@
   "Pe0ogR": {
     "message": "主题"
   },
+  "PiX/VH": {
+    "message": "在换行处将消息拆分成多条"
+  },
   "PwaN2o": {
     "message": "欢迎"
   },
@@ -413,8 +443,8 @@
   "SHMAcP": {
     "message": "请检查你的网络连接并重试。"
   },
-  "Sf+ebw": {
-    "message": "关闭窗格"
+  "SVwJTM": {
+    "message": "导出"
   },
   "SpLs8U": {
     "message": "您必须先加入 {space} 才能加入频道。"
@@ -467,6 +497,9 @@
   "VeLEVu": {
     "message": "角色名："
   },
+  "Vl357u": {
+    "message": "时间范围"
+  },
   "VlTrY6": {
     "message": "查询频道成员失败"
   },
@@ -497,6 +530,9 @@
   "X5rIjZ": {
     "message": "危险操作"
   },
+  "XOi37d": {
+    "message": "纯文本"
+  },
   "XTqS60": {
     "message": "请将 {errorCode} 告诉系统管理员。"
   },
@@ -524,8 +560,8 @@
   "Yf3xiD": {
     "message": "{days} 天前"
   },
-  "YtexzU": {
-    "message": "关闭 {paneName}"
+  "Yq91Dy": {
+    "message": "导出「{channelName}」"
   },
   "Yy/yDL": {
     "message": "重置密码"
@@ -544,6 +580,9 @@
   },
   "a+BhVZ": {
     "message": "重新生成"
+  },
+  "a5msuh": {
+    "message": "是"
   },
   "aLncO3": {
     "message": "秘密频道"
@@ -601,6 +640,9 @@
   },
   "dVoumD": {
     "message": "我在频道中的角色名（可选）"
+  },
+  "dlu6r1": {
+    "message": "电子表格"
   },
   "domxPs": {
     "message": "悄悄话"
@@ -674,6 +716,9 @@
   "hrgo+E": {
     "message": "归档"
   },
+  "iDRoI+": {
+    "message": "Left Member"
+  },
   "iHN12u": {
     "message": "管理员"
   },
@@ -688,6 +733,9 @@
   },
   "jRANBd": {
     "message": "编辑消息"
+  },
+  "jtLNcT": {
+    "message": "移动消息失败，找不到目的地，请再试一下。"
   },
   "jvo0vs": {
     "message": "保存"
@@ -746,6 +794,9 @@
   "nmSKJK": {
     "message": "不能为空。"
   },
+  "oUWADl": {
+    "message": "否"
+  },
   "oVARYX": {
     "message": "至多 {max} 个字符。"
   },
@@ -758,6 +809,9 @@
   "pBQ5bd": {
     "message": "编辑中"
   },
+  "pJ78jg": {
+    "message": "游戏外"
+  },
   "pm/HIR": {
     "message": "必须填写频道名。"
   },
@@ -766,6 +820,9 @@
   },
   "qGHWyb": {
     "message": "{count}条消息已过滤"
+  },
+  "qQ4pEa": {
+    "message": "对 {targets} 悄悄话"
   },
   "qbB8pg": {
     "message": "位面描述"
@@ -796,6 +853,9 @@
   },
   "rYtHKT": {
     "message": "依照系统设定"
+  },
+  "rZgHVT": {
+    "message": "导出频道失败"
   },
   "rbrahO": {
     "message": "关闭"
@@ -839,6 +899,9 @@
   "tYDBKv": {
     "message": "移动消息失败 ({errorCode})"
   },
+  "ug01Mk": {
+    "message": "时间"
+  },
   "uhu5aG": {
     "message": "公开"
   },
@@ -871,12 +934,6 @@
   },
   "wb3MSp": {
     "message": "此用户名已被占用。"
-  },
-  "x0pAb7": {
-    "message": "打开 {paneName}"
-  },
-  "x32Fvf": {
-    "message": "自动展开消息中的骰子"
   },
   "x82IOl": {
     "message": "不广播"
@@ -919,6 +976,9 @@
   },
   "zNnjeF": {
     "message": "确定要删除「{spaceName}」吗？"
+  },
+  "zQLEfz": {
+    "message": "格式"
   },
   "zQvVDJ": {
     "message": "所有"

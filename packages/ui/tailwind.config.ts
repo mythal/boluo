@@ -188,6 +188,20 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           border: $(yellow[200], yellow[900]),
         },
       },
+      banner: {
+        close: {
+          bg: $(neutral[200], neutral[900]),
+        },
+        info: {
+          bg: $(neutral[100], neutral[900]),
+        },
+        warning: {
+          bg: $(yellow[50], yellow[900]),
+        },
+        error: {
+          bg: $(red[50], red[900]),
+        },
+      },
 
       name: {
         bg: $(transparentize(neutral[200], 0.65), transparentize(neutral[600], 0.65)),

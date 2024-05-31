@@ -134,6 +134,9 @@
   "6q3tCn": {
     "message": "接続中"
   },
+  "70Tngj": {
+    "message": "Close the pane"
+  },
   "72vKlS": {
     "message": "次元の読み込みに失敗しました"
   },
@@ -443,9 +446,6 @@
   "SVwJTM": {
     "message": "Export"
   },
-  "Sf+ebw": {
-    "message": "ペインを閉じる"
-  },
   "SpLs8U": {
     "message": "You must first join the {space} to join a channel."
   },
@@ -562,9 +562,6 @@
   },
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
-  },
-  "YtexzU": {
-    "message": "{paneName} を閉じる"
   },
   "Yy/yDL": {
     "message": "パスワードをリセット"
@@ -736,6 +733,9 @@
   },
   "jRANBd": {
     "message": "メッセージを編集"
+  },
+  "jtLNcT": {
+    "message": "Failed to move the message, the target is lost. Please try again."
   },
   "jvo0vs": {
     "message": "保存"
@@ -934,12 +934,6 @@
   },
   "wb3MSp": {
     "message": "このユーザー名は既に使われています。"
-  },
-  "x0pAb7": {
-    "message": "{paneName} を開く"
-  },
-  "x32Fvf": {
-    "message": "メッセージ内のサイコロを展開"
   },
   "x82IOl": {
     "message": "ミュート"

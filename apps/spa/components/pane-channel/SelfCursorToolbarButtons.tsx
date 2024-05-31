@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useSetAtom } from 'jotai';
 import { SelfCursorButton } from './SelfCursorButton';

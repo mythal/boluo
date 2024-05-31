@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { FateResult, FateRoll } from '../../interpreter/entities';
+import { type FateResult, type FateRoll } from '../../interpreter/entities';
 import { EntityExprFateDice as FateDice } from './EntityExprFateDice';
 
 interface Props {

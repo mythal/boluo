@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { Settings } from '@boluo/icons';
 import { FormattedMessage } from 'react-intl';

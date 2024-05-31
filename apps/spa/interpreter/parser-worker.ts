@@ -1,5 +1,5 @@
 import { recordError } from '../error';
-import { Env, parse } from './parser';
+import { type Env, parse } from './parser';
 
 export interface ParserArguments {
   source: string;

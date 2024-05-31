@@ -1,6 +1,6 @@
 import { Upload } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
-import { FC, useRef } from 'react';
+import { type FC, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';

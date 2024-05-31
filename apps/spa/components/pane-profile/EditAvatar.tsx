@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Upload, X } from '@boluo/icons';
-import { FC, useCallback, useMemo, useRef } from 'react';
+import { type FC, useCallback, useMemo, useRef } from 'react';
 import { useWatch } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';

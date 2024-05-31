@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { FC, ReactNode, useContext, useMemo } from 'react';
+import { type FC, type ReactNode, useContext, useMemo } from 'react';
 import { stopPropagation } from '@boluo/utils';
 import { usePaneBanner } from '../hooks/useBanner';
 import { PaneContext } from '../state/view.context';

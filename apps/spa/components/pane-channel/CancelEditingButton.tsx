@@ -1,6 +1,6 @@
 import { X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { Button } from '@boluo/ui/Button';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 

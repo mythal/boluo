@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useAtomValue, useStore } from 'jotai';
-import { ChannelWithMember, Message } from '@boluo/api';
+import { type ChannelWithMember, type Message } from '@boluo/api';
 import { chatAtom, notifyTimestampAtom } from '../state/chat.atoms';
 import { notificationEnableAtom } from '../state/notification.atoms';
 import { useIntl } from 'react-intl';

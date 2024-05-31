@@ -1,4 +1,4 @@
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 import { FloatingBox } from './FloatingBox';
 import { Avatar } from '../account/Avatar';
 

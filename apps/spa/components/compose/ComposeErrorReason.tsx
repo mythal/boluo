@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { ComposeError } from '../../state/compose.reducer';
+import { type FC } from 'react';
+import { type ComposeError } from '../../state/compose.reducer';
 import { FormattedMessage } from 'react-intl';
 import { mediaMaxSizeMb } from '../../media';
 

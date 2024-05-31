@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react';
 import { PaneContext } from '../state/view.context';
-import { PaneData } from '../state/view.types';
+import { type PaneData } from '../state/view.types';
 import { useStore } from 'jotai';
 import { panesAtom } from '../state/view.atoms';
 

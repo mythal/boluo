@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FloatingPortal } from '@floating-ui/react';
 import { PanelLeftClose, PanelLeftOpen } from '@boluo/icons';
 import { isSidebarExpandedAtom } from '../../state/ui.atoms';

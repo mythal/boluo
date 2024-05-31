@@ -1,6 +1,6 @@
-import useSWRMutation, { MutationFetcher, SWRMutationConfiguration } from 'swr/mutation';
+import useSWRMutation, { type MutationFetcher, type SWRMutationConfiguration } from 'swr/mutation';
 import { post } from '@boluo/api-browser';
-import { ApiError, Message } from '@boluo/api';
+import { type ApiError, type Message } from '@boluo/api';
 import { identity } from '@boluo/utils';
 
 const path = '/messages/query';

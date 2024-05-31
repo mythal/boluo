@@ -1,5 +1,5 @@
-import { Channel, Member, SpaceMemberWithUser, UserStatus } from '@boluo/api';
-import { FC, ReactNode, useMemo, useState } from 'react';
+import { type Channel, type Member, type SpaceMemberWithUser, type UserStatus } from '@boluo/api';
+import { type FC, type ReactNode, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';

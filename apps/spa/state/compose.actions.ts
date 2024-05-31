@@ -1,6 +1,6 @@
-import { Message } from '@boluo/api';
+import { type Message } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
-import { MakeAction } from './actions';
+import { type MakeAction } from './actions';
 import type { ComposeState } from './compose.reducer';
 
 export type ComposeActionMap = {

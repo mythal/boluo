@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useQuerySpace } from '../hooks/useQuerySpace';

@@ -1,4 +1,4 @@
-import { ChannelAtoms, useChannelAtoms } from './useChannelAtoms';
+import { type ChannelAtoms, useChannelAtoms } from './useChannelAtoms';
 
 export type ComposeAtom = ChannelAtoms['composeAtom'];
 

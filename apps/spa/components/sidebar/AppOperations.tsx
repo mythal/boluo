@@ -1,9 +1,9 @@
 import { Bell } from '@boluo/icons';
 import clsx from 'clsx';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useNotificationSwitch } from '../../hooks/useNotificationSwitch';
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 
 export const AppOperations: FC<{ currentUser: User | null | undefined }> = ({ currentUser }) => {
   return <div className="flex justify-end px-4 pt-4">{currentUser != null && <NotificationSwitch />}</div>;

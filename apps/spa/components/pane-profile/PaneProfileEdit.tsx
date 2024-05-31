@@ -1,6 +1,6 @@
 import type { ApiError, User } from '@boluo/api';
 import { editAvatar, post } from '@boluo/api-browser';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';

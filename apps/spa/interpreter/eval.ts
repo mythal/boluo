@@ -1,7 +1,7 @@
 import Prando from 'prando';
-import { IntlShape } from 'react-intl';
+import { type IntlShape } from 'react-intl';
 import { by, byReverse } from '../sort';
-import { CocRoll, EvaluatedExprNode, ExprNode, FateResult } from './entities';
+import { type CocRoll, type EvaluatedExprNode, type ExprNode, type FateResult } from './entities';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 export const MAX_DICE_COUNTER = 64;

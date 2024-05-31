@@ -1,6 +1,6 @@
 import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
-import { MakeAction } from './actions';
+import { type MakeAction } from './actions';
 
 export type ChatActionMap = {
   receiveMessage: EventBody & { type: 'NEW_MESSAGE' };

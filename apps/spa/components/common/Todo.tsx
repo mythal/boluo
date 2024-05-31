@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { IS_DEVELOPMENT } from '../../const';
 
 export const Todo: FC<{ children: string }> = ({ children }) => {

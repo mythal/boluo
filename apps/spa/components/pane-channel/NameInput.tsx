@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { TextInput } from '@boluo/ui/TextInput';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { selectAtom } from 'jotai/utils';

@@ -1,5 +1,5 @@
 import { EllipsisVertical } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';

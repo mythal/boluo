@@ -1,6 +1,6 @@
-import { UserStatus } from '@boluo/api';
+import { type UserStatus } from '@boluo/api';
 import clsx from 'clsx';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '../common/TooltipBox';

@@ -1,7 +1,7 @@
 import { store } from '@boluo/store';
-import { ChatAction, ChatActionUnion } from './chat.actions';
+import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import { chatAtom } from './chat.atoms';
-import { ChatReducerContext } from './chat.reducer';
+import { type ChatReducerContext } from './chat.reducer';
 
 export interface Connected {
   type: 'CONNECTED';

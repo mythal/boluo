@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useContext } from 'react';
+import React, { type FC, type ReactNode, useContext } from 'react';
 import { useEffect, useState } from 'react';
 import screens from '@boluo/ui/screens.json';
 

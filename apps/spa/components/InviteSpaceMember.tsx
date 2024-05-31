@@ -1,6 +1,6 @@
 import { get, post } from '@boluo/api-browser';
 import { Clipboard, Refresh } from '@boluo/icons';
-import { FC, useCallback, useId, useRef, useState } from 'react';
+import { type FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWR from 'swr';
 import { Button } from '@boluo/ui/Button';

@@ -1,9 +1,9 @@
-import { ChannelMember } from '@boluo/api';
+import { type ChannelMember } from '@boluo/api';
 import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, ReactNode, useDeferredValue, useMemo } from 'react';
+import { type FC, type ReactNode, useDeferredValue, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { CursorContext, CursorState } from '../entities/TextWithCursor';
+import { CursorContext, type CursorState } from '../entities/TextWithCursor';
 import { Content } from './Content';
 import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
 

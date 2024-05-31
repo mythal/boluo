@@ -1,6 +1,6 @@
-import { NotFoundError } from '@boluo/api';
+import { type NotFoundError } from '@boluo/api';
 import { AlertCircle } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';

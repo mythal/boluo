@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 import { findNextPaneKey, focusPaneAtom, panesAtom } from '../state/view.atoms';
-import { Pane, PaneData } from '../state/view.types';
+import { type Pane, type PaneData } from '../state/view.types';
 import { usePaneLimit } from './useMaxPane';
 
 export const usePaneReplace = () => {

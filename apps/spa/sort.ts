@@ -1,4 +1,4 @@
-import { EventId } from '@boluo/api';
+import { type EventId } from '@boluo/api';
 
 export function by(a: number, b: number): number {
   return b - a;

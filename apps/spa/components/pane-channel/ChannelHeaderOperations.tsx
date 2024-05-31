@@ -1,7 +1,7 @@
-import { Channel } from '@boluo/api';
-import { PrimitiveAtom, useAtom } from 'jotai';
-import { FC, useCallback } from 'react';
-import { ChannelHeaderState } from './ChannelHeader';
+import { type Channel } from '@boluo/api';
+import { type PrimitiveAtom, useAtom } from 'jotai';
+import { type FC, useCallback } from 'react';
+import { type ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderMoreButton } from './ChannelHeaderMenuButton';
 import { ChannelHeaderSplitPaneButton } from './ChannelHeaderSplitPaneButton';
 import { ChannelMembersButton } from './ChannelMembersButton';

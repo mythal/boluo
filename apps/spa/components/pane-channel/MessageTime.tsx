@@ -1,5 +1,5 @@
-import { Message } from '@boluo/api';
-import { FC, useContext } from 'react';
+import { type Message } from '@boluo/api';
+import { type FC, useContext } from 'react';
 import { generateDetailDate, pad2 } from '../../date';
 import { useSetAtom } from 'jotai';
 import { DisplayContext as ToolbarDisplayContext } from './MessageToolbar';

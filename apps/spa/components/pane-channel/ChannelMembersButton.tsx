@@ -1,6 +1,6 @@
 import { Users } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';

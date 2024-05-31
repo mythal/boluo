@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { Binary, BinaryResult } from '../../interpreter/entities';
+import { type FC } from 'react';
+import { type Binary, type BinaryResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 
 interface Props {

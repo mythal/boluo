@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { Todo } from '../common/Todo';
 
 export const SidebarGuestContent: FC = () => {

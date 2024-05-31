@@ -2,7 +2,7 @@ import type { Channel, Message } from '@boluo/api';
 import clsx from 'clsx';
 import { Drama, Hash, Lock, MoveVertical, Plus, X } from '@boluo/icons';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';

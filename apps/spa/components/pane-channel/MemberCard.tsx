@@ -1,9 +1,9 @@
-import { Channel, ChannelMember, SpaceMember, User, UserStatus } from '@boluo/api';
+import { type Channel, type ChannelMember, type SpaceMember, type User, type UserStatus } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common';
 import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
-import React, { FC, ReactNode, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Badge } from '@boluo/ui/Badge';

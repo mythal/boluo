@@ -1,6 +1,6 @@
 import { Trash } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
-import { FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';

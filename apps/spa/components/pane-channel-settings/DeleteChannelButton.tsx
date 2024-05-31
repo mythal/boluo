@@ -1,14 +1,14 @@
-import { Channel } from '@boluo/api';
+import { type Channel } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
-import { FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import type { MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
-import { Empty } from '@boluo/utils';
+import { type Empty } from '@boluo/utils';
 import { panesAtom } from '../../state/view.atoms';
-import { Pane } from '../../state/view.types';
+import { type Pane } from '../../state/view.types';
 
 interface Props {
   channelId: string;

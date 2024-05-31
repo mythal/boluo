@@ -1,11 +1,11 @@
 import { useQueryCurrentUser } from '@boluo/common';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
-import { ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils';
 import { useLogout } from '../../hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
@@ -14,7 +14,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { EneterSendField } from './EnterSendField';
 import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 import { EditDefaultColor } from './EditDefaultColor';
 
 const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="mb-2 font-bold">{children}</h3>;

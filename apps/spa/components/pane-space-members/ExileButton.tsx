@@ -1,7 +1,7 @@
 import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import { post } from '@boluo/api-browser';
 import { UserX } from '@boluo/icons';
-import { FC, useState } from 'react';
+import { type FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';

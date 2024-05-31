@@ -1,6 +1,6 @@
-import { ApiError } from '@boluo/api';
+import { type ApiError } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRResponse } from 'swr';
+import useSWR, { type SWRResponse } from 'swr';
 
 export const useQueryConnectionToken = (): SWRResponse<{ token: string | null }, ApiError> => {
   const key = ['/events/token'] as const;

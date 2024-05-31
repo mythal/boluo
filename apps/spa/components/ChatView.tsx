@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 import { useMemo } from 'react';
 import { useSendStatus } from '../hooks/useSendStatus';
 import { panesAtom } from '../state/view.atoms';

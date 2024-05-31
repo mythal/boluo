@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { CancelEditingButton } from './CancelEditingButton';
 import { FileButton } from './FileButton';
 import { ToggleBroadcastButton } from './ToggleBroadcastButton';

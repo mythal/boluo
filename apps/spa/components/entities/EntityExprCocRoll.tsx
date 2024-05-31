@@ -1,7 +1,7 @@
 import { Dice, FlexibleStar } from '@boluo/icons';
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 import { useIntl } from 'react-intl';
-import { CocRoll, CocRollResult } from '../../interpreter/entities';
+import { type CocRoll, type CocRollResult } from '../../interpreter/entities';
 import { cocRollSubTypeDisplay, cocSuccessLevelDisplay } from '../../interpreter/eval';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';

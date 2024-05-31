@@ -1,6 +1,6 @@
 import { Archive } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';

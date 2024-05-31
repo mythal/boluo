@@ -1,4 +1,4 @@
-import { ChannelWithMaybeMember, Space } from '@boluo/api';
+import { type ChannelWithMaybeMember, type Space } from '@boluo/api';
 import { atom, useStore, type createStore } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';

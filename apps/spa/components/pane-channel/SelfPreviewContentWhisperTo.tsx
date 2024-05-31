@@ -1,7 +1,7 @@
-import { Member } from '@boluo/api';
+import { type Member } from '@boluo/api';
 import { X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
-import { FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';

@@ -1,4 +1,4 @@
-import { Proxy } from '@boluo/api';
+import { type Proxy } from '@boluo/api';
 import { backendUrlAtom } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';

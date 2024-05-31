@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { HelpCircle, LogIn, Settings, User as UserIcon } from '@boluo/icons';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { toggle } from '@boluo/utils';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
@@ -10,7 +10,7 @@ import { panesAtom } from '../../state/view.atoms';
 import { Avatar } from '../account/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 import { usePaneLimit } from '../../hooks/useMaxPane';
 
 interface Props {

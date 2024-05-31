@@ -1,6 +1,6 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { EntityExprNode } from './EntityExprNode';
-import { EvaluatedExpr } from '../pane-channel/Content';
+import { type EvaluatedExpr } from '../pane-channel/Content';
 
 interface Props {
   source: string;

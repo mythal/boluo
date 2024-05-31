@@ -1,5 +1,5 @@
 import { useSetAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { chatAtom } from '../../state/chat.atoms';
 

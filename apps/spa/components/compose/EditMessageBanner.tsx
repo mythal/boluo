@@ -1,10 +1,10 @@
-import { ReactNode, useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { selectAtom } from 'jotai/utils';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { chatAtom } from '../../state/chat.atoms';
 import { useChannelId } from '../../hooks/useChannelId';
-import { Message, User } from '@boluo/api';
+import { type Message, type User } from '@boluo/api';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Content } from '../pane-channel/Content';
 import { messageToParsed } from '../../interpreter/to-parsed';

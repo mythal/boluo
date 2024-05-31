@@ -1,6 +1,6 @@
 import type { ApiError, SpaceMember } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRResponse } from 'swr';
+import useSWR, { type SWRResponse } from 'swr';
 import { unwrap } from '@boluo/utils';
 
 export const useMySpaceMember = (spaceId: string | null): SWRResponse<SpaceMember | null, ApiError> => {

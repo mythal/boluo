@@ -1,7 +1,7 @@
-import { ApiError } from '@boluo/api';
+import { type ApiError } from '@boluo/api';
 import { useErrorExplain } from '@boluo/common';
 import { LogIn } from '@boluo/icons';
-import { FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSetBanner } from '../hooks/useBanner';
 import { usePaneClose } from '../hooks/usePaneClose';

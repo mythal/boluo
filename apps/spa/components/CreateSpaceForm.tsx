@@ -8,7 +8,7 @@ import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import useSWRMutation, { MutationFetcher } from 'swr/mutation';
+import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';

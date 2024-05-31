@@ -1,6 +1,6 @@
-import { FC, MutableRefObject, RefObject, useLayoutEffect, useRef } from 'react';
-import { ListRange, ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-import { ChatItem } from '../../state/channel.types';
+import { type FC, type MutableRefObject, type RefObject, useLayoutEffect, useRef } from 'react';
+import { type ListRange, type ScrollSeekPlaceholderProps, Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
+import { type ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { getOS } from '@boluo/utils';

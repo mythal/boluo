@@ -1,5 +1,5 @@
 import { Edit, PaperPlane } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { InComposeButton } from './InComposeButton';

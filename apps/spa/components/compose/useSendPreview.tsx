@@ -1,12 +1,12 @@
-import { ClientEvent, PreviewPost } from '@boluo/api';
-import { Atom, useAtomValue, useStore } from 'jotai';
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { type ClientEvent, type PreviewPost } from '@boluo/api';
+import { type Atom, useAtomValue, useStore } from 'jotai';
+import { type MutableRefObject, useEffect, useRef } from 'react';
 import { makeId } from '@boluo/utils';
-import { ComposeAtom } from '../../hooks/useComposeAtom';
+import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
-import { ParseResult } from '../../interpreter/parse-result';
+import { type ParseResult } from '../../interpreter/parse-result';
 import { connectionStateAtom } from '../../state/chat.atoms';
-import { ComposeState } from '../../state/compose.reducer';
+import { type ComposeState } from '../../state/compose.reducer';
 
 const SEND_PREVIEW_TIMEOUT_MS = 250;
 

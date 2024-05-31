@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import {
   palette,
   paletteKeys,
@@ -8,7 +8,7 @@ import {
   parseGameColor,
   computeColors,
 } from '../../color';
-import { ApiError, User } from '@boluo/api';
+import { type ApiError, type User } from '@boluo/api';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { post } from '@boluo/api-browser';

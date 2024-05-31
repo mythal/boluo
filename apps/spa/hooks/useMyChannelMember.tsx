@@ -1,7 +1,7 @@
 import type { ApiError, Member } from '@boluo/api';
 import { useQueryCurrentUser } from '@boluo/common';
 import { useQueryChannelMembers } from './useQueryChannelMembers';
-import { Result, Err, Ok } from '@boluo/utils';
+import { type Result, Err, Ok } from '@boluo/utils';
 
 export type MyChannelMemberResult = Result<
   Member,

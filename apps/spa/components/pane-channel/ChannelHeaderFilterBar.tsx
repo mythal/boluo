@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { ChannelHeaderFilter } from './ChannelHeaderFilter';
 import { ChannelHeaderFilterShowArchive } from './ChannelHeaderFilterShowArchive';
 

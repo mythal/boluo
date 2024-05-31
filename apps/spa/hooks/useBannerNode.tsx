@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react';
+import React, { type RefObject } from 'react';
 
 export const BannerContext = React.createContext<RefObject<HTMLDivElement | null>>({ current: null });
 

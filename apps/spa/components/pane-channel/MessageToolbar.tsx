@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import React, { FC, RefObject, useContext, useEffect, useMemo, useRef } from 'react';
-import { Message } from '@boluo/api';
-import { ReactNode } from 'react';
+import React, { type FC, type RefObject, useContext, useEffect, useMemo, useRef } from 'react';
+import { type Message } from '@boluo/api';
+import { type ReactNode } from 'react';
 import { Archive, ClipboardCopy, Edit, EllipsisVertical, Trash, TriangleAlert, X } from '@boluo/icons';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '../Delay';

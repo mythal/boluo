@@ -1,10 +1,10 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { Failed } from '../common/Failed';
-import { FC, ReactNode, useId, useRef, useState } from 'react';
+import { type FC, type ReactNode, useId, useRef, useState } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneBox } from '../PaneBox';
-import { Channel } from '@boluo/api';
+import { type Channel } from '@boluo/api';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { Check, ScrollText } from '@boluo/icons';
 import { Select } from '@boluo/ui/Select';
@@ -14,7 +14,7 @@ import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';
 import * as Sentry from '@sentry/browser';
 import { PaneFooterBox } from '../PaneFooterBox';
-import { ExportOptions, exportChannel } from './export';
+import { type ExportOptions, exportChannel } from './export';
 
 export interface ExportSchema {
   format: string;

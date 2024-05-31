@@ -1,7 +1,7 @@
 import { patch } from '@boluo/api-browser';
-import { Settings } from '@boluo/common';
+import { type Settings } from '@boluo/common';
 import { toSettings } from '@boluo/common/settings';
-import { FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';

@@ -1,6 +1,6 @@
 'use client';
 import { useAtom, useAtomValue } from 'jotai';
-import { FC, ReactNode, useEffect, useRef, useState } from 'react';
+import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Suspense } from 'react';
 import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
@@ -15,8 +15,8 @@ import { BannerContext } from '../hooks/useBannerNode';
 import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
 import {
-  ResolvedTheme,
-  Theme,
+  type ResolvedTheme,
+  type Theme,
   getThemeFromCookie,
   resolveSystemTheme,
   setThemeToDom,
@@ -30,7 +30,7 @@ import { IS_DEVELOPMENT, SENTRY_DSN, SENTRY_TUNNEL } from '../const';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
-import { Settings } from '@boluo/common';
+import { type Settings } from '@boluo/common';
 import * as Sentry from '@sentry/react';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {

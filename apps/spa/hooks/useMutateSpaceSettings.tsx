@@ -1,5 +1,5 @@
-import useSWRMutation, { MutationFetcher } from 'swr/mutation';
-import { SpaceSettings, spaceSettingsSchema } from './useQuerySpaceSettings';
+import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
+import { type SpaceSettings, spaceSettingsSchema } from './useQuerySpaceSettings';
 import { post } from '@boluo/api-browser';
 
 const path = '/spaces/settings';

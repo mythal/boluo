@@ -1,9 +1,9 @@
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 import { memo, Suspense } from 'react';
-import { Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
+import { type Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
-import { Pane, PaneData } from '../state/view.types';
+import { type Pane, type PaneData } from '../state/view.types';
 import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
 import { ChatPaneChannel } from './pane-channel/ChannelPane';
 import { PaneError } from './pane-error/PaneError';

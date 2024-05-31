@@ -1,13 +1,13 @@
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { ChangeEventHandler, FC, KeyboardEvent, startTransition, useEffect, useMemo, useRef } from 'react';
+import { type ChangeEventHandler, type FC, type KeyboardEvent, startTransition, useEffect, useMemo, useRef } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
-import { ComposeActionUnion } from '../../state/compose.actions';
+import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { RichTextarea, RichTextareaHandle } from 'rich-textarea';
+import { RichTextarea, type RichTextareaHandle } from 'rich-textarea';
 import { composeRender } from './render';
-import { ParseResult } from '../../interpreter/parse-result';
-import { ComposeAtom } from '../../hooks/useComposeAtom';
+import { type ParseResult } from '../../interpreter/parse-result';
+import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 
 interface Props {

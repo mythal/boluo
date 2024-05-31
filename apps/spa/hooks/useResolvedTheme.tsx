@@ -1,4 +1,4 @@
-import { ResolvedTheme } from '@boluo/theme';
+import { type ResolvedTheme } from '@boluo/theme';
 import React from 'react';
 import { recordWarn } from '../error';
 

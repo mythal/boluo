@@ -1,8 +1,8 @@
-import { FC, useRef } from 'react';
+import { type FC, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { ChatContentHeaderLoadMore } from './ChatContentHeaderLoadMore';
-import { VirtualListContext } from './ChatContentVirtualList';
+import { type VirtualListContext } from './ChatContentVirtualList';
 
 interface Props {
   context?: VirtualListContext;

@@ -1,6 +1,6 @@
 import { Mask } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';

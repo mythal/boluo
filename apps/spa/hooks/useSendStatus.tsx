@@ -1,9 +1,9 @@
-import { StatusKind } from '@boluo/api';
+import { type StatusKind } from '@boluo/api';
 import { useAtomValue, useStore } from 'jotai';
 import { useEffect, useRef } from 'react';
 import { connectionStateAtom } from '../state/chat.atoms';
 import { panesAtom } from '../state/view.atoms';
-import { ChannelPane, Pane } from '../state/view.types';
+import { type ChannelPane, Pane } from '../state/view.types';
 
 const SEND_STATUS_INTERVAL = 2000;
 

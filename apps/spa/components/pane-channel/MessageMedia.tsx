@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
 import { Paperclip, Refresh } from '@boluo/icons';
-import { ReactNode, memo, useState } from 'react';
+import { type ReactNode, memo, useState } from 'react';
 import Icon from '@boluo/ui/Icon';
 import { showFileSize } from '@boluo/utils';
 import { getMediaUrl, supportedMediaType } from '../../media';

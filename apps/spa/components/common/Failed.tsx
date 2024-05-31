@@ -1,6 +1,6 @@
 import { AlertTriangle } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { FormattedMessage } from 'react-intl';
 

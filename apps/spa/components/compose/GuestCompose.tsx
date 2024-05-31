@@ -1,10 +1,10 @@
 import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/common';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
-import { ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils';
 import { useChannelId } from '../../hooks/useChannelId';
 
 const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="py-2 text-center">{children}</div>;

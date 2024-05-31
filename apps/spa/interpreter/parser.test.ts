@@ -1,5 +1,5 @@
 import type { Entity } from './entities';
-import { Env, parse as originalParse } from './parser';
+import { type Env, parse as originalParse } from './parser';
 
 const parse = (source: string, parseExpr = true, env?: Env) => {
   const { entities, text } = originalParse(source, parseExpr, env);

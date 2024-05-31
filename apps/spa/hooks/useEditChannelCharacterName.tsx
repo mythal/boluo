@@ -1,6 +1,6 @@
-import { ApiError, ChannelMember } from '@boluo/api';
+import { type ApiError, type ChannelMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import useSWRMutation, { SWRMutationConfiguration, SWRMutationResponse } from 'swr/mutation';
+import useSWRMutation, { type SWRMutationConfiguration, type SWRMutationResponse } from 'swr/mutation';
 
 interface Arg {
   characterName: string;

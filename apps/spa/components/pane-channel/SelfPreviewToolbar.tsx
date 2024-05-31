@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useMemo } from 'react';
+import React, { type FC, type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom } from 'jotai';
 import Icon from '@boluo/ui/Icon';
@@ -6,7 +6,7 @@ import { Edit, PaperPlane, PersonRunning, TowerBroadcast, TriangleAlert, Whisper
 import { FormattedMessage } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from './useSend';
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 import clsx from 'clsx';
 import { ComposeErrorReason } from '../compose/ComposeErrorReason';
 import { useComposeAtom } from '../../hooks/useComposeAtom';

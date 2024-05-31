@@ -1,8 +1,8 @@
-import { Space, User } from '@boluo/api';
+import { type Space, type User } from '@boluo/api';
 import { useQueryMySpaces } from '@boluo/common';
 import { Plus } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useSwitchSpace } from '../../hooks/useSwitchSpace';

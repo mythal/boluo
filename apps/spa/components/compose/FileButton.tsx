@@ -1,6 +1,6 @@
 import { Trash, Upload } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC, useRef } from 'react';
+import { type FC, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';

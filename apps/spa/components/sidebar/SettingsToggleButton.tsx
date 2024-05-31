@@ -1,5 +1,5 @@
 import { Settings } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { usePaneToggle } from '../../hooks/usePaneToggle';

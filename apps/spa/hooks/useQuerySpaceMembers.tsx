@@ -1,6 +1,6 @@
 import type { ApiError, SpaceMemberWithUser } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRResponse } from 'swr';
+import useSWR, { type SWRResponse } from 'swr';
 import { unwrap } from '@boluo/utils';
 
 export const useQuerySpaceMembers = (spaceId: string): SWRResponse<Record<string, SpaceMemberWithUser>, ApiError> => {

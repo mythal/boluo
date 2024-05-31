@@ -1,4 +1,4 @@
-import { DataRef, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { type DataRef, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
@@ -11,9 +11,9 @@ import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
-import { SetOptimisticItems, useChatList } from '../../hooks/useChatList';
+import { type SetOptimisticItems, useChatList } from '../../hooks/useChatList';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
-import { ChatItem, MessageItem } from '../../state/channel.types';
+import { type ChatItem, type MessageItem } from '../../state/channel.types';
 import { chatAtom } from '../../state/chat.atoms';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatContentVirtualList } from './ChatContentVirtualList';

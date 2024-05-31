@@ -39,15 +39,6 @@ export const isChatInitializedAtom = selectAtom(chatAtom, (chat) => chat.context
 
 export const notifyTimestampAtom = selectAtom(chatAtom, (chat) => chat.notifyTimestamp);
 
-const LOG_CHAT_STATE = false;
-
-store.sub(chatAtom, () => {
-  if (LOG_CHAT_STATE) {
-    const chatState = store.get(chatAtom);
-    console.log('state', chatState);
-  }
-});
-
 export type ChatDispatch = ReturnType<typeof useSetAtom<typeof chatAtom>>;
 
 export const connectionStateAtom = selectAtom(chatAtom, (chatState) => chatState.connection);

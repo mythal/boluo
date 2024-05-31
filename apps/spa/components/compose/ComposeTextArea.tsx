@@ -1,6 +1,14 @@
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type ChangeEventHandler, type FC, type KeyboardEvent, startTransition, useEffect, useMemo, useRef } from 'react';
+import {
+  type ChangeEventHandler,
+  type FC,
+  type KeyboardEvent,
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';

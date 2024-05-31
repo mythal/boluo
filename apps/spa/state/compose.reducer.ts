@@ -38,8 +38,6 @@ export const makeInitialComposeState = (): ComposeState => ({
 export const clearBackup = (state: ComposeState): ComposeState =>
   state.backup === undefined ? state : { ...state, backup: undefined };
 
-const QUICK_CHECK_REGEX = /[.。](in|out)\b/i;
-
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
   const { source } = action.payload;
   let { previewId } = state;
@@ -115,7 +113,7 @@ const handleAddDice = (
   return { ...state, source, range };
 };
 
-const handleLink = (state: ComposeState, { payload: { href, text } }: ComposeAction<'link'>): ComposeState => {
+const handleLink = (state: ComposeState, _: ComposeAction<'link'>): ComposeState => {
   let { source, range } = state;
   if (!range) {
     range = [source.length, source.length];
@@ -129,7 +127,7 @@ const handleLink = (state: ComposeState, { payload: { href, text } }: ComposeAct
   return { ...state, source, range: [head.length + 1, head.length + insertText.length - 3] };
 };
 
-const handleBold = (state: ComposeState, { payload }: ComposeAction<'bold'>): ComposeState => {
+const handleBold = (state: ComposeState, _: ComposeAction<'bold'>): ComposeState => {
   let { source, range } = state;
   if (!range) {
     range = [source.length, source.length];

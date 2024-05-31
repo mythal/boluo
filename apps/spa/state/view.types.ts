@@ -1,5 +1,3 @@
-import { makeId } from '@boluo/utils';
-
 export interface SpacePane {
   type: 'SPACE';
   spaceId: string;

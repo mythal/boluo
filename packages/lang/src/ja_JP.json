@@ -17,9 +17,6 @@
   "/+v5jy": {
     "message": "{seconds} 秒前"
   },
-  "/3UTYF": {
-    "message": "{key} キーを使ってメッセージを送信する。"
-  },
   "/DfISw": {
     "message": "編集をキャンセル"
   },
@@ -232,6 +229,9 @@
   },
   "Euftjf": {
     "message": "ファイルのアップロード中にエラーが発生しました。メッセージを復元しますか？"
+  },
+  "F3Wc9W": {
+    "message": "Last {day} days"
   },
   "FN6jdd": {
     "message": "こんにちは、{username}！"
@@ -509,6 +509,9 @@
   "VzzYJk": {
     "message": "作成する"
   },
+  "W14DRL": {
+    "message": "Use {key} to send messages"
+  },
   "WASph7": {
     "message": "このメンバーをキックする"
   },
@@ -664,6 +667,9 @@
   },
   "eOqhbq": {
     "message": "Unable to reset your password, invalid reset link."
+  },
+  "eVYdrD": {
+    "message": "Last 1 day"
   },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"

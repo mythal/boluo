@@ -6,7 +6,6 @@ import { BreakpointProvider } from '../breakpoint';
 import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
 import { isSidebarExpandedAtom } from '../state/ui.atoms';
 import { isNoPaneAtom, routeAtom } from '../state/view.atoms';
-import { ChatErrorBoundary } from './ChatErrorBoundary';
 import { ChatNotFound } from './ChatNotFound';
 import { ChatRoot } from './ChatRoot';
 import { ChatSpace } from './ChatSpace';
@@ -139,9 +138,8 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       onTouchStart={autoFoldSidebar}
       onClick={autoFoldSidebar}
       className={clsx(
-        'md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
-        showMask &&
-          "after:content-[' '] after:absolute after:inset-0 after:z-20 after:block after:bg-black after:bg-opacity-25 after:dark:bg-opacity-50",
+        'md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
+        showMask ? 'cursor-pointer brightness-50' : '',
       )}
     >
       {children}

@@ -1,7 +1,7 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useController } from 'react-hook-form';
 import { TextArea } from '@boluo/ui/TextInput';
-import { ProfileEditSchema } from './PaneProfileEdit';
+import { type ProfileEditSchema } from './PaneProfileEdit';
 
 interface Props {
   className?: string;

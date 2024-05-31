@@ -1,12 +1,12 @@
-import { FC, useId, useMemo } from 'react';
+import { type FC, useId, useMemo } from 'react';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
 import { NameEditInput } from './NameInput';
-import { ChatSpaceState } from '../../state/chat.reducer';
+import { type ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
-import { Member } from '@boluo/api';
-import { ChannelState } from '../../state/channel.reducer';
+import { type Member } from '@boluo/api';
+import { type ChannelState } from '../../state/channel.reducer';
 
 interface Props {
   member: Member;

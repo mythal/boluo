@@ -1,6 +1,6 @@
-import { ApiError, isApiError } from '@boluo/api';
+import { type ApiError, isApiError } from '@boluo/api';
 import { useErrorExplain } from '@boluo/common';
-import { FC, ReactNode, useMemo } from 'react';
+import { type FC, type ReactNode, useMemo } from 'react';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 
 interface Props {

@@ -1,6 +1,6 @@
 import type { ApiError, Channel, ChannelWithMaybeMember } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRResponse, useSWRConfig } from 'swr';
+import useSWR, { type SWRResponse, useSWRConfig } from 'swr';
 import { unwrap } from '@boluo/utils';
 
 export const useQueryChannelList = (spaceId: string): SWRResponse<ChannelWithMaybeMember[], ApiError> => {

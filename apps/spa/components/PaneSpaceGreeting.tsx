@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { PaneBox } from './PaneBox';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 

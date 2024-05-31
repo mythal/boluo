@@ -1,7 +1,7 @@
-import { FC, useDeferredValue, useMemo } from 'react';
+import { type FC, useDeferredValue, useMemo } from 'react';
 import { fromRawEntities } from '../../interpreter/entities';
-import { emptyParseResult, ParseResult } from '../../interpreter/parse-result';
-import { PreviewItem } from '../../state/channel.types';
+import { emptyParseResult, type ParseResult } from '../../interpreter/parse-result';
+import { type PreviewItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';

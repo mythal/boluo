@@ -1,11 +1,11 @@
-import { Member } from '@boluo/api';
+import { type Member } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
-import { PreviewItem } from '../../state/channel.types';
-import { ComposeState } from '../../state/compose.reducer';
+import { type PreviewItem } from '../../state/channel.types';
+import { type ComposeState } from '../../state/compose.reducer';
 import { MessageMedia } from './MessageMedia';
 import { PreviewBox } from './PreviewBox';
 import { RemoveMediaButton } from './RemoveMediaButton';

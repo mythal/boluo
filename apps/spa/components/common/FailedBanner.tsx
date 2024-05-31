@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from 'react';
+import { type FC, type ReactNode, useState } from 'react';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { Button } from '@boluo/ui/Button';
 import { FormattedMessage } from 'react-intl';

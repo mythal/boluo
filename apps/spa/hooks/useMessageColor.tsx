@@ -1,4 +1,4 @@
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 import { useMemo } from 'react';
 import { computeColors, parseGameColor } from '../color';
 import { useResolvedTheme } from './useResolvedTheme';

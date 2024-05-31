@@ -1,8 +1,8 @@
-import { FC, useContext, useEffect, useMemo } from 'react';
+import { type FC, useContext, useEffect, useMemo } from 'react';
 import { autoUpdate, useFloating } from '@floating-ui/react';
 import { SelfCursorToolbarButtons } from './SelfCursorToolbarButtons';
 import { CursorContext } from '../entities/TextWithCursor';
-import { Atom, useAtomValue } from 'jotai';
+import { type Atom, useAtomValue } from 'jotai';
 import clsx from 'clsx';
 
 interface Props {

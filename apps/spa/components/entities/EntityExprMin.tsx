@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { Min, MinResult } from '../../interpreter/entities';
+import { type FC } from 'react';
+import { type Min, type MinResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 
 interface Props {

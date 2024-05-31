@@ -2,14 +2,14 @@
 import type { Member, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { FC, useDeferredValue, useMemo } from 'react';
+import { type FC, useDeferredValue, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
 import { SendButton } from './SendButton';
 import { FileButton } from './FileButton';
-import { ChannelAtoms } from '../../hooks/useChannelAtoms';
+import { type ChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';

@@ -1,7 +1,7 @@
 import { ArrowDownWideShort, ArrowUpWideShort, Dice } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Roll, RollResult } from '../../interpreter/entities';
+import { type Roll, type RollResult } from '../../interpreter/entities';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';

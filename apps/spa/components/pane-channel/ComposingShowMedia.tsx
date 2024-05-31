@@ -1,6 +1,6 @@
 import { Paperclip, Trash } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
-import { FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { useComposingMedia } from '../../hooks/useComposingMedia';

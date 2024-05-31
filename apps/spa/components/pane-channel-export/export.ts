@@ -1,10 +1,10 @@
-import Prando from 'prando';
-import { Entity, ExportEntity, fromLegacyEntity } from '../../interpreter/entities';
-import { Channel, ChannelMemberWithUser, Export, Message } from '@boluo/api';
+import type Prando from 'prando';
+import { type Entity, type ExportEntity, fromLegacyEntity } from '../../interpreter/entities';
+import { type Channel, type ChannelMemberWithUser, type Export, type Message } from '@boluo/api';
 import { evaluate, makeRng, nodeToText } from '../../interpreter/eval';
 import { getMediaUrl } from '../../media';
-import { IntlShape } from 'react-intl';
-import { LegacyEntity } from '../../interpreter/legacy-entities';
+import { type IntlShape } from 'react-intl';
+import { type LegacyEntity } from '../../interpreter/legacy-entities';
 import { get } from '@boluo/api-browser';
 import { fileNameDateTimeFormat, generateDetailDate } from '../../date';
 import { computeColors, parseGameColor } from '../../color';

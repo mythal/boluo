@@ -1,7 +1,7 @@
 import type { ApiError } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRResponse } from 'swr';
-import { ZodError, z } from 'zod';
+import useSWR, { type SWRResponse } from 'swr';
+import { type ZodError, z } from 'zod';
 
 export const spaceSettingsSchema = z.object({
   channelsOrder: z.array(z.string()).optional(),

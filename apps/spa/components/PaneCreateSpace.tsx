@@ -1,6 +1,6 @@
-import { Space } from '@boluo/api';
+import { type Space } from '@boluo/api';
 import { Plus } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { useSwitchSpace } from '../hooks/useSwitchSpace';

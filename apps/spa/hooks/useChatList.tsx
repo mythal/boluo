@@ -1,12 +1,12 @@
 import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { Dispatch, SetStateAction, useMemo, useRef, useState } from 'react';
+import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
-import { ChannelState } from '../state/channel.reducer';
-import { ChatItem, MessageItem, PreviewItem } from '../state/channel.types';
+import { type ChannelState } from '../state/channel.reducer';
+import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
-import { ComposeState } from '../state/compose.reducer';
-import { ChannelFilter, useChannelAtoms } from './useChannelAtoms';
+import { type ComposeState } from '../state/compose.reducer';
+import { type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
 import { recordWarn } from '../error';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;

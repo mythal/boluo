@@ -1,8 +1,8 @@
 import { Cubes, ThumbsDown, ThumbsUp } from '@boluo/icons';
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { DicePool, DicePoolResult } from '../../interpreter/entities';
+import { type DicePool, type DicePoolResult } from '../../interpreter/entities';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';

@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, ReactNode, useEffect, useState } from 'react';
+import React, { type HTMLAttributes, type ReactNode, useEffect, useState } from 'react';
 
 interface Props extends Exclude<HTMLAttributes<HTMLDivElement>, 'className' | 'onClick'> {
   children: ReactNode;

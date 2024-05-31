@@ -1,7 +1,7 @@
-import { ApiError, SpaceWithMember } from '@boluo/api';
+import { type ApiError, type SpaceWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { UserPlus } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { unwrap } from '@boluo/utils';

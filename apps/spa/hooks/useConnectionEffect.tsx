@@ -1,12 +1,12 @@
-import { ChannelMembers, EventId, isServerEvent, ServerEvent, UserStatus } from '@boluo/api';
+import { type ChannelMembers, type EventId, isServerEvent, type ServerEvent, type UserStatus } from '@boluo/api';
 import { webSocketUrlAtom } from '@boluo/common';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
 import { isUuid } from '@boluo/utils';
 import { PING, PONG } from '../const';
-import { chatAtom, ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
-import { ConnectionState } from '../state/connection.reducer';
+import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
+import { type ConnectionState } from '../state/connection.reducer';
 
 const createMailboxConnection = (baseUrl: string, id: string, token?: string | null, after?: EventId): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };

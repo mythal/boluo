@@ -1,8 +1,8 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { HelpText } from '@boluo/ui/HelpText';
-import { FormSchema } from '../pane-create-channel/PaneCreateChannel';
+import { type FormSchema } from '../pane-create-channel/PaneCreateChannel';
 
 interface Props {}
 

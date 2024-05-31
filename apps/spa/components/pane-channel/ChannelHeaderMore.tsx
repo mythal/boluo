@@ -1,13 +1,13 @@
-import { ChannelMember } from '@boluo/api';
+import { type ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
 import { Edit } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ChannelSettingsButton } from './ChannelSettingsButton';
 import { MemberLeaveButton } from './MemberLeaveButton';
-import { ChannelHeaderState } from './ChannelHeader';
+import { type ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderFilter } from './ChannelHeaderFilter';
 import { ChannelHeaderFilterShowArchive } from './ChannelHeaderFilterShowArchive';
 import { MemberJoinButton } from './MemberJoinButton';

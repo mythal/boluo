@@ -1,9 +1,9 @@
 import { Filter } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Select } from '@boluo/ui/Select';
-import { ChannelFilter, useChannelAtoms } from '../../hooks/useChannelAtoms';
+import { type ChannelFilter, useChannelAtoms } from '../../hooks/useChannelAtoms';
 import Icon from '@boluo/ui/Icon';
 
 interface Props {}

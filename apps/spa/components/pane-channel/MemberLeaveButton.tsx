@@ -1,12 +1,12 @@
 import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import { post } from '@boluo/api-browser';
 import { UserX } from '@boluo/icons';
-import { FC, useCallback, useState } from 'react';
+import { type FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import useSWRMutation, { MutationFetcher } from 'swr/mutation';
+import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
-import { Empty } from '@boluo/utils';
+import { type Empty } from '@boluo/utils';
 import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { FloatingBox } from '../common/FloatingBox';

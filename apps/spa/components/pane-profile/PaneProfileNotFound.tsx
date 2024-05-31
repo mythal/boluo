@@ -1,5 +1,5 @@
 import { User } from '@boluo/icons';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 

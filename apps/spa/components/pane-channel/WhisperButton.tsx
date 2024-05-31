@@ -1,7 +1,7 @@
 import { useQueryCurrentUser } from '@boluo/common';
 import { Whisper } from '@boluo/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';

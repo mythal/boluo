@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import React, { FC, useMemo, useState } from 'react';
+import React, { type FC, useMemo, useState } from 'react';
 import { Suspense } from 'react';
 import { isChatInitializedAtom } from '../../state/chat.atoms';
 import { ChatListLoading } from './ChatContentLoading';

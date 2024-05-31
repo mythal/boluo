@@ -1,5 +1,7 @@
 import { useSetAtom } from 'jotai';
-import React, { DragEventHandler, useCallback } from 'react';
+import {type DragEventHandler} from 'react';
+import type React from 'react';
+import { useCallback } from 'react';
 import { useComposeAtom } from './useComposeAtom';
 
 interface MediaDropReturn {

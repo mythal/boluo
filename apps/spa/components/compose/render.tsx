@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { ParseResult } from '../../interpreter/parse-result';
+import { type ReactNode } from 'react';
+import { type ParseResult } from '../../interpreter/parse-result';
 
 // Note: The `parsed` is possibly stale due to the delay in the `useDeferredValue` hook.
 export const composeRender =

@@ -1,15 +1,15 @@
-import { ChannelMember } from '@boluo/api';
-import { Atom, atom, PrimitiveAtom, WritableAtom } from 'jotai';
+import { type ChannelMember } from '@boluo/api';
+import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithReducer, atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
-import { composeInitialParseResult, ParseResult } from '../interpreter/parse-result';
+import { composeInitialParseResult, type ParseResult } from '../interpreter/parse-result';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import {
   checkCompose,
-  ComposeError,
+  type ComposeError,
   composeReducer,
-  ComposeState,
+  type ComposeState,
   makeInitialComposeState,
 } from '../state/compose.reducer';
 import { usePaneKey } from './usePaneKey';

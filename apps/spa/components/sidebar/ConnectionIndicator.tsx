@@ -10,7 +10,7 @@ import {
 import clsx from 'clsx';
 import { Cloud, CloudOff } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
-import { FC, Suspense, useEffect, useMemo, useState } from 'react';
+import { type FC, Suspense, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { FloatingBox } from '../common/FloatingBox';

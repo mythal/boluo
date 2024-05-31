@@ -49,6 +49,10 @@ module.exports = {
         '@typescript-eslint/prefer-regexp-exec': 'warn',
         '@typescript-eslint/prefer-includes': 'warn',
         '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'warn',
+        '@typescript-eslint/consistent-type-imports': [
+          'warn',
+          { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+        ],
       },
     },
   ],

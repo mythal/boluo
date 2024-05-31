@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { EvaluatedExprNode, ExprNode } from '../../interpreter/entities';
+import { type EvaluatedExprNode, type ExprNode } from '../../interpreter/entities';
 import { EntityExprBinary } from './EntityExprBinary';
 import { EntityExprCocRoll } from './EntityExprCocRoll';
 import { EntityExprDicePoolRoll } from './EntityExprDicePool';

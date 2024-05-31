@@ -1,16 +1,17 @@
 import {
   autoUpdate,
   offset,
-  Placement,
+  type Placement,
   shift,
   useDismiss,
   useFloating,
-  UseFloatingReturn,
+  type UseFloatingReturn,
   useHover,
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import React, { useCallback, useState } from 'react';
+import type React from 'react';
+import { useCallback, useState } from 'react';
 
 type UseInteractionsReturn = ReturnType<typeof useInteractions>;
 

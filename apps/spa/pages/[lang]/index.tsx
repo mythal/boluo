@@ -1,6 +1,6 @@
-import { IntlMessages, localeList, toLocale } from '@boluo/common/locale';
+import { type IntlMessages, localeList, toLocale } from '@boluo/common/locale';
 import { ClientProviders } from '../../components/ClientProviders';
-import { GetStaticPaths } from 'next';
+import { type GetStaticPaths } from 'next';
 import { getMessages } from '@boluo/common/server/get-messages';
 import { type Locale } from '@boluo/common';
 import Head from 'next/head';

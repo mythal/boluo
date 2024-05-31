@@ -1,7 +1,7 @@
 import type { Message } from '@boluo/api';
 import { byPos } from '../sort';
-import { MessageItem, PreviewItem } from './channel.types';
-import { ChatAction, ChatActionUnion } from './chat.actions';
+import { type MessageItem, type PreviewItem } from './channel.types';
+import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
 import { recordWarn } from '../error';
 

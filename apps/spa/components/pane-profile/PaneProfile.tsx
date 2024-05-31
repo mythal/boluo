@@ -1,6 +1,6 @@
 import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
 import { Edit, LogOut, User } from '@boluo/icons';
-import { FC, useState } from 'react';
+import { type FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Loading } from '@boluo/ui/Loading';
 import { toggle } from '@boluo/utils';

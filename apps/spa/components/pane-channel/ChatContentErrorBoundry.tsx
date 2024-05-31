@@ -1,4 +1,4 @@
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Failed } from '../common/Failed';
 import { ErrorBoundary } from '@sentry/react';

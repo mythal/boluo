@@ -1,5 +1,5 @@
 import { atom, useAtomValue } from 'jotai';
-import { createContext, FC, ReactNode, useMemo } from 'react';
+import { createContext, type FC, type ReactNode, useMemo } from 'react';
 import { focusPaneAtom } from './view.atoms';
 
 interface PaneContext {

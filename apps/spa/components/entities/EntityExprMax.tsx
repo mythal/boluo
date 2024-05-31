@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { Max, MaxResult } from '../../interpreter/entities';
+import { type FC } from 'react';
+import { type Max, type MaxResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 
 interface Props {

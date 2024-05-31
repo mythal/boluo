@@ -1,7 +1,7 @@
-import { Channel } from '@boluo/api';
+import { type Channel } from '@boluo/api';
 import { Drama, Hash } from '@boluo/icons';
 import { atom } from 'jotai';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { useChannelId } from '../../hooks/useChannelId';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { ChannelHeaderExtra } from './ChannelHeaderExtra';

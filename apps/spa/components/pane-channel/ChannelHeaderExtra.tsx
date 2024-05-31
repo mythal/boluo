@@ -1,6 +1,6 @@
-import { PrimitiveAtom, useAtom } from 'jotai';
-import { FC } from 'react';
-import { ChannelHeaderState } from './ChannelHeader';
+import { type PrimitiveAtom, useAtom } from 'jotai';
+import { type FC } from 'react';
+import { type ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderMore } from './ChannelHeaderMore';
 
 interface Props {

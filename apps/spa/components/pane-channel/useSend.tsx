@@ -1,17 +1,17 @@
-import { ApiError, Message, User } from '@boluo/api';
+import { type ApiError, type Message, type User } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
-import { Result } from '@boluo/utils';
+import { type Result } from '@boluo/utils';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
-import { ComposeActionUnion } from '../../state/compose.actions';
+import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { recordWarn } from '../../error';
 

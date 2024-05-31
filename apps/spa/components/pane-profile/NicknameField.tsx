@@ -1,8 +1,8 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
-import { ProfileEditSchema } from './PaneProfileEdit';
+import { type ProfileEditSchema } from './PaneProfileEdit';
 
 interface Props {
   nickname: string;

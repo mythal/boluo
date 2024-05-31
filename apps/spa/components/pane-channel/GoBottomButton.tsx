@@ -1,7 +1,7 @@
 import { ChevronsDown } from '@boluo/icons';
 import { memo, useMemo } from 'react';
 import { Button } from '@boluo/ui/Button';
-import { ChatItem } from '../../state/channel.types';
+import { type ChatItem } from '../../state/channel.types';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { useAtomValue } from 'jotai';
 

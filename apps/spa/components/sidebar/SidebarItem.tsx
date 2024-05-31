@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { X } from '@boluo/icons';
-import { FC, ReactNode, useMemo } from 'react';
+import { type FC, type ReactNode, useMemo } from 'react';
 
 interface Props {
   onClick?: () => void;

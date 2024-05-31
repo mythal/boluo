@@ -3,7 +3,7 @@ import type { Reducer } from 'react';
 import { eventIdCompare } from '../sort';
 import type { ChannelState } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
-import { ChatAction, ChatActionUnion, eventToChatAction } from './chat.actions';
+import { type ChatAction, type ChatActionUnion, eventToChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';
 import { recordError } from '../error';

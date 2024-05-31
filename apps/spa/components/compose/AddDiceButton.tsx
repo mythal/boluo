@@ -1,6 +1,6 @@
 import { Dice } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { InComposeButton } from './InComposeButton';

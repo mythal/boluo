@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { PreviewItem } from '../../state/channel.types';
+import { type PreviewItem } from '../../state/channel.types';
 import { OthersPreview } from './OthersPreview';
 import { SelfPreview } from './SelfPreview';
 import { useMember } from '../../hooks/useMember';

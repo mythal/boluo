@@ -1,4 +1,4 @@
-import { FC, useId } from 'react';
+import { type FC, useId } from 'react';
 import { useController } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { HelpText } from '@boluo/ui/HelpText';

@@ -15,7 +15,7 @@ import {
 } from '@floating-ui/react';
 import { NameBox } from './NameBox';
 import { NameEditContent } from './NameEditContent';
-import { Member } from '@boluo/api';
+import { type Member } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
 
 interface Props {

@@ -1,13 +1,13 @@
-import { Channel, Member } from '@boluo/api';
+import { type Channel, type Member } from '@boluo/api';
 import { UserPlus } from '@boluo/icons';
-import { FC, useMemo, useState } from 'react';
+import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
-import { MyChannelMemberResult } from '../../hooks/useMyChannelMember';
+import { type MyChannelMemberResult } from '../../hooks/useMyChannelMember';
 import { FailedBanner } from '../common/FailedBanner';
 
 interface Props {

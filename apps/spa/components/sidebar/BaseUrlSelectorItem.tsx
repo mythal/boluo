@@ -1,8 +1,8 @@
-import { Proxy } from '@boluo/api';
+import { type Proxy } from '@boluo/api';
 import clsx from 'clsx';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { ProxyTestResult } from '../../hooks/useAutoSelectProxy';
+import { type ProxyTestResult } from '../../hooks/useAutoSelectProxy';
 
 interface Props {
   proxy: Proxy;

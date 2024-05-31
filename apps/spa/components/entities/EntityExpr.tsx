@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { Expr } from '../../interpreter/entities';
+import { type FC } from 'react';
+import { type Expr } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 
 interface Props {

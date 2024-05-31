@@ -1,7 +1,7 @@
 import {
   closestCenter,
   DndContext,
-  DndContextProps,
+  type DndContextProps,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -9,7 +9,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { FC, ReactNode, useMemo } from 'react';
+import { type FC, type ReactNode, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';

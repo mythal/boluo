@@ -1,4 +1,4 @@
-import { ApiError } from '@boluo/api';
+import { type ApiError } from '@boluo/api';
 import { useErrorExplain } from '@boluo/common';
 import { AlertCircle } from '@boluo/icons';
 import { useCallback } from 'react';

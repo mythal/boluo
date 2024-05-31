@@ -3,8 +3,8 @@ import { atom } from 'jotai';
 import type { useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { store } from '@boluo/store';
-import { ChatActionUnion } from './chat.actions';
-import { chatReducer, ChatSpaceState, initialChatState, makeChatState } from './chat.reducer';
+import { type ChatActionUnion } from './chat.actions';
+import { chatReducer, type ChatSpaceState, initialChatState, makeChatState } from './chat.reducer';
 import { routeAtom } from './view.atoms';
 
 const baseChatAtom = atom(initialChatState);

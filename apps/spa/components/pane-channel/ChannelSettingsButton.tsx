@@ -1,5 +1,5 @@
 import { Settings } from '@boluo/icons';
-import { FC, MouseEventHandler, useCallback, useMemo } from 'react';
+import { type FC, type MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { usePaneKey } from '../../hooks/usePaneKey';

@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { DragEventHandler, FC, ReactNode, useEffect, useMemo, useRef } from 'react';
+import { type DragEventHandler, type FC, type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
 import { useReadObserve } from '../../hooks/useReadObserve';
 

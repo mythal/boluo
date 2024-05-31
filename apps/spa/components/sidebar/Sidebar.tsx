@@ -9,7 +9,7 @@ import { SpaceOptions } from './SidebarSpaceOptions';
 import { SidebarUserOperations } from './SidebarUserOperations';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
-import { User } from '@boluo/api';
+import { type User } from '@boluo/api';
 import { AppOperations } from './AppOperations';
 import { useIsClient } from '../../hooks/useIsClient';
 import { isApple } from '@boluo/utils';

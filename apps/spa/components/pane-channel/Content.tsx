@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { memo, ReactNode, useMemo } from 'react';
+import { memo, type ReactNode, useMemo } from 'react';
 import type { Entity, EvaluatedExprNode } from '../../interpreter/entities';
 import { evaluate, makeRng } from '../../interpreter/eval';
 import { Delay } from '../Delay';
@@ -14,7 +14,7 @@ import { EntityText } from '../entities/EntityText';
 import { SelfCursorToolbar } from './SelfCursorToolbar';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import { Cursor } from '../entities/Cursor';
-import { PrimitiveAtom } from 'jotai';
+import { type PrimitiveAtom } from 'jotai';
 import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
 import { EntityHead } from '../entities/EntityHead';
 

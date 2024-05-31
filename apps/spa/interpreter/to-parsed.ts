@@ -1,4 +1,4 @@
-import { ParseResult, emptyParseResult } from './parse-result';
+import { type ParseResult, emptyParseResult } from './parse-result';
 import { fromRawEntities } from './entities';
 
 export const messageToParsed = (text: string, rawEntities: unknown): ParseResult => {

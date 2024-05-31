@@ -1,4 +1,4 @@
-import { ChannelType } from '@boluo/api';
+import { type ChannelType } from '@boluo/api';
 
 export interface ChannelSettingsForm {
   name: string;

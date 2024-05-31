@@ -1,6 +1,6 @@
-import { FC, ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
+import { type FC, type ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
 import { Loading } from '@boluo/ui/Loading';
-import { ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils';
 import { usePaneFocus } from '../hooks/usePaneFocus';
 import { Delay } from './Delay';
 import { PaneBodyError } from './PaneBodyError';
@@ -8,7 +8,7 @@ import { BannerContext } from '../hooks/useBannerNode';
 import { selectAtom } from 'jotai/utils';
 import { PaneContext } from '../state/view.context';
 import { panesAtom } from '../state/view.atoms';
-import { PaneData } from '../state/view.types';
+import { type PaneData } from '../state/view.types';
 import { useAtomValue } from 'jotai';
 import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
 import { ChildPaneSwitch } from './PaneSwitch';

@@ -1,12 +1,12 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Settings, useQueryCurrentUser } from '@boluo/common';
-import { FC, useCallback } from 'react';
+import { type Settings, useQueryCurrentUser } from '@boluo/common';
+import { type FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { setThemeToDom, Theme, writeThemeToCookie } from '@boluo/theme';
+import { setThemeToDom, type Theme, writeThemeToCookie } from '@boluo/theme';
 import { useTheme } from '@boluo/theme/useTheme';
 import { Select } from '@boluo/ui/Select';
 import { identity } from '@boluo/utils';

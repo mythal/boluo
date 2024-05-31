@@ -1,9 +1,9 @@
 import clsx from 'clsx';
 import { X } from '@boluo/icons';
-import { FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
-import { Banner, useSetBanner } from '../hooks/useBanner';
+import { type Banner, useSetBanner } from '../hooks/useBanner';
 
 interface Props {
   banner: Banner;

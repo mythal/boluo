@@ -1,7 +1,7 @@
-import { ApiError, Message } from '@boluo/api';
+import { type ApiError, type Message } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import { useSetAtom } from 'jotai';
-import { FC, useEffect, useRef } from 'react';
+import { type FC, useEffect, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';

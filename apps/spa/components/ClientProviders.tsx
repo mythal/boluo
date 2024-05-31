@@ -1,6 +1,6 @@
 'use client';
 import { Provider as JotaiProvider } from 'jotai';
-import React, { ReactNode, Suspense, useCallback } from 'react';
+import React, { type ReactNode, Suspense, useCallback } from 'react';
 import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
 import type { IntlMessages, Locale } from '@boluo/common/locale';

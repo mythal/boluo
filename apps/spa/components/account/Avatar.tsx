@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { getMediaUrl } from '../../media';
 interface Props {
   id: string;

@@ -1,5 +1,5 @@
 import { useSetAtom, type PrimitiveAtom } from 'jotai';
-import { FC } from 'react';
+import { type FC } from 'react';
 
 interface Props {
   self?: boolean;

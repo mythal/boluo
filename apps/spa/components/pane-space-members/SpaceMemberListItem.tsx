@@ -1,5 +1,5 @@
-import { SpaceMemberWithUser } from '@boluo/api';
-import { FC, useCallback, useState } from 'react';
+import { type SpaceMemberWithUser } from '@boluo/api';
+import { type FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import { usePaneAdd } from '../../hooks/usePaneAdd';

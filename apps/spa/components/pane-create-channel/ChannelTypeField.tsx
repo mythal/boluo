@@ -1,5 +1,5 @@
-import { ChannelType } from '@boluo/api';
-import { FC, ReactNode } from 'react';
+import { type ChannelType } from '@boluo/api';
+import { type FC, type ReactNode } from 'react';
 import { useController } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 

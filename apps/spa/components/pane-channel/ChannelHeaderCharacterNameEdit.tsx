@@ -1,5 +1,5 @@
-import { ChannelMember } from '@boluo/api';
-import { FC, useId } from 'react';
+import { type ChannelMember } from '@boluo/api';
+import { type FC, useId } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';

@@ -1,17 +1,17 @@
-import { ChannelWithMaybeMember } from '@boluo/api';
-import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
+import { type ChannelWithMaybeMember } from '@boluo/api';
+import { type FC, type ReactNode, useCallback, useMemo, useState } from 'react';
 import { IsReorderingContext } from '../../hooks/useIsReordering';
 import { SidebarChannelItem } from './SidebarChannelItem';
 import { useAtomValue } from 'jotai';
 import { panesAtom } from '../../state/view.atoms';
 import {
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   DragOverlay,
-  DragStartEvent,
+  type DragStartEvent,
   MouseSensor,
   TouchSensor,
-  UniqueIdentifier,
+  type UniqueIdentifier,
   closestCenter,
   useSensor,
   useSensors,

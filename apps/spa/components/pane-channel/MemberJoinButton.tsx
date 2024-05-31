@@ -1,13 +1,13 @@
-import { Channel, ChannelWithMember, SpaceMember, User } from '@boluo/api';
+import { type Channel, type ChannelWithMember, type SpaceMember, type User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/common';
 import { UserPlus } from '@boluo/icons';
-import { FC, ReactNode, useState } from 'react';
+import { type FC, type ReactNode, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import useSWRMutation, { MutationFetcher } from 'swr/mutation';
+import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
-import { MyChannelMemberResult, useMyChannelMember } from '../../hooks/useMyChannelMember';
+import { type MyChannelMemberResult, useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { FailedBanner } from '../common/FailedBanner';

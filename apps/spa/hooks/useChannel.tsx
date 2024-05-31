@@ -1,4 +1,4 @@
-import { Channel } from '@boluo/api';
+import { type Channel } from '@boluo/api';
 import React from 'react';
 import { recordWarn } from '../error';
 

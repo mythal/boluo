@@ -1,4 +1,4 @@
-import { Locale } from '@boluo/common';
+import { type Locale } from '@boluo/common';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 

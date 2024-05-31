@@ -1,6 +1,6 @@
-import { ApiError } from '@boluo/api';
+import { type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Err, Ok, Result } from '@boluo/utils';
+import { Err, Ok, type Result } from '@boluo/utils';
 import { MEDIA_URL } from './const';
 import { recordError, recordWarn } from './error';
 

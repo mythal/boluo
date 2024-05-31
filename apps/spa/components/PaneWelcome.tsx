@@ -2,10 +2,9 @@ import { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
+import { GreetingHeader } from './GreetingHeader';
 
 interface Props {}
-
-export const Para = ({ children }: { children: ReactNode }) => <div className="py-2">{children}</div>;
 
 export const PaneWelcome: FC<Props> = () => {
   return (
@@ -18,12 +17,13 @@ export const PaneWelcome: FC<Props> = () => {
       }
     >
       <div className="p-pane">
-        <Para>
+        <GreetingHeader />
+        <p className="pb-2 pt-8">
           <FormattedMessage defaultMessage="This is Boluo, a chat app designed for tabletop roleplaying games." />
-        </Para>
-        <Para>
+        </p>
+        <p className="py-2">
           <FormattedMessage defaultMessage="It's currently in active development and everything is unstable." />
-        </Para>
+        </p>
       </div>
     </PaneBox>
   );

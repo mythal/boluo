@@ -83,9 +83,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       });
     }, [channel.id, latestMessageAtom]),
   );
-  const titleReorder = intl.formatMessage({ defaultMessage: 'Reorder channel' });
-  const titleClose = intl.formatMessage({ defaultMessage: 'Close' });
-  const titleOpenNew = intl.formatMessage({ defaultMessage: 'Open in new pane' });
+  const labelReorder = intl.formatMessage({ defaultMessage: 'Reorder channel' });
+  const labelClose = intl.formatMessage({ defaultMessage: 'Close' });
+  const labelOpenNew = intl.formatMessage({ defaultMessage: 'Open in new pane' });
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback(
     (e) => {
       e.preventDefault();
@@ -120,7 +120,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         isReordering ? 'cursor-grab' : 'cursor-pointer',
       )}
       onClick={handleClickButton}
-      title={isReordering ? titleReorder : active ? titleClose : titleOpenNew}
+      aria-label={isReordering ? labelReorder : active ? labelClose : labelOpenNew}
     >
       <ChannelItemIcon channel={channel} interactive={paneLimit >= 2} isReordering={isReordering} />
       {!isReordering && (

@@ -31,7 +31,7 @@ export const InGameSwitchButton: FC<Props> = () => {
             },
           })
         }
-        title={title}
+        label={title}
       >
         <Mask className={inGame ? '' : 'text-text-lighter'} />
       </InComposeButton>

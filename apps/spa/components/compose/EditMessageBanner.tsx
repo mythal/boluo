@@ -90,7 +90,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
           </div>
         </div>
         <div className="text-sm">
-          <InComposeButton title={cancelEditTitle} onClick={handleCanelEdit}>
+          <InComposeButton label={cancelEditTitle} onClick={handleCanelEdit}>
             <X />
           </InComposeButton>
         </div>

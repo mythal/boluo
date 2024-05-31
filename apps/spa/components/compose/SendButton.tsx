@@ -21,7 +21,7 @@ export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
     : intl.formatMessage({ defaultMessage: 'Send' });
   return (
     <div className="flex-shrink-0 self-end py-1 pr-1" ref={refs.setReference} {...getReferenceProps()}>
-      <InComposeButton onClick={() => send()} disabled={composeError !== null} title={title}>
+      <InComposeButton onClick={() => send()} disabled={composeError !== null} label={title}>
         {isEditing ? <Edit /> : <PaperPlane />}
       </InComposeButton>
       <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>

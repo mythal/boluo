@@ -13,7 +13,7 @@ export const ClosePaneButton: FC = () => {
         e.stopPropagation();
         close();
       }}
-      title={intl.formatMessage({ defaultMessage: 'Close pane' })}
+      aria-label={intl.formatMessage({ defaultMessage: 'Close the pane' })}
     >
       <Close />
     </SidebarHeaderButton>

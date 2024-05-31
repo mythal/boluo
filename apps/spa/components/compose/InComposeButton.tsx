@@ -5,14 +5,14 @@ interface Props {
   children: ReactNode;
   disabled?: boolean;
   pressed?: boolean;
-  title?: string;
+  label?: string;
 }
 
-export const InComposeButton = ({ onClick, children, title, pressed, disabled = false }: Props) => {
+export const InComposeButton = ({ onClick, children, label, pressed, disabled = false }: Props) => {
   return (
     <button
       disabled={disabled}
-      title={title}
+      aria-label={label}
       aria-pressed={pressed}
       className="bg-compose-button-bg disabled:bg-transprent disabled:text-text-lighter hover:enabled:bg-compose-button-hover-bg rounded-sm p-[0.5em] disabled:cursor-not-allowed"
       onClick={onClick}

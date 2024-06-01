@@ -1,9 +1,11 @@
 import { type ChannelMember } from '@boluo/api';
 import { useAtomValue } from 'jotai';
-import { type FC, type ReactNode, useDeferredValue } from 'react';
+import { type FC, type ReactNode, useDeferredValue, lazy, Suspense, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { Content } from './Content';
 import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
+
+const More = lazy(() => import('./SelfPreviewMore'));
 
 interface Props {
   nameNode: ReactNode;
@@ -16,6 +18,15 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
   const parsed = useAtomValue(parsedAtom);
 
   const deferredParsed = useDeferredValue(parsed);
+  const isEmpty = deferredParsed.entities.length === 0;
+  const more = useMemo(
+    () => (
+      <Suspense fallback={null}>
+        <More empty={isEmpty} />
+      </Suspense>
+    ),
+    [isEmpty],
+  );
   return (
     <>
       {parsed.whisperToUsernames != null && (
@@ -34,6 +45,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
           isArchived={false}
           nameNode={nameNode}
         />
+        {more}
       </div>
     </>
   );

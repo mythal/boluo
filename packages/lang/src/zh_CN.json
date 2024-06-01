@@ -231,7 +231,7 @@
     "message": "上传文件出错，是否恢复消息？"
   },
   "F3Wc9W": {
-    "message": "Last {day} days"
+    "message": "过去{day}天"
   },
   "FN6jdd": {
     "message": "贵安，{username}！"
@@ -510,7 +510,7 @@
     "message": "创建"
   },
   "W14DRL": {
-    "message": "Use {key} to send messages"
+    "message": "使用 {key} 键发送消息"
   },
   "WASph7": {
     "message": "踢走这个成员"
@@ -564,7 +564,7 @@
     "message": "{days} 天前"
   },
   "YjO/0+": {
-    "message": "Myself"
+    "message": "我自己"
   },
   "Yq91Dy": {
     "message": "导出「{channelName}」"
@@ -669,7 +669,7 @@
     "message": "无法重置密码，重置链接无效。"
   },
   "eVYdrD": {
-    "message": "Last 1 day"
+    "message": "过去1天"
   },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"

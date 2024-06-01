@@ -1,4 +1,4 @@
-import { type FC, type ReactNode } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';

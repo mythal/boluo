@@ -45,13 +45,11 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
         <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
       ) : (
         <Content
-          channelId={preview.channelId}
           source={source}
           entities={entities}
           isAction={preview.isAction}
           isArchived={false}
           nameNode={nameNode}
-          isPreview
         />
       )}
     </PreviewBox>

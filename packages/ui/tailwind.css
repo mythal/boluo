@@ -41,6 +41,11 @@
     font-family: fusion-pixel-zh-hant;
     src: url('./fonts/fusion-pixel-10px-monospaced-zh_hans.woff2');
   }
+  .font-pixel {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    font-smooth: never;
+  }
   #__next {
     height: 100%;
   }

@@ -45,7 +45,7 @@ export const PreviewBox: FC<Props> = ({
       data-id={id}
       data-is-last={isLast}
       className={clsx(
-        'group grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
+        'group/item grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
         'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',

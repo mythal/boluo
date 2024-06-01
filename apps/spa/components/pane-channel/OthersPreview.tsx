@@ -44,13 +44,15 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
       {preview.text === null ? (
         <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
       ) : (
-        <Content
-          source={source}
-          entities={entities}
-          isAction={preview.isAction}
-          isArchived={false}
-          nameNode={nameNode}
-        />
+        <div>
+          <Content
+            source={source}
+            entities={entities}
+            isAction={preview.isAction}
+            isArchived={false}
+            nameNode={nameNode}
+          />
+        </div>
       )}
     </PreviewBox>
   );

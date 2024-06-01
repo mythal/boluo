@@ -77,8 +77,6 @@ export const ChatItemMessage: FC<{
         ref={ref}
         data-read-position={message.pos}
         data-is-last={isLast}
-        onContextMenu={stopPropagation}
-        onDoubleClick={stopPropagation}
       >
         {message.whisperToUsers != null && (
           <span className="text-surface-600 text-sm italic">
@@ -95,14 +93,18 @@ export const ChatItemMessage: FC<{
         )}
 
         {parsed.text !== '' && (
-          <Content
-            source={parsed.text}
-            entities={parsed.entities}
-            isAction={isAction}
-            nameNode={nameNode}
-            isArchived={message.folded}
-            seed={message.seed}
-          />
+          <div>
+            <Content
+              source={parsed.text}
+              entities={parsed.entities}
+              isAction={isAction}
+              nameNode={nameNode}
+              isArchived={message.folded}
+              seed={message.seed}
+              onContextMenu={stopPropagation}
+              onDoubleClick={stopPropagation}
+            />
+          </div>
         )}
         {message.mediaId != null && <MessageMedia className="pt-2" media={message.mediaId} />}
       </div>

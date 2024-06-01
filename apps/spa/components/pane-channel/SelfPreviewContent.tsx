@@ -26,14 +26,15 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember }) => {
           myId={myMember.userId}
         />
       )}
-      <Content
-        source={deferredParsed.text}
-        entities={deferredParsed.entities}
-        isAction={deferredParsed.isAction}
-        isArchived={false}
-        nameNode={nameNode}
-        self
-      />
+      <div>
+        <Content
+          source={deferredParsed.text}
+          entities={deferredParsed.entities}
+          isAction={deferredParsed.isAction}
+          isArchived={false}
+          nameNode={nameNode}
+        />
+      </div>
     </>
   );
 };

@@ -34,15 +34,14 @@ async fn query(req: Request<Body>) -> Result<Channel, AppError> {
     Channel::get_by_id(&db::get().await, &query.id).await.or_not_found()
 }
 
+// TODO: cache it
 async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
     let channel = Channel::get_by_id(&mut *conn, &query.id).await.or_not_found()?;
-    let members = Member::get_by_channel(&mut *conn, channel.id).await?;
-
-    let color_list = ChannelMember::get_color_list(&mut *conn, &channel.id).await?;
+    let mut members = Member::get_by_channel(&mut *conn, channel.id).await?;
 
     let heartbeat_map = get_heartbeat_map()
         .lock()
@@ -50,9 +49,28 @@ async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
         .get(&query.id)
         .cloned()
         .unwrap_or_default();
+
+    members.sort_unstable_by(|a, b| {
+        if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
+            std::cmp::Ordering::Less
+        } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
+            std::cmp::Ordering::Greater
+        } else {
+            let a_heartbeat = heartbeat_map.get(&a.user.id);
+            let b_heartbeat = heartbeat_map.get(&b.user.id);
+            match (a_heartbeat, b_heartbeat) {
+                (Some(a_heartbeat), Some(b_heartbeat)) => a_heartbeat.cmp(b_heartbeat),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => a.channel.join_date.cmp(&b.channel.join_date),
+            }
+        }
+    });
+
     Ok(ChannelMembers {
         members,
-        color_list,
+        // deprecated
+        color_list: HashMap::new(),
         heartbeat_map,
     })
 }

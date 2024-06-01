@@ -101,12 +101,15 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
   );
 };
 
-const WhisperButton = () => {
+const WhisperButton: FC<{ currentUser: User }> = ({ currentUser }) => {
   const { isWhisperAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
   return (
-    <ToolbarButton active={isWhisper} onClick={() => dispatch({ type: 'toggleWhisper', payload: {} })}>
+    <ToolbarButton
+      active={isWhisper}
+      onClick={() => dispatch({ type: 'toggleWhisper', payload: { username: currentUser.username } })}
+    >
       <Icon icon={Whisper} className={isWhisper ? '' : 'opacity-50'} />
       <FormattedMessage defaultMessage="Whisper" />
     </ToolbarButton>
@@ -114,7 +117,7 @@ const WhisperButton = () => {
 };
 
 export const SelfPreviewToolbar: FC<Props> = ({ currentUser }) => {
-  const whisperButton = useMemo(() => <WhisperButton />, []);
+  const whisperButton = useMemo(() => <WhisperButton currentUser={currentUser} />, [currentUser]);
   const muteButton = useMemo(() => <MuteButton />, []);
   const actionButton = useMemo(() => <ActionButton />, []);
   const sendButton = useMemo(() => <SendButton currentUser={currentUser} />, [currentUser]);

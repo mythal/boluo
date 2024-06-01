@@ -78,7 +78,7 @@ export const Content = memo<Props>(({ source, entities, isAction, isArchived, na
     <>
       <div
         className={clsx(
-          'relative h-full whitespace-pre-wrap break-all',
+          'relative h-full whitespace-pre-wrap break-words',
           self ? 'pb-1' : '',
           isArchived ? 'decoration-highest/50 line-through' : '',
         )}

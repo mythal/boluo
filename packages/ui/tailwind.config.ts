@@ -251,6 +251,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
             bg: $(white, zinc[600]),
             text: $(black, white),
             border: $(neutral[300], neutral[500]),
+            hover: {
+              bg: $(neutral[100], zinc[500]),
+            },
           },
         },
       },

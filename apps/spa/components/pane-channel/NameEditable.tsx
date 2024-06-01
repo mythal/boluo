@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ChevronDown } from '@boluo/icons';
+import { ChevronDown, TriangleAlert } from '@boluo/icons';
 import { useMemo, useState, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
@@ -17,6 +17,8 @@ import { NameBox } from './NameBox';
 import { NameEditContent } from './NameEditContent';
 import { type Member } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
+import { Delay } from '../Delay';
+import { FallbackIcon } from '../FallbackIcon';
 
 interface Props {
   name: string | undefined | null;
@@ -73,7 +75,10 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         {...getReferenceProps()}
       >
         {isEmptyName ? (
-          <span className="text-error-400 italic">
+          <span className="font-pixel text-[12.5px]">
+            <Delay fallback={<FallbackIcon />}>
+              <Icon icon={TriangleAlert} className="mr-1" />
+            </Delay>
             <FormattedMessage defaultMessage="Need A Name" />
           </span>
         ) : (

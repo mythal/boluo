@@ -1,4 +1,4 @@
-import { Gamemaster } from '@boluo/icons';
+import { Gamemaster, TriangleAlert } from '@boluo/icons';
 import { useMemo, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NameBox } from './NameBox';
@@ -18,6 +18,8 @@ import {
 } from '@floating-ui/react';
 import { UserCard } from '../common/UserCard';
 import Icon from '@boluo/ui/Icon';
+import { Delay } from '../Delay';
+import { FallbackIcon } from '../FallbackIcon';
 
 interface Props {
   name: string | undefined | null;
@@ -55,7 +57,10 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
         {...getReferenceProps()}
       >
         {isEmptyName ? (
-          <span className="text-error-400 italic">
+          <span className="font-pixel text-[12.5px]">
+            <Delay fallback={<FallbackIcon />}>
+              <Icon className="mr-1" icon={TriangleAlert} />
+            </Delay>
             <FormattedMessage defaultMessage="No Name" />
           </span>
         ) : (

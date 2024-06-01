@@ -34,6 +34,11 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
     [dispatch],
   );
 
+  const memberMap: Record<string, Member> = useMemo(() => {
+    if (!channelMembers) return {};
+    return Object.fromEntries(channelMembers.members.map((member) => [member.user.username, member]));
+  }, [channelMembers]);
+
   const whisperToAdd = useMemo(() => {
     if (!channelMembers) return null;
     const members = channelMembers.members.filter((member) => !whisperToUsernames.includes(member.user.username));
@@ -41,20 +46,15 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
     return <WhisperToItemAdd inGame={inGame} members={members} add={addUsername} />;
   }, [addUsername, channelMembers, inGame, whisperToUsernames]);
 
-  const whisperToMembers: Member[] | null = useMemo(() => {
-    if (!channelMembers) {
-      return null;
-    }
-    return channelMembers.members.flatMap((member) => {
-      if (whisperToUsernames.includes(member.user.username)) {
-        return [member];
-      } else {
-        return [];
-      }
+  const whisperToMembers: Member[] = useMemo(() => {
+    return whisperToUsernames.flatMap((username) => {
+      const member = memberMap[username];
+      if (!member) return [];
+      return [member];
     });
-  }, [channelMembers, whisperToUsernames]);
+  }, [memberMap, whisperToUsernames]);
 
-  if (channelMembers == null || whisperToMembers == null || isLoading) {
+  if (channelMembers == null || isLoading) {
     return (
       <span>
         <FormattedMessage defaultMessage="Whisper to …" />

@@ -98,6 +98,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         border: $(neutral[200], neutral[800]),
         shadow: $(neutral[100], neutral[900]),
       },
+      menu: {
+        panel: {
+          bg: $(white, neutral[900]),
+        },
+        item: {
+          hover: { bg: $(neutral[50], blue[900]) },
+        },
+      },
       pane: {
         bg: $(white, darkPaneBg),
         header: {
@@ -231,6 +239,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
             border: $(neutral[600], neutral[400]),
             bg: $(lime[100], blue[900]),
             bgHover: $(lime[50], blue[800]),
+          },
+        },
+        whisper: {
+          add: {
+            bg: $(white, neutral[700]),
           },
         },
       },

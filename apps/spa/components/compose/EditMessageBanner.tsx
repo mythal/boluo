@@ -79,12 +79,10 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
           <div className="text-text-light text-xs"></div>
           <div className="text-text-light max-h-[3rem] overflow-y-auto text-sm">
             <Content
-              channelId={message.channelId}
               source={message.text}
               entities={parsed.entities}
               isAction={message.isAction}
               isArchived={false}
-              isPreview={false}
               nameNode={nameNode}
             />
           </div>

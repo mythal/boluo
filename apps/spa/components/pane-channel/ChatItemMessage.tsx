@@ -96,13 +96,11 @@ export const ChatItemMessage: FC<{
 
         {parsed.text !== '' && (
           <Content
-            channelId={message.channelId}
             source={parsed.text}
             entities={parsed.entities}
             isAction={isAction}
             nameNode={nameNode}
             isArchived={message.folded}
-            isPreview={false}
             seed={message.seed}
           />
         )}

@@ -74,7 +74,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
       <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
       <div>
         <div className="items-between pr-message-small @2xl:pr-message flex h-full min-h-8 flex-col gap-1">
-          <SelfPreviewContent isFocused={isFocused} myMember={member.channel} nameNode={nameNode} />
+          <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
           {mediaNode}
         </div>
 

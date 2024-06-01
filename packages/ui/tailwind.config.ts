@@ -242,8 +242,15 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         whisper: {
+          item: {
+            bg: $(neutral[50], neutral[800]),
+            border: $(neutral[100], black),
+            decoration: $(neutral[900], neutral[100]),
+          },
           add: {
-            bg: $(white, neutral[700]),
+            bg: $(white, zinc[600]),
+            text: $(black, white),
+            border: $(neutral[300], neutral[500]),
           },
         },
       },

@@ -563,6 +563,9 @@
   "Yf3xiD": {
     "message": "{days} 天前"
   },
+  "YjO/0+": {
+    "message": "Myself"
+  },
   "Yq91Dy": {
     "message": "导出「{channelName}」"
   },
@@ -610,9 +613,6 @@
   },
   "bT0FEQ": {
     "message": "你确定要删除「{channelName}」频道吗？"
-  },
-  "beLe/F": {
-    "message": "广播"
   },
   "c1nBz9": {
     "message": "以 … 角色"
@@ -700,9 +700,6 @@
   },
   "gduNan": {
     "message": "在亮色模式"
-  },
-  "gyrIEl": {
-    "message": "文件"
   },
   "hCMGkK": {
     "message": "您尚未登录"

@@ -563,6 +563,9 @@
   "Yf3xiD": {
     "message": "{days} 日前"
   },
+  "YjO/0+": {
+    "message": "Myself"
+  },
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
   },
@@ -610,9 +613,6 @@
   },
   "bT0FEQ": {
     "message": "Are you sure you want to delete the \"{channelName}\" channel?"
-  },
-  "beLe/F": {
-    "message": "ブロードキャスト"
   },
   "c1nBz9": {
     "message": "As the character of …"
@@ -700,9 +700,6 @@
   },
   "gduNan": {
     "message": "ライトモード中"
-  },
-  "gyrIEl": {
-    "message": "ファイル"
   },
   "hCMGkK": {
     "message": "ログインしていません"

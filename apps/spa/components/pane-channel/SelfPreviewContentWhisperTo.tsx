@@ -2,7 +2,7 @@ import { type Member } from '@boluo/api';
 import { Plus, X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { type FC, useCallback, useMemo, useState, type ReactNode } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
@@ -14,9 +14,10 @@ interface Props {
   inGame: boolean;
   channelId: string;
   whisperToUsernames: string[];
+  myId: string;
 }
 
-export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame }) => {
+export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame, myId }) => {
   const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
@@ -63,14 +64,14 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 
   if (whisperToMembers.length === 0) {
     return (
-      <span className="text-surface-600 text-sm">
+      <span className="text-text-light text-sm">
         <FormattedMessage defaultMessage="Whisper to the Master only" /> {whisperToAdd}
       </span>
     );
   }
 
   return (
-    <span className="text-surface-600 text-sm">
+    <span className="text-text-light text-sm">
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToMembers.map((member) => (
@@ -79,6 +80,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
             key={member.user.id}
             member={member}
             remove={removeUsername(member.user.username)}
+            myself={member.user.id === myId}
           />
         ))}
         {whisperToAdd}
@@ -87,19 +89,29 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
   );
 };
 
-export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void }> = ({
+export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void; myself: boolean }> = ({
   member,
   remove,
   inGame,
+  myself,
 }) => {
+  const intl = useIntl();
   const { nickname } = member.user;
   const { characterName } = member.channel;
+  let name;
+  if (myself) {
+    name = intl.formatMessage({ defaultMessage: 'Myself' });
+  } else if (inGame && characterName !== '') {
+    name = characterName;
+  } else {
+    name = nickname;
+  }
   return (
     <button
-      className="bg-lowest border-surface-100 hover:border-surface-300 rounded border px-1 hover:line-through"
+      className="bg-preview-whisper-item-bg border-preview-whisper-item-border decoration-preview-whisper-item-decoration rounded border px-1 decoration-2 hover:line-through"
       onClick={remove}
     >
-      {inGame && characterName !== '' ? characterName : nickname}
+      {name}
       <Icon icon={X} />
     </button>
   );
@@ -126,10 +138,10 @@ export const WhisperToItemAdd: FC<{ inGame: boolean; members: Member[]; add: (us
       <button
         ref={refs.setReference}
         className={clsx(
-          'bg-preview-whisper-add-bg inline-flex rounded border px-0.5',
+          'bg-preview-whisper-add-bg text-preview-whisper-add-text inline-flex rounded border px-0.5',
           open
-            ? 'border-surface-300 translate-y-px'
-            : 'border-transprent group-hover/item:border-surface-300 shadow-sm active:translate-y-px active:shadow-none',
+            ? 'border-preview-whisper-add-border translate-y-px'
+            : 'border-transprent group-hover/item:border-preview-whisper-add-border shadow-sm active:translate-y-px active:shadow-none',
         )}
         {...getReferenceProps()}
       >

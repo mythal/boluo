@@ -31,6 +31,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, isFocused })
           inGame={inGame}
           channelId={myMember.channelId}
           whisperToUsernames={parsed.whisperToUsernames}
+          myId={myMember.userId}
         />
       )}
       <Content

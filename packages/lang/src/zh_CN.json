@@ -17,9 +17,6 @@
   "/+v5jy": {
     "message": "{seconds} 秒前"
   },
-  "/3UTYF": {
-    "message": "使用 {key} 键发送消息."
-  },
   "/DfISw": {
     "message": "取消编辑"
   },
@@ -232,6 +229,9 @@
   },
   "Euftjf": {
     "message": "上传文件出错，是否恢复消息？"
+  },
+  "F3Wc9W": {
+    "message": "过去{day}天"
   },
   "FN6jdd": {
     "message": "贵安，{username}！"
@@ -509,6 +509,9 @@
   "VzzYJk": {
     "message": "创建"
   },
+  "W14DRL": {
+    "message": "使用 {key} 键发送消息"
+  },
   "WASph7": {
     "message": "踢走这个成员"
   },
@@ -560,6 +563,9 @@
   "Yf3xiD": {
     "message": "{days} 天前"
   },
+  "YjO/0+": {
+    "message": "我自己"
+  },
   "Yq91Dy": {
     "message": "导出「{channelName}」"
   },
@@ -607,9 +613,6 @@
   },
   "bT0FEQ": {
     "message": "你确定要删除「{channelName}」频道吗？"
-  },
-  "beLe/F": {
-    "message": "广播"
   },
   "c1nBz9": {
     "message": "以 … 角色"
@@ -665,6 +668,9 @@
   "eOqhbq": {
     "message": "无法重置密码，重置链接无效。"
   },
+  "eVYdrD": {
+    "message": "过去1天"
+  },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
   },
@@ -694,9 +700,6 @@
   },
   "gduNan": {
     "message": "在亮色模式"
-  },
-  "gyrIEl": {
-    "message": "文件"
   },
   "hCMGkK": {
     "message": "您尚未登录"

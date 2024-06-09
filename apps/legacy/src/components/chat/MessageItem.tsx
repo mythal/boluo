@@ -78,7 +78,7 @@ function MessageItem({
       {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
       {renderName && <div css={nameContainer}>{name}</div>}
       {content}
-      {myMember && !lazy && <ChatMessageToolbar mine={mine} message={message} myMember={myMember} />}
+      {myMember && !lazy && <ChatMessageToolbar key={message.id} mine={mine} message={message} myMember={myMember} />}
     </div>
   );
 }

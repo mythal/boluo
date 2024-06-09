@@ -11,6 +11,7 @@ import { EntityStrong } from '../entities/EntityStrong';
 import { EntityText } from '../entities/EntityText';
 import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
 import { ZERO_WIDTH_SPACE } from '../../const';
+import { EntityUnknown } from '../entities/EntityUnknown';
 
 interface Props {
   source: string;
@@ -67,6 +68,8 @@ export const Content = memo<Props>(
               return <EntityExpr key={index} source={source} entity={entity} />;
             case 'EvaluatedExpr':
               return <EntityEvaluatedExpr key={index} source={source} entity={entity} />;
+            default:
+              return <EntityUnknown key={index} />;
           }
         }),
       );

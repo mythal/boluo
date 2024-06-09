@@ -1,11 +1,7 @@
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 
-interface Props {
-  text: string;
-}
-
-export const EntityUnknown: FC<Props> = () => (
+export const EntityUnknown: FC = () => (
   <span className="font-mono">
     [<FormattedMessage defaultMessage="Unsupported" />]
   </span>

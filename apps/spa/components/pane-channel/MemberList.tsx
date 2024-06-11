@@ -1,4 +1,4 @@
-import { type Channel, type Member } from '@boluo/api';
+import { type User, type Channel, type Member } from '@boluo/api';
 import { UserPlus } from '@boluo/icons';
 import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -7,13 +7,12 @@ import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
-import { type MyChannelMemberResult } from '../../hooks/useMyChannelMember';
-import { FailedBanner } from '../common/FailedBanner';
+import { Failed } from '../common/Failed';
 
 interface Props {
   className?: string;
   channel: Channel;
-  myMember: MyChannelMemberResult;
+  currentUser: User | undefined | null;
 }
 
 const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
@@ -24,7 +23,7 @@ const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const MemberList: FC<Props> = ({ myMember, channel }) => {
+export const MemberList: FC<Props> = ({ currentUser, channel }) => {
   const intl = useIntl();
   const [uiState, setUiState] = useState<'MEMBER' | 'INVITE'>('MEMBER');
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
@@ -67,19 +66,29 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
     });
     return members;
   }, [membersData, userStatusMap]);
+  const myMember: Member | null = useMemo(() => {
+    if (membersData == null || currentUser == null) {
+      return null;
+    }
+    return membersData.members.find((member) => member.user.id === currentUser.id) ?? null;
+  }, [currentUser, membersData]);
   if (error && membersData == null) {
     return (
-      <FailedBanner error={error}>
-        <FormattedMessage defaultMessage="Failed to query members of the channel" />
-      </FailedBanner>
+      <div className="p-2">
+        <Failed error={error} message={<FormattedMessage defaultMessage="Failed to query members of the channel" />} />
+      </div>
     );
   }
 
-  if (membersData == null || (myMember.isErr && myMember.err === 'LOADING')) {
+  if (membersData == null) {
     return <MemberListLoading />;
   }
-  const canIKick = myMember.isOk ? myMember.some.channel.isMaster || myMember.some.space.isAdmin : false;
-  const canInvite = myMember.isOk && (myMember.some.channel.isMaster || myMember.some.space.isAdmin);
+  let canIKick = false;
+  let canInvite = false;
+  if (myMember != null) {
+    canIKick = myMember.channel.isMaster || myMember.space.isAdmin;
+    canInvite = myMember.channel.isMaster || myMember.space.isAdmin;
+  }
 
   return (
     <div className="border-surface-100 flex flex-col border-l">
@@ -100,13 +109,8 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
       </div>
 
       <div className="overflow-y-auto">
-        {uiState === 'INVITE' && myMember.isOk && (
-          <MemberInvitation
-            members={members}
-            myMember={myMember.some}
-            channel={channel}
-            userStatusMap={userStatusMap}
-          />
+        {uiState === 'INVITE' && myMember != null && (
+          <MemberInvitation members={members} myMember={myMember} channel={channel} userStatusMap={userStatusMap} />
         )}
         {uiState === 'MEMBER' &&
           members.map((member) => (
@@ -115,7 +119,7 @@ export const MemberList: FC<Props> = ({ myMember, channel }) => {
               channel={channel}
               member={member}
               canIKick={canIKick}
-              canIEditMaster={(myMember.isOk && myMember.some.space.isAdmin) ?? false}
+              canIEditMaster={myMember?.space.isAdmin ?? false}
               status={userStatusMap?.[member.user.id]}
             />
           ))}

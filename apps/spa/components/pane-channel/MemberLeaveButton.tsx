@@ -1,17 +1,18 @@
 import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import { post } from '@boluo/api-browser';
 import { UserX } from '@boluo/icons';
-import { type FC, useCallback, useState } from 'react';
+import { type FC, useCallback, useState, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
 import { type Empty } from '@boluo/utils';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { FloatingBox } from '../common/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import Icon from '@boluo/ui/Icon';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { type Member } from '@boluo/api';
 
 interface Props {
   channelId: string;
@@ -23,9 +24,13 @@ const leave: MutationFetcher<void, [string, string], Empty> = async ([_, channel
 };
 
 export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
-  const channelMember = useMyChannelMember(channelId);
+  const { data: channelMembers } = useQueryChannelMembers(channelId);
   const { data: channel, isLoading } = useQueryChannel(channelId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, { onSuccess });
+  const myMember = useMemo((): Member | null => {
+    if (channelMembers == null || channelMembers.selfIndex == null) return null;
+    return channelMembers.members[channelMembers.selfIndex] ?? null;
+  }, [channelMembers]);
 
   const [isConfirmOpen, setComfirmOpen] = useState(false);
   const { x, y, strategy, refs, context } = useFloating({
@@ -47,7 +52,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
     <>
       <SidebarHeaderButton
         ref={refs.setReference}
-        disabled={channelMember.isErr || isMutating || isLoading}
+        disabled={myMember == null || isMutating || isLoading}
         size="small"
         {...getReferenceProps()}
       >

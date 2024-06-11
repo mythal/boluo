@@ -1,10 +1,9 @@
-import { type ChannelMember } from '@boluo/api';
+import { type Member, type ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
 import { Edit } from '@boluo/icons';
-import { type FC } from 'react';
+import { useMemo, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { ChannelSettingsButton } from './ChannelSettingsButton';
 import { MemberLeaveButton } from './MemberLeaveButton';
 import { type ChannelHeaderState } from './ChannelHeader';
@@ -14,6 +13,7 @@ import { MemberJoinButton } from './MemberJoinButton';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { useQueryCurrentUser } from '@boluo/common';
 import { ChannelExportButton } from './ChannelExportButton';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 
 interface Props {
   channelId: string;
@@ -44,8 +44,14 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
 export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   const { data: channel } = useQueryChannel(channelId);
   const { data: currentUser } = useQueryCurrentUser();
-  const memberResult = useMyChannelMember(channelId);
-  const member = memberResult.isOk ? memberResult.some : null;
+  const { data: members } = useQueryChannelMembers(channelId);
+  const member = useMemo((): Member | null => {
+    if (members == null || members.members.length === 0 || members.selfIndex == null) {
+      return null;
+    } else {
+      return members.members[members.selfIndex] ?? null;
+    }
+  }, [members]);
 
   let memberButton = null;
   if (currentUser == null) {

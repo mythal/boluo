@@ -41,6 +41,12 @@ async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
     let channel = Channel::get_by_id(&mut *conn, &query.id).await.or_not_found()?;
+    let current_user_id = authenticate(&req).await.ok().map(|session| session.user_id);
+    if !channel.is_public && current_user_id.is_none() {
+        return Err(AppError::NoPermission(
+            "you are not logged in and this is a private channel".to_string(),
+        ));
+    }
     let mut members = Member::get_by_channel(&mut *conn, channel.id).await?;
 
     let heartbeat_map = get_heartbeat_map()
@@ -66,12 +72,18 @@ async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
             }
         }
     });
+    let self_index: Option<usize> =
+        current_user_id.and_then(|current_user_id| members.iter().position(|member| member.user.id == current_user_id));
+    if !channel.is_public && self_index.is_none() {
+        return Err(AppError::NoPermission("this is a private channel".to_string()));
+    }
 
     Ok(ChannelMembers {
         members,
         // deprecated
         color_list: HashMap::new(),
         heartbeat_map,
+        self_index,
     })
 }
 
@@ -355,7 +367,7 @@ async fn kick(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     Event::push_members(channel_id);
     let mut conn = pool.acquire().await?;
     let members = Member::get_by_channel(&mut *conn, channel_id).await?;
-    let color_list = ChannelMember::get_color_list(&mut *conn, &channel_id).await?;
+    let self_index: Option<usize> = members.iter().position(|member| member.user.id == operator_user_id);
     let heartbeat_map = get_heartbeat_map()
         .lock()
         .await
@@ -364,8 +376,9 @@ async fn kick(req: Request<Body>) -> Result<ChannelMembers, AppError> {
         .unwrap_or_default();
     Ok(ChannelMembers {
         members,
-        color_list,
+        color_list: HashMap::new(),
         heartbeat_map,
+        self_index,
     })
 }
 

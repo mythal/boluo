@@ -5,4 +5,5 @@ export interface ChannelMembers {
   members: Array<Member>;
   colorList: Record<string, string>;
   heartbeatMap: Record<string, bigint>;
+  selfIndex: number | null;
 }

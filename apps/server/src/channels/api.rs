@@ -85,6 +85,7 @@ pub struct ChannelMembers {
     pub members: Vec<Member>,
     pub color_list: HashMap<Uuid, String>,
     pub heartbeat_map: HashMap<Uuid, i64>,
+    pub self_index: Option<usize>,
 }
 
 #[derive(Serialize, Debug, TS)]

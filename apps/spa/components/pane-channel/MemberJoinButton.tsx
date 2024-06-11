@@ -1,4 +1,4 @@
-import { type Channel, type ChannelWithMember, type SpaceMember, type User } from '@boluo/api';
+import { type ChannelMembers, type Channel, type ChannelWithMember, type SpaceMember, type User } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/common';
 import { UserPlus } from '@boluo/icons';
@@ -7,11 +7,11 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
-import { type MyChannelMemberResult, useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { FailedBanner } from '../common/FailedBanner';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 
 interface Props {
   channel: Channel;
@@ -29,7 +29,7 @@ const check = (
   currentUser: User | undefined | null,
   channel: Channel,
   spaceMember: SpaceMember | null | undefined,
-  channelMember: MyChannelMemberResult,
+  channelMembers: ChannelMembers | null | undefined,
 ): 'NOT_BE_INVITED' | 'NOT_LOGGED_IN' | 'NOT_A_SPACE_MEMBER' | 'ALREADY' | null => {
   if (currentUser == null) {
     return 'NOT_LOGGED_IN';
@@ -40,7 +40,7 @@ const check = (
   if (spaceMember == null) {
     return 'NOT_A_SPACE_MEMBER';
   }
-  if (channelMember.isOk) {
+  if (channelMembers != null && channelMembers.selfIndex != null) {
     return 'ALREADY';
   }
   return null;
@@ -50,11 +50,11 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
   const { data: currentUser } = useQueryCurrentUser();
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channel.id], join);
   const { data: spaceMember } = useMySpaceMember(channel.spaceId);
-  const channelMember = useMyChannelMember(channel.id);
+  const { data: channelMembers } = useQueryChannelMembers(channel.id);
   const paneAdd = usePaneAdd();
   const [showError, setShowError] = useState(false);
 
-  const checkResult = check(currentUser, channel, spaceMember, channelMember);
+  const checkResult = check(currentUser, channel, spaceMember, channelMembers);
   const handleClick = async () => {
     if (checkResult != null) {
       setShowError(true);

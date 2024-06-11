@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { useQueryCurrentUser } from '@boluo/common';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { useMemo, type FC } from 'react';
@@ -22,6 +21,7 @@ import { parseDiceFace } from '../../dice';
 import { MemberContext } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
+import { type Member } from '@boluo/api';
 
 interface Props {
   channelId: string;
@@ -41,13 +41,18 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 };
 
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
-  const { data: currentUser } = useQueryCurrentUser();
   const { data: members } = useQueryChannelMembers(channelId, {});
-  const member = useMemo(
-    () => members?.members.find((member) => member.user.id === currentUser?.id) ?? null,
-    [members, currentUser],
-  );
-  const nickname = currentUser?.nickname ?? undefined;
+  const member: Member | null = useMemo(() => {
+    if (members == null) {
+      return null;
+    }
+    const { selfIndex } = members;
+    if (selfIndex == null) {
+      return null;
+    }
+    return members.members[selfIndex] ?? null;
+  }, [members]);
+  const nickname = member?.user.nickname ?? undefined;
   const characterName = member?.channel.characterName ?? '';
   const { data: channel, isLoading: isChannelLoading, error: queryChannelError } = useQueryChannel(channelId);
   const defaultInGame = channel?.type === 'IN_GAME';
@@ -105,7 +110,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
               )}
             >
               <ChatContent />
-              {memberListState === 'RIGHT' && <MemberList currentUser={currentUser} channel={channel} />}
+              {memberListState === 'RIGHT' && <MemberList currentUser={member?.user} channel={channel} />}
               {member ? <Compose channelAtoms={atoms} member={member} /> : <GuestCompose />}
             </div>
           </PaneBox>

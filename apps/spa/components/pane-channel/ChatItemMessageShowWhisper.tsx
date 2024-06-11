@@ -5,8 +5,8 @@ import { type FC, useEffect, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { chatAtom } from '../../state/chat.atoms';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 
 interface Props {
   messageId: string;
@@ -16,11 +16,15 @@ interface Props {
 }
 
 export const ChatItemMessageShowWhisper: FC<Props> = ({ messageId, userIdList, channelId, className }) => {
-  const memberResult = useMyChannelMember(channelId);
-  if (memberResult.isErr) {
+  const { data: chanenlMembers } = useQueryChannelMembers(channelId);
+  if (chanenlMembers == null || chanenlMembers.members.length === 0 || chanenlMembers.selfIndex == null) {
     return null;
   }
-  const member = memberResult.some;
+  const member = chanenlMembers.members[chanenlMembers.selfIndex];
+  if (member == null) {
+    return null;
+  }
+
   if (!member.channel.isMaster && !userIdList.includes(member.user.id)) {
     return (
       <span className={className}>

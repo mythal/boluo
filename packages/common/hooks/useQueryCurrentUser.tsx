@@ -1,7 +1,7 @@
 import type { ApiError, User } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
-import { Result } from '@boluo/utils';
+import useSWR, { type SWRConfiguration, type SWRResponse } from 'swr';
+import { type Result } from '@boluo/utils';
 
 export const useQueryCurrentUser = (
   config?: SWRConfiguration<User | null, ApiError>,

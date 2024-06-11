@@ -1,4 +1,3 @@
-import { type ChannelMember } from '@boluo/api';
 import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo, useRef } from 'react';
@@ -32,7 +31,7 @@ export const ChannelAtomsContext = createContext<ChannelAtoms | null>(null);
 
 export const useMakeChannelAtoms = (
   channelId: string,
-  member: ChannelMember | null,
+  characterName: string,
   defaultInGame: boolean,
   defaultDiceFace: number,
 ): ChannelAtoms => {
@@ -42,7 +41,6 @@ export const useMakeChannelAtoms = (
   }
   const defaultDiceFaceRef = useRef(defaultDiceFace);
   defaultDiceFaceRef.current = defaultDiceFace;
-  const characterName = member?.characterName ?? '';
   const composeAtom = composeAtomFamily({ channelId, paneKey });
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),

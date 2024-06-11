@@ -191,7 +191,7 @@ const MessageEdit: FC<{ message: Message; variant: 'toolbar' | 'more' }> = ({ me
   const label = intl.formatMessage({ defaultMessage: 'Edit' });
   const dispatch = useSetAtom(composeAtom);
   const member = useMember();
-  if (!member || member.user.id !== message.senderId || !member.space.isAdmin) {
+  if (!member || member.user.id !== message.senderId) {
     return null;
   }
 

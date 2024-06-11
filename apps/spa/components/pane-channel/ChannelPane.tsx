@@ -2,11 +2,10 @@ import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
-import { type FC } from 'react';
+import { useMemo, type FC } from 'react';
 import { memo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type ChannelAtoms, ChannelAtomsContext, useMakeChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useMyChannelMember } from '../../hooks/useMyChannelMember';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { Compose } from '../compose/Compose';
 import { useSendPreview } from '../compose/useSendPreview';
@@ -21,6 +20,7 @@ import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
 import { parseDiceFace } from '../../dice';
 import { MemberContext } from '../../hooks/useMember';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 
 interface Props {
   channelId: string;
@@ -41,43 +41,42 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const { data: currentUser } = useQueryCurrentUser();
-  const member = useMyChannelMember(channelId);
+  const { data: members } = useQueryChannelMembers(channelId, {});
+  const member = useMemo(
+    () => members?.members.find((member) => member.user.id === currentUser?.id) ?? null,
+    [members, currentUser],
+  );
   const nickname = currentUser?.nickname ?? undefined;
-  const { data: channel, isLoading, error } = useQueryChannel(channelId);
+  const characterName = member?.channel.characterName ?? '';
+  const { data: channel, isLoading: isChannelLoading, error: queryChannelError } = useQueryChannel(channelId);
   const defaultInGame = channel?.type === 'IN_GAME';
   const atoms: ChannelAtoms = useMakeChannelAtoms(
     channelId,
-    member.isOk ? member.some.channel : null,
+    characterName,
     defaultInGame,
     parseDiceFace(channel?.defaultDiceType),
   );
-  useSendPreview(
-    channelId,
-    nickname,
-    member.isOk ? member.some.channel.characterName : '',
-    atoms.composeAtom,
-    atoms.parsedAtom,
-    defaultInGame,
-  );
+  useSendPreview(channelId, nickname, characterName, atoms.composeAtom, atoms.parsedAtom, defaultInGame);
   const memberListState = useAtomValue(atoms.memberListStateAtom);
   let errorNode = null;
-  if (error) {
+  if (queryChannelError) {
     const title = <FormattedMessage defaultMessage="Failed to query the channel" />;
-    errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
-    if (channel == null) {
-      return (
-        <PaneFailed
-          error={error}
-          title={title}
-          message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
-        />
-      );
-    }
+    errorNode = <FailedBanner error={queryChannelError}>{title}</FailedBanner>;
   }
-  if (isLoading || channel == null || (!channel.isPublic && member.isErr && member.err === 'LOADING')) {
+  if (isChannelLoading) {
     return <PaneLoading grow>{errorNode}</PaneLoading>;
   }
-  const iAmMember = member.isOk && member.some.channel.channelId === channelId;
+
+  if (channel == null) {
+    return (
+      <PaneFailed
+        error={queryChannelError}
+        title={<FormattedMessage defaultMessage="Failed to query the channel" />}
+        message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
+      />
+    );
+  }
+  const iAmMember = member?.channel.channelId === channelId;
   if (!channel.isPublic && (member == null || !iAmMember)) {
     return (
       <PaneBox
@@ -93,7 +92,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     );
   }
   return (
-    <MemberContext.Provider value={member.isOk ? member.some : null}>
+    <MemberContext.Provider value={member}>
       <ChannelContext.Provider value={channel}>
         <ChannelAtomsContext.Provider value={atoms}>
           <PaneBox header={<ChannelHeader />} grow>
@@ -105,8 +104,8 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
               )}
             >
               <ChatContent />
-              {memberListState === 'RIGHT' && <MemberList myMember={member} channel={channel} />}
-              {member.isOk ? <Compose channelAtoms={atoms} member={member.some} /> : null}
+              {memberListState === 'RIGHT' && <MemberList currentUser={currentUser} channel={channel} />}
+              {member && <Compose channelAtoms={atoms} member={member} />}
             </div>
           </PaneBox>
         </ChannelAtomsContext.Provider>

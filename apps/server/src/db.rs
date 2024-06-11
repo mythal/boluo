@@ -12,6 +12,15 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
         pool.clone()
     } else {
         let pool = sqlx::postgres::PgPoolOptions::new()
+            .after_connect(|conn, _meta| {
+                Box::pin(async move {
+                    use sqlx::Executor;
+                    conn.execute("SET application_name = 'boluo-server'; SET statement_timeout = 20000;")
+                        .await?;
+
+                    Ok(())
+                })
+            })
             .max_connections(5)
             .connect(&get_postgres_url())
             .await

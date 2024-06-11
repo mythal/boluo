@@ -21,6 +21,7 @@ import { ChannelContext } from '../../hooks/useChannel';
 import { parseDiceFace } from '../../dice';
 import { MemberContext } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { GuestCompose } from '../compose/GuestCompose';
 
 interface Props {
   channelId: string;
@@ -105,7 +106,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
             >
               <ChatContent />
               {memberListState === 'RIGHT' && <MemberList currentUser={currentUser} channel={channel} />}
-              {member && <Compose channelAtoms={atoms} member={member} />}
+              {member ? <Compose channelAtoms={atoms} member={member} /> : <GuestCompose />}
             </div>
           </PaneBox>
         </ChannelAtomsContext.Provider>

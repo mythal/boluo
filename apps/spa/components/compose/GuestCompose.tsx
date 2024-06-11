@@ -3,11 +3,14 @@ import { useQueryCurrentUser } from '@boluo/common';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import { Button } from '@boluo/ui/Button';
 import { type ChildrenProps } from '@boluo/utils';
 import { useChannelId } from '../../hooks/useChannelId';
 
-const GuestComposeBox: FC<ChildrenProps> = ({ children }) => <div className="py-2 text-center">{children}</div>;
+const GuestComposeBox: FC<ChildrenProps> = ({ children }) => (
+  <div className="bg-compose-outer-bg border-t p-2 text-sm">
+    <div className="bg-compose-bg border-compose-border w-full rounded-sm border py-2 text-center">{children}</div>
+  </div>
+);
 
 export const GuestCompose = () => {
   const { data: currentUser } = useQueryCurrentUser();
@@ -29,9 +32,9 @@ export const GuestCompose = () => {
       <span className="mr-1">
         <FormattedMessage defaultMessage="You are not a member of this channel" />
       </span>
-      <Button data-small onClick={join}>
-        Join
-      </Button>
+      <button className="font-bold underline" onClick={join}>
+        <FormattedMessage defaultMessage="Join" />
+      </button>
     </GuestComposeBox>
   );
 };

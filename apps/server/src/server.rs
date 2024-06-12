@@ -33,6 +33,7 @@ mod pos;
 mod s3;
 mod session;
 mod spaces;
+mod state;
 mod users;
 mod validators;
 mod websocket;

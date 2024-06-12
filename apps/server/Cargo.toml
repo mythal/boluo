@@ -54,6 +54,7 @@ sqlx = { version = "0.7", features = [
   "chrono",
   "json",
 ] }
+dashmap = "5.5.3"
 
 
 [dependencies.ts-rs]

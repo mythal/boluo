@@ -42,10 +42,10 @@ function ResetPasswordConfirm() {
     [history, token],
   );
 
-  const passwordRepeatValidation: ValidationRules = {
+  const passwordRepeatValidation = {
     ...passwordValidation,
     validate: (value: string) => value === watch('password') || '两次输入的密码不相同',
-  };
+  } satisfies ValidationRules;
   return (
     <>
       <Title>重设密码</Title>

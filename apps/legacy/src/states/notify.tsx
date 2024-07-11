@@ -81,11 +81,12 @@ export const useNotify = () => {
       }
       const name = item.message.name;
       const text = item.message.text;
-      const newNotification = new Notification('菠萝 的新消息', {
+      const options: NotificationOptions & { renotify: boolean } = {
         body: `${name}: ${text}`,
         tag: channelId,
         renotify: true,
-      });
+      };
+      const newNotification = new Notification('菠萝 的新消息', options as NotificationOptions);
       const autoClouseTimeOut = 5000;
       newNotification.onshow = () => {
         setTimeout(() => {

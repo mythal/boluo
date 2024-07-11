@@ -22,12 +22,11 @@ export const maxLength = (max: number) => (intl: IntlShape) => ({
 
 // TODO: handle spaces
 export const nickname = (intl: IntlShape) => {
-  const a: RegisterOptions = {
+  return {
     ...required(intl),
     ...minLength(3)(intl),
     ...maxLength(32)(intl),
   };
-  return a;
 };
 
 export const username = (intl: IntlShape) => ({

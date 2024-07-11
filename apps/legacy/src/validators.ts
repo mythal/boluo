@@ -11,7 +11,7 @@ export const maxImageFileSize = 1024 * 1024 * 6;
 export const imageSizeExceeded = '图片大小最大只能 6MiB';
 
 export const required = '必须填写这个字段';
-export const emailValidation: ValidationRules = {
+export const emailValidation = {
   required,
   pattern: {
     // https://emailregex.com/
@@ -27,14 +27,14 @@ export const emailValidation: ValidationRules = {
     }
     return true;
   },
-};
-export const nicknameValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const nicknameValidation = {
   required,
   minLength: {
     value: 2,
     message: '昵称至少需要两个字符',
   },
-  validate: (nickname: string) => {
+  validate: (nickname = '') => {
     const striped = nickname.replace(/\s/g, '');
     if (striped.length === 0) {
       return '昵称不能为空';
@@ -46,8 +46,8 @@ export const nicknameValidation: ValidationRules = {
     value: 32,
     message: '昵称至少最多只能有32字符',
   },
-};
-export const usernameValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const usernameValidation = {
   required,
   pattern: {
     value: /^[\w_\d]+$/,
@@ -70,8 +70,8 @@ export const usernameValidation: ValidationRules = {
     }
     return true;
   },
-};
-export const passwordValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const passwordValidation = {
   required,
   minLength: {
     value: 8,
@@ -81,20 +81,20 @@ export const passwordValidation: ValidationRules = {
     value: 2048,
     message: '密码太长了',
   },
-};
-export const bioValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const bioValidation = {
   maxLength: {
     value: 256,
     message: '简介长度不能超过 256 字符',
   },
-};
-export const spaceNameValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const spaceNameValidation = {
   required: '必须填写位面名',
   maxLength: {
     value: 32,
     message: '位面名不可超过32字符',
   },
-  validate: (name: string) => {
+  validate: (name = '') => {
     const striped = name.replace(/\s/g, '');
     if (striped.length === 0) {
       return '位面名不能为空';
@@ -102,14 +102,17 @@ export const spaceNameValidation: ValidationRules = {
       return '位面名至少需要两个字符';
     }
   },
-};
-export const channelNameValidation = (spaceId?: Id, currentName?: string): ValidationRules => ({
+} satisfies ValidationRules;
+export const channelNameValidation = (
+  spaceId?: Id,
+  currentName?: string,
+): ValidationRules<{ name: string }, 'name'> => ({
   required: '必须填写频道名',
   maxLength: {
     value: 32,
     message: '频道名不可超过32字符',
   },
-  validate: async (name: string) => {
+  validate: async (name = '') => {
     const striped = name.replace(/\s/g, '');
     if (striped.length === 0) {
       return '频道名不能为空';
@@ -129,21 +132,21 @@ export const channelNameValidation = (spaceId?: Id, currentName?: string): Valid
     }
   },
 });
-export const characterNameValidation: ValidationRules = {
+export const characterNameValidation = {
   maxLength: {
     value: 32,
     message: '角色名最长32字符',
   },
-};
-export const descriptionValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const descriptionValidation = {
   maxLength: {
     value: 512,
     message: '简介最多512字符',
   },
-};
-export const channelTopicValidation: ValidationRules = {
+} satisfies ValidationRules;
+export const channelTopicValidation = {
   maxLength: {
     value: 128,
     message: '频道主题长度不能超过128字符',
   },
-};
+} satisfies ValidationRules;

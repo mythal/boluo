@@ -79,10 +79,10 @@ function SignUp() {
       setRegisterError(result.value);
     }
   };
-  const passwordRepeatValidation: ValidationRules = {
+  const passwordRepeatValidation = {
     ...passwordValidation,
     validate: (value: string) => value === watch('password') || '两次输入的密码不相同',
-  };
+  } satisfies ValidationRules;
   return (
     <>
       <Title>注册账号</Title>

@@ -55,3 +55,4 @@ Thumbs.db
 # direnv
 .direnv/
 .nx/cache
+.nx/workspace-data

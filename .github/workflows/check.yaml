@@ -33,6 +33,9 @@ jobs:
         env:
           CI: true
 
+      - name: Check
+        run: npm run check:affected
+
       - name: Lint
         run: npm run lint:affected
 

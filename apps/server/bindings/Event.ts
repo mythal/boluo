@@ -2,8 +2,4 @@
 import type { EventBody } from './EventBody';
 import type { EventId } from './EventId';
 
-export interface Event {
-  mailbox: string;
-  id: EventId;
-  body: EventBody;
-}
+export type Event = { mailbox: string; id: EventId; body: EventBody };

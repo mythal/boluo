@@ -3,11 +3,11 @@ import type { Channel } from './Channel';
 import type { Member } from './Member';
 import type { Space } from './Space';
 
-export interface ChannelWithRelated {
+export type ChannelWithRelated = {
   channel: Channel;
   members: Array<Member>;
   space: Space;
-  colorList: Record<string, string>;
-  heartbeatMap: Record<string, bigint>;
+  colorList: { [key: string]: string };
+  heartbeatMap: { [key: string]: bigint };
   encodedEvents: Array<string>;
-}
+};

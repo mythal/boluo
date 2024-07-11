@@ -47,7 +47,7 @@ export const MemberListItem: FC<Props> = ({ member, canIKick, status, channel, c
         className={clsx(
           'grid grid-flow-col grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1',
           hasCharacterName ? 'grid-rows-2' : 'grid-rows-1',
-          'hover:bg-surface-100 active:bg-surface-200 group relative  w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
+          'hover:bg-surface-100 active:bg-surface-200 group relative w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}

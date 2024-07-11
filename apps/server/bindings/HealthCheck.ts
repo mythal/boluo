@@ -3,11 +3,11 @@ import type { CheckResult } from './CheckResult';
 import type { ConnectionState } from './ConnectionState';
 import type { DiskInfo } from './DiskInfo';
 
-export interface HealthCheck {
+export type HealthCheck = {
   timestamp_sec: bigint;
   disks: Array<DiskInfo>;
   memory_total: bigint;
   memory_used: bigint;
   cache: CheckResult<ConnectionState>;
   database: CheckResult<ConnectionState>;
-}
+};

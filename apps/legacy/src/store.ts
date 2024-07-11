@@ -1,11 +1,10 @@
-import { composeWithDevTools } from '@redux-devtools/extension';
 import { useDispatch as useReduxDispatch, useSelector as useReduxSelector } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
-import thunk, { ThunkDispatch } from 'redux-thunk';
+import { thunk, ThunkDispatch } from 'redux-thunk';
 import { Action } from './actions';
 import { applicationReducer, ApplicationState, initApplicationState } from './reducers';
 
-export const store = createStore(applicationReducer, initApplicationState, composeWithDevTools(applyMiddleware(thunk)));
+export const store = createStore(applicationReducer, initApplicationState, applyMiddleware(thunk));
 
 export type Dispatch = ThunkDispatch<ApplicationState, unknown, Action>;
 

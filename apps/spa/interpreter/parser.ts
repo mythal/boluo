@@ -837,13 +837,13 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
     throw Error('Failed to parse the source: ' + source);
   }
   const [modifiers, { text, rest }] = result;
-  const action = modifiers.find((modifier): modifier is MeModifier => modifier.type === 'Me') || false;
-  const mute = modifiers.find((modifier): modifier is MuteModifier => modifier.type === 'Mute') || false;
-  const inGame = modifiers.find((modifier): modifier is InGameModifier => modifier.type === 'InGame') || false;
+  const action = modifiers.find((modifier) => modifier.type === 'Me') || false;
+  const mute = modifiers.find((modifier) => modifier.type === 'Mute') || false;
+  const inGame = modifiers.find((modifier) => modifier.type === 'InGame') || false;
   const isRoll = modifiers.some(
     (modifier) => modifier.type === 'Roll' || (modifier.type === 'Whisper' && modifier.roll),
   );
-  const whisper = modifiers.find((modifier): modifier is WhisperModifier => modifier.type === 'Whisper') || false;
+  const whisper = modifiers.find((modifier) => modifier.type === 'Whisper') || false;
   const isWhisper = modifiers.some((modifier) => modifier.type === 'Whisper');
   return {
     text,

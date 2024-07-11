@@ -24,7 +24,7 @@
     "reselect": "^4.1.8",
     "sanitize.css": "^13.0.0",
     "swr": "^2.2.5",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "scripts": {
     "dev": "webpack-dev-server --color --output-public-path / --progress",
@@ -50,7 +50,7 @@
     "@types/react-redux": "^7.1.33",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-transition-group": "^4.4.10",
-    "@types/uuid": "^9.0.7",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "babel-loader": "^9.1.3",

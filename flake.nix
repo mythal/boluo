@@ -2,7 +2,7 @@
   description = "A chat tool made for play RPG";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/nixos-24.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
     devshell = {
       url = "github:numtide/devshell";

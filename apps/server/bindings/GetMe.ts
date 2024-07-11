@@ -3,9 +3,9 @@ import type { ChannelWithMember } from './ChannelWithMember';
 import type { SpaceWithMember } from './SpaceWithMember';
 import type { User } from './User';
 
-export interface GetMe {
+export type GetMe = {
   user: User;
   settings: unknown;
   myChannels: Array<ChannelWithMember>;
   mySpaces: Array<SpaceWithMember>;
-}
+};

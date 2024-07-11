@@ -3,8 +3,4 @@ import type { Space } from './Space';
 import type { SpaceMember } from './SpaceMember';
 import type { User } from './User';
 
-export interface SpaceWithMember {
-  space: Space;
-  member: SpaceMember;
-  user: User;
-}
+export type SpaceWithMember = { space: Space; member: SpaceMember; user: User };

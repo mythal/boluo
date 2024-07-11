@@ -49,7 +49,7 @@ export const PreviewBox: FC<Props> = ({
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
         'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',
-        'shadow-[0_0_12px_10px_inset] ',
+        'shadow-[0_0_12px_10px_inset]',
         inGame
           ? 'bg-preview-in-bg shadow-[var(--colors-preview-in-bg)]'
           : 'bg-preview-out-bg shadow-[var(--colors-preview-out-bg)]',

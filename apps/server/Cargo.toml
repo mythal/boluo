@@ -57,7 +57,7 @@ sqlx = { version = "0.7", features = [
 
 
 [dependencies.ts-rs]
-version = "7"
+version = "9"
 features = ["serde-compat", "uuid-impl", "chrono-impl"]
 
 [dependencies.reqwest]

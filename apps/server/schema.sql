@@ -174,8 +174,6 @@ ALTER TABLE messages
 
 CREATE INDEX "message_tags" ON messages USING GIN (tags);
 
-CREATE INDEX "message_channel_index" ON messages USING btree (channel_id);
-
 CREATE TABLE restrained_members (
     "user_id" uuid NOT NULL CONSTRAINT "restrained_member_user" REFERENCES users (id) ON DELETE CASCADE,
     "space_id" uuid NOT NULL CONSTRAINT "restrained_member_space" REFERENCES spaces (id) ON DELETE CASCADE,

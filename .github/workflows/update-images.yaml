@@ -1,9 +1,11 @@
 name: Update Boluo Images
 
 on:
-  push:
-    branches:
-      - production
+  workflow_run:
+      workflows: ['Check']
+      types: [completed]
+      branches:
+          - 'production'
 
 jobs:
   update-images:

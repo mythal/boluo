@@ -41,10 +41,9 @@
           version = "0.0.0";
           targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
 
-          rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+          rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
             extensions = [ "rust-src" ];
-            inherit targets;
-          };
+          });
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 

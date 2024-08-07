@@ -530,6 +530,9 @@ const config: Config = {
     },
   },
   plugins: [
+    // The ESLint marks this as error, but it is following the official document.
+    // https://tailwindcss.com/docs/plugins
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     plugin(function ({ addVariant }) {
       addVariant('enabled', '&:not(:disabled)');
       addVariant('active-enabled', '&:is([data-active="true"],:active):not(:disabled)');

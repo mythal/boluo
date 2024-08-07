@@ -14,21 +14,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
-  pgadmin:
-    image: dpage/pgadmin4
-    restart: unless-stopped
-    volumes:
-      - ../services/servers.json:/pgadmin4/servers.json:ro
-    depends_on:
-      - db
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=example@example.com
-      - PGADMIN_DEFAULT_PASSWORD=8932rhku32rhui
-      - PGADMIN_LISTEN_PORT=4841
-      - PGADMIN_CONFIG_SERVER_MODE=False
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
   store:
     image: quay.io/minio/minio
     restart: unless-stopped

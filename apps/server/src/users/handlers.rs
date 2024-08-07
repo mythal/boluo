@@ -265,7 +265,7 @@ pub async fn ip_limit(cache: &mut cache::Connection, req: &Request<Body>) -> Res
     key.extend_from_slice(ip.as_bytes());
     let counter: i32 = cache.inner.incr(&key, 1).await?;
     if counter == 1 {
-        cache.inner.expire(&key, 60 * 2).await?;
+        cache.inner.expire::<_, ()>(&key, 60 * 2).await?;
     }
     if counter > 3 {
         return Err(AppError::LimitExceeded("IP"));
@@ -277,7 +277,7 @@ pub async fn email_limit(cache: &mut cache::Connection, email: &str) -> Result<(
     let email_key = token_key(email);
     let counter: i32 = cache.inner.incr(&email_key, 1).await?;
     if counter == 1 {
-        cache.inner.expire(&email_key, 60 * 2).await?;
+        cache.inner.expire::<_, ()>(&email_key, 60 * 2).await?;
     }
     if counter > 2 {
         return Err(AppError::LimitExceeded("email"));

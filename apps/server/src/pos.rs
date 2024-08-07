@@ -22,7 +22,7 @@ pub async fn alloc_new_pos(
         // if not present, initialize it
         let (p, q) = crate::messages::Message::max_pos(db, &channel_id).await;
         let initial_pos = (p as f64 / q as f64).ceil() as i32 + 1;
-        cache.inner.set_nx(&max_pos_key, initial_pos).await?;
+        cache.inner.set_nx::<_, _, ()>(&max_pos_key, initial_pos).await?;
     }
     cache.inner.incr(&max_pos_key, 1).await
 }
@@ -39,7 +39,7 @@ pub async fn pos(
         Ok(pos)
     } else {
         let bottom: i32 = alloc_new_pos(db, cache, channel_id).await?;
-        cache.inner.set_ex(&pos_key, bottom, 60 * 5).await?;
+        cache.inner.set_ex::<_, _, ()>(&pos_key, bottom, 60 * 5).await?;
         Ok(bottom)
     }
 }

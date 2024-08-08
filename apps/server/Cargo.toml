@@ -11,9 +11,9 @@ edition = "2021"
 name = "server"
 path = "src/server.rs"
 
-[[bin]]
-name = "init"
-path = "src/init.rs"
+# [[bin]]
+# name = "init"
+# path = "src/init.rs"
 
 [build-dependencies]
 dotenv = "0.15"
@@ -45,7 +45,7 @@ serde_urlencoded = "0.7"
 sysinfo = "0.31.2"
 thiserror = "1.0"
 tokio-stream = "0.1"
-tokio-tungstenite = "0.21"
+tokio-tungstenite = "0.23.1"
 sqlx = { version = "0.8.0", features = [
   "runtime-tokio",
   "tls-rustls",
@@ -54,6 +54,8 @@ sqlx = { version = "0.8.0", features = [
   "chrono",
   "json",
 ] }
+http-body-util = "0.1.2"
+hyper-util = { version = "0.1.7", features = ["full"] }
 
 
 [dependencies.ts-rs]
@@ -66,8 +68,8 @@ default-features = false
 features = ["json", "rustls-tls"]
 
 [dependencies.hyper]
-version = "0.14"
-features = ["server", "http1", "http2", "runtime", "stream"]
+version = "1.4.1"
+features = ["full"]
 
 [dependencies.serde]
 version = "1.0"

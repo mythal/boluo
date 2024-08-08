@@ -1,11 +1,12 @@
 //! Make server allow all origins for development.
 use std::sync::OnceLock;
 
+use hyper::body::{Body, Incoming};
 use hyper::header::{
     HeaderValue, ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS,
     ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_MAX_AGE, ACCESS_CONTROL_REQUEST_HEADERS, ORIGIN,
 };
-use hyper::{Body, Request, Response};
+use hyper::{Request, Response};
 
 use crate::context::get_domain;
 
@@ -33,7 +34,7 @@ pub fn is_allowed_origin(origin: &str) -> bool {
     start.iter().any(|x| origin.starts_with(x))
 }
 
-pub fn allow_origin(origin: Option<&str>, mut res: Response<Body>) -> Response<Body> {
+pub fn allow_origin(origin: Option<&str>, mut res: Response<Vec<u8>>) -> Response<Vec<u8>> {
     let header = res.headers_mut();
     let origin = if let Some(origin) = origin {
         if is_allowed_origin(origin) {
@@ -56,7 +57,7 @@ pub fn allow_origin(origin: Option<&str>, mut res: Response<Body>) -> Response<B
     res
 }
 
-pub fn preflight_requests(res: Request<Body>) -> Response<Body> {
+pub fn preflight_requests(res: Request<Incoming>) -> Response<Vec<u8>> {
     let headers = res.headers();
     let allow_headers = headers
         .get(ACCESS_CONTROL_REQUEST_HEADERS)
@@ -68,7 +69,7 @@ pub fn preflight_requests(res: Request<Body>) -> Response<Body> {
             HeaderValue::from_static("GET, POST, PUT, DELETE, PATCH"),
         )
         .header(ACCESS_CONTROL_ALLOW_HEADERS, allow_headers)
-        .body(Body::empty())
+        .body(Vec::new())
         .unwrap();
     let origin = res.headers().get(ORIGIN).and_then(|x| x.to_str().ok());
     allow_origin(origin, response)

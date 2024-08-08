@@ -1,9 +1,10 @@
 use crate::error::AppError;
-use crate::interface::{Request, Response};
+use crate::interface::Response;
 use crate::utils::sha1;
+use hyper::body::{Body, Incoming};
 use hyper::header::{HeaderMap, HeaderValue, CONNECTION, SEC_WEBSOCKET_KEY, UPGRADE};
 use hyper::upgrade::Upgraded;
-use hyper::Body;
+use hyper_util::rt::TokioIo;
 use std::future::Future;
 pub use tokio_tungstenite::tungstenite::{Error as WsError, Message as WsMessage};
 use tokio_tungstenite::WebSocketStream;
@@ -37,9 +38,9 @@ pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppErr
     HeaderValue::from_str(&accept).map_err(error_unexpected!())
 }
 
-pub fn establish_web_socket<H, F>(req: Request, handler: H) -> Response
+pub fn establish_web_socket<H, F>(req: hyper::Request<Incoming>, handler: H) -> Response
 where
-    H: FnOnce(WebSocketStream<Upgraded>) -> F,
+    H: FnOnce(WebSocketStream<TokioIo<Upgraded>>) -> F,
     H: Send + 'static,
     F: Future<Output = ()> + Send,
 {
@@ -49,12 +50,13 @@ where
         log::warn!("Invalid websocket header");
         return hyper::Response::builder()
             .status(StatusCode::BAD_REQUEST)
-            .body(Body::empty())
+            .body(Vec::new())
             .unwrap_or_default();
     };
     tokio::spawn(async {
         match hyper::upgrade::on(req).await {
             Ok(upgraded) => {
+                let upgraded = TokioIo::new(upgraded);
                 let ws_stream = tokio_tungstenite::WebSocketStream::from_raw_socket(upgraded, Role::Server, None).await;
                 handler(ws_stream).await;
                 log::debug!("WebSocket connection established");
@@ -70,7 +72,7 @@ where
         .header(header::UPGRADE, "websocket")
         .header(header::CONNECTION, "Upgrade")
         .header(header::SEC_WEBSOCKET_ACCEPT, accept)
-        .body(Body::empty())
+        .body(Vec::new())
         .unwrap_or_else(|err| {
             log::error!("Failed to build websocket response {}", err);
             hyper::Response::default()

@@ -12,14 +12,15 @@ use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Respons
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
-use hyper::{Body, Request};
+use hyper::body::Body;
+use hyper::Request;
 use uuid::Uuid;
 
-async fn list(_req: Request<Body>) -> Result<Vec<Space>, AppError> {
+async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
     Space::all(&db::get().await).await.map_err(Into::into)
 }
 
-async fn query(req: Request<Body>) -> Result<Space, AppError> {
+async fn query(req: Request<impl Body>) -> Result<Space, AppError> {
     let QuerySpace { id, token } = parse_query(req.uri())?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
@@ -57,12 +58,12 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     })
 }
 
-async fn query_with_related(req: Request<Body>) -> Result<SpaceWithRelated, AppError> {
+async fn query_with_related(req: Request<impl Body>) -> Result<SpaceWithRelated, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     space_related(&id).await
 }
 
-async fn token(req: Request<Body>) -> Result<Uuid, AppError> {
+async fn token(req: Request<impl Body>) -> Result<Uuid, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let pool = db::get().await;
@@ -79,7 +80,7 @@ async fn token(req: Request<Body>) -> Result<Uuid, AppError> {
     Space::get_token(&mut *conn, &id).await.map_err(Into::into)
 }
 
-async fn refresh_token(req: Request<Body>) -> Result<Uuid, AppError> {
+async fn refresh_token(req: Request<impl Body>) -> Result<Uuid, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let pool = db::get().await;
@@ -96,20 +97,20 @@ async fn refresh_token(req: Request<Body>) -> Result<Uuid, AppError> {
     Space::refresh_token(&mut *conn, &id).await.map_err(Into::into)
 }
 
-async fn my_spaces(req: Request<Body>) -> Result<Vec<SpaceWithMember>, AppError> {
+async fn my_spaces(req: Request<impl Body>) -> Result<Vec<SpaceWithMember>, AppError> {
     let session = authenticate(&req).await?;
     Space::get_by_user(&db::get().await, &session.user_id)
         .await
         .map_err(Into::into)
 }
 
-async fn search(req: Request<Body>) -> Result<Vec<Space>, AppError> {
+async fn search(req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
     let SearchParams { search } = parse_query(req.uri()).unwrap();
     let pool = db::get().await;
     Space::search(&pool, search).await.map_err(Into::into)
 }
 
-async fn create(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
+async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
     let CreateSpace {
         name,
@@ -145,7 +146,7 @@ async fn create(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
     Ok(SpaceWithMember { space, member, user })
 }
 
-async fn edit(req: Request<Body>) -> Result<Space, AppError> {
+async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
     let session = authenticate(&req).await?;
     let EditSpace {
         space_id,
@@ -197,7 +198,7 @@ async fn edit(req: Request<Body>) -> Result<Space, AppError> {
     Ok(space)
 }
 
-async fn join(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
+async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
     let JoinSpace { space_id, token } = parse_query(req.uri())?;
 
@@ -223,7 +224,7 @@ async fn join(req: Request<Body>) -> Result<SpaceWithMember, AppError> {
     Ok(SpaceWithMember { space, member, user })
 }
 
-async fn leave(req: Request<Body>) -> Result<bool, AppError> {
+async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
@@ -235,7 +236,7 @@ async fn leave(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn kick(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
+async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let session = authenticate(&req).await?;
     let KickFromSpace { space_id, user_id } = parse_query(req.uri())?;
 
@@ -259,7 +260,7 @@ async fn kick(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, 
     Ok(SpaceMemberWithUser::get_by_space(&pool, &space_id).await?)
 }
 
-async fn my_space_member(req: Request<Body>) -> Result<Option<SpaceMember>, AppError> {
+async fn my_space_member(req: Request<impl Body>) -> Result<Option<SpaceMember>, AppError> {
     let session = if let Ok(session) = authenticate(&req).await {
         session
     } else {
@@ -273,7 +274,7 @@ async fn my_space_member(req: Request<Body>) -> Result<Option<SpaceMember>, AppE
         .map_err(Into::into)
 }
 
-async fn members(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
+async fn members(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
@@ -282,7 +283,7 @@ async fn members(req: Request<Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser
         .map_err(Into::into)
 }
 
-async fn users_status(req: Request<Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
+async fn users_status(req: Request<impl Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     // TODO: permission check
     let mut cache = crate::cache::conn().await?;
@@ -290,7 +291,7 @@ async fn users_status(req: Request<Body>) -> Result<HashMap<Uuid, UserStatus>, A
     Ok(users_status)
 }
 
-async fn delete(req: Request<Body>) -> Result<Space, AppError> {
+async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
@@ -305,7 +306,7 @@ async fn delete(req: Request<Body>) -> Result<Space, AppError> {
     Err(AppError::NoPermission("failed to delete".to_string()))
 }
 
-async fn space_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+async fn space_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
@@ -314,7 +315,7 @@ async fn space_settings(req: Request<Body>) -> Result<serde_json::Value, AppErro
     Ok(extension)
 }
 
-async fn update_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let settings: serde_json::Value = interface::parse_body(req).await?;
@@ -337,7 +338,7 @@ async fn update_settings(req: Request<Body>) -> Result<serde_json::Value, AppErr
     Ok(settings)
 }
 
-pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

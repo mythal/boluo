@@ -1,7 +1,9 @@
 //! Make server allow all origins for development.
 use std::sync::OnceLock;
 
-use hyper::body::{Body, Incoming};
+use bytes::Bytes;
+use http_body_util::Full;
+use hyper::body::Incoming;
 use hyper::header::{
     HeaderValue, ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS,
     ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_MAX_AGE, ACCESS_CONTROL_REQUEST_HEADERS, ORIGIN,
@@ -34,7 +36,7 @@ pub fn is_allowed_origin(origin: &str) -> bool {
     start.iter().any(|x| origin.starts_with(x))
 }
 
-pub fn allow_origin(origin: Option<&str>, mut res: Response<Vec<u8>>) -> Response<Vec<u8>> {
+pub fn allow_origin(origin: Option<&str>, mut res: Response<Full<Bytes>>) -> Response<Full<Bytes>> {
     let header = res.headers_mut();
     let origin = if let Some(origin) = origin {
         if is_allowed_origin(origin) {
@@ -57,7 +59,7 @@ pub fn allow_origin(origin: Option<&str>, mut res: Response<Vec<u8>>) -> Respons
     res
 }
 
-pub fn preflight_requests(res: Request<Incoming>) -> Response<Vec<u8>> {
+pub fn preflight_requests(res: Request<Incoming>) -> Response<Full<Bytes>> {
     let headers = res.headers();
     let allow_headers = headers
         .get(ACCESS_CONTROL_REQUEST_HEADERS)
@@ -69,7 +71,7 @@ pub fn preflight_requests(res: Request<Incoming>) -> Response<Vec<u8>> {
             HeaderValue::from_static("GET, POST, PUT, DELETE, PATCH"),
         )
         .header(ACCESS_CONTROL_ALLOW_HEADERS, allow_headers)
-        .body(Vec::new())
+        .body(Full::new(Bytes::new()))
         .unwrap();
     let origin = res.headers().get(ORIGIN).and_then(|x| x.to_str().ok());
     allow_origin(origin, response)

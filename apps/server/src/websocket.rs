@@ -1,7 +1,7 @@
 use crate::error::AppError;
 use crate::interface::Response;
 use crate::utils::sha1;
-use hyper::body::{Body, Incoming};
+use hyper::body::Incoming;
 use hyper::header::{HeaderMap, HeaderValue, CONNECTION, SEC_WEBSOCKET_KEY, UPGRADE};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;

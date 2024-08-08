@@ -102,12 +102,12 @@ where
         .into_body()
         .collect()
         .await
-        .map_err(|e| {
+        .map_err(|_e| {
             // TODO: log
             AppError::BadRequest("Failed to read the request body".to_string())
         })?
         .to_bytes();
-    serde_json::from_slice(&body).map_err(|e| {
+    serde_json::from_slice(&body).map_err(|_e| {
         // TODO: log
         AppError::BadRequest("Failed to parse the request body".to_string())
     })

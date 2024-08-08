@@ -1,24 +1,24 @@
 use super::api::{Login, LoginReturn, Register, ResetPassword, ResetPasswordConfirm, ResetPasswordTokenCheck};
 use super::models::User;
-use crate::interface::{missing, ok_response, parse_body, parse_query, Response};
+use crate::channels::Channel;
+use crate::error::{AppError, Find, ValidationFailed};
+use crate::interface;
+use crate::interface::{missing, ok_response, parse_body, parse_query};
+use crate::media::{upload, upload_params};
 use crate::session::{
     add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies, is_authenticate_use_cookie,
     remove_session, remove_session_cookie, revoke_session,
 };
-use crate::{cache, db, mail};
-
-use crate::channels::Channel;
-use crate::error::{AppError, Find, ValidationFailed};
-use crate::interface;
-use crate::media::{upload, upload_params};
 use crate::spaces::Space;
 use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
-use hyper::{Body, Method, Request};
+use crate::{cache, db, mail};
+use hyper::body::{Body, Incoming};
+use hyper::{Method, Request, Response};
 use redis::AsyncCommands;
 
-async fn register(req: Request<Body>) -> Result<User, AppError> {
+async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     let Register {
         email,
         username,
@@ -31,7 +31,7 @@ async fn register(req: Request<Body>) -> Result<User, AppError> {
     Ok(user)
 }
 
-pub async fn query_user(req: Request<Body>) -> Result<Option<User>, AppError> {
+pub async fn query_user(req: Request<impl Body>) -> Result<Option<User>, AppError> {
     use crate::session::authenticate;
 
     let QueryUser { id } = parse_query(req.uri())?;
@@ -50,7 +50,7 @@ pub async fn query_user(req: Request<Body>) -> Result<Option<User>, AppError> {
     User::get_by_id(&pool, &id).await.or_not_found().map(Some)
 }
 
-pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
+pub async fn query_self(req: Request<impl Body>) -> Result<Option<User>, AppError> {
     use crate::session::authenticate;
 
     let session = authenticate(&req).await;
@@ -64,7 +64,7 @@ pub async fn query_self(req: Request<Body>) -> Result<Option<User>, AppError> {
     }
 }
 
-pub async fn query_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
     use crate::session::authenticate;
     let Ok(session) = authenticate(&req).await else {
         return Ok(serde_json::json!({}));
@@ -75,7 +75,7 @@ pub async fn query_settings(req: Request<Body>) -> Result<serde_json::Value, App
     Ok(settings)
 }
 
-pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
+pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
     let mut session = authenticate(&req).await;
     if let Err(AppError::Unauthenticated(_)) = session {
@@ -126,7 +126,7 @@ pub async fn get_me(req: Request<Body>) -> Result<Response, AppError> {
     }
 }
 
-pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
+pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session;
 
     let is_debug = req.headers().get("X-Debug").is_some();
@@ -155,7 +155,7 @@ pub async fn login(req: Request<Body>) -> Result<Response, AppError> {
     Ok(response)
 }
 
-pub async fn logout(req: Request<Body>) -> Result<Response, AppError> {
+pub async fn logout(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
 
     if let Ok(session) = authenticate(&req).await {
@@ -166,7 +166,7 @@ pub async fn logout(req: Request<Body>) -> Result<Response, AppError> {
     Ok(response)
 }
 
-pub async fn edit(req: Request<Body>) -> Result<User, AppError> {
+pub async fn edit(req: Request<impl Body>) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let EditUser {
@@ -190,7 +190,7 @@ pub fn is_image(mime: &Option<String>) -> bool {
     false
 }
 
-pub async fn update_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+pub async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
@@ -200,7 +200,7 @@ pub async fn update_settings(req: Request<Body>) -> Result<serde_json::Value, Ap
         .map_err(Into::into)
 }
 
-pub async fn partial_update_settings(req: Request<Body>) -> Result<serde_json::Value, AppError> {
+pub async fn partial_update_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
@@ -210,7 +210,7 @@ pub async fn partial_update_settings(req: Request<Body>) -> Result<serde_json::V
         .map_err(Into::into)
 }
 
-pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
+pub async fn edit_avatar(req: Request<Incoming>) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let params = upload_params(req.uri())?;
@@ -227,7 +227,7 @@ pub async fn edit_avatar(req: Request<Body>) -> Result<User, AppError> {
         .map_err(Into::into)
 }
 
-pub async fn remove_avatar(req: Request<Body>) -> Result<User, AppError> {
+pub async fn remove_avatar(req: Request<impl Body>) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
 
@@ -235,14 +235,14 @@ pub async fn remove_avatar(req: Request<Body>) -> Result<User, AppError> {
     User::remove_avatar(&pool, &session.user_id).await.map_err(Into::into)
 }
 
-pub async fn check_email_exists(req: Request<Body>) -> Result<bool, AppError> {
+pub async fn check_email_exists(req: Request<impl Body>) -> Result<bool, AppError> {
     let CheckEmailExists { email } = parse_query(req.uri())?;
     let pool = db::get().await;
     let user = User::get_by_email(&pool, &email).await?;
     Ok(user.is_some())
 }
 
-pub async fn check_username_exists(req: Request<Body>) -> Result<bool, AppError> {
+pub async fn check_username_exists(req: Request<impl Body>) -> Result<bool, AppError> {
     let CheckUsernameExists { username } = parse_query(req.uri())?;
     let pool = db::get().await;
     let user = User::get_by_username(&pool, &username).await?;
@@ -255,7 +255,7 @@ pub fn token_key(token: &str) -> Vec<u8> {
     key
 }
 
-pub async fn ip_limit(cache: &mut cache::Connection, req: &Request<Body>) -> Result<(), AppError> {
+pub async fn ip_limit(cache: &mut cache::Connection, req: &Request<impl Body>) -> Result<(), AppError> {
     let ip = get_ip(req).unwrap_or_else(|| {
         log::warn!("Unable to obtain client IP");
         log::info!("{:?}", req.headers());
@@ -285,7 +285,7 @@ pub async fn email_limit(cache: &mut cache::Connection, email: &str) -> Result<(
     Ok(())
 }
 
-pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
+pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
     let mut cache = cache::conn().await?;
     ip_limit(&mut cache, &req).await?;
     let ResetPassword { email, lang } = parse_body(req).await?;
@@ -332,7 +332,7 @@ pub async fn reset_password(req: Request<Body>) -> Result<(), AppError> {
     Ok(())
 }
 
-pub async fn reset_password_token_check(req: Request<Body>) -> Result<bool, AppError> {
+pub async fn reset_password_token_check(req: Request<impl Body>) -> Result<bool, AppError> {
     let ResetPasswordTokenCheck { token } = parse_query(req.uri())?;
     let email = cache::conn()
         .await?
@@ -346,7 +346,7 @@ pub async fn reset_password_token_check(req: Request<Body>) -> Result<bool, AppE
     }
 }
 
-pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> {
+pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppError> {
     let ResetPasswordConfirm { token, password } = parse_body(req).await?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
@@ -364,7 +364,7 @@ pub async fn reset_password_confirm(req: Request<Body>) -> Result<(), AppError> 
     Ok(())
 }
 
-pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u8>>, AppError> {
     match (path, req.method().clone()) {
         ("/login", Method::POST) => login(req).await,
         ("/register", Method::POST) => register(req).await.map(ok_response),

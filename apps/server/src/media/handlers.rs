@@ -9,10 +9,9 @@ use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
 use crate::utils::id;
 use aws_sdk_s3::primitives::{ByteStream, SdkBody};
+use hyper::body::{Body, Incoming};
 use hyper::header::{self, HeaderValue};
-use hyper::{Body, Request, Uri};
-use std::path::PathBuf;
-use tokio::fs::File;
+use hyper::{Request, Uri};
 use uuid::Uuid;
 
 fn content_disposition(attachment: bool, filename: &str) -> HeaderValue {
@@ -55,7 +54,7 @@ fn check_size(size: usize, max_size: usize) -> Result<(), AppError> {
     Ok(())
 }
 
-pub async fn upload(req: Request<Body>, id: Uuid, params: Upload, max_size: usize) -> Result<MediaFile, AppError> {
+pub async fn upload(req: Request<Incoming>, id: Uuid, params: Upload, max_size: usize) -> Result<MediaFile, AppError> {
     let Upload {
         filename,
         mime_type,
@@ -89,7 +88,7 @@ pub async fn upload(req: Request<Body>, id: Uuid, params: Upload, max_size: usiz
     Ok(media_file)
 }
 
-async fn media_upload(req: Request<Body>) -> Result<Media, AppError> {
+async fn media_upload(req: Request<Incoming>) -> Result<Media, AppError> {
     let session = authenticate(&req).await?;
     let params = upload_params(req.uri())?;
     let media_id = id();
@@ -98,23 +97,7 @@ async fn media_upload(req: Request<Body>) -> Result<Media, AppError> {
     media_file.create(&pool, session.user_id, "").await.map_err(Into::into)
 }
 
-async fn send_file(path: PathBuf, mut sender: hyper::body::Sender) -> Result<(), anyhow::Error> {
-    use bytes::BytesMut;
-    use tokio::io::AsyncReadExt;
-
-    let mut file = File::open(path).await?;
-    let mut buffer = BytesMut::with_capacity(1024);
-    while let Ok(read) = file.read_buf(&mut buffer).await {
-        if read == 0 {
-            break;
-        }
-        sender.send_data(buffer.clone().freeze()).await?;
-        buffer.clear();
-    }
-    Ok(())
-}
-
-async fn get(req: Request<Body>) -> Result<Response, AppError> {
+async fn get(req: Request<impl Body>) -> Result<Response, AppError> {
     let MediaQuery {
         id,
         filename,
@@ -135,7 +118,7 @@ async fn get(req: Request<Body>) -> Result<Response, AppError> {
     let response = hyper::Response::builder()
         .status(hyper::StatusCode::MOVED_PERMANENTLY)
         .header(header::LOCATION, url)
-        .body(Body::empty())
+        .body(Vec::new())
         .map_err(error_unexpected!("Failed to build media redirect response"))?;
     Ok(response)
 }
@@ -144,11 +127,12 @@ async fn put_object(
     client: &aws_sdk_s3::Client,
     bucket: &str,
     object: &str,
-    body: hyper::Body,
+    body: hyper::body::Incoming,
     content_type: &str,
     content_length: i32,
 ) -> Result<(), AppError> {
-    let body = ByteStream::new(SdkBody::from_body_0_4(body));
+    let sdk_body = SdkBody::from_body_1_x(body);
+    let body = ByteStream::new(sdk_body);
     client
         .put_object()
         .content_type(content_type)
@@ -188,7 +172,7 @@ async fn put_object_presigned(
 }
 
 const EXPIRES_IN_SEC: u64 = 60 * 10;
-async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
+async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
     use crate::s3;
     let session = authenticate(&req).await?;
     let PreSign {
@@ -233,7 +217,7 @@ async fn presigned(req: Request<Body>) -> Result<PreSignResult, AppError> {
     })
 }
 
-pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

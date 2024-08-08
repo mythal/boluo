@@ -1,7 +1,8 @@
 use anyhow::Context;
 use chrono::prelude::*;
+use hyper::body::Body;
 use hyper::header::HeaderName;
-use hyper::{Body, Request};
+use hyper::Request;
 use ring::hmac;
 use ring::rand::SecureRandom;
 use std::sync::OnceLock as OnceCell;
@@ -98,7 +99,7 @@ pub struct MessageRng {
     x: f64,
 }
 
-pub fn get_ip(req: &Request<Body>) -> Option<&str> {
+pub fn get_ip(req: &Request<impl Body>) -> Option<&str> {
     let real_ip = HeaderName::from_lowercase(b"x-real-ip").unwrap();
     let forwarded_for = HeaderName::from_lowercase(b"x-forwarded-for").unwrap();
     let headers = req.headers();

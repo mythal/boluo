@@ -42,7 +42,7 @@
           targets = [ "wasm32-unknown-unknown" "x86_64-unknown-linux-gnu" ];
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
-            extensions = [ "rust-src" ];
+            extensions = [ "rust-src" "rust-analyzer" ];
           });
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
@@ -338,7 +338,6 @@
               let
                 common = with pkgs; [
                   config.treefmt.build.wrapper
-                  rust-analyzer
                   rustToolchain
                   nil
                   nodejs

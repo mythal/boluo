@@ -8,9 +8,10 @@ use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
 use crate::spaces::SpaceMember;
 use crate::{db, interface};
-use hyper::{Body, Request};
+use hyper::body::Body;
+use hyper::Request;
 
-async fn send(req: Request<Body>) -> Result<Message, AppError> {
+async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let NewMessage {
         message_id: _,
@@ -56,7 +57,7 @@ async fn send(req: Request<Body>) -> Result<Message, AppError> {
     Ok(message)
 }
 
-async fn edit(req: Request<Body>) -> Result<Message, AppError> {
+async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let EditMessage {
         message_id,
@@ -103,7 +104,7 @@ async fn edit(req: Request<Body>) -> Result<Message, AppError> {
     Ok(message)
 }
 
-async fn move_between(req: Request<Body>) -> Result<bool, AppError> {
+async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let MoveMessageBetween {
         message_id,
@@ -146,7 +147,7 @@ async fn move_between(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn query(req: Request<Body>) -> Result<Message, AppError> {
+async fn query(req: Request<impl Body>) -> Result<Message, AppError> {
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
     let user_id = authenticate(&req).await.ok().map(|session| session.user_id);
     Message::get(&db::get().await, &id, user_id.as_ref())
@@ -154,7 +155,7 @@ async fn query(req: Request<Body>) -> Result<Message, AppError> {
         .or_not_found()
 }
 
-async fn delete(req: Request<Body>) -> Result<Message, AppError> {
+async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
     let pool = db::get().await;
@@ -173,7 +174,7 @@ async fn delete(req: Request<Body>) -> Result<Message, AppError> {
     Ok(message)
 }
 
-async fn toggle_fold(req: Request<Body>) -> Result<Message, AppError> {
+async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
     let pool = db::get().await;
@@ -197,7 +198,7 @@ async fn toggle_fold(req: Request<Body>) -> Result<Message, AppError> {
     Ok(message)
 }
 
-async fn by_channel(req: Request<Body>) -> Result<Vec<Message>, AppError> {
+async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     let GetMessagesByChannel {
         channel_id,
         limit,
@@ -220,7 +221,7 @@ async fn by_channel(req: Request<Body>) -> Result<Vec<Message>, AppError> {
         .map_err(Into::into)
 }
 
-pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

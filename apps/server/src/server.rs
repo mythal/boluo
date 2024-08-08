@@ -169,25 +169,44 @@ async fn main() {
 
     events::tasks::start();
     messages::tasks::start();
+    // https://hyper.rs/guides/1/server/graceful-shutdown/
+    let graceful = hyper_util::server::graceful::GracefulShutdown::new();
+    // https://tokio.rs/tokio/topics/shutdown
+    let mut terminate_stream = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+        .expect("Failed to create signal stream");
+    let http = http1::Builder::new();
     loop {
-        let Ok((stream, _)) = listener.accept().await else {
-            // TODO: log
-            continue;
-        };
-        let io = TokioIo::new(stream);
-        tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new().serve_connection(io, service_fn(handler)).await {
-                log::error!("server error: {}", err);
-            }
-        });
+        tokio::select! {
+            accept_result = listener.accept() => {
+                match accept_result {
+                    Ok((stream, _)) => {
+                        let io = TokioIo::new(stream);
+                        let conn = http.serve_connection(io, service_fn(handler));
+                        let fut = graceful.watch(conn);
+                        tokio::task::spawn(async move {
+                            if let Err(err) = fut.await {
+                                log::error!("server error: {}", err);
+                            }
+                        });
+                    },
+                    Err(err) => {
+                        log::debug!("Failed to accept: {}", err);
+                    }
+                }
+            },
+            _ = terminate_stream.recv() => {
+                log::info!("Graceful shutdown signal received");
+                break;
+            },
+        }
     }
 
-    // #[allow(clippy::never_loop)]
-    // loop {
-    //     tokio::select! {
-    //         _ = stream.recv() => log::info!("Shutdown boluo server"),
-    //         Err(e) = server => log::error!("server error: {}", e),
-    //     }
-    //     break;
-    // }
+    tokio::select! {
+        _ = graceful.shutdown() => {
+            log::info!("all connections gracefully closed");
+        },
+        _ = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
+            log::warn!("Timed out wait for all connections to close");
+        }
+    }
 }

@@ -1,22 +1,20 @@
 //! Types and functions for to help building APIs.
-use hyper::{Body, StatusCode};
+use hyper::body::Body;
+use hyper::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
+pub type Response = hyper::Response<Vec<u8>>;
 
-pub type Request = hyper::Request<hyper::Body>;
-pub type Response = hyper::Response<hyper::Body>;
-pub type HyperResult = Result<hyper::Response<hyper::Body>, hyper::Error>;
-
-fn build_response(bytes: Vec<u8>, status: StatusCode) -> Response {
+fn build_response(bytes: Vec<u8>, status: StatusCode) -> hyper::Response<Vec<u8>> {
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(status)
-        .body(Body::from(bytes))
+        .body(bytes)
         .expect("Failed to build response")
 }
 
-pub fn err_response(e: AppError) -> Response {
+pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
     let status = e.status_code();
     serde_json::to_vec(&WebResult::<()>::err(e))
         .map(|bytes| build_response(bytes, status))
@@ -24,12 +22,12 @@ pub fn err_response(e: AppError) -> Response {
             log::error!("Failed to serialize error: {}", e);
             hyper::Response::builder()
                 .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
-                .body(hyper::Body::from(include_str!("error_serialize_error.json")))
+                .body(include_str!("error_serialize_error.json").as_bytes().to_vec())
                 .expect("Failed to build serialize error response")
         })
 }
 
-pub fn ok_response<T: Serialize>(value: T) -> Response {
+pub fn ok_response<T: Serialize>(value: T) -> hyper::Response<Vec<u8>> {
     serde_json::to_vec(&WebResult::ok(value))
         .map(|bytes| build_response(bytes, hyper::StatusCode::OK))
         .map_err(AppError::Serialize)
@@ -79,7 +77,7 @@ impl<T: Serialize> WebResult<T> {
     }
 }
 
-pub fn missing() -> Result<Response, AppError> {
+pub fn missing() -> Result<hyper::Response<Vec<u8>>, AppError> {
     Err(AppError::missing())
 }
 
@@ -95,16 +93,22 @@ where
     })
 }
 
-pub async fn parse_body<T>(req: hyper::Request<Body>) -> Result<T, AppError>
+pub async fn parse_body<T>(req: hyper::Request<impl Body>) -> Result<T, AppError>
 where
     for<'de> T: Deserialize<'de>,
 {
-    let body = hyper::body::to_bytes(req.into_body()).await.map_err(|e| {
-        log::debug!("{}", e);
-        AppError::BadRequest("Failed to read the request body".to_string())
-    })?;
-    serde_json::from_slice(&body).map_err(|e| {
-        log::debug!("{}", e);
+    use http_body_util::BodyExt;
+    let body = req
+        .into_body()
+        .collect()
+        .await
+        .map_err(|_e| {
+            // TODO: log
+            AppError::BadRequest("Failed to read the request body".to_string())
+        })?
+        .to_bytes();
+    serde_json::from_slice(&body).map_err(|_e| {
+        // TODO: log
         AppError::BadRequest("Failed to parse the request body".to_string())
     })
 }

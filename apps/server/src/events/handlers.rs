@@ -6,7 +6,7 @@ use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::context::get_mailbox_broadcast_rx;
 use crate::events::types::ClientEvent;
-use crate::interface::{missing, ok_response, parse_query, Request, Response};
+use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::spaces::models::StatusKind;
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
@@ -15,7 +15,10 @@ use crate::{cache, db};
 use anyhow::anyhow;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
+use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
+use hyper::Request;
+use hyper_util::rt::TokioIo;
 use std::time::Duration;
 use tokio_stream::StreamExt as _;
 use tokio_tungstenite::tungstenite;
@@ -23,7 +26,7 @@ use tokio_tungstenite::WebSocketStream;
 use uuid::Uuid;
 
 const CHUNK_SIZE: usize = 16;
-type Sender = SplitSink<WebSocketStream<Upgraded>, tungstenite::Message>;
+type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
 
 async fn check_permissions(
     db: &mut sqlx::PgConnection,
@@ -153,7 +156,7 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: Stri
     Ok(())
 }
 
-fn ws_error(req: Request, mailbox: Option<Uuid>, reason: String) -> Response {
+fn ws_error(req: Request<Incoming>, mailbox: Option<Uuid>, reason: String) -> Response {
     let mailbox = mailbox.unwrap_or_default();
     let event = serde_json::to_string(&Event::error(mailbox, reason)).expect("Failed to serialize error event");
     establish_web_socket(req, |ws_stream| async move {
@@ -162,7 +165,7 @@ fn ws_error(req: Request, mailbox: Option<Uuid>, reason: String) -> Response {
     })
 }
 
-async fn connect(req: Request) -> Response {
+async fn connect(req: hyper::Request<Incoming>) -> Response {
     use futures::future;
 
     let Ok(EventQuery {
@@ -257,7 +260,7 @@ async fn connect(req: Request) -> Response {
     })
 }
 
-pub async fn token(req: Request) -> Result<Token, AppError> {
+pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     if let Ok(session) = authenticate(&req).await {
         let mut redis = cache::conn().await?;
         let token = Uuid::new_v4();
@@ -271,7 +274,7 @@ pub async fn token(req: Request) -> Result<Token, AppError> {
     }
 }
 
-pub async fn router(req: Request, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

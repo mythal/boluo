@@ -2,7 +2,8 @@ use std::cell::RefCell;
 
 use super::models::Proxy;
 use crate::{db, error::AppError, info::models::HealthCheck, interface::Response};
-use hyper::{Body, Method, Request};
+use hyper::body::Incoming;
+use hyper::{Method, Request};
 use sqlx::query_as;
 
 #[derive(Debug, Clone, Default)]
@@ -55,7 +56,7 @@ pub async fn proxies() -> Result<Response, AppError> {
     let response = hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)
-        .body(Body::from(body))
+        .body(body.into())
         .expect("Unexpected failture in build proxies response");
     Ok(response)
 }
@@ -72,7 +73,7 @@ pub fn version() -> Response {
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)
-        .body(Body::from(version.as_str()))
+        .body(version.as_str().into())
         .expect("Unexpected failture in build version response")
 }
 
@@ -102,7 +103,7 @@ pub async fn healthcheck() -> Result<Response, AppError> {
                 log::error!("Unexpected failture in serialize healthcheck result: {:?}", err);
                 AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
             })
-            .map(Body::from)
+            .map(Into::into)
     });
     let result = task
         .await
@@ -118,15 +119,15 @@ pub async fn healthcheck() -> Result<Response, AppError> {
     Ok(response)
 }
 
-pub fn echo(req: Request<Body>) -> Response {
+pub fn echo(req: Request<Incoming>) -> Response {
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "text/plain")
         .status(hyper::StatusCode::OK)
-        .body(Body::from(format!("{:?}", req.headers())))
+        .body(format!("{:?}", req.headers()).into_bytes())
         .unwrap_or(hyper::Response::default())
 }
 
-pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
     match (path, req.method().clone()) {
         ("/proxies", Method::GET) => proxies().await,
         ("/healthcheck", Method::GET) => healthcheck().await,

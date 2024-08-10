@@ -11,11 +11,12 @@ use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::context::get_heartbeat_map;
 use crate::events::Event;
-use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery, Response};
+use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery};
 use crate::messages::Message;
 use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
-use hyper::{Body, Request};
+use hyper::body::Body;
+use hyper::Request;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -28,14 +29,14 @@ async fn admin_only<'c, T: sqlx::PgExecutor<'c>>(db: T, user_id: &Uuid, space_id
     }
 }
 
-async fn query(req: Request<Body>) -> Result<Channel, AppError> {
+async fn query<B: Body>(req: Request<B>) -> Result<Channel, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
     Channel::get_by_id(&db::get().await, &query.id).await.or_not_found()
 }
 
 // TODO: cache it
-async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
+async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
     let pool = db::get().await;
@@ -87,7 +88,7 @@ async fn members(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     })
 }
 
-async fn query_with_related(req: Request<Body>) -> Result<ChannelWithRelated, AppError> {
+async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelated, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
     let session = authenticate(&req).await.ok();
 
@@ -125,7 +126,7 @@ async fn query_with_related(req: Request<Body>) -> Result<ChannelWithRelated, Ap
     Ok(with_related)
 }
 
-async fn create(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
+async fn create(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
     let CreateChannel {
         space_id,
@@ -163,7 +164,7 @@ async fn create(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
     Ok(joined)
 }
 
-async fn edit(req: Request<Body>) -> Result<Channel, AppError> {
+async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
     let session = authenticate(&req).await?;
     let EditChannel {
         channel_id,
@@ -219,7 +220,7 @@ async fn edit(req: Request<Body>) -> Result<Channel, AppError> {
     Ok(channel)
 }
 
-async fn edit_masters(req: Request<Body>) -> Result<bool, AppError> {
+async fn edit_masters(req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let GrantOrRemoveChannelMaster {
         channel_id,
@@ -252,7 +253,7 @@ async fn edit_masters(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn add_member(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
+async fn add_member(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
     let AddChannelMember {
         channel_id,
@@ -276,7 +277,7 @@ async fn add_member(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
     Ok(ChannelWithMember { channel, member })
 }
 
-async fn edit_member(req: Request<Body>) -> Result<ChannelMember, AppError> {
+async fn edit_member(req: Request<impl Body>) -> Result<ChannelMember, AppError> {
     let session = authenticate(&req).await?;
     let EditChannelMember {
         channel_id,
@@ -301,7 +302,7 @@ async fn edit_member(req: Request<Body>) -> Result<ChannelMember, AppError> {
     channel_member
 }
 
-async fn all_members(req: Request<Body>) -> Result<Vec<ChannelMemberWithUser>, AppError> {
+async fn all_members(req: Request<impl Body>) -> Result<Vec<ChannelMemberWithUser>, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
 
     ChannelMember::get_by_channel(&db::get().await, &id, true)
@@ -309,7 +310,7 @@ async fn all_members(req: Request<Body>) -> Result<Vec<ChannelMemberWithUser>, A
         .map_err(Into::into)
 }
 
-async fn join(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
+async fn join(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
     let JoinChannel {
         channel_id,
@@ -331,7 +332,7 @@ async fn join(req: Request<Body>) -> Result<ChannelWithMember, AppError> {
     Ok(ChannelWithMember { channel, member })
 }
 
-async fn leave(req: Request<Body>) -> Result<bool, AppError> {
+async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     ChannelMember::remove_user(&db::get().await, &session.user_id, &id).await?;
@@ -339,7 +340,7 @@ async fn leave(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn kick(req: Request<Body>) -> Result<ChannelMembers, AppError> {
+async fn kick(req: Request<impl Body>) -> Result<ChannelMembers, AppError> {
     let session = authenticate(&req).await?;
     let KickFromChannel {
         space_id,
@@ -382,7 +383,7 @@ async fn kick(req: Request<Body>) -> Result<ChannelMembers, AppError> {
     })
 }
 
-async fn delete(req: Request<Body>) -> Result<bool, AppError> {
+async fn delete(req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
@@ -400,7 +401,7 @@ async fn delete(req: Request<Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn by_space(req: Request<Body>) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
+async fn by_space(req: Request<impl Body>) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     let session = authenticate(&req).await.ok();
     let pool = db::get().await;
@@ -423,7 +424,7 @@ async fn by_space(req: Request<Body>) -> Result<Vec<ChannelWithMaybeMember>, App
     Ok(channels)
 }
 
-async fn export(req: Request<Body>) -> Result<Vec<Message>, AppError> {
+async fn export(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     let Export { channel_id, after } = parse_query(req.uri())?;
     let session = authenticate(&req).await?;
     let pool = db::get().await;
@@ -444,7 +445,7 @@ async fn export(req: Request<Body>) -> Result<Vec<Message>, AppError> {
         .map_err(Into::into)
 }
 
-async fn my_channels(req: Request<Body>) -> Result<Vec<ChannelWithMember>, AppError> {
+async fn my_channels(req: Request<impl Body>) -> Result<Vec<ChannelWithMember>, AppError> {
     let session = authenticate(&req).await?;
 
     Channel::get_by_user(&db::get().await, session.user_id)
@@ -452,12 +453,12 @@ async fn my_channels(req: Request<Body>) -> Result<Vec<ChannelWithMember>, AppEr
         .map_err(Into::into)
 }
 
-pub async fn check_channel_name_exists(req: Request<Body>) -> Result<bool, AppError> {
+pub async fn check_channel_name_exists(req: Request<impl Body>) -> Result<bool, AppError> {
     let CheckChannelName { space_id, name } = parse_query(req.uri())?;
     let channel = Channel::get_by_name(&db::get().await, space_id, &name).await?;
     Ok(channel.is_some())
 }
-pub async fn router(req: Request<Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(req: Request<impl Body>, path: &str) -> Result<hyper::Response<Vec<u8>>, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

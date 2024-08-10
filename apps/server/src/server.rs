@@ -6,11 +6,15 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use crate::context::debug;
 use clap::Parser;
+use http_body_util::Full;
+use hyper::body::Incoming;
 use hyper::header::ORIGIN;
-use hyper::server::conn::AddrStream;
-use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Request, Server};
-use tokio::signal::unix::{signal, SignalKind};
+use hyper::server::conn::http1;
+use hyper_util::rt::TokioIo;
+use tokio::net::TcpListener;
+
+use hyper::service::service_fn;
+use hyper::Request;
 
 #[macro_use]
 mod utils;
@@ -39,7 +43,7 @@ mod websocket;
 
 use crate::cors::allow_origin;
 use crate::error::AppError;
-use crate::interface::{err_response, missing, ok_response, Response};
+use crate::interface::{err_response, missing, ok_response};
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
 
@@ -47,7 +51,7 @@ use tikv_jemallocator::Jemalloc;
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
-async fn router(req: Request<Body>) -> Result<Response, AppError> {
+async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();
     macro_rules! table {
         ($prefix: expr, $handler: expr) => {
@@ -70,7 +74,7 @@ async fn router(req: Request<Body>) -> Result<Response, AppError> {
     missing()
 }
 
-async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
+async fn handler(req: Request<Incoming>) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
     use std::time::Instant;
     let start = Instant::now();
     let method = req.method().clone();
@@ -89,11 +93,11 @@ async fn handler(req: Request<Body>) -> Result<Response, hyper::Error> {
     let response = allow_origin(
         origin.as_deref(),
         match response {
-            Ok(response) => response,
+            Ok(response) => response.map(|bytes| Full::new(bytes.into())),
             Err(e) => {
                 has_error = true;
                 error::log_error(&e, &uri);
-                err_response(e)
+                err_response(e).map(|bytes| Full::new(bytes.into()))
             }
         },
     );
@@ -126,7 +130,6 @@ async fn storage_check() {
         .expect("Cannot connect to bucket");
     log::info!("Object Storage is ready");
 }
-
 #[derive(Parser)]
 struct Args {
     #[clap(long, help = "check only", default_value = "false")]
@@ -146,7 +149,6 @@ async fn main() {
         .parse()
         .expect("PORT must be a number");
     storage_check().await;
-
     let addr: Ipv4Addr = env::var("HOST")
         .unwrap_or("127.0.0.1".to_string())
         .parse()
@@ -154,7 +156,7 @@ async fn main() {
 
     let addr = SocketAddr::new(IpAddr::V4(addr), port);
 
-    let make_svc = make_service_fn(|_: &AddrStream| async { Ok::<_, hyper::Error>(service_fn(handler)) });
+    let listener = TcpListener::bind(addr).await.expect("Failed to bind address");
 
     cache::check().await;
     log::info!("Cache is ready");
@@ -165,18 +167,37 @@ async fn main() {
         return;
     }
 
-    let server = Server::bind(&addr).serve(make_svc);
     events::tasks::start();
     messages::tasks::start();
     // https://tokio.rs/tokio/topics/shutdown
-    let mut stream = signal(SignalKind::terminate()).unwrap();
-
-    #[allow(clippy::never_loop)]
+    let mut terminate_stream = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+        .expect("Failed to create signal stream");
+    let http = http1::Builder::new();
     loop {
         tokio::select! {
-            _ = stream.recv() => log::info!("Shutdown boluo server"),
-            Err(e) = server => log::error!("server error: {}", e),
+            accept_result = listener.accept() => {
+                match accept_result {
+                    Ok((stream, _)) => {
+                        let io = TokioIo::new(stream);
+                        let conn = http.serve_connection(io, service_fn(handler)).with_upgrades();
+                        tokio::task::spawn(async move {
+                            if let Err(err) = conn.await {
+                                log::error!("server error: {}", err);
+                            }
+                        });
+                    },
+                    Err(err) => {
+                        log::debug!("Failed to accept: {}", err);
+                    }
+                }
+            },
+            _ = terminate_stream.recv() => {
+                log::info!("Graceful shutdown signal received");
+                break;
+            },
         }
-        break;
     }
+
+    tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+    log::info!("Shutting down");
 }

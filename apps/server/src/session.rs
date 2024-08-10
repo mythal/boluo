@@ -262,7 +262,7 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     Ok(Session { id, user_id })
 }
 
-pub async fn authenticate(req: &hyper::Request<hyper::Body>) -> Result<Session, AppError> {
+pub async fn authenticate(req: &hyper::Request<impl hyper::body::Body>) -> Result<Session, AppError> {
     let headers = req.headers();
     let authorization = headers.get(AUTHORIZATION).map(HeaderValue::to_str);
 

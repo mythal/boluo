@@ -2,12 +2,13 @@ use crate::error::AppError;
 use crate::session::{self, Session};
 use crate::utils::sign;
 use chrono::Utc;
-use hyper::{Body, Request};
+use hyper::body::Body;
+use hyper::Request;
 use uuid::Uuid;
 
 // csrf-token:[session key(base 64)].[timestamp].[signature]
 
-pub async fn authenticate(req: &Request<Body>) -> Result<Session, AppError> {
+pub async fn authenticate(req: &Request<impl Body>) -> Result<Session, AppError> {
     let session = session::authenticate(req).await?;
     Ok(session)
 }
@@ -27,7 +28,7 @@ pub fn generate_csrf_token(session_key: &Uuid) -> String {
     buffer
 }
 
-pub async fn get_csrf_token(req: Request<Body>) -> Result<String, AppError> {
+pub async fn get_csrf_token(req: Request<impl Body>) -> Result<String, AppError> {
     let session_id = if let Ok(session) = session::authenticate(&req).await {
         session.id
     } else {

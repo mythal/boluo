@@ -22,6 +22,17 @@ pub fn is_allowed_origin(origin: &str) -> bool {
     static ALLOWED_ORIGIN: OnceLock<String> = OnceLock::new();
     fn get_allowed_origin() -> String {
         let domain = get_domain();
+        let addr_v4: Result<std::net::Ipv4Addr, _> = domain.parse();
+        if let Ok(addr) = addr_v4 {
+            log::warn!("[Security] Allowing all origins for IP address: {}", domain);
+            return format!("http://{}", addr);
+        }
+
+        let addr_v6: Result<std::net::Ipv6Addr, _> = domain.parse();
+        if let Ok(addr) = addr_v6 {
+            log::warn!("[Security] Allowing all origins for IP address: {}", domain);
+            return format!("http://[{}]", addr);
+        }
         format!("https://{}", domain)
     }
 

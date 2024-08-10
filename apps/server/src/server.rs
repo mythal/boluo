@@ -169,8 +169,6 @@ async fn main() {
 
     events::tasks::start();
     messages::tasks::start();
-    // https://hyper.rs/guides/1/server/graceful-shutdown/
-    let graceful = hyper_util::server::graceful::GracefulShutdown::new();
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
         .expect("Failed to create signal stream");
@@ -181,10 +179,9 @@ async fn main() {
                 match accept_result {
                     Ok((stream, _)) => {
                         let io = TokioIo::new(stream);
-                        let conn = http.serve_connection(io, service_fn(handler));
-                        let fut = graceful.watch(conn);
+                        let conn = http.serve_connection(io, service_fn(handler)).with_upgrades();
                         tokio::task::spawn(async move {
-                            if let Err(err) = fut.await {
+                            if let Err(err) = conn.await {
                                 log::error!("server error: {}", err);
                             }
                         });
@@ -201,12 +198,6 @@ async fn main() {
         }
     }
 
-    tokio::select! {
-        _ = graceful.shutdown() => {
-            log::info!("all connections gracefully closed");
-        },
-        _ = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
-            log::warn!("Timed out wait for all connections to close");
-        }
-    }
+    tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+    log::info!("Shutting down");
 }

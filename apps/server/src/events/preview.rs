@@ -70,7 +70,7 @@ impl PreviewPost {
         let cache = &mut cache;
         let mut should_finish = false;
         if let Some(text) = text.as_ref() {
-            if text.trim().is_empty() && edit_for.is_none() {
+            if (text.trim().is_empty() || entities.len() == 0) && edit_for.is_none() {
                 should_finish = true;
             }
         }

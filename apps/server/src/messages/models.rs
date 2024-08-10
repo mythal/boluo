@@ -213,8 +213,8 @@ impl Message {
             name = default_name.trim().to_string();
         }
         CHARACTER_NAME.run(&name)?;
-        if text.is_empty() {
-            return Err(ValidationFailed("Text is empty.").into());
+        if text.trim().is_empty() || entities.is_empty() {
+            return Err(ValidationFailed("Empty content").into());
         }
         let whisper_to = whisper_to.as_deref();
         let entities = JsonValue::Array(entities);

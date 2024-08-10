@@ -234,25 +234,35 @@ impl Event {
         let cache = super::context::get_cache().try_mailbox(mailbox).await;
         let Some(cache) = cache else { return vec![] };
         let cache = cache.lock().await;
-        let mut event_list: Vec<&Arc<SyncEvent>> = cache
+        let mut event_list: Vec<Arc<SyncEvent>> = cache
             .events
             .iter()
             .chain(cache.edition_map.values())
             .chain(cache.preview_map.values())
+            .cloned()
             .collect();
+        drop(cache);
+        if event_list.is_empty() {
+            return vec![];
+        }
         event_list.sort_by(|a, b| a.event.id.cmp(&b.event.id));
-        event_list
-            .into_iter()
-            .skip_while(|e| match e.event.id.timestamp.cmp(&after) {
-                Ordering::Less => true,
-                Ordering::Greater => false,
-                Ordering::Equal => {
-                    let Some(seq) = seq else { return false };
-                    e.event.id.seq <= seq
+        let mut prev_id: Option<EventId> = None;
+        let mut encoded_events: Vec<String> = Vec::with_capacity(event_list.len());
+        for event in event_list.into_iter() {
+            let event_id = event.event.id;
+            if let Some(prev_id) = prev_id {
+                if event_id == prev_id {
+                    log::error!("Duplicated event: {}", event.encoded);
                 }
-            })
-            .map(|e| e.encoded.clone())
-            .collect()
+            }
+            prev_id = Some(event_id);
+            let cmp = event_id.timestamp.cmp(&after);
+            let seq = seq.unwrap_or(Seq::MIN);
+            if cmp == Ordering::Greater || (cmp == Ordering::Equal && event_id.seq > seq) {
+                encoded_events.push(event.encoded.clone());
+            }
+        }
+        encoded_events
     }
 
     pub fn space_updated(space_id: Uuid) {

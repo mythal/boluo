@@ -95,7 +95,14 @@ async fn push_events(
                 .map(|batch_event| serde_json::to_string(&batch_event))
                 .collect();
             for message in messages {
-                tx.send(WsMessage::Text(message?)).await?;
+                let Ok(message) = message else {
+                    log::warn!("Failed to serialize batch event to mailbox {}", mailbox);
+                    return Err(anyhow!("Failed to serialize batch event"));
+                };
+                if let Err(err) = tx.send(WsMessage::Text(message)).await {
+                    log::warn!("Failed to send batch event to mailbox {}: {}", mailbox, err);
+                    return Err(err.into());
+                };
             }
         }
         let initialized = Event::initialized(mailbox);

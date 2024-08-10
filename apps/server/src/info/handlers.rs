@@ -29,7 +29,7 @@ pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
         proxies = x.borrow().clone();
     });
     if let Some(timestamp) = proxies.timestamp {
-        if now - timestamp < 60 * 60 {
+        if now - timestamp < 60 {
             return Ok(proxies.proxies);
         }
     }

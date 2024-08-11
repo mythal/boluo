@@ -1,12 +1,11 @@
 'use client';
 import { Provider as JotaiProvider } from 'jotai';
-import React, { type ReactNode, Suspense, useCallback } from 'react';
+import React, { type ReactNode, useCallback } from 'react';
 import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
 import type { IntlMessages, Locale } from '@boluo/common/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
-import { IS_DEVELOPMENT } from '../const';
 import { recordWarn } from '../error';
 
 interface Props {
@@ -14,9 +13,6 @@ interface Props {
   children: ReactNode;
   messages: IntlMessages;
 }
-
-const ENABLE_JOTAI_DEVTOOL = false;
-const JotaiDevtool = React.lazy(() => import('./JotaiDevtool'));
 
 export function ClientProviders({ children, lang, messages }: Props) {
   const changeLocale = useCallback((locale: Locale) => {
@@ -31,7 +27,6 @@ export function ClientProviders({ children, lang, messages }: Props) {
 
   return (
     <JotaiProvider store={store}>
-      <Suspense fallback={null}>{ENABLE_JOTAI_DEVTOOL && IS_DEVELOPMENT && <JotaiDevtool store={store} />}</Suspense>
       <SWRConfig
         value={{
           refreshInterval: 60000,

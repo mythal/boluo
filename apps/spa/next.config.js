@@ -7,7 +7,7 @@ const config = {
   output: 'export',
   productionBrowserSourceMaps: true,
   swcMinify: false,
-  transpilePackages: ['@boluo/ui', '@boluo/common', 'jotai-devtools'],
+  transpilePackages: ['@boluo/ui', '@boluo/common'],
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,

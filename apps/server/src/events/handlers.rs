@@ -12,7 +12,6 @@ use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
 use crate::{cache, db};
-use anyhow::anyhow;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
 use hyper::body::{Body, Incoming};
@@ -55,14 +54,7 @@ async fn check_permissions(
     Ok(())
 }
 
-// false positive
-#[allow(clippy::needless_pass_by_ref_mut)]
-async fn push_events(
-    mailbox: Uuid,
-    outgoing: &mut Sender,
-    after: Option<i64>,
-    seq: Option<u16>,
-) -> Result<(), anyhow::Error> {
+async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;
     use tokio::time::interval;
@@ -74,10 +66,13 @@ async fn push_events(
             match outgoing.send(message).await {
                 Ok(_) => (),
                 Err(ConnectionClosed) | Err(AlreadyClosed) => break,
-                Err(e) => return Err(e),
+                Err(e) => {
+                    log::error!("Error on sending WebSocket message: {}", e);
+                    return;
+                }
             }
         }
-        Ok(())
+        return;
     };
 
     let push = async {
@@ -97,11 +92,11 @@ async fn push_events(
             for message in messages {
                 let Ok(message) = message else {
                     log::warn!("Failed to serialize batch event to mailbox {}", mailbox);
-                    return Err(anyhow!("Failed to serialize batch event"));
+                    return;
                 };
                 if let Err(err) = tx.send(WsMessage::Text(message)).await {
                     log::warn!("Failed to send batch event to mailbox {}: {}", mailbox, err);
-                    return Err(err.into());
+                    return;
                 };
             }
         }
@@ -113,16 +108,19 @@ async fn push_events(
             let message = match mailbox_rx.recv().await {
                 Ok(event) => WsMessage::Text(event.encoded.clone()),
                 Err(RecvError::Lagged(lagged)) => {
-                    log::warn!("lagged {} at {}", lagged, mailbox);
+                    log::warn!("lagged {lagged} at {mailbox}");
                     continue;
                 }
-                Err(RecvError::Closed) => return Err(anyhow!("broadcast ({}) is closed.", mailbox)),
+                Err(RecvError::Closed) => {
+                    log::error!("mailbox {mailbox} closed");
+                    return;
+                }
             };
-            if tx.send(message).await.is_err() {
+            if let Err(e) = tx.send(message).await {
+                log::error!("Failed to send broadcast message to {mailbox}: {e}");
                 break;
             }
         }
-        Ok(())
     };
 
     let ping = IntervalStream::new(interval(Duration::from_secs(3))).for_each(|_| async {
@@ -132,35 +130,37 @@ async fn push_events(
     });
 
     tokio::select! {
-        r = message_sender => { r? },
+        r = message_sender => { r },
         _ = ping => {},
-        r = push => { r? },
+        r = push => { r },
     }
-
-    Ok(())
 }
 
-async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: String) -> Result<(), anyhow::Error> {
+async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: String) {
     let event: Result<ClientEvent, _> = serde_json::from_str(&message);
     if let Err(event) = event {
-        log::debug!("failed to parse event from client: {}", event);
-        return Ok(());
+        log::warn!("Failed to parse event from client: {}", event);
+        return;
     }
     let event = event.unwrap();
     match event {
         ClientEvent::Preview { preview } => {
-            let user_id = user_id.ok_or(AppError::NoPermission(
-                "You must be logged in to send a Preview.".to_string(),
-            ))?;
-            preview.broadcast(mailbox, user_id).await?;
+            let Some(user_id) = user_id else {
+                log::warn!("An user tried to preview without authentication");
+                return;
+            };
+            if let Err(err) = preview.broadcast(mailbox, user_id).await {
+                log::warn!("Failed to broadcast preview event: {}", err);
+            };
         }
         ClientEvent::Status { kind, focus } => {
             if let Some(user_id) = user_id {
-                Event::status(mailbox, user_id, kind, timestamp(), focus).await?;
+                if let Err(err) = Event::status(mailbox, user_id, kind, timestamp(), focus).await {
+                    log::warn!("Failed to broadcast status event: {}", err);
+                }
             }
         }
     }
-    Ok(())
 }
 
 fn ws_error(req: Request<Incoming>, mailbox: Option<Uuid>, reason: String) -> Response {
@@ -182,20 +182,24 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         seq,
     }) = parse_query(req.uri())
     else {
+        log::warn!("Invalid query {:?}", req.uri());
         return ws_error(req, None, "Invalid query".to_string());
     };
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
         let Ok(mut redis) = cache::conn().await else {
+            log::error!("Failed to connect to cache");
             return ws_error(req, Some(mailbox), "Failed to connect to cache".to_string());
         };
         let key = make_key(b"token", &token, b"user_id");
         let Ok(data) = redis.get(&key).await else {
+            log::warn!("Failed to get token");
             return ws_error(req, Some(mailbox), "Failed to get token".to_string());
         };
         if let Some(bytes) = data {
             let Ok(bytes) = bytes.try_into() else {
+                log::warn!("Invalid token");
                 return ws_error(req, Some(mailbox), "Invalid token".to_string());
             };
             *user_id = Ok(Uuid::from_bytes(bytes));
@@ -204,13 +208,20 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     let pool = db::get().await;
     let Ok(mut conn) = pool.acquire().await else {
-        return ws_error(req, Some(mailbox), "Failed to acquire connection".to_string());
+        log::error!("Failed to connect to the database");
+        return ws_error(req, Some(mailbox), "Failed to connect to the database".to_string());
     };
     let Ok(space) = Space::get_by_id(&mut *conn, &mailbox).await else {
+        log::warn!("Invalid mailbox: {}", mailbox);
         return ws_error(req, Some(mailbox), "Invalid mailbox".to_string());
     };
     if let Some(space) = space.as_ref() {
         let Ok(_) = check_permissions(&mut conn, space, &user_id).await else {
+            if let Ok(user_id) = user_id {
+                log::warn!("An user ({user_id}) tried to access a space ({mailbox}) without permission");
+            } else {
+                log::warn!("An user tried to access a space ({mailbox}) without permission");
+            }
             return ws_error(req, Some(mailbox), "No permission".to_string());
         };
     }
@@ -219,9 +230,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         let (mut outgoing, incoming) = ws_stream.split();
 
         let server_push_events = async move {
-            if let Err(e) = push_events(mailbox, &mut outgoing, after, seq).await {
-                log::warn!("Failed to push events: {}", e);
-            }
+            push_events(mailbox, &mut outgoing, after, seq).await;
             outgoing.close().await.ok();
         };
 
@@ -238,9 +247,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                     if message == "♡" {
                         return Ok(());
                     }
-                    if let Err(e) = handle_client_event(mailbox, user_id, message).await {
-                        log::warn!("Failed to handle the event from client: {}", e);
-                    }
+                    handle_client_event(mailbox, user_id, message).await;
                 }
                 Ok(())
             });

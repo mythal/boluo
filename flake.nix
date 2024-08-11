@@ -16,10 +16,6 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    treefmt-nix = {
-      url = "github:numtide/treefmt-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     napalm = {
       url = "github:nix-community/napalm";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -31,7 +27,6 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         inputs.devshell.flakeModule
-        inputs.treefmt-nix.flakeModule
       ];
 
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
@@ -337,7 +332,6 @@
             packages =
               let
                 common = with pkgs; [
-                  config.treefmt.build.wrapper
                   rustToolchain
                   nil
                   nodejs
@@ -375,15 +369,6 @@
                 eval = ''"-L framework=$DEVSHELL_DIR/Library/Frameworks"'';
               }
             ];
-          };
-
-          treefmt = {
-            projectRootFile = "flake.nix";
-            programs = {
-              nixpkgs-fmt.enable = true;
-              rustfmt.enable = true;
-              prettier.enable = true;
-            };
           };
         };
     };

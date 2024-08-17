@@ -235,7 +235,7 @@ export function mediaUrl(id: string, download = false, addBaseUrl = true): strin
 
 export function mediaHead(id: string): Promise<Response> {
   // https://stackoverflow.com/a/75115203
-  return fetch(`/api/media/get?id=${id}`, {
+  return fetch(makeUri('/media/get', { id }), {
     method: 'HEAD',
     mode: 'cors',
     cache: 'no-store',

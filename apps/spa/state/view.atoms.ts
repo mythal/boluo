@@ -3,6 +3,7 @@ import { atomWithHash } from 'jotai-location';
 import { selectAtom } from 'jotai/utils';
 import { isUuid } from '@boluo/utils';
 import { type Pane, type Route } from './view.types';
+import { recordError } from '../error';
 
 export const setHash = (searchParams: string) => {
   const parsed = new URLSearchParams(searchParams);
@@ -12,7 +13,13 @@ export const setHash = (searchParams: string) => {
     }
   }
   const hash = parsed.toString();
-  window.location.hash = hash;
+  try {
+    window.location.hash = hash;
+  } catch (e) {
+    // Sometimes setting the hash can fail,
+    // This is not a critical error
+    recordError('Failed to set hash', { hash, error: e });
+  }
 };
 
 const routeDeserialize = (raw: string): string => {

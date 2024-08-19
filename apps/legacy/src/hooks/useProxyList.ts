@@ -3,7 +3,7 @@ import useSWR from 'swr';
 import { Proxy, getDefaultBaseUrl } from '../base-url';
 
 const fetchList = async (): Promise<Proxy[]> => {
-  const response = await fetch('/api/info/proxies');
+  const response = await fetch(getDefaultBaseUrl() + '/api/info/proxies');
   const proxies = (await response.json()) as Proxy[];
   return proxies;
 };

@@ -1,4 +1,4 @@
-import { type ApiError } from '@boluo/api';
+import { type FetchFailError, type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Err, Ok, type Result } from '@boluo/utils';
 import { MEDIA_URL } from './const';
@@ -43,15 +43,21 @@ export function getMediaUrl(mediaId: string): string {
   return `${mediaPublicUrl}/${mediaId}`;
 }
 
-async function uploadImageToS3(file: File, presignedUrl: string): Promise<Result<void, S3Error>> {
+async function uploadImageToS3(file: File, presignedUrl: string): Promise<Result<void, S3Error | FetchFailError>> {
   // Use the fetch API to upload the image
-  const response = await fetch(presignedUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+  } catch (e) {
+    const fetchFailError: FetchFailError = { code: 'FETCH_FAIL', cause: e };
+    return new Err(fetchFailError);
+  }
 
   if (!response.ok) {
     recordWarn('Failed to upload the image to S3', { response });
@@ -88,7 +94,7 @@ interface MediaValidationError {
   err: MediaError;
 }
 
-type UploadError = PreSignFail | MediaValidationError | S3Error;
+type UploadError = PreSignFail | MediaValidationError | FetchFailError | S3Error;
 
 export const upload = async (file: File): Promise<Result<{ mediaId: string }, UploadError>> => {
   const validateResult = validateMedia(file);

@@ -100,6 +100,10 @@ function ChannelMemberButton({ className }: Props) {
   const [dialog, setDialog] = useState(false);
   const [leaveConfirmDialog, setLeaveConfirmDialog] = useState(false);
   const { leave, join, edit } = useChannelJoinLeave(channelId);
+  const toLogin = React.useCallback(() => {
+    recordNext();
+    location.href = '/login';
+  }, []);
   const {
     register,
     handleSubmit,
@@ -140,7 +144,7 @@ function ChannelMemberButton({ className }: Props) {
 
   if (user === undefined) {
     return (
-      <ChatHeaderButtonLink css={[mL(1)]} to="/login" onClick={recordNext}>
+      <ChatHeaderButtonLink css={[mL(1)]} to="/login" onClick={toLogin}>
         登录
       </ChatHeaderButtonLink>
     );

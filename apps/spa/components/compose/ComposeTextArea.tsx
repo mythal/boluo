@@ -70,6 +70,8 @@ const style: React.CSSProperties = {
   scrollbarWidth: 'none',
 };
 
+const MAX_FIND_LENGTH = 64;
+
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
   const { composeAtom, parsedAtom } = useChannelAtoms();
   const ref = useRef<RichTextareaHandle | null>(null);
@@ -82,7 +84,20 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       selectAtom(chatAtom, (chat) => {
         const channel = chat.channels[channelId];
         if (!channel) return null;
-        return channel.messages.findLast((message) => message.senderId === myId) ?? null;
+        const len = channel.messages.length;
+        if (len === 0) return null;
+        const end = Math.max(0, len - MAX_FIND_LENGTH);
+        for (let i = channel.messages.length - 1; i >= end; i--) {
+          const message = channel.messages[i];
+          if (!message) {
+            reportError("Unexpected undefined message in channel's messages");
+            break;
+          }
+          if (message?.senderId === myId) {
+            return message;
+          }
+        }
+        return null;
       }),
     [channelId, myId],
   );

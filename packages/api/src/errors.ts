@@ -1,4 +1,4 @@
-import * as errors from './error-types';
+import type * as errors from './error-types';
 
 export type ApiError =
   | errors.UnauthenticatedError

@@ -110,7 +110,7 @@ const useDndHandles = (
       if (!overData.current) return;
       const { sortable } = overData.current;
       const { realIndex, message: draggingMessage } = active;
-      const targetIndex = sortable.index;
+      const targetIndex = Math.min(messagesCount - 1, sortable.index);
       if (realIndex === targetIndex) return;
       resetDragging();
       const targetItem = chatList[targetIndex];
@@ -121,7 +121,7 @@ const useDndHandles = (
             <FormattedMessage defaultMessage="Failed to move the message, the target is lost. Please try again." />
           ),
         });
-        recordWarn('Lost the target item when drag end');
+        recordWarn('Lost the target item when drag end', { realIndex, targetIndex, messagesCount });
         return;
       }
       const timestamp = new Date().getTime();

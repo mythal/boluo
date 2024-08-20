@@ -69,6 +69,9 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
+  // Note:
+  // The payload.messages are sorted in descending order
+  // But the state.messages are sorted in ascending order
   const { fullLoaded } = payload;
   if (state.fullLoaded) {
     return state;
@@ -83,12 +86,23 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     message.id,
     makeMessageItem(message),
   ]);
-  const minPos = payload.messages.at(-1)!.pos;
+  const payloadMinPos = payload.messages.at(-1)!.pos;
   if (state.messages.length === 0) {
     return { ...state, messageMap: Object.fromEntries(newMessageEntries) };
   }
-  if (state.messages[0]!.pos <= minPos) {
-    recordWarn('Received messages that are older than the ones already loaded');
+  const stateMinPos = state.messages[0]!.pos;
+  if (stateMinPos <= payloadMinPos) {
+    if (stateMinPos === payloadMinPos && state.messages.length >= payload.messages.length) {
+      // Maybe this is a duplicate messages load
+      console.log('Received messages that are already loaded');
+      return state;
+    }
+    recordWarn('Received messages that are older than the ones already loaded', {
+      payloadMinPos,
+      stateMinPos,
+      payloadLenght: payload.messages.length,
+      stateLength: state.messages.length,
+    });
     return state;
   }
   const messageMap = { ...state.messageMap };

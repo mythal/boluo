@@ -235,19 +235,20 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
   const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
 
+  type UnregisterOberver = () => void;
+
   const readObserve = useCallback(
-    (node: Element): (() => void) => {
+    (node: Element): UnregisterOberver => {
+      // Create the observer if not exists
       if (positionObserverRef.current === null) {
-        // Initialize the observer
         const scroller = scrollerRef.current;
         if (!scroller) {
-          // FIXME: This should not happen
-          console.warn('Scroller is not ready');
-
+          console.debug("The scroller doesn't exist yet");
           return () => {};
         }
         positionObserverRef.current = new IntersectionObserver(
           (entries) => {
+            // Update the bottom state
             for (const entry of entries) {
               if (entry.target.getAttribute('data-is-last') === 'true') {
                 if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
@@ -260,18 +261,21 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
                 }
               }
             }
+            // Update the read position record
             window.setTimeout(() => {
-              const posList = [];
+              let maxPos = Number.MIN_SAFE_INTEGER;
               for (const entry of entries) {
                 if (entry.intersectionRatio > 0.7 && entry.isIntersecting) {
                   const rawPos = entry.target.getAttribute('data-read-position');
                   if (!rawPos) continue;
                   const pos = parseFloat(rawPos);
-                  if (Number.isNaN(pos)) continue;
-                  posList.push(pos);
+                  if (Number.isNaN(pos)) {
+                    recordWarn(`Invalid read position: ${rawPos}`);
+                    continue;
+                  }
+                  maxPos = Math.max(maxPos, pos);
                 }
               }
-              const maxPos = Math.max(...posList);
               const prevReadPos = store.get(channelReadFamily(channelId));
               if (maxPos > prevReadPos) {
                 store.set(channelReadFamily(channelId), maxPos);

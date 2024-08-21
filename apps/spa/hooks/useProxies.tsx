@@ -20,14 +20,14 @@ export const useProxies = () => {
   const intl = useIntl();
   return useMemo(() => {
     if (typeof window === 'undefined') return [];
-    const defaultProxies: Proxy[] = [
-      {
-        name: intl.formatMessage({ defaultMessage: 'Default' }),
-        url: DEFAULT_BACKEND_URL,
-        region: '',
-      },
-      // { name: intl.formatMessage({ defaultMessage: 'Dummy' }), url: 'example.com', region: 'Global' },
-    ];
-    return defaultProxies.concat(proxies || []);
+    const defaultName = intl.formatMessage({ defaultMessage: 'Default' });
+    const defaultProxy: Proxy = proxies?.find((proxy) => proxy.url === DEFAULT_BACKEND_URL) ?? {
+      name: defaultName,
+      url: DEFAULT_BACKEND_URL,
+      region: '',
+    };
+    if (!proxies || proxies.length === 0) return [defaultProxy];
+    const filteredProxies = proxies.filter((proxy) => proxy.url !== DEFAULT_BACKEND_URL);
+    return [defaultProxy].concat(filteredProxies || []);
   }, [intl, proxies]);
 };

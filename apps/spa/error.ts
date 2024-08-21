@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/react';
+import * as Sentry from '@sentry/nextjs';
 import { IS_DEVELOPMENT } from './const';
 
 export const recordWarn = (message: string, extras?: Record<string, unknown>) => {

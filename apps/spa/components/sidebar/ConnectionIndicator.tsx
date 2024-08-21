@@ -63,6 +63,14 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
             </span>
           </>
         )}
+        {connectionState.type === 'ERROR' && (
+          <>
+            <CloudOff />
+            <span>
+              <FormattedMessage defaultMessage="Error" />
+            </span>
+          </>
+        )}
         {connectionState.type === 'CONNECTING' && (
           <>
             <Spinner />

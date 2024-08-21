@@ -1,5 +1,5 @@
 use super::api::Token;
-use super::types::EventQuery;
+use super::types::{ConnectionError, EventQuery};
 use super::Event;
 use crate::cache::make_key;
 use crate::csrf::authenticate;
@@ -163,9 +163,9 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: Stri
     }
 }
 
-fn ws_error(req: Request<Incoming>, mailbox: Option<Uuid>, reason: String) -> Response {
+fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, code: ConnectionError, reason: String) -> Response {
     let mailbox = mailbox.unwrap_or_default();
-    let event = serde_json::to_string(&Event::error(mailbox, reason)).expect("Failed to serialize error event");
+    let event = serde_json::to_string(&Event::error(mailbox, code, reason)).expect("Failed to serialize error event");
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
         outgoing.send(WsMessage::Text(event)).await.ok();
@@ -183,24 +183,39 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
     }) = parse_query(req.uri())
     else {
         log::warn!("Invalid query {:?}", req.uri());
-        return ws_error(req, None, "Invalid query".to_string());
+        return connection_error(req, None, ConnectionError::InvalidToken, "Invalid query".to_string());
     };
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
         let Ok(mut redis) = cache::conn().await else {
             log::error!("Failed to connect to cache");
-            return ws_error(req, Some(mailbox), "Failed to connect to cache".to_string());
+            return connection_error(
+                req,
+                Some(mailbox),
+                ConnectionError::Unexpected,
+                "Failed to connect to cache".to_string(),
+            );
         };
         let key = make_key(b"token", &token, b"user_id");
         let Ok(data) = redis.get(&key).await else {
             log::warn!("Failed to get token");
-            return ws_error(req, Some(mailbox), "Failed to get token".to_string());
+            return connection_error(
+                req,
+                Some(mailbox),
+                ConnectionError::InvalidToken,
+                "Failed to get token".to_string(),
+            );
         };
         if let Some(bytes) = data {
             let Ok(bytes) = bytes.try_into() else {
                 log::warn!("Invalid token");
-                return ws_error(req, Some(mailbox), "Invalid token".to_string());
+                return connection_error(
+                    req,
+                    Some(mailbox),
+                    ConnectionError::InvalidToken,
+                    "Invalid token".to_string(),
+                );
             };
             *user_id = Ok(Uuid::from_bytes(bytes));
         }
@@ -209,11 +224,21 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
     let pool = db::get().await;
     let Ok(mut conn) = pool.acquire().await else {
         log::error!("Failed to connect to the database");
-        return ws_error(req, Some(mailbox), "Failed to connect to the database".to_string());
+        return connection_error(
+            req,
+            Some(mailbox),
+            ConnectionError::Unexpected,
+            "Failed to connect to the database".to_string(),
+        );
     };
     let Ok(space) = Space::get_by_id(&mut *conn, &mailbox).await else {
         log::warn!("Invalid mailbox: {}", mailbox);
-        return ws_error(req, Some(mailbox), "Invalid mailbox".to_string());
+        return connection_error(
+            req,
+            Some(mailbox),
+            ConnectionError::NotFound,
+            "Invalid mailbox".to_string(),
+        );
     };
     if let Some(space) = space.as_ref() {
         let Ok(_) = check_permissions(&mut conn, space, &user_id).await else {
@@ -222,7 +247,12 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             } else {
                 log::warn!("An user tried to access a space ({mailbox}) without permission");
             }
-            return ws_error(req, Some(mailbox), "No permission".to_string());
+            return connection_error(
+                req,
+                Some(mailbox),
+                ConnectionError::NoPermission,
+                "No permission".to_string(),
+            );
         };
     }
     let user_id = user_id.ok();

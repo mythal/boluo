@@ -103,7 +103,7 @@ export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, 
           void mutate<Record<string, UserStatus>>(['/spaces/users_status', event.body.spaceId], event.body.statusMap);
           return;
         case 'ERROR':
-          dispatch({ type: 'connectionError', payload: { mailboxId, code: event.body.code } });
+          dispatch({ type: 'connectionError', payload: { mailboxId, code: event.body.code ?? 'UNEXPECTED' } });
           return;
         case 'BATCH':
         case 'NEW_MESSAGE':

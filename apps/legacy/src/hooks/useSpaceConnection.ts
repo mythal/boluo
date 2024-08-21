@@ -63,8 +63,10 @@ export function useSpaceConnection() {
       const { body } = event;
       if (body.type === 'APP_UPDATED') {
         location.reload();
-      }
-      if (body.type === 'SPACE_UPDATED') {
+      } else if (body.type === 'ERROR') {
+        connection.close(300, body.code ?? 'UNEXPECTED');
+        return;
+      } else if (body.type === 'SPACE_UPDATED') {
         const { spaceWithRelated } = body;
         const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
         dispatch(action);

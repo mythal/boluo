@@ -32,6 +32,7 @@ pub async fn pos(
     cache: &mut crate::cache::Connection,
     channel_id: Uuid,
     message_id: Uuid,
+    keep_seconds: u64,
 ) -> Result<i32, CacheError> {
     let pos_key = create_pos_key(channel_id, message_id);
     let pos: Option<i32> = cache.inner.get(&pos_key).await?;
@@ -39,7 +40,7 @@ pub async fn pos(
         Ok(pos)
     } else {
         let bottom: i32 = alloc_new_pos(db, cache, channel_id).await?;
-        cache.inner.set_ex::<_, _, ()>(&pos_key, bottom, 60 * 5).await?;
+        cache.inner.set_ex::<_, _, ()>(&pos_key, bottom, keep_seconds).await?;
         Ok(bottom)
     }
 }

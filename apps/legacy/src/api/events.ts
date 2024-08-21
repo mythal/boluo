@@ -64,11 +64,18 @@ export type Events =
   | Event<MessagesMoved>
   | Event<StatusMap>
   | Event<SpaceUpdated>
+  | Event<ConnectionError>
   | Event<AppUpdated>;
 
 export interface Batch {
   type: 'BATCH';
   encodedEvents: string[];
+}
+
+export interface ConnectionError {
+  type: 'ERROR';
+  code?: string;
+  cause: string;
 }
 
 export interface SpaceUpdated {

@@ -219,8 +219,6 @@ const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource):
   if (!state.compose.editFor) {
     if (prevSource.trim() === '' && source.trim() !== '') {
       messageId = newId();
-    } else if (!state.compose.broadcast) {
-      messageId = newId();
     }
   }
   return { ...state, compose: { ...state.compose, source, messageId, isAction } };

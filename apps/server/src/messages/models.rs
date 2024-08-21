@@ -203,7 +203,7 @@ impl Message {
     ) -> Result<Message, AppError> {
         let pos: (i32, i32) = match (request_pos, preview_id) {
             (Some(pos), _) => pos,
-            (None, Some(id)) => (crate::pos::pos(&mut *conn, cache, *channel_id, *id).await?, 1),
+            (None, Some(id)) => (crate::pos::pos(&mut *conn, cache, *channel_id, *id, 30).await?, 1),
             (None, None) => (crate::pos::alloc_new_pos(&mut *conn, cache, *channel_id).await?, 1),
         };
         check_pos(pos)?;

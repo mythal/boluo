@@ -41,6 +41,16 @@ pub enum ClientEvent {
     Status { kind: StatusKind, focus: Vec<Uuid> },
 }
 
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, TS)]
+#[ts(export)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ConnectionError {
+    NotFound,
+    NoPermission,
+    InvalidToken,
+    Unexpected,
+}
+
 #[derive(Serialize, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
@@ -101,6 +111,7 @@ pub enum EventBody {
         space_with_related: SpaceWithRelated,
     },
     Error {
+        code: ConnectionError,
         reason: String,
     },
     AppUpdated {
@@ -135,11 +146,11 @@ impl Event {
         }
     }
 
-    pub fn error(mailbox: Uuid, reason: String) -> Event {
+    pub fn error(mailbox: Uuid, code: ConnectionError, reason: String) -> Event {
         Event {
             mailbox,
             id: EventId::new(),
-            body: EventBody::Error { reason },
+            body: EventBody::Error { code, reason },
         }
     }
 

@@ -1,4 +1,4 @@
-import type { EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from '@boluo/api';
+import type { ConnectionError, EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
 import { type MakeAction } from './actions';
 
@@ -13,6 +13,7 @@ export type ChatActionMap = {
   connecting: { mailboxId: string };
   reconnectCountdownTick: { immediately?: boolean };
   connectionClosed: { mailboxId: string; random: number };
+  connectionError: { mailboxId: string; code: ConnectionError };
   debugCloseConnection: { countdown: number };
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };

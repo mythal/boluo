@@ -2,6 +2,7 @@ import { store } from '@boluo/store';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import { chatAtom } from './chat.atoms';
 import { type ChatReducerContext } from './chat.reducer';
+import { type ConnectionError } from '@boluo/api';
 
 export interface Connected {
   type: 'CONNECTED';
@@ -19,7 +20,12 @@ export interface Closed {
   countdown: number;
 }
 
-export type ConnectionState = Connected | Connecting | Closed;
+export interface Error {
+  type: 'ERROR';
+  code: ConnectionError;
+}
+
+export type ConnectionState = Connected | Connecting | Closed | Error;
 
 export const initialConnectionState: ConnectionState = {
   type: 'CLOSED',
@@ -62,12 +68,14 @@ const handleConnectionClosed = (
 ): ConnectionState => {
   if (mailboxId && payload.mailboxId !== mailboxId) {
     return state;
+  } else if (state.type === 'ERROR') {
+    return state;
   }
   let retry = 0;
   if (state.type === 'CONNECTING') {
     retry = state.retry;
   }
-  let countdown = 0;
+  let countdown = 1;
   if (retry > 2) {
     const { random } = payload;
     let offset = 0;
@@ -80,6 +88,17 @@ const handleConnectionClosed = (
     countdown = RETRY_COUNTDOWN[retry] ?? 8 + offset;
   }
   return { type: 'CLOSED', retry, countdown };
+};
+
+const handleConnectionError = (
+  state: ConnectionState,
+  { payload }: ChatAction<'connectionError'>,
+  mailboxId: string,
+): ConnectionState => {
+  if (mailboxId && payload.mailboxId !== mailboxId) {
+    return state;
+  }
+  return { type: 'ERROR', code: payload.code };
 };
 
 const handleReconnectCountdownTick = (
@@ -116,6 +135,8 @@ export const connectionReducer = (
       return handleConnecting(state, action, mailboxId);
     case 'connectionClosed':
       return handleConnectionClosed(state, action, mailboxId);
+    case 'connectionError':
+      return handleConnectionError(state, action, mailboxId);
     case 'reconnectCountdownTick':
       return handleReconnectCountdownTick(state, action);
     case 'debugCloseConnection':

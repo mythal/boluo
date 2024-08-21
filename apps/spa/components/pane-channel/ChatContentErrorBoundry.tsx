@@ -1,7 +1,7 @@
 import React, { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Failed } from '../common/Failed';
-import { ErrorBoundary } from '@sentry/react';
+import { ErrorBoundary } from '@sentry/nextjs';
 
 export const ChatContentErrorBoundry: FC<{ children: ReactNode }> = ({ children }) => (
   <ErrorBoundary fallback={({ error, eventId }) => <ShowError error={error} eventId={eventId} />}>

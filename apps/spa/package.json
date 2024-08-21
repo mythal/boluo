@@ -22,6 +22,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@floating-ui/react": "^0.26.13",
+    "@sentry/nextjs": "^8.26.0",
     "@sentry/react": "^8.0.0",
     "clsx": "^2.1.0",
     "color2k": "^2.0.3",

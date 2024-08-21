@@ -6,7 +6,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';
 import { FormattedMessage } from 'react-intl';
 import { Failed, FailedUnexpected } from '../common/Failed';
-import { ErrorBoundary, type FallbackRender } from '@sentry/react';
+import { ErrorBoundary, type FallbackRender } from '@sentry/nextjs';
 
 export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
   const fallback: FallbackRender = ({ error, eventId }) => {

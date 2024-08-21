@@ -26,12 +26,10 @@ import { useQuerySettings } from '../hooks/useQuerySettings';
 import { ChatInvite } from './ChatInvite';
 import { PaneEmpty } from './PaneEmpty';
 import { useIsClient } from '../hooks/useIsClient';
-import { IS_DEVELOPMENT, SENTRY_DSN, SENTRY_TUNNEL } from '../const';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
 import { type Settings } from '@boluo/common';
-import * as Sentry from '@sentry/react';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;
@@ -54,16 +52,6 @@ const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => 
   }, [theme]);
   return resolvedTheme;
 };
-
-if (typeof window !== 'undefined' && SENTRY_DSN) {
-  Sentry.init({
-    environment: IS_DEVELOPMENT ? 'development' : 'production',
-    dsn: SENTRY_DSN,
-    tunnel: SENTRY_TUNNEL,
-    integrations: [],
-  });
-  console.debug('Sentry ready');
-}
 
 const Chat: FC = () => {
   const { data: settings } = useQuerySettings();

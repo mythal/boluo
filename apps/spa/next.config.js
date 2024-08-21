@@ -1,4 +1,5 @@
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
+const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -25,4 +26,18 @@ const config = {
     return config;
   },
 };
-module.exports = process.env.ANALYZE ? withBundleAnalyzer(config) : config;
+if (process.env.SENTRY_DSN) {
+  module.exports = withSentryConfig(config, {
+    org: 'mythal-rpg' ?? process.env.SENTRY_ORG,
+    project: 'boluo' ?? process.env.SENTRY_PROJECT,
+    autoInstrumentServerFunctions: false,
+    autoInstrumentMiddleware: false,
+    disableLogger: true,
+    authToken: process.env.SENTRY_TOKEN,
+    silent: true,
+  });
+} else if (process.env.ANALYZE) {
+  module.exports = withBundleAnalyzer(config);
+} else {
+  module.exports = config;
+}

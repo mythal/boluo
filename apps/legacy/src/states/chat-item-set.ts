@@ -214,3 +214,21 @@ export const resetMovingMessage = (itemSet: ChatItemSet, id: Id): ChatItemSet =>
   });
   return { ...itemSet, messages };
 };
+
+export function binarySearchPos(arr: List<{ pos: number }>, targetPos: number): number {
+  let left = 0;
+  let right = arr.count() - 1;
+
+  while (left <= right) {
+    const mid = left + Math.floor((right - left) / 2);
+    if (arr.get(mid)!.pos === targetPos) {
+      return mid;
+    } else if (arr.get(mid)!.pos < targetPos) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+
+  return left;
+}

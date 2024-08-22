@@ -31,6 +31,7 @@ import { Entity } from '../interpreter/entities';
 import { DEBUG } from '../settings';
 import {
   addItem,
+  binarySearchPos,
   ChatItem,
   ChatItemSet,
   deleteMessage,
@@ -373,6 +374,15 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = newMessage(itemSet, body.message, myId);
       break;
     case 'MESSAGE_PREVIEW':
+      if (chat.compose.messageId === body.preview.id && !body.preview.editFor) {
+        const itemIndexByPos = binarySearchPos(itemSet.messages, body.preview.pos);
+        const itemByPos = itemSet.messages.get(itemIndexByPos);
+        if (itemByPos && itemByPos.pos === body.preview.pos && itemByPos.type !== 'PREVIEW') {
+          // Collision occurred, generate a new preview id.
+          compose = { ...compose, messageId: newId() };
+          break;
+        }
+      }
       itemSet = newPreview(itemSet, body.preview, myId);
       break;
     case 'MESSAGE_DELETED':

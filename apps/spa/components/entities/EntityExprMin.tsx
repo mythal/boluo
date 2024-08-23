@@ -12,7 +12,7 @@ export const EntityExprMin: FC<Props> = ({ node: minNode }) => {
     result = `=${minNode.value}`;
   }
   return (
-    <div className="inline-flex">
+    <div className="EntityExprMin inline-flex">
       min({<EntityExprNode node={minNode.node} />}){result}
     </div>
   );

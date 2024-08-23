@@ -30,7 +30,7 @@ export const EntityExprRepeat: FC<Props> = ({ node: repeat }) => {
   }
   nodeList.pop();
   return (
-    <span>
+    <span className="EntityExprRepeat">
       &#123;{' '}
       {nodeList.map((item, key) => (
         <RepeatItem item={item} key={key} />

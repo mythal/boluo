@@ -1,5 +1,5 @@
 import type { Message } from '@boluo/api';
-import { byPos } from '../sort';
+import { binarySearchPos, byPos } from '../sort';
 import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
@@ -19,6 +19,7 @@ export interface ChannelState {
   messages: MessageItem[];
   previewMap: Record<UserId, PreviewItem>;
   scheduledGc: ScheduledGc | null;
+  collidedPreviewIdSet: Set<string>;
 }
 
 export interface ScheduledGc {
@@ -37,6 +38,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     fullLoaded: false,
     previewMap: {},
     scheduledGc: null,
+    collidedPreviewIdSet: new Set(),
   };
 };
 
@@ -137,7 +139,8 @@ const handleMessagePreview = (
   state: ChannelState,
   { payload: { preview, timestamp } }: ChatAction<'messagePreview'>,
 ): ChannelState => {
-  let { previewMap } = state;
+  let { previewMap, collidedPreviewIdSet } = state;
+  // The `preview.pos` is supposed to be integer, just `ceil` it to be safe.
   let pos = Math.ceil(preview.pos);
   let posP = pos;
   let posQ = 1;
@@ -149,11 +152,17 @@ const handleMessagePreview = (
     pos = message.pos;
     posP = message.posP;
     posQ = message.posQ;
+  } else if (preview.editFor === null) {
+    const index = binarySearchPos(state.messages, pos);
+    if (state.messages[index]?.pos === pos) {
+      collidedPreviewIdSet = new Set(collidedPreviewIdSet);
+      collidedPreviewIdSet.add(preview.id);
+    }
   }
 
   const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos, key: preview.senderId, timestamp };
   previewMap = { ...previewMap, [preview.senderId]: chatItem };
-  return { ...state, previewMap };
+  return { ...state, previewMap, collidedPreviewIdSet };
 };
 
 const handleMessageDeleted = (

@@ -24,6 +24,7 @@ export type ComposeActionMap = {
   removeWhisperTarget: { username: string };
   toggleAction: Empty;
   toggleWhisper: { username?: string };
+  collided: { previewId: string; newPreviewId: string };
 };
 
 export type ComposeActionUnion = MakeAction<ComposeActionMap, keyof ComposeActionMap>;

@@ -70,7 +70,7 @@ export const ChatItemMessage: FC<{
       optimistic={optimistic}
     >
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
-        {!mini && <>{nameNode}:</>}
+        {!mini && <span>{nameNode}:</span>}
       </div>
       <div
         className="pr-message-small @2xl:pr-message"

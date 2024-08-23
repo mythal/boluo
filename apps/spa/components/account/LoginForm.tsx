@@ -43,25 +43,23 @@ const UsernameField = () => {
     },
   } = useFormContext<Inputs>();
   return (
-    <>
-      <div>
-        <label htmlFor={id} className="block w-full py-1">
-          <FormattedMessage defaultMessage="Username or Email" />
-        </label>
+    <div>
+      <label htmlFor={id} className="block w-full py-1">
+        <FormattedMessage defaultMessage="Username or Email" />
+      </label>
 
-        <TextInput
-          className="w-full"
-          id={id}
-          autoCapitalize="off"
-          autoCorrect="off"
-          autoComplete="username"
-          variant={error ? 'error' : 'normal'}
-          {...register('username', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
-        />
+      <TextInput
+        className="w-full"
+        id={id}
+        autoCapitalize="off"
+        autoCorrect="off"
+        autoComplete="username"
+        variant={error ? 'error' : 'normal'}
+        {...register('username', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
+      />
 
-        <ErrorMessage error={error} />
-      </div>
-    </>
+      <ErrorMessage error={error} />
+    </div>
   );
 };
 
@@ -75,22 +73,20 @@ const PasswordField = () => {
     },
   } = useFormContext<Inputs>();
   return (
-    <>
-      <div>
-        <label htmlFor={id} className="block w-full py-1">
-          <FormattedMessage defaultMessage="Password" />
-        </label>
-        <TextInput
-          id={id}
-          type="password"
-          autoComplete="current-password"
-          className="w-full"
-          variant={error ? 'error' : 'normal'}
-          {...register('password', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
-        />
-        <ErrorMessage error={error} />
-      </div>
-    </>
+    <div>
+      <label htmlFor={id} className="block w-full py-1">
+        <FormattedMessage defaultMessage="Password" />
+      </label>
+      <TextInput
+        id={id}
+        type="password"
+        autoComplete="current-password"
+        className="w-full"
+        variant={error ? 'error' : 'normal'}
+        {...register('password', { required: intl.formatMessage({ defaultMessage: "Can't be empty." }) })}
+      />
+      <ErrorMessage error={error} />
+    </div>
   );
 };
 

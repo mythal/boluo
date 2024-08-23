@@ -21,6 +21,6 @@ export const Delay = memo<Props>(({ fallback = null, children, timeout = 64 }) =
     }
   }, [timeout]);
 
-  return <>{show ? children : fallback}</>;
+  return show ? children : fallback;
 });
 Delay.displayName = 'Delay';

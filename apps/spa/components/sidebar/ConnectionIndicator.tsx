@@ -10,15 +10,11 @@ import {
 import clsx from 'clsx';
 import { Cloud, CloudOff } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
-import { type FC, Suspense, useEffect, useMemo, useState } from 'react';
+import { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { connectionStateAtom } from '../../state/chat.atoms';
-import { FloatingBox } from '../common/FloatingBox';
-import { BaseUrlSelector } from './BaseUrlSelector';
-import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';
-import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
-import { ConnectionIndicatorConnecting } from './ConnectionIndicatorConnecting';
 import { FormattedMessage } from 'react-intl';
+import { BaseUrlSelectionPanel } from './BaseUrlSelectionPanel';
 
 interface Props {
   spaceId: string | null | undefined;
@@ -45,51 +41,51 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   if (spaceId == null) return null;
+  let icon: ReactNode;
+  switch (connectionState.type) {
+    case 'CONNECTED':
+      icon = <Cloud />;
+      break;
+    case 'CONNECTING':
+      icon = <Spinner />;
+      break;
+    case 'CLOSED':
+      icon = <CloudOff />;
+      break;
+    case 'ERROR':
+      icon = <CloudOff />;
+      break;
+  }
   return (
-    <>
-      <div
-        className={clsx(
-          'group flex cursor-pointer select-none items-center gap-1 px-4 py-1 text-sm',
-          connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-surface-300',
-        )}
-        ref={refs.setReference}
-        {...getReferenceProps()}
-      >
-        {connectionState.type === 'CLOSED' && (
-          <>
-            <CloudOff />
-            <span>
-              <FormattedMessage defaultMessage="Offline" />
-            </span>
-          </>
-        )}
-        {connectionState.type === 'ERROR' && (
-          <>
-            <CloudOff />
-            <span>
-              <FormattedMessage defaultMessage="Error" />
-            </span>
-          </>
-        )}
-        {connectionState.type === 'CONNECTING' && (
-          <>
-            <Spinner />
-            <span>…</span>
-          </>
-        )}
-        {connectionState.type === 'CONNECTED' && (
-          <>
-            <Cloud />
-            <span className="">
-              <FormattedMessage defaultMessage="Connected" />
-            </span>
-          </>
-        )}
-        <div className="flex-grow text-right">
-          <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
-            <FormattedMessage defaultMessage="Switch" />
-          </span>
-        </div>
+    <div
+      className={clsx(
+        'group flex cursor-pointer select-none items-center gap-1 px-4 py-1 text-sm',
+        connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-surface-300',
+      )}
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
+      {icon}
+      {connectionState.type === 'CLOSED' && (
+        <span>
+          <FormattedMessage defaultMessage="Offline" />
+        </span>
+      )}
+      {connectionState.type === 'ERROR' && (
+        <span>
+          <FormattedMessage defaultMessage="Error" />
+        </span>
+      )}
+      {connectionState.type === 'CONNECTING' && <span>…</span>}
+      {connectionState.type === 'CONNECTED' && (
+        <span className="">
+          <FormattedMessage defaultMessage="Connected" />
+        </span>
+      )}
+      <div className="flex-grow text-right">
+        <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
+          <FormattedMessage defaultMessage="Switch" />
+        </span>
       </div>
       {isPopoverOpen && (
         <FloatingPortal>
@@ -99,21 +95,10 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
             {...getFloatingProps()}
             className={clsx('z-40 w-[max-content]')}
           >
-            <FloatingBox>
-              <div className="flex flex-col gap-4">
-                {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
-                {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
-                {connectionState.type === 'CLOSED' && (
-                  <ConnectionIndicatorClosed countdown={connectionState.countdown} />
-                )}
-                <Suspense fallback="...">
-                  <BaseUrlSelector />
-                </Suspense>
-              </div>
-            </FloatingBox>
+            <BaseUrlSelectionPanel connectionState={connectionState} />
           </div>
         </FloatingPortal>
       )}
-    </>
+    </div>
   );
 };

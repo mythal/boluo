@@ -17,7 +17,7 @@ interface Props {
 export const EntityExprNode = memo<Props>(({ node }) => {
   switch (node.type) {
     case 'Num':
-      return <>{node.value}</>;
+      return node.value;
     case 'Binary':
       return <EntityExprBinary node={node} />;
     case 'Roll':

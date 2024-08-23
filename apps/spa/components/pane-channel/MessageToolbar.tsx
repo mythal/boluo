@@ -310,14 +310,12 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
     },
   });
   return (
-    <>
-      <MoreMenuItem
-        icon={Trash}
-        label={intl.formatMessage({ defaultMessage: 'Delete' })}
-        onClick={deleting ? empty : deleteMessage}
-        className={deleting ? 'text-text-lighter cursor-progress' : 'text-text-danger'}
-      />
-    </>
+    <MoreMenuItem
+      icon={Trash}
+      label={intl.formatMessage({ defaultMessage: 'Delete' })}
+      onClick={deleting ? empty : deleteMessage}
+      className={deleting ? 'text-text-lighter cursor-progress' : 'text-text-danger'}
+    />
   );
 };
 

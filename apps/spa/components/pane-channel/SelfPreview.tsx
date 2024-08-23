@@ -73,10 +73,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
     <PreviewBox isLast={isLast} id={preview.key} inGame={inGame} editMode={editMode} isSelf onDrop={onDrop}>
       <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
       <div>
-        <div className="items-between pr-message-small @2xl:pr-message flex h-full min-h-8 flex-col gap-1">
-          <SelfPreviewContent myMember={member.channel} nameNode={nameNode} />
-          {mediaNode}
-        </div>
+        <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />
 
         <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
       </div>

@@ -186,7 +186,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       if (isFiltered) continue;
       else if (preview.senderId === myId) {
         /* Always show the user's own preview */
-      } else if (preview.text === '' || preview.id === composeSlice.prevPreviewId) {
+      } else if (preview.text === '' || preview.entities.length === 0 || preview.id === composeSlice.prevPreviewId) {
         continue;
       }
       if (preview.id in messageMap) {
@@ -218,6 +218,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         itemList.push(preview);
       } else if (preview.pos > minPos) {
         const index = binarySearchPos(itemList, preview.pos);
+        const itemInThePosition = itemList[index];
+        if (itemInThePosition && itemInThePosition.type !== 'PREVIEW') {
+          // The position is already occupied by a message, skip.
+          continue;
+        }
         itemList.splice(index, 0, preview);
       }
     }

@@ -1,11 +1,11 @@
 import { type ClientEvent, type PreviewPost } from '@boluo/api';
-import { type Atom, useAtomValue, useStore } from 'jotai';
-import { type MutableRefObject, useEffect, useRef } from 'react';
+import { atom, type Atom, useAtomValue, useStore } from 'jotai';
+import { type MutableRefObject, useEffect, useMemo, useRef } from 'react';
 import { makeId } from '@boluo/utils';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { type ParseResult } from '../../interpreter/parse-result';
-import { connectionStateAtom } from '../../state/chat.atoms';
+import { chatAtom, connectionStateAtom } from '../../state/chat.atoms';
 import { type ComposeState } from '../../state/compose.reducer';
 
 const SEND_PREVIEW_TIMEOUT_MS = 250;
@@ -66,6 +66,29 @@ export const useSendPreview = (
   const sendTimoutRef = useRef<number | undefined>(undefined);
   const isFocused = usePaneIsFocus();
   const connectionState = useAtomValue(connectionStateAtom);
+  const hasCollidedAtom = useMemo(
+    () =>
+      atom((read) => {
+        const composeState = read(composeAtom);
+        const chatState = read(chatAtom);
+        const channelState = chatState.channels[channelId];
+        if (channelState == null || !channelState.fullLoaded) return false;
+        return channelState.collidedPreviewIdSet.has(composeState.previewId);
+      }),
+    [channelId, composeAtom],
+  );
+  useEffect(() => {
+    store.sub(hasCollidedAtom, () => {
+      const hasCollided = store.get(hasCollidedAtom);
+      const previewId = store.get(composeAtom).previewId;
+      if (hasCollided) {
+        store.set(composeAtom, {
+          type: 'collided',
+          payload: { previewId, newPreviewId: makeId() },
+        });
+      }
+    });
+  }, [composeAtom, hasCollidedAtom, store]);
   useEffect(() => {
     return store.sub(parsedAtom, () => {
       if (nickname === undefined || connectionState.type !== 'CONNECTED') {

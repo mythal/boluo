@@ -321,6 +321,17 @@ const handleRemoveWhisperTarget = (
   return modifyModifier(state, whisper, modifiedModifier);
 };
 
+export const handleCollided = (
+  state: ComposeState,
+  { payload: { previewId, newPreviewId } }: ComposeAction<'collided'>,
+) => {
+  if (previewId === state.previewId) {
+    return { ...state, previewId: newPreviewId };
+  } else {
+    return state;
+  }
+};
+
 export const composeReducer = (state: ComposeState, action: ComposeActionUnion): ComposeState => {
   switch (action.type) {
     case 'setSource':
@@ -333,6 +344,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleSetInGame(state, action);
     case 'recoverState':
       return handleRecoverState(state, action);
+    case 'collided':
+      return handleCollided(state, action);
     case 'addDice':
       return handleAddDice(state, action);
     case 'link':

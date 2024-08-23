@@ -8,7 +8,7 @@ import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
-import { SidebarItemSkeleton } from './SidebarItemSkeleton';
+import { SidebarSkeletonItem } from './SidebarSkeletonItem';
 import clsx from 'clsx';
 
 interface Props {
@@ -61,7 +61,12 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => 
           <FormattedMessage defaultMessage="Switch Spaces" />
         </span>
       </div>
-      {spacesWithMemberData == null && isLoading && <SidebarItemSkeleton />}
+      {spacesWithMemberData == null && isLoading && (
+        <div>
+          <SidebarSkeletonItem />
+          <SidebarSkeletonItem />
+        </div>
+      )}
       {spacesWithMemberData == null || spacesWithMemberData.length === 0 ? (
         <SidebarItem>
           <div className="text-text-lighter text-center">- Ø -</div>

@@ -9,6 +9,7 @@ import { EntityExprMin } from './EntityExprMin';
 import { EntityExprRepeat } from './EntityExprRepeat';
 import { EntityExprRoll } from './EntityExprRoll';
 import { EntityExprNodeUnknown } from './EntityExprUnknown';
+import { EntityExprSubExpr } from './EntityExprSubExpr';
 
 interface Props {
   node: ExprNode | EvaluatedExprNode;
@@ -35,11 +36,7 @@ export const EntityExprNode = memo<Props>(({ node }) => {
     case 'Min':
       return <EntityExprMin node={node} />;
     case 'SubExpr':
-      return (
-        <span>
-          (<EntityExprNode node={node.node} />)
-        </span>
-      );
+      return <EntityExprSubExpr node={node} />;
     default:
       return <EntityExprNodeUnknown />;
   }

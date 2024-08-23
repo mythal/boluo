@@ -31,11 +31,11 @@ export const SingleDice: FC<SingleDiceProps> = React.memo(({ value, last = false
   }
 
   return (
-    <>
+    <span>
       <span>{value}</span>
       <span className="text-surface-700 text-xs">{special}</span>
       {!last && ', '}
-    </>
+    </span>
   );
 });
 

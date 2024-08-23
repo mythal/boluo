@@ -36,9 +36,9 @@ export const EntityExprNode = memo<Props>(({ node }) => {
       return <EntityExprMin node={node} />;
     case 'SubExpr':
       return (
-        <>
+        <span>
           (<EntityExprNode node={node.node} />)
-        </>
+        </span>
       );
     default:
       return <EntityExprNodeUnknown />;

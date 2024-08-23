@@ -17,10 +17,10 @@ const UndecidedCocRoll: FC<{ node: CocRoll }> = ({ node }) => {
     target = <span className="text-surface-500 ml-0.5">≤{node.target.value}</span>;
   }
   return (
-    <>
+    <span>
       <span className="mx-0.5">??</span>
       {target}
-    </>
+    </span>
   );
 };
 
@@ -52,12 +52,12 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
     successLevel = <span className="ml-1 font-bold">{cocSuccessLevelDisplay(intl, node.value, node.targetValue)}</span>;
   }
   return (
-    <>
+    <span>
       {modifiers}
       {node.value}
       {target}
       {successLevel}
-    </>
+    </span>
   );
 };
 

@@ -12,11 +12,11 @@ export const EntityExprBinary: FC<Props> = ({ node }) => {
     result = `=${node.value}`;
   }
   return (
-    <>
+    <span>
       <EntityExprNode node={node.l} />
       {node.op}
       <EntityExprNode node={node.r} />
       {result}
-    </>
+    </span>
   );
 };

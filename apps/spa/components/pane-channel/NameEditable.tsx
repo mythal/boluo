@@ -79,7 +79,9 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
             <Delay fallback={<FallbackIcon />}>
               <Icon icon={TriangleAlert} className="mr-1" />
             </Delay>
-            <FormattedMessage defaultMessage="Need A Name" />
+            <span>
+              <FormattedMessage defaultMessage="Need A Name" />
+            </span>
           </span>
         ) : (
           name

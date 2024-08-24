@@ -18,7 +18,7 @@ export const EntityLink: FC<Props> = ({ source, entity }) => {
     href = source.substring(start, start + entity.href.len);
   }
   return (
-    <a target="_blank" title={title} href={href} className="underline underline-offset-2">
+    <a target="_blank" title={title} href={href} className="EntityLink underline underline-offset-2">
       <EntityText source={source} entity={entity.child} />
       <ExternalLink className="inline" />
     </a>

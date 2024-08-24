@@ -38,7 +38,9 @@ export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
             <Kbd variant="small">↵</Kbd>
           ) : (
             <>
-              <Kbd variant="small">{isApple() ? '⌘' : '↵'}</Kbd> + <Kbd variant="small">↵</Kbd>
+              <Kbd variant="small">{isApple() ? '⌘' : '↵'}</Kbd>
+              <span> + </span>
+              <Kbd variant="small">↵</Kbd>
             </>
           )}
         </div>

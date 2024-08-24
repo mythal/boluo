@@ -58,11 +58,15 @@ const LogoutField: FC<{ currentUser: User }> = ({ currentUser }) => {
       <div className="flex flex-none gap-2">
         <Button onClick={openProfile}>
           <UserIcon />
-          <FormattedMessage defaultMessage="Profile" />
+          <span>
+            <FormattedMessage defaultMessage="Profile" />
+          </span>
         </Button>
         <Button onClick={logout}>
           <LogOut />
-          <FormattedMessage defaultMessage="Logout" />
+          <span>
+            <FormattedMessage defaultMessage="Logout" />
+          </span>
         </Button>
       </div>
     </div>

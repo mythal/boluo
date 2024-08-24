@@ -58,7 +58,9 @@ export const ExileButton: FC<Props> = ({ spaceId, userId }) => {
     <>
       <InListButton ref={refs.setReference} {...getReferenceProps()}>
         <Icon icon={UserX} />
-        <FormattedMessage defaultMessage="Exile" />
+        <span>
+          <FormattedMessage defaultMessage="Exile" />
+        </span>
       </InListButton>
       {isConfirming && (
         <FloatingPortal>

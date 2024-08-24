@@ -12,5 +12,5 @@ export const EntityEmphasis: FC<Props> = ({
     child: { start, len },
   },
 }) => {
-  return <em>{source.substring(start, start + len)}</em>;
+  return <em className="EntityEmphasis">{source.substring(start, start + len)}</em>;
 };

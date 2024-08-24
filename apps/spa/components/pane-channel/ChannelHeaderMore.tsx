@@ -31,10 +31,12 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
           <span className="text-surface-700 @md:inline hidden text-sm">
             <FormattedMessage defaultMessage="Character Name:" />
           </span>
-          {member.characterName}
+          <span>{member.characterName}</span>
         </>
       ) : (
-        <FormattedMessage defaultMessage="No Character Name" />
+        <span>
+          <FormattedMessage defaultMessage="No Character Name" />
+        </span>
       )}
       <Icon icon={Edit} className="text-brand-700 ml-1" />
     </button>

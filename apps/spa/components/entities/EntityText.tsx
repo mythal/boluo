@@ -7,5 +7,5 @@ interface Props {
 }
 
 export const EntityText: FC<Props> = ({ source, entity: { start, len } }) => {
-  return source.substring(start, start + len);
+  return <span className="EntityText">{source.substring(start, start + len)}</span>;
 };

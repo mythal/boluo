@@ -12,5 +12,5 @@ export const EntityStrong: FC<Props> = ({
     child: { start, len },
   },
 }) => {
-  return <strong>{source.substring(start, start + len)}</strong>;
+  return <strong className="EntityStrong">{source.substring(start, start + len)}</strong>;
 };

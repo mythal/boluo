@@ -70,7 +70,15 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
   }, [media]);
 
   return (
-    <PreviewBox isLast={isLast} id={preview.key} inGame={inGame} editMode={editMode} isSelf onDrop={onDrop}>
+    <PreviewBox
+      isLast={isLast}
+      id={preview.key}
+      inGame={inGame}
+      editMode={editMode}
+      isSelf
+      onDrop={onDrop}
+      pos={preview.pos}
+    >
       <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
       <div>
         <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />

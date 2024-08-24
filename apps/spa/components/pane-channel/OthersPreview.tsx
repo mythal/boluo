@@ -36,6 +36,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
       isSelf={false}
       inGame={preview.inGame}
       isLast={isLast}
+      pos={preview.pos}
       className="text-text-light pr-message-small @2xl:pr-message"
     >
       <div className="@2xl:flex-col flex gap-1">

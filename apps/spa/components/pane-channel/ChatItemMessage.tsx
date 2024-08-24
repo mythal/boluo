@@ -68,6 +68,7 @@ export const ChatItemMessage: FC<{
       isScrolling={isScrolling}
       mini={mini}
       optimistic={optimistic}
+      pos={message.pos}
     >
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
         {!mini && <span>{nameNode}:</span>}
@@ -123,6 +124,7 @@ const MessageBox: FC<{
   sendBySelf: boolean;
   isScrolling: boolean;
   inGame: boolean;
+  pos: number;
 }> = ({
   className = '',
   inGame,
@@ -134,6 +136,7 @@ const MessageBox: FC<{
   isScrolling,
   optimistic = false,
   sendBySelf,
+  pos,
 }) => {
   const toolbarDisplayAtom = useMemo(makeMessageToolbarDisplayAtom, []);
   const store = useStore();
@@ -193,6 +196,7 @@ const MessageBox: FC<{
       <div
         data-overlay={overlay}
         data-in-game={inGame}
+        data-pos={pos}
         className={clsx(
           'group/msg relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
           'grid-cols-[1.5rem_minmax(0,1fr)]',

@@ -14,6 +14,7 @@ interface Props {
   isLast: boolean;
   inGame: boolean;
   onDrop?: DragEventHandler;
+  pos: number;
 }
 
 export const PreviewBox: FC<Props> = ({
@@ -25,6 +26,7 @@ export const PreviewBox: FC<Props> = ({
   isSelf = false,
   isLast,
   onDrop,
+  pos,
 }) => {
   const readObserve = useReadObserve();
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -32,7 +34,7 @@ export const PreviewBox: FC<Props> = ({
     if (boxRef.current == null) return;
     return readObserve(boxRef.current);
   }, [readObserve]);
-  const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
+  const { setNodeRef, transform, transition } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -43,6 +45,7 @@ export const PreviewBox: FC<Props> = ({
   return (
     <div
       data-id={id}
+      data-pos={pos}
       data-is-last={isLast}
       className={clsx(
         'group/item grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',

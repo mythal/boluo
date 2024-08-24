@@ -36,7 +36,9 @@ export const BaseUrlSelector: FC<Props> = () => {
 
       <label className="flex items-center gap-1 py-2">
         <input type="checkbox" checked={shouldAutoSelect} onChange={(e) => setShouldAutoSelect(e.target.checked)} />
-        <FormattedMessage defaultMessage="Auto Select" />
+        <span>
+          <FormattedMessage defaultMessage="Auto Select" />
+        </span>
       </label>
     </div>
   );

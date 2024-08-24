@@ -32,13 +32,15 @@ export const ShowError: FC = () => {
   const { source } = useAtomValue(composeAtom);
   return (
     <div className="px-4 py-2">
-      <FormattedMessage defaultMessage="The input box crashed." />
+      <span>
+        <FormattedMessage defaultMessage="The input box crashed." />
+      </span>
       {source && (
-        <>
-          {' '}
+        <div>
+          <span> </span>
           <FormattedMessage defaultMessage="Your last input was:" />
           <pre className="py-2">{source}</pre>
-        </>
+        </div>
       )}
     </div>
   );

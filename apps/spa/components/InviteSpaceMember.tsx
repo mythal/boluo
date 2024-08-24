@@ -64,7 +64,9 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
 
           <Button onClick={copy}>
             <Icon icon={Clipboard} />
-            <FormattedMessage defaultMessage="Copy" />
+            <span>
+              <FormattedMessage defaultMessage="Copy" />
+            </span>
           </Button>
           <Button onClick={handleRefresh} disabled={didRefresh}>
             <Icon icon={Refresh} />

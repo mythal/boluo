@@ -73,7 +73,9 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
       <div className="relative flex items-center gap-2">
         <div className="text-text-light w-[4.5rem] flex-initial text-sm">
           <Icon className="mr-1" icon={Edit} />
-          <FormattedMessage defaultMessage="Editing" />
+          <span>
+            <FormattedMessage defaultMessage="Editing" />
+          </span>
         </div>
         <div className="flex-grow">
           <div className="text-text-light text-xs"></div>

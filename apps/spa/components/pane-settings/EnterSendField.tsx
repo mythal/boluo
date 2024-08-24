@@ -54,7 +54,9 @@ export const EneterSendField: FC<Props> = () => {
             values={{
               key: (
                 <>
-                  <Kbd variant="small">Shift</Kbd> + <Kbd variant="small">↵</Kbd>
+                  <Kbd variant="small">Shift</Kbd>
+                  <span> + </span>
+                  <Kbd variant="small">↵</Kbd>
                 </>
               ),
             }}
@@ -71,7 +73,9 @@ export const EneterSendField: FC<Props> = () => {
             values={{
               key: (
                 <>
-                  <Kbd>{useCommand ? '⌘' : 'Ctrl'}</Kbd> + <Kbd>↵</Kbd>
+                  <Kbd>{useCommand ? '⌘' : 'Ctrl'}</Kbd>
+                  <span> + </span>
+                  <Kbd>↵</Kbd>
                 </>
               ),
             }}

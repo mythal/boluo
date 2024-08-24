@@ -28,13 +28,17 @@ export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected
         {region && <span className="ml-1 text-sm">({region})</span>}
       </div>
       <div className="min-w-[6em] text-right">
-        {result == null && '...'}
+        {result == null && <span>...</span>}
         {result === 'FAILED' && (
           <span className="text-error-700">
             <FormattedMessage defaultMessage="Failed" />
           </span>
         )}
-        {result === 'TIMEOUT' && <FormattedMessage defaultMessage="Timeout" />}
+        {result === 'TIMEOUT' && (
+          <span>
+            <FormattedMessage defaultMessage="Timeout" />
+          </span>
+        )}
         {typeof result === 'number' && <span>{result.toFixed(2)} ms</span>}
       </div>
     </button>

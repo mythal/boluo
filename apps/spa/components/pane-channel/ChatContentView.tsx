@@ -130,6 +130,14 @@ const useDndHandles = (
       if (realIndex < targetIndex) {
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
+        if (!targetNext) {
+          // Move to the end
+        } else if (targetItem.type === 'PREVIEW' || targetNext.type === 'PREVIEW') {
+          range = [
+            [targetItem.posP, targetItem.posQ],
+            [targetNext.posP, targetNext.posQ],
+          ];
+        }
         const optimisticPos = targetNext
           ? (targetNext.pos + targetItem.pos) / 2
           : (targetItem.posP + 1) / targetItem.posQ;
@@ -142,6 +150,14 @@ const useDndHandles = (
         range = [null, [targetItem.posP, targetItem.posQ]];
 
         const targetBefore = chatList[targetIndex - 1];
+        if (!targetBefore) {
+          // Move to the beginning
+        } else if (targetItem.type === 'PREVIEW' || targetBefore.type === 'PREVIEW') {
+          range = [
+            [targetBefore.posP, targetBefore.posQ],
+            [targetItem.posP, targetItem.posQ],
+          ];
+        }
 
         const optimisticPos = targetBefore
           ? (targetBefore.pos + targetItem.pos) / 2

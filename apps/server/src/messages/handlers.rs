@@ -128,9 +128,11 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
             "Only the master can move other's messages.".to_string(),
         ));
     }
-
     let mut message = match range {
         (None, None) => return Err(AppError::BadRequest("a and b cannot both be null".to_string())),
+        (Some(a), Some(b)) => Message::move_between(&mut *trans, &message_id, a, b)
+            .await?
+            .or_not_found()?,
         (Some(a), _) => Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
             .await?
             .or_not_found()?,

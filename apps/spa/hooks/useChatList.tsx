@@ -219,7 +219,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       } else if (preview.pos > minPos) {
         const index = binarySearchPos(itemList, preview.pos);
         const itemInThePosition = itemList[index];
-        if (itemInThePosition && itemInThePosition.type !== 'PREVIEW') {
+        if (itemInThePosition?.pos === preview.pos && itemInThePosition.type !== 'PREVIEW') {
           // The position is already occupied by a message, skip.
           continue;
         }

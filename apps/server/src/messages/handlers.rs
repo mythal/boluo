@@ -6,6 +6,7 @@ use crate::error::{AppError, Find};
 use crate::events::Event;
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
+use crate::pos::ensure_pos_largest;
 use crate::spaces::SpaceMember;
 use crate::{db, interface};
 use hyper::body::Body;
@@ -145,7 +146,10 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     if message.whisper_to_users.is_some() {
         message.hide();
     }
+    let pos = message.pos as i32;
     Event::message_edited(channel.space_id, message);
+    let mut cache = crate::cache::conn().await?;
+    ensure_pos_largest(&mut cache, channel_id, pos).await?;
     Ok(true)
 }
 

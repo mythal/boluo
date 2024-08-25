@@ -34,7 +34,7 @@ export const PreviewBox: FC<Props> = ({
     if (boxRef.current == null) return;
     return readObserve(boxRef.current);
   }, [readObserve]);
-  const { setNodeRef, transform, transition } = useSortable({ id });
+  const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
 
   const style = {
     transform: CSS.Transform.toString(transform),

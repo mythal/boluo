@@ -87,6 +87,8 @@ const makeDummyPreview = (
   timestamp: new Date().getTime(),
 });
 
+const SAFE_OFFSET = 4; // Can be arbitrary
+
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
   const { composeAtom, filterAtom, showArchivedAtom, parsedAtom } = useChannelAtoms();
@@ -130,7 +132,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     'chatList' | 'filteredMessagesCount'
   > => {
     if (!messages || !messageMap || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
-    const optimisticPreviewMap = { ...previewMap };
+    const optimisticPreviewList = Object.values(previewMap);
     const optimisticMessageItems: OptimisticItem[] = [];
     const itemList: ChatItem[] = messages.filter((item) => {
       const isFiltered = !filter(filterType, item);
@@ -150,15 +152,24 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         return false;
       }
     });
-    const filteredMessagesCount = messages.length - itemList.length;
-    const minPos = itemList.length > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
+    const itemListLen = itemList.length;
+    const filteredMessagesCount = messages.length - itemListLen;
+    const minPos = itemListLen > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
     if (myId) {
-      const existsPreview = optimisticPreviewMap[myId];
-      if (existsPreview && (existsPreview.id !== composeSlice.previewId || isEmpty)) {
-        delete optimisticPreviewMap[myId];
+      const existsPreviewIndex = optimisticPreviewList.findIndex((preview) => preview.senderId === myId);
+      let hasSelfPreview = existsPreviewIndex !== -1;
+      if (hasSelfPreview) {
+        const existsPreview = optimisticPreviewList[existsPreviewIndex]!;
+        if (existsPreview.id !== composeSlice.previewId || isEmpty) {
+          optimisticPreviewList.splice(existsPreviewIndex, 1);
+          hasSelfPreview = false;
+        }
       }
-      if (!(myId in optimisticPreviewMap)) {
-        let pos = 0;
+      if (!hasSelfPreview) {
+        const maxPreviewPos = optimisticPreviewList.reduce((max, preview) => Math.max(max, preview.pos), 0);
+        const maxPos = itemListLen > 0 ? Math.max(itemList[itemListLen - 1]!.pos, maxPreviewPos) : 1;
+        const dummyPos = Math.ceil(maxPos) + SAFE_OFFSET;
+        let pos = dummyPos;
         let posP = pos;
         let posQ = 1;
         if (composeSlice.editFor !== null) {
@@ -169,19 +180,12 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             posQ = message.posQ;
           }
         }
-        optimisticPreviewMap[myId] = makeDummyPreview(
-          composeSlice.previewId,
-          myId,
-          channelId,
-          true,
-          composeSlice.editFor,
-          pos,
-          posP,
-          posQ,
+        optimisticPreviewList.push(
+          makeDummyPreview(composeSlice.previewId, myId, channelId, true, composeSlice.editFor, pos, posP, posQ),
         );
       }
     }
-    for (const preview of Object.values(optimisticPreviewMap)) {
+    for (const preview of optimisticPreviewList) {
       const isFiltered = !filter(filterType, preview);
       if (isFiltered) continue;
       else if (preview.senderId === myId) {

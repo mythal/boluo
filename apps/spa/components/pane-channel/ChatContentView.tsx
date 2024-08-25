@@ -131,7 +131,7 @@ const useDndHandles = (
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
         if (!targetNext) {
-          if (targetItem.type === 'PREVIEW' && targetItem.pos === 0) {
+          if (targetItem.type === 'PREVIEW' && targetItem.optimistic && !targetItem.editFor) {
             // Dummy preview at the end
             const targetBefore = chatList[targetIndex - 1];
             if (!targetBefore) return;

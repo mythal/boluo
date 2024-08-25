@@ -11,7 +11,7 @@ import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
-import { type SetOptimisticItems, useChatList } from '../../hooks/useChatList';
+import { isDummySelfPreview, type SetOptimisticItems, useChatList } from '../../hooks/useChatList';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { type ChatItem, type MessageItem } from '../../state/channel.types';
 import { chatAtom } from '../../state/chat.atoms';
@@ -131,14 +131,17 @@ const useDndHandles = (
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
         if (!targetNext) {
-          if (targetItem.type === 'PREVIEW' && targetItem.optimistic && !targetItem.editFor) {
+          if (targetItem.type === 'PREVIEW' && isDummySelfPreview(targetItem)) {
             // Dummy preview at the end
             const targetBefore = chatList[targetIndex - 1];
             if (!targetBefore) return;
             range = [[targetBefore.posP, targetBefore.posQ], null];
           }
           // Move to the end
-        } else if (targetItem.type === 'PREVIEW' || targetNext.type === 'PREVIEW') {
+        } else if (
+          targetItem.type === 'PREVIEW' ||
+          (targetNext.type === 'PREVIEW' && !isDummySelfPreview(targetNext))
+        ) {
           range = [
             [targetItem.posP, targetItem.posQ],
             [targetNext.posP, targetNext.posQ],

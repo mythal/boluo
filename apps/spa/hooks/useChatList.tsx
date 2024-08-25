@@ -54,6 +54,8 @@ const filter = (type: ChannelFilter, item: ChatItem) => {
   return true;
 };
 
+export const isDummySelfPreview = (item: PreviewItem) => item.optimistic && !item.editFor;
+
 const makeDummyPreview = (
   id: string,
   myId: string,
@@ -87,7 +89,7 @@ const makeDummyPreview = (
   timestamp: new Date().getTime(),
 });
 
-const SAFE_OFFSET = 4; // Can be arbitrary
+const SAFE_OFFSET = 2;
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
@@ -216,7 +218,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         continue;
       }
       // Insert the preview to item list
-      if (preview.optimistic && !preview.editFor) {
+      if (isDummySelfPreview(preview)) {
         itemList.push(preview);
       } else if (preview.text === '' && preview.senderId === myId) {
         itemList.push(preview);

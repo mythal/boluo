@@ -130,13 +130,13 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     }
     let mut message = match range {
         (None, None) => return Err(AppError::BadRequest("a and b cannot both be null".to_string())),
+        (Some(a), Some((0, _) | (1, 0)) | None) => Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
+            .await?
+            .or_not_found()?,
+        (Some((_, 0) | (0, 1)) | None, Some(b)) => Message::move_above(&mut *trans, &channel_id, &message_id, b)
+            .await?
+            .or_not_found()?,
         (Some(a), Some(b)) => Message::move_between(&mut *trans, &message_id, a, b)
-            .await?
-            .or_not_found()?,
-        (Some(a), _) => Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
-            .await?
-            .or_not_found()?,
-        (None, Some(b)) => Message::move_above(&mut *trans, &channel_id, &message_id, b)
             .await?
             .or_not_found()?,
     };

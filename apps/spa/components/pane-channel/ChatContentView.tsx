@@ -131,6 +131,12 @@ const useDndHandles = (
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
         if (!targetNext) {
+          if (targetItem.type === 'PREVIEW' && targetItem.pos === 0) {
+            // Dummy preview at the end
+            const targetBefore = chatList[targetIndex - 1];
+            if (!targetBefore) return;
+            range = [[targetBefore.posP, targetBefore.posQ], null];
+          }
           // Move to the end
         } else if (targetItem.type === 'PREVIEW' || targetNext.type === 'PREVIEW') {
           range = [

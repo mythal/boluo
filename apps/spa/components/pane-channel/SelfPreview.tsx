@@ -72,7 +72,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
   return (
     <PreviewBox
       isLast={isLast}
-      id={preview.key}
+      id={preview.id}
       inGame={inGame}
       editMode={editMode}
       isSelf

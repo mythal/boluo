@@ -27,8 +27,18 @@ pub struct Preview {
     pub whisper_to_users: Option<Vec<Uuid>>,
     #[ts(type = "Array<unknown>")]
     pub entities: Vec<JsonValue>,
-    pub pos: i32,
+    pub pos: f64,
     pub edit_for: Option<DateTime<Utc>>,
+    pub edit: Option<PreviewEdit>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewEdit {
+    pub time: DateTime<Utc>,
+    pub p: i32,
+    pub q: i32,
 }
 
 #[derive(Deserialize, Debug, TS)]
@@ -48,6 +58,8 @@ pub struct PreviewPost {
     pub entities: Vec<JsonValue>,
     #[serde(default)]
     pub edit_for: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub edit: Option<PreviewEdit>,
 }
 
 impl PreviewPost {
@@ -63,6 +75,7 @@ impl PreviewPost {
             entities,
             edit_for,
             clear,
+            edit,
         } = self;
         let pool = db::get().await;
         let mut conn = pool.acquire().await?;
@@ -70,17 +83,20 @@ impl PreviewPost {
         let cache = &mut cache;
         let mut should_finish = false;
         if let Some(text) = text.as_ref() {
-            if (text.trim().is_empty() || entities.len() == 0) && edit_for.is_none() {
+            if (text.trim().is_empty() || entities.is_empty()) && edit_for.is_none() {
                 should_finish = true;
             }
         }
         let muted = text.is_none();
-        let start: i32 = if edit_for.is_some() || should_finish {
-            0
+        let mut start = 0.0;
+        if let Some(PreviewEdit { p, q, .. }) = edit {
+            start = p as f64 / q as f64;
         } else {
-            let keep_seconds = if muted { 8 } else { 60 * 3 };
-            crate::pos::pos(&mut conn, cache, channel_id, id, keep_seconds).await?
-        };
+            if edit_for.is_none() && !should_finish {
+                let keep_seconds = if muted { 8 } else { 60 * 3 };
+                start = crate::pos::pos(&mut conn, cache, channel_id, id, keep_seconds).await? as f64;
+            }
+        }
         let is_master = ChannelMember::get(&mut *conn, &user_id, &channel_id)
             .await
             .or_no_permission()?
@@ -102,6 +118,7 @@ impl PreviewPost {
             edit_for,
             clear,
             pos: start,
+            edit,
         });
 
         if should_finish {

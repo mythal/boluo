@@ -44,6 +44,7 @@ const sendPreview = (
       clear: false,
       entities: doNotBroadcast || resetPreview ? [] : parsed.entities,
       editFor,
+      edit: null, // TODO: implement `edit` instead of `editFor`
     };
 
     const clientEvent: ClientEvent = { type: 'PREVIEW', preview };

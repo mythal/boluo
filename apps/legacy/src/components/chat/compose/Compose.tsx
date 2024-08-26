@@ -122,7 +122,7 @@ interface Props {
 
 function Compose({ channelId }: Props) {
   const media = useSelector((state) => state.chatStates.get(channelId)?.compose.media);
-  const editFor = useSelector((state) => state.chatStates.get(channelId)?.compose.editFor);
+  const isEditing = useSelector((state) => Boolean(state.chatStates.get(channelId)?.compose.edit));
   const onSend = useOnSend();
   const dispatch = useDispatch();
   const setInGame = useCallback(
@@ -132,7 +132,7 @@ function Compose({ channelId }: Props) {
   const enterSend = useSelector((state) => state.profile?.settings.enterSend);
   return (
     <div css={container}>
-      {editFor && <Editing css={editBar} />}
+      {isEditing && <Editing css={editBar} />}
       <div css={toolbar}>
         <BroadcastSwitch size="large" css={[mR(1)]} />
         <InGameButton css={[mR(1)]} />
@@ -150,7 +150,7 @@ function Compose({ channelId }: Props) {
         </div>
       )}
       <div css={sendContainer}>
-        <SendButton onSend={onSend} editing={Boolean(editFor)} />
+        <SendButton onSend={onSend} editing={isEditing} />
       </div>
     </div>
   );

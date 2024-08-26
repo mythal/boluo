@@ -59,7 +59,7 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
       return;
     }
     const preview = previewItem.preview;
-    if (preview.id !== item.message.id || preview.editFor !== item.message.modified) {
+    if (preview.id !== item.message.id || preview.edit?.time !== item.message.modified) {
       return;
     }
     return previewItem;

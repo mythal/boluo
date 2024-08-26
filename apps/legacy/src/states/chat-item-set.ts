@@ -114,7 +114,7 @@ export const addItem = ({ messages, previews }: ChatItemSet, item: ChatItem): Ch
       messages = removeItem(messages, item.id);
     } else {
       previews = previews.set(item.id, item);
-      if (!item.preview.editFor) {
+      if (!item.preview.edit) {
         messages = insertItem(messages, item);
       }
     }

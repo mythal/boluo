@@ -31,7 +31,7 @@ const initChatState = (
       inputName: '',
       entities: [],
       sending: false,
-      editFor: null,
+      edit: null,
       messageId: newId(),
       media: undefined,
       isAction: false,

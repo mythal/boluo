@@ -23,7 +23,7 @@ const sendPreview = (
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { previewId, inputedName, editFor } = compose;
+    const { previewId, inputedName, edit } = compose;
     const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame } = parsed;
     const inGame = parsedInGame ?? defaultInGame;
     const inGameName = inputedName || characterName;
@@ -43,8 +43,8 @@ const sendPreview = (
       text: resetPreview ? '' : text,
       clear: false,
       entities: doNotBroadcast || resetPreview ? [] : parsed.entities,
-      editFor,
-      edit: null, // TODO: implement `edit` instead of `editFor`
+      editFor: null,
+      edit,
     };
 
     const clientEvent: ClientEvent = { type: 'PREVIEW', preview };

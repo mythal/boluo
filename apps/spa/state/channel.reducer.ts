@@ -144,7 +144,7 @@ const handleMessagePreview = (
   let pos = Math.ceil(preview.pos);
   let posP = pos;
   let posQ = 1;
-  if (preview.editFor && preview.id in state.messageMap) {
+  if (preview.edit && preview.id in state.messageMap) {
     const message = state.messageMap[preview.id]!;
     if (message.senderId !== preview.senderId) {
       return state;
@@ -152,7 +152,7 @@ const handleMessagePreview = (
     pos = message.pos;
     posP = message.posP;
     posQ = message.posQ;
-  } else if (preview.editFor === null) {
+  } else if (preview.edit === null) {
     const index = binarySearchPos(state.messages, pos);
     if (state.messages[index]?.pos === pos) {
       collidedPreviewIdSet = new Set(collidedPreviewIdSet);

@@ -8,6 +8,7 @@ import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
 import { type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
 import { recordWarn } from '../error';
+import { type PreviewEdit } from '@boluo/api';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
 
@@ -26,12 +27,12 @@ export interface OptimisticItem {
 }
 export const START_INDEX = 100000000;
 
-type ComposeSlice = Pick<ComposeState, 'previewId' | 'editFor'> & {
+type ComposeSlice = Pick<ComposeState, 'previewId' | 'edit'> & {
   prevPreviewId: string | null;
 };
 
 const selectComposeSlice = (
-  { previewId, editFor }: ComposeState,
+  { previewId, edit }: ComposeState,
   prevSlice: ComposeSlice | null | undefined,
 ): ComposeSlice => {
   let prevPreviewId: string | null = null;
@@ -43,10 +44,11 @@ const selectComposeSlice = (
     }
   }
 
-  return { previewId, editFor, prevPreviewId };
+  return { previewId, edit, prevPreviewId };
 };
 
-const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) => a.previewId === b.previewId && a.editFor === b.editFor;
+const isComposeSliceEq = (a: ComposeSlice, b: ComposeSlice) =>
+  a.previewId === b.previewId && a.edit?.time === b.edit?.time;
 
 const filter = (type: ChannelFilter, item: ChatItem) => {
   if (type === 'OOC' && item.inGame) return false;
@@ -54,14 +56,14 @@ const filter = (type: ChannelFilter, item: ChatItem) => {
   return true;
 };
 
-export const isDummySelfPreview = (item: PreviewItem) => item.optimistic && !item.editFor;
+export const isDummySelfPreview = (item: PreviewItem) => item.optimistic && !item.edit;
 
 const makeDummyPreview = (
   id: string,
   myId: string,
   channelId: string,
   inGame: boolean,
-  editFor: string | null,
+  edit: PreviewEdit | null,
   pos: number,
   posP: number,
   posQ: number,
@@ -83,7 +85,8 @@ const makeDummyPreview = (
   text: 'You should not seen this message, Please report a bug.',
   whisperToUsers: null,
   entities: [],
-  editFor,
+  editFor: null,
+  edit,
   optimistic: true,
   key: myId,
   timestamp: new Date().getTime(),
@@ -174,7 +177,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         let pos = dummyPos;
         let posP = pos;
         let posQ = 1;
-        if (composeSlice.editFor !== null) {
+        if (composeSlice.edit !== null) {
           const message = messageMap[composeSlice.previewId];
           if (message) {
             pos = message.pos;
@@ -183,7 +186,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           }
         }
         optimisticPreviewList.push(
-          makeDummyPreview(composeSlice.previewId, myId, channelId, true, composeSlice.editFor, pos, posP, posQ),
+          makeDummyPreview(composeSlice.previewId, myId, channelId, true, composeSlice.edit, pos, posP, posQ),
         );
       }
     }
@@ -198,7 +201,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       if (preview.id in messageMap) {
         // A edit preview
         const message = messageMap[preview.id]!;
-        if (preview.editFor !== message.modified) {
+        if (preview.edit?.time !== message.modified) {
           continue;
         }
         const index = binarySearchPos(itemList, message.pos);
@@ -213,8 +216,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           // Remove the original message
           itemList.splice(index, 1);
         }
-      } else if (preview.editFor) {
-        // The preview is editing a message that is not loaded.
+      } else if (preview.edit) {
+        // A edit preview, but the original message is not found
         continue;
       }
       // Insert the preview to item list
@@ -240,7 +243,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     return { chatList: itemList, filteredMessagesCount };
   }, [
     channelId,
-    composeSlice.editFor,
+    composeSlice.edit,
     composeSlice.prevPreviewId,
     composeSlice.previewId,
     filterType,

@@ -45,9 +45,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault(); // This is important to prevent the browser's default handling of the data
   };
-  const isEditing = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor != null), [composeAtom]),
-  );
+  const isEditing = useAtomValue(useMemo(() => selectAtom(composeAtom, ({ edit }) => edit != null), [composeAtom]));
   const inGame = useAtomValue(inGameAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
   const editMessageBanner = useMemo(() => {

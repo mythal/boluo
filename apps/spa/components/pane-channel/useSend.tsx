@@ -54,7 +54,7 @@ export const useSend = (me: User) => {
       dispatch({ type: 'recoverState', payload: backupComposeState });
       setBanner(null);
     };
-    const isEditing = compose.editFor !== null;
+    const isEditing = compose.edit !== null;
     dispatch({ type: 'sent', payload: { edit: isEditing } });
     const { text, entities, whisperToUsernames } = parse(compose.source);
     let result: Result<Message, ApiError>;

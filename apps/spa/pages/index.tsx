@@ -28,6 +28,7 @@ export default function Page(): JSX.Element {
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
         <meta name="description" content="A chat application designed specifically for playing RPGs." />
         <meta name="viewport" content="initial-scale=1, viewport-fit=cover, width=device-width"></meta>
+        <link rel="apple-touch-icon" href="/icons/app-180px.png"></link>
       </Head>
       <Redirector />
     </>

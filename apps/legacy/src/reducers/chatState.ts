@@ -21,10 +21,9 @@ import {
   SetIsAction,
   SetWhisperTo,
   StartEditMessage,
-  StopEditMessage,
 } from '../actions';
 import { Channel, makeMembers, Member } from '../api/channels';
-import { compareEvents, EventId, eventIdMax, Events, Preview } from '../api/events';
+import { compareEvents, EditPreview, EventId, eventIdMax, Events, Preview } from '../api/events';
 import { Message, MessageOrder } from '../api/messages';
 import { SpaceWithRelated } from '../api/spaces';
 import { Entity } from '../interpreter/entities';
@@ -55,7 +54,7 @@ export interface Compose {
   isAction: boolean;
   entities: Entity[];
   sending: boolean;
-  editFor: string | null;
+  edit: EditPreview | null;
   messageId: Id;
   media: File | string | undefined;
   source: string;
@@ -161,7 +160,7 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
   const compose: Compose = {
     ...state.compose,
     messageId: message.id,
-    editFor: message.modified,
+    edit: { time: message.modified, p: message.posP, q: message.posQ },
     isAction: message.isAction,
     inputName: message.inGame ? message.name : '',
     inGame: message.inGame,
@@ -171,10 +170,6 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
   };
 
   return { ...state, compose };
-};
-
-const handleStopEditMessage = (state: ChatState, { messageId }: StopEditMessage): ChatState => {
-  return state;
 };
 
 const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMessage): ChatState => {
@@ -217,7 +212,7 @@ const handleSetComposeSource = (state: ChatState, { source }: SetComposeSource):
   let { messageId } = state.compose;
   const prevSource = state.compose.source;
   const isAction = ACTION_COMMAND.test(source);
-  if (!state.compose.editFor) {
+  if (!state.compose.edit) {
     if (prevSource.trim() === '' && source.trim() !== '') {
       messageId = newId();
     }
@@ -254,7 +249,7 @@ const handleSetBroadcast = (state: ChatState, action: SetBroadcast): ChatState =
     broadcast = action.broadcast;
   }
   let { messageId } = state.compose;
-  if (!broadcast && !state.compose.editFor) {
+  if (!broadcast && !state.compose.edit) {
     messageId = newId();
   }
   return { ...state, compose: { ...state.compose, broadcast, messageId } };
@@ -296,7 +291,7 @@ const handleChatInitialized = (myId: Id, channelId: Id, itemSet: ChatItemSet): C
     inputName: '',
     entities: [],
     sending: false,
-    editFor: null,
+    edit: null,
     media: undefined,
     source: '',
     whisperTo: undefined,
@@ -311,9 +306,9 @@ const handleChatInitialized = (myId: Id, channelId: Id, itemSet: ChatItemSet): C
   if (preview.text === '' || preview.text === null || preview.channelId !== channelId) {
     return compose;
   }
-  if (preview.editFor) {
+  if (preview.edit) {
     compose.messageId = preview.id;
-    compose.editFor = preview.editFor;
+    compose.edit = preview.edit;
   }
   compose.source = preview.text;
   compose.inGame = preview.inGame;
@@ -334,7 +329,7 @@ const handleComposeSendFailed = (state: ChatState, action: ComposeSendFailed): C
 const handleResetComposeAfterSent = (state: ChatState, action: ResetComposeAfterSent): ChatState => {
   const compose: Compose = {
     ...state.compose,
-    editFor: null,
+    edit: null,
     sending: false,
     isAction: false,
     source: '',
@@ -346,7 +341,7 @@ const handleResetComposeAfterSent = (state: ChatState, action: ResetComposeAfter
 const handleCancelEdit = (state: ChatState, action: CancelEdit): ChatState => {
   const compose: Compose = {
     ...state.compose,
-    editFor: null,
+    edit: null,
     messageId: newId(),
     source: '',
     inputName: '',
@@ -374,7 +369,7 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = newMessage(itemSet, body.message, myId);
       break;
     case 'MESSAGE_PREVIEW':
-      if (chat.compose.messageId === body.preview.id && !body.preview.editFor) {
+      if (chat.compose.messageId === body.preview.id && !body.preview.edit) {
         const itemIndexByPos = binarySearchPos(itemSet.messages, body.preview.pos);
         const itemByPos = itemSet.messages.get(itemIndexByPos);
         if (itemByPos && itemByPos.pos === body.preview.pos && itemByPos.type !== 'PREVIEW') {
@@ -530,8 +525,6 @@ export const chatReducer = (
       return { ...state, filter: action.filter };
     case 'START_EDIT_MESSAGE':
       return handleStartEditMessage(state, action);
-    case 'STOP_EDIT_MESSAGE':
-      return handleStopEditMessage(state, action);
     case 'EVENT_RECEIVED':
       return handleChannelEvent(state, action.event, myId);
   }

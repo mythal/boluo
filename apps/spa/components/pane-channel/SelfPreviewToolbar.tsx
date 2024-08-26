@@ -76,8 +76,8 @@ const ActionButton = () => {
 const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
-  const editForAtom = useMemo(() => selectAtom(composeAtom, ({ editFor }) => editFor), [composeAtom]);
-  const editMode = useAtomValue(editForAtom) !== null;
+  const editAtom = useMemo(() => selectAtom(composeAtom, ({ edit }) => edit), [composeAtom]);
+  const editMode = useAtomValue(editAtom) !== null;
   const composeError = useComposeError();
   const send = useSend(currentUser);
   return (

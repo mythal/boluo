@@ -47,7 +47,6 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props,
     },
     [channelId, dispatch],
   );
-  const editFor = useSelector((state) => state.chatStates.get(channelId)!.compose.editFor);
   const compositing = useRef(false);
   const [dragging, setDragging] = useState(false);
   const setMedia = useCallback(

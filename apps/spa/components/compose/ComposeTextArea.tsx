@@ -140,11 +140,11 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       return;
     }
     const compose = store.get(composeAtom);
-    if (e.code === 'Escape' && compose.editFor != null) {
+    if (e.code === 'Escape' && compose.edit != null) {
       dispatch({ type: 'reset', payload: {} });
       return;
     }
-    if (e.code === 'ArrowUp' && compose.editFor == null) {
+    if (e.code === 'ArrowUp' && compose.edit == null) {
       const parsed = store.get(parsedAtom);
       const lastMessage = store.get(lastMessageAtom);
       if (parsed.entities.length === 0 && lastMessage) {

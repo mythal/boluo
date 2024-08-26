@@ -70,11 +70,14 @@ pub enum EventBody {
         message_id: Uuid,
         #[serde(rename = "channelId")]
         channel_id: Uuid,
+        pos: f64,
     },
     MessageEdited {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
         message: Box<Message>,
+        #[serde(rename = "oldPos")]
+        old_pos: f64,
     },
     MessagePreview {
         #[serde(rename = "channelId")]
@@ -167,14 +170,28 @@ impl Event {
         )
     }
 
-    pub fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid) {
-        Event::fire(EventBody::MessageDeleted { message_id, channel_id }, mailbox)
+    pub fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid, pos: f64) {
+        Event::fire(
+            EventBody::MessageDeleted {
+                message_id,
+                channel_id,
+                pos,
+            },
+            mailbox,
+        )
     }
 
-    pub fn message_edited(mailbox: Uuid, message: Message) {
+    pub fn message_edited(mailbox: Uuid, message: Message, old_pos: f64) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Event::fire(EventBody::MessageEdited { message, channel_id }, mailbox)
+        Event::fire(
+            EventBody::MessageEdited {
+                message,
+                channel_id,
+                old_pos,
+            },
+            mailbox,
+        )
     }
 
     pub fn channel_deleted(mailbox: Uuid, channel_id: Uuid) {
@@ -340,7 +357,11 @@ impl Event {
                 sender_id: preview.sender_id,
                 channel_id: preview.channel_id,
             },
-            EventBody::MessageEdited { channel_id: _, message } => Kind::Edition { message_id: message.id },
+            EventBody::MessageEdited {
+                channel_id: _,
+                message,
+                old_pos: _,
+            } => Kind::Edition { message_id: message.id },
             EventBody::NewMessage {
                 channel_id: _,
                 message: _,
@@ -349,6 +370,7 @@ impl Event {
             | EventBody::MessageDeleted {
                 message_id: _,
                 channel_id: _,
+                pos: _,
             } => Kind::Cache,
             _ => Kind::NoCache,
         };

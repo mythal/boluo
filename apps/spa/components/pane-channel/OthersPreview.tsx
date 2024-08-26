@@ -32,7 +32,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
   return (
     <PreviewBox
       id={preview.id}
-      editMode={preview.editFor !== null}
+      editMode={preview.edit !== null}
       isSelf={false}
       inGame={preview.inGame}
       isLast={isLast}

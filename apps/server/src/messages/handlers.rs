@@ -72,7 +72,7 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     } = interface::parse_body(req).await?;
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
-    let mut message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
+    let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
         .await?
         .or_not_found()?;
     let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
@@ -87,7 +87,7 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
 
     let text = &*text;
     let name = &*name;
-    message = Message::edit(
+    let edited_message = Message::edit(
         &mut *trans,
         name,
         &message_id,
@@ -101,8 +101,8 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     .await?
     .ok_or_else(|| unexpected!("The message had been delete."))?;
     trans.commit().await?;
-    Event::message_edited(space_member.space_id, message.clone());
-    Ok(message)
+    Event::message_edited(space_member.space_id, edited_message.clone(), edited_message.pos);
+    Ok(edited_message)
 }
 
 async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
@@ -129,7 +129,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
             "Only the master can move other's messages.".to_string(),
         ));
     }
-    let mut message = match range {
+    let mut moved_message = match range {
         (None, None) => return Err(AppError::BadRequest("a and b cannot both be null".to_string())),
         (Some(a), Some((0, _) | (1, 0)) | None) => Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
             .await?
@@ -143,11 +143,11 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     };
 
     trans.commit().await?;
-    if message.whisper_to_users.is_some() {
-        message.hide();
+    if moved_message.whisper_to_users.is_some() {
+        moved_message.hide();
     }
-    let pos = message.pos as i32;
-    Event::message_edited(channel.space_id, message);
+    let pos = moved_message.pos as i32;
+    Event::message_edited(channel.space_id, moved_message, message.pos);
     let mut cache = crate::cache::conn().await?;
     ensure_pos_largest(&mut cache, channel_id, pos).await?;
     Ok(true)
@@ -176,7 +176,7 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
         return Err(AppError::NoPermission("user id mismatch".to_string()));
     }
     Message::delete(&mut *conn, &id).await?;
-    Event::message_deleted(space_member.space_id, message.channel_id, message.id);
+    Event::message_deleted(space_member.space_id, message.channel_id, message.id, message.pos);
     Ok(message)
 }
 
@@ -197,11 +197,11 @@ async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
     if !channel.is_document && message.sender_id != session.user_id && !channel_member.is_master {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
-    let message = Message::set_folded(&mut *conn, &message.id, !message.folded)
+    let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
-    Event::message_edited(channel.space_id, message.clone());
-    Ok(message)
+    Event::message_edited(channel.space_id, edited_message.clone(), message.pos);
+    Ok(edited_message)
 }
 
 async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {

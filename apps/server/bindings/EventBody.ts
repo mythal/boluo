@@ -9,8 +9,8 @@ import type { UserStatus } from './UserStatus';
 
 export type EventBody =
   | { type: 'NEW_MESSAGE'; channelId: string; message: Message; previewId: string | null }
-  | { type: 'MESSAGE_DELETED'; messageId: string; channelId: string }
-  | { type: 'MESSAGE_EDITED'; channelId: string; message: Message }
+  | { type: 'MESSAGE_DELETED'; messageId: string; channelId: string; pos: number }
+  | { type: 'MESSAGE_EDITED'; channelId: string; message: Message; oldPos: number }
   | { type: 'MESSAGE_PREVIEW'; channelId: string; preview: Preview }
   | { type: 'CHANNEL_DELETED'; channelId: string }
   | { type: 'CHANNEL_EDITED'; channelId: string; channel: Channel }

@@ -62,13 +62,6 @@ export interface StartEditMessage {
   pane: Id;
 }
 
-export interface StopEditMessage {
-  type: 'STOP_EDIT_MESSAGE';
-  messageId: Id;
-  pane: Id;
-  editFor: number;
-}
-
 export interface StartMoveMessage {
   type: 'START_MOVE_MESSAGE';
   pane: Id;
@@ -294,12 +287,6 @@ export interface ComposeSent {
   pane: Id;
 }
 
-export interface SetEditing {
-  type: 'SET_EDITING';
-  pane: Id;
-  editFor: Id | null;
-}
-
 export interface SetComposeMedia {
   type: 'SET_COMPOSE_MEDIA';
   pane: Id;
@@ -391,7 +378,6 @@ export type Action =
   | SetWhisperTo
   | SetComposeSource
   | SetComposeMedia
-  | SetEditing
   | SetIsAction
   | ComposeSent
   | ComposeSending
@@ -426,7 +412,6 @@ export type Action =
   | UserLoaded
   | ChatFilter
   | StartEditMessage
-  | StopEditMessage
   | StartMoveMessage
   | FinishMoveMessage
   | MovingMessage

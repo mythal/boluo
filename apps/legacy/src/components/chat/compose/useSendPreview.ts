@@ -11,7 +11,7 @@ export const useSendPreview = () => {
   const initialized = useSelector((state) => state.chatStates.get(channelId)?.initialized ?? false);
   const parse = useParse();
   const compose = useSelector((state) => state.chatStates.get(channelId)!.compose);
-  const { source, whisperTo, broadcast, inGame, messageId, editFor, inputName, isAction } = compose;
+  const { source, whisperTo, broadcast, inGame, messageId, edit, inputName, isAction } = compose;
   const id = messageId;
   const nickname = useSelector((state) => state.profile?.user.nickname)!;
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member)!;
@@ -35,7 +35,7 @@ export const useSendPreview = () => {
         id,
         isAction,
         mediaId: null,
-        editFor,
+        edit,
         clear: false,
         channelId,
         text: '',
@@ -58,7 +58,7 @@ export const useSendPreview = () => {
     channelId,
     id,
     inGame,
-    editFor,
+    edit,
     initialized,
     inputName,
     isAction,

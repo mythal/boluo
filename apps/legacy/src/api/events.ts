@@ -105,6 +105,12 @@ export interface MessageEdited {
   message: Message;
 }
 
+export interface EditPreview {
+  time: string;
+  p: number;
+  q: number;
+}
+
 export interface Preview {
   id: string;
   senderId: Id;
@@ -120,7 +126,7 @@ export interface Preview {
   whisperToUsers: Id[] | null;
   entities: Entity[];
   pos: number;
-  editFor: string | null;
+  edit: EditPreview | null;
 }
 
 export interface PreviewPost {
@@ -133,7 +139,7 @@ export interface PreviewPost {
   text: string | null;
   entities: Entity[];
   clear: boolean;
-  editFor?: string | null;
+  edit: EditPreview | null;
 }
 
 export interface MessagePreview {

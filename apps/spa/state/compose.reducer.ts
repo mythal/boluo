@@ -2,13 +2,13 @@ import { makeId } from '@boluo/utils';
 import { type Modifier, parseModifiers } from '../interpreter/parser';
 import { type MediaError, validateMedia } from '../media';
 import { type ComposeAction, type ComposeActionUnion } from './compose.actions';
+import { type PreviewEdit } from '@boluo/api';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
 
 export type ComposeRange = [number, number];
 
 export interface ComposeState {
-  editFor: string | null;
   inputedName: string;
   previewId: string;
   source: string;
@@ -22,10 +22,10 @@ export interface ComposeState {
   focused: boolean;
   range: ComposeRange;
   backup?: ComposeState;
+  edit: PreviewEdit | null;
 }
 
 export const makeInitialComposeState = (): ComposeState => ({
-  editFor: null,
   inputedName: '',
   previewId: makeId(),
   source: '',
@@ -33,6 +33,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   range: [0, 0],
   focused: false,
   whisperTo: undefined,
+  edit: null,
 });
 
 export const clearBackup = (state: ComposeState): ComposeState =>
@@ -41,7 +42,7 @@ export const clearBackup = (state: ComposeState): ComposeState =>
 const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
   const { source } = action.payload;
   let { previewId } = state;
-  if ((source === '' || state.source === '') && state.editFor === null) {
+  if ((source === '' || state.source === '') && state.edit === null) {
     previewId = makeId();
   }
   return { ...state, source: action.payload.source, previewId };
@@ -173,7 +174,7 @@ const handleEditMessage = (
   state: ComposeState,
   { payload: { message } }: ComposeAction<'editMessage'>,
 ): ComposeState => {
-  const { id: previewId, modified: editFor, text: source, inGame, name, mediaId } = message;
+  const { id: previewId, modified, text: source, inGame, name, mediaId, posP, posQ } = message;
 
   const inputedName = inGame ? name : '';
   const range: ComposeState['range'] = [source.length, source.length];
@@ -181,7 +182,7 @@ const handleEditMessage = (
   return {
     ...makeInitialComposeState(),
     previewId,
-    editFor,
+    edit: { time: modified, p: posP, q: posQ },
     media: mediaId,
     source,
     inputedName,
@@ -256,7 +257,7 @@ const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeA
   return {
     ...state,
     previewId: makeId(),
-    editFor: null,
+    edit: null,
     range: [source.length, source.length],
     media: null,
     source,
@@ -279,7 +280,7 @@ const handleReset = (state: ComposeState, { payload: { restore } }: ComposeActio
   if (restore === true && state.backup != null) {
     return state.backup;
   }
-  if (state.editFor != null && state.backup != null) {
+  if (state.edit != null && state.backup != null) {
     return state.backup;
   }
   return makeInitialComposeState();

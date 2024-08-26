@@ -55,7 +55,7 @@ export const useOnSend = () => {
       return;
     }
     const { compose } = channel;
-    const { inputName, inGame, source, media, messageId, editFor, whisperTo, isAction } = compose;
+    const { inputName, inGame, source, media, messageId, edit, whisperTo, isAction } = compose;
     const myMember = profile.channels.get(channelId)!.member;
     let name = profile.user.nickname;
     if (inGame) {
@@ -69,7 +69,7 @@ export const useOnSend = () => {
     if (reason !== null) {
       showFlash('ERROR', reason)(dispatch);
     }
-    if (!editFor) {
+    if (!edit) {
       dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
     }
     const mediaId = await uploadMedia(store.dispatch, media);
@@ -84,7 +84,7 @@ export const useOnSend = () => {
       resolveUsername: () => null,
       defaultDiceFace,
     });
-    if (editFor) {
+    if (edit) {
       const editPayload: EditMessage = {
         messageId,
         name,

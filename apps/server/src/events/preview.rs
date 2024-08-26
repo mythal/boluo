@@ -73,7 +73,7 @@ impl PreviewPost {
             is_action,
             text,
             entities,
-            edit_for,
+            mut edit_for,
             clear,
             edit,
         } = self;
@@ -89,8 +89,9 @@ impl PreviewPost {
         }
         let muted = text.is_none();
         let mut start = 0.0;
-        if let Some(PreviewEdit { p, q, .. }) = edit {
+        if let Some(PreviewEdit { p, q, time }) = edit {
             start = p as f64 / q as f64;
+            edit_for = Some(time);
         } else {
             if edit_for.is_none() && !should_finish {
                 let keep_seconds = if muted { 8 } else { 60 * 3 };

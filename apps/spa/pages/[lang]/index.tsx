@@ -42,6 +42,7 @@ const PageHead = () => {
       />
       <meta name="application-name" content={intl.formatMessage({ defaultMessage: 'Boluo' })} />
       <link rel="manifest" href={`/${intl.locale}.webmanifest`} />
+      <link rel="apple-touch-icon" href="/icons/app-180px.png"></link>
 
       {localeList.map((locale) => (
         <link key={locale} rel="alternate" hrefLang={locale} href={`/${locale}`} />

@@ -1,9 +1,11 @@
 import type { Message } from '@boluo/api';
-import { binarySearchPos, byPos } from '../sort';
+import { binarySearchPosList } from '../sort';
 import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
 import { recordWarn } from '../error';
+import type { List } from 'list';
+import * as L from 'list';
 
 export type UserId = string;
 
@@ -14,9 +16,7 @@ const MIN_START_GC_COUNT = 4;
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
-  messageMap: Record<string, MessageItem>;
-  /** Values of the messageMap, sorted */
-  messages: MessageItem[];
+  messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
   scheduledGc: ScheduledGc | null;
   collidedPreviewIdSet: Set<string>;
@@ -33,8 +33,7 @@ const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
     id,
-    messages: [],
-    messageMap: {},
+    messages: L.empty(),
     fullLoaded: false,
     previewMap: {},
     scheduledGc: null,
@@ -43,7 +42,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
 };
 
 const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
-  const prevMessageMap = state.messageMap;
+  let { messages } = state;
   const message = makeMessageItem(payload.message);
   let { previewMap } = state;
   const previews = Object.values(previewMap);
@@ -53,21 +52,26 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
     );
   }
 
-  if (state.messages.length === 0) {
-    const messageMap = { [message.id]: message };
-    return { ...state, messageMap, previewMap };
+  const topMessage = L.first(messages);
+  const bottomMessage = L.last(messages);
+  if (topMessage == null || bottomMessage == null) {
+    return { ...state, messages: L.of(message), previewMap };
   }
-
-  const minPos = state.messages[0]!.pos;
-  if (message.pos <= minPos && !state.fullLoaded) {
+  if (message.pos <= topMessage.pos && !state.fullLoaded) {
     return state;
   }
-  if (message.id in prevMessageMap) {
-    recordWarn('Received a duplicate new message.', { message, prevMessage: prevMessageMap[message.id] });
+  if (message.pos > bottomMessage.pos) {
+    return { ...state, previewMap, messages: L.append(message, messages) };
+  }
+  const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
+  if (itemByPos) {
+    if (itemByPos.id !== message.id) {
+      recordWarn('Unexpected message position.', { message, itemByPos });
+    }
     return state;
   }
-  const messageMap = { ...prevMessageMap, [message.id]: message };
-  return { ...state, messageMap, previewMap };
+  messages = L.insert(insertIndex, message, messages);
+  return { ...state, previewMap, messages };
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
@@ -81,100 +85,145 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
   }
-  if (payload.messages.length === 0) {
+  let payloadMessages = L.from(payload.messages);
+  const payloadLen = payloadMessages.length;
+  if (payloadLen === 0) {
     return state;
   }
-  const newMessageEntries: Array<[string, MessageItem]> = [...payload.messages].map((message) => [
-    message.id,
-    makeMessageItem(message),
-  ]);
-  const payloadMinPos = payload.messages.at(-1)!.pos;
-  if (state.messages.length === 0) {
-    return { ...state, messageMap: Object.fromEntries(newMessageEntries) };
+  const topMessage = L.first(state.messages);
+  if (!topMessage) {
+    return { ...state, messages: L.reverse(L.map(makeMessageItem, payloadMessages)) };
   }
-  const stateMinPos = state.messages[0]!.pos;
-  if (stateMinPos <= payloadMinPos) {
-    if (stateMinPos === payloadMinPos && state.messages.length >= payload.messages.length) {
-      // Maybe this is a duplicate messages load
-      console.log('Received messages that are already loaded');
-      return state;
-    }
-    recordWarn('Received messages that are older than the ones already loaded', {
-      payloadMinPos,
-      stateMinPos,
-      payloadLenght: payload.messages.length,
-      stateLength: state.messages.length,
-    });
+  payloadMessages = L.dropWhile((message) => message.pos >= topMessage.pos, payloadMessages);
+  if (payloadMessages.length === 0) {
     return state;
   }
-  const messageMap = { ...state.messageMap };
-  for (const [id, item] of newMessageEntries) {
-    messageMap[id] = item;
-  }
-  return { ...state, messageMap };
+  return { ...state, messages: L.concat(L.reverse(L.map(makeMessageItem, payloadMessages)), state.messages) };
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
   const message: MessageItem = makeMessageItem(payload.message);
-  if (state.messages.length === 0) {
+  const { oldPos } = payload;
+  const topMessage = L.head(state.messages);
+  if (!topMessage) {
     return state;
   }
-  if (message.pos < state.messages[0]!.pos && !state.fullLoaded) {
-    if (message.id in state.messageMap) {
-      // The edited message has been moved out of the range of currently loaded messages.
-      const messageMap = { ...state.messageMap };
-      delete messageMap[message.id];
-      return { ...state, messageMap };
-    } else {
+  if (message.pos < topMessage.pos && !state.fullLoaded) {
+    if (oldPos === message.pos || oldPos < topMessage.pos) {
       return state;
     }
+    // The edited message has been moved out of the range of currently loaded messages.
+    const findResult = findMessage(state.messages, message.id, oldPos);
+    if (findResult == null) return state;
+    const [, index] = findResult;
+    return { ...state, messages: L.remove(index, 1, state.messages) };
+  } else if (message.pos === oldPos) {
+    // Edit the message in place
+    const findResult = findMessage(state.messages, message.id, message.pos);
+    if (findResult == null) return state;
+    const [, index] = findResult;
+    return { ...state, messages: L.update(index, message, state.messages) };
+  } else {
+    // The message has been moved to a new position
+    let messages = state.messages;
+    const findResult = findMessage(state.messages, message.id, oldPos);
+    if (findResult != null) {
+      const [, index] = findResult;
+      messages = L.remove(index, 1, state.messages);
+    }
+    if (message.pos < topMessage.pos) {
+      return { ...state, messages: L.prepend(message, messages) };
+    }
+    const last = L.last(messages);
+    if (last == null || message.pos > last.pos) {
+      return { ...state, messages: L.append(message, messages) };
+    }
+    const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
+    if (itemByPos) {
+      console.warn('Unexpected message position.', { message, itemByPos });
+      return state;
+    }
+    messages = L.insert(insertIndex, message, messages);
+    return { ...state, messages };
   }
-
-  const messageMap = { ...state.messageMap };
-  messageMap[message.id] = message;
-  return { ...state, messageMap };
 };
 
 const handleMessagePreview = (
   state: ChannelState,
   { payload: { preview, timestamp } }: ChatAction<'messagePreview'>,
 ): ChannelState => {
+  let newItem: PreviewItem;
   let { previewMap, collidedPreviewIdSet } = state;
-  // The `preview.pos` is supposed to be integer, just `ceil` it to be safe.
-  let pos = Math.ceil(preview.pos);
-  let posP = pos;
-  let posQ = 1;
-  if (preview.edit && preview.id in state.messageMap) {
-    const message = state.messageMap[preview.id]!;
-    if (message.senderId !== preview.senderId) {
+  if (preview.edit != null) {
+    const findResult = findMessage(state.messages, preview.id, preview.pos);
+    if (findResult == null) return state;
+    const [message] = findResult;
+    if (message.modified !== preview.edit.time || message.senderId !== preview.senderId) {
       return state;
     }
-    pos = message.pos;
-    posP = message.posP;
-    posQ = message.posQ;
-  } else if (preview.edit === null) {
-    const index = binarySearchPos(state.messages, pos);
-    if (state.messages[index]?.pos === pos) {
-      collidedPreviewIdSet = new Set(collidedPreviewIdSet);
-      collidedPreviewIdSet.add(preview.id);
+    newItem = {
+      ...preview,
+      type: 'PREVIEW',
+      pos: message.pos,
+      posP: message.posP,
+      posQ: message.posQ,
+      key: preview.senderId,
+      timestamp,
+    };
+  } else {
+    // The `preview.pos` is supposed to be integer, just `ceil` it to be safe.
+    const pos = Math.ceil(preview.pos);
+    const posP = pos;
+    const posQ = 1;
+    const [, itemByPos] = binarySearchPosList(state.messages, pos);
+    if (itemByPos) {
+      collidedPreviewIdSet = new Set([...collidedPreviewIdSet, preview.id]);
     }
+    newItem = { ...preview, type: 'PREVIEW', posQ, posP, pos, key: preview.senderId, timestamp };
   }
 
-  const chatItem: PreviewItem = { ...preview, type: 'PREVIEW', posQ, posP, pos, key: preview.senderId, timestamp };
-  previewMap = { ...previewMap, [preview.senderId]: chatItem };
+  previewMap = { ...previewMap, [preview.senderId]: newItem };
   return { ...state, previewMap, collidedPreviewIdSet };
+};
+
+/**
+ * @param messages messages sorted by pos in ascending order
+ * @param pos the pos of the message to find. this is just a hint for optimization.
+ */
+export const findMessage = (messages: List<MessageItem>, id: string, pos?: number): [MessageItem, number] | null => {
+  let failedFoundByPos = false;
+  if (pos != null) {
+    const [index, item] = binarySearchPosList(messages, pos);
+    if (item && item.id === id) {
+      return [item, index];
+    }
+    failedFoundByPos = true;
+  }
+  const index = L.findIndex((message) => message.id === id, messages);
+  if (index === -1) {
+    return null;
+  }
+  const message = L.nth(index, messages);
+  if (message?.id === id) {
+    if (failedFoundByPos) {
+      console.warn('Found message by id but failed to find by pos.', { id, pos });
+    }
+    return [message, index];
+  } else {
+    return null;
+  }
 };
 
 const handleMessageDeleted = (
   state: ChannelState,
-  { payload: { messageId } }: ChatAction<'messageDeleted'>,
+  { payload: { messageId, pos } }: ChatAction<'messageDeleted'>,
 ): ChannelState => {
-  if (!(messageId in state.messageMap)) {
+  const findResult = findMessage(state.messages, messageId, pos);
+  if (findResult == null) {
     return state;
   }
-  const messageMap = { ...state.messageMap };
-  delete messageMap[messageId];
-  return { ...state, messageMap };
+  const [, index] = findResult;
+  return { ...state, messages: L.remove(index, 1, state.messages) };
 };
 
 const handleResetGc = (state: ChannelState, { payload: { pos } }: ChatAction<'resetGc'>): ChannelState => {
@@ -215,14 +264,13 @@ const handleGcCountdown = (state: ChannelState): ChannelState => {
 const handleGc = (state: ChannelState): ChannelState => {
   if (state.scheduledGc == null || state.scheduledGc.countdown > 0) return state;
   const { lowerPos } = state.scheduledGc;
-  const gcLowerIndex = state.messages.findIndex((message) => message.pos >= lowerPos) - 1;
+  const gcLowerIndex = L.findIndex((message) => message.pos >= lowerPos, state.messages) - 1;
   if (gcLowerIndex <= MIN_START_GC_COUNT) return { ...state, scheduledGc: null };
   console.debug(`[Messages GC] Start GC. Lower index: ${gcLowerIndex} Power Pos: ${lowerPos}`);
-  const messages = state.messages.slice(gcLowerIndex);
-  const messageMap = Object.fromEntries(messages.map((message) => [message.id, message]));
+  const messages = L.drop(gcLowerIndex, state.messages);
   const scheduledGc = null;
   const fullLoaded = false;
-  return { ...state, messageMap, messages, scheduledGc, fullLoaded };
+  return { ...state, messages, scheduledGc, fullLoaded };
 };
 
 export const channelReducer = (
@@ -232,13 +280,8 @@ export const channelReducer = (
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
   nextState = handleGcCountdown(nextState);
-  if (nextState.messageMap !== state.messageMap) {
-    const messages = Object.values(nextState.messageMap);
-    messages.sort(byPos);
-    nextState = { ...nextState, messages };
-  }
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {
-    const pos = nextState.messages[GC_TRIGGER_LENGTH >> 1]!.pos;
+    const pos = L.nth(GC_TRIGGER_LENGTH >> 1, nextState.messages)!.pos;
     nextState = { ...nextState, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
   } else if (nextState.scheduledGc) {
     nextState = handleGc(nextState);

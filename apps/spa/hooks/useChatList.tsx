@@ -2,13 +2,14 @@ import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
-import { type ChannelState } from '../state/channel.reducer';
+import { findMessage, type ChannelState } from '../state/channel.reducer';
 import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
 import { type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
 import { recordWarn } from '../error';
 import { type PreviewEdit } from '@boluo/api';
+import * as L from 'list';
 
 export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
 
@@ -107,15 +108,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
 
   const messagesAtom = useMemo(
     () =>
-      selectAtom(
-        chatAtom,
-        (chat): [ChannelState['messages'] | null, ChannelState['messageMap'] | null] => {
-          const channel = chat.channels[channelId];
-          if (!channel) return [null, null];
-          return [channel.messages, channel.messageMap];
-        },
-        (a, b) => a?.[1] === b?.[1],
-      ),
+      selectAtom(chatAtom, (chat): ChannelState['messages'] | null => {
+        const channel = chat.channels[channelId];
+        if (!channel) return null;
+        return channel.messages;
+      }),
     [channelId],
   );
   const previewMapAtom = useMemo(
@@ -126,7 +123,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     () => selectAtom(chatAtom, (chat) => chat.channels[channelId]?.scheduledGc?.lowerPos ?? null),
     [channelId],
   );
-  const [messages, messageMap] = useAtomValue(messagesAtom);
+  const messages = useAtomValue(messagesAtom);
   const previewMap = useAtomValue(previewMapAtom);
   const scheduledGcLowerPos = useAtomValue(scheduledGcLowerPosAtom);
 
@@ -136,27 +133,29 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     UseChatListReturn,
     'chatList' | 'filteredMessagesCount'
   > => {
-    if (!messages || !messageMap || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
+    if (!messages || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
     const optimisticPreviewList = Object.values(previewMap);
     const optimisticMessageItems: OptimisticItem[] = [];
-    const itemList: ChatItem[] = messages.filter((item) => {
-      const isFiltered = !filter(filterType, item);
-      if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
-      if (isFiltered) {
-        return false;
-      }
-      const optimisticItem = optimisticItemMap[item.id];
-      if (!optimisticItem || optimisticItem.item.pos !== item.pos || optimisticItem.item.type !== 'MESSAGE') {
-        return true;
-      }
-      const itemTimestamp = Date.parse(item.modified);
-      if (itemTimestamp >= optimisticItem.timestamp) {
-        return true;
-      } else {
-        optimisticMessageItems.push(optimisticItem);
-        return false;
-      }
-    });
+    const itemList: ChatItem[] = L.toArray(
+      L.filter((item) => {
+        const isFiltered = !filter(filterType, item);
+        if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
+        if (isFiltered) {
+          return false;
+        }
+        const optimisticItem = optimisticItemMap[item.id];
+        if (!optimisticItem || optimisticItem.item.pos !== item.pos || optimisticItem.item.type !== 'MESSAGE') {
+          return true;
+        }
+        const itemTimestamp = Date.parse(item.modified);
+        if (itemTimestamp >= optimisticItem.timestamp) {
+          return true;
+        } else {
+          optimisticMessageItems.push(optimisticItem);
+          return false;
+        }
+      }, messages),
+    );
     const itemListLen = itemList.length;
     const filteredMessagesCount = messages.length - itemListLen;
     const minPos = itemListLen > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
@@ -178,8 +177,10 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         let posP = pos;
         let posQ = 1;
         if (composeSlice.edit !== null) {
-          const message = messageMap[composeSlice.previewId];
-          if (message) {
+          const editTargetPos = composeSlice.edit.p / composeSlice.edit.q;
+          const result = findMessage(messages, composeSlice.previewId, editTargetPos);
+          if (result) {
+            const [message] = result;
             pos = message.pos;
             posP = message.posP;
             posQ = message.posQ;
@@ -198,10 +199,14 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       } else if (preview.text === '' || preview.entities.length === 0 || preview.id === composeSlice.prevPreviewId) {
         continue;
       }
-      if (preview.id in messageMap) {
-        // A edit preview
-        const message = messageMap[preview.id]!;
-        if (preview.edit?.time !== message.modified) {
+      if (preview.edit) {
+        const findResult = findMessage(messages, preview.id, preview.pos);
+        if (!findResult) {
+          // The original message is not found
+          continue;
+        }
+        const [message] = findResult;
+        if (preview.edit.time !== message.modified) {
           continue;
         }
         const index = binarySearchPos(itemList, message.pos);
@@ -248,7 +253,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     composeSlice.previewId,
     filterType,
     isEmpty,
-    messageMap,
     messages,
     myId,
     optimisticItemMap,

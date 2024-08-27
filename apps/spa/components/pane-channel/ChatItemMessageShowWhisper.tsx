@@ -54,7 +54,7 @@ const ShowButton: FC<{ messageId: string; channelId: string }> = ({ messageId, c
     {
       onSuccess: (message) => {
         if (message == null) return;
-        dispatch({ type: 'messageEdited', payload: { message, channelId } });
+        dispatch({ type: 'messageEdited', payload: { message, channelId, oldPos: message.pos } });
       },
     },
   );

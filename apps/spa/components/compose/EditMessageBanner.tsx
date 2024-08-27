@@ -12,6 +12,7 @@ import { Name } from '../pane-channel/Name';
 import { InComposeButton } from './InComposeButton';
 import { Edit, X } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
+import { findMessage } from '../../state/channel.reducer';
 
 interface Props {
   currentUser: User;
@@ -21,17 +22,32 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
   const channelId = useChannelId();
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
-  const targetMessageIdAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.previewId), [composeAtom]);
+  const editingInfoAtom = useMemo(
+    () =>
+      selectAtom(
+        composeAtom,
+        (compose): [string | null, number | null] => {
+          if (!compose.edit) return [null, null];
+          const { p, q } = compose.edit;
+          return [compose.previewId, p / q];
+        },
+        ([idA, posA], [idB, posB]) => idA === idB && posA === posB,
+      ),
+    [composeAtom],
+  );
   const targetMessageAtom = useMemo(
     () =>
       atom((get): Message | null => {
-        const targetMessageId = get(targetMessageIdAtom);
+        const [targetMessageId, targetMessagePos] = get(editingInfoAtom);
         const chat = get(chatAtom);
         const channel = chat.channels[channelId];
-        if (!channel) return null;
-        return channel.messageMap[targetMessageId] ?? null;
+        if (!targetMessageId || !targetMessagePos || !channel) return null;
+        const result = findMessage(channel.messages, targetMessageId, targetMessagePos);
+        if (!result) return null;
+        const [message] = result;
+        return message;
       }),
-    [channelId, targetMessageIdAtom],
+    [channelId, editingInfoAtom],
   );
   const message = useAtomValue(targetMessageAtom);
   const intl = useIntl();

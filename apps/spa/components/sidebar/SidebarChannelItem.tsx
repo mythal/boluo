@@ -17,6 +17,7 @@ import { usePaneLimit } from '../../hooks/useMaxPane';
 import { useIsReordering } from '../../hooks/useIsReordering';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { findLast, last } from 'list';
 
 interface Props {
   channel: Channel;
@@ -45,19 +46,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       selectAtom(chatAtom, (chat): Message | 'EMPTY' | 'UNLOAD' => {
         const channelState = chat.channels[channel.id];
         if (!channelState) return 'UNLOAD';
-        const messages = channelState.messages ?? [];
-        if (messages.length === 0) {
-          if (channelState.fullLoaded) return 'EMPTY';
-          return 'UNLOAD';
+        const messages = channelState.messages;
+        const bottom = last(messages);
+        if (!bottom) {
+          return channelState.fullLoaded ? 'EMPTY' : 'UNLOAD';
         }
-        for (let i = messages.length - 1; i >= 0; i--) {
-          const message = messages[i];
-          if (!message) continue;
-          if (!message.folded) {
-            return messages[i]!;
-          }
-        }
-        return messages[messages.length - 1]!;
+        return findLast((message) => !message.folded, messages) ?? bottom;
       }),
     [channel.id],
   );

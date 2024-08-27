@@ -17,6 +17,7 @@ import { composeRender } from './render';
 import { type ParseResult } from '../../interpreter/parse-result';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
+import * as L from 'list';
 
 interface Props {
   myId: string;
@@ -86,18 +87,11 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
         if (!channel) return null;
         const len = channel.messages.length;
         if (len === 0) return null;
-        const end = Math.max(0, len - MAX_FIND_LENGTH);
-        for (let i = channel.messages.length - 1; i >= end; i--) {
-          const message = channel.messages[i];
-          if (!message) {
-            reportError("Unexpected undefined message in channel's messages");
-            break;
-          }
-          if (message?.senderId === myId) {
-            return message;
-          }
+        let count = 0;
+        for (const message of L.backwards(channel.messages)) {
+          if (message.senderId === myId) return message;
+          if (++count >= MAX_FIND_LENGTH) break;
         }
-        return null;
       }),
     [channelId, myId],
   );

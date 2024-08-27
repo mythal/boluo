@@ -8,6 +8,7 @@ import { toSimpleText } from '../interpreter/entities';
 import { messageToParsed } from '../interpreter/to-parsed';
 import { panesAtom } from '../state/view.atoms';
 import { useQueryChannelList } from './useQueryChannelList';
+import { backwards } from 'list';
 
 export const useNotify = (spaceId: string) => {
   const store = useStore();
@@ -45,13 +46,13 @@ export const useNotify = (spaceId: string) => {
         if (joinedChannels.findIndex(({ channel }) => channel.id === channelState.id) === -1) {
           continue;
         }
-        const length = channelState.messages.length;
-        for (let i = length - 1; i >= Math.max(0, length - 100); i--) {
-          const message = channelState.messages[i]!;
+        let count = 0;
+        for (const message of backwards(channelState.messages)) {
           const created = Date.parse(message.created);
           if (!Number.isNaN(created) && created > startTime) {
             newMessages.push(message);
           }
+          if (++count >= 100) break;
         }
       }
       const panes = store.get(panesAtom);

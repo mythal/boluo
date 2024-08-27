@@ -8,7 +8,7 @@ export type ChatActionMap = {
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;
   messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
-  messageEdited: { message: Message; channelId: string };
+  messageEdited: { message: Message; channelId: string; oldPos: number };
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };
   reconnectCountdownTick: { immediately?: boolean };
@@ -18,7 +18,7 @@ export type ChatActionMap = {
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
   messagePreview: { channelId: string; preview: Preview; timestamp: number };
-  messageDeleted: { channelId: string; messageId: string };
+  messageDeleted: { channelId: string; messageId: string; pos: number };
   channelDeleted: { channelId: string };
   resetGc: { pos: number };
   eventFromServer: ServerEvent;

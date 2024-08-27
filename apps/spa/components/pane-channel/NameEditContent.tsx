@@ -7,6 +7,7 @@ import { type ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
 import { type Member } from '@boluo/api';
 import { type ChannelState } from '../../state/channel.reducer';
+import { backwards, last } from 'list';
 
 interface Props {
   member: Member;
@@ -14,11 +15,9 @@ interface Props {
 
 const NAME_HISTORY_MAX = 5;
 
-const searchChannelForNames = (names: string[], channelState: ChannelState, userId: string, messageLimit: number) => {
-  const searchLimit = Math.min(channelState.messages.length - 1, messageLimit);
-
-  for (let i = searchLimit; i >= 0; i--) {
-    const message = channelState.messages[i]!;
+const searchChannelForNames = (names: string[], channelState: ChannelState, userId: string, searchLimit: number) => {
+  let count = 0;
+  for (const message of backwards(channelState.messages)) {
     if (
       !message.inGame ||
       message.folded ||
@@ -28,7 +27,7 @@ const searchChannelForNames = (names: string[], channelState: ChannelState, user
     )
       continue;
     names.push(message.name);
-    if (names.length > NAME_HISTORY_MAX) return;
+    if (++count >= searchLimit) return;
   }
 };
 
@@ -50,8 +49,8 @@ const chatStateToNameList = (
   );
   // sort by last message time
   channels.sort((a, b) => {
-    const aCreated = a.messages[a.messages.length - 1]!.created;
-    const bCreated = b.messages[b.messages.length - 1]!.created;
+    const aCreated = last(a.messages)!.created;
+    const bCreated = last(b.messages)!.created;
     const aTime = new Date(aCreated).getTime();
     const bTime = new Date(bCreated).getTime();
     return bTime - aTime;

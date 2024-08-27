@@ -9,6 +9,7 @@ import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '../../hooks/useMounted';
 import { chatAtom } from '../../state/chat.atoms';
+import { head } from 'list';
 
 const LOAD_MESSAGE_LIMIT = 51;
 const AUTO_LOAD = true;
@@ -44,10 +45,7 @@ export const ChatContentHeaderLoadMore: FC<Props> = () => {
     const chatState = store.get(chatAtom);
     const channelState = chatState.channels[channelId];
     setIsLoading(true);
-    let before: number | null = null;
-    if (channelState && channelState.messages.length > 0) {
-      before = channelState.messages[0]!.pos;
-    }
+    const before: number | null = channelState ? (head(channelState.messages)?.pos ?? null) : null;
     const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
     const result = await fetchPromise;
     if (result.isErr) {

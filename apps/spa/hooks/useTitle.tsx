@@ -5,6 +5,7 @@ import { useIntl } from 'react-intl';
 import { chatAtom, notifyTimestampAtom } from '../state/chat.atoms';
 import { channelReadFamily } from '../state/unread.atoms';
 import { useQueryChannelList } from './useQueryChannelList';
+import { backwards } from 'list';
 
 const hasUnreadMessages = (
   store: ReturnType<typeof createStore>,
@@ -27,14 +28,13 @@ const hasUnreadMessages = (
     if (channelWithMaybeMemberList.findIndex(({ channel }) => channel.id === channelId) === -1) continue;
     const channel = chatState.channels[channelId]!;
     const readPos = store.get(channelReadFamily(channelId));
-    const len = channel.messages.length;
-    for (let i = len - 1; i >= Math.max(0, len - 100); i--) {
-      const message = channel.messages[i]!;
+    let count = 0;
+    for (const message of backwards(channel.messages)) {
       if (myId != null && message.senderId === myId) continue;
-      if (message.pos > readPos && !message.folded) {
-        return true;
-      }
+      else if (message.pos <= readPos && !message.folded) return message;
+      else if (++count >= 100) break;
     }
+    return null;
   }
   return false;
 };

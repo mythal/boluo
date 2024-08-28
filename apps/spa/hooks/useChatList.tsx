@@ -200,7 +200,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         (preview.entities.length === 0 && preview.text !== null) ||
         preview.id === composeSlice.prevPreviewId
       ) {
-        console.log('Skip empty preview', preview);
         continue;
       }
       if (preview.edit) {

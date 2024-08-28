@@ -268,7 +268,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
       if (positionObserverRef.current === null) {
         const scroller = scrollerRef.current;
         if (!scroller) {
-          console.debug("The scroller doesn't exist yet");
           return () => {};
         }
         positionObserverRef.current = new IntersectionObserver(

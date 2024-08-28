@@ -196,7 +196,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       if (isFiltered) continue;
       else if (preview.senderId === myId) {
         /* Always show the user's own preview */
-      } else if (preview.text === '' || preview.entities.length === 0 || preview.id === composeSlice.prevPreviewId) {
+      } else if (
+        (preview.entities.length === 0 && preview.text !== null) ||
+        preview.id === composeSlice.prevPreviewId
+      ) {
+        console.log('Skip empty preview', preview);
         continue;
       }
       if (preview.edit) {
@@ -221,9 +225,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           // Remove the original message
           itemList.splice(index, 1);
         }
-      } else if (preview.edit) {
-        // A edit preview, but the original message is not found
-        continue;
       }
       // Insert the preview to item list
       if (isDummySelfPreview(preview)) {

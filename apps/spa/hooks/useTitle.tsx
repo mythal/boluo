@@ -31,10 +31,11 @@ const hasUnreadMessages = (
     let count = 0;
     for (const message of backwards(channel.messages)) {
       if (myId != null && message.senderId === myId) continue;
-      else if (message.pos <= readPos && !message.folded) return message;
-      else if (++count >= 100) break;
+      else if (message.pos > readPos && !message.folded) {
+        // console.debug('[UNREAD]', message);
+        return true;
+      } else if (++count >= 100) break;
     }
-    return null;
   }
   return false;
 };

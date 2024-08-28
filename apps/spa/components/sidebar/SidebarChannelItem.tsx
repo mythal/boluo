@@ -1,15 +1,14 @@
-import type { Channel, Message } from '@boluo/api';
+import type { Channel } from '@boluo/api';
 import clsx from 'clsx';
 import { Drama, Hash, Lock, MoveVertical, Plus, X } from '@boluo/icons';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { type FC, useCallback, useMemo } from 'react';
+import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { panesAtom } from '../../state/view.atoms';
 import { chatAtom } from '../../state/chat.atoms';
-import { selectAtom } from 'jotai/utils';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { channelReadFamily } from '../../state/unread.atoms';
@@ -18,6 +17,7 @@ import { useIsReordering } from '../../hooks/useIsReordering';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { findLast, last } from 'list';
+import { type PreviewItem } from '../../state/channel.types';
 
 interface Props {
   channel: Channel;
@@ -25,9 +25,13 @@ interface Props {
   overlay?: boolean;
 }
 
+const TYPEING_TIMEOUT = 1000;
+const UPDATE_TIMEOUT = 250;
+
 export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
+  const store = useStore();
   const paneLimit = usePaneLimit();
   const setPane = useSetAtom(panesAtom);
   const addPane = usePaneAdd();
@@ -41,20 +45,56 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  const messagesAtom = useMemo(() => atom((read) => read(chatAtom).channels[channel.id]?.messages), [channel.id]);
+  const previewMapAtom = useMemo(() => atom((read) => read(chatAtom).channels[channel.id]?.previewMap), [channel.id]);
+  const fullLoadedAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channel.id]?.fullLoaded ?? false),
+    [channel.id],
+  );
   const latestMessageAtom = useMemo(
     () =>
-      selectAtom(chatAtom, (chat): Message | 'EMPTY' | 'UNLOAD' => {
-        const channelState = chat.channels[channel.id];
-        if (!channelState) return 'UNLOAD';
-        const messages = channelState.messages;
+      atom((read) => {
+        const messages = read(messagesAtom);
+        if (!messages) return 'UNLOAD';
         const bottom = last(messages);
         if (!bottom) {
-          return channelState.fullLoaded ? 'EMPTY' : 'UNLOAD';
+          return read(fullLoadedAtom) ? 'EMPTY' : 'UNLOAD';
         }
         return findLast((message) => !message.folded, messages) ?? bottom;
       }),
-    [channel.id],
+    [fullLoadedAtom, messagesAtom],
   );
+  const [recentPreviews, setRecentPreviews] = useState<PreviewItem[]>([]);
+  const updateRecentPreviews = useCallback(() => {
+    const now = new Date().getTime();
+    const previewMap = store.get(previewMapAtom) ?? {};
+    const previews = Object.values(previewMap).filter(
+      (preview) => now - preview.timestamp < TYPEING_TIMEOUT && (preview.text === null || preview.text.length > 0),
+    );
+    setRecentPreviews((recentPreviews): PreviewItem[] => {
+      if (previews.length !== recentPreviews.length) {
+        return previews;
+      }
+      if (previews.every((preview) => recentPreviews.includes(preview))) {
+        return recentPreviews;
+      } else {
+        return previews;
+      }
+    });
+  }, [previewMapAtom, store]);
+  useEffect(() => store.sub(previewMapAtom, updateRecentPreviews), [previewMapAtom, store, updateRecentPreviews]);
+  const hasRecentPreviews = recentPreviews.length > 0;
+  useEffect(() => {
+    if (!hasRecentPreviews) return;
+    const handle = setInterval(updateRecentPreviews, UPDATE_TIMEOUT);
+    return () => clearInterval(handle);
+  }, [hasRecentPreviews, updateRecentPreviews]);
+  useEffect(() => {
+    console.log(
+      'updateRecentPreviews',
+      recentPreviews.map((preview) => preview.text),
+    );
+  }, [recentPreviews]);
   const latestMessage = useAtomValue(latestMessageAtom);
   const latestMessageText: string = useMemo(() => {
     if (typeof latestMessage === 'string') {

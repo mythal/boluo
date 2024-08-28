@@ -35,7 +35,6 @@ const connect = (
     setTimeout(() => dispatch({ type: 'reconnectCountdownTick', payload: {} }), 1000);
     return null;
   }
-  console.info(`establishing new connection for ${mailboxId}`);
   dispatch({ type: 'connecting', payload: { mailboxId } });
 
   const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, token, after);
@@ -99,7 +98,6 @@ export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, 
           });
           return;
         case 'STATUS_MAP':
-          console.debug('Status changed:', event.body);
           void mutate<Record<string, UserStatus>>(['/spaces/users_status', event.body.spaceId], event.body.statusMap);
           return;
         case 'ERROR':

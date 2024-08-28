@@ -206,7 +206,7 @@ export const findMessage = (messages: List<MessageItem>, id: string, pos?: numbe
   const message = L.nth(index, messages);
   if (message?.id === id) {
     if (failedFoundByPos) {
-      console.warn('Found message by id but failed to find by pos.', { id, pos });
+      recordWarn('Found message by id but failed to find by pos.', { id, pos });
     }
     return [message, index];
   } else {

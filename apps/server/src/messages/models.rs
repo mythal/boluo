@@ -166,10 +166,13 @@ impl Message {
         if !(1..=256).contains(&limit) {
             return Err(ValidationFailed("illegal limit range").into());
         }
-        sqlx::query_file_scalar!("sql/messages/get_by_channel.sql", channel_id, before, limit)
+        let mut messages = sqlx::query_file_scalar!("sql/messages/get_by_channel.sql", channel_id, before, limit)
             .fetch_all(db)
-            .await
-            .map_err(Into::into)
+            .await?;
+        for message in messages.iter_mut() {
+            message.hide();
+        }
+        Ok(messages)
     }
 
     pub async fn export<'c, T: sqlx::PgExecutor<'c>>(

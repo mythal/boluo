@@ -1,37 +1,33 @@
 import type { Channel } from '@boluo/api';
 import clsx from 'clsx';
 import { Drama, Hash, Lock, MoveVertical, Plus, X } from '@boluo/icons';
-import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
-import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { type Atom, atom, useAtomValue, useSetAtom } from 'jotai';
+import { type FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { panesAtom } from '../../state/view.atoms';
 import { chatAtom } from '../../state/chat.atoms';
-import { messageToParsed } from '../../interpreter/to-parsed';
-import { toSimpleText } from '../../interpreter/entities';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { usePaneLimit } from '../../hooks/useMaxPane';
 import { useIsReordering } from '../../hooks/useIsReordering';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { findLast, last } from 'list';
-import { type PreviewItem } from '../../state/channel.types';
+import { type MessageItem } from '../../state/channel.types';
+import { SidebarChannelItemPreview } from './SidebarChannelItemPreview';
 
 interface Props {
   channel: Channel;
   active: boolean;
   overlay?: boolean;
 }
-
-const TYPEING_TIMEOUT = 1000;
-const UPDATE_TIMEOUT = 250;
+export type LatestMessageAtom = Atom<'UNLOAD' | 'EMPTY' | MessageItem>;
 
 export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
-  const store = useStore();
   const paneLimit = usePaneLimit();
   const setPane = useSetAtom(panesAtom);
   const addPane = usePaneAdd();
@@ -46,12 +42,11 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     transition,
   };
   const messagesAtom = useMemo(() => atom((read) => read(chatAtom).channels[channel.id]?.messages), [channel.id]);
-  const previewMapAtom = useMemo(() => atom((read) => read(chatAtom).channels[channel.id]?.previewMap), [channel.id]);
   const fullLoadedAtom = useMemo(
     () => atom((read) => read(chatAtom).channels[channel.id]?.fullLoaded ?? false),
     [channel.id],
   );
-  const latestMessageAtom = useMemo(
+  const latestMessageAtom: LatestMessageAtom = useMemo(
     () =>
       atom((read) => {
         const messages = read(messagesAtom);
@@ -64,49 +59,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       }),
     [fullLoadedAtom, messagesAtom],
   );
-  const [recentPreviews, setRecentPreviews] = useState<PreviewItem[]>([]);
-  const updateRecentPreviews = useCallback(() => {
-    const now = new Date().getTime();
-    const previewMap = store.get(previewMapAtom) ?? {};
-    const previews = Object.values(previewMap).filter(
-      (preview) => now - preview.timestamp < TYPEING_TIMEOUT && (preview.text === null || preview.text.length > 0),
-    );
-    setRecentPreviews((recentPreviews): PreviewItem[] => {
-      if (previews.length !== recentPreviews.length) {
-        return previews;
-      }
-      if (previews.every((preview) => recentPreviews.includes(preview))) {
-        return recentPreviews;
-      } else {
-        return previews;
-      }
-    });
-  }, [previewMapAtom, store]);
-  useEffect(() => store.sub(previewMapAtom, updateRecentPreviews), [previewMapAtom, store, updateRecentPreviews]);
-  const hasRecentPreviews = recentPreviews.length > 0;
-  useEffect(() => {
-    if (!hasRecentPreviews) return;
-    const handle = setInterval(updateRecentPreviews, UPDATE_TIMEOUT);
-    return () => clearInterval(handle);
-  }, [hasRecentPreviews, updateRecentPreviews]);
-  useEffect(() => {
-    console.log(
-      'updateRecentPreviews',
-      recentPreviews.map((preview) => preview.text),
-    );
-  }, [recentPreviews]);
-  const latestMessage = useAtomValue(latestMessageAtom);
-  const latestMessageText: string = useMemo(() => {
-    if (typeof latestMessage === 'string') {
-      return '';
-    }
-    if (latestMessage.whisperToUsers !== null) {
-      return `[${intl.formatMessage({ defaultMessage: 'Whisper' })}]`;
-    }
-    const parsed = messageToParsed(latestMessage.text, latestMessage.entities);
-    return toSimpleText(parsed.text, parsed.entities);
-  }, [intl, latestMessage]);
-  const isUnread = useAtomValue(
+  const hasUnread = useAtomValue(
     useMemo(() => {
       const ReadPositionAtom = channelReadFamily(channel.id);
       return atom((get) => {
@@ -171,24 +124,11 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       {channel.name}
     </span>
   );
-  const messagePreview = (
-    <div className="col-start-2 h-5 w-full overflow-hidden">
-      {typeof latestMessage !== 'string' && (
-        <div
-          data-unread={isUnread}
-          data-is-action={latestMessage.isAction}
-          className="truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
-        >
-          <span className="text-text-light group-hover:text-text-base mr-1">
-            {latestMessage.name}
-            {latestMessage.isAction ? '' : ':'}
-          </span>
-          <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
-        </div>
-      )}
-      {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 h-4 w-full rounded-md"></div>}
-      {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
-    </div>
+  const messagePreview = useMemo(
+    () => (
+      <SidebarChannelItemPreview latestMessageAtom={latestMessageAtom} channelId={channel.id} hasUnread={hasUnread} />
+    ),
+    [hasUnread, channel.id, latestMessageAtom],
   );
   if (isReordering) {
     return (

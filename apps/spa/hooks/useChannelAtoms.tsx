@@ -47,9 +47,10 @@ export const useMakeChannelAtoms = (
     [characterName, composeAtom, defaultInGame],
   );
   const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> = useMemo(() => {
+    const sourceAtom = atom((get) => get(composeAtom).source);
     const loadableParsedAtom = loadable(
       atom(async (get, { signal }): Promise<ParseResult> => {
-        const { source } = get(composeAtom);
+        const source = get(sourceAtom);
         return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
       }),
     );

@@ -66,6 +66,7 @@ export const useSendPreview = (
   const store = useStore();
   const sendTimoutRef = useRef<number | undefined>(undefined);
   const isFocused = usePaneIsFocus();
+  const isFocusedRef = useRef(isFocused);
   const connectionState = useAtomValue(connectionStateAtom);
   const hasCollidedAtom = useMemo(
     () =>
@@ -95,9 +96,7 @@ export const useSendPreview = (
       if (nickname === undefined || connectionState.type !== 'CONNECTED') {
         return;
       }
-      if (!isFocused) {
-        return;
-      }
+      if (!isFocusedRef.current) return;
       const composeState = store.get(composeAtom);
       const parsed = store.get(parsedAtom);
       sendPreview(
@@ -111,5 +110,5 @@ export const useSendPreview = (
         defaultInGame,
       );
     });
-  }, [channelId, characterName, composeAtom, connectionState, defaultInGame, isFocused, nickname, parsedAtom, store]);
+  }, [channelId, characterName, composeAtom, connectionState, defaultInGame, nickname, parsedAtom, store]);
 };

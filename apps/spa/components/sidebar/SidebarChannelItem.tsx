@@ -1,7 +1,7 @@
-import type { Channel, Message } from '@boluo/api';
+import type { Channel } from '@boluo/api';
 import clsx from 'clsx';
 import { Drama, Hash, Lock, MoveVertical, Plus, X } from '@boluo/icons';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { type Atom, atom, useAtomValue, useSetAtom } from 'jotai';
 import { type FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
@@ -9,23 +9,24 @@ import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { panesAtom } from '../../state/view.atoms';
 import { chatAtom } from '../../state/chat.atoms';
-import { selectAtom } from 'jotai/utils';
-import { messageToParsed } from '../../interpreter/to-parsed';
-import { toSimpleText } from '../../interpreter/entities';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { usePaneLimit } from '../../hooks/useMaxPane';
 import { useIsReordering } from '../../hooks/useIsReordering';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { findLast, last } from 'list';
+import { type MessageItem } from '../../state/channel.types';
+import { SidebarChannelItemPreview } from './SidebarChannelItemPreview';
 
 interface Props {
   channel: Channel;
   active: boolean;
   overlay?: boolean;
+  myId: string | null | undefined;
 }
+export type LatestMessageAtom = Atom<'UNLOAD' | 'EMPTY' | MessageItem>;
 
-export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false }) => {
+export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false, myId }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
   const paneLimit = usePaneLimit();
@@ -41,32 +42,25 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  const latestMessageAtom = useMemo(
+  const messagesAtom = useMemo(() => atom((read) => read(chatAtom).channels[channel.id]?.messages), [channel.id]);
+  const fullLoadedAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channel.id]?.fullLoaded ?? false),
+    [channel.id],
+  );
+  const latestMessageAtom: LatestMessageAtom = useMemo(
     () =>
-      selectAtom(chatAtom, (chat): Message | 'EMPTY' | 'UNLOAD' => {
-        const channelState = chat.channels[channel.id];
-        if (!channelState) return 'UNLOAD';
-        const messages = channelState.messages;
+      atom((read) => {
+        const messages = read(messagesAtom);
+        if (!messages) return 'UNLOAD';
         const bottom = last(messages);
         if (!bottom) {
-          return channelState.fullLoaded ? 'EMPTY' : 'UNLOAD';
+          return read(fullLoadedAtom) ? 'EMPTY' : 'UNLOAD';
         }
         return findLast((message) => !message.folded, messages) ?? bottom;
       }),
-    [channel.id],
+    [fullLoadedAtom, messagesAtom],
   );
-  const latestMessage = useAtomValue(latestMessageAtom);
-  const latestMessageText: string = useMemo(() => {
-    if (typeof latestMessage === 'string') {
-      return '';
-    }
-    if (latestMessage.whisperToUsers !== null) {
-      return `[${intl.formatMessage({ defaultMessage: 'Whisper' })}]`;
-    }
-    const parsed = messageToParsed(latestMessage.text, latestMessage.entities);
-    return toSimpleText(parsed.text, parsed.entities);
-  }, [intl, latestMessage]);
-  const isUnread = useAtomValue(
+  const hasUnread = useAtomValue(
     useMemo(() => {
       const ReadPositionAtom = channelReadFamily(channel.id);
       return atom((get) => {
@@ -131,24 +125,16 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       {channel.name}
     </span>
   );
-  const messagePreview = (
-    <div className="col-start-2 h-5 w-full overflow-hidden">
-      {typeof latestMessage !== 'string' && (
-        <div
-          data-unread={isUnread}
-          data-is-action={latestMessage.isAction}
-          className="truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
-        >
-          <span className="text-text-light group-hover:text-text-base mr-1">
-            {latestMessage.name}
-            {latestMessage.isAction ? '' : ':'}
-          </span>
-          <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
-        </div>
-      )}
-      {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 h-4 w-full rounded-md"></div>}
-      {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
-    </div>
+  const messagePreview = useMemo(
+    () => (
+      <SidebarChannelItemPreview
+        myId={myId}
+        latestMessageAtom={latestMessageAtom}
+        channelId={channel.id}
+        hasUnread={hasUnread}
+      />
+    ),
+    [hasUnread, myId, latestMessageAtom, channel.id],
   );
   if (isReordering) {
     return (

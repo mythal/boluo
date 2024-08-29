@@ -51,7 +51,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
       <NameBox
         pressed={isOpen}
         interactive={user != null}
-        color={inGame ? color : undefined}
+        color={color}
         icon={isMaster ? masterIcon : undefined}
         ref={refs.setReference}
         {...getReferenceProps()}

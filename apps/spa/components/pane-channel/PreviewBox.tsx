@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { type DragEventHandler, type FC, type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
 import { useReadObserve } from '../../hooks/useReadObserve';
+import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 
 interface Props {
   children: ReactNode;
@@ -29,6 +30,7 @@ export const PreviewBox: FC<Props> = ({
   pos,
 }) => {
   const readObserve = useReadObserve();
+  const isInGameChannel = useIsInGameChannel();
   const boxRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (boxRef.current == null) return;
@@ -55,7 +57,10 @@ export const PreviewBox: FC<Props> = ({
         'shadow-[0_0_12px_10px_inset]',
         inGame
           ? 'bg-preview-in-bg shadow-[var(--colors-preview-in-bg)]'
-          : 'bg-preview-out-bg shadow-[var(--colors-preview-out-bg)]',
+          : [
+              'bg-preview-out-bg shadow-[var(--colors-preview-out-bg)]',
+              isInGameChannel ? 'text-text-light hover:text-text-base text-sm' : '',
+            ],
         className,
       )}
       ref={(ref) => {

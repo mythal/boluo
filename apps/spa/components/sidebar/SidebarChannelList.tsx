@@ -21,6 +21,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQuerySpaceSettings } from '../../hooks/useQuerySpaceSettings';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { useMutateSpaceSettings } from '../../hooks/useMutateSpaceSettings';
+import { useQueryCurrentUser } from '@boluo/common';
 
 interface Props {
   spaceId: string;
@@ -41,6 +42,8 @@ export const SidebarChannelList: FC<Props> = ({
     () => panes.flatMap((pane) => (pane.type === 'CHANNEL' ? [pane.channelId] : [])),
     [panes],
   );
+  const { data: currentUser } = useQueryCurrentUser();
+  const myId = currentUser?.id;
   const channelWithMemberList = useMemo((): typeof originalChannelWithMemberList => {
     if (spaceSettings == null) return originalChannelWithMemberList;
     const { channelsOrder = [] } = spaceSettings;
@@ -79,12 +82,13 @@ export const SidebarChannelList: FC<Props> = ({
     if (!activeChannel) return null;
     return (
       <SidebarChannelItem
+        myId={myId}
         channel={activeChannel.channel}
         active={channelIdFromPanes.includes(activeChannel.channel.id)}
         overlay
       />
     );
-  }, [activeId, channelIdFromPanes, channelWithMemberList]);
+  }, [activeId, channelIdFromPanes, channelWithMemberList, myId]);
 
   if (isLoading || spaceSettings == null) {
     return <SidebarChannelListSkeleton />;
@@ -101,7 +105,12 @@ export const SidebarChannelList: FC<Props> = ({
       >
         <SortableContext items={sortableItems} strategy={verticalListSortingStrategy} disabled={!isReordering}>
           {channelWithMemberList.map(({ channel }) => (
-            <SidebarChannelItem key={channel.id} channel={channel} active={channelIdFromPanes.includes(channel.id)} />
+            <SidebarChannelItem
+              myId={myId}
+              key={channel.id}
+              channel={channel}
+              active={channelIdFromPanes.includes(channel.id)}
+            />
           ))}
           <DragOverlay>{overlay}</DragOverlay>
         </SortableContext>

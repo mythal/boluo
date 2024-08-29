@@ -1,21 +1,23 @@
 import { atom, useAtomValue, useStore } from 'jotai';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { chatAtom } from '../../state/chat.atoms';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { type LatestMessageAtom } from './SidebarChannelItem';
 import { type PreviewItem } from '../../state/channel.types';
+import clsx from 'clsx';
 
 interface Props {
   hasUnread: boolean;
   latestMessageAtom: LatestMessageAtom;
   channelId: string;
+  myId: string | null | undefined;
 }
 
 const TYPEING_TIMEOUT = 2000;
 
-export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, latestMessageAtom }) => {
+export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, latestMessageAtom, myId }) => {
   const intl = useIntl();
   const store = useStore();
   const previewMapAtom = useMemo(() => atom((read) => read(chatAtom).channels[channelId]?.previewMap), [channelId]);
@@ -26,7 +28,10 @@ export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, lat
     const now = new Date().getTime();
     const previewMap = store.get(previewMapAtom) ?? {};
     const previews = Object.values(previewMap).filter(
-      (preview) => now - preview.timestamp < TYPEING_TIMEOUT && (preview.text === null || preview.text.length > 0),
+      (preview) =>
+        preview.senderId !== myId &&
+        now - preview.timestamp < TYPEING_TIMEOUT &&
+        (preview.text === null || preview.text.length > 0),
     );
     previews.sort((a, b) => a.timestamp - b.timestamp);
     setRecentPreviews((oldPreviews): PreviewItem[] => {
@@ -42,7 +47,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, lat
       }
       return oldPreviews;
     });
-  }, [previewMapAtom, store]);
+  }, [myId, previewMapAtom, store]);
   useEffect(() => store.sub(previewMapAtom, updateRecentPreviews), [previewMapAtom, store, updateRecentPreviews]);
   const oldestRecentPreviewTimestamp = recentPreviews[0]?.timestamp;
   useEffect(() => {
@@ -56,6 +61,19 @@ export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, lat
       updateRecentPreviews();
     }
   }, [oldestRecentPreviewTimestamp, updateRecentPreviews]);
+  const typingNames: string[] = useMemo(() => {
+    const previews: PreviewItem[] = [];
+    const masterPreview = recentPreviews.find((preview) => preview.isMaster);
+    if (masterPreview) {
+      previews.push(masterPreview);
+    }
+    for (const preview of recentPreviews) {
+      if (preview.isMaster) continue;
+      if (previews.find((x) => x.senderId === preview.senderId)) continue;
+      previews.push(preview);
+    }
+    return previews.map((preview) => preview.name);
+  }, [recentPreviews]);
   const latestMessage = useAtomValue(latestMessageAtom);
   const latestMessageText: string = useMemo(() => {
     if (typeof latestMessage === 'string') {
@@ -67,8 +85,38 @@ export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, lat
     const parsed = messageToParsed(latestMessage.text, latestMessage.entities);
     return toSimpleText(parsed.text, parsed.entities);
   }, [intl, latestMessage]);
+  const someoneIsTyping = typingNames.length > 0;
+  const containerClass: string = clsx(
+    'col-start-2 h-5 w-full overflow-hidden',
+    someoneIsTyping ? 'animate-pulse text-text-light' : '',
+  );
+  if (typingNames.length === 1) {
+    const [name] = typingNames;
+    return (
+      <div className={containerClass}>
+        <FormattedMessage defaultMessage="{name} is composing…" values={{ name }} />
+      </div>
+    );
+  } else if (typingNames.length === 2) {
+    const [a, b] = typingNames;
+    return (
+      <div className={containerClass}>
+        <FormattedMessage defaultMessage="{a} and {b} are composing…" values={{ a, b }} />
+      </div>
+    );
+  } else if (typingNames.length > 2) {
+    const [name, ...rest] = typingNames;
+    return (
+      <div className={containerClass}>
+        <FormattedMessage
+          defaultMessage="{name} and {count} others are composing…"
+          values={{ name, count: rest.length }}
+        />
+      </div>
+    );
+  }
   return (
-    <div className="col-start-2 h-5 w-full overflow-hidden">
+    <div className={containerClass}>
       {typeof latestMessage !== 'string' && (
         <div
           data-unread={hasUnread}

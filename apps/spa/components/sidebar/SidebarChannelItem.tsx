@@ -22,10 +22,11 @@ interface Props {
   channel: Channel;
   active: boolean;
   overlay?: boolean;
+  myId: string | null | undefined;
 }
 export type LatestMessageAtom = Atom<'UNLOAD' | 'EMPTY' | MessageItem>;
 
-export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false }) => {
+export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false, myId }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
   const paneLimit = usePaneLimit();
@@ -126,9 +127,14 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
   );
   const messagePreview = useMemo(
     () => (
-      <SidebarChannelItemPreview latestMessageAtom={latestMessageAtom} channelId={channel.id} hasUnread={hasUnread} />
+      <SidebarChannelItemPreview
+        myId={myId}
+        latestMessageAtom={latestMessageAtom}
+        channelId={channel.id}
+        hasUnread={hasUnread}
+      />
     ),
-    [hasUnread, channel.id, latestMessageAtom],
+    [hasUnread, myId, latestMessageAtom, channel.id],
   );
   if (isReordering) {
     return (

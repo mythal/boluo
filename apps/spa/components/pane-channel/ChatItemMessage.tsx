@@ -26,6 +26,7 @@ import {
 } from './MessageToolbar';
 import { useStore } from 'jotai';
 import { stopPropagation } from '@boluo/utils';
+import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 
 export const ChatItemMessage: FC<{
   message: MessageItem;
@@ -138,6 +139,7 @@ const MessageBox: FC<{
   sendBySelf,
   pos,
 }) => {
+  const isInGameChannel = useIsInGameChannel();
   const toolbarDisplayAtom = useMemo(makeMessageToolbarDisplayAtom, []);
   const store = useStore();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -202,7 +204,9 @@ const MessageBox: FC<{
           'grid-cols-[1.5rem_minmax(0,1fr)]',
           '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
           !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
-          inGame ? 'bg-message-inGame-bg' : 'bg-lowest',
+          inGame
+            ? 'bg-message-inGame-bg'
+            : ['bg-lowest', isInGameChannel ? 'text-text-light hover:text-text-base text-sm' : ''],
           'data-[overlay=true]:shadow-lg',
           isDragging && 'opacity-0',
           className,

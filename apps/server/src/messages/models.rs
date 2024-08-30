@@ -139,7 +139,7 @@ impl Message {
         if let Some(record) = result {
             let mut message: Message = record.message;
             if record.should_hide {
-                message.hide();
+                message.hide(None);
             }
             Ok(Some(message))
         } else {
@@ -162,6 +162,7 @@ impl Message {
         channel_id: &Uuid,
         before: Option<f64>,
         limit: i64,
+        current_user_id: Option<&Uuid>,
     ) -> Result<Vec<Message>, ModelError> {
         if !(1..=256).contains(&limit) {
             return Err(ValidationFailed("illegal limit range").into());
@@ -170,7 +171,7 @@ impl Message {
             .fetch_all(db)
             .await?;
         for message in messages.iter_mut() {
-            message.hide();
+            message.hide(current_user_id);
         }
         Ok(messages)
     }
@@ -280,7 +281,7 @@ impl Message {
         if let Some(preview_id) = preview_id {
             crate::pos::finished(cache, *channel_id, *preview_id).await?;
         }
-        message.hide();
+        message.hide(None);
         tokio::spawn(async move {
             let created = message.created;
             let channel_id = message.channel_id;
@@ -289,9 +290,14 @@ impl Message {
         Ok(message)
     }
 
-    pub fn hide(&mut self) {
-        if self.whisper_to_users.is_none() {
+    pub fn hide(&mut self, current_user_id: Option<&Uuid>) {
+        let Some(users) = self.whisper_to_users.as_ref() else {
             return;
+        };
+        if let Some(id) = current_user_id {
+            if users.contains(id) {
+                return;
+            }
         }
         self.seed = vec![0; 4];
         self.text = String::new();
@@ -389,7 +395,7 @@ impl Message {
         .fetch_optional(db)
         .await?;
         if let Some(mut message) = result {
-            message.hide();
+            message.hide(None);
             Ok(Some(message))
         } else {
             Ok(None)

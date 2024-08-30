@@ -144,7 +144,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
 
     trans.commit().await?;
     if moved_message.whisper_to_users.is_some() {
-        moved_message.hide();
+        moved_message.hide(None);
     }
     let pos = moved_message.pos as i32;
     Event::message_edited(channel.space_id, moved_message, message.pos);
@@ -215,14 +215,15 @@ async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     let mut conn = pool.acquire().await?;
 
     let channel = Channel::get_by_id(&mut *conn, &channel_id).await.or_not_found()?;
+    let session = authenticate(&req).await;
+    let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     if !channel.is_public {
-        let session = authenticate(&req).await?;
-        ChannelMember::get(&mut *conn, &session.user_id, &channel_id)
+        ChannelMember::get(&mut *conn, &session?.user_id, &channel_id)
             .await
             .or_no_permission()?;
     }
     let limit = limit.unwrap_or(128);
-    Message::get_by_channel(&mut *conn, &channel_id, before, limit)
+    Message::get_by_channel(&mut *conn, &channel_id, before, limit, current_user_id.as_ref())
         .await
         .map_err(Into::into)
 }

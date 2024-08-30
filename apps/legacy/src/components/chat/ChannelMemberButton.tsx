@@ -10,7 +10,7 @@ import doorOpen from '../../assets/icons/door-open.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ninja from '../../assets/icons/ninja.svg';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useDispatch, useSelector } from '../../store';
+import store, { useDispatch, useSelector } from '../../store';
 import { alignRight, mL, mR, mT } from '../../styles/atoms';
 import { recordNext } from '../../utils/browser';
 import { throwErr } from '../../utils/errors';
@@ -94,6 +94,7 @@ function ChannelMemberButton({ className }: Props) {
   );
   const member = useSelector((state) => state.profile?.channels.get(channelId)?.member);
   const nickname = user?.nickname;
+  const dispatch = useDispatch();
   const name = chatName(member?.characterName, nickname);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [menu, setMenu] = useState(false);
@@ -123,8 +124,14 @@ function ChannelMemberButton({ className }: Props) {
     setLeaveConfirmDialog(false);
     setDialog(false);
   };
-  const onSubmitEdit = ({ characterName }: FormData) => {
-    edit(characterName).then(dismissDialog);
+  const onSubmitEdit = async ({ characterName }: FormData) => {
+    await edit(characterName);
+    const oldCharacterName = member?.characterName;
+    const inputName = store.getState().chatStates.get(channelId)?.compose.inputName;
+    if (inputName && oldCharacterName && inputName === oldCharacterName) {
+      dispatch({ type: 'SET_INPUT_NAME', name: '', pane: channelId });
+    }
+    dismissDialog();
   };
 
   const characterNameField = (

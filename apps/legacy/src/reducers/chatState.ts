@@ -283,7 +283,12 @@ const handleSetWhisperTo = (state: ChatState, { whisperTo }: SetWhisperTo): Chat
   return { ...state, compose: { ...state.compose, whisperTo } };
 };
 
-const handleChatInitialized = (myId: Id, channelId: Id, itemSet: ChatItemSet): Compose => {
+const handleChatInitialized = (
+  myId: Id,
+  channelId: Id,
+  itemSet: ChatItemSet,
+  myMember: Member | undefined,
+): Compose => {
   const item = itemSet.previews.get(myId);
   const compose: Compose = {
     messageId: newId(),
@@ -312,7 +317,7 @@ const handleChatInitialized = (myId: Id, channelId: Id, itemSet: ChatItemSet): C
   }
   compose.source = preview.text;
   compose.inGame = preview.inGame;
-  if (compose.inGame && preview.name) {
+  if (compose.inGame && preview.name && myMember && preview.name !== myMember.channel.characterName) {
     compose.inputName = preview.name;
   }
   return compose;
@@ -401,7 +406,8 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       if (!initialized) {
         initialized = true;
         if (myId) {
-          compose = handleChatInitialized(myId, channel.id, itemSet);
+          const myMember = members.find((member) => member.channel.userId === myId);
+          compose = handleChatInitialized(myId, channel.id, itemSet, myMember);
         }
       }
       break;

@@ -151,10 +151,12 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
     }
     if (enterSend) {
       if (!e.shiftKey) {
+        e.preventDefault();
         await send();
       }
     } else {
       if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
         await send();
       }
     }

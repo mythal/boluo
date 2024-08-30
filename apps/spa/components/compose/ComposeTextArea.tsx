@@ -89,7 +89,10 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
         if (len === 0) return null;
         let count = 0;
         for (const message of L.backwards(channel.messages)) {
-          if (message.senderId === myId) return message;
+          if (message.folded) continue;
+          if (message.senderId === myId) {
+            return message;
+          }
           if (++count >= MAX_FIND_LENGTH) break;
         }
       }),
@@ -142,6 +145,14 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       const parsed = store.get(parsedAtom);
       const lastMessage = store.get(lastMessageAtom);
       if (parsed.entities.length === 0 && lastMessage) {
+        const textArea = e.target;
+        if (!(textArea instanceof HTMLTextAreaElement)) return;
+
+        // https://stackoverflow.com/a/9185820
+        // As the comment in the above link says, this solution is not perfect.
+        // But in our case, the text is unlikely to overflow the textarea.
+        const lineCount = textArea.value.substring(0, textArea.selectionStart).split('\n').length;
+        if (lineCount !== 1) return;
         e.preventDefault();
         dispatch({ type: 'editMessage', payload: { message: lastMessage } });
       }

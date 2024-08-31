@@ -24,7 +24,7 @@ import {
 } from '../actions';
 import { Channel, makeMembers, Member } from '../api/channels';
 import { compareEvents, EditPreview, EventId, eventIdMax, Events, Preview } from '../api/events';
-import { Message, MessageOrder } from '../api/messages';
+import { Message } from '../api/messages';
 import { SpaceWithRelated } from '../api/spaces';
 import { Entity } from '../interpreter/entities';
 import { DEBUG } from '../settings';
@@ -39,7 +39,6 @@ import {
   markMessageMoving,
   moveMessages,
   resetMovingMessage,
-  updateMessagesOrder,
 } from '../states/chat-item-set';
 import { Id, newId } from '../utils/id';
 
@@ -179,17 +178,6 @@ const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMe
 const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageMoving): ChatState => {
   const itemSet = resetMovingMessage(state.itemSet, messageId);
   return { ...state, itemSet };
-};
-const handleMessagesMoved = (
-  itemSet: ChatItemSet,
-  movedMessages: Message[],
-  orderChanges: MessageOrder[],
-  myId?: Id,
-): ChatItemSet => {
-  itemSet = updateMessagesOrder(itemSet, orderChanges);
-  const makeItem = makeMessageItem(myId);
-  const messages = moveMessages(itemSet.messages, movedMessages.map(makeItem));
-  return { ...itemSet, messages };
 };
 
 const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
@@ -387,9 +375,6 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       break;
     case 'MESSAGE_DELETED':
       itemSet = handleMessageDelete(itemSet, body.messageId);
-      break;
-    case 'MESSAGES_MOVED':
-      itemSet = handleMessagesMoved(itemSet, body.movedMessages, body.orderChanges, myId);
       break;
     case 'MESSAGE_EDITED':
       eventAfter = eventIdMax(eventAfter, event.id);

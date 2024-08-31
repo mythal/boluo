@@ -161,8 +161,6 @@ CREATE TABLE messages (
     "entities" jsonb NOT NULL DEFAULT '[]',
     "created" timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "modified" timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
-    "order_date" timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
-    "order_offset" integer NOT NULL DEFAULT 0,
     "pos_p" integer NOT NULL,
     "pos_q" integer NOT NULL,
     "pos" float8 GENERATED ALWAYS AS (pos_p::float8 / pos_q) STORED,

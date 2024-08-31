@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    -- FIXME: Deprecated \"order_date\"\n    AND msg.order_date > coalesce($2, to_timestamp(0)::timestamptz)\nORDER BY\n    msg.pos;\n\n",
+  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    AND msg.created > coalesce($2, to_timestamp(0)::timestamptz)\nORDER BY\n    msg.pos;\n\n",
   "describe": {
     "columns": [
       {
@@ -127,5 +127,5 @@
       null
     ]
   },
-  "hash": "b2751d76717d4f1a1f8768fedf06ef7e4920a977b8bf39bb489857e5aa20b57f"
+  "hash": "89e9164da69bcf9ffe2a9ed5c105a03fe1e88a5da7852927f91b8049d99e5133"
 }

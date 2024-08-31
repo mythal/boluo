@@ -19,8 +19,6 @@ export type Message = {
   entities: unknown;
   created: string;
   modified: string;
-  orderDate: string;
-  orderOffset: number;
   posP: number;
   posQ: number;
   pos: number;

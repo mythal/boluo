@@ -1,6 +1,6 @@
 import { List, Map } from 'immutable';
 import { isEmptyPreview, Preview } from '../api/events';
-import { Message, MessageOrder } from '../api/messages';
+import { Message } from '../api/messages';
 import { Id } from '../utils/id';
 
 export interface ChatNode {
@@ -129,27 +129,6 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
     return itemSet;
   }
   const messages = itemSet.messages.remove(index);
-  return { ...itemSet, messages };
-};
-
-export const updateMessagesOrder = (itemSet: ChatItemSet, orderChanges: MessageOrder[]): ChatItemSet => {
-  let { messages } = itemSet;
-  for (const change of orderChanges) {
-    const index = findItem(messages, change.id);
-    if (index !== -1) {
-      messages = messages.update(index, (item) => {
-        if (!item) {
-          throw new Error('item is empty');
-        }
-        if (item.type !== 'MESSAGE') {
-          return { ...item, date: change.orderDate, offset: change.orderOffset };
-        } else {
-          const message: Message = { ...item.message, ...change };
-          return { ...item, message, date: change.orderDate, offset: change.orderOffset };
-        }
-      });
-    }
-  }
   return { ...itemSet, messages };
 };
 

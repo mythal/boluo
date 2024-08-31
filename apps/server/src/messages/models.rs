@@ -43,8 +43,6 @@ pub struct Message {
     pub entities: JsonValue,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
-    pub order_date: DateTime<Utc>,
-    pub order_offset: i32,
     pub pos_p: i32,
     pub pos_q: i32,
     pub pos: f64,
@@ -86,8 +84,6 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for Message {
         let entities = decoder.try_decode::<JsonValue>()?;
         let created = decoder.try_decode::<DateTime<Utc>>()?;
         let modified = decoder.try_decode::<DateTime<Utc>>()?;
-        let order_date = decoder.try_decode::<DateTime<Utc>>()?;
-        let order_offset = decoder.try_decode::<i32>()?;
         let pos_p = decoder.try_decode::<i32>()?;
         let pos_q = decoder.try_decode::<i32>()?;
         let pos = decoder.try_decode::<f64>()?;
@@ -112,8 +108,6 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for Message {
             entities,
             created,
             modified,
-            order_date,
-            order_offset,
             color,
             pos,
             pos_p,
@@ -222,7 +216,7 @@ impl Message {
         }
         let whisper_to = whisper_to.as_deref();
         let entities = JsonValue::Array(entities);
-        let mut row = sqlx::query_file_scalar!(
+        let mut row: Result<Message, sqlx::Error> = sqlx::query_file_scalar!(
             "sql/messages/create.sql",
             sender_id,
             channel_id,

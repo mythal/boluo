@@ -27,12 +27,6 @@ export interface Message {
   posQ: number;
 }
 
-export interface MessageOrder {
-  id: string;
-  orderDate: number;
-  orderOffset: number;
-}
-
 export interface NewMessage {
   previewId: Id | null;
   channelId: Id;

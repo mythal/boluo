@@ -1,7 +1,7 @@
 import { Entity } from '../interpreter/entities';
 import { Id } from '../utils/id';
 import { Channel, Member } from './channels';
-import { Message, MessageOrder } from './messages';
+import { Message } from './messages';
 import { SpaceWithRelated, StatusKind, UserStatus } from './spaces';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';
@@ -15,9 +15,6 @@ export type MESSAGE_EDITED = typeof MESSAGE_EDITED;
 
 export const MESSAGE_PREVIEW = 'MESSAGE_PREVIEW';
 export type MESSAGE_PREVIEW = typeof MESSAGE_PREVIEW;
-
-export const MESSAGES_MOVED = 'MESSAGES_MOVED';
-export type MESSAGES_MOVED = typeof MESSAGES_MOVED;
 
 export const CHANNEL_DELETED = 'CHANNEL_DELETED';
 export type CHANNEL_DELETED = typeof CHANNEL_DELETED;
@@ -61,7 +58,6 @@ export type Events =
   | Event<ChannelDeleted>
   | Event<PushMembers>
   | Event<Initialized>
-  | Event<MessagesMoved>
   | Event<StatusMap>
   | Event<SpaceUpdated>
   | Event<ConnectionError>
@@ -151,13 +147,6 @@ export interface MessagePreview {
 export interface AppUpdated {
   type: APP_UPDATED;
   version: string;
-}
-
-export interface MessagesMoved {
-  type: MESSAGES_MOVED;
-  channelId: Id;
-  movedMessages: Message[];
-  orderChanges: MessageOrder[];
 }
 
 export interface ChannelEdited {

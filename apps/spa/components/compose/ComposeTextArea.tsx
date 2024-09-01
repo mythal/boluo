@@ -69,6 +69,10 @@ const style: React.CSSProperties = {
   width: '100%',
   maxHeight: '8rem',
   scrollbarWidth: 'none',
+  fontSize: '18px',
+  WebkitTextSizeAdjust: 'none',
+  MozTextSizeAdjust: 'none',
+  textSizeAdjust: 'none',
 };
 
 const MAX_FIND_LENGTH = 64;

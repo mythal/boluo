@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { ChevronDown, TriangleAlert } from '@boluo/icons';
-import { useMemo, useState, type FC, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   FloatingPortal,
@@ -19,6 +19,8 @@ import { type Member } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
+import { useAtomValue } from 'jotai';
 
 interface Props {
   name: string | undefined | null;
@@ -31,49 +33,43 @@ interface Props {
 }
 
 export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
+  const { composeFocusedAtom } = useChannelAtoms();
   const [isOpen, setIsOpen] = useState(false);
   const isEmptyName = name === '' || name == null;
-  const forceOpen = inGame && isEmptyName;
-  let shouldOpen = isOpen;
-  if (forceOpen && !isOpen) {
-    shouldOpen = true;
-  }
+  const composeFocused = useAtomValue(composeFocusedAtom);
+  const forceOpen = inGame && isEmptyName && composeFocused;
+  useEffect(() => {
+    if (forceOpen) setIsOpen(true);
+  }, [forceOpen]);
   const icon: ReactNode = useMemo(() => {
     return (
       <Icon
         icon={ChevronDown}
         className={clsx(
           'text inline-block h-[1em] w-[1em] transition-all duration-100',
-          shouldOpen ? 'rotate-180' : 'text-text-lighter',
+          isOpen ? 'rotate-180' : 'text-text-lighter',
         )}
       />
     );
-  }, [shouldOpen]);
+  }, [isOpen]);
 
   const { refs, floatingStyles, context } = useFloating({
-    open: shouldOpen,
+    open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'top-end',
     // The hide middleware will cause the keyboard flickering in Android
-    middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 4, crossAxis: -4 })],
+    middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 0, crossAxis: 0 })],
     whileElementsMounted: autoUpdate,
   });
 
-  const click = useClick(context, { enabled: !forceOpen });
-  const dismiss = useDismiss(context, { enabled: !forceOpen });
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
 
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   return (
     <>
-      <NameBox
-        interactive
-        pressed={shouldOpen}
-        color={color}
-        ref={refs.setReference}
-        icon={icon}
-        {...getReferenceProps()}
-      >
+      <NameBox interactive pressed={isOpen} color={color} ref={refs.setReference} icon={icon} {...getReferenceProps()}>
         {isEmptyName ? (
           <span className="font-pixel text-[12.5px]">
             <Delay fallback={<FallbackIcon />}>
@@ -88,11 +84,11 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         )}
       </NameBox>
 
-      {shouldOpen && (
+      {isOpen && (
         <FloatingPortal>
           <div
             ref={refs.setFloating}
-            className="bg-pane-bg z-20 rounded-sm border px-4 py-3 shadow-lg"
+            className="bg-pane-bg z-20 rounded-sm border px-4 py-3 shadow"
             style={floatingStyles}
             {...getFloatingProps()}
           >

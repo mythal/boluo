@@ -126,11 +126,7 @@ function ChannelMemberButton({ className }: Props) {
   };
   const onSubmitEdit = async ({ characterName }: FormData) => {
     await edit(characterName);
-    const oldCharacterName = member?.characterName;
-    const inputName = store.getState().chatStates.get(channelId)?.compose.inputName;
-    if (inputName && oldCharacterName && inputName === oldCharacterName) {
-      dispatch({ type: 'SET_INPUT_NAME', name: '', pane: channelId });
-    }
+    dispatch({ type: 'SET_INPUT_NAME', name: '', pane: channelId });
     dismissDialog();
   };
 

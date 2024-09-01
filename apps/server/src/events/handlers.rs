@@ -82,19 +82,19 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
         let cached_events = Event::get_from_cache(&mailbox, after, seq).await;
         if !cached_events.is_empty() {
             use itertools::Itertools;
-            let messages: Vec<Result<String, serde_json::Error>> = cached_events
+            let payload_list: Vec<Result<String, serde_json::Error>> = cached_events
                 .into_iter()
                 .chunks(CHUNK_SIZE)
                 .into_iter()
                 .map(|events| Event::batch(mailbox, events.collect()))
                 .map(|batch_event| serde_json::to_string(&batch_event))
                 .collect();
-            for message in messages {
-                let Ok(message) = message else {
+            for payload in payload_list {
+                let Ok(payload) = payload else {
                     log::warn!("Failed to serialize batch event to mailbox {}", mailbox);
                     return;
                 };
-                if let Err(err) = tx.send(WsMessage::Text(message)).await {
+                if let Err(err) = tx.send(WsMessage::Text(payload)).await {
                     log::warn!("Failed to send batch event to mailbox {}: {}", mailbox, err);
                     return;
                 };

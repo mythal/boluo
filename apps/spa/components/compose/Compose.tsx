@@ -2,7 +2,7 @@
 import type { Member, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type FC, useDeferredValue, useMemo } from 'react';
+import { type FC, useDeferredValue, useEffect, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
@@ -41,6 +41,11 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const enterSend = settings?.enterSend === true;
   const send = useSend(member.user);
   const { onDrop } = useMediaDrop();
+  useEffect(() => {
+    const { virtualKeyboard } = navigator;
+    if (!virtualKeyboard) return;
+    virtualKeyboard.overlaysContent = true;
+  }, []);
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault(); // This is important to prevent the browser's default handling of the data
@@ -57,6 +62,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const addDiceButton = useMemo(() => <AddDiceButton />, []);
   const sendButton = useMemo(() => <SendButton send={send} isEditing={isEditing} />, [isEditing, send]);
   const mediaLine = useMemo(() => <MediaLine />, []);
+
   return (
     <ComposeErrorBoundry>
       <div
@@ -83,6 +89,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
           {sendButton}
         </div>
         <div>{mediaLine}</div>
+        <div className="h-[env(keyboard-inset-height,_0px)]" />
       </div>
     </ComposeErrorBoundry>
   );

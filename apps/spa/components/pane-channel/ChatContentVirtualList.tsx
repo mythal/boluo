@@ -1,9 +1,10 @@
-import { type FC, type MutableRefObject, type RefObject, useLayoutEffect, useRef } from 'react';
+import { type FC, type MutableRefObject, type RefObject, useCallback, useLayoutEffect, useRef } from 'react';
 import { type ListRange, type ScrollSeekPlaceholderProps, Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { type ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { getOS } from '@boluo/utils';
+import { type OnVirtualKeybroadChange, useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
 
 interface Props {
   firstItemIndex: number;
@@ -68,6 +69,14 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     setIsScrolling,
   } = props;
   const totalCount = chatList.length;
+  const onVirtualKeybroadChange: OnVirtualKeybroadChange = useCallback(
+    (rect, prevRect) => {
+      if (rect.height <= prevRect.height) return;
+      virtuosoRef.current?.scrollToIndex({ index: totalCount - 1, align: 'end' });
+    },
+    [totalCount, virtuosoRef],
+  );
+  useVirtualKeybroadChange(onVirtualKeybroadChange);
 
   let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
   let prevItem: ChatItem | null = null;

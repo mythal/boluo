@@ -21,6 +21,7 @@ import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';
+import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
 
 interface Props {
   name: string | undefined | null;
@@ -53,7 +54,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
     );
   }, [isOpen]);
 
-  const { refs, floatingStyles, context } = useFloating({
+  const { refs, floatingStyles, context, update } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'top-end',
@@ -61,6 +62,8 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
     middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 0, crossAxis: 0 })],
     whileElementsMounted: autoUpdate,
   });
+
+  useVirtualKeybroadChange(update);
 
   const click = useClick(context);
   const dismiss = useDismiss(context);

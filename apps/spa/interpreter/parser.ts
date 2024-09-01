@@ -322,11 +322,21 @@ const spaces: P<null> = regex(/^\s*/).then(([match, state]) => {
   ];
 });
 
-const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\s*/).map(() => {
+const smallSpaces: P<null> = regex(/^ {0,2}/).then(([match, state]) => {
+  return [
+    null,
+    {
+      text: state.text + match[0],
+      rest: state.rest,
+    },
+  ];
+});
+
+const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\b/).map(() => {
   return { type: 'FateRoll' };
 });
 
-const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) => {
+const srRoll: P<DicePool> = regex(/^sr(p?) {0,2}(\d+)\b/).then(([match, state]) => {
   const push = Boolean(match[1]);
   const counterStr = match[2];
   if (!counterStr) {
@@ -348,7 +358,7 @@ const srRoll: P<DicePool> = regex(/^sr(p?)\s*(\d+)\s*/).then(([match, state]) =>
   return [node, state];
 });
 
-const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([match, state], env) => {
+const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))? {0,2}(\d{1,3})\b/).then(([match, state], env) => {
   const addStr = match[1] || '10';
   const counterStr = match[2];
   if (!counterStr) {
@@ -371,7 +381,7 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([matc
   return [node, state];
 });
 
-const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then(([[entire, modifier], state], env) => {
+const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\b/).then(([[entire, modifier], state], env) => {
   modifier = (modifier || '').toLowerCase();
   let subType: CocRoll['subType'] = 'NORMAL';
   switch (modifier) {
@@ -392,7 +402,7 @@ const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then
     type: 'CocRoll',
     subType,
   };
-  const right = atom(true).run(state, env);
+  const right = smallSpaces.with(atom(true)).run(state, env);
   if (right) {
     const [target, state] = right;
     node.target = target;

@@ -27,9 +27,7 @@ const sendPreview = (
     const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame } = parsed;
     const inGame = parsedInGame ?? defaultInGame;
     const inGameName = inputedName || characterName;
-    if (!previewId) {
-      return;
-    }
+    if (!previewId) return;
     const doNotBroadcast = !broadcast || whisperToUsernames !== null;
     const resetPreview = parsed.text === '' || parsed.entities.length === 0;
     const text: string | null = doNotBroadcast ? null : parsed.text;
@@ -93,10 +91,11 @@ export const useSendPreview = (
   }, [composeAtom, hasCollidedAtom, store]);
   useEffect(() => {
     return store.sub(parsedAtom, () => {
-      if (nickname === undefined || connectionState.type !== 'CONNECTED') {
-        return;
-      }
+      const chatState = store.get(chatAtom);
+      if (!chatState.context.initialized) return;
+      if (nickname === undefined || connectionState.type !== 'CONNECTED') return;
       if (!isFocusedRef.current) return;
+      if (!document.hasFocus()) return;
       const composeState = store.get(composeAtom);
       const parsed = store.get(parsedAtom);
       sendPreview(

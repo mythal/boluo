@@ -17,9 +17,8 @@ export const useSendPreview = () => {
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member)!;
 
   useEffect(() => {
-    if (!initialized) {
-      return;
-    }
+    if (!initialized) return;
+    if (!document.hasFocus()) return;
     const handle = window.setTimeout(() => {
       let name = nickname;
       if (inGame) {

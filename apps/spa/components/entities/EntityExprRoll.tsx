@@ -5,6 +5,8 @@ import { type Roll, type RollResult } from '../../interpreter/entities';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';
+import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { Result } from './Result';
 
 interface Props {
   node: Roll | RollResult;
@@ -29,13 +31,9 @@ const RollFilter: FC<{ filter: Roll['filter'] | undefined | null }> = ({ filter 
 const Undecided: FC = () => <span>=??</span>;
 
 const ShowRollResult: FC<{ node: RollResult }> = ({ node }) => {
+  const topLevel = useIsTopLevel();
   if (node.values.length <= 1) {
-    return (
-      <span className="">
-        {'='}
-        {node.value}
-      </span>
-    );
+    return <Result final={topLevel}>{node.value}</Result>;
   }
   return (
     <span>

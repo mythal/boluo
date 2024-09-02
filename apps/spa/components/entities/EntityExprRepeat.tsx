@@ -2,6 +2,8 @@ import { type FC } from 'react';
 import { type EvaluatedExprNode, type ExprNode, type Repeat, type RepeatResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 import { EntityExprNodeUnknown } from './EntityExprUnknown';
+import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { Result } from './Result';
 
 interface Props {
   node: Repeat | RepeatResult;
@@ -15,6 +17,7 @@ export const RepeatItem: FC<{ item: ExprNode | EvaluatedExprNode | 0 }> = ({ ite
 };
 
 export const EntityExprRepeat: FC<Props> = ({ node: repeat }) => {
+  const topLevel = useIsTopLevel();
   const { node, count } = repeat;
   if (count === 0) {
     return <EntityExprNodeUnknown />;
@@ -35,7 +38,8 @@ export const EntityExprRepeat: FC<Props> = ({ node: repeat }) => {
       {nodeList.map((item, key) => (
         <RepeatItem item={item} key={key} />
       ))}{' '}
-      &#125;{'value' in repeat && <span>={repeat.value}</span>}
+      &#125;
+      {'value' in repeat && <Result final={topLevel}>{repeat.value}</Result>}
     </span>
   );
 };

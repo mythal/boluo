@@ -1,7 +1,8 @@
-import { type FC } from 'react';
+import { type ReactNode, type FC } from 'react';
 import { type Binary, type BinaryResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 import { IsTopLevelContext, useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { Result } from './Result';
 
 interface Props {
   node: Binary | BinaryResult;
@@ -9,9 +10,9 @@ interface Props {
 
 export const EntityExprBinary: FC<Props> = ({ node }) => {
   const isTopLevel = useIsTopLevel();
-  let result = '';
+  let result: ReactNode = null;
   if (isTopLevel && 'value' in node) {
-    result = `=${node.value}`;
+    result = <Result final>{node.value}</Result>;
   }
   const entityNode = (
     <span className="EntityExprBinary">

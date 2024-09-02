@@ -82,7 +82,6 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       height: fixHeight ? '12rem' : undefined,
       maxHeight: fixHeight ? undefined : '10rem',
       scrollbarWidth: 'none',
-      fontSize: '18px',
       WebkitTextSizeAdjust: 'none',
       MozTextSizeAdjust: 'none',
       textSizeAdjust: 'none',

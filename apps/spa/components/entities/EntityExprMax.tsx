@@ -1,15 +1,18 @@
-import { type FC } from 'react';
+import { type ReactNode, type FC } from 'react';
 import { type Max, type MaxResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
+import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { Result } from './Result';
 
 interface Props {
   node: Max | MaxResult;
 }
 
 export const EntityExprMax: FC<Props> = ({ node: maxNode }) => {
-  let result = '';
+  const topLevel = useIsTopLevel();
+  let result: ReactNode = null;
   if ('value' in maxNode) {
-    result = `=${maxNode.value}`;
+    result = <Result final={topLevel}>{maxNode.value}</Result>;
   }
   return (
     <div className="EntityExprMax inline-flex">

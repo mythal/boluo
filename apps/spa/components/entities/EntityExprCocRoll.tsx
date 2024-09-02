@@ -6,6 +6,8 @@ import { cocRollSubTypeDisplay, cocSuccessLevelDisplay } from '../../interpreter
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';
+import { Result } from './Result';
+import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 
 interface Props {
   node: CocRoll | CocRollResult;
@@ -26,6 +28,7 @@ const UndecidedCocRoll: FC<{ node: CocRoll }> = ({ node }) => {
 
 const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
   const intl = useIntl();
+  const topLevel = useIsTopLevel();
   let target: ReactNode = null;
   let successLevel: ReactNode = null;
   let modifiers: ReactNode = null;
@@ -54,7 +57,9 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
   return (
     <span>
       {modifiers}
-      {node.value}
+      <Result final={topLevel} noEqual>
+        {node.value}
+      </Result>
       {target}
       {successLevel}
     </span>

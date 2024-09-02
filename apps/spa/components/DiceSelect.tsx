@@ -8,6 +8,9 @@ interface Props {
 }
 
 const items = [
+  { label: 'D6', value: 'd6' },
+  { label: 'D8', value: 'd8' },
+  { label: 'D10', value: 'd10' },
   { label: 'D20', value: 'd20' },
   { label: 'D100', value: 'd100' },
 ];

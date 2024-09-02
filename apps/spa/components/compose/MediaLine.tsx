@@ -8,6 +8,7 @@ import { FormattedMessage } from 'react-intl';
 import { mediaUrl } from '@boluo/api-browser';
 import { showFileSize } from '@boluo/utils';
 import { mediaMaxSizeByte, supportedMediaType } from '../../media';
+import * as classes from '@boluo/ui/classes';
 
 export const MediaLine: FC = () => {
   const { composeAtom } = useChannelAtoms();
@@ -37,7 +38,7 @@ export const MediaLine: FC = () => {
     );
   } else {
     content = (
-      <a href={mediaUrl(composeMedia)} target="_blank" className="link">
+      <a href={mediaUrl(composeMedia)} target="_blank" className={classes.link}>
         <FormattedMessage defaultMessage="Link" />
       </a>
     );

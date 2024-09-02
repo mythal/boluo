@@ -1,10 +1,11 @@
-import { Metadata } from 'next';
-import { getIntl, LangParams } from '@boluo/common/server';
+import { type Metadata } from 'next';
+import { getIntl, type LangParams } from '@boluo/common/server';
 import { CreateSpaceForm } from '../../../../components/CreateSpaceForm';
 import Link from 'next/link';
 import Icon from '@boluo/ui/Icon';
 import { ChevronLeft } from '@boluo/icons';
 
+import * as classes from '@boluo/ui/classes';
 export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);
 
@@ -19,7 +20,7 @@ export default function Page({ params }: { params: LangParams }) {
   return (
     <main className="bg-card-bg shadow-1 border-card-border shadow-card-shadow container max-w-md rounded-sm border p-6">
       <div>
-        <Link href={`/${params.lang}`} className="link">
+        <Link href={`/${params.lang}`} className={classes.link}>
           <Icon icon={ChevronLeft} />
           {intl.formatMessage({ defaultMessage: 'Boluo' })}
         </Link>

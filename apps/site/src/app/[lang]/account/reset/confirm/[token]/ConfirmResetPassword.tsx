@@ -3,13 +3,14 @@
 import { TextInput } from '@boluo/ui/TextInput';
 import { isUuid } from '@boluo/utils';
 import Link from 'next/link';
-import { FC, useId, useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { type FC, useId, useState } from 'react';
+import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import * as validators from '../../../../../../validations';
 import { Button } from '@boluo/ui/Button';
 import { post } from '@boluo/api-browser';
 import { useRouter } from 'next/navigation';
+import * as classes from '@boluo/ui/classes';
 
 interface Props {
   token: string;
@@ -52,7 +53,7 @@ export const ConfirmResetPassword: FC<Props> = ({ token }) => {
           <FormattedMessage defaultMessage="Unable to reset your password, invalid reset link." />
         </div>
         <div className="">
-          <Link href={`/${intl.locale}/account/reset`} className="link">
+          <Link href={`/${intl.locale}/account/reset`} className={classes.link}>
             <FormattedMessage defaultMessage="Try again" />
           </Link>
         </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLogout } from '../hooks/useLogout';
 import { LoadingText } from '@boluo/ui/LoadingText';
+import * as classes from '@boluo/ui/classes';
 
 export const UserOperations = () => {
   const intl = useIntl();
@@ -28,12 +29,12 @@ export const UserOperations = () => {
           defaultMessage="You are not logged in, {signUp} or {login}."
           values={{
             signUp: (
-              <Link className="link" href="/account/sign-up">
+              <Link className={classes.link} href="/account/sign-up">
                 Sign Up
               </Link>
             ),
             login: (
-              <Link className="link" href="/account/login">
+              <Link className={classes.link} href="/account/login">
                 Login
               </Link>
             ),
@@ -45,13 +46,13 @@ export const UserOperations = () => {
     <div className="flex flex-col gap-4">
       <div>
         <FormattedMessage defaultMessage="Hi, {username}!" values={{ username: currentUser.nickname }} /> (
-        <a href="#" className="link" onClick={logout}>
+        <a href="#" className={classes.link} onClick={logout}>
           <FormattedMessage defaultMessage="Logout" />
         </a>
         )
       </div>
-      <div>
-        <Link className="link text-lg" href={`${appUrl}/${intl.locale}`} target="_blank">
+      <div className="text-lg">
+        <Link className={classes.link} href={`${appUrl}/${intl.locale}`} target="_blank">
           Open Boluo
         </Link>
       </div>

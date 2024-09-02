@@ -15,6 +15,7 @@ import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
 import { ComposeErrorBoundry } from './ComposeErrorBoundry';
 import { useSettings } from '../../hooks/useSettings';
+import { FormattedMessage } from 'react-intl';
 
 interface Props {
   member: Member;
@@ -89,7 +90,11 @@ export const Compose = ({ member, channelAtoms }: Props) => {
           {sendButton}
         </div>
         <div>{mediaLine}</div>
-        <div className="h-[env(keyboard-inset-height,_0px)]" />
+        <div className="h-[env(keyboard-inset-height,_0px)] overflow-hidden">
+          <div className="px-1 py-4">
+            <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to dispaly the content." />
+          </div>
+        </div>
       </div>
     </ComposeErrorBoundry>
   );

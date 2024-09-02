@@ -301,8 +301,8 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       expr: {
         bg: $(lime[50], neutral[900]),
-        result: $(brand[600], brand[500]),
-        decoration: $(neutral[400], neutral[600]),
+        result: $(brand[600], brand[700]),
+        decoration: $(neutral[400], neutral[400]),
       },
       code: {
         bg: $(neutral[100], black),

@@ -6,6 +6,8 @@ import { type DicePool, type DicePoolResult } from '../../interpreter/entities';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';
+import { Result } from './Result';
+import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 
 interface Props {
   node: DicePool | DicePoolResult;
@@ -42,6 +44,7 @@ export const SingleDice: FC<SingleDiceProps> = React.memo(({ value, last = false
 SingleDice.displayName = 'SingleDice';
 
 export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
+  const topLevel = useIsTopLevel();
   return (
     <RollBox>
       <Delay fallback={<FallbackIcon />}>
@@ -84,7 +87,11 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
       ) : (
         <span className="italic">???</span>
       )}
-      {'value' in node && <span className="pl-1">={node.value}</span>}
+      {'value' in node && (
+        <span className="pl-1">
+          <Result final={topLevel}>{node.value}</Result>
+        </span>
+      )}
     </RollBox>
   );
 });

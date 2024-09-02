@@ -37,7 +37,8 @@ const ShowRollResult: FC<{ node: RollResult }> = ({ node }) => {
   }
   return (
     <span>
-      =<span className="text-surface-500">[{node.values.join(', ')}]</span>={node.value}
+      =<span className="text-text-lighter">[{node.values.join(', ')}]</span>
+      <Result final={topLevel}>{node.value}</Result>
     </span>
   );
 };

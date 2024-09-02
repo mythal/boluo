@@ -1,6 +1,6 @@
 import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
 import { findMessage, type ChannelState } from '../state/channel.reducer';
 import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
@@ -94,15 +94,40 @@ const makeDummyPreview = (
 });
 
 const SAFE_OFFSET = 2;
+const HIDE_DUMMY_DELAY = 8000;
+const HIDE_DUMMY_FOCUS_DELAY = 16000;
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom } = useChannelAtoms();
+  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, composeFocusedAtom } = useChannelAtoms();
   const showArchived = useAtomValue(showArchivedAtom);
   const filterType = useAtomValue(filterAtom);
   const composeSliceAtom = useMemo(() => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq), [composeAtom]);
+  const composeFocused = useAtomValue(composeFocusedAtom);
+  const [showDummy, setShowDummy] = useState(false);
+  const composeModified = useRef(0);
+  useEffect(
+    () =>
+      store.sub(composeAtom, () => {
+        composeModified.current = Date.now();
+      }),
+    [composeAtom, store],
+  );
+  useEffect(() => {
+    composeModified.current = Date.now();
+    if (composeFocused) {
+      setShowDummy(true);
+    }
+    const handle = window.setInterval(() => {
+      const now = Date.now();
+      const delay = composeFocused ? HIDE_DUMMY_FOCUS_DELAY : HIDE_DUMMY_DELAY;
+      if (now - composeModified.current > delay) {
+        setShowDummy(false);
+      }
+    }, 500);
+    return () => window.clearInterval(handle);
+  }, [composeFocused]);
   const composeSlice = useAtomValue(composeSliceAtom);
-
   // Intentionally quit reactivity
   const isEmpty = store.get(parsedAtom).entities.length === 0;
 
@@ -186,9 +211,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             posQ = message.posQ;
           }
         }
-        optimisticPreviewList.push(
-          makeDummyPreview(composeSlice.previewId, myId, channelId, true, composeSlice.edit, pos, posP, posQ),
-        );
+        if (composeSlice.edit !== null || showDummy) {
+          optimisticPreviewList.push(
+            makeDummyPreview(composeSlice.previewId, myId, channelId, true, composeSlice.edit, pos, posP, posQ),
+          );
+        }
       }
     }
     for (const preview of optimisticPreviewList) {
@@ -258,6 +285,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     optimisticItemMap,
     previewMap,
     showArchived,
+    showDummy,
   ]);
 
   // Compute firstItemIndex for prepending items

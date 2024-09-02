@@ -1,7 +1,8 @@
-import { LangParams, getIntl } from '@boluo/common/server';
+import { type LangParams, getIntl } from '@boluo/common/server';
 import Link from 'next/link';
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 import { UserOperations } from '../../components/UserOperations';
+import * as classes from '@boluo/ui/classes';
 
 const Card: FC<{ children: ReactNode; className?: string }> = ({ children, className = '' }) => {
   return (
@@ -48,7 +49,7 @@ export default function Page({ params }: { params: LangParams }) {
             defaultMessage:
               'This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit',
           })}{' '}
-          <Link className="link" href="https://old.boluo.chat">
+          <Link className={classes.link} href="https://old.boluo.chat">
             old.boluo.chat
           </Link>
         </Para>

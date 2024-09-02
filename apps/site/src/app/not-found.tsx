@@ -1,5 +1,6 @@
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
 import Link from 'next/link';
+import * as classes from '@boluo/ui/classes';
 
 export const metadata: Metadata = {
   title: 'Not Found - Boluo',
@@ -14,7 +15,7 @@ export default function NotFound() {
 
           <p className="">
             This page could not be found.{' '}
-            <Link href="/" className="link">
+            <Link href="/" className={classes.link}>
               Back
             </Link>
           </p>

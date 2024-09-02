@@ -3,6 +3,7 @@ import { ChevronLeft } from '@boluo/icons';
 import { FormattedMessage } from 'react-intl';
 import { ButtonLink } from '../../../../components/ButtonLink';
 import Link from 'next/link';
+import * as classes from '@boluo/ui/classes';
 
 interface Props {}
 
@@ -15,7 +16,7 @@ export function Footer(props: Props) {
       </ButtonLink>
 
       <div>
-        <Link className="link" href="/account/reset">
+        <Link className={classes.link} href="/account/reset">
           <FormattedMessage defaultMessage="Forgot password?" />
         </Link>
       </div>

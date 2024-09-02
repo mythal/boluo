@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
+import * as classes from '@boluo/ui/classes';
 
 interface Props {
   spaceId: string;
@@ -22,7 +23,7 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   };
   const loginLink = (
     <span>
-      <Link href="/account/login" className="link">
+      <Link href="/account/login" className={classes.link}>
         <FormattedMessage defaultMessage="log in" />
       </Link>
     </span>

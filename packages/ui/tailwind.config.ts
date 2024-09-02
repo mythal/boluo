@@ -88,6 +88,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         normal: $(blue[700], blue[400]),
         hover: $(blue[600], blue[300]),
         active: $(blue[500], blue[200]),
+        decoration: $(blue[400], blue[800]),
       },
       bg: $(neutral[50], neutral[800]),
       floating: {

@@ -1,28 +1,52 @@
 import { getOS } from '@boluo/utils';
 import { FormattedMessage } from 'react-intl';
+import { BackToHomepage } from './BackToHomepage';
+import * as classes from '@boluo/ui/classes';
 
 export const UnsupportedBrowser = () => {
   const isIos = getOS() === 'iOS';
+  const chromeLink = (
+    <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer" className={classes.link}>
+      Chrome
+    </a>
+  );
+  const firefoxLink = (
+    <a href="https://www.mozilla.org/firefox/" target="_blank" rel="noreferrer" className={classes.link}>
+      Firefox
+    </a>
+  );
+  const edgeLink = (
+    <a href="https://www.microsoft.com/edge" target="_blank" rel="noreferrer" className={classes.link}>
+      Edge
+    </a>
+  );
   return (
-    <div className="max-w-md p-8">
+    <div className="text-text-base max-w-md p-8">
       <h1 className="pb-4 text-xl">
         <FormattedMessage defaultMessage="Your browser is not supported" />
       </h1>
       <p className="py-2">
         <FormattedMessage defaultMessage="This application requires many modern features that are not supported by your browser." />{' '}
-        <a href="https://caniuse.com/css-container-queries" target="_blank" rel="noreferrer" className="underline">
+        <a href="https://caniuse.com/css-container-queries" target="_blank" rel="noreferrer" className={classes.link}>
           <FormattedMessage defaultMessage="Such as CSS Container Queries." />
         </a>
       </p>
       {isIos ? (
         <p className="py-2">
-          <FormattedMessage defaultMessage="Please upgrade your iOS/iPadOS to the latest version to use this application." />
+          <FormattedMessage defaultMessage="To use this app, please upgrade your iOS/iPadOS version to 16 or above." />
         </p>
       ) : (
         <p className="py-2">
-          <FormattedMessage defaultMessage="We recommend using the latest version of Chrome, Firefox, or Edge to use this application." />
+          <FormattedMessage
+            defaultMessage="We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
+            values={{ chromeLink, firefoxLink, edgeLink }}
+          />
         </p>
       )}
+
+      <p className="py-4">
+        <BackToHomepage />
+      </p>
     </div>
   );
 };

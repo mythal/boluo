@@ -10,7 +10,7 @@ import { Badge } from '@boluo/ui/Badge';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Avatar } from '../account/Avatar';
-import { FloatingBox } from '../common/FloatingBox';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 
 const JUST_NOW = 1000 * 10;
 const SECONDS_IN_MS = 1000;

@@ -1,5 +1,5 @@
 import { type User } from '@boluo/api';
-import { FloatingBox } from './FloatingBox';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { Avatar } from '../account/Avatar';
 
 interface Props {

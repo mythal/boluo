@@ -8,7 +8,7 @@ import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
 import { type Empty } from '@boluo/utils';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
-import { FloatingBox } from '../common/FloatingBox';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import Icon from '@boluo/ui/Icon';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';

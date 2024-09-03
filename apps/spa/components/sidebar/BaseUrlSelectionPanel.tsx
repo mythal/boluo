@@ -1,6 +1,6 @@
 import { type FC, Suspense } from 'react';
 import { type ConnectionState } from '../../state/connection.reducer';
-import { FloatingBox } from '../common/FloatingBox';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { ConnectionIndicatorConnected } from './ConnectionIndicatorConnected';
 import { ConnectionIndicatorConnecting } from './ConnectionIndicatorConnecting';
 import { ConnectionIndicatorClosed } from './ConnectionIndicatorClosed';

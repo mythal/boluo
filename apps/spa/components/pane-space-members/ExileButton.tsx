@@ -6,7 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
-import { FloatingBox } from '../common/FloatingBox';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { InListButton } from './InListButton';
 
 interface Props {

@@ -1,4 +1,4 @@
-import './types.d';
+import './tailwindcss-theme-swapper.d.ts';
 import themeSwapper from 'tailwindcss-theme-swapper';
 import { mix, rgba, transparentize } from 'color2k';
 import colors from 'tailwindcss/colors';
@@ -98,6 +98,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         bg: $(white, neutral[900]),
         border: $(neutral[200], neutral[800]),
         shadow: $(neutral[100], neutral[900]),
+      },
+      errors: {
+        bg: $(red[50], red[900]),
+        border: $(red[600], red[500]),
       },
       menu: {
         panel: {
@@ -482,8 +486,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
 
 const panePadding = '2rem';
 const paneHeight = '2.5rem';
+
 const config: Config = {
-  content: [],
+  content: ['./**/*.{tsx,ts,html}', './.storybook/*.html', './stories/**/*.{js,jsx,ts,tsx}'],
   darkMode: 'class',
   theme: {
     screens: Object.fromEntries(Object.entries(screens).map(([key, value]) => [key, `${value}px`])),
@@ -552,7 +557,8 @@ const config: Config = {
         },
         {
           name: 'dark',
-          selectors: ['.dark'],
+          selectors: ['.dark', '[data-theme="dark"]'],
+          mediaQuery: '@media (prefers-color-scheme: dark)',
           theme: makeTheme('dark'),
         },
       ],

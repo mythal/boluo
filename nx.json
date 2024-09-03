@@ -9,6 +9,12 @@
     "dev": {
       "dependsOn": ["^build"]
     },
+    "storybook": {
+      "dependsOn": ["^build"]
+    },
+    "build-storybook": {
+      "dependsOn": ["^build"]
+    },
     "generate": {
       "dependsOn": [],
       "cache": true

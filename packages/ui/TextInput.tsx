@@ -19,14 +19,19 @@ export const inputStyle = (variant: Variant['variant'] = 'normal') =>
       'border-input-warning-border-default bg-input-warning-bg ring-input-warning-ring placeholder:text-input-warning-placeholder focus:border-input-warning-border-focus hover:enabled:border-input-warning-border-hover',
   );
 
-export const TextInput = React.forwardRef<HTMLInputElement, InputProps>(({ variant, className, ...props }, ref) => {
-  return <input ref={ref} {...props} className={clsx(inputStyle(variant), className)} />;
-});
-TextInput.displayName = 'Input';
-
-export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ className, variant, ...props }, ref) => {
-    return <textarea {...props} className={clsx(inputStyle(variant), className)} ref={ref} />;
+export const TextInput = React.forwardRef<HTMLInputElement, InputProps>(
+  // Workaround
+  // https://github.com/storybookjs/storybook/issues/23084#issuecomment-2175457775
+  function TextInput({ variant, className, ...props }: InputProps, ref) {
+    return <input ref={ref} {...props} className={clsx('TextInput', inputStyle(variant), className)} />;
   },
 );
+TextInput.displayName = 'TextInput';
+
+export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
+  { className, variant, ...props }: TextAreaProps,
+  ref,
+) {
+  return <textarea {...props} className={clsx('TextArea', inputStyle(variant), className)} ref={ref} />;
+});
 TextArea.displayName = 'TextArea';

@@ -11,7 +11,10 @@ export type ButtonProps = React.ComponentPropsWithoutRef<'button'> &
     on?: boolean;
   }>;
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ children, className, ...props }, ref) => {
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { children, className, ...props }: ButtonProps,
+  ref,
+) {
   const isSmall = props['data-small'] ?? false;
   const type = props['data-type'] ?? 'default';
   return (
@@ -51,7 +54,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
       {type === 'detail' && (
         <span
           data-on={props['data-on']}
-          className="duration-1500 text-button-switch-detail-icon on:rotate-180 transform transition-transform data-[on=true]:rotate-180"
+          className="duration-1500 text-button-switch-detail-icon transform transition-transform data-[on=true]:rotate-180"
         >
           <ChevronDown />
         </span>

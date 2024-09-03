@@ -18,7 +18,7 @@ import { NameEditContent } from './NameEditContent';
 import { type Member } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '../Delay';
-import { FallbackIcon } from '../FallbackIcon';
+import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';
 import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';

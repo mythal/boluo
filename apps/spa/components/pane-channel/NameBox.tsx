@@ -1,6 +1,6 @@
 import React from 'react';
 import { Delay } from '../Delay';
-import { FallbackIcon } from '../FallbackIcon';
+import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import clsx from 'clsx';
 
 interface Props extends React.HTMLAttributes<HTMLSpanElement> {

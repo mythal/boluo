@@ -19,7 +19,7 @@ import {
 import { UserCard } from '../common/UserCard';
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '../Delay';
-import { FallbackIcon } from '../FallbackIcon';
+import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 
 interface Props {
   name: string | undefined | null;

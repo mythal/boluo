@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type Roll, type RollResult } from '../../interpreter/entities';
 import { Delay } from '../Delay';
-import { FallbackIcon } from '../FallbackIcon';
+import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { RollBox } from './RollBox';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 import { Result } from './Result';

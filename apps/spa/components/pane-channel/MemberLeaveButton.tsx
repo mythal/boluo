@@ -74,7 +74,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
                 />
               </div>
               <div className="pt-2 text-right">
-                <Button data-type="danger" data-small onClick={confirm} disabled={channel == null}>
+                <Button variant="danger" data-small onClick={confirm} disabled={channel == null}>
                   <FormattedMessage defaultMessage="Leave" />
                 </Button>
               </div>

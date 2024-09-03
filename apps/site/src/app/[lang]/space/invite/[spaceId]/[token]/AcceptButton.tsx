@@ -39,7 +39,7 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
         </div>
       )}
       <div>
-        <Button data-type="primary" onClick={handleClick} disabled={currentUser == null}>
+        <Button variant="primary" onClick={handleClick} disabled={currentUser == null}>
           <FormattedMessage defaultMessage="Accept" />
         </Button>
       </div>

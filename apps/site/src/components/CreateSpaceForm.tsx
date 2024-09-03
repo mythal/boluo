@@ -158,7 +158,7 @@ export const CreateSpaceForm: FC<Props> = () => {
         </div>
         {error && <FormErrorDispay error={error} />}
         <div className="mt-4 w-full">
-          <Button data-type="primary" type="submit">
+          <Button variant="primary" type="submit">
             <FormattedMessage defaultMessage="Create" />
           </Button>
         </div>

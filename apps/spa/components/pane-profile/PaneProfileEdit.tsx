@@ -97,7 +97,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
           <Button type="button" onClick={onSuccess}>
             <FormattedMessage defaultMessage="Cancel" />
           </Button>
-          <Button type="submit" data-type="primary" disabled={disabled}>
+          <Button type="submit" variant="primary" disabled={disabled}>
             <FormattedMessage defaultMessage="Save Changes" />
           </Button>
         </PaneFooterBox>

@@ -1,22 +1,20 @@
 import clsx from 'clsx';
 import { ChevronDown } from '@boluo/icons';
 import React from 'react';
-import type { DataAttr } from '@boluo/utils';
 
-export type ButtonProps = React.ComponentPropsWithoutRef<'button'> &
-  DataAttr<{
-    small?: boolean;
-    type?: 'primary' | 'default' | 'switch' | 'danger' | 'detail';
-    active?: boolean;
-    on?: boolean;
-  }>;
+interface ExtendedButtonProps {
+  small?: boolean;
+  variant?: 'primary' | 'default' | 'switch' | 'danger' | 'detail';
+  on?: boolean;
+  active?: boolean;
+}
+
+export type ButtonProps = React.ComponentPropsWithoutRef<'button'> & ExtendedButtonProps;
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { children, className, ...props }: ButtonProps,
+  { children, className, variant = 'default', small = false, on, active, ...props }: ButtonProps,
   ref,
 ) {
-  const isSmall = props['data-small'] ?? false;
-  const type = props['data-type'] ?? 'default';
   return (
     <button
       className={clsx(
@@ -24,20 +22,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
         'select-none appearance-none focus-visible:outline-none',
         'inline-flex items-center justify-center focus:ring',
         'm-0 gap-1 rounded-sm',
-        isSmall ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
-        (type === 'default' || type === 'detail') && [
+        small ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
+        (variant === 'default' || variant === 'detail') && [
           'bg-button-default-bg text-button-default-text',
           'hover:enabled:bg-button-default-hover-bg active-enabled:bg-button-default-active-bg',
           'disabled:text-button-default-disabled-text disabled:bg-button-default-disabled-bg',
         ],
-        type === 'danger' &&
+        variant === 'danger' &&
           'bg-button-danger-bg text-button-danger-text hover:enabled:bg-button-danger-hover-bg active-enabled:bg-button-danger-active-bg',
-        type === 'primary' && [
+        variant === 'primary' && [
           'bg-button-primary-bg text-button-primary-text',
           'hover:enabled:bg-button-primary-hover-bg active-enabled:bg-button-primary-active-bg',
           'disabled:bg-button-primary-disabled-bg disabled:text-button-primary-text',
         ],
-        type === 'switch' && [
+        variant === 'switch' && [
           'bg-button-switch-bg text-button-switch-text',
           'hover:enabled:bg-button-switch-hover-bg active-enabled:bg-button-switch-active-bg',
           'border-r-1 border-r-button-switch-off-hint',
@@ -46,14 +44,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
         ],
         className,
       )}
-      aria-pressed={type === 'switch' ? props['data-on'] : undefined}
+      data-on={on}
+      data-active={active}
+      aria-pressed={variant === 'switch' ? Boolean(on) : undefined}
       ref={ref}
       {...props}
     >
       {children}
-      {type === 'detail' && (
+      {variant === 'detail' && (
         <span
-          data-on={props['data-on']}
+          data-on={on}
           className="duration-1500 text-button-switch-detail-icon transform transition-transform data-[on=true]:rotate-180"
         >
           <ChevronDown />

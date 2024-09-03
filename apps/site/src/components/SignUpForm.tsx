@@ -174,7 +174,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
         </div>
       )}
       <div className="mt-2 flex justify-end">
-        <Button data-type="primary" type="submit" disabled={!isValid || isSubmitting}>
+        <Button variant="primary" type="submit" disabled={!isValid || isSubmitting}>
           <FormattedMessage defaultMessage="Sign Up" />
         </Button>
       </div>

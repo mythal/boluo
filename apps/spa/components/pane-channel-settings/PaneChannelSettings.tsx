@@ -111,7 +111,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           <Button type="button" onClick={closePane}>
             <FormattedMessage defaultMessage="Cancel" />
           </Button>
-          <Button type="submit" data-type="primary" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
+          <Button type="submit" variant="primary" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
             <FormattedMessage defaultMessage="Save Changes" />
           </Button>
         </PaneFooterBox>

@@ -6,7 +6,7 @@ import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '../common/TooltipBox';
+import { TooltipBox } from '@boluo/ui';
 
 interface Props {}
 

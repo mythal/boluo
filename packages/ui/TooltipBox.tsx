@@ -17,7 +17,7 @@ export const TooltipBox = forwardRef<HTMLDivElement, Props>(
           ref={ref}
           className={
             defaultStyle
-              ? 'TooltipBox bg-tooltip-bg text-tooltip-text rounded-sm px-2 py-1 text-sm shadow-md'
+              ? 'TooltipBox bg-tooltip-bg text-tooltip-text shadow-tooltip-shadow/50 rounded-sm px-2 py-1 text-sm shadow-[1px_2px_0_0]'
               : className
           }
           {...props}

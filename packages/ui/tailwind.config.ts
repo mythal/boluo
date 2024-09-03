@@ -73,8 +73,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         normal: blue[600],
       },
       tooltip: {
-        bg: black,
+        bg: $(black, neutral[600]),
         text: white,
+        shadow: $(neutral[500], black),
       },
       light: {
         bg: neutral[100],

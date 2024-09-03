@@ -6,7 +6,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '../common/TooltipBox';
+import { TooltipBox } from '@boluo/ui';
 
 interface Props {}
 

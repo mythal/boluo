@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { InComposeButton } from './InComposeButton';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '../common/TooltipBox';
+import { TooltipBox } from '@boluo/ui';
 import { useSettings } from '../../hooks/useSettings';
 import { Kbd } from '@boluo/ui/Kbd';
 import { isApple } from '@boluo/utils';

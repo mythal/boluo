@@ -6,7 +6,7 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { InComposeButton } from './InComposeButton';
 import { useDefaultRollCommand } from '../../hooks/useDefaultRollCommand';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '../common/TooltipBox';
+import { TooltipBox } from '@boluo/ui';
 
 interface Props {}
 

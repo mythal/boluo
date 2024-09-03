@@ -11,7 +11,10 @@ export type ButtonProps = React.ComponentPropsWithoutRef<'button'> &
     on?: boolean;
   }>;
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ children, className, ...props }, ref) => {
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { children, className, ...props }: ButtonProps,
+  ref,
+) {
   const isSmall = props['data-small'] ?? false;
   const type = props['data-type'] ?? 'default';
   return (

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import clsx from 'clsx';
 
-export interface Props {
+interface Props {
   children: string;
   variant?: 'small' | 'normal';
 }

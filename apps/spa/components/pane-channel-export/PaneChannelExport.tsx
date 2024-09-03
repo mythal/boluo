@@ -165,7 +165,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
         <Button type="button">
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button type="submit" data-type="primary">
+        <Button type="submit" variant="primary">
           {exportButtonIcon}
           <FormattedMessage defaultMessage="Export" />
         </Button>

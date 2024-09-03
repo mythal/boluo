@@ -85,7 +85,7 @@ const ConfirmLeave: FC<{ channelId: string; channelName: string; dismiss: () => 
         <Button data-small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button data-small data-type="danger" disabled={isKicking} onClick={() => kick()}>
+        <Button data-small variant="danger" disabled={isKicking} onClick={() => kick()}>
           <FormattedMessage defaultMessage="Leave" />
         </Button>
       </div>
@@ -125,7 +125,7 @@ const ConfirmKick: FC<{
         <Button data-small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button data-small data-type="danger" disabled={isKicking} onClick={() => kick()}>
+        <Button data-small variant="danger" disabled={isKicking} onClick={() => kick()}>
           <FormattedMessage defaultMessage="Yes, Kick" />
         </Button>
       </div>

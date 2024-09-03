@@ -15,7 +15,7 @@ export const RefreshButton = ({ className, small = false, children }: Props) => 
     location.reload();
   }, []);
   return (
-    <Button aria-label="refresh" title="refresh" onClick={refresh} className={className} data-small={small}>
+    <Button aria-label="refresh" title="refresh" onClick={refresh} className={className} small={small}>
       <Icon icon={Refresh} />
       {children}
     </Button>

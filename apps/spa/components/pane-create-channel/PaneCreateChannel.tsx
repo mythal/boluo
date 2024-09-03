@@ -110,7 +110,7 @@ export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
               <Button type="button" onClick={close}>
                 <FormattedMessage defaultMessage="Cancel" />
               </Button>
-              <Button type="submit" data-type="primary" disabled={!form.formState.isDirty || isMutating}>
+              <Button type="submit" variant="primary" disabled={!form.formState.isDirty || isMutating}>
                 <FormattedMessage defaultMessage="Create Channel" />
               </Button>
             </PaneFooterBox>

@@ -125,7 +125,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       )}
 
       <div className="flex justify-end py-2">
-        <Button data-type="primary" type="submit" disabled={!isDirty || isSubmitting}>
+        <Button variant="primary" type="submit" disabled={!isDirty || isSubmitting}>
           <FormattedMessage defaultMessage="Login" />
         </Button>
       </div>

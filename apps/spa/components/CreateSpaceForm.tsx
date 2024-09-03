@@ -170,7 +170,7 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
               <FormattedMessage defaultMessage="Cancel" />
             </Button>
           )}
-          <Button data-type="primary" type="submit" disabled={!form.formState.isDirty || isCreating}>
+          <Button variant="primary" type="submit" disabled={!form.formState.isDirty || isCreating}>
             <FormattedMessage defaultMessage="Create Space" />
           </Button>
         </PaneFooterBox>

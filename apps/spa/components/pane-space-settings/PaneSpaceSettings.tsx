@@ -70,7 +70,7 @@ const InvitationField: FC<{ spaceId: string }> = ({ spaceId }) => {
   return (
     <div>
       <div>
-        <Button onClick={() => setExpanded((x) => !x)} data-type="detail" data-on={expanded} type="button">
+        <Button onClick={() => setExpanded((x) => !x)} variant="detail" on={expanded} type="button">
           <FormattedMessage defaultMessage="Invite" />
         </Button>
       </div>
@@ -252,7 +252,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
             <FormattedMessage defaultMessage="Cancel" />
           </Button>
 
-          <Button type="submit" data-type="primary" disabled={isMutating || !form.formState.isDirty}>
+          <Button type="submit" variant="primary" disabled={isMutating || !form.formState.isDirty}>
             <FormattedMessage defaultMessage="Change Settings" />
           </Button>
         </PaneFooterBox>

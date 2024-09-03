@@ -1,3 +1,4 @@
+'use client';
 import clsx from 'clsx';
 import { type FC, type ReactNode } from 'react';
 

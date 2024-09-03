@@ -8,6 +8,7 @@
     "build:site": "nx run-many --target=build --projects=site --output-style='stream'",
     "build:spa": "nx run-many --target=build --projects=spa --output-style='stream'",
     "build:affected": "nx affected -t build",
+    "storybook:ui": "nx run-many --target=storybook --projects='@boluo/ui'",
     "check": "nx run-many --target=check --all",
     "check:affected": "nx affected -t check",
     "check:format": "prettier --check .",

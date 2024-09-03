@@ -1,3 +1,4 @@
+import { LoadingText } from '@boluo/ui/LoadingText';
 import { SidebarItem } from './SidebarItem';
 
 const nop = () => {
@@ -6,7 +7,7 @@ const nop = () => {
 export const SidebarSkeletonItem = () => {
   return (
     <SidebarItem onClick={nop}>
-      <span className="animate-pulse">Loading...</span>
+      <LoadingText />
     </SidebarItem>
   );
 };

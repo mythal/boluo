@@ -3,7 +3,7 @@
  */
 module.exports = {
   root: true,
-  extends: ['@boluo/eslint-config'],
+  extends: ['@boluo/eslint-config', 'plugin:storybook/recommended'],
 
   overrides: [
     {

@@ -5,7 +5,9 @@
   "license": "GPL-3.0",
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "sideEffects": false,
   "peerDependencies": {
@@ -13,31 +15,44 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@boluo/api": "*",
+    "@boluo/eslint-config": "*",
+    "@boluo/theme": "*",
+    "@boluo/typescript-config": "*",
+    "@boluo/utils": "*",
     "@formatjs/ts-transformer": "^3.13.9",
+    "@storybook/addon-essentials": "^8.2.9",
+    "@storybook/addon-interactions": "^8.2.9",
+    "@storybook/addon-links": "^8.2.9",
+    "@storybook/addon-onboarding": "^8.2.9",
+    "@storybook/addon-themes": "^8.2.9",
+    "@storybook/blocks": "^8.2.9",
+    "@storybook/react": "^8.2.9",
+    "@storybook/react-vite": "^8.2.9",
+    "@storybook/test": "^8.2.9",
     "@tailwindcss/container-queries": "^0.1.1",
     "@types/node": "^20.11.5",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
-    "@boluo/api": "*",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8.56.0",
-    "@boluo/eslint-config": "*",
-    "postcss": "^8.4.32",
+    "eslint-plugin-storybook": "^0.8.0",
+    "postcss": "^8.4.44",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwindcss": "^3.4.0",
+    "storybook": "^8.2.9",
+    "tailwindcss": "^3.4.10",
     "tailwindcss-theme-swapper": "^0.12.0",
-    "@boluo/theme": "*",
     "ts-node": "^10.9.2",
-    "@boluo/typescript-config": "*",
-    "typescript": "^5.3.3",
-    "@boluo/utils": "*"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "clsx": "^2.1.0",
     "@boluo/common": "*",
     "@boluo/icons": "*",
-    "react-intl": "^6.6.1",
+    "@floating-ui/react": "^0.26.23",
+    "clsx": "^2.1.0",
     "color2k": "^2.0.3",
+    "react-intl": "^6.6.1",
     "tslib": "^2.6.2"
   }
 }

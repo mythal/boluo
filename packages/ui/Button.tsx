@@ -51,7 +51,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ childr
       {type === 'detail' && (
         <span
           data-on={props['data-on']}
-          className="duration-1500 text-button-switch-detail-icon on:rotate-180 transform transition-transform data-[on=true]:rotate-180"
+          className="duration-1500 text-button-switch-detail-icon transform transition-transform data-[on=true]:rotate-180"
         >
           <ChevronDown />
         </span>

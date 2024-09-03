@@ -1,24 +1,26 @@
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Spinner } from './Spinner';
+import { LoadingText } from './LoadingText';
 
 export type LoadingType = 'inline' | 'block';
 
 interface Props {
   type?: LoadingType;
-  label?: string;
+  children?: ReactNode;
 }
 
-export const Loading: FC<Props> = ({ type = 'block', label = 'Loading' }) => {
+export const Loading: FC<Props> = ({ type = 'block', children }) => {
+  children = children || <LoadingText />;
   if (type === 'inline') {
     return (
       <span className="text-sm">
-        <Spinner className="mr-1" /> {label}
+        <Spinner className="mr-1" /> {children}
       </span>
     );
   }
   return (
     <div className="flex h-full w-full items-center justify-center text-lg">
-      <Spinner className="mr-1" /> {label}
+      <Spinner className="mr-1" /> {children}
     </div>
   );
 };

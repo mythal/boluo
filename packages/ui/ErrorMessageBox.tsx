@@ -1,9 +1,13 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
 }
 
 export const ErrorMessageBox = ({ children }: Props) => {
-  return <div className="bg-error-100 border-error-200 w-full rounded border px-4 py-2">{children}</div>;
+  return (
+    <aside className="bg-errors-bg border-errors-border shadow-errors-border w-full rounded border px-4 py-2 shadow-[0_1px_0_0]">
+      {children}
+    </aside>
+  );
 };

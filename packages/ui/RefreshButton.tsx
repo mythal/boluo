@@ -1,11 +1,11 @@
 import { Refresh } from '@boluo/icons';
 import type { ReactNode } from 'react';
 import { useCallback } from 'react';
-import type { StyleProps } from '@boluo/utils';
 import { Button } from './Button';
 import Icon from './Icon';
 
-interface Props extends StyleProps {
+interface Props {
+  className?: string;
   small?: boolean;
   children: ReactNode;
 }

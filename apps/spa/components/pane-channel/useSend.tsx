@@ -14,6 +14,8 @@ import { upload } from '../../media';
 import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { recordWarn } from '../../error';
+import { type ChatActionUnion } from '../../state/chat.actions';
+import { chatAtom } from '../../state/chat.atoms';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
@@ -41,6 +43,7 @@ export const useSend = (me: User) => {
   }, []);
 
   const send = useCallback(async () => {
+    const sendStartTime = Date.now();
     if (myMember == null) {
       recordWarn('Cannot find my channel member');
       return;
@@ -50,6 +53,7 @@ export const useSend = (me: User) => {
     if (store.get(checkComposeAtom) !== null) return;
     const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
+    const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
     const handleRecover = () => {
       dispatch({ type: 'recoverState', payload: backupComposeState });
       setBanner(null);
@@ -100,7 +104,7 @@ export const useSend = (me: User) => {
         color: '',
       });
     } else {
-      result = await post('/messages/send', null, {
+      const newMessage = {
         messageId: null,
         previewId: compose.previewId,
         channelId,
@@ -113,7 +117,9 @@ export const useSend = (me: User) => {
         pos: null,
         whisperToUsers: whisperToUsernames ? usernameListToUserIdList(whisperToUsernames) : null,
         color: '',
-      });
+      };
+      chatDispatch({ type: 'messageSent', payload: { newMessage, sendTime: sendStartTime } });
+      result = await post('/messages/send', null, newMessage);
     }
 
     if (result.isOk) {

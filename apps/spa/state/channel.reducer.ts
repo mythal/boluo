@@ -1,4 +1,4 @@
-import type { Message } from '@boluo/api';
+import type { Message, NewMessage } from '@boluo/api';
 import { binarySearchPosList } from '../sort';
 import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
@@ -13,11 +13,62 @@ const GC_TRIGGER_LENGTH = 128;
 const GC_INITIAL_COUNTDOWN = 8;
 const MIN_START_GC_COUNT = 4;
 
+export interface OptimisticItem {
+  optimisticPos: number;
+  timestamp: number;
+  item: MessageItem | PreviewItem;
+}
+
+export interface OptimisticMessage {
+  newMessage: NewMessage;
+  preview: PreviewItem;
+  item: OptimisticItem;
+}
+
+const optimisticMessageToOptimisticItem = (
+  newMessage: NewMessage,
+  preview: PreviewItem,
+  sendTime: number,
+): OptimisticMessage => {
+  const created = new Date(sendTime).toISOString();
+  const id = newMessage.previewId ?? preview.id;
+  const message: MessageItem = {
+    key: id,
+    optimistic: true,
+    id,
+    type: 'MESSAGE',
+    pos: preview.pos,
+    posP: preview.posP,
+    posQ: preview.posQ,
+    channelId: newMessage.channelId,
+    senderId: preview.senderId,
+    parentMessageId: preview.parentMessageId,
+    name: newMessage.name,
+    mediaId: newMessage.mediaId,
+    inGame: newMessage.inGame,
+    seed: [],
+    isAction: newMessage.isAction,
+    isMaster: preview.isMaster,
+    pinned: false,
+    color: newMessage.color,
+    text: newMessage.text,
+    folded: false,
+    modified: created,
+    entities: newMessage.entities,
+    whisperToUsers: newMessage.whisperToUsers,
+    created,
+    tags: [],
+  };
+  const item: OptimisticItem = { optimisticPos: preview.pos, timestamp: sendTime, item: message };
+  return { newMessage, preview, item };
+};
+
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
+  optimisticMessages: List<OptimisticMessage>;
   scheduledGc: ScheduledGc | null;
   collidedPreviewIdSet: Set<string>;
 }
@@ -38,40 +89,44 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     previewMap: {},
     scheduledGc: null,
     collidedPreviewIdSet: new Set(),
+    optimisticMessages: L.empty(),
   };
 };
 
 const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
   let { messages } = state;
   const message = makeMessageItem(payload.message);
-  let { previewMap } = state;
+  let { previewMap, optimisticMessages } = state;
   const previews = Object.values(previewMap);
   if (payload.previewId && previews.find((preview) => preview.id === payload.previewId)) {
     previewMap = Object.fromEntries(
       previews.filter((preview) => preview.id !== payload.previewId).map((preview) => [preview.senderId, preview]),
     );
   }
+  if (payload.previewId) {
+    optimisticMessages = L.filter(({ newMessage }) => newMessage.previewId !== payload.previewId, optimisticMessages);
+  }
 
   const topMessage = L.first(messages);
   const bottomMessage = L.last(messages);
   if (topMessage == null || bottomMessage == null) {
-    return { ...state, messages: L.of(message), previewMap };
+    return { ...state, messages: L.of(message), previewMap, optimisticMessages };
   }
   if (message.pos <= topMessage.pos && !state.fullLoaded) {
-    return state;
+    return { ...state, optimisticMessages };
   }
   if (message.pos > bottomMessage.pos) {
-    return { ...state, previewMap, messages: L.append(message, messages) };
+    return { ...state, previewMap, messages: L.append(message, messages), optimisticMessages };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
     if (itemByPos.id !== message.id) {
       recordWarn('Unexpected message position.', { message, itemByPos });
     }
-    return state;
+    return { ...state, optimisticMessages };
   }
   messages = L.insert(insertIndex, message, messages);
-  return { ...state, previewMap, messages };
+  return { ...state, previewMap, messages, optimisticMessages };
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
@@ -99,6 +154,22 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
     return state;
   }
   return { ...state, messages: L.concat(L.reverse(L.map(makeMessageItem, payloadMessages)), state.messages) };
+};
+
+const handleMessageSent = (
+  state: ChannelState,
+  { payload: { newMessage, sendTime } }: ChatAction<'messageSent'>,
+): ChannelState => {
+  if (!newMessage.previewId) return state;
+  const preview = Object.values(state.previewMap).find((preview) => preview.id === newMessage.previewId);
+  if (!preview) return state;
+  return {
+    ...state,
+    optimisticMessages: L.append(
+      optimisticMessageToOptimisticItem(newMessage, preview, sendTime),
+      state.optimisticMessages,
+    ),
+  };
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
@@ -250,6 +321,8 @@ const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initializ
       return handleMessageEdited(state, action);
     case 'messageDeleted':
       return handleMessageDeleted(state, action);
+    case 'messageSent':
+      return handleMessageSent(state, action);
     case 'messagesLoaded':
       // This action is triggered by the user
       // and should be ignored if the chat state

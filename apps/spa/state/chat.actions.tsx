@@ -1,9 +1,18 @@
-import type { ConnectionError, EventBody, Message, Preview, ServerEvent, SpaceWithRelated } from '@boluo/api';
+import type {
+  ConnectionError,
+  EventBody,
+  Message,
+  NewMessage,
+  Preview,
+  ServerEvent,
+  SpaceWithRelated,
+} from '@boluo/api';
 import type { Empty } from '@boluo/utils';
 import { type MakeAction } from './actions';
 
 export type ChatActionMap = {
   receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
+  messageSent: { newMessage: NewMessage; sendTime: number };
   initialized: Empty;
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;

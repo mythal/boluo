@@ -3,9 +3,6 @@ import { Loading } from '../Loading';
 
 const meta: Meta<typeof Loading> = {
   component: Loading,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

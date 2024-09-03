@@ -4,9 +4,6 @@ import { Spinner } from '../Spinner';
 
 const meta: Meta<typeof Spinner> = {
   component: Spinner,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

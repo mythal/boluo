@@ -3,9 +3,6 @@ import { ErrorMessageBox } from '../ErrorMessageBox';
 
 const meta: Meta<typeof ErrorMessageBox> = {
   component: ErrorMessageBox,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

@@ -3,9 +3,6 @@ import { RefreshButton } from '../RefreshButton';
 
 const meta: Meta<typeof RefreshButton> = {
   component: RefreshButton,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

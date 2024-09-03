@@ -3,9 +3,6 @@ import { LoadingText } from '../LoadingText';
 
 const meta: Meta<typeof LoadingText> = {
   component: LoadingText,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

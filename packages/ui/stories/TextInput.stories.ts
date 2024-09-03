@@ -3,9 +3,6 @@ import { TextInput } from '../TextInput';
 
 const meta: Meta<typeof TextInput> = {
   component: TextInput,
-  parameters: {
-    layout: 'centered',
-  },
   argTypes: {
     variant: {
       options: ['default', 'error', 'warning'],

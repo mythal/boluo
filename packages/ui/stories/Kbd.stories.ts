@@ -3,9 +3,6 @@ import { Kbd } from '../Kbd';
 
 const meta: Meta<typeof Kbd> = {
   component: Kbd,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

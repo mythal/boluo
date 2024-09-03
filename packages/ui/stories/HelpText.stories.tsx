@@ -3,9 +3,6 @@ import { HelpText } from '../HelpText';
 
 const meta: Meta<typeof HelpText> = {
   component: HelpText,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

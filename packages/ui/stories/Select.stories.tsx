@@ -4,9 +4,6 @@ import { Select } from '../Select';
 
 const meta: Meta<typeof Select> = {
   component: Select,
-  parameters: {
-    layout: 'centered',
-  },
 };
 
 export default meta;

@@ -3,9 +3,6 @@ import { Button } from '../Button';
 
 const meta: Meta<typeof Button> = {
   component: Button,
-  parameters: {
-    layout: 'centered',
-  },
   argTypes: {
     'data-small': {
       control: {

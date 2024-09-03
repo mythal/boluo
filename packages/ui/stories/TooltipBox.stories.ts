@@ -4,7 +4,9 @@ import { TooltipBox } from '../TooltipBox';
 
 const meta: Meta<typeof TooltipBox> = {
   component: TooltipBox,
-  parameters: {},
+  parameters: {
+    layout: 'padded',
+  },
 };
 
 export default meta;

@@ -8,7 +8,7 @@ import useSWRMutation from 'swr/mutation';
 import { Kbd } from '@boluo/ui/Kbd';
 import { identity, isApple } from '@boluo/utils';
 import { useSettings } from '../../hooks/useSettings';
-import { SelectBox } from '../common/SelectBox';
+import { SelectBox } from '@boluo/ui/SelectBox';
 
 interface Props {}
 

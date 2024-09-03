@@ -2,7 +2,7 @@ import { type ChannelType } from '@boluo/api';
 import { type FC } from 'react';
 import { useController } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
-import { SelectBox } from '../common/SelectBox';
+import { SelectBox } from '@boluo/ui/SelectBox';
 
 export const ChannelTypeField: FC = () => {
   const {

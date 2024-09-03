@@ -6,7 +6,7 @@ import { isSidebarExpandedAtom } from '../../state/ui.atoms';
 import { useIsTouch } from '../../hooks/useIsTouch';
 import clsx from 'clsx';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '@boluo/ui';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { FormattedMessage } from 'react-intl';
 import { Kbd } from '@boluo/ui/Kbd';
 import { isApple } from '@boluo/utils';

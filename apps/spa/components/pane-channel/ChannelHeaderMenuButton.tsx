@@ -5,7 +5,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';
 import { useTooltip } from '../../hooks/useTooltip';
 import { FormattedMessage } from 'react-intl';
-import { TooltipBox } from '@boluo/ui';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 interface Props {
   on: boolean;

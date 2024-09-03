@@ -4,7 +4,7 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '@boluo/ui';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 interface Props {}
 

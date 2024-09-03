@@ -1,5 +1,5 @@
 'use client';
-import { FC, startTransition, useEffect, useState } from 'react';
+import { type FC, startTransition, useEffect, useState } from 'react';
 
 export const LoadingText: FC = () => {
   const [count, setCount] = useState(0);
@@ -13,7 +13,7 @@ export const LoadingText: FC = () => {
   }, []);
   const x = count % 5;
   return (
-    <span className="cursor-progress select-none">
+    <span className="LoadingText cursor-progress select-none">
       Loading<span className={x > 1 ? '' : 'opacity-15'}>.</span>
       <span className={x > 2 ? '' : 'opacity-15'}>.</span>
       <span className={x > 3 ? '' : 'opacity-15'}>.</span>

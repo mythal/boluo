@@ -9,6 +9,6 @@ interface Props {
 }
 
 export const Spinner: React.FC<Props> = ({ label, className }) => {
-  return <Icon className={clsx('animate-spin', className)} icon={CircleNotch} label={label} />;
+  return <Icon className={clsx('Spinner animate-spin', className)} icon={CircleNotch} label={label} />;
 };
 Spinner.displayName = 'Spinner';

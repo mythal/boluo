@@ -5,7 +5,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '@boluo/ui';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 interface Props {
   className?: string;

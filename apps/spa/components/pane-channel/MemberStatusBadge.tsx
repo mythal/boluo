@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import React, { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '@boluo/ui';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ status }) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();

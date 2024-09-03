@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { usePaneSplit } from '../../hooks/usePaneSplit';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useTooltip } from '../../hooks/useTooltip';
-import { TooltipBox } from '@boluo/ui';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const ChannelHeaderSplitPaneButton: FC = () => {
   const intl = useIntl();

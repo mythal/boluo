@@ -206,7 +206,14 @@ export const findMessage = (messages: List<MessageItem>, id: string, pos?: numbe
   const message = L.nth(index, messages);
   if (message?.id === id) {
     if (failedFoundByPos) {
-      recordWarn('Found message by id but failed to find by pos.', { id, pos });
+      const [index, item] = binarySearchPosList(messages, pos!);
+      recordWarn('Found message by id but failed to find by pos.', {
+        id,
+        pos,
+        realIndex: index,
+        foundIndex: index,
+        itemId: item?.id,
+      });
     }
     return [message, index];
   } else {
@@ -273,12 +280,26 @@ const handleGc = (state: ChannelState): ChannelState => {
   return { ...state, messages, scheduledGc, fullLoaded };
 };
 
+const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion) => {
+  let lastPos = 0;
+  for (const message of messages) {
+    if (message.pos < lastPos) {
+      recordWarn('Messages are not sorted by pos.', { action, message });
+      return;
+    }
+    lastPos = message.pos;
+  }
+};
+
 export const channelReducer = (
   state: ChannelState,
   action: ChatActionUnion,
   { initialized }: ChatReducerContext,
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
+  setTimeout(() => {
+    checkOrder(nextState.messages, action);
+  }, 500);
   nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {
     const pos = L.nth(GC_TRIGGER_LENGTH >> 1, nextState.messages)!.pos;

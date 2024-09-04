@@ -353,15 +353,16 @@ const handleGc = (state: ChannelState): ChannelState => {
   return { ...state, messages, scheduledGc, fullLoaded };
 };
 
-const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion) => {
+const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion): List<MessageItem> => {
   let lastPos = 0;
   for (const message of messages) {
     if (message.pos < lastPos) {
       recordWarn('Messages are not sorted by pos.', { action, message });
-      return;
+      return L.sortBy(({ pos }) => pos, messages);
     }
     lastPos = message.pos;
   }
+  return messages;
 };
 
 export const channelReducer = (
@@ -370,9 +371,10 @@ export const channelReducer = (
   { initialized }: ChatReducerContext,
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
-  setTimeout(() => {
-    checkOrder(nextState.messages, action);
-  }, 500);
+  const reorderedMessages = checkOrder(nextState.messages, action);
+  if (reorderedMessages !== nextState.messages) {
+    nextState = { ...nextState, messages: reorderedMessages };
+  }
   nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {
     const pos = L.nth(GC_TRIGGER_LENGTH >> 1, nextState.messages)!.pos;

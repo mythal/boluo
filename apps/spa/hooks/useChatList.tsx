@@ -6,7 +6,7 @@ import { findMessage, type OptimisticItem, type ChannelState } from '../state/ch
 import { type ChatItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
-import { type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
+import { type ChannelAtoms, type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
 import { recordWarn } from '../error';
 import { type PreviewEdit } from '@boluo/api';
 import * as L from 'list';
@@ -90,39 +90,55 @@ const makeDummyPreview = (
 
 const SAFE_OFFSET = 2;
 const HIDE_DUMMY_DELAY = 8000;
-const HIDE_DUMMY_FOCUS_DELAY = 16000;
+
+export const useShowDummy = (
+  store: ReturnType<typeof useStore>,
+  composeAtom: ChannelAtoms['composeAtom'],
+  hideSelfPreviewTimeoutAtom: ChannelAtoms['hideSelfPreviewTimeoutAtom'],
+): boolean => {
+  const hideDummyTimeout = useRef<number>(0);
+  const [showDummy, setShowDummy] = useState(false);
+  useEffect(() => {
+    let handle: number | undefined;
+    const updateTimeout = () => {
+      const now = Date.now();
+      const timeout = hideDummyTimeout.current;
+      if (now < timeout) {
+        setShowDummy(true);
+        clearTimeout(handle);
+        handle = window.setTimeout(() => {
+          setShowDummy(false);
+        }, timeout - now);
+      } else {
+        setShowDummy(false);
+      }
+    };
+    const unsubRecordModified = store.sub(composeAtom, () => {
+      hideDummyTimeout.current = Math.max(Date.now() + HIDE_DUMMY_DELAY, hideDummyTimeout.current);
+      updateTimeout();
+    });
+    const unsubListenTimeout = store.sub(hideSelfPreviewTimeoutAtom, () => {
+      const selfPreviewLock = store.get(hideSelfPreviewTimeoutAtom);
+      hideDummyTimeout.current = Math.max(hideDummyTimeout.current, selfPreviewLock);
+      updateTimeout();
+    });
+    return () => {
+      unsubListenTimeout();
+      unsubRecordModified();
+      clearTimeout(handle);
+    };
+  }, [composeAtom, hideSelfPreviewTimeoutAtom, store]);
+  return showDummy;
+};
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, composeFocusedAtom } = useChannelAtoms();
+  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, hideSelfPreviewTimeoutAtom } = useChannelAtoms();
   const showArchived = useAtomValue(showArchivedAtom);
   const filterType = useAtomValue(filterAtom);
   const composeSliceAtom = useMemo(() => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq), [composeAtom]);
-  const composeFocused = useAtomValue(composeFocusedAtom);
-  const [showDummy, setShowDummy] = useState(false);
-  const composeModified = useRef(0);
-  useEffect(
-    () =>
-      store.sub(composeAtom, () => {
-        composeModified.current = Date.now();
-      }),
-    [composeAtom, store],
-  );
-  useEffect(() => {
-    composeModified.current = Date.now();
-    if (composeFocused) {
-      setShowDummy(true);
-    }
-    const handle = window.setInterval(() => {
-      const now = Date.now();
-      const delay = composeFocused ? HIDE_DUMMY_FOCUS_DELAY : HIDE_DUMMY_DELAY;
-      if (now - composeModified.current > delay) {
-        setShowDummy(false);
-      }
-    }, 500);
-    return () => window.clearInterval(handle);
-  }, [composeFocused]);
   const composeSlice = useAtomValue(composeSliceAtom);
+  const showDummy = useShowDummy(store, composeAtom, hideSelfPreviewTimeoutAtom);
   // Intentionally quit reactivity
   const isEmpty = store.get(parsedAtom).entities.length === 0;
 

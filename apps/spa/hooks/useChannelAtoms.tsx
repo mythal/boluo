@@ -20,6 +20,7 @@ export interface ChannelAtoms {
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
+  hideSelfPreviewTimeoutAtom: PrimitiveAtom<number>;
   inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
   inGameAtom: Atom<boolean>;
@@ -49,6 +50,7 @@ export const useMakeChannelAtoms = (
   );
   const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> = useMemo(() => {
     const sourceAtom = atom((get) => get(composeAtom).source);
+    const hideSelfPreviewTimeoutAtom = atom(0);
     const loadableParsedAtom = loadable(
       atom(async (get, { signal }): Promise<ParseResult> => {
         const source = get(sourceAtom);
@@ -72,6 +74,7 @@ export const useMakeChannelAtoms = (
     return {
       composeAtom,
       parsedAtom,
+      hideSelfPreviewTimeoutAtom,
       isActionAtom,
       inputedNameAtom,
       hasMediaAtom,

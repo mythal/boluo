@@ -262,13 +262,14 @@ const handleMessagePreview = (
  * @param pos the pos of the message to find. this is just a hint for optimization.
  */
 export const findMessage = (messages: List<MessageItem>, id: string, pos?: number): [MessageItem, number] | null => {
-  let failedFoundByPos = false;
+  let failedFoundByPos: [MessageItem | null, number] | null = null;
   if (pos != null) {
     const [index, item] = binarySearchPosList(messages, pos);
     if (item && item.id === id) {
       return [item, index];
     }
-    failedFoundByPos = true;
+    // Unexpected message position
+    failedFoundByPos = [item, index];
   }
   const index = L.findIndex((message) => message.id === id, messages);
   if (index === -1) {
@@ -276,14 +277,15 @@ export const findMessage = (messages: List<MessageItem>, id: string, pos?: numbe
   }
   const message = L.nth(index, messages);
   if (message?.id === id) {
-    if (failedFoundByPos) {
-      const [index, item] = binarySearchPosList(messages, pos!);
+    if (failedFoundByPos != null) {
+      const [foundItem, foundIndex] = failedFoundByPos;
       recordWarn('Found message by id but failed to find by pos.', {
         id,
         pos,
-        realIndex: index,
-        foundIndex: index,
-        itemId: item?.id,
+        index,
+        foundIndex,
+        foundItemId: foundItem?.id,
+        messageId: message.id,
       });
     }
     return [message, index];
@@ -354,13 +356,26 @@ const handleGc = (state: ChannelState): ChannelState => {
 };
 
 const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion): List<MessageItem> => {
-  let lastPos = 0;
+  let prevPos = -1;
+  let i = 0;
+  const firstPos = L.first(messages)?.pos;
+  const lastPos = L.last(messages)?.pos;
   for (const message of messages) {
-    if (message.pos < lastPos) {
-      recordWarn('Messages are not sorted by pos.', { action, message });
+    if (message.pos < prevPos) {
+      recordWarn('Messages are not sorted by pos.', {
+        action,
+        message,
+        pos: message.pos,
+        prevPos,
+        firstPos,
+        lastPos,
+        index: i,
+        size: messages.length,
+      });
       return L.sortBy(({ pos }) => pos, messages);
     }
-    lastPos = message.pos;
+    prevPos = message.pos;
+    i += 1;
   }
   return messages;
 };
@@ -371,9 +386,16 @@ export const channelReducer = (
   { initialized }: ChatReducerContext,
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
-  const reorderedMessages = checkOrder(nextState.messages, action);
-  if (reorderedMessages !== nextState.messages) {
-    nextState = { ...nextState, messages: reorderedMessages };
+  let messages = nextState.messages;
+  switch (action.type) {
+    case 'messageEdited':
+    case 'receiveMessage':
+    case 'messagesLoaded':
+      messages = checkOrder(messages, action);
+      break;
+  }
+  if (messages !== nextState.messages) {
+    nextState = { ...nextState, messages };
   }
   nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {

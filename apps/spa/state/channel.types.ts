@@ -5,11 +5,18 @@ export type PreviewItem = Preview & {
   posP: number;
   posQ: number;
   optimistic?: true;
+  failTo?: FailTo;
   key: string;
   timestamp: number;
 };
 
-export type FailTo = { type: 'SEND' } | { type: 'EDIT' } | { type: 'DELETE' } | { type: 'UPLOAD' };
+export type FailTo =
+  | { type: 'SEND'; onUpload?: boolean }
+  | { type: 'EDIT'; onUpload?: boolean }
+  | { type: 'DELETE' }
+  | { type: 'UPLOAD' }
+  | { type: 'MOVE' };
+
 export type MessageItem = Message & {
   type: 'MESSAGE';
   optimistic?: true;

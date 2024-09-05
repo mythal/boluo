@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { type FC, useEffect, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type ParseResult } from '../../interpreter/parse-result';
-import { type MessageItem } from '../../state/channel.types';
+import { type FailTo, type MessageItem } from '../../state/channel.types';
 import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
@@ -76,6 +76,7 @@ export const ChatItemMessage: FC<{
       mini={mini}
       optimistic={optimistic}
       pos={message.pos}
+      failTo={message.failTo}
     >
       <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
         {!mini && <span>{nameNode}:</span>}
@@ -132,6 +133,7 @@ const MessageBox: FC<{
   isScrolling: boolean;
   inGame: boolean;
   pos: number;
+  failTo: FailTo | null | undefined;
 }> = ({
   className = '',
   inGame,
@@ -143,6 +145,7 @@ const MessageBox: FC<{
   isScrolling,
   optimistic = false,
   sendBySelf,
+  failTo,
   pos,
 }) => {
   const isInGameChannel = useIsInGameChannel();
@@ -174,12 +177,13 @@ const MessageBox: FC<{
           ref={setActivatorNodeRef}
           attributes={attributes}
           listeners={listeners}
+          failTo={failTo}
           loading={optimistic}
         />
       ) : (
         <div className="text-message-time-text col-span-1 row-span-full h-full text-right"></div>
       ),
-    [attributes, draggable, listeners, optimistic, setActivatorNodeRef],
+    [attributes, draggable, failTo, listeners, optimistic, setActivatorNodeRef],
   );
   const toolbar = useMemo(() => {
     if (isDragging || overlay) return null;
@@ -206,7 +210,7 @@ const MessageBox: FC<{
         data-in-game={inGame}
         data-pos={pos}
         className={clsx(
-          'group/msg relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
+          'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
           'grid-cols-[1.5rem_minmax(0,1fr)]',
           '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
           !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
@@ -225,7 +229,7 @@ const MessageBox: FC<{
         {handle}
         {children}
         <div className="absolute right-2 top-1 select-none">
-          <MessageTime message={message} />
+          <MessageTime message={message} failTo={failTo} />
         </div>
         {toolbar}
       </div>

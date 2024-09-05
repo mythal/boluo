@@ -1,9 +1,10 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
-import { MoveVertical } from '@boluo/icons';
-import { forwardRef } from 'react';
+import { MoveVertical, TriangleAlert } from '@boluo/icons';
+import { forwardRef, type ReactNode } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { Delay } from '../Delay';
+import { type FailTo } from '../../state/channel.types';
 
 type UseSortableReturn = ReturnType<typeof useSortable>;
 
@@ -12,13 +13,22 @@ interface Props {
   attributes?: UseSortableReturn['attributes'];
   loading?: boolean;
   children?: React.ReactNode;
+  failTo: FailTo | null | undefined;
 }
 
 export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
-  ({ listeners, attributes, loading = false }, ref) => {
+  ({ listeners, attributes, loading = false, failTo }, ref) => {
     if (loading) {
       listeners = undefined;
       attributes = undefined;
+    }
+    let icon: ReactNode;
+    if (failTo) {
+      icon = <TriangleAlert className="text-text-danger inline text-xs" />;
+    } else if (loading) {
+      icon = <Spinner className="inline text-xs" />;
+    } else {
+      icon = <MoveVertical className="inline text-xs" />;
     }
     return (
       <div className="col-span-1 row-span-full h-full">
@@ -33,7 +43,7 @@ export const MessageReorderHandle = forwardRef<HTMLDivElement, Props>(
           )}
         >
           <Delay>
-            <div>{loading ? <Spinner className="inline text-xs" /> : <MoveVertical className="inline text-xs" />}</div>
+            <div>{icon}</div>
           </Delay>
         </div>
       </div>

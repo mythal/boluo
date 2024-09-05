@@ -1,11 +1,7 @@
-import { type NewMessage, type ApiError, type Message, type User, type EditMessage } from '@boluo/api';
+import { type NewMessage, type User, type EditMessage } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { Button } from '@boluo/ui/Button';
-import { type Result } from '@boluo/utils';
-import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
@@ -16,13 +12,14 @@ import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { recordWarn } from '../../error';
 import { type ChatActionUnion } from '../../state/chat.actions';
 import { chatAtom } from '../../state/chat.atoms';
+import { timeout } from '@boluo/utils';
+import { type FailTo } from '../../state/channel.types';
 
 export const useSend = (me: User) => {
   const channelId = useChannelId();
   const defaultInGame = useDefaultInGame();
   const { composeAtom, parsedAtom, checkComposeAtom } = useChannelAtoms();
   const store = useStore();
-  const setBanner = useSetBanner();
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
   const queryChannelMembersRef = useRef(queryChannelMembers);
   queryChannelMembersRef.current = queryChannelMembers;
@@ -51,17 +48,11 @@ export const useSend = (me: User) => {
     const compose = store.get(composeAtom);
     const parsed = store.get(parsedAtom);
     if (store.get(checkComposeAtom) !== null) return;
-    const backupComposeState = compose;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
-    const handleRecover = () => {
-      dispatch({ type: 'recoverState', payload: backupComposeState });
-      setBanner(null);
-    };
     const isEditing = compose.edit !== null;
     dispatch({ type: 'sent', payload: { edit: isEditing } });
     const { text, entities, whisperToUsernames } = parse(compose.source);
-    let result: Result<Message, ApiError>;
     let name = nickname;
     const inGame = parsed.inGame ?? defaultInGame;
     if (inGame) {
@@ -127,6 +118,19 @@ export const useSend = (me: User) => {
     if (compose.media instanceof File) {
       uploadResult = await upload(compose.media);
     }
+    if (uploadResult?.isOk === false) {
+      let key: string;
+      let failTo: FailTo;
+      if (payload.type === 'NEW') {
+        key = compose.previewId;
+        failTo = { type: 'SEND', onUpload: true };
+      } else {
+        key = payload.editMessage.messageId;
+        failTo = { type: 'EDIT', onUpload: true };
+      }
+      chatDispatch({ type: 'fail', payload: { failTo, key } });
+      return;
+    }
     const mediaId = uploadResult?.isOk ? uploadResult.some.mediaId : null;
     if (payload.type === 'EDIT') {
       if (mediaId) payload.editMessage.mediaId = mediaId;
@@ -134,30 +138,21 @@ export const useSend = (me: User) => {
         type: 'messageEditing',
         payload: { editMessage: payload.editMessage, sendTime: sendStartTime, media: null },
       });
-      result = await patch('/messages/edit', null, payload.editMessage);
+      const result = await Promise.race([patch('/messages/edit', null, payload.editMessage), timeout(8000)]);
+      if (result === 'TIMEOUT' || !result.isOk) {
+        chatDispatch({ type: 'fail', payload: { failTo: { type: 'EDIT' }, key: payload.editMessage.messageId } });
+      }
     } else {
       if (mediaId) payload.newMessage.mediaId = mediaId;
       chatDispatch({
         type: 'messageSending',
         payload: { newMessage: payload.newMessage, sendTime: sendStartTime, media: null },
       });
-      result = await post('/messages/send', null, payload.newMessage);
+      const result = await Promise.race([post('/messages/send', null, payload.newMessage), timeout(8000)]);
+      if ((result === 'TIMEOUT' || !result.isOk) && payload.newMessage.previewId) {
+        chatDispatch({ type: 'fail', payload: { failTo: { type: 'SEND' }, key: payload.newMessage.previewId } });
+      }
     }
-
-    if (result.isOk) {
-      return;
-    }
-    setBanner({
-      level: 'WARNING',
-      content: (
-        <div className="">
-          <FormattedMessage defaultMessage="Error while sending a message, did you recover the message?" />
-          <Button data-small className="ml-2" onClick={handleRecover}>
-            <FormattedMessage defaultMessage="Recover" />
-          </Button>
-        </div>
-      ),
-    });
   }, [
     channelId,
     checkComposeAtom,
@@ -166,7 +161,6 @@ export const useSend = (me: User) => {
     myMember,
     nickname,
     parsedAtom,
-    setBanner,
     store,
     usernameListToUserIdList,
   ]);

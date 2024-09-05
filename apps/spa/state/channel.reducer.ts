@@ -93,40 +93,62 @@ export const makeInitialChannelState = (id: string): ChannelState => {
   };
 };
 
-const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
-  let { messages } = state;
-  const message = makeMessageItem(payload.message);
-  let { previewMap, optimisticMessages } = state;
+const filterPreviewMap = (
+  previewId: string | null | undefined,
+  previewMap: Record<UserId, PreviewItem>,
+): Record<UserId, PreviewItem> => {
+  if (!previewId) return previewMap;
   const previews = Object.values(previewMap);
-  if (payload.previewId && previews.find((preview) => preview.id === payload.previewId)) {
-    previewMap = Object.fromEntries(
-      previews.filter((preview) => preview.id !== payload.previewId).map((preview) => [preview.senderId, preview]),
-    );
-  }
-  if (payload.previewId) {
-    optimisticMessages = L.filter(({ newMessage }) => newMessage.previewId !== payload.previewId, optimisticMessages);
-  }
+  if (!previews.find((preview) => preview.id === previewId)) return previewMap;
+  return Object.fromEntries(
+    previews.filter((preview) => preview.id !== previewId).map((preview) => [preview.senderId, preview]),
+  );
+};
+
+const filterOptimisticMessages = (
+  previewId: string | null | undefined,
+  optimisticMessages: List<OptimisticMessage>,
+): List<OptimisticMessage> => {
+  if (!previewId) return optimisticMessages;
+  return L.filter(({ newMessage }) => newMessage.previewId !== previewId, optimisticMessages);
+};
+
+const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
+  const { messages } = state;
+  const message = makeMessageItem(payload.message);
+  const previewMap = filterPreviewMap(payload.previewId, state.previewMap);
+  const optimisticMessages = filterOptimisticMessages(payload.previewId, state.optimisticMessages);
+
+  const resetMessagesState = (state: ChannelState): ChannelState => {
+    return { ...state, previewMap, optimisticMessages, messages: L.empty(), fullLoaded: false };
+  };
 
   const topMessage = L.first(messages);
   const bottomMessage = L.last(messages);
-  if (topMessage == null || bottomMessage == null) {
-    return { ...state, messages: L.of(message), previewMap, optimisticMessages };
+  if (
+    topMessage == null ||
+    bottomMessage == null ||
+    message.pos === topMessage.pos ||
+    message.pos === bottomMessage.pos
+  ) {
+    return resetMessagesState(state);
   }
-  if (message.pos <= topMessage.pos && !state.fullLoaded) {
-    return { ...state, optimisticMessages };
+  if (message.pos < topMessage.pos) {
+    return { ...state, optimisticMessages, messages: state.fullLoaded ? L.prepend(message, messages) : messages };
   }
   if (message.pos > bottomMessage.pos) {
     return { ...state, previewMap, messages: L.append(message, messages), optimisticMessages };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
-    if (itemByPos.id !== message.id) {
-      recordWarn('Unexpected message position.', { message, itemByPos });
+    if (itemByPos.id !== message.id || itemByPos.modified !== message.modified) {
+      recordWarn('Unexpected new message position', { message, itemByPos });
+      return resetMessagesState(state);
     }
+    // Duplicate message
     return { ...state, optimisticMessages };
   }
-  messages = L.insert(insertIndex, message, messages);
-  return { ...state, previewMap, messages, optimisticMessages };
+  return { ...state, previewMap, messages: L.insert(insertIndex, message, messages), optimisticMessages };
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
@@ -173,50 +195,66 @@ const handleMessageSent = (
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
+  const resetMessagesState = (state: ChannelState): ChannelState => {
+    return { ...state, messages: L.empty(), fullLoaded: false };
+  };
   const message: MessageItem = makeMessageItem(payload.message);
   const { oldPos } = payload;
-  const topMessage = L.head(state.messages);
-  if (!topMessage) {
+  const originalTopMessage = L.head(state.messages);
+  if (!originalTopMessage) {
     return state;
   }
-  if (message.pos < topMessage.pos && !state.fullLoaded) {
-    if (oldPos === message.pos || oldPos < topMessage.pos) {
-      return state;
-    }
-    // The edited message has been moved out of the range of currently loaded messages.
-    const findResult = findMessage(state.messages, message.id, oldPos);
-    if (findResult == null) return state;
-    const [, index] = findResult;
-    return { ...state, messages: L.remove(index, 1, state.messages) };
-  } else if (message.pos === oldPos) {
-    // Edit the message in place
+  const moved = oldPos !== message.pos;
+  if (!moved) {
+    // In-place editing
+    if (message.pos < originalTopMessage.pos) return state;
     const findResult = findMessage(state.messages, message.id, message.pos);
     if (findResult == null) return state;
     const [, index] = findResult;
     return { ...state, messages: L.update(index, message, state.messages) };
-  } else {
-    // The message has been moved to a new position
-    let messages = state.messages;
-    const findResult = findMessage(state.messages, message.id, oldPos);
-    if (findResult != null) {
-      const [, index] = findResult;
-      messages = L.remove(index, 1, state.messages);
-    }
-    if (message.pos < topMessage.pos) {
-      return { ...state, messages: L.prepend(message, messages) };
-    }
-    const last = L.last(messages);
-    if (last == null || message.pos > last.pos) {
-      return { ...state, messages: L.append(message, messages) };
-    }
-    const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
-    if (itemByPos) {
-      console.warn('Unexpected message position.', { message, itemByPos });
-      return state;
-    }
-    messages = L.insert(insertIndex, message, messages);
-    return { ...state, messages };
   }
+  // Remove the previous message if it loaded
+  let messagesState = state.messages;
+  if (oldPos >= originalTopMessage.pos) {
+    const oldEntry = findMessage(state.messages, message.id, oldPos);
+    if (oldEntry != null) {
+      const [, index] = oldEntry;
+      messagesState = L.remove(index, 1, state.messages);
+    }
+  }
+  const messages = messagesState;
+  const topMessage = L.head(messages);
+  const bottomMessage = L.last(messages);
+  if (!topMessage || !bottomMessage) {
+    // The only message has been removed in the previous step
+    const moveUp = message.pos < originalTopMessage.pos;
+    return { ...state, messages: moveUp ? L.empty() : L.of(message) };
+  }
+
+  if (message.pos < topMessage.pos) {
+    // Move up
+    if (oldPos === topMessage.pos) {
+      recordWarn('The top message should be removed in the previous step', { message, topMessage });
+      return resetMessagesState(state);
+    }
+    return {
+      ...state,
+      messages: state.fullLoaded
+        ? L.prepend(message, messages)
+        : // The message has been moved out of the loaded range
+          messages,
+    };
+  }
+  if (message.pos > bottomMessage.pos) {
+    // Move down to the bottom
+    return { ...state, messages: L.append(message, messages) };
+  }
+  const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
+  if (itemByPos) {
+    recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
+    return resetMessagesState(state);
+  }
+  return { ...state, messages: L.insert(insertIndex, message, messages) };
 };
 
 const handleMessagePreview = (
@@ -364,6 +402,7 @@ const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion): List<
     if (message.pos < prevPos) {
       recordWarn('Messages are not sorted by pos.', {
         action,
+        payload: action.type === 'messageEdited' ? action.payload.message : action.payload,
         message,
         pos: message.pos,
         prevPos,

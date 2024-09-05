@@ -1,4 +1,4 @@
-import { type ApiError, type Message, type User } from '@boluo/api';
+import { type NewMessage, type ApiError, type Message, type User, type EditMessage } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
@@ -72,54 +72,76 @@ export const useSend = (me: User) => {
         name = inputedName;
       }
     }
+    let payload: { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
+    if (!isEditing) {
+      payload = {
+        type: 'NEW',
+        newMessage: {
+          messageId: null,
+          previewId: compose.previewId,
+          channelId,
+          name,
+          text,
+          entities,
+          inGame,
+          isAction: parsed.isAction,
+          mediaId: null,
+          pos: null,
+          whisperToUsers: whisperToUsernames ? usernameListToUserIdList(whisperToUsernames) : null,
+          color: '',
+        },
+      };
+      chatDispatch({
+        type: 'messageSending',
+        payload: {
+          newMessage: payload.newMessage,
+          sendTime: sendStartTime,
+          media: compose.media instanceof File ? compose.media : null,
+        },
+      });
+    } else {
+      payload = {
+        type: 'EDIT',
+        editMessage: {
+          messageId: compose.previewId,
+          name,
+          text: parsed.text,
+          entities: parsed.entities,
+          inGame,
+          isAction: parsed.isAction,
+          mediaId: typeof compose.media === 'string' ? compose.media : null,
+          color: '',
+        },
+      };
+      chatDispatch({
+        type: 'messageEditing',
+        payload: {
+          editMessage: payload.editMessage,
+          sendTime: sendStartTime,
+          media: compose.media instanceof File ? compose.media : null,
+        },
+      });
+    }
 
     let uploadResult: Awaited<ReturnType<typeof upload>> | null = null;
     if (compose.media instanceof File) {
       uploadResult = await upload(compose.media);
     }
-    if (uploadResult?.isOk === false) {
-      setBanner({
-        level: 'WARNING',
-        content: (
-          <div className="">
-            <FormattedMessage defaultMessage="Error while uploading a file, did you recover the message?" />
-            <Button data-small className="ml-2" onClick={handleRecover}>
-              <FormattedMessage defaultMessage="Recover" />
-            </Button>
-          </div>
-        ),
-      });
-      return;
-    }
     const mediaId = uploadResult?.isOk ? uploadResult.some.mediaId : null;
-    if (isEditing) {
-      result = await patch('/messages/edit', null, {
-        messageId: compose.previewId,
-        name,
-        text: parsed.text,
-        entities: parsed.entities,
-        inGame,
-        isAction: parsed.isAction,
-        mediaId,
-        color: '',
+    if (payload.type === 'EDIT') {
+      if (mediaId) payload.editMessage.mediaId = mediaId;
+      chatDispatch({
+        type: 'messageEditing',
+        payload: { editMessage: payload.editMessage, sendTime: sendStartTime, media: null },
       });
+      result = await patch('/messages/edit', null, payload.editMessage);
     } else {
-      const newMessage = {
-        messageId: null,
-        previewId: compose.previewId,
-        channelId,
-        name,
-        text,
-        entities,
-        inGame,
-        isAction: parsed.isAction,
-        mediaId,
-        pos: null,
-        whisperToUsers: whisperToUsernames ? usernameListToUserIdList(whisperToUsernames) : null,
-        color: '',
-      };
-      chatDispatch({ type: 'messageSent', payload: { newMessage, sendTime: sendStartTime } });
-      result = await post('/messages/send', null, newMessage);
+      if (mediaId) payload.newMessage.mediaId = mediaId;
+      chatDispatch({
+        type: 'messageSending',
+        payload: { newMessage: payload.newMessage, sendTime: sendStartTime, media: null },
+      });
+      result = await post('/messages/send', null, payload.newMessage);
     }
 
     if (result.isOk) {

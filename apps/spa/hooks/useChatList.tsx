@@ -1,8 +1,8 @@
 import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type Dispatch, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
-import { findMessage, type OptimisticItem, type ChannelState } from '../state/channel.reducer';
+import { findMessage, type OptimisticItem, type ChannelState, type OptimisticMessage } from '../state/channel.reducer';
 import { type ChatItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
@@ -11,11 +11,8 @@ import { recordWarn } from '../error';
 import { type PreviewEdit } from '@boluo/api';
 import * as L from 'list';
 
-export type SetOptimisticItems = Dispatch<SetStateAction<Record<string, OptimisticItem>>>;
-
 interface UseChatListReturn {
   chatList: ChatItem[];
-  setOptimisticItems: SetOptimisticItems;
   firstItemIndex: number;
   filteredMessagesCount: number;
   scheduledGcLowerPos: number | null;
@@ -156,10 +153,10 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   );
   const optimisticMessagesAtom = useMemo(
     () =>
-      selectAtom(chatAtom, (chat): L.List<OptimisticItem> => {
+      selectAtom(chatAtom, (chat): Record<string, OptimisticMessage> => {
         const channel = chat.channels[channelId];
-        if (!channel) return L.empty();
-        return L.map(({ item }) => item, channel.optimisticMessages);
+        if (!channel) return {};
+        return channel.optimisticMessages;
       }),
     [channelId],
   );
@@ -175,8 +172,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const optimisticMessagesFromState = useAtomValue(optimisticMessagesAtom);
   const previewMap = useAtomValue(previewMapAtom);
   const scheduledGcLowerPos = useAtomValue(scheduledGcLowerPosAtom);
-
-  const [optimisticItemMap, setOptimisticItems] = useState<Record<string, OptimisticItem>>({});
   const firstItemIndex = useRef(START_INDEX); // can't be negative
   const { chatList, filteredMessagesCount } = useMemo((): Pick<
     UseChatListReturn,
@@ -184,7 +179,13 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   > => {
     if (!messages || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
     const optimisticPreviewList = Object.values(previewMap);
-    let optimisticMessageItems: L.List<OptimisticItem> = optimisticMessagesFromState;
+    const optimisticMessageItems: OptimisticItem[] = [];
+    for (const key in optimisticMessagesFromState) {
+      const optimistic = optimisticMessagesFromState[key];
+      if (optimistic?.ref.type === 'PREVIEW') {
+        optimisticMessageItems.push(optimistic.item);
+      }
+    }
     const itemList: ChatItem[] = L.toArray(
       L.filter((item) => {
         const isFiltered = !filter(filterType, item);
@@ -192,8 +193,12 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         if (isFiltered) {
           return false;
         }
-        const optimisticItem = optimisticItemMap[item.id];
-        if (!optimisticItem || optimisticItem.item.pos !== item.pos || optimisticItem.item.type !== 'MESSAGE') {
+        const optimisticItem = optimisticMessagesFromState[item.id]?.item;
+        if (
+          !optimisticItem ||
+          /* moved */ optimisticItem.item.pos !== item.pos ||
+          /* just for type narrowing */ optimisticItem.item.type !== 'MESSAGE'
+        ) {
           return true;
         }
         const itemTimestamp = Date.parse(item.modified);
@@ -201,7 +206,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           return true;
         } else {
           // Side effect: record the optimistic item that should be rendered.
-          optimisticMessageItems = L.append(optimisticItem, optimisticMessageItems);
+          optimisticMessageItems.push(optimisticItem);
           return false;
         }
       }, messages),
@@ -307,7 +312,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     isEmpty,
     messages,
     myId,
-    optimisticItemMap,
     optimisticMessagesFromState,
     previewMap,
     showArchived,
@@ -338,7 +342,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
 
   return {
     chatList,
-    setOptimisticItems,
     firstItemIndex: firstItemIndex.current,
     filteredMessagesCount,
     scheduledGcLowerPos,

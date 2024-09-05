@@ -156,7 +156,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       selectAtom(chatAtom, (chat): Record<string, OptimisticMessage> => {
         const channel = chat.channels[channelId];
         if (!channel) return {};
-        return channel.optimisticMessages;
+        return channel.optimisticMessageMap;
       }),
     [channelId],
   );

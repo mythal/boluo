@@ -91,7 +91,7 @@ export interface ChannelState {
   fullLoaded: boolean;
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
-  optimisticMessages: Record<string, OptimisticMessage>;
+  optimisticMessageMap: Record<string, OptimisticMessage>;
   scheduledGc: ScheduledGc | null;
   collidedPreviewIdSet: Set<string>;
 }
@@ -112,7 +112,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     previewMap: {},
     scheduledGc: null,
     collidedPreviewIdSet: new Set(),
-    optimisticMessages: {},
+    optimisticMessageMap: {},
   };
 };
 
@@ -130,25 +130,25 @@ const filterPreviewMap = (
 
 const filterOptimisticMessages = (
   refId: string | null | undefined,
-  optimisticMessages: Record<string, OptimisticMessage>,
+  optimisticMessageMap: Record<string, OptimisticMessage>,
 ): Record<string, OptimisticMessage> => {
-  if (!refId) return optimisticMessages;
-  if (refId in optimisticMessages) {
-    const nextOptimisticMessages = { ...optimisticMessages };
+  if (!refId) return optimisticMessageMap;
+  if (refId in optimisticMessageMap) {
+    const nextOptimisticMessages = { ...optimisticMessageMap };
     delete nextOptimisticMessages[refId];
     return nextOptimisticMessages;
   }
-  return optimisticMessages;
+  return optimisticMessageMap;
 };
 
 const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
   const { messages } = state;
   const message = makeMessageItem(payload.message);
   const previewMap = filterPreviewMap(payload.previewId, state.previewMap);
-  const optimisticMessages = filterOptimisticMessages(payload.previewId, state.optimisticMessages);
+  const optimisticMessageMap = filterOptimisticMessages(payload.previewId, state.optimisticMessageMap);
 
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, previewMap, optimisticMessages, messages: L.empty(), fullLoaded: false };
+    return { ...state, previewMap, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
   };
 
   const topMessage = L.first(messages);
@@ -162,10 +162,10 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
     return resetMessagesState(state);
   }
   if (message.pos < topMessage.pos) {
-    return { ...state, optimisticMessages, messages: state.fullLoaded ? L.prepend(message, messages) : messages };
+    return { ...state, optimisticMessageMap, messages: state.fullLoaded ? L.prepend(message, messages) : messages };
   }
   if (message.pos > bottomMessage.pos) {
-    return { ...state, previewMap, messages: L.append(message, messages), optimisticMessages };
+    return { ...state, previewMap, messages: L.append(message, messages), optimisticMessageMap };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
@@ -174,9 +174,9 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
       return resetMessagesState(state);
     }
     // Duplicate message
-    return { ...state, optimisticMessages };
+    return { ...state, optimisticMessageMap };
   }
-  return { ...state, previewMap, messages: L.insert(insertIndex, message, messages), optimisticMessages };
+  return { ...state, previewMap, messages: L.insert(insertIndex, message, messages), optimisticMessageMap };
 };
 
 const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
@@ -216,7 +216,7 @@ const handleMessageSending = (
   const optimisticItem = newMessageOptimisticItem(newMessage, preview, sendTime, media);
   return {
     ...state,
-    optimisticMessages: { ...state.optimisticMessages, [newMessage.previewId]: optimisticItem },
+    optimisticMessageMap: { ...state.optimisticMessageMap, [newMessage.previewId]: optimisticItem },
   };
 };
 
@@ -229,29 +229,29 @@ const handleMessageEditing = (
   const optimisticItem = editMessageOptimisticItem(editMessage, previousMessage, sendTime, media);
   return {
     ...state,
-    optimisticMessages: { ...state.optimisticMessages, [editMessage.messageId]: optimisticItem },
+    optimisticMessageMap: { ...state.optimisticMessageMap, [editMessage.messageId]: optimisticItem },
   };
 };
 
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
-  const optimisticMessages = filterOptimisticMessages(payload.message.id, state.optimisticMessages);
+  const optimisticMessageMap = filterOptimisticMessages(payload.message.id, state.optimisticMessageMap);
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, optimisticMessages, messages: L.empty(), fullLoaded: false };
+    return { ...state, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
   };
   const message: MessageItem = makeMessageItem(payload.message);
   const { oldPos } = payload;
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
-    return { ...state, optimisticMessages };
+    return { ...state, optimisticMessageMap };
   }
   const moved = oldPos !== message.pos;
   if (!moved) {
     // In-place editing
-    if (message.pos < originalTopMessage.pos) return { ...state, optimisticMessages };
+    if (message.pos < originalTopMessage.pos) return { ...state, optimisticMessageMap };
     const findResult = findMessage(state.messages, message.id, message.pos);
-    if (findResult == null) return { ...state, optimisticMessages };
+    if (findResult == null) return { ...state, optimisticMessageMap };
     const [, index] = findResult;
-    return { ...state, messages: L.update(index, message, state.messages), optimisticMessages };
+    return { ...state, messages: L.update(index, message, state.messages), optimisticMessageMap };
   }
   // Remove the previous message if it loaded
   let messagesState = state.messages;
@@ -268,7 +268,7 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
   if (!topMessage || !bottomMessage) {
     // The only message has been removed in the previous step
     const moveUp = message.pos < originalTopMessage.pos;
-    return { ...state, optimisticMessages, messages: moveUp ? L.empty() : L.of(message) };
+    return { ...state, optimisticMessageMap, messages: moveUp ? L.empty() : L.of(message) };
   }
 
   if (message.pos < topMessage.pos) {
@@ -279,7 +279,7 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
     }
     return {
       ...state,
-      optimisticMessages,
+      optimisticMessageMap,
       messages: state.fullLoaded
         ? L.prepend(message, messages)
         : // The message has been moved out of the loaded range
@@ -288,14 +288,14 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
   }
   if (message.pos > bottomMessage.pos) {
     // Move down to the bottom
-    return { ...state, optimisticMessages, messages: L.append(message, messages) };
+    return { ...state, optimisticMessageMap, messages: L.append(message, messages) };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
     recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
     return resetMessagesState(state);
   }
-  return { ...state, optimisticMessages, messages: L.insert(insertIndex, message, messages) };
+  return { ...state, optimisticMessageMap, messages: L.insert(insertIndex, message, messages) };
 };
 
 const handleMessagePreview = (
@@ -377,19 +377,19 @@ const handleMessageDeleted = (
   state: ChannelState,
   { payload: { messageId, pos } }: ChatAction<'messageDeleted'>,
 ): ChannelState => {
-  let optimisticMessages: typeof state.optimisticMessages;
-  if (messageId in state.optimisticMessages) {
-    optimisticMessages = { ...state.optimisticMessages };
-    delete optimisticMessages[messageId];
+  let optimisticMessageMap: typeof state.optimisticMessageMap;
+  if (messageId in state.optimisticMessageMap) {
+    optimisticMessageMap = { ...state.optimisticMessageMap };
+    delete optimisticMessageMap[messageId];
   } else {
-    optimisticMessages = state.optimisticMessages;
+    optimisticMessageMap = state.optimisticMessageMap;
   }
   const findResult = findMessage(state.messages, messageId, pos);
   if (findResult == null) {
-    return { ...state, optimisticMessages };
+    return { ...state, optimisticMessageMap };
   }
   const [, index] = findResult;
-  return { ...state, optimisticMessages, messages: L.remove(index, 1, state.messages) };
+  return { ...state, optimisticMessageMap, messages: L.remove(index, 1, state.messages) };
 };
 
 const handleResetGc = (state: ChannelState, { payload: { pos } }: ChatAction<'resetGc'>): ChannelState => {
@@ -403,32 +403,32 @@ const handleSetOptimisticMessage = (
   state: ChannelState,
   { payload }: ChatAction<'setOptimisticMessage'>,
 ): ChannelState => {
-  return { ...state, optimisticMessages: { ...state.optimisticMessages, [payload.ref.id]: payload } };
+  return { ...state, optimisticMessageMap: { ...state.optimisticMessageMap, [payload.ref.id]: payload } };
 };
 
 const handleRemoveOptimisticMessage = (
   state: ChannelState,
   { payload: { id } }: ChatAction<'removeOptimisticMessage'>,
 ): ChannelState => {
-  const optimisticMessages = { ...state.optimisticMessages };
-  delete optimisticMessages[id];
-  return { ...state, optimisticMessages };
+  const optimisticMessageMap = { ...state.optimisticMessageMap };
+  delete optimisticMessageMap[id];
+  return { ...state, optimisticMessageMap };
 };
 
 const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): ChannelState => {
   const { failTo, key } = payload;
   if (failTo.type === 'SEND') {
-    const optimisticMessage = state.optimisticMessages[key];
+    const optimisticMessage = state.optimisticMessageMap[key];
     if (!optimisticMessage) return state;
     const chatItem = optimisticMessage.item.item;
     if (chatItem.type !== 'MESSAGE') return state;
     const item: MessageItem = { ...chatItem, failTo };
     const optimisticItem: OptimisticItem = { ...optimisticMessage.item, item };
-    const optimisticMessages: ChannelState['optimisticMessages'] = {
-      ...state.optimisticMessages,
+    const optimisticMessageMap: ChannelState['optimisticMessageMap'] = {
+      ...state.optimisticMessageMap,
       [optimisticMessage.ref.id]: { ...optimisticMessage, item: optimisticItem },
     };
-    return { ...state, optimisticMessages };
+    return { ...state, optimisticMessageMap };
   }
   const messageIndex = L.findIndex((message) => message.id === key, state.messages);
   let messages = state.messages;

@@ -58,6 +58,12 @@ export const ChatItemMessage: FC<{
   );
   const mini = continuous || isAction;
   const draggable = sendBySelf || iAmMaster;
+  let media: ReactNode = null;
+  if (message.mediaId != null) {
+    media = <MessageMedia className="pt-2" media={message.mediaId} />;
+  } else if (message.optimisticMedia != null) {
+    media = <MessageMedia className="pt-2" media={message.optimisticMedia} />;
+  }
 
   return (
     <MessageBox
@@ -108,7 +114,7 @@ export const ChatItemMessage: FC<{
             />
           </div>
         )}
-        {message.mediaId != null && <MessageMedia className="pt-2" media={message.mediaId} />}
+        {media}
       </div>
     </MessageBox>
   );

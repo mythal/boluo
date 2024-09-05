@@ -1,7 +1,7 @@
 import { type DataRef, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { post } from '@boluo/api-browser';
-import { useStore } from 'jotai';
+import { useSetAtom, useStore } from 'jotai';
 import type { FC, MutableRefObject, RefObject } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
@@ -11,7 +11,7 @@ import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
-import { isDummySelfPreview, type SetOptimisticItems, useChatList } from '../../hooks/useChatList';
+import { isDummySelfPreview, useChatList } from '../../hooks/useChatList';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { type ChatItem, type MessageItem } from '../../state/channel.types';
 import { chatAtom } from '../../state/chat.atoms';
@@ -75,12 +75,9 @@ interface UseDragHandlesResult {
   handleDragCancel: () => void;
 }
 
-const useDndHandles = (
-  channelId: string,
-  chatList: ChatItem[],
-  setOptimisticItems: SetOptimisticItems,
-): UseDragHandlesResult => {
+const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesResult => {
   const setBanner = useSetBanner();
+  const dispatch = useSetAtom(chatAtom);
   const [draggingItem, setDraggingItem] = useState<DraggingItem | null>(null);
   const activeRef = useRef<DraggingItem | null>(draggingItem);
   activeRef.current = draggingItem;
@@ -150,11 +147,10 @@ const useDndHandles = (
         const optimisticPos = targetNext
           ? (targetNext.pos + targetItem.pos) / 2
           : (targetItem.posP + 1) / targetItem.posQ;
-
-        setOptimisticItems((items) => ({
-          ...items,
-          [draggingMessage.id]: { item, optimisticPos, timestamp },
-        }));
+        dispatch({
+          type: 'setOptimisticMessage',
+          payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
+        });
       } else {
         range = [null, [targetItem.posP, targetItem.posQ]];
 
@@ -171,11 +167,10 @@ const useDndHandles = (
         const optimisticPos = targetBefore
           ? (targetBefore.pos + targetItem.pos) / 2
           : targetItem.posP / targetItem.posQ + 1;
-
-        setOptimisticItems((items) => ({
-          ...items,
-          [draggingMessage.id]: { item, optimisticPos, timestamp },
-        }));
+        dispatch({
+          type: 'setOptimisticMessage',
+          payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
+        });
       }
       if (range) {
         const result = await post('/messages/move_between', null, {
@@ -183,11 +178,7 @@ const useDndHandles = (
           messageId: draggingMessage.id,
           range,
         });
-        setOptimisticItems((items) => {
-          const nextItems = { ...items };
-          delete nextItems[draggingMessage.id];
-          return nextItems;
-        });
+        dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
         if (result.isErr) {
           const errorCode = result.err.code;
           setBanner({
@@ -197,7 +188,7 @@ const useDndHandles = (
         }
       }
     },
-    [resetDragging, setOptimisticItems, channelId, setBanner],
+    [resetDragging, setBanner, dispatch, channelId],
   );
 
   const handleDragCancel = useCallback(() => {
@@ -243,16 +234,9 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
 
   const myId: string | undefined = myMember?.user.id;
   const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, setOptimisticItems, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
-    channelId,
-    myId,
-  );
+  const { chatList, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(channelId, myId);
 
-  const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
-    channelId,
-    chatList,
-    setOptimisticItems,
-  );
+  const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(channelId, chatList);
   const renderRangeRef = useRef<[number, number]>([0, 0]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);

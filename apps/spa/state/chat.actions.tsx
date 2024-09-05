@@ -1,5 +1,6 @@
 import type {
   ConnectionError,
+  EditMessage,
   EventBody,
   Message,
   NewMessage,
@@ -9,10 +10,16 @@ import type {
 } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
 import { type MakeAction } from './actions';
+import { type FailTo } from './channel.types';
+import { type OptimisticMessage } from './channel.reducer';
 
 export type ChatActionMap = {
   receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
-  messageSent: { newMessage: NewMessage; sendTime: number };
+  messageSending: { newMessage: NewMessage; sendTime: number; media: File | null };
+  messageEditing: { editMessage: EditMessage; sendTime: number; media: File | null };
+  setOptimisticMessage: OptimisticMessage;
+  removeOptimisticMessage: { id: string };
+  fail: { failTo: FailTo; key: string };
   initialized: Empty;
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;

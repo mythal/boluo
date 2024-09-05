@@ -9,6 +9,13 @@ export type PreviewItem = Preview & {
   timestamp: number;
 };
 
-export type MessageItem = Message & { type: 'MESSAGE'; optimistic?: true; key: string };
+export type FailTo = { type: 'SEND' } | { type: 'EDIT' } | { type: 'DELETE' } | { type: 'UPLOAD' };
+export type MessageItem = Message & {
+  type: 'MESSAGE';
+  optimistic?: true;
+  optimisticMedia?: File | null;
+  failTo?: FailTo;
+  key: string;
+};
 
 export type ChatItem = PreviewItem | MessageItem;

@@ -22,6 +22,7 @@ import { channelReadFamily } from '../../state/unread.atoms';
 import { ReadObserverContext } from '../../hooks/useReadObserve';
 import { useMember } from '../../hooks/useMember';
 import { recordWarn } from '../../error';
+import { timeout } from '@boluo/utils';
 
 interface Props {
   setIsScrolling: (isScrolling: boolean) => void;
@@ -173,18 +174,17 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
         });
       }
       if (range) {
-        const result = await post('/messages/move_between', null, {
-          channelId,
-          messageId: draggingMessage.id,
-          range,
-        });
+        const result = await Promise.race([
+          post('/messages/move_between', null, {
+            channelId,
+            messageId: draggingMessage.id,
+            range,
+          }),
+          timeout(8000),
+        ]);
         dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
-        if (result.isErr) {
-          const errorCode = result.err.code;
-          setBanner({
-            level: 'ERROR',
-            content: <FormattedMessage defaultMessage="Failed to move message ({errorCode})" values={{ errorCode }} />,
-          });
+        if (result === 'TIMEOUT' || result.isErr) {
+          dispatch({ type: 'fail', payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id } });
         }
       }
     },

@@ -226,7 +226,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       }
       if (!hasSelfPreview) {
         const maxPreviewPos = optimisticPreviewList.reduce((max, preview) => Math.max(max, preview.pos), 0);
-        const maxPos = itemListLen > 0 ? Math.max(itemList[itemListLen - 1]!.pos, maxPreviewPos) : 1;
+        const maxOptimisticPos = optimisticMessageItems.reduce((max, { item }) => Math.max(max, item.pos), 0);
+        const maxPos = Math.max(itemListLen > 0 ? itemList[itemListLen - 1]!.pos : 1, maxPreviewPos, maxOptimisticPos);
         const dummyPos = Math.ceil(maxPos) + SAFE_OFFSET;
         let pos = dummyPos;
         let posP = pos;

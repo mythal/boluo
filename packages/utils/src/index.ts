@@ -1,4 +1,4 @@
-export { sleep } from './async';
+export { sleep, timeout } from './async';
 export { getOS, isApple, stopPropagation } from './browser';
 export { revertPalette, palette } from './color';
 export { isDaytime, parseDate } from './date';

@@ -415,6 +415,34 @@ const handleRemoveOptimisticMessage = (
   return { ...state, optimisticMessages };
 };
 
+const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): ChannelState => {
+  const { failTo, key } = payload;
+  if (failTo.type === 'SEND') {
+    const optimisticMessage = state.optimisticMessages[key];
+    if (!optimisticMessage) return state;
+    const chatItem = optimisticMessage.item.item;
+    if (chatItem.type !== 'MESSAGE') return state;
+    const item: MessageItem = { ...chatItem, failTo };
+    const optimisticItem: OptimisticItem = { ...optimisticMessage.item, item };
+    const optimisticMessages: ChannelState['optimisticMessages'] = {
+      ...state.optimisticMessages,
+      [optimisticMessage.ref.id]: { ...optimisticMessage, item: optimisticItem },
+    };
+    return { ...state, optimisticMessages };
+  }
+  const messageIndex = L.findIndex((message) => message.id === key, state.messages);
+  let messages = state.messages;
+  if (messageIndex !== -1) {
+    const message = L.nth(messageIndex, state.messages)!;
+    messages = L.update(messageIndex, { ...message, failTo }, state.messages);
+  }
+
+  return handleRemoveOptimisticMessage(
+    { ...state, messages },
+    { type: 'removeOptimisticMessage', payload: { id: key } },
+  );
+};
+
 const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initialized: boolean): ChannelState => {
   switch (action.type) {
     case 'messagePreview':
@@ -438,6 +466,8 @@ const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initializ
       // and should be ignored if the chat state
       // has not been initialized.
       return initialized ? handleMessagesLoaded(state, action) : state;
+    case 'fail':
+      return handleFail(state, action);
     case 'resetGc':
       return handleResetGc(state, action);
     default:

@@ -493,16 +493,19 @@ const handleGc = (state: ChannelState): ChannelState => {
   return { ...state, messages, scheduledGc, fullLoaded };
 };
 
-const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion): List<MessageItem> => {
-  let prevPos = -1;
+const CHECK_COUNT = 512;
+const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState => {
+  let prevPos = Number.MAX_SAFE_INTEGER;
   let i = 0;
+  const messages = state.messages;
   const firstPos = L.first(messages)?.pos;
   const lastPos = L.last(messages)?.pos;
-  for (const message of messages) {
-    if (message.pos < prevPos) {
-      recordWarn('Messages are not sorted by pos.', {
-        action,
-        payload: action.type === 'messageEdited' ? action.payload.message : action.payload,
+  for (const message of L.backwards(messages)) {
+    if (i > CHECK_COUNT) break;
+    if (message.pos >= prevPos) {
+      recordWarn('Messages are not sorted by pos', {
+        actionType: action.type,
+        actionPayload: action.payload,
         message,
         pos: message.pos,
         prevPos,
@@ -511,12 +514,12 @@ const checkOrder = (messages: List<MessageItem>, action: ChatActionUnion): List<
         index: i,
         size: messages.length,
       });
-      return L.sortBy(({ pos }) => pos, messages);
+      return { ...state, messages: L.empty(), fullLoaded: false };
     }
     prevPos = message.pos;
     i += 1;
   }
-  return messages;
+  return state;
 };
 
 export const channelReducer = (
@@ -525,16 +528,12 @@ export const channelReducer = (
   { initialized }: ChatReducerContext,
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
-  let messages = nextState.messages;
   switch (action.type) {
     case 'messageEdited':
     case 'receiveMessage':
     case 'messagesLoaded':
-      messages = checkOrder(messages, action);
+      nextState = checkOrder(nextState, action);
       break;
-  }
-  if (messages !== nextState.messages) {
-    nextState = { ...nextState, messages };
   }
   nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {

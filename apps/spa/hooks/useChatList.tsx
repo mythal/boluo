@@ -114,8 +114,11 @@ export const useShowDummy = (
       }
     };
     const unsubRecordModified = store.sub(composeAtom, () => {
-      hideDummyTimeout.current = Math.max(Date.now() + HIDE_DUMMY_DELAY, hideDummyTimeout.current);
-      updateTimeout();
+      const focused = store.get(composeAtom).focused;
+      if (focused) {
+        hideDummyTimeout.current = Math.max(Date.now() + HIDE_DUMMY_DELAY, hideDummyTimeout.current);
+        updateTimeout();
+      }
     });
     const unsubListenTimeout = store.sub(hideSelfPreviewTimeoutAtom, () => {
       const selfPreviewLock = store.get(hideSelfPreviewTimeoutAtom);

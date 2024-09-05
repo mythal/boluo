@@ -6,15 +6,18 @@ import { identity } from '@boluo/utils';
 const path = '/messages/query';
 type Key = readonly [typeof path, string];
 
-const updater: MutationFetcher<Message, Key> = async ([_, messageId]) => {
+const updater: MutationFetcher<Message | null, Key> = async ([_, messageId]) => {
   const result = await post('/messages/toggle_fold', { id: messageId }, {});
+  if (result.isErr && result.err.code === 'NOT_FOUND') {
+    return null;
+  }
   return result.unwrap();
 };
 
 export const useMutateMessageArchive = (
   messageId: string,
-  options: SWRMutationConfiguration<Message, ApiError, Key, never> = {
+  options: SWRMutationConfiguration<Message | null, ApiError, Key, never> = {
     revalidate: false,
     populateCache: identity,
   },
-) => useSWRMutation<Message, ApiError, Key>([path, messageId] as const, updater, options);
+) => useSWRMutation<Message | null, ApiError, Key>([path, messageId] as const, updater, options);

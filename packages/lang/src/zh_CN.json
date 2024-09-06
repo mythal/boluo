@@ -152,6 +152,9 @@
   "88cMEG": {
     "message": "摧毁位面"
   },
+  "8pN86+": {
+    "message": "{name} is composing…"
+  },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
   },
@@ -166,6 +169,9 @@
   },
   "9WRlF4": {
     "message": "发送"
+  },
+  "9dRayY": {
+    "message": "Your browser is not supported"
   },
   "9to/Le": {
     "message": "更改头像"
@@ -184,9 +190,6 @@
   },
   "BEbOqj": {
     "message": "糟糕！"
-  },
-  "Bc5LE6": {
-    "message": "尺寸必须小于{mediaMaxSizeMb}M。"
   },
   "Bm9rWe": {
     "message": "删除消息失败"
@@ -227,9 +230,6 @@
   "DBP+Od": {
     "message": "Echo"
   },
-  "Euftjf": {
-    "message": "上传文件出错，是否恢复消息？"
-  },
   "F3Wc9W": {
     "message": "过去{day}天"
   },
@@ -244,6 +244,9 @@
   },
   "GMPXuF": {
     "message": "每个人都可以加入这个位面"
+  },
+  "GaOcCS": {
+    "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
   },
   "GbWVAh": {
     "message": "是的，踢走"
@@ -320,6 +323,9 @@
   "KIAp17": {
     "message": "不带富文本信息"
   },
+  "KN7zKn": {
+    "message": "Error"
+  },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
   },
@@ -334,6 +340,9 @@
   },
   "LXxsbk": {
     "message": "匿名"
+  },
+  "LnM0On": {
+    "message": "{a} and {b} are composing…"
   },
   "MWO2zy": {
     "message": "出了点问题。"
@@ -473,9 +482,6 @@
   "TwyMau": {
     "message": "账号"
   },
-  "UIVqKu": {
-    "message": "恢复"
-  },
   "UdtpV7": {
     "message": "主题"
   },
@@ -523,6 +529,12 @@
   },
   "We16k/": {
     "message": "确认要离开「{spaceName}」位面吗？"
+  },
+  "Wi3NTK": {
+    "message": "This application requires many modern features that are not supported by your browser."
+  },
+  "Wj4YzT": {
+    "message": "Back to Homepage"
   },
   "WwpJ5A": {
     "message": "发送密码重置邮件"
@@ -740,9 +752,6 @@
   "jtLNcT": {
     "message": "移动消息失败，找不到目的地，请再试一下。"
   },
-  "jvo0vs": {
-    "message": "保存"
-  },
   "k1s9UW": {
     "message": "未找到"
   },
@@ -761,9 +770,6 @@
   "kMogDE": {
     "message": "请输入合法的邮箱地址。"
   },
-  "kaKiV5": {
-    "message": "角色名"
-  },
   "kh4wt0": {
     "message": "切换侧边栏"
   },
@@ -778,6 +784,9 @@
   },
   "lx+ssX": {
     "message": "离开位面"
+  },
+  "m8OPHR": {
+    "message": "If you see this text, please try to swipe down ↓ to dispaly the content."
   },
   "mYgmal": {
     "message": "角色外身份"
@@ -805,6 +814,9 @@
   },
   "oaP8SV": {
     "message": "您已拒绝通知权限。"
+  },
+  "oeO284": {
+    "message": "{name} and {count} others are composing…"
   },
   "onmBf2": {
     "message": "换一个随机颜色"
@@ -842,11 +854,11 @@
   "qvc9uM": {
     "message": "此操作不可撤销。"
   },
-  "qwN+HQ": {
-    "message": "发送消息时出错，您是否恢复消息？"
-  },
   "r2rV1X": {
     "message": "游戏外"
+  },
+  "r4YqDx": {
+    "message": "Such as CSS Container Queries."
   },
   "rK7cTy": {
     "message": "初始频道名称"
@@ -899,14 +911,17 @@
   "tOdNiY": {
     "message": "暗色"
   },
-  "tYDBKv": {
-    "message": "移动消息失败 ({errorCode})"
+  "taJuye": {
+    "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
   },
   "ug01Mk": {
     "message": "时间"
   },
   "uhu5aG": {
     "message": "公开"
+  },
+  "uizmax": {
+    "message": "Press"
   },
   "ulAzZl": {
     "message": "查询用户失败"

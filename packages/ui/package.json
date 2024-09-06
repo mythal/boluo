@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "homepage": "https://github.com/mythal/boluo",
   "license": "GPL-3.0",
+  "type": "module",
   "scripts": {
     "check": "tsc --noEmit --project tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx",
@@ -34,7 +35,9 @@
     "@types/node": "^20.11.5",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "babel-plugin-formatjs": "^10.5.16",
     "eslint": "^8.56.0",
     "eslint-plugin-storybook": "^0.8.0",
     "postcss": "^8.4.44",
@@ -52,7 +55,7 @@
     "@floating-ui/react": "^0.26.23",
     "clsx": "^2.1.0",
     "color2k": "^2.0.3",
-    "react-intl": "^6.6.1",
+    "react-intl": "^6.6.8",
     "tslib": "^2.6.2"
   }
 }

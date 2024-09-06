@@ -251,6 +251,9 @@
   "GbWVAh": {
     "message": "Yes, Kick"
   },
+  "Glg99w": {
+    "message": "Oops! The compose box crashed, Your last input was:"
+  },
   "HAlOn1": {
     "message": "Name"
   },
@@ -385,6 +388,9 @@
   },
   "OYT4m/": {
     "message": "Message cannot be empty"
+  },
+  "OcOUVQ": {
+    "message": "Oops! The input box crashed."
   },
   "P57vjw": {
     "message": "Channel name must be at most 32 characters."
@@ -608,9 +614,6 @@
   "aLncO3": {
     "message": "Secret Channel"
   },
-  "aTCgvQ": {
-    "message": "Your last input was:"
-  },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."
   },
@@ -757,9 +760,6 @@
   },
   "k1s9UW": {
     "message": "Not Found"
-  },
-  "k7IL+w": {
-    "message": "The input box crashed."
   },
   "kFck7X": {
     "message": "Game Master"

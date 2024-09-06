@@ -1,7 +1,8 @@
 import type { Preview } from '@storybook/react';
 import { withThemeByClassName } from '@storybook/addon-themes';
+import React from 'react';
+import { IntlProvider } from 'react-intl';
 import '../tailwind.css';
-
 const preview: Preview = {
   parameters: {
     layout: 'centered',
@@ -15,6 +16,11 @@ const preview: Preview = {
 };
 
 export const decorators = [
+  (Story) => (
+    <IntlProvider locale="en">
+      <Story />
+    </IntlProvider>
+  ),
   withThemeByClassName({
     themes: {
       light: 'light',

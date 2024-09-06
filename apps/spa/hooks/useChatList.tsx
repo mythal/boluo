@@ -2,7 +2,7 @@ import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { binarySearchPos } from '../sort';
-import { findMessage, type OptimisticItem, type ChannelState, type OptimisticMessage } from '../state/channel.reducer';
+import { findMessage, type OptimisticItem, type ChannelState } from '../state/channel.reducer';
 import { type ChatItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
@@ -131,6 +131,20 @@ export const useShowDummy = (
   return showDummy;
 };
 
+type ChannelSlice = Pick<ChannelState, 'messages' | 'fullLoaded' | 'previewMap' | 'optimisticMessageMap'> & {
+  scheduledGcLowerPos: number | null;
+};
+
+function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
+  return (
+    a.messages === b.messages &&
+    a.fullLoaded === b.fullLoaded &&
+    a.previewMap === b.previewMap &&
+    a.optimisticMessageMap === b.optimisticMessageMap &&
+    a.scheduledGcLowerPos === b.scheduledGcLowerPos
+  );
+}
+
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
   const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, hideSelfPreviewTimeoutAtom } = useChannelAtoms();
@@ -142,36 +156,34 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   // Intentionally quit reactivity
   const isEmpty = store.get(parsedAtom).entities.length === 0;
 
-  const messagesAtom = useMemo(
+  const channelSliceAtom = useMemo(
     () =>
-      selectAtom(chatAtom, (chat): ChannelState['messages'] | null => {
-        const channel = chat.channels[channelId];
-        if (!channel) return null;
-        return channel.messages;
-      }),
+      selectAtom(
+        chatAtom,
+        (chat): ChannelSlice => {
+          const channel = chat.channels[channelId];
+          if (!channel)
+            return {
+              messages: L.empty(),
+              fullLoaded: false,
+              previewMap: {},
+              scheduledGcLowerPos: null,
+              optimisticMessageMap: {},
+            };
+          return {
+            messages: channel.messages,
+            fullLoaded: channel.fullLoaded,
+            previewMap: channel.previewMap,
+            optimisticMessageMap: channel.optimisticMessageMap,
+            scheduledGcLowerPos: channel.scheduledGc?.lowerPos ?? null,
+          };
+        },
+        channelSliceEq,
+      ),
     [channelId],
   );
-  const optimisticMessagesAtom = useMemo(
-    () =>
-      selectAtom(chatAtom, (chat): Record<string, OptimisticMessage> => {
-        const channel = chat.channels[channelId];
-        if (!channel) return {};
-        return channel.optimisticMessageMap;
-      }),
-    [channelId],
-  );
-  const previewMapAtom = useMemo(
-    () => selectAtom(chatAtom, (chat) => chat.channels[channelId]?.previewMap),
-    [channelId],
-  );
-  const scheduledGcLowerPosAtom = useMemo(
-    () => selectAtom(chatAtom, (chat) => chat.channels[channelId]?.scheduledGc?.lowerPos ?? null),
-    [channelId],
-  );
-  const messages = useAtomValue(messagesAtom);
-  const optimisticMessagesFromState = useAtomValue(optimisticMessagesAtom);
-  const previewMap = useAtomValue(previewMapAtom);
-  const scheduledGcLowerPos = useAtomValue(scheduledGcLowerPosAtom);
+  const { fullLoaded, messages, previewMap, scheduledGcLowerPos, optimisticMessageMap } =
+    useAtomValue(channelSliceAtom);
   const firstItemIndex = useRef(START_INDEX); // can't be negative
   const { chatList, filteredMessagesCount } = useMemo((): Pick<
     UseChatListReturn,
@@ -180,8 +192,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     if (!messages || !previewMap) return { chatList: [], filteredMessagesCount: 0 };
     const optimisticPreviewList = Object.values(previewMap);
     const optimisticMessageItems: OptimisticItem[] = [];
-    for (const key in optimisticMessagesFromState) {
-      const optimistic = optimisticMessagesFromState[key];
+    for (const key in optimisticMessageMap) {
+      const optimistic = optimisticMessageMap[key];
       if (optimistic?.ref.type === 'PREVIEW') {
         optimisticMessageItems.push(optimistic.item);
       }
@@ -193,7 +205,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         if (isFiltered) {
           return false;
         }
-        const optimisticItem = optimisticMessagesFromState[item.id]?.item;
+        const optimisticItem = optimisticMessageMap[item.id]?.item;
         if (
           !optimisticItem ||
           /* moved */ optimisticItem.item.pos !== item.pos ||
@@ -288,7 +300,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         itemList.push(preview);
       } else if (preview.text === '' && preview.senderId === myId) {
         itemList.push(preview);
-      } else if (preview.pos > minPos) {
+      } else if (preview.pos > minPos || (preview.pos < minPos && fullLoaded)) {
         const index = binarySearchPos(itemList, preview.pos);
         const itemInThePosition = itemList[index];
         if (itemInThePosition?.pos === preview.pos && itemInThePosition.type !== 'PREVIEW') {
@@ -300,7 +312,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     }
     for (const optimisticItem of optimisticMessageItems) {
       const { item, optimisticPos } = optimisticItem;
-      itemList.splice(binarySearchPos(itemList, optimisticPos), 0, item);
+      const insertPos = binarySearchPos(itemList, optimisticPos);
+      itemList.splice(insertPos, 0, item);
     }
 
     return { chatList: itemList, filteredMessagesCount };
@@ -310,10 +323,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     composeSlice.prevPreviewId,
     composeSlice.previewId,
     filterType,
+    fullLoaded,
     isEmpty,
     messages,
     myId,
-    optimisticMessagesFromState,
+    optimisticMessageMap,
     previewMap,
     showArchived,
     showDummy,

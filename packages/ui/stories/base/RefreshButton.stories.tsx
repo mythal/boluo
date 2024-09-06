@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { RefreshButton } from '../RefreshButton';
+import { RefreshButton } from '../../RefreshButton';
 
 const meta: Meta<typeof RefreshButton> = {
   component: RefreshButton,

@@ -16,7 +16,7 @@ import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import type { ChildrenProps } from '@boluo/utils';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
-import { DangerZone } from '../common/DangerZone';
+import { DangerZone } from '@boluo/ui/DangerZone';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { InviteSpaceMember } from '../InviteSpaceMember';

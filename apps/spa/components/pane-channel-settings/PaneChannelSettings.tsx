@@ -9,7 +9,7 @@ import { Button } from '@boluo/ui/Button';
 import { Loading } from '@boluo/ui/Loading';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
-import { DangerZone } from '../common/DangerZone';
+import { DangerZone } from '@boluo/ui/DangerZone';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';
 import { PaneFooterBox } from '../PaneFooterBox';

@@ -35,7 +35,7 @@ export const EventId: FC<{ eventId: string }> = ({ eventId }) => {
   return (
     <>
       <span className="underline decoration-dashed" ref={refs.setReference} {...getReferenceProps()}>
-        {eventId}
+        {eventId.slice(0, 8)}
       </span>
 
       <TooltipBox defaultStyle show={isOpen} ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()}>

@@ -1,6 +1,7 @@
 import { type FC } from 'react';
 import { TextInput } from './TextInput';
 import { FormattedMessage } from 'react-intl';
+import { OopsKaomoji } from './OopsKaomoji';
 
 export const ComposeFallback: FC<{ source: string | undefined | null }> = ({ source }) => {
   const empty = source == null || source.trim() === '';
@@ -8,12 +9,13 @@ export const ComposeFallback: FC<{ source: string | undefined | null }> = ({ sou
     <div className="ComposeFallback px-4 py-2">
       {empty ? (
         <span className="text-text-light">
-          <FormattedMessage defaultMessage="Oops! The compose box crashed." />
+          <OopsKaomoji /> <FormattedMessage defaultMessage="The compose box crashed." />
         </span>
       ) : (
         <div className="text-text-light pb-1 text-sm">
+          <OopsKaomoji />{' '}
           <span>
-            <FormattedMessage defaultMessage="Oops! The compose box crashed, Your last input was:" />
+            <FormattedMessage defaultMessage="The compose box crashed, Your last input was:" />
           </span>
         </div>
       )}

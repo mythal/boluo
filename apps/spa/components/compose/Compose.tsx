@@ -9,13 +9,14 @@ import { ComposeTextArea } from './ComposeTextArea';
 import { InGameSwitchButton } from './InGameSwitchButton';
 import { SendButton } from './SendButton';
 import { FileButton } from './FileButton';
-import { type ChannelAtoms } from '../../hooks/useChannelAtoms';
+import { useChannelAtoms, type ChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
-import { ComposeErrorBoundry } from './ComposeErrorBoundry';
 import { useSettings } from '../../hooks/useSettings';
 import { FormattedMessage } from 'react-intl';
+import { ErrorBoundary } from '@sentry/nextjs';
+import { TextInput } from '@boluo/ui/TextInput';
 
 interface Props {
   member: Member;
@@ -65,7 +66,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const mediaLine = useMemo(() => <MediaLine />, []);
 
   return (
-    <ComposeErrorBoundry>
+    <ErrorBoundary fallback={<ComposeError />}>
       <div
         onDrop={onDrop}
         onDragOver={handleDragOver}
@@ -96,6 +97,26 @@ export const Compose = ({ member, channelAtoms }: Props) => {
           </div>
         </div>
       </div>
-    </ComposeErrorBoundry>
+    </ErrorBoundary>
+  );
+};
+
+export const ComposeError: FC = () => {
+  const { composeAtom } = useChannelAtoms();
+  const source = useAtomValue(composeAtom).source.trim();
+  return (
+    <div className="px-4 py-2">
+      <div className="text-text-light pb-1 text-sm">
+        <span>
+          <FormattedMessage defaultMessage="The input box crashed." />
+        </span>
+        {source && (
+          <span>
+            <FormattedMessage defaultMessage="Your last input was:" />
+          </span>
+        )}
+      </div>
+      {source && <TextInput readOnly className="w-full py-2 font-mono" value={source} />}
+    </div>
   );
 };

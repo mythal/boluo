@@ -166,8 +166,8 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
         }
 
         const optimisticPos = targetBefore
-          ? (targetBefore.pos + targetItem.pos) / 2
-          : targetItem.posP / targetItem.posQ + 1;
+          ? (targetBefore.posP + targetItem.posP) / (targetBefore.posQ + targetItem.posQ)
+          : targetItem.posP / (targetItem.posQ + 1);
         dispatch({
           type: 'setOptimisticMessage',
           payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },

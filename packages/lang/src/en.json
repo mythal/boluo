@@ -251,9 +251,6 @@
   "GbWVAh": {
     "message": "Yes, Kick"
   },
-  "Glg99w": {
-    "message": "Oops! The compose box crashed, Your last input was:"
-  },
   "HAlOn1": {
     "message": "Name"
   },
@@ -293,6 +290,9 @@
   "IW0/M8": {
     "message": "Auto Select"
   },
+  "Ibwf8a": {
+    "message": "The compose box crashed."
+  },
   "IvBid4": {
     "message": "Use the {enter} key to send messages"
   },
@@ -307,6 +307,9 @@
   },
   "JQt0RP": {
     "message": "Pull to Load"
+  },
+  "Jc0JUv": {
+    "message": "The compose box crashed, Your last input was:"
   },
   "Jq3FDz": {
     "message": "Content"
@@ -388,9 +391,6 @@
   },
   "OYT4m/": {
     "message": "Message cannot be empty"
-  },
-  "OcOUVQ": {
-    "message": "Oops! The input box crashed."
   },
   "P57vjw": {
     "message": "Channel name must be at most 32 characters."

@@ -153,7 +153,9 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
 
   const topMessage = L.first(messages);
   const bottomMessage = L.last(messages);
-  if (
+  if ((topMessage == null || bottomMessage == null) && state.fullLoaded) {
+    return { ...state, previewMap, optimisticMessageMap, messages: L.of(message) };
+  } else if (
     topMessage == null ||
     bottomMessage == null ||
     message.pos === topMessage.pos ||

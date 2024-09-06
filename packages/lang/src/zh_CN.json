@@ -153,7 +153,7 @@
     "message": "摧毁位面"
   },
   "8pN86+": {
-    "message": "{name} is composing…"
+    "message": "{name} 在撰写…"
   },
   "973Dls": {
     "message": "只有接受邀请的人能够加入此位面"
@@ -171,7 +171,7 @@
     "message": "发送"
   },
   "9dRayY": {
-    "message": "Your browser is not supported"
+    "message": "您的浏览器不受支持"
   },
   "9to/Le": {
     "message": "更改头像"
@@ -246,7 +246,7 @@
     "message": "每个人都可以加入这个位面"
   },
   "GaOcCS": {
-    "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
+    "message": "若要使用此应用程序，请将您的 iOS/iPadOS 版本升级到16或更高版本。"
   },
   "GbWVAh": {
     "message": "是的，踢走"
@@ -324,7 +324,7 @@
     "message": "不带富文本信息"
   },
   "KN7zKn": {
-    "message": "Error"
+    "message": "错误"
   },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
@@ -342,7 +342,7 @@
     "message": "匿名"
   },
   "LnM0On": {
-    "message": "{a} and {b} are composing…"
+    "message": "{a} 和 {b} 正撰写…"
   },
   "MWO2zy": {
     "message": "出了点问题。"
@@ -430,6 +430,9 @@
   },
   "R59CS8": {
     "message": "移除头像"
+  },
+  "R5iTJ0": {
+    "message": "If you see this text, please try to swipe down ↓ to display the content."
   },
   "RraqCg": {
     "message": "帐号与密码不匹配"
@@ -531,10 +534,10 @@
     "message": "确认要离开「{spaceName}」位面吗？"
   },
   "Wi3NTK": {
-    "message": "This application requires many modern features that are not supported by your browser."
+    "message": "应用需要许多现代功能，但您的浏览器并不支持。"
   },
   "Wj4YzT": {
-    "message": "Back to Homepage"
+    "message": "返回主页"
   },
   "WwpJ5A": {
     "message": "发送密码重置邮件"
@@ -732,7 +735,7 @@
     "message": "归档"
   },
   "iDRoI+": {
-    "message": "Left Member"
+    "message": "离开的成员"
   },
   "iHN12u": {
     "message": "管理员"
@@ -785,9 +788,6 @@
   "lx+ssX": {
     "message": "离开位面"
   },
-  "m8OPHR": {
-    "message": "If you see this text, please try to swipe down ↓ to dispaly the content."
-  },
   "mYgmal": {
     "message": "角色外身份"
   },
@@ -816,7 +816,7 @@
     "message": "您已拒绝通知权限。"
   },
   "oeO284": {
-    "message": "{name} and {count} others are composing…"
+    "message": "{name} 以及{count}人正在撰写…"
   },
   "onmBf2": {
     "message": "换一个随机颜色"
@@ -858,7 +858,7 @@
     "message": "游戏外"
   },
   "r4YqDx": {
-    "message": "Such as CSS Container Queries."
+    "message": "例如 CSS 容器查询。"
   },
   "rK7cTy": {
     "message": "初始频道名称"
@@ -912,7 +912,7 @@
     "message": "暗色"
   },
   "taJuye": {
-    "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
+    "message": "为了使用本应用，推荐使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
   },
   "ug01Mk": {
     "message": "时间"

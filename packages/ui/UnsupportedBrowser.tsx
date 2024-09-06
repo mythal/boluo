@@ -1,10 +1,8 @@
-import { getOS } from '@boluo/utils';
 import { FormattedMessage } from 'react-intl';
 import { BackToHomepage } from './BackToHomepage';
-import * as classes from '@boluo/ui/classes';
+import * as classes from './classes';
 
-export const UnsupportedBrowser = () => {
-  const isIos = getOS() === 'iOS';
+export const UnsupportedBrowser = ({ isIos, siteUrl }: { isIos: boolean; siteUrl: string | undefined | null }) => {
   const chromeLink = (
     <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer" className={classes.link}>
       Chrome
@@ -44,9 +42,11 @@ export const UnsupportedBrowser = () => {
         </p>
       )}
 
-      <p className="py-4">
-        <BackToHomepage />
-      </p>
+      {siteUrl && (
+        <p className="py-4">
+          <BackToHomepage url={siteUrl} />
+        </p>
+      )}
     </div>
   );
 };

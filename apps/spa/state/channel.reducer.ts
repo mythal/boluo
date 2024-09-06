@@ -361,7 +361,7 @@ export const findMessage = (messages: List<MessageItem>, id: string, pos?: numbe
   if (message?.id === id) {
     if (failedFoundByPos != null) {
       const [foundItem, foundIndex] = failedFoundByPos;
-      recordWarn('Found message by id but failed to find by pos.', {
+      recordWarn('Found message by id but failed to find by pos', {
         id,
         pos,
         index,
@@ -532,11 +532,13 @@ export const channelReducer = (
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
   switch (action.type) {
-    case 'messageEdited':
-    case 'receiveMessage':
-    case 'messagesLoaded':
-      nextState = checkOrder(nextState, action);
+    case 'messagePreview':
+    case 'setOptimisticMessage':
+    case 'removeOptimisticMessage':
+    case 'resetGc':
       break;
+    default:
+      nextState = checkOrder(nextState, action);
   }
   nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {

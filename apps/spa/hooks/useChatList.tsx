@@ -346,7 +346,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         if (prevFirstItemNewIndex !== -1) {
           firstItemIndex.current = prevFirstItemIndex - prevFirstItemNewIndex;
         } else {
-          recordWarn('Lost the previous first item');
+          recordWarn('Lost the previous first item', {
+            chatListLength: chatList.length,
+            prevChatListLength: prevChatList.length,
+            prevFirstItem,
+          });
           const lengthDiff = chatList.length - prevChatList.length;
           firstItemIndex.current = prevFirstItemIndex - lengthDiff;
         }

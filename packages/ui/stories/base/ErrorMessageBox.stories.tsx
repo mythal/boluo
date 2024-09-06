@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ErrorMessageBox } from '../ErrorMessageBox';
+import { ErrorMessageBox } from '../../ErrorMessageBox';
 
 const meta: Meta<typeof ErrorMessageBox> = {
   component: ErrorMessageBox,

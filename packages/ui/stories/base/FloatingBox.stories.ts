@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { FloatingBox } from '../FloatingBox';
+import { FloatingBox } from '../../FloatingBox';
 
 const meta: Meta<typeof FloatingBox> = {
   component: FloatingBox,

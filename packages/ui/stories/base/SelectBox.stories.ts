@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { SelectBox } from '../SelectBox';
+import { SelectBox } from '../../SelectBox';
 import { fn } from '@storybook/test';
 const meta: Meta<typeof SelectBox> = {
   component: SelectBox,

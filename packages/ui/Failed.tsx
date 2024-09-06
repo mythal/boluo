@@ -38,5 +38,5 @@ export const Failed: FC<FailedProps> = ({ title, message, code, icon, eventId })
 };
 
 const EventIdFallback: FC<{ eventId: string }> = ({ eventId }) => (
-  <span className="underline decoration-dashed">{eventId}</span>
+  <span className="underline decoration-dashed">{eventId.slice(0, 8)}</span>
 );

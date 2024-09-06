@@ -9,17 +9,14 @@ import { FormProvider, useController, useForm, useFormContext } from 'react-hook
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
-import { Oops } from '@boluo/ui/Oops';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required } from '../validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
+import { useErrorExplain } from '@boluo/common';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
-  return (
-    <div className="text-error-700 my-1">
-      <Oops error={error} type="inline" />
-    </div>
-  );
+  const explain = useErrorExplain();
+  return <div className="text-error-700 my-1">{explain(error)}</div>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {

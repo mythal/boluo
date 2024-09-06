@@ -1,13 +1,12 @@
-import { ApiError, Space } from '@boluo/api';
-import { Metadata } from 'next';
+import { type ApiError, type Space } from '@boluo/api';
+import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { Result } from '@boluo/utils';
+import { type Result } from '@boluo/utils';
 import { get } from '@boluo/common/server/api';
-import { getIntl, LangParams } from '@boluo/common/server';
+import { getIntl, type LangParams } from '@boluo/common/server';
 import { AcceptButton } from './AcceptButton';
 import { BackLink } from '../../../../../../components/BackLink';
-import { Oops } from '@boluo/ui/Oops';
 
 interface Params extends LangParams {
   spaceId: string;

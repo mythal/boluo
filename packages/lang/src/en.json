@@ -152,6 +152,9 @@
   "88cMEG": {
     "message": "Destory Space"
   },
+  "8pN86+": {
+    "message": "{name} is composing…"
+  },
   "973Dls": {
     "message": "Only invited people can join this space"
   },
@@ -166,6 +169,9 @@
   },
   "9WRlF4": {
     "message": "Send"
+  },
+  "9dRayY": {
+    "message": "Your browser is not supported"
   },
   "9to/Le": {
     "message": "Change Avatar"
@@ -184,9 +190,6 @@
   },
   "BEbOqj": {
     "message": "Oops!"
-  },
-  "Bc5LE6": {
-    "message": "Size must be less than {mediaMaxSizeMb}M."
   },
   "Bm9rWe": {
     "message": "Failed to delete the message"
@@ -227,9 +230,6 @@
   "DBP+Od": {
     "message": "Echo"
   },
-  "Euftjf": {
-    "message": "Error while uploading a file, did you recover the message?"
-  },
   "F3Wc9W": {
     "message": "Last {day} days"
   },
@@ -244,6 +244,9 @@
   },
   "GMPXuF": {
     "message": "Everyone can join this space"
+  },
+  "GaOcCS": {
+    "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
   },
   "GbWVAh": {
     "message": "Yes, Kick"
@@ -320,6 +323,9 @@
   "KIAp17": {
     "message": "Without rich-text informations"
   },
+  "KN7zKn": {
+    "message": "Error"
+  },
   "KhLK4z": {
     "message": "You do not have permission to view this space."
   },
@@ -334,6 +340,9 @@
   },
   "LXxsbk": {
     "message": "Anonymous"
+  },
+  "LnM0On": {
+    "message": "{a} and {b} are composing…"
   },
   "MWO2zy": {
     "message": "Something going wrong."
@@ -473,9 +482,6 @@
   "TwyMau": {
     "message": "Account"
   },
-  "UIVqKu": {
-    "message": "Recover"
-  },
   "UdtpV7": {
     "message": "Topic"
   },
@@ -523,6 +529,12 @@
   },
   "We16k/": {
     "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
+  "Wi3NTK": {
+    "message": "This application requires many modern features that are not supported by your browser."
+  },
+  "Wj4YzT": {
+    "message": "Back to Homepage"
   },
   "WwpJ5A": {
     "message": "Send Password Reset Email"
@@ -740,9 +752,6 @@
   "jtLNcT": {
     "message": "Failed to move the message, the target is lost. Please try again."
   },
-  "jvo0vs": {
-    "message": "Save"
-  },
   "k1s9UW": {
     "message": "Not Found"
   },
@@ -761,9 +770,6 @@
   "kMogDE": {
     "message": "Must be a valid email address."
   },
-  "kaKiV5": {
-    "message": "Character Name"
-  },
   "kh4wt0": {
     "message": "Toggle Sidebar"
   },
@@ -778,6 +784,9 @@
   },
   "lx+ssX": {
     "message": "Leave Space"
+  },
+  "m8OPHR": {
+    "message": "If you see this text, please try to swipe down ↓ to dispaly the content."
   },
   "mYgmal": {
     "message": "Out of Character"
@@ -805,6 +814,9 @@
   },
   "oaP8SV": {
     "message": "You have denied notification permission."
+  },
+  "oeO284": {
+    "message": "{name} and {count} others are composing…"
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
@@ -842,11 +854,11 @@
   "qvc9uM": {
     "message": "This cannot be undone."
   },
-  "qwN+HQ": {
-    "message": "Error while sending a message, did you recover the message?"
-  },
   "r2rV1X": {
     "message": "Out-Of-Character"
+  },
+  "r4YqDx": {
+    "message": "Such as CSS Container Queries."
   },
   "rK7cTy": {
     "message": "Initial Channel Name"
@@ -899,14 +911,17 @@
   "tOdNiY": {
     "message": "Dark"
   },
-  "tYDBKv": {
-    "message": "Failed to move message ({errorCode})"
+  "taJuye": {
+    "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
   },
   "ug01Mk": {
     "message": "Time"
   },
   "uhu5aG": {
     "message": "Public"
+  },
+  "uizmax": {
+    "message": "Press"
   },
   "ulAzZl": {
     "message": "Failed to query the user"

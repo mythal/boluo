@@ -431,6 +431,9 @@
   "R59CS8": {
     "message": "Remove Avatar"
   },
+  "R5iTJ0": {
+    "message": "If you see this text, please try to swipe down ↓ to display the content."
+  },
   "RraqCg": {
     "message": "Username and password do not match"
   },
@@ -784,9 +787,6 @@
   },
   "lx+ssX": {
     "message": "Leave Space"
-  },
-  "m8OPHR": {
-    "message": "If you see this text, please try to swipe down ↓ to dispaly the content."
   },
   "mYgmal": {
     "message": "Out of Character"

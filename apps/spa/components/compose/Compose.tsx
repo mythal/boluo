@@ -93,7 +93,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         <div>{mediaLine}</div>
         <div className="h-[env(keyboard-inset-height,_0px)] overflow-hidden">
           <div className="px-1 py-4">
-            <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to dispaly the content." />
+            <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />
           </div>
         </div>
       </div>

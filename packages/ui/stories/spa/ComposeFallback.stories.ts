@@ -18,3 +18,9 @@ export const Basic: Story = {
     source: 'Compose Fallback',
   },
 };
+
+export const Empty: Story = {
+  args: {
+    source: '',
+  },
+};

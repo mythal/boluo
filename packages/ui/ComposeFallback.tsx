@@ -5,9 +5,9 @@ import { FormattedMessage } from 'react-intl';
 export const ComposeFallback: FC<{ source: string | undefined | null }> = ({ source }) => {
   const empty = source == null || source.trim() === '';
   return (
-    <div className="px-4 py-2">
+    <div className="ComposeFallback px-4 py-2">
       {empty ? (
-        <span>
+        <span className="text-text-light">
           <FormattedMessage defaultMessage="Oops! The compose box crashed." />
         </span>
       ) : (

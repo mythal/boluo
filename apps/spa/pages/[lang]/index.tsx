@@ -9,8 +9,10 @@ import { useEffect } from 'react';
 import '@boluo/ui/tailwind.css';
 import Chat from '../../components/Chat';
 import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
-import { UnsupportedBrowser } from '../../components/UnsupportedBrowser';
+import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
 import { useDetectBrowserSupport } from '../../hooks/useDetectBrowserSupport';
+import { getOS } from '@boluo/utils';
+import { SITE_URL } from '../../const';
 
 export const getStaticPaths = (() => {
   return {
@@ -58,7 +60,9 @@ export default function Page({ lang, messages }: Props): JSX.Element {
   return (
     <ClientProviders lang={lang} messages={messages}>
       <PageHead />
-      <ChatErrorBoundary>{isSupportedBrowser ? <Chat /> : <UnsupportedBrowser />}</ChatErrorBoundary>
+      <ChatErrorBoundary>
+        {isSupportedBrowser ? <Chat /> : <UnsupportedBrowser isIos={getOS() === 'iOS'} siteUrl={SITE_URL} />}
+      </ChatErrorBoundary>
     </ClientProviders>
   );
 }

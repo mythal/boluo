@@ -270,7 +270,8 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
   if (!topMessage || !bottomMessage) {
     // The only message has been removed in the previous step
     const moveUp = message.pos < originalTopMessage.pos;
-    return { ...state, optimisticMessageMap, messages: moveUp ? L.empty() : L.of(message) };
+    const movedOut = moveUp && !state.fullLoaded;
+    return { ...state, optimisticMessageMap, messages: movedOut ? L.empty() : L.of(message) };
   }
 
   if (message.pos < topMessage.pos) {

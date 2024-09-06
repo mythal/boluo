@@ -17,7 +17,7 @@ import type { ChildrenProps } from '@boluo/utils';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { DangerZone } from '../common/DangerZone';
-import { DiceSelect } from '../DiceSelect';
+import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';

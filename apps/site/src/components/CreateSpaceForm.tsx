@@ -12,7 +12,7 @@ import { Button } from '@boluo/ui/Button';
 import { Oops } from '@boluo/ui/Oops';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required } from '../validations';
-import { DiceSelect } from './DiceSelect';
+import { DiceSelect } from '@boluo/ui/DiceSelect';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   return (

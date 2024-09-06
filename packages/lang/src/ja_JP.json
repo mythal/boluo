@@ -152,6 +152,9 @@
   "88cMEG": {
     "message": "次元を破壊する"
   },
+  "8pN86+": {
+    "message": "{name} is composing…"
+  },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
   },
@@ -166,6 +169,9 @@
   },
   "9WRlF4": {
     "message": "送信"
+  },
+  "9dRayY": {
+    "message": "Your browser is not supported"
   },
   "9to/Le": {
     "message": "アバターの変更"
@@ -184,9 +190,6 @@
   },
   "BEbOqj": {
     "message": "おっとっと！"
-  },
-  "Bc5LE6": {
-    "message": "サイズでは {mediaMaxSizeMb}M 未満でなければなりません。"
   },
   "Bm9rWe": {
     "message": "メッセージの削除に失敗しました"
@@ -227,9 +230,6 @@
   "DBP+Od": {
     "message": "エコー"
   },
-  "Euftjf": {
-    "message": "ファイルのアップロード中にエラーが発生しました。メッセージを復元しますか？"
-  },
   "F3Wc9W": {
     "message": "Last {day} days"
   },
@@ -244,6 +244,9 @@
   },
   "GMPXuF": {
     "message": "誰でもこの次元に参加できます"
+  },
+  "GaOcCS": {
+    "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
   },
   "GbWVAh": {
     "message": "キックする"
@@ -320,6 +323,9 @@
   "KIAp17": {
     "message": "Without rich-text informations"
   },
+  "KN7zKn": {
+    "message": "Error"
+  },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
   },
@@ -334,6 +340,9 @@
   },
   "LXxsbk": {
     "message": "Anonymous"
+  },
+  "LnM0On": {
+    "message": "{a} and {b} are composing…"
   },
   "MWO2zy": {
     "message": "何か問題が起きています."
@@ -473,9 +482,6 @@
   "TwyMau": {
     "message": "アカウント"
   },
-  "UIVqKu": {
-    "message": "リカバリー"
-  },
   "UdtpV7": {
     "message": "トピック"
   },
@@ -523,6 +529,12 @@
   },
   "We16k/": {
     "message": "Are you sure to leave the \"{spaceName}\" space?"
+  },
+  "Wi3NTK": {
+    "message": "This application requires many modern features that are not supported by your browser."
+  },
+  "Wj4YzT": {
+    "message": "Back to Homepage"
   },
   "WwpJ5A": {
     "message": "パスワードリセット用メールを送信する"
@@ -740,9 +752,6 @@
   "jtLNcT": {
     "message": "Failed to move the message, the target is lost. Please try again."
   },
-  "jvo0vs": {
-    "message": "保存"
-  },
   "k1s9UW": {
     "message": "見つかりませんでした"
   },
@@ -761,9 +770,6 @@
   "kMogDE": {
     "message": "メールアドレスのフォーマットが不正です。"
   },
-  "kaKiV5": {
-    "message": "キャラクター名"
-  },
   "kh4wt0": {
     "message": "サイドバーを切り替える"
   },
@@ -778,6 +784,9 @@
   },
   "lx+ssX": {
     "message": "次元を離れる"
+  },
+  "m8OPHR": {
+    "message": "If you see this text, please try to swipe down ↓ to dispaly the content."
   },
   "mYgmal": {
     "message": "キャラクター外"
@@ -805,6 +814,9 @@
   },
   "oaP8SV": {
     "message": "You have denied notification permission."
+  },
+  "oeO284": {
+    "message": "{name} and {count} others are composing…"
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
@@ -842,11 +854,11 @@
   "qvc9uM": {
     "message": "この操作は元に戻すことができません。"
   },
-  "qwN+HQ": {
-    "message": "Error while sending a message, did you recover the message?"
-  },
   "r2rV1X": {
     "message": "キャラクター外"
+  },
+  "r4YqDx": {
+    "message": "Such as CSS Container Queries."
   },
   "rK7cTy": {
     "message": "最初のチャネル名"
@@ -899,14 +911,17 @@
   "tOdNiY": {
     "message": "ダーク"
   },
-  "tYDBKv": {
-    "message": "メッセージの移動に失敗しました ({errorCode})"
+  "taJuye": {
+    "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
   },
   "ug01Mk": {
     "message": "Time"
   },
   "uhu5aG": {
     "message": "公開"
+  },
+  "uizmax": {
+    "message": "Press"
   },
   "ulAzZl": {
     "message": "Failed to query the user"

@@ -1,3 +1,4 @@
+'use client';
 import React, { type HTMLAttributes, type ReactNode, useEffect, useState } from 'react';
 
 interface Props extends Exclude<HTMLAttributes<HTMLDivElement>, 'className' | 'onClick'> {
@@ -5,7 +6,10 @@ interface Props extends Exclude<HTMLAttributes<HTMLDivElement>, 'className' | 'o
   prompt: ReactNode;
 }
 
-export const DangerZone = React.forwardRef<HTMLDivElement, Props>(({ children, prompt, ...props }, ref) => {
+export const DangerZone = React.forwardRef<HTMLDivElement, Props>(function DangerZone(
+  { children, prompt, ...props },
+  ref,
+) {
   const [isReveal, setReveal] = useState(false);
   useEffect(() => {
     if (!isReveal) return;

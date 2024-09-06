@@ -16,7 +16,7 @@ import { MediaLine } from './MediaLine';
 import { useSettings } from '../../hooks/useSettings';
 import { FormattedMessage } from 'react-intl';
 import { ErrorBoundary } from '@sentry/nextjs';
-import { TextInput } from '@boluo/ui/TextInput';
+import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 
 interface Props {
   member: Member;
@@ -103,20 +103,6 @@ export const Compose = ({ member, channelAtoms }: Props) => {
 
 export const ComposeError: FC = () => {
   const { composeAtom } = useChannelAtoms();
-  const source = useAtomValue(composeAtom).source.trim();
-  return (
-    <div className="px-4 py-2">
-      <div className="text-text-light pb-1 text-sm">
-        <span>
-          <FormattedMessage defaultMessage="The input box crashed." />
-        </span>
-        {source && (
-          <span>
-            <FormattedMessage defaultMessage="Your last input was:" />
-          </span>
-        )}
-      </div>
-      {source && <TextInput readOnly className="w-full py-2 font-mono" value={source} />}
-    </div>
-  );
+  const source = useAtomValue(composeAtom).source;
+  return <ComposeFallback source={source} />;
 };

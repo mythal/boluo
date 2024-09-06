@@ -7,12 +7,28 @@ import type { IntlMessages, Locale } from '@boluo/common/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 import { recordWarn } from '../error';
+import { isApiError } from '@boluo/api';
+import { captureException } from '@sentry/nextjs';
 
 interface Props {
   lang: Locale;
   children: ReactNode;
   messages: IntlMessages;
 }
+
+const onError = (error: unknown, key: unknown) => {
+  if (isApiError(error)) {
+    switch (error.code) {
+      case 'UNAUTHENTICATED':
+      case 'NOT_FOUND':
+      case 'NO_PERMISSION':
+      case 'NOT_JSON':
+      case 'FETCH_FAIL':
+        return;
+    }
+  }
+  captureException(error, { extra: { key } });
+};
 
 export function ClientProviders({ children, lang, messages }: Props) {
   const changeLocale = useCallback((locale: Locale) => {
@@ -30,6 +46,7 @@ export function ClientProviders({ children, lang, messages }: Props) {
       <SWRConfig
         value={{
           refreshInterval: 60000,
+          onError,
         }}
       >
         <ChangeLocaleContext.Provider value={changeLocale}>

@@ -28,6 +28,16 @@ export const isApiError = (error: unknown): error is ApiError =>
   error.hasOwnProperty('code') &&
   (error.hasOwnProperty('message') || error.hasOwnProperty('cause'));
 
+export const errorCode = (error: unknown) => {
+  if (isApiError(error)) {
+    return error.code;
+  } else if (error instanceof Error) {
+    return error.name;
+  } else {
+    return 'UNKNOWN';
+  }
+};
+
 export const keepError =
   <Code extends ApiErrorCode>(watchCodeList: Code[]) =>
   (error: unknown): ApiErrorMap[Code] => {

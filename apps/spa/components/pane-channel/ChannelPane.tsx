@@ -76,7 +76,7 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   if (channel == null) {
     return (
       <PaneFailed
-        error={queryChannelError}
+        code={queryChannelError?.code}
         title={<FormattedMessage defaultMessage="Failed to query the channel" />}
         message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
       />

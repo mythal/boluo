@@ -1,12 +1,12 @@
-import { isApiError } from '@boluo/api';
+import { errorCode, isApiError } from '@boluo/api';
 import type { FC } from 'react';
 import React from 'react';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';
 import { FormattedMessage } from 'react-intl';
-import { Failed, FailedUnexpected } from '../common/Failed';
 import { ErrorBoundary, type FallbackRender } from '@sentry/nextjs';
+import { Failed } from '@boluo/ui/Failed';
 
 export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
   const fallback: FallbackRender = ({ error, eventId }) => {
@@ -14,7 +14,7 @@ export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
       if (error.code === 'NOT_FOUND') {
         return <PaneErrorNotFound error={error} />;
       } else {
-        return <Failed title={<FormattedMessage defaultMessage="Oops!" />} error={error} />;
+        return <Failed title={<FormattedMessage defaultMessage="Oops!" />} code={errorCode(error)} />;
       }
     }
     return (
@@ -27,7 +27,7 @@ export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
         }
       >
         <div className="p-pane">
-          <FailedUnexpected error={error} eventId={eventId} />
+          <Failed code={errorCode(error)} eventId={eventId} />
         </div>
       </PaneBox>
     );

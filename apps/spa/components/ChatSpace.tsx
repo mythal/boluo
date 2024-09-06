@@ -41,7 +41,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
         <PaneFailed
           title={title}
           message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
-          error={error}
+          code={error.code}
         />
       );
     } else {

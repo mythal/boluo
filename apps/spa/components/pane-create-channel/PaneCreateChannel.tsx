@@ -129,7 +129,7 @@ export const PaneCreateChannel: FC<{
     if (isLoading) {
       return <PaneLoading />;
     } else if (error) {
-      return <PaneFailed title={<FormattedMessage defaultMessage="Failed to load the space" />} error={error} />;
+      return <PaneFailed title={<FormattedMessage defaultMessage="Failed to load the space" />} code={error.code} />;
     } else {
       // Unreachable
       return null;

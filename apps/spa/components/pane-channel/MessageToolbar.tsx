@@ -3,6 +3,7 @@ import React, { type FC, type RefObject, useContext, useEffect, useMemo, useRef 
 import { type Message } from '@boluo/api';
 import { type ReactNode } from 'react';
 import { Archive, ClipboardCopy, Edit, EllipsisVertical, Trash, TriangleAlert, X } from '@boluo/icons';
+import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '../Delay';
 import { useMutateMessageArchive } from '../../hooks/useMutateMessageArchive';
@@ -16,7 +17,7 @@ import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils';
-import { InlineErrorBoundry } from '../common/InlineErrorBoundry';
+import { ErrorBoundary } from '@sentry/nextjs';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -285,7 +286,7 @@ const MessageToolbarMore: FC<{ message: Message }> = ({ message }) => {
     );
   }
   return (
-    <InlineErrorBoundry className="text-text-warning text-sm">
+    <ErrorBoundary fallback={<SomethingWentWrong className="text-text-warning text-sm" />}>
       {detailDate}
       {display.type === 'CONFIRM_DELETE' ? (
         <MessageDeleteConfirm message={message} />
@@ -296,7 +297,7 @@ const MessageToolbarMore: FC<{ message: Message }> = ({ message }) => {
           <MessageArchiveOrDelete message={message} />
         </>
       )}
-    </InlineErrorBoundry>
+    </ErrorBoundary>
   );
 };
 

@@ -1,10 +1,10 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
-import { Failed } from '../common/Failed';
+import { Failed } from '@boluo/ui/Failed';
 import { type FC, type ReactNode, useId, useRef, useState } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneBox } from '../PaneBox';
-import { type Channel } from '@boluo/api';
+import { errorCode, type Channel } from '@boluo/api';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { Check, ScrollText } from '@boluo/icons';
 import { Select } from '@boluo/ui/Select';
@@ -101,7 +101,10 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
       <div className="p-pane mx-auto grid max-w-screen-sm grid-cols-[auto_1fr] items-baseline gap-2">
         {error != null && (
           <div className="bg-failed-banner-bg col-span-full rounded-sm px-4 py-2">
-            <Failed error={error} title={<FormattedMessage defaultMessage="Failed to export the channel" />} />
+            <Failed
+              code={errorCode(error)}
+              title={<FormattedMessage defaultMessage="Failed to export the channel" />}
+            />
           </div>
         )}
         <label htmlFor={id + 'format'} className="select-none justify-self-end">
@@ -186,7 +189,7 @@ export const PaneChannelExport: FC<{ channelId: string }> = ({ channelId }) => {
         }
       >
         <div className="p-pane">
-          <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />
+          <Failed code={errorCode(error)} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />
         </div>
       </PaneBox>
     );

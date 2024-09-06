@@ -3,7 +3,7 @@ import { type FC, useMemo } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
 import { SpaceMemberListItem } from './SpaceMemberListItem';
-import { Failed } from '../common/Failed';
+import { Failed } from '@boluo/ui/Failed';
 import { FormattedMessage } from 'react-intl';
 
 interface Props {
@@ -22,7 +22,9 @@ export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
     return membersMap[myId]?.space.isAdmin ?? false;
   }, [myId, membersMap, spaceOwnerId]);
   if (error != null && membersMap == null) {
-    return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query members of the space" />} />;
+    return (
+      <Failed code={error.code} title={<FormattedMessage defaultMessage="Failed to query members of the space" />} />
+    );
   }
   if (membersMap == null) {
     return <Loading />;

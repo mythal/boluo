@@ -7,7 +7,7 @@ import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
-import { Failed } from '../common/Failed';
+import { Failed } from '@boluo/ui/Failed';
 
 interface Props {
   className?: string;
@@ -75,7 +75,10 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
   if (error && membersData == null) {
     return (
       <div className="p-2">
-        <Failed error={error} message={<FormattedMessage defaultMessage="Failed to query members of the channel" />} />
+        <Failed
+          code={error.code}
+          message={<FormattedMessage defaultMessage="Failed to query members of the channel" />}
+        />
       </div>
     );
   }

@@ -2,7 +2,7 @@ import { type FC } from 'react';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FormattedMessage } from 'react-intl';
-import { Failed, type FailedProps } from '../common/Failed';
+import { Failed, type FailedProps } from '@boluo/ui/Failed';
 import Icon from '@boluo/ui/Icon';
 import { AlertTriangle } from '@boluo/icons';
 

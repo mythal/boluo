@@ -21,7 +21,7 @@ import { type ChannelSettingsForm } from './form';
 import { IsSecretField } from './IsPrivateField';
 import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
-import { Failed } from '../common/Failed';
+import { Failed } from '@boluo/ui/Failed';
 import { ChannelTypeField } from '../pane-create-channel/ChannelTypeField';
 
 const channelToInitialValues = (channel: Channel): ChannelSettingsForm => ({
@@ -123,7 +123,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 export const PaneChannelSettings: FC<{ channelId: string }> = ({ channelId }) => {
   const { data: channel, error } = useQueryChannel(channelId);
   if (error && channel == null) {
-    return <Failed error={error} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />;
+    return <Failed code={error.code} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />;
   } else if (!channel) {
     return <Loading />;
   }

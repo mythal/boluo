@@ -12,7 +12,7 @@ import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
-import { DiceSelect } from './DiceSelect';
+import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { PaneFooterBox } from './PaneFooterBox';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {

@@ -2,7 +2,7 @@ import { type FC, useId } from 'react';
 import { useController } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';
 import { HelpText } from '@boluo/ui/HelpText';
-import { DiceSelect } from '../DiceSelect';
+import { DiceSelect } from '@boluo/ui/DiceSelect';
 
 interface Props {}
 

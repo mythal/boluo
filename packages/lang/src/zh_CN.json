@@ -291,7 +291,7 @@
     "message": "自动选择"
   },
   "Ibwf8a": {
-    "message": "The compose box crashed."
+    "message": "输入框已经崩溃。"
   },
   "IvBid4": {
     "message": "使用 {enter} 键发送消息"
@@ -309,13 +309,13 @@
     "message": "下拉刷新"
   },
   "Jc0JUv": {
-    "message": "The compose box crashed, Your last input was:"
+    "message": "输入框崩溃了。您最后的输入是："
   },
   "Jq3FDz": {
     "message": "内容"
   },
   "JqiqNj": {
-    "message": "Something went wrong"
+    "message": "出错了"
   },
   "Jxxkva": {
     "message": "可以在设置中更改默认消息颜色。"
@@ -735,7 +735,7 @@
     "message": "邀请"
   },
   "hgvaRE": {
-    "message": "Please provide this ID when reporting the prolblem."
+    "message": "请在提交 bug 时附带这个 ID"
   },
   "hh0xW7": {
     "message": "频道名"
@@ -744,7 +744,7 @@
     "message": "归档"
   },
   "iATkrL": {
-    "message": "The pane has crashed"
+    "message": "窗格崩溃了"
   },
   "iDRoI+": {
     "message": "离开的成员"

@@ -314,6 +314,9 @@
   "Jq3FDz": {
     "message": "Content"
   },
+  "JqiqNj": {
+    "message": "Something went wrong"
+  },
   "Jxxkva": {
     "message": "You can change default message color in the Settings."
   },
@@ -731,11 +734,17 @@
   "hYOE+U": {
     "message": "Invite"
   },
+  "hgvaRE": {
+    "message": "Please provide this ID when reporting the prolblem."
+  },
   "hh0xW7": {
     "message": "Channel Name"
   },
   "hrgo+E": {
     "message": "Archive"
+  },
+  "iATkrL": {
+    "message": "The pane has crashed"
   },
   "iDRoI+": {
     "message": "Left Member"
@@ -775,9 +784,6 @@
   },
   "kh4wt0": {
     "message": "Toggle Sidebar"
-  },
-  "kiU3pa": {
-    "message": "Oops! Something went wrong"
   },
   "lJePcp": {
     "message": "Failure"

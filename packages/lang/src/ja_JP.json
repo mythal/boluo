@@ -528,7 +528,7 @@
     "message": "作成する"
   },
   "W14DRL": {
-    "message": "Use {key} to send messages"
+    "message": "{key} キーを使ってメッセージを送信する"
   },
   "WASph7": {
     "message": "このメンバーをキックする"
@@ -540,7 +540,7 @@
     "message": "「{channelName}」チャンネルの設定"
   },
   "We16k/": {
-    "message": "Are you sure to leave the \"{spaceName}\" space?"
+    "message": "本当に「{spaceName}」次元を抜けますか？"
   },
   "Wi3NTK": {
     "message": "This application requires many modern features that are not supported by your browser."
@@ -561,7 +561,7 @@
     "message": "プレーンテキスト"
   },
   "XTqS60": {
-    "message": "Please send {errorCode} to the system administrator."
+    "message": "「{errorCode}」をシステム管理者に送信してください。"
   },
   "Xs60po": {
     "message": "{hours} 時間前"
@@ -591,7 +591,7 @@
     "message": "ご自身"
   },
   "Yq91Dy": {
-    "message": "Export \"{channelName}\""
+    "message": "「{channelName}」をエクスポート"
   },
   "Yy/yDL": {
     "message": "パスワードをリセット"
@@ -621,7 +621,7 @@
     "message": "This is a secret channel. You must be invited to join this channel."
   },
   "aw8eqe": {
-    "message": "Use {key} to make a line break."
+    "message": "「{key}」を使って改行します。"
   },
   "b2XKbY": {
     "message": "例：コボルトのグループが私たちを攻撃しようとしました"

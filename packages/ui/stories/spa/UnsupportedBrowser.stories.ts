@@ -23,7 +23,7 @@ export const Basic: Story = {
 export const Ios: Story = {
   args: {
     isIos: true,
-    siteUrl: null
+    siteUrl: null,
   },
 };
 Ios.storyName = 'iOS';

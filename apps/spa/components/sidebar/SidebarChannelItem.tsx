@@ -56,7 +56,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         if (!bottom) {
           return read(fullLoadedAtom) ? 'EMPTY' : 'UNLOAD';
         }
-        return findLast((message) => !message.folded, messages) ?? bottom;
+        return findLast((message) => !message.folded, messages) ?? 'EMPTY';
       }),
     [fullLoadedAtom, messagesAtom],
   );

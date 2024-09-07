@@ -51,7 +51,7 @@
     "message": "次元"
   },
   "0eanrB": {
-    "message": "Include archived messages"
+    "message": "アーカイブされたメッセージも含める"
   },
   "0pT/2d": {
     "message": "キャラクター名なし"
@@ -84,7 +84,7 @@
     "message": "キャンセル"
   },
   "4FbTT8": {
-    "message": "Is Master"
+    "message": "マスターとしています"
   },
   "4KGRux": {
     "message": "通知をオンにする"
@@ -93,7 +93,7 @@
     "message": "コピー"
   },
   "4udfbj": {
-    "message": "Export Channel"
+    "message": "チャンネルをエクスポートする"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
@@ -132,7 +132,7 @@
     "message": "接続中"
   },
   "70Tngj": {
-    "message": "Close the pane"
+    "message": "ペインを閉じる"
   },
   "72vKlS": {
     "message": "次元の読み込みに失敗しました"
@@ -153,13 +153,13 @@
     "message": "次元を破壊する"
   },
   "8pN86+": {
-    "message": "{name} is composing…"
+    "message": "{name} は入力している"
   },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
   },
   "98c0D6": {
-    "message": "Include out-of-game messages"
+    "message": "ゲーム外のメッセージも含める"
   },
   "9NDg1Z": {
     "message": "(ささやき)"
@@ -171,7 +171,7 @@
     "message": "送信"
   },
   "9dRayY": {
-    "message": "Your browser is not supported"
+    "message": "お使いのブラウザはサポートされていません"
   },
   "9to/Le": {
     "message": "アバターの変更"
@@ -231,7 +231,7 @@
     "message": "エコー"
   },
   "F3Wc9W": {
-    "message": "Last {day} days"
+    "message": "直近の {day} 日"
   },
   "FN6jdd": {
     "message": "こんにちは、{username}！"
@@ -246,13 +246,13 @@
     "message": "誰でもこの次元に参加できます"
   },
   "GaOcCS": {
-    "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
+    "message": "このアプリを使用するには、iOS/iPadOSのバージョンが16以上は必要です。"
   },
   "GbWVAh": {
     "message": "キックする"
   },
   "HAlOn1": {
-    "message": "Name"
+    "message": "名前"
   },
   "HH8O0c": {
     "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
@@ -312,10 +312,10 @@
     "message": "The compose box crashed, Your last input was:"
   },
   "Jq3FDz": {
-    "message": "Content"
+    "message": "コンテンツ"
   },
   "JqiqNj": {
-    "message": "Something went wrong"
+    "message": "エラーが発生しました"
   },
   "Jxxkva": {
     "message": "設定でデフォルトのメッセージの色を変更できます。"
@@ -330,10 +330,10 @@
     "message": "パスワードリセットのメールは送信しました。"
   },
   "KIAp17": {
-    "message": "Without rich-text informations"
+    "message": "リッチテキスト情報なしで"
   },
   "KN7zKn": {
-    "message": "Error"
+    "message": "エラー"
   },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
@@ -348,10 +348,10 @@
     "message": "チャンネル"
   },
   "LXxsbk": {
-    "message": "Anonymous"
+    "message": "匿名"
   },
   "LnM0On": {
-    "message": "{a} and {b} are composing…"
+    "message": "{a} と {b} は入力しています"
   },
   "MWO2zy": {
     "message": "何か問題が起きています."
@@ -441,7 +441,7 @@
     "message": "アイコンを削除"
   },
   "R5iTJ0": {
-    "message": "If you see this text, please try to swipe down ↓ to display the content."
+    "message": "このテキストが表示された場合は、下にスワイプしてコンテンツを表示してみてください。"
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
@@ -462,13 +462,13 @@
     "message": "このメンバーを追放してもよろしいですか？"
   },
   "SHMAcP": {
-    "message": "Please check your network connection and try again."
+    "message": "ネットワーク接続を確認して、もう一度試してください。"
   },
   "SVwJTM": {
-    "message": "Export"
+    "message": "書き出す"
   },
   "SpLs8U": {
-    "message": "You must first join the {space} to join a channel."
+    "message": "チャネルに参加するには、まず {space} に参加する必要があります。"
   },
   "SqVNRz": {
     "message": "次元を作成する"
@@ -516,7 +516,7 @@
     "message": "キャラクター名:"
   },
   "Vl357u": {
-    "message": "Time Range"
+    "message": "対象期間"
   },
   "VlTrY6": {
     "message": "Failed to query members of the channel"
@@ -546,7 +546,7 @@
     "message": "This application requires many modern features that are not supported by your browser."
   },
   "Wj4YzT": {
-    "message": "Back to Homepage"
+    "message": "ホームページに戻る"
   },
   "WwpJ5A": {
     "message": "パスワードリセット用メールを送信する"
@@ -558,7 +558,7 @@
     "message": "危険な操作"
   },
   "XOi37d": {
-    "message": "Plain Text"
+    "message": "プレーンテキスト"
   },
   "XTqS60": {
     "message": "Please send {errorCode} to the system administrator."
@@ -570,7 +570,7 @@
     "message": "招待できる人はいません。"
   },
   "XzgtzD": {
-    "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
+    "message": "これは、テーブルトップのロールプレイングゲーム用に設計されたチャットアプリ Boluo です。"
   },
   "Y78Gyb": {
     "message": "{minutes}分前"
@@ -579,7 +579,7 @@
     "message": "インターフェース"
   },
   "YNPiTV": {
-    "message": "Are you sure you want to leave {channelName}?"
+    "message": "{channelName} から退出しますか？"
   },
   "YQwJw3": {
     "message": "デフォルトロールコマンド"
@@ -588,7 +588,7 @@
     "message": "{days} 日前"
   },
   "YjO/0+": {
-    "message": "Myself"
+    "message": "ご自身"
   },
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
@@ -612,7 +612,7 @@
     "message": "再生成しました"
   },
   "a5msuh": {
-    "message": "Yes"
+    "message": "はい"
   },
   "aLncO3": {
     "message": "秘密チャンネル"
@@ -687,7 +687,7 @@
     "message": "添付ファイル"
   },
   "eOqhbq": {
-    "message": "Unable to reset your password, invalid reset link."
+    "message": "無効なリセットリンクから，パスワードをリセットできません。"
   },
   "eVYdrD": {
     "message": "Last 1 day"
@@ -813,7 +813,7 @@
     "message": "入力必須です。"
   },
   "oUWADl": {
-    "message": "No"
+    "message": "いいえ"
   },
   "oVARYX": {
     "message": "少なくとも {max} 文字以上でなければなりません。"
@@ -822,7 +822,7 @@
     "message": "You have denied notification permission."
   },
   "oeO284": {
-    "message": "{name} and {count} others are composing…"
+    "message": "{name} と他の {count} 人は入力しています"
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
@@ -834,7 +834,7 @@
     "message": "OOC"
   },
   "pm/HIR": {
-    "message": "Channel name is required."
+    "message": "チャンネル名が必要です。"
   },
   "q7JBy1": {
     "message": "設定を変更"
@@ -912,31 +912,31 @@
     "message": "Copy Source"
   },
   "t5xj3B": {
-    "message": "New Space"
+    "message": "新しい次元"
   },
   "tOdNiY": {
     "message": "ダーク"
   },
   "taJuye": {
-    "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
+    "message": "このアプリを使用するには、最新バージョンの {chromeLink}、 {firefoxLink}、または {edgeLink} を使用することをお勧めします。"
   },
   "ug01Mk": {
-    "message": "Time"
+    "message": "時間"
   },
   "uhu5aG": {
     "message": "公開"
   },
   "uizmax": {
-    "message": "Press"
+    "message": "押す"
   },
   "ulAzZl": {
-    "message": "Failed to query the user"
+    "message": "ユーザーの読み込みが失敗しました"
   },
   "v3aFf1": {
     "message": "次元を作成"
   },
   "vMrnt6": {
-    "message": "An error occurred while parsing the data."
+    "message": "データを解析中にエラーが発生しました。"
   },
   "vRORF/": {
     "message": "「{spaceName}」次元の設定"
@@ -948,7 +948,7 @@
     "message": "非公開"
   },
   "w00UiA": {
-    "message": "Your device does not support sending notifications."
+    "message": "お使いのデバイスには通知をサポートしていません。"
   },
   "wEQDC6": {
     "message": "編集"
@@ -969,10 +969,10 @@
     "message": "見えません"
   },
   "xgZgnO": {
-    "message": "Wrong request method."
+    "message": "不正なリクエスト方法です。"
   },
   "xil+Fb": {
-    "message": "This channel name is already taken."
+    "message": "このチャンネル名は既に使用されています。"
   },
   "xl27nc": {
     "message": "パスワードをリセット"
@@ -993,7 +993,7 @@
     "message": "おっとっと！"
   },
   "z9LRLa": {
-    "message": "Edited at"
+    "message": "編集日時："
   },
   "zINlao": {
     "message": "所有者"
@@ -1002,7 +1002,7 @@
     "message": "本当に「{spaceName}」を削除しますか？"
   },
   "zQLEfz": {
-    "message": "Format"
+    "message": "フォーマット"
   },
   "zQvVDJ": {
     "message": "全て"

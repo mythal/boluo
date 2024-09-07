@@ -290,6 +290,9 @@
   "IW0/M8": {
     "message": "自動選択"
   },
+  "Ibwf8a": {
+    "message": "The compose box crashed."
+  },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
   },
@@ -305,8 +308,14 @@
   "JQt0RP": {
     "message": "引いて読み込む"
   },
+  "Jc0JUv": {
+    "message": "The compose box crashed, Your last input was:"
+  },
   "Jq3FDz": {
     "message": "Content"
+  },
+  "JqiqNj": {
+    "message": "Something went wrong"
   },
   "Jxxkva": {
     "message": "設定でデフォルトのメッセージの色を変更できます。"
@@ -608,9 +617,6 @@
   "aLncO3": {
     "message": "秘密チャンネル"
   },
-  "aTCgvQ": {
-    "message": "最後に入力したのは:"
-  },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."
   },
@@ -728,11 +734,17 @@
   "hYOE+U": {
     "message": "招待"
   },
+  "hgvaRE": {
+    "message": "Please provide this ID when reporting the prolblem."
+  },
   "hh0xW7": {
     "message": "チャンネル名"
   },
   "hrgo+E": {
     "message": "アーカイブ"
+  },
+  "iATkrL": {
+    "message": "The pane has crashed"
   },
   "iDRoI+": {
     "message": "Left Member"
@@ -758,9 +770,6 @@
   "k1s9UW": {
     "message": "見つかりませんでした"
   },
-  "k7IL+w": {
-    "message": "The input box crashed."
-  },
   "kFck7X": {
     "message": "ゲームマスター"
   },
@@ -775,9 +784,6 @@
   },
   "kh4wt0": {
     "message": "サイドバーを切り替える"
-  },
-  "kiU3pa": {
-    "message": "おっと！何かがうまくいかなかった"
   },
   "lJePcp": {
     "message": "失敗"

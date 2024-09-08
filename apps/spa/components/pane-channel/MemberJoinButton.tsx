@@ -5,13 +5,13 @@ import { UserPlus } from '@boluo/icons';
 import { type FC, type ReactNode, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
-import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { FailedBanner } from '../common/FailedBanner';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   channel: Channel;
@@ -79,14 +79,13 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
               defaultMessage="You must first join the {space} to join a channel."
               values={{
                 space: (
-                  <Button
-                    data-small
+                  <ButtonInline
                     onClick={() => {
                       paneAdd({ type: 'SPACE', spaceId: channel.spaceId });
                     }}
                   >
                     <FormattedMessage defaultMessage="Space" />
-                  </Button>
+                  </ButtonInline>
                 ),
               }}
             />

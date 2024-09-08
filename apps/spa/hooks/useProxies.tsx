@@ -7,8 +7,12 @@ import { BACKEND_URL } from '../const';
 const DEFAULT_BACKEND_URL = BACKEND_URL || (typeof window === 'undefined' ? '' : window.location.origin);
 
 const fetcher = async (): Promise<Proxy[]> => {
-  const res = await fetch(`${DEFAULT_BACKEND_URL}/api/info/proxies`);
-  return (await res.json()) as Proxy[];
+  try {
+    const res = await fetch(`${DEFAULT_BACKEND_URL}/api/info/proxies`);
+    return (await res.json()) as Proxy[];
+  } catch (error) {
+    return [];
+  }
 };
 
 export const useProxies = () => {

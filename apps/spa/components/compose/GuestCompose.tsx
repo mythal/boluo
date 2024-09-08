@@ -1,40 +1,45 @@
-import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/common';
-import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { useSWRConfig } from 'swr';
-import { type ChildrenProps } from '@boluo/utils';
-import { useChannelId } from '../../hooks/useChannelId';
+import { ComposeFallbackBox } from '@boluo/ui/ComposeFallbackBox';
+import { type FC } from 'react';
+import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
+import { LoadingText } from '@boluo/ui/LoadingText';
+import { useMutateJoinChannel } from '../../hooks/useMutateJoinChannel';
 
-const GuestComposeBox: FC<ChildrenProps> = ({ children }) => (
-  <div className="bg-compose-outer-bg border-t p-2 text-sm">
-    <div className="bg-compose-bg border-compose-border w-full rounded-sm border py-2 text-center">{children}</div>
-  </div>
-);
+interface Props {
+  channelId: string;
+  spaceId: string;
+}
 
-export const GuestCompose = () => {
+export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
   const { data: currentUser } = useQueryCurrentUser();
-  const channelId = useChannelId();
-  const { mutate } = useSWRConfig();
-  const join = async () => {
-    await post('/channels/join', null, { channelId, characterName: '' });
-    await mutate(['/channels/members', channelId]);
-  };
+  const { data: spaceMembers, isLoading: isQueryingMember, error: queryMembersError } = useQuerySpaceMembers(spaceId);
+  const { isMutating: isJoining, error: joinError, trigger: join } = useMutateJoinChannel(channelId);
   if (!currentUser) {
+    return <ComposeFallbackBox description={<FormattedMessage defaultMessage="You are not logged in" />} />;
+  } else if (isQueryingMember || isJoining) {
+    return <ComposeFallbackBox description={<LoadingText />} />;
+  } else if (queryMembersError) {
+    return <ComposeFallbackBox description={<FormattedMessage defaultMessage="Failed to load" />} />;
+  } else if (joinError) {
+    return <ComposeFallbackBox description={<FormattedMessage defaultMessage="Failed to join" />} />;
+  } else if (spaceMembers && !(currentUser.id in spaceMembers)) {
     return (
-      <GuestComposeBox>
-        <FormattedMessage defaultMessage="You are not logged in" />
-      </GuestComposeBox>
+      <ComposeFallbackBox description={<FormattedMessage defaultMessage="You are not a member of this space" />} />
     );
   }
   return (
-    <GuestComposeBox>
-      <span className="mr-1">
-        <FormattedMessage defaultMessage="You are not a member of this channel" />
-      </span>
-      <button className="font-bold underline" onClick={join}>
-        <FormattedMessage defaultMessage="Join" />
-      </button>
-    </GuestComposeBox>
+    <ComposeFallbackBox
+      description={
+        <>
+          <span className="mr-1">
+            <FormattedMessage defaultMessage="You are not a member of this channel" />
+          </span>
+          <button className="font-bold underline" onClick={() => join({})}>
+            <FormattedMessage defaultMessage="Join" />
+          </button>
+        </>
+      }
+    />
   );
 };

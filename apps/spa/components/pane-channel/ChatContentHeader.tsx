@@ -3,12 +3,19 @@ import { FormattedMessage } from 'react-intl';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { ChatContentHeaderLoadMore } from './ChatContentHeaderLoadMore';
 import { type VirtualListContext } from './ChatContentVirtualList';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { Delay } from '../Delay';
+import { FallbackIcon } from '@boluo/ui/FallbackIcon';
+import Icon from '@boluo/ui/Icon';
+import { FilterX } from '@boluo/icons';
+import { useClearFilter } from '../../hooks/useClearFilter';
 
 interface Props {
   context?: VirtualListContext;
 }
 
 export const ChatContentHeader: FC<Props> = (props) => {
+  const clear = useClearFilter();
   const count = props.context?.filteredMessagesCount ?? 0;
   const isFullLoaded = useIsFullLoaded();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -16,8 +23,18 @@ export const ChatContentHeader: FC<Props> = (props) => {
   return (
     <div ref={boxRef} className="flex h-28 select-none flex-col items-center justify-end gap-2 py-4">
       {count !== 0 && (
-        <span className="text-surface-500 text-xs">
-          <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />
+        <span className="text-xs">
+          <span className="text-text-lighter text-xs">
+            <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />
+          </span>
+          <ButtonInline className="ml-1" onClick={clear}>
+            <span className="mr-0.5">
+              <Delay fallback={<FallbackIcon />}>
+                <Icon icon={FilterX} />
+              </Delay>
+            </span>
+            <FormattedMessage defaultMessage="Show" />
+          </ButtonInline>
         </span>
       )}
       {isFullLoaded ? <span className="text-surface-500">Ω</span> : <ChatContentHeaderLoadMore />}

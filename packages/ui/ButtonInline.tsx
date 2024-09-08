@@ -15,7 +15,8 @@ export const ButtonInline = React.forwardRef<HTMLButtonElement, ButtonInlineProp
     <button
       className={clsx(
         className,
-        'bg-button-inline-bg shadow-button-inline-border active:shadow-button-inline-border inline-block -translate-y-[1px] rounded-sm px-[0.5em] shadow-[0_0px_0_1px,_0_2px_0_0] active:translate-y-0 active:shadow-[0_0px_0_1px]',
+        'bg-button-inline-bg inline-block -translate-y-[1px] rounded px-[0.5em] transition-shadow duration-100 active:translate-y-0',
+        'shadow-button-inline-border/50 active:shadow-button-inline-border/25 shadow-[0_2px_0_0] active:shadow-[0_0px_0_1px]',
       )}
       ref={ref}
       {...props}

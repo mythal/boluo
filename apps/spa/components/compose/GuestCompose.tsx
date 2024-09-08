@@ -1,10 +1,13 @@
 import { useQueryCurrentUser } from '@boluo/common';
 import { FormattedMessage } from 'react-intl';
 import { ComposeFallbackBox } from '@boluo/ui/ComposeFallbackBox';
-import { type FC } from 'react';
+import { type ReactNode, type FC } from 'react';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
-import { LoadingText } from '@boluo/ui/LoadingText';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { useMutateJoinChannel } from '../../hooks/useMutateJoinChannel';
+import { AlertTriangle, UserPlus } from '@boluo/icons';
+import Icon from '@boluo/ui/Icon';
+import { Spinner } from '@boluo/ui/Spinner';
 
 interface Props {
   channelId: string;
@@ -17,12 +20,12 @@ export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
   const { isMutating: isJoining, error: joinError, trigger: join } = useMutateJoinChannel(channelId);
   if (!currentUser) {
     return <ComposeFallbackBox description={<FormattedMessage defaultMessage="You are not logged in" />} />;
-  } else if (isQueryingMember || isJoining) {
-    return <ComposeFallbackBox description={<LoadingText />} />;
-  } else if (queryMembersError) {
-    return <ComposeFallbackBox description={<FormattedMessage defaultMessage="Failed to load" />} />;
-  } else if (joinError) {
-    return <ComposeFallbackBox description={<FormattedMessage defaultMessage="Failed to join" />} />;
+  }
+  let icon: ReactNode = <Icon icon={UserPlus} />;
+  if (isQueryingMember || isJoining) {
+    icon = <Spinner />;
+  } else if (queryMembersError || joinError) {
+    icon = <Icon icon={AlertTriangle} />;
   } else if (spaceMembers && !(currentUser.id in spaceMembers)) {
     return (
       <ComposeFallbackBox description={<FormattedMessage defaultMessage="You are not a member of this space" />} />
@@ -35,9 +38,9 @@ export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
           <span className="mr-1">
             <FormattedMessage defaultMessage="You are not a member of this channel" />
           </span>
-          <button className="font-bold underline" onClick={() => join({})}>
-            <FormattedMessage defaultMessage="Join" />
-          </button>
+          <ButtonInline onClick={() => join({})}>
+            {icon} <FormattedMessage defaultMessage="Join" />
+          </ButtonInline>
         </>
       }
     />

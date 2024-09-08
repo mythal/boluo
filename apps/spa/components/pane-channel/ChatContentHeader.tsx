@@ -1,5 +1,5 @@
 import { type FC, useRef } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { ChatContentHeaderLoadMore } from './ChatContentHeaderLoadMore';
 import { type VirtualListContext } from './ChatContentVirtualList';
@@ -15,11 +15,12 @@ interface Props {
 }
 
 export const ChatContentHeader: FC<Props> = (props) => {
+  const intl = useIntl();
   const clear = useClearFilter();
   const count = props.context?.filteredMessagesCount ?? 0;
   const isFullLoaded = useIsFullLoaded();
   const boxRef = useRef<HTMLDivElement>(null);
-
+  const noMore = intl.formatMessage({ defaultMessage: 'No more messages' });
   return (
     <div ref={boxRef} className="flex h-28 select-none flex-col items-center justify-end gap-2 py-4">
       {count !== 0 && (
@@ -37,7 +38,13 @@ export const ChatContentHeader: FC<Props> = (props) => {
           </ButtonInline>
         </span>
       )}
-      {isFullLoaded ? <span className="text-surface-500">Ω</span> : <ChatContentHeaderLoadMore />}
+      {isFullLoaded ? (
+        <span className="text-text-lighter text-lg" title={noMore}>
+          Ω
+        </span>
+      ) : (
+        <ChatContentHeaderLoadMore />
+      )}
     </div>
   );
 };

@@ -111,7 +111,11 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
             >
               <ChatContent />
               {memberListState === 'RIGHT' && <MemberList currentUser={member?.user} channel={channel} />}
-              {member ? <Compose channelAtoms={atoms} member={member} /> : <GuestCompose />}
+              {member ? (
+                <Compose channelAtoms={atoms} member={member} />
+              ) : (
+                <GuestCompose channelId={channel.id} spaceId={channel.spaceId} />
+              )}
             </div>
           </PaneBox>
         </ChannelAtomsContext.Provider>

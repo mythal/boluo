@@ -93,7 +93,7 @@
     "message": "コピー"
   },
   "4udfbj": {
-    "message": "チャンネルをエクスポートする"
+    "message": "チャネルをエクスポート"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
@@ -153,7 +153,7 @@
     "message": "次元を破壊する"
   },
   "8pN86+": {
-    "message": "{name} は入力している"
+    "message": "{name} は入力している…"
   },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
@@ -330,7 +330,7 @@
     "message": "パスワードリセットのメールは送信しました。"
   },
   "KIAp17": {
-    "message": "リッチテキスト情報なしで"
+    "message": "リッチテキストなしに"
   },
   "KN7zKn": {
     "message": "エラー"
@@ -351,7 +351,7 @@
     "message": "匿名"
   },
   "LnM0On": {
-    "message": "{a} と {b} は入力しています"
+    "message": "{a} と {b} は入力しています…"
   },
   "MWO2zy": {
     "message": "何か問題が起きています."
@@ -441,7 +441,7 @@
     "message": "アイコンを削除"
   },
   "R5iTJ0": {
-    "message": "このテキストが表示された場合は、下にスワイプしてコンテンツを表示してみてください。"
+    "message": "このテキストが表示された場合は、下にスワイプして ↓コンテンツを表示してみてください。"
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
@@ -465,7 +465,7 @@
     "message": "ネットワーク接続を確認して、もう一度試してください。"
   },
   "SVwJTM": {
-    "message": "書き出す"
+    "message": "エクスポート"
   },
   "SpLs8U": {
     "message": "チャネルに参加するには、まず {space} に参加する必要があります。"
@@ -822,7 +822,7 @@
     "message": "You have denied notification permission."
   },
   "oeO284": {
-    "message": "{name} と他の {count} 人は入力しています"
+    "message": "{name} と他の {count} 人は入力しています…"
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
@@ -993,7 +993,7 @@
     "message": "おっとっと！"
   },
   "z9LRLa": {
-    "message": "編集日時："
+    "message": "編集日時"
   },
   "zINlao": {
     "message": "所有者"

@@ -33,9 +33,6 @@ const onError = (error: unknown, key: unknown) => {
 const swrConfig: SWRConfiguration = {
   refreshInterval: 60000,
   onError,
-  onSuccess: () => {
-    // Try to workaround `R().onSuccess is not a function`
-  },
 };
 
 export function ClientProviders({ children, lang, messages }: Props) {

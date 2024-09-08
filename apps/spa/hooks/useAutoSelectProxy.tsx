@@ -3,7 +3,7 @@ import { backendUrlAtom } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import useSWR from 'swr';
-import { sleep } from '@boluo/utils';
+import { empty, sleep } from '@boluo/utils';
 import { useProxies } from './useProxies';
 import { IS_DEVELOPMENT } from '../const';
 
@@ -69,7 +69,7 @@ export const useAutoSelectProxy = (interval: number) => {
     }
   };
   const { data: result } = useSWR(['test-proxies', proxies], () => tester(proxies), {
-    onSuccess: shouldAutoSelect ? onSuccess : undefined,
+    onSuccess: shouldAutoSelect ? onSuccess : empty,
     refreshInterval: interval,
     fallbackData: [],
     suspense: false,

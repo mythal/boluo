@@ -10,7 +10,7 @@ import {
 import clsx from 'clsx';
 import { Cloud, CloudOff } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
-import { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type FC, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { FormattedMessage } from 'react-intl';
@@ -32,9 +32,17 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
     onOpenChange: setPopoverOpen,
     whileElementsMounted: autoUpdate,
   });
+  const prevConnectStateType = useRef(connectionState.type);
   useEffect(() => {
-    setPopoverOpen(connectionState.type !== 'CONNECTED');
-  }, [connectionState.type]);
+    setPopoverOpen((prev) => {
+      if (connectionState.type === 'CONNECTED' || connectionState.type === 'ERROR') return prev;
+      if (connectionState.retry < 2) return prev;
+      if (connectionState.type === prevConnectStateType.current) return prev;
+      if (prevConnectStateType.current === 'CLOSED' && connectionState.type === 'CONNECTING') return prev;
+      return true;
+    });
+    prevConnectStateType.current = connectionState.type;
+  }, [connectionState]);
 
   const click = useClick(context, {});
 
@@ -57,35 +65,37 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       break;
   }
   return (
-    <div
-      className={clsx(
-        'group flex cursor-pointer select-none items-center gap-1 px-4 py-1 text-sm',
-        connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-surface-300',
-      )}
-      ref={refs.setReference}
-      {...getReferenceProps()}
-    >
-      {icon}
-      {connectionState.type === 'CLOSED' && (
-        <span>
-          <FormattedMessage defaultMessage="Offline" />
-        </span>
-      )}
-      {connectionState.type === 'ERROR' && (
-        <span>
-          <FormattedMessage defaultMessage="Error" />
-        </span>
-      )}
-      {connectionState.type === 'CONNECTING' && <span>…</span>}
-      {connectionState.type === 'CONNECTED' && (
-        <span className="">
-          <FormattedMessage defaultMessage="Connected" />
-        </span>
-      )}
-      <div className="flex-grow text-right">
-        <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
-          <FormattedMessage defaultMessage="Switch" />
-        </span>
+    <>
+      <div
+        className={clsx(
+          'ConnectionIndicatior group flex cursor-pointer select-none items-center gap-1 px-4 py-1 text-sm',
+          connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-surface-300',
+        )}
+        ref={refs.setReference}
+        {...getReferenceProps()}
+      >
+        {icon}
+        {connectionState.type === 'CLOSED' && (
+          <span>
+            <FormattedMessage defaultMessage="Offline" />
+          </span>
+        )}
+        {connectionState.type === 'ERROR' && (
+          <span>
+            <FormattedMessage defaultMessage="Error" />
+          </span>
+        )}
+        {connectionState.type === 'CONNECTING' && <span>…</span>}
+        {connectionState.type === 'CONNECTED' && (
+          <span className="">
+            <FormattedMessage defaultMessage="Connected" />
+          </span>
+        )}
+        <div className="flex-grow text-right">
+          <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
+            <FormattedMessage defaultMessage="Switch" />
+          </span>
+        </div>
       </div>
       {isPopoverOpen && (
         <FloatingPortal>
@@ -99,6 +109,6 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
           </div>
         </FloatingPortal>
       )}
-    </div>
+    </>
   );
 };

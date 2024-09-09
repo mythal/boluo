@@ -1,78 +1,45 @@
-import { type Proxy } from '@boluo/api';
 import { backendUrlAtom } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
-import useSWR from 'swr';
-import { empty, sleep } from '@boluo/utils';
 import { useProxies } from './useProxies';
-import { IS_DEVELOPMENT } from '../const';
+import { type BaseUrlTestResult, shouldAutoSelectAtom, testProxies, TIMEOUT } from '../base-url';
+import { useEffect } from 'react';
 
-const timeout = async (): Promise<'TIMEOUT'> => {
-  await sleep(1500);
-  return 'TIMEOUT';
-};
+type ResultWithScore = BaseUrlTestResult & { score: number };
 
-export interface ProxyTestResult {
-  proxy: Proxy;
-  result: number | 'FAILED' | 'TIMEOUT';
-}
-
-const proxyTimer = async (proxy: Proxy): Promise<ProxyTestResult> => {
-  const { url } = proxy;
-  const now = performance.now();
-
-  try {
-    const result = await Promise.race([fetch(url + '/api/info'), timeout()]);
-    if (result === 'TIMEOUT') {
-      return { proxy, result: 'TIMEOUT' };
-    } else {
-      if (result.status !== 200) {
-        return { proxy, result: 'FAILED' };
-      }
-    }
-  } catch (e) {
-    return { proxy, result: 'FAILED' };
-  }
-  return { proxy, result: performance.now() - now };
-};
-
-const tester = async (proxies: Proxy[]): Promise<ProxyTestResult[]> => {
-  return await Promise.all(proxies.map(proxyTimer));
-};
-
-export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select', IS_DEVELOPMENT);
+const EXTRA_SCORE_FOR_PREVIOUS = 100;
 
 export const useAutoSelectProxy = (interval: number) => {
   const proxies = useProxies();
   const shouldAutoSelect = useAtomValue(shouldAutoSelectAtom);
   const setBackendUrl = useSetAtom(backendUrlAtom);
-  const onSuccess = (result: ProxyTestResult[]) => {
-    let best: ProxyTestResult | undefined;
-    for (const item of result) {
-      if (item.result === 'FAILED' || item.result === 'TIMEOUT') {
-        continue;
-      }
-      if (!best) best = item;
-      if (typeof best.result === 'number' && item.result < best.result) {
-        best = item;
-      }
-    }
-    if (best) {
-      const bestUrl = best.proxy.url;
+  useEffect(() => {
+    if (!shouldAutoSelect) return;
+    const onSuccess = (result: BaseUrlTestResult[] | null) => {
+      if (!result) return;
       setBackendUrl((prev) => {
-        if (prev === bestUrl) {
+        const withScores: ResultWithScore[] = result.map((record) => {
+          if (record.rtt === 'FAILED' || record.rtt === 'TIMEOUT') {
+            return { ...record, score: 0 };
+          }
+          const extraScore = prev === record.proxy.url ? EXTRA_SCORE_FOR_PREVIOUS : 0;
+          return { ...record, score: TIMEOUT - record.rtt + extraScore };
+        });
+        if (withScores.length === 0) return prev;
+        const best = withScores.reduce(
+          (bestSoFar, record) => (bestSoFar.score > record.score ? bestSoFar : record),
+          withScores[0]!,
+        );
+        if (best.score <= 0) {
+          // TODO: notify user
           return prev;
         }
-        console.log('Auto select proxy: ', bestUrl);
-        return bestUrl;
+        return best.proxy.url;
       });
-    }
-  };
-  const { data: result } = useSWR(['test-proxies', proxies], () => tester(proxies), {
-    onSuccess: shouldAutoSelect ? onSuccess : empty,
-    refreshInterval: interval,
-    fallbackData: [],
-    suspense: false,
-  });
-  return result;
+    };
+    const selectBest = () => {
+      void testProxies(proxies).then(onSuccess);
+    };
+    const timer = setInterval(selectBest, interval);
+    return () => clearInterval(timer);
+  }, [interval, proxies, setBackendUrl, shouldAutoSelect]);
 };

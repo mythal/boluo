@@ -183,6 +183,7 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       },
       connect: {
         success: $(green[300], green[700]),
+        other: $(neutral[300], neutral[600]),
       },
       select: {
         bg: $(neutral[50], neutral[700]),

@@ -2,8 +2,8 @@ import { backendUrlAtom } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useProxies } from './useProxies';
 import {
+  backendUrlConfigAtom,
   type BaseUrlTestResult,
-  getBaseUrlFromStorage,
   shouldAutoSelectAtom,
   testProxies,
   testProxy,
@@ -60,13 +60,13 @@ export const useBackendUrlSetupEffect = () => {
       }
     };
     if (!shouldAutoSelect) {
-      const baseUrlFromStorage = getBaseUrlFromStorage();
-      const proxyFromStorage = proxies.find((proxy) => proxy.url === baseUrlFromStorage);
-      if (!proxyFromStorage) {
+      const backendUrlConfig = store.get(backendUrlConfigAtom);
+      const proxyFromConfig = proxies.find((proxy) => proxy.url === backendUrlConfig);
+      if (!proxyFromConfig) {
         selectBest();
       } else {
-        setBackendUrl(proxyFromStorage.url);
-        void testOrSelectBest(proxyFromStorage);
+        setBackendUrl(proxyFromConfig.url);
+        void testOrSelectBest(proxyFromConfig);
       }
       return;
     } else {

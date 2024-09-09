@@ -2,6 +2,7 @@ import { type Proxy } from '@boluo/api';
 import { timeout } from '@boluo/utils';
 import { atomWithStorage } from 'jotai/utils';
 import { IS_DEVELOPMENT } from './const';
+import { atom } from 'jotai';
 
 export interface BaseUrlTestResult {
   proxy: Proxy;
@@ -33,14 +34,6 @@ export const testProxies = async (proxies: Proxy[]): Promise<BaseUrlTestResult[]
   return Promise.all(proxies.map(testProxy));
 };
 
-export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select-v1', !IS_DEVELOPMENT);
+export const backendUrlConfigAtom = atomWithStorage('boluo-backend-config-v1', IS_DEVELOPMENT ? '' : 'auto');
 
-export const MANUAL_BASE_URL_KEY = 'boluo-manual-base-url-v1';
-
-export const saveBaseUrl = (url: string) => {
-  sessionStorage.setItem(MANUAL_BASE_URL_KEY, url);
-};
-
-export const getBaseUrlFromStorage = () => {
-  return sessionStorage.getItem(MANUAL_BASE_URL_KEY);
-};
+export const shouldAutoSelectAtom = atom((get) => get(backendUrlConfigAtom) === 'auto');

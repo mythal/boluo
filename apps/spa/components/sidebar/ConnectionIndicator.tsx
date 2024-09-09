@@ -15,6 +15,9 @@ import { Spinner } from '@boluo/ui/Spinner';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { FormattedMessage } from 'react-intl';
 import { BaseUrlSelectionPanel } from './BaseUrlSelectionPanel';
+import { useProxies } from '../../hooks/useProxies';
+import { backendUrlConfigAtom } from '../../base-url';
+import { backendUrlAtom } from '@boluo/api-browser';
 
 interface Props {
   spaceId: string | null | undefined;
@@ -89,6 +92,9 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
         {connectionState.type === 'CONNECTED' && (
           <span className="">
             <FormattedMessage defaultMessage="Connected" />
+            <span className="mx-1 text-xs">
+              (<CurrentName />)
+            </span>
           </span>
         )}
         <div className="flex-grow text-right">
@@ -111,4 +117,22 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       )}
     </>
   );
+};
+
+export const CurrentName: FC = () => {
+  const proxies = useProxies();
+  const backendUrlConfig = useAtomValue(backendUrlConfigAtom);
+  const backendUrl = useAtomValue(backendUrlAtom);
+  if (backendUrlConfig === 'auto') {
+    return (
+      <span>
+        <FormattedMessage defaultMessage="Auto" />
+      </span>
+    );
+  }
+  const current = proxies.find((proxy) => proxy.url === backendUrl);
+  if (!current) {
+    return <span>...</span>;
+  }
+  return <span>{current.name}</span>;
 };

@@ -9,7 +9,7 @@ export interface BaseUrlTestResult {
 }
 export const TIMEOUT = 1500;
 
-const proxyTimer = async (proxy: Proxy): Promise<BaseUrlTestResult> => {
+export const testProxy = async (proxy: Proxy): Promise<BaseUrlTestResult> => {
   const { url } = proxy;
   const now = performance.now();
 
@@ -30,7 +30,17 @@ const proxyTimer = async (proxy: Proxy): Promise<BaseUrlTestResult> => {
 };
 
 export const testProxies = async (proxies: Proxy[]): Promise<BaseUrlTestResult[]> => {
-  return Promise.all(proxies.map(proxyTimer));
+  return Promise.all(proxies.map(testProxy));
 };
 
-export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select', !IS_DEVELOPMENT);
+export const shouldAutoSelectAtom = atomWithStorage('boluo-should-auto-select-v1', !IS_DEVELOPMENT);
+
+export const MANUAL_BASE_URL_KEY = 'boluo-manual-base-url-v1';
+
+export const saveBaseUrl = (url: string) => {
+  sessionStorage.setItem(MANUAL_BASE_URL_KEY, url);
+};
+
+export const getBaseUrlFromStorage = () => {
+  return sessionStorage.getItem(MANUAL_BASE_URL_KEY);
+};

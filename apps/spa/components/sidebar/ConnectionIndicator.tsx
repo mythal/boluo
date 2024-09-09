@@ -72,7 +72,7 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       <div
         className={clsx(
           'ConnectionIndicatior group flex cursor-pointer select-none items-center gap-1 px-4 py-1 text-sm',
-          connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-surface-300',
+          connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-connect-other',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}

@@ -104,10 +104,6 @@ const handleEventFromServer = (
   state: ChatSpaceState,
   { payload: event }: ChatAction<'eventFromServer'>,
 ): ChatSpaceState => {
-  if (eventIdCompare(event.id, state.lastEventId) <= 0) {
-    return state;
-  }
-  const lastEventId = event.id;
   if (event.body.type === 'BATCH') {
     const { encodedEvents } = event.body;
     const events: Array<ServerEvent | null> = encodedEvents.map((encodedEvent) => {
@@ -119,18 +115,19 @@ const handleEventFromServer = (
       }
     });
     let nextState = state;
+    let lastEventId = state.lastEventId;
     for (const event of events) {
-      if (event === null) {
-        continue;
-      }
+      if (event === null) continue;
+      if (eventIdCompare(event.id, state.lastEventId) <= 0) continue;
       const chatAction = eventToChatAction(event);
-      if (chatAction === null) {
-        continue;
-      }
+      if (chatAction === null) continue;
       nextState = chatReducer(nextState, chatAction);
+      lastEventId = event.id;
     }
     return { ...nextState, lastEventId };
   }
+  if (eventIdCompare(event.id, state.lastEventId) <= 0) return state;
+  const lastEventId = event.id;
   const chatAction = eventToChatAction(event);
   if (chatAction === null) {
     return { ...state, lastEventId };

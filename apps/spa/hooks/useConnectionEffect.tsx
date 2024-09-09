@@ -7,6 +7,7 @@ import { isUuid } from '@boluo/utils';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
+import { recordError } from '../error';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
@@ -70,11 +71,23 @@ const connect = (
       return;
     }
     if (!isServerEvent(event)) return;
-    dispatch({ type: 'eventFromServer', payload: event });
-    // The `event.id.node` field is currently unused, so we can ignore it.
-    if (event.id.timestamp < after.timestamp) return;
-    if (event.id.timestamp === after.timestamp && event.id.seq <= after.seq) return;
-    onEvent(event);
+    let eventList: ServerEvent[];
+    if (event.body.type === 'BATCH') {
+      eventList = event.body.encodedEvents.flatMap((encodedEvent) => {
+        try {
+          return [JSON.parse(encodedEvent) as ServerEvent];
+        } catch {
+          recordError('Failed to parse event', { event: encodedEvent });
+          return [];
+        }
+      });
+    } else {
+      eventList = [event];
+    }
+    for (const event of eventList) {
+      dispatch({ type: 'eventFromServer', payload: event });
+      onEvent(event);
+    }
   };
   return newConnection;
 };

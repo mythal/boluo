@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { useProxies } from '../../hooks/useProxies';
 import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 import useSWR from 'swr';
-import { shouldAutoSelectAtom, testProxies } from '../../base-url';
+import { saveBaseUrl, shouldAutoSelectAtom, testProxies } from '../../base-url';
 
 interface Props {}
 
@@ -21,10 +21,11 @@ export const BaseUrlSelector: FC<Props> = () => {
   const handleSelect = (backendUrl: string) => {
     setShouldAutoSelect(false);
     setBackendUrl(backendUrl);
+    saveBaseUrl(backendUrl);
   };
   return (
     <div>
-      <label className="block">
+      <div>
         <FormattedMessage defaultMessage="Change Connection Region" />
         <div className="text-surface-900 flex flex-col gap-1 pt-1">
           {proxies.map((proxy, index) => {
@@ -33,14 +34,14 @@ export const BaseUrlSelector: FC<Props> = () => {
               <BaseUrlSelectorItem
                 key={index}
                 proxy={proxy}
-                result={result?.rtt ?? 'FAILED'}
+                result={result?.rtt}
                 selected={proxy.url === backendUrl}
                 setUrl={handleSelect}
               />
             );
           })}
         </div>
-      </label>
+      </div>
 
       <label className="flex items-center gap-1 py-2">
         <input type="checkbox" checked={shouldAutoSelect} onChange={(e) => setShouldAutoSelect(e.target.checked)} />

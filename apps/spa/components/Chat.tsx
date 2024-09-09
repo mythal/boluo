@@ -3,7 +3,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Suspense } from 'react';
 import { BreakpointProvider } from '../breakpoint';
-import { useAutoSelectProxy } from '../hooks/useAutoSelectProxy';
+import { useBackendUrlSetupEffect } from '../hooks/useBackendUrlSetupEffect';
 import { isSidebarExpandedAtom } from '../state/ui.atoms';
 import { isNoPaneAtom, routeAtom } from '../state/view.atoms';
 import { ChatNotFound } from './ChatNotFound';
@@ -58,7 +58,7 @@ const Chat: FC = () => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const route = useAtomValue(routeAtom);
   const isClient = useIsClient();
-  useAutoSelectProxy(60 * 1000);
+  useBackendUrlSetupEffect();
   const resolvedTheme = useThemeSetup(settings);
 
   useEffect(() => {

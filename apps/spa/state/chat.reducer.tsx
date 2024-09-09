@@ -144,6 +144,9 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   if (action.type === 'eventFromServer') {
     return handleEventFromServer(state, action);
   }
+  if (action.type === 'resetChatState') {
+    return makeChatState(state.context.spaceId);
+  }
   if (action.type === 'spaceUpdated') {
     return handleSpaceUpdated(state, action);
   } else if (action.type === 'enterSpace') {

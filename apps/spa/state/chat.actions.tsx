@@ -38,6 +38,7 @@ export type ChatActionMap = {
   channelDeleted: { channelId: string };
   resetGc: { pos: number };
   eventFromServer: ServerEvent;
+  resetChatState: Empty;
 };
 
 export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;

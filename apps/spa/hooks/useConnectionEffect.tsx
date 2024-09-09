@@ -8,6 +8,9 @@ import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
 
+let lastPongTime = Date.now();
+const RELOAD_TIMEOUT = 1000 * 60 * 30;
+
 const createMailboxConnection = (baseUrl: string, id: string, token?: string | null, after?: EventId): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
   if (token) paramsObject.token = token;
@@ -35,6 +38,11 @@ const connect = (
     setTimeout(() => dispatch({ type: 'reconnectCountdownTick', payload: {} }), 1000);
     return null;
   }
+  if (Date.now() - lastPongTime > RELOAD_TIMEOUT) {
+    alert('Connection lost due to inactivity.');
+    dispatch({ type: 'resetChatState', payload: {} });
+    return null;
+  }
   dispatch({ type: 'connecting', payload: { mailboxId } });
 
   const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, token, after);
@@ -50,6 +58,7 @@ const connect = (
     const raw = message.data;
     if (raw === PING) {
       newConnection.send(PONG);
+      lastPongTime = Date.now();
       return;
     }
     if (!raw || typeof raw !== 'string' || raw === PONG) return;

@@ -1,4 +1,4 @@
-import type { EventId, ServerEvent } from '@boluo/api';
+import type { EventId } from '@boluo/api';
 import type { Reducer } from 'react';
 import { eventIdCompare } from '../sort';
 import type { ChannelState } from './channel.reducer';
@@ -6,7 +6,6 @@ import { channelReducer, makeInitialChannelState } from './channel.reducer';
 import { type ChatAction, type ChatActionUnion, eventToChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';
-import { recordError } from '../error';
 
 export interface ChatReducerContext {
   spaceId: string;
@@ -105,26 +104,8 @@ const handleEventFromServer = (
   { payload: event }: ChatAction<'eventFromServer'>,
 ): ChatSpaceState => {
   if (event.body.type === 'BATCH') {
-    const { encodedEvents } = event.body;
-    const events: Array<ServerEvent | null> = encodedEvents.map((encodedEvent) => {
-      try {
-        return JSON.parse(encodedEvent) as ServerEvent;
-      } catch {
-        recordError('Failed to parse event', { event: encodedEvent });
-        return null;
-      }
-    });
-    let nextState = state;
-    let lastEventId = state.lastEventId;
-    for (const event of events) {
-      if (event === null) continue;
-      if (eventIdCompare(event.id, state.lastEventId) <= 0) continue;
-      const chatAction = eventToChatAction(event);
-      if (chatAction === null) continue;
-      nextState = chatReducer(nextState, chatAction);
-      lastEventId = event.id;
-    }
-    return { ...nextState, lastEventId };
+    // We do not handle batch events here
+    return state;
   }
   if (eventIdCompare(event.id, state.lastEventId) <= 0) return state;
   const lastEventId = event.id;

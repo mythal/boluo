@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { useProxies } from '../../hooks/useProxies';
 import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 import useSWR from 'swr';
-import { saveBaseUrl, shouldAutoSelectAtom, testProxies } from '../../base-url';
+import { backendUrlConfigAtom, testProxies } from '../../base-url';
 
 interface Props {}
 
@@ -16,12 +16,11 @@ export const BaseUrlSelector: FC<Props> = () => {
     fallbackData: [],
     suspense: false,
   });
-  const [shouldAutoSelect, setShouldAutoSelect] = useAtom(shouldAutoSelectAtom);
+  const [backendUrlConfig, setBackendUrlConfig] = useAtom(backendUrlConfigAtom);
   const [backendUrl, setBackendUrl] = useAtom(backendUrlAtom);
   const handleSelect = (backendUrl: string) => {
-    setShouldAutoSelect(false);
+    setBackendUrlConfig(backendUrl);
     setBackendUrl(backendUrl);
-    saveBaseUrl(backendUrl);
   };
   return (
     <div>
@@ -44,7 +43,11 @@ export const BaseUrlSelector: FC<Props> = () => {
       </div>
 
       <label className="flex items-center gap-1 py-2">
-        <input type="checkbox" checked={shouldAutoSelect} onChange={(e) => setShouldAutoSelect(e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={backendUrlConfig === 'auto'}
+          onChange={(e) => setBackendUrlConfig(e.target.checked ? 'auto' : '')}
+        />
         <span>
           <FormattedMessage defaultMessage="Auto Select" />
         </span>

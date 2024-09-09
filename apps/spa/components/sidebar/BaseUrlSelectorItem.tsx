@@ -2,11 +2,11 @@ import { type Proxy } from '@boluo/api';
 import clsx from 'clsx';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { type ProxyTestResult } from '../../hooks/useAutoSelectProxy';
+import { type BaseUrlTestResult } from '../../base-url';
 
 interface Props {
   proxy: Proxy;
-  result: ProxyTestResult['result'] | null | undefined;
+  result: BaseUrlTestResult['rtt'] | null | undefined;
   selected: boolean;
   setUrl: (url: string) => void;
 }

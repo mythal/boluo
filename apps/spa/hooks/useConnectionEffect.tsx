@@ -71,6 +71,9 @@ const connect = (
     }
     if (!isServerEvent(event)) return;
     dispatch({ type: 'eventFromServer', payload: event });
+    // The `event.id.node` field is currently unused, so we can ignore it.
+    if (event.id.timestamp < after.timestamp) return;
+    if (event.id.timestamp === after.timestamp && event.id.seq <= after.seq) return;
     onEvent(event);
   };
   return newConnection;

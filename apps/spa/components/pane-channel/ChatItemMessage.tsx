@@ -39,7 +39,7 @@ export const ChatItemMessage: FC<{
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
   const isScrolling = useIsScrolling();
-  const { isMaster, isAction, optimistic } = message;
+  const { isMaster, isAction } = message;
   const { data: user } = useQueryUser(message.senderId);
   const readObserve = useReadObserve();
   const ref = useRef<HTMLDivElement>(null);
@@ -74,7 +74,6 @@ export const ChatItemMessage: FC<{
       overlay={overlay}
       isScrolling={isScrolling}
       mini={mini}
-      optimistic={optimistic}
       pos={message.pos}
       failTo={message.failTo}
     >
@@ -128,7 +127,6 @@ const MessageBox: FC<{
   draggable?: boolean;
   mini?: boolean;
   overlay?: boolean;
-  optimistic?: boolean;
   sendBySelf: boolean;
   isScrolling: boolean;
   inGame: boolean;
@@ -143,7 +141,6 @@ const MessageBox: FC<{
   message,
   mini = false,
   isScrolling,
-  optimistic = false,
   sendBySelf,
   failTo,
   pos,
@@ -173,17 +170,11 @@ const MessageBox: FC<{
   const handle = useMemo(
     () =>
       draggable ? (
-        <MessageReorderHandle
-          ref={setActivatorNodeRef}
-          attributes={attributes}
-          listeners={listeners}
-          failTo={failTo}
-          loading={optimistic}
-        />
+        <MessageReorderHandle ref={setActivatorNodeRef} attributes={attributes} listeners={listeners} failTo={failTo} />
       ) : (
         <div className="text-message-time-text col-span-1 row-span-full h-full text-right"></div>
       ),
-    [attributes, draggable, failTo, listeners, optimistic, setActivatorNodeRef],
+    [attributes, draggable, failTo, listeners, setActivatorNodeRef],
   );
   const toolbar = useMemo(() => {
     if (isDragging || overlay) return null;

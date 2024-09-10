@@ -262,7 +262,9 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
         modifiedDiff > 0 ||
         (modifiedDiff === 0 &&
           /* FIXME: move the message will not change the `modified` field */
-          item.pos === message.pos)
+          item.pos === message.pos &&
+          /* Show a whisper message */
+          message.text === item.text)
       ) {
         return state;
       }

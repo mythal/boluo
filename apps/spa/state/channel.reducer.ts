@@ -235,32 +235,42 @@ const handleMessageEditing = (
   };
 };
 
+const compareMessageModified = (a: MessageItem, b: MessageItem): number => {
+  const aModified = Date.parse(a.modified);
+  const bModified = Date.parse(b.modified);
+  return aModified - bModified;
+};
+
 const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
   const optimisticMessageMap = filterOptimisticMessages(payload.message.id, state.optimisticMessageMap);
   const resetMessagesState = (state: ChannelState): ChannelState => {
     return { ...state, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
   };
   const message: MessageItem = makeMessageItem(payload.message);
-  const { oldPos } = payload;
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
     return { ...state, optimisticMessageMap };
   }
-  const moved = oldPos !== message.pos;
-  if (!moved) {
-    // In-place editing
-    if (message.pos < originalTopMessage.pos) return { ...state, optimisticMessageMap };
-    const findResult = findMessage(state.messages, message.id, message.pos);
-    if (findResult == null) return { ...state, optimisticMessageMap };
-    const [, index] = findResult;
-    return { ...state, messages: L.update(index, message, state.messages), optimisticMessageMap };
-  }
   // Remove the previous message if it loaded
   let messagesState = state.messages;
-  if (oldPos >= originalTopMessage.pos) {
-    const oldEntry = findMessage(state.messages, message.id, oldPos);
+  if (payload.oldPos >= originalTopMessage.pos) {
+    const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
     if (oldEntry != null) {
-      const [, index] = oldEntry;
+      const [item, index] = oldEntry;
+      const modifiedDiff = compareMessageModified(item, message);
+      if (
+        modifiedDiff > 0 ||
+        (modifiedDiff === 0 &&
+          /* FIXME: move the message will not change the `modified` field */
+          item.pos === message.pos)
+      ) {
+        console.log(item.modified, message.modified);
+        return state;
+      }
+      if (item.pos === message.pos) {
+        // In-place editing
+        return { ...state, messages: L.update(index, message, state.messages), optimisticMessageMap };
+      }
       messagesState = L.remove(index, 1, state.messages);
     }
   }
@@ -276,10 +286,6 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
 
   if (message.pos < topMessage.pos) {
     // Move up
-    if (oldPos === topMessage.pos) {
-      recordWarn('The top message should be removed in the previous step', { message, topMessage });
-      return resetMessagesState(state);
-    }
     return {
       ...state,
       optimisticMessageMap,
@@ -367,7 +373,7 @@ export const findMessage = (messages: List<MessageItem>, id: string, pos?: numbe
         index,
         foundIndex,
         foundItemId: foundItem?.id,
-        messageId: message.id,
+        messagePos: message.pos,
       });
     }
     return [message, index];

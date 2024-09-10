@@ -264,7 +264,6 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
           /* FIXME: move the message will not change the `modified` field */
           item.pos === message.pos)
       ) {
-        console.log(item.modified, message.modified);
         return state;
       }
       if (item.pos === message.pos) {

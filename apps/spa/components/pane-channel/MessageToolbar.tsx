@@ -18,6 +18,7 @@ import { toSimpleText } from '../../interpreter/entities';
 import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils';
 import { ErrorBoundary } from '@sentry/nextjs';
+import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -44,8 +45,9 @@ export const MessageToolbar: FC<{
   const member = useMember();
   const admin = member?.space.isAdmin || false;
   const master = member?.channel.isMaster || false;
+  const optimistic = useIsOptimistic();
   const permsArchive = admin || master || sendBySelf;
-  const permsEdit = sendBySelf;
+  const permsEdit = sendBySelf && !optimistic;
   const [display, setDisplay] = useAtom(useContext(DisplayContext));
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const store = useStore();
@@ -72,7 +74,7 @@ export const MessageToolbar: FC<{
     return (
       <Delay
         fallback={
-          <MessageToolbarButton pressed={message.folded}>
+          <MessageToolbarButton optimistic={optimistic} pressed={message.folded}>
             <Archive />
           </MessageToolbarButton>
         }
@@ -80,13 +82,13 @@ export const MessageToolbar: FC<{
         <MessageArchive messageId={message.id} archived={message.folded} variant="toolbar" />
       </Delay>
     );
-  }, [message.folded, message.id, permsArchive]);
+  }, [message.folded, message.id, optimistic, permsArchive]);
   const editButton = useMemo(() => {
     if (!permsEdit) return null;
     return (
       <Delay
         fallback={
-          <MessageToolbarButton>
+          <MessageToolbarButton optimistic={optimistic}>
             <Edit />
           </MessageToolbarButton>
         }
@@ -94,7 +96,7 @@ export const MessageToolbar: FC<{
         <MessageEdit message={message} variant="toolbar" />
       </Delay>
     );
-  }, [message, permsEdit]);
+  }, [message, optimistic, permsEdit]);
   const moreButton = useMemo(() => {
     return (
       <Delay
@@ -129,17 +131,20 @@ interface MessageToolbarButtonProps extends Omit<React.ButtonHTMLAttributes<HTML
   children: ReactNode;
   loading?: boolean;
   pressed?: boolean;
+  optimistic?: boolean;
 }
 
 const MessageToolbarButton = React.forwardRef<HTMLButtonElement, MessageToolbarButtonProps>(
-  ({ children, pressed, loading = false, ...props }, ref) => {
+  ({ children, pressed, loading = false, optimistic = false, ...props }, ref) => {
     return (
       <button
         ref={ref}
         aria-pressed={pressed}
+        disabled={optimistic || props.disabled}
         className={clsx(
           'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base',
-          pressed ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner' : 'hover:bg-switch-hover-bg',
+          optimistic ? 'cursor-progress' : '',
+          pressed ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner' : 'enabled:hover:bg-switch-hover-bg',
           loading ? 'text-text-lighter cursor-progress' : '',
         )}
         {...props}
@@ -157,6 +162,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   variant,
 }) => {
   const setDisplay = useSetAtom(useContext(DisplayContext));
+  const optimistic = useIsOptimistic();
   const intl = useIntl();
   const { trigger: toggle, isMutating: isToggling } = useMutateMessageArchive(messageId, {
     revalidate: false,
@@ -168,7 +174,12 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   if (variant === 'toolbar') {
     return (
       <>
-        <MessageToolbarButton loading={isToggling} onClick={() => (isToggling ? empty() : toggle())} pressed={archived}>
+        <MessageToolbarButton
+          optimistic={optimistic}
+          loading={isToggling}
+          onClick={() => (isToggling ? empty() : toggle())}
+          pressed={archived}
+        >
           <Archive />
         </MessageToolbarButton>
       </>
@@ -178,6 +189,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
       <MoreMenuItem
         icon={Archive}
         pressed={archived}
+        optimistic={optimistic}
         onClick={isToggling ? empty : toggle}
         label={intl.formatMessage({ defaultMessage: 'Archive' })}
         className={clsx('flex-1', isToggling ? 'text-text-lighter cursor-progress' : '')}
@@ -187,6 +199,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
 };
 
 const MessageEdit: FC<{ message: Message; variant: 'toolbar' | 'more' }> = ({ message, variant }) => {
+  const optimistic = useIsOptimistic();
   const composeAtom = useComposeAtom();
   const intl = useIntl();
   const label = intl.formatMessage({ defaultMessage: 'Edit' });
@@ -202,12 +215,12 @@ const MessageEdit: FC<{ message: Message; variant: 'toolbar' | 'more' }> = ({ me
 
   if (variant === 'toolbar') {
     return (
-      <MessageToolbarButton onClick={handleEditMessage}>
+      <MessageToolbarButton onClick={handleEditMessage} optimistic={optimistic}>
         <Edit />
       </MessageToolbarButton>
     );
   } else {
-    return <MoreMenuItem icon={Edit} onClick={handleEditMessage} label={label} />;
+    return <MoreMenuItem icon={Edit} onClick={handleEditMessage} optimistic={optimistic} label={label} />;
   }
 };
 
@@ -346,6 +359,7 @@ const MessageDeleteConfirm: FC<{ message: Message }> = ({ message }) => {
 const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
   const intl = useIntl();
   const member = useMember();
+  const optimistic = useIsOptimistic();
   const sendBySelf = message.senderId === member?.user.id;
   const premsDelete = member?.space.isAdmin || sendBySelf;
   const premsArchive = member?.channel.isMaster || sendBySelf;
@@ -359,6 +373,7 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
     () => (
       <MoreMenuItem
         icon={Trash}
+        optimistic={optimistic}
         label={intl.formatMessage({ defaultMessage: 'Delete' })}
         onClick={() => {
           setDisplay(CONFIRM_DELETE);
@@ -366,7 +381,7 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
         className=""
       />
     ),
-    [intl, setDisplay],
+    [intl, optimistic, setDisplay],
   );
   if (!premsDelete && !premsArchive) return null;
   if (!premsDelete) return archiveButton;
@@ -418,17 +433,20 @@ const MoreMenuItem: FC<{
   label: string;
   className?: string;
   pressed?: boolean;
+  optimistic?: boolean;
   onClick?: () => void;
-}> = ({ icon, label, className, pressed, onClick }) => {
+}> = ({ icon, label, className, pressed, onClick, optimistic = false }) => {
   return (
     <button
       aria-pressed={pressed}
+      disabled={optimistic}
       className={clsx(
         'flex gap-1 rounded-sm p-1.5 text-sm',
-        pressed ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner' : 'hover:bg-switch-hover-bg',
+        optimistic ? 'cursor-progress' : '',
+        pressed ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner' : 'enabled:hover:bg-switch-hover-bg',
         className,
       )}
-      onClick={onClick}
+      onClick={optimistic ? empty : onClick}
     >
       <Icon icon={icon} /> <span>{label}</span>
     </button>

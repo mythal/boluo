@@ -377,6 +377,9 @@
   "N97hnL": {
     "message": "権限がありません"
   },
+  "NXI/XL": {
+    "message": "Auto"
+  },
   "NXv+Ue": {
     "message": "通知をオフにしる"
   },
@@ -394,6 +397,9 @@
   },
   "OYT4m/": {
     "message": "メッセージは空にできません"
+  },
+  "OtUXSR": {
+    "message": "Type a message"
   },
   "P57vjw": {
     "message": "チャンネル名は32文字以内で入力してください。"
@@ -734,6 +740,9 @@
   "hYOE+U": {
     "message": "招待"
   },
+  "had27J": {
+    "message": "Restore Draft"
+  },
   "hgvaRE": {
     "message": "Please provide this ID when reporting the prolblem."
   },
@@ -811,6 +820,9 @@
   },
   "nmSKJK": {
     "message": "入力必須です。"
+  },
+  "oSgCYv": {
+    "message": "You are not a member of this space"
   },
   "oUWADl": {
     "message": "いいえ"
@@ -947,6 +959,9 @@
   "viXE32": {
     "message": "非公開"
   },
+  "vnPoZm": {
+    "message": "Tell your adventures"
+  },
   "w00UiA": {
     "message": "お使いのデバイスには通知をサポートしていません。"
   },
@@ -979,6 +994,9 @@
   },
   "xmcVZ0": {
     "message": "検索"
+  },
+  "xpqynr": {
+    "message": "No more messages"
   },
   "xrKHS6": {
     "message": "成功"

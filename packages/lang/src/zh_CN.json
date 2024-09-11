@@ -377,6 +377,9 @@
   "N97hnL": {
     "message": "没有权限"
   },
+  "NXI/XL": {
+    "message": "Auto"
+  },
   "NXv+Ue": {
     "message": "关闭通知"
   },
@@ -394,6 +397,9 @@
   },
   "OYT4m/": {
     "message": "消息不能为空"
+  },
+  "OtUXSR": {
+    "message": "Type a message"
   },
   "P57vjw": {
     "message": "频道名称最多不能超过 32 字符。"
@@ -734,6 +740,9 @@
   "hYOE+U": {
     "message": "邀请"
   },
+  "had27J": {
+    "message": "Restore Draft"
+  },
   "hgvaRE": {
     "message": "请在提交 bug 时附带这个 ID"
   },
@@ -811,6 +820,9 @@
   },
   "nmSKJK": {
     "message": "不能为空。"
+  },
+  "oSgCYv": {
+    "message": "You are not a member of this space"
   },
   "oUWADl": {
     "message": "否"
@@ -947,6 +959,9 @@
   "viXE32": {
     "message": "非公开"
   },
+  "vnPoZm": {
+    "message": "Tell your adventures"
+  },
   "w00UiA": {
     "message": "您的设备不支持发送通知。"
   },
@@ -979,6 +994,9 @@
   },
   "xmcVZ0": {
     "message": "搜索"
+  },
+  "xpqynr": {
+    "message": "No more messages"
   },
   "xrKHS6": {
     "message": "成功"

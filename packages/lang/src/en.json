@@ -377,6 +377,9 @@
   "N97hnL": {
     "message": "No permission."
   },
+  "NXI/XL": {
+    "message": "Auto"
+  },
   "NXv+Ue": {
     "message": "Turn off notification"
   },
@@ -394,6 +397,9 @@
   },
   "OYT4m/": {
     "message": "Message cannot be empty"
+  },
+  "OtUXSR": {
+    "message": "Type a message"
   },
   "P57vjw": {
     "message": "Channel name must be at most 32 characters."
@@ -734,6 +740,9 @@
   "hYOE+U": {
     "message": "Invite"
   },
+  "had27J": {
+    "message": "Restore Draft"
+  },
   "hgvaRE": {
     "message": "Please provide this ID when reporting the prolblem."
   },
@@ -811,6 +820,9 @@
   },
   "nmSKJK": {
     "message": "Can't be empty."
+  },
+  "oSgCYv": {
+    "message": "You are not a member of this space"
   },
   "oUWADl": {
     "message": "No"
@@ -947,6 +959,9 @@
   "viXE32": {
     "message": "Private"
   },
+  "vnPoZm": {
+    "message": "Tell your adventures"
+  },
   "w00UiA": {
     "message": "Your device does not support sending notifications."
   },
@@ -979,6 +994,9 @@
   },
   "xmcVZ0": {
     "message": "Search"
+  },
+  "xpqynr": {
+    "message": "No more messages"
   },
   "xrKHS6": {
     "message": "Success"

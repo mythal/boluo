@@ -4,6 +4,7 @@ import { type FC, type ReactNode, useDeferredValue } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { Content } from './Content';
 import { ContentWhisperTo } from './SelfPreviewContentWhisperTo';
+import { SelfPreviewPlaceholder } from './SelfPreviewPlaceholder';
 
 interface Props {
   nameNode: ReactNode;
@@ -12,7 +13,7 @@ interface Props {
 }
 
 export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, mediaNode }) => {
-  const { parsedAtom, inGameAtom } = useChannelAtoms();
+  const { parsedAtom, inGameAtom, composeAtom } = useChannelAtoms();
   const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
 
@@ -28,13 +29,17 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, mediaNode })
         />
       )}
       <div>
-        <Content
-          source={deferredParsed.text}
-          entities={deferredParsed.entities}
-          isAction={deferredParsed.isAction}
-          isArchived={false}
-          nameNode={nameNode}
-        />
+        {parsed.entities.length > 0 ? (
+          <Content
+            source={deferredParsed.text}
+            entities={deferredParsed.entities}
+            isAction={deferredParsed.isAction}
+            isArchived={false}
+            nameNode={nameNode}
+          />
+        ) : (
+          <SelfPreviewPlaceholder channelId={myMember.channelId} inGame={inGame} composeAtom={composeAtom} />
+        )}
       </div>
       {mediaNode}
     </div>

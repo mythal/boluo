@@ -17,19 +17,25 @@ import { useSettings } from '../../hooks/useSettings';
 import { FormattedMessage } from 'react-intl';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { ComposeFallback } from '@boluo/ui/ComposeFallback';
+import { useBackupCompose } from '../../hooks/useBackupCompose';
 
 interface Props {
   member: Member;
   channelAtoms: ChannelAtoms;
 }
 
+export const COMPOSE_BACKUP_TIMEOUT = 2000;
+export const composeBackupKey = (channelId: string) => `compose-backup:${channelId}`;
+
 const DeferredComposeTextArea: FC<{
   parsedAtom: ChannelAtoms['parsedAtom'];
   currentUser: User;
   enterSend: boolean;
+  channelId: string;
   send: () => Promise<void>;
-}> = ({ parsedAtom, currentUser, send, enterSend }) => {
+}> = ({ parsedAtom, currentUser, send, enterSend, channelId }) => {
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
+  useBackupCompose(channelId, parsed);
   const compose = useMemo(
     () => <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />,
     [currentUser.id, enterSend, parsed, send],
@@ -84,6 +90,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
             parsedAtom={parsedAtom}
             currentUser={member.user}
             enterSend={enterSend}
+            channelId={member.channel.channelId}
             send={send}
           />
 

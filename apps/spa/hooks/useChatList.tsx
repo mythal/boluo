@@ -333,6 +333,22 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     showDummy,
   ]);
 
+  useEffect(() => {
+    if (!myId) return;
+    const optimisticMessages = Object.values(optimisticMessageMap).filter(
+      (message) => message.item.item.senderId === myId || message.ref.senderId === myId,
+    );
+    if (optimisticMessages.length === 0) return;
+    const listener = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', listener);
+    return () => {
+      window.removeEventListener('beforeunload', listener);
+    };
+  }, [myId, optimisticMessageMap]);
+
   // Compute firstItemIndex for prepending items
   // https://virtuoso.dev/prepend-items/
   const prevChatListRef = useRef<ChatItem[] | null>(null);

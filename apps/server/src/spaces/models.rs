@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use chrono::prelude::*;
-use redis::AsyncCommands;
+use deadpool_redis::redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use ts_rs::TS;
@@ -34,10 +34,9 @@ pub struct UserStatus {
 }
 
 pub async fn space_users_status(
-    cache: &mut crate::cache::Connection,
+    redis: &mut deadpool_redis::Connection,
     space_id: Uuid,
 ) -> Result<HashMap<Uuid, UserStatus>, AppError> {
-    let redis = &mut cache.inner;
     let key = make_key(b"space", &space_id, b"heartbeat");
     let redis_result: HashMap<Vec<u8>, Vec<u8>> = redis.hgetall(&*key).await?;
     let mut table: HashMap<Uuid, UserStatus> = HashMap::new();

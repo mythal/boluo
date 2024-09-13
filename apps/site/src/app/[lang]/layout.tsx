@@ -36,5 +36,5 @@ export default function RootLayout({ children, params: { lang } }: { children: R
 }
 
 export function generateStaticParams() {
-  return [{ lang: 'zh-CN' }, { lang: 'ja' }, { lang: 'en' }];
+  return [{ lang: 'zh-CN' }, { lang: 'zh-TW' }, { lang: 'ja' }, { lang: 'en' }];
 }

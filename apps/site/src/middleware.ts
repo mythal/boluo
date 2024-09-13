@@ -23,7 +23,7 @@ function getLocale(request: NextRequest): Locale {
   return 'en';
 }
 
-const locales = ['en', 'ja', 'zh', 'zh-CN'] as const;
+const locales = ['en', 'ja', 'zh', 'zh-CN', 'zh-TW'] as const;
 
 const IS_STATIC_FILES = /^\/\w+\.(png|ico|svg)/;
 

@@ -311,6 +311,13 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
             )
             .await
         }
+        "zh-TW" | "zh_TW" => {
+            mail::send(
+                &email,
+                include_str!("../../text/reset-password/title.zh-TW.txt").trim(),
+                &format!(include_str!("../../text/reset-password/content.zh-TW.html"), token),
+            ).await
+        }
         "ja" => {
             mail::send(
                 &email,

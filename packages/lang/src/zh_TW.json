@@ -1,0 +1,1028 @@
+{
+  "++9PoL": {
+    "message": "刪除文件"
+  },
+  "+CI3C/": {
+    "message": "需要輸入1{value}時可以簡寫為 1d."
+  },
+  "+OyBM6": {
+    "message": "這個郵件地址已經被使用。"
+  },
+  "+PG3ZZ": {
+    "message": "骰池"
+  },
+  "+a+2ug": {
+    "message": "成員"
+  },
+  "/+v5jy": {
+    "message": "{seconds} 秒前"
+  },
+  "/DfISw": {
+    "message": "取消編輯"
+  },
+  "/I//hN": {
+    "message": "載入訊息失敗 ({errorCode})"
+  },
+  "/caJLq": {
+    "message": "在新窗格中打開"
+  },
+  "/iUStU": {
+    "message": "例如： 媽祖"
+  },
+  "01eQoz": {
+    "message": "更換線路"
+  },
+  "0Azlrb": {
+    "message": "管理"
+  },
+  "0EJGBZ": {
+    "message": "你確認要踢走 {nickname} ({username}) 嗎？"
+  },
+  "0HT+Ib": {
+    "message": "已歸檔"
+  },
+  "0JXAsk": {
+    "message": "離開"
+  },
+  "0QeqCg": {
+    "message": "發生意外錯誤。請稍後再試。"
+  },
+  "0ah2ud": {
+    "message": "位面"
+  },
+  "0eanrB": {
+    "message": "包括已歸檔的訊息"
+  },
+  "0pT/2d": {
+    "message": "無角色名"
+  },
+  "1iEPTM": {
+    "message": "通用"
+  },
+  "2J8G6R": {
+    "message": "檔案大小不能超過 {sizeLimit}M"
+  },
+  "2pzTGC": {
+    "message": "大成功"
+  },
+  "2s3EZW": {
+    "message": "需要名字"
+  },
+  "39AHJm": {
+    "message": "註冊"
+  },
+  "3VI9mt": {
+    "message": "保存變更"
+  },
+  "3c9Xiy": {
+    "message": "發生了未知錯誤。"
+  },
+  "3cc4Ct": {
+    "message": "亮色"
+  },
+  "47FYwb": {
+    "message": "取消"
+  },
+  "4FbTT8": {
+    "message": "是主持人"
+  },
+  "4KGRux": {
+    "message": "啟用通知"
+  },
+  "4l6vz1": {
+    "message": "拷貝"
+  },
+  "4udfbj": {
+    "message": "匯出頻道"
+  },
+  "5HUwAy": {
+    "message": "只允許字母，數字和下劃線。"
+  },
+  "5WZlnV": {
+    "message": "按名稱查找"
+  },
+  "5jeq8P": {
+    "message": "未知"
+  },
+  "5sg7KC": {
+    "message": "密碼"
+  },
+  "60KMrS": {
+    "message": "設作預設"
+  },
+  "64sfSN": {
+    "message": "沒差"
+  },
+  "6CVXeu": {
+    "message": "查詢頻道失敗"
+  },
+  "6DeXXB": {
+    "message": "為遊玩 TRPG 量身打造的聊天應用"
+  },
+  "6JNvt/": {
+    "message": "至少需要 {min} 個字元。"
+  },
+  "6PgVSe": {
+    "message": "重新生成"
+  },
+  "6QRlW8": {
+    "message": "正在等待重新連接 ({countdown}s)"
+  },
+  "6q3tCn": {
+    "message": "正在連接"
+  },
+  "70Tngj": {
+    "message": "關閉窗格"
+  },
+  "72vKlS": {
+    "message": "載入位面失敗"
+  },
+  "7G8Ojg": {
+    "message": "無法發送訊息"
+  },
+  "7UOvbT": {
+    "message": "離線"
+  },
+  "7q87xo": {
+    "message": "頻道設定"
+  },
+  "8+j66D": {
+    "message": "確實要刪除這條訊息？"
+  },
+  "88cMEG": {
+    "message": "摧毀位面"
+  },
+  "8pN86+": {
+    "message": "{name} 在撰寫…"
+  },
+  "973Dls": {
+    "message": "只有接受邀請的人能夠加入此位面"
+  },
+  "98c0D6": {
+    "message": "包括遊戲外訊息"
+  },
+  "9NDg1Z": {
+    "message": "(悄悄話)"
+  },
+  "9Obw6C": {
+    "message": "篩選"
+  },
+  "9WRlF4": {
+    "message": "送出"
+  },
+  "9dRayY": {
+    "message": "您的瀏覽器不受支援"
+  },
+  "9to/Le": {
+    "message": "變更大頭貼"
+  },
+  "AVI/0j": {
+    "message": "拆分"
+  },
+  "AbXVP4": {
+    "message": "創建於"
+  },
+  "AtML1q": {
+    "message": "主持人"
+  },
+  "AyGauy": {
+    "message": "登入"
+  },
+  "BEbOqj": {
+    "message": "糟糕！"
+  },
+  "Bm9rWe": {
+    "message": "刪除訊息失敗"
+  },
+  "Bp3LVS": {
+    "message": "找不到位面"
+  },
+  "BzWmz8": {
+    "message": "位面名"
+  },
+  "C81/uG": {
+    "message": "登出"
+  },
+  "CW7jWC": {
+    "message": "(自己)"
+  },
+  "Ciussb": {
+    "message": "只能通過邀請訪問秘密頻道"
+  },
+  "CoEsov": {
+    "message": "用戶名或郵箱"
+  },
+  "CoTP+E": {
+    "message": "您不是該頻道的成員"
+  },
+  "CtZMCP": {
+    "message": "秘密"
+  },
+  "CuNepY": {
+    "message": "創建頻道"
+  },
+  "D3idYv": {
+    "message": "設定"
+  },
+  "D3x69s": {
+    "message": "悄悄話給主持人"
+  },
+  "DBP+Od": {
+    "message": "Echo"
+  },
+  "F3Wc9W": {
+    "message": "過去 {day} 天"
+  },
+  "FN6jdd": {
+    "message": "貴安, {username}!"
+  },
+  "FazwRl": {
+    "message": "再試一次"
+  },
+  "GEhexi": {
+    "message": "在暗色模式"
+  },
+  "GMPXuF": {
+    "message": "每個人都可以加入這個位面"
+  },
+  "GaOcCS": {
+    "message": "若要使用此應用程式，請將您的 iOS/iPadOS 版本更新到16或更高版本。"
+  },
+  "GbWVAh": {
+    "message": "是的，踢走"
+  },
+  "HAlOn1": {
+    "message": "名字"
+  },
+  "HH8O0c": {
+    "message": "請求失敗，可能是網路異常。"
+  },
+  "HSaR2M": {
+    "message": "是否為秘密頻道？"
+  },
+  "HTmh5Q": {
+    "message": "目標"
+  },
+  "HlQPHQ": {
+    "message": "加入位面"
+  },
+  "HpyhN3": {
+    "message": "菠蘿"
+  },
+  "I5NMJ8": {
+    "message": "更多"
+  },
+  "I90sbW": {
+    "message": "剛剛"
+  },
+  "IEBWYE": {
+    "message": "放逐"
+  },
+  "IN8rCW": {
+    "message": "無效的邀請連結"
+  },
+  "INVcoD": {
+    "message": "目前正在積極開發，一切都不穩定。"
+  },
+  "IQwWyF": {
+    "message": "你必須登入後才能加入頻道。"
+  },
+  "IW0/M8": {
+    "message": "自動選擇"
+  },
+  "Ibwf8a": {
+    "message": "輸入框已崩潰。"
+  },
+  "IvBid4": {
+    "message": "使用 {enter} 鍵發送訊息"
+  },
+  "IvjoDS": {
+    "message": "已連接"
+  },
+  "JBWS0c": {
+    "message": "連結"
+  },
+  "JCIgkj": {
+    "message": "用戶名"
+  },
+  "JQt0RP": {
+    "message": "下拉刷新"
+  },
+  "Jc0JUv": {
+    "message": "輸入框崩潰了。您最後的輸入是："
+  },
+  "Jq3FDz": {
+    "message": "內容"
+  },
+  "JqiqNj": {
+    "message": "出錯了"
+  },
+  "Jxxkva": {
+    "message": "可以在設定中變更訊息顏色。"
+  },
+  "K3r6DQ": {
+    "message": "刪除"
+  },
+  "K7AkdL": {
+    "message": "顯示"
+  },
+  "K8uxGU": {
+    "message": "密碼重設郵件已發送。"
+  },
+  "KIAp17": {
+    "message": "不帶富文本資訊"
+  },
+  "KN7zKn": {
+    "message": "錯誤"
+  },
+  "KhLK4z": {
+    "message": "您沒有權限查看此位面。"
+  },
+  "Kp8wZw": {
+    "message": "還沒有設定簡介"
+  },
+  "L01rMU": {
+    "message": "成員預設將作為本人發言。"
+  },
+  "LUrJwE": {
+    "message": "頻道"
+  },
+  "LXxsbk": {
+    "message": "匿名"
+  },
+  "LnM0On": {
+    "message": "{a} 和 {b} 正撰寫…"
+  },
+  "MWO2zy": {
+    "message": "出了點問題。"
+  },
+  "MgRaWS": {
+    "message": "頻道名不可為空。"
+  },
+  "MoRJdV": {
+    "message": "用哪個按鍵發送訊息？"
+  },
+  "MoZLbF": {
+    "message": "暫不支持"
+  },
+  "MqRkT1": {
+    "message": "不支持的媒體類型"
+  },
+  "Mqn9K5": {
+    "message": "找不到人"
+  },
+  "Mtd9LO": {
+    "message": "超時"
+  },
+  "N97hnL": {
+    "message": "沒有權限。"
+  },
+  "NXI/XL": {
+    "message": "Auto"
+  },
+  "NXv+Ue": {
+    "message": "關閉通知"
+  },
+  "NZyhSX": {
+    "message": "新聞"
+  },
+  "O5epsB": {
+    "message": "取"
+  },
+  "OLFHJL": {
+    "message": "極難成功"
+  },
+  "OWhbRI": {
+    "message": "按下按鈕時將插入的命令。"
+  },
+  "OYT4m/": {
+    "message": "訊息不能為空"
+  },
+  "OtUXSR": {
+    "message": "Type a message"
+  },
+  "P57vjw": {
+    "message": "頻道名稱最多不能超過 32 字元。"
+  },
+  "P6PLpi": {
+    "message": "加入"
+  },
+  "PHZ3YP": {
+    "message": "大成功: {critical}, 大失敗: {fumble}, 成功: {success}, 加骰: {addition}"
+  },
+  "PO83gc": {
+    "message": "上次出現"
+  },
+  "Pe0ogR": {
+    "message": "主題"
+  },
+  "PiX/VH": {
+    "message": "在換行處將訊息拆分成多條"
+  },
+  "PwaN2o": {
+    "message": "歡迎"
+  },
+  "Q+Af6H": {
+    "message": "遊戲外"
+  },
+  "Q8Qw5B": {
+    "message": "描述"
+  },
+  "QBYqL5": {
+    "message": "查詢位面成員失敗"
+  },
+  "QOvY19": {
+    "message": "悄悄話給主持人以及"
+  },
+  "QdsAIR": {
+    "message": "「{spaceName}」位面成員"
+  },
+  "QlsDcr": {
+    "message": "動作"
+  },
+  "Qm+Ijg": {
+    "message": "該郵箱尚未註冊"
+  },
+  "R59CS8": {
+    "message": "移除大頭貼"
+  },
+  "R5iTJ0": {
+    "message": "如果您看到這個文本，為了顯示內容請嘗試向下滑動 ↓ 。"
+  },
+  "RraqCg": {
+    "message": "賬號和密碼不匹配"
+  },
+  "RvUa7+": {
+    "message": "無名稱"
+  },
+  "Ryulue": {
+    "message": "查詢位面失敗"
+  },
+  "SBkvpf": {
+    "message": "暱稱"
+  },
+  "SENRqu": {
+    "message": "幫助"
+  },
+  "SEg47O": {
+    "message": "您確定要放逐這個成員嗎？"
+  },
+  "SHMAcP": {
+    "message": "請檢查你的網路連線並重試。"
+  },
+  "SVwJTM": {
+    "message": "匯出"
+  },
+  "SpLs8U": {
+    "message": "您必須先加入 {space} 才能加入頻道。"
+  },
+  "SqVNRz": {
+    "message": "創建位面"
+  },
+  "StUScz": {
+    "message": "{count} 位成員"
+  },
+  "TAyWna": {
+    "message": "邀請你到此位面"
+  },
+  "TDaF6J": {
+    "message": "知道了"
+  },
+  "TThIOM": {
+    "message": "未找到"
+  },
+  "TdbPNK": {
+    "message": "自己"
+  },
+  "Tuwpkq": {
+    "message": "添加投骰"
+  },
+  "TwyMau": {
+    "message": "賬號"
+  },
+  "UdtpV7": {
+    "message": "主題"
+  },
+  "UhsO+i": {
+    "message": "未找到訊息"
+  },
+  "Ujs8Kg": {
+    "message": "來自服務器的訊息"
+  },
+  "UyfeTd": {
+    "message": "這裡是新版本的菠蘿，仍在活躍開發中。如果你更想回到舊版，請訪問"
+  },
+  "V/JHlm": {
+    "message": "忘記密碼?"
+  },
+  "VA/Z1S": {
+    "message": "隱藏"
+  },
+  "VeLEVu": {
+    "message": "角色名："
+  },
+  "Vl357u": {
+    "message": "時間範圍"
+  },
+  "VlTrY6": {
+    "message": "查詢頻道成員失敗"
+  },
+  "VnXp8Z": {
+    "message": "大頭貼"
+  },
+  "VzzYJk": {
+    "message": "創建"
+  },
+  "W14DRL": {
+    "message": "使用 {key} 來發送訊息"
+  },
+  "WASph7": {
+    "message": "踢走這個成員"
+  },
+  "WJSlkx": {
+    "message": "来自「{name}」的新訊息"
+  },
+  "Wa3nyB": {
+    "message": "「{channelName}」頻道設定"
+  },
+  "We16k/": {
+    "message": "確認要離開「{spaceName}」位面嗎？"
+  },
+  "Wi3NTK": {
+    "message": "應用需要許多現代功能，但您的瀏覽器並不支援。"
+  },
+  "Wj4YzT": {
+    "message": "返回主頁"
+  },
+  "WwpJ5A": {
+    "message": "發送密碼重設郵件"
+  },
+  "X2YA3V": {
+    "message": "提交的資料沒有通過稽核。"
+  },
+  "X5rIjZ": {
+    "message": "危險操作"
+  },
+  "XOi37d": {
+    "message": "純文本"
+  },
+  "XTqS60": {
+    "message": "請將 {errorCode} 告訴系統管理員。"
+  },
+  "Xs60po": {
+    "message": "{hours} 小時前"
+  },
+  "Xt6aW0": {
+    "message": "沒有人可以邀請"
+  },
+  "XzgtzD": {
+    "message": "這是「菠蘿」，一個為桌上角色扮演遊戲（TRPG）量身打造的聊天應用。"
+  },
+  "Y78Gyb": {
+    "message": "{minutes} 分前"
+  },
+  "YETHtM": {
+    "message": "介面"
+  },
+  "YNPiTV": {
+    "message": "確定要離開「{channelName}」嗎？"
+  },
+  "YQwJw3": {
+    "message": "預設投骰指令"
+  },
+  "Yf3xiD": {
+    "message": "{days} 天前"
+  },
+  "YjO/0+": {
+    "message": "我自己"
+  },
+  "Yq91Dy": {
+    "message": "匯出「{channelName}」"
+  },
+  "Yy/yDL": {
+    "message": "重設密碼"
+  },
+  "ZKBnrB": {
+    "message": "必須填寫角色名"
+  },
+  "ZMoczs": {
+    "message": "位面"
+  },
+  "ZgsEsn": {
+    "message": "沒有權限"
+  },
+  "ZvI2/H": {
+    "message": "釋放加載"
+  },
+  "a+BhVZ": {
+    "message": "重新生成"
+  },
+  "a5msuh": {
+    "message": "是"
+  },
+  "aLncO3": {
+    "message": "秘密頻道"
+  },
+  "aifEPM": {
+    "message": "這是一個秘密頻道。需要邀請才能進入此頻道。"
+  },
+  "aw8eqe": {
+    "message": "使用 {key} 換行。"
+  },
+  "b2XKbY": {
+    "message": "例如：一群狗頭人試圖攻擊我們"
+  },
+  "bF0HPN": {
+    "message": "資料條目間存在衝突。"
+  },
+  "bGay8d": {
+    "message": "位面設定"
+  },
+  "bT0FEQ": {
+    "message": "你確定要刪除「{channelName}」頻道嗎？"
+  },
+  "c1nBz9": {
+    "message": "以 … 角色"
+  },
+  "c65UQI": {
+    "message": "頻道名稱需要至少 2 個字元。"
+  },
+  "cCTI4h": {
+    "message": "是否允許網際網路上的任何人查看此位面"
+  },
+  "cLIHUg": {
+    "message": "困難成功"
+  },
+  "ccU6l/": {
+    "message": "在線"
+  },
+  "ceSWhW": {
+    "message": "顯示已歸檔的訊息"
+  },
+  "clpFBW": {
+    "message": "位面公開性"
+  },
+  "cpFKi9": {
+    "message": "主題可以用來記錄和提醒您當前關注的內容。"
+  },
+  "dMEGZV": {
+    "message": "拆分窗格"
+  },
+  "dVoumD": {
+    "message": "我在頻道中的角色名（可選）"
+  },
+  "dlu6r1": {
+    "message": "電子表格"
+  },
+  "domxPs": {
+    "message": "悄悄話"
+  },
+  "dzosaH": {
+    "message": "刪除頻道"
+  },
+  "e+eb5F": {
+    "message": "廣播已關閉"
+  },
+  "e3Ttmb": {
+    "message": "遊戲內"
+  },
+  "eHA8Ex": {
+    "message": "悄悄話給 …"
+  },
+  "eLCAEP": {
+    "message": "附件"
+  },
+  "eOqhbq": {
+    "message": "無法重設密碼，重設連結無效。"
+  },
+  "eVYdrD": {
+    "message": "過去1天"
+  },
+  "ea+WlP": {
+    "message": "加入私人頻道需要邀請"
+  },
+  "f0Sf6g": {
+    "message": "添加檔案"
+  },
+  "fNCCY7": {
+    "message": "基本"
+  },
+  "fTHhSB": {
+    "message": "新密碼"
+  },
+  "fc2iho": {
+    "message": "添加檔案"
+  },
+  "fnihsY": {
+    "message": "離開"
+  },
+  "fsU2v+": {
+    "message": "位面間跳躍"
+  },
+  "ftsMiH": {
+    "message": "遊戲內/外"
+  },
+  "gEes7R": {
+    "message": "為了接受邀請，你需要先 {loginLink}。"
+  },
+  "gduNan": {
+    "message": "在亮色模式"
+  },
+  "hCMGkK": {
+    "message": "您尚未登入"
+  },
+  "hFIEcy": {
+    "message": "請求格式不正確。"
+  },
+  "hSOOaa": {
+    "message": "你被邀請到「{spaceName}」"
+  },
+  "hYOE+U": {
+    "message": "邀請"
+  },
+  "had27J": {
+    "message": "Restore Draft"
+  },
+  "hgvaRE": {
+    "message": "請在提交 bug 時附帶這個 ID"
+  },
+  "hh0xW7": {
+    "message": "頻道名"
+  },
+  "hrgo+E": {
+    "message": "歸檔"
+  },
+  "iATkrL": {
+    "message": "窗格崩潰了"
+  },
+  "iDRoI+": {
+    "message": "離開的成員"
+  },
+  "iHN12u": {
+    "message": "管理員"
+  },
+  "iLUQIP": {
+    "message": "邀請連結"
+  },
+  "itPgxd": {
+    "message": "個人資料"
+  },
+  "iySl5e": {
+    "message": "你已經加入了該頻道。"
+  },
+  "jRANBd": {
+    "message": "編輯訊息"
+  },
+  "jtLNcT": {
+    "message": "移動訊息失敗，找不到目的地，請再試一下。"
+  },
+  "k1s9UW": {
+    "message": "未找到"
+  },
+  "kFck7X": {
+    "message": "遊戲主持人"
+  },
+  "kGQJcD": {
+    "message": "重排"
+  },
+  "kIUNDX": {
+    "message": "預設使用的骰子"
+  },
+  "kMogDE": {
+    "message": "請輸入有效的郵箱地址。"
+  },
+  "kh4wt0": {
+    "message": "切換側邊欄"
+  },
+  "lJePcp": {
+    "message": "失敗"
+  },
+  "lKv8ex": {
+    "message": "預設"
+  },
+  "lx+ssX": {
+    "message": "離開位面"
+  },
+  "mYgmal": {
+    "message": "角色外身分"
+  },
+  "muMPUp": {
+    "message": "大失敗"
+  },
+  "n1Whvj": {
+    "message": "切換"
+  },
+  "n9f3pm": {
+    "message": "超出限額"
+  },
+  "nKu0Ba": {
+    "message": "你必須先登入。"
+  },
+  "nmSKJK": {
+    "message": "不能為空。"
+  },
+  "oSgCYv": {
+    "message": "You are not a member of this space"
+  },
+  "oUWADl": {
+    "message": "否"
+  },
+  "oVARYX": {
+    "message": "至多 {max} 個字元。"
+  },
+  "oaP8SV": {
+    "message": "您已拒絕通知權限。"
+  },
+  "oeO284": {
+    "message": "{name} 以及{count}人正在撰寫…"
+  },
+  "onmBf2": {
+    "message": "換一個隨機顏色"
+  },
+  "pBQ5bd": {
+    "message": "編輯中"
+  },
+  "pJ78jg": {
+    "message": "遊戲外"
+  },
+  "pm/HIR": {
+    "message": "必須填寫頻道名。"
+  },
+  "q7JBy1": {
+    "message": "變更設定"
+  },
+  "qGHWyb": {
+    "message": "{count}條訊息已過濾"
+  },
+  "qQ4pEa": {
+    "message": "對 {targets} 悄悄話"
+  },
+  "qbB8pg": {
+    "message": "位面描述"
+  },
+  "qj1uhz": {
+    "message": "斷開連結"
+  },
+  "qnWbsU": {
+    "message": "歸檔訊息失敗"
+  },
+  "qoUUiA": {
+    "message": "允許旁觀者"
+  },
+  "qvc9uM": {
+    "message": "此操作不可撤銷。"
+  },
+  "r2rV1X": {
+    "message": "遊戲外"
+  },
+  "r4YqDx": {
+    "message": "例如 CSS 容器查詢。"
+  },
+  "rK7cTy": {
+    "message": "初始頻道名稱"
+  },
+  "rYQKZm": {
+    "message": "登入"
+  },
+  "rYtHKT": {
+    "message": "依照系統設定"
+  },
+  "rZgHVT": {
+    "message": "匯出頻道失敗"
+  },
+  "rbrahO": {
+    "message": "關閉"
+  },
+  "rl4pg7": {
+    "message": "重排頻道"
+  },
+  "s+ixvA": {
+    "message": "確定，摧毀「{spaceName}」"
+  },
+  "s6Rg3u": {
+    "message": "哎呀！出了錯，但不是你這邊的問題"
+  },
+  "sMAAlN": {
+    "message": "新增"
+  },
+  "sjzLbX": {
+    "message": "接受"
+  },
+  "snqrYf": {
+    "message": "你沒有登入，{signUp} 或者 {login}。"
+  },
+  "sol2mE": {
+    "message": "未找到，記錄可能已刪除。"
+  },
+  "sy+pv5": {
+    "message": "郵箱"
+  },
+  "t0WZaq": {
+    "message": "進行遊戲的頻道，成員默認以角色身分發言"
+  },
+  "t44Zkc": {
+    "message": "拷貝源文本"
+  },
+  "t5xj3B": {
+    "message": "新位面"
+  },
+  "tOdNiY": {
+    "message": "暗色"
+  },
+  "taJuye": {
+    "message": "為了使用本應用，推薦使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
+  },
+  "ug01Mk": {
+    "message": "時間"
+  },
+  "uhu5aG": {
+    "message": "公開"
+  },
+  "uizmax": {
+    "message": "按"
+  },
+  "ulAzZl": {
+    "message": "查詢用戶失敗"
+  },
+  "v3aFf1": {
+    "message": "建立位面"
+  },
+  "vMrnt6": {
+    "message": "解析資料時發生了錯誤。"
+  },
+  "vRORF/": {
+    "message": "「{spaceName}」位面設定"
+  },
+  "vXCeIi": {
+    "message": "失敗"
+  },
+  "viXE32": {
+    "message": "非公開"
+  },
+  "vnPoZm": {
+    "message": "Tell your adventures"
+  },
+  "w00UiA": {
+    "message": "您的設備不支援發送通知。"
+  },
+  "wEQDC6": {
+    "message": "編輯"
+  },
+  "wV1fJ2": {
+    "message": "預設顏色"
+  },
+  "wb3MSp": {
+    "message": "此用戶名已被佔用。"
+  },
+  "x82IOl": {
+    "message": "不廣播"
+  },
+  "xMnH8F": {
+    "message": "加載更多"
+  },
+  "xWN20+": {
+    "message": "你不能看"
+  },
+  "xgZgnO": {
+    "message": "請求方式錯誤。"
+  },
+  "xil+Fb": {
+    "message": "此頻道名已被佔用。"
+  },
+  "xl27nc": {
+    "message": "重設密碼"
+  },
+  "xmcVZ0": {
+    "message": "檢索"
+  },
+  "xpqynr": {
+    "message": "No more messages"
+  },
+  "xrKHS6": {
+    "message": "成功"
+  },
+  "y1Z3or": {
+    "message": "語言"
+  },
+  "y63e7m": {
+    "message": "郵箱"
+  },
+  "z/ipXX": {
+    "message": "糟糕！"
+  },
+  "z9LRLa": {
+    "message": "修改於"
+  },
+  "zINlao": {
+    "message": "所有者"
+  },
+  "zNnjeF": {
+    "message": "確定要刪除「{spaceName}」嗎？"
+  },
+  "zQLEfz": {
+    "message": "格式"
+  },
+  "zQvVDJ": {
+    "message": "所有"
+  }
+}

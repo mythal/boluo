@@ -12,6 +12,7 @@ use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
 use crate::{cache, db};
+use deadpool_redis::redis::AsyncCommands;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
 use hyper::body::{Body, Incoming};
@@ -188,17 +189,9 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        let Ok(mut redis) = cache::conn().await else {
-            log::error!("Failed to connect to cache");
-            return connection_error(
-                req,
-                Some(mailbox),
-                ConnectionError::Unexpected,
-                "Failed to connect to cache".to_string(),
-            );
-        };
+        let mut redis = cache::conn().await;
         let key = make_key(b"token", &token, b"user_id");
-        let Ok(data) = redis.get(&key).await else {
+        let Ok(data) = redis.get::<_, Option<Vec<u8>>>(&key).await else {
             log::warn!("Failed to get token");
             return connection_error(
                 req,
@@ -306,10 +299,10 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     if let Ok(session) = authenticate(&req).await {
-        let mut redis = cache::conn().await?;
+        let mut redis = cache::conn().await;
         let token = Uuid::new_v4();
         let key = make_key(b"token", &token, b"user_id");
-        redis.set_with_expiration(&key, session.user_id.as_bytes(), 10).await?;
+        redis.set_ex::<_, _, ()>(&key, session.user_id.as_bytes(), 10).await?;
         Ok(Token {
             token: Some(token.to_string()),
         })

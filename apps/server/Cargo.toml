@@ -50,6 +50,7 @@ sqlx = { version = "0.8.0", features = [
 ] }
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
+deadpool-redis = "0.17.0"
 
 
 [dependencies.ts-rs]
@@ -89,11 +90,6 @@ features = [
   "fs",
   "parking_lot",
 ]
-
-[dependencies.redis]
-version = "0.26"
-default-features = false
-features = ["connection-manager", "tokio-rustls-comp"]
 
 [dependencies.fern]
 version = "0.6"

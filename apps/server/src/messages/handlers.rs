@@ -34,7 +34,7 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         ChannelMember::get_with_space_member(&mut *conn, &session.user_id, &channel_id)
             .await
             .or_no_permission()?;
-    let mut cache = crate::cache::conn().await?;
+    let mut cache = crate::cache::conn().await;
     let message = Message::create(
         &mut conn,
         &mut cache,
@@ -148,7 +148,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     }
     let pos = moved_message.pos as i32;
     Event::message_edited(channel.space_id, moved_message, message.pos);
-    let mut cache = crate::cache::conn().await?;
+    let mut cache = crate::cache::conn().await;
     ensure_pos_largest(&mut cache, channel_id, pos).await?;
     Ok(true)
 }

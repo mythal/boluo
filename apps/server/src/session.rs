@@ -4,6 +4,7 @@ use crate::error::AppError;
 use crate::error::CacheError;
 use crate::utils::{self, sign};
 use anyhow::Context;
+use deadpool_redis::redis::AsyncCommands;
 use hyper::header::HeaderValue;
 use hyper::header::AUTHORIZATION;
 use hyper::header::COOKIE;
@@ -54,7 +55,7 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
 
 pub async fn revoke_session(id: &Uuid) -> Result<(), CacheError> {
     let key = make_key(id);
-    cache::conn().await?.remove(&key).await
+    cache::conn().await.del(&key).await
 }
 
 #[test]
@@ -72,7 +73,7 @@ fn make_key(session: &Uuid) -> Vec<u8> {
 pub async fn start(user_id: &Uuid) -> Result<Uuid, CacheError> {
     let session = utils::id();
     let key = make_key(&session);
-    cache::conn().await?.set(&key, user_id.as_bytes()).await?;
+    cache::conn().await.set::<_, _, ()>(&key, user_id.as_bytes()).await?;
     Ok(session)
 }
 
@@ -165,7 +166,7 @@ pub fn add_settings_cookie(settings: &serde_json::Value, response_header: &mut H
 
 pub async fn remove_session(id: Uuid) -> Result<(), CacheError> {
     let key = make_key(&id);
-    cache::conn().await?.remove(&key).await?;
+    cache::conn().await.del::<_, ()>(&key).await?;
     Ok(())
 }
 
@@ -253,10 +254,14 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     };
 
     let key = make_key(&id);
-    let bytes: Vec<u8> = cache::conn().await?.get(&key).await?.ok_or_else(|| {
-        log::warn!("Session {} not found, token: {}", id, token);
-        AuthenticateFail::NoSessionFound
-    })?;
+    let bytes: Vec<u8> = cache::conn()
+        .await
+        .get::<_, Option<Vec<u8>>>(&key)
+        .await?
+        .ok_or_else(|| {
+            log::warn!("Session {} not found, token: {}", id, token);
+            AuthenticateFail::NoSessionFound
+        })?;
 
     let user_id = Uuid::from_slice(&bytes).map_err(|_| AuthenticateFail::InvaildToken)?;
     Ok(Session { id, user_id })

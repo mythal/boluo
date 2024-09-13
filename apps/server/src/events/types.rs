@@ -9,7 +9,7 @@ use crate::spaces::api::SpaceWithRelated;
 use crate::spaces::models::{space_users_status, StatusKind, UserStatus};
 use crate::{cache, db};
 use chrono::Utc;
-use redis::AsyncCommands;
+use deadpool_redis::redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -202,7 +202,7 @@ impl Event {
         let channel_id = preview.channel_id;
         Event::fire(EventBody::MessagePreview { preview, channel_id }, mailbox);
     }
-    pub async fn push_status(cache: &mut crate::cache::Connection, space_id: Uuid) -> Result<(), anyhow::Error> {
+    pub async fn push_status(cache: &mut deadpool_redis::Connection, space_id: Uuid) -> Result<(), anyhow::Error> {
         let status_map = space_users_status(cache, space_id).await?;
         Event::transient(space_id, EventBody::StatusMap { status_map, space_id });
         Ok(())
@@ -215,13 +215,12 @@ impl Event {
         timestamp: i64,
         focus: Vec<Uuid>,
     ) -> Result<(), anyhow::Error> {
-        let mut cache = cache::conn().await?;
+        let mut cache = cache::conn().await;
         let heartbeat = UserStatus { timestamp, kind, focus };
         let mut changed = true;
 
         let key = cache::make_key(b"space", &space_id, b"heartbeat");
         let old_value: Option<Result<UserStatus, _>> = cache
-            .inner
             .hget::<_, _, Option<Vec<u8>>>(&*key, user_id.as_bytes())
             .await?
             .as_deref()
@@ -231,7 +230,7 @@ impl Event {
         }
         let value = serde_json::to_vec(&heartbeat)?;
 
-        let created: bool = cache.inner.hset(&*key, user_id.as_bytes(), &*value).await?;
+        let created: bool = cache.hset(&*key, user_id.as_bytes(), &*value).await?;
         if created || changed {
             Event::push_status(&mut cache, space_id).await?;
         }

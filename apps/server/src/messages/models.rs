@@ -183,7 +183,7 @@ impl Message {
 
     pub async fn create(
         conn: &mut sqlx::PgConnection,
-        cache: &mut crate::cache::Connection,
+        cache: &mut deadpool_redis::Connection,
         preview_id: Option<&Uuid>,
         channel_id: &Uuid,
         sender_id: &Uuid,

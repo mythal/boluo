@@ -79,7 +79,7 @@ impl PreviewPost {
         } = self;
         let pool = db::get().await;
         let mut conn = pool.acquire().await?;
-        let mut cache = cache::conn().await?;
+        let mut cache = cache::conn().await;
         let cache = &mut cache;
         let mut should_finish = false;
         if let Some(text) = text.as_ref() {

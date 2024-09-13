@@ -1,6 +1,6 @@
 use crate::session::AuthenticateFail;
+pub use deadpool_redis::redis::RedisError as CacheError;
 use hyper::{StatusCode, Uri};
-pub use redis::RedisError as CacheError;
 use std::error::Error;
 use thiserror::Error;
 

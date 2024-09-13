@@ -14,9 +14,9 @@ use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, 
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
 use crate::{cache, db, mail};
+use deadpool_redis::redis::AsyncCommands;
 use hyper::body::{Body, Incoming};
 use hyper::{Method, Request, Response};
-use redis::AsyncCommands;
 
 async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     let Register {
@@ -255,7 +255,7 @@ pub fn token_key(token: &str) -> Vec<u8> {
     key
 }
 
-pub async fn ip_limit(cache: &mut cache::Connection, req: &Request<impl Body>) -> Result<(), AppError> {
+pub async fn ip_limit(cache: &mut deadpool_redis::Connection, req: &Request<impl Body>) -> Result<(), AppError> {
     let ip = get_ip(req).unwrap_or_else(|| {
         log::warn!("Unable to obtain client IP");
         log::info!("{:?}", req.headers());
@@ -263,9 +263,9 @@ pub async fn ip_limit(cache: &mut cache::Connection, req: &Request<impl Body>) -
     });
     let mut key = b"reset_password_ip:".to_vec();
     key.extend_from_slice(ip.as_bytes());
-    let counter: i32 = cache.inner.incr(&key, 1).await?;
+    let counter: i32 = cache.incr(&key, 1).await?;
     if counter == 1 {
-        cache.inner.expire::<_, ()>(&key, 60 * 2).await?;
+        cache.expire::<_, ()>(&key, 60 * 2).await?;
     }
     if counter > 3 {
         return Err(AppError::LimitExceeded("IP"));
@@ -273,11 +273,11 @@ pub async fn ip_limit(cache: &mut cache::Connection, req: &Request<impl Body>) -
     Ok(())
 }
 
-pub async fn email_limit(cache: &mut cache::Connection, email: &str) -> Result<(), AppError> {
+pub async fn email_limit(cache: &mut deadpool_redis::Connection, email: &str) -> Result<(), AppError> {
     let email_key = token_key(email);
-    let counter: i32 = cache.inner.incr(&email_key, 1).await?;
+    let counter: i32 = cache.incr(&email_key, 1).await?;
     if counter == 1 {
-        cache.inner.expire::<_, ()>(&email_key, 60 * 2).await?;
+        cache.expire::<_, ()>(&email_key, 60 * 2).await?;
     }
     if counter > 2 {
         return Err(AppError::LimitExceeded("email"));
@@ -286,7 +286,7 @@ pub async fn email_limit(cache: &mut cache::Connection, email: &str) -> Result<(
 }
 
 pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
-    let mut cache = cache::conn().await?;
+    let mut cache = cache::conn().await;
     ip_limit(&mut cache, &req).await?;
     let ResetPassword { email, lang } = parse_body(req).await?;
     email_limit(&mut cache, &email).await?;
@@ -299,7 +299,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
     let key = token_key(&token);
 
     cache
-        .set_with_expiration(key.as_slice(), email.as_bytes(), 60 * 60)
+        .set_ex::<_, _, ()>(key.as_slice(), email.as_bytes(), 60 * 60)
         .await?;
     let lang = lang.as_deref().unwrap_or("en");
     match lang {
@@ -335,8 +335,8 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
 pub async fn reset_password_token_check(req: Request<impl Body>) -> Result<bool, AppError> {
     let ResetPasswordTokenCheck { token } = parse_query(req.uri())?;
     let email = cache::conn()
-        .await?
-        .get(token_key(&token).as_slice())
+        .await
+        .get::<_, Option<Vec<u8>>>(token_key(&token).as_slice())
         .await?
         .map(String::from_utf8);
     if let Some(Ok(_)) = email {
@@ -351,8 +351,8 @@ pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppEr
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
     let email = cache::conn()
-        .await?
-        .get(token_key(&token).as_slice())
+        .await
+        .get::<_, Option<Vec<u8>>>(token_key(&token).as_slice())
         .await?
         .map(String::from_utf8)
         .ok_or(AppError::NotFound("token"))?

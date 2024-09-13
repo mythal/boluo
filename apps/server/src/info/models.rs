@@ -64,13 +64,10 @@ pub struct ConnectionState {
 
 impl ConnectionState {
     pub async fn cache() -> Result<ConnectionState, String> {
-        pub use redis::AsyncCommands;
+        pub use deadpool_redis::redis::AsyncCommands;
         let start = std::time::Instant::now();
-        let mut conn = crate::cache::conn()
-            .await
-            .map_err(|err| format!("Failed to connect to cache: {:?}", err))?;
+        let mut conn = crate::cache::conn().await;
         let _redis_result: bool = conn
-            .inner
             .set(b"health_check", b"ok")
             .await
             .map_err(|err| format!("Failed to set health_check to cache: {:?}", err))?;

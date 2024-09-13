@@ -1,0 +1,45 @@
+{
+  "name": "菠蘿RPG",
+  "short_name": "菠蘿",
+  "start_url": "/zh-TW",
+  "icons": [
+    {
+      "src": "icons/app.svg",
+      "sizes": "48x48 72x72 96x96",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/app-128px.png",
+      "sizes": "128x128",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/app-144px.png",
+      "sizes": "144x144",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/app-180px.png",
+      "sizes": "180x180",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/app-192px.png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/app-256px.png",
+      "sizes": "256x256",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/app-512px.png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

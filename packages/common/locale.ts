@@ -18,7 +18,8 @@ export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {
 };
 
 export const narrowLocale = (locale: string): Locale | null => {
-  if (locale === 'zh-tw') {
+  locale = locale.toLowerCase();
+  if (locale === 'zh-tw' || locale === "zh-hant") {
     return 'zh-TW';
   } else if (locale === 'zh' || locale.startsWith('zh-')) {
     return 'zh-CN';

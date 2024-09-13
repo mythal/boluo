@@ -25,6 +25,10 @@ export const LocaleSelect: React.FC<Props> = ({ id, disabled = false }) => {
         label: '简体中文',
       },
       {
+        value: 'zh-TW',
+        label: '繁體中文',
+      },
+      {
         value: 'ja',
         label: '日本語',
       },

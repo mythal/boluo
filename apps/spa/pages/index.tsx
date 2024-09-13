@@ -11,6 +11,8 @@ const Redirector = () => {
     let subpath = '/en';
     if (locale.startsWith('ja')) {
       subpath = '/ja';
+    } else if (locale.startsWith('zh-TW')) {
+      subpath = '/zh-TW';
     } else if (locale.startsWith('zh')) {
       subpath = '/zh-CN';
     }

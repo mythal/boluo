@@ -39,7 +39,10 @@
   }
   @font-face {
     font-family: fusion-pixel-zh-hant;
-    src: url('./fonts/fusion-pixel-10px-monospaced-zh_hans.woff2');
+    src: url('./fonts/fusion-pixel-10px-monospaced-zh_hant.woff2');
+  }
+  :lang(zh-TW) .font-pixel {
+    font-family: fusion-pixel-zh-hans, monospace;
   }
   .font-pixel {
     -webkit-font-smoothing: none;

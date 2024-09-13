@@ -1,8 +1,8 @@
 import { IntlErrorCode, type OnErrorFn } from '@formatjs/intl';
 import type { IntlConfig } from 'react-intl';
 export type IntlMessages = IntlConfig['messages'];
-export type Locale = 'en' | 'ja' | 'zh-CN';
-export const localeList: Locale[] = ['en', 'ja', 'zh-CN'];
+export type Locale = 'en' | 'ja' | 'zh-CN' | 'zh-TW';
+export const localeList: Locale[] = ['en', 'ja', 'zh-CN', 'zh-TW'];
 export const defaultLocale = 'en';
 export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {
   switch (locale) {
@@ -12,11 +12,16 @@ export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {
       return (await import('@boluo/lang/compiled/ja_JP.json')).default;
     case 'zh-CN':
       return (await import('@boluo/lang/compiled/zh_CN.json')).default;
+    case 'zh-TW':
+      return (await import('@boluo/lang/compiled/zh_TW.json')).default;
   }
 };
 
 export const narrowLocale = (locale: string): Locale | null => {
-  if (locale === 'zh' || locale.startsWith('zh-')) {
+  locale = locale.toLowerCase();
+  if (locale === 'zh-tw' || locale === "zh-hant") {
+    return 'zh-TW';
+  } else if (locale === 'zh' || locale.startsWith('zh-')) {
     return 'zh-CN';
   } else if (locale === 'ja') {
     return 'ja';

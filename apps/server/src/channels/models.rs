@@ -21,7 +21,7 @@ pub enum ChannelType {
 }
 
 impl ChannelType {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             ChannelType::InGame => "in_game",
             ChannelType::OutOfGame => "out_of_game",
@@ -73,7 +73,7 @@ impl Channel {
             name,
             is_public,
             default_dice_type,
-            _type.to_str(),
+            _type.as_str(),
         )
         .fetch_one(db)
         .await
@@ -169,7 +169,7 @@ impl Channel {
             default_roll_command,
             is_public,
             is_document,
-            _type.as_ref().map(ChannelType::to_str)
+            _type.as_ref().map(ChannelType::as_str)
         )
         .fetch_one(db)
         .await

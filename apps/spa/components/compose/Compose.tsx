@@ -1,7 +1,6 @@
 'use client';
 import type { Member, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
-import { selectAtom } from 'jotai/utils';
 import { type FC, useDeferredValue, useEffect, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
@@ -32,10 +31,11 @@ const DeferredComposeTextArea: FC<{
   currentUser: User;
   enterSend: boolean;
   channelId: string;
+  isEditing: boolean;
   send: () => Promise<void>;
-}> = ({ parsedAtom, currentUser, send, enterSend, channelId }) => {
+}> = ({ parsedAtom, currentUser, send, enterSend, channelId, isEditing }) => {
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
-  useBackupCompose(channelId, parsed);
+  useBackupCompose(channelId, parsed, isEditing);
   const compose = useMemo(
     () => <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />,
     [currentUser.id, enterSend, parsed, send],
@@ -44,7 +44,7 @@ const DeferredComposeTextArea: FC<{
 };
 
 export const Compose = ({ member, channelAtoms }: Props) => {
-  const { composeAtom, inGameAtom, isWhisperAtom, parsedAtom } = channelAtoms;
+  const { inGameAtom, isWhisperAtom, parsedAtom, isEditingAtom } = channelAtoms;
   const settings = useSettings();
   const enterSend = settings?.enterSend === true;
   const send = useSend(member.user);
@@ -58,7 +58,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault(); // This is important to prevent the browser's default handling of the data
   };
-  const isEditing = useAtomValue(useMemo(() => selectAtom(composeAtom, ({ edit }) => edit != null), [composeAtom]));
+  const isEditing = useAtomValue(isEditingAtom);
   const inGame = useAtomValue(inGameAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
   const editMessageBanner = useMemo(() => {
@@ -92,6 +92,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
             enterSend={enterSend}
             channelId={member.channel.channelId}
             send={send}
+            isEditing={isEditing}
           />
 
           {addDiceButton}

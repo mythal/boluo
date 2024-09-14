@@ -4,9 +4,10 @@ import { type ParseResult } from '../interpreter/parse-result';
 export const COMPOSE_BACKUP_TIMEOUT = 2000;
 export const composeBackupKey = (channelId: string) => `compose-backup:${channelId}`;
 
-export const useBackupCompose = (channelId: string, parsed: ParseResult) => {
+export const useBackupCompose = (channelId: string, parsed: ParseResult, disabled: boolean) => {
   const lastSave = useRef<number>(0);
   useEffect(() => {
+    if (disabled) return;
     if (parsed.entities.length === 0) return;
     const trimed = parsed.text.trim();
     if (trimed === '') return;
@@ -26,5 +27,5 @@ export const useBackupCompose = (channelId: string, parsed: ParseResult) => {
       save();
     }
     lastSave.current = now;
-  }, [channelId, parsed]);
+  }, [channelId, disabled, parsed]);
 };

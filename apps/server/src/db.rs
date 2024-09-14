@@ -89,7 +89,7 @@ pub async fn check() {
         "General",
         true,
         "d20",
-        ChannelType::InGame.to_str(),
+        ChannelType::InGame.as_str(),
     )
     .fetch_one(&mut *trans)
     .await

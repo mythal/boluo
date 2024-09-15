@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    id AS \"id!: Uuid\"\nFROM\n    spaces\nWHERE\n    deleted = FALSE\n    AND latest_activity > now() - interval '2 hours';\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: Uuid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "73b6c9dd7d1105ac973a75ee0fc86b3b56682e636c7a6f0b82b8947fd2ff6354"
+}

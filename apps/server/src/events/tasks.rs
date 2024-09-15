@@ -22,10 +22,7 @@ async fn push_status() {
     IntervalStream::new(interval(Duration::from_secs(4)))
         .for_each(|_| async {
             let pool = db::get().await;
-            let spaces = match Space::all(&pool).await {
-                Ok(all_space) => all_space.into_iter().map(|space| space.id).collect(),
-                _ => vec![],
-            };
+            let spaces = Space::recent(&pool).await.unwrap_or_default();
 
             let mut cache = cache::conn().await;
             for space_id in spaces {

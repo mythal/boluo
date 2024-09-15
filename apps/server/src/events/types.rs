@@ -1,13 +1,13 @@
 use crate::channels::models::Member;
 use crate::channels::Channel;
 
+use crate::cache;
 use crate::events::context;
 use crate::events::context::SyncEvent;
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use crate::spaces::models::{space_users_status, StatusKind, UserStatus};
-use crate::{cache, db};
 use chrono::Utc;
 use deadpool_redis::redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
@@ -237,9 +237,9 @@ impl Event {
         Ok(())
     }
 
-    pub fn push_members(channel_id: Uuid) {
+    pub fn push_members(space_id: Uuid, channel_id: Uuid, members: Vec<Member>) {
         spawn(async move {
-            if let Err(e) = Event::fire_members(channel_id).await {
+            if let Err(e) = Event::fire_members(space_id, channel_id, members).await {
                 log::warn!("Failed to fetch member list: {}", e);
             }
         });
@@ -315,21 +315,14 @@ impl Event {
         }
     }
 
-    async fn fire_members(channel_id: Uuid) -> Result<(), anyhow::Error> {
-        let pool = db::get().await;
-        let mut conn = pool.acquire().await?;
-        let channel = Channel::get_by_id(&mut *conn, &channel_id)
-            .await?
-            .ok_or(anyhow::anyhow!("channel not found"))?;
-        let members = Member::get_by_channel(&mut *conn, channel_id).await?;
-        drop(conn);
+    async fn fire_members(space_id: Uuid, channel_id: Uuid, members: Vec<Member>) -> Result<(), anyhow::Error> {
         let event = SyncEvent::new(Event {
-            mailbox: channel.space_id,
+            mailbox: space_id,
             body: EventBody::Members { members, channel_id },
             id: EventId::new(),
         });
 
-        Event::send(channel.space_id, Arc::new(event)).await;
+        Event::send(space_id, Arc::new(event)).await;
         Ok(())
     }
 
@@ -371,10 +364,6 @@ impl Event {
                 channel_id: _,
                 pos: _,
             } => Kind::Cache,
-            EventBody::Members { channel_id, members } => {
-                cache.members.insert(*channel_id, members.clone());
-                Kind::NoCache
-            }
             _ => Kind::NoCache,
         };
 

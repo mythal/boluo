@@ -48,7 +48,7 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
             "you are not logged in and this is a private channel".to_string(),
         ));
     }
-    let mut members = Member::get_by_channel(&mut *conn, channel.id).await?;
+    let mut members = Member::get_by_channel_cached(&mut *conn, channel.space_id, channel.id).await?;
 
     let heartbeat_map = get_heartbeat_map()
         .lock()
@@ -95,7 +95,7 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
     let (mut channel, space) = Channel::get_with_space(&mut *conn, &query.id).await.or_not_found()?;
-    let members = Member::get_by_channel(&mut *conn, channel.id).await?;
+    let members = Member::get_by_channel_cached(&mut *conn, channel.space_id, channel.id).await?;
     let my_member: Option<&Member> =
         session.and_then(|session| members.iter().find(|member| member.user.id == session.user_id));
 
@@ -213,7 +213,8 @@ async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
     }
     trans.commit().await?;
     if push_members {
-        Event::push_members(channel_id);
+        let members = Member::get_by_channel(&pool, channel.space_id, channel_id).await?;
+        Event::push_members(channel.space_id, channel_id, members);
     }
     Event::channel_edited(channel.clone());
     Event::space_updated(channel.space_id);
@@ -228,6 +229,7 @@ async fn edit_masters(req: Request<impl Body>) -> Result<bool, AppError> {
         user_id,
     } = interface::parse_body(req).await?;
     let pool = db::get().await;
+    let channel = Channel::get_by_id(&pool, &channel_id).await.or_not_found()?;
     let mut trans = pool.begin().await?;
 
     let space_member = SpaceMember::get_by_channel(&mut *trans, &session.user_id, &channel_id)
@@ -249,7 +251,8 @@ async fn edit_masters(req: Request<impl Body>) -> Result<bool, AppError> {
     .await
     .ok();
     trans.commit().await?;
-    Event::push_members(channel_id);
+    let members = Member::get_by_channel(&pool, space_member.space_id, channel_id).await?;
+    Event::push_members(channel.space_id, channel_id, members);
     Ok(true)
 }
 
@@ -273,7 +276,8 @@ async fn add_member(req: Request<impl Body>) -> Result<ChannelWithMember, AppErr
         .or_no_permission()?;
     let member = ChannelMember::add_user(&mut *trans, &user_id, &channel_id, &character_name, false).await?;
     trans.commit().await?;
-    Event::push_members(channel_id);
+    let members = Member::get_by_channel(&pool, channel.space_id, channel_id).await?;
+    Event::push_members(channel.space_id, channel_id, members);
     Ok(ChannelWithMember { channel, member })
 }
 
@@ -284,6 +288,7 @@ async fn edit_member(req: Request<impl Body>) -> Result<ChannelMember, AppError>
         character_name,
         text_color,
     } = interface::parse_body(req).await?;
+    let channel = Channel::get_by_id(&db::get().await, &channel_id).await.or_not_found()?;
 
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
@@ -298,7 +303,8 @@ async fn edit_member(req: Request<impl Body>) -> Result<ChannelMember, AppError>
         .await?
         .or_not_found();
     trans.commit().await?;
-    Event::push_members(channel_id);
+    let members = Member::get_by_channel(&pool, channel.space_id, channel_id).await?;
+    Event::push_members(channel.space_id, channel_id, members);
     channel_member
 }
 
@@ -328,15 +334,19 @@ async fn join(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
         .or_no_permission()?;
     let member = ChannelMember::add_user(&mut *trans, &session.user_id, &channel.id, &character_name, false).await?;
     trans.commit().await?;
-    Event::push_members(channel_id);
+    let members = Member::get_by_channel(&pool, channel.space_id, channel_id).await?;
+    Event::push_members(channel.space_id, channel_id, members);
     Ok(ChannelWithMember { channel, member })
 }
 
 async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
-    ChannelMember::remove_user(&db::get().await, &session.user_id, &id).await?;
-    Event::push_members(id);
+    let pool = db::get().await;
+    let channel = Channel::get_by_id(&pool, &id).await.or_not_found()?;
+    ChannelMember::remove_user(&pool, &session.user_id, &id).await?;
+    let members = Member::get_by_channel(&pool, channel.space_id, id).await?;
+    Event::push_members(channel.space_id, id, members);
     Ok(true)
 }
 
@@ -365,9 +375,9 @@ async fn kick(req: Request<impl Body>) -> Result<ChannelMembers, AppError> {
     }
     ChannelMember::remove_user(&mut *trans, &user_to_be_kicked, &channel_id).await?;
     trans.commit().await?;
-    Event::push_members(channel_id);
     let mut conn = pool.acquire().await?;
-    let members = Member::get_by_channel(&mut *conn, channel_id).await?;
+    let members = Member::get_by_channel(&mut *conn, space_id, channel_id).await?;
+    Event::push_members(space_id, channel_id, members.clone());
     let self_index: Option<usize> = members.iter().position(|member| member.user.id == operator_user_id);
     let heartbeat_map = get_heartbeat_map()
         .lock()

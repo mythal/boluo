@@ -50,12 +50,17 @@ pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<Sync
     }
 }
 
+pub struct Members {
+    pub list: Vec<crate::channels::models::Member>,
+    pub instant: std::time::Instant,
+}
+
 pub struct MailBoxCache {
     pub start_at: i64,
     pub events: VecDeque<Arc<SyncEvent>>,
     pub preview_map: HashMap<(Uuid, Uuid), Arc<SyncEvent>>, // (sender id, channel id)
     pub edition_map: HashMap<Uuid, Arc<SyncEvent>>,         // the key is message id
-    pub members: HashMap<Uuid, Vec<crate::channels::models::Member>>,
+    pub members: HashMap<Uuid, Members>,
 }
 
 pub struct Cache {

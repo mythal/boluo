@@ -121,7 +121,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
         .await
         .or_not_found()?;
-    let channel_member = ChannelMember::get(&mut *trans, &session.user_id, &message.channel_id)
+    let channel_member = ChannelMember::get_cached(&mut *trans, session.user_id, channel.space_id, message.channel_id)
         .await
         .or_no_permission()?;
     if !channel.is_document && !channel_member.is_master && message.sender_id != session.user_id {
@@ -191,7 +191,7 @@ async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
     let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
         .await
         .or_not_found()?;
-    let channel_member = ChannelMember::get(&mut *conn, &session.user_id, &message.channel_id)
+    let channel_member = ChannelMember::get_cached(&mut *conn, session.user_id, channel.space_id, message.channel_id)
         .await
         .or_no_permission()?;
     if !channel.is_document && message.sender_id != session.user_id && !channel_member.is_master {
@@ -218,7 +218,7 @@ async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     if !channel.is_public {
-        ChannelMember::get(&mut *conn, &session?.user_id, &channel_id)
+        ChannelMember::get_cached(&mut *conn, session?.user_id, channel.space_id, channel_id)
             .await
             .or_no_permission()?;
     }

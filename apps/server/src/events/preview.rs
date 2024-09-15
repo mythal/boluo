@@ -96,7 +96,7 @@ impl PreviewPost {
             let keep_seconds = if muted { 8 } else { 60 * 3 };
             start = crate::pos::pos(&mut conn, cache, channel_id, id, keep_seconds).await? as f64;
         }
-        let is_master = ChannelMember::get(&mut *conn, &user_id, &channel_id)
+        let is_master = ChannelMember::get_cached(&mut *conn, user_id, space_id, channel_id)
             .await
             .or_no_permission()?
             .is_master;

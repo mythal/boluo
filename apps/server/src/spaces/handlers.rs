@@ -13,12 +13,42 @@ use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Respons
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
+use arc_swap::ArcSwap;
 use hyper::body::Body;
 use hyper::Request;
 use uuid::Uuid;
 
 async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
-    Space::all(&db::get().await).await.map_err(Into::into)
+    struct SpaceList {
+        spaces: Vec<Space>,
+        instant: std::time::Instant,
+    }
+    async fn init_spaces() -> ArcSwap<SpaceList> {
+        let pool = db::get().await;
+        let spaces = Space::all(&pool).await.unwrap_or_default();
+        ArcSwap::new(std::sync::Arc::new(SpaceList {
+            spaces,
+            instant: std::time::Instant::now(),
+        }))
+    }
+
+    static CACHE: tokio::sync::OnceCell<ArcSwap<SpaceList>> = tokio::sync::OnceCell::const_new();
+    let space_list_lock = CACHE.get_or_init(init_spaces).await;
+
+    {
+        let space_list = space_list_lock.load();
+        if space_list.spaces.len() > 0 && space_list.instant.elapsed().as_secs() < 10 {
+            return Ok(space_list.spaces.clone());
+        }
+    }
+    let pool = db::get().await;
+    let spaces = Space::all(&pool).await?;
+    let space_list = SpaceList {
+        spaces: spaces.clone(),
+        instant: std::time::Instant::now(),
+    };
+    space_list_lock.store(std::sync::Arc::new(space_list));
+    Ok(spaces)
 }
 
 async fn query(req: Request<impl Body>) -> Result<Space, AppError> {

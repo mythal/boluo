@@ -129,6 +129,10 @@ impl Space {
         Ok(())
     }
 
+    pub async fn recent<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<Uuid>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/spaces/recent.sql").fetch_all(db).await
+    }
+
     pub async fn all<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<Space>, sqlx::Error> {
         sqlx::query_file_scalar!("sql/spaces/all.sql").fetch_all(db).await
     }

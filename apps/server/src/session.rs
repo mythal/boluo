@@ -1,7 +1,7 @@
-use crate::cache;
 use crate::context::domain;
 use crate::error::AppError;
 use crate::error::CacheError;
+use crate::redis;
 use crate::utils::{self, sign};
 use anyhow::Context;
 use deadpool_redis::redis::AsyncCommands;
@@ -55,7 +55,7 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
 
 pub async fn revoke_session(id: &Uuid) -> Result<(), CacheError> {
     let key = make_key(id);
-    cache::conn().await.del(&key).await
+    redis::conn().await.del(&key).await
 }
 
 #[test]
@@ -67,13 +67,13 @@ fn test_session_sign() {
 }
 
 fn make_key(session: &Uuid) -> Vec<u8> {
-    cache::make_key(b"sessions", session, b"user_id")
+    redis::make_key(b"sessions", session, b"user_id")
 }
 
 pub async fn start(user_id: &Uuid) -> Result<Uuid, CacheError> {
     let session = utils::id();
     let key = make_key(&session);
-    cache::conn().await.set::<_, _, ()>(&key, user_id.as_bytes()).await?;
+    redis::conn().await.set::<_, _, ()>(&key, user_id.as_bytes()).await?;
     Ok(session)
 }
 
@@ -166,7 +166,7 @@ pub fn add_settings_cookie(settings: &serde_json::Value, response_header: &mut H
 
 pub async fn remove_session(id: Uuid) -> Result<(), CacheError> {
     let key = make_key(&id);
-    cache::conn().await.del::<_, ()>(&key).await?;
+    redis::conn().await.del::<_, ()>(&key).await?;
     Ok(())
 }
 
@@ -254,7 +254,7 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     };
 
     let key = make_key(&id);
-    let bytes: Vec<u8> = cache::conn()
+    let bytes: Vec<u8> = redis::conn()
         .await
         .get::<_, Option<Vec<u8>>>(&key)
         .await?

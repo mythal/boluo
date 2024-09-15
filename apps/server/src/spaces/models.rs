@@ -8,9 +8,9 @@ use sqlx::query_file_scalar;
 use ts_rs::TS;
 use uuid::Uuid;
 
-use crate::cache::make_key;
 use crate::channels::ChannelMember;
 use crate::error::{AppError, ModelError};
+use crate::redis::make_key;
 use crate::spaces::api::SpaceWithMember;
 use crate::users::User;
 use crate::utils::merge_blank;

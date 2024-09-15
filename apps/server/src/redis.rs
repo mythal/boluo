@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 pub type RedisPool = deadpool_redis::Pool;
 
-/// Get cache database connection.
+/// Get redis database connection.
 pub async fn conn() -> deadpool_redis::Connection {
     use std::env::var;
     use std::sync::OnceLock;
@@ -44,6 +44,6 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
 }
 
 pub async fn check() {
-    let mut cache = conn().await;
-    let _result: Option<String> = cache.get("hello").await.expect("Failed to get cache");
+    let mut redis = conn().await;
+    let _result: Option<String> = redis.get("hello").await.expect("Failed to get redis");
 }

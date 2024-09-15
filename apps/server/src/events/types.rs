@@ -371,6 +371,10 @@ impl Event {
                 channel_id: _,
                 pos: _,
             } => Kind::Cache,
+            EventBody::Members { channel_id, members } => {
+                cache.members.insert(*channel_id, members.clone());
+                Kind::NoCache
+            }
             _ => Kind::NoCache,
         };
 

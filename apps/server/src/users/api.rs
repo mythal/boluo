@@ -1,5 +1,4 @@
 use super::User;
-use crate::channels::api::ChannelWithMember;
 use crate::spaces::api::SpaceWithMember;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -43,7 +42,6 @@ pub struct GetMe {
     pub user: User,
     #[ts(type = "unknown")]
     pub settings: serde_json::Value,
-    pub my_channels: Vec<ChannelWithMember>,
     pub my_spaces: Vec<SpaceWithMember>,
 }
 

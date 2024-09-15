@@ -55,6 +55,7 @@ pub struct MailBoxCache {
     pub events: VecDeque<Arc<SyncEvent>>,
     pub preview_map: HashMap<(Uuid, Uuid), Arc<SyncEvent>>, // (sender id, channel id)
     pub edition_map: HashMap<Uuid, Arc<SyncEvent>>,         // the key is message id
+    pub members: HashMap<Uuid, Vec<crate::channels::models::Member>>,
 }
 
 pub struct Cache {
@@ -84,6 +85,7 @@ impl Cache {
                 events: VecDeque::new(),
                 preview_map: HashMap::new(),
                 edition_map: HashMap::new(),
+                members: HashMap::new(),
             };
             let cache = Arc::new(Mutex::new(cache));
             let mut map = self.mailboxes.write().await;

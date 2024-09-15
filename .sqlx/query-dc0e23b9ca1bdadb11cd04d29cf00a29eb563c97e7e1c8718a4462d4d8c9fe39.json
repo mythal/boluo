@@ -88,14 +88,6 @@
                   "Timestamptz"
                 ],
                 [
-                  "order_date",
-                  "Timestamptz"
-                ],
-                [
-                  "order_offset",
-                  "Int4"
-                ],
-                [
                   "pos_p",
                   "Int4"
                 ],

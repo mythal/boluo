@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
 use super::models::{space_users_status, UserStatus};
 use super::{Space, SpaceMember};
+use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember, ChannelType};
 use crate::csrf::authenticate;
 use crate::db;
@@ -48,7 +49,11 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     let channels = Channel::get_by_space(&mut *conn, id).await?;
     let mut cache = crate::cache::conn().await;
     let users_status = space_users_status(&mut cache, space.id).await?;
-    let channel_members = ChannelMember::get_by_space(&mut *conn, &space.id).await?;
+    let mut channel_members: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
+    for channel in channels.iter() {
+        let members = Member::get_by_channel_cached(&mut *conn, space.id, channel.id).await?;
+        channel_members.insert(channel.id, members.into_iter().map(|member| member.channel).collect());
+    }
     Ok(SpaceWithRelated {
         space,
         members,

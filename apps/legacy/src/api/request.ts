@@ -156,7 +156,7 @@ export function post(path: '/channels/join', payload: JoinChannel): Promise<AppR
 export function post(path: '/channels/add_member', payload: AddMember): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(
-  path: '/channel/kick',
+  path: '/channels/kick',
   payload: {},
   query: { channelId: string; userId: string; spaceId: string },
 ): Promise<AppResult<ChannelMembers>>;

@@ -4,6 +4,7 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember};
+use crate::db;
 use crate::error::ModelError;
 use crate::spaces::{Space, SpaceMember};
 use crate::users::User;
@@ -317,16 +318,41 @@ impl ChannelMember {
             .map(|row| row.map(|record| (record.channel, record.space)))
     }
 
-    pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
+    pub async fn get_cached<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
-        user: &Uuid,
-        channel: &Uuid,
+        user_id: Uuid,
+        space_id: Uuid,
+        channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/channels/get_channel_member.sql", user, channel)
-            .fetch_optional(db)
-            .await
+        if let Some(cache) = crate::events::context::get_cache().try_mailbox(&space_id).await {
+            if let Ok(cache) = cache.try_lock() {
+                if let Some(members) = cache.members.get(&channel_id) {
+                    if members.instant.elapsed().as_secs() < 30 {
+                        if let Some(member) = members.list.iter().find(|m| m.user.id == user_id) {
+                            return Ok(Some(member.channel.clone()));
+                        }
+                    }
+                }
+            }
+        }
+        ChannelMember::get(db, user_id, space_id, channel_id).await
     }
 
+    pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+        space_id: Uuid,
+        channel_id: Uuid,
+    ) -> Result<Option<ChannelMember>, sqlx::Error> {
+        let channel_member = sqlx::query_file_scalar!("sql/channels/get_channel_member.sql", &user_id, &channel_id)
+            .fetch_optional(db)
+            .await?;
+        tokio::spawn(async move {
+            let db = db::get().await;
+            let _ = Member::get_by_channel(&db, space_id, channel_id).await;
+        });
+        Ok(channel_member)
+    }
     pub async fn remove_user<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: &Uuid,

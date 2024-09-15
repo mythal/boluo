@@ -266,11 +266,11 @@ async fn add_member(req: Request<impl Body>) -> Result<ChannelWithMember, AppErr
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
 
-    ChannelMember::get(&mut *trans, &session.user_id, &channel_id)
+    let channel = Channel::get_by_id(&mut *trans, &channel_id).await.or_not_found()?;
+
+    ChannelMember::get_cached(&mut *trans, session.user_id, channel.space_id, channel_id)
         .await
         .or_no_permission()?;
-
-    let channel = Channel::get_by_id(&mut *trans, &channel_id).await.or_not_found()?;
     SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
         .await
         .or_no_permission()?;
@@ -293,7 +293,7 @@ async fn edit_member(req: Request<impl Body>) -> Result<ChannelMember, AppError>
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
 
-    ChannelMember::get(&mut *trans, &session.user_id, &channel_id)
+    ChannelMember::get_cached(&mut *trans, session.user_id, channel.space_id, channel_id)
         .await
         .or_no_permission()?;
 
@@ -364,7 +364,7 @@ async fn kick(req: Request<impl Body>) -> Result<ChannelMembers, AppError> {
         .await
         .or_no_permission()?;
     if !space_member.is_admin {
-        let channel_member = ChannelMember::get(&mut *trans, &operator_user_id, &channel_id)
+        let channel_member = ChannelMember::get_cached(&mut *trans, operator_user_id, space_id, channel_id)
             .await
             .or_no_permission()?;
         if !channel_member.is_master {
@@ -445,7 +445,7 @@ async fn export(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     let space_member = SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
         .await
         .or_no_permission()?;
-    let channel_member = ChannelMember::get(&mut *trans, &session.user_id, &channel_id).await?;
+    let channel_member = ChannelMember::get_cached(&mut *trans, session.user_id, channel.space_id, channel_id).await?;
     if channel_member.is_none() && !space_member.is_admin {
         return Err(AppError::NoPermission("user is not channel member".to_string()));
     }

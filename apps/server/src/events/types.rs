@@ -1,11 +1,11 @@
 use crate::channels::models::Member;
 use crate::channels::Channel;
 
-use crate::cache;
 use crate::events::context;
 use crate::events::context::SyncEvent;
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
+use crate::redis;
 use crate::spaces::api::SpaceWithRelated;
 use crate::spaces::models::{space_users_status, StatusKind, UserStatus};
 use chrono::Utc;
@@ -202,8 +202,8 @@ impl Event {
         let channel_id = preview.channel_id;
         Event::fire(EventBody::MessagePreview { preview, channel_id }, mailbox);
     }
-    pub async fn push_status(cache: &mut deadpool_redis::Connection, space_id: Uuid) -> Result<(), anyhow::Error> {
-        let status_map = space_users_status(cache, space_id).await?;
+    pub async fn push_status(redis: &mut deadpool_redis::Connection, space_id: Uuid) -> Result<(), anyhow::Error> {
+        let status_map = space_users_status(redis, space_id).await?;
         Event::transient(space_id, EventBody::StatusMap { status_map, space_id });
         Ok(())
     }
@@ -215,12 +215,12 @@ impl Event {
         timestamp: i64,
         focus: Vec<Uuid>,
     ) -> Result<(), anyhow::Error> {
-        let mut cache = cache::conn().await;
+        let mut redis = redis::conn().await;
         let heartbeat = UserStatus { timestamp, kind, focus };
         let mut changed = true;
 
-        let key = cache::make_key(b"space", &space_id, b"heartbeat");
-        let old_value: Option<Result<UserStatus, _>> = cache
+        let key = redis::make_key(b"space", &space_id, b"heartbeat");
+        let old_value: Option<Result<UserStatus, _>> = redis
             .hget::<_, _, Option<Vec<u8>>>(&*key, user_id.as_bytes())
             .await?
             .as_deref()
@@ -230,9 +230,9 @@ impl Event {
         }
         let value = serde_json::to_vec(&heartbeat)?;
 
-        let created: bool = cache.hset(&*key, user_id.as_bytes(), &*value).await?;
+        let created: bool = redis.hset(&*key, user_id.as_bytes(), &*value).await?;
         if created || changed {
-            Event::push_status(&mut cache, space_id).await?;
+            Event::push_status(&mut redis, space_id).await?;
         }
         Ok(())
     }
@@ -252,23 +252,23 @@ impl Event {
     }
 
     pub fn cache_key(mailbox: &Uuid) -> Vec<u8> {
-        cache::make_key(b"mailbox", mailbox, b"events")
+        redis::make_key(b"mailbox", mailbox, b"events")
     }
 
     pub async fn get_from_cache(mailbox: &Uuid, after: Option<i64>, seq: Option<Seq>) -> Vec<String> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let cache = super::context::get_cache().try_mailbox(mailbox).await;
-        let Some(cache) = cache else { return vec![] };
-        let cache = cache.lock().await;
-        let mut event_list: Vec<Arc<SyncEvent>> = cache
+        let redis = super::context::get_cache().try_mailbox(mailbox).await;
+        let Some(redis) = redis else { return vec![] };
+        let redis = redis.lock().await;
+        let mut event_list: Vec<Arc<SyncEvent>> = redis
             .events
             .iter()
-            .chain(cache.edition_map.values())
-            .chain(cache.preview_map.values())
+            .chain(redis.edition_map.values())
+            .chain(redis.preview_map.values())
             .cloned()
             .collect();
-        drop(cache);
+        drop(redis);
         if event_list.is_empty() {
             return vec![];
         }
@@ -335,8 +335,8 @@ impl Event {
     }
 
     async fn async_fire(body: EventBody, mailbox: Uuid) {
-        let cache = super::context::get_cache().mailbox(&mailbox).await;
-        let mut cache = cache.lock().await;
+        let redis = super::context::get_cache().mailbox(&mailbox).await;
+        let mut redis = redis.lock().await;
 
         enum Kind {
             Preview { channel_id: Uuid, sender_id: Uuid },
@@ -370,13 +370,13 @@ impl Event {
         let event = Event::build(body, mailbox);
         match kind {
             Kind::Preview { sender_id, channel_id } => {
-                cache.preview_map.insert((sender_id, channel_id), event.clone());
+                redis.preview_map.insert((sender_id, channel_id), event.clone());
             }
             Kind::Edition { message_id } => {
-                cache.edition_map.insert(message_id, event.clone());
+                redis.edition_map.insert(message_id, event.clone());
             }
             Kind::Cache => {
-                cache.events.push_back(event.clone());
+                redis.events.push_back(event.clone());
             }
             Kind::NoCache => {}
         }

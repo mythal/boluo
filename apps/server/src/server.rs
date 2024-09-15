@@ -20,7 +20,6 @@ use hyper::Request;
 mod utils;
 #[macro_use]
 mod error;
-mod cache;
 mod channels;
 mod context;
 mod cors;
@@ -34,6 +33,7 @@ mod mail;
 mod media;
 mod messages;
 mod pos;
+mod redis;
 mod s3;
 mod session;
 mod spaces;
@@ -158,7 +158,7 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.expect("Failed to bind address");
 
-    cache::check().await;
+    redis::check().await;
     log::info!("Cache is ready");
     db::check().await;
     log::info!("Database is ready");

@@ -2,7 +2,7 @@ use crate::channels::ChannelMember;
 use crate::db;
 use crate::error::AppError;
 use crate::events::Event;
-use crate::{cache, error::Find};
+use crate::{error::Find, redis};
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -79,8 +79,8 @@ impl PreviewPost {
         } = self;
         let pool = db::get().await;
         let mut conn = pool.acquire().await?;
-        let mut cache = cache::conn().await;
-        let cache = &mut cache;
+        let mut redis_conn = redis::conn().await;
+        let redis_conn = &mut redis_conn;
         let mut should_finish = false;
         if let Some(text) = text.as_ref() {
             if (text.trim().is_empty() || entities.is_empty()) && edit_for.is_none() {
@@ -94,7 +94,7 @@ impl PreviewPost {
             edit_for = Some(time);
         } else if edit_for.is_none() && !should_finish {
             let keep_seconds = if muted { 8 } else { 60 * 3 };
-            start = crate::pos::pos(&mut conn, cache, channel_id, id, keep_seconds).await? as f64;
+            start = crate::pos::pos(&mut conn, redis_conn, channel_id, id, keep_seconds).await? as f64;
         }
         let is_master = ChannelMember::get_cached(&mut *conn, user_id, space_id, channel_id)
             .await
@@ -121,7 +121,7 @@ impl PreviewPost {
         });
 
         if should_finish {
-            crate::pos::finished(cache, channel_id, id).await?;
+            crate::pos::finished(redis_conn, channel_id, id).await?;
         }
         Event::message_preview(space_id, preview);
         Ok(())

@@ -77,8 +77,8 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     let space = Space::get_by_id(&mut *conn, id).await?.or_not_found()?;
     let members = SpaceMemberWithUser::get_by_space(&mut *conn, id).await?;
     let channels = Channel::get_by_space(&mut *conn, id).await?;
-    let mut cache = crate::cache::conn().await;
-    let users_status = space_users_status(&mut cache, space.id).await?;
+    let mut redis_conn = crate::redis::conn().await;
+    let users_status = space_users_status(&mut redis_conn, space.id).await?;
     let mut channel_members: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
     for channel in channels.iter() {
         let members = Member::get_by_channel_cached(&mut *conn, space.id, channel.id).await?;
@@ -321,8 +321,8 @@ async fn members(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWit
 async fn users_status(req: Request<impl Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     // TODO: permission check
-    let mut cache = crate::cache::conn().await;
-    let users_status = space_users_status(&mut cache, space_id).await?;
+    let mut redis_conn = crate::redis::conn().await;
+    let users_status = space_users_status(&mut redis_conn, space_id).await?;
     Ok(users_status)
 }
 

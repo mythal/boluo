@@ -66,7 +66,7 @@ impl ConnectionState {
     pub async fn cache() -> Result<ConnectionState, String> {
         pub use deadpool_redis::redis::AsyncCommands;
         let start = std::time::Instant::now();
-        let mut conn = crate::cache::conn().await;
+        let mut conn = crate::redis::conn().await;
         let _redis_result: bool = conn
             .set(b"health_check", b"ok")
             .await

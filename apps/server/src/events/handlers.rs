@@ -1,17 +1,17 @@
 use super::api::Token;
 use super::types::{ConnectionError, EventQuery};
 use super::Event;
-use crate::cache::make_key;
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::context::get_mailbox_broadcast_rx;
 use crate::events::types::ClientEvent;
 use crate::interface::{missing, ok_response, parse_query, Response};
+use crate::redis::make_key;
 use crate::spaces::models::StatusKind;
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
-use crate::{cache, db};
+use crate::{db, redis};
 use deadpool_redis::redis::AsyncCommands;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
@@ -189,7 +189,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        let mut redis = cache::conn().await;
+        let mut redis = redis::conn().await;
         let key = make_key(b"token", &token, b"user_id");
         let Ok(data) = redis.get::<_, Option<Vec<u8>>>(&key).await else {
             log::warn!("Failed to get token");
@@ -299,7 +299,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     if let Ok(session) = authenticate(&req).await {
-        let mut redis = cache::conn().await;
+        let mut redis = redis::conn().await;
         let token = Uuid::new_v4();
         let key = make_key(b"token", &token, b"user_id");
         redis.set_ex::<_, _, ()>(&key, session.user_id.as_bytes(), 10).await?;

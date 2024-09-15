@@ -16,7 +16,6 @@ export interface GetMe {
   user: User;
   settings: Settings;
   mySpaces: SpaceWithMember[];
-  myChannels: ChannelWithMember[];
 }
 
 export interface EditUser {

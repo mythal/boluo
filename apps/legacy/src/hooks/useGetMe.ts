@@ -8,8 +8,8 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
       const me = await get('/users/get_me');
       if (me.isOk) {
         if (me.value) {
-          const { user, mySpaces, myChannels, settings } = me.value;
-          dispatch({ type: 'LOGGED_IN', user, myChannels, mySpaces, settings });
+          const { user, mySpaces, settings } = me.value;
+          dispatch({ type: 'LOGGED_IN', user, mySpaces, settings });
         } else {
           dispatch({ type: 'LOGGED_OUT' });
         }

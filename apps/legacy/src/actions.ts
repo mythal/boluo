@@ -216,7 +216,6 @@ export interface LoggedIn {
   user: User;
   settings: Settings;
   mySpaces: SpaceWithMember[];
-  myChannels: ChannelWithMember[];
 }
 
 export interface SettingsUpdated {

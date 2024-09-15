@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
 
-use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember};
+use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::ModelError;
 use crate::spaces::{Space, SpaceMember};
@@ -182,6 +182,15 @@ impl Channel {
             .fetch_all(db)
             .await?;
         Ok(rows.into_iter().map(|row| (row.channel_id, row.max_pos)).collect())
+    }
+
+    pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<Vec<ChannelWithMember>, sqlx::Error> {
+        sqlx::query_file_as!(ChannelWithMember, "sql/channels/get_channels_by_user.sql", user_id)
+            .fetch_all(db)
+            .await
     }
 }
 

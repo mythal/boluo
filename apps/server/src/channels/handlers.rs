@@ -455,6 +455,14 @@ async fn export(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
         .map_err(Into::into)
 }
 
+async fn my_channels(req: Request<impl Body>) -> Result<Vec<ChannelWithMember>, AppError> {
+    let session = authenticate(&req).await?;
+
+    Channel::get_by_user(&db::get().await, session.user_id)
+        .await
+        .map_err(Into::into)
+}
+
 pub async fn check_channel_name_exists(req: Request<impl Body>) -> Result<bool, AppError> {
     let CheckChannelName { space_id, name } = parse_query(req.uri())?;
     let channel = Channel::get_by_name(&db::get().await, space_id, &name).await?;
@@ -468,6 +476,7 @@ pub async fn router(req: Request<impl Body>, path: &str) -> Result<hyper::Respon
         ("/query_with_related", Method::GET) => query_with_related(req).await.map(ok_response),
         ("/members", Method::GET) => members(req).await.map(ok_response),
         ("/by_space", Method::GET) => by_space(req).await.map(ok_response),
+        ("/my", Method::GET) => my_channels(req).await.map(ok_response),
         ("/create", Method::POST) => create(req).await.map(ok_response),
         ("/edit", Method::POST) => edit(req).await.map(ok_response),
         ("/edit_master", Method::POST) => edit_masters(req).await.map(ok_response),

@@ -30,11 +30,15 @@ export interface ProfileState {
 const login = (state: ProfileState | undefined, action: LoggedIn): ProfileState => {
   const { user, settings } = action;
   let spaces: OrderedMap<Id, SpaceWithMember> = OrderedMap<Id, SpaceWithMember>();
+  let channels: OrderedMap<Id, ChannelWithMember> = OrderedMap<Id, ChannelWithMember>();
   for (const s of action.mySpaces) {
     spaces = spaces.set(s.space.id, s);
   }
+  for (const c of action.myChannels) {
+    channels = channels.set(c.channel.id, c);
+  }
 
-  return { user, channels: state?.channels ?? OrderedMap(), spaces, settings };
+  return { user, channels, spaces, settings };
 };
 
 const editUser = ({ channels, spaces, settings }: ProfileState, { user }: UserEdited): ProfileState => {

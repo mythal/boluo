@@ -1,5 +1,6 @@
 use super::api::{Login, LoginReturn, Register, ResetPassword, ResetPasswordConfirm, ResetPasswordTokenCheck};
 use super::models::User;
+use crate::channels::Channel;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface;
 use crate::interface::{missing, ok_response, parse_body, parse_query};
@@ -91,11 +92,13 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
             let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
                 let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+                let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
                 let settings = UserExt::get_settings(&mut *conn, user.id).await?;
 
                 let mut response = ok_response(Some(GetMe {
                     user,
                     settings,
+                    my_channels,
                     my_spaces,
                 }));
                 if is_authenticate_use_cookie(req.headers()) {
@@ -137,11 +140,13 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let token = session::token(&session);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+    let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
     let settings = UserExt::get_settings(&mut *conn, user.id).await?;
     let me = GetMe {
         user,
         settings: settings.clone(),
         my_spaces,
+        my_channels,
     };
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();

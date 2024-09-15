@@ -2390,6 +2390,7 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "arc-swap",
  "aws-credential-types",
  "aws-sdk-s3",
  "base64 0.22.1",

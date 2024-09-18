@@ -95,7 +95,11 @@ async fn handler(req: Request<Incoming>) -> Result<hyper::Response<Full<hyper::b
         match response {
             Ok(response) => response.map(|bytes| Full::new(bytes.into())),
             Err(e) => {
-                has_error = true;
+                if let AppError::NotFound(_) = e {
+                    // Do not log 404
+                } else {
+                    has_error = true;
+                }
                 error::log_error(&e, &uri);
                 err_response(e).map(|bytes| Full::new(bytes.into()))
             }

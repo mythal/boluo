@@ -35,6 +35,8 @@ export const ChatItemMessage: FC<{
   continuous?: boolean;
   overlay?: boolean;
 }> = ({ message, continuous = false, overlay = false, isLast }) => {
+  // TODO: Delete this line
+  message = { ...message, failTo: { type: 'SEND' } };
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
@@ -152,7 +154,7 @@ const MessageBox: FC<{
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
     id: message.id,
     data: { message },
-    disabled: !draggable || isScrolling,
+    disabled: !draggable || isScrolling || failTo != null,
   });
 
   const setRef = (node: HTMLDivElement | null) => {
@@ -168,12 +170,15 @@ const MessageBox: FC<{
     [transform, transition],
   );
   const handle = useMemo(
-    () =>
-      draggable ? (
-        <MessageReorderHandle ref={setActivatorNodeRef} attributes={attributes} listeners={listeners} failTo={failTo} />
-      ) : (
-        <div className="text-message-time-text col-span-1 row-span-full h-full text-right"></div>
-      ),
+    () => (
+      <MessageReorderHandle
+        draggable={draggable}
+        ref={setActivatorNodeRef}
+        attributes={attributes}
+        listeners={listeners}
+        failTo={failTo}
+      />
+    ),
     [attributes, draggable, failTo, listeners, setActivatorNodeRef],
   );
   const toolbar = useMemo(() => {

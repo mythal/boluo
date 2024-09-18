@@ -52,6 +52,7 @@ http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
 deadpool-redis = "0.17.0"
 arc-swap = "1.7.1"
+lru = "0.12.4"
 
 
 [dependencies.ts-rs]

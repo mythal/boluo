@@ -2407,6 +2407,7 @@ dependencies = [
  "hyper-util",
  "itertools",
  "log",
+ "lru",
  "percent-encoding",
  "regex",
  "reqwest",

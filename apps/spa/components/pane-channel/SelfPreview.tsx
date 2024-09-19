@@ -1,4 +1,4 @@
-import { type Member } from '@boluo/api';
+import { type MemberWithUser } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { type FC, useMemo } from 'react';
@@ -31,7 +31,7 @@ const selector = ({ inputedName, edit, media }: ComposeState): ComposeDrived => 
 
 interface Props {
   preview: PreviewItem;
-  myMember: Member;
+  myMember: MemberWithUser;
   isLast: boolean;
 }
 

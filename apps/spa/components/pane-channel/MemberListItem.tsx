@@ -7,7 +7,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { type Channel, type Member, type UserStatus } from '@boluo/api';
+import { type Channel, type MemberWithUser, type UserStatus } from '@boluo/api';
 import clsx from 'clsx';
 import { Mask } from '@boluo/icons';
 import { type FC, useState } from 'react';
@@ -18,7 +18,7 @@ import { MemberCard } from './MemberCard';
 import { MemberStatusBadge } from './MemberStatusBadge';
 
 interface Props {
-  member: Member;
+  member: MemberWithUser;
   channel: Channel;
   canIKick: boolean;
   canIEditMaster: boolean;

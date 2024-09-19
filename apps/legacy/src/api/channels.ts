@@ -40,14 +40,14 @@ export interface ChannelWithMember {
   member: ChannelMember;
 }
 
-export interface Member {
+export interface MemberWithUser {
   channel: ChannelMember;
   space: SpaceMember;
   user: User;
 }
 
 export interface ChannelMembers {
-  members: Member[];
+  members: MemberWithUser[];
   colorList: Record<Id, string>;
   heartbeatMap: Record<Id, number>;
 }
@@ -64,7 +64,7 @@ export interface AddMember {
 
 export interface ChannelWithRelated {
   channel: Channel;
-  members: Member[];
+  members: MemberWithUser[];
   space: Space;
   colorList: Record<Id, string>;
   heartbeatMap: Record<Id, number>;
@@ -102,7 +102,7 @@ export const makeMembers = (
   channelId: Id,
   spaceMemberMap: Record<Id, SpaceMemberWithUser | undefined>,
   channelMemberMap: Record<Id, ChannelMember[] | undefined>,
-): Member[] => {
+): MemberWithUser[] => {
   const members = [];
   const channelMemberList = channelMemberMap[channelId];
   if (!channelMemberList) {

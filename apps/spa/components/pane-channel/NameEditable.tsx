@@ -15,7 +15,7 @@ import {
 } from '@floating-ui/react';
 import { NameBox } from './NameBox';
 import { NameEditContent } from './NameEditContent';
-import { type Member } from '@boluo/api';
+import { type MemberWithUser } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
@@ -30,7 +30,7 @@ interface Props {
   isMaster: boolean;
   self: boolean;
   isPreview?: boolean;
-  member: Member;
+  member: MemberWithUser;
 }
 
 export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {

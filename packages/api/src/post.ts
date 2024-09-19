@@ -59,7 +59,7 @@ export interface Post {
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
   '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };
   '/channels/leave': { payload: Empty; query: { id: string }; result: true };
-  '/channels/kick': { payload: Empty; query: KickFromChannel; result: ChannelMember };
+  '/channels/kick': { payload: Empty; query: KickFromChannel; result: true };
   '/channels/edit': { payload: EditChannel; query: null; result: Channel };
   '/channels/delete': { payload: Empty; query: { id: string }; result: Channel };
   '/channels/edit_member': { payload: EditChannelMember; query: null; result: ChannelMember };

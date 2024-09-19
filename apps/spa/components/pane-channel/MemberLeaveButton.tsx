@@ -12,7 +12,7 @@ import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import Icon from '@boluo/ui/Icon';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
-import { type Member } from '@boluo/api';
+import { type MemberWithUser } from '@boluo/api';
 
 interface Props {
   channelId: string;
@@ -27,7 +27,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
   const { data: channelMembers } = useQueryChannelMembers(channelId);
   const { data: channel, isLoading } = useQueryChannel(channelId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, { onSuccess });
-  const myMember = useMemo((): Member | null => {
+  const myMember = useMemo((): MemberWithUser | null => {
     if (channelMembers == null || channelMembers.selfIndex == null) return null;
     return channelMembers.members[channelMembers.selfIndex] ?? null;
   }, [channelMembers]);

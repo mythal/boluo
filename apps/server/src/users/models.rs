@@ -1,26 +1,22 @@
+use std::collections::HashMap;
+use std::sync::LazyLock;
+
 use chrono::prelude::*;
-use lru::LruCache;
+use quick_cache::sync::Cache;
 use serde::Serialize;
 use sqlx::{query_file_scalar, query_scalar};
-use tokio::sync::Mutex;
 use ts_rs::TS;
 use uuid::Uuid;
 
-use crate::error::ModelError;
+use crate::error::{row_not_found, ModelError};
 use crate::utils::merge_blank;
 
-const USER_CACHE_SIZE: std::num::NonZeroUsize = unsafe { std::num::NonZeroUsize::new_unchecked(8192) };
+const USER_CACHE_SIZE: usize = 8192;
 
-// TODO: Cache invalidation on multiple server instances
-static USERS_CACHE: Mutex<Option<LruCache<Uuid, User>>> = Mutex::const_new(None);
+static USERS_CACHE: LazyLock<Cache<Uuid, User>> = LazyLock::new(|| Cache::new(8192));
 
-fn init_users_cache() -> LruCache<Uuid, User> {
-    LruCache::new(USER_CACHE_SIZE)
-}
-
-async fn update_users_cache(key: Uuid, value: User) {
-    let mut cache = USERS_CACHE.lock().await;
-    cache.get_or_insert_with(init_users_cache).put(key, value);
+async fn invalidate_user_cache(_id: Uuid) {
+    // TODO: Cache invalidation for other server instances
 }
 
 #[derive(Debug, Serialize, Clone, TS)]
@@ -109,7 +105,7 @@ impl User {
         let user = sqlx::query_file_scalar!("sql/users/create.sql", email, username, nickname, password)
             .fetch_one(db)
             .await?;
-        update_users_cache(user.id, user.clone()).await;
+        USERS_CACHE.insert(user.id, user.clone());
         Ok(user)
     }
 
@@ -142,7 +138,7 @@ impl User {
             .await?;
         if let Some(result) = result {
             if result.password_match {
-                update_users_cache(result.user.id, result.user.clone()).await;
+                USERS_CACHE.insert(result.user.id, result.user.clone());
                 Ok(Some(result.user))
             } else {
                 Ok(None)
@@ -152,55 +148,44 @@ impl User {
         }
     }
 
-    pub async fn get_by_id_list_cached<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        id_list: &[Uuid],
-    ) -> Result<Vec<User>, sqlx::Error> {
-        let mut cache_guard = USERS_CACHE.lock().await;
-        let cache = cache_guard.get_or_insert_with(init_users_cache);
-        let mut result_list: Vec<User> = Vec::with_capacity(id_list.len());
-        for id in id_list {
-            if let Some(user) = cache.get(id) {
-                result_list.push(user.clone());
-            } else {
-                drop(cache_guard);
-                return User::get_by_id_list(db, id_list).await;
-            }
-        }
-        Ok(result_list)
-    }
     pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id_list: &[Uuid],
-    ) -> Result<Vec<User>, sqlx::Error> {
-        let users = query_file_scalar!("sql/users/get_by_id_list.sql", id_list)
+    ) -> Result<HashMap<Uuid, User>, sqlx::Error> {
+        use std::collections::HashSet;
+        let mut id_set: HashSet<Uuid> = id_list.iter().cloned().collect();
+        let mut result_map: HashMap<Uuid, User> = HashMap::new();
+        for id in id_list {
+            if let Some(user) = USERS_CACHE.get(id) {
+                result_map.insert(user.id, user);
+            } else {
+                id_set.remove(id);
+            }
+        }
+        let query_id_list: Vec<Uuid> = id_set.into_iter().collect();
+        let users = query_file_scalar!("sql/users/get_by_id_list.sql", &*query_id_list)
             .fetch_all(db)
             .await?;
-        let mut cache = USERS_CACHE.lock().await;
-        let cache = cache.get_or_insert_with(init_users_cache);
         for user in &users {
-            cache.put(user.id, user.clone());
+            USERS_CACHE.insert(user.id, user.clone());
+            result_map.insert(user.id, user.clone());
         }
-        Ok(users)
+        Ok(result_map)
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<User>, sqlx::Error> {
-        {
-            let mut cache = USERS_CACHE.lock().await;
-            if let Some(user) = cache.get_or_insert_with(init_users_cache).get(id) {
-                return Ok(Some(user.clone()));
-            }
-        }
-        let user = query_scalar!(
-            r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
-            id
-        )
-        .fetch_optional(db)
-        .await?;
-        if let Some(user) = &user {
-            update_users_cache(*id, user.clone()).await;
-        }
-        Ok(user)
+        USERS_CACHE
+            .get_or_insert_async(id, async {
+                query_scalar!(
+                    r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
+                    id
+                )
+                .fetch_one(db)
+                .await
+            })
+            .await
+            .map(Some)
+            .or_else(row_not_found)
     }
 
     pub async fn get_by_email<'c, T: sqlx::PgExecutor<'c>>(db: T, email: &str) -> Result<Option<User>, sqlx::Error> {
@@ -211,7 +196,7 @@ impl User {
         .fetch_optional(db)
         .await?;
         if let Some(user) = &user {
-            update_users_cache(user.id, user.clone()).await;
+            USERS_CACHE.insert(user.id, user.clone());
         }
         Ok(user)
     }
@@ -227,7 +212,7 @@ impl User {
         .fetch_optional(db)
         .await?;
         if let Some(user) = &user {
-            update_users_cache(user.id, user.clone()).await;
+            USERS_CACHE.insert(user.id, user.clone());
         }
         Ok(user)
     }
@@ -251,7 +236,8 @@ impl User {
             .execute(db)
             .await?
             .rows_affected();
-        USERS_CACHE.lock().await.get_or_insert_with(init_users_cache).pop(id);
+        USERS_CACHE.remove(id);
+        invalidate_user_cache(*id).await;
         Ok(affected)
     }
 
@@ -275,14 +261,16 @@ impl User {
         let user = query_file_scalar!("sql/users/edit.sql", id, nickname, bio, avatar, default_color)
             .fetch_one(db)
             .await?;
-        update_users_cache(*id, user.clone()).await;
+        USERS_CACHE.insert(user.id, user.clone());
+        invalidate_user_cache(*id).await;
         Ok(user)
     }
     pub async fn remove_avatar<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<User, ModelError> {
         let user = sqlx::query_file_scalar!("sql/users/remove_avatar.sql", id)
             .fetch_one(db)
             .await?;
-        update_users_cache(*id, user.clone()).await;
+        USERS_CACHE.insert(user.id, user.clone());
+        invalidate_user_cache(*id).await;
         Ok(user)
     }
 }
@@ -295,16 +283,10 @@ pub struct UserExt {
     pub settings: serde_json::Value,
 }
 
-// TODO: Cache invalidation on multiple server instances
-static SETTINGS_CACHE: Mutex<Option<LruCache<Uuid, serde_json::Value>>> = Mutex::const_new(None);
+static SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> = LazyLock::new(|| Cache::new(4096));
 
-fn init_settings_cache() -> LruCache<Uuid, serde_json::Value> {
-    LruCache::new(USER_CACHE_SIZE)
-}
-
-async fn update_settings_cache(key: Uuid, value: serde_json::Value) {
-    let mut cache = SETTINGS_CACHE.lock().await;
-    cache.get_or_insert_with(init_settings_cache).put(key, value);
+async fn invalidate_settings_cache(_: Uuid) {
+    // TODO: Cache invalidation for other server instances
 }
 
 impl UserExt {
@@ -312,21 +294,14 @@ impl UserExt {
         db: T,
         user_id: Uuid,
     ) -> Result<serde_json::Value, sqlx::Error> {
-        {
-            let mut cache = SETTINGS_CACHE.lock().await;
-            if let Some(settings) = cache.get_or_insert_with(init_settings_cache).get(&user_id) {
-                return Ok(settings.clone());
-            }
-        }
-        let settings = sqlx::query_file_scalar!("sql/users/get_settings.sql", user_id)
-            .fetch_optional(db)
+        SETTINGS_CACHE
+            .get_or_insert_async(&user_id, async {
+                sqlx::query_file_scalar!("sql/users/get_settings.sql", user_id)
+                    .fetch_optional(db)
+                    .await
+                    .map(|settings| settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())))
+            })
             .await
-            .map(|settings| settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())))?;
-        let mut cache = SETTINGS_CACHE.lock().await;
-        cache
-            .get_or_insert_with(init_settings_cache)
-            .put(user_id, settings.clone());
-        Ok(settings)
     }
 
     pub async fn update_settings<'c, T: sqlx::PgExecutor<'c>>(
@@ -337,7 +312,8 @@ impl UserExt {
         let settings = sqlx::query_file_scalar!("sql/users/set_settings.sql", user_id, settings)
             .fetch_one(db)
             .await?;
-        update_settings_cache(user_id, settings.clone()).await;
+        invalidate_settings_cache(user_id).await;
+        SETTINGS_CACHE.insert(user_id, settings.clone());
         Ok(settings)
     }
 
@@ -349,7 +325,8 @@ impl UserExt {
         let settings = sqlx::query_file_scalar!("sql/users/partial_set_settings.sql", user_id, settings)
             .fetch_one(db)
             .await?;
-        update_settings_cache(user_id, settings.clone()).await;
+        invalidate_settings_cache(user_id).await;
+        SETTINGS_CACHE.insert(user_id, settings.clone());
         Ok(settings)
     }
 }

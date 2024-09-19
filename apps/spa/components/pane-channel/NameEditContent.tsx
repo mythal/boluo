@@ -5,12 +5,12 @@ import { FormattedMessage } from 'react-intl';
 import { NameEditInput } from './NameInput';
 import { type ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
-import { type Member } from '@boluo/api';
+import { type MemberWithUser } from '@boluo/api';
 import { type ChannelState } from '../../state/channel.reducer';
 import { backwards, last } from 'list';
 
 interface Props {
-  member: Member;
+  member: MemberWithUser;
 }
 
 const NAME_HISTORY_MAX = 5;

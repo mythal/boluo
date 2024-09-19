@@ -1,4 +1,4 @@
-import { type User, type Channel, type Member } from '@boluo/api';
+import { type User, type Channel, type MemberWithUser } from '@boluo/api';
 import { UserPlus } from '@boluo/icons';
 import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -32,7 +32,7 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
     setUiState((x) => (x === 'MEMBER' ? 'INVITE' : 'MEMBER'));
   };
 
-  const members: Member[] = useMemo(() => {
+  const members: MemberWithUser[] = useMemo(() => {
     if (membersData == null) {
       return [];
     }
@@ -66,7 +66,7 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
     });
     return members;
   }, [membersData, userStatusMap]);
-  const myMember: Member | null = useMemo(() => {
+  const myMember: MemberWithUser | null = useMemo(() => {
     if (membersData == null || currentUser == null) {
       return null;
     }

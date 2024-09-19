@@ -1,5 +1,5 @@
 'use client';
-import type { Member, User } from '@boluo/api';
+import type { MemberWithUser, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { type FC, useDeferredValue, useEffect, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
@@ -19,7 +19,7 @@ import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
 
 interface Props {
-  member: Member;
+  member: MemberWithUser;
   channelAtoms: ChannelAtoms;
 }
 

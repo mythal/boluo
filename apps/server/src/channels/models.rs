@@ -336,7 +336,6 @@ impl ChannelMember {
         if let Some(cache) = crate::events::context::get_cache().try_mailbox(&space_id).await {
             if let Ok(mut cache) = cache.try_lock() {
                 if let Some(members) = cache.members.get_mut(&channel_id) {
-                    members.update_users(db).await;
                     if let Some(member) = members.map.get(&user_id) {
                         return Ok(Some(member.channel.clone()));
                     } else {
@@ -450,10 +449,7 @@ impl ChannelMember {
 pub struct Member {
     pub channel: ChannelMember,
     pub space: SpaceMember,
-    pub user: User,
 }
-
-const CACHE_EXPIRATION: u64 = 60 * 10;
 
 impl Member {
     pub async fn get_by_channel_cached<'c, T: sqlx::PgExecutor<'c>>(
@@ -463,8 +459,8 @@ impl Member {
     ) -> Result<Vec<Member>, sqlx::Error> {
         let cache = crate::events::context::get_cache();
         if let Some(cache) = cache.try_mailbox(&space_id).await {
-            if let Ok(cache) = cache.try_lock() {
-                if let Some(members) = cache.members.get(&channel_id) {
+            if let Ok(mut cache) = cache.try_lock() {
+                if let Some(members) = cache.members.get_mut(&channel_id) {
                     return Ok(members.map.values().cloned().collect());
                 }
             }
@@ -477,13 +473,9 @@ impl Member {
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Vec<Member>, sqlx::Error> {
-        let members = sqlx::query_file_as!(
-            Member,
-            "sql/channels/get_members_information_by_channel.sql",
-            channel_id,
-        )
-        .fetch_all(db)
-        .await?;
+        let members = sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id,)
+            .fetch_all(db)
+            .await?;
         let instant = std::time::Instant::now();
         let members_copy = members.clone();
         tokio::spawn(async move {
@@ -507,4 +499,23 @@ impl Member {
         });
         Ok(members_copy)
     }
+}
+
+pub async fn members_add_user<'c, T: sqlx::PgExecutor<'c>>(
+    db: T,
+    members: Vec<Member>,
+) -> Result<Vec<crate::channels::api::MemberWithUser>, sqlx::Error> {
+    let id_list: Vec<Uuid> = members.iter().map(|member| member.channel.user_id).collect();
+    let mut users = User::get_by_id_list(db, &id_list).await?;
+    let mut members_with_user = Vec::with_capacity(members.len());
+    for member in members {
+        if let Some(user) = users.remove(&member.channel.user_id) {
+            members_with_user.push(crate::channels::api::MemberWithUser {
+                user,
+                channel: member.channel,
+                space: member.space,
+            });
+        }
+    }
+    Ok(members_with_user)
 }

@@ -21,7 +21,7 @@ import { parseDiceFace } from '../../dice';
 import { MemberContext } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
-import { type Member } from '@boluo/api';
+import { type MemberWithUser } from '@boluo/api';
 
 interface Props {
   channelId: string;
@@ -42,7 +42,7 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 
 export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   const { data: members } = useQueryChannelMembers(channelId, {});
-  const member: Member | null = useMemo(() => {
+  const member: MemberWithUser | null = useMemo(() => {
     if (members == null) {
       return null;
     }

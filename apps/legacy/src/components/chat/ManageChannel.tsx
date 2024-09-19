@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
 import Select from 'react-select';
 import { showFlash } from '../../actions';
-import { Channel, EditChannel, Member } from '../../api/channels';
+import { Channel, EditChannel, MemberWithUser } from '../../api/channels';
 import { AppError } from '../../api/error';
 import { post } from '../../api/request';
 import { useDispatch, useSelector } from '../../store';
@@ -69,7 +69,7 @@ export interface MemberOption {
   value: Id;
 }
 
-export function makeMemberOption({ user }: Member): MemberOption {
+export function makeMemberOption({ user }: MemberWithUser): MemberOption {
   return { label: user.nickname, value: user.id };
 }
 

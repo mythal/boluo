@@ -1,6 +1,6 @@
 import { Entity } from '../interpreter/entities';
 import { Id } from '../utils/id';
-import { Channel, Member } from './channels';
+import { Channel, MemberWithUser } from './channels';
 import { Message } from './messages';
 import { SpaceWithRelated, StatusKind, UserStatus } from './spaces';
 
@@ -163,7 +163,7 @@ export interface ChannelDeleted {
 export interface PushMembers {
   type: 'MEMBERS';
   channelId: Id;
-  members: Member[];
+  members: MemberWithUser[];
 }
 
 export interface StatusMap {

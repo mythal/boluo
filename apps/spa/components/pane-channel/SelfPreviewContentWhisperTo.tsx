@@ -1,4 +1,4 @@
-import { type Member } from '@boluo/api';
+import { type MemberWithUser } from '@boluo/api';
 import { Plus, X } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { type FC, useCallback, useMemo, useState, type ReactNode } from 'react';
@@ -34,7 +34,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
     [dispatch],
   );
 
-  const memberMap: Record<string, Member> = useMemo(() => {
+  const memberMap: Record<string, MemberWithUser> = useMemo(() => {
     if (!channelMembers) return {};
     return Object.fromEntries(channelMembers.members.map((member) => [member.user.username, member]));
   }, [channelMembers]);
@@ -46,7 +46,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
     return <WhisperToItemAdd inGame={inGame} members={members} add={addUsername} />;
   }, [addUsername, channelMembers, inGame, whisperToUsernames]);
 
-  const whisperToMembers: Member[] = useMemo(() => {
+  const whisperToMembers: MemberWithUser[] = useMemo(() => {
     return whisperToUsernames.flatMap((username) => {
       const member = memberMap[username];
       if (!member) return [];
@@ -89,7 +89,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
   );
 };
 
-export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => void; myself: boolean }> = ({
+export const WhisperToItem: FC<{ member: MemberWithUser; inGame: boolean; remove: () => void; myself: boolean }> = ({
   member,
   remove,
   inGame,
@@ -117,7 +117,7 @@ export const WhisperToItem: FC<{ member: Member; inGame: boolean; remove: () => 
   );
 };
 
-export const WhisperToItemAdd: FC<{ inGame: boolean; members: Member[]; add: (username: string) => void }> = ({
+export const WhisperToItemAdd: FC<{ inGame: boolean; members: MemberWithUser[]; add: (username: string) => void }> = ({
   inGame,
   members,
   add,
@@ -165,7 +165,7 @@ export const WhisperToItemAdd: FC<{ inGame: boolean; members: Member[]; add: (us
   );
 };
 
-const MemberItem: FC<{ member: Member; inGame: boolean; add: (username: string) => void }> = ({
+const MemberItem: FC<{ member: MemberWithUser; inGame: boolean; add: (username: string) => void }> = ({
   member,
   add,
   inGame,

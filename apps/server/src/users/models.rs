@@ -152,6 +152,38 @@ impl User {
         }
     }
 
+    pub async fn get_by_id_list_cached<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id_list: &[Uuid],
+    ) -> Result<Vec<User>, sqlx::Error> {
+        let mut cache_guard = USERS_CACHE.lock().await;
+        let cache = cache_guard.get_or_insert_with(init_users_cache);
+        let mut result_list: Vec<User> = Vec::with_capacity(id_list.len());
+        for id in id_list {
+            if let Some(user) = cache.get(id) {
+                result_list.push(user.clone());
+            } else {
+                drop(cache_guard);
+                return User::get_by_id_list(db, id_list).await;
+            }
+        }
+        Ok(result_list)
+    }
+    pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id_list: &[Uuid],
+    ) -> Result<Vec<User>, sqlx::Error> {
+        let users = query_file_scalar!("sql/users/get_by_id_list.sql", id_list)
+            .fetch_all(db)
+            .await?;
+        let mut cache = USERS_CACHE.lock().await;
+        let cache = cache.get_or_insert_with(init_users_cache);
+        for user in &users {
+            cache.put(user.id, user.clone());
+        }
+        Ok(users)
+    }
+
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<User>, sqlx::Error> {
         {
             let mut cache = USERS_CACHE.lock().await;

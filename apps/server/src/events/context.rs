@@ -51,8 +51,34 @@ pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<Sync
 }
 
 pub struct Members {
-    pub list: Vec<crate::channels::models::Member>,
+    pub map: HashMap<Uuid, crate::channels::models::Member>,
     pub instant: std::time::Instant,
+}
+
+impl Members {
+    pub async fn update_users<'c, T: sqlx::PgExecutor<'c>>(&mut self, db: T) {
+        self.instant = std::time::Instant::now();
+        let id_list: Vec<Uuid> = self.map.keys().cloned().into_iter().collect();
+        let users = crate::users::User::get_by_id_list_cached(db, &*id_list).await;
+        let Ok(users) = users else {
+            log::error!("Failed to get users by id list: {:?}", users);
+            return;
+        };
+        let mut member_map: HashMap<Uuid, crate::channels::models::Member> = HashMap::new();
+        std::mem::swap(&mut self.map, &mut member_map);
+        self.map = users
+            .into_iter()
+            .filter_map(|user| {
+                let id = user.id;
+                if let Some(mut member) = member_map.remove(&id) {
+                    member.user = user;
+                    Some((id, member))
+                } else {
+                    None
+                }
+            })
+            .collect();
+    }
 }
 
 pub struct MailBoxCache {

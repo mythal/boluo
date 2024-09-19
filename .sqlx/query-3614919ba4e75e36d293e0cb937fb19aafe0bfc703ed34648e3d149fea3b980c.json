@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    cm AS \"channel!: ChannelMember\",\n    sm AS \"space!: SpaceMember\",\n    u AS \"user!: User\"\nFROM\n    channel_members cm\n    INNER JOIN channels ch ON cm.channel_id = ch.id\n        AND ch.deleted = FALSE\n    INNER JOIN space_members sm ON sm.space_id = ch.space_id\n        AND sm.user_id = cm.user_id\n    INNER JOIN users u ON cm.user_id = u.id\nWHERE\n    cm.channel_id = $1\n    AND cm.is_joined;\n\n",
+  "query": "SELECT\n    cm AS \"channel!: ChannelMember\",\n    sm AS \"space!: SpaceMember\"\nFROM\n    channel_members cm\n    INNER JOIN channels ch ON cm.channel_id = ch.id\n        AND ch.deleted = FALSE\n    INNER JOIN space_members sm ON sm.space_id = ch.space_id\n        AND sm.user_id = cm.user_id\nWHERE\n    cm.channel_id = $1\n    AND cm.is_joined;\n\n",
   "describe": {
     "columns": [
       {
@@ -72,59 +72,6 @@
             }
           }
         }
-      },
-      {
-        "ordinal": 2,
-        "name": "user!: User",
-        "type_info": {
-          "Custom": {
-            "name": "users",
-            "kind": {
-              "Composite": [
-                [
-                  "id",
-                  "Uuid"
-                ],
-                [
-                  "email",
-                  "Text"
-                ],
-                [
-                  "username",
-                  "Text"
-                ],
-                [
-                  "nickname",
-                  "Text"
-                ],
-                [
-                  "password",
-                  "Text"
-                ],
-                [
-                  "bio",
-                  "Text"
-                ],
-                [
-                  "joined",
-                  "Timestamptz"
-                ],
-                [
-                  "deactivated",
-                  "Bool"
-                ],
-                [
-                  "avatar_id",
-                  "Uuid"
-                ],
-                [
-                  "default_color",
-                  "Text"
-                ]
-              ]
-            }
-          }
-        }
       }
     ],
     "parameters": {
@@ -134,9 +81,8 @@
     },
     "nullable": [
       null,
-      null,
       null
     ]
   },
-  "hash": "d04ccb6db2c157c10ee5412e72b890632117409e1eefe764b149298a07860c54"
+  "hash": "3614919ba4e75e36d293e0cb937fb19aafe0bfc703ed34648e3d149fea3b980c"
 }

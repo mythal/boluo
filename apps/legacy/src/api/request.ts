@@ -159,7 +159,7 @@ export function post(
   path: '/channels/kick',
   payload: {},
   query: { channelId: string; userId: string; spaceId: string },
-): Promise<AppResult<ChannelMembers>>;
+): Promise<AppResult<true>>;
 export function post(path: '/channels/delete', payload: {}, query: IdQuery): Promise<AppResult<Channel>>;
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
 export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;

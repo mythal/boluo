@@ -22,7 +22,7 @@ import {
   SetWhisperTo,
   StartEditMessage,
 } from '../actions';
-import { Channel, makeMembers, Member } from '../api/channels';
+import { Channel, makeMembers, MemberWithUser } from '../api/channels';
 import { compareEvents, EditPreview, EventId, eventIdMax, Events, Preview } from '../api/events';
 import { Message } from '../api/messages';
 import { SpaceWithRelated } from '../api/spaces';
@@ -64,7 +64,7 @@ export interface Compose {
 
 export interface ChatState {
   channel: Channel;
-  members: Member[];
+  members: MemberWithUser[];
   colorMap: Map<Id, string>;
   initialized: boolean;
   // heartbeatMap: Map<Id, number>;
@@ -180,7 +180,7 @@ const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageM
   return { ...state, itemSet };
 };
 
-const updateColorMap = (members: Member[], colorMap: Map<Id, string>): Map<Id, string> => {
+const updateColorMap = (members: MemberWithUser[], colorMap: Map<Id, string>): Map<Id, string> => {
   for (const member of members) {
     const { textColor, userId } = member.channel;
     if (textColor !== colorMap.get(userId, null)) {
@@ -275,7 +275,7 @@ const handleChatInitialized = (
   myId: Id,
   channelId: Id,
   itemSet: ChatItemSet,
-  myMember: Member | undefined,
+  myMember: MemberWithUser | undefined,
 ): Compose => {
   const item = itemSet.previews.get(myId);
   const compose: Compose = {

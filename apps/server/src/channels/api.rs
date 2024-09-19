@@ -2,7 +2,6 @@ use super::{
     models::{Channel, ChannelMember},
     ChannelType,
 };
-use crate::channels::models::Member;
 use crate::spaces::Space;
 use crate::users::User;
 use chrono::prelude::*;
@@ -10,6 +9,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ts_rs::TS;
 use uuid::Uuid;
+
+#[derive(Debug, Serialize, Clone, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
+pub struct MemberWithUser {
+    pub channel: ChannelMember,
+    pub space: crate::spaces::SpaceMember,
+    pub user: User,
+}
 
 #[derive(Deserialize, Debug, TS)]
 #[ts(export)]
@@ -82,7 +90,7 @@ pub struct EditChannelMember {
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMembers {
-    pub members: Vec<Member>,
+    pub members: Vec<MemberWithUser>,
     pub color_list: HashMap<Uuid, String>,
     pub heartbeat_map: HashMap<Uuid, i64>,
     pub self_index: Option<usize>,
@@ -93,7 +101,7 @@ pub struct ChannelMembers {
 #[serde(rename_all = "camelCase")]
 pub struct ChannelWithRelated {
     pub channel: Channel,
-    pub members: Vec<Member>,
+    pub members: Vec<MemberWithUser>,
     pub space: Space,
     pub color_list: HashMap<Uuid, String>,
     pub heartbeat_map: HashMap<Uuid, i64>,

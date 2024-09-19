@@ -230,3 +230,11 @@ impl<T> Find<T> for Option<T> {
         }
     }
 }
+
+pub fn row_not_found<T>(e: sqlx::Error) -> Result<Option<T>, sqlx::Error> {
+    if let sqlx::Error::RowNotFound = e {
+        Ok(None)
+    } else {
+        Err(e)
+    }
+}

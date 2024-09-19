@@ -1,4 +1,4 @@
-use crate::channels::models::Member;
+use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
 use crate::events::context;
@@ -96,7 +96,7 @@ pub enum EventBody {
     Members {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
-        members: Vec<Member>,
+        members: Vec<MemberWithUser>,
     },
     Batch {
         #[serde(rename = "encodedEvents")]
@@ -237,7 +237,7 @@ impl Event {
         Ok(())
     }
 
-    pub fn push_members(space_id: Uuid, channel_id: Uuid, members: Vec<Member>) {
+    pub fn push_members(space_id: Uuid, channel_id: Uuid, members: Vec<MemberWithUser>) {
         spawn(async move {
             if let Err(e) = Event::fire_members(space_id, channel_id, members).await {
                 log::warn!("Failed to fetch member list: {}", e);
@@ -315,7 +315,7 @@ impl Event {
         }
     }
 
-    async fn fire_members(space_id: Uuid, channel_id: Uuid, members: Vec<Member>) -> Result<(), anyhow::Error> {
+    async fn fire_members(space_id: Uuid, channel_id: Uuid, members: Vec<MemberWithUser>) -> Result<(), anyhow::Error> {
         let event = SyncEvent::new(Event {
             mailbox: space_id,
             body: EventBody::Members { members, channel_id },

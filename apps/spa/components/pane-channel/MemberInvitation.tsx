@@ -1,4 +1,4 @@
-import { type Channel, type Member, type SpaceMemberWithUser, type UserStatus } from '@boluo/api';
+import { type Channel, type MemberWithUser, type SpaceMemberWithUser, type UserStatus } from '@boluo/api';
 import { type FC, type ReactNode, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
@@ -8,8 +8,8 @@ import { MemberInvitationItem } from './MemberInvitationItem';
 interface Props {
   channel: Channel;
   userStatusMap: Record<string, UserStatus> | undefined;
-  members: Member[];
-  myMember: Member;
+  members: MemberWithUser[];
+  myMember: MemberWithUser;
 }
 
 export const MemberInvitation: FC<Props> = ({ members, myMember, channel, userStatusMap }) => {

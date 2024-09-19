@@ -1,4 +1,4 @@
-import { type Member, type ChannelMember } from '@boluo/api';
+import { type MemberWithUser, type ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
 import { Edit } from '@boluo/icons';
 import { useMemo, type FC } from 'react';
@@ -47,7 +47,7 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   const { data: channel } = useQueryChannel(channelId);
   const { data: currentUser } = useQueryCurrentUser();
   const { data: members } = useQueryChannelMembers(channelId);
-  const member = useMemo((): Member | null => {
+  const member = useMemo((): MemberWithUser | null => {
     if (members == null || members.members.length === 0 || members.selfIndex == null) {
       return null;
     } else {

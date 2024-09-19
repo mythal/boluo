@@ -1,5 +1,7 @@
+use quick_cache::sync::Cache;
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::sync::LazyLock;
 
 use chrono::prelude::*;
 use deadpool_redis::redis::AsyncCommands;
@@ -9,7 +11,7 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::channels::ChannelMember;
-use crate::error::{AppError, ModelError};
+use crate::error::{row_not_found, AppError, ModelError};
 use crate::redis::make_key;
 use crate::spaces::api::SpaceWithMember;
 use crate::users::User;
@@ -58,6 +60,9 @@ pub async fn space_users_status(
     Ok(table)
 }
 
+static SPACES_CACHE: LazyLock<Cache<Uuid, Space>> = LazyLock::new(|| Cache::new(1024));
+static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> = LazyLock::new(|| Cache::new(1024));
+
 #[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
 #[sqlx(type_name = "spaces")]
 #[ts(export)]
@@ -101,7 +106,7 @@ impl Space {
             DICE.run(default_dice_type)?;
         }
         DESCRIPTION.run(description.as_str())?;
-        query_file_scalar!(
+        let space = query_file_scalar!(
             "sql/spaces/create.sql",
             name,
             owner_id,
@@ -110,8 +115,9 @@ impl Space {
             description
         )
         .fetch_one(db)
-        .await
-        .map_err(Into::into)
+        .await?;
+        SPACES_CACHE.insert(space.id, space.clone());
+        Ok(space)
     }
 
     pub async fn is_admin<'c, T: sqlx::PgExecutor<'c>>(&self, db: T, user_id: &Uuid) -> bool {
@@ -126,6 +132,7 @@ impl Space {
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<(), sqlx::Error> {
         sqlx::query_file!("sql/spaces/delete.sql", id).execute(db).await?;
+        SPACES_CACHE.remove(id);
         Ok(())
     }
 
@@ -138,36 +145,49 @@ impl Space {
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<Space>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
-            .fetch_optional(db)
+        SPACES_CACHE
+            .get_or_insert_async(id, async {
+                sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
+                    .fetch_one(db)
+                    .await
+            })
             .await
+            .map(Some)
+            .or_else(row_not_found)
     }
 
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/get_by_channel.sql", channel_id)
+        let space = sqlx::query_file_scalar!("sql/spaces/get_by_channel.sql", channel_id)
             .fetch_optional(db)
-            .await
+            .await?;
+        if let Some(space) = &space {
+            SPACES_CACHE.insert(space.id, space.clone());
+        }
+        Ok(space)
     }
 
     pub async fn refresh_token<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Uuid, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/refresh_token.sql", id)
+        let token = sqlx::query_file_scalar!("sql/spaces/refresh_token.sql", id)
             .fetch_one(db)
-            .await
+            .await?;
+        SPACES_CACHE.remove(id);
+        Ok(token)
     }
 
     pub async fn get_token<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Uuid, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/get_token.sql", id)
-            .fetch_one(db)
-            .await
+        Space::get_by_id(db, id)
+            .await?
+            .ok_or(sqlx::Error::RowNotFound)
+            .map(|space| space.invite_token)
     }
 
     pub async fn is_public<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<bool>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/is_public.sql", id)
-            .fetch_optional(db)
+        Space::get_by_id(db, id)
             .await
+            .map(|space| space.map(|space| space.is_public))
     }
 
     pub async fn edit<'c, T: sqlx::PgExecutor<'c>>(
@@ -192,7 +212,7 @@ impl Space {
         if let Some(dice) = default_dice_type.as_ref() {
             validators::DICE.run(dice)?;
         }
-        sqlx::query_file_scalar!(
+        let space = sqlx::query_file_scalar!(
             "sql/spaces/edit.sql",
             space_id,
             name,
@@ -203,8 +223,11 @@ impl Space {
             allow_spectator
         )
         .fetch_optional(db)
-        .await
-        .map_err(Into::into)
+        .await?;
+        if let Some(space) = &space {
+            SPACES_CACHE.insert(space.id, space.clone());
+        }
+        Ok(space)
     }
 
     pub async fn search<'c, T: sqlx::PgExecutor<'c>>(db: T, search: String) -> Result<Vec<Space>, sqlx::Error> {
@@ -228,9 +251,14 @@ impl Space {
         db: T,
         user_id: &Uuid,
     ) -> Result<Vec<SpaceWithMember>, sqlx::Error> {
-        sqlx::query_file_as!(SpaceWithMember, "sql/spaces/get_spaces_by_user.sql", user_id)
-            .fetch_all(db)
-            .await
+        let space_with_member_list =
+            sqlx::query_file_as!(SpaceWithMember, "sql/spaces/get_spaces_by_user.sql", user_id)
+                .fetch_all(db)
+                .await?;
+        for space in &space_with_member_list {
+            SPACES_CACHE.insert(space.space.id, space.space.clone());
+        }
+        Ok(space_with_member_list)
     }
 
     pub async fn user_owned<'c, T: sqlx::PgExecutor<'c>>(db: T, user_id: &Uuid) -> Result<Vec<Space>, sqlx::Error> {
@@ -243,10 +271,12 @@ impl Space {
         db: T,
         space_id: Uuid,
     ) -> Result<serde_json::Value, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
+        let settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
             .fetch_optional(db)
-            .await
-            .map(|record| record.unwrap_or(serde_json::json!({})))
+            .await?
+            .unwrap_or(serde_json::json!({}));
+        SPACE_SETTINGS_CACHE.insert(space_id, settings.clone());
+        Ok(settings)
     }
     pub async fn put_settings<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -256,6 +286,7 @@ impl Space {
         sqlx::query_file_scalar!("sql/spaces/put_settings.sql", space_id, settings)
             .execute(db)
             .await?;
+        SPACE_SETTINGS_CACHE.insert(space_id, settings.clone());
         Ok(())
     }
 }

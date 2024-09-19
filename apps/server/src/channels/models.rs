@@ -334,12 +334,13 @@ impl ChannelMember {
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         if let Some(cache) = crate::events::context::get_cache().try_mailbox(&space_id).await {
-            if let Ok(cache) = cache.try_lock() {
-                if let Some(members) = cache.members.get(&channel_id) {
-                    if members.instant.elapsed().as_secs() < 30 {
-                        if let Some(member) = members.list.iter().find(|m| m.user.id == user_id) {
-                            return Ok(Some(member.channel.clone()));
-                        }
+            if let Ok(mut cache) = cache.try_lock() {
+                if let Some(members) = cache.members.get_mut(&channel_id) {
+                    members.update_users(db).await;
+                    if let Some(member) = members.map.get(&user_id) {
+                        return Ok(Some(member.channel.clone()));
+                    } else {
+                        return Ok(None);
                     }
                 }
             }
@@ -464,10 +465,7 @@ impl Member {
         if let Some(cache) = cache.try_mailbox(&space_id).await {
             if let Ok(cache) = cache.try_lock() {
                 if let Some(members) = cache.members.get(&channel_id) {
-                    let instant = std::time::Instant::now();
-                    if (instant - members.instant).as_secs() < CACHE_EXPIRATION {
-                        return Ok(members.list.clone());
-                    }
+                    return Ok(members.map.values().cloned().collect());
                 }
             }
         }
@@ -499,7 +497,10 @@ impl Member {
             cache.members.insert(
                 channel_id,
                 crate::events::context::Members {
-                    list: members.clone(),
+                    map: members
+                        .into_iter()
+                        .map(|member| (member.channel.user_id, member))
+                        .collect(),
                     instant,
                 },
             );

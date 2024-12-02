@@ -38,7 +38,7 @@ export interface CodeBlock extends BaseEntity {
 
 export interface Strong extends BaseEntity {
   type: 'Strong';
-  child: Text;
+  child: Text | Emphasis;
 }
 
 export interface Emphasis extends BaseEntity {

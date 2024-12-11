@@ -443,7 +443,7 @@ async fn export(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     if channel_member.is_none() && !space_member.is_admin {
         return Err(AppError::NoPermission("user is not channel member".to_string()));
     }
-    let hide = channel_member.map_or(true, |member| !member.is_master);
+    let hide = channel_member.is_none_or(|member| !member.is_master);
     Message::export(&mut *trans, &channel.id, hide, after)
         .await
         .map_err(Into::into)

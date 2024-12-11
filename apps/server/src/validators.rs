@@ -3,7 +3,7 @@ use crate::error::ValidationFailed;
 pub type ValidateFn<T> = dyn Fn(&T) -> bool + Sync;
 pub struct Validator<'a, T: ?Sized>(&'a [(&'static str, &'a ValidateFn<T>)]);
 
-impl<'a, T: ?Sized> Validator<'a, T> {
+impl<T: ?Sized> Validator<'_, T> {
     pub fn run<U: AsRef<T>>(&self, value: U) -> Result<(), ValidationFailed> {
         let Validator(sub_validators) = *self;
         for (message, validator) in sub_validators {

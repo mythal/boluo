@@ -55,6 +55,8 @@ async fn check_permissions(
     Ok(())
 }
 
+// Allow the needless return for keep some visual hints
+#[allow(clippy::needless_return)]
 async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;

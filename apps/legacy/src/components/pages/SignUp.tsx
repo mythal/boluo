@@ -88,7 +88,7 @@ function SignUp() {
       <Title>注册账号</Title>
       {registerError && (
         <InformationBar variant="ERROR">
-          <>{errorText(registerError)}</>
+          <>{errorText(registerError).description}</>
         </InformationBar>
       )}
       <form onSubmit={handleSubmit(onSubmit)}>

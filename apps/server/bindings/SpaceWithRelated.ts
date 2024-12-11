@@ -7,8 +7,8 @@ import type { UserStatus } from './UserStatus';
 
 export type SpaceWithRelated = {
   space: Space;
-  members: { [key: string]: SpaceMemberWithUser };
+  members: { [key in string]?: SpaceMemberWithUser };
   channels: Array<Channel>;
-  channelMembers: { [key: string]: Array<ChannelMember> };
-  usersStatus: { [key: string]: UserStatus };
+  channelMembers: { [key in string]?: Array<ChannelMember> };
+  usersStatus: { [key in string]?: UserStatus };
 };

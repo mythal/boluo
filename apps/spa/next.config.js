@@ -28,12 +28,14 @@ const config = {
 };
 if (process.env.SENTRY_DSN) {
   module.exports = withSentryConfig(config, {
-    org: 'mythal-rpg' ?? process.env.SENTRY_ORG,
-    project: 'boluo' ?? process.env.SENTRY_PROJECT,
+    org: 'mythal' ?? process.env.SENTRY_ORG,
+    sentryUrl: process.env.SENTRY_URL ?? 'https://sentry.io/',
+    project: 'boluo-app' ?? process.env.SENTRY_PROJECT,
     autoInstrumentServerFunctions: false,
     autoInstrumentMiddleware: false,
     disableLogger: true,
     authToken: process.env.SENTRY_TOKEN,
+    widenClientFileUpload: true,
     silent: true,
   });
 } else if (process.env.ANALYZE) {

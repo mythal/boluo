@@ -37,7 +37,7 @@ async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
 
     {
         let space_list = space_list_lock.load();
-        if space_list.spaces.len() > 0 && space_list.instant.elapsed().as_secs() < 10 {
+        if !space_list.spaces.is_empty() && space_list.instant.elapsed().as_secs() < 10 {
             return Ok(space_list.spaces.clone());
         }
     }

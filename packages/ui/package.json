@@ -52,10 +52,10 @@
   "dependencies": {
     "@boluo/common": "*",
     "@boluo/icons": "*",
-    "@floating-ui/react": "^0.26.23",
+    "@floating-ui/react": "^0.27.0",
     "clsx": "^2.1.0",
     "color2k": "^2.0.3",
-    "react-intl": "^6.6.8",
+    "react-intl": "^7.0.4",
     "tslib": "^2.6.2"
   }
 }

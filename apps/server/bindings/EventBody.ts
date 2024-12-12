@@ -17,7 +17,7 @@ export type EventBody =
   | { type: 'MEMBERS'; channelId: string; members: Array<MemberWithUser> }
   | { type: 'BATCH'; encodedEvents: Array<string> }
   | { type: 'INITIALIZED' }
-  | { type: 'STATUS_MAP'; statusMap: { [key: string]: UserStatus }; spaceId: string }
+  | { type: 'STATUS_MAP'; statusMap: { [key in string]?: UserStatus }; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
   | { type: 'ERROR'; code: ConnectionError; reason: string }
   | { type: 'APP_UPDATED'; version: string };

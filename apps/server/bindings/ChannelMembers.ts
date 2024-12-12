@@ -3,7 +3,7 @@ import type { MemberWithUser } from './MemberWithUser';
 
 export type ChannelMembers = {
   members: Array<MemberWithUser>;
-  colorList: { [key: string]: string };
-  heartbeatMap: { [key: string]: bigint };
+  colorList: { [key in string]?: string };
+  heartbeatMap: { [key in string]?: bigint };
   selfIndex: number | null;
 };

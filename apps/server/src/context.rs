@@ -8,7 +8,7 @@ static SECRET: OnceCell<String> = OnceCell::new();
 
 fn env_bool<T: AsRef<str>>(s: T) -> bool {
     let s = s.as_ref().trim();
-    !(s.is_empty() || s == "0" || s.to_ascii_lowercase() == "false")
+    !(s.is_empty() || s == "0" || s.eq_ignore_ascii_case("false"))
 }
 
 pub fn ci() -> bool {

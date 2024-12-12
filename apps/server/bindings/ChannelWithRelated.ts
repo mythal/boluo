@@ -7,7 +7,7 @@ export type ChannelWithRelated = {
   channel: Channel;
   members: Array<MemberWithUser>;
   space: Space;
-  colorList: { [key: string]: string };
-  heartbeatMap: { [key: string]: bigint };
+  colorList: { [key in string]?: string };
+  heartbeatMap: { [key in string]?: bigint };
   encodedEvents: Array<string>;
 };

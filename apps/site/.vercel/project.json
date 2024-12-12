@@ -4,6 +4,7 @@
   "settings": {
     "framework": "nextjs",
     "rootDirectory": null,
+    "installCommand": "npm install --include-workspace-root",
     "outputDirectory": null,
     "buildCommand": "npm run --include-workspace-root build:site --if-present"
   }

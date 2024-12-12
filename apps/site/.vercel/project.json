@@ -4,7 +4,7 @@
   "settings": {
     "framework": "nextjs",
     "rootDirectory": null,
-    "outputDirectory": "apps/site/.next",
-    "buildCommand": "npm run build:site"
+    "outputDirectory": null,
+    "buildCommand": "npm run --include-workspace-root build:site --if-present"
   }
 }

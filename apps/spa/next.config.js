@@ -35,6 +35,7 @@ if (process.env.SENTRY_DSN) {
     autoInstrumentMiddleware: false,
     disableLogger: true,
     authToken: process.env.SENTRY_TOKEN,
+    widenClientFileUpload: true,
     silent: true,
   });
 } else if (process.env.ANALYZE) {

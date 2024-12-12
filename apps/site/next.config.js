@@ -20,7 +20,6 @@ const config = {
   eslint: {
     dirs: ['src', 'tests'],
   },
-  output: 'standalone',
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     BACKEND_URL: process.env.BACKEND_URL,
@@ -28,9 +27,6 @@ const config = {
     DOMAIN: process.env.DOMAIN,
   },
   transpilePackages: ['@boluo/ui', '@boluo/common'],
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, '../../'),
-  },
   rewrites,
   webpack: (config) => {
     // `react-intl` without parser

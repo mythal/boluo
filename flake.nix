@@ -169,6 +169,7 @@
 
                     PUBLIC_MEDIA_URL = "https://media.boluo.chat";
                     BACKEND_URL = "https://boluo.chat";
+                    STANDALONE = "true";
 
                     configurePhase = ''
                       runHook preConfigure

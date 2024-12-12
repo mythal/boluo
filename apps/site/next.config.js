@@ -1,6 +1,7 @@
 const path = require('path');
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
 const BACKEND_URL = process.env.BACKEND_URL;
+const STANDALONE = process.env.STANDALONE === 'true';
 if (!BACKEND_URL) {
   throw new Error('BACKEND_URL is required');
 }
@@ -20,6 +21,7 @@ const config = {
   eslint: {
     dirs: ['src', 'tests'],
   },
+  output: STANDALONE ? 'standalone' : undefined,
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     BACKEND_URL: process.env.BACKEND_URL,
@@ -27,6 +29,9 @@ const config = {
     DOMAIN: process.env.DOMAIN,
   },
   transpilePackages: ['@boluo/ui', '@boluo/common'],
+  experimental: {
+    outputFileTracingRoot: STANDALONE ? path.join(__dirname, '../../') : undefined,
+  },
   rewrites,
   webpack: (config) => {
     // `react-intl` without parser

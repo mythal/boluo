@@ -96,6 +96,7 @@ impl HealthCheck {
         let database = ConnectionState::database().await.into();
         system.refresh_memory();
         let disks = Disks::new_with_refreshed_list();
+        let gib_in_bytes = 1024 * 1024 * 1024;
         HealthCheck {
             timestamp_sec: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -109,6 +110,7 @@ impl HealthCheck {
                     available: disk.available_space(),
                     total: disk.total_space(),
                 })
+                .filter(|disk| disk.total > gib_in_bytes)
                 .collect(),
             memory_total: system.total_memory(),
             memory_used: system.used_memory(),

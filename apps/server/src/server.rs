@@ -32,6 +32,7 @@ mod logger;
 mod mail;
 mod media;
 mod messages;
+mod opendal;
 mod pos;
 mod redis;
 mod s3;
@@ -166,7 +167,8 @@ async fn main() {
     log::info!("Cache is ready");
     db::check().await;
     log::info!("Database is ready");
-
+    opendal::check().await.unwrap();
+    log::info!("OpenDAL is ready");
     if args.check {
         return;
     }

@@ -53,6 +53,7 @@ hyper-util = { version = "0.1.7", features = ["full"] }
 deadpool-redis = "0.18.0"
 arc-swap = "1.7.1"
 quick_cache = "0.6.9"
+opendal = { version = "0.50.2", features = ["services-s3"] }
 
 
 [dependencies.ts-rs]

@@ -173,6 +173,7 @@ async fn put_object_presigned(
 
 const EXPIRES_IN_SEC: u64 = 60 * 10;
 async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
+    use crate::opendal;
     use crate::s3;
     let session = authenticate(&req).await?;
     let PreSign {
@@ -180,7 +181,6 @@ async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
         mime_type,
         size,
     } = parse_query(req.uri())?;
-    let client = s3::get_client();
 
     let db = db::get().await;
     if size <= 0 {
@@ -202,17 +202,17 @@ async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
         "",
     )
     .await?;
-    let uri = put_object_presigned(
-        client,
-        s3::get_bucket_name(),
-        &media.id.as_hyphenated().to_string(),
-        EXPIRES_IN_SEC,
-        &mime_type,
-        size,
-    )
-    .await?;
+    let expire = std::time::Duration::from_secs(EXPIRES_IN_SEC);
+    let result = opendal::get_storage_operator()
+        .presign_write_with(&media.id.as_hyphenated().to_string(), expire)
+        .content_type(&mime_type)
+        // TODO: Size limit
+        // https://github.com/apache/opendal/issues/5299
+        .await
+        .map_err(|e| AppError::Unexpected(e.into()))?;
+
     Ok(PreSignResult {
-        url: uri.to_string(),
+        url: result.uri().to_string(),
         media_id: media.id,
     })
 }

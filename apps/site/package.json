@@ -24,6 +24,7 @@
     "@boluo/utils": "*",
     "@formatjs/intl": "^3.0.4",
     "@next/mdx": "^14.1.1",
+    "@sentry/nextjs": "^8.47.0",
     "clsx": "^2.1.0",
     "jotai": "^2.7.0",
     "negotiator": "^1.0.0",

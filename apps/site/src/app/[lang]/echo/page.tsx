@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
-import { getIntl, LangParams } from '@boluo/common/server';
+import { getIntl, type LangParams } from '@boluo/common/server';
 
 export function generateMetadata({ params }: { params: LangParams }): Metadata {
   const intl = getIntl(params);

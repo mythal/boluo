@@ -1,5 +1,6 @@
 const path = require('path');
 const withBundleAnalyzer = require('@next/bundle-analyzer')();
+const { withSentryConfig } = require('@sentry/nextjs');
 const BACKEND_URL = process.env.BACKEND_URL;
 const STANDALONE = process.env.STANDALONE === 'true';
 if (!BACKEND_URL) {
@@ -27,6 +28,7 @@ const config = {
     BACKEND_URL: process.env.BACKEND_URL,
     APP_URL: process.env.APP_URL,
     DOMAIN: process.env.DOMAIN,
+    SENTRY_DSN: process.env.SENTRY_DSN,
   },
   transpilePackages: ['@boluo/ui', '@boluo/common'],
   experimental: {
@@ -43,4 +45,18 @@ const config = {
   },
 };
 
-module.exports = process.env.ANALYZE === 'true' ? withBundleAnalyzer(config) : config;
+if (process.env.SENTRY_DSN) {
+  module.exports = withSentryConfig(config, {
+    org: 'mythal' ?? process.env.SENTRY_ORG,
+    sentryUrl: process.env.SENTRY_URL ?? 'https://sentry.io/',
+    project: 'boluo-site' ?? process.env.SENTRY_PROJECT_SITE,
+    disableLogger: true,
+    authToken: process.env.SENTRY_TOKEN,
+    widenClientFileUpload: true,
+    silent: true,
+  });
+} else if (process.env.ANALYZE === 'true') {
+  module.exports = withBundleAnalyzer(config);
+} else {
+  module.exports = config;
+}

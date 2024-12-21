@@ -1,11 +1,16 @@
 import { v1 as uuidV1 } from 'uuid';
 
-const getNodeId = (): number[] => {
+const getNodeId = (): Uint8Array => {
   const key = 'client-node-id';
   const serializedId = localStorage.getItem(key);
   if (serializedId) {
     try {
-      return JSON.parse(serializedId) as number[];
+      const parsed = JSON.parse(serializedId);
+      if (Array.isArray(parsed) && parsed.length === 6 && parsed.every((x) => typeof x === 'number')) {
+        return new Uint8Array(parsed);
+      } else {
+        throw new Error('Invalid node ID');
+      }
     } catch (e) {
       localStorage.removeItem(key);
       return getNodeId();
@@ -15,7 +20,7 @@ const getNodeId = (): number[] => {
     window.crypto.getRandomValues(bytes);
     const nodeId = Array.from(bytes);
     localStorage.setItem(key, JSON.stringify(nodeId));
-    return nodeId;
+    return bytes;
   }
 };
 

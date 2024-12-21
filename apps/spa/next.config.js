@@ -30,7 +30,7 @@ if (process.env.SENTRY_DSN) {
   module.exports = withSentryConfig(config, {
     org: 'mythal' ?? process.env.SENTRY_ORG,
     sentryUrl: process.env.SENTRY_URL ?? 'https://sentry.io/',
-    project: 'boluo-app' ?? process.env.SENTRY_PROJECT,
+    project: 'boluo-spa' ?? process.env.SENTRY_PROJECT,
     autoInstrumentServerFunctions: false,
     autoInstrumentMiddleware: false,
     disableLogger: true,

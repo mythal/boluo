@@ -12,9 +12,9 @@
   "devDependencies": {
     "@babel/core": "^7.23.7",
     "@svgr/cli": "^8.1.0",
-    "@types/react": "^18.2.46",
+    "@types/react": "^19.0.2",
     "@boluo/typescript-config": "*",
-    "react": "^18.2.0",
+    "react": "^19.0.0",
     "typescript": "^5.3.3"
   }
 }

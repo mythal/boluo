@@ -12,14 +12,14 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "react": "^18.2.0",
-    "uuid": "^10.0.0"
+    "react": "^19.0.0",
+    "uuid": "^11.0.3"
   },
   "sideEffects": false,
   "devDependencies": {
-    "@types/react": "^18.2.46",
+    "@types/react": "^19.0.2",
     "@types/uuid": "^10.0.0",
-    "eslint": "^8.56.0",
+    "eslint": "^9.17.0",
     "@boluo/eslint-config": "*",
     "@boluo/typescript-config": "*",
     "typescript": "^5.3.3"

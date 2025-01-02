@@ -52,9 +52,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         system: $(themeColor.light, themeColor.dark),
       },
       kbd: {
-        bg: $(white, neutral[700]),
+        bg: $(white, neutral[800]),
         text: $(black, white),
-        shadow: $(neutral[200], neutral[800]),
+        shadow: $(neutral[400], neutral[900]),
       },
       brand,
       green: $(green, revert(green)),
@@ -72,8 +72,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       dot: {
         normal: blue[600],
       },
+      badge: {
+        bg: $(neutral[50], neutral[700]),
+        hover: $(neutral[100], neutral[600]),
+        border: $(neutral[500], black),
+      },
       tooltip: {
-        bg: $(black, neutral[600]),
+        bg: $(neutral[600], neutral[600]),
+        border: black,
         text: white,
         shadow: $(neutral[500], black),
       },
@@ -91,14 +97,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         active: $(blue[500], blue[200]),
         decoration: $(blue[400], blue[800]),
       },
-      bg: $(neutral[50], neutral[800]),
+      bg: $(neutral[50], neutral[700]),
       floating: {
         bg: $(neutral[50], neutral[900]),
       },
       card: {
-        bg: $(white, neutral[900]),
-        border: $(neutral[200], neutral[800]),
-        shadow: $(neutral[100], neutral[900]),
+        bg: $(white, neutral[800]),
+        border: $(neutral[200], neutral[500]),
+        shadow: $(neutral[100], black),
       },
       errors: {
         bg: $(red[50], red[900]),
@@ -186,10 +192,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         other: $(neutral[300], neutral[600]),
       },
       select: {
-        bg: $(neutral[50], neutral[700]),
-        border: $(neutral[100], neutral[700]),
+        bg: $(neutral[100], neutral[600]),
+        border: $(neutral[300], neutral[500]),
         hover: {
-          border: $(neutral[200], neutral[600]),
+          border: $(neutral[500], neutral[400]),
         },
         open: {
           border: $(lime[500], blue[500]),
@@ -381,7 +387,6 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       button: {
         inline: {
           bg: $(neutral[100], neutral[600]),
-          border: $(black, black),
         },
         light: {
           hover: {
@@ -392,13 +397,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         default: {
-          bg: $(neutral[100], neutral[700]),
+          bg: $(neutral[50], neutral[600]),
           text: $(black, white),
+          border: $(neutral[300], black),
           hover: {
-            bg: $(neutral[200], neutral[700]),
+            bg: $(neutral[100], mix(neutral[500], neutral[600], 0.5)),
           },
           active: {
-            bg: $(neutral[300], neutral[600]),
+            bg: $(neutral[200], neutral[600]),
           },
           disabled: {
             bg: $(neutral[400], neutral[500]),
@@ -406,32 +412,35 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         danger: {
-          bg: $(red[600], red[500]),
-          text: $(white, black),
+          bg: $(red[500], red[500]),
+          text: $(white, white),
           hover: {
             bg: $(red[500], red[400]),
           },
+          border: $(red[700], red[900]),
           active: {
             bg: $(red[400], red[300]),
           },
         },
         primary: {
-          bg: brand[600],
+          bg: $(brand[600], brand[500]),
           text: white,
           hover: {
-            bg: brand[700],
+            bg: $(brand[500], brand[600]),
           },
+          border: $(brand[700], brand[600]),
           active: {
-            bg: brand[700],
+            bg: $(brand[700], brand[400]),
           },
           disabled: {
-            bg: brand[700],
+            bg: $(neutral[600], neutral[500]),
             text: neutral[300],
           },
         },
         switch: {
           bg: $(neutral[100], neutral[700]),
           text: $(black, white),
+          border: $(neutral[300], black),
           on: {
             hint: brand[400],
             bg: $(neutral[300], neutral[600]),

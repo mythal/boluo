@@ -386,7 +386,6 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       button: {
         inline: {
           bg: $(neutral[100], neutral[600]),
-          border: $(black, black),
         },
         light: {
           hover: {

@@ -52,9 +52,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         system: $(themeColor.light, themeColor.dark),
       },
       kbd: {
-        bg: $(white, neutral[700]),
+        bg: $(white, neutral[800]),
         text: $(black, white),
-        shadow: $(neutral[200], neutral[800]),
+        shadow: $(neutral[400], neutral[900]),
       },
       brand,
       green: $(green, revert(green)),

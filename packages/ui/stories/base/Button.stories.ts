@@ -12,7 +12,9 @@ export default meta;
 type Story = StoryObj<typeof Button>;
 
 export const Basic: Story = {
-  args: {},
+  args: {
+    disabled: false,
+  },
 };
 
 export const Small: Story = {

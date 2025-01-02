@@ -397,13 +397,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         default: {
-          bg: $(neutral[100], neutral[700]),
+          bg: $(neutral[50], neutral[700]),
           text: $(black, white),
+          border: $(neutral[300], black),
           hover: {
-            bg: $(neutral[200], neutral[700]),
+            bg: $(neutral[100], neutral[700]),
           },
           active: {
-            bg: $(neutral[300], neutral[600]),
+            bg: $(neutral[200], neutral[600]),
           },
           disabled: {
             bg: $(neutral[400], neutral[500]),
@@ -411,32 +412,35 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         danger: {
-          bg: $(red[600], red[500]),
-          text: $(white, black),
+          bg: $(red[500], red[500]),
+          text: $(white, white),
           hover: {
             bg: $(red[500], red[400]),
           },
+          border: $(red[700], red[900]),
           active: {
             bg: $(red[400], red[300]),
           },
         },
         primary: {
-          bg: brand[600],
+          bg: $(brand[600], brand[500]),
           text: white,
           hover: {
-            bg: brand[700],
+            bg: $(brand[500], brand[600]),
           },
+          border: $(brand[700], black),
           active: {
-            bg: brand[700],
+            bg: $(brand[700], brand[200]),
           },
           disabled: {
-            bg: brand[700],
+            bg: $(neutral[600], neutral[500]),
             text: neutral[300],
           },
         },
         switch: {
           bg: $(neutral[100], neutral[700]),
           text: $(black, white),
+          border: $(neutral[300], black),
           on: {
             hint: brand[400],
             bg: $(neutral[300], neutral[600]),

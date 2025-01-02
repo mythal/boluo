@@ -191,10 +191,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         other: $(neutral[300], neutral[600]),
       },
       select: {
-        bg: $(neutral[50], neutral[600]),
-        border: $(neutral[100], neutral[500]),
+        bg: $(neutral[100], neutral[600]),
+        border: $(neutral[300], neutral[500]),
         hover: {
-          border: $(neutral[200], neutral[400]),
+          border: $(neutral[500], neutral[400]),
         },
         open: {
           border: $(lime[500], blue[500]),

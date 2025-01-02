@@ -18,11 +18,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
   return (
     <button
       className={clsx(
-        'enabled:cursor-pointer disabled:cursor-not-allowed',
+        'Button enabled:cursor-pointer disabled:cursor-not-allowed',
         'select-none appearance-none focus-visible:outline-none',
-        'inline-flex items-center justify-center focus:ring',
+        'inline-flex items-center justify-center',
         'm-0 gap-1 rounded-sm',
-        'active-enabled:translate-y-px border shadow-[0_1px_0_0_rgba(0,0,0,0.06)]',
+        'active-enabled:shadow-none active-enabled:translate-y-px border shadow-sm',
 
         small ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
         (variant === 'default' || variant === 'detail') && [
@@ -31,8 +31,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
           'disabled:text-button-default-disabled-text disabled:bg-button-default-disabled-bg',
           'border-button-default-border',
         ],
-        variant === 'danger' &&
-          'bg-button-danger-bg text-button-danger-text hover:enabled:bg-button-danger-hover-bg active-enabled:bg-button-danger-active-bg border-button-danger-border',
+        variant === 'danger' && [
+          'bg-button-danger-bg text-button-danger-text hover:enabled:bg-button-danger-hover-bg',
+          'active-enabled:bg-button-danger-active-bg border-button-danger-border',
+        ],
+
         variant === 'primary' && [
           'bg-button-primary-bg text-button-primary-text',
           'hover:enabled:bg-button-primary-hover-bg active-enabled:bg-button-primary-active-bg',

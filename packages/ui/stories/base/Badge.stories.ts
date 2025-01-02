@@ -13,3 +13,10 @@ export const Basic: Story = {
     children: 'New',
   },
 };
+
+export const Clickable: Story = {
+  args: {
+    children: 'New',
+    onClick: () => alert('clicked'),
+  },
+};

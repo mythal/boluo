@@ -8,12 +8,14 @@ interface Props {
 }
 
 export const Badge: FC<Props> = ({ icon, children, onClick }) => {
+  const clickable = onClick != null;
   return (
     <div
+      role={clickable ? 'button' : undefined}
       onClick={onClick}
       className={clsx(
-        'Badge bg-surface-100 border-surface-300 inline-flex gap-1 rounded-lg border px-1 py-0.5 text-sm',
-        onClick != null ? 'hover:bg-surface-50 hover:border-surface-500 cursor-pointer select-none' : '',
+        'Badge bg-badge-bg border-badge-border inline-flex gap-1 rounded-sm border px-1 py-0.5 text-xs',
+        clickable && 'hover:bg-badge-hover cursor-pointer select-none active:translate-y-px',
       )}
     >
       {icon}

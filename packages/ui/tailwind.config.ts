@@ -72,6 +72,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
       dot: {
         normal: blue[600],
       },
+      badge: {
+        bg: $(neutral[50], neutral[700]),
+        hover: $(neutral[100], neutral[600]),
+        border: $(neutral[500], black),
+      },
       tooltip: {
         bg: $(black, neutral[600]),
         text: white,

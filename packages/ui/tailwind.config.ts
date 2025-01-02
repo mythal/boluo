@@ -96,14 +96,14 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         active: $(blue[500], blue[200]),
         decoration: $(blue[400], blue[800]),
       },
-      bg: $(neutral[50], neutral[800]),
+      bg: $(neutral[50], neutral[700]),
       floating: {
         bg: $(neutral[50], neutral[900]),
       },
       card: {
-        bg: $(white, neutral[900]),
-        border: $(neutral[200], neutral[800]),
-        shadow: $(neutral[100], neutral[900]),
+        bg: $(white, neutral[800]),
+        border: $(neutral[200], neutral[500]),
+        shadow: $(neutral[100], black),
       },
       errors: {
         bg: $(red[50], red[900]),
@@ -191,10 +191,10 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         other: $(neutral[300], neutral[600]),
       },
       select: {
-        bg: $(neutral[50], neutral[700]),
-        border: $(neutral[100], neutral[700]),
+        bg: $(neutral[50], neutral[600]),
+        border: $(neutral[100], neutral[500]),
         hover: {
-          border: $(neutral[200], neutral[600]),
+          border: $(neutral[200], neutral[400]),
         },
         open: {
           border: $(lime[500], blue[500]),
@@ -396,11 +396,11 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           },
         },
         default: {
-          bg: $(neutral[50], neutral[700]),
+          bg: $(neutral[50], neutral[600]),
           text: $(black, white),
           border: $(neutral[300], black),
           hover: {
-            bg: $(neutral[100], neutral[700]),
+            bg: $(neutral[100], mix(neutral[500], neutral[600], 0.5)),
           },
           active: {
             bg: $(neutral[200], neutral[600]),
@@ -427,9 +427,9 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
           hover: {
             bg: $(brand[500], brand[600]),
           },
-          border: $(brand[700], black),
+          border: $(brand[700], brand[600]),
           active: {
-            bg: $(brand[700], brand[200]),
+            bg: $(brand[700], brand[400]),
           },
           disabled: {
             bg: $(neutral[600], neutral[500]),

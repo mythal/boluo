@@ -78,7 +78,8 @@ const makeTheme = (name: 'dark' | 'light'): Config['theme'] => {
         border: $(neutral[500], black),
       },
       tooltip: {
-        bg: $(black, neutral[600]),
+        bg: $(neutral[600], neutral[600]),
+        border: black,
         text: white,
         shadow: $(neutral[500], black),
       },

@@ -57,7 +57,10 @@
     "check-types": "tsc --noEmit",
     "dev": "next dev --hostname 0.0.0.0 --port 3100 --turbopack",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "type": "module"
 }

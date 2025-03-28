@@ -1,10 +1,12 @@
 {
   "name": "boluo",
   "devDependencies": {
+    "@opennextjs/cloudflare": "^0.6.4",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "syncpack": "^13.0.3",
-    "turbo": "^2.4.4"
+    "turbo": "^2.4.4",
+    "wrangler": "^4.6.0"
   },
   "engines": {
     "node": ">=18"

@@ -2,6 +2,10 @@
 # nix
 result
 
+# cloudflare
+.wrangler/
+.dev.vars
+
 # dependencies
 node_modules
 
@@ -10,6 +14,7 @@ node_modules
 build/
 out/
 .swc/
+.open-next/
 
 # misc
 .DS_Store

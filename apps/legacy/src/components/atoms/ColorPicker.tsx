@@ -6,6 +6,7 @@ interface Props {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  ref: React.Ref<HTMLInputElement>;
 }
 
 const ColorDisplay = styled.div`
@@ -13,7 +14,7 @@ const ColorDisplay = styled.div`
   box-shadow: 0 0 2px #000000 inset;
 `;
 
-const ColorPicker: React.ForwardRefRenderFunction<HTMLInputElement, Props> = ({ value, onChange, id }, ref) => {
+const ColorPicker: React.FC<Props> = ({ value, onChange, id, ref }) => {
   return (
     <React.Fragment>
       <label htmlFor={id}>
@@ -24,4 +25,4 @@ const ColorPicker: React.ForwardRefRenderFunction<HTMLInputElement, Props> = ({ 
   );
 };
 
-export default React.forwardRef(ColorPicker);
+export default ColorPicker;

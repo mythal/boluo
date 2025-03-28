@@ -34,10 +34,13 @@ async fn update_spaces_latest_activity() {
                 local
             };
             for (channel_id, update_time) in wait_update.into_iter() {
-                if let Err(err) =
-                    sqlx::query_file!("sql/messages/update_space_latest_activity.sql", channel_id, update_time)
-                        .execute(&mut *conn)
-                        .await
+                if let Err(err) = sqlx::query_file!(
+                    "sql/messages/update_space_latest_activity.sql",
+                    channel_id,
+                    update_time
+                )
+                .execute(&mut *conn)
+                .await
                 {
                     log::error!("Failed to update space latest activity: {:?}", err);
                 };

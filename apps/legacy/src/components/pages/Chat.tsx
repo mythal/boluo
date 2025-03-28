@@ -134,7 +134,9 @@ function Chat() {
       });
     }
   }, [channelId, focused, paneList]);
-  const result: AppResult<SpaceWithRelated> = useSelector((state) => state.ui.spaceSet.get(spaceId, errLoading()));
+  const result: AppResult<SpaceWithRelated> = useSelector((state) =>
+    state.ui.spaceSet.get(spaceId, errLoading()),
+  );
   if (!result.isOk) {
     if (result.value.code === LOADING) {
       return <PageLoading text="load space data" />;
@@ -197,7 +199,9 @@ function Chat() {
         <Home members={members} channels={channels} space={space} />
       )}
 
-      {userDialog && <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />}
+      {userDialog && (
+        <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />
+      )}
     </Container>
   );
 }

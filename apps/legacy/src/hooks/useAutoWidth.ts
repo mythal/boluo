@@ -1,6 +1,10 @@
 import { RefObject, useLayoutEffect } from 'react';
 
-export const useAutoWidth = (text: string, inputRef: RefObject<HTMLInputElement>, initialWidth = 48) => {
+export const useAutoWidth = (
+  text: string,
+  inputRef: RefObject<HTMLInputElement>,
+  initialWidth = 48,
+) => {
   useLayoutEffect(() => {
     if (!inputRef.current) {
       return;

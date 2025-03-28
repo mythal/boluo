@@ -3,14 +3,18 @@ import React from 'react';
 
 interface ExtendedButtonInlineProps {
   variant?: 'primary' | 'default';
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
-export type ButtonInlineProps = React.ComponentPropsWithoutRef<'button'> & ExtendedButtonInlineProps;
+export type ButtonInlineProps = React.ComponentPropsWithoutRef<'button'> &
+  ExtendedButtonInlineProps;
 
-export const ButtonInline = React.forwardRef<HTMLButtonElement, ButtonInlineProps>(function ButtonInline(
-  { children, className, ...props }: ButtonInlineProps,
+export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
+  children,
+  className,
   ref,
-) {
+  ...props
+}: ButtonInlineProps) {
   return (
     <button
       className={clsx(
@@ -24,5 +28,4 @@ export const ButtonInline = React.forwardRef<HTMLButtonElement, ButtonInlineProp
       {children}
     </button>
   );
-});
-ButtonInline.displayName = 'ButtonInline';
+};

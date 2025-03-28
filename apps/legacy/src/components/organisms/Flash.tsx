@@ -29,7 +29,12 @@ function Flash({ flashState }: Props) {
   const dispatch = useDispatch();
 
   const informationBarMap = (info: Information) => (
-    <InformationBar css={flash} key={info.id} variant={info.level} dismiss={() => dispatch(dismissFlash(info.id))}>
+    <InformationBar
+      css={flash}
+      key={info.id}
+      variant={info.level}
+      dismiss={() => dispatch(dismissFlash(info.id))}
+    >
       {info.content}
     </InformationBar>
   );

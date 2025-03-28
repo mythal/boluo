@@ -1,20 +1,11 @@
-import type { Result } from '@boluo/utils';
-import { Err, Ok } from '@boluo/utils';
+import type { Result } from '@boluo/utils/result';
+import { Err, Ok } from '@boluo/utils/result';
 import { FetchFailError, NotJsonError, UnexpectedError } from './error-types';
-import { ApiError } from './errors';
+import { ApiError } from './errors.js';
 import { isAppResponse } from './request';
 
 export async function appFetch<T>(url: string, params: RequestInit): Promise<Result<T, ApiError>> {
   let result: Result<T, ApiError>;
-  if (process.env.NODE_ENV === 'development') {
-    if (!params.headers) {
-      params.headers = new Headers({ 'X-Debug': 'true' });
-    } else {
-      const headers = new Headers(params.headers);
-      headers.set('X-Debug', 'true');
-      params.headers = headers;
-    }
-  }
   try {
     const response = await fetch(url, params);
     let data: unknown;
@@ -31,7 +22,10 @@ export async function appFetch<T>(url: string, params: RequestInit): Promise<Res
         result = new Err(data.err);
       }
     } else {
-      const error: UnexpectedError = { code: 'UNEXPECTED', message: 'Got incorrect data from the server' };
+      const error: UnexpectedError = {
+        code: 'UNEXPECTED',
+        message: 'Got incorrect data from the server',
+      };
       result = new Err(error);
     }
   } catch (cause) {

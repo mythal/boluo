@@ -102,7 +102,13 @@ function Dialog({
       </div>
       {confirm && (
         <div css={buttonAreaStyle}>
-          <Button data-small autoFocus disabled={loading} data-variant={confirmButtonVariant} onClick={confirm}>
+          <Button
+            data-small
+            autoFocus
+            disabled={loading}
+            data-variant={confirmButtonVariant}
+            onClick={confirm}
+          >
             {loading && <Icon sprite={rotateIcon} spin />}
             {confirmText}
           </Button>

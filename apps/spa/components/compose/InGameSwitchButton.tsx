@@ -8,13 +8,12 @@ import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
-interface Props {}
-
-export const InGameSwitchButton: FC<Props> = () => {
+export const InGameSwitchButton: FC = () => {
   const defaultInGame = useDefaultInGame();
   const { inGameAtom, composeAtom } = useChannelAtoms();
 
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('top-start');
+  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
+    useTooltip('top-start');
   const intl = useIntl();
   const inGame = useAtomValue(inGameAtom);
   const dispatch = useSetAtom(composeAtom);
@@ -35,7 +34,13 @@ export const InGameSwitchButton: FC<Props> = () => {
       >
         <Mask className={inGame ? '' : 'text-text-lighter'} />
       </InComposeButton>
-      <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>
+      <TooltipBox
+        show={showTooltip}
+        style={floatingStyles}
+        ref={refs.setFloating}
+        {...getFloatingProps()}
+        defaultStyle
+      >
         {title}
       </TooltipBox>
     </div>

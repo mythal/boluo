@@ -4,7 +4,7 @@ import { mix, rgba, transparentize } from 'color2k';
 import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 import { revertPalette as revert, palette } from '@boluo/utils';
-import screens from './screens.json';
+import screens from './screens.json' with { type: 'json' };
 import type { Config } from 'tailwindcss';
 const red = palette(colors.red);
 const neutral = palette(colors.neutral);
@@ -546,13 +546,13 @@ const config: Config = {
   plugins: [
     // The ESLint marks this as error, but it is following the official document.
     // https://tailwindcss.com/docs/plugins
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     plugin(function ({ addVariant }) {
       addVariant('enabled', '&:not(:disabled)');
       addVariant('active-enabled', '&:is([data-active="true"],:active):not(:disabled)');
       addVariant('on', '&[data-on="true"]');
       addVariant('off', '&[data-on="false"]');
     }),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('@tailwindcss/container-queries'),
     themeSwapper({
       themes: [

@@ -17,10 +17,18 @@ interface Props {
 
 const TYPEING_TIMEOUT = 2000;
 
-export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, latestMessageAtom, myId }) => {
+export const SidebarChannelItemPreview: FC<Props> = ({
+  hasUnread,
+  channelId,
+  latestMessageAtom,
+  myId,
+}) => {
   const intl = useIntl();
   const store = useStore();
-  const previewMapAtom = useMemo(() => atom((read) => read(chatAtom).channels[channelId]?.previewMap), [channelId]);
+  const previewMapAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channelId]?.previewMap),
+    [channelId],
+  );
 
   // Sort by timestamp, descending.
   const [recentPreviews, setRecentPreviews] = useState<PreviewItem[]>([]);
@@ -48,7 +56,10 @@ export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, lat
       return oldPreviews;
     });
   }, [myId, previewMapAtom, store]);
-  useEffect(() => store.sub(previewMapAtom, updateRecentPreviews), [previewMapAtom, store, updateRecentPreviews]);
+  useEffect(
+    () => store.sub(previewMapAtom, updateRecentPreviews),
+    [previewMapAtom, store, updateRecentPreviews],
+  );
   const oldestRecentPreviewTimestamp = recentPreviews[0]?.timestamp;
   useEffect(() => {
     if (oldestRecentPreviewTimestamp == null) return;
@@ -127,10 +138,14 @@ export const SidebarChannelItemPreview: FC<Props> = ({ hasUnread, channelId, lat
             {latestMessage.name}
             {latestMessage.isAction ? '' : ':'}
           </span>
-          <span className="text-text-lighter group-hover:text-text-light">{latestMessageText || '…'}</span>
+          <span className="text-text-lighter group-hover:text-text-light">
+            {latestMessageText || '…'}
+          </span>
         </div>
       )}
-      {latestMessage === 'UNLOAD' && <div className="bg-text-lighter/20 h-4 w-full rounded-md"></div>}
+      {latestMessage === 'UNLOAD' && (
+        <div className="bg-text-lighter/20 h-4 w-full rounded-md"></div>
+      )}
       {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
     </div>
   );

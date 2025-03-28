@@ -1,4 +1,9 @@
-import { type Channel, type MemberWithUser, type SpaceMemberWithUser, type UserStatus } from '@boluo/api';
+import {
+  type Channel,
+  type MemberWithUser,
+  type SpaceMemberWithUser,
+  type UserStatus,
+} from '@boluo/api';
 import { type FC, type ReactNode, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';

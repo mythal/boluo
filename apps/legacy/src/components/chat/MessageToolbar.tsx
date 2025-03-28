@@ -96,7 +96,9 @@ function MessageToolbar({ myMember, mine, message }: Props) {
     return null;
   }
   buttonsProps[buttonsProps.length - 1].x = 'left';
-  const buttons = buttonsProps.map((props) => <ChatItemToolbarButton key={props.title} {...props} />);
+  const buttons = buttonsProps.map((props) => (
+    <ChatItemToolbarButton key={props.title} {...props} />
+  ));
 
   return (
     <React.Fragment>

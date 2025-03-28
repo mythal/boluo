@@ -39,7 +39,9 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
   const isFocused = usePaneIsFocus();
   const isMaster = member.channel.isMaster;
   const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
-  const compose: ComposeDrived = useAtomValue(useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]));
+  const compose: ComposeDrived = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
+  );
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   const { editMode, media } = compose;
@@ -54,7 +56,15 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
   }, [compose.name, inGame, member.channel.characterName, member.user.nickname]);
   const nameNode = useMemo(() => {
     return (
-      <NameEditable inGame={inGame} name={name} member={member} isMaster={isMaster} color={color} isPreview self />
+      <NameEditable
+        inGame={inGame}
+        name={name}
+        member={member}
+        isMaster={isMaster}
+        color={color}
+        isPreview
+        self
+      />
     );
   }, [color, inGame, isMaster, member, name]);
   const { onDrop } = useMediaDrop();

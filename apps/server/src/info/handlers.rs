@@ -100,20 +100,26 @@ pub async fn healthcheck() -> Result<Response, AppError> {
         let health_check: HealthCheck = get_healthcheck().await;
         serde_json::to_vec(&health_check)
             .map_err(|err| {
-                log::error!("Unexpected failture in serialize healthcheck result: {:?}", err);
+                log::error!(
+                    "Unexpected failture in serialize healthcheck result: {:?}",
+                    err
+                );
                 AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
             })
             .map(Into::into)
     });
-    let result = task
-        .await
-        .map_err(|_err| AppError::Unexpected(anyhow::anyhow!("Failed to join healthcheck task")))??;
+    let result = task.await.map_err(|_err| {
+        AppError::Unexpected(anyhow::anyhow!("Failed to join healthcheck task"))
+    })??;
     let response = hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)
         .body(result)
         .map_err(|err| {
-            log::error!("Unexpected failture in build healthcheck response: {:?}", err);
+            log::error!(
+                "Unexpected failture in build healthcheck response: {:?}",
+                err
+            );
             AppError::Unexpected(anyhow::anyhow!("Failed to build healthcheck response"))
         })?;
     Ok(response)

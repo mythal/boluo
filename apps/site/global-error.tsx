@@ -3,10 +3,11 @@
 import * as Sentry from '@sentry/nextjs';
 import NextError from 'next/error';
 import { useEffect } from 'react';
+import { SENTRY_CONFIG } from './src/const';
 
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
-    if (process.env.SENTRY_DSN) {
+    if (SENTRY_CONFIG.enabled) {
       Sentry.captureException(error);
     }
   }, [error]);

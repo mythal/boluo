@@ -90,8 +90,15 @@ function Home({ space, members, channels }: Props) {
               <Icon sprite={userCog} /> 管理
             </ChatHeaderButton>
           )}
-          {space.isPublic && <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />}
-          <LeaveSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} name={space.name} />
+          {space.isPublic && (
+            <JoinSpaceButton css={[mL(1), chatHeaderButtonStyle]} data-small id={space.id} />
+          )}
+          <LeaveSpaceButton
+            css={[mL(1), chatHeaderButtonStyle]}
+            data-small
+            id={space.id}
+            name={space.name}
+          />
         </Buttons>
       </Header>
       <div css={container}>
@@ -109,7 +116,13 @@ function Home({ space, members, channels }: Props) {
         {/*</div*/}
       </div>
       {managing && myMember && (
-        <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />
+        <ManageSpace
+          space={space}
+          channels={channels}
+          members={members}
+          my={myMember}
+          dismiss={stopManage}
+        />
       )}
     </React.Fragment>
   );

@@ -10,7 +10,19 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const SidebarHeaderButton = React.forwardRef<HTMLButtonElement, Props>(
-  ({ icon, children, className, onClick, active = false, isLoading = false, size = 'medium', ...props }, ref) => {
+  (
+    {
+      icon,
+      children,
+      className,
+      onClick,
+      active = false,
+      isLoading = false,
+      size = 'medium',
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <button
         ref={ref}

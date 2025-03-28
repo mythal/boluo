@@ -73,7 +73,9 @@ function SpacePage() {
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const inviteLinkInput = useRef<HTMLInputElement>(null);
 
-  const { data } = useSWR(['/spaces/query_with_related' as const, id], ([path, id]) => get(path, { id, token }));
+  const { data } = useSWR(['/spaces/query_with_related' as const, id], ([path, id]) =>
+    get(path, { id, token }),
+  );
   const result: AppResult<SpaceWithRelated> = data ?? errLoading();
 
   useTitleWithResult<SpaceWithRelated>(result, ({ space }) => space.name);
@@ -134,7 +136,13 @@ function SpacePage() {
         <LeaveSpaceButton css={buttonStyle} data-small id={space.id} name={space.name} />
       </OperatorBar>
       {managing && myMember && (
-        <ManageSpace space={space} channels={channels} members={members} my={myMember} dismiss={stopManage} />
+        <ManageSpace
+          space={space}
+          channels={channels}
+          members={members}
+          my={myMember}
+          dismiss={stopManage}
+        />
       )}
     </React.Fragment>
   );

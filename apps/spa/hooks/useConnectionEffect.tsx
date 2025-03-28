@@ -1,4 +1,5 @@
-import { type ChannelMembers, type EventId, isServerEvent, type ServerEvent, type UserStatus } from '@boluo/api';
+import { type ChannelMembers, type EventId, type ServerEvent, type UserStatus } from '@boluo/api';
+import { isServerEvent } from '@boluo/api/events';
 import { webSocketUrlAtom } from '@boluo/common';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
@@ -12,7 +13,12 @@ import { recordError } from '../error';
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
 
-const createMailboxConnection = (baseUrl: string, id: string, token?: string | null, after?: EventId): WebSocket => {
+const createMailboxConnection = (
+  baseUrl: string,
+  id: string,
+  token?: string | null,
+  after?: EventId,
+): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
   if (token) paramsObject.token = token;
   if (after) {
@@ -92,7 +98,11 @@ const connect = (
   return newConnection;
 };
 
-export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, token: string | undefined | null) => {
+export const useConnectionEffect = (
+  mailboxId: string,
+  isTokenLoading: boolean,
+  token: string | undefined | null,
+) => {
   const { mutate } = useSWRConfig();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
   const store = useStore();
@@ -116,11 +126,14 @@ export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, 
           return;
         case 'MEMBERS':
           const members = event.body.members;
-          void mutate<ChannelMembers>(['/channels/members', event.body.channelId], (channelMembers) => {
-            if (channelMembers != null) {
-              return { ...channelMembers, members };
-            }
-          });
+          void mutate<ChannelMembers>(
+            ['/channels/members', event.body.channelId],
+            (channelMembers) => {
+              if (channelMembers != null) {
+                return { ...channelMembers, members };
+              }
+            },
+          );
           return;
         case 'STATUS_MAP':
           void mutate<Record<string, UserStatus | undefined>>(
@@ -129,7 +142,10 @@ export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, 
           );
           return;
         case 'ERROR':
-          dispatch({ type: 'connectionError', payload: { mailboxId, code: event.body.code ?? 'UNEXPECTED' } });
+          dispatch({
+            type: 'connectionError',
+            payload: { mailboxId, code: event.body.code ?? 'UNEXPECTED' },
+          });
           return;
         case 'BATCH':
         case 'NEW_MESSAGE':
@@ -151,7 +167,15 @@ export const useConnectionEffect = (mailboxId: string, isTokenLoading: boolean, 
     let ws: WebSocket | null = null;
     const unsub = store.sub(connectionStateAtom, () => {
       const chatState = store.get(chatAtom);
-      ws = connect(webSocketEndpoint, mailboxId, chatState.connection, chatState.lastEventId, onEvent, dispatch, token);
+      ws = connect(
+        webSocketEndpoint,
+        mailboxId,
+        chatState.connection,
+        chatState.lastEventId,
+        onEvent,
+        dispatch,
+        token,
+      );
     });
     const handle = window.setTimeout(() => {
       if (ws == null) {

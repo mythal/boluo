@@ -29,7 +29,7 @@ clap = { version = "4.4.12", features = ["derive"] }
 cookie = "0.18"
 dotenv = "0.15"
 futures = "0.3"
-itertools = "0.13"
+itertools = "0.14"
 log = "0.4"
 percent-encoding = "2.2.0"
 regex = "1"
@@ -50,7 +50,7 @@ sqlx = { version = "0.8.2", features = [
 ] }
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
-deadpool-redis = "0.18.0"
+deadpool-redis = "0.20.0"
 arc-swap = "1.7.1"
 quick_cache = "0.6.9"
 

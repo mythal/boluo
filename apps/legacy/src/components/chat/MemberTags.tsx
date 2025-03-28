@@ -15,7 +15,9 @@ function MemberTags({ spaceMember, channelMember, spaceOwnerId }: Props) {
   return (
     <React.Fragment>
       {spaceMember.isAdmin && (
-        <span css={[adminTag, mR(1)]}>{spaceOwnerId === spaceMember.userId ? '创建者' : '管理'}</span>
+        <span css={[adminTag, mR(1)]}>
+          {spaceOwnerId === spaceMember.userId ? '创建者' : '管理'}
+        </span>
       )}
       {channelMember?.isMaster && <span css={masterTag}>主持</span>}
     </React.Fragment>

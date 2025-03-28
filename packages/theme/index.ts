@@ -1,10 +1,24 @@
 export type Theme = 'light' | 'dark' | 'system';
 
+export const THEMES = ['light', 'dark', 'system'] as const;
+
 export const DEFAULT_THEME: Theme = 'system';
+
+export const isTheme = (value: string): value is Theme =>
+  (THEMES as readonly string[]).includes(value);
 
 const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';
 
+const THEME_PREFIX = 'theme:';
+const THEME_PREFIX_ENCODED = encodeURIComponent(THEME_PREFIX);
+
 export const toTheme = (value: string): Theme => {
+  if (value.startsWith('theme:')) {
+    value = value.slice(THEME_PREFIX.length);
+  } else if (value.startsWith(THEME_PREFIX_ENCODED)) {
+    value = decodeURIComponent(value.slice(THEME_PREFIX_ENCODED.length));
+  }
+
   if (value === 'light') {
     return 'light';
   } else if (value === 'dark') {
@@ -63,7 +77,7 @@ const setThemeByMediaQuery = <T extends { matches: boolean }>(queryDark: T) => {
   }
 };
 
-const setSystemTheme = () => {
+export const setSystemTheme = () => {
   const classList = window.document.documentElement.classList;
   // How do I detect dark mode using JavaScript?
   // https://stackoverflow.com/a/57795495
@@ -74,7 +88,9 @@ const setSystemTheme = () => {
     classList.remove('dark');
     classList.add('light');
   }
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setThemeByMediaQuery);
+  window
+    .matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', setThemeByMediaQuery);
 };
 
 export const watchSystemTheme = () => {
@@ -117,7 +133,9 @@ export const setThemeToDom = (value: string): Theme => {
       break;
   }
 
-  const colorSchemeNode: HTMLMetaElement | null = document.querySelector('meta[name="color-scheme"]');
+  const colorSchemeNode: HTMLMetaElement | null = document.querySelector(
+    'meta[name="color-scheme"]',
+  );
   if (colorSchemeNode) {
     colorSchemeNode.content = colorScheme;
   } else {

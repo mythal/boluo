@@ -33,7 +33,9 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
       <button
         className={clsx(
           'inline-block flex-none rounded-sm px-1 py-0.5 text-sm',
-          sidebarState === 'SPACES' ? 'bg-sidebar-folder-active-bg' : 'hover:bg-sidebar-folder-hover-bg',
+          sidebarState === 'SPACES'
+            ? 'bg-sidebar-folder-active-bg'
+            : 'hover:bg-sidebar-folder-hover-bg',
         )}
         onClick={handleClickSwitchSpace}
       >

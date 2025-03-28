@@ -7,9 +7,7 @@ import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 import useSWR from 'swr';
 import { backendUrlConfigAtom, testProxies } from '../../base-url';
 
-interface Props {}
-
-export const BaseUrlSelector: FC<Props> = () => {
+export const BaseUrlSelector: FC = () => {
   const proxies = useProxies();
   const { data: testReuslt } = useSWR(['proxies', proxies], () => testProxies(proxies), {
     refreshInterval: 2000,

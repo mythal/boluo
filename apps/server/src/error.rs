@@ -164,7 +164,9 @@ impl From<sqlx::Error> for ModelError {
             } else if e.is_check_violation() {
                 return ModelError::Validation(ValidationFailed("Check constraint violation"));
             } else if e.is_foreign_key_violation() {
-                return ModelError::Validation(ValidationFailed("Foreign key constraint violation"));
+                return ModelError::Validation(ValidationFailed(
+                    "Foreign key constraint violation",
+                ));
             }
         }
         ModelError::Db(e)

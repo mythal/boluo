@@ -190,17 +190,34 @@ function ManageChannel({ channel, dismiss }: Props) {
         </div>
         <div css={field}>
           <Label>游戏主持人</Label>
-          <Select isMulti value={selectedMember} onChange={handleChange} options={memberOptions} theme={selectTheme} />
+          <Select
+            isMulti
+            value={selectedMember}
+            onChange={handleChange}
+            options={memberOptions}
+            theme={selectTheme}
+          />
         </div>
         <div css={field}>
           <Label>
-            <input id="isPrivate" defaultChecked={!channel.isPublic} {...register('isPrivate')} type="checkbox" />{' '}
+            <input
+              id="isPrivate"
+              defaultChecked={!channel.isPublic}
+              {...register('isPrivate')}
+              type="checkbox"
+            />{' '}
             秘密频道
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>
         </div>
         <div css={[mY(2), buttons]}>
-          <Button css={[textSm]} data-variant="danger" disabled={submitting} onClick={openDeleteDialog} type="button">
+          <Button
+            css={[textSm]}
+            data-variant="danger"
+            disabled={submitting}
+            onClick={openDeleteDialog}
+            type="button"
+          >
             删除频道
           </Button>
         </div>

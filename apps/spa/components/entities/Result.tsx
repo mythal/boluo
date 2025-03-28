@@ -9,7 +9,12 @@ export const Result: FC<{ children: ReactNode; final?: boolean; noEqual?: boolea
   return (
     <span>
       {!noEqual && <span>=</span>}
-      <span className={clsx('Result', final ? 'text-expr-result font-bold' : 'decoration-expr-decoration underline')}>
+      <span
+        className={clsx(
+          'Result',
+          final ? 'text-expr-result font-bold' : 'decoration-expr-decoration underline',
+        )}
+      >
         {children}
       </span>
     </span>

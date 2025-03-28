@@ -1,11 +1,11 @@
 import { type UserStatus } from '@boluo/api';
 import clsx from 'clsx';
-import React, { type FC } from 'react';
+import React from 'react';
 import { useIntl } from 'react-intl';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
-export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ status }) => {
+export const MemberStatusBadge = React.memo(({ status }: { status: UserStatus }) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
   const intl = useIntl();
   let text = intl.formatMessage({ defaultMessage: 'Unknown' });
@@ -33,7 +33,13 @@ export const MemberStatusBadge: FC<{ status: UserStatus }> = React.memo(({ statu
         )}
         aria-label={text}
       />
-      <TooltipBox show={showTooltip} ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()} defaultStyle>
+      <TooltipBox
+        show={showTooltip}
+        ref={refs.setFloating}
+        style={floatingStyles}
+        {...getFloatingProps()}
+        defaultStyle
+      >
         <div className="font-bold">{text}</div>
       </TooltipBox>
     </div>

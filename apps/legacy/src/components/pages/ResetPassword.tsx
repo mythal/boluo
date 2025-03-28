@@ -56,7 +56,9 @@ function ResetPassword() {
               {...register('email', { required })}
             />
           </div>
-          {state === 'sent' && <div css={mY(2)}>已发送，请在邮箱查收，如果找不到请检查垃圾邮箱。</div>}
+          {state === 'sent' && (
+            <div css={mY(2)}>已发送，请在邮箱查收，如果找不到请检查垃圾邮箱。</div>
+          )}
           <div css={[alignRight]}>
             <Button
               css={[textLg, mT(2)]}

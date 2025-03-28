@@ -25,7 +25,10 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
   const [tab, setTab] = useState<MembersTab>('LIST');
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const title = (
-    <FormattedMessage defaultMessage='Members of "{spaceName}" Space' values={{ spaceName: space?.name ?? '...' }} />
+    <FormattedMessage
+      defaultMessage='Members of "{spaceName}" Space'
+      values={{ spaceName: space?.name ?? '...' }}
+    />
   );
   if (mySpaceMember?.isAdmin !== true) {
     return (
@@ -38,7 +41,10 @@ export const PaneSpaceMembers: FC<Props> = ({ spaceId }) => {
   return (
     <PaneBox
       header={
-        <PaneHeaderBox icon={<Users />} extra={<HeaderTab value={tab} onChange={setTab} tabItems={MembersTabItems} />}>
+        <PaneHeaderBox
+          icon={<Users />}
+          extra={<HeaderTab value={tab} onChange={setTab} tabItems={MembersTabItems} />}
+        >
           {title}
         </PaneHeaderBox>
       }

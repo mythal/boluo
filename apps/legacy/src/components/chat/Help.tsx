@@ -41,7 +41,8 @@ function Basic() {
       <img css={image} alt="投骰子例子" src={rollExample} />
 
       <Text>
-        也可以不在开头加 <Code>.r</Code> 而是用 <Code>{'{}'}</Code> 或者 <Code>【】</Code> 将指令括起来：
+        也可以不在开头加 <Code>.r</Code> 而是用 <Code>{'{}'}</Code> 或者 <Code>【】</Code>{' '}
+        将指令括起来：
       </Text>
 
       <Text>

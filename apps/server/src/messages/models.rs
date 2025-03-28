@@ -13,7 +13,9 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
         return Err(ValidationFailed(r#""pos_q" cannot be 0"#));
     }
     if p < 0 || q < 0 {
-        return Err(ValidationFailed(r#""pos_p" and "pos_q" cannot be negative numbers"#));
+        return Err(ValidationFailed(
+            r#""pos_p" and "pos_q" cannot be negative numbers"#,
+        ));
     }
     Ok(())
 }
@@ -62,7 +64,9 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for Message {
         value: ::sqlx::postgres::PgValueRef<'r>,
     ) -> ::std::result::Result<
         Self,
-        ::std::boxed::Box<dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync>,
+        ::std::boxed::Box<
+            dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync,
+        >,
     > {
         let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
         let id = decoder.try_decode::<Uuid>()?;
@@ -161,9 +165,10 @@ impl Message {
         if !(1..=256).contains(&limit) {
             return Err(ValidationFailed("illegal limit range").into());
         }
-        let mut messages = sqlx::query_file_scalar!("sql/messages/get_by_channel.sql", channel_id, before, limit)
-            .fetch_all(db)
-            .await?;
+        let mut messages =
+            sqlx::query_file_scalar!("sql/messages/get_by_channel.sql", channel_id, before, limit)
+                .fetch_all(db)
+                .await?;
         for message in messages.iter_mut() {
             message.hide(current_user_id);
         }
@@ -201,8 +206,14 @@ impl Message {
     ) -> Result<Message, AppError> {
         let pos: (i32, i32) = match (request_pos, preview_id) {
             (Some(pos), _) => pos,
-            (None, Some(id)) => (crate::pos::pos(&mut *conn, redis_conn, *channel_id, *id, 30).await?, 1),
-            (None, None) => (crate::pos::alloc_new_pos(&mut *conn, redis_conn, *channel_id).await?, 1),
+            (None, Some(id)) => (
+                crate::pos::pos(&mut *conn, redis_conn, *channel_id, *id, 30).await?,
+                1,
+            ),
+            (None, None) => (
+                crate::pos::alloc_new_pos(&mut *conn, redis_conn, *channel_id).await?,
+                1,
+            ),
         };
         check_pos(pos)?;
 
@@ -279,7 +290,10 @@ impl Message {
         tokio::spawn(async move {
             let created = message.created;
             let channel_id = message.channel_id;
-            super::tasks::WAIT_UPDATE.lock().await.insert(channel_id, created);
+            super::tasks::WAIT_UPDATE
+                .lock()
+                .await
+                .insert(channel_id, created);
         });
         Ok(message)
     }
@@ -306,10 +320,16 @@ impl Message {
     ) -> Result<Option<Message>, ModelError> {
         check_pos(pos)?;
 
-        sqlx::query_file_scalar!("sql/messages/move_above.sql", channel_id, message_id, pos.0, pos.1)
-            .fetch_optional(db)
-            .await
-            .map_err(Into::into)
+        sqlx::query_file_scalar!(
+            "sql/messages/move_above.sql",
+            channel_id,
+            message_id,
+            pos.0,
+            pos.1
+        )
+        .fetch_optional(db)
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn move_bottom<'c, T: sqlx::PgExecutor<'c>>(
@@ -319,10 +339,16 @@ impl Message {
         pos: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         check_pos(pos)?;
-        sqlx::query_file_scalar!("sql/messages/move_bottom.sql", channel_id, message_id, pos.0, pos.1)
-            .fetch_optional(db)
-            .await
-            .map_err(Into::into)
+        sqlx::query_file_scalar!(
+            "sql/messages/move_bottom.sql",
+            channel_id,
+            message_id,
+            pos.0,
+            pos.1
+        )
+        .fetch_optional(db)
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn move_between<'c, T: sqlx::PgExecutor<'c>>(

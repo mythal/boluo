@@ -1,19 +1,14 @@
 {
   "name": "@boluo/ui",
   "version": "0.0.0",
-  "homepage": "https://github.com/mythal/boluo",
-  "license": "GPL-3.0",
-  "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit --project tsconfig.json",
-    "lint": "eslint . --ext .ts,.tsx",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
-  },
-  "sideEffects": false,
-  "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+  "dependencies": {
+    "@boluo/common": "*",
+    "@boluo/icons": "*",
+    "@floating-ui/react": "^0.27.5",
+    "clsx": "^2.1.1",
+    "color2k": "^2.0.3",
+    "react-intl": "^7.1.10",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@boluo/api": "*",
@@ -21,41 +16,33 @@
     "@boluo/theme": "*",
     "@boluo/typescript-config": "*",
     "@boluo/utils": "*",
-    "@formatjs/ts-transformer": "^3.13.9",
-    "@storybook/addon-essentials": "^8.2.9",
-    "@storybook/addon-interactions": "^8.2.9",
-    "@storybook/addon-links": "^8.2.9",
-    "@storybook/addon-onboarding": "^8.2.9",
-    "@storybook/addon-themes": "^8.2.9",
-    "@storybook/blocks": "^8.2.9",
-    "@storybook/react": "^8.2.9",
-    "@storybook/react-vite": "^8.2.9",
-    "@storybook/test": "^8.2.9",
+    "@formatjs/ts-transformer": "^3.13.34",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@types/node": "^22.10.3",
-    "@types/react": "^18.2.46",
-    "@types/react-dom": "^18.2.18",
-    "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.20",
-    "babel-plugin-formatjs": "^10.5.16",
-    "eslint": "^8.56.0",
-    "eslint-plugin-storybook": "^0.8.0",
-    "postcss": "^8.4.44",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "storybook": "^8.2.9",
-    "tailwindcss": "^3.4.10",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "babel-plugin-formatjs": "^10.5.37",
+    "eslint": "^9.23.0",
+    "postcss": "^8.5.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.17",
     "tailwindcss-theme-swapper": "^0.12.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.2"
   },
-  "dependencies": {
-    "@boluo/common": "*",
-    "@boluo/icons": "*",
-    "@floating-ui/react": "^0.27.0",
-    "clsx": "^2.1.0",
-    "color2k": "^2.0.3",
-    "react-intl": "^7.0.4",
-    "tslib": "^2.6.2"
-  }
+  "homepage": "https://github.com/mythal/boluo",
+  "license": "AGPL-3.0",
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit --project tsconfig.json",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "sideEffects": false,
+  "type": "module"
 }

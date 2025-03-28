@@ -1,6 +1,6 @@
 import { type ApiError, type ChannelWithMember, type Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 import { Plus } from '@boluo/icons';
 import type { FC } from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
@@ -55,7 +55,10 @@ const CharacterNameField: FC = () => {
       <div className="py-1">
         <FormattedMessage defaultMessage="My Character Name in the Channel (Optional)" />
       </div>
-      <TextInput {...register('characterName')} placeholder={intl.formatMessage({ defaultMessage: 'e.g. Gandalf' })} />
+      <TextInput
+        {...register('characterName')}
+        placeholder={intl.formatMessage({ defaultMessage: 'e.g. Gandalf' })}
+      />
     </label>
   );
 };
@@ -75,11 +78,12 @@ export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
       type: 'IN_GAME',
     },
   });
-  const { trigger, isMutating, error } = useSWRMutation<ChannelWithMember, ApiError, typeof key, FormSchema>(
-    key,
-    createChannel,
-    {},
-  );
+  const { trigger, isMutating, error } = useSWRMutation<
+    ChannelWithMember,
+    ApiError,
+    typeof key,
+    FormSchema
+  >(key, createChannel, {});
   const onSubmit = async (data: FormSchema) => {
     const channelWithMember = await trigger(data);
     if (channelWithMember) {
@@ -110,7 +114,11 @@ export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
               <Button type="button" onClick={close}>
                 <FormattedMessage defaultMessage="Cancel" />
               </Button>
-              <Button type="submit" variant="primary" disabled={!form.formState.isDirty || isMutating}>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={!form.formState.isDirty || isMutating}
+              >
                 <FormattedMessage defaultMessage="Create Channel" />
               </Button>
             </PaneFooterBox>
@@ -129,7 +137,12 @@ export const PaneCreateChannel: FC<{
     if (isLoading) {
       return <PaneLoading />;
     } else if (error) {
-      return <PaneFailed title={<FormattedMessage defaultMessage="Failed to load the space" />} code={error.code} />;
+      return (
+        <PaneFailed
+          title={<FormattedMessage defaultMessage="Failed to load the space" />}
+          code={error.code}
+        />
+      );
     } else {
       // Unreachable
       return null;

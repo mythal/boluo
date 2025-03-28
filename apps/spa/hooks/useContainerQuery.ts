@@ -13,47 +13,53 @@ export const useContainerQuery = <W extends Breakpoints, H extends Breakpoints>(
   config: Config<W, H>,
 ): [keyof W | null, keyof H | null] => {
   const { width: widthConfig, height: heightConfig } = config;
-  const calculateWidthBreakPoint: (rect: DOMRectReadOnly | null | undefined) => keyof W | null = useCallback(
-    (rect) => {
-      if (!widthConfig || !rect) {
-        return null;
-      }
-      let fittest: number = -1;
-      let breakpointName: keyof W | null = null;
-      for (const name in widthConfig) {
-        const breakpoint = widthConfig[name]!;
-        if (rect.width >= breakpoint && breakpoint > fittest) {
-          fittest = breakpoint;
-          breakpointName = name;
+  const calculateWidthBreakPoint: (rect: DOMRectReadOnly | null | undefined) => keyof W | null =
+    useCallback(
+      (rect) => {
+        if (!widthConfig || !rect) {
+          return null;
         }
-      }
-      return breakpointName;
-    },
-    [widthConfig],
-  );
-
-  const calculateHeightBreakPoint: (rect: DOMRectReadOnly | null | undefined) => keyof H | null = useCallback(
-    (rect) => {
-      if (!heightConfig || !rect) {
-        return null;
-      }
-
-      let fittest: number = -1;
-      let breakpointName: keyof H | null = null;
-      for (const name in heightConfig) {
-        const breakpoint = heightConfig[name]!;
-        if (rect.height >= breakpoint && breakpoint > fittest) {
-          fittest = breakpoint;
-          breakpointName = name;
+        let fittest: number = -1;
+        let breakpointName: keyof W | null = null;
+        for (const name in widthConfig) {
+          const breakpoint = widthConfig[name]!;
+          if (rect.width >= breakpoint && breakpoint > fittest) {
+            fittest = breakpoint;
+            breakpointName = name;
+          }
         }
-      }
-      return breakpointName;
-    },
-    [heightConfig],
-  );
+        return breakpointName;
+      },
+      [widthConfig],
+    );
+
+  const calculateHeightBreakPoint: (rect: DOMRectReadOnly | null | undefined) => keyof H | null =
+    useCallback(
+      (rect) => {
+        if (!heightConfig || !rect) {
+          return null;
+        }
+
+        let fittest: number = -1;
+        let breakpointName: keyof H | null = null;
+        for (const name in heightConfig) {
+          const breakpoint = heightConfig[name]!;
+          if (rect.height >= breakpoint && breakpoint > fittest) {
+            fittest = breakpoint;
+            breakpointName = name;
+          }
+        }
+        return breakpointName;
+      },
+      [heightConfig],
+    );
   const rect = ref.current?.getBoundingClientRect();
-  const [widthBreakpoint, setWidthBreakpoint] = useState<keyof W | null>(calculateWidthBreakPoint(rect));
-  const [heightBreakpoint, setHeightBreakpoint] = useState<keyof H | null>(calculateHeightBreakPoint(rect));
+  const [widthBreakpoint, setWidthBreakpoint] = useState<keyof W | null>(
+    calculateWidthBreakPoint(rect),
+  );
+  const [heightBreakpoint, setHeightBreakpoint] = useState<keyof H | null>(
+    calculateHeightBreakPoint(rect),
+  );
   useEffect(() => {
     const rect = ref.current?.getBoundingClientRect();
     setWidthBreakpoint(calculateWidthBreakPoint(rect));

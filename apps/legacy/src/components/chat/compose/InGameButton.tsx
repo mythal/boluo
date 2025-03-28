@@ -28,7 +28,10 @@ function InGameButton({ className }: Props) {
   const pane = useChannelId();
   const dispatch = useDispatch();
   const inGame = useSelector((state) => state.chatStates.get(pane)!.compose.inGame);
-  const toggleInGame = useCallback(() => dispatch({ type: 'SET_IN_GAME', pane, inGame: 'TOGGLE' }), [dispatch, pane]);
+  const toggleInGame = useCallback(
+    () => dispatch({ type: 'SET_IN_GAME', pane, inGame: 'TOGGLE' }),
+    [dispatch, pane],
+  );
   return (
     <div css={inGameContainer} className={className}>
       <Tooltip className="tooltip">

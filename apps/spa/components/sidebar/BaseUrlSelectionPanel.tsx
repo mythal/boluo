@@ -16,7 +16,9 @@ export const BaseUrlSelectionPanel: FC<Props> = ({ connectionState }) => {
       <div className="flex flex-col gap-4">
         {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
         {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
-        {connectionState.type === 'CLOSED' && <ConnectionIndicatorClosed countdown={connectionState.countdown} />}
+        {connectionState.type === 'CLOSED' && (
+          <ConnectionIndicatorClosed countdown={connectionState.countdown} />
+        )}
         <Suspense fallback="...">
           <BaseUrlSelector />
         </Suspense>

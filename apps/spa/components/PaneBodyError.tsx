@@ -8,7 +8,9 @@ export const PaneBodyError = ({ children }: { children: React.ReactNode }) => {
   const intl = useIntl();
   const fallback: FallbackRender = ({ eventId, error }) => {
     const title = intl.formatMessage({ defaultMessage: 'The pane has crashed' });
-    const message = intl.formatMessage({ defaultMessage: 'An unexpected error occurred. Please try again later.' });
+    const message = intl.formatMessage({
+      defaultMessage: 'An unexpected error occurred. Please try again later.',
+    });
     return (
       <div className="p-pane">
         <Failed message={message} title={title} code={errorCode(error)} eventId={eventId} />

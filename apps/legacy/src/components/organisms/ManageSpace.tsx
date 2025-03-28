@@ -97,7 +97,12 @@ function ManageSpace({ space, my, dismiss }: Props) {
         <input readOnly value={space.id} {...register('spaceId', { required })} hidden />
         <div>
           <Label htmlFor="name">位面名</Label>
-          <Input css={largeInput} id="name" defaultValue={space.name} {...register('name', spaceNameValidation)} />
+          <Input
+            css={largeInput}
+            id="name"
+            defaultValue={space.name}
+            {...register('name', spaceNameValidation)}
+          />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
         <div>
@@ -125,13 +130,24 @@ function ManageSpace({ space, my, dismiss }: Props) {
         </div>
         <div css={[mY(2)]}>
           <Label>
-            <input type="checkbox" defaultChecked={space.explorable} id="explorable" {...register('explorable')} />{' '}
+            <input
+              type="checkbox"
+              defaultChecked={space.explorable}
+              id="explorable"
+              {...register('explorable')}
+            />{' '}
             在「探索位面」中列出
           </Label>
         </div>
         <div css={[mY(2)]}>
           <Label css={pB(0)}>
-            <input type="checkbox" defaultChecked={space.isPublic} {...register('isPublic')} id="isPublic" /> 公开位面
+            <input
+              type="checkbox"
+              defaultChecked={space.isPublic}
+              {...register('isPublic')}
+              id="isPublic"
+            />{' '}
+            公开位面
           </Label>
           <HelpText>非公开位面只能通过邀请链接来加入</HelpText>
         </div>
@@ -147,7 +163,12 @@ function ManageSpace({ space, my, dismiss }: Props) {
           </Label>
         </div>
         <div css={[mY(4), alignRight]}>
-          <Button data-variant="danger" disabled={submitting} type="button" onClick={() => showDeleteDialog(true)}>
+          <Button
+            data-variant="danger"
+            disabled={submitting}
+            type="button"
+            onClick={() => showDeleteDialog(true)}
+          >
             <Icon sprite={deleteSpaceIcon} /> 摧毁位面
           </Button>
         </div>

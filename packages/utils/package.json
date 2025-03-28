@@ -1,26 +1,28 @@
 {
   "name": "@boluo/utils",
   "version": "0.0.0",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "homepage": "https://github.com/mythal/boluo",
-  "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "dev": "tsc --project tsconfig.json --watch",
-    "lint": "eslint . --ext .ts,.tsx"
-  },
-  "license": "GPL-3.0",
   "dependencies": {
-    "react": "^18.2.0",
-    "uuid": "^11.0.3"
+    "react": "^19.0.0",
+    "uuid": "^11.1.0"
   },
-  "sideEffects": false,
   "devDependencies": {
-    "@types/react": "^18.2.46",
-    "eslint": "^8.56.0",
     "@boluo/eslint-config": "*",
     "@boluo/typescript-config": "*",
-    "typescript": "^5.3.3"
-  }
+    "@types/react": "^19.0.12",
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
+  "homepage": "https://github.com/mythal/boluo",
+  "private": true,
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "sideEffects": false,
+  "type": "module"
 }

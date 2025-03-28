@@ -4,7 +4,8 @@ import { useIntl } from 'react-intl';
 import useSWR from 'swr';
 import { BACKEND_URL } from '../const';
 
-const DEFAULT_BACKEND_URL = BACKEND_URL || (typeof window === 'undefined' ? '' : window.location.origin);
+const DEFAULT_BACKEND_URL =
+  BACKEND_URL || (typeof window === 'undefined' ? '' : window.location.origin);
 
 const fetcher = async (): Promise<Proxy[]> => {
   try {

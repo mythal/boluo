@@ -22,7 +22,9 @@ export const ChannelExportButton: FC<Props> = ({ channelId }) => {
           const panes = read(panesAtom);
           const pane = panes.find(
             (pane) =>
-              (pane.key === paneKey && pane.child?.type === 'CHANNEL_EXPORT' && pane.child.channelId === channelId) ||
+              (pane.key === paneKey &&
+                pane.child?.type === 'CHANNEL_EXPORT' &&
+                pane.child.channelId === channelId) ||
               (pane.type === 'CHANNEL_EXPORT' && pane.channelId === channelId),
           );
           return Boolean(pane);

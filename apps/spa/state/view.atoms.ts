@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, WritableAtom } from 'jotai';
 import { atomWithHash } from 'jotai-location';
 import { selectAtom } from 'jotai/utils';
 import { isUuid } from '@boluo/utils';
@@ -115,7 +115,10 @@ const paneSerialize = (panes: Pane[]): string => {
   return JSON.stringify(panes);
 };
 
-export const panesAtom = atomWithHash<Pane[]>('panes', [], {
+type PaneAtomSet = ((prev: Pane[]) => Pane[]) | Pane[];
+export type PaneAtom = WritableAtom<Pane[], [PaneAtomSet], void>;
+
+export const panesAtom: PaneAtom = atomWithHash<Pane[]>('panes', [], {
   deserialize: paneDeserialize,
   serialize: paneSerialize,
   setHash,

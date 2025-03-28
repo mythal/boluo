@@ -1,9 +1,11 @@
 import type { ParseResult } from './parse-result';
 import type { ParserArguments } from './parser-worker';
 
-const create = (): Worker => new Worker(new URL('./parser-worker.ts', import.meta.url), { type: 'module' });
+const create = (): Worker =>
+  new Worker(new URL('./parser-worker.ts', import.meta.url), { type: 'module' });
 
-const workerPool: Worker[] = typeof window === 'undefined' ? [] : [create(), create(), create(), create()];
+const workerPool: Worker[] =
+  typeof window === 'undefined' ? [] : [create(), create(), create(), create()];
 
 const putBack = (worker: Worker): void => {
   if (workerPool.length < 4) {
@@ -13,7 +15,10 @@ const putBack = (worker: Worker): void => {
   }
 };
 
-export const asyncParse = (parserArguments: ParserArguments, signal?: AbortSignal): Promise<ParseResult> => {
+export const asyncParse = (
+  parserArguments: ParserArguments,
+  signal?: AbortSignal,
+): Promise<ParseResult> => {
   const worker = workerPool.pop() ?? create();
   const promise = new Promise<ParseResult>((resolve, reject) => {
     if (signal?.aborted) {

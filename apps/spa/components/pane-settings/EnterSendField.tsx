@@ -10,15 +10,16 @@ import { identity, isApple } from '@boluo/utils';
 import { useSettings } from '../../hooks/useSettings';
 import { SelectBox } from '@boluo/ui/SelectBox';
 
-interface Props {}
-
-export const EneterSendField: FC<Props> = () => {
+export const EneterSendField: FC = () => {
   const key = ['/users/settings'] as const;
-  const updater: MutationFetcher<Settings, typeof key, boolean> = useCallback(async (_, { arg: enterSend }) => {
-    const settings: Settings = { enterSend };
-    const settingsResult = await patch('/users/update_settings', null, settings);
-    return settingsResult.map(toSettings).unwrapOr({});
-  }, []);
+  const updater: MutationFetcher<Settings, typeof key, boolean> = useCallback(
+    async (_, { arg: enterSend }) => {
+      const settings: Settings = { enterSend };
+      const settingsResult = await patch('/users/update_settings', null, settings);
+      return settingsResult.map(toSettings).unwrapOr({});
+    },
+    [],
+  );
   const { trigger } = useSWRMutation(key, updater, {
     populateCache: identity,
     rollbackOnError: true,

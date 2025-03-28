@@ -1,5 +1,10 @@
 import { type FC } from 'react';
-import { type EvaluatedExprNode, type ExprNode, type Repeat, type RepeatResult } from '../../interpreter/entities';
+import {
+  type EvaluatedExprNode,
+  type ExprNode,
+  type Repeat,
+  type RepeatResult,
+} from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 import { EntityExprNodeUnknown } from './EntityExprUnknown';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';

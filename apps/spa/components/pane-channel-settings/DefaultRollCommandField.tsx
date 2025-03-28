@@ -5,9 +5,7 @@ import { HelpText } from '@boluo/ui/HelpText';
 import { TextInput } from '@boluo/ui/TextInput';
 import { type ChannelSettingsForm } from './form';
 
-interface Props {}
-
-export const DefaultRollCommandField: FC<Props> = ({}) => {
+export const DefaultRollCommandField: FC = () => {
   const id = useId();
   const { register } = useFormContext<ChannelSettingsForm>();
   return (

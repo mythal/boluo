@@ -57,7 +57,9 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     return (
       <>
         {toggleMembershipButton}
-        {(space.ownerId === myId || mySpaceMember?.space.isAdmin) && <SpaceSettingsButton spaceId={space.id} />}
+        {(space.ownerId === myId || mySpaceMember?.space.isAdmin) && (
+          <SpaceSettingsButton spaceId={space.id} />
+        )}
       </>
     );
   }, [isSpaceMembersLoading, myId, mySpaceMember, space]);
@@ -80,13 +82,19 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
         <div className="flex gap-2 py-2">
           <Badge>
             <Icon icon={isPublic ? Globe : Key} />
-            {isPublic ? <FormattedMessage defaultMessage="Public" /> : <FormattedMessage defaultMessage="Private" />}
+            {isPublic ? (
+              <FormattedMessage defaultMessage="Public" />
+            ) : (
+              <FormattedMessage defaultMessage="Private" />
+            )}
           </Badge>
 
           <SpaceMemberBadge spaceId={spaceId} members={spaceMemberList} />
         </div>
 
-        {description !== '' && <div className="max-w-md whitespace-pre-line py-2">{description}</div>}
+        {description !== '' && (
+          <div className="max-w-md whitespace-pre-line py-2">{description}</div>
+        )}
       </div>
     </PaneBox>
   );

@@ -27,7 +27,12 @@ export const ChatListDndContext: FC<Props> = ({ children, active, ...rest }) => 
   const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
   const modifiers = useMemo(() => [restrictToVerticalAxis], []);
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={modifiers} {...rest}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      modifiers={modifiers}
+      {...rest}
+    >
       <IsDraggingContext.Provider value={!!active}>
         {children}
 

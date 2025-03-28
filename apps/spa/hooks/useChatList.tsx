@@ -113,7 +113,10 @@ export const useShowDummy = (
     const unsubRecordModified = store.sub(composeAtom, () => {
       const focused = store.get(composeAtom).focused;
       if (focused) {
-        hideDummyTimeout.current = Math.max(Date.now() + HIDE_DUMMY_DELAY, hideDummyTimeout.current);
+        hideDummyTimeout.current = Math.max(
+          Date.now() + HIDE_DUMMY_DELAY,
+          hideDummyTimeout.current,
+        );
         updateTimeout();
       }
     });
@@ -131,7 +134,10 @@ export const useShowDummy = (
   return showDummy;
 };
 
-type ChannelSlice = Pick<ChannelState, 'messages' | 'fullLoaded' | 'previewMap' | 'optimisticMessageMap'> & {
+type ChannelSlice = Pick<
+  ChannelState,
+  'messages' | 'fullLoaded' | 'previewMap' | 'optimisticMessageMap'
+> & {
   scheduledGcLowerPos: number | null;
 };
 
@@ -147,10 +153,14 @@ function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, hideSelfPreviewTimeoutAtom } = useChannelAtoms();
+  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, hideSelfPreviewTimeoutAtom } =
+    useChannelAtoms();
   const showArchived = useAtomValue(showArchivedAtom);
   const filterType = useAtomValue(filterAtom);
-  const composeSliceAtom = useMemo(() => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq), [composeAtom]);
+  const composeSliceAtom = useMemo(
+    () => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq),
+    [composeAtom],
+  );
   const composeSlice = useAtomValue(composeSliceAtom);
   const showDummy = useShowDummy(store, composeAtom, hideSelfPreviewTimeoutAtom);
   // Intentionally quit reactivity
@@ -227,7 +237,9 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     const filteredMessagesCount = messages.length - itemListLen;
     const minPos = itemListLen > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
     if (myId) {
-      const existsPreviewIndex = optimisticPreviewList.findIndex((preview) => preview.senderId === myId);
+      const existsPreviewIndex = optimisticPreviewList.findIndex(
+        (preview) => preview.senderId === myId,
+      );
       let hasSelfPreview = existsPreviewIndex !== -1;
       if (hasSelfPreview) {
         const existsPreview = optimisticPreviewList[existsPreviewIndex]!;
@@ -237,9 +249,19 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         }
       }
       if (!hasSelfPreview) {
-        const maxPreviewPos = optimisticPreviewList.reduce((max, preview) => Math.max(max, preview.pos), 0);
-        const maxOptimisticPos = optimisticMessageItems.reduce((max, { item }) => Math.max(max, item.pos), 0);
-        const maxPos = Math.max(itemListLen > 0 ? itemList[itemListLen - 1]!.pos : 1, maxPreviewPos, maxOptimisticPos);
+        const maxPreviewPos = optimisticPreviewList.reduce(
+          (max, preview) => Math.max(max, preview.pos),
+          0,
+        );
+        const maxOptimisticPos = optimisticMessageItems.reduce(
+          (max, { item }) => Math.max(max, item.pos),
+          0,
+        );
+        const maxPos = Math.max(
+          itemListLen > 0 ? itemList[itemListLen - 1]!.pos : 1,
+          maxPreviewPos,
+          maxOptimisticPos,
+        );
         const dummyPos = Math.ceil(maxPos) + SAFE_OFFSET;
         let pos = dummyPos;
         let posP = pos;
@@ -256,7 +278,16 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         }
         if (composeSlice.edit !== null || showDummy) {
           optimisticPreviewList.push(
-            makeDummyPreview(composeSlice.previewId, myId, channelId, true, composeSlice.edit, pos, posP, posQ),
+            makeDummyPreview(
+              composeSlice.previewId,
+              myId,
+              channelId,
+              true,
+              composeSlice.edit,
+              pos,
+              posP,
+              posQ,
+            ),
           );
         }
       }

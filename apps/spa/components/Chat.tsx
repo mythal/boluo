@@ -84,10 +84,14 @@ const Chat: FC = () => {
                     <PaneEmpty />
                   ) : (
                     <Suspense fallback={<PaneLoading grow />}>
-                      {route.type === 'SPACE' && <ChatSpace key={route.spaceId} spaceId={route.spaceId} />}
+                      {route.type === 'SPACE' && (
+                        <ChatSpace key={route.spaceId} spaceId={route.spaceId} />
+                      )}
                       {route.type === 'NOT_FOUND' && <ChatNotFound />}
                       {route.type === 'ROOT' && <ChatRoot />}
-                      {route.type === 'INVITE' && <ChatInvite spaceId={route.spaceId} token={route.token} />}
+                      {route.type === 'INVITE' && (
+                        <ChatInvite spaceId={route.spaceId} token={route.token} />
+                      )}
                     </Suspense>
                   )}
                 </ChatContentBox>

@@ -3,7 +3,7 @@ import { type RefObject, useCallback, useContext } from 'react';
 import { focusPaneAtom } from '../state/view.atoms';
 import { PaneContext } from '../state/view.context';
 
-export const usePaneFocus = (ref: RefObject<HTMLDivElement>) => {
+export const usePaneFocus = (ref: RefObject<HTMLDivElement | null>) => {
   const store = useStore();
   const { key } = useContext(PaneContext);
   return useCallback(() => {

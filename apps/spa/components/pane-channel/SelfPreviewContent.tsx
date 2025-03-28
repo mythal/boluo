@@ -38,7 +38,11 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, mediaNode })
             nameNode={nameNode}
           />
         ) : (
-          <SelfPreviewPlaceholder channelId={myMember.channelId} inGame={inGame} composeAtom={composeAtom} />
+          <SelfPreviewPlaceholder
+            channelId={myMember.channelId}
+            inGame={inGame}
+            composeAtom={composeAtom}
+          />
         )}
       </div>
       {mediaNode}

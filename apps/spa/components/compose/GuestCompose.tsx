@@ -16,10 +16,22 @@ interface Props {
 
 export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
   const { data: currentUser } = useQueryCurrentUser();
-  const { data: spaceMembers, isLoading: isQueryingMember, error: queryMembersError } = useQuerySpaceMembers(spaceId);
-  const { isMutating: isJoining, error: joinError, trigger: join } = useMutateJoinChannel(channelId);
+  const {
+    data: spaceMembers,
+    isLoading: isQueryingMember,
+    error: queryMembersError,
+  } = useQuerySpaceMembers(spaceId);
+  const {
+    isMutating: isJoining,
+    error: joinError,
+    trigger: join,
+  } = useMutateJoinChannel(channelId);
   if (!currentUser) {
-    return <ComposeFallbackBox description={<FormattedMessage defaultMessage="You are not logged in" />} />;
+    return (
+      <ComposeFallbackBox
+        description={<FormattedMessage defaultMessage="You are not logged in" />}
+      />
+    );
   }
   let icon: ReactNode = <Icon icon={UserPlus} />;
   if (isQueryingMember || isJoining) {
@@ -28,7 +40,9 @@ export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
     icon = <Icon icon={AlertTriangle} />;
   } else if (spaceMembers && !(currentUser.id in spaceMembers)) {
     return (
-      <ComposeFallbackBox description={<FormattedMessage defaultMessage="You are not a member of this space" />} />
+      <ComposeFallbackBox
+        description={<FormattedMessage defaultMessage="You are not a member of this space" />}
+      />
     );
   }
   return (

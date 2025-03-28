@@ -15,7 +15,7 @@ interface Props {
   node: ExprNode | EvaluatedExprNode;
 }
 
-export const EntityExprNode = memo<Props>(({ node }) => {
+export const EntityExprNode = memo<Props>(({ node }: Props) => {
   switch (node.type) {
     case 'Num':
       return node.value;

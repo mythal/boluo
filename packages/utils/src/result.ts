@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /*
 Modified from https://github.com/vultix/ts-results
 */

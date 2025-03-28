@@ -15,7 +15,10 @@ export const ConnectionIndicatorClosed: FC<Props> = ({ countdown }) => {
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <FormattedMessage defaultMessage="Waiting for reconnection ({countdown}s)" values={{ countdown }} />
+        <FormattedMessage
+          defaultMessage="Waiting for reconnection ({countdown}s)"
+          values={{ countdown }}
+        />
       </div>
       <div>
         <button className="underline" onClick={immediatelyReconnect}>

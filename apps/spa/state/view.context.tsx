@@ -8,7 +8,11 @@ interface PaneContext {
   canClose?: boolean;
 }
 
-export const PaneContext = createContext<PaneContext>({ key: null, focused: true, canClose: false });
+export const PaneContext = createContext<PaneContext>({
+  key: null,
+  focused: true,
+  canClose: false,
+});
 
 interface Props {
   children: ReactNode;

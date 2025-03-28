@@ -4,7 +4,11 @@ import { useAtomValue } from 'jotai';
 import { useMemo, type FC } from 'react';
 import { memo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { type ChannelAtoms, ChannelAtomsContext, useMakeChannelAtoms } from '../../hooks/useChannelAtoms';
+import {
+  type ChannelAtoms,
+  ChannelAtomsContext,
+  useMakeChannelAtoms,
+} from '../../hooks/useChannelAtoms';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { Compose } from '../compose/Compose';
 import { useSendPreview } from '../compose/useSendPreview';
@@ -40,7 +44,7 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
+export const ChatPaneChannel = memo(({ channelId }: Props) => {
   const { data: members } = useQueryChannelMembers(channelId, {});
   const member: MemberWithUser | null = useMemo(() => {
     if (members == null) {
@@ -54,7 +58,11 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
   }, [members]);
   const nickname = member?.user.nickname ?? undefined;
   const characterName = member?.channel.characterName ?? '';
-  const { data: channel, isLoading: isChannelLoading, error: queryChannelError } = useQueryChannel(channelId);
+  const {
+    data: channel,
+    isLoading: isChannelLoading,
+    error: queryChannelError,
+  } = useQueryChannel(channelId);
   const defaultInGame = channel?.type === 'IN_GAME';
   const atoms: ChannelAtoms = useMakeChannelAtoms(
     channelId,
@@ -62,7 +70,14 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
     defaultInGame,
     parseDiceFace(channel?.defaultDiceType),
   );
-  useSendPreview(channelId, nickname, characterName, atoms.composeAtom, atoms.parsedAtom, defaultInGame);
+  useSendPreview(
+    channelId,
+    nickname,
+    characterName,
+    atoms.composeAtom,
+    atoms.parsedAtom,
+    defaultInGame,
+  );
   const memberListState = useAtomValue(atoms.memberListStateAtom);
   let errorNode = null;
   if (queryChannelError) {
@@ -78,7 +93,9 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
       <PaneFailed
         code={queryChannelError?.code}
         title={<FormattedMessage defaultMessage="Failed to query the channel" />}
-        message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
+        message={
+          <FormattedMessage defaultMessage="Please check your network connection and try again." />
+        }
       />
     );
   }
@@ -106,11 +123,15 @@ export const ChatPaneChannel: FC<Props> = memo(({ channelId }) => {
             <div
               className={clsx(
                 'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
-                memberListState === 'CLOSED' ? 'grid-cols-1' : '@2xl:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
+                memberListState === 'CLOSED'
+                  ? 'grid-cols-1'
+                  : '@2xl:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
               )}
             >
               <ChatContent />
-              {memberListState === 'RIGHT' && <MemberList currentUser={member?.user} channel={channel} />}
+              {memberListState === 'RIGHT' && (
+                <MemberList currentUser={member?.user} channel={channel} />
+              )}
               {member ? (
                 <Compose channelAtoms={atoms} member={member} />
               ) : (

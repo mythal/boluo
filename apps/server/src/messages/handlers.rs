@@ -78,9 +78,10 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
         .await
         .or_not_found()?;
-    let (_, space_member) = ChannelMember::get_with_space_member(&mut *trans, &session.user_id, &message.channel_id)
-        .await
-        .or_no_permission()?;
+    let (_, space_member) =
+        ChannelMember::get_with_space_member(&mut *trans, &session.user_id, &message.channel_id)
+            .await
+            .or_no_permission()?;
     if !channel.is_document && message.sender_id != session.user_id {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
@@ -101,7 +102,11 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     .await?
     .ok_or_else(|| unexpected!("The message had been delete."))?;
     trans.commit().await?;
-    Event::message_edited(space_member.space_id, edited_message.clone(), edited_message.pos);
+    Event::message_edited(
+        space_member.space_id,
+        edited_message.clone(),
+        edited_message.pos,
+    );
     Ok(edited_message)
 }
 
@@ -121,22 +126,35 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
         .await
         .or_not_found()?;
-    let channel_member = ChannelMember::get_cached(&mut *trans, session.user_id, channel.space_id, message.channel_id)
-        .await
-        .or_no_permission()?;
+    let channel_member = ChannelMember::get_cached(
+        &mut *trans,
+        session.user_id,
+        channel.space_id,
+        message.channel_id,
+    )
+    .await
+    .or_no_permission()?;
     if !channel.is_document && !channel_member.is_master && message.sender_id != session.user_id {
         return Err(AppError::NoPermission(
             "Only the master can move other's messages.".to_string(),
         ));
     }
     let mut moved_message = match range {
-        (None, None) => return Err(AppError::BadRequest("a and b cannot both be null".to_string())),
-        (Some(a), Some((0, _) | (1, 0)) | None) => Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
-            .await?
-            .or_not_found()?,
-        (Some((_, 0) | (0, 1)) | None, Some(b)) => Message::move_above(&mut *trans, &channel_id, &message_id, b)
-            .await?
-            .or_not_found()?,
+        (None, None) => {
+            return Err(AppError::BadRequest(
+                "a and b cannot both be null".to_string(),
+            ))
+        }
+        (Some(a), Some((0, _) | (1, 0)) | None) => {
+            Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
+                .await?
+                .or_not_found()?
+        }
+        (Some((_, 0) | (0, 1)) | None, Some(b)) => {
+            Message::move_above(&mut *trans, &channel_id, &message_id, b)
+                .await?
+                .or_not_found()?
+        }
         (Some(a), Some(b)) => Message::move_between(&mut *trans, &message_id, a, b)
             .await?
             .or_not_found()?,
@@ -169,14 +187,20 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
     let message = Message::get(&mut *conn, &id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    let space_member = SpaceMember::get_by_channel(&mut *conn, &session.user_id, &message.channel_id)
-        .await
-        .or_no_permission()?;
+    let space_member =
+        SpaceMember::get_by_channel(&mut *conn, &session.user_id, &message.channel_id)
+            .await
+            .or_no_permission()?;
     if !space_member.is_admin && message.sender_id != session.user_id {
         return Err(AppError::NoPermission("user id mismatch".to_string()));
     }
     Message::delete(&mut *conn, &id).await?;
-    Event::message_deleted(space_member.space_id, message.channel_id, message.id, message.pos);
+    Event::message_deleted(
+        space_member.space_id,
+        message.channel_id,
+        message.id,
+        message.pos,
+    );
     Ok(message)
 }
 
@@ -191,9 +215,14 @@ async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
     let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
         .await
         .or_not_found()?;
-    let channel_member = ChannelMember::get_cached(&mut *conn, session.user_id, channel.space_id, message.channel_id)
-        .await
-        .or_no_permission()?;
+    let channel_member = ChannelMember::get_cached(
+        &mut *conn,
+        session.user_id,
+        channel.space_id,
+        message.channel_id,
+    )
+    .await
+    .or_no_permission()?;
     if !channel.is_document && message.sender_id != session.user_id && !channel_member.is_master {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
@@ -214,7 +243,9 @@ async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
 
-    let channel = Channel::get_by_id(&mut *conn, &channel_id).await.or_not_found()?;
+    let channel = Channel::get_by_id(&mut *conn, &channel_id)
+        .await
+        .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     if !channel.is_public {
@@ -223,9 +254,15 @@ async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
             .or_no_permission()?;
     }
     let limit = limit.unwrap_or(128);
-    Message::get_by_channel(&mut *conn, &channel_id, before, limit, current_user_id.as_ref())
-        .await
-        .map_err(Into::into)
+    Message::get_by_channel(
+        &mut *conn,
+        &channel_id,
+        before,
+        limit,
+        current_user_id.as_ref(),
+    )
+    .await
+    .map_err(Into::into)
 }
 
 pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, AppError> {

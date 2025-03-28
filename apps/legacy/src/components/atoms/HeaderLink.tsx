@@ -3,7 +3,14 @@ import styled from '@emotion/styled';
 import { darken } from 'polished';
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
-import { breakpoint, headerTransition, mediaQuery, roundedPx, spacingN, textSm } from '../../styles/atoms';
+import {
+  breakpoint,
+  headerTransition,
+  mediaQuery,
+  roundedPx,
+  spacingN,
+  textSm,
+} from '../../styles/atoms';
 import { bgColor, headerBgColor, textColor } from '../../styles/colors';
 
 interface Props {

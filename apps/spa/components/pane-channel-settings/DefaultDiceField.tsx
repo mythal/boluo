@@ -4,9 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { HelpText } from '@boluo/ui/HelpText';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
 
-interface Props {}
-
-export const DefaultDiceField: FC<Props> = ({}) => {
+export const DefaultDiceField: FC = () => {
   const id = useId();
   const {
     field: { value, onChange },
@@ -23,7 +21,10 @@ export const DefaultDiceField: FC<Props> = ({}) => {
       <DiceSelect id={id} value={value} onChange={onChange} />
       <div className="pt-1">
         <HelpText>
-          <FormattedMessage defaultMessage="When you type 1{value}, you can simplify it to 1d." values={{ value }} />
+          <FormattedMessage
+            defaultMessage="When you type 1{value}, you can simplify it to 1d."
+            values={{ value }}
+          />
         </HelpText>
       </div>
     </div>

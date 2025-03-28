@@ -7,7 +7,11 @@ export const isNotificationSupported = 'Notification' in window;
 
 export const canNotifyAtom = atom(isNotificationSupported && Notification.permission === 'granted');
 
-export const useNotificationSwitch = (): { canNotify: boolean; startNotify: () => void; stopNotify: () => void } => {
+export const useNotificationSwitch = (): {
+  canNotify: boolean;
+  startNotify: () => void;
+  stopNotify: () => void;
+} => {
   const [canNotify, setCanNotify] = useAtom(canNotifyAtom);
 
   const startNotify = async () => {

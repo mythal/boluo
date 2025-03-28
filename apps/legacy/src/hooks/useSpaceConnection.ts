@@ -14,7 +14,10 @@ export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
 
 export const connectStateAtom = atom<ConnectState>('CONNECTING');
 
-export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Promise<string | null> {
+export async function getConnectionToken(
+  spaceId: Id,
+  myId: Id | undefined,
+): Promise<string | null> {
   if (!myId) {
     return null;
   }
@@ -95,7 +98,9 @@ export function useSpaceConnection() {
       console.warn('connection error: ', e);
       setConnectState('CLOSED');
       if (autoSelect) {
-        selectBestBaseUrl(baseUrl).then((baseUrl) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }));
+        selectBestBaseUrl(baseUrl).then((baseUrl) =>
+          dispatch({ type: 'CHANGE_BASE_URL', baseUrl }),
+        );
       }
     };
     connection.onclose = (e) => {

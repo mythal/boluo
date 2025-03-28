@@ -4,13 +4,13 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { HelpText } from '@boluo/ui/HelpText';
 import { TextArea } from '@boluo/ui/TextInput';
 
-interface Props {}
-
-export const TopicField: FC<Props> = ({}) => {
+export const TopicField: FC = () => {
   const { register } = useFormContext();
   const id = useId();
   const intl = useIntl();
-  const placeholder = intl.formatMessage({ defaultMessage: 'e.g. A group of kobolds tried to attack us' });
+  const placeholder = intl.formatMessage({
+    defaultMessage: 'e.g. A group of kobolds tried to attack us',
+  });
 
   return (
     <div>

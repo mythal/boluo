@@ -48,9 +48,21 @@ export interface ChatFilter {
   filter: ChatState['filter'];
 }
 
-export const chatNoneFilter = (pane: Id): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'NONE', pane });
-export const chatInGameFilter = (pane: Id): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'IN_GAME', pane });
-export const chatOutGameFilter = (pane: Id): ChatFilter => ({ type: 'CHAT_FILTER', filter: 'OUT_GAME', pane });
+export const chatNoneFilter = (pane: Id): ChatFilter => ({
+  type: 'CHAT_FILTER',
+  filter: 'NONE',
+  pane,
+});
+export const chatInGameFilter = (pane: Id): ChatFilter => ({
+  type: 'CHAT_FILTER',
+  filter: 'IN_GAME',
+  pane,
+});
+export const chatOutGameFilter = (pane: Id): ChatFilter => ({
+  type: 'CHAT_FILTER',
+  filter: 'OUT_GAME',
+  pane,
+});
 
 export interface ToggleShowFolded {
   type: 'TOGGLE_SHOW_FOLDED';
@@ -127,7 +139,9 @@ export const loadExploreSpace = () => (dispatch: Dispatch) => {
   get('/spaces/list').then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
 };
 export const searchSpaces = (searchText: string) => (dispatch: Dispatch) => {
-  get('/spaces/search', { search: searchText }).then((spaces) => dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }));
+  get('/spaces/search', { search: searchText }).then((spaces) =>
+    dispatch({ type: 'EXPLORE_SPACE_LOADED', spaces }),
+  );
 };
 
 export interface SwitchChat {

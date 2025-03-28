@@ -4,26 +4,8 @@
     "*.tailwind.css": "tailwindcss",
     ".env.local.example": "properties"
   },
-  // Nix
-  "nix.serverSettings": {
-    "nil": {
-      "diagnostics": {
-        "ignored": ["unused_binding", "unused_with"]
-      },
-      "formatting": {
-        "command": ["nixpkgs-fmt"]
-      }
-    }
-  },
   // ESLint
-  "eslint.workingDirectories": [
-    {
-      "pattern": "./packages/*"
-    },
-    {
-      "pattern": "./apps/*"
-    }
-  ],
+  "eslint.useFlatConfig": true,
   // TypeScript / JavaScript
   "javascript.updateImportsOnFileMove.enabled": "always",
   "typescript.preferences.importModuleSpecifier": "relative",
@@ -48,13 +30,11 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "typescript.tsdk": "./node_modules/typescript/lib",
-
   // Tailwind CSS
   "editor.quickSuggestions": {
     "strings": true
   },
   // https://github.com/lukeed/clsx#tailwind-support
   "tailwindCSS.experimental.classRegex": [["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]],
-  "tailwindCSS.experimental.configFile": "packages/ui/tailwind.config.ts"
+  "tailwindCSS.experimental.configFile": "packages/tailwind-config/tailwind.config.ts"
 }

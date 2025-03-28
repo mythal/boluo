@@ -13,7 +13,18 @@ import { useChannelId, usePane } from '../../hooks/useChannelId';
 import { useTitle } from '../../hooks/useTitle';
 import { useNotify } from '../../states/notify';
 import { useSelector } from '../../store';
-import { flex, fontBold, fontMono, fontNormal, mL, mR, pR, textBase, textLg, textSm } from '../../styles/atoms';
+import {
+  flex,
+  fontBold,
+  fontMono,
+  fontNormal,
+  mL,
+  mR,
+  pR,
+  textBase,
+  textLg,
+  textSm,
+} from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
 import ChannelMemberButton from './ChannelMemberButton';
@@ -67,7 +78,9 @@ interface Props {
 function Header({ focus }: Props) {
   const pane = useChannelId();
   const channel = useSelector((state) => state.chatStates.get(pane)!.channel);
-  const isSpaceAdmin = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin);
+  const isSpaceAdmin = useSelector(
+    (state) => state.profile?.spaces.get(channel.spaceId)?.member.isAdmin,
+  );
   const myMember = useSelector((state) => state.profile?.channels.get(channel.id)?.member);
   const [managePanel, setManagePanel] = useState(false);
   const [exportDialog, showExportDialog] = useState(false);

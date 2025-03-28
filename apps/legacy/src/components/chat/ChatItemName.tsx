@@ -55,7 +55,9 @@ const nicknameStyle = css`
 function ChatItemName({ name, userId, master }: Props) {
   const pane = useChannelId()!;
   const nickname = useSelector(
-    (state) => state.chatStates.get(pane)!.members.find((member) => member.user.id === userId)?.user.nickname,
+    (state) =>
+      state.chatStates.get(pane)!.members.find((member) => member.user.id === userId)?.user
+        .nickname,
   );
   const linkRef = useRef<HTMLAnchorElement>(null);
   if (!colorMap[name]) {

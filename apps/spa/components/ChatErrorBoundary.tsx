@@ -17,7 +17,8 @@ const ChatError: FC<{ error: unknown; eventId: string }> = ({ eventId }) => {
 
       <p className="text-text-light">The application crash due to an unexpected error.</p>
       <p className="text-text-light">
-        Please send this code to the system administrator: <span className="text-text-base font-mono">{eventId}</span>
+        Please send this code to the system administrator:{' '}
+        <span className="text-text-base font-mono">{eventId}</span>
       </p>
       <p className="font-pixel">.·°՞(つ ≧□≦)つ՞°·.</p>
     </div>

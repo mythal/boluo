@@ -22,7 +22,10 @@ interface Props {
   spaceId?: string;
 }
 
-const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null }> = ({ spaceId, currentUser }) => {
+const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null }> = ({
+  spaceId,
+  currentUser,
+}) => {
   const { data: space, isLoading } = useQuerySpace(spaceId);
   const contentState = useAtomValue(sidebarContentStateAtom);
   if (space == null) {
@@ -36,7 +39,9 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
     <>
       <SpaceOptions space={space} />
       {contentState === 'CHANNELS' && <SidebarChannels spaceId={space.id} />}
-      {contentState === 'SPACES' && <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />}
+      {contentState === 'SPACES' && (
+        <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />
+      )}
     </>
   );
 };
@@ -80,8 +85,16 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   }
 
   return (
-    <div className={clsx('bg-bg standalone-bottom-padding relative flex h-full min-h-0 flex-none flex-col')}>
-      <div className={clsx('w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden')}>
+    <div
+      className={clsx(
+        'bg-bg standalone-bottom-padding relative flex h-full min-h-0 flex-none flex-col',
+      )}
+    >
+      <div
+        className={clsx(
+          'w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden',
+        )}
+      >
         {content}
 
         <div className="">

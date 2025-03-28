@@ -2,12 +2,8 @@
   "extends": "@boluo/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "declaration": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "sourceMap": true
+    "module": "Preserve",
+    "moduleResolution": "bundler"
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "build", "node_modules"]

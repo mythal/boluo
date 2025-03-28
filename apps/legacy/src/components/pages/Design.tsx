@@ -159,7 +159,12 @@ function Design() {
       <section css={[flex, gap(2)]}>
         <Button onClick={() => setShowModel(true)}>打开对话框</Button>
         {showModel && (
-          <Dialog mask dismiss={() => setShowModel(false)} confirm={() => setShowModel(false)} title="Hello, world">
+          <Dialog
+            mask
+            dismiss={() => setShowModel(false)}
+            confirm={() => setShowModel(false)}
+            title="Hello, world"
+          >
             hello, world
           </Dialog>
         )}
@@ -182,7 +187,14 @@ function Design() {
         </Button>
 
         {showMenu && (
-          <Overlay x={1} y={1} selfY={-1} selfX={1} anchor={menuAnchor} onOuter={() => setShowMenu(false)}>
+          <Overlay
+            x={1}
+            y={1}
+            selfY={-1}
+            selfX={1}
+            anchor={menuAnchor}
+            onOuter={() => setShowMenu(false)}
+          >
             <Menu dismiss={() => setShowMenu(false)}>
               <MenuItem onClick={() => alert('hello')}>Hello</MenuItem>
               <MenuItem onClick={() => alert('hello')}>World</MenuItem>

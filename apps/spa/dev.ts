@@ -29,7 +29,10 @@ export const delay = ({
     } else if (!shouldErr && shouldDelay) {
       setTimeout(resolve, ms);
     } else {
-      const ApiError = { type: 'UnexpectedError', message: typeof err === 'string' ? err : 'Successfully failed' };
+      const ApiError = {
+        type: 'UnexpectedError',
+        message: typeof err === 'string' ? err : 'Successfully failed',
+      };
       setTimeout(() => reject(ApiError), ms);
     }
   });

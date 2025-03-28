@@ -37,7 +37,10 @@ export const NameEditInput: FC<{
   defaultName: string;
 }> = ({ id, setInGame = false, defaultName, channelId }) => {
   const composeAtom = useComposeAtom();
-  const inputedNameAtom = useMemo(() => selectAtom(composeAtom, ({ inputedName }) => inputedName), [composeAtom]);
+  const inputedNameAtom = useMemo(
+    () => selectAtom(composeAtom, ({ inputedName }) => inputedName),
+    [composeAtom],
+  );
   const inputedName = useAtomValue(inputedNameAtom);
   const dispatch = useSetAtom(composeAtom);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +50,13 @@ export const NameEditInput: FC<{
   return (
     <>
       <div>
-        <TextInput id={id} value={inputedName} className="w-full" placeholder={defaultName} onChange={handleChange} />
+        <TextInput
+          id={id}
+          value={inputedName}
+          className="w-full"
+          placeholder={defaultName}
+          onChange={handleChange}
+        />
       </div>
       <div className="text-right">
         <AsDefaultButton

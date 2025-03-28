@@ -1,5 +1,5 @@
 import { type ApiError } from '@boluo/api';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 import { AlertCircle } from '@boluo/icons';
 import { useCallback } from 'react';
 import { useSetBanner } from './useBanner';

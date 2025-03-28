@@ -30,7 +30,7 @@ interface Props {
 const focusAction: ComposeActionUnion & { type: 'focus' } = { type: 'focus', payload: {} };
 const blurAction: ComposeActionUnion & { type: 'blur' } = { type: 'blur', payload: {} };
 
-const useEnterKeyHint = (enterSend: boolean, ref: React.RefObject<RichTextareaHandle>) =>
+const useEnterKeyHint = (enterSend: boolean, ref: React.RefObject<RichTextareaHandle | null>) =>
   useEffect(() => {
     const textarea = ref.current;
     if (!textarea) return;
@@ -39,12 +39,15 @@ const useEnterKeyHint = (enterSend: boolean, ref: React.RefObject<RichTextareaHa
 
 const useReflectRangeChange = (
   composeAtom: ComposeAtom,
-  lock: React.MutableRefObject<boolean>,
-  ref: React.RefObject<RichTextareaHandle>,
+  lock: React.RefObject<boolean>,
+  ref: React.RefObject<RichTextareaHandle | null>,
 ) => {
   const store = useStore();
 
-  const rangeAtom = useMemo(() => selectAtom(composeAtom, (compose) => compose.range), [composeAtom]);
+  const rangeAtom = useMemo(
+    () => selectAtom(composeAtom, (compose) => compose.range),
+    [composeAtom],
+  );
   return useEffect(() => {
     return store.sub(rangeAtom, () => {
       const range = store.get(rangeAtom);
@@ -69,7 +72,8 @@ const useReflectRangeChange = (
 const MAX_FIND_LENGTH = 64;
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
-  const { composeAtom, parsedAtom, composeFocusedAtom, hideSelfPreviewTimeoutAtom } = useChannelAtoms();
+  const { composeAtom, parsedAtom, composeFocusedAtom, hideSelfPreviewTimeoutAtom } =
+    useChannelAtoms();
   const fixHeight = useAtomValue(composeFocusedAtom) && window.innerWidth < screens.md;
   const setSelfPreviewLock = useSetAtom(hideSelfPreviewTimeoutAtom);
   const ref = useRef<RichTextareaHandle | null>(null);
@@ -107,7 +111,9 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       }),
     [channelId, myId],
   );
-  const source = useAtomValue(useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]));
+  const source = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]),
+  );
 
   const lock = useRef(false);
   useEnterKeyHint(enterSend, ref);

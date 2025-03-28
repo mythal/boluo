@@ -1,5 +1,4 @@
 import { get } from '@boluo/api-browser';
-import type { RegisterOptions } from 'react-hook-form';
 import type { IntlShape } from 'react-intl';
 
 export const required = (intl: IntlShape) => ({
@@ -33,7 +32,9 @@ export const username = (intl: IntlShape) => ({
   ...required(intl),
   pattern: {
     value: /^[\w_\d]+$/,
-    message: intl.formatMessage({ defaultMessage: 'Only letters, numbers, and underscores are allowed.' }),
+    message: intl.formatMessage({
+      defaultMessage: 'Only letters, numbers, and underscores are allowed.',
+    }),
   },
   ...minLength(3),
   ...maxLength(32),

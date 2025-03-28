@@ -57,7 +57,13 @@ function CreateChannel({ space, dismiss }: Props) {
   }
   const onSubmit = async ({ name, characterName, isPrivate }: FormData) => {
     const defaultDiceType = defaultDice?.value;
-    const payload: CreateChannelData = { name, spaceId, defaultDiceType, characterName, isPublic: !isPrivate };
+    const payload: CreateChannelData = {
+      name,
+      spaceId,
+      defaultDiceType,
+      characterName,
+      isPublic: !isPrivate,
+    };
     setSubmitting(true);
     const result = await post('/channels/create', payload);
     setSubmitting(false);
@@ -93,12 +99,22 @@ function CreateChannel({ space, dismiss }: Props) {
         </div>
         <div>
           <Label htmlFor="characterName">角色名</Label>
-          <Input id="characterName" placeholder="例如：KP" {...register('characterName', characterNameValidation)} />
+          <Input
+            id="characterName"
+            placeholder="例如：KP"
+            {...register('characterName', characterNameValidation)}
+          />
           {errors.characterName && <ErrorMessage>{errors.characterName.message}</ErrorMessage>}
         </div>
         <div>
           <Label>
-            <input id="isPrivate" defaultChecked={false} {...register('isPrivate')} type="checkbox" /> 秘密频道
+            <input
+              id="isPrivate"
+              defaultChecked={false}
+              {...register('isPrivate')}
+              type="checkbox"
+            />{' '}
+            秘密频道
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>
         </div>

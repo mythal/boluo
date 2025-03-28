@@ -4,12 +4,10 @@ import React, { type HTMLAttributes, type ReactNode, useEffect, useState } from 
 interface Props extends Exclude<HTMLAttributes<HTMLDivElement>, 'className' | 'onClick'> {
   children: ReactNode;
   prompt: ReactNode;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
-export const DangerZone = React.forwardRef<HTMLDivElement, Props>(function DangerZone(
-  { children, prompt, ...props },
-  ref,
-) {
+export const DangerZone = function DangerZone({ children, prompt, ref, ...props }: Props) {
   const [isReveal, setReveal] = useState(false);
   useEffect(() => {
     if (!isReveal) return;
@@ -25,6 +23,4 @@ export const DangerZone = React.forwardRef<HTMLDivElement, Props>(function Dange
       <div className={isReveal ? '' : 'pointer-events-none opacity-10'}>{children}</div>
     </div>
   );
-});
-
-DangerZone.displayName = 'DangerZone';
+};

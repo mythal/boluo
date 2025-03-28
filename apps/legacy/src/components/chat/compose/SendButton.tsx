@@ -18,7 +18,9 @@ export const SendButton = ({ onSend, editing = false }: Props) => {
   const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
   const enterSend = useSelector((state) => state.profile!.settings.enterSend);
   const inputName = useSelector((state) => state.chatStates.get(channelId)!.compose.inputName);
-  const characterName = useSelector((state) => state.profile?.channels.get(channelId)?.member.characterName ?? '');
+  const characterName = useSelector(
+    (state) => state.profile?.channels.get(channelId)?.member.characterName ?? '',
+  );
   const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
   const sending = useSelector((state) => state.chatStates.get(channelId)!.compose.sending);
   useSendPreview();

@@ -16,7 +16,10 @@ pub async fn ensure_pos_largest(
     pos: i32,
 ) -> Result<(), CacheError> {
     let max_pos_key = create_max_pos_key(&channel_id);
-    let current_max: i32 = redis_conn.get::<_, Option<i32>>(&max_pos_key).await?.unwrap_or(1);
+    let current_max: i32 = redis_conn
+        .get::<_, Option<i32>>(&max_pos_key)
+        .await?
+        .unwrap_or(1);
     if pos > current_max {
         redis_conn.set::<_, _, ()>(&max_pos_key, pos).await?;
     }
@@ -29,13 +32,18 @@ pub async fn alloc_new_pos(
     channel_id: Uuid,
 ) -> Result<i32, CacheError> {
     let max_pos_key = create_max_pos_key(&channel_id);
-    let in_cache: bool = redis_conn.get::<_, Option<i32>>(&max_pos_key).await?.is_some();
+    let in_cache: bool = redis_conn
+        .get::<_, Option<i32>>(&max_pos_key)
+        .await?
+        .is_some();
 
     if !in_cache {
         // if not present, initialize it
         let (p, q) = crate::messages::Message::max_pos(db, &channel_id).await;
         let initial_pos = (p as f64 / q as f64).ceil() as i32 + 1;
-        redis_conn.set_nx::<_, _, ()>(&max_pos_key, initial_pos).await?;
+        redis_conn
+            .set_nx::<_, _, ()>(&max_pos_key, initial_pos)
+            .await?;
     }
     redis_conn.incr(&max_pos_key, 1).await
 }
@@ -53,7 +61,9 @@ pub async fn pos(
         Ok(pos)
     } else {
         let bottom: i32 = alloc_new_pos(db, redis_conn, channel_id).await?;
-        redis_conn.set_ex::<_, _, ()>(&pos_key, bottom, keep_seconds).await?;
+        redis_conn
+            .set_ex::<_, _, ()>(&pos_key, bottom, keep_seconds)
+            .await?;
         Ok(bottom)
     }
 }

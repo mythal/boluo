@@ -12,7 +12,10 @@ export const useDispatch = (): Dispatch => {
   return useReduxDispatch<Dispatch>();
 };
 
-export function useSelector<T>(mapper: (state: ApplicationState) => T, equalityFn?: (a: T, b: T) => boolean): T {
+export function useSelector<T>(
+  mapper: (state: ApplicationState) => T,
+  equalityFn?: (a: T, b: T) => boolean,
+): T {
   return useReduxSelector<ApplicationState, T>(mapper, equalityFn);
 }
 

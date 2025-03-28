@@ -68,7 +68,13 @@ function InviteChannelMemberDialog({ channelId, dismiss, spaceId }: Props) {
       confirm={inviteMember}
       loading={loading}
     >
-      <Select isMulti options={memberOptions} theme={selectTheme} value={membersToInvite} onChange={handleChange} />
+      <Select
+        isMulti
+        options={memberOptions}
+        theme={selectTheme}
+        value={membersToInvite}
+        onChange={handleChange}
+      />
     </Dialog>
   );
 }

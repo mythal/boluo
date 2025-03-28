@@ -53,7 +53,12 @@ function ResetPasswordConfirm() {
         <div css={[mY(2)]}>
           <Label htmlFor="password">密码</Label>
           <div>
-            <Input css={largeInput} type="password" id="password" {...register('password', passwordValidation)} />
+            <Input
+              css={largeInput}
+              type="password"
+              id="password"
+              {...register('password', passwordValidation)}
+            />
           </div>
           <div>{errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}</div>
 
@@ -67,10 +72,19 @@ function ResetPasswordConfirm() {
                 {...register('passwordRepeat', passwordRepeatValidation)}
               />
             </div>
-            <div>{errors.passwordRepeat && <ErrorMessage>{errors.passwordRepeat.message}</ErrorMessage>}</div>
+            <div>
+              {errors.passwordRepeat && (
+                <ErrorMessage>{errors.passwordRepeat.message}</ErrorMessage>
+              )}
+            </div>
           </div>
           <div css={[alignRight]}>
-            <Button css={[textLg, mT(2)]} disabled={state === 'loading'} data-variant="primary" type="submit">
+            <Button
+              css={[textLg, mT(2)]}
+              disabled={state === 'loading'}
+              data-variant="primary"
+              type="submit"
+            >
               重设密码
             </Button>
           </div>

@@ -2,8 +2,13 @@ export const palette = <T extends Record<string, string>>(colors: T): Record<key
   return colors;
 };
 
-export const revertPalette = <T extends Record<string, string>>(colors: T): Record<keyof T, string> => {
-  const colorEntries: [number, string][] = Object.entries(colors).map(([key, value]) => [Number(key), value]);
+export const revertPalette = <T extends Record<string, string>>(
+  colors: T,
+): Record<keyof T, string> => {
+  const colorEntries: [number, string][] = Object.entries(colors).map(([key, value]) => [
+    Number(key),
+    value,
+  ]);
   colorEntries.sort(([k1], [k2]) => k1 - k2);
   const keys = colorEntries.map(([key]) => String(key));
   const reversedKey = keys.reverse();

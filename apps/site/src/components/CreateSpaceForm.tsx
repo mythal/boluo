@@ -12,7 +12,7 @@ import { Button } from '@boluo/ui/Button';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required } from '../validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
@@ -25,8 +25,6 @@ const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
   }
   return <div className="mt-1 text-sm">{error.message}</div>;
 };
-
-interface Props {}
 
 const NameField: FC = () => {
   const intl = useIntl();
@@ -116,13 +114,17 @@ const DescriptionField: FC = () => {
       <label className="block py-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Description" />
       </label>
-      <TextArea className="w-full" variant={error ? 'error' : 'normal'} {...register('description')} />
+      <TextArea
+        className="w-full"
+        variant={error ? 'error' : 'normal'}
+        {...register('description')}
+      />
       <FieldErrorDisplay error={error} />
     </div>
   );
 };
 
-export const CreateSpaceForm: FC<Props> = () => {
+export const CreateSpaceForm: FC = () => {
   const intl = useIntl();
   const { mutate } = useSWRConfig();
   const methods = useForm<CreateSpace>({

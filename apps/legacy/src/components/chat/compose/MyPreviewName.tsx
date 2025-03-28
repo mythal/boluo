@@ -64,7 +64,9 @@ function MyPreviewName() {
   const characterName: string = useSelector(
     (state) => state.profile?.channels.get(channelId)?.member.characterName ?? '',
   );
-  const isMaster: boolean = useSelector((state) => state.profile?.channels.get(channelId)?.member.isMaster ?? false);
+  const isMaster: boolean = useSelector(
+    (state) => state.profile?.channels.get(channelId)?.member.isMaster ?? false,
+  );
   const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
   const inputName = useSelector((state) => state.chatStates.get(channelId)!.compose.inputName);
   let name = nickname;
@@ -84,7 +86,14 @@ function MyPreviewName() {
   return (
     <Container>
       <div css={[relative, inline]}>
-        {inGame && <input placeholder={characterName} css={nameInputStyle} value={name} onChange={handleNameInput} />}
+        {inGame && (
+          <input
+            placeholder={characterName}
+            css={nameInputStyle}
+            value={name}
+            onChange={handleNameInput}
+          />
+        )}
         {!inGame && <span style={{ color }}>{nickname}</span>}
 
         {name.length === 0 && inGame && !characterName && (

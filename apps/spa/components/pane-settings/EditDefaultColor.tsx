@@ -13,7 +13,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { post } from '@boluo/api-browser';
 import { mutate } from 'swr';
-import { useTheme } from '@boluo/theme/useTheme';
+import { useTheme } from '@boluo/theme/react';
 import { resolveSystemTheme } from '@boluo/theme';
 import { Button } from '@boluo/ui/Button';
 
@@ -58,8 +58,14 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
     [currentUser.defaultColor, trigger],
   );
 
-  const parsedColors = useMemo(() => parseGameColor(currentUser.defaultColor), [currentUser.defaultColor]);
-  const computedColors = useMemo(() => computeColors(currentUser.id, parsedColors), [currentUser.id, parsedColors]);
+  const parsedColors = useMemo(
+    () => parseGameColor(currentUser.defaultColor),
+    [currentUser.defaultColor],
+  );
+  const computedColors = useMemo(
+    () => computeColors(currentUser.id, parsedColors),
+    [currentUser.id, parsedColors],
+  );
   const parsedColor = parsedColors[theme];
   const randomColorSeedSuffix = parsedColor.type === 'random' ? parsedColor.seed : '';
   return (

@@ -29,7 +29,8 @@ function MemberListButton({ className, spaceId, folded, active, toggle }: Props)
     [spaceResult],
   );
   const onlineCount = useMemo(
-    () => (spaceResult?.isOk ? Object.values(spaceResult.value.usersStatus).filter(isOnline).length : 0),
+    () =>
+      spaceResult?.isOk ? Object.values(spaceResult.value.usersStatus).filter(isOnline).length : 0,
     [spaceResult],
   );
 

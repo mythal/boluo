@@ -23,7 +23,12 @@ export type ChatActionMap = {
   initialized: Empty;
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;
-  messagesLoaded: { messages: Message[]; before: number | null; channelId: string; fullLoaded: boolean };
+  messagesLoaded: {
+    messages: Message[];
+    before: number | null;
+    channelId: string;
+    fullLoaded: boolean;
+  };
   messageEdited: { message: Message; channelId: string; oldPos: number };
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };

@@ -1,11 +1,9 @@
 {
   "extends": "@boluo/typescript-config/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "lib": ["ESNext", "DOM"],
-    "outDir": "dist/",
-    "module": "ESNext"
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

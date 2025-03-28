@@ -24,10 +24,18 @@ export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
   return (
     <div className="inline-flex" ref={refs.setReference} {...getReferenceProps()}>
       <SidebarHeaderButton onClick={toggle} active={on} className="relative">
-        <EllipsisVertical className={`transition-transform duration-100 ${on ? 'rotate-0' : 'rotate-90'}`} />
+        <EllipsisVertical
+          className={`transition-transform duration-100 ${on ? 'rotate-0' : 'rotate-90'}`}
+        />
         {filter !== 'ALL' && <Dot />}
       </SidebarHeaderButton>
-      <TooltipBox show={showTooltip} ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()} defaultStyle>
+      <TooltipBox
+        show={showTooltip}
+        ref={refs.setFloating}
+        style={floatingStyles}
+        {...getFloatingProps()}
+        defaultStyle
+      >
         <FormattedMessage defaultMessage="More" />
       </TooltipBox>
     </div>

@@ -1,6 +1,17 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
-import { fontMono, fontNormal, mL, pX, pY, relative, roundedSm, textSm, textXs, uiShadow } from '../../styles/atoms';
+import {
+  fontMono,
+  fontNormal,
+  mL,
+  pX,
+  pY,
+  relative,
+  roundedSm,
+  textSm,
+  textXs,
+  uiShadow,
+} from '../../styles/atoms';
 import { black, gray, white } from '../../styles/colors';
 import { parseDateString } from '../../utils/helper';
 import { dateTimeFormat, timeFormat } from '../../utils/time';
@@ -43,7 +54,9 @@ function MessageTime(props: Props) {
     <time css={style}>
       <div css={timeTooltip} className="time-tooltip">
         <div>{dateTimeFormat(created)}</div>
-        {props.created !== props.modified && <div css={textXs}>修改于 {dateTimeFormat(modified)}</div>}
+        {props.created !== props.modified && (
+          <div css={textXs}>修改于 {dateTimeFormat(modified)}</div>
+        )}
       </div>
       {timeFormat(created)}
     </time>

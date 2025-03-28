@@ -24,7 +24,10 @@ interface UseTooltipReturn {
   dismiss: () => void;
 }
 
-export const useTooltip = (placement: Placement = 'bottom', offsetMount: number = 4): UseTooltipReturn => {
+export const useTooltip = (
+  placement: Placement = 'bottom',
+  offsetMount: number = 4,
+): UseTooltipReturn => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({

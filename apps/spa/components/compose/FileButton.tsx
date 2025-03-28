@@ -17,7 +17,8 @@ export const FileButton: FC<Props> = () => {
   const { composeAtom, hasMediaAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const hasMedia = useAtomValue(hasMediaAtom);
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('top-start');
+  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
+    useTooltip('top-start');
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) {
@@ -39,12 +40,29 @@ export const FileButton: FC<Props> = () => {
     ? intl.formatMessage({ defaultMessage: 'Remove File' })
     : intl.formatMessage({ defaultMessage: 'Add File' });
   return (
-    <div ref={refs.setReference} {...getReferenceProps()} className="relative flex-shrink-0 py-1 pl-1">
+    <div
+      ref={refs.setReference}
+      {...getReferenceProps()}
+      className="relative flex-shrink-0 py-1 pl-1"
+    >
       <InComposeButton onClick={handleClick} label={title}>
         {hasMedia ? <Trash /> : <Upload />}
       </InComposeButton>
-      <input type="file" ref={inputRef} className="hidden" aria-hidden hidden onChange={handleFileChange} />
-      <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>
+      <input
+        type="file"
+        ref={inputRef}
+        className="hidden"
+        aria-hidden
+        hidden
+        onChange={handleFileChange}
+      />
+      <TooltipBox
+        show={showTooltip}
+        style={floatingStyles}
+        ref={refs.setFloating}
+        {...getFloatingProps()}
+        defaultStyle
+      >
         <FormattedMessage defaultMessage="Add a file" />
       </TooltipBox>
     </div>

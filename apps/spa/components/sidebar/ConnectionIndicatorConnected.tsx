@@ -5,9 +5,7 @@ import { Button } from '@boluo/ui/Button';
 import { chatAtom } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
 
-interface Props {}
-
-export const ConnectionIndicatorConnected: FC<Props> = ({}) => {
+export const ConnectionIndicatorConnected: FC = () => {
   const isDevMode = useAtomValue(devMode);
   const dispatch = useSetAtom(chatAtom);
   const disconnect = () => {

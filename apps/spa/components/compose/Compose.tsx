@@ -37,7 +37,9 @@ const DeferredComposeTextArea: FC<{
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
   useBackupCompose(channelId, parsed, isEditing);
   const compose = useMemo(
-    () => <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />,
+    () => (
+      <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />
+    ),
     [currentUser.id, enterSend, parsed, send],
   );
   return compose;
@@ -68,7 +70,10 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const fileButton = useMemo(() => <FileButton />, []);
   const inGameSwitchButton = useMemo(() => <InGameSwitchButton />, []);
   const addDiceButton = useMemo(() => <AddDiceButton />, []);
-  const sendButton = useMemo(() => <SendButton send={send} isEditing={isEditing} />, [isEditing, send]);
+  const sendButton = useMemo(
+    () => <SendButton send={send} isEditing={isEditing} />,
+    [isEditing, send],
+  );
   const mediaLine = useMemo(() => <MediaLine />, []);
 
   return (

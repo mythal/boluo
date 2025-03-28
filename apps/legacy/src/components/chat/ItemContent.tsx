@@ -51,7 +51,10 @@ function ItemContent({ text, entities, seed }: Props) {
     } else if (entity.type === 'Text') {
       content.push(<Text key={key}>{text.substr(entity.start, entity.len)}</Text>);
     } else if (entity.type === 'Link') {
-      const href = typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len);
+      const href =
+        typeof entity.href === 'string'
+          ? entity.href
+          : text.substr(entity.href.start, entity.href.len);
       content.push(
         <ExternalLink css={link} key={key} to={href}>
           {text.substr(entity.child.start, entity.child.len)}
@@ -60,7 +63,9 @@ function ItemContent({ text, entities, seed }: Props) {
     } else if (entity.type === 'Strong') {
       content.push(<Strong key={key}>{text.substr(entity.child.start, entity.child.len)}</Strong>);
     } else if (entity.type === 'Emphasis') {
-      content.push(<Emphasis key={key}>{text.substr(entity.child.start, entity.child.len)}</Emphasis>);
+      content.push(
+        <Emphasis key={key}>{text.substr(entity.child.start, entity.child.len)}</Emphasis>,
+      );
     } else if (entity.type === 'Code') {
       content.push(<Code key={key}>{text.substr(entity.child.start, entity.child.len)}</Code>);
     } else if (entity.type === 'CodeBlock') {

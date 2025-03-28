@@ -1,7 +1,12 @@
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 import { findNextPaneKey, panesAtom } from '../state/view.atoms';
-import { insertPaneByPosition, type NewPanePosition, type Pane, type PaneData } from '../state/view.types';
+import {
+  insertPaneByPosition,
+  type NewPanePosition,
+  type Pane,
+  type PaneData,
+} from '../state/view.types';
 import { usePaneLimit } from './useMaxPane';
 import { usePaneKey } from './usePaneKey';
 

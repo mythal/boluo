@@ -7,9 +7,7 @@ import { devMode } from '../state/dev.atoms';
 import { useAtomValue } from 'jotai';
 import { Button } from '@boluo/ui/Button';
 
-interface Props {}
-
-export const PaneHelp: FC<Props> = () => {
+export const PaneHelp: FC = () => {
   const dev = useAtomValue(devMode);
   const [crashOnRendering, setCrashOnRendering] = useState(false);
   if (crashOnRendering) {

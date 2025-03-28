@@ -7,7 +7,7 @@ import { useIntl } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { setThemeToDom, type Theme, writeThemeToCookie } from '@boluo/theme';
-import { useTheme } from '@boluo/theme/useTheme';
+import { useTheme } from '@boluo/theme/react';
 import { Select } from '@boluo/ui/Select';
 import { identity } from '@boluo/utils';
 
@@ -21,11 +21,14 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   const intl = useIntl();
 
   const key = ['/users/settings'] as const;
-  const updater: MutationFetcher<Settings, typeof key, Theme> = useCallback(async (url, { arg: theme }) => {
-    const settings: Settings = { theme };
-    const settingsResult = await patch('/users/update_settings', null, settings);
-    return settingsResult.unwrapOr({});
-  }, []);
+  const updater: MutationFetcher<Settings, typeof key, Theme> = useCallback(
+    async (url, { arg: theme }) => {
+      const settings: Settings = { theme };
+      const settingsResult = await patch('/users/update_settings', null, settings);
+      return settingsResult.unwrapOr({});
+    },
+    [],
+  );
   const { trigger } = useSWRMutation(key, updater, {
     populateCache: identity,
     revalidate: false,

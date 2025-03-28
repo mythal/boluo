@@ -1,6 +1,6 @@
 import type { ApiError, CreateSpace, Space, SpaceWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 import { channelNameValidation, required } from '@boluo/common/validations';
 import type { FC } from 'react';
 import { useId } from 'react';
@@ -119,7 +119,11 @@ const DescriptionField: FC = () => {
       <label htmlFor={id} className="block pb-1">
         <FormattedMessage defaultMessage="Description" />
       </label>
-      <TextArea className="w-full" variant={error ? 'error' : 'normal'} {...register('description')} />
+      <TextArea
+        className="w-full"
+        variant={error ? 'error' : 'normal'}
+        {...register('description')}
+      />
       <FieldErrorDisplay error={error} />
     </div>
   );
@@ -136,7 +140,10 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
   });
   const { handleSubmit } = form;
   const key = ['/spaces/create'] as const;
-  const createSpace: MutationFetcher<SpaceWithMember, typeof key, CreateSpace> = async (_, { arg: params }) => {
+  const createSpace: MutationFetcher<SpaceWithMember, typeof key, CreateSpace> = async (
+    _,
+    { arg: params },
+  ) => {
     const result = await post('/spaces/create', null, params);
     return result.unwrap();
   };

@@ -6,7 +6,14 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
-import { FloatingPortal, offset, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  FloatingPortal,
+  offset,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
 import clsx from 'clsx';
 import { Avatar } from '../account/Avatar';
 
@@ -36,12 +43,16 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 
   const memberMap: Record<string, MemberWithUser> = useMemo(() => {
     if (!channelMembers) return {};
-    return Object.fromEntries(channelMembers.members.map((member) => [member.user.username, member]));
+    return Object.fromEntries(
+      channelMembers.members.map((member) => [member.user.username, member]),
+    );
   }, [channelMembers]);
 
   const whisperToAdd = useMemo(() => {
     if (!channelMembers) return null;
-    const members = channelMembers.members.filter((member) => !whisperToUsernames.includes(member.user.username));
+    const members = channelMembers.members.filter(
+      (member) => !whisperToUsernames.includes(member.user.username),
+    );
     if (members.length === 0) return null;
     return <WhisperToItemAdd inGame={inGame} members={members} add={addUsername} />;
   }, [addUsername, channelMembers, inGame, whisperToUsernames]);
@@ -89,12 +100,12 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
   );
 };
 
-export const WhisperToItem: FC<{ member: MemberWithUser; inGame: boolean; remove: () => void; myself: boolean }> = ({
-  member,
-  remove,
-  inGame,
-  myself,
-}) => {
+export const WhisperToItem: FC<{
+  member: MemberWithUser;
+  inGame: boolean;
+  remove: () => void;
+  myself: boolean;
+}> = ({ member, remove, inGame, myself }) => {
   const intl = useIntl();
   const { nickname } = member.user;
   const { characterName } = member.channel;
@@ -117,11 +128,11 @@ export const WhisperToItem: FC<{ member: MemberWithUser; inGame: boolean; remove
   );
 };
 
-export const WhisperToItemAdd: FC<{ inGame: boolean; members: MemberWithUser[]; add: (username: string) => void }> = ({
-  inGame,
-  members,
-  add,
-}) => {
+export const WhisperToItemAdd: FC<{
+  inGame: boolean;
+  members: MemberWithUser[];
+  add: (username: string) => void;
+}> = ({ inGame, members, add }) => {
   const [open, setOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     placement: 'top-start',
@@ -165,11 +176,11 @@ export const WhisperToItemAdd: FC<{ inGame: boolean; members: MemberWithUser[]; 
   );
 };
 
-const MemberItem: FC<{ member: MemberWithUser; inGame: boolean; add: (username: string) => void }> = ({
-  member,
-  add,
-  inGame,
-}) => {
+const MemberItem: FC<{
+  member: MemberWithUser;
+  inGame: boolean;
+  add: (username: string) => void;
+}> = ({ member, add, inGame }) => {
   const characterName: ReactNode = member.channel.characterName || (
     <span className="font-pixel text-text-lighter text-[12.5px]">[empty]</span>
   );

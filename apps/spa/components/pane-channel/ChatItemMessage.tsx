@@ -49,7 +49,15 @@ export const ChatItemMessage: FC<{
   }, [readObserve]);
 
   const nameNode = useMemo(
-    () => <Name inGame={message.inGame} name={message.name} isMaster={isMaster} self={sendBySelf} user={user} />,
+    () => (
+      <Name
+        inGame={message.inGame}
+        name={message.name}
+        isMaster={isMaster}
+        self={sendBySelf}
+        user={user}
+      />
+    ),
     [message.inGame, message.name, isMaster, sendBySelf, user],
   );
   const parsed: ParseResult = useMemo(
@@ -149,7 +157,15 @@ const MessageBox: FC<{
   const toolbarDisplayAtom = useMemo(makeMessageToolbarDisplayAtom, []);
   const store = useStore();
   const ref = useRef<HTMLDivElement | null>(null);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    setActivatorNodeRef,
+  } = useSortable({
     id: message.id,
     data: { message },
     disabled: !draggable || isScrolling,
@@ -170,7 +186,12 @@ const MessageBox: FC<{
   const handle = useMemo(
     () =>
       draggable ? (
-        <MessageReorderHandle ref={setActivatorNodeRef} attributes={attributes} listeners={listeners} failTo={failTo} />
+        <MessageReorderHandle
+          ref={setActivatorNodeRef}
+          attributes={attributes}
+          listeners={listeners}
+          failTo={failTo}
+        />
       ) : (
         <div className="text-message-time-text col-span-1 row-span-full h-full text-right"></div>
       ),

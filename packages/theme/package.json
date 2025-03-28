@@ -1,25 +1,26 @@
 {
   "name": "@boluo/theme",
   "version": "0.0.0",
+  "devDependencies": {
+    "@boluo/eslint-config": "*",
+    "@boluo/typescript-config": "*",
+    "@boluo/utils": "*",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./react": "./react.ts"
+  },
   "homepage": "https://github.com/mythal/boluo",
-  "license": "GPL-3.0",
-  "type": "module",
-  "main": "./index.js",
-  "types": "./dist/index.d.ts",
+  "license": "AGPL-3.0",
   "scripts": {
-    "dev": "tsc --project tsconfig.json --watch",
-    "build": "tsc --project tsconfig.json",
+    "check-types": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,
-  "devDependencies": {
-    "@types/node": "^22.10.3",
-    "@types/react": "^18.2.46",
-    "@types/react-dom": "^18.2.18",
-    "eslint": "^8.56.0",
-    "@boluo/eslint-config": "*",
-    "@boluo/typescript-config": "*",
-    "typescript": "^5.3.3",
-    "@boluo/utils": "*"
-  }
+  "type": "module"
 }

@@ -1,4 +1,10 @@
-import { type Channel, type ChannelMember, type SpaceMember, type User, type UserStatus } from '@boluo/api';
+import {
+  type Channel,
+  type ChannelMember,
+  type SpaceMember,
+  type User,
+  type UserStatus,
+} from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common';
@@ -32,7 +38,12 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
 
   return (
     <label className="group grid grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-1 gap-y-0.5">
-      <input type="checkbox" checked={channelMember.isMaster} onChange={() => edit()} disabled={isEditing} />
+      <input
+        type="checkbox"
+        checked={channelMember.isMaster}
+        onChange={() => edit()}
+        disabled={isEditing}
+      />
       <span className="space-x-1">
         <span>
           <FormattedMessage defaultMessage="Game Master" />
@@ -48,10 +59,17 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
 
 const InviteButton: FC<{ userId: string; channelId: string }> = ({ userId, channelId }) => {
   const key = ['/channels/members', channelId] as const;
-  const { isMutating: isInviting, trigger: invite } = useSWRMutation(key, async ([_, channelId]) => {
-    const result = await post('/channels/add_member', null, { channelId, userId, characterName: '' });
-    return result.unwrap();
-  });
+  const { isMutating: isInviting, trigger: invite } = useSWRMutation(
+    key,
+    async ([_, channelId]) => {
+      const result = await post('/channels/add_member', null, {
+        channelId,
+        userId,
+        characterName: '',
+      });
+      return result.unwrap();
+    },
+  );
   return (
     <Button data-small disabled={isInviting} onClick={() => invite()}>
       <Icon icon={UserPlus} />
@@ -79,7 +97,10 @@ const ConfirmLeave: FC<{ channelId: string; channelName: string; dismiss: () => 
   return (
     <div className="pt-2 text-sm">
       <div>
-        <FormattedMessage defaultMessage="Are you sure you want to leave {channelName}?" values={{ channelName }} />
+        <FormattedMessage
+          defaultMessage="Are you sure you want to leave {channelName}?"
+          values={{ channelName }}
+        />
       </div>
       <div className="pt-2 text-right">
         <Button data-small className="mx-1" onClick={dismiss}>
@@ -133,8 +154,8 @@ const ConfirmKick: FC<{
   );
 };
 
-const LastSeen: FC<{ timestamp: number; className?: string }> = React.memo(
-  ({ timestamp: lastSeenTimeStamp, className }) => {
+const LastSeen = React.memo(
+  ({ timestamp: lastSeenTimeStamp, className }: { timestamp: number; className?: string }) => {
     const [now, setNow] = useState(Date.now());
     useEffect(() => {
       const interval = setInterval(() => {
@@ -179,7 +200,8 @@ const LastSeen: FC<{ timestamp: number; className?: string }> = React.memo(
     }
     return (
       <span className={className}>
-        <FormattedMessage defaultMessage="Last seen" /> <time dateTime={lastSeen.toISOString()}>{timeText}</time>
+        <FormattedMessage defaultMessage="Last seen" />{' '}
+        <time dateTime={lastSeen.toISOString()}>{timeText}</time>
       </span>
     );
   },
@@ -212,7 +234,11 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
   );
 };
 
-const Badges: FC<{ thisIsMe: boolean; isMaster: boolean; isAdmin: boolean }> = ({ thisIsMe, isMaster, isAdmin }) => {
+const Badges: FC<{ thisIsMe: boolean; isMaster: boolean; isAdmin: boolean }> = ({
+  thisIsMe,
+  isMaster,
+  isAdmin,
+}) => {
   const badges: ReactNode[] = [];
   if (thisIsMe) {
     badges.push(
@@ -270,7 +296,9 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
     const { data: currentUser } = useQueryCurrentUser();
     const thisIsMe = user.id === currentUser?.id;
     const canIManage = canIKick || canIInvite || canIEditMaster;
-    const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>('VIEW');
+    const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>(
+      'VIEW',
+    );
     const intl = useIntl();
     let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
     if (status != null) {
@@ -307,13 +335,19 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
               {status != null && (
                 <div className="space-x-1 text-sm">
                   {status.kind === 'ONLINE' ? (
-                    <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>{statusText}</span>
+                    <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>
+                      {statusText}
+                    </span>
                   ) : (
                     <LastSeen timestamp={status.timestamp} className="text-surface-500" />
                   )}
                 </div>
               )}
-              <Badges thisIsMe={thisIsMe} isAdmin={spaceMember.isAdmin} isMaster={channelMember?.isMaster ?? false} />
+              <Badges
+                thisIsMe={thisIsMe}
+                isAdmin={spaceMember.isAdmin}
+                isMaster={channelMember?.isMaster ?? false}
+              />
             </div>
           </div>
           {user.bio !== '' && (
@@ -379,7 +413,11 @@ export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
             />
           )}
           {uiState === 'CONFIRM_LEAVE' && (
-            <ConfirmLeave channelId={channel.id} channelName={channel.name} dismiss={() => setUiState('VIEW')} />
+            <ConfirmLeave
+              channelId={channel.id}
+              channelName={channel.name}
+              dismiss={() => setUiState('VIEW')}
+            />
           )}
         </FloatingBox>
       </div>

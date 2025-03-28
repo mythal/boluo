@@ -1,29 +1,31 @@
 {
   "name": "@boluo/api",
   "version": "0.0.0",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "homepage": "https://github.com/mythal/boluo",
-  "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "lint": "eslint . --ext .ts,.tsx"
-  },
-  "license": "GPL-3.0",
   "dependencies": {
     "@boluo/server-bindings": "*",
     "@boluo/typescript-config": "*",
-    "tslib": "^2.6.2",
     "@boluo/utils": "*"
   },
-  "sideEffects": false,
   "devDependencies": {
-    "eslint": "^8.56.0",
     "@boluo/eslint-config": "*",
-    "jotai": "^2.7.0",
-    "typescript": "^5.3.3"
+    "eslint": "^9.23.0",
+    "jotai": "^2.12.2",
+    "typescript": "^5.8.2"
   },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts",
+    "./types/*": "./src/types/*.ts"
+  },
+  "homepage": "https://github.com/mythal/boluo",
+  "license": "AGPL-3.0",
   "peerDependencies": {
-    "jotai": "^2.7.0"
-  }
+    "jotai": "^2.12.2"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "sideEffects": false,
+  "type": "module"
 }

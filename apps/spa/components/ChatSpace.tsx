@@ -33,14 +33,18 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
       defaultPane = (
         <PaneFailed
           title={<FormattedMessage defaultMessage="No permission" />}
-          message={<FormattedMessage defaultMessage="You do not have permission to view this space." />}
+          message={
+            <FormattedMessage defaultMessage="You do not have permission to view this space." />
+          }
         />
       );
     } else if (!space) {
       defaultPane = (
         <PaneFailed
           title={title}
-          message={<FormattedMessage defaultMessage="Please check your network connection and try again." />}
+          message={
+            <FormattedMessage defaultMessage="Please check your network connection and try again." />
+          }
           code={error.code}
         />
       );

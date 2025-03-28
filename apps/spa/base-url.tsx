@@ -34,6 +34,9 @@ export const testProxies = async (proxies: Proxy[]): Promise<BaseUrlTestResult[]
   return Promise.all(proxies.map(testProxy));
 };
 
-export const backendUrlConfigAtom = atomWithStorage('boluo-backend-config-v1', IS_DEVELOPMENT ? '' : 'auto');
+export const backendUrlConfigAtom = atomWithStorage(
+  'boluo-backend-config-v1',
+  IS_DEVELOPMENT ? '' : 'auto',
+);
 
 export const shouldAutoSelectAtom = atom((get) => get(backendUrlConfigAtom) === 'auto');

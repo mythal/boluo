@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
+import { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import { ChannelMember } from '../../api/channels';
 import { Message } from '../../api/messages';
 import { chatItemContainer } from './ChatItemContainer';
@@ -58,7 +58,9 @@ function MessageItem({
       >
         <MessageMedia css={itemImage} mediaId={message.mediaId} />
         {message.isAction && name}
-        {message.whisperToUsers != null && <MessageWhisperList message={message} myMember={myMember} shown />}
+        {message.whisperToUsers != null && (
+          <MessageWhisperList message={message} myMember={myMember} shown />
+        )}
         <ChatItemContent entities={message.entities} seed={message.seed} text={message.text} />
         <MessageTime created={message.created} modified={message.modified} />
       </ChatItemContentContainer>
@@ -78,7 +80,9 @@ function MessageItem({
       {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
       {renderName && <div css={nameContainer}>{name}</div>}
       {content}
-      {myMember && !lazy && <ChatMessageToolbar key={message.id} mine={mine} message={message} myMember={myMember} />}
+      {myMember && !lazy && (
+        <ChatMessageToolbar key={message.id} mine={mine} message={message} myMember={myMember} />
+      )}
     </div>
   );
 }

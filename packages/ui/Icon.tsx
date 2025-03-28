@@ -10,7 +10,16 @@ interface Props {
 
 const Icon: React.FC<Props> = ({ icon, noStrut = false, className, label }: Props) => {
   const Icon = icon;
-  const loaded = <Icon aria-hidden role="img" width="1em" height="1em" className={className} aria-label={label} />;
+  const loaded = (
+    <Icon
+      aria-hidden
+      role="img"
+      width="1em"
+      height="1em"
+      className={className}
+      aria-label={label}
+    />
+  );
   if (noStrut) {
     return loaded;
   } else {

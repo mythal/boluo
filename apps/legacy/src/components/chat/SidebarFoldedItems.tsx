@@ -42,7 +42,12 @@ function SidebarFoldedItems({ space, channels }: Props) {
   const dismissMenu = () => setChannelMenu(false);
   return (
     <React.Fragment>
-      <ChatHeaderButtonNavLink activeClassName="active" exact css={[mB(1), sidebarIconButton]} to={chatPath(space.id)}>
+      <ChatHeaderButtonNavLink
+        activeClassName="active"
+        exact
+        css={[mB(1), sidebarIconButton]}
+        to={chatPath(space.id)}
+      >
         <Icon sprite={nightSky} />
       </ChatHeaderButtonNavLink>
       <ChatHeaderButton ref={channelButton} css={[mB(1), sidebarIconButton]} onClick={toggleMenu}>

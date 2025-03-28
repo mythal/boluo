@@ -44,7 +44,9 @@ export const ChannelHeader: FC = () => {
   return (
     <PaneHeaderBox
       icon={icon}
-      operators={channel ? <ChannelHeaderOperations stateAtom={headerStateAtom} channel={channel} /> : null}
+      operators={
+        channel ? <ChannelHeaderOperations stateAtom={headerStateAtom} channel={channel} /> : null
+      }
       extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
     >
       <ChannelName channel={channel} />

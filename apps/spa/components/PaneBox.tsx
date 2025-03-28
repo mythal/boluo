@@ -50,7 +50,10 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
       {header}
       <div ref={bannerRef} className="border-pane-header-border border-b"></div>
 
-      <div onFocus={focus} className="bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden">
+      <div
+        onFocus={focus}
+        className="bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden"
+      >
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center">

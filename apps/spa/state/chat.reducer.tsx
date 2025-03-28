@@ -48,7 +48,11 @@ const channelsReducer = (
 ): ChatSpaceState['channels'] => {
   if ('channelId' in action.payload) {
     const { channelId } = action.payload;
-    const channelState = channelReducer(channels[channelId] ?? makeInitialChannelState(channelId), action, context);
+    const channelState = channelReducer(
+      channels[channelId] ?? makeInitialChannelState(channelId),
+      action,
+      context,
+    );
     return { ...channels, [channelId]: channelState };
   } else {
     const nextChannels: ChatSpaceState['channels'] = {};

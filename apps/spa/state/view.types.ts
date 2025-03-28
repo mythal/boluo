@@ -108,7 +108,11 @@ export type Route = RootRoute | SpaceRoute | NotFoundRoute | InviteRoute;
 
 export type NewPanePosition = 'HEAD' | 'TAIL' | { refKey: number; before?: boolean };
 
-export const insertPaneByPosition = (panes: Pane[], pane: Pane, position: NewPanePosition): Pane[] => {
+export const insertPaneByPosition = (
+  panes: Pane[],
+  pane: Pane,
+  position: NewPanePosition,
+): Pane[] => {
   const nextPanes = [...panes];
   if (position === 'HEAD') {
     nextPanes.unshift(pane);

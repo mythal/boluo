@@ -1,4 +1,11 @@
-import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  autoUpdate,
+  FloatingPortal,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
 import { post } from '@boluo/api-browser';
 import { UserX } from '@boluo/icons';
 import { type FC, useState } from 'react';
@@ -64,7 +71,11 @@ export const ExileButton: FC<Props> = ({ spaceId, userId }) => {
       </InListButton>
       {isConfirming && (
         <FloatingPortal>
-          <div ref={refs.setFloating} style={{ position: strategy, top: y ?? 0, left: x ?? 0 }} {...getFloatingProps()}>
+          <div
+            ref={refs.setFloating}
+            style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
+            {...getFloatingProps()}
+          >
             <ExileConfirm spaceId={spaceId} userId={userId} />
           </div>
         </FloatingPortal>

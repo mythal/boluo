@@ -82,7 +82,10 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }, { loader: 'css-loader' }],
+        use: [
+          PRODUCTION ? MiniCssExtractPlugin.loader : { loader: 'style-loader' },
+          { loader: 'css-loader' },
+        ],
       },
       { test: /\.(png|jpe?g|gif|woff2)$/, use: ['file-loader'] },
       {

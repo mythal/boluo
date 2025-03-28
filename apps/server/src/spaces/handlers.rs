@@ -66,7 +66,9 @@ async fn query(req: Request<impl Body>) -> Result<Space, AppError> {
     }
     let session = authenticate(&req).await?;
     let Some(_) = SpaceMember::get(&mut *conn, &session.user_id, &id).await? else {
-        return Err(AppError::NoPermission("A non-member tries to query space".to_string()));
+        return Err(AppError::NoPermission(
+            "A non-member tries to query space".to_string(),
+        ));
     };
     Ok(space)
 }
@@ -82,7 +84,10 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     let mut channel_members: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
     for channel in channels.iter() {
         let members = Member::get_by_channel_cached(&mut *conn, space.id, channel.id).await?;
-        channel_members.insert(channel.id, members.into_iter().map(|member| member.channel).collect());
+        channel_members.insert(
+            channel.id,
+            members.into_iter().map(|member| member.channel).collect(),
+        );
     }
     Ok(SpaceWithRelated {
         space,
@@ -129,7 +134,9 @@ async fn refresh_token(req: Request<impl Body>) -> Result<Uuid, AppError> {
             "A non-admin tries to refresh join token".to_string(),
         ));
     }
-    Space::refresh_token(&mut *conn, &id).await.map_err(Into::into)
+    Space::refresh_token(&mut *conn, &id)
+        .await
+        .map_err(Into::into)
 }
 
 async fn my_spaces(req: Request<impl Body>) -> Result<Vec<SpaceWithMember>, AppError> {
@@ -162,7 +169,15 @@ async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     let user = User::get_by_id(&pool, &session.user_id)
         .await?
         .ok_or(AppError::NotFound("user"))?;
-    let space = Space::create(&mut *trans, name, &user.id, description, password, default_dice_type).await?;
+    let space = Space::create(
+        &mut *trans,
+        name,
+        &user.id,
+        description,
+        password,
+        default_dice_type,
+    )
+    .await?;
     let member = SpaceMember::add_admin(&mut *trans, &user.id, &space.id).await?;
     let _type = first_channel_type.unwrap_or(ChannelType::OutOfGame);
     let channel = Channel::create(
@@ -178,7 +193,11 @@ async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     ChannelMember::add_user(&mut *trans, &user.id, &channel.id, "", true).await?;
     trans.commit().await?;
     log::info!("a space ({}) was just created", space.id);
-    Ok(SpaceWithMember { space, member, user })
+    Ok(SpaceWithMember {
+        space,
+        member,
+        user,
+    })
 }
 
 async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
@@ -202,7 +221,9 @@ async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
         .await
         .or_no_permission()?;
     if !space_member.is_admin {
-        return Err(AppError::NoPermission("A non-admin tries to edit space".to_string()));
+        return Err(AppError::NoPermission(
+            "A non-admin tries to edit space".to_string(),
+        ));
     }
     let space = Space::edit(
         &mut *trans,
@@ -240,7 +261,9 @@ async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
 
-    let space = Space::get_by_id(&mut *conn, &space_id).await?.or_not_found()?;
+    let space = Space::get_by_id(&mut *conn, &space_id)
+        .await?
+        .or_not_found()?;
     if !space.is_public && token != Some(space.invite_token) && space.owner_id != session.user_id {
         return Err(AppError::NoPermission(
             "A user tries to join group without token".to_string(),
@@ -256,7 +279,11 @@ async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
         SpaceMember::add_user(&mut *conn, user_id, &space_id).await?
     };
     Event::space_updated(space_id);
-    Ok(SpaceWithMember { space, member, user })
+    Ok(SpaceWithMember {
+        space,
+        member,
+        user,
+    })
 }
 
 async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
@@ -287,7 +314,9 @@ async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUs
         return Err(AppError::BadRequest("Can't kick admin".to_string()));
     }
     if !my_member.is_admin {
-        return Err(AppError::NoPermission("A non-admin tries to kick".to_string()));
+        return Err(AppError::NoPermission(
+            "A non-admin tries to kick".to_string(),
+        ));
     }
     SpaceMember::remove_user(&mut trans, &user_id, &space_id).await?;
     trans.commit().await?;
@@ -337,7 +366,11 @@ async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
         log::info!("A space ({}) was deleted", space.id);
         return Ok(space);
     }
-    log::warn!("The user {} failed to try delete a space {}", session.user_id, space.id);
+    log::warn!(
+        "The user {} failed to try delete a space {}",
+        session.user_id,
+        space.id
+    );
     Err(AppError::NoPermission("failed to delete".to_string()))
 }
 

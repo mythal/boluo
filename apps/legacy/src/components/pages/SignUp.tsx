@@ -23,7 +23,12 @@ import {
   textSm,
   textXl,
 } from '../../styles/atoms';
-import { emailValidation, nicknameValidation, passwordValidation, usernameValidation } from '../../validators';
+import {
+  emailValidation,
+  nicknameValidation,
+  passwordValidation,
+  usernameValidation,
+} from '../../validators';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';
@@ -95,7 +100,12 @@ function SignUp() {
         <div css={formGrid}>
           <div css={[mY(2)]}>
             <Label htmlFor="email">邮箱</Label>
-            <Input css={largeInput} type="email" id="email" {...register('email', emailValidation)} />
+            <Input
+              css={largeInput}
+              type="email"
+              id="email"
+              {...register('email', emailValidation)}
+            />
             {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
           </div>
           <div css={[mY(2)]}>
@@ -154,7 +164,12 @@ function SignUp() {
             </ul>
           </div>
           <div css={[alignRight]}>
-            <Button css={[mL(4), textLg]} disabled={submitting} data-variant="primary" type="submit">
+            <Button
+              css={[mL(4), textLg]}
+              disabled={submitting}
+              data-variant="primary"
+              type="submit"
+            >
               <Icon sprite={signUpIcon} loading={submitting} />
               注册账号
             </Button>

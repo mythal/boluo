@@ -104,7 +104,11 @@ export const closeChat = (state: ChatState, channelId: Id): ChatState | undefine
   return undefined;
 };
 
-const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myId: Id | undefined): ChatState => {
+const loadMessages = (
+  chat: ChatState,
+  { messages, finished }: LoadMessages,
+  myId: Id | undefined,
+): ChatState => {
   const len = messages.length;
   if (len === 0) {
     return { ...chat, finished };
@@ -125,7 +129,11 @@ const loadMessages = (chat: ChatState, { messages, finished }: LoadMessages, myI
   return { ...chat, finished, itemSet };
 };
 
-const handleEditMessage = (chatState: ChatState, message: Message, myId: Id | undefined): ChatState => {
+const handleEditMessage = (
+  chatState: ChatState,
+  message: Message,
+  myId: Id | undefined,
+): ChatState => {
   const item = makeMessageItem(myId)(message);
   const itemSet = editMessage(chatState.itemSet, item, chatState.finished);
   return { ...chatState, itemSet };
@@ -171,11 +179,19 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
   return { ...state, compose };
 };
 
-const handleMessageMoving = (state: ChatState, { message, targetItem }: MovingMessage): ChatState => {
-  return O.modify(focusItemSet)((itemSet) => markMessageMoving(itemSet, message, targetItem))(state);
+const handleMessageMoving = (
+  state: ChatState,
+  { message, targetItem }: MovingMessage,
+): ChatState => {
+  return O.modify(focusItemSet)((itemSet) => markMessageMoving(itemSet, message, targetItem))(
+    state,
+  );
 };
 
-const handleResetMessageMoving = (state: ChatState, { messageId }: ResetMessageMoving): ChatState => {
+const handleResetMessageMoving = (
+  state: ChatState,
+  { messageId }: ResetMessageMoving,
+): ChatState => {
   const itemSet = resetMovingMessage(state.itemSet, messageId);
   return { ...state, itemSet };
 };
@@ -305,7 +321,12 @@ const handleChatInitialized = (
   }
   compose.source = preview.text;
   compose.inGame = preview.inGame;
-  if (compose.inGame && preview.name && myMember && preview.name !== myMember.channel.characterName) {
+  if (
+    compose.inGame &&
+    preview.name &&
+    myMember &&
+    preview.name !== myMember.channel.characterName
+  ) {
     compose.inputName = preview.name;
   }
   return compose;
@@ -319,7 +340,10 @@ const handleComposeSendFailed = (state: ChatState, action: ComposeSendFailed): C
   return state;
 };
 
-const handleResetComposeAfterSent = (state: ChatState, action: ResetComposeAfterSent): ChatState => {
+const handleResetComposeAfterSent = (
+  state: ChatState,
+  action: ResetComposeAfterSent,
+): ChatState => {
   const compose: Compose = {
     ...state.compose,
     edit: null,
@@ -413,10 +437,17 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
   };
 };
 
-export const handleMoveFinish = (state: ChatState, action: Action, myId?: Id): ChatState | undefined => {
+export const handleMoveFinish = (
+  state: ChatState,
+  action: Action,
+  myId?: Id,
+): ChatState | undefined => {
   const actions = state.postponed;
   state = { ...state, postponed: List(), moving: false };
-  return actions.reduce<ChatState | undefined>((state, action) => chatReducer(state, action, myId), state);
+  return actions.reduce<ChatState | undefined>(
+    (state, action) => chatReducer(state, action, myId),
+    state,
+  );
 };
 
 export const handleRevealMessage = (state: ChatState, message: Message, myId?: Id): ChatState => {
@@ -433,13 +464,20 @@ export const checkMessagesOrder = (itemSet: ChatItemSet) => {
   }
 };
 
-const handleSpaceUpdate = (state: ChatState, spaceWithRelated: SpaceWithRelated): ChatState | undefined => {
+const handleSpaceUpdate = (
+  state: ChatState,
+  spaceWithRelated: SpaceWithRelated,
+): ChatState | undefined => {
   const { channels } = spaceWithRelated;
   const channel = channels.find((channel) => state.channel.id === channel.id);
   if (!channel) {
     return undefined;
   }
-  const members = makeMembers(state.channel.id, spaceWithRelated.members, spaceWithRelated.channelMembers);
+  const members = makeMembers(
+    state.channel.id,
+    spaceWithRelated.members,
+    spaceWithRelated.channelMembers,
+  );
 
   return { ...state, channel, members };
 };

@@ -1,4 +1,10 @@
-import type { Channel, ChannelMemberWithUser, ChannelMembers, ChannelWithMaybeMember, Export } from './types/channels';
+import type {
+  Channel,
+  ChannelMemberWithUser,
+  ChannelMembers,
+  ChannelWithMaybeMember,
+  Export,
+} from './types/channels';
 import type { GetMessagesByChannel, Message } from './types/messages';
 import type {
   Space,
@@ -8,7 +14,7 @@ import type {
   SpaceWithRelated,
   UserStatus,
 } from './types/spaces';
-import type { CheckEmail, CheckUsername, GetMe, User } from './types/users';
+import type { CheckEmail, CheckUsername, User } from './types/users';
 
 export interface Get {
   // users

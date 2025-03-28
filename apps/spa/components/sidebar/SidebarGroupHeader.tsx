@@ -10,7 +10,13 @@ interface Props {
   icon?: typeof ChevronDown;
 }
 
-export const SidebarGroupHeader: FC<Props> = ({ folded, toggle, children, disabled = false, icon: Icon }) => {
+export const SidebarGroupHeader: FC<Props> = ({
+  folded,
+  toggle,
+  children,
+  disabled = false,
+  icon: Icon,
+}) => {
   return (
     <button
       onClick={toggle}

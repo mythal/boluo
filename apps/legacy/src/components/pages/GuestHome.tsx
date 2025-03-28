@@ -39,7 +39,11 @@ function GuestHome() {
         <use xlinkHref={logo.url} />
       </svg>
 
-      {isIe && <InformationBar variant="WARNING">菠萝不支持这个浏览器，推荐使用 Chrome 浏览器。</InformationBar>}
+      {isIe && (
+        <InformationBar variant="WARNING">
+          菠萝不支持这个浏览器，推荐使用 Chrome 浏览器。
+        </InformationBar>
+      )}
       <Title>菠萝</Title>
       <SubTitle>
         游玩

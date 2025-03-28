@@ -8,7 +8,7 @@ interface Props {
   active: DraggingItem | null;
 }
 
-export const DraggingOverlay = memo<Props>(({ active }) => {
+export const DraggingOverlay = memo<Props>(({ active }: Props) => {
   if (!active) {
     return null;
   }

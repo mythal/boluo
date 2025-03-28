@@ -1,7 +1,7 @@
 'use client';
 import type { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 import { useRouter } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';
@@ -19,6 +19,7 @@ import { required } from '../validations';
 
 // https://web.dev/sign-in-form-best-practices/
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface Props extends StyleProps {}
 
 interface Inputs {

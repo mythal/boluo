@@ -14,7 +14,9 @@ export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
       if (error.code === 'NOT_FOUND') {
         return <PaneErrorNotFound error={error} />;
       } else {
-        return <Failed title={<FormattedMessage defaultMessage="Oops!" />} code={errorCode(error)} />;
+        return (
+          <Failed title={<FormattedMessage defaultMessage="Oops!" />} code={errorCode(error)} />
+        );
       }
     }
     return (

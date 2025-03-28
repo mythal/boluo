@@ -138,7 +138,10 @@ function Compose({ channelId }: Props) {
         <InGameButton css={[mR(1)]} />
         <AddDiceButton inCompose />
       </div>
-      <div css={inputContainer} onKeyDown={handleKeyDown(onSend, () => setInGame('TOGGLE'), enterSend)}>
+      <div
+        css={inputContainer}
+        onKeyDown={handleKeyDown(onSend, () => setInGame('TOGGLE'), enterSend)}
+      >
         <ComposeInput autoFocus autoSize css={[input]} />
       </div>
       {media && (

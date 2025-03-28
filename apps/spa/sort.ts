@@ -13,7 +13,10 @@ export function byPos(a: { pos: number }, b: { pos: number }): number {
   return a.pos - b.pos;
 }
 
-export function binarySearchPosList<T extends { pos: number }>(arr: L.List<T>, targetPos: number): [number, T | null] {
+export function binarySearchPosList<T extends { pos: number }>(
+  arr: L.List<T>,
+  targetPos: number,
+): [number, T | null] {
   const head = L.head(arr);
   const last = L.last(arr);
   if (!head || !last || targetPos < head.pos) {

@@ -73,7 +73,10 @@ fn make_key(session: &Uuid) -> Vec<u8> {
 pub async fn start(user_id: &Uuid) -> Result<Uuid, CacheError> {
     let session = utils::id();
     let key = make_key(&session);
-    redis::conn().await.set::<_, _, ()>(&key, user_id.as_bytes()).await?;
+    redis::conn()
+        .await
+        .set::<_, _, ()>(&key, user_id.as_bytes())
+        .await?;
     Ok(session)
 }
 
@@ -87,7 +90,9 @@ pub fn is_authenticate_use_cookie(headers: &HeaderMap<HeaderValue>) -> bool {
     !headers.contains_key(AUTHORIZATION)
 }
 
-pub async fn get_session_from_old_version_cookies(headers: &HeaderMap<HeaderValue>) -> Option<Session> {
+pub async fn get_session_from_old_version_cookies(
+    headers: &HeaderMap<HeaderValue>,
+) -> Option<Session> {
     use std::sync::OnceLock;
     static COOKIE_PATTERN: OnceLock<Regex> = OnceLock::new();
 
@@ -104,7 +109,11 @@ pub async fn get_session_from_old_version_cookies(headers: &HeaderMap<HeaderValu
     get_session_from_token(token).await.ok()
 }
 
-pub fn add_session_cookie(session: &Uuid, is_debug: bool, response_header: &mut HeaderMap<HeaderValue>) {
+pub fn add_session_cookie(
+    session: &Uuid,
+    is_debug: bool,
+    response_header: &mut HeaderMap<HeaderValue>,
+) {
     use cookie::time::Duration;
     use cookie::{CookieBuilder, SameSite};
     use hyper::header::SET_COOKIE;
@@ -125,7 +134,10 @@ pub fn add_session_cookie(session: &Uuid, is_debug: bool, response_header: &mut 
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
 }
 
-pub fn add_settings_cookie(settings: &serde_json::Value, response_header: &mut HeaderMap<HeaderValue>) {
+pub fn add_settings_cookie(
+    settings: &serde_json::Value,
+    response_header: &mut HeaderMap<HeaderValue>,
+) {
     use cookie::time::Duration;
     use cookie::CookieBuilder;
     use hyper::header::SET_COOKIE;
@@ -267,7 +279,9 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     Ok(Session { id, user_id })
 }
 
-pub async fn authenticate(req: &hyper::Request<impl hyper::body::Body>) -> Result<Session, AppError> {
+pub async fn authenticate(
+    req: &hyper::Request<impl hyper::body::Body>,
+) -> Result<Session, AppError> {
     let headers = req.headers();
     let authorization = headers.get(AUTHORIZATION).map(HeaderValue::to_str);
 
@@ -281,7 +295,9 @@ pub async fn authenticate(req: &hyper::Request<impl hyper::body::Body>) -> Resul
             Err(err) => {
                 log::warn!(
                     "Failed to parse the cookie: {} error: {}",
-                    cookie.to_str().unwrap_or("[Failed convert the cookie to string]"),
+                    cookie
+                        .to_str()
+                        .unwrap_or("[Failed convert the cookie to string]"),
                     err
                 );
                 return Err(AuthenticateFail::InvaildToken.into());

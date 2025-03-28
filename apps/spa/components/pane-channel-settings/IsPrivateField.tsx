@@ -4,9 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { HelpText } from '@boluo/ui/HelpText';
 import { type FormSchema } from '../pane-create-channel/PaneCreateChannel';
 
-interface Props {}
-
-export const IsSecretField: FC<Props> = () => {
+export const IsSecretField: FC = () => {
   const { register } = useFormContext<FormSchema, 'isSecret'>();
   return (
     <div>

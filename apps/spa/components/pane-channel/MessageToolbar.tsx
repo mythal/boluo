@@ -2,7 +2,15 @@ import clsx from 'clsx';
 import React, { type FC, type RefObject, useContext, useEffect, useMemo, useRef } from 'react';
 import { type Message } from '@boluo/api';
 import { type ReactNode } from 'react';
-import { Archive, ClipboardCopy, Edit, EllipsisVertical, Trash, TriangleAlert, X } from '@boluo/icons';
+import {
+  Archive,
+  ClipboardCopy,
+  Edit,
+  EllipsisVertical,
+  Trash,
+  TriangleAlert,
+  X,
+} from '@boluo/icons';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '../Delay';
@@ -127,7 +135,8 @@ export const MessageToolbar: FC<{
   );
 };
 
-interface MessageToolbarButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+interface MessageToolbarButtonProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
   children: ReactNode;
   loading?: boolean;
   pressed?: boolean;
@@ -144,7 +153,9 @@ const MessageToolbarButton = React.forwardRef<HTMLButtonElement, MessageToolbarB
         className={clsx(
           'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base',
           optimistic ? 'cursor-progress' : '',
-          pressed ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner' : 'enabled:hover:bg-switch-hover-bg',
+          pressed
+            ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
+            : 'enabled:hover:bg-switch-hover-bg',
           loading ? 'text-text-lighter cursor-progress' : '',
         )}
         {...props}
@@ -168,7 +179,10 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
     revalidate: false,
     populateCache: identity,
     onError: () => {
-      setDisplay({ type: 'ERROR', message: intl.formatMessage({ defaultMessage: 'Failed to archive the message' }) });
+      setDisplay({
+        type: 'ERROR',
+        message: intl.formatMessage({ defaultMessage: 'Failed to archive the message' }),
+      });
     },
   });
   if (variant === 'toolbar') {
@@ -198,7 +212,10 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   }
 };
 
-const MessageEdit: FC<{ message: Message; variant: 'toolbar' | 'more' }> = ({ message, variant }) => {
+const MessageEdit: FC<{ message: Message; variant: 'toolbar' | 'more' }> = ({
+  message,
+  variant,
+}) => {
   const optimistic = useIsOptimistic();
   const composeAtom = useComposeAtom();
   const intl = useIntl();
@@ -220,7 +237,9 @@ const MessageEdit: FC<{ message: Message; variant: 'toolbar' | 'more' }> = ({ me
       </MessageToolbarButton>
     );
   } else {
-    return <MoreMenuItem icon={Edit} onClick={handleEditMessage} optimistic={optimistic} label={label} />;
+    return (
+      <MoreMenuItem icon={Edit} onClick={handleEditMessage} optimistic={optimistic} label={label} />
+    );
   }
 };
 
@@ -320,7 +339,10 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
   const { trigger: deleteMessage, isMutating: deleting } = useMutateMessageDelete(messageId, {
     revalidate: false,
     onError: () => {
-      setDisplay({ type: 'ERROR', message: intl.formatMessage({ defaultMessage: 'Failed to delete the message' }) });
+      setDisplay({
+        type: 'ERROR',
+        message: intl.formatMessage({ defaultMessage: 'Failed to delete the message' }),
+      });
     },
   });
   return (
@@ -417,11 +439,13 @@ const MessageDetailDate: FC<{ created: string; edited: string }> = ({ created, e
   return (
     <div className="text-text-lighter select-text pb-2 text-right text-xs">
       <div className="">
-        <FormattedMessage defaultMessage="Created at" /> <time className="font-mono">{createdDate}</time>
+        <FormattedMessage defaultMessage="Created at" />{' '}
+        <time className="font-mono">{createdDate}</time>
       </div>
       {isEdited && (
         <div className="pt-0.5">
-          <FormattedMessage defaultMessage="Edited at" /> <time className="font-mono">{editedDate}</time>
+          <FormattedMessage defaultMessage="Edited at" />{' '}
+          <time className="font-mono">{editedDate}</time>
         </div>
       )}
     </div>
@@ -443,7 +467,9 @@ const MoreMenuItem: FC<{
       className={clsx(
         'flex gap-1 rounded-sm p-1.5 text-sm',
         optimistic ? 'cursor-progress' : '',
-        pressed ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner' : 'enabled:hover:bg-switch-hover-bg',
+        pressed
+          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
+          : 'enabled:hover:bg-switch-hover-bg',
         className,
       )}
       onClick={optimistic ? empty : onClick}

@@ -19,7 +19,8 @@ export const Failed: FC<FailedProps> = ({ title, message, code, icon, eventId })
   return (
     <div className="flex flex-col items-baseline gap-2">
       <h1 className="text-lg">
-        {icon ?? <Icon icon={AlertTriangle} className="text-failed-icon" />} {title || <SomethingWentWrong noKaomoji />}
+        {icon ?? <Icon icon={AlertTriangle} className="text-failed-icon" />}{' '}
+        {title || <SomethingWentWrong noKaomoji />}
       </h1>
       {message && <div>{message}</div>}
       {(code || eventId) && (

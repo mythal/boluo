@@ -113,7 +113,12 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
 
       <div className="overflow-y-auto">
         {uiState === 'INVITE' && myMember != null && (
-          <MemberInvitation members={members} myMember={myMember} channel={channel} userStatusMap={userStatusMap} />
+          <MemberInvitation
+            members={members}
+            myMember={myMember}
+            channel={channel}
+            userStatusMap={userStatusMap}
+          />
         )}
         {uiState === 'MEMBER' &&
           members.map((member) => (

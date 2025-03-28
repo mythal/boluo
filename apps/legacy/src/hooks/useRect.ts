@@ -21,7 +21,7 @@ export function useRect<T extends Element>(nodeRef: React.RefObject<T>): DOMRect
     }
   }, [element]);
 
-  const timeout = useRef<number | undefined>();
+  const timeout = useRef<number | undefined>(undefined);
 
   React.useEffect(() => {
     if (!element) {

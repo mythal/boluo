@@ -52,7 +52,11 @@ const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
         {node.targetValue}
       </span>
     );
-    successLevel = <span className="ml-1 font-bold">{cocSuccessLevelDisplay(intl, node.value, node.targetValue)}</span>;
+    successLevel = (
+      <span className="ml-1 font-bold">
+        {cocSuccessLevelDisplay(intl, node.value, node.targetValue)}
+      </span>
+    );
   }
   return (
     <span>
@@ -74,7 +78,9 @@ export const EntityExprCocRoll: FC<Props> = ({ node }) => {
       </Delay>
 
       {node.subType !== 'NORMAL' && (
-        <span className="mx-0.5 inline-block w-4 text-center">{cocRollSubTypeDisplay(node.subType)}</span>
+        <span className="mx-0.5 inline-block w-4 text-center">
+          {cocRollSubTypeDisplay(node.subType)}
+        </span>
       )}
       {'value' in node ? <CocResult node={node} /> : <UndecidedCocRoll node={node} />}
     </RollBox>

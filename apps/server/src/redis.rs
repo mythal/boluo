@@ -36,7 +36,8 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
     buffer[type_name_len] = b':';
     let id_start = type_name_len + 1;
     let id_end = id_start + Hyphenated::LENGTH;
-    id.as_hyphenated().encode_lower(&mut buffer[id_start..id_end]);
+    id.as_hyphenated()
+        .encode_lower(&mut buffer[id_start..id_end]);
     let field_start = id_end + 1;
     buffer[id_end] = b':';
     buffer[field_start..].copy_from_slice(field_name);

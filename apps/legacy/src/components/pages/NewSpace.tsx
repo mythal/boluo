@@ -10,9 +10,22 @@ import implosion from '../../assets/icons/implosion.svg';
 import nightSky from '../../assets/icons/night-sky.svg';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
-import { alignRight, gridColumn, largeInput, md, mT, mY, spacingN, textLg } from '../../styles/atoms';
+import {
+  alignRight,
+  gridColumn,
+  largeInput,
+  md,
+  mT,
+  mY,
+  spacingN,
+  textLg,
+} from '../../styles/atoms';
 import { encodeUuid } from '../../utils/id';
-import { channelNameValidation, descriptionValidation, spaceNameValidation } from '../../validators';
+import {
+  channelNameValidation,
+  descriptionValidation,
+  spaceNameValidation,
+} from '../../validators';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';

@@ -114,7 +114,18 @@ export interface SubExpr {
   node: ExprNode;
 }
 
-export type ExprNode = Roll | Binary | Num | Max | Min | SubExpr | CocRoll | FateRoll | DicePool | Repeat | Unknown;
+export type ExprNode =
+  | Roll
+  | Binary
+  | Num
+  | Max
+  | Min
+  | SubExpr
+  | CocRoll
+  | FateRoll
+  | DicePool
+  | Repeat
+  | Unknown;
 
 export interface RollResult extends Roll {
   values: number[];
@@ -196,7 +207,15 @@ export interface ExportLink extends BaseEntity {
   text: string;
 }
 
-export type ExportEntity = (Text | ExportLink | Strong | Emphasis | Code | CodeBlock | ExportExpr) & { text: string };
+export type ExportEntity = (
+  | Text
+  | ExportLink
+  | Strong
+  | Emphasis
+  | Code
+  | CodeBlock
+  | ExportExpr
+) & { text: string };
 
 export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {
   const { start, offset: len } = legacy;
@@ -204,7 +223,14 @@ export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {
     case 'Text':
       return { type: 'Text', start, len };
     case 'Link':
-      return { type: 'Link', start, len, child: { type: 'Text', start, len }, href: legacy.href, title: legacy.title };
+      return {
+        type: 'Link',
+        start,
+        len,
+        child: { type: 'Text', start, len },
+        href: legacy.href,
+        title: legacy.title,
+      };
     case 'Expr':
       return { type: 'Expr', start, len, node: legacy.node };
     case 'Strong':

@@ -33,7 +33,9 @@ export const useSend = (me: User) => {
     const queryChannelMembers = queryChannelMembersRef.current;
     if (queryChannelMembers == null) return [];
     return usernames.flatMap((username) => {
-      const member = queryChannelMembers.members.find((member) => member.user.username === username);
+      const member = queryChannelMembers.members.find(
+        (member) => member.user.username === username,
+      );
       if (member == null) return [];
       return [member.user.id];
     });
@@ -63,7 +65,9 @@ export const useSend = (me: User) => {
         name = inputedName;
       }
     }
-    let payload: { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
+    let payload:
+      | { type: 'NEW'; newMessage: NewMessage }
+      | { type: 'EDIT'; editMessage: EditMessage };
     if (!isEditing) {
       payload = {
         type: 'NEW',
@@ -138,9 +142,15 @@ export const useSend = (me: User) => {
         type: 'messageEditing',
         payload: { editMessage: payload.editMessage, sendTime: sendStartTime, media: null },
       });
-      const result = await Promise.race([patch('/messages/edit', null, payload.editMessage), timeout(8000)]);
+      const result = await Promise.race([
+        patch('/messages/edit', null, payload.editMessage),
+        timeout(8000),
+      ]);
       if (result === 'TIMEOUT' || !result.isOk) {
-        chatDispatch({ type: 'fail', payload: { failTo: { type: 'EDIT' }, key: payload.editMessage.messageId } });
+        chatDispatch({
+          type: 'fail',
+          payload: { failTo: { type: 'EDIT' }, key: payload.editMessage.messageId },
+        });
       }
     } else {
       if (mediaId) payload.newMessage.mediaId = mediaId;
@@ -148,9 +158,15 @@ export const useSend = (me: User) => {
         type: 'messageSending',
         payload: { newMessage: payload.newMessage, sendTime: sendStartTime, media: null },
       });
-      const result = await Promise.race([post('/messages/send', null, payload.newMessage), timeout(8000)]);
+      const result = await Promise.race([
+        post('/messages/send', null, payload.newMessage),
+        timeout(8000),
+      ]);
       if ((result === 'TIMEOUT' || !result.isOk) && payload.newMessage.previewId) {
-        chatDispatch({ type: 'fail', payload: { failTo: { type: 'SEND' }, key: payload.newMessage.previewId } });
+        chatDispatch({
+          type: 'fail',
+          payload: { failTo: { type: 'SEND' }, key: payload.newMessage.previewId },
+        });
       }
     }
   }, [

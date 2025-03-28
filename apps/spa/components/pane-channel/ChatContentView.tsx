@@ -45,7 +45,10 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
     if (bottom) {
       setShowButton(false);
     } else {
-      showButtonTimeoutRef.current = window.setTimeout(() => setShowButton(true), SHOW_BOTTOM_BUTTON_TIMEOUT);
+      showButtonTimeoutRef.current = window.setTimeout(
+        () => setShowButton(true),
+        SHOW_BOTTOM_BUTTON_TIMEOUT,
+      );
     }
   }, []);
 
@@ -184,7 +187,10 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
         ]);
         dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
         if (result === 'TIMEOUT' || result.isErr) {
-          dispatch({ type: 'fail', payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id } });
+          dispatch({
+            type: 'fail',
+            payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id },
+          });
         }
       }
     },
@@ -233,16 +239,32 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
   const myMember = useMember();
 
   const myId: string | undefined = myMember?.user.id;
-  const { showButton, onBottomStateChange: goBottomButtonOnBottomChange, goBottom } = useScrollToBottom(virtuosoRef);
-  const { chatList, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(channelId, myId);
+  const {
+    showButton,
+    onBottomStateChange: goBottomButtonOnBottomChange,
+    goBottom,
+  } = useScrollToBottom(virtuosoRef);
+  const { chatList, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
+    channelId,
+    myId,
+  );
 
-  const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(channelId, chatList);
+  const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
+    channelId,
+    chatList,
+  );
   const renderRangeRef = useRef<[number, number]>([0, 0]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
-  const scrollLockRef = useScrollLock(virtuosoRef, scrollerRef, wrapperRef, renderRangeRef, chatList);
+  const scrollLockRef = useScrollLock(
+    virtuosoRef,
+    scrollerRef,
+    wrapperRef,
+    renderRangeRef,
+    chatList,
+  );
 
   type UnregisterOberver = () => void;
 
@@ -306,7 +328,9 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
     const [a] = renderRangeRef.current;
     const chatItem = chatList[a];
     if (chatItem && scheduledGcLowerPos > chatItem.pos) {
-      console.debug(`[Messages GC] Reset GC. scheduled: ${scheduledGcLowerPos} reset: ${chatItem.pos}`);
+      console.debug(
+        `[Messages GC] Reset GC. scheduled: ${scheduledGcLowerPos} reset: ${chatItem.pos}`,
+      );
       store.set(chatAtom, { type: 'resetGc', payload: { pos: chatItem.pos } });
     }
   });
@@ -331,7 +355,9 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
                 scrollerRef={scrollerRef}
                 chatList={chatList}
               />
-              {showButton && <GoButtomButton channelId={channelId} chatList={chatList} onClick={goBottom} />}
+              {showButton && (
+                <GoButtomButton channelId={channelId} chatList={chatList} onClick={goBottom} />
+              )}
             </SortableContext>
           </ChatListDndContext>
         </ReadObserverContext.Provider>

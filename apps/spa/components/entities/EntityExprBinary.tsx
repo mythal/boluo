@@ -22,5 +22,9 @@ export const EntityExprBinary: FC<Props> = ({ node }) => {
       {result}
     </span>
   );
-  return isTopLevel ? <IsTopLevelContext.Provider value={false}>{entityNode}</IsTopLevelContext.Provider> : entityNode;
+  return isTopLevel ? (
+    <IsTopLevelContext.Provider value={false}>{entityNode}</IsTopLevelContext.Provider>
+  ) : (
+    entityNode
+  );
 };

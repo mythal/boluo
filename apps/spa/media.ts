@@ -43,7 +43,10 @@ export function getMediaUrl(mediaId: string): string {
   return `${mediaPublicUrl}/${mediaId}`;
 }
 
-async function uploadImageToS3(file: File, presignedUrl: string): Promise<Result<void, S3Error | FetchFailError>> {
+async function uploadImageToS3(
+  file: File,
+  presignedUrl: string,
+): Promise<Result<void, S3Error | FetchFailError>> {
   // Use the fetch API to upload the image
   let response: Response;
   try {

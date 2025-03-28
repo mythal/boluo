@@ -11,7 +11,13 @@ export const UserCard = ({ user }: Props) => {
     <FloatingBox>
       <div className="flex gap-2">
         <div>
-          <Avatar className="rounded-sm" size="4rem" id={user.id} name={user.nickname} avatarId={user.avatarId} />
+          <Avatar
+            className="rounded-sm"
+            size="4rem"
+            id={user.id}
+            name={user.nickname}
+            avatarId={user.avatarId}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <div className="font-bold">{user.nickname}</div>

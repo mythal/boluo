@@ -55,7 +55,11 @@ const handleJoinSpace = (state: UiState, action: JoinedSpace): UiState => {
   return { ...state, spaceSet };
 };
 
-const handleLeftSpace = ({ spaceSet, ...state }: UiState, action: LeftSpace, userId: Id | undefined): UiState => {
+const handleLeftSpace = (
+  { spaceSet, ...state }: UiState,
+  action: LeftSpace,
+  userId: Id | undefined,
+): UiState => {
   spaceSet = spaceSet.update(action.spaceId, errLoading(), (result) =>
     result.map(({ members, ...rest }) => {
       if (!userId) {
@@ -115,7 +119,11 @@ const handleUpdateSpaceUserStatus = (state: UiState, action: StatusMap): UiState
   return { ...state, spaceSet };
 };
 
-const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppResult<SpaceWithRelated>): UiState => {
+const handleSpaceWithRelatedResult = (
+  state: UiState,
+  spaceId: Id,
+  result: AppResult<SpaceWithRelated>,
+): UiState => {
   let { spaceSet, exploreSpaceList, userSet } = state;
   spaceSet = spaceSet.set(spaceId, result);
   if (result.isOk) {
@@ -142,7 +150,9 @@ const handleSpaceWithRelatedResult = (state: UiState, spaceId: Id, result: AppRe
 const removeSpace = (state: UiState, spaceId: Id): UiState => {
   let { spaceSet, exploreSpaceList } = state;
   spaceSet = spaceSet.remove(spaceId);
-  exploreSpaceList = exploreSpaceList.map((spaces) => spaces.filter((space) => space.id !== spaceId));
+  exploreSpaceList = exploreSpaceList.map((spaces) =>
+    spaces.filter((space) => space.id !== spaceId),
+  );
   return { ...state, spaceSet, exploreSpaceList };
 };
 
@@ -165,14 +175,22 @@ const handleUnfocusChannel = (state: UiState, { pane }: UnfocusChannel): UiState
   const focusChannelList = state.focusChannelList.filter((id) => id !== pane);
   return { ...state, focusChannelList };
 };
-export function uiReducer(state: UiState = initUiState, action: Action, userId: Id | undefined): UiState {
+export function uiReducer(
+  state: UiState = initUiState,
+  action: Action,
+  userId: Id | undefined,
+): UiState {
   switch (action.type) {
     case 'EXPLORE_SPACE_LOADED':
       return { ...state, exploreSpaceList: action.spaces };
     case 'SPACE_LOADED':
       return handleSpaceWithRelatedResult(state, action.spaceId, action.result);
     case 'SPACE_UPDATED':
-      return handleSpaceWithRelatedResult(state, action.spaceWithRelated.space.id, new Ok(action.spaceWithRelated));
+      return handleSpaceWithRelatedResult(
+        state,
+        action.spaceWithRelated.space.id,
+        new Ok(action.spaceWithRelated),
+      );
     case 'SPACE_DELETED':
       return removeSpace(state, action.spaceId);
     case 'USER_LOADED':

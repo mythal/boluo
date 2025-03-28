@@ -6,7 +6,8 @@ interface Props {
   timeout?: number;
 }
 
-export const Delay = memo<Props>(({ fallback = null, children, timeout = 64 }) => {
+// eslint-disable-next-line react/prop-types
+export const Delay = memo<Props>(({ fallback = null, children, timeout = 64 }: Props) => {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const callback = () => {

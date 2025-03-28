@@ -30,7 +30,11 @@ pub fn id() -> Uuid {
     });
     let now = Utc::now();
     static CONTEXT: UuidContext = UuidContext::new(0);
-    let timestamp = Timestamp::from_unix(&CONTEXT, now.timestamp() as u64, now.timestamp_subsec_nanos());
+    let timestamp = Timestamp::from_unix(
+        &CONTEXT,
+        now.timestamp() as u64,
+        now.timestamp_subsec_nanos(),
+    );
     Uuid::new_v1(timestamp, node_id)
 }
 
@@ -69,11 +73,17 @@ pub fn timestamp() -> i64 {
     Utc::now().timestamp_millis()
 }
 
-pub fn inner_map<T, E, U, F: Fn(T) -> U>(x: Result<Option<T>, E>, mapper: F) -> Result<Option<U>, E> {
+pub fn inner_map<T, E, U, F: Fn(T) -> U>(
+    x: Result<Option<T>, E>,
+    mapper: F,
+) -> Result<Option<U>, E> {
     x.map(|y| y.map(mapper))
 }
 
-pub fn inner_result_map<T, E, U, F: Fn(T) -> Result<U, E>>(x: Result<Option<T>, E>, mapper: F) -> Result<Option<U>, E> {
+pub fn inner_result_map<T, E, U, F: Fn(T) -> Result<U, E>>(
+    x: Result<Option<T>, E>,
+    mapper: F,
+) -> Result<Option<U>, E> {
     match x {
         Ok(Some(x)) => mapper(x).map(|value| Some(value)),
         Ok(None) => Ok(None),

@@ -1,5 +1,5 @@
 import { type ApiError } from '@boluo/api';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 import { LogIn } from '@boluo/icons';
 import { type FC, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -10,9 +10,7 @@ import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { Todo } from './common/Todo';
 
-interface Props {}
-
-export const PaneLogin: FC<Props> = () => {
+export const PaneLogin: FC = () => {
   const close = usePaneClose();
   const setBanner = useSetBanner();
   const intl = useIntl();

@@ -14,7 +14,9 @@ interface Props {
 export const AddDiceButton = ({ inCompose = false, className }: Props) => {
   const channelId = useChannelId();
   const dispatch = useDispatch();
-  const dice = useSelector((state) => state.chatStates.get(channelId)?.channel.defaultRollCommand ?? 'd');
+  const dice = useSelector(
+    (state) => state.chatStates.get(channelId)?.channel.defaultRollCommand ?? 'd',
+  );
 
   const addDice = useCallback(() => {
     dispatch({ type: 'ADD_DICE', pane: channelId, dice });

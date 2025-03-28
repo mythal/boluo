@@ -137,11 +137,21 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
             <FormattedMessage defaultMessage="All" />
           </option>
         </Select>
-        <input id={id + 'archived'} type="checkbox" className="justify-self-end" {...register('includeArchived')} />
+        <input
+          id={id + 'archived'}
+          type="checkbox"
+          className="justify-self-end"
+          {...register('includeArchived')}
+        />
         <label className="select-none" htmlFor={id + 'archived'}>
           <FormattedMessage defaultMessage="Include archived messages" />
         </label>
-        <input id={id + 'out-game'} type="checkbox" className="justify-self-end" {...register('includeOutGame')} />
+        <input
+          id={id + 'out-game'}
+          type="checkbox"
+          className="justify-self-end"
+          {...register('includeOutGame')}
+        />
         <label htmlFor={id + 'out-game'} className="select-none">
           <FormattedMessage defaultMessage="Include out-of-game messages" />
         </label>
@@ -189,7 +199,10 @@ export const PaneChannelExport: FC<{ channelId: string }> = ({ channelId }) => {
         }
       >
         <div className="p-pane">
-          <Failed code={errorCode(error)} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />
+          <Failed
+            code={errorCode(error)}
+            title={<FormattedMessage defaultMessage="Failed to query the channel" />}
+          />
         </div>
       </PaneBox>
     );
@@ -207,7 +220,10 @@ const PaneChannelExportHeader: FC<{ channel: Channel }> = ({ channel }) => {
   return (
     <PaneHeaderBox icon={<ScrollText />}>
       <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-        <FormattedMessage defaultMessage='Export "{channelName}"' values={{ channelName: channel.name }} />
+        <FormattedMessage
+          defaultMessage='Export "{channelName}"'
+          values={{ channelName: channel.name }}
+        />
       </span>
     </PaneHeaderBox>
   );

@@ -7,14 +7,21 @@ interface ExtendedButtonProps {
   variant?: 'primary' | 'default' | 'switch' | 'danger' | 'detail';
   on?: boolean;
   active?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 export type ButtonProps = React.ComponentPropsWithoutRef<'button'> & ExtendedButtonProps;
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { children, className, variant = 'default', small = false, on, active, ...props }: ButtonProps,
+export const Button: React.FC<ButtonProps> = function Button({
+  children,
+  className,
+  variant = 'default',
+  small = false,
+  on,
+  active,
   ref,
-) {
+  ...props
+}: ButtonProps) {
   return (
     <button
       className={clsx(
@@ -61,5 +68,4 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
       )}
     </button>
   );
-});
-Button.displayName = 'Button';
+};

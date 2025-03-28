@@ -104,7 +104,8 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
             }
         }
         let initialized = Event::initialized(mailbox);
-        let initialized = serde_json::to_string(&initialized).expect("Failed to serialize initialized event");
+        let initialized =
+            serde_json::to_string(&initialized).expect("Failed to serialize initialized event");
         tx.send(WsMessage::Text(initialized)).await.ok();
 
         loop {
@@ -166,9 +167,15 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: Stri
     }
 }
 
-fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, code: ConnectionError, reason: String) -> Response {
+fn connection_error(
+    req: Request<Incoming>,
+    mailbox: Option<Uuid>,
+    code: ConnectionError,
+    reason: String,
+) -> Response {
     let mailbox = mailbox.unwrap_or_default();
-    let event = serde_json::to_string(&Event::error(mailbox, code, reason)).expect("Failed to serialize error event");
+    let event = serde_json::to_string(&Event::error(mailbox, code, reason))
+        .expect("Failed to serialize error event");
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
         outgoing.send(WsMessage::Text(event)).await.ok();
@@ -186,7 +193,12 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
     }) = parse_query(req.uri())
     else {
         log::warn!("Invalid query {:?}", req.uri());
-        return connection_error(req, None, ConnectionError::InvalidToken, "Invalid query".to_string());
+        return connection_error(
+            req,
+            None,
+            ConnectionError::InvalidToken,
+            "Invalid query".to_string(),
+        );
     };
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
@@ -238,7 +250,9 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
     if let Some(space) = space.as_ref() {
         let Ok(_) = check_permissions(&mut conn, space, &user_id).await else {
             if let Ok(user_id) = user_id {
-                log::warn!("An user ({user_id}) tried to access a space ({mailbox}) without permission");
+                log::warn!(
+                    "An user ({user_id}) tried to access a space ({mailbox}) without permission"
+                );
             } else {
                 log::warn!("An user tried to access a space ({mailbox}) without permission");
             }
@@ -292,7 +306,9 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             }
         }
         if let (Some(user_id), Some(space)) = (user_id, space) {
-            if let Err(e) = Event::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await {
+            if let Err(e) =
+                Event::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await
+            {
                 log::warn!("Failed to broadcast offline status: {}", e);
             }
         }
@@ -304,7 +320,9 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
         let mut redis = redis::conn().await;
         let token = Uuid::new_v4();
         let key = make_key(b"token", &token, b"user_id");
-        redis.set_ex::<_, _, ()>(&key, session.user_id.as_bytes(), 10).await?;
+        redis
+            .set_ex::<_, _, ()>(&key, session.user_id.as_bytes(), 10)
+            .await?;
         Ok(Token {
             token: Some(token.to_string()),
         })

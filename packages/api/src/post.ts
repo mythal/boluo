@@ -1,6 +1,6 @@
-import type { MoveMessageBetween } from '@boluo/server-bindings/MoveMessageBetween';
-import { type PreSign } from '@boluo/server-bindings/PreSign';
-import { type PreSignResult } from '@boluo/server-bindings/PreSignResult';
+import type { MoveMessageBetween } from '@boluo/server-bindings/MoveMessageBetween.js';
+import { type PreSign } from '@boluo/server-bindings/PreSign.js';
+import { type PreSignResult } from '@boluo/server-bindings/PreSignResult.js';
 import type { Empty } from '@boluo/utils';
 import type {
   AddChannelMember,
@@ -46,9 +46,17 @@ export interface Post {
   '/spaces/edit': { payload: EditSpace; query: null; result: Space };
   '/spaces/delete': { payload: Empty; query: { id: string }; result: Space };
   '/spaces/refresh_token': { payload: Empty; query: { id: string }; result: string };
-  '/spaces/join': { payload: Empty; result: SpaceWithMember; query: { spaceId: string; token?: string } };
+  '/spaces/join': {
+    payload: Empty;
+    result: SpaceWithMember;
+    query: { spaceId: string; token?: string };
+  };
   '/spaces/leave': { payload: Empty; query: { id: string }; result: true };
-  '/spaces/kick': { payload: Empty; query: KickFromSpace; result: Record<string, SpaceMemberWithUser> };
+  '/spaces/kick': {
+    payload: Empty;
+    query: KickFromSpace;
+    result: Record<string, SpaceMemberWithUser>;
+  };
   '/spaces/update_settings': { payload: unknown; query: { id: string }; result: unknown };
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };

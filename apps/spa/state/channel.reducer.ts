@@ -42,7 +42,11 @@ const editMessageOptimisticItem = (
     mediaId,
     color,
   };
-  const item: OptimisticItem = { optimisticPos: previousMessage.pos, timestamp: sendTime, item: message };
+  const item: OptimisticItem = {
+    optimisticPos: previousMessage.pos,
+    timestamp: sendTime,
+    item: message,
+  };
   return { ref: previousMessage, item };
 };
 
@@ -102,7 +106,11 @@ export interface ScheduledGc {
   lowerPos: number;
 }
 
-const makeMessageItem = (message: Message): MessageItem => ({ ...message, type: 'MESSAGE', key: message.id });
+const makeMessageItem = (message: Message): MessageItem => ({
+  ...message,
+  type: 'MESSAGE',
+  key: message.id,
+});
 
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
@@ -124,7 +132,9 @@ const filterPreviewMap = (
   const previews = Object.values(previewMap);
   if (!previews.find((preview) => preview.id === previewId)) return previewMap;
   return Object.fromEntries(
-    previews.filter((preview) => preview.id !== previewId).map((preview) => [preview.senderId, preview]),
+    previews
+      .filter((preview) => preview.id !== previewId)
+      .map((preview) => [preview.senderId, preview]),
   );
 };
 
@@ -141,11 +151,17 @@ const filterOptimisticMessages = (
   return optimisticMessageMap;
 };
 
-const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveMessage'>): ChannelState => {
+const handleNewMessage = (
+  state: ChannelState,
+  { payload }: ChatAction<'receiveMessage'>,
+): ChannelState => {
   const { messages } = state;
   const message = makeMessageItem(payload.message);
   const previewMap = filterPreviewMap(payload.previewId, state.previewMap);
-  const optimisticMessageMap = filterOptimisticMessages(payload.previewId, state.optimisticMessageMap);
+  const optimisticMessageMap = filterOptimisticMessages(
+    payload.previewId,
+    state.optimisticMessageMap,
+  );
 
   const resetMessagesState = (state: ChannelState): ChannelState => {
     return { ...state, previewMap, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
@@ -164,7 +180,11 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
     return resetMessagesState(state);
   }
   if (message.pos < topMessage.pos) {
-    return { ...state, optimisticMessageMap, messages: state.fullLoaded ? L.prepend(message, messages) : messages };
+    return {
+      ...state,
+      optimisticMessageMap,
+      messages: state.fullLoaded ? L.prepend(message, messages) : messages,
+    };
   }
   if (message.pos > bottomMessage.pos) {
     return { ...state, previewMap, messages: L.append(message, messages), optimisticMessageMap };
@@ -178,10 +198,18 @@ const handleNewMessage = (state: ChannelState, { payload }: ChatAction<'receiveM
     // Duplicate message
     return { ...state, optimisticMessageMap };
   }
-  return { ...state, previewMap, messages: L.insert(insertIndex, message, messages), optimisticMessageMap };
+  return {
+    ...state,
+    previewMap,
+    messages: L.insert(insertIndex, message, messages),
+    optimisticMessageMap,
+  };
 };
 
-const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'messagesLoaded'>): ChannelState => {
+const handleMessagesLoaded = (
+  state: ChannelState,
+  { payload }: ChatAction<'messagesLoaded'>,
+): ChannelState => {
   // Note:
   // The payload.messages are sorted in descending order
   // But the state.messages are sorted in ascending order
@@ -205,7 +233,10 @@ const handleMessagesLoaded = (state: ChannelState, { payload }: ChatAction<'mess
   if (payloadMessages.length === 0) {
     return state;
   }
-  return { ...state, messages: L.concat(L.reverse(L.map(makeMessageItem, payloadMessages)), state.messages) };
+  return {
+    ...state,
+    messages: L.concat(L.reverse(L.map(makeMessageItem, payloadMessages)), state.messages),
+  };
 };
 
 const handleMessageSending = (
@@ -213,7 +244,9 @@ const handleMessageSending = (
   { payload: { newMessage, sendTime, media } }: ChatAction<'messageSending'>,
 ): ChannelState => {
   if (!newMessage.previewId) return state;
-  const preview = Object.values(state.previewMap).find((preview) => preview.id === newMessage.previewId);
+  const preview = Object.values(state.previewMap).find(
+    (preview) => preview.id === newMessage.previewId,
+  );
   if (!preview) return state;
   const optimisticItem = newMessageOptimisticItem(newMessage, preview, sendTime, media);
   return {
@@ -231,7 +264,10 @@ const handleMessageEditing = (
   const optimisticItem = editMessageOptimisticItem(editMessage, previousMessage, sendTime, media);
   return {
     ...state,
-    optimisticMessageMap: { ...state.optimisticMessageMap, [editMessage.messageId]: optimisticItem },
+    optimisticMessageMap: {
+      ...state.optimisticMessageMap,
+      [editMessage.messageId]: optimisticItem,
+    },
   };
 };
 
@@ -241,8 +277,14 @@ const compareMessageModified = (a: MessageItem, b: MessageItem): number => {
   return aModified - bModified;
 };
 
-const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messageEdited'>): ChannelState => {
-  const optimisticMessageMap = filterOptimisticMessages(payload.message.id, state.optimisticMessageMap);
+const handleMessageEdited = (
+  state: ChannelState,
+  { payload }: ChatAction<'messageEdited'>,
+): ChannelState => {
+  const optimisticMessageMap = filterOptimisticMessages(
+    payload.message.id,
+    state.optimisticMessageMap,
+  );
   const resetMessagesState = (state: ChannelState): ChannelState => {
     return { ...state, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
   };
@@ -270,7 +312,11 @@ const handleMessageEdited = (state: ChannelState, { payload }: ChatAction<'messa
       }
       if (item.pos === message.pos) {
         // In-place editing
-        return { ...state, messages: L.update(index, message, state.messages), optimisticMessageMap };
+        return {
+          ...state,
+          messages: L.update(index, message, state.messages),
+          optimisticMessageMap,
+        };
       }
       messagesState = L.remove(index, 1, state.messages);
     }
@@ -350,7 +396,11 @@ const handleMessagePreview = (
  * @param messages messages sorted by pos in ascending order
  * @param pos the pos of the message to find. this is just a hint for optimization.
  */
-export const findMessage = (messages: List<MessageItem>, id: string, pos?: number): [MessageItem, number] | null => {
+export const findMessage = (
+  messages: List<MessageItem>,
+  id: string,
+  pos?: number,
+): [MessageItem, number] | null => {
   let failedFoundByPos: [MessageItem | null, number] | null = null;
   if (pos != null) {
     const [index, item] = binarySearchPosList(messages, pos);
@@ -402,7 +452,10 @@ const handleMessageDeleted = (
   return { ...state, optimisticMessageMap, messages: L.remove(index, 1, state.messages) };
 };
 
-const handleResetGc = (state: ChannelState, { payload: { pos } }: ChatAction<'resetGc'>): ChannelState => {
+const handleResetGc = (
+  state: ChannelState,
+  { payload: { pos } }: ChatAction<'resetGc'>,
+): ChannelState => {
   if (state.scheduledGc == null) return state;
   const { lowerPos } = state.scheduledGc;
   if (pos >= lowerPos) return state;
@@ -413,7 +466,10 @@ const handleSetOptimisticMessage = (
   state: ChannelState,
   { payload }: ChatAction<'setOptimisticMessage'>,
 ): ChannelState => {
-  return { ...state, optimisticMessageMap: { ...state.optimisticMessageMap, [payload.ref.id]: payload } };
+  return {
+    ...state,
+    optimisticMessageMap: { ...state.optimisticMessageMap, [payload.ref.id]: payload },
+  };
 };
 
 const handleRemoveOptimisticMessage = (
@@ -453,7 +509,11 @@ const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): Chann
   );
 };
 
-const channelReducer$ = (state: ChannelState, action: ChatActionUnion, initialized: boolean): ChannelState => {
+const channelReducer$ = (
+  state: ChannelState,
+  action: ChatActionUnion,
+  initialized: boolean,
+): ChannelState => {
   switch (action.type) {
     case 'messagePreview':
       return handleMessagePreview(state, action);

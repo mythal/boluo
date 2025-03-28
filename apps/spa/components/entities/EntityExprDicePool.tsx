@@ -21,29 +21,31 @@ interface SingleDiceProps {
   fumble?: number;
 }
 
-export const SingleDice: FC<SingleDiceProps> = React.memo(({ value, last = false, fumble, critical }) => {
-  const intl = useIntl();
-  let special: ReactNode = null;
-  if (fumble && value <= fumble) {
-    const title = intl.formatMessage({ defaultMessage: 'Fumble' });
-    special = <ThumbsUp className="inline text-sm" aria-label={title} />;
-  } else if (critical && value >= critical) {
-    const title = intl.formatMessage({ defaultMessage: 'Critical' });
-    special = <ThumbsDown className="inline text-sm" aria-label={title} />;
-  }
+export const SingleDice: FC<SingleDiceProps> = React.memo(
+  ({ value, last = false, fumble, critical }: SingleDiceProps) => {
+    const intl = useIntl();
+    let special: ReactNode = null;
+    if (fumble && value <= fumble) {
+      const title = intl.formatMessage({ defaultMessage: 'Fumble' });
+      special = <ThumbsUp className="inline text-sm" aria-label={title} />;
+    } else if (critical && value >= critical) {
+      const title = intl.formatMessage({ defaultMessage: 'Critical' });
+      special = <ThumbsDown className="inline text-sm" aria-label={title} />;
+    }
 
-  return (
-    <span>
-      <span>{value}</span>
-      <span className="text-surface-700 text-xs">{special}</span>
-      {!last && ', '}
-    </span>
-  );
-});
+    return (
+      <span>
+        <span>{value}</span>
+        <span className="text-surface-700 text-xs">{special}</span>
+        {!last && ', '}
+      </span>
+    );
+  },
+);
 
 SingleDice.displayName = 'SingleDice';
 
-export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }) => {
+export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }: Props) => {
   const topLevel = useIsTopLevel();
   return (
     <RollBox>

@@ -15,7 +15,8 @@ export const SidebarButton: FC = () => {
   const isTouch = useIsTouch();
   const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
 
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('bottom-start');
+  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
+    useTooltip('bottom-start');
   return (
     <FloatingPortal>
       <button

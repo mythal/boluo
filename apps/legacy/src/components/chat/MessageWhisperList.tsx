@@ -41,7 +41,8 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
   const { whisperToUsers } = message;
 
   const canAccess =
-    whisperToUsers === null || (myMember && (myMember.isMaster || whisperToUsers.indexOf(myMember.userId) !== -1));
+    whisperToUsers === null ||
+    (myMember && (myMember.isMaster || whisperToUsers.indexOf(myMember.userId) !== -1));
   const reveal = async () => {
     const result = await get('/messages/query', { id: message.id });
     if (result.isErr) {
@@ -54,12 +55,17 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
     dispatch({ type: 'REVEAL_MESSAGE', message: result.value, pane });
   };
   if (canAccess) {
-    const canAccessMembers = members.filter((member) => whisperToUsers!.indexOf(member.user.id) !== -1);
+    const canAccessMembers = members.filter(
+      (member) => whisperToUsers!.indexOf(member.user.id) !== -1,
+    );
     let description = <span>悄悄话</span>;
     if (whisperToUsers!.length > 0 && myMember?.isMaster) {
       description = (
         <span>
-          对 {canAccessMembers.map((member) => member.channel.characterName || member.user.nickname).join(', ')}{' '}
+          对{' '}
+          {canAccessMembers
+            .map((member) => member.channel.characterName || member.user.nickname)
+            .join(', ')}{' '}
           说的悄悄话
         </span>
       );

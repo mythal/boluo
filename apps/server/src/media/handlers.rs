@@ -54,7 +54,12 @@ fn check_size(size: usize, max_size: usize) -> Result<(), AppError> {
     Ok(())
 }
 
-pub async fn upload(req: Request<Incoming>, id: Uuid, params: Upload, max_size: usize) -> Result<MediaFile, AppError> {
+pub async fn upload(
+    req: Request<Incoming>,
+    id: Uuid,
+    params: Upload,
+    max_size: usize,
+) -> Result<MediaFile, AppError> {
     let Upload {
         filename,
         mime_type,
@@ -94,7 +99,10 @@ async fn media_upload(req: Request<Incoming>) -> Result<Media, AppError> {
     let media_id = id();
     let media_file = upload(req, media_id, params, 1024 * 1024 * 16).await?;
     let pool = db::get().await;
-    media_file.create(&pool, session.user_id, "").await.map_err(Into::into)
+    media_file
+        .create(&pool, session.user_id, "")
+        .await
+        .map_err(Into::into)
 }
 
 async fn get(req: Request<impl Body>) -> Result<Response, AppError> {
@@ -110,9 +118,15 @@ async fn get(req: Request<impl Body>) -> Result<Response, AppError> {
     if let Some(id) = id {
         media = Some(Media::get_by_id(&pool, &id).await.or_not_found()?);
     } else if let Some(filename) = filename {
-        media = Some(Media::get_by_filename(&pool, &filename).await.or_not_found()?);
+        media = Some(
+            Media::get_by_filename(&pool, &filename)
+                .await
+                .or_not_found()?,
+        );
     }
-    let media = media.ok_or_else(|| AppError::BadRequest("Filename or media id must be specified.".to_string()))?;
+    let media = media.ok_or_else(|| {
+        AppError::BadRequest("Filename or media id must be specified.".to_string())
+    })?;
 
     let url = format!("{}/{}", media_public_url().trim_end_matches('/'), media.id);
     let response = hyper::Response::builder()
@@ -156,8 +170,8 @@ async fn put_object_presigned(
 ) -> Result<String, AppError> {
     let expires_in = std::time::Duration::from_secs(expires_in);
 
-    let presigned =
-        aws_sdk_s3::presigning::PresigningConfig::expires_in(expires_in).map_err(|e| AppError::Unexpected(e.into()))?;
+    let presigned = aws_sdk_s3::presigning::PresigningConfig::expires_in(expires_in)
+        .map_err(|e| AppError::Unexpected(e.into()))?;
     let presigned_request = client
         .put_object()
         .content_type(content_type)

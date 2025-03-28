@@ -74,7 +74,9 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
     missing()
 }
 
-async fn handler(req: Request<Incoming>) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
+async fn handler(
+    req: Request<Incoming>,
+) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
     use std::time::Instant;
     let start = Instant::now();
     let method = req.method().clone();
@@ -160,7 +162,9 @@ async fn main() {
 
     let addr = SocketAddr::new(IpAddr::V4(addr), port);
 
-    let listener = TcpListener::bind(addr).await.expect("Failed to bind address");
+    let listener = TcpListener::bind(addr)
+        .await
+        .expect("Failed to bind address");
 
     redis::check().await;
     log::info!("Cache is ready");
@@ -174,8 +178,9 @@ async fn main() {
     events::tasks::start();
     messages::tasks::start();
     // https://tokio.rs/tokio/topics/shutdown
-    let mut terminate_stream = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-        .expect("Failed to create signal stream");
+    let mut terminate_stream =
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("Failed to create signal stream");
     let http = http1::Builder::new();
     loop {
         tokio::select! {

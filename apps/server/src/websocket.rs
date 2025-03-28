@@ -57,7 +57,12 @@ where
         match hyper::upgrade::on(req).await {
             Ok(upgraded) => {
                 let upgraded = TokioIo::new(upgraded);
-                let ws_stream = tokio_tungstenite::WebSocketStream::from_raw_socket(upgraded, Role::Server, None).await;
+                let ws_stream = tokio_tungstenite::WebSocketStream::from_raw_socket(
+                    upgraded,
+                    Role::Server,
+                    None,
+                )
+                .await;
                 handler(ws_stream).await;
                 log::debug!("WebSocket connection established");
             }

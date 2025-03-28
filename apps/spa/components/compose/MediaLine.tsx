@@ -16,7 +16,9 @@ export const MediaLine: FC = () => {
   const handleRemove = () => {
     dispatch({ type: 'media', payload: { media: null } });
   };
-  const composeMedia = useAtomValue(useMemo(() => selectAtom(composeAtom, ({ media }) => media), [composeAtom]));
+  const composeMedia = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ media }) => media), [composeAtom]),
+  );
   if (!composeMedia) return null;
 
   let content: ReactNode = null;
@@ -25,7 +27,10 @@ export const MediaLine: FC = () => {
     const isSizeValid = composeMedia.size < mediaMaxSizeByte;
     content = (
       <>
-        <div data-valid={isTypeValid} className="data-[valid=false]:text-compose-media-invalid truncate">
+        <div
+          data-valid={isTypeValid}
+          className="data-[valid=false]:text-compose-media-invalid truncate"
+        >
           {composeMedia.name}
         </div>
         <div
@@ -38,7 +43,7 @@ export const MediaLine: FC = () => {
     );
   } else {
     content = (
-      <a href={mediaUrl(composeMedia)} target="_blank" className={classes.link}>
+      <a href={mediaUrl(composeMedia)} target="_blank" className={classes.link} rel="noreferrer">
         <FormattedMessage defaultMessage="Link" />
       </a>
     );
@@ -51,7 +56,10 @@ export const MediaLine: FC = () => {
         <FormattedMessage defaultMessage="Attachment" />:
       </div>
       {content}
-      <button onClick={handleRemove} className="text-compose-media-remove-text hover:text-compose-media-remove-hover">
+      <button
+        onClick={handleRemove}
+        className="text-compose-media-remove-text hover:text-compose-media-remove-hover"
+      >
         <Icon icon={Trash} />
       </button>
     </div>

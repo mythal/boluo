@@ -61,7 +61,10 @@ impl Media {
         path
     }
 
-    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, media_id: &Uuid) -> Result<Option<Media>, sqlx::Error> {
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        media_id: &Uuid,
+    ) -> Result<Option<Media>, sqlx::Error> {
         let media = sqlx::query_file_scalar!("sql/media/get_by_id.sql", media_id)
             .fetch_optional(db)
             .await?;

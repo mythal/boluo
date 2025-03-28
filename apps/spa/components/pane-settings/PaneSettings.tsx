@@ -17,7 +17,9 @@ import { ThemeSelect } from './ThemeSelect';
 import { type User } from '@boluo/api';
 import { EditDefaultColor } from './EditDefaultColor';
 
-const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="mb-2 font-bold">{children}</h3>;
+const SectionTitle: FC<ChildrenProps> = ({ children }) => (
+  <h3 className="mb-2 font-bold">{children}</h3>
+);
 
 const LanguageField = () => {
   const id = useId();

@@ -1,17 +1,10 @@
-import {
-  type ApiError,
-  appFetch,
-  type Get,
-  type LoginReturn,
-  makeUri,
-  type Media,
-  type Patch,
-  type Post,
-  type User,
-} from '@boluo/api';
+import { appFetch, type Get, makeUri, type Patch, type Post } from '@boluo/api';
 import { atom } from 'jotai';
 import { store } from '@boluo/store';
-import type { Result } from '@boluo/utils';
+import type { Result } from '@boluo/utils/result';
+import { ApiError } from '@boluo/api/errors';
+import { LoginReturn, User } from '@boluo/api/types/users';
+import { Media } from '@boluo/api/types/media';
 
 export const backendUrlAtom = atom(process?.env?.PUBLIC_BACKEND_URL ?? '');
 
@@ -85,7 +78,10 @@ export async function post<P extends keyof Post>(
   return appFetch(url, params);
 }
 
-export async function login(username: string, password: string): Promise<Result<LoginReturn, ApiError>> {
+export async function login(
+  username: string,
+  password: string,
+): Promise<Result<LoginReturn, ApiError>> {
   const domain = process?.env?.DOMAIN;
   let withToken = true;
   if (domain && (location.hostname === domain || location.hostname.endsWith('.' + domain))) {

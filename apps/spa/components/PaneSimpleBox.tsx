@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import type { ChildrenProps } from '@boluo/utils';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface Props extends ChildrenProps {}
 
 export const PaneSimpleBox: FC<Props> = ({ children }) => {

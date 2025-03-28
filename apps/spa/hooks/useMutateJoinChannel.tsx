@@ -22,4 +22,9 @@ export const useMutateJoinChannel = (
   options: SWRMutationConfiguration<ChannelWithMember, ApiError, Key, Args> = {
     revalidate: true,
   },
-) => useSWRMutation<ChannelWithMember, ApiError, Key, Args>([path, channelId] as const, updater, options);
+) =>
+  useSWRMutation<ChannelWithMember, ApiError, Key, Args>(
+    [path, channelId] as const,
+    updater,
+    options,
+  );

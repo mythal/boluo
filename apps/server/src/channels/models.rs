@@ -11,7 +11,9 @@ use crate::users::User;
 use crate::utils::merge_blank;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, TS, sqlx::Type)]
+#[derive(
+    Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, TS, sqlx::Type,
+)]
 #[ts(export)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "text", rename_all = "snake_case")]
@@ -81,7 +83,10 @@ impl Channel {
         .map_err(Into::into)
     }
 
-    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<Channel>, sqlx::Error> {
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<Channel>, sqlx::Error> {
         sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
             .fetch_optional(db)
             .await
@@ -177,20 +182,29 @@ impl Channel {
         .map_err(Into::into)
     }
 
-    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<(Uuid, f64)>, sqlx::Error> {
+    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+    ) -> Result<Vec<(Uuid, f64)>, sqlx::Error> {
         let rows = sqlx::query_file!("sql/channels/channel_max_pos.sql")
             .fetch_all(db)
             .await?;
-        Ok(rows.into_iter().map(|row| (row.channel_id, row.max_pos)).collect())
+        Ok(rows
+            .into_iter()
+            .map(|row| (row.channel_id, row.max_pos))
+            .collect())
     }
 
     pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
     ) -> Result<Vec<ChannelWithMember>, sqlx::Error> {
-        sqlx::query_file_as!(ChannelWithMember, "sql/channels/get_channels_by_user.sql", user_id)
-            .fetch_all(db)
-            .await
+        sqlx::query_file_as!(
+            ChannelWithMember,
+            "sql/channels/get_channels_by_user.sql",
+            user_id
+        )
+        .fetch_all(db)
+        .await
     }
 }
 
@@ -213,7 +227,9 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for ChannelMember {
         value: ::sqlx::postgres::PgValueRef<'r>,
     ) -> ::std::result::Result<
         Self,
-        ::std::boxed::Box<dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync>,
+        ::std::boxed::Box<
+            dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync,
+        >,
     > {
         let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
         let user_id = decoder.try_decode::<Uuid>()?;
@@ -274,7 +290,11 @@ impl ChannelMember {
         sqlx::query_file!("sql/channels/get_color_list.sql", channel_id)
             .fetch_all(db)
             .await
-            .map(|rows| rows.into_iter().map(|row| (row.user_id, row.color)).collect())
+            .map(|rows| {
+                rows.into_iter()
+                    .map(|row| (row.user_id, row.color))
+                    .collect()
+            })
     }
 
     pub async fn get_by_user_and_space<'c, T: sqlx::PgExecutor<'c>>(
@@ -321,10 +341,14 @@ impl ChannelMember {
         user_id: &Uuid,
         channel_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
-        sqlx::query_file!("sql/channels/get_with_space_member.sql", user_id, channel_id)
-            .fetch_optional(db)
-            .await
-            .map(|row| row.map(|record| (record.channel, record.space)))
+        sqlx::query_file!(
+            "sql/channels/get_with_space_member.sql",
+            user_id,
+            channel_id
+        )
+        .fetch_optional(db)
+        .await
+        .map(|row| row.map(|record| (record.channel, record.space)))
     }
 
     pub async fn get_cached<'c, T: sqlx::PgExecutor<'c>>(
@@ -333,7 +357,10 @@ impl ChannelMember {
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        if let Some(cache) = crate::events::context::get_cache().try_mailbox(&space_id).await {
+        if let Some(cache) = crate::events::context::get_cache()
+            .try_mailbox(&space_id)
+            .await
+        {
             if let Ok(mut cache) = cache.try_lock() {
                 if let Some(members) = cache.members.get_mut(&channel_id) {
                     if let Some(member) = members.map.get(&user_id) {
@@ -353,9 +380,10 @@ impl ChannelMember {
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        let channel_member = sqlx::query_file_scalar!("sql/channels/get_channel_member.sql", &user_id, &channel_id)
-            .fetch_optional(db)
-            .await?;
+        let channel_member =
+            sqlx::query_file_scalar!("sql/channels/get_channel_member.sql", &user_id, &channel_id)
+                .fetch_optional(db)
+                .await?;
         tokio::spawn(async move {
             let db = db::get().await;
             let _ = Member::get_by_channel(&db, space_id, channel_id).await;
@@ -367,10 +395,14 @@ impl ChannelMember {
         user_id: &Uuid,
         channel_id: &Uuid,
     ) -> Result<u64, sqlx::Error> {
-        sqlx::query_file!("sql/channels/remove_user_from_channel.sql", user_id, channel_id)
-            .execute(db)
-            .await
-            .map(|r| r.rows_affected())
+        sqlx::query_file!(
+            "sql/channels/remove_user_from_channel.sql",
+            user_id,
+            channel_id
+        )
+        .execute(db)
+        .await
+        .map(|r| r.rows_affected())
     }
 
     pub async fn remove_user_by_space<'c, T: sqlx::PgExecutor<'c>>(
@@ -437,9 +469,14 @@ impl ChannelMember {
         channel_id: &Uuid,
         is_master: bool,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/channels/set_master.sql", user_id, channel_id, is_master)
-            .fetch_optional(db)
-            .await
+        sqlx::query_file_scalar!(
+            "sql/channels/set_master.sql",
+            user_id,
+            channel_id,
+            is_master
+        )
+        .fetch_optional(db)
+        .await
     }
 }
 
@@ -473,9 +510,10 @@ impl Member {
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Vec<Member>, sqlx::Error> {
-        let members = sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id,)
-            .fetch_all(db)
-            .await?;
+        let members =
+            sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id,)
+                .fetch_all(db)
+                .await?;
         let instant = std::time::Instant::now();
         let members_copy = members.clone();
         tokio::spawn(async move {
@@ -505,7 +543,10 @@ pub async fn members_add_user<'c, T: sqlx::PgExecutor<'c>>(
     db: T,
     members: Vec<Member>,
 ) -> Result<Vec<crate::channels::api::MemberWithUser>, sqlx::Error> {
-    let id_list: Vec<Uuid> = members.iter().map(|member| member.channel.user_id).collect();
+    let id_list: Vec<Uuid> = members
+        .iter()
+        .map(|member| member.channel.user_id)
+        .collect();
     let mut users = User::get_by_id_list(db, &id_list).await?;
     let mut members_with_user = Vec::with_capacity(members.len());
     for member in members {

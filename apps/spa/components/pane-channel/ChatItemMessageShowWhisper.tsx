@@ -15,9 +15,18 @@ interface Props {
   className?: string;
 }
 
-export const ChatItemMessageShowWhisper: FC<Props> = ({ messageId, userIdList, channelId, className }) => {
+export const ChatItemMessageShowWhisper: FC<Props> = ({
+  messageId,
+  userIdList,
+  channelId,
+  className,
+}) => {
   const { data: chanenlMembers } = useQueryChannelMembers(channelId);
-  if (chanenlMembers == null || chanenlMembers.members.length === 0 || chanenlMembers.selfIndex == null) {
+  if (
+    chanenlMembers == null ||
+    chanenlMembers.members.length === 0 ||
+    chanenlMembers.selfIndex == null
+  ) {
     return null;
   }
   const member = chanenlMembers.members[chanenlMembers.selfIndex];
@@ -80,7 +89,13 @@ const ShowButton: FC<{ messageId: string; channelId: string }> = ({ messageId, c
   }, [trigger]);
 
   return (
-    <Button ref={buttonRef} type="button" data-small disabled={isMutating} onClick={() => trigger()}>
+    <Button
+      ref={buttonRef}
+      type="button"
+      data-small
+      disabled={isMutating}
+      onClick={() => trigger()}
+    >
       <FormattedMessage defaultMessage="Show" />
     </Button>
   );

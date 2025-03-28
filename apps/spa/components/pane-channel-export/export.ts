@@ -105,7 +105,10 @@ const entityToExportEntity =
       return {
         type: 'Link',
         text: text.substring(start, start + len),
-        href: typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len),
+        href:
+          typeof entity.href === 'string'
+            ? entity.href
+            : text.substr(entity.href.start, entity.href.len),
         start: entity.start,
         len: entity.len,
       };
@@ -115,7 +118,10 @@ const entityToExportEntity =
       entity.type === 'Code' ||
       entity.type === 'CodeBlock'
     ) {
-      return { ...entity, text: text.substring(entity.child.start, entity.child.start + entity.child.len) };
+      return {
+        ...entity,
+        text: text.substring(entity.child.start, entity.child.start + entity.child.len),
+      };
     } else {
       return { ...entity, text: text.substring(entity.start, entity.start + entity.len) };
     }
@@ -135,8 +141,21 @@ export const exportMessage = (intl: IntlShape, members: ChannelMemberWithUser[])
     };
   }
   return (message: Message): ExportMessage => {
-    const { id, senderId, name, mediaId, inGame, isAction, isMaster, folded, created, modified, text, entities, seed } =
-      message;
+    const {
+      id,
+      senderId,
+      name,
+      mediaId,
+      inGame,
+      isAction,
+      isMaster,
+      folded,
+      created,
+      modified,
+      text,
+      entities,
+      seed,
+    } = message;
     const rng = makeRng(seed);
 
     let exportEntities: ExportEntity[] = [];
@@ -236,7 +255,9 @@ function entityMarkdown(entity: ExportEntity): string {
 }
 
 function booleanToText(intl: IntlShape, value: boolean): string {
-  return value ? intl.formatMessage({ defaultMessage: 'Yes' }) : intl.formatMessage({ defaultMessage: 'No' });
+  return value
+    ? intl.formatMessage({ defaultMessage: 'Yes' })
+    : intl.formatMessage({ defaultMessage: 'No' });
 }
 
 export function csvBlob(intl: IntlShape, messages: ExportMessage[]): Blob {
@@ -253,7 +274,18 @@ export function csvBlob(intl: IntlShape, messages: ExportMessage[]): Blob {
   ].join(', ');
   let csv = headerRow + '\n';
   for (const message of messages) {
-    const { created, name, sender, isMaster, isAction, inGame, entities, whisperTo, mediaUrl, folded } = message;
+    const {
+      created,
+      name,
+      sender,
+      isMaster,
+      isAction,
+      inGame,
+      entities,
+      whisperTo,
+      mediaUrl,
+      folded,
+    } = message;
     const row: string[] = [
       formatDateString(created),
       name,
@@ -376,7 +408,10 @@ export function bbCodeTextBlob(context: ExportContext, messages: ExportMessage[]
   return new Blob([text], { type: 'text/plain;charset=utf-8;' });
 }
 
-export function txtBlob({ intl, options: { simple } }: ExportContext, messages: ExportMessage[]): Blob {
+export function txtBlob(
+  { intl, options: { simple } }: ExportContext,
+  messages: ExportMessage[],
+): Blob {
   let text = '';
   for (const message of messages) {
     const name = messageName(intl, message, simple);

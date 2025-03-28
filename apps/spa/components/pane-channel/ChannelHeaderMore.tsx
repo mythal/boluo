@@ -20,11 +20,17 @@ interface Props {
   setHeaderState: (state: ChannelHeaderState) => void;
 }
 
-export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = ({ member, edit }) => {
+export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = ({
+  member,
+  edit,
+}) => {
   return (
     <button
       onClick={edit}
-      className={clsx('flex items-center gap-0.5 whitespace-nowrap rounded-sm px-2 py-1', 'hover:bg-pin-brand-700/10')}
+      className={clsx(
+        'flex items-center gap-0.5 whitespace-nowrap rounded-sm px-2 py-1',
+        'hover:bg-pin-brand-700/10',
+      )}
     >
       {member.characterName ? (
         <>
@@ -59,7 +65,9 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   if (currentUser == null) {
     // Keep the button hidden
   } else if (member) {
-    memberButton = <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />;
+    memberButton = (
+      <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />
+    );
   } else if (channel != null) {
     memberButton = <MemberJoinButton channel={channel} />;
   }

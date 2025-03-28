@@ -11,8 +11,25 @@ import help from '../../assets/icons/help.svg';
 import plus from '../../assets/icons/plus-circle.svg';
 import { useNotificationSwitch } from '../../states/notify';
 import { useSelector } from '../../store';
-import { fontBold, fontMono, mB, mR, mT, p, pR, pX, pY, textBase, textSm } from '../../styles/atoms';
-import { gray, sidebarItemActiveBgColor, sidebarItemHoverBgColor, textColor } from '../../styles/colors';
+import {
+  fontBold,
+  fontMono,
+  mB,
+  mR,
+  mT,
+  p,
+  pR,
+  pX,
+  pY,
+  textBase,
+  textSm,
+} from '../../styles/atoms';
+import {
+  gray,
+  sidebarItemActiveBgColor,
+  sidebarItemHoverBgColor,
+  textColor,
+} from '../../styles/colors';
 import { encodeUuid } from '../../utils/id';
 import { chatPath } from '../../utils/path';
 import Icon from '../atoms/Icon';
@@ -77,7 +94,12 @@ function SidebarExpandItems({ space, channels }: Props) {
   return (
     <React.Fragment>
       <SidebarConnectionDisplay />
-      <NavLink css={sidebarTitle} exact activeClassName="active" to={`/chat/${encodeUuid(space.id)}`}>
+      <NavLink
+        css={sidebarTitle}
+        exact
+        activeClassName="active"
+        to={`/chat/${encodeUuid(space.id)}`}
+      >
         <SpaceName>{space.name}</SpaceName>
       </NavLink>
       <SidebarSectionTitle>

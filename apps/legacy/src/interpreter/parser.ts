@@ -231,7 +231,8 @@ const strong: P<Entity> = regex(STRONG_REGEX).then(([match, { text, rest }]) => 
   return [entity, { text, rest }];
 });
 
-const URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/;
+const URL_REGEX =
+  /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/;
 
 const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
@@ -256,7 +257,8 @@ const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
 // \d+ match digits and stop.
 // \s(?=\S) match single space and stop.
 // [^...]: stop characters.
-const TEXT_REGEX = /\d+|\s(?=\S)|[，。、)）」】\]：！？]+\s*|[\s\S][^\d*{【@[(/（#\s，。、）)」】\]：！？]*\s*/;
+const TEXT_REGEX =
+  /\d+|\s(?=\S)|[，。、)）」】\]：！？]+\s*|[\s\S][^\d*{【@[(/（#\s，。、）)」】\]：！？]*\s*/;
 
 const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
@@ -354,35 +356,37 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))?\s*(\d{1,3})\s*/).then(([matc
   return [node, state];
 });
 
-const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then(([[entire, modifier], state], env) => {
-  modifier = (modifier || '').toLowerCase();
-  let subType: CocRoll['subType'] = 'NORMAL';
-  switch (modifier) {
-    case 'p':
-      subType = 'PENALTY';
-      break;
-    case 'pp':
-      subType = 'PENALTY_2';
-      break;
-    case 'b':
-      subType = 'BONUS';
-      break;
-    case 'bb':
-      subType = 'BONUS_2';
-      break;
-  }
-  const node: CocRoll = {
-    type: 'CocRoll',
-    subType,
-  };
-  const right = atom(true).run(state, env);
-  if (right) {
-    const [target, state] = right;
-    node.target = target;
+const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then(
+  ([[entire, modifier], state], env) => {
+    modifier = (modifier || '').toLowerCase();
+    let subType: CocRoll['subType'] = 'NORMAL';
+    switch (modifier) {
+      case 'p':
+        subType = 'PENALTY';
+        break;
+      case 'pp':
+        subType = 'PENALTY_2';
+        break;
+      case 'b':
+        subType = 'BONUS';
+        break;
+      case 'bb':
+        subType = 'BONUS_2';
+        break;
+    }
+    const node: CocRoll = {
+      type: 'CocRoll',
+      subType,
+    };
+    const right = atom(true).run(state, env);
+    if (right) {
+      const [target, state] = right;
+      node.target = target;
+      return [node, state];
+    }
     return [node, state];
-  }
-  return [node, state];
-});
+  },
+);
 
 const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](\d{0,4})(?:([kKLlHh])(\d{1,3}))?(?![a-zA-Z])/).then(
   ([match, state], env) => {
@@ -448,9 +452,11 @@ const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T):
   new P((state, env) => {
     const rest = (l: T): P<T> =>
       new P((state, env) => {
-        const restExpr: P<T> = spaces.with(op.skip(spaces).and(p())).then(([[op, r], state], env) => {
-          return rest(cons(op, l, r)).run(state, env);
-        });
+        const restExpr: P<T> = spaces
+          .with(op.skip(spaces).and(p()))
+          .then(([[op, r], state], env) => {
+            return rest(cons(op, l, r)).run(state, env);
+          });
         return maybe(restExpr)
           .map((node) => node ?? l)
           .run(state, env);
@@ -494,7 +500,8 @@ const max: P<ExprNode> = regex(/^[Mm][Aa][Xx]\s*/)
   .then(([_, state], env) => atom().run(state, env))
   .map((node) => ExprMinMax(node, 'Max'));
 
-const subExprMapper = (node: ExprNode): SubExpr => (node.type === 'SubExpr' ? node : { type: 'SubExpr', node });
+const subExprMapper = (node: ExprNode): SubExpr =>
+  node.type === 'SubExpr' ? node : { type: 'SubExpr', node };
 
 const atom = (disableRoll = false): P<ExprNode> => {
   const subExpr = choice([
@@ -590,7 +597,9 @@ const ROLL_COMMAND = /^[.。]r\s*/;
 
 const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl, expression, span]);
 
-const message: P<Entity[]> = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
+const message: P<Entity[]> = many(entity).map((entityList) =>
+  entityList.reduce(mergeTextEntitiesReducer, []),
+);
 
 const rollCommand: P<Entity[]> = new P((state, env) => {
   const prefix = ROLL_COMMAND.exec(state.rest);
@@ -605,7 +614,17 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
     }
     return exprNodeToEntity(state)(result);
   });
-  const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl, expression, exprEntity, span]);
+  const entity = choice<Entity>([
+    codeBlock,
+    code,
+    strong,
+    emphasis,
+    link,
+    autoUrl,
+    expression,
+    exprEntity,
+    span,
+  ]);
   const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
   return message.run(next, env);
 });

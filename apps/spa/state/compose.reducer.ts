@@ -39,7 +39,10 @@ export const makeInitialComposeState = (): ComposeState => ({
 export const clearBackup = (state: ComposeState): ComposeState =>
   state.backup === undefined ? state : { ...state, backup: undefined };
 
-const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setSource'>): ComposeState => {
+const handleSetComposeSource = (
+  state: ComposeState,
+  action: ComposeAction<'setSource'>,
+): ComposeState => {
   const { source } = action.payload;
   let { previewId } = state;
   if ((source === '' || state.source === '') && state.edit === null) {
@@ -48,7 +51,10 @@ const handleSetComposeSource = (state: ComposeState, action: ComposeAction<'setS
   return { ...state, source: action.payload.source, previewId };
 };
 
-const handleToggleInGame = (state: ComposeState, { payload }: ComposeAction<'toggleInGame'>): ComposeState => {
+const handleToggleInGame = (
+  state: ComposeState,
+  { payload }: ComposeAction<'toggleInGame'>,
+): ComposeState => {
   const { source } = state;
   const { inGame: modifier } = parseModifiers(source);
   let nextSource;
@@ -65,7 +71,10 @@ const handleToggleInGame = (state: ComposeState, { payload }: ComposeAction<'tog
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
-const handleSetInGame = (state: ComposeState, { payload }: ComposeAction<'setInGame'>): ComposeState => {
+const handleSetInGame = (
+  state: ComposeState,
+  { payload }: ComposeAction<'setInGame'>,
+): ComposeState => {
   const { source } = state;
   const { inGame: modifier } = parseModifiers(source);
   if (modifier !== false && modifier.inGame === payload.inGame) {
@@ -85,7 +94,10 @@ const handleSetInGame = (state: ComposeState, { payload }: ComposeAction<'setInG
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
-const handleRecoverState = (state: ComposeState, action: ComposeAction<'recoverState'>): ComposeState => {
+const handleRecoverState = (
+  state: ComposeState,
+  action: ComposeAction<'recoverState'>,
+): ComposeState => {
   return { ...action.payload, previewId: makeId(), media: null };
 };
 
@@ -142,7 +154,10 @@ const handleBold = (state: ComposeState, _: ComposeAction<'bold'>): ComposeState
   return { ...state, source, range: [head.length + 2, head.length + insertText.length - 2] };
 };
 
-const handleSetInputedName = (state: ComposeState, { payload }: ComposeAction<'setInputedName'>): ComposeState => {
+const handleSetInputedName = (
+  state: ComposeState,
+  { payload }: ComposeAction<'setInputedName'>,
+): ComposeState => {
   const inputedName = payload.inputedName.trim().slice(0, 32);
   const nextState = { ...state, inputedName };
   if (payload.setInGame) {
@@ -152,7 +167,10 @@ const handleSetInputedName = (state: ComposeState, { payload }: ComposeAction<'s
   }
 };
 
-const handleSetRange = (state: ComposeState, { payload: { range } }: ComposeAction<'setRange'>): ComposeState => {
+const handleSetRange = (
+  state: ComposeState,
+  { payload: { range } }: ComposeAction<'setRange'>,
+): ComposeState => {
   if (!range) {
     const end = state.source.length - 1;
     return { ...state, range: [end, end] };
@@ -191,7 +209,11 @@ const handleEditMessage = (
   };
 };
 
-const modifyModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {
+const modifyModifier = (
+  state: ComposeState,
+  modifier: Modifier | false,
+  command: string,
+): ComposeState => {
   const { source } = state;
   let nextSource = source;
   if (!modifier) {
@@ -205,7 +227,11 @@ const modifyModifier = (state: ComposeState, modifier: Modifier | false, command
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
-const toggleModifier = (state: ComposeState, modifier: Modifier | false, command: string): ComposeState => {
+const toggleModifier = (
+  state: ComposeState,
+  modifier: Modifier | false,
+  command: string,
+): ComposeState => {
   const { source } = state;
   let nextSource = source;
   if (!modifier) {
@@ -219,7 +245,10 @@ const toggleModifier = (state: ComposeState, modifier: Modifier | false, command
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
-const handleToggleBroadcast = (state: ComposeState, _: ComposeAction<'toggleBroadcast'>): ComposeState => {
+const handleToggleBroadcast = (
+  state: ComposeState,
+  _: ComposeAction<'toggleBroadcast'>,
+): ComposeState => {
   const { mute } = parseModifiers(state.source);
   return toggleModifier(state, mute, '.mute');
 };
@@ -233,13 +262,19 @@ const handleToggleWhisper = (
   return toggleModifier(state, whisper, command);
 };
 
-const handleToggleAction = (state: ComposeState, _: ComposeAction<'toggleAction'>): ComposeState => {
+const handleToggleAction = (
+  state: ComposeState,
+  _: ComposeAction<'toggleAction'>,
+): ComposeState => {
   const { source } = state;
   const { action } = parseModifiers(source);
   return toggleModifier(state, action, '.me');
 };
 
-const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeAction<'sent'>): ComposeState => {
+const handleSent = (
+  state: ComposeState,
+  { payload: { edit = false } }: ComposeAction<'sent'>,
+): ComposeState => {
   if (edit && state.backup) {
     return state.backup;
   }
@@ -264,16 +299,28 @@ const handleSent = (state: ComposeState, { payload: { edit = false } }: ComposeA
   };
 };
 
-const handleMedia = (state: ComposeState, { payload: { media } }: ComposeAction<'media'>): ComposeState => ({
+const handleMedia = (
+  state: ComposeState,
+  { payload: { media } }: ComposeAction<'media'>,
+): ComposeState => ({
   ...state,
   media,
 });
 
-const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeState => ({ ...state, focused: true });
+const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeState => ({
+  ...state,
+  focused: true,
+});
 
-const handleBlur = (state: ComposeState, _: ComposeAction<'blur'>): ComposeState => ({ ...state, focused: false });
+const handleBlur = (state: ComposeState, _: ComposeAction<'blur'>): ComposeState => ({
+  ...state,
+  focused: false,
+});
 
-const handleReset = (state: ComposeState, { payload: { restore } }: ComposeAction<'reset'>): ComposeState => {
+const handleReset = (
+  state: ComposeState,
+  { payload: { restore } }: ComposeAction<'reset'>,
+): ComposeState => {
   if (restore === false) {
     return makeInitialComposeState();
   }
@@ -382,7 +429,11 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
 
 export const checkCompose =
   (characterName: string, defaultInGame: boolean) =>
-  ({ source, inputedName, media }: Pick<ComposeState, 'source' | 'inputedName' | 'media'>): ComposeError | null => {
+  ({
+    source,
+    inputedName,
+    media,
+  }: Pick<ComposeState, 'source' | 'inputedName' | 'media'>): ComposeError | null => {
     const { inGame, rest } = parseModifiers(source);
     if (inGame ? inGame.inGame : defaultInGame) {
       if (inputedName.trim() === '' && characterName === '') {

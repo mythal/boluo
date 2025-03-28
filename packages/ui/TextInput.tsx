@@ -1,12 +1,14 @@
 import clsx from 'clsx';
-import React from 'react';
+import React, { FC } from 'react';
 
 interface Variant {
   variant?: 'normal' | 'error' | 'warning';
 }
 
-type InputProps = React.ComponentPropsWithoutRef<'input'> & Variant;
-type TextAreaProps = React.ComponentPropsWithoutRef<'textarea'> & Variant;
+type InputProps = React.ComponentPropsWithoutRef<'input'> &
+  Variant & { ref?: React.Ref<HTMLInputElement> };
+type TextAreaProps = React.ComponentPropsWithoutRef<'textarea'> &
+  Variant & { ref?: React.Ref<HTMLTextAreaElement> };
 
 export const inputStyle = (variant: Variant['variant'] = 'normal') =>
   clsx(
@@ -19,19 +21,14 @@ export const inputStyle = (variant: Variant['variant'] = 'normal') =>
       'border-input-warning-border-default bg-input-warning-bg ring-input-warning-ring placeholder:text-input-warning-placeholder focus:border-input-warning-border-focus hover:enabled:border-input-warning-border-hover',
   );
 
-export const TextInput = React.forwardRef<HTMLInputElement, InputProps>(
-  // Workaround
-  // https://github.com/storybookjs/storybook/issues/23084#issuecomment-2175457775
-  function TextInput({ variant, className, ...props }: InputProps, ref) {
-    return <input ref={ref} {...props} className={clsx('TextInput', inputStyle(variant), className)} />;
-  },
-);
-TextInput.displayName = 'TextInput';
+export const TextInput: FC<InputProps> = ({ variant, className, ref, ...props }: InputProps) => {
+  return (
+    <input ref={ref} {...props} className={clsx('TextInput', inputStyle(variant), className)} />
+  );
+};
 
-export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
-  { className, variant, ...props }: TextAreaProps,
-  ref,
-) {
-  return <textarea {...props} className={clsx('TextArea', inputStyle(variant), className)} ref={ref} />;
-});
-TextArea.displayName = 'TextArea';
+export const TextArea = ({ className, variant, ref, ...props }: TextAreaProps) => {
+  return (
+    <textarea {...props} className={clsx('TextArea', inputStyle(variant), className)} ref={ref} />
+  );
+};

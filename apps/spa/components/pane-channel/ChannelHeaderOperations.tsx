@@ -14,7 +14,10 @@ interface Props {
 
 export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const [state, setState] = useAtom(stateAtom);
-  const toggleMore = useCallback(() => setState((prev) => (prev === 'MORE' ? 'DEFAULT' : 'MORE')), [setState]);
+  const toggleMore = useCallback(
+    () => setState((prev) => (prev === 'MORE' ? 'DEFAULT' : 'MORE')),
+    [setState],
+  );
   const paneLimit = usePaneLimit();
   return (
     <>

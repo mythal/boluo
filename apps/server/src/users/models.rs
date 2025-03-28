@@ -46,7 +46,9 @@ impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for User {
         value: ::sqlx::postgres::PgValueRef<'r>,
     ) -> ::std::result::Result<
         Self,
-        ::std::boxed::Box<dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync>,
+        ::std::boxed::Box<
+            dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync,
+        >,
     > {
         let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
         let id = decoder.try_decode::<Uuid>()?;
@@ -102,9 +104,10 @@ impl User {
         NAME.run(username)?;
         PASSWORD.run(password)?;
 
-        let user = sqlx::query_file_scalar!("sql/users/create.sql", email, username, nickname, password)
-            .fetch_one(db)
-            .await?;
+        let user =
+            sqlx::query_file_scalar!("sql/users/create.sql", email, username, nickname, password)
+                .fetch_one(db)
+                .await?;
         USERS_CACHE.insert(user.id, user.clone());
         Ok(user)
     }
@@ -173,7 +176,10 @@ impl User {
         Ok(result_map)
     }
 
-    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<User>, sqlx::Error> {
         USERS_CACHE
             .get_or_insert_async(id, async {
                 query_scalar!(
@@ -188,7 +194,10 @@ impl User {
             .or_else(row_not_found)
     }
 
-    pub async fn get_by_email<'c, T: sqlx::PgExecutor<'c>>(db: T, email: &str) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_by_email<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        email: &str,
+    ) -> Result<Option<User>, sqlx::Error> {
         let user = query_scalar!(
             r#"SELECT users as "users!: User" FROM users WHERE email = $1 AND deactivated = false LIMIT 1"#,
             email
@@ -231,7 +240,10 @@ impl User {
         Ok(())
     }
 
-    pub async fn deactivated<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
+    pub async fn deactivated<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file!("sql/users/deactivated.sql", id)
             .execute(db)
             .await?
@@ -258,14 +270,24 @@ impl User {
         if let Some(bio) = bio {
             BIO.run(bio)?;
         }
-        let user = query_file_scalar!("sql/users/edit.sql", id, nickname, bio, avatar, default_color)
-            .fetch_one(db)
-            .await?;
+        let user = query_file_scalar!(
+            "sql/users/edit.sql",
+            id,
+            nickname,
+            bio,
+            avatar,
+            default_color
+        )
+        .fetch_one(db)
+        .await?;
         USERS_CACHE.insert(user.id, user.clone());
         invalidate_user_cache(*id).await;
         Ok(user)
     }
-    pub async fn remove_avatar<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<User, ModelError> {
+    pub async fn remove_avatar<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<User, ModelError> {
         let user = sqlx::query_file_scalar!("sql/users/remove_avatar.sql", id)
             .fetch_one(db)
             .await?;
@@ -283,7 +305,8 @@ pub struct UserExt {
     pub settings: serde_json::Value,
 }
 
-static SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> = LazyLock::new(|| Cache::new(4096));
+static SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> =
+    LazyLock::new(|| Cache::new(4096));
 
 async fn invalidate_settings_cache(_: Uuid) {
     // TODO: Cache invalidation for other server instances
@@ -299,7 +322,9 @@ impl UserExt {
                 sqlx::query_file_scalar!("sql/users/get_settings.sql", user_id)
                     .fetch_optional(db)
                     .await
-                    .map(|settings| settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())))
+                    .map(|settings| {
+                        settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new()))
+                    })
             })
             .await
     }
@@ -322,9 +347,10 @@ impl UserExt {
         user_id: Uuid,
         settings: serde_json::Value,
     ) -> Result<serde_json::Value, sqlx::Error> {
-        let settings = sqlx::query_file_scalar!("sql/users/partial_set_settings.sql", user_id, settings)
-            .fetch_one(db)
-            .await?;
+        let settings =
+            sqlx::query_file_scalar!("sql/users/partial_set_settings.sql", user_id, settings)
+                .fetch_one(db)
+                .await?;
         invalidate_settings_cache(user_id).await;
         SETTINGS_CACHE.insert(user_id, settings.clone());
         Ok(settings)

@@ -4,9 +4,7 @@ import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { GreetingHeader } from './GreetingHeader';
 
-interface Props {}
-
-export const PaneWelcome: FC<Props> = () => {
+export const PaneWelcome: FC = () => {
   return (
     <PaneBox
       grow

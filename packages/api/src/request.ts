@@ -11,7 +11,6 @@ export const makeUri = (baseUrl: string, path: string, query?: unknown): string 
   }
   const searchParams = new URLSearchParams();
   for (const entry of entities) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [key, value] = entry;
     if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
       searchParams.set(key, String(value));

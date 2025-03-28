@@ -73,13 +73,14 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneSpaceGreeting spaceId={pane.spaceId} />;
     case 'CHANNEL_EXPORT':
       return <PaneChannelExport channelId={pane.channelId} />;
-    default:
+    default: {
       const Component = PANE_MAP[pane.type] ?? PaneEmpty;
       return <Component />;
+    }
   }
 };
 
-export const ChildPaneSwitch = memo<{ pane: PaneData }>(({ pane }) => {
+export const ChildPaneSwitch = memo(({ pane }: { pane: PaneData }) => {
   return (
     <Suspense fallback={<PaneLoading />}>
       <PaneError>
@@ -90,7 +91,7 @@ export const ChildPaneSwitch = memo<{ pane: PaneData }>(({ pane }) => {
 });
 ChildPaneSwitch.displayName = 'ChildPaneSwitch';
 
-export const ChatPaneSwitch = memo<Props>(({ pane }) => {
+export const ChatPaneSwitch = memo(({ pane }: Props) => {
   const [banner, setBanner] = useState<Banner | null>(emptyBanner);
   return (
     <PaneProvider key={pane.key} paneKey={pane.key}>

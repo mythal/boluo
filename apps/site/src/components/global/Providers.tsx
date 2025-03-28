@@ -5,7 +5,12 @@ import { Provider as JotaiProvider } from 'jotai';
 import { FC, useEffect } from 'react';
 import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
-import { clearWatchSystemTheme, getThemeFromCookie, setThemeToDom, watchSystemTheme } from '@boluo/theme';
+import {
+  clearWatchSystemTheme,
+  getThemeFromCookie,
+  setThemeToDom,
+  watchSystemTheme,
+} from '@boluo/theme';
 import type { ChildrenProps } from '@boluo/utils';
 import { LocaleProvider } from './LocaleProvider';
 

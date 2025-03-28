@@ -42,7 +42,10 @@ export const initialChatItemSet: ChatItemSet = {
   previews: Map<Id, PreviewItem>(),
 };
 
-const insertItem = (messages: ChatItemSet['messages'], newItem: MessageItem | PreviewItem): ChatItemSet['messages'] => {
+const insertItem = (
+  messages: ChatItemSet['messages'],
+  newItem: MessageItem | PreviewItem,
+): ChatItemSet['messages'] => {
   if (messages.size === 0) {
     return messages.push(newItem);
   }
@@ -132,11 +135,18 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
   return { ...itemSet, messages };
 };
 
-export const moveMessages = (messages: ChatItemSet['messages'], movedItems: MessageItem[]): ChatItemSet['messages'] => {
+export const moveMessages = (
+  messages: ChatItemSet['messages'],
+  movedItems: MessageItem[],
+): ChatItemSet['messages'] => {
   return messages;
 };
 
-export const editMessage = (itemSet: ChatItemSet, editedItem: MessageItem, finished: boolean): ChatItemSet => {
+export const editMessage = (
+  itemSet: ChatItemSet,
+  editedItem: MessageItem,
+  finished: boolean,
+): ChatItemSet => {
   let { messages } = itemSet;
   const top = messages.first();
   if (top === undefined) {

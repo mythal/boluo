@@ -94,7 +94,8 @@ impl PreviewPost {
             edit_for = Some(time);
         } else if edit_for.is_none() && !should_finish {
             let keep_seconds = if muted { 8 } else { 60 * 3 };
-            start = crate::pos::pos(&mut conn, redis_conn, channel_id, id, keep_seconds).await? as f64;
+            start =
+                crate::pos::pos(&mut conn, redis_conn, channel_id, id, keep_seconds).await? as f64;
         }
         let is_master = ChannelMember::get_cached(&mut *conn, user_id, space_id, channel_id)
             .await

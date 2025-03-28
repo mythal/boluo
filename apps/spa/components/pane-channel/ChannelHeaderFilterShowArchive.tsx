@@ -8,9 +8,7 @@ import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
-interface Props {}
-
-export const ChannelHeaderFilterShowArchive: FC<Props> = () => {
+export const ChannelHeaderFilterShowArchive: FC = () => {
   const { showArchivedAtom } = useChannelAtoms();
   const [show, setShow] = useAtom(showArchivedAtom);
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
@@ -26,7 +24,13 @@ export const ChannelHeaderFilterShowArchive: FC<Props> = () => {
           </span>
         </SidebarHeaderButton>
       </div>
-      <TooltipBox show={showTooltip} style={floatingStyles} {...getFloatingProps()} ref={refs.setFloating} defaultStyle>
+      <TooltipBox
+        show={showTooltip}
+        style={floatingStyles}
+        {...getFloatingProps()}
+        ref={refs.setFloating}
+        defaultStyle
+      >
         <FormattedMessage defaultMessage="Show archived messages" />
       </TooltipBox>
     </>

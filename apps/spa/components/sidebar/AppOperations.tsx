@@ -6,7 +6,11 @@ import { useNotificationSwitch } from '../../hooks/useNotificationSwitch';
 import { type User } from '@boluo/api';
 
 export const AppOperations: FC<{ currentUser: User | null | undefined }> = ({ currentUser }) => {
-  return <div className="flex justify-end px-4 pt-4">{currentUser != null && <NotificationSwitch />}</div>;
+  return (
+    <div className="flex justify-end px-4 pt-4">
+      {currentUser != null && <NotificationSwitch />}
+    </div>
+  );
 };
 
 export const NotificationSwitch: FC = () => {

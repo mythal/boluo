@@ -32,7 +32,7 @@ export interface AnchorPosition {
 type Props = React.HTMLAttributes<HTMLDivElement> &
   AnchorPosition & {
     anchor: React.RefObject<HTMLElement | null>;
-    children: React.ReactChild;
+    children: React.ReactNode;
     className?: string;
     onOuter?: () => void;
     zIndex?: number;

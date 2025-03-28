@@ -121,7 +121,11 @@ function Sidebar({ space, channels }: Props) {
               </ChatHeaderButton>
               {state === 'entered' && (
                 <Fragment>
-                  <UserStatusButton spaceId={space.id} active={showMember} toggle={toggleShowMember} />
+                  <UserStatusButton
+                    spaceId={space.id}
+                    active={showMember}
+                    toggle={toggleShowMember}
+                  />
                   <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
                     <Icon sprite={logo} />
                     菠萝

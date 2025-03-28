@@ -1,12 +1,15 @@
 {
   "name": "@boluo/lang",
   "version": "0.0.0",
-  "scripts": {
-    "generate": "formatjs extract '../../{apps,packages}/{site,spa,ui,theme,common}/**/*.{ts,tsx,js,jsx}' --ignore '../../**/{node_modules,out,.next,storybook-static}/**/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin",
-    "build": "formatjs compile-folder --ast --format crowdin ./src ./compiled"
-  },
-  "license": "GPL-3.0",
   "devDependencies": {
-    "@formatjs/cli": "^6.2.7"
+    "@formatjs/cli": "^6.6.3"
+  },
+  "exports": {
+    "./*.json": "./dist/*.json"
+  },
+  "license": "AGPL-3.0",
+  "scripts": {
+    "build": "formatjs compile-folder --ast --format crowdin ./src ./dist",
+    "generate": "formatjs extract '../../{apps,packages}/{site,spa,ui,theme,common}/**/*.{ts,tsx,js,jsx}' --ignore '../../**/{node_modules,out,.next,storybook-static}/**/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin"
   }
 }

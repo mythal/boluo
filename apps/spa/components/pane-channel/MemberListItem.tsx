@@ -25,7 +25,13 @@ interface Props {
   status: UserStatus | undefined;
 }
 
-export const MemberListItem: FC<Props> = ({ member, canIKick, status, channel, canIEditMaster }) => {
+export const MemberListItem: FC<Props> = ({
+  member,
+  canIKick,
+  status,
+  channel,
+  canIEditMaster,
+}) => {
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,
@@ -53,7 +59,13 @@ export const MemberListItem: FC<Props> = ({ member, canIKick, status, channel, c
         {...getReferenceProps()}
       >
         <div className="row-span-full h-8 w-8 flex-none">
-          <Avatar size="2rem" name={user.nickname} id={user.id} avatarId={user.avatarId} className="rounded-sm" />
+          <Avatar
+            size="2rem"
+            name={user.nickname}
+            id={user.id}
+            avatarId={user.avatarId}
+            className="rounded-sm"
+          />
         </div>
         {hasCharacterName && (
           <span className={clsx(offline ? 'text-surface-500' : '', 'text-left', 'truncate')}>
@@ -63,7 +75,10 @@ export const MemberListItem: FC<Props> = ({ member, canIKick, status, channel, c
         <span className={clsx(hasCharacterName ? '' : 'row-span-full', 'text-left')}>
           {
             <span
-              className={clsx(offline ? 'text-text-light' : hasCharacterName ? 'text-surface-600' : '', 'truncate')}
+              className={clsx(
+                offline ? 'text-text-light' : hasCharacterName ? 'text-surface-600' : '',
+                'truncate',
+              )}
             >
               {user.nickname}
             </span>

@@ -1,10 +1,25 @@
-import { type FC, type MutableRefObject, type RefObject, useCallback, useLayoutEffect, useRef } from 'react';
-import { type ListRange, type ScrollSeekPlaceholderProps, Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
+import {
+  type FC,
+  type MutableRefObject,
+  type RefObject,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from 'react';
+import {
+  type ListRange,
+  type ScrollSeekPlaceholderProps,
+  Virtuoso,
+  type VirtuosoHandle,
+} from 'react-virtuoso';
 import { type ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
 import { getOS } from '@boluo/utils';
-import { type OnVirtualKeybroadChange, useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
+import {
+  type OnVirtualKeybroadChange,
+  useVirtualKeybroadChange,
+} from '../../hooks/useVirtualKeybroadChange';
 
 interface Props {
   firstItemIndex: number;
@@ -38,7 +53,10 @@ const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undef
   );
 };
 
-const useWorkaroundFirstItemIndex = (virtuosoRef: RefObject<VirtuosoHandle | null>, originalFirstItemIndex: number) => {
+const useWorkaroundFirstItemIndex = (
+  virtuosoRef: RefObject<VirtuosoHandle | null>,
+  originalFirstItemIndex: number,
+) => {
   const os = getOS();
   // In iOS/iPadOS, the behavior of `firstItemIndex` is weird, use a fallback method to fix it
   const workaroundOnLoad = os === 'iOS';
@@ -91,7 +109,9 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
 
     prevOffsetIndex = offsetIndex;
     prevItem = item;
-    return <ChatItemSwitch isLast={isLast} key={item.key} chatItem={item} continuous={continuous} />;
+    return (
+      <ChatItemSwitch isLast={isLast} key={item.key} chatItem={item} continuous={continuous} />
+    );
   };
   const handleRangeChange = (range: ListRange) => {
     renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];

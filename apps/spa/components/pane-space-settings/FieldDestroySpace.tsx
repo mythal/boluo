@@ -5,7 +5,10 @@ import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 
-export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ spaceId, spaceName }) => {
+export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({
+  spaceId,
+  spaceName,
+}) => {
   const { mutate } = useSWRConfig();
   const [_isMutating, setIsMutating] = useState(false);
   const deleteSpace = async () => {
@@ -20,7 +23,10 @@ export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({ 
   return (
     <div className="flex flex-col gap-1">
       <div>
-        <FormattedMessage defaultMessage="Are you sure you want to delete {spaceName}?" values={{ spaceName }} />{' '}
+        <FormattedMessage
+          defaultMessage="Are you sure you want to delete {spaceName}?"
+          values={{ spaceName }}
+        />{' '}
         <span className="font-bold">
           <FormattedMessage defaultMessage="This cannot be undone." />
         </span>

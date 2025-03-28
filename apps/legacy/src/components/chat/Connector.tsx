@@ -28,7 +28,10 @@ export const style = css`
   color: #1a202c;
 `;
 
-export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Promise<string | null> {
+export async function getConnectionToken(
+  spaceId: Id,
+  myId: Id | undefined,
+): Promise<string | null> {
   if (!myId) {
     return null;
   }
@@ -138,7 +141,13 @@ export const Connector = ({ spaceId, myId }: Props) => {
         retry();
         return;
       }
-      const connection = connect(baseUrlRef.current, spaceId, token, after.current.timestamp, after.current.seq);
+      const connection = connect(
+        baseUrlRef.current,
+        spaceId,
+        token,
+        after.current.timestamp,
+        after.current.seq,
+      );
       connectionRef.current = connection;
       connection.onclose = (event) => {
         console.log('Websocket connection closed', event);

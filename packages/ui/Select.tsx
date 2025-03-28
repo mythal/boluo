@@ -1,11 +1,16 @@
 import clsx from 'clsx';
 import React from 'react';
 
-type SelectProps = React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>;
+type SelectProps = React.DetailedHTMLProps<
+  React.SelectHTMLAttributes<HTMLSelectElement>,
+  HTMLSelectElement
+>;
 
-type Props = Exclude<SelectProps, 'className'>;
+type Props = Exclude<SelectProps, 'className'> & {
+  ref?: React.Ref<HTMLSelectElement>;
+};
 
-export const Select = React.forwardRef<HTMLSelectElement, Props>(({ children, ...props }, ref) => {
+export const Select: React.FC<Props> = ({ children, ref, ...props }: Props) => {
   return (
     <select
       {...props}
@@ -19,6 +24,4 @@ export const Select = React.forwardRef<HTMLSelectElement, Props>(({ children, ..
       {children}
     </select>
   );
-});
-
-Select.displayName = 'Select';
+};

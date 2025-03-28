@@ -41,7 +41,10 @@ const login = (state: ProfileState | undefined, action: LoggedIn): ProfileState 
   return { user, channels, spaces, settings };
 };
 
-const editUser = ({ channels, spaces, settings }: ProfileState, { user }: UserEdited): ProfileState => {
+const editUser = (
+  { channels, spaces, settings }: ProfileState,
+  { user }: UserEdited,
+): ProfileState => {
   return { user, channels, spaces, settings };
 };
 
@@ -65,7 +68,10 @@ const leaveChannel = (state: ProfileState, { id }: LeftChannel): ProfileState =>
   return { ...state, channels };
 };
 
-const editChannelMember = (state: ProfileState, { channelId, member }: ChannelMemberEdited): ProfileState => {
+const editChannelMember = (
+  state: ProfileState,
+  { channelId, member }: ChannelMemberEdited,
+): ProfileState => {
   const channel = state.channels.get(channelId)?.channel;
   if (!channel) {
     return state;
@@ -74,7 +80,11 @@ const editChannelMember = (state: ProfileState, { channelId, member }: ChannelMe
   return { ...state, channels };
 };
 
-const editChannelMemberByList = (state: ProfileState, channelId: Id, event: PushMembers): ProfileState => {
+const editChannelMemberByList = (
+  state: ProfileState,
+  channelId: Id,
+  event: PushMembers,
+): ProfileState => {
   const { settings } = state;
   const member = event.members.find((member) => member.user.id === state.user.id);
   if (!member) {
@@ -84,7 +94,10 @@ const editChannelMemberByList = (state: ProfileState, channelId: Id, event: Push
   let { channels, spaces } = state;
   const channelWithMember = channels.get(member.channel.channelId, undefined);
   if (channelWithMember !== undefined) {
-    channels = channels.set(member.channel.channelId, { ...channelWithMember, member: member.channel });
+    channels = channels.set(member.channel.channelId, {
+      ...channelWithMember,
+      member: member.channel,
+    });
   }
   const spaceWithMember = spaces.get(member.space.spaceId, undefined);
   if (spaceWithMember !== undefined) {
@@ -131,7 +144,9 @@ function updateChannel(state: ProfileState, chat: ChatState): ProfileState {
     if (!state.channels.has(channel.id)) {
       return state;
     }
-    const channels = state.channels.filter((channelWithMember) => channelWithMember.channel.id !== channel.id);
+    const channels = state.channels.filter(
+      (channelWithMember) => channelWithMember.channel.id !== channel.id,
+    );
     return { ...state, channels };
   }
   const { user } = myMember;
@@ -139,7 +154,10 @@ function updateChannel(state: ProfileState, chat: ChatState): ProfileState {
   return { ...state, user, channels };
 }
 
-export const profileReducer = (state: ProfileState | undefined, action: Action): ProfileState | undefined => {
+export const profileReducer = (
+  state: ProfileState | undefined,
+  action: Action,
+): ProfileState | undefined => {
   switch (action.type) {
     case 'LOGGED_IN':
       return login(state, action);

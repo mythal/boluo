@@ -49,46 +49,50 @@ export const useMakeChannelAtoms = (
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
     [characterName, composeAtom, defaultInGame],
   );
-  const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> = useMemo(() => {
-    const sourceAtom = atom((get) => get(composeAtom).source);
-    const hideSelfPreviewTimeoutAtom = atom(0);
-    const loadableParsedAtom = loadable(
-      atom(async (get, { signal }): Promise<ParseResult> => {
-        const source = get(sourceAtom);
-        return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
-      }),
-    );
-    let cachedParseResult: ParseResult = composeInitialParseResult;
-    const parsedAtom = atom((get) => {
-      const loadableParsed = get(loadableParsedAtom);
-      if (loadableParsed.state === 'hasData') {
-        cachedParseResult = loadableParsed.data;
-      }
-      return cachedParseResult;
-    });
-    const inputedNameAtom = selectAtom(composeAtom, ({ inputedName }) => inputedName);
-    const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
-    const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
-    const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
-    const isEditingAtom = selectAtom(composeAtom, ({ edit }) => edit != null);
-    const isWhisperAtom = selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames !== null);
-    const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
-    return {
-      composeAtom,
-      parsedAtom,
-      hideSelfPreviewTimeoutAtom,
-      isActionAtom,
-      inputedNameAtom,
-      hasMediaAtom,
-      broadcastAtom,
-      isWhisperAtom,
-      composeFocusedAtom,
-      isEditingAtom,
-      filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
-      showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
-      memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
-    };
-  }, [channelId, composeAtom]);
+  const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> =
+    useMemo(() => {
+      const sourceAtom = atom((get) => get(composeAtom).source);
+      const hideSelfPreviewTimeoutAtom = atom(0);
+      const loadableParsedAtom = loadable(
+        atom(async (get, { signal }): Promise<ParseResult> => {
+          const source = get(sourceAtom);
+          return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
+        }),
+      );
+      let cachedParseResult: ParseResult = composeInitialParseResult;
+      const parsedAtom = atom((get) => {
+        const loadableParsed = get(loadableParsedAtom);
+        if (loadableParsed.state === 'hasData') {
+          cachedParseResult = loadableParsed.data;
+        }
+        return cachedParseResult;
+      });
+      const inputedNameAtom = selectAtom(composeAtom, ({ inputedName }) => inputedName);
+      const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
+      const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
+      const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
+      const isEditingAtom = selectAtom(composeAtom, ({ edit }) => edit != null);
+      const isWhisperAtom = selectAtom(
+        parsedAtom,
+        ({ whisperToUsernames }) => whisperToUsernames !== null,
+      );
+      const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
+      return {
+        composeAtom,
+        parsedAtom,
+        hideSelfPreviewTimeoutAtom,
+        isActionAtom,
+        inputedNameAtom,
+        hasMediaAtom,
+        broadcastAtom,
+        isWhisperAtom,
+        composeFocusedAtom,
+        isEditingAtom,
+        filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
+        showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
+        memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
+      };
+    }, [channelId, composeAtom]);
   const inGameAtom = useMemo(
     () =>
       atom((read) => {

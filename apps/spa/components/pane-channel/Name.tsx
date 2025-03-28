@@ -37,7 +37,12 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'top',
-    middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 4, crossAxis: -4 }), hide()],
+    middleware: [
+      flip({ mainAxis: true, crossAxis: false }),
+      shift(),
+      offset({ mainAxis: 4, crossAxis: -4 }),
+      hide(),
+    ],
     whileElementsMounted: autoUpdate,
   });
   const click = useClick(context);
@@ -45,7 +50,10 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   const isEmptyName = name === '' || name == null;
   const color = useMessageColor(user, inGame, messageColor);
-  const masterIcon = useMemo(() => <Icon icon={Gamemaster} className="inline-block h-[1em] w-[1em]" />, []);
+  const masterIcon = useMemo(
+    () => <Icon icon={Gamemaster} className="inline-block h-[1em] w-[1em]" />,
+    [],
+  );
   return (
     <>
       <NameBox

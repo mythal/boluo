@@ -176,7 +176,12 @@ function ChannelMemberButton({ className }: Props) {
   }
   return (
     <React.Fragment>
-      <ChatHeaderButton data-active={menu} ref={buttonRef} onClick={toggleMenu} className={className}>
+      <ChatHeaderButton
+        data-active={menu}
+        ref={buttonRef}
+        onClick={toggleMenu}
+        className={className}
+      >
         <Icon sprite={ninja} css={[mR(1)]} />
         {name}
       </ChatHeaderButton>

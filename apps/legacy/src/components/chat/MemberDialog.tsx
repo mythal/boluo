@@ -82,7 +82,11 @@ function MemberDialog({ userId, spaceId, dismiss }: Props) {
   const spaceMember = member.space;
   const user = member.user;
   const kick = async () => {
-    const result = await post('/spaces/kick', {}, { userId: user.id, spaceId: spaceMember.spaceId });
+    const result = await post(
+      '/spaces/kick',
+      {},
+      { userId: user.id, spaceId: spaceMember.spaceId },
+    );
     if (result.isErr) {
       throwErr(dispatch)(result.value);
     }

@@ -39,7 +39,9 @@ type FormSchema = {
   defaultDiceType: string;
 };
 
-const SectionTitle: FC<ChildrenProps> = ({ children }) => <h3 className="mb-2 font-bold">{children}</h3>;
+const SectionTitle: FC<ChildrenProps> = ({ children }) => (
+  <h3 className="mb-2 font-bold">{children}</h3>
+);
 
 const NameField: FC = () => {
   const { register } = useFormContext<FormSchema>();
@@ -121,7 +123,13 @@ const PublicityField: FC = () => {
   return (
     <div>
       <div className="grid grid-cols-[1.5em_minmax(0,_1fr)] gap-x-1 gap-y-0">
-        <input id={fieldId.public} type="radio" value="public" {...register('publicity')} className="mr-2" />
+        <input
+          id={fieldId.public}
+          type="radio"
+          value="public"
+          {...register('publicity')}
+          className="mr-2"
+        />
         <label htmlFor={fieldId.public}>
           <FormattedMessage defaultMessage="Public" />
         </label>
@@ -131,7 +139,13 @@ const PublicityField: FC = () => {
           </HelpText>
         </label>
 
-        <input id={fieldId.private} type="radio" value="private" {...register('publicity')} className="mr-2" />
+        <input
+          id={fieldId.private}
+          type="radio"
+          value="private"
+          {...register('publicity')}
+          className="mr-2"
+        />
         <label htmlFor={fieldId.private}>
           <FormattedMessage defaultMessage="Private" />
         </label>
@@ -181,11 +195,14 @@ const spaceToForm = (space: Space): FormSchema => ({
 
 const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
   const key = ['/spaces/query', space.id] as const;
-  const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(async ([_, _spaceId], { arg }) => {
-    const result = await post('/spaces/edit', null, arg);
-    const space = result.unwrap();
-    return space;
-  }, []);
+  const updater: MutationFetcher<Space, typeof key, EditSpace> = useCallback(
+    async ([_, _spaceId], { arg }) => {
+      const result = await post('/spaces/edit', null, arg);
+      const space = result.unwrap();
+      return space;
+    },
+    [],
+  );
   const cancel = usePaneClose();
 
   const {
@@ -266,7 +283,12 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
   const { data: space, error } = useQuerySpace(spaceId);
   if (error != null) {
     if (space == null) {
-      return <Failed code={error.code} title={<FormattedMessage defaultMessage="Failed to query the space" />} />;
+      return (
+        <Failed
+          code={error.code}
+          title={<FormattedMessage defaultMessage="Failed to query the space" />}
+        />
+      );
     }
   }
   if (!space || isQueryingUser) {
@@ -294,7 +316,10 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
     <PaneBox
       header={
         <PaneHeaderBox icon={<Settings />}>
-          <FormattedMessage defaultMessage='Settings of "{spaceName}" Space' values={{ spaceName: space.name }} />
+          <FormattedMessage
+            defaultMessage='Settings of "{spaceName}" Space'
+            values={{ spaceName: space.name }}
+          />
         </PaneHeaderBox>
       }
     >

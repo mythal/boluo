@@ -30,7 +30,12 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   if (isLoading) {
     return <Loading />;
   } else if (error != null && user == null) {
-    return <PaneFailed code={error.code} title={<FormattedMessage defaultMessage="Failed to query the user" />} />;
+    return (
+      <PaneFailed
+        code={error.code}
+        title={<FormattedMessage defaultMessage="Failed to query the user" />}
+      />
+    );
   } else if (user == null) {
     return <PaneProfileNotFound />;
   }
@@ -45,7 +50,11 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
         </SidebarHeaderButton>
       )}
       {isMe && (
-        <SidebarHeaderButton active={isEditing} onClick={() => setIsEditing(toggle)} title={editLabel}>
+        <SidebarHeaderButton
+          active={isEditing}
+          onClick={() => setIsEditing(toggle)}
+          title={editLabel}
+        >
           <Edit />
           <span className="@md:inline hidden text-xs">
             <FormattedMessage defaultMessage="Edit" />

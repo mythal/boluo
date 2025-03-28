@@ -57,7 +57,14 @@ function EditAvatar({ className, mediaId, selectFile, size }: Props) {
         ref={input}
         hidden
       />
-      <Avatar id={null} src={uri} size={size} onClick={onClick} css={avatarStyle} className={className} />
+      <Avatar
+        id={null}
+        src={uri}
+        size={size}
+        onClick={onClick}
+        css={avatarStyle}
+        className={className}
+      />
     </>
   );
 }

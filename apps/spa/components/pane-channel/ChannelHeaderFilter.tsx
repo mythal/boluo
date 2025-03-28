@@ -6,9 +6,7 @@ import { Select } from '@boluo/ui/Select';
 import { type ChannelFilter, useChannelAtoms } from '../../hooks/useChannelAtoms';
 import Icon from '@boluo/ui/Icon';
 
-interface Props {}
-
-export const ChannelHeaderFilter: FC<Props> = () => {
+export const ChannelHeaderFilter: FC = () => {
   const intl = useIntl();
   const items = useMemo(
     () => [

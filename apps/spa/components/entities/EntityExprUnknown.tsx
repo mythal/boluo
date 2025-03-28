@@ -1,5 +1,3 @@
 import { type FC } from 'react';
 
-interface Props {}
-
-export const EntityExprNodeUnknown: FC<Props> = () => <span>???</span>;
+export const EntityExprNodeUnknown: FC = () => <span>???</span>;

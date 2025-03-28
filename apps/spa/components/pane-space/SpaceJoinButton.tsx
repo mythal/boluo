@@ -36,7 +36,12 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
     icon = <AlertTriangle />;
   }
   return (
-    <SidebarHeaderButton className="SpaceJoinButton" isLoading={isJoining} icon={icon} onClick={() => join()}>
+    <SidebarHeaderButton
+      className="SpaceJoinButton"
+      isLoading={isJoining}
+      icon={icon}
+      onClick={() => join()}
+    >
       <span className="text-xs">
         <FormattedMessage defaultMessage="Join Space" />
       </span>

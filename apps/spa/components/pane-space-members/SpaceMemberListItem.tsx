@@ -36,7 +36,13 @@ export const SpaceMemberListItem: FC<Props> = ({
   return (
     <div className="px-pane group grid grid-flow-col grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-1 py-2">
       <a href={profileUrl} className="row-span-full" onClick={openProfile}>
-        <Avatar id={user.id} name={user.nickname} avatarId={user.avatarId} size="3rem" className="rounded-sm" />
+        <Avatar
+          id={user.id}
+          name={user.nickname}
+          avatarId={user.avatarId}
+          size="3rem"
+          className="rounded-sm"
+        />
       </a>
       <div>
         <a href={profileUrl} onClick={openProfile} className="text-brand-700 text-lg">

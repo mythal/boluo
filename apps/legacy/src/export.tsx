@@ -55,8 +55,21 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
     };
   }
   return (message: Message): ExportMessage => {
-    const { id, senderId, name, mediaId, inGame, isAction, isMaster, folded, created, modified, text, entities, seed } =
-      message;
+    const {
+      id,
+      senderId,
+      name,
+      mediaId,
+      inGame,
+      isAction,
+      isMaster,
+      folded,
+      created,
+      modified,
+      text,
+      entities,
+      seed,
+    } = message;
     const rng = makeRng(seed);
     const exportEntities: ExportEntity[] = !rng
       ? []
@@ -77,7 +90,10 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
             return {
               type: 'ExportLink',
               text: text.substr(entity.child.start, entity.child.len),
-              href: typeof entity.href === 'string' ? entity.href : text.substr(entity.href.start, entity.href.len),
+              href:
+                typeof entity.href === 'string'
+                  ? entity.href
+                  : text.substr(entity.href.start, entity.href.len),
               start: entity.start,
               len: entity.len,
             };
@@ -87,7 +103,10 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
             entity.type === 'Code' ||
             entity.type === 'CodeBlock'
           ) {
-            return { ...entity, text: text.substring(entity.child.start, entity.child.start + entity.child.len) };
+            return {
+              ...entity,
+              text: text.substring(entity.child.start, entity.child.start + entity.child.len),
+            };
           } else {
             return { ...entity, text: text.substr(entity.start, entity.len) };
           }
@@ -190,7 +209,18 @@ function booleanToText(value: boolean): string {
 export function csvBlob(messages: ExportMessage[]): Blob {
   let csv = '时间, 名字, 昵称, 主持人?, 动作?, 游戏内?, 内容, 悄悄话, 附件, 折叠?\n';
   for (const message of messages) {
-    const { created, name, sender, isMaster, isAction, inGame, entities, whisperTo, mediaUrl, folded } = message;
+    const {
+      created,
+      name,
+      sender,
+      isMaster,
+      isAction,
+      inGame,
+      entities,
+      whisperTo,
+      mediaUrl,
+      folded,
+    } = message;
     const row: string[] = [
       dateTimeFormat(parseDateString(created)),
       name,
@@ -240,7 +270,11 @@ function messageMetaDataText(message: ExportMessage): string {
   return span;
 }
 
-export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean, headerAfterWrap: boolean): Blob {
+export function bbCodeTextBlob(
+  messages: ExportMessage[],
+  simple: boolean,
+  headerAfterWrap: boolean,
+): Blob {
   let text = '';
   for (const message of messages) {
     const name = messageName(message, simple);
@@ -302,7 +336,11 @@ export function bbCodeTextBlob(messages: ExportMessage[], simple: boolean, heade
   return new Blob([text], { type: 'text/plain;charset=utf-8;' });
 }
 
-export function txtBlob(messages: ExportMessage[], simple: boolean, headerAfterWrap: boolean): Blob {
+export function txtBlob(
+  messages: ExportMessage[],
+  simple: boolean,
+  headerAfterWrap: boolean,
+): Blob {
   let text = '';
   for (const message of messages) {
     const name = messageName(message, simple);

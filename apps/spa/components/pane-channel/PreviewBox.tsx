@@ -43,7 +43,10 @@ export const PreviewBox: FC<Props> = ({
     transition,
     '--bg-angle': isSelf ? '135deg' : '225deg',
   };
-  const handlePlaceHolder = useMemo(() => <PreviewHandlePlaceHolder editMode={editMode} />, [editMode]);
+  const handlePlaceHolder = useMemo(
+    () => <PreviewHandlePlaceHolder editMode={editMode} />,
+    [editMode],
+  );
   return (
     <div
       data-id={id}

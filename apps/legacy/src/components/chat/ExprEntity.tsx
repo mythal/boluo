@@ -25,7 +25,17 @@ import {
   TOO_MUCH_LAYER,
 } from '../../interpreter/eval';
 import { useSelector } from '../../store';
-import { fontMono, fontNormal, mL, mY, pX, pY, roundedPx, textLg, textSm } from '../../styles/atoms';
+import {
+  fontMono,
+  fontNormal,
+  mL,
+  mY,
+  pX,
+  pY,
+  roundedPx,
+  textLg,
+  textSm,
+} from '../../styles/atoms';
 import { blue, red, textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
 
@@ -145,7 +155,8 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
   return (
     <Roll onClick={handleMouse} className="roll">
       <Icon sprite={dicePoolIcon} />
-      {node.counter}d{node.face} {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒{' '}
+      {node.counter}d{node.face}{' '}
+      {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒{' '}
       {node.value}
       {additionCounter}
     </Roll>
@@ -186,7 +197,9 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
       {node.value}
       {expand && <span>= {node.rolled}</span>}
       {modifierName && <span css={[mL(1)]}>{modifierName}</span>}
-      {expand && node.modifiers.length > 0 && <span css={[mL(1)]}>[{node.modifiers.join(', ')}]</span>}
+      {expand && node.modifiers.length > 0 && (
+        <span css={[mL(1)]}>[{node.modifiers.join(', ')}]</span>
+      )}
       {successName && <span css={[mL(1)]}>{successName}</span>}
       {expand && node.targetValue && <span>({targetValue})</span>}
     </Roll>

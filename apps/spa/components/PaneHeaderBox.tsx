@@ -15,7 +15,13 @@ interface Props {
   extra?: ReactNode;
 }
 
-export const PaneHeaderBox: FC<Props> = ({ children, operators, icon, extra, withoutDefaultOperators = false }) => {
+export const PaneHeaderBox: FC<Props> = ({
+  children,
+  operators,
+  icon,
+  extra,
+  withoutDefaultOperators = false,
+}) => {
   const { focused: isFocused, canClose } = useContext(PaneContext);
   const paneBanner = usePaneBanner();
   const defaultOperators: ReactNode = useMemo(() => {

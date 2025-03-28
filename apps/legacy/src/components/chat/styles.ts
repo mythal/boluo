@@ -43,7 +43,10 @@ export const previewStyle = (colorA: string, colorB: string) => css`
 export const textInGame = textLg;
 export const textOutGame = textSm;
 export const previewInGame = previewStyle(chatItemBgColor, darken(0.15, chatItemBgColor));
-export const previewOutGame = previewStyle(chatItemOutGameBgColor, darken(0.15, chatItemOutGameBgColor));
+export const previewOutGame = previewStyle(
+  chatItemOutGameBgColor,
+  darken(0.15, chatItemOutGameBgColor),
+);
 
 export const nameContainer = css`
   grid-area: name;

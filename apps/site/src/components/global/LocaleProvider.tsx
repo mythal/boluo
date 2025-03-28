@@ -1,8 +1,8 @@
 'use client';
 import { patch } from '@boluo/api-browser';
 import { Locale, Settings, useQueryCurrentUser } from '@boluo/common';
-import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
-import { defaultLocale, IntlMessages, localeList, onIntlError } from '@boluo/common/locale';
+import { ChangeLocaleContext } from '@boluo/common/hooks';
+import { defaultLocale, IntlMessages, LOCALES, onIntlError } from '@boluo/common/locale';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
@@ -16,7 +16,7 @@ interface Props extends ChildrenProps {
 }
 
 const removeLocalePrefix = (pathname: string) => {
-  for (const locale of localeList) {
+  for (const locale of LOCALES) {
     if (pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`) {
       return pathname.replace(`/${locale}`, '');
     }
@@ -29,11 +29,14 @@ export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const router = useRouter();
 
   const key = ['/users/settings'] as const;
-  const localeUpdater: MutationFetcher<Settings, typeof key, Locale> = useCallback(async (_, { arg: locale }) => {
-    const settings: Settings = { locale };
-    const settingsResult = await patch('/users/update_settings', null, settings);
-    return settingsResult.unwrapOr({});
-  }, []);
+  const localeUpdater: MutationFetcher<Settings, typeof key, Locale> = useCallback(
+    async (_, { arg: locale }) => {
+      const settings: Settings = { locale };
+      const settingsResult = await patch('/users/update_settings', null, settings);
+      return settingsResult.unwrapOr({});
+    },
+    [],
+  );
   const { trigger: updateLocale } = useSWRMutation(key, localeUpdater, {
     populateCache: identity,
     revalidate: false,
@@ -50,8 +53,15 @@ export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
     [currentUser, router, updateLocale],
   );
   return (
-    <IntlProvider locale={locale} messages={messages} defaultLocale={defaultLocale} onError={onIntlError}>
-      <ChangeLocaleContext.Provider value={handleChangeLocale}>{children}</ChangeLocaleContext.Provider>
+    <IntlProvider
+      locale={locale}
+      messages={messages}
+      defaultLocale={defaultLocale}
+      onError={onIntlError}
+    >
+      <ChangeLocaleContext.Provider value={handleChangeLocale}>
+        {children}
+      </ChangeLocaleContext.Provider>
     </IntlProvider>
   );
 };

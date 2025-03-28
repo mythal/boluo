@@ -13,7 +13,10 @@ export function useTitle(suffix: string, prefix = ' - Boluo') {
   }, [suffix, prefix]);
 }
 
-export function useTitleWithResult<T>(result: AppResult<T> | 'LOADING', titleMapper: (value: T) => string) {
+export function useTitleWithResult<T>(
+  result: AppResult<T> | 'LOADING',
+  titleMapper: (value: T) => string,
+) {
   let title;
   if (result === 'LOADING') {
     title = '载入中';

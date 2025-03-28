@@ -60,7 +60,13 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
           <FormattedMessage defaultMessage="Invite Link" />
         </label>
         <div className="flex gap-1">
-          <TextInput ref={inviteLinkRef} id={id + 'link'} className="w-full flex-1" value={link} readOnly />
+          <TextInput
+            ref={inviteLinkRef}
+            id={id + 'link'}
+            className="w-full flex-1"
+            value={link}
+            readOnly
+          />
 
           <Button onClick={copy}>
             <Icon icon={Clipboard} />

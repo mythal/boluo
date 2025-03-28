@@ -15,8 +15,10 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
             .after_connect(|conn, _meta| {
                 Box::pin(async move {
                     use sqlx::Executor;
-                    conn.execute("SET application_name = 'boluo-server'; SET statement_timeout = 20000;")
-                        .await?;
+                    conn.execute(
+                        "SET application_name = 'boluo-server'; SET statement_timeout = 20000;",
+                    )
+                    .await?;
 
                     Ok(())
                 })
@@ -61,22 +63,31 @@ pub async fn check() {
     .fetch_one(&mut *trans)
     .await
     .expect("Cannot set settings");
-    let _user_ext: UserExt =
-        sqlx::query_scalar(r#"SELECT users_extension AS "ext!: UserExt" FROM users_extension WHERE user_id = $1"#)
-            .bind(user.id)
+    let _user_ext: UserExt = sqlx::query_scalar(
+        r#"SELECT users_extension AS "ext!: UserExt" FROM users_extension WHERE user_id = $1"#,
+    )
+    .bind(user.id)
+    .fetch_one(&mut *trans)
+    .await
+    .expect("Cannot get user extension");
+
+    let space = sqlx::query_file_scalar!(
+        "sql/spaces/create.sql",
+        "Low of Cycles",
+        user.id,
+        "",
+        "d20",
+        ""
+    )
+    .fetch_one(&mut *trans)
+    .await
+    .expect("Cannot create space");
+    let space_member =
+        sqlx::query_file!("sql/spaces/add_user_to_space.sql", user.id, space.id, true)
             .fetch_one(&mut *trans)
             .await
-            .expect("Cannot get user extension");
-
-    let space = sqlx::query_file_scalar!("sql/spaces/create.sql", "Low of Cycles", user.id, "", "d20", "")
-        .fetch_one(&mut *trans)
-        .await
-        .expect("Cannot create space");
-    let space_member = sqlx::query_file!("sql/spaces/add_user_to_space.sql", user.id, space.id, true)
-        .fetch_one(&mut *trans)
-        .await
-        .expect("Cannot add user to space")
-        .member;
+            .expect("Cannot add user to space")
+            .member;
     let space_members = sqlx::query_file!("sql/spaces/get_members_by_spaces.sql", space.id)
         .fetch_all(&mut *trans)
         .await

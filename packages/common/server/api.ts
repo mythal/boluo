@@ -11,8 +11,12 @@ const getBackEndUrl = () => {
     return backEndUrl;
   } else if (process.env.BACKEND_URL) {
     const BACKEND_URL = process.env.BACKEND_URL;
-    if (BACKEND_URL.endsWith('/')) {
+    if (BACKEND_URL.endsWith('/api/')) {
+      backEndUrl = BACKEND_URL.slice(0, -1);
+    } else if (BACKEND_URL.endsWith('/')) {
       backEndUrl = BACKEND_URL + 'api';
+    } else if (BACKEND_URL.endsWith('/api')) {
+      backEndUrl = BACKEND_URL;
     } else {
       backEndUrl = BACKEND_URL + '/api';
     }

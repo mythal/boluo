@@ -8,10 +8,9 @@ import { useDefaultRollCommand } from '../../hooks/useDefaultRollCommand';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
-interface Props {}
-
-export const AddDiceButton: FC<Props> = () => {
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip('top-end');
+export const AddDiceButton: FC = () => {
+  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
+    useTooltip('top-end');
   const defaultRollCommand = useDefaultRollCommand();
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
@@ -29,7 +28,13 @@ export const AddDiceButton: FC<Props> = () => {
       <InComposeButton onClick={handleAddDice} label={title}>
         <Dice />
       </InComposeButton>
-      <TooltipBox show={showTooltip} style={floatingStyles} ref={refs.setFloating} {...getFloatingProps()} defaultStyle>
+      <TooltipBox
+        show={showTooltip}
+        style={floatingStyles}
+        ref={refs.setFloating}
+        {...getFloatingProps()}
+        defaultStyle
+      >
         {title}
       </TooltipBox>
     </div>

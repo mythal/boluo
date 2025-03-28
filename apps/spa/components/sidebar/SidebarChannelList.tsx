@@ -51,22 +51,36 @@ export const SidebarChannelList: FC<Props> = ({
       const channel = originalChannelWithMemberList.find(({ channel }) => channel.id === id);
       return channel ? [channel] : [];
     });
-    const notIncluded = originalChannelWithMemberList.filter(({ channel }) => !channelsOrder.includes(channel.id));
+    const notIncluded = originalChannelWithMemberList.filter(
+      ({ channel }) => !channelsOrder.includes(channel.id),
+    );
     return [...reordered, ...notIncluded];
   }, [originalChannelWithMemberList, spaceSettings]);
 
   const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}));
   const modifiers = useMemo(() => [restrictToVerticalAxis, restrictToWindowEdges], []);
-  const sortableItems = useMemo(() => channelWithMemberList.map(({ channel }) => channel.id), [channelWithMemberList]);
+  const sortableItems = useMemo(
+    () => channelWithMemberList.map(({ channel }) => channel.id),
+    [channelWithMemberList],
+  );
   const handleDragStart = useCallback(({ active }: DragStartEvent) => setActiveId(active.id), []);
   const handleDragEnd = useCallback(
     (e: DragEndEvent) => {
       const { over, active } = e;
       setActiveId(null);
       if (!over) return;
-      const overChannelIndex = channelWithMemberList.findIndex(({ channel }) => channel.id === over.id);
-      const activeChannelIndex = channelWithMemberList.findIndex(({ channel }) => channel.id === active.id);
-      if (overChannelIndex === -1 || activeChannelIndex === -1 || overChannelIndex === activeChannelIndex) return;
+      const overChannelIndex = channelWithMemberList.findIndex(
+        ({ channel }) => channel.id === over.id,
+      );
+      const activeChannelIndex = channelWithMemberList.findIndex(
+        ({ channel }) => channel.id === active.id,
+      );
+      if (
+        overChannelIndex === -1 ||
+        activeChannelIndex === -1 ||
+        overChannelIndex === activeChannelIndex
+      )
+        return;
       const idList = channelWithMemberList.map(({ channel }) => channel.id);
       const [removed] = idList.splice(activeChannelIndex, 1);
       if (removed == null) return;
@@ -103,7 +117,11 @@ export const SidebarChannelList: FC<Props> = ({
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <SortableContext items={sortableItems} strategy={verticalListSortingStrategy} disabled={!isReordering}>
+        <SortableContext
+          items={sortableItems}
+          strategy={verticalListSortingStrategy}
+          disabled={!isReordering}
+        >
           {channelWithMemberList.map(({ channel }) => (
             <SidebarChannelItem
               myId={myId}

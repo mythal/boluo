@@ -110,7 +110,13 @@ function ChatItemToolbarButton({
           {info && <div css={[textXs]}>{info}</div>}
         </Tooltip>
       )}
-      <button css={style} data-size={size} data-on={on} onClick={onClick} disabled={loading || disabled}>
+      <button
+        css={style}
+        data-size={size}
+        data-on={on}
+        onClick={onClick}
+        disabled={loading || disabled}
+      >
         <Icon spin={loading} sprite={loading ? rotateIcon : sprite} />
       </button>
     </div>

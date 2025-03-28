@@ -1,4 +1,11 @@
-import { autoUpdate, FloatingPortal, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  autoUpdate,
+  FloatingPortal,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
 import { post } from '@boluo/api-browser';
 import { UserX } from '@boluo/icons';
 import { type FC, useCallback, useState, useMemo } from 'react';
@@ -26,7 +33,9 @@ const leave: MutationFetcher<void, [string, string], Empty> = async ([_, channel
 export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
   const { data: channelMembers } = useQueryChannelMembers(channelId);
   const { data: channel, isLoading } = useQueryChannel(channelId);
-  const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, { onSuccess });
+  const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, {
+    onSuccess,
+  });
   const myMember = useMemo((): MemberWithUser | null => {
     if (channelMembers == null || channelMembers.selfIndex == null) return null;
     return channelMembers.members[channelMembers.selfIndex] ?? null;

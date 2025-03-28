@@ -10,6 +10,7 @@ interface Props {
   autoFocus?: boolean;
   className?: string;
   autoSize?: boolean;
+  ref?: Ref<ComposeInputAction>;
 }
 
 const style = css`
@@ -23,7 +24,10 @@ export interface ComposeInputAction {
   reset: () => void;
 }
 
-function useAutoFocus(autoFocus: undefined | boolean, inputRef: React.RefObject<HTMLTextAreaElement>) {
+function useAutoFocus(
+  autoFocus: undefined | boolean,
+  inputRef: React.RefObject<HTMLTextAreaElement | null>,
+) {
   useEffect(() => {
     if (autoFocus && inputRef.current) {
       const input = inputRef.current;
@@ -34,11 +38,11 @@ function useAutoFocus(autoFocus: undefined | boolean, inputRef: React.RefObject<
   }, [autoFocus, inputRef]);
 }
 
-function ComposeInput({ autoFocus = false, autoSize = false, className }: Props, ref: Ref<ComposeInputAction>) {
+function ComposeInput({ autoFocus = false, autoSize = false, className }: Props) {
   const dispatch = useDispatch();
   const channelId = useChannelId();
   const inGame = useSelector((state) => state.chatStates.get(channelId)!.compose.inGame);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   useAutoHeight(autoSize, inputRef);
   const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
   const setSource = useCallback(

@@ -69,7 +69,12 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
         )}
       </Suspense>
       {mySpaceMember?.isAdmin && (
-        <SidebarItem icon={<Plus />} toggle active={isCreateChannelPaneOpened} onClick={toggleCreateChannelPane}>
+        <SidebarItem
+          icon={<Plus />}
+          toggle
+          active={isCreateChannelPaneOpened}
+          onClick={toggleCreateChannelPane}
+        >
           <span className="text-surface-400 group-hover:text-surface-800">
             <FormattedMessage defaultMessage="Add New" />
           </span>

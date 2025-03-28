@@ -14,7 +14,10 @@ function ActionSwitch({ className, size }: Props) {
   const pane = useChannelId();
   const dispatch = useDispatch();
   const isAction = useSelector((state) => state.chatStates.get(pane)!.compose.isAction);
-  const toggle = useCallback(() => dispatch({ type: 'SET_IS_ACTION', pane, isAction: 'TOGGLE' }), [dispatch, pane]);
+  const toggle = useCallback(
+    () => dispatch({ type: 'SET_IS_ACTION', pane, isAction: 'TOGGLE' }),
+    [dispatch, pane],
+  );
   return (
     <ChatItemToolbarButton
       on={isAction}

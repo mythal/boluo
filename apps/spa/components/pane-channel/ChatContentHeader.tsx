@@ -22,7 +22,10 @@ export const ChatContentHeader: FC<Props> = (props) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const noMore = intl.formatMessage({ defaultMessage: 'No more messages' });
   return (
-    <div ref={boxRef} className="flex h-28 select-none flex-col items-center justify-end gap-2 py-4">
+    <div
+      ref={boxRef}
+      className="flex h-28 select-none flex-col items-center justify-end gap-2 py-4"
+    >
       {count !== 0 && (
         <span className="text-xs">
           <span className="text-text-lighter text-xs">

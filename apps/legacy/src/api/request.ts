@@ -140,32 +140,83 @@ interface IdWithToken {
 export function post(path: '/users/login', payload: LoginData): Promise<AppResult<LoginResult>>;
 export function post(path: '/users/register', payload: RegisterData): Promise<AppResult<User>>;
 export function post(path: '/users/edit', payload: EditUser): Promise<AppResult<User>>;
-export function post(path: '/users/update_settings', payload: Settings): Promise<AppResult<Settings>>;
-export function post(path: '/users/reset_password', payload: ResetPassword): Promise<AppResult<null>>;
-export function post(path: '/users/reset_password_confirm', payload: ResetPasswordConfirm): Promise<AppResult<null>>;
-export function post(path: '/spaces/create', payload: CreateSpace): Promise<AppResult<SpaceWithMember>>;
+export function post(
+  path: '/users/update_settings',
+  payload: Settings,
+): Promise<AppResult<Settings>>;
+export function post(
+  path: '/users/reset_password',
+  payload: ResetPassword,
+): Promise<AppResult<null>>;
+export function post(
+  path: '/users/reset_password_confirm',
+  payload: ResetPasswordConfirm,
+): Promise<AppResult<null>>;
+export function post(
+  path: '/spaces/create',
+  payload: CreateSpace,
+): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/edit', payload: EditSpace): Promise<AppResult<Space>>;
-export function post(path: '/spaces/join', payload: {}, query: SpaceIdWithToken): Promise<AppResult<SpaceWithMember>>;
+export function post(
+  path: '/spaces/join',
+  payload: {},
+  query: SpaceIdWithToken,
+): Promise<AppResult<SpaceWithMember>>;
 export function post(path: '/spaces/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
 export function post(path: '/spaces/kick', payload: {}, query: Kick): Promise<AppResult<true>>;
-export function post(path: '/spaces/delete', payload: {}, query: IdQuery): Promise<AppResult<Space>>;
-export function post(path: '/channels/create', payload: CreateChannel): Promise<AppResult<ChannelWithMember>>;
+export function post(
+  path: '/spaces/delete',
+  payload: {},
+  query: IdQuery,
+): Promise<AppResult<Space>>;
+export function post(
+  path: '/channels/create',
+  payload: CreateChannel,
+): Promise<AppResult<ChannelWithMember>>;
 export function post(path: '/channels/edit', payload: EditChannel): Promise<AppResult<Channel>>;
-export function post(path: '/channels/edit_member', payload: EditChannelMember): Promise<AppResult<ChannelMember>>;
-export function post(path: '/channels/join', payload: JoinChannel): Promise<AppResult<ChannelWithMember>>;
-export function post(path: '/channels/add_member', payload: AddMember): Promise<AppResult<ChannelWithMember>>;
-export function post(path: '/channels/leave', payload: {}, query: IdQuery): Promise<AppResult<true>>;
+export function post(
+  path: '/channels/edit_member',
+  payload: EditChannelMember,
+): Promise<AppResult<ChannelMember>>;
+export function post(
+  path: '/channels/join',
+  payload: JoinChannel,
+): Promise<AppResult<ChannelWithMember>>;
+export function post(
+  path: '/channels/add_member',
+  payload: AddMember,
+): Promise<AppResult<ChannelWithMember>>;
+export function post(
+  path: '/channels/leave',
+  payload: {},
+  query: IdQuery,
+): Promise<AppResult<true>>;
 export function post(
   path: '/channels/kick',
   payload: {},
   query: { channelId: string; userId: string; spaceId: string },
 ): Promise<AppResult<true>>;
-export function post(path: '/channels/delete', payload: {}, query: IdQuery): Promise<AppResult<Channel>>;
+export function post(
+  path: '/channels/delete',
+  payload: {},
+  query: IdQuery,
+): Promise<AppResult<Channel>>;
 export function post(path: '/messages/send', payload: NewMessage): Promise<AppResult<Message>>;
-export function post(path: '/messages/delete', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
-export function post(path: '/messages/toggle_fold', payload: {}, query: IdQuery): Promise<AppResult<Message>>;
+export function post(
+  path: '/messages/delete',
+  payload: {},
+  query: IdQuery,
+): Promise<AppResult<Message>>;
+export function post(
+  path: '/messages/toggle_fold',
+  payload: {},
+  query: IdQuery,
+): Promise<AppResult<Message>>;
 export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<Message>>;
-export function post(path: '/messages/move_between', payload: MoveBetween): Promise<AppResult<Message>>;
+export function post(
+  path: '/messages/move_between',
+  payload: MoveBetween,
+): Promise<AppResult<Message>>;
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,
@@ -186,7 +237,10 @@ export function patch<T, U extends object = object, Q extends object = {}>(
 export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User>>;
 export function get(path: '/users/get_me'): Promise<AppResult<GetMe | null>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
-export function get(path: '/users/check_username', query: CheckUsername): Promise<AppResult<boolean>>;
+export function get(
+  path: '/users/check_username',
+  query: CheckUsername,
+): Promise<AppResult<boolean>>;
 export function get(path: '/users/check_email', query: CheckEmail): Promise<AppResult<boolean>>;
 export function get(
   path: '/users/reset_password_token_check',
@@ -195,27 +249,49 @@ export function get(
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
-export function get(path: '/spaces/query_with_related', query: IdWithToken): Promise<AppResult<SpaceWithRelated>>;
+export function get(
+  path: '/spaces/query_with_related',
+  query: IdWithToken,
+): Promise<AppResult<SpaceWithRelated>>;
 export function get(path: '/spaces/token', query: IdQuery): Promise<AppResult<string>>;
-export function get(path: '/spaces/members', query: IdQuery): Promise<AppResult<Record<string, SpaceMemberWithUser>>>;
+export function get(
+  path: '/spaces/members',
+  query: IdQuery,
+): Promise<AppResult<Record<string, SpaceMemberWithUser>>>;
 export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
-export function get(path: '/channels/query_with_related', query: IdQuery): Promise<AppResult<ChannelWithRelated>>;
+export function get(
+  path: '/channels/query_with_related',
+  query: IdQuery,
+): Promise<AppResult<ChannelWithRelated>>;
 export function get(
   path: '/channels/by_space',
   query: IdQuery,
 ): Promise<AppResult<Array<{ channel: Channel; member: ChannelMember | null }>>>;
-export function get(path: '/channels/all_members', query: IdQuery): Promise<AppResult<ChannelMemberWithUser[]>>;
-export function get(path: '/channels/check_name', query: CheckChannelName): Promise<AppResult<boolean>>;
+export function get(
+  path: '/channels/all_members',
+  query: IdQuery,
+): Promise<AppResult<ChannelMemberWithUser[]>>;
+export function get(
+  path: '/channels/check_name',
+  query: CheckChannelName,
+): Promise<AppResult<boolean>>;
 export function get(path: '/channels/export', query: Export): Promise<AppResult<Message[]>>;
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
-export function get(path: '/events/token', query: IdQuery): Promise<AppResult<{ token: string | null }>>;
+export function get(
+  path: '/events/token',
+  query: IdQuery,
+): Promise<AppResult<{ token: string | null }>>;
 
 export function get<Q extends object, T>(path: string, query?: Q): Promise<AppResult<T>> {
   return request(makeUri(path, query), 'GET', null);
 }
 
-export function editAvatar(file: Blob, filename: string, mimeType: string): Promise<AppResult<User>> {
+export function editAvatar(
+  file: Blob,
+  filename: string,
+  mimeType: string,
+): Promise<AppResult<User>> {
   const path = '/users/edit_avatar';
   return request(makeUri(path, { filename, mimeType, size: file.size }), 'POST', file, mimeType);
 }

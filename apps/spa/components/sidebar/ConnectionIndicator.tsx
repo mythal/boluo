@@ -41,7 +41,8 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       if (connectionState.type === 'CONNECTED' || connectionState.type === 'ERROR') return prev;
       if (connectionState.retry < 2) return prev;
       if (connectionState.type === prevConnectStateType.current) return prev;
-      if (prevConnectStateType.current === 'CLOSED' && connectionState.type === 'CONNECTING') return prev;
+      if (prevConnectStateType.current === 'CLOSED' && connectionState.type === 'CONNECTING')
+        return prev;
       return true;
     });
     prevConnectStateType.current = connectionState.type;

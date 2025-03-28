@@ -20,7 +20,15 @@ export const Avatar: FC<Props> = (props) => {
     return { width: size, height: size };
   }, [size]);
   if (avatarId) {
-    return <img alt={name} style={style} onClick={onClick} className={className} src={getMediaUrl(avatarId)} />;
+    return (
+      <img
+        alt={name}
+        style={style}
+        onClick={onClick}
+        className={className}
+        src={getMediaUrl(avatarId)}
+      />
+    );
   }
 
   const src = `https://avatars.boluo.chat/${encodeURIComponent(id + name)}`;

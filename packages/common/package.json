@@ -1,48 +1,52 @@
 {
   "name": "@boluo/common",
   "version": "0.0.0",
+  "dependencies": {
+    "@boluo/api-browser": "*",
+    "@boluo/icons": "*",
+    "@boluo/lang": "*",
+    "clsx": "^2.1.1",
+    "react-hook-form": "^7.54.2"
+  },
+  "devDependencies": {
+    "@boluo/api": "*",
+    "@boluo/eslint-config": "*",
+    "@boluo/theme": "*",
+    "@boluo/typescript-config": "*",
+    "@boluo/utils": "*",
+    "@formatjs/intl": "^3.1.6",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.23.0",
+    "jotai": "^2.12.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-intl": "^7.1.10",
+    "swr": "^2.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./*": "./*.ts",
+    "./server": "./server/index.ts",
+    "./server/*": "./server/*.ts"
+  },
   "homepage": "https://github.com/mythal/boluo",
-  "license": "GPL-3.0",
-  "type": "module",
-  "main": "./index.js",
-  "types": "./dist/index.d.ts",
+  "license": "AGPL-3.0",
+  "peerDependencies": {
+    "jotai": "^2.12.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-intl": "^7.1.10",
+    "swr": "^2.3.3"
+  },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "check-types": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,
-  "peerDependencies": {
-    "jotai": "^2.7.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-hook-form": "^7.51.0",
-    "react-intl": "^7.0.4",
-    "swr": "^2.2.5"
-  },
-  "devDependencies": {
-    "@formatjs/intl": "^3.0.4",
-    "@types/node": "^22.10.3",
-    "@types/react": "^18.2.61",
-    "@types/react-dom": "^18.2.19",
-    "@boluo/api": "*",
-    "eslint": "^8.56.0",
-    "@boluo/eslint-config": "*",
-    "jotai": "^2.6.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-intl": "^7.0.4",
-    "swr": "^2.2.5",
-    "@boluo/theme": "*",
-    "ts-node": "^10.9.2",
-    "@boluo/typescript-config": "*",
-    "typescript": "^5.3.3",
-    "@boluo/utils": "*"
-  },
-  "dependencies": {
-    "@boluo/api-browser": "*",
-    "clsx": "^2.1.0",
-    "@boluo/icons": "*",
-    "@boluo/lang": "*",
-    "react-hook-form": "^7.49.2"
-  }
+  "type": "module"
 }

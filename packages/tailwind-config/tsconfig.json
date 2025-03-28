@@ -1,0 +1,5 @@
+{
+  "extends": "@boluo/typescript-config/base.json",
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"]
+}

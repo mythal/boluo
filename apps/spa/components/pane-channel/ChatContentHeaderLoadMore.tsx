@@ -23,9 +23,7 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
   return end.y - start.y > 20;
 };
 
-interface Props {}
-
-export const ChatContentHeaderLoadMore: FC<Props> = () => {
+export const ChatContentHeaderLoadMore: FC = () => {
   const channelId = useChannelId();
   const isTouchDeviceRef = useRef(false);
   const mountedRef = useMountedRef();
@@ -46,7 +44,11 @@ export const ChatContentHeaderLoadMore: FC<Props> = () => {
     const channelState = chatState.channels[channelId];
     setIsLoading(true);
     const before: number | null = channelState ? (head(channelState.messages)?.pos ?? null) : null;
-    const fetchPromise = get('/messages/by_channel', { channelId, before, limit: LOAD_MESSAGE_LIMIT });
+    const fetchPromise = get('/messages/by_channel', {
+      channelId,
+      before,
+      limit: LOAD_MESSAGE_LIMIT,
+    });
     const result = await fetchPromise;
     if (result.isErr) {
       setBanner({
@@ -150,7 +152,9 @@ export const ChatContentHeaderLoadMore: FC<Props> = () => {
         {isLoading ? (
           <CircleNotch className="animate-spin" />
         ) : (
-          <ChevronDown className={clsx('transition-transform duration-300', willLoad && 'rotate-180')} />
+          <ChevronDown
+            className={clsx('transition-transform duration-300', willLoad && 'rotate-180')}
+          />
         )}
 
         <div className="flex-grow text-center">

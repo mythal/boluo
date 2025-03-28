@@ -53,7 +53,12 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     const value = values.reduce((a, b) => a + b, 0);
     return { ...node, values, value };
   } else if (node.type === 'FateRoll') {
-    const values: FateResult['values'] = [fateDice(rng), fateDice(rng), fateDice(rng), fateDice(rng)];
+    const values: FateResult['values'] = [
+      fateDice(rng),
+      fateDice(rng),
+      fateDice(rng),
+      fateDice(rng),
+    ];
     const value = values.reduce((a: number, b: number) => a + b, 0);
     return { type: 'FateRoll', value, values };
   } else if (node.type === 'DicePool') {
@@ -205,7 +210,11 @@ export const cocRollSubTypeDisplay = (subType: CocRoll['subType']): string | nul
   return modifierName;
 };
 
-export const cocSuccessLevelDisplay = (intl: IntlShape, value: number, targetValue: number): string => {
+export const cocSuccessLevelDisplay = (
+  intl: IntlShape,
+  value: number,
+  targetValue: number,
+): string => {
   let successName: string;
   if (value === 100 || (targetValue < 50 && value > 95)) {
     successName = intl.formatMessage({ defaultMessage: 'Fumble' });
@@ -255,7 +264,10 @@ export const nodeToText = (intl: IntlShape, node: EvaluatedExprNode): string => 
   } else if (node.type === 'CocRoll') {
     const { subType } = node;
     const typeDisplay = cocRollSubTypeDisplay(subType) || '';
-    const modifier = node.subType === 'NORMAL' ? '' : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
+    const modifier =
+      node.subType === 'NORMAL'
+        ? ''
+        : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
     let successLevel: string = '';
     if (node.targetValue) {
       const tagetLabel = intl.formatMessage({ defaultMessage: 'target' });

@@ -1,39 +1,34 @@
 {
   "name": "boluo",
-  "version": "0.0.0",
-  "license": "MIT",
-  "scripts": {
-    "build": "nx run-many --target=build --all --output-style='stream'",
-    "build:legacy": "nx run-many --target=build --projects=legacy --output-style='stream'",
-    "build:site": "nx run-many --target=build --projects=site --output-style='stream'",
-    "build:spa": "nx run-many --target=build --projects=spa --output-style='stream'",
-    "build:affected": "nx affected -t build",
-    "storybook:ui": "nx run-many --target=storybook --projects='@boluo/ui'",
-    "build-storybook": "nx run-many --target=build-storybook --all",
-    "check": "nx run-many --target=check --all",
-    "check:affected": "nx affected -t check",
-    "check:format": "prettier --check .",
-    "lint": "nx run-many --target=lint --all",
-    "lint:affected": "nx affected -t lint",
-    "format": "prettier --write .",
-    "dev:site": "nx run-many --target=dev --projects=site",
-    "dev:spa": "nx run-many --target=dev --projects=spa",
-    "dev:legacy": "nx run-many --target=dev --projects=legacy"
-  },
-  "private": true,
-  "workspaces": [
-    "packages/*",
-    "apps/server/bindings",
-    "apps/*"
-  ],
-  "dependencies": {
-    "@boluo/eslint-config": "*",
-    "nx": "^19.0.2",
-    "typescript": "^5.3.3"
-  },
-  "packageManager": "npm@10.2.3",
   "devDependencies": {
-    "prettier": "^3.1.1",
-    "prettier-plugin-tailwindcss": "^0.6.5"
-  }
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "syncpack": "^13.0.3",
+    "turbo": "^2.4.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.9.2",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "build:legacy": "turbo build --filter=legacy",
+    "build:site": "turbo build --filter=site",
+    "build:spa": "turbo build --filter=spa",
+    "check-types": "turbo run check-types",
+    "dev": "turbo run dev",
+    "dev:site": "turbo run dev --filter=site",
+    "test": "turbo run test",
+    "fix:versions": "syncpack-fix-mismatches --filter '^(?!@boluo/).+'",
+    "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}'",
+    "format:versions": "syncpack format",
+    "generate": "turbo run generate",
+    "lint": "turbo run lint"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "apps/server/bindings"
+  ]
 }

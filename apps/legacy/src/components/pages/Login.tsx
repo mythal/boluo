@@ -9,7 +9,18 @@ import loginIcon from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
-import { alignRight, flex, flex1, largeInput, link, mR, mT, mY, sm, textLg } from '../../styles/atoms';
+import {
+  alignRight,
+  flex,
+  flex1,
+  largeInput,
+  link,
+  mR,
+  mT,
+  mY,
+  sm,
+  textLg,
+} from '../../styles/atoms';
 import { popNext } from '../../utils/browser';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
@@ -57,7 +68,12 @@ function Login() {
         <div css={[sm(flex)]}>
           <div css={[mY(2), sm(mR(2), flex1)]}>
             <Label htmlFor="username">用户名 / 邮箱</Label>
-            <Input css={largeInput} id="username" autoComplete="username" {...register('username', { required })} />
+            <Input
+              css={largeInput}
+              id="username"
+              autoComplete="username"
+              {...register('username', { required })}
+            />
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
           <div css={[mY(2), flex1]}>

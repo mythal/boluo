@@ -42,7 +42,10 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  const messagesAtom = useMemo(() => atom((read) => read(chatAtom).channels[channel.id]?.messages), [channel.id]);
+  const messagesAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channel.id]?.messages),
+    [channel.id],
+  );
   const fullLoadedAtom = useMemo(
     () => atom((read) => read(chatAtom).channels[channel.id]?.fullLoaded ?? false),
     [channel.id],
@@ -92,14 +95,18 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         return;
       }
       if (active) {
-        setPane((panes) => panes.filter((pane) => pane.type !== 'CHANNEL' || pane.channelId !== channel.id));
+        setPane((panes) =>
+          panes.filter((pane) => pane.type !== 'CHANNEL' || pane.channelId !== channel.id),
+        );
       } else {
         addPane({ type: 'CHANNEL', channelId: channel.id });
       }
     },
     [active, addPane, channel.id, isReordering, paneLimit, setPane],
   );
-  const paneUrlPart = encodeURIComponent(JSON.stringify([{ type: 'CHANNEL', channelId: channel.id, key: 0 }]));
+  const paneUrlPart = encodeURIComponent(
+    JSON.stringify([{ type: 'CHANNEL', channelId: channel.id, key: 0 }]),
+  );
   const iconButton = (
     <button
       className={clsx(
@@ -193,5 +200,10 @@ const ChannelItemIcon: FC<{ channel: Channel; interactive: boolean; isReordering
   } else if (channel.type === 'IN_GAME') {
     icon = Drama;
   }
-  return <Icon className={!interactive || isReordering ? '' : 'group-hover/icon:opacity-0'} icon={icon} />;
+  return (
+    <Icon
+      className={!interactive || isReordering ? '' : 'group-hover/icon:opacity-0'}
+      icon={icon}
+    />
+  );
 };

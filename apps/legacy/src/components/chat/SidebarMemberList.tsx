@@ -29,7 +29,12 @@ function SidebarMemberList({ spaceId }: Props) {
     }
     const status = usersStatus[member.user.id];
     memberList.push(
-      <SidebarMemberListItem key={member.user.id} member={member} online={isOnline(status)} onClick={handleClick} />,
+      <SidebarMemberListItem
+        key={member.user.id}
+        member={member}
+        online={isOnline(status)}
+        onClick={handleClick}
+      />,
     );
   }
   return <div css={overflowYAuto}>{memberList}</div>;

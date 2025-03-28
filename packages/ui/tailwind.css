@@ -6,14 +6,17 @@
   html {
     font-size: 16px;
     /* https://github.com/system-fonts/modern-font-stacks#humanist */
-    font-family: 'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+    font-family:
+      'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro,
+      sans-serif;
   }
   html.switching,
   html.switching * {
     transition-duration: 200ms;
     transition-timing-function: ease-in;
-    transition-property: background-color, border-bottom-color, border-top-color, border-left-color, border-right-color,
-      outline-color;
+    transition-property:
+      background-color, border-bottom-color, border-top-color, border-left-color,
+      border-right-color, outline-color;
   }
 
   @font-face {

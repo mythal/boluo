@@ -6,7 +6,11 @@ const getNodeId = (): Uint8Array => {
   if (serializedId) {
     try {
       const parsed = JSON.parse(serializedId);
-      if (Array.isArray(parsed) && parsed.length === 6 && parsed.every((x) => typeof x === 'number')) {
+      if (
+        Array.isArray(parsed) &&
+        parsed.length === 6 &&
+        parsed.every((x) => typeof x === 'number')
+      ) {
         return new Uint8Array(parsed);
       } else {
         throw new Error('Invalid node ID');

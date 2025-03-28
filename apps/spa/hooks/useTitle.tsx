@@ -25,7 +25,8 @@ const hasUnreadMessages = (
   }
   const channels = Object.keys(chatState.channels);
   for (const channelId of channels) {
-    if (channelWithMaybeMemberList.findIndex(({ channel }) => channel.id === channelId) === -1) continue;
+    if (channelWithMaybeMemberList.findIndex(({ channel }) => channel.id === channelId) === -1)
+      continue;
     const channel = chatState.channels[channelId]!;
     const readPos = store.get(channelReadFamily(channelId));
     let count = 0;
@@ -68,7 +69,8 @@ export const useTitle = (spaceId: string, space: Space | null | undefined) => {
       if (!chatState || !chatState.context.initialized) {
         return false;
       }
-      document.title = (hasUnreadMessages(store, channelWithMaybeMemberList) ? '(*) ' : '') + space.name;
+      document.title =
+        (hasUnreadMessages(store, channelWithMaybeMemberList) ? '(*) ' : '') + space.name;
     };
     update();
     const unsubNotificationTimestamp = store.sub(notifyTimestampAtom, update);

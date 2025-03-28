@@ -132,11 +132,19 @@ function ExportDialog({ dismiss, channel }: Props) {
         />
       </div>
       <Label>
-        <input checked={filterOutGame} onChange={(e) => setFilterOutGame(e.target.checked)} type="checkbox" />{' '}
+        <input
+          checked={filterOutGame}
+          onChange={(e) => setFilterOutGame(e.target.checked)}
+          type="checkbox"
+        />{' '}
         过滤游戏外消息
       </Label>
       <Label>
-        <input checked={filterFolded} onChange={(e) => setFilterFolded(e.target.checked)} type="checkbox" />{' '}
+        <input
+          checked={filterFolded}
+          onChange={(e) => setFilterFolded(e.target.checked)}
+          type="checkbox"
+        />{' '}
         过滤已折叠消息
       </Label>
       {(format.value === 'TXT' || format.value === 'BBCODE') && (
@@ -147,12 +155,21 @@ function ExportDialog({ dismiss, channel }: Props) {
       )}
       {format.value === 'BBCODE' && (
         <Label>
-          <input checked={headerAfterWrap} onChange={(e) => setHeaderAfterWrap(e.target.checked)} type="checkbox" />{' '}
+          <input
+            checked={headerAfterWrap}
+            onChange={(e) => setHeaderAfterWrap(e.target.checked)}
+            type="checkbox"
+          />{' '}
           在换行处拆分成多条
         </Label>
       )}
       <a hidden href="#" ref={linkRef} download={filename} />
-      <Button css={[widthFull, mT(4)]} data-variant="primary" onClick={exportData} disabled={loading}>
+      <Button
+        css={[widthFull, mT(4)]}
+        data-variant="primary"
+        onClick={exportData}
+        disabled={loading}
+      >
         <span>
           <Icon loading={loading} sprite={exportIcon} /> 导出
         </span>

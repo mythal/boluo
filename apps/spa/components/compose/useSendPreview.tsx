@@ -109,5 +109,14 @@ export const useSendPreview = (
         defaultInGame,
       );
     });
-  }, [channelId, characterName, composeAtom, connectionState, defaultInGame, nickname, parsedAtom, store]);
+  }, [
+    channelId,
+    characterName,
+    composeAtom,
+    connectionState,
+    defaultInGame,
+    nickname,
+    parsedAtom,
+    store,
+  ]);
 };

@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import { List } from 'immutable';
 import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { DragDropContext, DragDropContextProps, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, DragDropContextProps, Droppable } from '@hello-pangea/dnd';
 import { FinishMoveMessage, ResetMessageMoving } from '../../actions';
 import { post } from '../../api/request';
 import { usePane } from '../../hooks/useChannelId';
@@ -65,7 +65,7 @@ const itemPos = (item: PreviewItem | MessageItem | undefined | null): [number, n
   }
 };
 
-const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement>) => {
+const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
   const scrollEnd = useRef<number>(0);
 
   useLayoutEffect(() => {
@@ -178,7 +178,11 @@ function ChatList({ channelId, focus }: Props) {
   let prevName: Id | null = null;
   const items = filteredMessages.map((item, index) => {
     let sameSender = false;
-    if (item.type === 'MESSAGE' && item.message.senderId === prevSender && item.message.name === prevName) {
+    if (
+      item.type === 'MESSAGE' &&
+      item.message.senderId === prevSender &&
+      item.message.name === prevName
+    ) {
       sameSender = true;
     } else if (item.type === 'MESSAGE') {
       prevSender = item.message.senderId;
@@ -187,7 +191,15 @@ function ChatList({ channelId, focus }: Props) {
       prevSender = item.preview.senderId;
       prevName = item.preview.name;
     }
-    return <ChatItem key={item.id} item={item} myMember={myMember} index={index} sameSender={sameSender} />;
+    return (
+      <ChatItem
+        key={item.id}
+        item={item}
+        myMember={myMember}
+        index={index}
+        sameSender={sameSender}
+      />
+    );
   });
 
   return (

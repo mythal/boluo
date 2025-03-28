@@ -36,7 +36,8 @@ export const isLoginOpenAtom = atom((get) => {
 
 export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {
   const panes = get(panesAtom);
-  return (id: string) => panes.findIndex((pane) => pane.type === 'PROFILE' && pane.userId === id) !== -1;
+  return (id: string) =>
+    panes.findIndex((pane) => pane.type === 'PROFILE' && pane.userId === id) !== -1;
 });
 export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
   const isLoginOpen = useAtomValue(isLoginOpenAtom);
@@ -64,19 +65,34 @@ export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
     togglePane({ type: 'PROFILE', userId: currentUser.id });
   }, [currentUser, togglePane]);
   const loginItem = !currentUser && (
-    <SidebarItem icon={<LogIn />} toggle={canToggle} onClick={handleToggleLogin} active={isLoginOpen}>
+    <SidebarItem
+      icon={<LogIn />}
+      toggle={canToggle}
+      onClick={handleToggleLogin}
+      active={isLoginOpen}
+    >
       <FormattedMessage defaultMessage="Login" />
     </SidebarItem>
   );
   const settingsItem = (
-    <SidebarItem icon={<Settings />} active={isSettingsOpen} toggle={canToggle} onClick={handleToggleSettings}>
+    <SidebarItem
+      icon={<Settings />}
+      active={isSettingsOpen}
+      toggle={canToggle}
+      onClick={handleToggleSettings}
+    >
       <FormattedMessage defaultMessage="Settings" />
     </SidebarItem>
   );
   const toggleHelp = useCallback(() => togglePane({ type: 'HELP' }), [togglePane]);
   const helpItem = useMemo(
     () => (
-      <SidebarItem icon={<HelpCircle />} active={isHelpOpen} toggle={canToggle} onClick={toggleHelp}>
+      <SidebarItem
+        icon={<HelpCircle />}
+        active={isHelpOpen}
+        toggle={canToggle}
+        onClick={toggleHelp}
+      >
         <FormattedMessage defaultMessage="Help" />
       </SidebarItem>
     ),
@@ -108,7 +124,9 @@ export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
             avatarId={currentUser.avatarId}
             className={clsx('h-6 w-6 rounded')}
           />
-          <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{currentUser.nickname}</div>
+          <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+            {currentUser.nickname}
+          </div>
         </SidebarGroupHeader>
       ) : (
         <>

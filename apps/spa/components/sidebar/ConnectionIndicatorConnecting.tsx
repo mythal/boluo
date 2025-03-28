@@ -1,9 +1,7 @@
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 
-interface Props {}
-
-export const ConnectionIndicatorConnecting: FC<Props> = ({}) => {
+export const ConnectionIndicatorConnecting: FC = () => {
   return (
     <div>
       <FormattedMessage defaultMessage="Connecting" />

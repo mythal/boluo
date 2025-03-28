@@ -35,7 +35,12 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
 
   return (
     <>
-      <button data-variant="danger" onClick={() => setConfirmDialog(true)} disabled={leaving} {...props}>
+      <button
+        data-variant="danger"
+        onClick={() => setConfirmDialog(true)}
+        disabled={leaving}
+        {...props}
+      >
         <Icon sprite={doorOpen} loading={leaving} />
         退出
       </button>

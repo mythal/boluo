@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["apps/server"]
+metadata.crane.name = "boluo"
 
 [profile.release]
 panic = "abort"

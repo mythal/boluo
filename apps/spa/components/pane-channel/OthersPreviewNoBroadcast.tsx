@@ -5,7 +5,7 @@ interface Props {
   timestamp: number;
 }
 
-export const OthersPreviewNoBroadcast = React.memo<Props>(({ timestamp }) => {
+export const OthersPreviewNoBroadcast = React.memo<Props>(({ timestamp }: Props) => {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const now = new Date().getTime();
@@ -17,7 +17,10 @@ export const OthersPreviewNoBroadcast = React.memo<Props>(({ timestamp }) => {
     return () => window.clearTimeout(handle);
   }, [timestamp]);
   return (
-    <div ref={ref} className="text-surface-600 data-[highlight=true]:text-surface-300 transition-colors duration-100">
+    <div
+      ref={ref}
+      className="text-surface-600 data-[highlight=true]:text-surface-300 transition-colors duration-100"
+    >
       *
       <span className="px-1 italic">
         <FormattedMessage defaultMessage="Broadcast has been turned off" />

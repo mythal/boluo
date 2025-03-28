@@ -31,11 +31,26 @@ function ComposeToolbar(props: Props) {
     () => dispatch({ type: 'SET_BROADCAST', pane, broadcast: 'TOGGLE' }),
     [dispatch, pane],
   );
-  const toggleInGame = useCallback(() => dispatch({ type: 'SET_IN_GAME', pane, inGame: 'TOGGLE' }), [dispatch, pane]);
+  const toggleInGame = useCallback(
+    () => dispatch({ type: 'SET_IN_GAME', pane, inGame: 'TOGGLE' }),
+    [dispatch, pane],
+  );
   return (
     <Toolbar>
-      <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} title="游戏内" info="Esc" />
-      <ChatItemToolbarButton css={mR(1)} on={isAction} onClick={toggleIsAction} sprite={running} title="描述动作" />
+      <ChatItemToolbarButton
+        on={inGame}
+        onClick={toggleInGame}
+        sprite={mask}
+        title="游戏内"
+        info="Esc"
+      />
+      <ChatItemToolbarButton
+        css={mR(1)}
+        on={isAction}
+        onClick={toggleIsAction}
+        sprite={running}
+        title="描述动作"
+      />
       <ChatItemToolbarButton
         css={mR(1)}
         sprite={broadcastTower}

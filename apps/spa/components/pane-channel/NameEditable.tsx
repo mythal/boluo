@@ -68,7 +68,11 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
     onOpenChange: setIsOpen,
     placement: 'top-end',
     // The hide middleware will cause the keyboard flickering in Android
-    middleware: [flip({ mainAxis: true, crossAxis: false }), shift(), offset({ mainAxis: 0, crossAxis: 0 })],
+    middleware: [
+      flip({ mainAxis: true, crossAxis: false }),
+      shift(),
+      offset({ mainAxis: 0, crossAxis: 0 }),
+    ],
     whileElementsMounted: autoUpdate,
   });
 
@@ -81,7 +85,14 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
 
   return (
     <>
-      <NameBox interactive pressed={isOpen} color={color} ref={refs.setReference} icon={icon} {...getReferenceProps()}>
+      <NameBox
+        interactive
+        pressed={isOpen}
+        color={color}
+        ref={refs.setReference}
+        icon={icon}
+        {...getReferenceProps()}
+      >
         {isEmptyName ? (
           <span className="font-pixel text-[12.5px]">
             <Delay fallback={<FallbackIcon />}>

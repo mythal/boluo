@@ -46,7 +46,10 @@ pub async fn space_users_status(
         let user_id_array: [u8; 16] = match user_id_bytes.try_into() {
             Ok(array) => array,
             Err(bytes) => {
-                log::error!("Failed to convert user id in cache to [u8; 16]: {:?}", bytes);
+                log::error!(
+                    "Failed to convert user id in cache to [u8; 16]: {:?}",
+                    bytes
+                );
                 continue;
             }
         };
@@ -61,7 +64,8 @@ pub async fn space_users_status(
 }
 
 static SPACES_CACHE: LazyLock<Cache<Uuid, Space>> = LazyLock::new(|| Cache::new(1024));
-static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> = LazyLock::new(|| Cache::new(1024));
+static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> =
+    LazyLock::new(|| Cache::new(1024));
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
 #[sqlx(type_name = "spaces")]
@@ -131,20 +135,29 @@ impl Space {
     }
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<(), sqlx::Error> {
-        sqlx::query_file!("sql/spaces/delete.sql", id).execute(db).await?;
+        sqlx::query_file!("sql/spaces/delete.sql", id)
+            .execute(db)
+            .await?;
         SPACES_CACHE.remove(id);
         Ok(())
     }
 
     pub async fn recent<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<Uuid>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/recent.sql").fetch_all(db).await
+        sqlx::query_file_scalar!("sql/spaces/recent.sql")
+            .fetch_all(db)
+            .await
     }
 
     pub async fn all<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<Space>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/all.sql").fetch_all(db).await
+        sqlx::query_file_scalar!("sql/spaces/all.sql")
+            .fetch_all(db)
+            .await
     }
 
-    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<Space>, sqlx::Error> {
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<Space>, sqlx::Error> {
         SPACES_CACHE
             .get_or_insert_async(id, async {
                 sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
@@ -169,7 +182,10 @@ impl Space {
         Ok(space)
     }
 
-    pub async fn refresh_token<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Uuid, sqlx::Error> {
+    pub async fn refresh_token<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Uuid, sqlx::Error> {
         let token = sqlx::query_file_scalar!("sql/spaces/refresh_token.sql", id)
             .fetch_one(db)
             .await?;
@@ -177,14 +193,20 @@ impl Space {
         Ok(token)
     }
 
-    pub async fn get_token<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Uuid, sqlx::Error> {
+    pub async fn get_token<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Uuid, sqlx::Error> {
         Space::get_by_id(db, id)
             .await?
             .ok_or(sqlx::Error::RowNotFound)
             .map(|space| space.invite_token)
     }
 
-    pub async fn is_public<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<Option<bool>, sqlx::Error> {
+    pub async fn is_public<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<bool>, sqlx::Error> {
         Space::get_by_id(db, id)
             .await
             .map(|space| space.map(|space| space.is_public))
@@ -230,7 +252,10 @@ impl Space {
         Ok(space)
     }
 
-    pub async fn search<'c, T: sqlx::PgExecutor<'c>>(db: T, search: String) -> Result<Vec<Space>, sqlx::Error> {
+    pub async fn search<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        search: String,
+    ) -> Result<Vec<Space>, sqlx::Error> {
         // https://www.postgresql.org/docs/9.3/functions-matching.html
         let patterns: Vec<String> = search
             .trim()
@@ -251,17 +276,23 @@ impl Space {
         db: T,
         user_id: &Uuid,
     ) -> Result<Vec<SpaceWithMember>, sqlx::Error> {
-        let space_with_member_list =
-            sqlx::query_file_as!(SpaceWithMember, "sql/spaces/get_spaces_by_user.sql", user_id)
-                .fetch_all(db)
-                .await?;
+        let space_with_member_list = sqlx::query_file_as!(
+            SpaceWithMember,
+            "sql/spaces/get_spaces_by_user.sql",
+            user_id
+        )
+        .fetch_all(db)
+        .await?;
         for space in &space_with_member_list {
             SPACES_CACHE.insert(space.space.id, space.space.clone());
         }
         Ok(space_with_member_list)
     }
 
-    pub async fn user_owned<'c, T: sqlx::PgExecutor<'c>>(db: T, user_id: &Uuid) -> Result<Vec<Space>, sqlx::Error> {
+    pub async fn user_owned<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: &Uuid,
+    ) -> Result<Vec<Space>, sqlx::Error> {
         sqlx::query_file_scalar!("sql/spaces/user_owned_spaces.sql", user_id)
             .fetch_all(db)
             .await
@@ -323,9 +354,14 @@ impl SpaceMember {
         space_id: &Uuid,
         is_admin: Option<bool>,
     ) -> Result<Option<SpaceMember>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/set_space_member.sql", is_admin, user_id, space_id,)
-            .fetch_optional(db)
-            .await
+        sqlx::query_file_scalar!(
+            "sql/spaces/set_space_member.sql",
+            is_admin,
+            user_id,
+            space_id,
+        )
+        .fetch_optional(db)
+        .await
     }
 
     pub async fn remove_user(
@@ -413,10 +449,17 @@ impl SpaceMemberWithUser {
         db: T,
         space_id: &Uuid,
     ) -> Result<HashMap<Uuid, SpaceMemberWithUser>, sqlx::Error> {
-        let members = sqlx::query_file_as!(SpaceMemberWithUser, "sql/spaces/get_members_by_spaces.sql", space_id)
-            .fetch_all(db)
-            .await?;
-        Ok(members.into_iter().map(|member| (member.user.id, member)).collect())
+        let members = sqlx::query_file_as!(
+            SpaceMemberWithUser,
+            "sql/spaces/get_members_by_spaces.sql",
+            space_id
+        )
+        .fetch_all(db)
+        .await?;
+        Ok(members
+            .into_iter()
+            .map(|member| (member.user.id, member))
+            .collect())
     }
 }
 

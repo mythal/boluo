@@ -100,7 +100,11 @@ export const errorText = (raw: AppError): ErrorText => {
     case FETCH_FAIL:
       return { description: '遇到网络错误', detail: '这可能是我们的服务器出错或者的网络故障', raw };
     case NOT_JSON:
-      return { description: '糟糕！服务器返回的消息格式有误', detail: '这可能是我们的服务器出错或者您的网络故障', raw };
+      return {
+        description: '糟糕！服务器返回的消息格式有误',
+        detail: '这可能是我们的服务器出错或者您的网络故障',
+        raw,
+      };
     case UNEXPECTED:
       return {
         description: '糟糕！出现了服务器内部错误',

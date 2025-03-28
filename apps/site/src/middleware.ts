@@ -1,9 +1,10 @@
-import { Locale, narrowLocale } from '@boluo/common/locale';
+import { Locale, narrowLocale, LOCALES } from '@boluo/common/locale';
+import { Theme } from '@boluo/theme';
 import Negotiator from 'negotiator';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Get the preferred locale, similar to above or using a library
 function getLocale(request: NextRequest): Locale {
+  // From cookie
   const langCookieItem = request.cookies.get('boluo-locale');
   if (langCookieItem != null) {
     const locale = narrowLocale(langCookieItem.value);
@@ -12,6 +13,7 @@ function getLocale(request: NextRequest): Locale {
     }
   }
 
+  // From accept-language header
   const accptLanguage = request.headers.get('accept-language') ?? 'en';
   const negotiator = new Negotiator({ headers: { 'accept-language': accptLanguage } });
   for (const language of negotiator.languages()) {
@@ -20,32 +22,35 @@ function getLocale(request: NextRequest): Locale {
       return locale;
     }
   }
+  // Default to English
   return 'en';
 }
 
-const locales = ['en', 'ja', 'zh', 'zh-CN', 'zh-TW'] as const;
+function getTheme(request: NextRequest): Theme {
+  return 'light';
+}
+const isLocale = (locale: string = ''): locale is Locale =>
+  (LOCALES as readonly string[]).includes(locale);
 
 const IS_STATIC_FILES = /^\/\w+\.(png|ico|svg)/;
+const themePrefix = 'theme:';
 
 export function middleware(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
-  if (IS_STATIC_FILES.test(pathname)) {
+  if (IS_STATIC_FILES.test(pathname) || pathname.startsWith('/api')) {
     return;
   }
-  if (pathname.startsWith('/api')) {
-    return;
-  }
-  // Check if there is any supported locale in the pathname
-
-  const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`,
-  );
-
-  // Redirect if there is no locale
-  if (pathnameIsMissingLocale) {
+  const segments = pathname.split('/');
+  const [segment0, segment1, segment2] = segments;
+  console.assert(segment0 === '', 'Unexpected root segment');
+  if (segments.length === 1 || !isLocale(segment1)) {
     const locale = getLocale(request);
-
-    const url = new URL(`/${locale}${pathname}`, request.url);
+    const theme = getTheme(request);
+    const url = new URL(`/${locale}/theme:${theme}${pathname}`, request.url);
+    return NextResponse.rewrite(url);
+  } else if (!segment2 || !segment2.startsWith(themePrefix)) {
+    const theme = getTheme(request);
+    const url = new URL(`/${segment1}/theme:${theme}${pathname}`, request.url);
     return NextResponse.rewrite(url);
   }
 }

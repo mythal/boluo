@@ -1,4 +1,4 @@
-import { parseBool } from './env';
+import { parseBool } from './env.js';
 
 const getBoolFlag = (key: string, defaultValue = false): boolean => {
   if (globalThis.window?.localStorage) {

@@ -1,13 +1,8 @@
 {
   "extends": "@boluo/typescript-config/react-library.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "declaration": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "sourceMap": true
+    "moduleResolution": "bundler",
+    "module": "esnext"
   },
   "include": ["**/*.ts", "**/*.tsx", "tailwindcss-theme-swapper.d.ts", "tailwind.config.mjs"],
   "exclude": ["dist", "build", "node_modules"]

@@ -52,7 +52,12 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
     const value = values.reduce((a, b) => a + b, 0);
     return { ...node, values, value };
   } else if (node.type === 'FateRoll') {
-    const values: FateResult['values'] = [fateDice(rng), fateDice(rng), fateDice(rng), fateDice(rng)];
+    const values: FateResult['values'] = [
+      fateDice(rng),
+      fateDice(rng),
+      fateDice(rng),
+      fateDice(rng),
+    ];
     const value = values.reduce((a: number, b: number) => a + b, 0);
     return { type: 'FateRoll', value, values };
   } else if (node.type === 'DicePool') {
@@ -256,7 +261,10 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
   } else if (node.type === 'CocRoll') {
     const { subType } = node;
     const typeDisplay = cocRollSubTypeDisplay(subType) || '';
-    const modifier = node.subType === 'NORMAL' ? '' : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
+    const modifier =
+      node.subType === 'NORMAL'
+        ? ''
+        : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
     const successLevel =
       node.targetValue === undefined
         ? ''

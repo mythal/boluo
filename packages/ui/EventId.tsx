@@ -34,11 +34,21 @@ export const EventId: FC<{ eventId: string }> = ({ eventId }) => {
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
   return (
     <>
-      <span className="underline decoration-dashed" ref={refs.setReference} {...getReferenceProps()}>
+      <span
+        className="underline decoration-dashed"
+        ref={refs.setReference}
+        {...getReferenceProps()}
+      >
         {eventId.slice(0, 8)}
       </span>
 
-      <TooltipBox defaultStyle show={isOpen} ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()}>
+      <TooltipBox
+        defaultStyle
+        show={isOpen}
+        ref={refs.setFloating}
+        style={floatingStyles}
+        {...getFloatingProps()}
+      >
         <FormattedMessage defaultMessage="Please provide this ID when reporting the prolblem." />
       </TooltipBox>
     </>

@@ -1,6 +1,10 @@
 import { RefObject, useEffect } from 'react';
 
-export const useAutoHeight = (enable: boolean, inputRef: RefObject<HTMLTextAreaElement>, maxHeight = 128) => {
+export const useAutoHeight = (
+  enable: boolean,
+  inputRef: RefObject<HTMLTextAreaElement | null>,
+  maxHeight = 128,
+) => {
   useEffect(() => {
     if (inputRef.current === null || !enable) {
       return;

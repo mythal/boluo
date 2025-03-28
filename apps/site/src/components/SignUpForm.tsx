@@ -1,7 +1,7 @@
 'use client';
 import type { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common';
+import { useErrorExplain } from '@boluo/common/hooks';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
@@ -140,7 +140,11 @@ const PasswordField = () => {
           </label>
 
           <button type="button" onClick={() => setShow((show) => !show)} className="text-brand-700">
-            {show ? <FormattedMessage defaultMessage="Hide" /> : <FormattedMessage defaultMessage="Show" />}
+            {show ? (
+              <FormattedMessage defaultMessage="Hide" />
+            ) : (
+              <FormattedMessage defaultMessage="Show" />
+            )}
           </button>
         </div>
         <TextInput

@@ -16,7 +16,10 @@ interface Props {
   currentUser: User | null | undefined;
 }
 
-const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({ space, currentSpaceId }) => {
+const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({
+  space,
+  currentSpaceId,
+}) => {
   const switchSpace = useSwitchSpace();
   const isCurrent = currentSpaceId === space.id;
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
@@ -77,7 +80,12 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => 
         ))
       )}
       {currentUser != null && (
-        <SidebarItem icon={<Plus />} toggle active={isCreateSpacePaneOpened} onClick={handleToggleCreateSpacePane}>
+        <SidebarItem
+          icon={<Plus />}
+          toggle
+          active={isCreateSpacePaneOpened}
+          onClick={handleToggleCreateSpacePane}
+        >
           <span className="text-surface-400 group-hover:text-surface-800">
             <FormattedMessage defaultMessage="New Space" />
           </span>

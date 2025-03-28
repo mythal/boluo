@@ -21,7 +21,9 @@ export const ChannelTypeField: FC = () => {
 
       <SelectBox
         title={<FormattedMessage defaultMessage="Out of Game" />}
-        description={<FormattedMessage defaultMessage="By default member will speak on their own behalf." />}
+        description={
+          <FormattedMessage defaultMessage="By default member will speak on their own behalf." />
+        }
         selected={type === 'OUT_OF_GAME'}
         onSelected={() => onChange('OUT_OF_GAME')}
       />

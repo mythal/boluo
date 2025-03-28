@@ -111,7 +111,11 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           <Button type="button" onClick={closePane}>
             <FormattedMessage defaultMessage="Cancel" />
           </Button>
-          <Button type="submit" variant="primary" disabled={!form.formState.isDirty || form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!form.formState.isDirty || form.formState.isSubmitting}
+          >
             <FormattedMessage defaultMessage="Save Changes" />
           </Button>
         </PaneFooterBox>
@@ -123,7 +127,12 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
 export const PaneChannelSettings: FC<{ channelId: string }> = ({ channelId }) => {
   const { data: channel, error } = useQueryChannel(channelId);
   if (error && channel == null) {
-    return <Failed code={error.code} title={<FormattedMessage defaultMessage="Failed to query the channel" />} />;
+    return (
+      <Failed
+        code={error.code}
+        title={<FormattedMessage defaultMessage="Failed to query the channel" />}
+      />
+    );
   } else if (!channel) {
     return <Loading />;
   }

@@ -18,10 +18,24 @@ function Avatar({ className, size, id, src, onClick }: Props) {
       src = mediaUrl(id!);
     }
     return (
-      <img alt="用户头像" onClick={onClick} className={className} css={[{ height: size, width: size }]} src={src} />
+      <img
+        alt="用户头像"
+        onClick={onClick}
+        className={className}
+        css={[{ height: size, width: size }]}
+        src={src}
+      />
     );
   } else {
-    return <SpriteSvg onClick={onClick} className={className} width={size} height={size} sprite={defaultAvatar} />;
+    return (
+      <SpriteSvg
+        onClick={onClick}
+        className={className}
+        width={size}
+        height={size}
+        sprite={defaultAvatar}
+      />
+    );
   }
 }
 

@@ -64,15 +64,28 @@ export const ConnectionSelectDialog = ({ dismiss }: Props) => {
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const dispatch = useDispatch();
   const proxyList = useProxyList();
-  const changeBaseUrl = useCallback((baseUrl: string) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }), [dispatch]);
+  const changeBaseUrl = useCallback(
+    (baseUrl: string) => dispatch({ type: 'CHANGE_BASE_URL', baseUrl }),
+    [dispatch],
+  );
   return (
     <Dialog title="选择线路" dismiss={dismiss} mask>
       <label>
-        <input type="checkbox" checked={autoSelect} onChange={(e) => setAutoSelect(e.target.checked)} /> 自动选择线路
+        <input
+          type="checkbox"
+          checked={autoSelect}
+          onChange={(e) => setAutoSelect(e.target.checked)}
+        />{' '}
+        自动选择线路
       </label>
       <div css={[flexCol, gap(1), pT(2)]}>
         {proxyList.map((proxy) => (
-          <ProxyItem key={proxy.name} proxy={proxy} current={baseUrl === proxy.url} changeBaseUrl={changeBaseUrl} />
+          <ProxyItem
+            key={proxy.name}
+            proxy={proxy}
+            current={baseUrl === proxy.url}
+            changeBaseUrl={changeBaseUrl}
+          />
         ))}
       </div>
     </Dialog>

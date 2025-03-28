@@ -48,11 +48,19 @@ export const handleSpaceUpdate = (state: ChatStateMap, action: SpaceUpdated): Ch
   for (const channel of spaceWithRelated.channels) {
     chatStates = state.update(channel.id, (prevChatState) => {
       if (prevChatState === undefined) {
-        const nextState = initChatState(channel, spaceWithRelated.channelMembers, spaceWithRelated.members);
+        const nextState = initChatState(
+          channel,
+          spaceWithRelated.channelMembers,
+          spaceWithRelated.members,
+        );
         nextState.initialized = true;
         return nextState;
       } else {
-        const members = makeMembers(channel.id, spaceWithRelated.members, spaceWithRelated.channelMembers);
+        const members = makeMembers(
+          channel.id,
+          spaceWithRelated.members,
+          spaceWithRelated.channelMembers,
+        );
         return { ...prevChatState, channel, members };
       }
     });
@@ -74,7 +82,11 @@ export const handleSpaceLoaded = (state: ChatStateMap, action: SpaceLoaded): Cha
   return chatStates;
 };
 
-export const chatStateMapReducer = (state: ChatStateMap, action: Action, userId: Id | undefined): ChatStateMap => {
+export const chatStateMapReducer = (
+  state: ChatStateMap,
+  action: Action,
+  userId: Id | undefined,
+): ChatStateMap => {
   if (action.type === 'SPACE_LOADED') {
     state = handleSpaceLoaded(state, action);
   } else if (action.type === 'SPACE_UPDATED') {

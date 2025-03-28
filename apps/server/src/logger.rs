@@ -13,7 +13,11 @@ pub fn to_systemd_log_level(level: Level) -> u8 {
 }
 
 pub fn setup_logger(debug: bool) -> Result<(), fern::InitError> {
-    let level = if debug { LevelFilter::Debug } else { LevelFilter::Info };
+    let level = if debug {
+        LevelFilter::Debug
+    } else {
+        LevelFilter::Info
+    };
     let color_config = ColoredLevelConfig::new()
         .info(Color::Green)
         .error(Color::BrightBlue)

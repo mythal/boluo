@@ -13,7 +13,13 @@ import {
   textLg,
   textSm,
 } from '../../styles/atoms';
-import { buttonColor, buttonDangerColor, buttonDarkColor, buttonPrimaryColor, textColor } from '../../styles/colors';
+import {
+  buttonColor,
+  buttonDangerColor,
+  buttonDarkColor,
+  buttonPrimaryColor,
+  textColor,
+} from '../../styles/colors';
 
 export const buttonShadowColor = 'rgba(0, 0, 0, 0.2)';
 

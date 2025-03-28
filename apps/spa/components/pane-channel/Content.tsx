@@ -24,10 +24,24 @@ interface Props {
   onContextMenu?: MouseEventHandler<HTMLSpanElement>;
 }
 
-export type EvaluatedExpr = { type: 'EvaluatedExpr'; node: EvaluatedExprNode; start: number; len: number };
+export type EvaluatedExpr = {
+  type: 'EvaluatedExpr';
+  node: EvaluatedExprNode;
+  start: number;
+  len: number;
+};
 
 export const Content = memo<Props>(
-  ({ source, entities, isAction, isArchived, nameNode, seed, onContextMenu, onDoubleClick }) => {
+  ({
+    source,
+    entities,
+    isAction,
+    isArchived,
+    nameNode,
+    seed,
+    onContextMenu,
+    onDoubleClick,
+  }: Props) => {
     const evaluatedEntities: Array<Entity | EvaluatedExpr> = useMemo(() => {
       if (seed == null || seed.length !== 4) {
         return entities;
@@ -37,7 +51,12 @@ export const Content = memo<Props>(
       for (const entity of entities) {
         if (entity.type === 'Expr') {
           const evaluated = evaluate(entity.node, rng);
-          extendedEntities.push({ type: 'EvaluatedExpr', node: evaluated, start: entity.start, len: entity.len });
+          extendedEntities.push({
+            type: 'EvaluatedExpr',
+            node: evaluated,
+            start: entity.start,
+            len: entity.len,
+          });
         } else {
           extendedEntities.push(entity);
         }

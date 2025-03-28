@@ -1,4 +1,10 @@
-import { type ChannelMembers, type Channel, type ChannelWithMember, type SpaceMember, type User } from '@boluo/api';
+import {
+  type ChannelMembers,
+  type Channel,
+  type ChannelWithMember,
+  type SpaceMember,
+  type User,
+} from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/common';
 import { UserPlus } from '@boluo/icons';
@@ -17,10 +23,11 @@ interface Props {
   channel: Channel;
 }
 
-const join: MutationFetcher<ChannelWithMember, [string, string], { characterName?: string }> = async (
-  [_, channelId],
-  { arg: { characterName = '' } },
-) => {
+const join: MutationFetcher<
+  ChannelWithMember,
+  [string, string],
+  { characterName?: string }
+> = async ([_, channelId], { arg: { characterName = '' } }) => {
   const channelWithMember = await post('/channels/join', null, { channelId, characterName });
   return channelWithMember.unwrap();
 };
@@ -70,7 +77,9 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
         content = <FormattedMessage defaultMessage="You must be logged in to join a channel." />;
         break;
       case 'NOT_BE_INVITED':
-        content = <FormattedMessage defaultMessage="You must be invited to join a private channel." />;
+        content = (
+          <FormattedMessage defaultMessage="You must be invited to join a private channel." />
+        );
         break;
       case 'NOT_A_SPACE_MEMBER':
         content = (

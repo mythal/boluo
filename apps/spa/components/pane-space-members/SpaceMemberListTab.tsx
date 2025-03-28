@@ -23,7 +23,10 @@ export const SpaceMemberListTab: FC<Props> = ({ spaceId, spaceOwnerId }) => {
   }, [myId, membersMap, spaceOwnerId]);
   if (error != null && membersMap == null) {
     return (
-      <Failed code={error.code} title={<FormattedMessage defaultMessage="Failed to query members of the space" />} />
+      <Failed
+        code={error.code}
+        title={<FormattedMessage defaultMessage="Failed to query members of the space" />}
+      />
     );
   }
   if (membersMap == null) {

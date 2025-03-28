@@ -2,14 +2,23 @@ import { useAtom } from 'jotai';
 import { isNotificationSupported, notificationEnableAtom } from '../state/notification.atoms';
 import { useIntl } from 'react-intl';
 
-export const useNotificationSwitch = (): { canNotify: boolean; startNotify: () => void; stopNotify: () => void } => {
+export const useNotificationSwitch = (): {
+  canNotify: boolean;
+  startNotify: () => void;
+  stopNotify: () => void;
+} => {
   const [notificationEnable, setNotificationEnable] = useAtom(notificationEnableAtom);
-  const canNotify = isNotificationSupported && Notification.permission === 'granted' && notificationEnable;
+  const canNotify =
+    isNotificationSupported && Notification.permission === 'granted' && notificationEnable;
   const intl = useIntl();
 
   const startNotify = async () => {
     if (!isNotificationSupported) {
-      alert(intl.formatMessage({ defaultMessage: 'Your device does not support sending notifications.' }));
+      alert(
+        intl.formatMessage({
+          defaultMessage: 'Your device does not support sending notifications.',
+        }),
+      );
       return;
     }
     if (Notification.permission !== 'granted') {

@@ -15,7 +15,12 @@ interface Props {
 
 const NAME_HISTORY_MAX = 5;
 
-const searchChannelForNames = (names: string[], channelState: ChannelState, userId: string, searchLimit: number) => {
+const searchChannelForNames = (
+  names: string[],
+  channelState: ChannelState,
+  userId: string,
+  searchLimit: number,
+) => {
   let count = 0;
   for (const message of backwards(channelState.messages)) {
     if (
@@ -114,7 +119,10 @@ export const NameEditContent: FC<Props> = ({ member }) => {
                 key={name}
                 className="bg-name-history-bg hover:bg-name-history-hover-bg inline-block max-w-[10rem] truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
                 onClick={() => {
-                  dispatch({ type: 'setInputedName', payload: { inputedName: name, setInGame: true } });
+                  dispatch({
+                    type: 'setInputedName',
+                    payload: { inputedName: name, setInGame: true },
+                  });
                 }}
               >
                 {name}

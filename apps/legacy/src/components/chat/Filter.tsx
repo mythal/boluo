@@ -28,13 +28,21 @@ function Filter({ className }: Props) {
   const dismiss = () => setOpen(false);
   return (
     <React.Fragment>
-      <ChatHeaderButton data-active={open} onClick={() => setOpen((open) => !open)} ref={button} className={className}>
+      <ChatHeaderButton
+        data-active={open}
+        onClick={() => setOpen((open) => !open)}
+        ref={button}
+        className={className}
+      >
         <Icon sprite={filterIcon} />
       </ChatHeaderButton>
       {open && (
         <Overlay x={1} y={1} selfX={-1} anchor={button} onOuter={dismiss}>
           <Menu dismiss={dismiss}>
-            <MenuItem onClick={() => dispatch(chatInGameFilter(pane))} icon={filter === 'IN_GAME' ? dotCircle : circle}>
+            <MenuItem
+              onClick={() => dispatch(chatInGameFilter(pane))}
+              icon={filter === 'IN_GAME' ? dotCircle : circle}
+            >
               游戏内消息
             </MenuItem>
             <MenuItem
@@ -43,10 +51,16 @@ function Filter({ className }: Props) {
             >
               游戏外消息
             </MenuItem>
-            <MenuItem onClick={() => dispatch(chatNoneFilter(pane))} icon={filter === 'NONE' ? dotCircle : circle}>
+            <MenuItem
+              onClick={() => dispatch(chatNoneFilter(pane))}
+              icon={filter === 'NONE' ? dotCircle : circle}
+            >
               所有消息
             </MenuItem>
-            <MenuItem onClick={() => dispatch({ type: 'TOGGLE_SHOW_FOLDED' })} icon={showFolded ? check : uncheck}>
+            <MenuItem
+              onClick={() => dispatch({ type: 'TOGGLE_SHOW_FOLDED' })}
+              icon={showFolded ? check : uncheck}
+            >
               显示折叠的消息
             </MenuItem>
           </Menu>

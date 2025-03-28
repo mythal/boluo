@@ -12,7 +12,11 @@ import { getDiceFace } from '../../../utils/game';
 import { Id, newId } from '../../../utils/id';
 import { uploadMedia } from './helper';
 
-export const whyCannotSend = (inGame: boolean, characterName: string, source: string): null | string => {
+export const whyCannotSend = (
+  inGame: boolean,
+  characterName: string,
+  source: string,
+): null | string => {
   if (inGame && characterName.trim().length === 0) {
     return '角色名不能为空';
   }

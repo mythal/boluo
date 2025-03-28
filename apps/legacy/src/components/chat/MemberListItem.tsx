@@ -47,7 +47,14 @@ const usernameStyle = css`
   line-height: 1rem;
 `;
 
-function MemberListItem({ user, channelMember, spaceOwnerId, spaceMember, timestamp, imAdmin }: Props) {
+function MemberListItem({
+  user,
+  channelMember,
+  spaceOwnerId,
+  spaceMember,
+  timestamp,
+  imAdmin,
+}: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isShowCard, showCard] = useState(false);
   const dismiss = useCallback(() => {
@@ -55,12 +62,20 @@ function MemberListItem({ user, channelMember, spaceOwnerId, spaceMember, timest
   }, []);
   return (
     <React.Fragment>
-      <Container ref={containerRef} data-online={isOnline(timestamp)} onClick={() => showCard(true)}>
+      <Container
+        ref={containerRef}
+        data-online={isOnline(timestamp)}
+        onClick={() => showCard(true)}
+      >
         <Avatar css={roundedPx} size="2.5rem" id={user.avatarId} />
         <div css={[mX(2)]}>
           <div>
             <span css={mR(1)}>{channelMember?.characterName || user.nickname}</span>
-            <MemberTags spaceMember={spaceMember} channelMember={channelMember} spaceOwnerId={spaceOwnerId} />
+            <MemberTags
+              spaceMember={spaceMember}
+              channelMember={channelMember}
+              spaceOwnerId={spaceOwnerId}
+            />
           </div>
           <div css={usernameStyle}>{user.username}</div>
         </div>

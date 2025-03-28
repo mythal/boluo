@@ -22,11 +22,14 @@ export type ApiErrorMap = MapDiscriminatedUnion<ApiError, 'code'>;
 
 export type ApiErrorCode = ApiError['code'];
 
+const hasOwnProperty = (obj: unknown, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(obj, key);
+
 export const isApiError = (error: unknown): error is ApiError =>
   typeof error === 'object' &&
   error !== null &&
-  error.hasOwnProperty('code') &&
-  (error.hasOwnProperty('message') || error.hasOwnProperty('cause'));
+  hasOwnProperty(error, 'code') &&
+  (hasOwnProperty(error, 'message') || hasOwnProperty(error, 'cause'));
 
 export const errorCode = (error: unknown) => {
   if (isApiError(error)) {

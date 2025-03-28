@@ -2,7 +2,15 @@ import React, { type FC, type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom } from 'jotai';
 import Icon from '@boluo/ui/Icon';
-import { Edit, PaperPlane, PersonRunning, TowerBroadcast, TriangleAlert, Whisper, X } from '@boluo/icons';
+import {
+  Edit,
+  PaperPlane,
+  PersonRunning,
+  TowerBroadcast,
+  TriangleAlert,
+  Whisper,
+  X,
+} from '@boluo/icons';
 import { FormattedMessage } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from './useSend';
@@ -66,7 +74,10 @@ const ActionButton = () => {
   const dispatch = useSetAtom(composeAtom);
   const isAction = useAtomValue(isActionAtom);
   return (
-    <ToolbarButton active={isAction} onClick={() => dispatch({ type: 'toggleAction', payload: {} })}>
+    <ToolbarButton
+      active={isAction}
+      onClick={() => dispatch({ type: 'toggleAction', payload: {} })}
+    >
       <Icon icon={PersonRunning} className={isAction ? '' : 'opacity-50'} />
       <FormattedMessage defaultMessage="Action" />
     </ToolbarButton>
@@ -84,7 +95,11 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
     <>
       <ToolbarButton disabled={composeError !== null} onClick={send}>
         <Icon icon={editMode ? Edit : PaperPlane} />
-        {editMode ? <FormattedMessage defaultMessage="Edit" /> : <FormattedMessage defaultMessage="Send" />}
+        {editMode ? (
+          <FormattedMessage defaultMessage="Edit" />
+        ) : (
+          <FormattedMessage defaultMessage="Send" />
+        )}
       </ToolbarButton>
       {editMode && (
         <ToolbarButton onClick={() => dispatch({ type: 'reset', payload: {} })}>
@@ -108,7 +123,9 @@ const WhisperButton: FC<{ currentUser: User }> = ({ currentUser }) => {
   return (
     <ToolbarButton
       active={isWhisper}
-      onClick={() => dispatch({ type: 'toggleWhisper', payload: { username: currentUser.username } })}
+      onClick={() =>
+        dispatch({ type: 'toggleWhisper', payload: { username: currentUser.username } })
+      }
     >
       <Icon icon={Whisper} className={isWhisper ? '' : 'opacity-50'} />
       <FormattedMessage defaultMessage="Whisper" />

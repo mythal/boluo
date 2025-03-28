@@ -12,7 +12,7 @@ type Props = {
   children?: ReactNode;
 };
 
-export const MessageMedia = memo<Props>(({ media, className, children = null }) => {
+export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
   let src: string | null = null;
   if (media instanceof File) {
@@ -20,7 +20,10 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }) 
   } else {
     src = getMediaUrl(media);
   }
-  if (media instanceof File && (!media.type.startsWith('image/') || !supportedMediaType.includes(media.type))) {
+  if (
+    media instanceof File &&
+    (!media.type.startsWith('image/') || !supportedMediaType.includes(media.type))
+  ) {
     return (
       <div className={className}>
         <div className="bg-surface-50 border-surface-200 flex h-[6rem] flex-col justify-between rounded border px-3 py-2">
@@ -52,7 +55,12 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }) 
             <Icon icon={Refresh} />
           </button>
         ) : (
-          <a href={src} target="_blank" className="block h-full w-fit overflow-hidden">
+          <a
+            href={src}
+            target="_blank"
+            className="block h-full w-fit overflow-hidden"
+            rel="noreferrer"
+          >
             <img
               src={src}
               alt="media"

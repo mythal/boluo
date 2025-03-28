@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Draggable, DraggableProvided, DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
+import { Draggable, DraggableProvided, DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import { ChannelMember } from '../../api/channels';
 import { useChannelId } from '../../hooks/useChannelId';
 import { MessageItem, PreviewItem } from '../../states/chat-item-set';
@@ -64,7 +64,8 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
     }
     return previewItem;
   });
-  const draggable = myMember && item?.type === 'MESSAGE' && (item.mine || myMember.isMaster) && !editItem;
+  const draggable =
+    myMember && item?.type === 'MESSAGE' && (item.mine || myMember.isMaster) && !editItem;
   const id = item?.id || myMember?.userId || 'UNEXPECTED';
   const renderer = (provided: DraggableProvided) => {
     return (

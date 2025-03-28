@@ -1,20 +1,36 @@
 import { IntlErrorCode, type OnErrorFn } from '@formatjs/intl';
-import type { IntlConfig } from 'react-intl';
+import { createIntl, type IntlConfig, type IntlShape } from 'react-intl';
 export type IntlMessages = IntlConfig['messages'];
 export type Locale = 'en' | 'ja' | 'zh-CN' | 'zh-TW';
-export const localeList: Locale[] = ['en', 'ja', 'zh-CN', 'zh-TW'];
+export const LOCALES: Locale[] = ['en', 'ja', 'zh-CN', 'zh-TW'] as const;
 export const defaultLocale = 'en';
 export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {
   switch (locale) {
     case 'en':
-      return (await import('@boluo/lang/compiled/en.json')).default;
+      return (await import('@boluo/lang/en.json', { with: { type: 'json' } })).default;
     case 'ja':
-      return (await import('@boluo/lang/compiled/ja_JP.json')).default;
+      return (await import('@boluo/lang/ja_JP.json', { with: { type: 'json' } })).default;
     case 'zh-CN':
-      return (await import('@boluo/lang/compiled/zh_CN.json')).default;
+      return (await import('@boluo/lang/zh_CN.json', { with: { type: 'json' } })).default;
     case 'zh-TW':
-      return (await import('@boluo/lang/compiled/zh_TW.json')).default;
+      return (await import('@boluo/lang/zh_TW.json', { with: { type: 'json' } })).default;
   }
+};
+
+export const getIntl = async ({ lang }: { lang: string }): Promise<IntlShape> => {
+  const locale = toLocale(lang);
+  const messages = await loadMessages(locale);
+  return createIntl({
+    locale,
+    messages,
+    onError: (err) => {
+      if (err.code === IntlErrorCode.MISSING_TRANSLATION) {
+        console.debug(err.message.trim());
+      } else {
+        console.error(err);
+      }
+    },
+  });
 };
 
 export const narrowLocale = (locale: string): Locale | null => {
@@ -48,6 +64,6 @@ export const onIntlError: OnErrorFn = (e) => {
       console.debug('Missing Translation: ', e.message);
     }
   } else {
-    throw e;
+    console.error(e);
   }
 };

@@ -84,7 +84,7 @@
     "message": "キャンセル"
   },
   "4FbTT8": {
-    "message": "マスターとしています"
+    "message": "マスターです"
   },
   "4KGRux": {
     "message": "通知をオンにする"
@@ -408,7 +408,7 @@
     "message": "参加する"
   },
   "PHZ3YP": {
-    "message": "絶対成功: {critical}, 絶対失敗: {fumble}, 成功: {success}, 追加: {addition}"
+    "message": "Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
   },
   "PO83gc": {
     "message": "最近の活動時間"
@@ -921,7 +921,7 @@
     "message": "The channel where the game is played. By default member will speak as a character."
   },
   "t44Zkc": {
-    "message": "Copy Source"
+    "message": "ソースをコピー"
   },
   "t5xj3B": {
     "message": "新しい次元"

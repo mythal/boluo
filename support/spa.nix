@@ -2,16 +2,23 @@
   pkgs,
   version,
   pruneSource,
-  mkNpmDeps,
   ...
 }:
 let
   src = pruneSource "spa";
-  npmDeps = mkNpmDeps src;
 in
 pkgs.buildNpmPackage {
   pname = "boluo-spa";
-  inherit src version npmDeps;
+  inherit src version;
+
+  npmDeps = pkgs.fetchNpmDeps {
+    name = "boluo-spa-deps";
+    hash = builtins.readFile ./hash-spa.txt;
+    src = "${src}/package-lock.json";
+    unpackPhase = ''
+      cp $src package-lock.json
+    '';
+  };
 
   installPhase = ''
     mkdir -p $out/bin

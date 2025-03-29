@@ -35,7 +35,6 @@
     "@mdx-js/react": "^3.0.0",
     "@next/bundle-analyzer": "^15.2.4",
     "@next/eslint-plugin-next": "^15.2.4",
-    "@opennextjs/cloudflare": "^0.6.5",
     "@swc/plugin-formatjs": "^3.0.0",
     "@types/mdx": "^2.0.10",
     "@types/negotiator": "^0.6.3",
@@ -50,6 +49,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "webpack": "^5.98.0"
+  },
+  "optionalDependencies": {
+    "@opennextjs/cloudflare": "^0.6.5"
   },
   "homepage": "https://github.com/mythal/boluo-mono",
   "license": "GPL-3.0",

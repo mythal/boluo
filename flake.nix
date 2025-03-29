@@ -61,7 +61,7 @@
               {
                 pname = "boluo-node-deps";
                 buildInputs = with pkgs; [ cacert ];
-                npmCommands = [ "npm ci --loglevel verbose --nodedir=${pkgs.nodejs}/include/node" ];
+                npmCommands = [ "npm ci --omit=optional --loglevel verbose --nodedir=${pkgs.nodejs}/include/node" ];
               };
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (

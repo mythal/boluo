@@ -1,7 +1,6 @@
 {
   "name": "boluo",
   "devDependencies": {
-    "@opennextjs/cloudflare": "^0.6.4",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "syncpack": "^13.0.3",
@@ -26,7 +25,8 @@
     "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}'",
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "preview:site": "turbo run preview --filter=site"
   },
   "workspaces": [
     "apps/*",

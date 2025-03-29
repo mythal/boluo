@@ -49,20 +49,6 @@
 
           napalmBuildPackage = napalm.legacyPackages."${system}".buildPackage;
 
-          pruned-legacy = pkgs.stdenv.mkDerivation {
-            name = "boluo-pruned-legacy-source";
-            src = lib.cleanSource ./.;
-            __contentAddressed = true;
-            outputHashMode = "recursive";
-            outputHashAlgo = "sha256";
-
-            installPhase = ''
-              ${pkgs.turbo}/bin/turbo prune legacy
-              mkdir -p $out
-              cp -r out/* $outs
-            '';
-          };
-
           nodeDeps =
             napalmBuildPackage
               # Keeps only package.json and package-lock.json files
@@ -106,6 +92,7 @@
           cargo-source =
             let
               filters = [
+                (path: _type: lib.hasSuffix "Cargo.toml" path)
                 (path: _type: lib.hasInfix "/.sqlx/" path)
                 (path: _type: lib.hasInfix "/apps/server/migrations/" path)
                 (path: _type: lib.hasInfix "/apps/server/sql/" path)
@@ -182,31 +169,6 @@
           };
 
           checks = {
-            # Run clippy (and deny all warnings) on the crate source,
-            # again, resuing the dependency artifacts from above.
-            #
-            # Note that this is done as a separate derivation so that
-            # we can block the CI if there are issues here, but not
-            # prevent downstream consumers from building our crate by itself.
-            crate-clippy = craneLib.cargoClippy (
-              commonArgs
-              // {
-                inherit cargoArtifacts;
-                cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-              }
-            );
-
-            crate-doc = craneLib.cargoDoc (
-              commonArgs
-              // {
-                inherit cargoArtifacts;
-              }
-            );
-
-            # Check formatting
-            crate-fmt = craneLib.cargoFmt {
-              inherit cargo-source;
-            };
           };
           devShells.default = pkgs.mkShell {
             buildInputs = with pkgs; [

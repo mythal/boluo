@@ -2,16 +2,23 @@
   pkgs,
   version,
   pruneSource,
-  mkNpmDeps,
   ...
 }:
 let
   src = pruneSource "site";
-  npmDeps = mkNpmDeps src;
 in
 pkgs.buildNpmPackage {
-  inherit version src npmDeps;
+  inherit version src;
   pname = "boluo-site";
+
+  npmDeps = pkgs.fetchNpmDeps {
+    name = "boluo-site-deps";
+    hash = builtins.readFile ./hash-site.txt;
+    src = "${src}/package-lock.json";
+    unpackPhase = ''
+      cp $src package-lock.json
+    '';
+  };
 
   STANDALONE = "true";
   TURBO_TELEMETRY_DISABLED = 1;

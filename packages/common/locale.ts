@@ -1,5 +1,4 @@
-import { IntlErrorCode, type OnErrorFn } from '@formatjs/intl';
-import { createIntl, type IntlConfig, type IntlShape } from 'react-intl';
+import { createIntl, IntlConfig, IntlErrorCode, IntlShape, type OnErrorFn } from '@formatjs/intl';
 export type IntlMessages = IntlConfig['messages'];
 export type Locale = 'en' | 'ja' | 'zh-CN' | 'zh-TW';
 export const LOCALES: Locale[] = ['en', 'ja', 'zh-CN', 'zh-TW'] as const;
@@ -20,17 +19,7 @@ export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {
 export const getIntl = async ({ lang }: { lang: string }): Promise<IntlShape> => {
   const locale = toLocale(lang);
   const messages = await loadMessages(locale);
-  return createIntl({
-    locale,
-    messages,
-    onError: (err) => {
-      if (err.code === IntlErrorCode.MISSING_TRANSLATION) {
-        console.debug(err.message.trim());
-      } else {
-        console.error(err);
-      }
-    },
-  });
+  return createIntl({ locale, messages, onError: onIntlError });
 };
 
 export const narrowLocale = (locale: string): Locale | null => {

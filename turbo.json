@@ -20,34 +20,17 @@
     "SENTRY_PROJECT"
   ],
   "tasks": {
-    "generate": {
-      "dependsOn": ["^generate"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"]
-    },
+    "generate": { "dependsOn": ["^generate"], "inputs": ["$TURBO_DEFAULT$", ".env*"] },
     "build": {
       "dependsOn": ["^generate", "generate", "^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "test": {
-      "dependsOn": ["^build"]
-    },
-    "check-types": {
-      "dependsOn": ["^check-types"]
-    },
-    "dev": {
-      "dependsOn": ["^generate", "generate", "^build"],
-      "cache": false,
-      "persistent": true
-    },
-    "@boluo/icons#generate": {
-      "dependsOn": [],
-      "inputs": ["icons/**"],
-      "outputs": ["src/**"]
-    },
+    "lint": { "dependsOn": ["^lint"] },
+    "test": { "dependsOn": ["^build"] },
+    "check-types": { "dependsOn": ["^check-types"] },
+    "dev": { "dependsOn": ["^generate", "generate", "^build"], "cache": false, "persistent": true },
+    "@boluo/icons#generate": { "dependsOn": [], "inputs": ["icons/**"], "outputs": ["src/**"] },
     "@boluo/icons#build": {
       "dependsOn": ["^build", "generate"],
       "inputs": ["src/**"],

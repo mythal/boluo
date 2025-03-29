@@ -1,0 +1,17 @@
+matrix:
+  PACKAGE:
+    - server
+    - site
+    - legacy
+    - spa
+when:
+  - event: push
+    branch: master
+labels:
+  backend: local
+  distro: nixos
+steps:
+  - name: build
+    image: bash
+    commands:
+      - nix build --option max-call-depth 100000 '.#${PACKAGE}'

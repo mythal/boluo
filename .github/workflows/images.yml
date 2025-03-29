@@ -10,6 +10,10 @@ jobs:
       matrix:
         package:
           - legacy
+          - server
+          - spa
+          - site
+
     permissions:
       packages: write
       contents: read

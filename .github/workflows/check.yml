@@ -1,3 +1,4 @@
+name: Check
 on:
   pull_request:
   push:
@@ -30,3 +31,16 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - run: nix build --print-build-logs .#${{ matrix.package }}
+
+  cargo-fmt:
+    name: Style (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
+
+      - run: cargo fmt --all --check

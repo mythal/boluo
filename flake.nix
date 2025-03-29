@@ -171,12 +171,23 @@
                 pruneSource
                 ;
             };
+
+            site-image = import ./support/site-image.nix {
+              boluo-site = self'.packages.site;
+              inherit pkgs certEnv;
+            };
+
             spa = import ./support/spa.nix {
               inherit
                 pkgs
                 version
                 pruneSource
                 ;
+            };
+
+            spa-image = import ./support/spa-image.nix {
+              inherit pkgs;
+              boluo-spa = self'.packages.spa;
             };
           };
 

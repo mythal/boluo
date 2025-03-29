@@ -11,17 +11,12 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    napalm = {
-      url = "github:nix-community/napalm";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
     inputs@{
       flake-parts,
       crane,
-      napalm,
       ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -46,23 +41,42 @@
         let
           inherit (pkgs) lib stdenv;
           version = "0.0.0";
+          pruneSource =
+            name:
+            pkgs.stdenvNoCC.mkDerivation {
+              name = "boluo-${name}-source";
+              src = lib.cleanSource ./.;
+              __contentAddressed = true;
 
-          napalmBuildPackage = napalm.legacyPackages."${system}".buildPackage;
+              outputHashMode = "recursive";
+              outputHashAlgo = "sha256";
 
-          nodeDeps =
-            napalmBuildPackage
-              # Keeps only package.json and package-lock.json files
-              (pkgs.lib.sourceByRegex ./. [
-                ".*package.json"
-                ".*package-lock.json"
-                "(apps|packages)"
-                "(apps|packages)/[a-zA-Z0-9_-]+"
-              ])
-              {
-                pname = "boluo-node-deps";
-                buildInputs = with pkgs; [ cacert ];
-                npmCommands = [ "npm ci --omit=optional --loglevel verbose --nodedir=${pkgs.nodejs}/include/node" ];
-              };
+              TURBO_TELEMETRY_DISABLED = 1;
+              installPhase = ''
+                ${pkgs.turbo}/bin/turbo prune ${name}
+                mkdir -p $out
+                cp -r out/* $out
+              '';
+            };
+          mkNpmDeps =
+            src:
+            pkgs.stdenvNoCC.mkDerivation {
+              name = "${src.name}-deps";
+              nativeBuildInputs = [ pkgs.prefetch-npm-deps ];
+              src = "${src}/package-lock.json";
+              unpackPhase = ":";
+
+              buildPhase = ''
+                runHook preBuild
+                prefetch-npm-deps $src $out
+                runHook postBuild
+              '';
+              dontInstall = true;
+              outputHashMode = "recursive";
+              outputHashAlgo = "sha256";
+              __contentAddressed = true;
+              SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+            };
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
             toolchain:
@@ -152,7 +166,12 @@
             };
 
             legacy = import ./support/legacy.nix {
-              inherit pkgs version nodeDeps;
+              inherit
+                pkgs
+                version
+                pruneSource
+                mkNpmDeps
+                ;
             };
 
             legacy-image = import ./support/legacy-image.nix {
@@ -161,10 +180,20 @@
             };
 
             site = import ./support/site.nix {
-              inherit pkgs version nodeDeps;
+              inherit
+                pkgs
+                version
+                pruneSource
+                mkNpmDeps
+                ;
             };
             spa = import ./support/spa.nix {
-              inherit pkgs version nodeDeps;
+              inherit
+                pkgs
+                version
+                pruneSource
+                mkNpmDeps
+                ;
             };
           };
 

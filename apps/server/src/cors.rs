@@ -48,6 +48,7 @@ pub fn is_allowed_origin(origin: &str) -> bool {
         }),
         "http://localhost:",
         "http://127.0.0.1:",
+        "https://boluo-net.kagangtuya.top",
     ];
     start.iter().any(|x| origin.starts_with(x))
 }

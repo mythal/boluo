@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 export const IS_BROWSER = typeof window !== 'undefined';
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 export const BACKEND_URL = process.env.PUBLIC_BACKEND_URL;

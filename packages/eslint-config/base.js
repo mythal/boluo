@@ -27,6 +27,11 @@ export const config = [
     },
   },
   {
-    ignores: ['dist/**', 'postcss.config.cjs'],
+    ignores: ['dist/**', 'out/**', '.next/**', 'postcss.config.cjs'],
+  },
+  {
+    rules: {
+      'no-restricted-globals': ['warn', 'process'],
+    },
   },
 ];

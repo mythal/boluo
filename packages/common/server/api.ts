@@ -4,13 +4,14 @@ import { makeUri } from '@boluo/api';
 import { appFetch } from '@boluo/api';
 import type { Result } from '@boluo/utils';
 
+// eslint-disable-next-line no-restricted-globals
+const BACKEND_URL = process.env.BACKEND_URL;
 let backEndUrl: string | undefined;
 
 const getBackEndUrl = () => {
   if (backEndUrl) {
     return backEndUrl;
-  } else if (process.env.BACKEND_URL) {
-    const BACKEND_URL = process.env.BACKEND_URL;
+  } else if (BACKEND_URL) {
     if (BACKEND_URL.endsWith('/api/')) {
       backEndUrl = BACKEND_URL.slice(0, -1);
     } else if (BACKEND_URL.endsWith('/')) {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars,@typescript-eslint/no-use-before-define */
 import {
   Binary,
   type CocRoll,

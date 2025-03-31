@@ -7,12 +7,12 @@ import { ApiError } from '@boluo/api/errors';
 import { LoginReturn, User } from '@boluo/api/types/users';
 import { Media } from '@boluo/api/types/media';
 
-export const backendUrlAtom = atom(process?.env?.PUBLIC_BACKEND_URL ?? '');
+export const backendUrlAtom = atom('');
 
 export const apiUrlAtom = atom((get) => {
   const url = get(backendUrlAtom).trim() || '';
   if (url === '') {
-    return process?.env?.PUBLIC_BACKEND_URL ?? window.location.origin + '/api';
+    return window.location.origin + '/api';
   } else if (url.endsWith('/api')) {
     return url;
   } else if (url.endsWith('/')) {
@@ -85,11 +85,7 @@ export async function login(
   username: string,
   password: string,
 ): Promise<Result<LoginReturn, ApiError>> {
-  const domain = process?.env?.DOMAIN;
-  let withToken = true;
-  if (domain && (location.hostname === domain || location.hostname.endsWith('.' + domain))) {
-    withToken = false;
-  }
+  const withToken = isCrossOrigin();
   const result = await post('/users/login', null, { password, username, withToken });
   if (result.isOk && result.some.token) {
     setToken(result.some.token);

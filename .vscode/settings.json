@@ -36,5 +36,11 @@
   },
   // https://github.com/lukeed/clsx#tailwind-support
   "tailwindCSS.experimental.classRegex": [["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]],
-  "tailwindCSS.experimental.configFile": "packages/tailwind-config/tailwind.config.ts"
+  "tailwindCSS.experimental.configFile": "packages/tailwind-config/tailwind.config.ts",
+  "search.exclude": {
+    "**/.next": true,
+    "**/.open-next": true,
+    "**/dist": true,
+    "**/.log": true
+  }
 }

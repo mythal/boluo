@@ -17,7 +17,7 @@ export const Router: React.FC<Props> = () => {
       <Route path="/design" element={<Design />} />
       <Route path="/chat/:spaceId/:channelId" element={<Chat />} />
       <Route path="/chat/:spaceId" element={<Chat />} />
-      <Route path="/" element={isLoggedIn ? <LoggedInRouter /> : <GuestRouter />} />
+      <Route path="*" element={isLoggedIn ? <LoggedInRouter /> : <GuestRouter />} />
     </Routes>
   );
 };

@@ -29,7 +29,7 @@ export const ConfirmResetPassword: FC<Props> = ({ token }) => {
   const onSubmit: SubmitHandler<FormSchema> = async ({ password }) => {
     const result = await post('/users/reset_password_confirm', null, { token, password });
     if (result.isOk) {
-      router.push(`/${intl.locale}/account/login`);
+      router.push('/account/login');
       return;
     }
     const { err } = result;
@@ -53,7 +53,7 @@ export const ConfirmResetPassword: FC<Props> = ({ token }) => {
           <FormattedMessage defaultMessage="Unable to reset your password, invalid reset link." />
         </div>
         <div className="">
-          <Link href={`/${intl.locale}/account/reset`} className={classes.link}>
+          <Link href="/account/reset" className={classes.link}>
             <FormattedMessage defaultMessage="Try again" />
           </Link>
         </div>

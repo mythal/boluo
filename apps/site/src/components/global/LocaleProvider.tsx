@@ -15,15 +15,6 @@ interface Props extends ChildrenProps {
   messages: IntlMessages;
 }
 
-const removeLocalePrefix = (pathname: string) => {
-  for (const locale of LOCALES) {
-    if (pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`) {
-      return pathname.replace(`/${locale}`, '');
-    }
-  }
-  return pathname;
-};
-
 export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const { data: currentUser } = useQueryCurrentUser();
   const router = useRouter();

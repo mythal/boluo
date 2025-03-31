@@ -1,8 +1,8 @@
+/* eslint-disable no-restricted-globals */
 import path from 'path';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 import { NextConfig } from 'next';
-const BACKEND_URL = process.env.BACKEND_URL;
 const STANDALONE = process.env.STANDALONE === 'true';
 
 const config: NextConfig = {
@@ -31,8 +31,7 @@ const config: NextConfig = {
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
     PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,
-    BACKEND_URL,
-    APP_URL: process.env.APP_URL,
+    APP_URL: process.env.APP_URL ?? 'https://app.boluo.chat',
     DOMAIN: process.env.DOMAIN,
     SENTRY_DSN: process.env.SENTRY_DSN,
   },

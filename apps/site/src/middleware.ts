@@ -37,7 +37,8 @@ const themePrefix = 'theme:';
 export function middleware(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
   if (pathname.startsWith('/api')) {
-    const hostname = process.env.BACKEND_URL || 'https://boluo.chat';
+    // eslint-disable-next-line no-restricted-globals
+    const hostname = process.env.BACKEND_URL || 'https://production.boluo.chat';
     const url = new URL(hostname + pathname + request.nextUrl.search, request.url);
     return NextResponse.rewrite(url);
   }

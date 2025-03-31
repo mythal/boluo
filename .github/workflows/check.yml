@@ -13,6 +13,7 @@ jobs:
           - legacy
           - site
           - spa
+          - server
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout

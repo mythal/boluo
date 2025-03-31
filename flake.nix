@@ -174,7 +174,7 @@
 
             site-image = import ./support/site-image.nix {
               boluo-site = self'.packages.site;
-              inherit pkgs certEnv;
+              inherit pkgs certEnv commonImageContents;
             };
 
             spa = import ./support/spa.nix {

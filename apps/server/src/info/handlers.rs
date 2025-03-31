@@ -4,6 +4,7 @@ use super::models::Proxy;
 use crate::{db, error::AppError, info::models::HealthCheck, interface::Response};
 use hyper::body::Incoming;
 use hyper::{Method, Request};
+use serde::{Deserialize, Serialize};
 use sqlx::query_as;
 
 #[derive(Debug, Clone, Default)]
@@ -61,19 +62,27 @@ pub async fn proxies() -> Result<Response, AppError> {
     Ok(response)
 }
 
-pub fn version() -> Response {
+#[derive(Debug, Serialize, Deserialize)]
+struct BascInfo {
+    version: String,
+    media_url: String,
+}
+
+pub fn basic_info() -> Response {
     use std::sync::OnceLock;
-    static VERSION: OnceLock<String> = OnceLock::new();
-    let version = VERSION.get_or_init(|| {
+    static BASIC_INFO: OnceLock<String> = OnceLock::new();
+    let body = BASIC_INFO.get_or_init(|| {
         let version = std::env::var("VERSION").unwrap_or_else(|_| "unknown".to_string());
-        let value = serde_json::json!({ "version": version });
-        serde_json::to_string(&value).expect("Unexpected failture in serialize version information")
+        let media_url = std::env::var("PUBLIC_MEDIA_URL")
+            .unwrap_or_else(|_| "https://media.boluo.chat".to_string());
+        serde_json::to_string(&BascInfo { version, media_url })
+            .expect("Unexpected failture in serialize version information")
     });
 
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)
-        .body(version.as_str().into())
+        .body(body.as_str().into())
         .expect("Unexpected failture in build version response")
 }
 
@@ -138,6 +147,6 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppE
         ("/proxies", Method::GET) => proxies().await,
         ("/healthcheck", Method::GET) => healthcheck().await,
         ("/echo", Method::GET) => Ok(echo(req)),
-        _ => Ok(version()),
+        _ => Ok(basic_info()),
     }
 }

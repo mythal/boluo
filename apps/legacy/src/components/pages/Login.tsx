@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LoggedIn } from '../../actions';
 import { AppError, NO_PERMISSION } from '../../api/error';
 import { post } from '../../api/request';
@@ -38,7 +38,7 @@ const errorRewrite = {
 function Login() {
   useTitle('登录');
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [loginError, setLoginError] = useState<AppError | null>(null);
   const {
     register,
@@ -53,7 +53,7 @@ function Login() {
     if (result.isOk) {
       dispatch<LoggedIn>({ type: 'LOGGED_IN', ...result.value.me });
       const next = popNext() || '/';
-      history.replace(next);
+      navigate(next, { replace: true });
     } else {
       setLoginError(result.value);
     }

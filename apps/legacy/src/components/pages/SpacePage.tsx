@@ -40,6 +40,7 @@ import ManageSpace from '../organisms/ManageSpace';
 interface Params {
   id: string;
   token?: string;
+  [key: string]: string | undefined;
 }
 
 const OperatorBar = styled.div`
@@ -67,6 +68,13 @@ const SpaceTitle = styled.h1`
 
 function SpacePage() {
   let { id, token } = useParams<Params>();
+  if (!id) {
+    const result: AppResult<SpaceWithRelated> = errLoading();
+    if (!result.isOk) {
+      return <RenderError error={result.value} more404 />;
+    }
+    return null; // TypeScript requires a return but this should never happen
+  }
   id = decodeUuid(id);
   token = token ? decodeUuid(token) : undefined;
   const [managing, setManaging] = useState(false);

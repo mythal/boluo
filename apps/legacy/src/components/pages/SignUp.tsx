@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import { useState } from 'react';
 import { RegisterOptions as ValidationRules, useForm } from 'react-hook-form';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AppError, errorText } from '../../api/error';
 import { post } from '../../api/request';
 import { RegisterData } from '../../api/users';
@@ -74,12 +74,12 @@ function SignUp() {
   } = useForm<FormData>();
   const [submitting, setSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<AppError | null>(null);
-  const history = useHistory();
+  const navigate = useNavigate();
   const onSubmit = async (data: FormData) => {
     setSubmitting(true);
     const result = await post('/users/register', data);
     if (result.isOk) {
-      history.replace('/login');
+      navigate('/login', { replace: true });
     } else {
       setRegisterError(result.value);
     }

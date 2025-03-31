@@ -13,12 +13,8 @@ import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
 import { RenderError } from '../molecules/RenderError';
 
-interface Params {
-  id?: string;
-}
-
 function Profile() {
-  let { id } = useParams<Params>();
+  let { id } = useParams<{ id?: string }>();
   id = id ? decodeUuid(id) : undefined;
   const myId = useSelector((state) => state.profile?.user.id);
   id = id ?? myId;

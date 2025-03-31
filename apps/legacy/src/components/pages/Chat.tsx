@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { useAtom, useSetAtom } from 'jotai';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { loadSpace } from '../../actions';
 import { errLoading, LOADING } from '../../api/error';
 import { AppResult } from '../../api/request';
@@ -106,13 +106,13 @@ function useLoadSpace(spaceId: Id) {
 }
 
 function Chat() {
-  const params = useParams<Params>();
+  const params = useParams();
   const [userDialog, setUserDialog] = useAtom(userDialogAtom);
-  const spaceId: Id = decodeUuid(params.spaceId);
+  const spaceId: Id = decodeUuid(params?.spaceId ?? '');
   const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
   const prevChannelId = useRef<typeof channelId>(channelId);
   const myId: Id | undefined = useMyId();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [focused, setFocused] = useState(0);
   const [paneList, setPaneList] = useState<Id[]>(channelId ? [channelId] : []);
   useLoadSpace(spaceId);
@@ -150,7 +150,7 @@ function Chat() {
   const { channels, space, members } = result.value;
 
   if (!space.allowSpectator && !(myId && members[myId])) {
-    history.replace(`/space/${encodeUuid(spaceId)}`);
+    navigate(`/space/${encodeUuid(spaceId)}`, { replace: true });
   }
   return (
     <Container data-split={paneList.length}>
@@ -161,7 +161,7 @@ function Chat() {
       {channelId ? (
         paneList.map((paneId, index) => {
           const focus = () => {
-            history.replace(chatPath(spaceId, paneId));
+            navigate(chatPath(spaceId, paneId), { replace: true });
             setFocused(index);
           };
 

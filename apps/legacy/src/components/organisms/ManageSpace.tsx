@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Channel } from '../../api/channels';
 import { AppError } from '../../api/error';
 import { post } from '../../api/request';
@@ -59,7 +59,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
   const [deleteDialog, showDeleteDialog] = useState(false);
-  const history = useHistory();
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const dispatch = useDispatch();
   if (space.ownerId !== my.userId && !my.isAdmin) {
@@ -86,7 +86,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
       return;
     }
     dispatch({ type: 'SPACE_DELETED', spaceId: space.id });
-    history.push('/');
+    navigate('/');
   };
 
   return (

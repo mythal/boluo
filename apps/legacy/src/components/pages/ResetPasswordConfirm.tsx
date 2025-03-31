@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { RegisterOptions as ValidationRules } from 'react-hook-form/dist/types/validator';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { post } from '../../api/request';
+import type { ResetPasswordConfirm } from '../../api/users';
 import { useTitle } from '../../hooks/useTitle';
 import { alignRight, largeInput, mT, mY, textLg } from '../../styles/atoms';
 import { passwordValidation } from '../../validators';
@@ -17,9 +18,10 @@ interface FormData {
   passwordRepeat: string;
 }
 
-interface UrlParams {
+type UrlParams = {
+  [key: string]: string;
   token: string;
-}
+};
 
 function ResetPasswordConfirm() {
   useTitle('重设密码');
@@ -30,16 +32,22 @@ function ResetPasswordConfirm() {
     formState: { errors },
   } = useForm<FormData>();
   const [state, setState] = useState<'loading' | 'default'>('default');
-  const { token } = useParams<UrlParams>();
-  const history = useHistory();
+  const params = useParams<UrlParams>();
+  const navigate = useNavigate();
 
   const onSubmit = useCallback(
     async ({ password }: FormData) => {
+      if (!params.token) {
+        return;
+      }
       setState('loading');
-      await post('/users/reset_password_confirm', { password, token });
-      history.push('/login');
+      await post('/users/reset_password_confirm', {
+        password,
+        token: params.token,
+      });
+      navigate('/login');
     },
-    [history, token],
+    [navigate, params.token],
   );
 
   const passwordRepeatValidation = {

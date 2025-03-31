@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import Loading from '../components/molecules/Loading';
 import ExploreSpace from '../components/pages/ExploreSpace';
 import Logout from '../components/pages/Logout';
@@ -14,44 +14,20 @@ import BasePage from '../components/templates/BasePage';
 function LoggedInRouter() {
   return (
     <BasePage>
-      <Switch>
-        <Route path="/" exact>
-          <My />
-        </Route>
-        <Route path="/my" exact>
-          <My />
-        </Route>
-        <Route path="/profile/:id">
-          <Profile />
-        </Route>
-        <Route path="/profile" exact>
-          <Profile />
-        </Route>
-        <Route path="/space/new">
-          <NewSpace />
-        </Route>
-        <Route path="/space/explore">
-          <ExploreSpace />
-        </Route>
-        <Route path="/space/:id">
-          <SpacePage />
-        </Route>
-        <Route path="/join/space/:id/:token">
-          <SpacePage />
-        </Route>
-        <Route path="/settings">
-          <Settings />
-        </Route>
-        <Route path="/loading">
-          <Loading />
-        </Route>
-        <Route path="/logout">
-          <Logout />
-        </Route>
-        <Route path="/">
-          <NotFound />
-        </Route>
-      </Switch>
+      <Routes>
+        <Route path="/" element={<My />} />
+        <Route path="/my" element={<My />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/space/new" element={<NewSpace />} />
+        <Route path="/space/explore" element={<ExploreSpace />} />
+        <Route path="/space/:id" element={<SpacePage />} />
+        <Route path="/join/space/:id/:token" element={<SpacePage />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/loading" element={<Loading />} />
+        <Route path="/logout" element={<Logout />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </BasePage>
   );
 }

@@ -43,8 +43,8 @@ function SidebarFoldedItems({ space, channels }: Props) {
   return (
     <React.Fragment>
       <ChatHeaderButtonNavLink
-        activeClassName="active"
-        exact
+        className={({ isActive }) => (isActive ? 'active' : '')}
+        end
         css={[mB(1), sidebarIconButton]}
         to={chatPath(space.id)}
       >

@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { JoinedSpace } from '../../actions';
 import { AppError } from '../../api/error';
 import { post } from '../../api/request';
@@ -54,7 +54,7 @@ function NewSpace() {
   } = useForm<CreateSpace>();
   const [submitting, setSubmitting] = useState(false);
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const onSubmit = async (data: CreateSpace) => {
@@ -66,7 +66,7 @@ function NewSpace() {
       const { space, member } = result.value;
       const action: JoinedSpace = { type: 'JOINED_SPACE', space, member };
       dispatch<JoinedSpace>(action);
-      history.push(`/space/${encodeUuid(space.id)}`);
+      navigate(`/space/${encodeUuid(space.id)}`);
     } else {
       setCreationError(result.value);
     }

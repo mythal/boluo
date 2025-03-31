@@ -2,6 +2,7 @@
   pkgs,
   certEnv,
   boluo-site,
+  commonImageContents,
   ...
 }:
 pkgs.dockerTools.buildLayeredImage {

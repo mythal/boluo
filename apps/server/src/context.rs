@@ -19,7 +19,7 @@ pub fn debug() -> bool {
     *DEBUG.get_or_init(|| env::var("BOLUO_DEBUG").map(env_bool).unwrap_or(false))
 }
 
-pub fn get_domain() -> String {
+fn get_domain() -> String {
     env::var("DOMAIN").unwrap_or("boluo.chat".to_string())
 }
 

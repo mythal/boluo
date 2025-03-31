@@ -161,7 +161,6 @@ impl User {
         for id in id_list {
             if let Some(user) = USERS_CACHE.get(id) {
                 result_map.insert(user.id, user);
-            } else {
                 id_set.remove(id);
             }
         }

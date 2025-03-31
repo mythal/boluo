@@ -2,6 +2,7 @@ import { appFetch, type Get, makeUri, type Patch, type Post } from '@boluo/api';
 import { atom } from 'jotai';
 import { store } from '@boluo/store';
 import type { Result } from '@boluo/utils/result';
+import { isCrossOrigin } from '@boluo/utils/browser';
 import { ApiError } from '@boluo/api/errors';
 import { LoginReturn, User } from '@boluo/api/types/users';
 import { Media } from '@boluo/api/types/media';
@@ -28,12 +29,14 @@ export function getToken(): string | null {
 }
 
 function addToken(params: RequestInit): RequestInit {
-  const token = getToken();
-  if (!token) {
-    return params;
-  }
   const headers = new Headers(params.headers || {});
-  headers.set('Authorization', token);
+  if (isCrossOrigin()) {
+    headers.set('X-Debug', '1');
+  }
+  const token = getToken();
+  if (token) {
+    headers.set('Authorization', token);
+  }
   // headers.set('Authorization', `Bearer ${token}`);
   return { ...params, headers };
 }

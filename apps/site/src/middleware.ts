@@ -34,9 +34,13 @@ const isLocale = (locale: string = ''): locale is Locale =>
 
 const IS_STATIC_FILES = /^\/\w+\.(png|ico|svg)/;
 const themePrefix = 'theme:';
-
 export function middleware(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith('/api')) {
+    const hostname = process.env.BACKEND_URL || 'https://boluo.chat';
+    const url = new URL(hostname + pathname + request.nextUrl.search, request.url);
+    return NextResponse.rewrite(url);
+  }
   if (IS_STATIC_FILES.test(pathname) || pathname.startsWith('/api')) {
     return;
   }
@@ -58,7 +62,7 @@ export function middleware(request: NextRequest): NextResponse | void {
 export const config = {
   matcher: [
     // Skip all internal paths (_next)
-    '/((?!_next|api).*)',
+    '/((?!_next).*)',
     // Optional: only run on root (/) URL
     // '/'
   ],

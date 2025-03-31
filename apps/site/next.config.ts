@@ -5,16 +5,6 @@ import { NextConfig } from 'next';
 const BACKEND_URL = process.env.BACKEND_URL;
 const STANDALONE = process.env.STANDALONE === 'true';
 
-const rewrites = async () =>
-  BACKEND_URL
-    ? [
-        {
-          source: '/api/:path*',
-          destination: `${BACKEND_URL}/api/:path*`, // Proxy to Backend
-        },
-      ]
-    : [];
-
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -46,7 +36,6 @@ const config: NextConfig = {
     SENTRY_DSN: process.env.SENTRY_DSN,
   },
   outputFileTracingRoot: STANDALONE ? path.join(__dirname, '../../') : undefined,
-  rewrites,
   webpack: (config) => {
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller

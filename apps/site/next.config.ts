@@ -30,6 +30,7 @@ const config: NextConfig = {
   },
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
+    PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,
     BACKEND_URL,
     APP_URL: process.env.APP_URL,
     DOMAIN: process.env.DOMAIN,

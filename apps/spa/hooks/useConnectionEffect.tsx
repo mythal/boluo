@@ -119,12 +119,13 @@ export const useConnectionEffect = (
           void mutate(['/channels/by_space', event.mailbox]);
           void mutate(['/channels/query', event.body.channelId], event.body.channel);
           return;
-        case 'SPACE_UPDATED':
+        case 'SPACE_UPDATED': {
           const { space } = event.body.spaceWithRelated;
           void mutate(['/spaces/query', space.id], space);
           void mutate(['/channels/by_space', space.id]);
           return;
-        case 'MEMBERS':
+        }
+        case 'MEMBERS': {
           const members = event.body.members;
           void mutate<ChannelMembers>(
             ['/channels/members', event.body.channelId],
@@ -135,6 +136,7 @@ export const useConnectionEffect = (
             },
           );
           return;
+        }
         case 'STATUS_MAP':
           void mutate<Record<string, UserStatus | undefined>>(
             ['/spaces/users_status', event.body.spaceId],

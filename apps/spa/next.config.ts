@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import generateWithBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 import { NextConfig } from 'next';

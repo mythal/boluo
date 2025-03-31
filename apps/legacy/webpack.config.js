@@ -59,7 +59,7 @@ module.exports = {
     proxy: [
       {
         context: ['/api'],
-        target: process.env.BACKEND_URL || 'http://localhost:3000',
+        target: process.env.BACKEND_URL || 'https://production.boluo.chat',
         secure: false,
         changeOrigin: true,
         ws: true,

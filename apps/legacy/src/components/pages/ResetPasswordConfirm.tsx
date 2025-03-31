@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { RegisterOptions as ValidationRules } from 'react-hook-form/dist/types/validator';
 import { useNavigate, useParams } from 'react-router-dom';
 import { post } from '../../api/request';
-import type { ResetPasswordConfirm } from '../../api/users';
 import { useTitle } from '../../hooks/useTitle';
 import { alignRight, largeInput, mT, mY, textLg } from '../../styles/atoms';
 import { passwordValidation } from '../../validators';

@@ -27,7 +27,6 @@ import { compareEvents, EditPreview, EventId, eventIdMax, Events, Preview } from
 import { Message } from '../api/messages';
 import { SpaceWithRelated } from '../api/spaces';
 import { Entity } from '../interpreter/entities';
-import { DEBUG } from '../settings';
 import {
   addItem,
   binarySearchPos,
@@ -421,9 +420,6 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       }
       break;
   }
-  if (DEBUG) {
-    checkMessagesOrder(itemSet);
-  }
   eventAfter = eventIdMax(eventAfter, event.id);
   return {
     ...chat,
@@ -491,9 +487,6 @@ export const chatReducer = (
     return undefined;
   }
 
-  if (DEBUG) {
-    checkMessagesOrder(state.itemSet);
-  }
   switch (action.type) {
     case 'SET_COMPOSE_SOURCE':
       return handleSetComposeSource(state, action);

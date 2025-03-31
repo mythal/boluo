@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types */
-import { DEBUG } from '../settings';
+import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Id } from '../utils/id';
 import { Err, Ok, Result } from '../utils/result';
@@ -78,9 +77,10 @@ export const request = async <T>(
   const headers = new Headers({
     'Content-Type': contentType,
   });
-  if (DEBUG) {
+  if (isCrossOrigin) {
     headers.append('X-Debug', '1');
   }
+
   const result = await fetch(path, {
     method,
     headers,

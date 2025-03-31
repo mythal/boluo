@@ -59,11 +59,12 @@ export const headerLinkStyle = css`
 
 export const HeaderButton = styled.button(headerLinkStyle);
 
-function HeaderLink({ children, ...props }: Props) {
+function HeaderLink({ children, exact, ...props }: Props) {
   return (
     <NavLink
       css={headerLinkStyle}
       className={({ isActive }) => (isActive ? 'active' : '')}
+      end={exact}
       {...props}
     >
       {children}

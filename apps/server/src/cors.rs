@@ -11,37 +11,41 @@ use hyper::header::{
 };
 use hyper::{Request, Response};
 
-use crate::context::get_domain;
+use crate::context::domain;
 
 pub fn is_allowed_origin(origin: &str) -> bool {
-    static ALLOWED_ORIGIN_SUFFIX: OnceLock<String> = OnceLock::new();
+    static DOMAIN_SUFFIX: OnceLock<String> = OnceLock::new();
 
-    fn get_allowed_origin_suffix() -> String {
-        let domain = get_domain();
-        format!(".{}", domain)
-    }
-    static ALLOWED_ORIGIN: OnceLock<String> = OnceLock::new();
-    fn get_allowed_origin() -> String {
-        let domain = get_domain();
-        let addr_v4: Result<std::net::Ipv4Addr, _> = domain.parse();
-        if let Ok(addr) = addr_v4 {
-            log::warn!("[Security] Allowing all origins for IP address: {}", domain);
-            return format!("http://{}", addr);
-        }
-
-        let addr_v6: Result<std::net::Ipv6Addr, _> = domain.parse();
-        if let Ok(addr) = addr_v6 {
-            log::warn!("[Security] Allowing all origins for IP address: {}", domain);
-            return format!("http://[{}]", addr);
-        }
-        format!("https://{}", domain)
-    }
-
-    if origin.ends_with(ALLOWED_ORIGIN_SUFFIX.get_or_init(get_allowed_origin_suffix)) {
+    let end = [
+        DOMAIN_SUFFIX.get_or_init(|| {
+            let domain = domain();
+            format!(".{}", domain)
+        }),
+        ".boluo-legacy.pages.dev",
+        ".boluo-app.pages.dev",
+        ".mythal.workers.dev",
+    ];
+    if end.iter().any(|x| origin.ends_with(x)) {
         return true;
     }
+
+    static ALLOWED_ORIGIN: OnceLock<String> = OnceLock::new();
     let start = [
-        ALLOWED_ORIGIN.get_or_init(get_allowed_origin),
+        ALLOWED_ORIGIN.get_or_init(|| {
+            let domain = domain();
+            let addr_v4: Result<std::net::Ipv4Addr, _> = domain.parse();
+            if let Ok(addr) = addr_v4 {
+                log::warn!("[Security] Allowing all origins for IP address: {}", domain);
+                return format!("http://{}", addr);
+            }
+
+            let addr_v6: Result<std::net::Ipv6Addr, _> = domain.parse();
+            if let Ok(addr) = addr_v6 {
+                log::warn!("[Security] Allowing all origins for IP address: {}", domain);
+                return format!("http://[{}]", addr);
+            }
+            format!("https://{}", domain)
+        }),
         "http://localhost:",
         "http://127.0.0.1:",
     ];

@@ -14,7 +14,7 @@ import Avatar from '../molecules/Avatar';
 import { RenderError } from '../molecules/RenderError';
 
 function Profile() {
-  let { id } = useParams<{ id?: string }>();
+  let { id } = useParams();
   id = id ? decodeUuid(id) : undefined;
   const myId = useSelector((state) => state.profile?.user.id);
   id = id ?? myId;

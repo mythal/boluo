@@ -26,11 +26,6 @@ import Sidebar from '../chat/Sidebar';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 
-interface Params {
-  spaceId: string;
-  channelId?: string;
-}
-
 // noinspection CssInvalidPropertyValue
 const viewHeight = css`
   html,

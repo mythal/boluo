@@ -18,11 +18,6 @@ interface FormData {
   passwordRepeat: string;
 }
 
-type UrlParams = {
-  [key: string]: string;
-  token: string;
-};
-
 function ResetPasswordConfirm() {
   useTitle('重设密码');
   const {
@@ -32,22 +27,22 @@ function ResetPasswordConfirm() {
     formState: { errors },
   } = useForm<FormData>();
   const [state, setState] = useState<'loading' | 'default'>('default');
-  const params = useParams<UrlParams>();
+  const { token } = useParams();
   const navigate = useNavigate();
 
   const onSubmit = useCallback(
     async ({ password }: FormData) => {
-      if (!params.token) {
+      if (!token) {
         return;
       }
       setState('loading');
       await post('/users/reset_password_confirm', {
         password,
-        token: params.token,
+        token,
       });
       navigate('/login');
     },
-    [navigate, params.token],
+    [navigate, token],
   );
 
   const passwordRepeatValidation = {

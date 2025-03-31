@@ -66,7 +66,11 @@ export interface IMenuItemLink {
 
 export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
   return (
-    <MenuItemLinkContainer to={to}>
+    <MenuItemLinkContainer
+      to={to}
+      end={exact}
+      className={({ isActive }) => (isActive ? 'active' : '')}
+    >
       <div>{children}</div>
       {icon && <TextIcon sprite={icon} />}
     </MenuItemLinkContainer>

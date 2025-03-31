@@ -119,3 +119,44 @@ impl HealthCheck {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct BasicInfo {
+    pub version: String,
+}
+
+impl BasicInfo {
+    pub fn new() -> Self {
+        let version = std::env::var("VERSION").unwrap_or_else(|_| "unknown".to_string());
+        BasicInfo { version }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
+pub struct AppSettings {
+    pub media_url: String,
+    pub app_url: String,
+    pub site_url: String,
+    pub sentry_dsn: Option<String>,
+}
+
+impl AppSettings {
+    pub fn new() -> Self {
+        let media_url = std::env::var("PUBLIC_MEDIA_URL")
+            .unwrap_or_else(|_| "https://media.boluo.chat".to_string());
+        let app_url =
+            std::env::var("APP_URL").unwrap_or_else(|_| "https://app.boluo.chat".to_string());
+        let site_url =
+            std::env::var("SITE_URL").unwrap_or_else(|_| "https://site.boluo.chat".to_string());
+        let sentry_dsn = std::env::var("SENTRY_DSN").ok();
+        AppSettings {
+            media_url,
+            app_url,
+            site_url,
+            sentry_dsn,
+        }
+    }
+}

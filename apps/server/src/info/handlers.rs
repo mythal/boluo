@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 
-use super::models::Proxy;
+use super::models::{BasicInfo, Proxy};
+use crate::info::models::AppSettings;
 use crate::{db, error::AppError, info::models::HealthCheck, interface::Response};
 use hyper::body::Incoming;
 use hyper::{Method, Request};
-use serde::{Deserialize, Serialize};
 use sqlx::query_as;
 
 #[derive(Debug, Clone, Default)]
@@ -62,21 +62,27 @@ pub async fn proxies() -> Result<Response, AppError> {
     Ok(response)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct BascInfo {
-    version: String,
-    media_url: String,
-}
-
 pub fn basic_info() -> Response {
     use std::sync::OnceLock;
     static BASIC_INFO: OnceLock<String> = OnceLock::new();
     let body = BASIC_INFO.get_or_init(|| {
-        let version = std::env::var("VERSION").unwrap_or_else(|_| "unknown".to_string());
-        let media_url = std::env::var("PUBLIC_MEDIA_URL")
-            .unwrap_or_else(|_| "https://media.boluo.chat".to_string());
-        serde_json::to_string(&BascInfo { version, media_url })
+        serde_json::to_string(&BasicInfo::new())
             .expect("Unexpected failture in serialize version information")
+    });
+
+    hyper::Response::builder()
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        .status(hyper::StatusCode::OK)
+        .body(body.as_str().into())
+        .expect("Unexpected failture in build version response")
+}
+
+pub fn settings() -> Response {
+    use std::sync::OnceLock;
+    static SETTINGS: OnceLock<String> = OnceLock::new();
+    let body = SETTINGS.get_or_init(|| {
+        serde_json::to_string(&AppSettings::new())
+            .expect("Unexpected failture in serialize settings information")
     });
 
     hyper::Response::builder()
@@ -146,6 +152,7 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppE
     match (path, req.method().clone()) {
         ("/proxies", Method::GET) => proxies().await,
         ("/healthcheck", Method::GET) => healthcheck().await,
+        ("/settings", Method::GET) => Ok(settings()),
         ("/echo", Method::GET) => Ok(echo(req)),
         _ => Ok(basic_info()),
     }

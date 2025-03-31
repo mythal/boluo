@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import { Set } from 'immutable';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { showFlash } from '../../actions';
 import { Channel, EditChannel, MemberWithUser } from '../../api/channels';
@@ -84,7 +84,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const [defaultDice, setDefaultDice] = useState<DiceOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
-  const history = useHistory();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const members = useSelector((state) => state.chatStates.get(channelId)?.members) || [];
   const spaceMember = useSelector((state) => state.profile?.spaces.get(channel.spaceId)?.member);
@@ -131,7 +131,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const deleteChannel = async () => {
     const result = await post('/channels/delete', {}, { id: channelId });
     if (result.isOk) {
-      history.push(chatPath(channel.spaceId));
+      navigate(chatPath(channel.spaceId));
     } else {
       dispatch(showFlash('ERROR', '删除频道失败'));
     }

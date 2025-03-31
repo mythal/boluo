@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { useIsLoggedIn } from '../hooks/useIsLoggedIn';
 
 interface Props {}
@@ -13,17 +13,11 @@ export const Router: React.FC<Props> = () => {
   const isLoggedIn = useIsLoggedIn();
 
   return (
-    <Switch>
-      <Route path="/design">
-        <Design />
-      </Route>
-      <Route path="/chat/:spaceId/:channelId">
-        <Chat />
-      </Route>
-      <Route path="/chat/:spaceId">
-        <Chat />
-      </Route>
-      <Route path="/">{isLoggedIn ? <LoggedInRouter /> : <GuestRouter />}</Route>
-    </Switch>
+    <Routes>
+      <Route path="/design" element={<Design />} />
+      <Route path="/chat/:spaceId/:channelId" element={<Chat />} />
+      <Route path="/chat/:spaceId" element={<Chat />} />
+      <Route path="/" element={isLoggedIn ? <LoggedInRouter /> : <GuestRouter />} />
+    </Routes>
   );
 };

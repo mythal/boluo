@@ -62,11 +62,6 @@ const sidebarTitle = css`
   &:hover {
     background-color: ${sidebarItemHoverBgColor};
   }
-
-  &.active,
-  &:active {
-    background-color: ${sidebarItemActiveBgColor};
-  }
 `;
 
 const SpaceName = styled.span``;
@@ -96,8 +91,10 @@ function SidebarExpandItems({ space, channels }: Props) {
       <SidebarConnectionDisplay />
       <NavLink
         css={sidebarTitle}
-        exact
-        activeClassName="active"
+        style={({ isActive }) =>
+          isActive ? { backgroundColor: sidebarItemActiveBgColor } : undefined
+        }
+        end
         to={`/chat/${encodeUuid(space.id)}`}
       >
         <SpaceName>{space.name}</SpaceName>

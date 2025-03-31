@@ -61,7 +61,11 @@ export const HeaderButton = styled.button(headerLinkStyle);
 
 function HeaderLink({ children, ...props }: Props) {
   return (
-    <NavLink css={headerLinkStyle} activeClassName="active" {...props}>
+    <NavLink
+      css={headerLinkStyle}
+      className={({ isActive }) => (isActive ? 'active' : '')}
+      {...props}
+    >
       {children}
     </NavLink>
   );

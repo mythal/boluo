@@ -8,7 +8,7 @@ import { ButtonLink } from './ButtonLink';
 export const BackLink: FC = () => {
   const intl = useIntl();
   return (
-    <ButtonLink href={`/${intl.locale}`}>
+    <ButtonLink href="/">
       <Icon icon={ChevronLeft} />
       <FormattedMessage defaultMessage="Boluo" />
     </ButtonLink>

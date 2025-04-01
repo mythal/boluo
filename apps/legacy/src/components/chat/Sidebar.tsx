@@ -2,7 +2,6 @@ import { css } from '@emotion/react';
 import { darken } from 'polished';
 import * as React from 'react';
 import { Fragment, useCallback, useMemo, useState } from 'react';
-import { Transition } from 'react-transition-group';
 import { Channel } from '../../api/channels';
 import { Space } from '../../api/spaces';
 import bars from '../../assets/icons/bars.svg';
@@ -110,41 +109,32 @@ function Sidebar({ space, channels }: Props) {
     return spaceWithMember.member.isAdmin;
   });
   const channelList = useVisibleChannels(channels, imAdmin);
+  const state = expand ? 'entered' : 'exited';
   return (
     <React.Fragment>
-      <Transition in={expand} timeout={300}>
-        {(state) => (
-          <React.Fragment>
-            <div css={sidebarHeader}>
-              <ChatHeaderButton onClick={toggle} css={[textLg]} data-active={expand}>
-                <Icon sprite={bars} />
-              </ChatHeaderButton>
-              {state === 'entered' && (
-                <Fragment>
-                  <UserStatusButton
-                    spaceId={space.id}
-                    active={showMember}
-                    toggle={toggleShowMember}
-                  />
-                  <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
-                    <Icon sprite={logo} />
-                    菠萝
-                  </ChatHeaderButtonLink>
-                </Fragment>
-              )}
-            </div>
-            <div css={sidebarBody} data-state={state}>
-              {state === 'entered' &&
-                (showMember ? (
-                  <SidebarMemberList spaceId={space.id} />
-                ) : (
-                  <SidebarExpandItems space={space} channels={channelList} />
-                ))}
-              {state === 'exited' && <SidebarFoldedItems space={space} channels={channelList} />}
-            </div>
-          </React.Fragment>
+      <div css={sidebarHeader}>
+        <ChatHeaderButton onClick={toggle} css={[textLg]} data-active={expand}>
+          <Icon sprite={bars} />
+        </ChatHeaderButton>
+        {state === 'entered' && (
+          <Fragment>
+            <UserStatusButton spaceId={space.id} active={showMember} toggle={toggleShowMember} />
+            <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
+              <Icon sprite={logo} />
+              菠萝
+            </ChatHeaderButtonLink>
+          </Fragment>
         )}
-      </Transition>
+      </div>
+      <div css={sidebarBody} data-state={state}>
+        {state === 'entered' &&
+          (showMember ? (
+            <SidebarMemberList spaceId={space.id} />
+          ) : (
+            <SidebarExpandItems space={space} channels={channelList} />
+          ))}
+        {state === 'exited' && <SidebarFoldedItems space={space} channels={channelList} />}
+      </div>
     </React.Fragment>
   );
 }

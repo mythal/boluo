@@ -37,6 +37,7 @@ mod redis;
 mod s3;
 mod session;
 mod spaces;
+mod tunnel;
 mod users;
 mod validators;
 mod websocket;
@@ -64,6 +65,8 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(req).await.map(ok_response);
     }
+
+    table!("/api/tunnel", tunnel::tunnel);
     table!("/api/info", info::router);
     table!("/api/messages", messages::router);
     table!("/api/users", users::router);

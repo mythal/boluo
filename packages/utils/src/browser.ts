@@ -46,8 +46,10 @@ export const isCrossOrigin = () => {
   ) {
     return true;
   }
-  if (hostname.endsWith('.boluo-legacy.pages.dev')) {
+  const ends = ['.boluo-legacy.pages.dev', '.boluo-app.pages.dev', '.mythal.workers.dev'];
+  if (ends.some((x) => hostname.endsWith(x))) {
     return true;
   }
+
   return false;
 };

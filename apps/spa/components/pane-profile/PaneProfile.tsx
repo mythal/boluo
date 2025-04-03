@@ -4,7 +4,7 @@ import { type FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Loading } from '@boluo/ui/Loading';
 import { toggle } from '@boluo/utils';
-import { useLogout } from '../../hooks/useLogout';
+import { useLogout } from '@boluo/common/hooks/useLogout';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';

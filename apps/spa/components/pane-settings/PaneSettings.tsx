@@ -6,7 +6,7 @@ import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { type ChildrenProps } from '@boluo/utils';
-import { useLogout } from '../../hooks/useLogout';
+import { useLogout } from '@boluo/common/hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
 import { PaneBox } from '../PaneBox';

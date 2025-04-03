@@ -3,15 +3,21 @@
 import { useQueryCurrentUser } from '@boluo/common/hooks';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useLogout } from '../hooks/useLogout';
+import { useLogout } from '@boluo/common/hooks/useLogout';
 import { LoadingText } from '@boluo/ui/LoadingText';
 import * as classes from '@boluo/ui/classes';
 import { APP_URL } from '../const';
+import { useRouter } from 'next/navigation';
 
 export const UserOperations = () => {
   const intl = useIntl();
   const { data: currentUser, isLoading } = useQueryCurrentUser();
   const logout = useLogout();
+  const router = useRouter();
+  const onClick = () => {
+    logout();
+    router.refresh();
+  };
   if (!APP_URL) {
     return <div>APP_URL is not set.</div>;
   }

@@ -28,6 +28,10 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY) || null;
 }
 
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 function addToken(params: RequestInit): RequestInit {
   const headers = new Headers(params.headers || {});
   if (isCrossOrigin()) {

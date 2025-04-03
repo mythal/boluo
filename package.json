@@ -5,12 +5,12 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "turbo": "^2.4.4"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "optionalDependencies": {
     "wrangler": "^4.6.0",
     "syncpack": "^13.0.3"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "packageManager": "npm@10.9.2",
   "private": true,
@@ -21,15 +21,15 @@
     "build:spa": "turbo build --filter=spa",
     "check-types": "turbo run check-types",
     "dev": "turbo run dev",
-    "dev:site": "turbo run dev --filter=site",
     "dev:legacy": "turbo run dev --filter=legacy",
-    "test": "turbo run test",
+    "dev:site": "turbo run dev --filter=site",
     "fix:versions": "syncpack-fix-mismatches --filter '^(?!@boluo/).+'",
     "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}'",
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
     "lint": "turbo run lint",
-    "preview:site": "turbo run preview --filter=site"
+    "preview:site": "turbo run preview --filter=site",
+    "test": "turbo run test"
   },
   "workspaces": [
     "apps/*",

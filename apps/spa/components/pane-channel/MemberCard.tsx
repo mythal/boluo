@@ -276,152 +276,148 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
   canIKick?: boolean;
   canIInvite?: boolean;
   canIEditMaster?: boolean;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
-export const MemberCard = React.forwardRef<HTMLDivElement, Props>(
-  (
-    {
-      user,
-      spaceMember,
-      channelMember,
-      canIKick = false,
-      canIInvite = false,
-      canIEditMaster = false,
-      status,
-      channel,
-      ...props
-    },
-    ref,
-  ) => {
-    const { data: currentUser } = useQueryCurrentUser();
-    const thisIsMe = user.id === currentUser?.id;
-    const canIManage = canIKick || canIInvite || canIEditMaster;
-    const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>(
-      'VIEW',
-    );
-    const intl = useIntl();
-    let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
-    if (status != null) {
-      switch (status.kind) {
-        case 'ONLINE':
-          statusText = intl.formatMessage({ defaultMessage: 'Online' });
-          break;
-        case 'OFFLINE':
-          statusText = intl.formatMessage({ defaultMessage: 'Offline' });
-          break;
-        case 'AWAY':
-          statusText = intl.formatMessage({ defaultMessage: 'Away' });
-          break;
-      }
+export const MemberCard: React.FC<Props> = ({
+  user,
+  spaceMember,
+  channelMember,
+  canIKick = false,
+  canIInvite = false,
+  canIEditMaster = false,
+  status,
+  channel,
+  ref,
+  ...props
+}) => {
+  const { data: currentUser } = useQueryCurrentUser();
+  const thisIsMe = user.id === currentUser?.id;
+  const canIManage = canIKick || canIInvite || canIEditMaster;
+  const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>(
+    'VIEW',
+  );
+  const intl = useIntl();
+  let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
+  if (status != null) {
+    switch (status.kind) {
+      case 'ONLINE':
+        statusText = intl.formatMessage({ defaultMessage: 'Online' });
+        break;
+      case 'OFFLINE':
+        statusText = intl.formatMessage({ defaultMessage: 'Offline' });
+        break;
+      case 'AWAY':
+        statusText = intl.formatMessage({ defaultMessage: 'Away' });
+        break;
     }
-    return (
-      <div {...props} ref={ref} className="w-[20rem]">
-        <FloatingBox>
-          <div className="flex items-end">
-            <Avatar
-              size="6rem"
-              className="float-left mr-2 rounded"
-              id={user.id}
-              avatarId={user.avatarId}
-              name={user.nickname}
-            />
-            <div className="space-y-1">
-              <Names
-                username={user.username}
-                nickname={user.nickname}
-                characterName={channelMember?.characterName ?? ''}
-              />
-
-              {status != null && (
-                <div className="space-x-1 text-sm">
-                  {status.kind === 'ONLINE' ? (
-                    <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>
-                      {statusText}
-                    </span>
-                  ) : (
-                    <LastSeen timestamp={status.timestamp} className="text-surface-500" />
-                  )}
-                </div>
-              )}
-              <Badges
-                thisIsMe={thisIsMe}
-                isAdmin={spaceMember.isAdmin}
-                isMaster={channelMember?.isMaster ?? false}
-              />
-            </div>
-          </div>
-          {user.bio !== '' && (
-            <div className="pt-4">
-              <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
-            </div>
-          )}
-          {uiState === 'VIEW' && canIManage && (
-            <div className="space-x-1 pt-4 text-right">
-              {thisIsMe && channelMember != null && (
-                <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
-                  <Icon icon={UserX} />
-                  <FormattedMessage defaultMessage="Leave" />
-                </Button>
-              )}
-              <Button
-                data-small
-                onClick={() => setUiState((x) => (x === 'VIEW' ? 'MANAGE' : 'VIEW'))}
-                title={intl.formatMessage({ defaultMessage: 'Manage' })}
-              >
-                <Icon icon={UserCog} />
-              </Button>
-            </div>
-          )}
-
-          {uiState === 'MANAGE' && (
-            <div className="pb-2 pt-4">
-              {canIEditMaster && channelMember?.channelId === channel.id && (
-                <EditMasterCheckBox channelMember={channelMember} />
-              )}
-            </div>
-          )}
-
-          {uiState === 'MANAGE' && (
-            <div className="space-x-1 pt-4">
-              {canIKick && !thisIsMe && (
-                <Button data-small onClick={() => setUiState('CONFIRM_KICK')}>
-                  <Icon icon={UserX} />
-                  <FormattedMessage defaultMessage="Kick this member" />
-                </Button>
-              )}
-              {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
-                <InviteButton userId={user.id} channelId={channel.id} />
-              )}
-
-              {thisIsMe && channelMember?.channelId === channel.id && (
-                <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
-                  <Icon icon={UserX} />
-                  <FormattedMessage defaultMessage="Leave" />
-                </Button>
-              )}
-            </div>
-          )}
-
-          {uiState === 'CONFIRM_KICK' && (
-            <ConfirmKick
-              spaceId={spaceMember.spaceId}
-              channelId={channel.id}
-              userId={user.id}
-              nickname={user.nickname}
+  }
+  return (
+    <div {...props} ref={ref} className="w-[20rem]">
+      <FloatingBox>
+        <div className="flex items-end">
+          <Avatar
+            size="6rem"
+            className="float-left mr-2 rounded"
+            id={user.id}
+            avatarId={user.avatarId}
+            name={user.nickname}
+          />
+          <div className="space-y-1">
+            <Names
               username={user.username}
-              dismiss={() => setUiState('VIEW')}
+              nickname={user.nickname}
+              characterName={channelMember?.characterName ?? ''}
             />
-          )}
-          {uiState === 'CONFIRM_LEAVE' && (
-            <ConfirmLeave
-              channelId={channel.id}
-              channelName={channel.name}
-              dismiss={() => setUiState('VIEW')}
+
+            {status != null && (
+              <div className="space-x-1 text-sm">
+                {status.kind === 'ONLINE' ? (
+                  <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>
+                    {statusText}
+                  </span>
+                ) : (
+                  <LastSeen timestamp={status.timestamp} className="text-surface-500" />
+                )}
+              </div>
+            )}
+            <Badges
+              thisIsMe={thisIsMe}
+              isAdmin={spaceMember.isAdmin}
+              isMaster={channelMember?.isMaster ?? false}
             />
-          )}
-        </FloatingBox>
-      </div>
-    );
-  },
-);
-MemberCard.displayName = 'MemberCard';
+          </div>
+        </div>
+        {user.bio !== '' && (
+          <div className="pt-4">
+            <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
+          </div>
+        )}
+        {uiState === 'VIEW' && canIManage && (
+          <div className="space-x-1 pt-4 text-right">
+            {thisIsMe && channelMember != null && (
+              <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Leave" />
+              </Button>
+            )}
+            <Button
+              data-small
+              onClick={() => setUiState((x) => (x === 'VIEW' ? 'MANAGE' : 'VIEW'))}
+              title={intl.formatMessage({ defaultMessage: 'Manage' })}
+            >
+              <Icon icon={UserCog} />
+            </Button>
+          </div>
+        )}
+
+        {uiState === 'MANAGE' && (
+          <div className="pb-2 pt-4">
+            {canIEditMaster && channelMember?.channelId === channel.id && (
+              <EditMasterCheckBox channelMember={channelMember} />
+            )}
+          </div>
+        )}
+
+        {uiState === 'MANAGE' && (
+          <div className="space-x-1 pt-4">
+            {canIKick && !thisIsMe && (
+              <Button data-small onClick={() => setUiState('CONFIRM_KICK')}>
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Kick this member" />
+              </Button>
+            )}
+            {canIInvite && channelMember?.channelId !== channel.id && !thisIsMe && (
+              <InviteButton userId={user.id} channelId={channel.id} />
+            )}
+
+            {thisIsMe && channelMember?.channelId === channel.id && (
+              <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
+                <Icon icon={UserX} />
+                <FormattedMessage defaultMessage="Leave" />
+              </Button>
+            )}
+          </div>
+        )}
+
+        {uiState === 'CONFIRM_KICK' && (
+          <ConfirmKick
+            spaceId={spaceMember.spaceId}
+            channelId={channel.id}
+            userId={user.id}
+            nickname={user.nickname}
+            username={user.username}
+            dismiss={() => setUiState('VIEW')}
+          />
+        )}
+        {uiState === 'CONFIRM_LEAVE' && (
+          <ConfirmLeave
+            channelId={channel.id}
+            channelName={channel.name}
+            dismiss={() => setUiState('VIEW')}
+          />
+        )}
+      </FloatingBox>
+    </div>
+  );
+};

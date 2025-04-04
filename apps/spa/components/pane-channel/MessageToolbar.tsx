@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { type FC, type RefObject, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { type FC, Ref, type RefObject, useContext, useEffect, useMemo, useRef } from 'react';
 import { type Message } from '@boluo/api';
 import { type ReactNode } from 'react';
 import {
@@ -141,31 +141,36 @@ interface MessageToolbarButtonProps
   loading?: boolean;
   pressed?: boolean;
   optimistic?: boolean;
+  ref?: Ref<HTMLButtonElement>;
 }
 
-const MessageToolbarButton = React.forwardRef<HTMLButtonElement, MessageToolbarButtonProps>(
-  ({ children, pressed, loading = false, optimistic = false, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        aria-pressed={pressed}
-        disabled={optimistic || props.disabled}
-        className={clsx(
-          'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base',
-          optimistic ? 'cursor-progress' : '',
-          pressed
-            ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
-            : 'enabled:hover:bg-switch-hover-bg',
-          loading ? 'text-text-lighter cursor-progress' : '',
-        )}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  },
-);
-MessageToolbarButton.displayName = 'MessageToolbarButton';
+const MessageToolbarButton = ({
+  children,
+  pressed,
+  loading = false,
+  optimistic = false,
+  ref,
+  ...props
+}: MessageToolbarButtonProps) => {
+  return (
+    <button
+      ref={ref}
+      aria-pressed={pressed}
+      disabled={optimistic || props.disabled}
+      className={clsx(
+        'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base',
+        optimistic ? 'cursor-progress' : '',
+        pressed
+          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
+          : 'enabled:hover:bg-switch-hover-bg',
+        loading ? 'text-text-lighter cursor-progress' : '',
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolbar' | 'more' }> = ({
   messageId,
@@ -258,7 +263,7 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
   const displayAtom = useContext(DisplayContext);
   const [display, setDisplay] = useAtom(displayAtom);
   const open = shoudShowMore(display.type);
-  const { refs, floatingStyles, context, update } = useFloating({
+  const { refs, floatingStyles, context, update } = useFloating<HTMLButtonElement>({
     open,
     onOpenChange: (isOpen, _event, reason) => {
       switch (reason) {

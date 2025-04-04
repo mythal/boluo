@@ -24,10 +24,21 @@ interface Props {
   currentUser: User;
 }
 
-const ToolbarButton = React.forwardRef<
-  HTMLButtonElement,
-  { children: ReactNode; onClick: () => void; active?: boolean; disabled?: boolean }
->(({ children, onClick, active = false, disabled = false }, ref) => {
+interface ToolbarButtonProps {
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
+}
+
+const ToolbarButton = ({
+  children,
+  onClick,
+  active = false,
+  disabled = false,
+  ref,
+}: ToolbarButtonProps) => {
   return (
     <button
       onClick={onClick}
@@ -48,8 +59,7 @@ const ToolbarButton = React.forwardRef<
       {children}
     </button>
   );
-});
-ToolbarButton.displayName = 'ToolbarButton';
+};
 
 const MuteButton = () => {
   const { broadcastAtom, isWhisperAtom, composeAtom } = useChannelAtoms();

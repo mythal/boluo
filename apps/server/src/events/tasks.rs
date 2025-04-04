@@ -37,8 +37,8 @@ async fn events_clean() {
         .for_each(|_| async {
             let mut next_map = HashMap::new();
             let before = timestamp() - 12 * 60 * 60 * 1000;
-            let redis_conn = super::context::get_cache().mailboxes.read().await;
-            for (id, mailbox) in redis_conn.iter() {
+            let mailbox_read_lock = super::context::get_cache().mailboxes.read().await;
+            for (id, mailbox) in mailbox_read_lock.iter() {
                 let mut empty = false;
                 let mut before = before;
                 {
@@ -76,9 +76,10 @@ async fn events_clean() {
                     next_map.insert(*id, mailbox.clone());
                 }
             }
-            drop(redis_conn);
-            let mut redis_conn = super::context::get_cache().mailboxes.write().await;
-            swap(&mut next_map, &mut *redis_conn);
+            drop(mailbox_read_lock);
+            let mut mailbox_write_lock = super::context::get_cache().mailboxes.write().await;
+            swap(&mut next_map, &mut *mailbox_write_lock);
+            drop(mailbox_write_lock);
         })
         .await;
 }

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
 
+use crate::cache::CacheItem;
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::{row_not_found, ModelError};
@@ -56,7 +57,7 @@ pub struct Channel {
     pub r#type: ChannelType,
 }
 
-static CHANNEL_CACHE: LazyLock<Cache<Uuid, Channel>> = LazyLock::new(|| Cache::new(8192));
+pub static CHANNEL_CACHE: LazyLock<Cache<Uuid, Channel>> = LazyLock::new(|| Cache::new(8192));
 
 fn insert_cache(channel: &Channel) {
     CHANNEL_CACHE.insert(channel.id, channel.clone());
@@ -155,7 +156,7 @@ impl Channel {
 
         if let Some(channel) = CHANNEL_CACHE.get(id) {
             if let Some(space) = SPACES_CACHE.get(&channel.space_id) {
-                return Ok(Some((channel.clone(), space)));
+                return Ok(Some((channel.clone(), space.payload)));
             }
         }
         let channel_and_space = sqlx::query_file!("sql/channels/fetch_channel_with_space.sql", id)
@@ -164,7 +165,7 @@ impl Channel {
             .map(|record| (record.channel, record.space));
         if let Some((channel, space)) = &channel_and_space {
             insert_cache(channel);
-            SPACES_CACHE.insert(space.id, space.clone());
+            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
         }
         Ok(channel_and_space)
     }

@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    s AS \"space!: Space\"\nFROM\n    spaces s\nWHERE\n    s.id = ANY($1)\n    AND deleted = FALSE;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space!: Space",
+        "type_info": {
+          "Custom": {
+            "name": "spaces",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "language",
+                  "Text"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "explorable",
+                  "Bool"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
+                ],
+                [
+                  "allow_spectator",
+                  "Bool"
+                ],
+                [
+                  "latest_activity",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "dacec08a428e88abc1a18570d0200bd43336b8da47f862dda8a0015f94cc279e"
+}

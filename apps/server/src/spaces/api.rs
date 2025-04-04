@@ -78,7 +78,7 @@ pub struct SpaceWithRelated {
     pub users_status: HashMap<Uuid, UserStatus>,
 }
 
-#[derive(Serialize, Debug, TS)]
+#[derive(Serialize, Debug, Clone, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceWithMember {

@@ -108,7 +108,7 @@ pub struct ChannelWithRelated {
     pub encoded_events: Vec<String>,
 }
 
-#[derive(Serialize, Debug, TS)]
+#[derive(Serialize, Debug, Clone, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelWithMember {

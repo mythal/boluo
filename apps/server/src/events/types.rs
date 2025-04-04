@@ -209,13 +209,15 @@ impl Event {
     }
     pub async fn push_status(space_id: Uuid) -> Result<(), anyhow::Error> {
         let status_map = space_users_status(space_id).await;
-        Event::transient(
-            space_id,
-            EventBody::StatusMap {
-                status_map,
+        if let Some(status_map) = status_map {
+            Event::transient(
                 space_id,
-            },
-        );
+                EventBody::StatusMap {
+                    status_map,
+                    space_id,
+                },
+            );
+        }
         Ok(())
     }
 
@@ -248,6 +250,7 @@ impl Event {
         };
 
         let old_value = mailbox.status.insert(user_id, heartbeat);
+        drop(mailbox);
         if let Some(old_value) = old_value {
             if old_value.kind != kind {
                 Event::push_status(space_id).await?;

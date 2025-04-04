@@ -23,7 +23,7 @@ export const ChatContent: FC = () => {
   if (!initialized) return loading;
   return (
     <Suspense fallback={loading}>
-      <IsScrollingContext.Provider value={isScrolling}>{view}</IsScrollingContext.Provider>
+      <IsScrollingContext value={isScrolling}>{view}</IsScrollingContext>
     </Suspense>
   );
 };

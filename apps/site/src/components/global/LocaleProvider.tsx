@@ -50,9 +50,7 @@ export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
       defaultLocale={defaultLocale}
       onError={onIntlError}
     >
-      <ChangeLocaleContext.Provider value={handleChangeLocale}>
-        {children}
-      </ChangeLocaleContext.Provider>
+      <ChangeLocaleContext value={handleChangeLocale}>{children}</ChangeLocaleContext>
     </IntlProvider>
   );
 };

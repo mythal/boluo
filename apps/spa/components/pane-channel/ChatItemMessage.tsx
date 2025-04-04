@@ -216,7 +216,7 @@ const MessageBox: FC<{
     store.set(toolbarDisplayAtom, { type: 'MORE' });
   };
   return (
-    <ToolbarDisplayContext.Provider value={toolbarDisplayAtom}>
+    <ToolbarDisplayContext value={toolbarDisplayAtom}>
       <div
         data-overlay={overlay}
         data-in-game={inGame}
@@ -245,6 +245,6 @@ const MessageBox: FC<{
         </div>
         {toolbar}
       </div>
-    </ToolbarDisplayContext.Provider>
+    </ToolbarDisplayContext>
   );
 };

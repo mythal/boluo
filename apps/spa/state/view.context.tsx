@@ -24,5 +24,5 @@ export const PaneProvider: FC<Props> = ({ paneKey: key, children, canClose = tru
   const isFocusedAtom = useMemo(() => atom((get) => get(focusPaneAtom) === key), [key]);
   const focused = useAtomValue(isFocusedAtom);
   const value: PaneContext = useMemo(() => ({ key, focused, canClose }), [canClose, focused, key]);
-  return <PaneContext.Provider value={value}>{children}</PaneContext.Provider>;
+  return <PaneContext value={value}>{children}</PaneContext>;
 };

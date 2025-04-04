@@ -58,11 +58,11 @@ export function ClientProviders({ children, lang, messages }: Props) {
   return (
     <JotaiProvider store={store}>
       <SWRConfig value={swrConfig}>
-        <ChangeLocaleContext.Provider value={changeLocale}>
+        <ChangeLocaleContext value={changeLocale}>
           <IntlProvider locale={lang} messages={messages} onError={handleIntlError}>
             {children}
           </IntlProvider>
-        </ChangeLocaleContext.Provider>
+        </ChangeLocaleContext>
       </SWRConfig>
     </JotaiProvider>
   );

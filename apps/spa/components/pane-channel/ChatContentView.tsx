@@ -337,8 +337,8 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
 
   return (
     <div className="@container relative" ref={wrapperRef}>
-      <ScrollerRefContext.Provider value={scrollerRef}>
-        <ReadObserverContext.Provider value={readObserve}>
+      <ScrollerRefContext value={scrollerRef}>
+        <ReadObserverContext value={readObserve}>
           <ChatListDndContext
             active={active}
             onDragCancel={handleDragCancel}
@@ -360,8 +360,8 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
               )}
             </SortableContext>
           </ChatListDndContext>
-        </ReadObserverContext.Provider>
-      </ScrollerRefContext.Provider>
+        </ReadObserverContext>
+      </ScrollerRefContext>
     </div>
   );
 };

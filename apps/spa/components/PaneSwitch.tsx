@@ -51,15 +51,15 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneSpace spaceId={pane.spaceId} />;
     case 'CHANNEL':
       return (
-        <ChannelIdContext.Provider value={pane.channelId}>
+        <ChannelIdContext value={pane.channelId}>
           <ChatPaneChannel channelId={pane.channelId} key={pane.channelId} />
-        </ChannelIdContext.Provider>
+        </ChannelIdContext>
       );
     case 'CHANNEL_SETTINGS':
       return (
-        <ChannelIdContext.Provider value={pane.channelId}>
+        <ChannelIdContext value={pane.channelId}>
           <PaneChannelSettings channelId={pane.channelId} key={pane.channelId} />
-        </ChannelIdContext.Provider>
+        </ChannelIdContext>
       );
     case 'SPACE_SETTINGS':
       return <PaneSpaceSettings spaceId={pane.spaceId} />;
@@ -95,15 +95,15 @@ export const ChatPaneSwitch = memo(({ pane }: Props) => {
   const [banner, setBanner] = useState<Banner | null>(emptyBanner);
   return (
     <PaneProvider key={pane.key} paneKey={pane.key}>
-      <PaneBannerContext.Provider value={banner ?? emptyBanner}>
-        <ThrowBanner.Provider value={setBanner}>
+      <PaneBannerContext value={banner ?? emptyBanner}>
+        <ThrowBanner value={setBanner}>
           <Suspense fallback={<PaneLoading />}>
             <PaneError>
               <Switch pane={pane} />
             </PaneError>
           </Suspense>
-        </ThrowBanner.Provider>
-      </PaneBannerContext.Provider>
+        </ThrowBanner>
+      </PaneBannerContext>
     </PaneProvider>
   );
 });

@@ -20,7 +20,7 @@ export const EntityExprSubExpr = ({ node }: Props) => {
     </span>
   );
   if (isTopLevel) {
-    return <IsTopLevelContext.Provider value={false}>{entityNode}</IsTopLevelContext.Provider>;
+    return <IsTopLevelContext value={false}>{entityNode}</IsTopLevelContext>;
   } else {
     return entityNode;
   }

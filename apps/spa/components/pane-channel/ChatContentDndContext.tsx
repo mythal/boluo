@@ -33,11 +33,11 @@ export const ChatListDndContext: FC<Props> = ({ children, active, ...rest }) => 
       modifiers={modifiers}
       {...rest}
     >
-      <IsDraggingContext.Provider value={!!active}>
+      <IsDraggingContext value={!!active}>
         {children}
 
         {createPortal(<DraggingOverlay active={active} />, document.body)}
-      </IsDraggingContext.Provider>
+      </IsDraggingContext>
     </DndContext>
   );
 };

@@ -177,7 +177,7 @@ function Chat() {
                     return nextPanes;
                   });
           return (
-            <PaneContext.Provider
+            <PaneContext
               key={index}
               value={{
                 id: paneId,
@@ -187,7 +187,7 @@ function Chat() {
               }}
             >
               <ChannelChat focus={focus} key={paneId} spaceId={spaceId} channelId={paneId} />
-            </PaneContext.Provider>
+            </PaneContext>
           );
         })
       ) : (

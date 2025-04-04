@@ -71,10 +71,10 @@ const Chat: FC = () => {
   }, []);
   const isTouch = useDetectIsTouch();
   return (
-    <SettingsContext.Provider value={settings}>
-      <ResolvedThemeContext.Provider value={resolvedTheme}>
-        <BannerContext.Provider value={bannerRef}>
-          <IsTouchContext.Provider value={isTouch}>
+    <SettingsContext value={settings}>
+      <ResolvedThemeContext value={resolvedTheme}>
+        <BannerContext value={bannerRef}>
+          <IsTouchContext value={isTouch}>
             <BreakpointProvider>
               <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
                 <div ref={bannerRef} className="col-span-full"></div>
@@ -97,10 +97,10 @@ const Chat: FC = () => {
                 </ChatContentBox>
               </div>
             </BreakpointProvider>
-          </IsTouchContext.Provider>
-        </BannerContext.Provider>
-      </ResolvedThemeContext.Provider>
-    </SettingsContext.Provider>
+          </IsTouchContext>
+        </BannerContext>
+      </ResolvedThemeContext>
+    </SettingsContext>
   );
 };
 

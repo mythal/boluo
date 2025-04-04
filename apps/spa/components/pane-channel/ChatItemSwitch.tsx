@@ -16,20 +16,20 @@ export const ChatItemSwitch = memo<Props>(
     switch (chatItem.type) {
       case 'MESSAGE':
         return (
-          <IsOptimisticContext.Provider value={chatItem.optimistic || false}>
+          <IsOptimisticContext value={chatItem.optimistic || false}>
             <ChatItemMessage
               isLast={isLast}
               message={chatItem}
               className={className}
               continuous={continuous}
             />
-          </IsOptimisticContext.Provider>
+          </IsOptimisticContext>
         );
       case 'PREVIEW':
         return (
-          <IsOptimisticContext.Provider value={chatItem.optimistic || false}>
+          <IsOptimisticContext value={chatItem.optimistic || false}>
             <ChatItemPreview isLast={isLast} preview={chatItem} className={className} />
-          </IsOptimisticContext.Provider>
+          </IsOptimisticContext>
         );
       default:
         return <div className={className}>Not implemented</div>;

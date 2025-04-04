@@ -108,7 +108,7 @@ export const SidebarChannelList: FC<Props> = ({
     return <SidebarChannelListSkeleton />;
   }
   return (
-    <IsReorderingContext.Provider value={isReordering}>
+    <IsReorderingContext value={isReordering}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -133,7 +133,7 @@ export const SidebarChannelList: FC<Props> = ({
           <DragOverlay>{overlay}</DragOverlay>
         </SortableContext>
       </DndContext>
-    </IsReorderingContext.Provider>
+    </IsReorderingContext>
   );
 };
 

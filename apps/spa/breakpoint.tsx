@@ -55,7 +55,7 @@ const BreakpointContext = React.createContext<Breakpoint | null>(null);
 export const BreakpointProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const breakpoint = useListenBreakpoint();
 
-  return <BreakpointContext.Provider value={breakpoint}>{children}</BreakpointContext.Provider>;
+  return <BreakpointContext value={breakpoint}>{children}</BreakpointContext>;
 };
 
 export const useBreakpoint = (): Breakpoint => {

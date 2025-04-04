@@ -62,9 +62,9 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
   }
 
   return (
-    <SpaceContext.Provider value={space}>
+    <SpaceContext value={space}>
       {errorNode}
       <ChatView defaultPane={defaultPane} />
-    </SpaceContext.Provider>
+    </SpaceContext>
   );
 };

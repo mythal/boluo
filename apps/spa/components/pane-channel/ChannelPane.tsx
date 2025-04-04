@@ -115,9 +115,9 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
     );
   }
   return (
-    <MemberContext.Provider value={member}>
-      <ChannelContext.Provider value={channel}>
-        <ChannelAtomsContext.Provider value={atoms}>
+    <MemberContext value={member}>
+      <ChannelContext value={channel}>
+        <ChannelAtomsContext value={atoms}>
           <PaneBox header={<ChannelHeader />} grow>
             {errorNode}
             <div
@@ -139,9 +139,9 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
               )}
             </div>
           </PaneBox>
-        </ChannelAtomsContext.Provider>
-      </ChannelContext.Provider>
-    </MemberContext.Provider>
+        </ChannelAtomsContext>
+      </ChannelContext>
+    </MemberContext>
   );
 });
 ChatPaneChannel.displayName = 'ChatPaneChannel';

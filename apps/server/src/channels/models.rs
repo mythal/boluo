@@ -704,17 +704,19 @@ impl Member {
     ) -> Result<Vec<Member>, sqlx::Error> {
         use std::time::Instant;
         let time_before_got_cache = Instant::now();
-        let cache = crate::events::context::get_cache().mailbox(&space_id).await;
-        let mut cache = cache.lock().await;
-        if let Some(members_cache) = cache.members.get(&channel_id) {
-            if members_cache.instant > time_before_got_cache {
-                return Ok(members_cache.map.values().cloned().collect());
+        let mailbox = crate::events::context::get_cache().mailbox(&space_id).await;
+        if let Ok(cache) = mailbox.try_lock() {
+            if let Some(members_cache) = cache.members.get(&channel_id) {
+                if members_cache.instant > time_before_got_cache {
+                    return Ok(members_cache.map.values().cloned().collect());
+                }
             }
         }
         let members =
             sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id)
                 .fetch_all(db)
                 .await?;
+        let mut cache = mailbox.lock().await;
         cache.members.insert(
             channel_id,
             crate::events::context::Members {
@@ -726,6 +728,7 @@ impl Member {
                 instant: Instant::now(),
             },
         );
+        drop(cache);
         Ok(members)
     }
 }

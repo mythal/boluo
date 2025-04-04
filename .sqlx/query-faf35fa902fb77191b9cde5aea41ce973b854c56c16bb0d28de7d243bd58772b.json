@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    ch AS \"channel!: Channel\"\nFROM\n    channels ch\nWHERE\n    ch.id = ANY($1)\n    AND deleted = FALSE\n",
+  "query": "SELECT\n    ch AS \"channel!: Channel\"\nFROM\n    channels ch\nWHERE\n    ch.id = ANY($1)\n    AND deleted = FALSE;\n",
   "describe": {
     "columns": [
       {
@@ -74,5 +74,5 @@
       null
     ]
   },
-  "hash": "aae580afc076cc4db49b4e2fbfd5d64a03e7fd8de43463ac9a20d98fc37144f6"
+  "hash": "faf35fa902fb77191b9cde5aea41ce973b854c56c16bb0d28de7d243bd58772b"
 }

@@ -15,7 +15,7 @@ import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
 import type { StyleProps } from '@boluo/utils';
-import { required } from '../validations';
+import { required } from '@boluo/common/validations';
 
 // https://web.dev/sign-in-form-best-practices/
 

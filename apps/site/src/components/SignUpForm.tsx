@@ -11,7 +11,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
-import * as validations from '../validations';
+import * as validations from '@boluo/common/validations';
 
 // https://web.dev/sign-in-form-best-practices/
 

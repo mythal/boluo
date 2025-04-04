@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { type FC, useId, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import * as validators from '../../../../../../../validations';
+import * as validators from '@boluo/common/validations';
 import { Button } from '@boluo/ui/Button';
 import { post } from '@boluo/api-browser';
 import { useRouter } from 'next/navigation';

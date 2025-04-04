@@ -5,7 +5,7 @@ import { TextInput } from '@boluo/ui/TextInput';
 import { useId, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
-import * as validators from '../../../../../validations';
+import * as validators from '@boluo/common/validations';
 import { Button } from '@boluo/ui/Button';
 
 interface FormSchema {

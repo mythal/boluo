@@ -20,15 +20,19 @@ export const maxLength = (max: number) => (intl: IntlShape) => ({
   },
 });
 
-// TODO: handle spaces
-export const nickname = (intl: IntlShape) => {
-  const a: RegisterOptions = {
+export const nickname = (intl: IntlShape) =>
+  ({
     ...required(intl),
     ...minLength(3)(intl),
     ...maxLength(32)(intl),
-  };
-  return a;
-};
+  }) satisfies RegisterOptions;
+
+export const spaceName = (intl: IntlShape) =>
+  ({
+    ...required(intl),
+    ...minLength(2)(intl),
+    ...maxLength(32)(intl),
+  }) satisfies RegisterOptions;
 
 export const username = (intl: IntlShape) => ({
   ...required(intl),

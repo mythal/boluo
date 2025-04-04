@@ -10,7 +10,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
-import { required } from '../validations';
+import { required, spaceName } from '@boluo/common/validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { useErrorExplain } from '@boluo/common/hooks';
 
@@ -45,7 +45,7 @@ const NameField: FC = () => {
         className="w-full"
         id={id}
         variant={error ? 'error' : 'normal'}
-        {...register('name', required(intl))}
+        {...register('name', spaceName(intl))}
       />
       <FieldErrorDisplay error={error} />
     </div>

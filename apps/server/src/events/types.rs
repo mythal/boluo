@@ -6,7 +6,6 @@ use crate::events::context::SyncEvent;
 use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
-use crate::redis;
 use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -281,10 +280,6 @@ impl Event {
         )
     }
 
-    pub fn cache_key(mailbox: &Uuid) -> Vec<u8> {
-        redis::make_key(b"mailbox", mailbox, b"events")
-    }
-
     pub async fn get_from_cache(
         mailbox: &Uuid,
         after: Option<i64>,
@@ -292,17 +287,19 @@ impl Event {
     ) -> Vec<String> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let redis = super::context::get_cache().try_mailbox(mailbox).await;
-        let Some(redis) = redis else { return vec![] };
-        let redis = redis.lock().await;
-        let mut event_list: Vec<Arc<SyncEvent>> = redis
+        let mailbox = super::context::get_cache().try_mailbox(mailbox).await;
+        let Some(mailbox) = mailbox else {
+            return vec![];
+        };
+        let mailbox_state = mailbox.lock().await;
+        let mut event_list: Vec<Arc<SyncEvent>> = mailbox_state
             .events
             .iter()
-            .chain(redis.edition_map.values())
-            .chain(redis.preview_map.values())
+            .chain(mailbox_state.edition_map.values())
+            .chain(mailbox_state.preview_map.values())
             .cloned()
             .collect();
-        drop(redis);
+        drop(mailbox_state);
         if event_list.is_empty() {
             return vec![];
         }
@@ -376,8 +373,8 @@ impl Event {
     }
 
     async fn async_fire(body: EventBody, mailbox: Uuid) {
-        let redis = super::context::get_cache().mailbox(&mailbox).await;
-        let mut redis = redis.lock().await;
+        let mailbox_lock = super::context::get_cache().mailbox(&mailbox).await;
+        let mut mailbox_state = mailbox_lock.lock().await;
 
         enum Kind {
             Preview { channel_id: Uuid, sender_id: Uuid },
@@ -419,15 +416,15 @@ impl Event {
                 sender_id,
                 channel_id,
             } => {
-                redis
+                mailbox_state
                     .preview_map
                     .insert((sender_id, channel_id), event.clone());
             }
             Kind::Edition { message_id } => {
-                redis.edition_map.insert(message_id, event.clone());
+                mailbox_state.edition_map.insert(message_id, event.clone());
             }
             Kind::Cache => {
-                redis.events.push_back(event.clone());
+                mailbox_state.events.push_back(event.clone());
             }
             Kind::NoCache => {}
         }

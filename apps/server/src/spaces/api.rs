@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
 
-use super::models::UserStatus;
 use crate::channels::ChannelType;
+use crate::events::models::UserStatus;
 
 #[derive(Deserialize, Debug, TS)]
 #[ts(export)]

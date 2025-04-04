@@ -10,6 +10,8 @@ use uuid::Uuid;
 
 use crate::utils::timestamp;
 
+use super::models::UserStatus;
+
 #[derive(Debug)]
 pub struct SyncEvent {
     pub event: Event,
@@ -63,6 +65,7 @@ pub struct MailBoxCache {
     pub preview_map: HashMap<(Uuid, Uuid), Arc<SyncEvent>>, // (sender id, channel id)
     pub edition_map: HashMap<Uuid, Arc<SyncEvent>>,         // the key is message id
     pub members: HashMap<Uuid, Members>,
+    pub status: HashMap<Uuid, UserStatus>,
 }
 
 impl MailBoxCache {
@@ -130,6 +133,7 @@ impl Cache {
                 preview_map: HashMap::new(),
                 edition_map: HashMap::new(),
                 members: HashMap::new(),
+                status: HashMap::new(),
             };
             let cache = Arc::new(Mutex::new(cache));
             let mut map = self.mailboxes.write().await;

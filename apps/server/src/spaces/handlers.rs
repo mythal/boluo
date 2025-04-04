@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
-use super::models::{space_users_status, UserStatus};
 use super::{Space, SpaceMember};
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember, ChannelType};
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
+use crate::events::models::{space_users_status, UserStatus};
 use crate::events::Event;
 use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Response};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
@@ -79,8 +79,7 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     let space = Space::get_by_id(&mut *conn, id).await?.or_not_found()?;
     let members = SpaceMemberWithUser::get_by_space(&mut *conn, id).await?;
     let channels = Channel::get_by_space(&mut *conn, id).await?;
-    let mut redis_conn = crate::redis::conn().await;
-    let users_status = space_users_status(&mut redis_conn, space.id).await?;
+    let users_status = space_users_status(space.id).await;
     let mut channel_members: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
     for channel in channels.iter() {
         let members = Member::get_by_channel(&mut *conn, space.id, channel.id).await?;
@@ -350,8 +349,7 @@ async fn members(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWit
 async fn users_status(req: Request<impl Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     // TODO: permission check
-    let mut redis_conn = crate::redis::conn().await;
-    let users_status = space_users_status(&mut redis_conn, space_id).await?;
+    let users_status = space_users_status(space_id).await;
     Ok(users_status)
 }
 

@@ -1,10 +1,8 @@
 use quick_cache::sync::Cache;
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::sync::LazyLock;
 
 use chrono::prelude::*;
-use deadpool_redis::redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use ts_rs::TS;
@@ -12,57 +10,10 @@ use uuid::Uuid;
 
 use crate::cache::CacheItem;
 use crate::channels::ChannelMember;
-use crate::error::{row_not_found, AppError, ModelError};
-use crate::redis::make_key;
+use crate::error::{row_not_found, ModelError};
 use crate::spaces::api::SpaceWithMember;
 use crate::users::User;
 use crate::utils::merge_blank;
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, TS)]
-#[ts(export)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum StatusKind {
-    Offline,
-    Away,
-    Online,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
-#[ts(export)]
-pub struct UserStatus {
-    #[ts(type = "number")]
-    pub timestamp: i64,
-    pub kind: StatusKind,
-    pub focus: Vec<Uuid>,
-}
-
-pub async fn space_users_status(
-    redis: &mut deadpool_redis::Connection,
-    space_id: Uuid,
-) -> Result<HashMap<Uuid, UserStatus>, AppError> {
-    let key = make_key(b"space", &space_id, b"heartbeat");
-    let redis_result: HashMap<Vec<u8>, Vec<u8>> = redis.hgetall(&*key).await?;
-    let mut table: HashMap<Uuid, UserStatus> = HashMap::new();
-    for (user_id_bytes, data) in redis_result.into_iter() {
-        let user_id_array: [u8; 16] = match user_id_bytes.try_into() {
-            Ok(array) => array,
-            Err(bytes) => {
-                log::error!(
-                    "Failed to convert user id in cache to [u8; 16]: {:?}",
-                    bytes
-                );
-                continue;
-            }
-        };
-        match serde_json::from_slice::<UserStatus>(&data) {
-            Ok(status) => {
-                table.insert(Uuid::from_bytes(user_id_array), status);
-            }
-            Err(err) => log::error!("failed to deserialize user status in cache: {}", err),
-        }
-    }
-    Ok(table)
-}
 
 pub static SPACES_CACHE: LazyLock<Cache<Uuid, CacheItem<Space>>> =
     LazyLock::new(|| Cache::new(1024));

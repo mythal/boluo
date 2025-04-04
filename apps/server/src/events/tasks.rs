@@ -1,8 +1,8 @@
+use crate::db;
 use crate::events::context::{get_broadcast_table, get_heartbeat_map};
 use crate::events::Event;
 use crate::spaces::Space;
 use crate::utils::timestamp;
-use crate::{db, redis};
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::mem::swap;
@@ -24,9 +24,8 @@ async fn push_status() {
             let pool = db::get().await;
             let spaces = Space::recent(&pool).await.unwrap_or_default();
 
-            let mut redis_conn = redis::conn().await;
             for space_id in spaces {
-                Event::push_status(&mut redis_conn, space_id).await.ok();
+                Event::push_status(space_id).await.ok();
             }
         })
         .await;

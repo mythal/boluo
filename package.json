@@ -23,6 +23,7 @@
     "dev": "turbo run dev",
     "dev:legacy": "turbo run dev --filter=legacy",
     "dev:site": "turbo run dev --filter=site",
+    "dev:spa": "turbo run dev --filter=spa",
     "fix:versions": "syncpack-fix-mismatches --filter '^(?!@boluo/).+'",
     "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}'",
     "format:versions": "syncpack format",

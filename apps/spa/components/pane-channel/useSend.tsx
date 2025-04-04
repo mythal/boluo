@@ -18,7 +18,7 @@ import { type FailTo } from '../../state/channel.types';
 export const useSend = (me: User) => {
   const channelId = useChannelId();
   const defaultInGame = useDefaultInGame();
-  const { composeAtom, parsedAtom, checkComposeAtom } = useChannelAtoms();
+  const { composeAtom, parsedAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
   const store = useStore();
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
   const queryChannelMembersRef = useRef(queryChannelMembers);
@@ -54,7 +54,10 @@ export const useSend = (me: User) => {
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
     const isEditing = compose.edit !== null;
     dispatch({ type: 'sent', payload: { edit: isEditing } });
-    const { text, entities, whisperToUsernames } = parse(compose.source);
+    const { text, entities, whisperToUsernames } = parse(compose.source, true, {
+      defaultDiceFace: defaultDiceFaceRef.current,
+      resolveUsername: (username) => null,
+    });
     let name = nickname;
     const inGame = parsed.inGame ?? defaultInGame;
     if (inGame) {
@@ -173,6 +176,7 @@ export const useSend = (me: User) => {
     channelId,
     checkComposeAtom,
     composeAtom,
+    defaultDiceFaceRef,
     defaultInGame,
     myMember,
     nickname,

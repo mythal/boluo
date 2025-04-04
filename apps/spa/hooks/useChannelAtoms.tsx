@@ -28,6 +28,7 @@ export interface ChannelAtoms {
   filterAtom: PrimitiveAtom<ChannelFilter>;
   showArchivedAtom: PrimitiveAtom<boolean>;
   memberListStateAtom: PrimitiveAtom<ChannelMemberListState>;
+  defaultDiceFaceRef: React.RefObject<number>;
 }
 
 export const ChannelAtomsContext = createContext<ChannelAtoms | null>(null);
@@ -91,6 +92,7 @@ export const useMakeChannelAtoms = (
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
         memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
+        defaultDiceFaceRef,
       };
     }, [channelId, composeAtom]);
   const inGameAtom = useMemo(

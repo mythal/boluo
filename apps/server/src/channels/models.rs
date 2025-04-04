@@ -196,10 +196,10 @@ impl Channel {
         )
         .fetch_all(db)
         .await?;
-        for &ChannelWithMaybeMember { ref channel, .. } in &channel_list {
+        for ChannelWithMaybeMember { channel, .. } in &channel_list {
             insert_cache(channel);
         }
-        return Ok(channel_list);
+        Ok(channel_list)
     }
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
@@ -209,7 +209,7 @@ impl Channel {
             .map(|r| r.rows_affected())?;
         if affected > 0 {
             CHANNEL_CACHE.remove(id);
-            if let Some(cache) = crate::events::context::get_cache().try_mailbox(&id).await {
+            if let Some(cache) = crate::events::context::get_cache().try_mailbox(id).await {
                 cache.lock().await.remove_channel(id);
             }
         }
@@ -456,7 +456,7 @@ impl ChannelMember {
         space_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
         if let Some(cache) = crate::events::context::get_cache()
-            .try_mailbox(&space_id)
+            .try_mailbox(space_id)
             .await
         {
             if let Ok(mut cache) = cache.try_lock() {

@@ -114,7 +114,7 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                     }
                 }
                 let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
-                let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
+                let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
                 let settings = UserExt::get_settings(&mut *conn, user.id).await?;
                 let get_me = GetMe {
                     user,
@@ -167,7 +167,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let token = session::token(&session);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut *conn, &user_id).await?;
-    let my_channels = Channel::get_by_user(&mut *conn, user_id).await?;
+    let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
     let settings = UserExt::get_settings(&mut *conn, user_id).await?;
     let me = GetMe {
         user,

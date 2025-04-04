@@ -77,7 +77,9 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
       const url = URL.createObjectURL(blob);
       const link = linkRef.current;
       if (!link) {
-        throw new Error('The link node for export is not found');
+        // This should never happen, but it happened.
+        alert('Failed to create download link, please try again.');
+        return;
       }
       link.href = url;
       link.download = filename;

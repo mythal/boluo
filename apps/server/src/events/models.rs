@@ -41,13 +41,10 @@ pub struct UserStatus {
     pub focus: Vec<Uuid>,
 }
 
-pub async fn space_users_status(space_id: Uuid) -> HashMap<Uuid, UserStatus> {
-    let Some(mailbox) = crate::events::context::get_cache()
+pub async fn space_users_status(space_id: Uuid) -> Option<HashMap<Uuid, UserStatus>> {
+    let mailbox = crate::events::context::get_cache()
         .try_mailbox(&space_id)
-        .await
-    else {
-        return HashMap::new();
-    };
-    let mailbox = mailbox.lock().await;
-    mailbox.status.clone()
+        .await?;
+    let mailbox = mailbox.try_lock().ok()?;
+    Some(mailbox.status.clone())
 }

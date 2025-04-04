@@ -3,13 +3,12 @@ use crate::channels::Channel;
 
 use crate::events::context;
 use crate::events::context::SyncEvent;
+use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
 use crate::redis;
 use crate::spaces::api::SpaceWithRelated;
-use crate::spaces::models::{space_users_status, StatusKind, UserStatus};
 use chrono::Utc;
-use deadpool_redis::redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -208,11 +207,8 @@ impl Event {
             mailbox,
         );
     }
-    pub async fn push_status(
-        redis: &mut deadpool_redis::Connection,
-        space_id: Uuid,
-    ) -> Result<(), anyhow::Error> {
-        let status_map = space_users_status(redis, space_id).await?;
+    pub async fn push_status(space_id: Uuid) -> Result<(), anyhow::Error> {
+        let status_map = space_users_status(space_id).await;
         Event::transient(
             space_id,
             EventBody::StatusMap {
@@ -230,28 +226,34 @@ impl Event {
         timestamp: i64,
         focus: Vec<Uuid>,
     ) -> Result<(), anyhow::Error> {
-        let mut redis = redis::conn().await;
         let heartbeat = UserStatus {
             timestamp,
             kind,
             focus,
         };
-        let mut changed = true;
 
-        let key = redis::make_key(b"space", &space_id, b"heartbeat");
-        let old_value: Option<Result<UserStatus, _>> = redis
-            .hget::<_, _, Option<Vec<u8>>>(&*key, user_id.as_bytes())
-            .await?
-            .as_deref()
-            .map(serde_json::from_slice);
-        if let Some(Ok(old_value)) = old_value {
-            changed = old_value.kind != kind;
-        }
-        let value = serde_json::to_vec(&heartbeat)?;
+        let Some(mailbox) = super::context::get_cache().try_mailbox(&space_id).await else {
+            log::warn!(
+                "Failed to get mailbox for space {} on update status",
+                space_id
+            );
+            return Ok(());
+        };
+        let Ok(mut mailbox) = mailbox.try_lock() else {
+            log::warn!(
+                "Failed to lock mailbox for space {} on update status",
+                space_id
+            );
+            return Ok(());
+        };
 
-        let created: bool = redis.hset(&*key, user_id.as_bytes(), &*value).await?;
-        if created || changed {
-            Event::push_status(&mut redis, space_id).await?;
+        let old_value = mailbox.status.insert(user_id, heartbeat);
+        if let Some(old_value) = old_value {
+            if old_value.kind != kind {
+                Event::push_status(space_id).await?;
+            }
+        } else {
+            Event::push_status(space_id).await?;
         }
         Ok(())
     }

@@ -36,7 +36,7 @@ pub struct Settings {
     expand_dice: bool,
 }
 
-#[derive(Debug, Serialize, TS)]
+#[derive(Debug, Serialize, Clone, TS)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct GetMe {

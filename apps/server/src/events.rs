@@ -1,7 +1,7 @@
 mod api;
 pub mod context;
 mod handlers;
-mod models;
+pub mod models;
 pub mod preview;
 pub mod tasks;
 mod types;

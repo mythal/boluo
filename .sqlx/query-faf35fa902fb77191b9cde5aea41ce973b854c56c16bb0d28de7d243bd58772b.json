@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    c AS \"channel!: Channel\",\n    cm AS \"member!: ChannelMember\"\nFROM\n    channel_members cm\n    INNER JOIN channels c ON cm.channel_id = c.id\n        AND c.deleted = FALSE\n    INNER JOIN space_members sm ON cm.user_id = sm.user_id\n        AND c.space_id = sm.space_id\nWHERE\n    cm.user_id = $1\n    AND cm.is_joined;\n\n",
+  "query": "SELECT\n    ch AS \"channel!: Channel\"\nFROM\n    channels ch\nWHERE\n    ch.id = ANY($1)\n    AND deleted = FALSE;\n",
   "describe": {
     "columns": [
       {
@@ -63,58 +63,16 @@
             }
           }
         }
-      },
-      {
-        "ordinal": 1,
-        "name": "member!: ChannelMember",
-        "type_info": {
-          "Custom": {
-            "name": "channel_members",
-            "kind": {
-              "Composite": [
-                [
-                  "user_id",
-                  "Uuid"
-                ],
-                [
-                  "channel_id",
-                  "Uuid"
-                ],
-                [
-                  "join_date",
-                  "Timestamptz"
-                ],
-                [
-                  "character_name",
-                  "Text"
-                ],
-                [
-                  "text_color",
-                  "Text"
-                ],
-                [
-                  "is_joined",
-                  "Bool"
-                ],
-                [
-                  "is_master",
-                  "Bool"
-                ]
-              ]
-            }
-          }
-        }
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
-      null,
       null
     ]
   },
-  "hash": "2077734e176253a1a295acbeb0519d2cee890c51b8e65cd55545c5e3d624cc3b"
+  "hash": "faf35fa902fb77191b9cde5aea41ce973b854c56c16bb0d28de7d243bd58772b"
 }

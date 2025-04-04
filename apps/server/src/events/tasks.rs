@@ -1,8 +1,8 @@
+use crate::db;
 use crate::events::context::{get_broadcast_table, get_heartbeat_map};
 use crate::events::Event;
 use crate::spaces::Space;
 use crate::utils::timestamp;
-use crate::{db, redis};
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::mem::swap;
@@ -24,9 +24,8 @@ async fn push_status() {
             let pool = db::get().await;
             let spaces = Space::recent(&pool).await.unwrap_or_default();
 
-            let mut redis_conn = redis::conn().await;
             for space_id in spaces {
-                Event::push_status(&mut redis_conn, space_id).await.ok();
+                Event::push_status(space_id).await.ok();
             }
         })
         .await;
@@ -37,8 +36,8 @@ async fn events_clean() {
         .for_each(|_| async {
             let mut next_map = HashMap::new();
             let before = timestamp() - 12 * 60 * 60 * 1000;
-            let redis_conn = super::context::get_cache().mailboxes.read().await;
-            for (id, mailbox) in redis_conn.iter() {
+            let mailbox_read_lock = super::context::get_cache().mailboxes.read().await;
+            for (id, mailbox) in mailbox_read_lock.iter() {
                 let mut empty = false;
                 let mut before = before;
                 {
@@ -76,9 +75,10 @@ async fn events_clean() {
                     next_map.insert(*id, mailbox.clone());
                 }
             }
-            drop(redis_conn);
-            let mut redis_conn = super::context::get_cache().mailboxes.write().await;
-            swap(&mut next_map, &mut *redis_conn);
+            drop(mailbox_read_lock);
+            let mut mailbox_write_lock = super::context::get_cache().mailboxes.write().await;
+            swap(&mut next_map, &mut *mailbox_write_lock);
+            drop(mailbox_write_lock);
         })
         .await;
 }

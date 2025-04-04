@@ -1,7 +1,10 @@
+use std::sync::LazyLock;
+
 use super::api::{
     Login, LoginReturn, Register, ResetPassword, ResetPasswordConfirm, ResetPasswordTokenCheck,
 };
 use super::models::User;
+use crate::cache::CacheItem;
 use crate::channels::Channel;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface;
@@ -19,6 +22,8 @@ use crate::{db, mail, redis};
 use deadpool_redis::redis::AsyncCommands;
 use hyper::body::{Body, Incoming};
 use hyper::{Method, Request, Response};
+use quick_cache::sync::Cache;
+use uuid::Uuid;
 
 async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     let Register {
@@ -81,6 +86,11 @@ pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value
     Ok(settings)
 }
 
+pub static GET_ME_CACHE: LazyLock<Cache<Uuid, CacheItem<GetMe>>> =
+    LazyLock::new(|| Cache::new(4096));
+
+const GET_ME_TIMEOUT: u64 = 25;
+
 pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
     let mut session = authenticate(&req).await;
@@ -97,16 +107,24 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
             let mut conn = pool.acquire().await?;
             let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
+                let cached = GET_ME_CACHE.get(&user.id);
+                if let Some(get_me) = cached {
+                    if get_me.instant.elapsed().as_secs() < GET_ME_TIMEOUT {
+                        return Ok(ok_response(Some(get_me.payload.clone())));
+                    }
+                }
                 let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
-                let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
+                let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
                 let settings = UserExt::get_settings(&mut *conn, user.id).await?;
-
-                let mut response = ok_response(Some(GetMe {
+                let get_me = GetMe {
                     user,
                     settings,
                     my_channels,
                     my_spaces,
-                }));
+                };
+                GET_ME_CACHE.insert(session.user_id, CacheItem::new(get_me.clone()));
+
+                let mut response = ok_response(Some(get_me));
                 if is_authenticate_use_cookie(req.headers()) {
                     // refresh session cookie
                     let is_debug = req.headers().get("X-Debug").is_some();
@@ -142,24 +160,26 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let user = User::login(&mut *conn, &form.username, &form.password)
         .await
         .or_no_permission()?;
-    let session = session::start(&user.id)
+    let user_id = user.id;
+    let session = session::start(&user_id)
         .await
         .map_err(error_unexpected!())?;
     let token = session::token(&session);
     let token = if form.with_token { Some(token) } else { None };
-    let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
-    let my_channels = Channel::get_by_user(&mut *conn, user.id).await?;
-    let settings = UserExt::get_settings(&mut *conn, user.id).await?;
+    let my_spaces = Space::get_by_user(&mut *conn, &user_id).await?;
+    let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
+    let settings = UserExt::get_settings(&mut *conn, user_id).await?;
     let me = GetMe {
         user,
         settings: settings.clone(),
         my_spaces,
         my_channels,
     };
+    GET_ME_CACHE.insert(user_id, CacheItem::new(me.clone()));
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
-    add_session_cookie(&session, is_debug, headers);
     add_settings_cookie(&settings, headers);
+    add_session_cookie(&session, is_debug, headers);
     Ok(response)
 }
 

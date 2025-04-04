@@ -1,70 +1,23 @@
 use quick_cache::sync::Cache;
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::sync::LazyLock;
 
 use chrono::prelude::*;
-use deadpool_redis::redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use ts_rs::TS;
 use uuid::Uuid;
 
+use crate::cache::CacheItem;
 use crate::channels::ChannelMember;
-use crate::error::{row_not_found, AppError, ModelError};
-use crate::redis::make_key;
+use crate::error::{row_not_found, ModelError};
 use crate::spaces::api::SpaceWithMember;
 use crate::users::User;
 use crate::utils::merge_blank;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, TS)]
-#[ts(export)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum StatusKind {
-    Offline,
-    Away,
-    Online,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
-#[ts(export)]
-pub struct UserStatus {
-    #[ts(type = "number")]
-    pub timestamp: i64,
-    pub kind: StatusKind,
-    pub focus: Vec<Uuid>,
-}
-
-pub async fn space_users_status(
-    redis: &mut deadpool_redis::Connection,
-    space_id: Uuid,
-) -> Result<HashMap<Uuid, UserStatus>, AppError> {
-    let key = make_key(b"space", &space_id, b"heartbeat");
-    let redis_result: HashMap<Vec<u8>, Vec<u8>> = redis.hgetall(&*key).await?;
-    let mut table: HashMap<Uuid, UserStatus> = HashMap::new();
-    for (user_id_bytes, data) in redis_result.into_iter() {
-        let user_id_array: [u8; 16] = match user_id_bytes.try_into() {
-            Ok(array) => array,
-            Err(bytes) => {
-                log::error!(
-                    "Failed to convert user id in cache to [u8; 16]: {:?}",
-                    bytes
-                );
-                continue;
-            }
-        };
-        match serde_json::from_slice::<UserStatus>(&data) {
-            Ok(status) => {
-                table.insert(Uuid::from_bytes(user_id_array), status);
-            }
-            Err(err) => log::error!("failed to deserialize user status in cache: {}", err),
-        }
-    }
-    Ok(table)
-}
-
-static SPACES_CACHE: LazyLock<Cache<Uuid, Space>> = LazyLock::new(|| Cache::new(1024));
-static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> =
+pub static SPACES_CACHE: LazyLock<Cache<Uuid, CacheItem<Space>>> =
+    LazyLock::new(|| Cache::new(1024));
+static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, CacheItem<serde_json::Value>>> =
     LazyLock::new(|| Cache::new(1024));
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
@@ -120,7 +73,7 @@ impl Space {
         )
         .fetch_one(db)
         .await?;
-        SPACES_CACHE.insert(space.id, space.clone());
+        SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
         Ok(space)
     }
 
@@ -139,6 +92,7 @@ impl Space {
             .execute(db)
             .await?;
         SPACES_CACHE.remove(id);
+        SPACE_SETTINGS_CACHE.remove(id);
         Ok(())
     }
 
@@ -163,21 +117,51 @@ impl Space {
                 sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
                     .fetch_one(db)
                     .await
+                    .map(CacheItem::new)
             })
             .await
-            .map(Some)
+            .map(|item| Some(item.payload))
             .or_else(row_not_found)
+    }
+
+    pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>, I: Iterator<Item = Uuid>>(
+        db: T,
+        id_list: I,
+    ) -> Result<HashMap<Uuid, Space>, sqlx::Error> {
+        let mut query_ids: Vec<Uuid> = Vec::new();
+        let mut result_map: HashMap<Uuid, Space> = HashMap::new();
+        for id in id_list {
+            if let Some(space_item) = SPACES_CACHE.get(&id) {
+                result_map.insert(space_item.payload.id, space_item.payload);
+            } else {
+                query_ids.push(id);
+            }
+        }
+        let spaces = sqlx::query_file_scalar!("sql/spaces/get_by_id_list.sql", &*query_ids)
+            .fetch_all(db)
+            .await?;
+        for space in spaces {
+            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
+            result_map.insert(space.id, space);
+        }
+        Ok(result_map)
     }
 
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
+        use crate::channels::models::CHANNEL_CACHE;
+        if let Some(channel) = CHANNEL_CACHE.get(channel_id) {
+            if let Some(space) = SPACES_CACHE.get(&channel.space_id) {
+                return Ok(Some(space.payload.clone()));
+            }
+        }
         let space = sqlx::query_file_scalar!("sql/spaces/get_by_channel.sql", channel_id)
             .fetch_optional(db)
             .await?;
         if let Some(space) = &space {
-            SPACES_CACHE.insert(space.id, space.clone());
+            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
         }
         Ok(space)
     }
@@ -247,7 +231,7 @@ impl Space {
         .fetch_optional(db)
         .await?;
         if let Some(space) = &space {
-            SPACES_CACHE.insert(space.id, space.clone());
+            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
         }
         Ok(space)
     }
@@ -284,7 +268,7 @@ impl Space {
         .fetch_all(db)
         .await?;
         for space in &space_with_member_list {
-            SPACES_CACHE.insert(space.space.id, space.space.clone());
+            SPACES_CACHE.insert(space.space.id, CacheItem::new(space.space.clone()));
         }
         Ok(space_with_member_list)
     }
@@ -302,12 +286,17 @@ impl Space {
         db: T,
         space_id: Uuid,
     ) -> Result<serde_json::Value, sqlx::Error> {
-        let settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
-            .fetch_optional(db)
-            .await?
-            .unwrap_or(serde_json::json!({}));
-        SPACE_SETTINGS_CACHE.insert(space_id, settings.clone());
-        Ok(settings)
+        use serde_json::json;
+        SPACE_SETTINGS_CACHE
+            .get_or_insert_async(&space_id, async {
+                sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
+                    .fetch_optional(db)
+                    .await
+                    .map(|settings| settings.unwrap_or(json!({})))
+                    .map(CacheItem::new)
+            })
+            .await
+            .map(|item| item.payload)
     }
     pub async fn put_settings<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -317,7 +306,7 @@ impl Space {
         sqlx::query_file_scalar!("sql/spaces/put_settings.sql", space_id, settings)
             .execute(db)
             .await?;
-        SPACE_SETTINGS_CACHE.insert(space_id, settings.clone());
+        SPACE_SETTINGS_CACHE.insert(space_id, CacheItem::new(settings.clone()));
         Ok(())
     }
 }
@@ -366,8 +355,8 @@ impl SpaceMember {
 
     pub async fn remove_user(
         db: &mut sqlx::PgConnection,
-        user_id: &Uuid,
-        space_id: &Uuid,
+        user_id: Uuid,
+        space_id: Uuid,
     ) -> Result<Vec<Uuid>, sqlx::Error> {
         let affected = {
             sqlx::query_file_scalar!("sql/spaces/remove_user_from_space.sql", user_id, space_id)

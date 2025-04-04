@@ -1,5 +1,7 @@
 use crate::channels::models::Member;
+use crate::channels::ChannelMember;
 use crate::events::Event;
+use crate::spaces::SpaceMember;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
@@ -61,6 +63,43 @@ pub struct MailBoxCache {
     pub preview_map: HashMap<(Uuid, Uuid), Arc<SyncEvent>>, // (sender id, channel id)
     pub edition_map: HashMap<Uuid, Arc<SyncEvent>>,         // the key is message id
     pub members: HashMap<Uuid, Members>,
+}
+
+impl MailBoxCache {
+    pub fn remove_channel(&mut self, channel_id: &Uuid) {
+        self.members.remove(channel_id);
+    }
+
+    pub fn update_channel_member(&mut self, channel_member: ChannelMember) {
+        if let Some(members) = self.members.get_mut(&channel_member.channel_id) {
+            if let Some(member) = members.map.get_mut(&channel_member.user_id) {
+                member.channel = channel_member;
+            }
+        }
+    }
+    pub fn update_space_member(&mut self, space_member: SpaceMember) {
+        for members in self.members.values_mut() {
+            if let Some(member) = members.map.get_mut(&space_member.user_id) {
+                member.space = space_member.clone();
+            }
+        }
+    }
+
+    pub fn remove_member(&mut self, user_id: &Uuid) {
+        for members in self.members.values_mut() {
+            members.map.remove(user_id);
+        }
+        self.members.retain(|_, members| !members.map.is_empty());
+    }
+
+    pub fn remove_member_from_channel(&mut self, channel_id: &Uuid, user_id: &Uuid) {
+        if let Some(members) = self.members.get_mut(channel_id) {
+            members.map.remove(user_id);
+            if members.map.is_empty() {
+                self.members.remove(channel_id);
+            }
+        }
+    }
 }
 
 pub struct Cache {

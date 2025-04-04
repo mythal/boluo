@@ -63,7 +63,7 @@ pub async fn space_users_status(
     Ok(table)
 }
 
-static SPACES_CACHE: LazyLock<Cache<Uuid, Space>> = LazyLock::new(|| Cache::new(1024));
+pub static SPACES_CACHE: LazyLock<Cache<Uuid, Space>> = LazyLock::new(|| Cache::new(1024));
 static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, serde_json::Value>> =
     LazyLock::new(|| Cache::new(1024));
 
@@ -366,8 +366,8 @@ impl SpaceMember {
 
     pub async fn remove_user(
         db: &mut sqlx::PgConnection,
-        user_id: &Uuid,
-        space_id: &Uuid,
+        user_id: Uuid,
+        space_id: Uuid,
     ) -> Result<Vec<Uuid>, sqlx::Error> {
         let affected = {
             sqlx::query_file_scalar!("sql/spaces/remove_user_from_space.sql", user_id, space_id)

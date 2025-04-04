@@ -151,21 +151,20 @@ impl User {
         }
     }
 
-    pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>>(
+    pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>, I: Iterator<Item = Uuid>>(
         db: T,
-        id_list: &[Uuid],
+        id_list: I,
     ) -> Result<HashMap<Uuid, User>, sqlx::Error> {
-        use std::collections::HashSet;
-        let mut id_set: HashSet<Uuid> = id_list.iter().cloned().collect();
+        let mut query_ids: Vec<Uuid> = Vec::new();
         let mut result_map: HashMap<Uuid, User> = HashMap::new();
         for id in id_list {
-            if let Some(user) = USERS_CACHE.get(id) {
+            if let Some(user) = USERS_CACHE.get(&id) {
                 result_map.insert(user.id, user);
-                id_set.remove(id);
+            } else {
+                query_ids.push(id);
             }
         }
-        let query_id_list: Vec<Uuid> = id_set.into_iter().collect();
-        let users = query_file_scalar!("sql/users/get_by_id_list.sql", &*query_id_list)
+        let users = query_file_scalar!("sql/users/get_by_id_list.sql", &*query_ids)
             .fetch_all(db)
             .await?;
         for user in &users {

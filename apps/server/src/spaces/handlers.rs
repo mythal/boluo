@@ -83,7 +83,7 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     let users_status = space_users_status(&mut redis_conn, space.id).await?;
     let mut channel_members: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
     for channel in channels.iter() {
-        let members = Member::get_by_channel_cached(&mut *conn, space.id, channel.id).await?;
+        let members = Member::get_by_channel(&mut *conn, space.id, channel.id).await?;
         channel_members.insert(
             channel.id,
             members.into_iter().map(|member| member.channel).collect(),
@@ -190,7 +190,7 @@ async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     )
     .await?;
     assert_eq!(channel.r#type, _type);
-    ChannelMember::add_user(&mut *trans, &user.id, &channel.id, "", true).await?;
+    ChannelMember::add_user(&mut *trans, user.id, channel.id, channel.space_id, "", true).await?;
     trans.commit().await?;
     log::info!("a space ({}) was just created", space.id);
     Ok(SpaceWithMember {
@@ -292,7 +292,7 @@ async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
 
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
-    SpaceMember::remove_user(&mut trans, &session.user_id, &id).await?;
+    SpaceMember::remove_user(&mut trans, session.user_id, id).await?;
     trans.commit().await?;
     Event::space_updated(id);
     Ok(true)
@@ -318,7 +318,7 @@ async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUs
             "A non-admin tries to kick".to_string(),
         ));
     }
-    SpaceMember::remove_user(&mut trans, &user_id, &space_id).await?;
+    SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
     trans.commit().await?;
     Event::space_updated(space_id);
     Ok(SpaceMemberWithUser::get_by_space(&pool, &space_id).await?)

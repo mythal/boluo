@@ -234,14 +234,11 @@ impl Event {
         };
 
         let Some(mailbox) = super::context::get_cache().try_mailbox(&space_id).await else {
-            log::warn!(
-                "Failed to get mailbox for space {} on update status",
-                space_id
-            );
+            // It's ok if the mailbox is not be created yet
             return Ok(());
         };
         let Ok(mut mailbox) = mailbox.try_lock() else {
-            log::warn!(
+            log::info!(
                 "Failed to lock mailbox for space {} on update status",
                 space_id
             );

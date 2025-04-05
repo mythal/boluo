@@ -1,12 +1,10 @@
 import * as Sentry from '@sentry/nextjs';
-import { SENTRY_CONFIG } from './src/const';
+import { SENTRY_CONFIG } from './const';
 
-export function register() {
-  if (!SENTRY_CONFIG.enabled) return;
-  const sentryDsn = SENTRY_CONFIG.dsn;
-  if (sentryDsn) {
+export async function register() {
+  if (SENTRY_CONFIG.enabled) {
     Sentry.init({
-      dsn: sentryDsn,
+      dsn: SENTRY_CONFIG.dsn,
       environment: 'development',
       // Set tracesSampleRate to 1.0 to capture 100%
       // of transactions for tracing.
@@ -17,3 +15,4 @@ export function register() {
     });
   }
 }
+export const onRequestError = Sentry.captureRequestError;

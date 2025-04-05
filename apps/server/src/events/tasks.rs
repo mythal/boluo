@@ -1,18 +1,15 @@
 use crate::db;
-use crate::events::context::{get_broadcast_table, get_heartbeat_map};
+use crate::events::context::get_broadcast_table;
 use crate::events::Event;
 use crate::spaces::Space;
 use crate::utils::timestamp;
 use futures::StreamExt;
-use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time::interval;
 use tokio_stream::wrappers::IntervalStream;
-use uuid::Uuid;
 
 pub fn start() {
     tokio::spawn(events_clean());
-    tokio::spawn(heartbeat_clean());
     tokio::spawn(broadcast_clean());
     tokio::spawn(push_status());
 }
@@ -60,27 +57,6 @@ async fn events_clean() {
                     && mailbox.edition_map.is_empty()
                     && mailbox.preview_map.is_empty())
             });
-        })
-        .await;
-}
-
-async fn heartbeat_clean() {
-    IntervalStream::new(interval(Duration::from_secs(60 * 30)))
-        .for_each(|_| async {
-            let now = timestamp();
-            let mut map_ref = get_heartbeat_map().lock().await;
-            let mut map = HashMap::new();
-            let hour = 1000 * 60 * 60;
-            std::mem::swap(&mut map, &mut *map_ref);
-            for (channel_id, heartbeat_map) in map.into_iter() {
-                let heartbeat_map: HashMap<Uuid, i64> = heartbeat_map
-                    .into_iter()
-                    .filter(|(_, time)| now - *time < hour)
-                    .collect();
-                if !heartbeat_map.is_empty() {
-                    map_ref.insert(channel_id, heartbeat_map);
-                }
-            }
         })
         .await;
 }

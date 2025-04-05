@@ -11,7 +11,6 @@ use crate::channels::models::{ChannelType, Member};
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
-use crate::events::context::get_heartbeat_map;
 use crate::events::Event;
 use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery};
 use crate::messages::Message;
@@ -70,27 +69,13 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
     }
     let mut members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
 
-    let heartbeat_map = get_heartbeat_map()
-        .lock()
-        .await
-        .get(&query.id)
-        .cloned()
-        .unwrap_or_default();
-
     members.sort_unstable_by(|a, b| {
         if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
             std::cmp::Ordering::Less
         } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
             std::cmp::Ordering::Greater
         } else {
-            let a_heartbeat = heartbeat_map.get(&a.channel.user_id);
-            let b_heartbeat = heartbeat_map.get(&b.channel.user_id);
-            match (a_heartbeat, b_heartbeat) {
-                (Some(a_heartbeat), Some(b_heartbeat)) => a_heartbeat.cmp(b_heartbeat),
-                (Some(_), None) => std::cmp::Ordering::Less,
-                (None, Some(_)) => std::cmp::Ordering::Greater,
-                (None, None) => a.channel.join_date.cmp(&b.channel.join_date),
-            }
+            a.channel.join_date.cmp(&b.channel.join_date)
         }
     });
     let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
@@ -108,7 +93,7 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
         members: members_attach_user(&mut *conn, members).await?,
         // deprecated
         color_list: HashMap::new(),
-        heartbeat_map,
+        heartbeat_map: HashMap::new(),
         self_index,
     })
 }
@@ -130,13 +115,6 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
     });
 
     let color_list = ChannelMember::get_color_list(&mut *conn, &channel.id).await?;
-    let heartbeat_map = {
-        let map = get_heartbeat_map().lock().await;
-        match map.get(&query.id) {
-            Some(map) => map.clone(),
-            _ => HashMap::new(),
-        }
-    };
 
     let encoded_events = if channel.is_public || my_member.is_some() {
         Event::get_from_cache(&query.id, None, None).await
@@ -150,7 +128,7 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
         space,
         members: members_attach_user(&mut *conn, members).await?,
         color_list,
-        heartbeat_map,
+        heartbeat_map: HashMap::new(),
         encoded_events,
     };
     Ok(with_related)

@@ -66,7 +66,6 @@ export interface ChatState {
   members: MemberWithUser[];
   colorMap: Map<Id, string>;
   initialized: boolean;
-  // heartbeatMap: Map<Id, number>;
   itemSet: ChatItemSet;
   finished: boolean;
   eventAfter: EventId;

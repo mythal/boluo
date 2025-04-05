@@ -5,7 +5,6 @@ use crate::spaces::Space;
 use crate::utils::timestamp;
 use futures::StreamExt;
 use std::collections::HashMap;
-use std::mem::swap;
 use std::time::Duration;
 use tokio::time::interval;
 use tokio_stream::wrappers::IntervalStream;
@@ -34,51 +33,33 @@ async fn push_status() {
 async fn events_clean() {
     IntervalStream::new(interval(Duration::from_secs(60 * 60 * 2)))
         .for_each(|_| async {
-            let mut next_map = HashMap::new();
             let before = timestamp() - 12 * 60 * 60 * 1000;
-            let mailbox_read_lock = super::context::store().mailboxes.read().await;
-            for (id, mailbox) in mailbox_read_lock.iter() {
-                let mut empty = false;
+            let mut mailbox_map = super::context::store().mailboxes.pin();
+            mailbox_map.retain(|id, mailbox| {
                 let mut before = before;
-                {
-                    let mut mailbox = mailbox.lock().await;
-                    let mut len = mailbox.events.len();
-                    while let Some(event) = mailbox.events.pop_front() {
-                        if len < 1024 && event.event.id.timestamp > before {
-                            before = event.event.id.timestamp - 1;
-                            mailbox.events.push_front(event);
-                            break;
-                        }
-                        len -= 1;
-                    }
-                    let mut preview_map = HashMap::new();
-                    let mut edition_map = HashMap::new();
-                    swap(&mut preview_map, &mut mailbox.preview_map);
-                    swap(&mut edition_map, &mut mailbox.edition_map);
-                    mailbox.preview_map = preview_map
-                        .into_iter()
-                        .filter(|(_, preview)| preview.event.id.timestamp > before)
-                        .collect();
-                    mailbox.edition_map = edition_map
-                        .into_iter()
-                        .filter(|(_, edition)| edition.event.id.timestamp > before)
-                        .collect();
-                    mailbox.start_at = before;
-                    if mailbox.events.is_empty()
-                        && mailbox.edition_map.is_empty()
-                        && mailbox.preview_map.is_empty()
-                    {
-                        empty = true;
+
+                let Ok(mut mailbox) = mailbox.try_lock() else {
+                    log::warn!("mailbox lock failed, id: {}", id);
+                    return true;
+                };
+                while let Some(event) = mailbox.events.pop_front() {
+                    if mailbox.events.len() < 1024 && event.event.id.timestamp > before {
+                        before = event.event.id.timestamp - 1;
+                        mailbox.events.push_front(event);
+                        break;
                     }
                 }
-                if !empty {
-                    next_map.insert(*id, mailbox.clone());
-                }
-            }
-            drop(mailbox_read_lock);
-            let mut mailbox_write_lock = super::context::store().mailboxes.write().await;
-            swap(&mut next_map, &mut *mailbox_write_lock);
-            drop(mailbox_write_lock);
+                mailbox
+                    .preview_map
+                    .retain(|_, preview| preview.event.id.timestamp > before);
+
+                mailbox
+                    .edition_map
+                    .retain(|_, edition| edition.event.id.timestamp > before);
+                !(mailbox.events.is_empty()
+                    && mailbox.edition_map.is_empty()
+                    && mailbox.preview_map.is_empty())
+            });
         })
         .await;
 }

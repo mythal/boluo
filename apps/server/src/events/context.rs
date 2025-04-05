@@ -2,10 +2,11 @@ use crate::channels::models::Member;
 use crate::channels::ChannelMember;
 use crate::events::Event;
 use crate::spaces::SpaceMember;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
-use tokio::sync::{broadcast, Mutex, RwLock};
+use tokio::sync::{broadcast, Mutex};
 use uuid::Uuid;
 
 use crate::utils::timestamp;
@@ -105,27 +106,24 @@ impl MailBoxState {
 }
 
 pub struct Store {
-    pub mailboxes: RwLock<HashMap<Uuid, Arc<Mutex<MailBoxState>>>>,
+    pub mailboxes: papaya::HashMap<Uuid, Arc<Mutex<MailBoxState>>>,
 }
 
 impl Store {
     pub fn new() -> Store {
         Store {
-            mailboxes: RwLock::new(HashMap::new()),
+            mailboxes: papaya::HashMap::new(),
         }
     }
 
     pub async fn get_mailbox(&self, mailbox_id: &Uuid) -> Option<Arc<Mutex<MailBoxState>>> {
-        let map = self.mailboxes.read().await;
+        let map = self.mailboxes.pin();
         map.get(mailbox_id).cloned()
     }
 
     pub async fn ensure_mailbox(&self, mailbox_id: &Uuid) -> Arc<Mutex<MailBoxState>> {
-        let map = self.mailboxes.read().await;
-        if let Some(cache) = map.get(mailbox_id) {
-            cache.clone()
-        } else {
-            drop(map);
+        let map = self.mailboxes.pin();
+        map.get_or_insert_with(*mailbox_id, || {
             let cache = MailBoxState {
                 start_at: timestamp(),
                 events: VecDeque::new(),
@@ -134,11 +132,9 @@ impl Store {
                 members_cache: HashMap::new(),
                 status: HashMap::new(),
             };
-            let cache = Arc::new(Mutex::new(cache));
-            let mut map = self.mailboxes.write().await;
-            map.insert(*mailbox_id, cache.clone());
-            cache
-        }
+            Arc::new(Mutex::new(cache))
+        })
+        .clone()
     }
 }
 

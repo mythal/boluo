@@ -283,12 +283,6 @@ impl Channel {
         for member in channel_member_list {
             if let Some(channel) = channels.remove(&member.channel_id) {
                 channel_with_members.push(ChannelWithMember { channel, member });
-            } else {
-                log::error!(
-                    "Channel {} not returned from `get_by_id_list` for user {}",
-                    member.channel_id,
-                    user_id
-                );
             }
         }
         Ok(channel_with_members)

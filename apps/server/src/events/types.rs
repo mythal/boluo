@@ -233,11 +233,12 @@ impl Event {
             focus,
         };
 
-        let Some(mailbox) = super::context::get_cache().try_mailbox(&space_id).await else {
+        let Some(mailbox_state) = super::context::store().get_mailbox(&space_id).await else {
             // It's ok if the mailbox is not be created yet
+
             return Ok(());
         };
-        let Ok(mut mailbox) = mailbox.try_lock() else {
+        let Ok(mut mailbox_state) = mailbox_state.try_lock() else {
             log::info!(
                 "Failed to lock mailbox for space {} on update status",
                 space_id
@@ -245,8 +246,8 @@ impl Event {
             return Ok(());
         };
 
-        let old_value = mailbox.status.insert(user_id, heartbeat);
-        drop(mailbox);
+        let old_value = mailbox_state.status.insert(user_id, heartbeat);
+        drop(mailbox_state);
         if let Some(old_value) = old_value {
             if old_value.kind != kind {
                 Event::push_status(space_id).await?;
@@ -278,17 +279,17 @@ impl Event {
     }
 
     pub async fn get_from_cache(
-        mailbox: &Uuid,
+        mailbox_id: &Uuid,
         after: Option<i64>,
         seq: Option<Seq>,
     ) -> Vec<String> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let mailbox = super::context::get_cache().try_mailbox(mailbox).await;
-        let Some(mailbox) = mailbox else {
+        let mailbox_state = super::context::store().get_mailbox(mailbox_id).await;
+        let Some(mailbox_state) = mailbox_state else {
             return vec![];
         };
-        let mailbox_state = mailbox.lock().await;
+        let mailbox_state = mailbox_state.lock().await;
         let mut event_list: Vec<Arc<SyncEvent>> = mailbox_state
             .events
             .iter()
@@ -370,7 +371,7 @@ impl Event {
     }
 
     async fn async_fire(body: EventBody, mailbox: Uuid) {
-        let mailbox_lock = super::context::get_cache().mailbox(&mailbox).await;
+        let mailbox_lock = super::context::store().ensure_mailbox(&mailbox).await;
         let mut mailbox_state = mailbox_lock.lock().await;
 
         enum Kind {

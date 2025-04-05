@@ -489,21 +489,14 @@ impl ChannelMember {
                 }
             }
         }
-        ChannelMember::get_from_db(db, user_id, space_id, channel_id).await
-    }
-
-    pub async fn get_from_db<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        user_id: Uuid,
-        space_id: Uuid,
-        channel_id: Uuid,
-    ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        let channel_member =
-            sqlx::query_file_scalar!("sql/channels/get_channel_member.sql", &user_id, &channel_id)
-                .fetch_optional(db)
-                .await?;
-        Member::load_to_cache(space_id, channel_id);
-        Ok(channel_member)
+        Member::get_by_channel(db, space_id, channel_id)
+            .await
+            .map(|members| {
+                members
+                    .into_iter()
+                    .map(|member| member.channel)
+                    .find(|member| member.user_id == user_id)
+            })
     }
 
     pub async fn remove_user<'c, T: sqlx::PgExecutor<'c>>(
@@ -677,7 +670,9 @@ impl Member {
         if let Some(cache) = cache.try_mailbox(&space_id).await {
             if let Ok(mut cache) = cache.try_lock() {
                 if let Some(members) = cache.members.get_mut(&channel_id) {
-                    return Ok(members.map.values().cloned().collect());
+                    if members.instant.elapsed().as_secs() < 60 * 5 {
+                        return Ok(members.map.values().cloned().collect());
+                    }
                 }
             }
         }

@@ -42,9 +42,9 @@ pub struct UserStatus {
 }
 
 pub async fn space_users_status(space_id: Uuid) -> Option<HashMap<Uuid, UserStatus>> {
-    let mailbox = crate::events::context::get_cache()
-        .try_mailbox(&space_id)
+    let mailbox_state = crate::events::context::store()
+        .get_mailbox(&space_id)
         .await?;
-    let mailbox = mailbox.try_lock().ok()?;
-    Some(mailbox.status.clone())
+    let mailbox_state = mailbox_state.try_lock().ok()?;
+    Some(mailbox_state.status.clone())
 }

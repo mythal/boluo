@@ -26,12 +26,18 @@ impl SyncEvent {
     }
 }
 
-type BroadcastTable = papaya::HashMap<Uuid, broadcast::Sender<Arc<SyncEvent>>>;
+type BroadcastTable = papaya::HashMap<Uuid, broadcast::Sender<Arc<SyncEvent>>, ahash::RandomState>;
 
 static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
 
 pub fn get_broadcast_table() -> &'static BroadcastTable {
-    BROADCAST_TABLE.get_or_init(|| papaya::HashMap::new())
+    BROADCAST_TABLE.get_or_init(|| {
+        papaya::HashMap::builder()
+            .capacity(4096)
+            .hasher(ahash::RandomState::new())
+            .resize_mode(papaya::ResizeMode::Blocking)
+            .build()
+    })
 }
 
 pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<SyncEvent>> {
@@ -99,13 +105,17 @@ impl MailBoxState {
 }
 
 pub struct Store {
-    pub mailboxes: papaya::HashMap<Uuid, Arc<Mutex<MailBoxState>>>,
+    pub mailboxes: papaya::HashMap<Uuid, Arc<Mutex<MailBoxState>>, ahash::RandomState>,
 }
 
 impl Store {
     pub fn new() -> Store {
         Store {
-            mailboxes: papaya::HashMap::new(),
+            mailboxes: papaya::HashMap::builder()
+                .capacity(4096)
+                .hasher(ahash::RandomState::new())
+                .resize_mode(papaya::ResizeMode::Blocking)
+                .build(),
         }
     }
 

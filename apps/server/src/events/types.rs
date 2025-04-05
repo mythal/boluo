@@ -337,8 +337,13 @@ impl Event {
     }
 
     async fn send(mailbox: Uuid, event: Arc<SyncEvent>) {
-        let broadcast_table = context::get_broadcast_table();
-        let table = broadcast_table.read().await;
+        let table: papaya::HashMapRef<
+            '_,
+            Uuid,
+            tokio::sync::broadcast::Sender<Arc<SyncEvent>>,
+            std::hash::RandomState,
+            papaya::LocalGuard<'_>,
+        > = context::get_broadcast_table().pin();
         if let Some(tx) = table.get(&mailbox) {
             tx.send(event).ok();
         }

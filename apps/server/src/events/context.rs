@@ -25,12 +25,12 @@ impl SyncEvent {
     }
 }
 
-type BroadcastTable = RwLock<HashMap<Uuid, broadcast::Sender<Arc<SyncEvent>>>>;
+type BroadcastTable = papaya::HashMap<Uuid, broadcast::Sender<Arc<SyncEvent>>>;
 
 static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
 
 pub fn get_broadcast_table() -> &'static BroadcastTable {
-    BROADCAST_TABLE.get_or_init(|| RwLock::new(HashMap::new()))
+    BROADCAST_TABLE.get_or_init(|| papaya::HashMap::new())
 }
 
 type HeartbeatMap = Mutex<HashMap<Uuid, HashMap<Uuid, i64>>>;
@@ -42,14 +42,12 @@ pub fn get_heartbeat_map() -> &'static HeartbeatMap {
 
 pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<SyncEvent>> {
     let broadcast_table = get_broadcast_table();
-    let table = broadcast_table.read().await;
+    let table = broadcast_table.pin();
     if let Some(sender) = table.get(id) {
         sender.subscribe()
     } else {
-        drop(table);
         let capacity = 256;
         let (tx, rx) = broadcast::channel(capacity);
-        let mut table = broadcast_table.write().await;
         table.insert(*id, tx);
         rx
     }

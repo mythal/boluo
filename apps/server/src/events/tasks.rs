@@ -107,10 +107,14 @@ async fn heartbeat_clean() {
 async fn broadcast_clean() {
     IntervalStream::new(interval(Duration::from_secs(5 * 60)))
         .for_each(|_| async {
-            let mut broadcast_table = get_broadcast_table().write().await;
+            let mut broadcast_table = get_broadcast_table().pin();
+            let before_count = broadcast_table.len();
             broadcast_table.retain(|_, v| v.receiver_count() != 0);
-            drop(broadcast_table);
-            log::trace!("clean finished");
+            log::info!(
+                "finish broadcast clean, {} -> {}",
+                before_count,
+                broadcast_table.len()
+            );
         })
         .await;
 }

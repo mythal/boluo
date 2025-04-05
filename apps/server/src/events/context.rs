@@ -59,29 +59,29 @@ pub struct Members {
     pub map: HashMap<Uuid, Member>,
     pub instant: std::time::Instant,
 }
-pub struct MailBoxCache {
+pub struct MailBoxState {
     pub start_at: i64,
     pub events: VecDeque<Arc<SyncEvent>>,
     pub preview_map: HashMap<(Uuid, Uuid), Arc<SyncEvent>>, // (sender id, channel id)
     pub edition_map: HashMap<Uuid, Arc<SyncEvent>>,         // the key is message id
-    pub members: HashMap<Uuid, Members>,
+    pub members_cache: HashMap<Uuid, Members>,
     pub status: HashMap<Uuid, UserStatus>,
 }
 
-impl MailBoxCache {
+impl MailBoxState {
     pub fn remove_channel(&mut self, channel_id: &Uuid) {
-        self.members.remove(channel_id);
+        self.members_cache.remove(channel_id);
     }
 
     pub fn update_channel_member(&mut self, channel_member: ChannelMember) {
-        if let Some(members) = self.members.get_mut(&channel_member.channel_id) {
+        if let Some(members) = self.members_cache.get_mut(&channel_member.channel_id) {
             if let Some(member) = members.map.get_mut(&channel_member.user_id) {
                 member.channel = channel_member;
             }
         }
     }
     pub fn update_space_member(&mut self, space_member: SpaceMember) {
-        for members in self.members.values_mut() {
+        for members in self.members_cache.values_mut() {
             if let Some(member) = members.map.get_mut(&space_member.user_id) {
                 member.space = space_member.clone();
             }
@@ -89,50 +89,51 @@ impl MailBoxCache {
     }
 
     pub fn remove_member(&mut self, user_id: &Uuid) {
-        for members in self.members.values_mut() {
+        for members in self.members_cache.values_mut() {
             members.map.remove(user_id);
         }
-        self.members.retain(|_, members| !members.map.is_empty());
+        self.members_cache
+            .retain(|_, members| !members.map.is_empty());
     }
 
     pub fn remove_member_from_channel(&mut self, channel_id: &Uuid, user_id: &Uuid) {
-        if let Some(members) = self.members.get_mut(channel_id) {
+        if let Some(members) = self.members_cache.get_mut(channel_id) {
             members.map.remove(user_id);
             if members.map.is_empty() {
-                self.members.remove(channel_id);
+                self.members_cache.remove(channel_id);
             }
         }
     }
 }
 
-pub struct Cache {
-    pub mailboxes: RwLock<HashMap<Uuid, Arc<Mutex<MailBoxCache>>>>,
+pub struct Store {
+    pub mailboxes: RwLock<HashMap<Uuid, Arc<Mutex<MailBoxState>>>>,
 }
 
-impl Cache {
-    pub fn new() -> Cache {
-        Cache {
+impl Store {
+    pub fn new() -> Store {
+        Store {
             mailboxes: RwLock::new(HashMap::new()),
         }
     }
 
-    pub async fn try_mailbox(&self, mailbox_id: &Uuid) -> Option<Arc<Mutex<MailBoxCache>>> {
+    pub async fn get_mailbox(&self, mailbox_id: &Uuid) -> Option<Arc<Mutex<MailBoxState>>> {
         let map = self.mailboxes.read().await;
         map.get(mailbox_id).cloned()
     }
 
-    pub async fn mailbox(&self, mailbox_id: &Uuid) -> Arc<Mutex<MailBoxCache>> {
+    pub async fn ensure_mailbox(&self, mailbox_id: &Uuid) -> Arc<Mutex<MailBoxState>> {
         let map = self.mailboxes.read().await;
         if let Some(cache) = map.get(mailbox_id) {
             cache.clone()
         } else {
             drop(map);
-            let cache = MailBoxCache {
+            let cache = MailBoxState {
                 start_at: timestamp(),
                 events: VecDeque::new(),
                 preview_map: HashMap::new(),
                 edition_map: HashMap::new(),
-                members: HashMap::new(),
+                members_cache: HashMap::new(),
                 status: HashMap::new(),
             };
             let cache = Arc::new(Mutex::new(cache));
@@ -143,8 +144,8 @@ impl Cache {
     }
 }
 
-static CACHE: OnceCell<Cache> = OnceCell::new();
+static STORE: OnceCell<Store> = OnceCell::new();
 
-pub fn get_cache() -> &'static Cache {
-    CACHE.get_or_init(Cache::new)
+pub fn store() -> &'static Store {
+    STORE.get_or_init(Store::new)
 }

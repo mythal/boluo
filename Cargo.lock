@@ -2863,6 +2863,7 @@ dependencies = [
  "itertools 0.14.0",
  "log",
  "papaya",
+ "parking_lot",
  "percent-encoding",
  "quick_cache",
  "regex",

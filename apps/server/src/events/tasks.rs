@@ -32,30 +32,39 @@ async fn events_clean() {
         .for_each(|_| async {
             let before = timestamp() - 12 * 60 * 60 * 1000;
             let mut mailbox_map = super::context::store().mailboxes.pin();
-            mailbox_map.retain(|id, mailbox| {
+            mailbox_map.retain(|_id, mailbox| {
                 let mut before = before;
 
-                let Ok(mut mailbox) = mailbox.try_lock() else {
-                    log::warn!("mailbox lock failed, id: {}", id);
+                let events_is_empty = if let Some(mut events) = mailbox.events.try_lock() {
+                    while let Some(event) = events.pop_front() {
+                        if events.len() < 1024 && event.event.id.timestamp > before {
+                            before = event.event.id.timestamp - 1;
+                            events.push_front(event);
+                            break;
+                        }
+                    }
+                    events.is_empty()
+                } else {
                     return true;
                 };
-                while let Some(event) = mailbox.events.pop_front() {
-                    if mailbox.events.len() < 1024 && event.event.id.timestamp > before {
-                        before = event.event.id.timestamp - 1;
-                        mailbox.events.push_front(event);
-                        break;
-                    }
-                }
-                mailbox
-                    .preview_map
-                    .retain(|_, preview| preview.event.id.timestamp > before);
 
-                mailbox
-                    .edition_map
-                    .retain(|_, edition| edition.event.id.timestamp > before);
-                !(mailbox.events.is_empty()
-                    && mailbox.edition_map.is_empty()
-                    && mailbox.preview_map.is_empty())
+                let preview_map_is_empty =
+                    if let Some(mut preview_map) = mailbox.preview_map.try_lock() {
+                        preview_map.retain(|_, preview| preview.event.id.timestamp > before);
+                        preview_map.is_empty()
+                    } else {
+                        return true;
+                    };
+
+                let edition_map_is_empty =
+                    if let Some(mut edition_map) = mailbox.edition_map.try_lock() {
+                        edition_map.retain(|_, edition| edition.event.id.timestamp > before);
+                        edition_map.is_empty()
+                    } else {
+                        return true;
+                    };
+
+                !(events_is_empty && preview_map_is_empty && edition_map_is_empty)
             });
         })
         .await;

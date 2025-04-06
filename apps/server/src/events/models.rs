@@ -42,8 +42,9 @@ pub struct UserStatus {
 }
 
 pub async fn space_users_status(space_id: Uuid) -> Option<HashMap<Uuid, UserStatus>> {
-    let map = crate::events::context::store().mailboxes.pin_owned();
-    let mailbox_state = map.get(&space_id)?;
-    let mailbox_state = mailbox_state.try_lock().ok()?;
-    Some(mailbox_state.status.clone())
+    let map = crate::events::context::store().mailboxes.pin();
+    if let Some(status) = map.get(&space_id)?.status.try_lock() {
+        return Some(status.clone());
+    }
+    None
 }

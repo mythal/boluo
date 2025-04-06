@@ -80,7 +80,7 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
 
     let push = async {
         let mut tx = tx.clone();
-        let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox).await;
+        let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
         let Some(cached_events) = Event::get_from_cache(&mailbox, after, seq) else {
             let error_event = Event::error(
@@ -139,8 +139,8 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
     }
 }
 
-async fn handle_client_event<'a>(mailbox: Uuid, user_id: Option<Uuid>, message: &str) {
-    let event: Result<ClientEvent, _> = serde_json::from_str(&message);
+async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: &str) {
+    let event: Result<ClientEvent, _> = serde_json::from_str(message);
     if let Err(event) = event {
         log::warn!("Failed to parse event from client: {}", event);
         return;

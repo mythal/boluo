@@ -64,16 +64,27 @@ pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<Sync
     }
 }
 
-pub struct Members {
-    pub map: HashMap<Uuid, Member>,
-    pub instant: std::time::Instant,
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct ChannelUserId {
+    pub channel_id: Uuid,
+    pub user_id: Uuid,
 }
+
+impl ChannelUserId {
+    pub fn new(channel_id: Uuid, user_id: Uuid) -> Self {
+        ChannelUserId {
+            channel_id,
+            user_id,
+        }
+    }
+}
+
 pub struct MailBoxState {
     pub start_at: i64,
     pub events: Mutex<VecDeque<Arc<SyncEvent>>>,
-    pub preview_map: Mutex<HashMap<(Uuid, Uuid), Arc<SyncEvent>>>, // (sender id, channel id)
-    pub edition_map: Mutex<HashMap<Uuid, Arc<SyncEvent>>>,         // the key is message id
-    pub members_cache: Mutex<HashMap<Uuid, Members>>,
+    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<SyncEvent>>>,
+    pub edition_map: Mutex<HashMap<Uuid, Arc<SyncEvent>>>, // the key is message id
+    members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
     pub status: Mutex<HashMap<Uuid, UserStatus>>,
 }
 
@@ -84,81 +95,96 @@ impl Default for MailBoxState {
             events: Mutex::new(VecDeque::new()),
             preview_map: Mutex::new(HashMap::new()),
             edition_map: Mutex::new(HashMap::new()),
-            members_cache: Mutex::new(HashMap::new()),
+            members_cache: papaya::HashMap::builder()
+                .capacity(64)
+                .hasher(ahash::RandomState::new())
+                .build(),
             status: Mutex::new(HashMap::new()),
         }
     }
 }
 
 impl MailBoxState {
-    pub fn remove_channel(&self, channel_id: &Uuid) -> Result<(), StateError> {
-        self.members_cache
-            .try_lock_for(WAIT_MORE)
-            .ok_or(StateError::TimeOut)
-            .map(|mut members_cache| {
-                members_cache.remove(channel_id);
-            })
+    pub fn get_members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
+        let mut members: Vec<Member> = Vec::new();
+        let members_cache = self.members_cache.pin();
+
+        for id in members_cache.keys() {
+            if id.channel_id == channel_id {
+                if let Some(member) = members_cache.get(id) {
+                    members.push(member.clone())
+                }
+            }
+        }
+        members
     }
 
-    pub fn is_master(&self, channel_id: &Uuid, user_id: &Uuid) -> Result<bool, StateError> {
-        let members_cache = self
-            .members_cache
-            .try_lock_for(WAIT_SHORTLY)
-            .ok_or(StateError::TimeOut)?;
+    pub fn set_members(&self, members: &Vec<Member>) {
+        let members_cache = self.members_cache.pin();
+        for member in members {
+            let channel_user_id =
+                ChannelUserId::new(member.channel.channel_id, member.channel.user_id);
+            members_cache.insert(channel_user_id, member.clone());
+        }
+    }
+
+    pub fn remove_channel(&self, channel_id: Uuid) -> Result<(), StateError> {
+        self.members_cache
+            .pin()
+            .retain(|id, _| id.channel_id != channel_id);
+        Ok(())
+    }
+
+    pub fn is_master(&self, channel_id: Uuid, user_id: Uuid) -> Result<bool, StateError> {
+        let members_cache = self.members_cache.pin();
         members_cache
-            .get(channel_id)
-            .ok_or(StateError::NotFound)?
-            .map
-            .get(user_id)
+            .get(&ChannelUserId::new(channel_id, user_id))
             .ok_or(StateError::NotFound)
             .map(|member| member.channel.is_master)
     }
 
-    pub fn get_member(&self, channel_id: &Uuid, user_id: &Uuid) -> Result<Member, StateError> {
-        let members_cache = self
-            .members_cache
-            .try_lock_for(WAIT_SHORTLY)
-            .ok_or(StateError::TimeOut)?;
+    pub fn get_member(&self, channel_id: Uuid, user_id: Uuid) -> Result<Member, StateError> {
+        let members_cache = self.members_cache.pin();
         members_cache
-            .get(channel_id)
-            .and_then(|members| members.map.get(user_id))
+            .get(&ChannelUserId::new(channel_id, user_id))
             .ok_or(StateError::NotFound)
             .cloned()
     }
 
     pub fn update_channel_member(&self, channel_member: ChannelMember) {
-        let mut members_cache = self.members_cache.lock();
-        if let Some(members) = members_cache.get_mut(&channel_member.channel_id) {
-            if let Some(member) = members.map.get_mut(&channel_member.user_id) {
+        let channel_user_id = ChannelUserId::new(channel_member.channel_id, channel_member.user_id);
+        self.members_cache
+            .pin()
+            .update(channel_user_id, move |member| {
+                let channel_member = channel_member.clone();
+                let mut member = member.clone();
                 member.channel = channel_member;
-            }
-        }
+                member
+            });
     }
     pub fn update_space_member(&self, space_member: SpaceMember) {
-        let mut members_cache = self.members_cache.lock();
-        for members in members_cache.values_mut() {
-            if let Some(member) = members.map.get_mut(&space_member.user_id) {
-                member.space = space_member.clone();
+        let user_id = space_member.user_id;
+        let members_cache = self.members_cache.pin();
+        for channel_user_id in members_cache.keys() {
+            if user_id == channel_user_id.user_id {
+                members_cache.update(*channel_user_id, |member| {
+                    let mut member = member.clone();
+                    member.space = space_member.clone();
+                    member
+                });
             }
         }
     }
 
     pub fn remove_member(&self, user_id: &Uuid) {
-        let mut members_cache = self.members_cache.lock();
-        for members in members_cache.values_mut() {
-            members.map.remove(user_id);
-        }
-        members_cache.retain(|_, members| !members.map.is_empty());
+        let mut members_cache = self.members_cache.pin();
+        members_cache.retain(|id, _| id.user_id != *user_id);
     }
 
-    pub fn remove_member_from_channel(&self, channel_id: &Uuid, user_id: &Uuid) {
-        let mut members_cache = self.members_cache.lock();
-        if let Some(members) = members_cache.get_mut(channel_id) {
-            members.map.remove(user_id);
-            if members.map.is_empty() {
-                members_cache.remove(channel_id);
-            }
-        }
+    pub fn remove_member_from_channel(&self, channel_id: Uuid, user_id: Uuid) {
+        let channel_user_id = ChannelUserId::new(channel_id, user_id);
+        let members_cache = self.members_cache.pin();
+        members_cache.remove(&channel_user_id);
     }
 }
 

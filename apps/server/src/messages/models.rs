@@ -273,14 +273,12 @@ impl Message {
             crate::pos::submitted(*channel_id, *preview_id);
         }
         message.hide(None);
-        tokio::spawn(async move {
-            let created = message.created;
-            let channel_id = message.channel_id;
-            super::tasks::WAIT_UPDATE
-                .lock()
-                .await
-                .insert(channel_id, created);
-        });
+
+        {
+            if let Ok(mut update_map) = super::tasks::RECENTLY_UPDATED_SPACES.try_lock() {
+                update_map.insert(*channel_id, message.created);
+            }
+        }
         Ok(message)
     }
 

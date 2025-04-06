@@ -5,20 +5,9 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
+use crate::pos::check_pos;
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
-
-pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
-    if q == 0 {
-        return Err(ValidationFailed(r#""pos_q" cannot be 0"#));
-    }
-    if p < 0 || q < 0 {
-        return Err(ValidationFailed(
-            r#""pos_p" and "pos_q" cannot be negative numbers"#,
-        ));
-    }
-    Ok(())
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[ts(export)]
@@ -181,6 +170,7 @@ impl Message {
         _hide: bool,
         after: Option<DateTime<Utc>>,
     ) -> Result<Vec<Message>, sqlx::Error> {
+        // TODO: chunk
         sqlx::query_file_scalar!("sql/messages/export.sql", channel_id, after)
             .fetch_all(db)
             .await
@@ -188,7 +178,6 @@ impl Message {
 
     pub async fn create(
         conn: &mut sqlx::PgConnection,
-        redis_conn: &mut deadpool_redis::Connection,
         preview_id: Option<&Uuid>,
         channel_id: &Uuid,
         sender_id: &Uuid,
@@ -206,12 +195,9 @@ impl Message {
     ) -> Result<Message, AppError> {
         let pos: (i32, i32) = match (request_pos, preview_id) {
             (Some(pos), _) => pos,
-            (None, Some(id)) => (
-                crate::pos::pos(&mut *conn, redis_conn, *channel_id, *id, 30).await?,
-                1,
-            ),
+            (None, Some(id)) => (crate::pos::pos(&mut *conn, *channel_id, *id, 30).await?, 1),
             (None, None) => (
-                crate::pos::alloc_new_pos(&mut *conn, redis_conn, *channel_id).await?,
+                crate::pos::allocate_next_pos(&mut *conn, *channel_id).await?,
                 1,
             ),
         };
@@ -259,8 +245,8 @@ impl Message {
                 "A conflict occurred while creating a new message at channel {}",
                 channel_id
             );
-            crate::pos::reset_channel_pos(redis_conn, channel_id).await?;
-            let p = crate::pos::alloc_new_pos(&mut *conn, redis_conn, *channel_id).await?;
+            crate::pos::reset_channel_pos(channel_id);
+            let p = crate::pos::allocate_next_pos(&mut *conn, *channel_id).await?;
             let q = 1i32;
             row = sqlx::query_file_scalar!(
                 "sql/messages/create.sql",
@@ -284,7 +270,7 @@ impl Message {
 
         let mut message = row?;
         if let Some(preview_id) = preview_id {
-            crate::pos::finished(redis_conn, *channel_id, *preview_id).await?;
+            crate::pos::finished(*channel_id, *preview_id).await;
         }
         message.hide(None);
         tokio::spawn(async move {
@@ -370,12 +356,14 @@ impl Message {
         }
         .map_err(Into::into)
     }
-    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(db: T, channel_id: &Uuid) -> (i32, i32) {
+    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        channel_id: &Uuid,
+    ) -> Result<(i32, i32), sqlx::Error> {
         sqlx::query_file!("sql/messages/max_pos.sql", channel_id)
             .fetch_one(db)
             .await
             .map(|row| (row.pos_p, row.pos_q))
-            .unwrap_or((42, 1))
     }
     pub async fn set_folded<'c, T: sqlx::PgExecutor<'c>>(
         db: T,

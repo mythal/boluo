@@ -1,84 +1,109 @@
-use crate::error::CacheError;
-use deadpool_redis::redis::AsyncCommands;
+use std::sync::{
+    atomic::{AtomicI32, Ordering},
+    LazyLock,
+};
+
+use crate::error::ValidationFailed;
 use uuid::Uuid;
 
-fn create_max_pos_key(channel_id: &Uuid) -> String {
-    format!("channel:{channel_id}:max_pos")
-}
-
-fn create_pos_key(channel_id: Uuid, message_id: Uuid) -> String {
-    format!("channel:{channel_id}:preview:{message_id}:pos")
-}
-
-pub async fn ensure_pos_largest(
-    redis_conn: &mut deadpool_redis::Connection,
-    channel_id: Uuid,
-    pos: i32,
-) -> Result<(), CacheError> {
-    let max_pos_key = create_max_pos_key(&channel_id);
-    let current_max: i32 = redis_conn
-        .get::<_, Option<i32>>(&max_pos_key)
-        .await?
-        .unwrap_or(1);
-    if pos > current_max {
-        redis_conn.set::<_, _, ()>(&max_pos_key, pos).await?;
+pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
+    if q == 0 {
+        return Err(ValidationFailed(r#""pos_q" cannot be 0"#));
+    }
+    if p < 0 || q < 0 {
+        return Err(ValidationFailed(
+            r#""pos_p" and "pos_q" cannot be negative numbers"#,
+        ));
     }
     Ok(())
 }
 
-pub async fn alloc_new_pos(
-    db: &mut sqlx::PgConnection,
-    redis_conn: &mut deadpool_redis::Connection,
-    channel_id: Uuid,
-) -> Result<i32, CacheError> {
-    let max_pos_key = create_max_pos_key(&channel_id);
-    let in_cache: bool = redis_conn
-        .get::<_, Option<i32>>(&max_pos_key)
-        .await?
-        .is_some();
+static CHANNEL_MAX_POS: LazyLock<papaya::HashMap<Uuid, AtomicI32, ahash::RandomState>> =
+    LazyLock::new(|| {
+        papaya::HashMap::builder()
+            .capacity(1024)
+            .hasher(ahash::RandomState::new())
+            .build()
+    });
 
-    if !in_cache {
+// FIXME: The outdated values are never removed.
+static CHANNEL_ITEM_POS: LazyLock<
+    papaya::HashMap<(Uuid, Uuid), (i32, std::time::Instant), ahash::RandomState>,
+> = LazyLock::new(|| {
+    papaya::HashMap::builder()
+        .capacity(4096)
+        .hasher(ahash::RandomState::new())
+        .build()
+});
+
+pub fn update_max_pos(channel_id: Uuid, pos: i32) -> i32 {
+    let max_pos_map = CHANNEL_MAX_POS.pin();
+    let max_pos = max_pos_map.get_or_insert_with(channel_id, || AtomicI32::new(1));
+    let old_pos = max_pos.fetch_max(pos, Ordering::SeqCst);
+    std::cmp::max(old_pos, pos)
+}
+
+pub async fn allocate_next_pos(
+    db: &mut sqlx::PgConnection,
+    channel_id: Uuid,
+) -> Result<i32, sqlx::Error> {
+    const DELTA: i32 = 1;
+    let in_cache_pos: Option<i32> = {
+        let max_pos_map = CHANNEL_MAX_POS.pin();
+        max_pos_map
+            .get(&channel_id)
+            .map(|pos| pos.load(Ordering::SeqCst))
+    };
+
+    let old_value = if let Some(in_cache_pos) = in_cache_pos {
+        let max_pos_map = CHANNEL_MAX_POS.pin();
+        max_pos_map
+            .get_or_insert_with(channel_id, || AtomicI32::new(in_cache_pos))
+            .fetch_add(DELTA, Ordering::SeqCst)
+    } else {
         // if not present, initialize it
-        let (p, q) = crate::messages::Message::max_pos(db, &channel_id).await;
-        let initial_pos = (p as f64 / q as f64).ceil() as i32 + 1;
-        redis_conn
-            .set_nx::<_, _, ()>(&max_pos_key, initial_pos)
-            .await?;
-    }
-    redis_conn.incr(&max_pos_key, 1).await
+        let (p, q) = crate::messages::Message::max_pos(db, &channel_id).await?;
+        let initial_pos = (p as f64 / q as f64).ceil() as i32;
+        let max_pos_map = CHANNEL_MAX_POS.pin();
+        max_pos_map
+            .get_or_insert(channel_id, AtomicI32::new(initial_pos))
+            .fetch_add(DELTA, Ordering::SeqCst)
+    };
+    Ok(old_value.wrapping_add(DELTA))
 }
 
 pub async fn pos(
     db: &mut sqlx::PgConnection,
-    redis_conn: &mut deadpool_redis::Connection,
     channel_id: Uuid,
-    message_id: Uuid,
+    item_id: Uuid,
     keep_seconds: u64,
-) -> Result<i32, CacheError> {
-    let pos_key = create_pos_key(channel_id, message_id);
-    let pos: Option<i32> = redis_conn.get(&pos_key).await?;
-    if let Some(pos) = pos {
-        Ok(pos)
-    } else {
-        let bottom: i32 = alloc_new_pos(db, redis_conn, channel_id).await?;
-        redis_conn
-            .set_ex::<_, _, ()>(&pos_key, bottom, keep_seconds)
-            .await?;
-        Ok(bottom)
+) -> Result<i32, sqlx::Error> {
+    {
+        let item_pos_map = CHANNEL_ITEM_POS.pin();
+        if let Some((pos, created)) = item_pos_map.get(&(channel_id, item_id)) {
+            if created.elapsed().as_secs() <= keep_seconds {
+                return Ok(*pos);
+            }
+        }
     }
+    let pos = allocate_next_pos(db, channel_id).await?;
+    let item_pos_map = CHANNEL_ITEM_POS.pin();
+    item_pos_map.insert((channel_id, item_id), (pos, std::time::Instant::now()));
+    Ok(pos)
 }
 
-pub async fn reset_channel_pos(
-    redis_conn: &mut deadpool_redis::Connection,
-    channel_id: &Uuid,
-) -> Result<(), CacheError> {
-    redis_conn.del(create_max_pos_key(channel_id)).await
+pub fn reset_channel_pos(channel_id: &Uuid) {
+    {
+        let mut item_pos_map = CHANNEL_ITEM_POS.pin();
+        item_pos_map.retain(|(item_channel_id, _), _| item_channel_id != channel_id);
+    }
+    let max_pos_map = CHANNEL_MAX_POS.pin();
+    max_pos_map.remove(channel_id);
 }
 
-pub async fn finished(
-    redis_conn: &mut deadpool_redis::Connection,
-    channel_id: Uuid,
-    message_id: Uuid,
-) -> Result<i32, CacheError> {
-    redis_conn.del(create_pos_key(channel_id, message_id)).await
+pub async fn finished(channel_id: Uuid, item_id: Uuid) -> Option<i32> {
+    let item_pos_map = CHANNEL_ITEM_POS.pin();
+    item_pos_map
+        .remove(&(channel_id, item_id))
+        .map(|(pos, _)| *pos)
 }

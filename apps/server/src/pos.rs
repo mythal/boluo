@@ -26,15 +26,45 @@ static CHANNEL_MAX_POS: LazyLock<papaya::HashMap<Uuid, AtomicI32, ahash::RandomS
             .build()
     });
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PosItemState {
+    Submitted,
+    Cancelled,
+    Keeping,
+}
+
+#[derive(Debug, Clone)]
+struct PosItem {
+    pos: i32,
+    state: PosItemState,
+    created: std::time::Instant,
+    updated: std::time::Instant,
+}
+
+impl PosItem {
+    fn new(pos: i32) -> Self {
+        let now = std::time::Instant::now();
+        Self {
+            pos,
+            created: now,
+            updated: now,
+            state: PosItemState::Keeping,
+        }
+    }
+
+    fn is_vaild(&self, keep_seconds: u64) -> bool {
+        self.state == PosItemState::Keeping && self.created.elapsed().as_secs() < keep_seconds
+    }
+}
+
 // FIXME: The outdated values are never removed.
-static CHANNEL_ITEM_POS: LazyLock<
-    papaya::HashMap<(Uuid, Uuid), (i32, std::time::Instant), ahash::RandomState>,
-> = LazyLock::new(|| {
-    papaya::HashMap::builder()
-        .capacity(4096)
-        .hasher(ahash::RandomState::new())
-        .build()
-});
+static CHANNEL_ITEM_POS: LazyLock<papaya::HashMap<(Uuid, Uuid), PosItem, ahash::RandomState>> =
+    LazyLock::new(|| {
+        papaya::HashMap::builder()
+            .capacity(4096)
+            .hasher(ahash::RandomState::new())
+            .build()
+    });
 
 pub fn update_max_pos(channel_id: Uuid, pos: i32) -> i32 {
     let max_pos_map = CHANNEL_MAX_POS.pin();
@@ -80,15 +110,15 @@ pub async fn pos(
 ) -> Result<i32, sqlx::Error> {
     {
         let item_pos_map = CHANNEL_ITEM_POS.pin();
-        if let Some((pos, created)) = item_pos_map.get(&(channel_id, item_id)) {
-            if created.elapsed().as_secs() <= keep_seconds {
-                return Ok(*pos);
+        if let Some(pos_item) = item_pos_map.get(&(channel_id, item_id)) {
+            if pos_item.is_vaild(keep_seconds) {
+                return Ok(pos_item.pos);
             }
         }
     }
     let pos = allocate_next_pos(db, channel_id).await?;
     let item_pos_map = CHANNEL_ITEM_POS.pin();
-    item_pos_map.insert((channel_id, item_id), (pos, std::time::Instant::now()));
+    item_pos_map.insert((channel_id, item_id), PosItem::new(pos));
     Ok(pos)
 }
 
@@ -101,9 +131,26 @@ pub fn reset_channel_pos(channel_id: &Uuid) {
     max_pos_map.remove(channel_id);
 }
 
-pub async fn finished(channel_id: Uuid, item_id: Uuid) -> Option<i32> {
+pub fn submitted(channel_id: Uuid, item_id: Uuid) -> Option<i32> {
     let item_pos_map = CHANNEL_ITEM_POS.pin();
     item_pos_map
-        .remove(&(channel_id, item_id))
-        .map(|(pos, _)| *pos)
+        .update((channel_id, item_id), |pos_item| {
+            let mut pos_item = pos_item.clone();
+            pos_item.state = PosItemState::Submitted;
+            pos_item.updated = std::time::Instant::now();
+            pos_item
+        })
+        .map(|pos_item| pos_item.pos)
+}
+
+pub fn cancel(channel_id: Uuid, item_id: Uuid) -> Option<i32> {
+    let item_pos_map = CHANNEL_ITEM_POS.pin();
+    item_pos_map
+        .update((channel_id, item_id), |pos_item| {
+            let mut pos_item = pos_item.clone();
+            pos_item.state = PosItemState::Cancelled;
+            pos_item.updated = std::time::Instant::now();
+            pos_item
+        })
+        .map(|pos_item| pos_item.pos)
 }

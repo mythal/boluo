@@ -79,10 +79,10 @@ impl PreviewPost {
         } = self;
         let pool = db::get().await;
         let mut conn = pool.acquire().await?;
-        let mut should_finish = false;
+        let mut should_clear = false;
         if let Some(text) = text.as_ref() {
             if (text.trim().is_empty() || entities.is_empty()) && edit_for.is_none() {
-                should_finish = true;
+                should_clear = true;
             }
         }
         let muted = text.is_none();
@@ -90,7 +90,7 @@ impl PreviewPost {
         if let Some(PreviewEdit { p, q, time }) = edit {
             start = p as f64 / q as f64;
             edit_for = Some(time);
-        } else if edit_for.is_none() && !should_finish {
+        } else if edit_for.is_none() && !should_clear {
             let keep_seconds = if muted { 8 } else { 60 * 3 };
             start = crate::pos::pos(&mut conn, channel_id, id, keep_seconds).await? as f64;
         }
@@ -118,8 +118,8 @@ impl PreviewPost {
             edit,
         });
 
-        if should_finish {
-            crate::pos::finished(channel_id, id).await;
+        if should_clear {
+            crate::pos::cancel(channel_id, id);
         }
         Event::message_preview(space_id, preview);
         Ok(())

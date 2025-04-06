@@ -270,7 +270,7 @@ impl Message {
 
         let mut message = row?;
         if let Some(preview_id) = preview_id {
-            crate::pos::finished(*channel_id, *preview_id).await;
+            crate::pos::submitted(*channel_id, *preview_id);
         }
         message.hide(None);
         tokio::spawn(async move {

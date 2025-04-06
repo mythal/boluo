@@ -117,7 +117,9 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
     let color_list = ChannelMember::get_color_list(&mut *conn, &channel.id).await?;
 
     let encoded_events = if channel.is_public || my_member.is_some() {
-        Event::get_from_cache(&query.id, None, None).await
+        Event::get_from_cache(&query.id, None, None).ok_or_else(|| {
+            AppError::Unexpected(anyhow::anyhow!("Failed to get events from cache"))
+        })?
     } else {
         channel.topic = String::new();
         Vec::new()

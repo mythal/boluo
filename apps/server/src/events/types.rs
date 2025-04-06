@@ -1,8 +1,8 @@
 use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
-use crate::events::context::SyncEvent;
 use crate::events::context::{self, ChannelUserId};
+use crate::events::context::{SyncEvent, WAIT};
 use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
@@ -280,27 +280,62 @@ impl Event {
         )
     }
 
-    pub async fn get_from_cache(
+    pub fn get_from_cache(
         mailbox_id: &Uuid,
         after: Option<i64>,
         seq: Option<Seq>,
-    ) -> Vec<String> {
+    ) -> Option<Vec<String>> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let map = super::context::store().mailboxes.pin();
-        let Some(mailbox_state) = map.get(mailbox_id) else {
-            return vec![];
+        let mut event_list: Vec<Arc<SyncEvent>> = {
+            let map = super::context::store().mailboxes.pin();
+            let Some(mailbox_state) = map.get(mailbox_id) else {
+                return Some(vec![]);
+            };
+            let mut event_list: Vec<Arc<SyncEvent>> = {
+                let events = mailbox_state.events.try_lock_for(WAIT);
+                if let Some(events) = events {
+                    events.iter().cloned().collect()
+                } else {
+                    log::error!(
+                        "Failed to lock events for space {} on get_from_cache",
+                        mailbox_id
+                    );
+                    return None;
+                }
+            };
+            {
+                let edition_map = mailbox_state.edition_map.try_lock_for(WAIT);
+                if let Some(edition_map) = edition_map {
+                    for event in edition_map.values() {
+                        event_list.push(event.clone());
+                    }
+                } else {
+                    log::error!(
+                        "Failed to lock edition_map for space {} on get_from_cache",
+                        mailbox_id
+                    );
+                    return None;
+                }
+            }
+            {
+                let preview_map = mailbox_state.preview_map.try_lock_for(WAIT);
+                if let Some(preview_map) = preview_map {
+                    for event in preview_map.values() {
+                        event_list.push(event.clone());
+                    }
+                } else {
+                    log::error!(
+                        "Failed to lock preview_map for space {} on get_from_cache",
+                        mailbox_id
+                    );
+                    return None;
+                }
+            }
+            event_list
         };
-        let mut event_list: Vec<Arc<SyncEvent>> = mailbox_state
-            .events
-            .lock()
-            .iter()
-            .chain(mailbox_state.edition_map.lock().values())
-            .chain(mailbox_state.preview_map.lock().values())
-            .cloned()
-            .collect();
         if event_list.is_empty() {
-            return vec![];
+            return Some(vec![]);
         }
         event_list.sort_by(|a, b| a.event.id.cmp(&b.event.id));
         let mut prev_id: Option<EventId> = None;
@@ -319,7 +354,7 @@ impl Event {
                 encoded_events.push(event.encoded.clone());
             }
         }
-        encoded_events
+        Some(encoded_events)
     }
 
     pub fn space_updated(space_id: Uuid) {

@@ -82,7 +82,10 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(&mailbox).await;
 
-        let cached_events = Event::get_from_cache(&mailbox, after, seq).await;
+        let Some(cached_events) = Event::get_from_cache(&mailbox, after, seq) else {
+            // TODO: Push an error event
+            return;
+        };
         if !cached_events.is_empty() {
             use itertools::Itertools;
             let messages: Vec<Result<String, serde_json::Error>> = cached_events

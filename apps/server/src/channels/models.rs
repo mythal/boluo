@@ -209,7 +209,8 @@ impl Channel {
             .map(|r| r.rows_affected())?;
         if affected > 0 {
             CHANNEL_CACHE.remove(id);
-            if let Some(mailbox_state) = crate::events::context::store().get_mailbox(id).await {
+            let map = crate::events::context::store().mailboxes.pin_owned();
+            if let Some(mailbox_state) = map.get(id) {
                 mailbox_state.lock().await.remove_channel(id);
             }
         }
@@ -426,7 +427,8 @@ impl ChannelMember {
         channel_id: &Uuid,
         space_id: &Uuid,
     ) -> Result<bool, sqlx::Error> {
-        if let Some(mailbox_state) = crate::events::context::store().get_mailbox(space_id).await {
+        let map = crate::events::context::store().mailboxes.pin();
+        if let Some(mailbox_state) = map.get(space_id) {
             if let Ok(mut mailbox_state) = mailbox_state.try_lock() {
                 if let Some(members) = mailbox_state.members_cache.get_mut(channel_id) {
                     if let Some(member) = members.map.get(user_id) {
@@ -446,7 +448,8 @@ impl ChannelMember {
         channel_id: &Uuid,
         space_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
-        if let Some(mailbox_state) = crate::events::context::store().get_mailbox(space_id).await {
+        let map = crate::events::context::store().mailboxes.pin_owned();
+        if let Some(mailbox_state) = map.get(space_id) {
             if let Ok(mut mailbox_state) = mailbox_state.try_lock() {
                 if let Some(members) = mailbox_state.members_cache.get_mut(channel_id) {
                     if let Some(member) = members.map.get(user_id) {
@@ -471,7 +474,8 @@ impl ChannelMember {
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        if let Some(mailbox_state) = crate::events::context::store().get_mailbox(&space_id).await {
+        let map = crate::events::context::store().mailboxes.pin_owned();
+        if let Some(mailbox_state) = map.get(&space_id) {
             if let Ok(mut mailbox_state) = mailbox_state.try_lock() {
                 if let Some(members) = mailbox_state.members_cache.get_mut(&channel_id) {
                     if let Some(member) = members.map.get(&user_id) {
@@ -508,13 +512,10 @@ impl ChannelMember {
         }
         tokio::spawn(async move {
             USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
-            if let Some(mailbox_state) =
-                crate::events::context::store().get_mailbox(&space_id).await
-            {
-                mailbox_state
-                    .lock()
-                    .await
-                    .remove_member_from_channel(&channel_id, &user_id);
+            let map = crate::events::context::store().mailboxes.pin_owned();
+            if let Some(mailbox_state_lock) = map.get(&space_id) {
+                let mut mailbox_state = mailbox_state_lock.lock().await;
+                mailbox_state.remove_member_from_channel(&channel_id, &user_id);
             }
         });
         Ok(())
@@ -532,9 +533,8 @@ impl ChannelMember {
 
         tokio::spawn(async move {
             USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
-            if let Some(mailbox_state) =
-                crate::events::context::store().get_mailbox(&space_id).await
-            {
+            let map = crate::events::context::store().mailboxes.pin_owned();
+            if let Some(mailbox_state) = map.get(&space_id) {
                 mailbox_state.lock().await.remove_member(&user_id);
             }
         });
@@ -572,9 +572,8 @@ impl ChannelMember {
         USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
         if let Some(channel_member) = channel_member.clone() {
             tokio::spawn(async move {
-                if let Some(mailbox_state) =
-                    crate::events::context::store().get_mailbox(&space_id).await
-                {
+                let map = crate::events::context::store().mailboxes.pin_owned();
+                if let Some(mailbox_state) = map.get(&space_id) {
                     mailbox_state
                         .lock()
                         .await
@@ -618,6 +617,7 @@ impl ChannelMember {
         db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
+        space_id: Uuid,
         is_master: bool,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         let channel_member = sqlx::query_file_scalar!(
@@ -631,10 +631,8 @@ impl ChannelMember {
         if let Some(channel_member) = channel_member.clone() {
             USER_ALL_CHANNEL_MEMBER_CACHE.remove(&channel_member.user_id);
             tokio::spawn(async move {
-                if let Some(mailbox_state) = crate::events::context::store()
-                    .get_mailbox(&channel_member.channel_id)
-                    .await
-                {
+                let map = crate::events::context::store().mailboxes.pin_owned();
+                if let Some(mailbox_state) = map.get(&space_id) {
                     mailbox_state
                         .lock()
                         .await
@@ -661,7 +659,8 @@ impl Member {
         channel_id: Uuid,
     ) -> Result<Vec<Member>, sqlx::Error> {
         let store = crate::events::context::store();
-        if let Some(mailbox_state) = store.get_mailbox(&space_id).await {
+        let map = store.mailboxes.pin_owned();
+        if let Some(mailbox_state) = map.get(&space_id) {
             if let Ok(mut mailbox_state) = mailbox_state.try_lock() {
                 if let Some(members) = mailbox_state.members_cache.get_mut(&channel_id) {
                     if members.instant.elapsed().as_secs() < 60 * 5 {
@@ -687,9 +686,8 @@ impl Member {
     ) -> Result<Vec<Member>, sqlx::Error> {
         use std::time::Instant;
         let time_before_got_cache = Instant::now();
-        let mailbox_state = crate::events::context::store()
-            .ensure_mailbox(&space_id)
-            .await;
+        let map = crate::events::context::store().mailboxes.pin_owned();
+        let mailbox_state = map.get_or_insert_with(space_id, Default::default);
         if let Ok(mailbox_state) = mailbox_state.try_lock() {
             if let Some(members_cache) = mailbox_state.members_cache.get(&channel_id) {
                 if members_cache.instant > time_before_got_cache {

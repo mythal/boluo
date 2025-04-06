@@ -1,8 +1,8 @@
 use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
-use crate::events::context;
 use crate::events::context::SyncEvent;
+use crate::events::context::{self, ChannelUserId};
 use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
@@ -418,7 +418,7 @@ impl Event {
                     mailbox_state
                         .preview_map
                         .lock()
-                        .insert((sender_id, channel_id), event.clone());
+                        .insert(ChannelUserId::new(channel_id, sender_id), event.clone());
                 }
                 Kind::Edition { message_id } => {
                     mailbox_state

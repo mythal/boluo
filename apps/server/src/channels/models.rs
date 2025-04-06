@@ -8,7 +8,7 @@ use crate::cache::CacheItem;
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::{row_not_found, ModelError};
-use crate::events::context::{StateError, WAIT_SHORTLY};
+use crate::events::context::StateError;
 use crate::spaces::{Space, SpaceMember};
 use crate::users::User;
 use crate::utils::merge_blank;
@@ -212,7 +212,7 @@ impl Channel {
             CHANNEL_CACHE.remove(id);
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(id) {
-                if let Err(StateError::TimeOut) = mailbox_state.remove_channel(id) {
+                if let Err(StateError::TimeOut) = mailbox_state.remove_channel(*id) {
                     log::warn!("Failed to remove channel from mailbox state");
                 }
             }
@@ -426,12 +426,12 @@ impl ChannelMember {
 
     pub async fn is_master<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
-        user_id: &Uuid,
-        channel_id: &Uuid,
-        space_id: &Uuid,
+        user_id: Uuid,
+        channel_id: Uuid,
+        space_id: Uuid,
     ) -> Result<bool, sqlx::Error> {
         let map = crate::events::context::store().mailboxes.pin();
-        if let Some(mailbox_state) = map.get(space_id) {
+        if let Some(mailbox_state) = map.get(&space_id) {
             if let Ok(is_master) = mailbox_state.is_master(channel_id, user_id) {
                 return Ok(is_master);
             }
@@ -443,8 +443,8 @@ impl ChannelMember {
 
     pub async fn get_with_space_member<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
-        user_id: &Uuid,
-        channel_id: &Uuid,
+        user_id: Uuid,
+        channel_id: Uuid,
         space_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
         {
@@ -474,7 +474,7 @@ impl ChannelMember {
         {
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
-                if let Ok(member) = mailbox_state.get_member(&channel_id, &user_id) {
+                if let Ok(member) = mailbox_state.get_member(channel_id, user_id) {
                     return Ok(Some(member.channel));
                 }
             }
@@ -509,7 +509,7 @@ impl ChannelMember {
             USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
-                mailbox_state.remove_member_from_channel(&channel_id, &user_id);
+                mailbox_state.remove_member_from_channel(channel_id, user_id);
             }
         });
         Ok(())
@@ -650,13 +650,9 @@ impl Member {
         {
             let map = store.mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
-                if let Some(members_cache) = mailbox_state.members_cache.try_lock_for(WAIT_SHORTLY)
-                {
-                    if let Some(members) = members_cache.get(&channel_id) {
-                        if members.instant.elapsed().as_secs() < 60 * 5 {
-                            return Ok(members.map.values().cloned().collect());
-                        }
-                    }
+                let members = mailbox_state.get_members_in_channel(channel_id);
+                if !members.is_empty() {
+                    return Ok(members);
                 }
             }
         }
@@ -675,7 +671,6 @@ impl Member {
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Vec<Member>, sqlx::Error> {
-        use std::time::Instant;
         let members =
             sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id)
                 .fetch_all(db)
@@ -683,18 +678,7 @@ impl Member {
         {
             let map = crate::events::context::store().mailboxes.pin();
             let mailbox_state = map.get_or_insert_with(space_id, Default::default);
-            let mut members_cache = mailbox_state.members_cache.lock();
-            members_cache.insert(
-                channel_id,
-                crate::events::context::Members {
-                    map: members
-                        .iter()
-                        .cloned()
-                        .map(|member| (member.channel.user_id, member))
-                        .collect(),
-                    instant: Instant::now(),
-                },
-            );
+            mailbox_state.set_members(&members);
         }
         Ok(members)
     }

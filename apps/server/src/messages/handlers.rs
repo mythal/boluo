@@ -35,8 +35,8 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         .or_not_found()?;
     let (channel_member, space_member) = ChannelMember::get_with_space_member(
         &mut *conn,
-        &session.user_id,
-        &channel_id,
+        session.user_id,
+        channel_id,
         &channel.space_id,
     )
     .await
@@ -87,8 +87,8 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
         .or_not_found()?;
     let (_, space_member) = ChannelMember::get_with_space_member(
         &mut *trans,
-        &session.user_id,
-        &message.channel_id,
+        session.user_id,
+        message.channel_id,
         &channel.space_id,
     )
     .await

@@ -83,32 +83,24 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
         let mut mailbox_rx = get_mailbox_broadcast_rx(&mailbox).await;
 
         let Some(cached_events) = Event::get_from_cache(&mailbox, after, seq) else {
-            // TODO: Push an error event
+            let error_event = Event::error(
+                mailbox,
+                ConnectionError::Unexpected,
+                "Failed to get cached events".to_string(),
+            )
+            .encode();
+            tx.send(WsMessage::Text(error_event)).await.ok();
             return;
         };
         if !cached_events.is_empty() {
-            use itertools::Itertools;
-            let messages: Vec<Result<String, serde_json::Error>> = cached_events
-                .into_iter()
-                .chunks(CHUNK_SIZE)
-                .into_iter()
-                .map(|events| Event::batch(mailbox, events.collect()))
-                .map(|batch_event| serde_json::to_string(&batch_event))
-                .collect();
-            for message in messages {
-                let Ok(message) = message else {
-                    log::warn!("Failed to serialize batch event to mailbox {}", mailbox);
-                    return;
-                };
+            for message in cached_events {
                 if let Err(err) = tx.send(WsMessage::Text(message)).await {
                     log::warn!("Failed to send batch event to mailbox {}: {}", mailbox, err);
                     return;
                 };
             }
         }
-        let initialized = Event::initialized(mailbox);
-        let initialized =
-            serde_json::to_string(&initialized).expect("Failed to serialize initialized event");
+        let initialized = Event::initialized(mailbox).encode();
         tx.send(WsMessage::Text(initialized)).await.ok();
 
         loop {
@@ -131,7 +123,11 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
     };
 
     let ping = IntervalStream::new(interval(Duration::from_secs(3))).for_each(|_| async {
-        if let Err(err) = tx.clone().send(WsMessage::Text("♥".to_string())).await {
+        if let Err(err) = tx
+            .clone()
+            .send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥")))
+            .await
+        {
             log::warn!("{}", err);
         }
     });
@@ -143,7 +139,7 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
     }
 }
 
-async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: String) {
+async fn handle_client_event<'a>(mailbox: Uuid, user_id: Option<Uuid>, message: &str) {
     let event: Result<ClientEvent, _> = serde_json::from_str(&message);
     if let Err(event) = event {
         log::warn!("Failed to parse event from client: {}", event);
@@ -177,8 +173,7 @@ fn connection_error(
     reason: String,
 ) -> Response {
     let mailbox = mailbox.unwrap_or_default();
-    let event = serde_json::to_string(&Event::error(mailbox, code, reason))
-        .expect("Failed to serialize error event");
+    let event = Event::error(mailbox, code, reason).encode();
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
         outgoing.send(WsMessage::Text(event)).await.ok();
@@ -289,7 +284,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                     if message == "♡" {
                         return Ok(());
                     }
-                    handle_client_event(mailbox, user_id, message).await;
+                    handle_client_event(mailbox, user_id, &message).await;
                 }
                 Ok(())
             });

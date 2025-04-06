@@ -105,7 +105,6 @@ pub struct ChannelWithRelated {
     pub space: Space,
     pub color_list: HashMap<Uuid, String>,
     pub heartbeat_map: HashMap<Uuid, i64>,
-    pub encoded_events: Vec<String>,
 }
 
 #[derive(Serialize, Debug, Clone, TS)]

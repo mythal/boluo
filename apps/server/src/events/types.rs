@@ -233,23 +233,23 @@ impl Event {
             focus,
         };
 
-        let map = super::context::store().mailboxes.pin_owned();
+        let old_value = {
+            let map = super::context::store().mailboxes.pin();
+            let Some(mailbox_state) = map.get(&space_id) else {
+                // It's ok if the mailbox is not be created yet
 
-        let Some(mailbox_state) = map.get(&space_id) else {
-            // It's ok if the mailbox is not be created yet
+                return Ok(());
+            };
+            let Some(mut status) = mailbox_state.status.try_lock() else {
+                log::info!(
+                    "Failed to lock mailbox for space {} on update status",
+                    space_id
+                );
+                return Ok(());
+            };
 
-            return Ok(());
+            status.insert(user_id, heartbeat)
         };
-        let Ok(mut mailbox_state) = mailbox_state.try_lock() else {
-            log::info!(
-                "Failed to lock mailbox for space {} on update status",
-                space_id
-            );
-            return Ok(());
-        };
-
-        let old_value = mailbox_state.status.insert(user_id, heartbeat);
-        drop(mailbox_state);
         if let Some(old_value) = old_value {
             if old_value.kind != kind {
                 Event::push_status(space_id).await?;
@@ -287,19 +287,18 @@ impl Event {
     ) -> Vec<String> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let map = super::context::store().mailboxes.pin_owned();
+        let map = super::context::store().mailboxes.pin();
         let Some(mailbox_state) = map.get(mailbox_id) else {
             return vec![];
         };
-        let mailbox_state = mailbox_state.lock().await;
         let mut event_list: Vec<Arc<SyncEvent>> = mailbox_state
             .events
+            .lock()
             .iter()
-            .chain(mailbox_state.edition_map.values())
-            .chain(mailbox_state.preview_map.values())
+            .chain(mailbox_state.edition_map.lock().values())
+            .chain(mailbox_state.preview_map.lock().values())
             .cloned()
             .collect();
-        drop(mailbox_state);
         if event_list.is_empty() {
             return vec![];
         }
@@ -372,62 +371,68 @@ impl Event {
     }
 
     async fn async_fire(body: EventBody, mailbox: Uuid) {
-        let map = super::context::store().mailboxes.pin_owned();
-        let mailbox_lock = map.get_or_insert_with(mailbox, Default::default);
-        let mut mailbox_state = mailbox_lock.lock().await;
+        let event = {
+            let map = super::context::store().mailboxes.pin();
+            let mailbox_state = map.get_or_insert_with(mailbox, Default::default);
 
-        enum Kind {
-            Preview { channel_id: Uuid, sender_id: Uuid },
-            Edition { message_id: Uuid },
-            NoCache,
-            Cache,
-        }
-        let kind = match &body {
-            EventBody::MessagePreview {
-                preview,
-                channel_id: _,
-            } => Kind::Preview {
-                sender_id: preview.sender_id,
-                channel_id: preview.channel_id,
-            },
-            EventBody::MessageEdited {
-                channel_id: _,
-                message,
-                old_pos: _,
-            } => Kind::Edition {
-                message_id: message.id,
-            },
-            EventBody::NewMessage {
-                channel_id: _,
-                message: _,
-                preview_id: _,
+            enum Kind {
+                Preview { channel_id: Uuid, sender_id: Uuid },
+                Edition { message_id: Uuid },
+                NoCache,
+                Cache,
             }
-            | EventBody::MessageDeleted {
-                message_id: _,
-                channel_id: _,
-                pos: _,
-            } => Kind::Cache,
-            _ => Kind::NoCache,
+            let kind = match &body {
+                EventBody::MessagePreview {
+                    preview,
+                    channel_id: _,
+                } => Kind::Preview {
+                    sender_id: preview.sender_id,
+                    channel_id: preview.channel_id,
+                },
+                EventBody::MessageEdited {
+                    channel_id: _,
+                    message,
+                    old_pos: _,
+                } => Kind::Edition {
+                    message_id: message.id,
+                },
+                EventBody::NewMessage {
+                    channel_id: _,
+                    message: _,
+                    preview_id: _,
+                }
+                | EventBody::MessageDeleted {
+                    message_id: _,
+                    channel_id: _,
+                    pos: _,
+                } => Kind::Cache,
+                _ => Kind::NoCache,
+            };
+
+            let event = Event::build(body, mailbox);
+            match kind {
+                Kind::Preview {
+                    sender_id,
+                    channel_id,
+                } => {
+                    mailbox_state
+                        .preview_map
+                        .lock()
+                        .insert((sender_id, channel_id), event.clone());
+                }
+                Kind::Edition { message_id } => {
+                    mailbox_state
+                        .edition_map
+                        .lock()
+                        .insert(message_id, event.clone());
+                }
+                Kind::Cache => {
+                    mailbox_state.events.lock().push_back(event.clone());
+                }
+                Kind::NoCache => {}
+            }
+            event
         };
-
-        let event = Event::build(body, mailbox);
-        match kind {
-            Kind::Preview {
-                sender_id,
-                channel_id,
-            } => {
-                mailbox_state
-                    .preview_map
-                    .insert((sender_id, channel_id), event.clone());
-            }
-            Kind::Edition { message_id } => {
-                mailbox_state.edition_map.insert(message_id, event.clone());
-            }
-            Kind::Cache => {
-                mailbox_state.events.push_back(event.clone());
-            }
-            Kind::NoCache => {}
-        }
 
         Event::send(mailbox, event).await;
     }

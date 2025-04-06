@@ -2,7 +2,7 @@ use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
 use crate::events::context::{self, ChannelUserId};
-use crate::events::context::{SyncEvent, WAIT};
+use crate::events::context::{EncodedEvent, WAIT};
 use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
@@ -294,12 +294,12 @@ impl Event {
     ) -> Option<Vec<tungstenite::Utf8Bytes>> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let mut event_list: Vec<Arc<SyncEvent>> = {
+        let mut event_list: Vec<Arc<EncodedEvent>> = {
             let map = super::context::store().mailboxes.pin();
             let Some(mailbox_state) = map.get(mailbox_id) else {
                 return Some(vec![]);
             };
-            let mut event_list: Vec<Arc<SyncEvent>> = {
+            let mut event_list: Vec<Arc<EncodedEvent>> = {
                 let events = mailbox_state.events.try_lock_for(WAIT);
                 if let Some(events) = events {
                     events.iter().cloned().collect()
@@ -379,7 +379,7 @@ impl Event {
         });
     }
 
-    async fn send(mailbox: Uuid, event: Arc<SyncEvent>) {
+    async fn send(mailbox: Uuid, event: Arc<EncodedEvent>) {
         let table = context::get_broadcast_table().pin();
         if let Some(tx) = table.get(&mailbox) {
             tx.send(event).ok();
@@ -391,7 +391,7 @@ impl Event {
         channel_id: Uuid,
         members: Vec<MemberWithUser>,
     ) -> Result<(), anyhow::Error> {
-        let event = SyncEvent::new(Event {
+        let event = EncodedEvent::new(Event {
             mailbox: space_id,
             body: EventBody::Members {
                 members,
@@ -404,8 +404,8 @@ impl Event {
         Ok(())
     }
 
-    fn build(body: EventBody, mailbox: Uuid) -> Arc<SyncEvent> {
-        Arc::new(SyncEvent::new(Event {
+    fn build(body: EventBody, mailbox: Uuid) -> Arc<EncodedEvent> {
+        Arc::new(EncodedEvent::new(Event {
             mailbox,
             body,
             id: EventId::new(),

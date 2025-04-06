@@ -26,19 +26,20 @@ pub enum StateError {
 }
 
 #[derive(Debug)]
-pub struct SyncEvent {
+pub struct EncodedEvent {
     pub event: Event,
     pub encoded: Utf8Bytes,
 }
 
-impl SyncEvent {
-    pub fn new(event: Event) -> SyncEvent {
+impl EncodedEvent {
+    pub fn new(event: Event) -> EncodedEvent {
         let encoded = event.encode();
-        SyncEvent { encoded, event }
+        EncodedEvent { encoded, event }
     }
 }
 
-type BroadcastTable = papaya::HashMap<Uuid, broadcast::Sender<Arc<SyncEvent>>, ahash::RandomState>;
+type BroadcastTable =
+    papaya::HashMap<Uuid, broadcast::Sender<Arc<EncodedEvent>>, ahash::RandomState>;
 
 static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
 
@@ -52,7 +53,7 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
     })
 }
 
-pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<SyncEvent>> {
+pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
     let broadcast_table = get_broadcast_table();
     let table = broadcast_table.pin();
     if let Some(sender) = table.get(id) {
@@ -82,9 +83,9 @@ impl ChannelUserId {
 
 pub struct MailBoxState {
     pub start_at: i64,
-    pub events: Mutex<VecDeque<Arc<SyncEvent>>>,
-    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<SyncEvent>, ahash::RandomState>>,
-    pub edition_map: Mutex<HashMap<Uuid, Arc<SyncEvent>>>, // the key is message id
+    pub events: Mutex<VecDeque<Arc<EncodedEvent>>>,
+    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<EncodedEvent>, ahash::RandomState>>,
+    pub edition_map: Mutex<HashMap<Uuid, Arc<EncodedEvent>>>, // the key is message id
     members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
     pub status: Mutex<HashMap<Uuid, UserStatus>>,
 }

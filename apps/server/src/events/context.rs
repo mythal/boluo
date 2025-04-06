@@ -53,17 +53,16 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
     })
 }
 
-pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
+pub async fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
     let broadcast_table = get_broadcast_table();
     let table = broadcast_table.pin();
-    if let Some(sender) = table.get(id) {
-        sender.subscribe()
-    } else {
-        let capacity = 256;
-        let (tx, rx) = broadcast::channel(capacity);
-        table.insert(*id, tx);
-        rx
-    }
+    table
+        .get_or_insert_with(id, || {
+            let capacity = 256;
+            let (tx, _) = broadcast::channel(capacity);
+            tx
+        })
+        .subscribe()
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

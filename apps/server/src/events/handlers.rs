@@ -80,7 +80,7 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
 
     let push = async {
         let mut tx = tx.clone();
-        let mut mailbox_rx = get_mailbox_broadcast_rx(&mailbox).await;
+        let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox).await;
 
         let Some(cached_events) = Event::get_from_cache(&mailbox, after, seq) else {
             let error_event = Event::error(

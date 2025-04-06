@@ -352,6 +352,17 @@ impl Message {
                 .fetch_optional(db)
                 .await
         }
+        .inspect_err(|err| {
+            if err
+                .as_database_error()
+                .map(|e| e.is_unique_violation())
+                .unwrap_or(false)
+            {
+                log::error!(
+                    "A conflict occurred while moving message {id} between {a:?} and {b:?}"
+                );
+            }
+        })
         .map_err(Into::into)
     }
     pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(

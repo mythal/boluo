@@ -53,7 +53,7 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
     })
 }
 
-pub async fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
+pub fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
     let broadcast_table = get_broadcast_table();
     let table = broadcast_table.pin();
     table

@@ -66,6 +66,19 @@ pub struct MailBoxState {
     pub status: HashMap<Uuid, UserStatus>,
 }
 
+impl Default for MailBoxState {
+    fn default() -> Self {
+        MailBoxState {
+            start_at: timestamp(),
+            events: VecDeque::new(),
+            preview_map: HashMap::new(),
+            edition_map: HashMap::new(),
+            members_cache: HashMap::new(),
+            status: HashMap::new(),
+        }
+    }
+}
+
 impl MailBoxState {
     pub fn remove_channel(&mut self, channel_id: &Uuid) {
         self.members_cache.remove(channel_id);
@@ -105,7 +118,7 @@ impl MailBoxState {
 }
 
 pub struct Store {
-    pub mailboxes: papaya::HashMap<Uuid, Arc<Mutex<MailBoxState>>, ahash::RandomState>,
+    pub mailboxes: papaya::HashMap<Uuid, Mutex<MailBoxState>, ahash::RandomState>,
 }
 
 impl Store {
@@ -117,27 +130,6 @@ impl Store {
                 .resize_mode(papaya::ResizeMode::Blocking)
                 .build(),
         }
-    }
-
-    pub async fn get_mailbox(&self, mailbox_id: &Uuid) -> Option<Arc<Mutex<MailBoxState>>> {
-        let map = self.mailboxes.pin();
-        map.get(mailbox_id).cloned()
-    }
-
-    pub async fn ensure_mailbox(&self, mailbox_id: &Uuid) -> Arc<Mutex<MailBoxState>> {
-        let map = self.mailboxes.pin();
-        map.get_or_insert_with(*mailbox_id, || {
-            let cache = MailBoxState {
-                start_at: timestamp(),
-                events: VecDeque::new(),
-                preview_map: HashMap::new(),
-                edition_map: HashMap::new(),
-                members_cache: HashMap::new(),
-                status: HashMap::new(),
-            };
-            Arc::new(Mutex::new(cache))
-        })
-        .clone()
     }
 }
 

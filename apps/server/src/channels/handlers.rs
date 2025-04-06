@@ -217,12 +217,12 @@ async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
     .await?;
     let push_members = !(grant_masters.is_empty() && remove_masters.is_empty());
     for user_id in grant_masters {
-        ChannelMember::set_master(&mut *trans, &user_id, &channel_id, true)
+        ChannelMember::set_master(&mut *trans, &user_id, &channel_id, channel.space_id, true)
             .await
             .ok();
     }
     for user_id in remove_masters {
-        ChannelMember::set_master(&mut *trans, &user_id, &channel_id, false)
+        ChannelMember::set_master(&mut *trans, &user_id, &channel_id, channel.space_id, false)
             .await
             .ok();
     }
@@ -263,6 +263,7 @@ async fn edit_masters(req: Request<impl Body>) -> Result<bool, AppError> {
         &mut *trans,
         &user_id,
         &channel_id,
+        channel.space_id,
         match grant_or_revoke {
             GrantOrRevoke::Grant => true,
             GrantOrRevoke::Revoke => false,

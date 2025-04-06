@@ -233,7 +233,9 @@ impl Event {
             focus,
         };
 
-        let Some(mailbox_state) = super::context::store().get_mailbox(&space_id).await else {
+        let map = super::context::store().mailboxes.pin_owned();
+
+        let Some(mailbox_state) = map.get(&space_id) else {
             // It's ok if the mailbox is not be created yet
 
             return Ok(());
@@ -285,8 +287,8 @@ impl Event {
     ) -> Vec<String> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let mailbox_state = super::context::store().get_mailbox(mailbox_id).await;
-        let Some(mailbox_state) = mailbox_state else {
+        let map = super::context::store().mailboxes.pin_owned();
+        let Some(mailbox_state) = map.get(mailbox_id) else {
             return vec![];
         };
         let mailbox_state = mailbox_state.lock().await;
@@ -370,7 +372,8 @@ impl Event {
     }
 
     async fn async_fire(body: EventBody, mailbox: Uuid) {
-        let mailbox_lock = super::context::store().ensure_mailbox(&mailbox).await;
+        let map = super::context::store().mailboxes.pin_owned();
+        let mailbox_lock = map.get_or_insert_with(mailbox, Default::default);
         let mut mailbox_state = mailbox_lock.lock().await;
 
         enum Kind {

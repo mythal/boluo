@@ -261,18 +261,6 @@ impl Channel {
         .map_err(Into::into)
     }
 
-    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-    ) -> Result<Vec<(Uuid, f64)>, sqlx::Error> {
-        let rows = sqlx::query_file!("sql/channels/channel_max_pos.sql")
-            .fetch_all(db)
-            .await?;
-        Ok(rows
-            .into_iter()
-            .map(|row| (row.channel_id, row.max_pos))
-            .collect())
-    }
-
     pub async fn get_by_user(
         db: &mut sqlx::PgConnection,
         user_id: Uuid,

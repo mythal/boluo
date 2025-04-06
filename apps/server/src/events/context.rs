@@ -8,6 +8,7 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
 use tokio::sync::broadcast;
+use tokio_tungstenite::tungstenite::Utf8Bytes;
 use uuid::Uuid;
 
 use crate::utils::timestamp;
@@ -27,12 +28,12 @@ pub enum StateError {
 #[derive(Debug)]
 pub struct SyncEvent {
     pub event: Event,
-    pub encoded: String,
+    pub encoded: Utf8Bytes,
 }
 
 impl SyncEvent {
     pub fn new(event: Event) -> SyncEvent {
-        let encoded = serde_json::to_string(&event).unwrap();
+        let encoded = event.encode();
         SyncEvent { encoded, event }
     }
 }

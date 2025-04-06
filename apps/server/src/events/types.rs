@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::spawn;
+use tokio_tungstenite::tungstenite;
 use ts_rs::TS;
 use uuid::Uuid;
 
@@ -136,6 +137,12 @@ impl Event {
             id: EventId::new(),
             body: EventBody::Initialized,
         }
+    }
+
+    pub fn encode(&self) -> tungstenite::Utf8Bytes {
+        let serialized = serde_json::to_string(self).expect("Failed to encode event");
+        let bytes = tungstenite::Bytes::from_owner(serialized);
+        unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
     }
 
     pub fn batch(mailbox: Uuid, encoded_events: Vec<String>) -> Event {
@@ -284,7 +291,7 @@ impl Event {
         mailbox_id: &Uuid,
         after: Option<i64>,
         seq: Option<Seq>,
-    ) -> Option<Vec<String>> {
+    ) -> Option<Vec<tungstenite::Utf8Bytes>> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
         let mut event_list: Vec<Arc<SyncEvent>> = {
@@ -339,7 +346,7 @@ impl Event {
         }
         event_list.sort_by(|a, b| a.event.id.cmp(&b.event.id));
         let mut prev_id: Option<EventId> = None;
-        let mut encoded_events: Vec<String> = Vec::with_capacity(event_list.len());
+        let mut encoded_events: Vec<tungstenite::Utf8Bytes> = Vec::with_capacity(event_list.len());
         for event in event_list.into_iter() {
             let event_id = event.event.id;
             if let Some(prev_id) = prev_id {

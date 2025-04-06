@@ -107,7 +107,7 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
     let (mut channel, space) = Channel::get_with_space(&mut *conn, &query.id)
         .await
         .or_not_found()?;
-    let members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
+    let mut members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
     let my_member: Option<&Member> = session.and_then(|session| {
         members
             .iter()
@@ -116,14 +116,12 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
 
     let color_list = ChannelMember::get_color_list(&mut *conn, &channel.id).await?;
 
-    let encoded_events = if channel.is_public || my_member.is_some() {
-        Event::get_from_cache(&query.id, None, None).ok_or_else(|| {
-            AppError::Unexpected(anyhow::anyhow!("Failed to get events from cache"))
-        })?
+    if channel.is_public || my_member.is_some() {
+        // has permission
     } else {
         channel.topic = String::new();
-        Vec::new()
-    };
+        members.clear();
+    }
 
     let with_related = ChannelWithRelated {
         channel,
@@ -131,7 +129,6 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
         members: members_attach_user(&mut *conn, members).await?,
         color_list,
         heartbeat_map: HashMap::new(),
-        encoded_events,
     };
     Ok(with_related)
 }

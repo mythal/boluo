@@ -173,9 +173,8 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    let pos = moved_message.pos as i32;
+    update_max_pos(channel_id, moved_message.pos.ceil() as i32);
     Event::message_edited(channel.space_id, moved_message, message.pos);
-    update_max_pos(channel_id, pos);
     Ok(true)
 }
 

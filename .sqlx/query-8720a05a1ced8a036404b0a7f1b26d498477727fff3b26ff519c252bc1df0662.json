@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    messages\nSET\n    (pos_p,\n        pos_q) = (\n        SELECT\n            p AS pos_p,\n            q AS pos_q\n        FROM\n            find_intermediate ($2, $3, $4, $5))\nWHERE\n    id = $1\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "INSERT INTO messages (id, sender_id, channel_id, name, text, entities, in_game, is_action, is_master, whisper_to_users, media_id, pos_p, pos_q, color)\n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)\nRETURNING\n    messages AS \"message!: Message\";\n\n",
   "describe": {
     "columns": [
       {
@@ -112,15 +112,24 @@
     "parameters": {
       "Left": [
         "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Bool",
+        "Bool",
+        "UuidArray",
+        "Uuid",
         "Int4",
         "Int4",
-        "Int4",
-        "Int4"
+        "Text"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "39386dbf889fcb1303cc1a40ba8e4cbae0084d4a28acf633491885112b55ade1"
+  "hash": "8720a05a1ced8a036404b0a7f1b26d498477727fff3b26ff519c252bc1df0662"
 }

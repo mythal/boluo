@@ -6,7 +6,6 @@ use crate::error::{AppError, Find};
 use crate::events::Event;
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
-use crate::pos::ensure_pos_largest;
 use crate::spaces::SpaceMember;
 use crate::{db, interface};
 use hyper::body::Body;
@@ -35,18 +34,17 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         .or_not_found()?;
     let (channel_member, space_member) = ChannelMember::get_with_space_member(
         &mut *conn,
-        &session.user_id,
-        &channel_id,
+        session.user_id,
+        channel_id,
         &channel.space_id,
     )
     .await
     .or_no_permission()?;
-    let mut redis_conn = crate::redis::conn().await;
     let message = Message::create(
         &mut conn,
-        &mut redis_conn,
         preview_id.as_ref(),
         &channel_id,
+        channel.space_id,
         &session.user_id,
         &channel_member.character_name,
         &name,
@@ -87,8 +85,8 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
         .or_not_found()?;
     let (_, space_member) = ChannelMember::get_with_space_member(
         &mut *trans,
-        &session.user_id,
-        &message.channel_id,
+        session.user_id,
+        message.channel_id,
         &channel.space_id,
     )
     .await
@@ -166,19 +164,23 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
                 .await?
                 .or_not_found()?
         }
-        (Some(a), Some(b)) => Message::move_between(&mut *trans, &message_id, a, b)
+        (Some(a), Some(b)) => Message::move_between(&mut trans, &message_id, channel_id, a, b)
             .await?
             .or_not_found()?,
     };
 
     trans.commit().await?;
+    crate::pos::CHANNEL_POS_MAP.submitted(
+        channel_id,
+        message_id,
+        moved_message.pos_p,
+        moved_message.pos_q,
+        Some(message_id),
+    );
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    let pos = moved_message.pos as i32;
     Event::message_edited(channel.space_id, moved_message, message.pos);
-    let mut redis_conn = crate::redis::conn().await;
-    ensure_pos_largest(&mut redis_conn, channel_id, pos).await?;
     Ok(true)
 }
 

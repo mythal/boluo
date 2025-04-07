@@ -22,11 +22,9 @@ function MemberListButton({ className, channelId }: Props) {
   const channelMembers = useSelector((state) => state.chatStates.get(pane)!.members);
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  // const heartbeatMap = useSelector((state) => state.chatStates.get(pane)!.heartbeatMap);
   const myMember = useSelector((state) => state.profile?.channels.get(channelId)?.member);
 
   const now = new Date().getTime();
-  // const onlineCount = heartbeatMap.filter((time) => isOnline(time, now)).count();
   const onlineCount = 0;
   const toggle = useCallback(() => setOpen((value) => !value), []);
   return (

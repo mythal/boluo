@@ -1,6 +1,7 @@
 SELECT
     pos_p,
-    pos_q
+    pos_q,
+    id
 FROM
     messages msg
 WHERE

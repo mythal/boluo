@@ -134,6 +134,7 @@ pub async fn check() {
 
     let _message = sqlx::query_file_scalar!(
         "sql/messages/create.sql",
+        uuid::Uuid::new_v4(),
         user.id,
         channel.id,
         "Madokami",

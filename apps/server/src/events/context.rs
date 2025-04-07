@@ -2,149 +2,211 @@ use crate::channels::models::Member;
 use crate::channels::ChannelMember;
 use crate::events::Event;
 use crate::spaces::SpaceMember;
-use std::collections::{HashMap, VecDeque};
+use parking_lot::Mutex;
+use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
-use tokio::sync::{broadcast, Mutex, RwLock};
+use tokio::sync::broadcast;
+use tokio_tungstenite::tungstenite::Utf8Bytes;
 use uuid::Uuid;
 
 use crate::utils::timestamp;
 
 use super::models::UserStatus;
 
-#[derive(Debug)]
-pub struct SyncEvent {
-    pub event: Event,
-    pub encoded: String,
+pub const WAIT_SHORTLY: std::time::Duration = std::time::Duration::from_millis(6);
+pub const WAIT: std::time::Duration = std::time::Duration::from_millis(100);
+pub const WAIT_MORE: std::time::Duration = std::time::Duration::from_millis(1000);
+
+#[derive(Debug, Clone)]
+pub enum StateError {
+    TimeOut,
+    NotFound,
 }
 
-impl SyncEvent {
-    pub fn new(event: Event) -> SyncEvent {
-        let encoded = serde_json::to_string(&event).unwrap();
-        SyncEvent { encoded, event }
+#[derive(Debug)]
+pub struct EncodedEvent {
+    pub event: Event,
+    pub encoded: Utf8Bytes,
+}
+
+impl EncodedEvent {
+    pub fn new(event: Event) -> EncodedEvent {
+        let encoded = event.encode();
+        EncodedEvent { encoded, event }
     }
 }
 
-type BroadcastTable = RwLock<HashMap<Uuid, broadcast::Sender<Arc<SyncEvent>>>>;
+type BroadcastTable =
+    papaya::HashMap<Uuid, broadcast::Sender<Arc<EncodedEvent>>, ahash::RandomState>;
 
 static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
 
 pub fn get_broadcast_table() -> &'static BroadcastTable {
-    BROADCAST_TABLE.get_or_init(|| RwLock::new(HashMap::new()))
+    BROADCAST_TABLE.get_or_init(|| {
+        papaya::HashMap::builder()
+            .capacity(4096)
+            .hasher(ahash::RandomState::new())
+            .resize_mode(papaya::ResizeMode::Blocking)
+            .build()
+    })
 }
 
-type HeartbeatMap = Mutex<HashMap<Uuid, HashMap<Uuid, i64>>>;
-static HEARTBEAT_MAP: OnceCell<HeartbeatMap> = OnceCell::new();
-
-pub fn get_heartbeat_map() -> &'static HeartbeatMap {
-    HEARTBEAT_MAP.get_or_init(|| Mutex::new(HashMap::new()))
-}
-
-pub async fn get_mailbox_broadcast_rx(id: &Uuid) -> broadcast::Receiver<Arc<SyncEvent>> {
+pub fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
     let broadcast_table = get_broadcast_table();
-    let table = broadcast_table.read().await;
-    if let Some(sender) = table.get(id) {
-        sender.subscribe()
-    } else {
-        drop(table);
-        let capacity = 256;
-        let (tx, rx) = broadcast::channel(capacity);
-        let mut table = broadcast_table.write().await;
-        table.insert(*id, tx);
-        rx
+    let table = broadcast_table.pin();
+    table
+        .get_or_insert_with(id, || {
+            let capacity = 256;
+            let (tx, _) = broadcast::channel(capacity);
+            tx
+        })
+        .subscribe()
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct ChannelUserId {
+    pub channel_id: Uuid,
+    pub user_id: Uuid,
+}
+
+impl ChannelUserId {
+    pub fn new(channel_id: Uuid, user_id: Uuid) -> Self {
+        ChannelUserId {
+            channel_id,
+            user_id,
+        }
     }
 }
 
-pub struct Members {
-    pub map: HashMap<Uuid, Member>,
-    pub instant: std::time::Instant,
-}
-pub struct MailBoxCache {
+pub struct MailBoxState {
     pub start_at: i64,
-    pub events: VecDeque<Arc<SyncEvent>>,
-    pub preview_map: HashMap<(Uuid, Uuid), Arc<SyncEvent>>, // (sender id, channel id)
-    pub edition_map: HashMap<Uuid, Arc<SyncEvent>>,         // the key is message id
-    pub members: HashMap<Uuid, Members>,
-    pub status: HashMap<Uuid, UserStatus>,
+    pub events: Mutex<VecDeque<Arc<EncodedEvent>>>,
+    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<EncodedEvent>, ahash::RandomState>>,
+    pub edition_map: Mutex<HashMap<Uuid, Arc<EncodedEvent>>>, // the key is message id
+    members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
+    pub status: Mutex<HashMap<Uuid, UserStatus>>,
 }
 
-impl MailBoxCache {
-    pub fn remove_channel(&mut self, channel_id: &Uuid) {
-        self.members.remove(channel_id);
+impl Default for MailBoxState {
+    fn default() -> Self {
+        MailBoxState {
+            start_at: timestamp(),
+            events: Mutex::new(VecDeque::new()),
+            preview_map: Mutex::new(HashMap::with_hasher(ahash::RandomState::new())),
+            edition_map: Mutex::new(HashMap::new()),
+            members_cache: papaya::HashMap::builder()
+                .capacity(64)
+                .hasher(ahash::RandomState::new())
+                .build(),
+            status: Mutex::new(HashMap::new()),
+        }
+    }
+}
+
+impl MailBoxState {
+    pub fn get_members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
+        let mut members: Vec<Member> = Vec::new();
+        let members_cache = self.members_cache.pin();
+
+        for id in members_cache.keys() {
+            if id.channel_id == channel_id {
+                if let Some(member) = members_cache.get(id) {
+                    members.push(member.clone())
+                }
+            }
+        }
+        members
     }
 
-    pub fn update_channel_member(&mut self, channel_member: ChannelMember) {
-        if let Some(members) = self.members.get_mut(&channel_member.channel_id) {
-            if let Some(member) = members.map.get_mut(&channel_member.user_id) {
+    pub fn set_members(&self, members: &Vec<Member>) {
+        let members_cache = self.members_cache.pin();
+        for member in members {
+            let channel_user_id =
+                ChannelUserId::new(member.channel.channel_id, member.channel.user_id);
+            members_cache.insert(channel_user_id, member.clone());
+        }
+    }
+
+    pub fn remove_channel(&self, channel_id: Uuid) -> Result<(), StateError> {
+        self.members_cache
+            .pin()
+            .retain(|id, _| id.channel_id != channel_id);
+        Ok(())
+    }
+
+    pub fn is_master(&self, channel_id: Uuid, user_id: Uuid) -> Result<bool, StateError> {
+        let members_cache = self.members_cache.pin();
+        members_cache
+            .get(&ChannelUserId::new(channel_id, user_id))
+            .ok_or(StateError::NotFound)
+            .map(|member| member.channel.is_master)
+    }
+
+    pub fn get_member(&self, channel_id: Uuid, user_id: Uuid) -> Result<Member, StateError> {
+        let members_cache = self.members_cache.pin();
+        members_cache
+            .get(&ChannelUserId::new(channel_id, user_id))
+            .ok_or(StateError::NotFound)
+            .cloned()
+    }
+
+    pub fn update_channel_member(&self, channel_member: ChannelMember) {
+        let channel_user_id = ChannelUserId::new(channel_member.channel_id, channel_member.user_id);
+        self.members_cache
+            .pin()
+            .update(channel_user_id, move |member| {
+                let channel_member = channel_member.clone();
+                let mut member = member.clone();
                 member.channel = channel_member;
-            }
-        }
+                member
+            });
     }
-    pub fn update_space_member(&mut self, space_member: SpaceMember) {
-        for members in self.members.values_mut() {
-            if let Some(member) = members.map.get_mut(&space_member.user_id) {
-                member.space = space_member.clone();
+    pub fn update_space_member(&self, space_member: SpaceMember) {
+        let user_id = space_member.user_id;
+        let members_cache = self.members_cache.pin();
+        for channel_user_id in members_cache.keys() {
+            if user_id == channel_user_id.user_id {
+                members_cache.update(*channel_user_id, |member| {
+                    let mut member = member.clone();
+                    member.space = space_member.clone();
+                    member
+                });
             }
         }
     }
 
-    pub fn remove_member(&mut self, user_id: &Uuid) {
-        for members in self.members.values_mut() {
-            members.map.remove(user_id);
-        }
-        self.members.retain(|_, members| !members.map.is_empty());
+    pub fn remove_member(&self, user_id: &Uuid) {
+        let mut members_cache = self.members_cache.pin();
+        members_cache.retain(|id, _| id.user_id != *user_id);
     }
 
-    pub fn remove_member_from_channel(&mut self, channel_id: &Uuid, user_id: &Uuid) {
-        if let Some(members) = self.members.get_mut(channel_id) {
-            members.map.remove(user_id);
-            if members.map.is_empty() {
-                self.members.remove(channel_id);
-            }
+    pub fn remove_member_from_channel(&self, channel_id: Uuid, user_id: Uuid) {
+        let channel_user_id = ChannelUserId::new(channel_id, user_id);
+        let members_cache = self.members_cache.pin();
+        members_cache.remove(&channel_user_id);
+    }
+}
+
+pub struct Store {
+    pub mailboxes: papaya::HashMap<Uuid, MailBoxState, ahash::RandomState>,
+}
+
+impl Store {
+    pub fn new() -> Store {
+        Store {
+            mailboxes: papaya::HashMap::builder()
+                .capacity(4096)
+                .hasher(ahash::RandomState::new())
+                .resize_mode(papaya::ResizeMode::Blocking)
+                .build(),
         }
     }
 }
 
-pub struct Cache {
-    pub mailboxes: RwLock<HashMap<Uuid, Arc<Mutex<MailBoxCache>>>>,
-}
+static STORE: OnceCell<Store> = OnceCell::new();
 
-impl Cache {
-    pub fn new() -> Cache {
-        Cache {
-            mailboxes: RwLock::new(HashMap::new()),
-        }
-    }
-
-    pub async fn try_mailbox(&self, mailbox_id: &Uuid) -> Option<Arc<Mutex<MailBoxCache>>> {
-        let map = self.mailboxes.read().await;
-        map.get(mailbox_id).cloned()
-    }
-
-    pub async fn mailbox(&self, mailbox_id: &Uuid) -> Arc<Mutex<MailBoxCache>> {
-        let map = self.mailboxes.read().await;
-        if let Some(cache) = map.get(mailbox_id) {
-            cache.clone()
-        } else {
-            drop(map);
-            let cache = MailBoxCache {
-                start_at: timestamp(),
-                events: VecDeque::new(),
-                preview_map: HashMap::new(),
-                edition_map: HashMap::new(),
-                members: HashMap::new(),
-                status: HashMap::new(),
-            };
-            let cache = Arc::new(Mutex::new(cache));
-            let mut map = self.mailboxes.write().await;
-            map.insert(*mailbox_id, cache.clone());
-            cache
-        }
-    }
-}
-
-static CACHE: OnceCell<Cache> = OnceCell::new();
-
-pub fn get_cache() -> &'static Cache {
-    CACHE.get_or_init(Cache::new)
+pub fn store() -> &'static Store {
+    STORE.get_or_init(Store::new)
 }

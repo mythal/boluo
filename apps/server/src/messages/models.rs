@@ -1,24 +1,14 @@
 use chrono::prelude::*;
+use num_rational::Rational32;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
+use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
-
-pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
-    if q == 0 {
-        return Err(ValidationFailed(r#""pos_q" cannot be 0"#));
-    }
-    if p < 0 || q < 0 {
-        return Err(ValidationFailed(
-            r#""pos_p" and "pos_q" cannot be negative numbers"#,
-        ));
-    }
-    Ok(())
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[ts(export)]
@@ -181,6 +171,7 @@ impl Message {
         _hide: bool,
         after: Option<DateTime<Utc>>,
     ) -> Result<Vec<Message>, sqlx::Error> {
+        // TODO: chunk
         sqlx::query_file_scalar!("sql/messages/export.sql", channel_id, after)
             .fetch_all(db)
             .await
@@ -188,9 +179,9 @@ impl Message {
 
     pub async fn create(
         conn: &mut sqlx::PgConnection,
-        redis_conn: &mut deadpool_redis::Connection,
         preview_id: Option<&Uuid>,
         channel_id: &Uuid,
+        _space_id: Uuid,
         sender_id: &Uuid,
         default_name: &str,
         name: &str,
@@ -204,16 +195,52 @@ impl Message {
         request_pos: Option<(i32, i32)>,
         color: String,
     ) -> Result<Message, AppError> {
-        let pos: (i32, i32) = match (request_pos, preview_id) {
-            (Some(pos), _) => pos,
-            (None, Some(id)) => (
-                crate::pos::pos(&mut *conn, redis_conn, *channel_id, *id, 30).await?,
+        let id = Uuid::now_v1(b"server");
+        let pos: Option<(i32, i32)> = {
+            match (request_pos, preview_id) {
+                (Some(pos @ (p, q)), _) => {
+                    let channel_pos_map = CHANNEL_POS_MAP.0.pin();
+                    let channel_pos_lock =
+                        channel_pos_map.get_or_insert_with(*channel_id, Default::default);
+                    let channel_pos = channel_pos_lock.read();
+                    let pos_item = channel_pos.get(&Rational32::new(p, q));
+                    let now = std::time::Instant::now();
+
+                    match (pos_item, preview_id.cloned()) {
+                        (Some(pos_item), Some(preview_id)) => {
+                            if (preview_id == pos_item.id && pos_item.is_live())
+                                || pos_item.pos_avaliable(now)
+                            {
+                                Some(pos)
+                            } else {
+                                None
+                            }
+                        }
+                        (Some(pos_item), None) => {
+                            if pos_item.pos_avaliable(now) {
+                                Some(pos)
+                            } else {
+                                None
+                            }
+                        }
+                        (None, _) => Some(pos),
+                    }
+                }
+                (None, Some(id)) => CHANNEL_POS_MAP
+                    .try_restore_pos(*channel_id, *id)
+                    .map(|ratio| (*ratio.numer(), *ratio.denom())),
+                (None, None) => None,
+            }
+        };
+        let pos = if let Some(pos) = pos {
+            pos
+        } else {
+            (
+                CHANNEL_POS_MAP
+                    .get_next_pos(&mut *conn, *channel_id)
+                    .await?,
                 1,
-            ),
-            (None, None) => (
-                crate::pos::alloc_new_pos(&mut *conn, redis_conn, *channel_id).await?,
-                1,
-            ),
+            )
         };
         check_pos(pos)?;
 
@@ -229,6 +256,7 @@ impl Message {
         let entities = JsonValue::Array(entities);
         let mut row: Result<Message, sqlx::Error> = sqlx::query_file_scalar!(
             "sql/messages/create.sql",
+            id,
             sender_id,
             channel_id,
             &name,
@@ -259,11 +287,13 @@ impl Message {
                 "A conflict occurred while creating a new message at channel {}",
                 channel_id
             );
-            crate::pos::reset_channel_pos(redis_conn, channel_id).await?;
-            let p = crate::pos::alloc_new_pos(&mut *conn, redis_conn, *channel_id).await?;
+            let p = CHANNEL_POS_MAP
+                .get_next_pos(&mut *conn, *channel_id)
+                .await?;
             let q = 1i32;
             row = sqlx::query_file_scalar!(
                 "sql/messages/create.sql",
+                id,
                 sender_id,
                 channel_id,
                 &name,
@@ -283,18 +313,20 @@ impl Message {
         }
 
         let mut message = row?;
-        if let Some(preview_id) = preview_id {
-            crate::pos::finished(redis_conn, *channel_id, *preview_id).await?;
-        }
+        crate::pos::CHANNEL_POS_MAP.submitted(
+            *channel_id,
+            message.id,
+            message.pos_p,
+            message.pos_q,
+            preview_id.cloned(),
+        );
         message.hide(None);
-        tokio::spawn(async move {
-            let created = message.created;
-            let channel_id = message.channel_id;
-            super::tasks::WAIT_UPDATE
-                .lock()
-                .await
-                .insert(channel_id, created);
-        });
+
+        {
+            if let Ok(mut update_map) = super::tasks::RECENTLY_UPDATED_SPACES.try_lock() {
+                update_map.insert(*channel_id, message.created);
+            }
+        }
         Ok(message)
     }
 
@@ -351,31 +383,56 @@ impl Message {
         .map_err(Into::into)
     }
 
-    pub async fn move_between<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn move_between(
+        db: &mut sqlx::PgConnection,
         id: &Uuid,
+        channel_id: Uuid,
         a: (i32, i32),
         b: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
-        if a == b {
-            sqlx::query_file_scalar!("sql/messages/set_position.sql", id, a.0, a.1)
-                .fetch_optional(db)
-                .await
+        let pos = if a == b {
+            a
         } else {
-            sqlx::query_file_scalar!("sql/messages/move_between.sql", id, a.0, a.1, b.0, b.1)
-                .fetch_optional(db)
-                .await
+            find_intermediate(a.0, a.1, b.0, b.1)
+        };
+
+        let message_in_pos = sqlx::query_file_scalar!(
+            "sql/messages/set_position.sql",
+            id,
+            channel_id,
+            pos.0,
+            pos.1
+        )
+        .fetch_optional(&mut *db)
+        .await?;
+        let Some(message_in_pos) = message_in_pos else {
+            log::warn!("Message {} not found in channel {}", id, channel_id);
+            return Ok(None);
+        };
+        if message_in_pos.id == *id {
+            Ok(Some(message_in_pos))
+        } else {
+            let message_in_pos_id = message_in_pos.id;
+            log::warn!("Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}");
+            Message::move_bottom(
+                db,
+                &channel_id,
+                id,
+                (message_in_pos.pos_p, message_in_pos.pos_q),
+            )
+            .await
         }
-        .map_err(Into::into)
     }
-    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(db: T, channel_id: &Uuid) -> (i32, i32) {
+    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        channel_id: &Uuid,
+    ) -> Result<(i32, i32, Uuid), sqlx::Error> {
         sqlx::query_file!("sql/messages/max_pos.sql", channel_id)
             .fetch_one(db)
             .await
-            .map(|row| (row.pos_p, row.pos_q))
-            .unwrap_or((42, 1))
+            .map(|row| (row.pos_p, row.pos_q, row.id))
     }
     pub async fn set_folded<'c, T: sqlx::PgExecutor<'c>>(
         db: T,

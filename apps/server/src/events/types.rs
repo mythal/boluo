@@ -1,8 +1,8 @@
 use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
-use crate::events::context;
-use crate::events::context::SyncEvent;
+use crate::events::context::{self, ChannelUserId};
+use crate::events::context::{EncodedEvent, WAIT};
 use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::spawn;
+use tokio_tungstenite::tungstenite;
 use ts_rs::TS;
 use uuid::Uuid;
 
@@ -138,6 +139,12 @@ impl Event {
         }
     }
 
+    pub fn encode(&self) -> tungstenite::Utf8Bytes {
+        let serialized = serde_json::to_string(self).expect("Failed to encode event");
+        let bytes = tungstenite::Bytes::from_owner(serialized);
+        unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
+    }
+
     pub fn batch(mailbox: Uuid, encoded_events: Vec<String>) -> Event {
         Event {
             mailbox,
@@ -233,20 +240,23 @@ impl Event {
             focus,
         };
 
-        let Some(mailbox) = super::context::get_cache().try_mailbox(&space_id).await else {
-            // It's ok if the mailbox is not be created yet
-            return Ok(());
-        };
-        let Ok(mut mailbox) = mailbox.try_lock() else {
-            log::info!(
-                "Failed to lock mailbox for space {} on update status",
-                space_id
-            );
-            return Ok(());
-        };
+        let old_value = {
+            let map = super::context::store().mailboxes.pin();
+            let Some(mailbox_state) = map.get(&space_id) else {
+                // It's ok if the mailbox is not be created yet
 
-        let old_value = mailbox.status.insert(user_id, heartbeat);
-        drop(mailbox);
+                return Ok(());
+            };
+            let Some(mut status) = mailbox_state.status.try_lock() else {
+                log::info!(
+                    "Failed to lock mailbox for space {} on update status",
+                    space_id
+                );
+                return Ok(());
+            };
+
+            status.insert(user_id, heartbeat)
+        };
         if let Some(old_value) = old_value {
             if old_value.kind != kind {
                 Event::push_status(space_id).await?;
@@ -277,32 +287,66 @@ impl Event {
         )
     }
 
-    pub async fn get_from_cache(
-        mailbox: &Uuid,
+    pub fn get_from_cache(
+        mailbox_id: &Uuid,
         after: Option<i64>,
         seq: Option<Seq>,
-    ) -> Vec<String> {
+    ) -> Option<Vec<tungstenite::Utf8Bytes>> {
         use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let mailbox = super::context::get_cache().try_mailbox(mailbox).await;
-        let Some(mailbox) = mailbox else {
-            return vec![];
+        let mut event_list: Vec<Arc<EncodedEvent>> = {
+            let map = super::context::store().mailboxes.pin();
+            let Some(mailbox_state) = map.get(mailbox_id) else {
+                return Some(vec![]);
+            };
+            let mut event_list: Vec<Arc<EncodedEvent>> = {
+                let events = mailbox_state.events.try_lock_for(WAIT);
+                if let Some(events) = events {
+                    events.iter().cloned().collect()
+                } else {
+                    log::error!(
+                        "Failed to lock events for space {} on get_from_cache",
+                        mailbox_id
+                    );
+                    return None;
+                }
+            };
+            {
+                let edition_map = mailbox_state.edition_map.try_lock_for(WAIT);
+                if let Some(edition_map) = edition_map {
+                    for event in edition_map.values() {
+                        event_list.push(event.clone());
+                    }
+                } else {
+                    log::error!(
+                        "Failed to lock edition_map for space {} on get_from_cache",
+                        mailbox_id
+                    );
+                    return None;
+                }
+            }
+            {
+                let preview_map = mailbox_state.preview_map.try_lock_for(WAIT);
+                if let Some(preview_map) = preview_map {
+                    for event in preview_map.values() {
+                        event_list.push(event.clone());
+                    }
+                } else {
+                    log::error!(
+                        "Failed to lock preview_map for space {} on get_from_cache",
+                        mailbox_id
+                    );
+                    return None;
+                }
+            }
+            event_list
         };
-        let mailbox_state = mailbox.lock().await;
-        let mut event_list: Vec<Arc<SyncEvent>> = mailbox_state
-            .events
-            .iter()
-            .chain(mailbox_state.edition_map.values())
-            .chain(mailbox_state.preview_map.values())
-            .cloned()
-            .collect();
-        drop(mailbox_state);
         if event_list.is_empty() {
-            return vec![];
+            return Some(vec![]);
         }
         event_list.sort_by(|a, b| a.event.id.cmp(&b.event.id));
         let mut prev_id: Option<EventId> = None;
-        let mut encoded_events: Vec<String> = Vec::with_capacity(event_list.len());
+        let mut encoded_events: Vec<tungstenite::Utf8Bytes> = Vec::with_capacity(event_list.len());
         for event in event_list.into_iter() {
             let event_id = event.event.id;
             if let Some(prev_id) = prev_id {
@@ -317,7 +361,7 @@ impl Event {
                 encoded_events.push(event.encoded.clone());
             }
         }
-        encoded_events
+        Some(encoded_events)
     }
 
     pub fn space_updated(space_id: Uuid) {
@@ -335,9 +379,8 @@ impl Event {
         });
     }
 
-    async fn send(mailbox: Uuid, event: Arc<SyncEvent>) {
-        let broadcast_table = context::get_broadcast_table();
-        let table = broadcast_table.read().await;
+    async fn send(mailbox: Uuid, event: Arc<EncodedEvent>) {
+        let table = context::get_broadcast_table().pin();
         if let Some(tx) = table.get(&mailbox) {
             tx.send(event).ok();
         }
@@ -348,7 +391,7 @@ impl Event {
         channel_id: Uuid,
         members: Vec<MemberWithUser>,
     ) -> Result<(), anyhow::Error> {
-        let event = SyncEvent::new(Event {
+        let event = EncodedEvent::new(Event {
             mailbox: space_id,
             body: EventBody::Members {
                 members,
@@ -361,8 +404,8 @@ impl Event {
         Ok(())
     }
 
-    fn build(body: EventBody, mailbox: Uuid) -> Arc<SyncEvent> {
-        Arc::new(SyncEvent::new(Event {
+    fn build(body: EventBody, mailbox: Uuid) -> Arc<EncodedEvent> {
+        Arc::new(EncodedEvent::new(Event {
             mailbox,
             body,
             id: EventId::new(),
@@ -370,61 +413,68 @@ impl Event {
     }
 
     async fn async_fire(body: EventBody, mailbox: Uuid) {
-        let mailbox_lock = super::context::get_cache().mailbox(&mailbox).await;
-        let mut mailbox_state = mailbox_lock.lock().await;
+        let event = {
+            let map = super::context::store().mailboxes.pin();
+            let mailbox_state = map.get_or_insert_with(mailbox, Default::default);
 
-        enum Kind {
-            Preview { channel_id: Uuid, sender_id: Uuid },
-            Edition { message_id: Uuid },
-            NoCache,
-            Cache,
-        }
-        let kind = match &body {
-            EventBody::MessagePreview {
-                preview,
-                channel_id: _,
-            } => Kind::Preview {
-                sender_id: preview.sender_id,
-                channel_id: preview.channel_id,
-            },
-            EventBody::MessageEdited {
-                channel_id: _,
-                message,
-                old_pos: _,
-            } => Kind::Edition {
-                message_id: message.id,
-            },
-            EventBody::NewMessage {
-                channel_id: _,
-                message: _,
-                preview_id: _,
+            enum Kind {
+                Preview { channel_id: Uuid, sender_id: Uuid },
+                Edition { message_id: Uuid },
+                NoCache,
+                Cache,
             }
-            | EventBody::MessageDeleted {
-                message_id: _,
-                channel_id: _,
-                pos: _,
-            } => Kind::Cache,
-            _ => Kind::NoCache,
+            let kind = match &body {
+                EventBody::MessagePreview {
+                    preview,
+                    channel_id: _,
+                } => Kind::Preview {
+                    sender_id: preview.sender_id,
+                    channel_id: preview.channel_id,
+                },
+                EventBody::MessageEdited {
+                    channel_id: _,
+                    message,
+                    old_pos: _,
+                } => Kind::Edition {
+                    message_id: message.id,
+                },
+                EventBody::NewMessage {
+                    channel_id: _,
+                    message: _,
+                    preview_id: _,
+                }
+                | EventBody::MessageDeleted {
+                    message_id: _,
+                    channel_id: _,
+                    pos: _,
+                } => Kind::Cache,
+                _ => Kind::NoCache,
+            };
+
+            let event = Event::build(body, mailbox);
+            match kind {
+                Kind::Preview {
+                    sender_id,
+                    channel_id,
+                } => {
+                    mailbox_state
+                        .preview_map
+                        .lock()
+                        .insert(ChannelUserId::new(channel_id, sender_id), event.clone());
+                }
+                Kind::Edition { message_id } => {
+                    mailbox_state
+                        .edition_map
+                        .lock()
+                        .insert(message_id, event.clone());
+                }
+                Kind::Cache => {
+                    mailbox_state.events.lock().push_back(event.clone());
+                }
+                Kind::NoCache => {}
+            }
+            event
         };
-
-        let event = Event::build(body, mailbox);
-        match kind {
-            Kind::Preview {
-                sender_id,
-                channel_id,
-            } => {
-                mailbox_state
-                    .preview_map
-                    .insert((sender_id, channel_id), event.clone());
-            }
-            Kind::Edition { message_id } => {
-                mailbox_state.edition_map.insert(message_id, event.clone());
-            }
-            Kind::Cache => {
-                mailbox_state.events.push_back(event.clone());
-            }
-            Kind::NoCache => {}
-        }
 
         Event::send(mailbox, event).await;
     }

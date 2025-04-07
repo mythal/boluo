@@ -9,5 +9,4 @@ export type ChannelWithRelated = {
   space: Space;
   colorList: { [key in string]?: string };
   heartbeatMap: { [key in string]?: bigint };
-  encodedEvents: Array<string>;
 };

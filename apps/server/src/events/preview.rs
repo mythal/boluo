@@ -1,8 +1,8 @@
 use crate::channels::ChannelMember;
 use crate::db;
 use crate::error::AppError;
+use crate::error::Find;
 use crate::events::Event;
-use crate::{error::Find, redis};
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -79,12 +79,10 @@ impl PreviewPost {
         } = self;
         let pool = db::get().await;
         let mut conn = pool.acquire().await?;
-        let mut redis_conn = redis::conn().await;
-        let redis_conn = &mut redis_conn;
-        let mut should_finish = false;
+        let mut should_clear = false;
         if let Some(text) = text.as_ref() {
             if (text.trim().is_empty() || entities.is_empty()) && edit_for.is_none() {
-                should_finish = true;
+                should_clear = true;
             }
         }
         let muted = text.is_none();
@@ -92,10 +90,12 @@ impl PreviewPost {
         if let Some(PreviewEdit { p, q, time }) = edit {
             start = p as f64 / q as f64;
             edit_for = Some(time);
-        } else if edit_for.is_none() && !should_finish {
-            let keep_seconds = if muted { 8 } else { 60 * 3 };
-            start =
-                crate::pos::pos(&mut conn, redis_conn, channel_id, id, keep_seconds).await? as f64;
+        } else if edit_for.is_none() && !should_clear {
+            let timeout = if muted { 8 } else { 60 * 3 };
+            let pos = crate::pos::CHANNEL_POS_MAP
+                .pos(&mut conn, channel_id, id, timeout)
+                .await?;
+            start = *pos.numer() as f64 / *pos.denom() as f64;
         }
         let is_master = ChannelMember::get(&mut *conn, user_id, space_id, channel_id)
             .await
@@ -121,8 +121,8 @@ impl PreviewPost {
             edit,
         });
 
-        if should_finish {
-            crate::pos::finished(redis_conn, channel_id, id).await?;
+        if should_clear {
+            crate::pos::CHANNEL_POS_MAP.cancelled(channel_id, id);
         }
         Event::message_preview(space_id, preview);
         Ok(())

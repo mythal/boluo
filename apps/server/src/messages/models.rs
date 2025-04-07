@@ -5,7 +5,7 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
-use crate::pos::check_pos;
+use crate::pos::{check_pos, find_intermediate};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
@@ -335,35 +335,47 @@ impl Message {
         .map_err(Into::into)
     }
 
-    pub async fn move_between<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn move_between(
+        db: &mut sqlx::PgConnection,
         id: &Uuid,
+        channel_id: Uuid,
         a: (i32, i32),
         b: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
-        if a == b {
-            sqlx::query_file_scalar!("sql/messages/set_position.sql", id, a.0, a.1)
-                .fetch_optional(db)
-                .await
+        let pos = if a == b {
+            a
         } else {
-            sqlx::query_file_scalar!("sql/messages/move_between.sql", id, a.0, a.1, b.0, b.1)
-                .fetch_optional(db)
-                .await
+            find_intermediate(a.0, a.1, b.0, b.1)
+        };
+
+        let message_in_pos = sqlx::query_file_scalar!(
+            "sql/messages/set_position.sql",
+            id,
+            channel_id,
+            pos.0,
+            pos.1
+        )
+        .fetch_optional(&mut *db)
+        .await?;
+        let Some(message_in_pos) = message_in_pos else {
+            log::warn!("Message {} not found in channel {}", id, channel_id);
+            return Ok(None);
+        };
+        if message_in_pos.id == *id {
+            Ok(Some(message_in_pos))
+        } else {
+            let message_in_pos_id = message_in_pos.id;
+            log::warn!("Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}");
+            Message::move_bottom(
+                db,
+                &channel_id,
+                id,
+                (message_in_pos.pos_p, message_in_pos.pos_q),
+            )
+            .await
         }
-        .inspect_err(|err| {
-            if err
-                .as_database_error()
-                .map(|e| e.is_unique_violation())
-                .unwrap_or(false)
-            {
-                log::error!(
-                    "A conflict occurred while moving message {id} between {a:?} and {b:?}"
-                );
-            }
-        })
-        .map_err(Into::into)
     }
     pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
         db: T,

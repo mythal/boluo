@@ -164,7 +164,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
                 .await?
                 .or_not_found()?
         }
-        (Some(a), Some(b)) => Message::move_between(&mut *trans, &message_id, a, b)
+        (Some(a), Some(b)) => Message::move_between(&mut trans, &message_id, channel_id, a, b)
             .await?
             .or_not_found()?,
     };

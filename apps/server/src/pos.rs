@@ -154,3 +154,68 @@ pub fn cancel(channel_id: Uuid, item_id: Uuid) -> Option<i32> {
         })
         .map(|pos_item| pos_item.pos)
 }
+
+pub fn find_intermediate(p1: i32, q1: i32, p2: i32, q2: i32) -> (i32, i32) {
+    if (p1 as i64 * q2 as i64) == (p2 as i64 * q1 as i64) {
+        return (p1, q1);
+    }
+    let (mut low, mut high) = ((0, 1), (1, 0));
+    if (p1 as i64 * q2 as i64 + 1) != (p2 as i64 * q1 as i64) {
+        loop {
+            let x = (low.0 + high.0, low.1 + high.1);
+            if x.0 as i64 * q1 as i64 <= x.1 as i64 * p1 as i64 {
+                low = x;
+            } else if p2 as i64 * x.1 as i64 <= q2 as i64 * x.0 as i64 {
+                high = x;
+            } else {
+                return x;
+            }
+        }
+    }
+    (p1 + p2, q1 + q2)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_neighbors_1_3_1_2() {
+        assert_eq!(find_intermediate(1, 3, 1, 2), (2, 5));
+    }
+
+    #[test]
+    fn test_neighbors_1_2_2_3() {
+        assert_eq!(find_intermediate(1, 2, 2, 3), (3, 5));
+    }
+
+    #[test]
+    fn test_non_neighbors_1_4_1_2() {
+        assert_eq!(find_intermediate(1, 4, 1, 2), (1, 3));
+    }
+
+    #[test]
+    fn test_non_neighbors_1_3_2_3() {
+        assert_eq!(find_intermediate(1, 3, 2, 3), (1, 2));
+    }
+
+    #[test]
+    fn test_neighbors_2_3_3_4() {
+        assert_eq!(find_intermediate(2, 3, 3, 4), (5, 7));
+    }
+
+    #[test]
+    fn test_edge_0_1_1_1() {
+        assert_eq!(find_intermediate(0, 1, 1, 1), (1, 2));
+    }
+
+    #[test]
+    fn test_far_apart_1_100_1_1() {
+        assert_eq!(find_intermediate(1, 100, 1, 1), (1, 2));
+    }
+
+    #[test]
+    fn test_equal_fractions_1_2_1_2() {
+        assert_eq!(find_intermediate(1, 2, 1, 2), (1, 2));
+    }
+}

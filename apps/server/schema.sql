@@ -15,6 +15,11 @@ DECLARE
     ph integer := 1;
     qh integer := 0;
 BEGIN
+    IF p1::bigint * q2 = p2::bigint * q1 THEN
+        p := p1;
+        q := q1;
+        RETURN;
+    END IF;
     IF (p1::bigint * q2 + 1) <> (p2::bigint * q1) THEN
         LOOP
             p := pl + ph;

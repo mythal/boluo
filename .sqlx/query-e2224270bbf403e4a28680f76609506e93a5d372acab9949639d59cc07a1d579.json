@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    messages\nSET\n    (pos_p,\n        pos_q) = (\n        SELECT\n            p AS pos_p,\n            q AS pos_q\n        FROM\n            find_intermediate ($2, $3, $4, $5))\nWHERE\n    id = $1\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "WITH\n    existing_in_pos AS (\n        SELECT\n            messages\n        FROM\n            messages\n        WHERE\n            channel_id = $2\n            AND pos = ($3::int::float8 / $4::int::float8)\n    ),\n    move_pos AS (\n        UPDATE\n            messages\n        SET\n            pos_p = $3,\n            pos_q = $4\n        WHERE\n            id = $1\n            -- Only update if a message is not already in the target position\n            AND NOT EXISTS (SELECT 1 FROM existing_in_pos)\n        RETURNING\n            messages\n    )\nSELECT\n    messages AS \"message!: Message\"\nFROM\n    move_pos\nUNION ALL\nSELECT\n    messages AS \"message!: Message\"\nFROM\n    existing_in_pos\nLIMIT 1;\n",
   "describe": {
     "columns": [
       {
@@ -112,8 +112,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Int4",
-        "Int4",
+        "Uuid",
         "Int4",
         "Int4"
       ]
@@ -122,5 +121,5 @@
       null
     ]
   },
-  "hash": "39386dbf889fcb1303cc1a40ba8e4cbae0084d4a28acf633491885112b55ade1"
+  "hash": "e2224270bbf403e4a28680f76609506e93a5d372acab9949639d59cc07a1d579"
 }

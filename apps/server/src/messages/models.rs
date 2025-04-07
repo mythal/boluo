@@ -1,11 +1,12 @@
 use chrono::prelude::*;
+use num_rational::Rational32;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
-use crate::pos::{check_pos, find_intermediate};
+use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
@@ -180,6 +181,7 @@ impl Message {
         conn: &mut sqlx::PgConnection,
         preview_id: Option<&Uuid>,
         channel_id: &Uuid,
+        _space_id: Uuid,
         sender_id: &Uuid,
         default_name: &str,
         name: &str,
@@ -193,13 +195,52 @@ impl Message {
         request_pos: Option<(i32, i32)>,
         color: String,
     ) -> Result<Message, AppError> {
-        let pos: (i32, i32) = match (request_pos, preview_id) {
-            (Some(pos), _) => pos,
-            (None, Some(id)) => (crate::pos::pos(&mut *conn, *channel_id, *id, 30).await?, 1),
-            (None, None) => (
-                crate::pos::allocate_next_pos(&mut *conn, *channel_id).await?,
+        let id = Uuid::now_v1(b"server");
+        let pos: Option<(i32, i32)> = {
+            match (request_pos, preview_id) {
+                (Some(pos @ (p, q)), _) => {
+                    let channel_pos_map = CHANNEL_POS_MAP.0.pin();
+                    let channel_pos_lock =
+                        channel_pos_map.get_or_insert_with(*channel_id, Default::default);
+                    let channel_pos = channel_pos_lock.read();
+                    let pos_item = channel_pos.get(&Rational32::new(p, q));
+                    let now = std::time::Instant::now();
+
+                    match (pos_item, preview_id.cloned()) {
+                        (Some(pos_item), Some(preview_id)) => {
+                            if (preview_id == pos_item.id && pos_item.is_live())
+                                || pos_item.pos_avaliable(now)
+                            {
+                                Some(pos)
+                            } else {
+                                None
+                            }
+                        }
+                        (Some(pos_item), None) => {
+                            if pos_item.pos_avaliable(now) {
+                                Some(pos)
+                            } else {
+                                None
+                            }
+                        }
+                        (None, _) => Some(pos),
+                    }
+                }
+                (None, Some(id)) => CHANNEL_POS_MAP
+                    .try_restore_pos(*channel_id, *id)
+                    .map(|ratio| (*ratio.numer(), *ratio.denom())),
+                (None, None) => None,
+            }
+        };
+        let pos = if let Some(pos) = pos {
+            pos
+        } else {
+            (
+                CHANNEL_POS_MAP
+                    .get_next_pos(&mut *conn, *channel_id)
+                    .await?,
                 1,
-            ),
+            )
         };
         check_pos(pos)?;
 
@@ -215,6 +256,7 @@ impl Message {
         let entities = JsonValue::Array(entities);
         let mut row: Result<Message, sqlx::Error> = sqlx::query_file_scalar!(
             "sql/messages/create.sql",
+            id,
             sender_id,
             channel_id,
             &name,
@@ -245,11 +287,13 @@ impl Message {
                 "A conflict occurred while creating a new message at channel {}",
                 channel_id
             );
-            crate::pos::reset_channel_pos(channel_id);
-            let p = crate::pos::allocate_next_pos(&mut *conn, *channel_id).await?;
+            let p = CHANNEL_POS_MAP
+                .get_next_pos(&mut *conn, *channel_id)
+                .await?;
             let q = 1i32;
             row = sqlx::query_file_scalar!(
                 "sql/messages/create.sql",
+                id,
                 sender_id,
                 channel_id,
                 &name,
@@ -269,9 +313,13 @@ impl Message {
         }
 
         let mut message = row?;
-        if let Some(preview_id) = preview_id {
-            crate::pos::submitted(*channel_id, *preview_id);
-        }
+        crate::pos::CHANNEL_POS_MAP.submitted(
+            *channel_id,
+            message.id,
+            message.pos_p,
+            message.pos_q,
+            preview_id.cloned(),
+        );
         message.hide(None);
 
         {
@@ -380,11 +428,11 @@ impl Message {
     pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
-    ) -> Result<(i32, i32), sqlx::Error> {
+    ) -> Result<(i32, i32, Uuid), sqlx::Error> {
         sqlx::query_file!("sql/messages/max_pos.sql", channel_id)
             .fetch_one(db)
             .await
-            .map(|row| (row.pos_p, row.pos_q))
+            .map(|row| (row.pos_p, row.pos_q, row.id))
     }
     pub async fn set_folded<'c, T: sqlx::PgExecutor<'c>>(
         db: T,

@@ -100,5 +100,10 @@ features = [
 version = "0.7"
 features = ["colored"]
 
+[dependencies.num-rational]
+version = "0.4.2"
+features = ["std"]
+default-features = false
+
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.6"

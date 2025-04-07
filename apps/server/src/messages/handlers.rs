@@ -6,7 +6,6 @@ use crate::error::{AppError, Find};
 use crate::events::Event;
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
-use crate::pos::update_max_pos;
 use crate::spaces::SpaceMember;
 use crate::{db, interface};
 use hyper::body::Body;
@@ -45,6 +44,7 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         &mut conn,
         preview_id.as_ref(),
         &channel_id,
+        channel.space_id,
         &session.user_id,
         &channel_member.character_name,
         &name,
@@ -170,10 +170,16 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     };
 
     trans.commit().await?;
+    crate::pos::CHANNEL_POS_MAP.submitted(
+        channel_id,
+        message_id,
+        moved_message.pos_p,
+        moved_message.pos_q,
+        Some(message_id),
+    );
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    update_max_pos(channel_id, moved_message.pos.ceil() as i32);
     Event::message_edited(channel.space_id, moved_message, message.pos);
     Ok(true)
 }

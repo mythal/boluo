@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO messages (sender_id, channel_id, name, text, entities, in_game, is_action, is_master, whisper_to_users, media_id, pos_p, pos_q, color)\n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "INSERT INTO messages (id, sender_id, channel_id, name, text, entities, in_game, is_action, is_master, whisper_to_users, media_id, pos_p, pos_q, color)\n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)\nRETURNING\n    messages AS \"message!: Message\";\n\n",
   "describe": {
     "columns": [
       {
@@ -113,6 +113,7 @@
       "Left": [
         "Uuid",
         "Uuid",
+        "Uuid",
         "Text",
         "Text",
         "Jsonb",
@@ -130,5 +131,5 @@
       null
     ]
   },
-  "hash": "fde9b6f3019194b3129c57c5e8551bdcbcd17e49526be7b0db53af213d9ebca1"
+  "hash": "8720a05a1ced8a036404b0a7f1b26d498477727fff3b26ff519c252bc1df0662"
 }

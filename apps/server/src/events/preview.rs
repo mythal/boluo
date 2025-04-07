@@ -86,13 +86,16 @@ impl PreviewPost {
             }
         }
         let muted = text.is_none();
-        let mut start = 0.0;
+        let mut pos = 0.0;
         if let Some(PreviewEdit { p, q, time }) = edit {
-            start = p as f64 / q as f64;
+            pos = p as f64 / q as f64;
             edit_for = Some(time);
         } else if edit_for.is_none() && !should_clear {
-            let keep_seconds = if muted { 8 } else { 60 * 3 };
-            start = crate::pos::pos(&mut conn, channel_id, id, keep_seconds).await? as f64;
+            let timeout = if muted { 8 } else { 60 * 3 };
+            let pos_ratio = crate::pos::CHANNEL_POS_MAP
+                .preview_pos(&mut conn, channel_id, id, timeout)
+                .await?;
+            pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
         let is_master = ChannelMember::get(&mut *conn, user_id, space_id, channel_id)
             .await
@@ -114,12 +117,12 @@ impl PreviewPost {
             is_master,
             edit_for,
             clear,
-            pos: start,
+            pos,
             edit,
         });
 
         if should_clear {
-            crate::pos::cancel(channel_id, id);
+            crate::pos::CHANNEL_POS_MAP.cancelled(channel_id, id);
         }
         Event::message_preview(space_id, preview);
         Ok(())

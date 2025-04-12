@@ -19,7 +19,7 @@ async fn invalidate_user_cache(_id: Uuid) {
     // TODO: Cache invalidation for other server instances
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
+#[derive(Debug, Serialize, Clone, TS, sqlx::Type)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
@@ -37,49 +37,6 @@ pub struct User {
     pub avatar_id: Option<Uuid>,
     /// See `Message::color`
     pub default_color: String,
-}
-
-// Expand from `sqlx::Type` to workaround
-// https://github.com/launchbadge/sqlx/issues/1031
-impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for User {
-    fn decode(
-        value: ::sqlx::postgres::PgValueRef<'r>,
-    ) -> ::std::result::Result<
-        Self,
-        ::std::boxed::Box<
-            dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync,
-        >,
-    > {
-        let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
-        let id = decoder.try_decode::<Uuid>()?;
-        let email = decoder.try_decode::<String>()?;
-        let username = decoder.try_decode::<String>()?;
-        let nickname = decoder.try_decode::<String>()?;
-        let password = decoder.try_decode::<String>()?;
-        let bio = decoder.try_decode::<String>()?;
-        let joined = decoder.try_decode::<DateTime<Utc>>()?;
-        let deactivated = decoder.try_decode::<bool>()?;
-        let avatar_id = decoder.try_decode::<Option<Uuid>>()?;
-        let default_color = decoder.try_decode::<String>()?;
-        ::std::result::Result::Ok(User {
-            id,
-            email,
-            username,
-            nickname,
-            password,
-            bio,
-            joined,
-            deactivated,
-            default_color,
-            avatar_id,
-        })
-    }
-}
-
-impl sqlx::Type<sqlx::Postgres> for User {
-    fn type_info() -> sqlx::postgres::PgTypeInfo {
-        sqlx::postgres::PgTypeInfo::with_name("users")
-    }
 }
 
 impl User {

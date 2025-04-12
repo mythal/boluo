@@ -10,7 +10,7 @@ use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct Message {
@@ -45,74 +45,6 @@ pub struct Message {
     ///
     /// If the string contains a semicolon, the second part is for the dark mode.
     pub color: String,
-}
-
-// Expand from `sqlx::Type` to workaround
-// https://github.com/launchbadge/sqlx/issues/1031
-impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for Message {
-    fn decode(
-        value: ::sqlx::postgres::PgValueRef<'r>,
-    ) -> ::std::result::Result<
-        Self,
-        ::std::boxed::Box<
-            dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync,
-        >,
-    > {
-        let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
-        let id = decoder.try_decode::<Uuid>()?;
-        let sender_id = decoder.try_decode::<Uuid>()?;
-        let channel_id = decoder.try_decode::<Uuid>()?;
-        let parent_message_id = decoder.try_decode::<Option<Uuid>>()?;
-        let name = decoder.try_decode::<String>()?;
-        let media_id = decoder.try_decode::<Option<Uuid>>()?;
-        let seed = decoder.try_decode::<Vec<u8>>()?;
-        let deleted = decoder.try_decode::<bool>()?;
-        let in_game = decoder.try_decode::<bool>()?;
-        let is_action = decoder.try_decode::<bool>()?;
-        let is_master = decoder.try_decode::<bool>()?;
-        let pinned = decoder.try_decode::<bool>()?;
-        let tags = decoder.try_decode::<Vec<String>>()?;
-        let folded = decoder.try_decode::<bool>()?;
-        let text = decoder.try_decode::<String>()?;
-        let whisper_to_users = decoder.try_decode::<Option<Vec<Uuid>>>()?;
-        let entities = decoder.try_decode::<JsonValue>()?;
-        let created = decoder.try_decode::<DateTime<Utc>>()?;
-        let modified = decoder.try_decode::<DateTime<Utc>>()?;
-        let pos_p = decoder.try_decode::<i32>()?;
-        let pos_q = decoder.try_decode::<i32>()?;
-        let pos = decoder.try_decode::<f64>()?;
-        let color = decoder.try_decode::<String>()?;
-        ::std::result::Result::Ok(Message {
-            id,
-            sender_id,
-            channel_id,
-            parent_message_id,
-            name,
-            media_id,
-            seed,
-            deleted,
-            in_game,
-            is_action,
-            is_master,
-            pinned,
-            tags,
-            folded,
-            text,
-            whisper_to_users,
-            entities,
-            created,
-            modified,
-            color,
-            pos,
-            pos_p,
-            pos_q,
-        })
-    }
-}
-impl ::sqlx::Type<::sqlx::Postgres> for Message {
-    fn type_info() -> ::sqlx::postgres::PgTypeInfo {
-        ::sqlx::postgres::PgTypeInfo::with_name("messages")
-    }
 }
 
 impl Message {

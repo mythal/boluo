@@ -281,7 +281,7 @@ impl Channel {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMember {
@@ -293,40 +293,6 @@ pub struct ChannelMember {
     pub text_color: Option<String>,
     #[serde(skip)]
     pub is_joined: bool,
-}
-
-impl<'r> ::sqlx::decode::Decode<'r, ::sqlx::Postgres> for ChannelMember {
-    fn decode(
-        value: ::sqlx::postgres::PgValueRef<'r>,
-    ) -> ::std::result::Result<
-        Self,
-        ::std::boxed::Box<
-            dyn ::std::error::Error + 'static + ::std::marker::Send + ::std::marker::Sync,
-        >,
-    > {
-        let mut decoder = ::sqlx::postgres::types::PgRecordDecoder::new(value)?;
-        let user_id = decoder.try_decode::<Uuid>()?;
-        let channel_id = decoder.try_decode::<Uuid>()?;
-        let join_date = decoder.try_decode::<DateTime<Utc>>()?;
-        let character_name = decoder.try_decode::<String>()?;
-        let text_color = decoder.try_decode::<Option<String>>()?;
-        let is_joined = decoder.try_decode::<bool>()?;
-        let is_master = decoder.try_decode::<bool>()?;
-        ::std::result::Result::Ok(ChannelMember {
-            user_id,
-            channel_id,
-            join_date,
-            character_name,
-            is_master,
-            text_color,
-            is_joined,
-        })
-    }
-}
-impl ::sqlx::Type<::sqlx::Postgres> for ChannelMember {
-    fn type_info() -> ::sqlx::postgres::PgTypeInfo {
-        ::sqlx::postgres::PgTypeInfo::with_name("channel_members")
-    }
 }
 
 /// Avoid to read values from this cache.

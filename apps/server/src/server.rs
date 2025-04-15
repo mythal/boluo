@@ -38,6 +38,7 @@ mod redis;
 mod s3;
 mod session;
 mod spaces;
+mod ts;
 mod users;
 mod validators;
 mod websocket;
@@ -141,6 +142,8 @@ async fn storage_check() {
 struct Args {
     #[clap(long, help = "check only", default_value = "false")]
     check: bool,
+    #[clap(long, help = "export typescript types", default_value = "false")]
+    types: bool,
 }
 
 #[tokio::main]
@@ -150,6 +153,10 @@ async fn main() {
     logger::setup_logger(debug()).unwrap();
 
     let args = Args::parse();
+    if args.types {
+        ts::export();
+        return;
+    }
 
     let port: u16 = env::var("PORT")
         .expect("PORT must be set")

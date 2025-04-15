@@ -2,15 +2,13 @@ use crate::channels::ChannelMember;
 use crate::db;
 use crate::error::AppError;
 use crate::error::Find;
-use crate::events::Event;
+use crate::events::Update;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Preview {
     pub id: Uuid,
@@ -25,15 +23,13 @@ pub struct Preview {
     pub clear: bool,
     pub text: Option<String>,
     pub whisper_to_users: Option<Vec<Uuid>>,
-    #[ts(type = "Array<unknown>")]
     pub entities: Vec<JsonValue>,
     pub pos: f64,
     pub edit_for: Option<DateTime<Utc>>,
     pub edit: Option<PreviewEdit>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviewEdit {
     pub time: DateTime<Utc>,
@@ -41,8 +37,7 @@ pub struct PreviewEdit {
     pub q: i32,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviewPost {
     pub id: Uuid,
@@ -54,7 +49,6 @@ pub struct PreviewPost {
     pub text: Option<String>,
     #[serde(default)]
     pub clear: bool,
-    #[ts(type = "Array<unknown>")]
     pub entities: Vec<JsonValue>,
     #[serde(default)]
     pub edit_for: Option<DateTime<Utc>>,
@@ -124,7 +118,7 @@ impl PreviewPost {
         if should_clear {
             crate::pos::CHANNEL_POS_MAP.cancelled(channel_id, id);
         }
-        Event::message_preview(space_id, preview);
+        Update::message_preview(space_id, preview);
         Ok(())
     }
 }

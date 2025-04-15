@@ -4,8 +4,8 @@ import { store } from '@boluo/store';
 import type { Result } from '@boluo/utils/result';
 import { isCrossOrigin } from '@boluo/utils/browser';
 import { ApiError } from '@boluo/api/errors';
-import { LoginReturn, User } from '@boluo/api/types/users';
-import { Media } from '@boluo/api/types/media';
+import type { LoginReturn, User } from '@boluo/api';
+import type { Media } from '@boluo/api';
 
 export const backendUrlAtom = atom('');
 

@@ -1,6 +1,6 @@
 use crate::db;
 use crate::events::context::get_broadcast_table;
-use crate::events::Event;
+use crate::events::Update;
 use crate::spaces::Space;
 use crate::utils::timestamp;
 use futures::StreamExt;
@@ -21,7 +21,7 @@ async fn push_status() {
             let spaces = Space::recent(&pool).await.unwrap_or_default();
 
             for space_id in spaces {
-                Event::push_status(space_id).await.ok();
+                Update::push_status(space_id).await.ok();
             }
         })
         .await;
@@ -35,22 +35,22 @@ async fn events_clean() {
             mailbox_map.retain(|_id, mailbox| {
                 let mut before = before;
 
-                let events_is_empty = if let Some(mut events) = mailbox.events.try_lock() {
-                    while let Some(event) = events.pop_front() {
-                        if events.len() < 1024 && event.event.id.timestamp > before {
-                            before = event.event.id.timestamp - 1;
-                            events.push_front(event);
+                let events_is_empty = if let Some(mut updates) = mailbox.updates.try_lock() {
+                    while let Some(encoded_update) = updates.pop_front() {
+                        if updates.len() < 1024 && encoded_update.update.id.timestamp > before {
+                            before = encoded_update.update.id.timestamp - 1;
+                            updates.push_front(encoded_update);
                             break;
                         }
                     }
-                    events.is_empty()
+                    updates.is_empty()
                 } else {
                     return true;
                 };
 
                 let preview_map_is_empty =
                     if let Some(mut preview_map) = mailbox.preview_map.try_lock() {
-                        preview_map.retain(|_, preview| preview.event.id.timestamp > before);
+                        preview_map.retain(|_, preview| preview.update.id.timestamp > before);
                         preview_map.is_empty()
                     } else {
                         return true;
@@ -58,7 +58,7 @@ async fn events_clean() {
 
                 let edition_map_is_empty =
                     if let Some(mut edition_map) = mailbox.edition_map.try_lock() {
-                        edition_map.retain(|_, edition| edition.event.id.timestamp > before);
+                        edition_map.retain(|_, edition| edition.update.id.timestamp > before);
                         edition_map.is_empty()
                     } else {
                         return true;

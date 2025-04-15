@@ -3,7 +3,7 @@ use super::Message;
 use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
-use crate::events::Event;
+use crate::events::Update;
 use crate::interface::{missing, ok_response, parse_query, Response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
 use crate::spaces::SpaceMember;
@@ -59,7 +59,7 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         color,
     )
     .await?;
-    Event::new_message(space_member.space_id, message.clone(), preview_id);
+    Update::new_message(space_member.space_id, message.clone(), preview_id);
     Ok(message)
 }
 
@@ -111,7 +111,7 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     .await?
     .ok_or_else(|| unexpected!("The message had been delete."))?;
     trans.commit().await?;
-    Event::message_edited(
+    Update::message_edited(
         space_member.space_id,
         edited_message.clone(),
         edited_message.pos,
@@ -180,7 +180,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    Event::message_edited(channel.space_id, moved_message, message.pos);
+    Update::message_edited(channel.space_id, moved_message, message.pos);
     Ok(true)
 }
 
@@ -208,7 +208,7 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
         return Err(AppError::NoPermission("user id mismatch".to_string()));
     }
     Message::delete(&mut *conn, &id).await?;
-    Event::message_deleted(
+    Update::message_deleted(
         space_member.space_id,
         message.channel_id,
         message.id,
@@ -242,7 +242,7 @@ async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
     let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
-    Event::message_edited(channel.space_id, edited_message.clone(), message.pos);
+    Update::message_edited(channel.space_id, edited_message.clone(), message.pos);
     Ok(edited_message)
 }
 

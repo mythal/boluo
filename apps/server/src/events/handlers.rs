@@ -1,6 +1,6 @@
 use super::api::Token;
-use super::types::{ConnectionError, EventQuery};
-use super::Event;
+use super::types::{ConnectionError, UpdateQuery};
+use super::Update;
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::context::get_mailbox_broadcast_rx;
@@ -57,7 +57,7 @@ async fn check_permissions(
 
 // Allow the needless return for keep some visual hints
 #[allow(clippy::needless_return)]
-async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
+async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;
     use tokio::time::interval;
@@ -82,30 +82,34 @@ async fn push_events(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, s
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
-        let Some(cached_events) = Event::get_from_cache(&mailbox, after, seq) else {
-            let error_event = Event::error(
+        let Some(cached_updates) = Update::get_from_cache(&mailbox, after, seq) else {
+            let error_update = Update::error(
                 mailbox,
                 ConnectionError::Unexpected,
-                "Failed to get cached events".to_string(),
+                "Failed to get cached updates".to_string(),
             )
             .encode();
-            tx.send(WsMessage::Text(error_event)).await.ok();
+            tx.send(WsMessage::Text(error_update)).await.ok();
             return;
         };
-        if !cached_events.is_empty() {
-            for message in cached_events {
+        if !cached_updates.is_empty() {
+            for message in cached_updates {
                 if let Err(err) = tx.send(WsMessage::Text(message)).await {
-                    log::warn!("Failed to send batch event to mailbox {}: {}", mailbox, err);
+                    log::warn!(
+                        "Failed to send batch update to mailbox {}: {}",
+                        mailbox,
+                        err
+                    );
                     return;
                 };
             }
         }
-        let initialized = Event::initialized(mailbox).encode();
+        let initialized = Update::initialized(mailbox).encode();
         tx.send(WsMessage::Text(initialized)).await.ok();
 
         loop {
             let message = match mailbox_rx.recv().await {
-                Ok(event) => WsMessage::Text(event.encoded.clone()),
+                Ok(update) => WsMessage::Text(update.encoded.clone()),
                 Err(RecvError::Lagged(lagged)) => {
                     log::warn!("lagged {lagged} at {mailbox}");
                     continue;
@@ -153,13 +157,13 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: &str
                 return;
             };
             if let Err(err) = preview.broadcast(mailbox, user_id).await {
-                log::warn!("Failed to broadcast preview event: {}", err);
+                log::warn!("Failed to broadcast preview update: {}", err);
             };
         }
         ClientEvent::Status { kind, focus } => {
             if let Some(user_id) = user_id {
-                if let Err(err) = Event::status(mailbox, user_id, kind, timestamp(), focus).await {
-                    log::warn!("Failed to broadcast status event: {}", err);
+                if let Err(err) = Update::status(mailbox, user_id, kind, timestamp(), focus).await {
+                    log::warn!("Failed to broadcast status update: {}", err);
                 }
             }
         }
@@ -173,17 +177,17 @@ fn connection_error(
     reason: String,
 ) -> Response {
     let mailbox = mailbox.unwrap_or_default();
-    let event = Event::error(mailbox, code, reason).encode();
+    let error_update = Update::error(mailbox, code, reason).encode();
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
-        outgoing.send(WsMessage::Text(event)).await.ok();
+        outgoing.send(WsMessage::Text(error_update)).await.ok();
     })
 }
 
 async fn connect(req: hyper::Request<Incoming>) -> Response {
     use futures::future;
 
-    let Ok(EventQuery {
+    let Ok(UpdateQuery {
         mailbox,
         token,
         after,
@@ -266,8 +270,8 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
 
-        let server_push_events = async move {
-            push_events(mailbox, &mut outgoing, after, seq).await;
+        let push_updates_future = async move {
+            push_updates(mailbox, &mut outgoing, after, seq).await;
             outgoing.close().await.ok();
         };
 
@@ -288,13 +292,13 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 }
                 Ok(())
             });
-        futures::pin_mut!(server_push_events);
+        futures::pin_mut!(push_updates_future);
         futures::pin_mut!(receive_client_events);
-        let select_result = future::select(server_push_events, receive_client_events).await;
+        let select_result = future::select(push_updates_future, receive_client_events).await;
         log::debug!("WebSocket connection close");
         match select_result {
             future::Either::Left((_, _)) => {
-                log::debug!("Stop push events");
+                log::debug!("Stop push updates");
             }
             future::Either::Right((Err(e), _)) => {
                 log::warn!("Failed to receive events: {}", e);
@@ -305,7 +309,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         }
         if let (Some(user_id), Some(space)) = (user_id, space) {
             if let Err(e) =
-                Event::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await
+                Update::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await
             {
                 log::warn!("Failed to broadcast offline status: {}", e);
             }

@@ -2,7 +2,6 @@ use crate::context::media_path;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use ts_rs::TS;
 use uuid::Uuid;
 
 pub struct MediaFile {
@@ -37,9 +36,8 @@ impl MediaFile {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, TS, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "media")]
-#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct Media {
     pub id: Uuid,

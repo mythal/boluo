@@ -3,7 +3,7 @@ import type { Reducer } from 'react';
 import { eventIdCompare } from '../sort';
 import type { ChannelState } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
-import { type ChatAction, type ChatActionUnion, eventToChatAction } from './chat.actions';
+import { type ChatAction, type ChatActionUnion, updateToChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';
 
@@ -103,17 +103,17 @@ const handleChannelDeleted = (
   return { ...state, channels: nextChannels };
 };
 
-const handleEventFromServer = (
+const handleUpdate = (
   state: ChatSpaceState,
-  { payload: event }: ChatAction<'eventFromServer'>,
+  { payload: update }: ChatAction<'update'>,
 ): ChatSpaceState => {
-  if (event.body.type === 'BATCH') {
+  if (update.body.type === 'BATCH') {
     // We do not handle batch events here
     return state;
   }
-  if (eventIdCompare(event.id, state.lastEventId) <= 0) return state;
-  const lastEventId = event.id;
-  const chatAction = eventToChatAction(event);
+  if (eventIdCompare(update.id, state.lastEventId) <= 0) return state;
+  const lastEventId = update.id;
+  const chatAction = updateToChatAction(update);
   if (chatAction === null) {
     return { ...state, lastEventId };
   }
@@ -123,8 +123,8 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,
   action: ChatActionUnion,
 ): ChatSpaceState => {
-  if (action.type === 'eventFromServer') {
-    return handleEventFromServer(state, action);
+  if (action.type === 'update') {
+    return handleUpdate(state, action);
   }
   if (action.type === 'resetChatState') {
     return makeChatState(state.context.spaceId);

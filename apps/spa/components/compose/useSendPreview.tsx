@@ -1,4 +1,4 @@
-import { type ClientEvent, type PreviewPost } from '@boluo/api';
+import { JsonValue, type ClientEvent, type PreviewPost } from '@boluo/api';
 import { atom, type Atom, useAtomValue, useStore } from 'jotai';
 import { type MutableRefObject, useEffect, useMemo, useRef } from 'react';
 import { makeId } from '@boluo/utils';
@@ -40,7 +40,7 @@ const sendPreview = (
       isAction,
       text: resetPreview ? '' : text,
       clear: false,
-      entities: doNotBroadcast || resetPreview ? [] : parsed.entities,
+      entities: doNotBroadcast || resetPreview ? [] : (parsed.entities as unknown as JsonValue[]),
       editFor: null,
       edit,
     };

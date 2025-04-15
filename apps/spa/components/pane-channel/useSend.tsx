@@ -1,4 +1,4 @@
-import { type NewMessage, type User, type EditMessage } from '@boluo/api';
+import { type NewMessage, type User, type EditMessage, JsonValue } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
@@ -80,7 +80,7 @@ export const useSend = (me: User) => {
           channelId,
           name,
           text,
-          entities,
+          entities: entities as unknown as JsonValue[],
           inGame,
           isAction: parsed.isAction,
           mediaId: null,
@@ -104,7 +104,7 @@ export const useSend = (me: User) => {
           messageId: compose.previewId,
           name,
           text: parsed.text,
-          entities: parsed.entities,
+          entities: parsed.entities as unknown[] as JsonValue[],
           inGame,
           isAction: parsed.isAction,
           mediaId: typeof compose.media === 'string' ? compose.media : null,

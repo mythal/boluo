@@ -1,11 +1,9 @@
-use std::collections::HashMap;
-use std::sync::LazyLock;
-
 use chrono::prelude::*;
 use quick_cache::sync::Cache;
 use serde::Serialize;
 use sqlx::{query_file_scalar, query_scalar};
-use ts_rs::TS;
+use std::collections::HashMap;
+use std::sync::LazyLock;
 use uuid::Uuid;
 
 use crate::error::{row_not_found, ModelError};
@@ -19,8 +17,7 @@ async fn invalidate_user_cache(_id: Uuid) {
     // TODO: Cache invalidation for other server instances
 }
 
-#[derive(Debug, Serialize, Clone, TS, sqlx::Type)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, sqlx::Type, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: Uuid,

@@ -1,6 +1,4 @@
-import type { MoveMessageBetween } from '@boluo/server-bindings/MoveMessageBetween.js';
-import { type PreSign } from '@boluo/server-bindings/PreSign.js';
-import { type PreSignResult } from '@boluo/server-bindings/PreSignResult.js';
+import type { MoveMessageBetween, PreSign, PreSignResult } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
 import type {
   AddChannelMember,
@@ -13,25 +11,22 @@ import type {
   GrantOrRemoveChannelMaster,
   JoinChannel,
   KickFromChannel,
-} from './types/channels';
-import type { Message, NewMessage } from './types/messages';
-import type {
+  Message,
+  NewMessage,
   CreateSpace,
   EditSpace,
   KickFromSpace,
   Space,
   SpaceMemberWithUser,
   SpaceWithMember,
-} from './types/spaces';
-import type {
   EditUser,
-  LoginData,
+  Login as LoginData,
   LoginReturn,
-  RegisterData,
+  Register as RegisterData,
   ResetPassword,
   ResetPasswordConfirm,
   User,
-} from './types/users';
+} from './bindings';
 
 export interface Post {
   // users

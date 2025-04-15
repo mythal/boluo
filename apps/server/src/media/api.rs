@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Deserialize, TS)]
-#[ts(export)]
+#[derive(Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Upload {
     pub filename: String,
@@ -12,8 +10,7 @@ pub struct Upload {
     pub size: usize,
 }
 
-#[derive(Deserialize, TS)]
-#[ts(export)]
+#[derive(Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaQuery {
     pub filename: Option<String>,
@@ -22,8 +19,7 @@ pub struct MediaQuery {
     pub download: bool,
 }
 
-#[derive(Deserialize, TS)]
-#[ts(export)]
+#[derive(Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreSign {
     pub filename: String,
@@ -31,8 +27,7 @@ pub struct PreSign {
     pub size: i32,
 }
 
-#[derive(Deserialize, Serialize, TS)]
-#[ts(export)]
+#[derive(Deserialize, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreSignResult {
     pub url: String,

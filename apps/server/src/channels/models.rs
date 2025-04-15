@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use quick_cache::sync::Cache;
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::cache::CacheItem;
@@ -16,9 +15,18 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 #[derive(
-    Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, TS, sqlx::Type,
+    Debug,
+    Clone,
+    Copy,
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    specta::Type,
+    sqlx::Type,
 )]
-#[ts(export)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "text", rename_all = "snake_case")]
 pub enum ChannelType {
@@ -37,9 +45,8 @@ impl ChannelType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "channels")]
-#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct Channel {
     pub id: Uuid,
@@ -281,8 +288,7 @@ impl Channel {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMember {
     pub user_id: Uuid,
@@ -586,8 +592,7 @@ impl ChannelMember {
     }
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Member {
     pub channel: ChannelMember,

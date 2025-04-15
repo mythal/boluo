@@ -7,11 +7,9 @@ use crate::users::User;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MemberWithUser {
     pub channel: ChannelMember,
@@ -19,8 +17,7 @@ pub struct MemberWithUser {
     pub user: User,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateChannel {
     pub space_id: Uuid,
@@ -33,8 +30,7 @@ pub struct CreateChannel {
     pub _type: Option<ChannelType>,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct EditChannel {
     pub channel_id: Uuid,
@@ -52,16 +48,14 @@ pub struct EditChannel {
     pub _type: Option<ChannelType>,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum GrantOrRevoke {
     Grant,
     Revoke,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GrantOrRemoveChannelMaster {
     pub channel_id: Uuid,
@@ -69,16 +63,14 @@ pub struct GrantOrRemoveChannelMaster {
     pub grant_or_revoke: GrantOrRevoke,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct CheckChannelName {
     pub space_id: Uuid,
     pub name: String,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct EditChannelMember {
     pub channel_id: Uuid,
@@ -86,8 +78,7 @@ pub struct EditChannelMember {
     pub text_color: Option<String>,
 }
 
-#[derive(Serialize, Debug, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMembers {
     pub members: Vec<MemberWithUser>,
@@ -96,8 +87,7 @@ pub struct ChannelMembers {
     pub self_index: Option<usize>,
 }
 
-#[derive(Serialize, Debug, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelWithRelated {
     pub channel: Channel,
@@ -107,32 +97,28 @@ pub struct ChannelWithRelated {
     pub heartbeat_map: HashMap<Uuid, i64>,
 }
 
-#[derive(Serialize, Debug, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelWithMember {
     pub channel: Channel,
     pub member: ChannelMember,
 }
 
-#[derive(Serialize, Debug, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelWithMaybeMember {
     pub channel: Channel,
     pub member: Option<ChannelMember>,
 }
 
-#[derive(Serialize, Debug, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMemberWithUser {
     pub member: ChannelMember,
     pub user: User,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinChannel {
     pub channel_id: Uuid,
@@ -140,8 +126,7 @@ pub struct JoinChannel {
     pub character_name: String,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct KickFromChannel {
     pub space_id: Uuid,
@@ -149,8 +134,7 @@ pub struct KickFromChannel {
     pub user_id: Uuid,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct AddChannelMember {
     pub channel_id: Uuid,
@@ -159,8 +143,7 @@ pub struct AddChannelMember {
     pub character_name: String,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Export {
     pub channel_id: Uuid,

@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
 
 use crate::db;
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Proxy {
     pub name: String,
@@ -12,8 +10,7 @@ pub struct Proxy {
     pub region: String,
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct DiskInfo {
     pub name: String,
     pub mount_point: String,
@@ -21,8 +18,7 @@ pub struct DiskInfo {
     pub total: u64,
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct HealthCheck {
     pub timestamp_sec: u64,
     pub disks: Vec<DiskInfo>,
@@ -32,8 +28,7 @@ pub struct HealthCheck {
     pub database: CheckResult<ConnectionState>,
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 #[serde(tag = "type")]
 pub enum CheckResult<T> {
     Ok { value: T },
@@ -42,7 +37,7 @@ pub enum CheckResult<T> {
 
 impl<T> From<Result<T, String>> for CheckResult<T>
 where
-    T: Serialize + Clone + TS + std::fmt::Debug,
+    T: Serialize + Clone + specta::Type + std::fmt::Debug,
 {
     fn from(result: Result<T, String>) -> Self {
         match result {
@@ -52,8 +47,7 @@ where
     }
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct ConnectionState {
     rtt_ms: u64,
     /// Connection count in the pool.
@@ -120,8 +114,7 @@ impl HealthCheck {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, specta::Type)]
 pub struct BasicInfo {
     pub version: String,
 }
@@ -133,8 +126,7 @@ impl BasicInfo {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub media_url: String,

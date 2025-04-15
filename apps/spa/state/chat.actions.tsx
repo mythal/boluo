@@ -1,11 +1,11 @@
 import type {
   ConnectionError,
   EditMessage,
-  EventBody,
+  UpdateBody,
   Message,
   NewMessage,
   Preview,
-  ServerEvent,
+  Update,
   SpaceWithRelated,
 } from '@boluo/api';
 import type { Empty } from '@boluo/utils';
@@ -14,7 +14,7 @@ import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';
 
 export type ChatActionMap = {
-  receiveMessage: EventBody & { type: 'NEW_MESSAGE' };
+  receiveMessage: UpdateBody & { type: 'NEW_MESSAGE' };
   messageSending: { newMessage: NewMessage; sendTime: number; media: File | null };
   messageEditing: { editMessage: EditMessage; sendTime: number; media: File | null };
   setOptimisticMessage: OptimisticMessage;
@@ -42,7 +42,7 @@ export type ChatActionMap = {
   messageDeleted: { channelId: string; messageId: string; pos: number };
   channelDeleted: { channelId: string };
   resetGc: { pos: number };
-  eventFromServer: ServerEvent;
+  update: Update;
   resetChatState: Empty;
 };
 
@@ -50,7 +50,7 @@ export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
 
 export type ChatAction<T extends keyof ChatActionMap> = MakeAction<ChatActionMap, T>;
 
-export const eventToChatAction = (e: ServerEvent): ChatActionUnion | null => {
+export const updateToChatAction = (e: Update): ChatActionUnion | null => {
   switch (e.body.type) {
     case 'NEW_MESSAGE':
       return { type: 'receiveMessage', payload: e.body };

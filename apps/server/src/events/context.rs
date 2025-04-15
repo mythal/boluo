@@ -1,6 +1,6 @@
 use crate::channels::models::Member;
 use crate::channels::ChannelMember;
-use crate::events::Event;
+use crate::events::Update;
 use crate::spaces::SpaceMember;
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -26,20 +26,20 @@ pub enum StateError {
 }
 
 #[derive(Debug)]
-pub struct EncodedEvent {
-    pub event: Event,
+pub struct EncodedUpdate {
+    pub update: Update,
     pub encoded: Utf8Bytes,
 }
 
-impl EncodedEvent {
-    pub fn new(event: Event) -> EncodedEvent {
-        let encoded = event.encode();
-        EncodedEvent { encoded, event }
+impl EncodedUpdate {
+    pub fn new(update: Update) -> EncodedUpdate {
+        let encoded = update.encode();
+        EncodedUpdate { encoded, update }
     }
 }
 
 type BroadcastTable =
-    papaya::HashMap<Uuid, broadcast::Sender<Arc<EncodedEvent>>, ahash::RandomState>;
+    papaya::HashMap<Uuid, broadcast::Sender<Arc<EncodedUpdate>>, ahash::RandomState>;
 
 static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
 
@@ -53,7 +53,7 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
     })
 }
 
-pub fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedEvent>> {
+pub fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedUpdate>> {
     let broadcast_table = get_broadcast_table();
     let table = broadcast_table.pin();
     table
@@ -82,9 +82,9 @@ impl ChannelUserId {
 
 pub struct MailBoxState {
     pub start_at: i64,
-    pub events: Mutex<VecDeque<Arc<EncodedEvent>>>,
-    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<EncodedEvent>, ahash::RandomState>>,
-    pub edition_map: Mutex<HashMap<Uuid, Arc<EncodedEvent>>>, // the key is message id
+    pub updates: Mutex<VecDeque<Arc<EncodedUpdate>>>,
+    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>>,
+    pub edition_map: Mutex<HashMap<Uuid, Arc<EncodedUpdate>>>, // the key is message id
     members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
     pub status: Mutex<HashMap<Uuid, UserStatus>>,
 }
@@ -93,7 +93,7 @@ impl Default for MailBoxState {
     fn default() -> Self {
         MailBoxState {
             start_at: timestamp(),
-            events: Mutex::new(VecDeque::new()),
+            updates: Mutex::new(VecDeque::new()),
             preview_map: Mutex::new(HashMap::with_hasher(ahash::RandomState::new())),
             edition_map: Mutex::new(HashMap::new()),
             members_cache: papaya::HashMap::builder()

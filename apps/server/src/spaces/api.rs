@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::channels::ChannelType;
 use crate::events::models::UserStatus;
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateSpace {
     pub name: String,
@@ -19,39 +17,34 @@ pub struct CreateSpace {
     pub first_channel_type: Option<ChannelType>,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct QuerySpace {
     pub id: Uuid,
     pub token: Option<Uuid>,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinSpace {
     pub space_id: Uuid,
     pub token: Option<Uuid>,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct KickFromSpace {
     pub space_id: Uuid,
     pub user_id: Uuid,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchParams {
     pub search: String,
 }
 
-#[derive(Deserialize, Debug, TS)]
-#[ts(export)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct EditSpace {
     pub space_id: Uuid,
@@ -67,8 +60,7 @@ pub struct EditSpace {
     pub remove_admins: Vec<Uuid>,
 }
 
-#[derive(Serialize, Debug, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceWithRelated {
     pub space: super::Space,
@@ -78,8 +70,7 @@ pub struct SpaceWithRelated {
     pub users_status: HashMap<Uuid, UserStatus>,
 }
 
-#[derive(Serialize, Debug, Clone, TS)]
-#[ts(export)]
+#[derive(Serialize, Debug, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceWithMember {
     pub space: super::Space,

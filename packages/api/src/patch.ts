@@ -1,4 +1,4 @@
-import type { EditMessage, Message } from './types/messages';
+import type { EditMessage, Message } from './bindings';
 
 export interface Patch {
   '/users/update_settings': { payload: object; query: null; result: object };

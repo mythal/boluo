@@ -4,17 +4,18 @@ import type {
   ChannelMembers,
   ChannelWithMaybeMember,
   Export,
-} from './types/channels';
-import type { GetMessagesByChannel, Message } from './types/messages';
-import type {
+  GetMessagesByChannel,
+  Message,
   Space,
   SpaceMember,
   SpaceMemberWithUser,
   SpaceWithMember,
   SpaceWithRelated,
   UserStatus,
-} from './types/spaces';
-import type { CheckEmail, CheckUsername, User } from './types/users';
+  CheckEmailExists,
+  CheckUsernameExists,
+  User,
+} from './bindings';
 
 export interface Get {
   // users
@@ -22,8 +23,8 @@ export interface Get {
   '/users/query_self': { query: null; result: User | null };
   '/users/logout': { query: null; result: true };
   '/users/settings': { query: null; result: unknown };
-  '/users/check_username': { query: CheckUsername; result: boolean };
-  '/users/check_email': { query: CheckEmail; result: boolean };
+  '/users/check_username': { query: CheckUsernameExists; result: boolean };
+  '/users/check_email': { query: CheckEmailExists; result: boolean };
   // spaces
   '/spaces/users_status': { query: { id: string }; result: Record<string, UserStatus> };
   '/spaces/query': { query: { id: string; token?: string }; result: Space };

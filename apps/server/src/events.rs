@@ -7,4 +7,4 @@ pub mod tasks;
 mod types;
 
 pub use handlers::router;
-pub use types::Event;
+pub use types::Update;

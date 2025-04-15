@@ -8,7 +8,7 @@ use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::models::{space_users_status, UserStatus};
-use crate::events::Event;
+use crate::events::Update;
 use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Response};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
@@ -249,7 +249,7 @@ async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
     }
     trans.commit().await?;
 
-    Event::space_updated(space_id);
+    Update::space_updated(space_id);
     Ok(space)
 }
 
@@ -277,7 +277,7 @@ async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     } else {
         SpaceMember::add_user(&mut *conn, user_id, &space_id).await?
     };
-    Event::space_updated(space_id);
+    Update::space_updated(space_id);
     Ok(SpaceWithMember {
         space,
         member,
@@ -293,7 +293,7 @@ async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
     let mut trans = pool.begin().await?;
     SpaceMember::remove_user(&mut trans, session.user_id, id).await?;
     trans.commit().await?;
-    Event::space_updated(id);
+    Update::space_updated(id);
     Ok(true)
 }
 
@@ -319,7 +319,7 @@ async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUs
     }
     SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
     trans.commit().await?;
-    Event::space_updated(space_id);
+    Update::space_updated(space_id);
     Ok(SpaceMemberWithUser::get_by_space(&pool, &space_id).await?)
 }
 

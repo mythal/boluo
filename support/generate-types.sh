@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# see [ts-rs #62](https://github.com/Aleph-Alpha/ts-rs/issues/62)
-cargo test export_bindings_
+cargo run -p server -- --types
 
-npm exec prettier -- --write ./apps/server/bindings/**/*
+npm exec prettier -- --write ./packages/api/src/bindings.ts
 cargo sqlx prepare --workspace

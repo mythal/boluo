@@ -5,7 +5,6 @@ use std::sync::LazyLock;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
-use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::cache::CacheItem;
@@ -20,17 +19,14 @@ pub static SPACES_CACHE: LazyLock<Cache<Uuid, CacheItem<Space>>> =
 static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, CacheItem<serde_json::Value>>> =
     LazyLock::new(|| Cache::new(1024));
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "spaces")]
-#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct Space {
     pub id: Uuid,
     pub name: String,
     pub description: String,
-    #[ts(type = "number")]
     pub created: DateTime<Utc>,
-    #[ts(type = "number")]
     pub modified: DateTime<Utc>,
     pub owner_id: Uuid,
     pub is_public: bool,
@@ -311,9 +307,8 @@ impl Space {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "space_members")]
-#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceMember {
     pub user_id: Uuid,
@@ -425,8 +420,7 @@ impl SpaceMember {
     }
 }
 
-#[derive(Debug, Serialize, Clone, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceMemberWithUser {
     pub space: SpaceMember,

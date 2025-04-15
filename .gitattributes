@@ -1,3 +1,3 @@
 # https://github.com/github-linguist/linguist/blob/master/docs/overrides.md#vendored-code
-apps/server/bindings/* linguist-generated
+packages/api/src/bindings.ts linguist-generated
 **/.sqlx/* linguist-generated

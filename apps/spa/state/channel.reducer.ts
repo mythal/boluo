@@ -40,7 +40,7 @@ const editMessageOptimisticItem = (
     inGame,
     isAction,
     mediaId,
-    color,
+    color: color ?? '',
   };
   const item: OptimisticItem = {
     optimisticPos: previousMessage.pos,
@@ -77,7 +77,7 @@ const newMessageOptimisticItem = (
     isAction: newMessage.isAction,
     isMaster: preview.isMaster,
     pinned: false,
-    color: newMessage.color,
+    color: newMessage.color ?? '',
     text: newMessage.text,
     folded: false,
     modified: created,

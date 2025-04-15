@@ -1,6 +1,7 @@
 {
   "extends": "@boluo/typescript-config/base.json",
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "dist/",
     "module": "Preserve",
     "moduleResolution": "bundler"

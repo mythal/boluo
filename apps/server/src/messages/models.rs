@@ -2,7 +2,6 @@ use chrono::prelude::*;
 use num_rational::Rational32;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
@@ -10,8 +9,7 @@ use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
-#[derive(Debug, Serialize, Deserialize, Clone, TS, sqlx::Type)]
-#[ts(export)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Message {
     pub id: Uuid,
@@ -31,7 +29,6 @@ pub struct Message {
     pub folded: bool,
     pub text: String,
     pub whisper_to_users: Option<Vec<Uuid>>,
-    #[ts(type = "unknown")]
     pub entities: JsonValue,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,

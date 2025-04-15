@@ -1,3 +1,4 @@
+import { JsonValue } from '@boluo/api';
 import { isLegacyEntity, type LegacyEntity } from './legacy-entities';
 
 export interface BaseEntity {

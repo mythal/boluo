@@ -11,7 +11,7 @@ use crate::channels::models::{ChannelType, Member};
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
-use crate::events::Event;
+use crate::events::Update;
 use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery};
 use crate::messages::Message;
 use crate::session::Session;
@@ -49,7 +49,7 @@ async fn push_members(space_id: Uuid, channel_id: Uuid) -> Result<(), sqlx::Erro
     let mut conn = pool.acquire().await?;
     let members = Member::get_by_channel_from_db(&mut *conn, space_id, channel_id).await?;
     let members = members_attach_user(&mut *conn, members).await?;
-    Event::push_members(space_id, channel_id, members);
+    Update::push_members(space_id, channel_id, members);
     Ok(())
 }
 
@@ -174,7 +174,7 @@ async fn create(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> 
         channel,
         member: channel_member,
     };
-    Event::space_updated(space_id);
+    Update::space_updated(space_id);
     Ok(joined)
 }
 
@@ -231,10 +231,10 @@ async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
         let members =
             Member::get_by_channel_from_db(&mut *conn, channel.space_id, channel_id).await?;
         let members = members_attach_user(&mut *conn, members).await?;
-        Event::push_members(channel.space_id, channel_id, members);
+        Update::push_members(channel.space_id, channel_id, members);
     }
-    Event::channel_edited(channel.clone());
-    Event::space_updated(channel.space_id);
+    Update::channel_edited(channel.clone());
+    Update::space_updated(channel.space_id);
     Ok(channel)
 }
 
@@ -437,8 +437,8 @@ async fn delete(req: Request<impl Body>) -> Result<bool, AppError> {
 
     Channel::delete(&mut *conn, &id).await?;
     log::info!("channel {} was deleted.", &id);
-    Event::channel_deleted(channel.space_id, id);
-    Event::space_updated(channel.space_id);
+    Update::channel_deleted(channel.space_id, id);
+    Update::space_updated(channel.space_id);
     Ok(true)
 }
 

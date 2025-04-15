@@ -34,7 +34,6 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "apps/server/bindings"
+    "packages/*"
   ]
 }

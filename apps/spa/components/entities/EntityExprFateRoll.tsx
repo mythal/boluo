@@ -1,10 +1,10 @@
 import type { FC } from 'react';
-import { type FateResult, type FateRoll } from '../../interpreter/entities';
+import { type MaybeEvalutedExprOf } from '@boluo/api';
 import { EntityExprFateDice as FateDice } from './EntityExprFateDice';
 import clsx from 'clsx';
 
 interface Props {
-  node: FateRoll | FateResult;
+  node: MaybeEvalutedExprOf<'FateRoll'>;
 }
 
 export const EntityExprFateRoll: FC<Props> = ({ node }) => {

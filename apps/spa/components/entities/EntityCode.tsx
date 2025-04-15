@@ -1,9 +1,9 @@
 import type { FC } from 'react';
-import type { Code } from '../../interpreter/entities';
+import type { EntityOf } from '@boluo/api';
 
 interface Props {
   source: string;
-  entity: Code;
+  entity: EntityOf<'Code'>;
 }
 
 export const EntityCode: FC<Props> = ({

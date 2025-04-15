@@ -1,6 +1,7 @@
 use serde::Deserialize;
-use serde_json::Value as JsonValue;
 use uuid::Uuid;
+
+use super::models::Entities;
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -10,7 +11,7 @@ pub struct NewMessage {
     pub channel_id: Uuid,
     pub name: String,
     pub text: String,
-    pub entities: Vec<JsonValue>,
+    pub entities: Entities,
     pub in_game: bool,
     pub is_action: bool,
     pub media_id: Option<Uuid>,
@@ -26,7 +27,7 @@ pub struct EditMessage {
     pub message_id: Uuid,
     pub name: String,
     pub text: String,
-    pub entities: Vec<JsonValue>,
+    pub entities: Entities,
     pub in_game: bool,
     pub is_action: bool,
     pub media_id: Option<Uuid>,

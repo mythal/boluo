@@ -1,9 +1,9 @@
+import type { EntityOf } from '@boluo/api';
 import type { FC } from 'react';
-import type { Emphasis } from '../../interpreter/entities';
 
 interface Props {
   source: string;
-  entity: Emphasis;
+  entity: EntityOf<'Emphasis'>;
 }
 
 export const EntityEmphasis: FC<Props> = ({

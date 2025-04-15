@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { memo, type ReactNode, useMemo, type MouseEventHandler } from 'react';
-import type { Entity, EvaluatedExprNode } from '../../interpreter/entities';
+import type { Entity, EvaluatedExprNode, Entities } from '@boluo/api';
 import { evaluate, makeRng } from '../../interpreter/eval';
 import { EntityCode } from '../entities/EntityCode';
 import { EntityCodeBlock } from '../entities/EntityCodeBlock';
@@ -15,7 +15,7 @@ import { EntityUnknown } from '../entities/EntityUnknown';
 
 interface Props {
   source: string;
-  entities: Entity[];
+  entities: Entities;
   isAction: boolean;
   isArchived: boolean;
   seed?: number[];

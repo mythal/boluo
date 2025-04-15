@@ -1,11 +1,11 @@
 import { EntityExprNode } from './EntityExprNode';
-import { type SubExpr, type SubExprResult } from '../../interpreter/entities';
 import { IsTopLevelContext, useIsTopLevel } from '../../hooks/useIsTopLevel';
 import { type ReactNode } from 'react';
 import { Result } from './Result';
+import type { MaybeEvalutedExprOf } from '@boluo/api';
 
 interface Props {
-  node: SubExpr | SubExprResult;
+  node: MaybeEvalutedExprOf<'SubExpr'>;
 }
 
 export const EntityExprSubExpr = ({ node }: Props) => {

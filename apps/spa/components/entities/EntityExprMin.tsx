@@ -1,11 +1,11 @@
 import { type ReactNode, type FC } from 'react';
-import { type Min, type MinResult } from '../../interpreter/entities';
 import { EntityExprNode } from './EntityExprNode';
 import { Result } from './Result';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import type { MaybeEvalutedExprOf } from '@boluo/api';
 
 interface Props {
-  node: Min | MinResult;
+  node: MaybeEvalutedExprOf<'Min'>;
 }
 
 export const EntityExprMin: FC<Props> = ({ node: minNode }) => {

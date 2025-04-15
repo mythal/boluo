@@ -3,9 +3,9 @@ use crate::db;
 use crate::error::AppError;
 use crate::error::Find;
 use crate::events::Update;
+use crate::messages::Entities;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
@@ -23,7 +23,7 @@ pub struct Preview {
     pub clear: bool,
     pub text: Option<String>,
     pub whisper_to_users: Option<Vec<Uuid>>,
-    pub entities: Vec<JsonValue>,
+    pub entities: Entities,
     pub pos: f64,
     pub edit_for: Option<DateTime<Utc>>,
     pub edit: Option<PreviewEdit>,
@@ -49,7 +49,7 @@ pub struct PreviewPost {
     pub text: Option<String>,
     #[serde(default)]
     pub clear: bool,
-    pub entities: Vec<JsonValue>,
+    pub entities: Entities,
     #[serde(default)]
     pub edit_for: Option<DateTime<Utc>>,
     #[serde(default)]
@@ -75,7 +75,7 @@ impl PreviewPost {
         let mut conn = pool.acquire().await?;
         let mut should_clear = false;
         if let Some(text) = text.as_ref() {
-            if (text.trim().is_empty() || entities.is_empty()) && edit_for.is_none() {
+            if (text.trim().is_empty() || entities.0.is_empty()) && edit_for.is_none() {
                 should_clear = true;
             }
         }

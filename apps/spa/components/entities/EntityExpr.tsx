@@ -1,10 +1,10 @@
 import { type FC } from 'react';
-import { type Expr } from '../../interpreter/entities';
+import { type ExprEntity } from '@boluo/api';
 import { EntityExprNode } from './EntityExprNode';
 
 interface Props {
   source: string;
-  entity: Expr;
+  entity: ExprEntity;
   level?: number;
 }
 

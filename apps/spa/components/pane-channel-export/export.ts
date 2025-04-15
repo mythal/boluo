@@ -1,10 +1,15 @@
 import type Prando from 'prando';
-import { type Entity, type ExportEntity, fromLegacyEntity } from '../../interpreter/entities';
-import { type Channel, type ChannelMemberWithUser, type Export, type Message } from '@boluo/api';
+import { type ExportEntity } from '../../interpreter/entities';
+import {
+  Entity,
+  type Channel,
+  type ChannelMemberWithUser,
+  type Export,
+  type Message,
+} from '@boluo/api';
 import { evaluate, makeRng, nodeToText } from '../../interpreter/eval';
 import { getMediaUrl } from '../../media';
 import { type IntlShape } from 'react-intl';
-import { type LegacyEntity } from '../../interpreter/legacy-entities';
 import { get } from '@boluo/api-browser';
 import { fileNameDateTimeFormat, generateDetailDate } from '../../date';
 import { computeColors, parseGameColor } from '../../color';
@@ -66,24 +71,6 @@ export interface ExportMessage {
 export const formatDateString = (dateString: string): string => {
   const date = new Date(dateString);
   return generateDetailDate(date);
-};
-
-const parseEntities = (rawEntities: unknown): Entity[] => {
-  if (!Array.isArray(rawEntities)) {
-    return [];
-  }
-  const entities: Entity[] = [];
-  // TODO: use zod
-  for (const entity of rawEntities) {
-    if (typeof entity !== 'object' || entity == null) {
-      continue;
-    } else if ('offset' in entity) {
-      entities.push(fromLegacyEntity(entity as LegacyEntity));
-    } else if ('type' in entity) {
-      entities.push(entity as Entity);
-    }
-  }
-  return entities;
 };
 
 const entityToExportEntity =
@@ -161,7 +148,7 @@ export const exportMessage = (intl: IntlShape, members: ChannelMemberWithUser[])
     let exportEntities: ExportEntity[] = [];
     if (rng) {
       const entityMapper = entityToExportEntity(intl, rng, text);
-      exportEntities = parseEntities(entities).map(entityMapper);
+      exportEntities = entities.map(entityMapper);
     }
     let whisperTo: ExportMessage['whisperTo'] = null;
     if (message.whisperToUsers) {

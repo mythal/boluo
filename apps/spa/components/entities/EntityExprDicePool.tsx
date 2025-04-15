@@ -2,7 +2,7 @@ import { Cubes, ThumbsDown, ThumbsUp } from '@boluo/icons';
 import { type FC, type ReactNode } from 'react';
 import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { type DicePool, type DicePoolResult } from '../../interpreter/entities';
+import { type MaybeEvalutedExprOf } from '@boluo/api';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { RollBox } from './RollBox';
@@ -10,15 +10,15 @@ import { Result } from './Result';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 
 interface Props {
-  node: DicePool | DicePoolResult;
+  node: MaybeEvalutedExprOf<'DicePool'>;
 }
 
 interface SingleDiceProps {
   value: number;
-  last?: boolean;
+  last?: boolean | null;
   addition: number;
-  critical?: number;
-  fumble?: number;
+  critical?: number | null;
+  fumble?: number | null;
 }
 
 export const SingleDice: FC<SingleDiceProps> = React.memo(

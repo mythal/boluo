@@ -2,12 +2,66 @@ use chrono::prelude::*;
 use num_rational::Rational32;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
+use types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
 use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default, specta::Type)]
+pub struct Entities(pub Vec<types::entities::Entity>);
+
+impl sqlx::Encode<'_, sqlx::Postgres> for Entities {
+    fn encode_by_ref(
+        &self,
+        _buf: &mut sqlx::postgres::PgArgumentBuffer,
+    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+        let json = serde_json::to_value(&self.0)?;
+        sqlx::Encode::encode_by_ref(&json, _buf)
+    }
+}
+
+// sqlx-postgres/src/types/json.rs
+impl sqlx::Decode<'_, sqlx::Postgres> for Entities {
+    fn decode(
+        value: sqlx::postgres::PgValueRef<'_>,
+    ) -> std::result::Result<Self, sqlx::error::BoxDynError> {
+        let mut buf = value.as_bytes()?;
+
+        if value.format() == sqlx::postgres::PgValueFormat::Binary {
+            if buf[0] != 1 {
+                log::error!("Invalid JSONB format");
+                return Ok(Default::default());
+            }
+            buf = &buf[1..];
+        }
+        let entites = serde_json::from_slice::<'_, Entities>(buf);
+        match entites {
+            Err(_) => match serde_json::from_slice::<'_, Vec<LegacyEntity>>(buf) {
+                Ok(legacy_entities) => {
+                    let entities = legacy_entities
+                        .into_iter()
+                        .map(|entity| entity.into())
+                        .collect();
+                    return Ok(Entities(entities));
+                }
+                Err(err) => {
+                    log::error!("Failed to decode JSONB: {}", err);
+                    Ok(Default::default())
+                }
+            },
+            Ok(entities) => Ok(entities),
+        }
+    }
+}
+
+impl sqlx::Type<sqlx::Postgres> for Entities {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        sqlx::postgres::PgTypeInfo::with_name("jsonb")
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[serde(rename_all = "camelCase")]
@@ -29,7 +83,7 @@ pub struct Message {
     pub folded: bool,
     pub text: String,
     pub whisper_to_users: Option<Vec<Uuid>>,
-    pub entities: JsonValue,
+    pub entities: Entities,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
     pub pos_p: i32,
@@ -115,7 +169,7 @@ impl Message {
         default_name: &str,
         name: &str,
         text: &str,
-        entities: Vec<JsonValue>,
+        entities: Entities,
         in_game: bool,
         is_action: bool,
         is_master: bool,
@@ -178,11 +232,11 @@ impl Message {
             name = default_name.trim().to_string();
         }
         CHARACTER_NAME.run(&name)?;
-        if text.trim().is_empty() || entities.is_empty() {
+        if text.trim().is_empty() || entities.0.is_empty() {
             return Err(ValidationFailed("Empty content").into());
         }
         let whisper_to = whisper_to.as_deref();
-        let entities = JsonValue::Array(entities);
+        let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
         let mut row: Result<Message, sqlx::Error> = sqlx::query_file_scalar!(
             "sql/messages/create.sql",
             id,
@@ -270,7 +324,7 @@ impl Message {
         }
         self.seed = vec![0; 4];
         self.text = String::new();
-        self.entities = JsonValue::Array(Vec::new());
+        self.entities = Default::default();
     }
 
     pub async fn move_above<'c, T: sqlx::PgExecutor<'c>>(
@@ -378,13 +432,13 @@ impl Message {
         name: &str,
         id: &Uuid,
         text: &str,
-        entities: Vec<JsonValue>,
+        entities: Entities,
         in_game: bool,
         is_action: bool,
         media_id: Option<Uuid>,
         color: String,
     ) -> Result<Option<Message>, ModelError> {
-        let entities = JsonValue::Array(entities);
+        let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
         let name = merge_blank(name);
         CHARACTER_NAME.run(&name)?;
         let result = sqlx::query_file_scalar!(

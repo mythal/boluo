@@ -1,11 +1,11 @@
 import { type ReactNode, type FC } from 'react';
-import { type Max, type MaxResult } from '../../interpreter/entities';
+import type { MaybeEvalutedExprOf } from '@boluo/api';
 import { EntityExprNode } from './EntityExprNode';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 import { Result } from './Result';
 
 interface Props {
-  node: Max | MaxResult;
+  node: MaybeEvalutedExprOf<'Max'>;
 }
 
 export const EntityExprMax: FC<Props> = ({ node: maxNode }) => {

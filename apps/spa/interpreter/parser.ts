@@ -1,22 +1,12 @@
-import {
-  Binary,
-  type CocRoll,
-  type Code,
-  type CodeBlock,
-  type DicePool,
-  type Emphasis,
-  type Entity,
-  type Expr,
-  type ExprNode,
-  type FateRoll,
-  type Link,
-  type Num,
-  type Operator,
-  type Roll,
-  type Strong,
-  type SubExpr,
-  type Text,
-} from './entities';
+import type {
+  ExprOf,
+  EntityOf,
+  Entity,
+  Operator,
+  ExprNode,
+  PureExprNode,
+  PureExprOf,
+} from '@boluo/api';
 import type { ParseResult } from './parse-result';
 
 interface State {
@@ -165,7 +155,7 @@ const EM_REGEX = /^\*(.+?)\*/;
 
 const emphasis: P<Entity> = regex(EM_REGEX).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
-  const entity: Emphasis = {
+  const entity: EntityOf<'Emphasis'> = {
     type: 'Emphasis',
     start: text.length,
     len: entire.length,
@@ -182,7 +172,7 @@ const emphasis: P<Entity> = regex(EM_REGEX).then(([match, { text, rest }]) => {
 const CODE_REGEX = /^`(.+?)`/;
 const code: P<Entity> = regex(CODE_REGEX).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
-  const entity: Code = {
+  const entity: EntityOf<'Code'> = {
     type: 'Code',
     start: text.length,
     child: {
@@ -199,7 +189,7 @@ const code: P<Entity> = regex(CODE_REGEX).then(([match, { text, rest }]) => {
 const CODE_BLOCK_REGEX = /^```\n?([\s\S]*?)\n?```\s*/;
 const codeBlock: P<Entity> = regex(CODE_BLOCK_REGEX).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
-  const entity: CodeBlock = {
+  const entity: EntityOf<'CodeBlock'> = {
     type: 'CodeBlock',
     start: text.length,
     len: entire.length,
@@ -217,7 +207,7 @@ const STRONG_REGEX = /^\*\*(.+?)\*\*/;
 
 const strong: P<Entity> = regex(STRONG_REGEX).then(([match, { text, rest }]) => {
   const [entire, content = ''] = match;
-  const entity: Strong = {
+  const entity: EntityOf<'Strong'> = {
     type: 'Strong',
     start: text.length,
     len: entire.length,
@@ -236,7 +226,7 @@ const URL_REGEX =
 
 const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
-  const entity: Link = {
+  const entity: EntityOf<'Link'> = {
     type: 'Link',
     child: {
       type: 'Text',
@@ -260,10 +250,10 @@ const autoUrl: P<Entity> = regex(URL_REGEX).then(([match, { text, rest }]) => {
 const TEXT_REGEX =
   /\d+|\s(?=\S)|[，。、)）」】\]：！？]+\s*|[\s\S][^\d*{【@[(/（#\s，。、）)」】\]：！？]*\s*/;
 
-const span: P<Text> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
+const span: P<EntityOf<'Text'>> = regex(TEXT_REGEX).then(([match, { text, rest }]) => {
   const [content] = match;
   const offset = content.length;
-  const entity: Text = {
+  const entity: EntityOf<'Text'> = {
     type: 'Text',
     start: text.length,
     len: offset,
@@ -283,7 +273,7 @@ const mention: P<string> = regex(/^@([\w_\d]{3,32})\s*/).then(([match, { text, r
 const LINK_REGEX = /^\[(.+?)]\(([^)]+?)\)/;
 const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
   const [entire, content = '', link = ''] = match;
-  let href: Link['href'];
+  let href: EntityOf<'Link'>['href'];
   if (link.length === 0) {
     href = link;
   } else {
@@ -298,7 +288,7 @@ const link: P<Entity> = regex(LINK_REGEX).then(([match, { text, rest }]) => {
     }
   }
 
-  const entity: Link = {
+  const entity: EntityOf<'Link'> = {
     type: 'Link',
     start: text.length,
     len: entire.length,
@@ -333,11 +323,11 @@ const smallSpaces: P<null> = regex(/^ {0,2}/).then(([match, state]) => {
   ];
 });
 
-const fateRoll: P<FateRoll> = regex(/^([Ff][Aa][Tt][Ee]|dF)\b/).map(() => {
+const fateRoll: P<ExprOf<'FateRoll'>> = regex(/^([Ff][Aa][Tt][Ee]|dF)\b/).map(() => {
   return { type: 'FateRoll' };
 });
 
-const srRoll: P<DicePool> = regex(/^sr(p?) {0,2}(\d+)\b/).then(([match, state]) => {
+const srRoll: P<ExprOf<'DicePool'>> = regex(/^sr(p?) {0,2}(\d+)\b/).then(([match, state]) => {
   const push = Boolean(match[1]);
   const counterStr = match[2];
   if (!counterStr) {
@@ -347,7 +337,7 @@ const srRoll: P<DicePool> = regex(/^sr(p?) {0,2}(\d+)\b/).then(([match, state]) 
   if (counter < 1) {
     return null;
   }
-  const node: DicePool = {
+  const node: ExprOf<'DicePool'> = {
     type: 'DicePool',
     counter,
     face: 6,
@@ -359,7 +349,7 @@ const srRoll: P<DicePool> = regex(/^sr(p?) {0,2}(\d+)\b/).then(([match, state]) 
   return [node, state];
 });
 
-const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))? {0,2}(\d{1,3})\b/).then(
+const wodRoll: P<ExprOf<'DicePool'>> = regex(/^[wW](?:_(\d))? {0,2}(\d{1,3})\b/).then(
   ([match, state], env) => {
     const addStr = match[1] || '10';
     const counterStr = match[2];
@@ -371,7 +361,7 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))? {0,2}(\d{1,3})\b/).then(
     if (counter < 1 || addition < 4) {
       return null;
     }
-    const node: DicePool = {
+    const node: ExprOf<'DicePool'> = {
       type: 'DicePool',
       counter,
       face: 10,
@@ -384,10 +374,10 @@ const wodRoll: P<DicePool> = regex(/^[wW](?:_(\d))? {0,2}(\d{1,3})\b/).then(
   },
 );
 
-const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\b/).then(
+const cocRoll: P<ExprOf<'CocRoll'>> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\b/).then(
   ([[entire, modifier], state], env) => {
     modifier = (modifier || '').toLowerCase();
-    let subType: CocRoll['subType'] = 'NORMAL';
+    let subType: ExprOf<'CocRoll'>['subType'] = 'NORMAL';
     switch (modifier) {
       case 'p':
         subType = 'PENALTY';
@@ -402,11 +392,11 @@ const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\b/).then(
         subType = 'BONUS_2';
         break;
     }
-    const node: CocRoll = {
+    const node: ExprOf<'CocRoll'> = {
       type: 'CocRoll',
       subType,
     };
-    const right = smallSpaces.with(atom(true)).run(state, env);
+    const right = smallSpaces.with(atomPure()).run(state, env);
     if (right) {
       const [target, state] = right;
       node.target = target;
@@ -427,7 +417,7 @@ const roll: P<ExprNode> = regex(/^(\d{0,3})[dD](\d{0,4})(?:([kKLlHh])(\d{1,3}))?
     if (face < 1) {
       face = env.defaultDiceFace;
     }
-    const node: Roll = {
+    const node: ExprOf<'Roll'> = {
       type: 'Roll',
       counter,
       face,
@@ -474,7 +464,9 @@ const operator2: P<Operator> = regex(/^[*/×÷]/).map(([op]): Operator => {
   throw Error('unreachable');
 });
 
-const num: P<ExprNode> = regex(/^\d{1,5}/).map(([n]): Num => ({ type: 'Num', value: Number(n) }));
+const num: P<ExprOf<'Num'>> = regex(/^\d{1,5}/).map(
+  ([n]): ExprOf<'Num'> => ({ type: 'Num', value: Number(n) }),
+);
 
 const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T): P<T> =>
   new P((state, env) => {
@@ -528,10 +520,13 @@ const max: P<ExprNode> = regex(/^[Mm][Aa][Xx]\s*/)
   .then(([_, state], env) => atom().run(state, env))
   .map((node) => ExprMinMax(node, 'Max'));
 
-const subExprMapper = (node: ExprNode): SubExpr =>
+const subExprMapper = (node: ExprNode): ExprOf<'SubExpr'> =>
   node.type === 'SubExpr' ? node : { type: 'SubExpr', node };
 
-const atom = (disableRoll = false): P<ExprNode> => {
+const subExprPureMapper = (node: PureExprNode): PureExprOf<'SubExpr'> =>
+  node.type === 'SubExpr' ? node : { type: 'SubExpr', node };
+
+const atom = (): P<ExprNode> => {
   const subExpr = choice([
     regex(/^\(\s*/)
       .with(expr())
@@ -546,10 +541,25 @@ const atom = (disableRoll = false): P<ExprNode> => {
       .skip(regex(/^\s*]/))
       .map(subExprMapper), // match [...]
   ]);
-  if (disableRoll) {
-    return choice([num, subExpr]);
-  }
   return choice([srRoll, roll, cocRoll, fateRoll, wodRoll, repeat(), num, subExpr]);
+};
+
+const atomPure = (): P<PureExprNode> => {
+  const subExpr = choice<PureExprNode>([
+    regex(/^\(\s*/)
+      .with(exprPure())
+      .skip(regex(/^\s*\)/))
+      .map(subExprPureMapper), // match (...)
+    regex(/^（\s*/)
+      .with(exprPure())
+      .skip(regex(/^\s*）/))
+      .map(subExprPureMapper), // match （...）
+    regex(/^\[\s*/)
+      .with(exprPure())
+      .skip(regex(/^\s*]/))
+      .map(subExprPureMapper), // match [...]
+  ]);
+  return choice<PureExprNode>([num, subExpr]);
 };
 
 const repeat = (): P<ExprNode> =>
@@ -578,6 +588,21 @@ const expr2 = (): P<ExprNode> =>
 const expr = (): P<ExprNode> =>
   chainl1<ExprNode, Operator>(operator1, expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
 
+const exprPure2 = (): P<PureExprNode> =>
+  chainl1<PureExprNode, Operator>(operator2, atomPure, (op, l, r) => ({
+    type: 'Binary',
+    l,
+    r,
+    op,
+  }));
+const exprPure = (): P<PureExprNode> =>
+  chainl1<PureExprNode, Operator>(operator1, exprPure2, (op, l, r) => ({
+    type: 'Binary',
+    l,
+    r,
+    op,
+  }));
+
 const EXPRESSION = /^{(.+?)}|^【(.+?)】|^｛(.+?)｝/;
 const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], env) => {
   const [entire, a, b, c] = match;
@@ -593,7 +618,7 @@ const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], e
   if (exprState.rest !== '') {
     return null;
   }
-  const entity: Expr = {
+  const entity: EntityOf<'Expr'> = {
     type: 'Expr',
     start: text.length,
     len: entire.length,
@@ -607,7 +632,7 @@ const exprNodeToEntity =
   ([node, next]: [ExprNode, State]): [Entity, State] => {
     const offset = state.rest.length - next.rest.length;
     const consumed = state.rest.substring(0, offset);
-    const entity: Expr = {
+    const entity: EntityOf<'Expr'> = {
       type: 'Expr',
       start: state.text.length,
       len: offset,

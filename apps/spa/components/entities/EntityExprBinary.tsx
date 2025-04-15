@@ -1,5 +1,5 @@
 import { type ReactNode, type FC } from 'react';
-import { type Binary, type BinaryResult } from '../../interpreter/entities';
+import { type Binary, type BinaryResult } from '@boluo/api';
 import { EntityExprNode } from './EntityExprNode';
 import { IsTopLevelContext, useIsTopLevel } from '../../hooks/useIsTopLevel';
 import { Result } from './Result';

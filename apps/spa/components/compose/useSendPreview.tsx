@@ -40,7 +40,7 @@ const sendPreview = (
       isAction,
       text: resetPreview ? '' : text,
       clear: false,
-      entities: doNotBroadcast || resetPreview ? [] : (parsed.entities as unknown as JsonValue[]),
+      entities: doNotBroadcast || resetPreview ? [] : parsed.entities,
       editFor: null,
       edit,
     };

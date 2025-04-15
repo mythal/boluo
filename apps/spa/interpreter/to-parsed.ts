@@ -1,10 +1,9 @@
 import { type ParseResult, emptyParseResult } from './parse-result';
-import { fromRawEntities } from './entities';
+import { Entities } from '@boluo/api';
 
-export const messageToParsed = (text: string, rawEntities: unknown): ParseResult => {
-  if (!Array.isArray(rawEntities) || text === null) {
+export const messageToParsed = (text: string, entities: Entities): ParseResult => {
+  if (!Array.isArray(entities) || text === null) {
     return emptyParseResult;
   }
-  const entities = fromRawEntities(text, rawEntities);
   return { ...emptyParseResult, text, entities };
 };

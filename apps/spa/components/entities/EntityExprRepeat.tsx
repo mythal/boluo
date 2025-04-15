@@ -1,17 +1,13 @@
 import { type FC } from 'react';
-import {
-  type EvaluatedExprNode,
-  type ExprNode,
-  type Repeat,
-  type RepeatResult,
-} from '../../interpreter/entities';
+import { type EvaluatedExprNode, type ExprNode } from '@boluo/api';
 import { EntityExprNode } from './EntityExprNode';
 import { EntityExprNodeUnknown } from './EntityExprUnknown';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 import { Result } from './Result';
+import type { MaybeEvalutedExprOf } from '@boluo/api';
 
 interface Props {
-  node: Repeat | RepeatResult;
+  node: MaybeEvalutedExprOf<'Repeat'>;
 }
 
 export const RepeatItem: FC<{ item: ExprNode | EvaluatedExprNode | 0 }> = ({ item }) => {

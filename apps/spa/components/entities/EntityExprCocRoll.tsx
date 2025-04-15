@@ -1,7 +1,7 @@
 import { Dice, FlexibleStar } from '@boluo/icons';
 import { type FC, type ReactNode } from 'react';
 import { useIntl } from 'react-intl';
-import { type CocRoll, type CocRollResult } from '../../interpreter/entities';
+import { EvaluatedExprOf, ExprOf, MaybeEvalutedExprOf } from '@boluo/api';
 import { cocRollSubTypeDisplay, cocSuccessLevelDisplay } from '../../interpreter/eval';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
@@ -10,10 +10,10 @@ import { Result } from './Result';
 import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 
 interface Props {
-  node: CocRoll | CocRollResult;
+  node: MaybeEvalutedExprOf<'CocRoll'>;
 }
 
-const UndecidedCocRoll: FC<{ node: CocRoll }> = ({ node }) => {
+const UndecidedCocRoll: FC<{ node: ExprOf<'CocRoll'> }> = ({ node }) => {
   let target: ReactNode = null;
   if (node.target && node.target.type === 'Num') {
     target = <span className="text-surface-500 ml-0.5">≤{node.target.value}</span>;
@@ -26,7 +26,7 @@ const UndecidedCocRoll: FC<{ node: CocRoll }> = ({ node }) => {
   );
 };
 
-const CocResult: FC<{ node: CocRollResult }> = ({ node }) => {
+const CocResult: FC<{ node: EvaluatedExprOf<'CocRoll'> }> = ({ node }) => {
   const intl = useIntl();
   const topLevel = useIsTopLevel();
   let target: ReactNode = null;

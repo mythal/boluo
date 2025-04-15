@@ -1,9 +1,9 @@
-import type { Entity } from './entities';
+import type { Entities } from '@boluo/api';
 import type { Modifier } from './parser';
 
 export interface ParseResult {
   text: string;
-  entities: Entity[];
+  entities: Entities;
   isAction: boolean;
   isRoll: boolean;
   inGame: boolean | null;

@@ -1,7 +1,7 @@
 import { ArrowDownWideShort, ArrowUpWideShort, Dice } from '@boluo/icons';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { type Roll, type RollResult } from '../../interpreter/entities';
+import type { ExprOf, EvaluatedExprOf, MaybeEvalutedExprOf } from '@boluo/api';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { RollBox } from './RollBox';
@@ -9,10 +9,10 @@ import { useIsTopLevel } from '../../hooks/useIsTopLevel';
 import { Result } from './Result';
 
 interface Props {
-  node: Roll | RollResult;
+  node: MaybeEvalutedExprOf<'Roll'>;
 }
 
-const RollFilter: FC<{ filter: Roll['filter'] | undefined | null }> = ({ filter }) => {
+const RollFilter: FC<{ filter: ExprOf<'Roll'>['filter'] | undefined | null }> = ({ filter }) => {
   if (filter == null) return null;
   const [type, mount] = filter;
   return (
@@ -30,7 +30,7 @@ const RollFilter: FC<{ filter: Roll['filter'] | undefined | null }> = ({ filter 
 
 const Undecided: FC = () => <span>=??</span>;
 
-const ShowRollResult: FC<{ node: RollResult }> = ({ node }) => {
+const ShowRollResult: FC<{ node: EvaluatedExprOf<'Roll'> }> = ({ node }) => {
   const topLevel = useIsTopLevel();
   if (node.values.length <= 1) {
     return <Result final={topLevel}>{node.value}</Result>;

@@ -1,9 +1,9 @@
+import { EntityOf } from '@boluo/api';
 import type { FC } from 'react';
-import type { Strong } from '../../interpreter/entities';
 
 interface Props {
   source: string;
-  entity: Strong;
+  entity: EntityOf<'Strong'>;
 }
 
 export const EntityStrong: FC<Props> = ({

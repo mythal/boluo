@@ -1,11 +1,11 @@
 import { ExternalLink } from '@boluo/icons';
 import type { FC } from 'react';
-import type { Link } from '../../interpreter/entities';
+import type { EntityOf } from '@boluo/api';
 import { EntityText } from './EntityText';
 
 interface Props {
   source: string;
-  entity: Link;
+  entity: EntityOf<'Link'>;
 }
 
 export const EntityLink: FC<Props> = ({ source, entity }) => {
@@ -20,7 +20,7 @@ export const EntityLink: FC<Props> = ({ source, entity }) => {
   return (
     <a
       target="_blank"
-      title={title}
+      title={title ?? undefined}
       href={href}
       className="EntityLink underline underline-offset-2"
       rel="noreferrer"

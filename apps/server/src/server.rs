@@ -159,7 +159,7 @@ async fn main() {
     }
 
     let port: u16 = env::var("PORT")
-        .expect("PORT must be set")
+        .unwrap_or("3000".to_string())
         .parse()
         .expect("PORT must be a number");
     storage_check().await;

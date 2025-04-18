@@ -295,10 +295,10 @@ pub struct ChannelMember {
     pub channel_id: Uuid,
     pub join_date: DateTime<Utc>,
     pub character_name: String,
-    pub is_master: bool,
     pub text_color: Option<String>,
     #[serde(skip)]
     pub is_joined: bool,
+    pub is_master: bool,
 }
 
 /// Avoid to read values from this cache.

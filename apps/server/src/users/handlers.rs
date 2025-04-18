@@ -12,7 +12,7 @@ use crate::interface::{missing, ok_response, parse_body, parse_query};
 use crate::media::{upload, upload_params};
 use crate::session::{
     add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies,
-    is_authenticate_use_cookie, remove_session, remove_session_cookie, revoke_session,
+    is_authenticate_use_cookie, remove_session_cookie, revoke_session,
 };
 use crate::spaces::Space;
 use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
@@ -132,7 +132,7 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                 }
                 Ok(response)
             } else {
-                remove_session(session.id).await?;
+                revoke_session(session.id).await?;
                 log::error!(
                     "[Unexpected] session ({}) is valid and exists, \
                     but the user ({}) to whom the session refers \
@@ -161,9 +161,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         .await
         .or_no_permission()?;
     let user_id = user.id;
-    let session = session::start(&user_id)
-        .await
-        .map_err(error_unexpected!())?;
+    let session = session::start(user_id).await.map_err(error_unexpected!())?;
     let token = session::token(&session);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut *conn, &user_id).await?;
@@ -187,7 +185,7 @@ pub async fn logout(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
     use crate::session::authenticate;
 
     if let Ok(session) = authenticate(&req).await {
-        revoke_session(&session.id).await?;
+        revoke_session(session.id).await?;
     }
     let mut response = ok_response(true);
     remove_session_cookie(response.headers_mut());

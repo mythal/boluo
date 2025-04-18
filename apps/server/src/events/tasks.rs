@@ -12,6 +12,7 @@ pub fn start() {
     tokio::spawn(events_clean());
     tokio::spawn(broadcast_clean());
     tokio::spawn(push_status());
+    tokio::spawn(super::handlers::token_clean());
 }
 
 async fn push_status() {

@@ -2,31 +2,64 @@ use super::api::Token;
 use super::types::{ConnectionError, UpdateQuery};
 use super::Update;
 use crate::csrf::authenticate;
+use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::context::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::types::ClientEvent;
 use crate::interface::{missing, ok_response, parse_query, Response};
-use crate::redis::make_key;
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
-use crate::{db, redis};
-use deadpool_redis::redis::AsyncCommands;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
 use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio_stream::StreamExt as _;
 use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::WebSocketStream;
 use uuid::Uuid;
 
 const CHUNK_SIZE: usize = 16;
+const TOKEN_VALIDITY: Duration = Duration::from_secs(10);
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
+
+struct TokenInfo {
+    user_id: Uuid,
+    created_at: Instant,
+}
+
+impl TokenInfo {
+    fn new(user_id: Uuid) -> Self {
+        Self {
+            user_id,
+            created_at: Instant::now(),
+        }
+    }
+    fn user_id(&self) -> Option<Uuid> {
+        if self.created_at.elapsed() < TOKEN_VALIDITY {
+            Some(self.user_id)
+        } else {
+            None
+        }
+    }
+}
+
+static TOKEN_STORE: std::sync::LazyLock<papaya::HashMap<Uuid, TokenInfo>> =
+    std::sync::LazyLock::new(papaya::HashMap::new);
+
+pub async fn token_clean() {
+    tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(5 * 60)))
+        .for_each(|_| async {
+            let mut token_store = TOKEN_STORE.pin();
+            let now = Instant::now();
+            token_store.retain(|_, token| now - token.created_at < TOKEN_VALIDITY);
+        })
+        .await;
+}
 
 async fn check_permissions(
     db: &mut sqlx::PgConnection,
@@ -205,28 +238,11 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        let mut redis = redis::conn().await;
-        let key = make_key(b"token", &token, b"user_id");
-        let Ok(data) = redis.get::<_, Option<Vec<u8>>>(&key).await else {
-            log::warn!("Failed to get token");
-            return connection_error(
-                req,
-                Some(mailbox),
-                ConnectionError::InvalidToken,
-                "Failed to get token".to_string(),
-            );
-        };
-        if let Some(bytes) = data {
-            let Ok(bytes) = bytes.try_into() else {
-                log::warn!("Invalid token");
-                return connection_error(
-                    req,
-                    Some(mailbox),
-                    ConnectionError::InvalidToken,
-                    "Invalid token".to_string(),
-                );
-            };
-            *user_id = Ok(Uuid::from_bytes(bytes));
+        if let Some(user_id_from_token) = {
+            let token_store = TOKEN_STORE.pin();
+            token_store.get(&token).and_then(TokenInfo::user_id)
+        } {
+            *user_id = Ok(user_id_from_token);
         }
     }
 
@@ -319,12 +335,11 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     if let Ok(session) = authenticate(&req).await {
-        let mut redis = redis::conn().await;
         let token = Uuid::new_v4();
-        let key = make_key(b"token", &token, b"user_id");
-        redis
-            .set_ex::<_, _, ()>(&key, session.user_id.as_bytes(), 10)
-            .await?;
+        {
+            let token_store = TOKEN_STORE.pin();
+            token_store.insert(token, TokenInfo::new(session.user_id));
+        }
         Ok(Token {
             token: Some(token.to_string()),
         })

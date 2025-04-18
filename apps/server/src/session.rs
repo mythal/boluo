@@ -1,10 +1,9 @@
+use std::sync::LazyLock;
+
 use crate::context::domain;
 use crate::error::AppError;
-use crate::error::CacheError;
-use crate::redis;
 use crate::utils::{self, sign};
 use anyhow::Context;
-use deadpool_redis::redis::AsyncCommands;
 use hyper::header::HeaderValue;
 use hyper::header::AUTHORIZATION;
 use hyper::header::COOKIE;
@@ -14,6 +13,15 @@ use thiserror::Error;
 use uuid::Uuid;
 
 pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
+
+static SESSION_CACHE: LazyLock<quick_cache::sync::Cache<Uuid, SessionInfo>> =
+    LazyLock::new(|| quick_cache::sync::Cache::new(8192));
+
+#[derive(Debug, Clone)]
+struct SessionInfo {
+    pub user_id: Uuid,
+    pub created: chrono::DateTime<chrono::Utc>,
+}
 
 #[derive(Error, Debug)]
 pub enum AuthenticateFail {
@@ -53,9 +61,13 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
     Uuid::from_slice(session.as_slice()).context("Failed to convert session bytes data to UUID.")
 }
 
-pub async fn revoke_session(id: &Uuid) -> Result<(), CacheError> {
-    let key = make_key(id);
-    redis::conn().await.del(&key).await
+pub async fn revoke_session(id: Uuid) -> Result<(), sqlx::Error> {
+    let mut conn = crate::db::get().await.acquire().await?;
+    sqlx::query_file!("sql/users/session_revoke.sql", id)
+        .execute(&mut *conn)
+        .await?;
+    SESSION_CACHE.remove(&id);
+    Ok(())
 }
 
 #[test]
@@ -66,17 +78,13 @@ fn test_session_sign() {
     assert_eq!(session, session_2);
 }
 
-fn make_key(session: &Uuid) -> Vec<u8> {
-    redis::make_key(b"sessions", session, b"user_id")
-}
-
-pub async fn start(user_id: &Uuid) -> Result<Uuid, CacheError> {
-    let session = utils::id();
-    let key = make_key(&session);
-    redis::conn()
-        .await
-        .set::<_, _, ()>(&key, user_id.as_bytes())
+pub async fn start(user_id: Uuid) -> Result<Uuid, sqlx::Error> {
+    let mut conn = crate::db::get().await.acquire().await?;
+    let session = Uuid::new_v4();
+    let created = sqlx::query_file_scalar!("sql/users/session_start.sql", &session, &user_id)
+        .fetch_one(&mut *conn)
         .await?;
+    SESSION_CACHE.insert(session, SessionInfo { user_id, created });
     Ok(session)
 }
 
@@ -176,12 +184,6 @@ pub fn add_settings_cookie(
     }
 }
 
-pub async fn remove_session(id: Uuid) -> Result<(), CacheError> {
-    let key = make_key(&id);
-    redis::conn().await.del::<_, ()>(&key).await?;
-    Ok(())
-}
-
 pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
     use cookie::time::Duration;
     use cookie::CookieBuilder;
@@ -264,18 +266,20 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
         }
         Ok(id) => id,
     };
-
-    let key = make_key(&id);
-    let bytes: Vec<u8> = redis::conn()
-        .await
-        .get::<_, Option<Vec<u8>>>(&key)
-        .await?
-        .ok_or_else(|| {
-            log::warn!("Session {} not found, token: {}", id, token);
-            AuthenticateFail::NoSessionFound
-        })?;
-
-    let user_id = Uuid::from_slice(&bytes).map_err(|_| AuthenticateFail::InvaildToken)?;
+    let session_info: Result<SessionInfo, AppError> = SESSION_CACHE
+        .get_or_insert_async(&id, async {
+            let mut conn = crate::db::get().await.acquire().await?;
+            sqlx::query_file_as!(SessionInfo, "sql/users/session_fetch.sql", id)
+                .fetch_optional(&mut *conn)
+                .await
+                .map_err(|err| {
+                    log::warn!("Failed to get session from database: {}", err);
+                    AppError::Unexpected(err.into())
+                })?
+                .ok_or(AppError::NotFound("session"))
+        })
+        .await;
+    let user_id = session_info?.user_id;
     Ok(Session { id, user_id })
 }
 

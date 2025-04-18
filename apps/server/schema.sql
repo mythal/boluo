@@ -204,3 +204,10 @@ CREATE TABLE events (
     "created" timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
+CREATE TABLE user_sessions (
+    "id" uuid NOT NULL DEFAULT uuid_generate_v4 () PRIMARY KEY,
+    "user_id" uuid NOT NULL CONSTRAINT "session_user" REFERENCES users (id) ON DELETE CASCADE,
+    "active" boolean NOT NULL DEFAULT TRUE,
+    "created" timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
+    "latest_activity" timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
+);

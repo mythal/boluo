@@ -294,20 +294,6 @@ impl Update {
                 }
             };
             {
-                let edition_map = mailbox_state.edition_map.try_lock_for(WAIT);
-                if let Some(edition_map) = edition_map {
-                    for update in edition_map.values() {
-                        updates.push(update.clone());
-                    }
-                } else {
-                    log::error!(
-                        "Failed to lock edition_map for space {} on get_from_cache",
-                        mailbox_id
-                    );
-                    return None;
-                }
-            }
-            {
                 let preview_map = mailbox_state.preview_map.try_lock_for(WAIT);
                 if let Some(preview_map) = preview_map {
                     for encoded_update in preview_map.values() {

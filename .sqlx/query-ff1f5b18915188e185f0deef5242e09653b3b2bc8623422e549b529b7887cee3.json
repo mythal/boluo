@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_sessions\nSET active = FALSE\nWHERE id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ff1f5b18915188e185f0deef5242e09653b3b2bc8623422e549b529b7887cee3"
+}

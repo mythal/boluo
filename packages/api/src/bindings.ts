@@ -38,8 +38,8 @@ export type ChannelMember = {
   channelId: string;
   joinDate: string;
   characterName: string;
-  isMaster: boolean;
   textColor: string | null;
+  isMaster: boolean;
 };
 
 export type ChannelMemberWithUser = { member: ChannelMember; user: User };

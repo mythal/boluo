@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT users AS  \"users!: User\"\nFROM users INNER JOIN reset_tokens ON users.id = reset_tokens.user_id\nWHERE reset_tokens.token = $1\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "users!: User",
+        "type_info": {
+          "Custom": {
+            "name": "users",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "email",
+                  "Text"
+                ],
+                [
+                  "username",
+                  "Text"
+                ],
+                [
+                  "nickname",
+                  "Text"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "bio",
+                  "Text"
+                ],
+                [
+                  "joined",
+                  "Timestamptz"
+                ],
+                [
+                  "deactivated",
+                  "Bool"
+                ],
+                [
+                  "avatar_id",
+                  "Uuid"
+                ],
+                [
+                  "default_color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "75818e4256ceadde7a2485afd43720a83fc52cf7dbe403d64548fb9bc6ec3392"
+}

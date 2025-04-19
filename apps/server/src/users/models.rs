@@ -178,16 +178,34 @@ impl User {
         Ok(user)
     }
 
-    pub async fn reset_password<'c, T: sqlx::PgExecutor<'c>>(
+    pub async fn get_by_reset_token<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
+        token: Uuid,
+    ) -> Result<User, sqlx::Error> {
+        let user: User = query_file_scalar!("sql/users/get_by_reset_token.sql", token)
+            .fetch_one(db)
+            .await?;
+        USERS_CACHE.insert(user.id, user.clone());
+        Ok(user)
+    }
+
+    pub async fn reset_password(
+        db: &mut sqlx::PgConnection,
         id: Uuid,
+        token: Uuid,
         password: &str,
     ) -> Result<(), ModelError> {
         use crate::validators::PASSWORD;
 
         PASSWORD.run(password)?;
         sqlx::query_file!("sql/users/reset_password.sql", id, password)
-            .execute(db)
+            .execute(&mut *db)
+            .await?;
+        sqlx::query_file!("sql/users/reset_token_use.sql", id, token)
+            .execute(&mut *db)
+            .await?;
+        sqlx::query_file!("sql/users/reset_token_invalidate.sql", id)
+            .execute(&mut *db)
             .await?;
         Ok(())
     }

@@ -1,3 +1,4 @@
+use std::net::IpAddr;
 use std::sync::LazyLock;
 
 use super::api::{
@@ -299,9 +300,25 @@ pub fn token_key(token: &str) -> Vec<u8> {
 }
 
 pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
-    // TODO: IP and email limit
+    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
+    static IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
+        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(32).unwrap()))
+    });
+    let ip = get_ip(&req)?;
+    IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
 
     let ResetPassword { email, lang } = parse_body(req).await?;
+    let email = email.trim().to_lowercase();
+    crate::validators::EMAIL.run(&email)?;
+
+    static EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> = LazyLock::new(|| {
+        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(16).unwrap()))
+    });
+    EMAIL_LIMITER
+        .check_key(&email)
+        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
     let pool = db::get().await;
     User::get_by_email(&pool, &email)

@@ -518,7 +518,6 @@ export type UpdateBody =
   | { type: 'CHANNEL_DELETED'; channelId: string }
   | { type: 'CHANNEL_EDITED'; channelId: string; channel: Channel }
   | { type: 'MEMBERS'; channelId: string; members: MemberWithUser[] }
-  | { type: 'BATCH'; updates: string[] }
   | { type: 'INITIALIZED' }
   | { type: 'STATUS_MAP'; statusMap: Partial<{ [key in string]: UserStatus }>; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }

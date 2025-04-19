@@ -1,7 +1,7 @@
 use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
-use crate::events::context::{self, ChannelUserId};
+use crate::events::context;
 use crate::events::context::{EncodedUpdate, WAIT};
 use crate::events::models::{space_users_status, StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
@@ -47,7 +47,7 @@ pub enum ConnectionError {
     Unexpected,
 }
 
-#[derive(Serialize, Debug, specta::Type)]
+#[derive(Serialize, Debug, Clone, specta::Type)]
 #[serde(tag = "type")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum UpdateBody {
@@ -93,9 +93,6 @@ pub enum UpdateBody {
         channel_id: Uuid,
         members: Vec<MemberWithUser>,
     },
-    Batch {
-        updates: Vec<String>,
-    },
     Initialized,
     StatusMap {
         #[serde(rename = "statusMap")]
@@ -116,7 +113,7 @@ pub enum UpdateBody {
     },
 }
 
-#[derive(Serialize, Debug, specta::Type)]
+#[derive(Serialize, Clone, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Update {
     pub mailbox: Uuid,
@@ -137,15 +134,6 @@ impl Update {
         let serialized = serde_json::to_string(self).expect("Failed to encode update");
         let bytes = tungstenite::Bytes::from_owner(serialized);
         unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
-    }
-
-    pub fn batch(mailbox: Uuid, updates: Vec<String>) -> Update {
-        Update {
-            mailbox,
-            id: EventId::new(),
-            // subsec: now.timestamp_subsec_millis(),
-            body: UpdateBody::Batch { updates },
-        }
     }
 
     pub fn error(mailbox: Uuid, code: ConnectionError, reason: String) -> Update {
@@ -411,66 +399,8 @@ impl Update {
             let map = super::context::store().mailboxes.pin();
             let mailbox_state = map.get_or_insert_with(mailbox, Default::default);
 
-            enum Kind {
-                Preview { channel_id: Uuid, sender_id: Uuid },
-                Edition { message_id: Uuid },
-                NoCache,
-                Cache,
-            }
-            let kind = match &body {
-                UpdateBody::MessagePreview {
-                    preview,
-                    channel_id: _,
-                } => Kind::Preview {
-                    sender_id: preview.sender_id,
-                    channel_id: preview.channel_id,
-                },
-                UpdateBody::MessageEdited {
-                    channel_id: _,
-                    message,
-                    old_pos: _,
-                } => Kind::Edition {
-                    message_id: message.id,
-                },
-                UpdateBody::NewMessage {
-                    channel_id: _,
-                    message: _,
-                    preview_id: _,
-                }
-                | UpdateBody::MessageDeleted {
-                    message_id: _,
-                    channel_id: _,
-                    pos: _,
-                } => Kind::Cache,
-                _ => Kind::NoCache,
-            };
-
             let encoded_update = Update::build(body, mailbox);
-            match kind {
-                Kind::Preview {
-                    sender_id,
-                    channel_id,
-                } => {
-                    mailbox_state.preview_map.lock().insert(
-                        ChannelUserId::new(channel_id, sender_id),
-                        encoded_update.clone(),
-                    );
-                }
-                Kind::Edition { message_id } => {
-                    mailbox_state
-                        .edition_map
-                        .lock()
-                        .insert(message_id, encoded_update.clone());
-                }
-                Kind::Cache => {
-                    mailbox_state
-                        .updates
-                        .lock()
-                        .push_back(encoded_update.clone());
-                }
-                Kind::NoCache => {}
-            }
-            encoded_update
+            mailbox_state.new_update(encoded_update)
         };
 
         Update::send(mailbox, update).await;

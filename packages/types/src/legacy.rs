@@ -8,11 +8,11 @@ pub struct LegacySpan {
     pub offset: i32,
 }
 
-impl Into<entities::Span> for LegacySpan {
-    fn into(self) -> entities::Span {
+impl From<LegacySpan> for entities::Span {
+    fn from(value: LegacySpan) -> entities::Span {
         entities::Span {
-            start: self.start,
-            len: self.offset,
+            start: value.start,
+            len: value.offset,
         }
     }
 }
@@ -45,10 +45,10 @@ pub enum LegacyEntity {
     Emphasis(LegacySpan),
 }
 
-impl Into<entities::Entity> for LegacyEntity {
-    fn into(self) -> entities::Entity {
+impl From<LegacyEntity> for entities::Entity {
+    fn from(value: LegacyEntity) -> entities::Entity {
         use entities::{ChildText, Entity, ExprEntity, LinkEntity, SpanWithChild};
-        match self {
+        match value {
             LegacyEntity::Text(span) => Entity::Text(span.into()),
             LegacyEntity::Link(link) => Entity::Link(LinkEntity {
                 span: link.span.into(),

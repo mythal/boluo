@@ -395,7 +395,7 @@ pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppEr
         .parse::<Uuid>()
         .map_err(|_| AppError::BadRequest("Invalid token".to_string()))?;
     let user = User::get_by_reset_token(&mut *conn, token).await?;
-    User::reset_password(&mut *conn, user.id, token, &password).await?;
+    User::reset_password(&mut conn, user.id, token, &password).await?;
     Ok(())
 }
 

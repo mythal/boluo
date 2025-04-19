@@ -45,7 +45,7 @@ impl sqlx::Decode<'_, sqlx::Postgres> for Entities {
                         .into_iter()
                         .map(|entity| entity.into())
                         .collect();
-                    return Ok(Entities(entities));
+                    Ok(Entities(entities))
                 }
                 Err(err) => {
                     log::error!("Failed to decode JSONB: {}", err);

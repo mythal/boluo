@@ -57,15 +57,7 @@ async fn events_clean() {
                         return true;
                     };
 
-                let edition_map_is_empty =
-                    if let Some(mut edition_map) = mailbox.edition_map.try_lock() {
-                        edition_map.retain(|_, edition| edition.update.id.timestamp > before);
-                        edition_map.is_empty()
-                    } else {
-                        return true;
-                    };
-
-                !(events_is_empty && preview_map_is_empty && edition_map_is_empty)
+                !(events_is_empty && preview_map_is_empty)
             });
         })
         .await;

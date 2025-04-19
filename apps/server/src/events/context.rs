@@ -90,7 +90,6 @@ pub struct MailBoxState {
     pub start_at: i64,
     pub updates: Mutex<VecDeque<Arc<EncodedUpdate>>>,
     pub preview_map: Mutex<HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>>,
-    pub edition_map: Mutex<HashMap<Uuid, Arc<EncodedUpdate>>>, // the key is message id
     members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
     pub status: Mutex<HashMap<Uuid, UserStatus>>,
 }
@@ -101,7 +100,6 @@ impl Default for MailBoxState {
             start_at: timestamp(),
             updates: Mutex::new(VecDeque::new()),
             preview_map: Mutex::new(HashMap::with_hasher(ahash::RandomState::new())),
-            edition_map: Mutex::new(HashMap::new()),
             members_cache: papaya::HashMap::builder()
                 .capacity(64)
                 .hasher(ahash::RandomState::new())

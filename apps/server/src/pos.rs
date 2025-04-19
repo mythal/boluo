@@ -158,7 +158,7 @@ impl ChannelPosMap {
     }
 }
 
-pub static CHANNEL_POS_MAP: LazyLock<ChannelPosMap> = LazyLock::new(|| ChannelPosMap::new());
+pub static CHANNEL_POS_MAP: LazyLock<ChannelPosMap> = LazyLock::new(ChannelPosMap::new);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PosItemState {

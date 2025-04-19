@@ -14,6 +14,7 @@ use uuid::Uuid;
 use crate::utils::timestamp;
 
 use super::models::UserStatus;
+use super::types::UpdateBody;
 
 pub const WAIT_SHORTLY: std::time::Duration = std::time::Duration::from_millis(6);
 pub const WAIT: std::time::Duration = std::time::Duration::from_millis(100);
@@ -25,7 +26,7 @@ pub enum StateError {
     NotFound,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EncodedUpdate {
     pub update: Update,
     pub encoded: Utf8Bytes,
@@ -35,6 +36,11 @@ impl EncodedUpdate {
     pub fn new(update: Update) -> EncodedUpdate {
         let encoded = update.encode();
         EncodedUpdate { encoded, update }
+    }
+
+    pub fn replace_body(&mut self, body: UpdateBody) {
+        self.update.body = body;
+        self.encoded = self.update.encode();
     }
 }
 
@@ -186,6 +192,97 @@ impl MailBoxState {
         let channel_user_id = ChannelUserId::new(channel_id, user_id);
         let members_cache = self.members_cache.pin();
         members_cache.remove(&channel_user_id);
+    }
+
+    pub fn new_update(&self, shared_update: Arc<EncodedUpdate>) -> Arc<EncodedUpdate> {
+        use super::types::UpdateBody::*;
+        match &shared_update.update.body {
+            MessagePreview { preview, .. } => {
+                self.preview_map.lock().insert(
+                    ChannelUserId::new(preview.channel_id, preview.sender_id),
+                    shared_update.clone(),
+                );
+            }
+            MessageEdited {
+                message: edited_message,
+                ..
+            } => {
+                let mut updates = self.updates.lock();
+                for encoded in updates.iter_mut().rev() {
+                    if let NewMessage {
+                        message: original,
+                        channel_id,
+                        preview_id,
+                    } = &encoded.update.body
+                    {
+                        if original.id == edited_message.id
+                            && original.channel_id == edited_message.channel_id
+                            && original.modified < edited_message.modified
+                        {
+                            let body = NewMessage {
+                                channel_id: *channel_id,
+                                message: edited_message.clone(),
+                                preview_id: *preview_id,
+                            };
+                            Arc::make_mut(encoded).replace_body(body);
+                            break;
+                        }
+                    }
+                }
+            }
+            MessageDeleted {
+                message_id,
+                channel_id,
+                pos,
+            } => {
+                let mut updates = self.updates.lock();
+                for encoded in updates.iter_mut().rev() {
+                    if let NewMessage {
+                        message: original, ..
+                    } = &encoded.update.body
+                    {
+                        if original.id == *message_id && original.channel_id == *channel_id {
+                            let body = MessageDeleted {
+                                message_id: *message_id,
+                                channel_id: *channel_id,
+                                pos: *pos,
+                            };
+                            Arc::make_mut(encoded).replace_body(body);
+                            break;
+                        }
+                    }
+                }
+            }
+            NewMessage { .. } => {
+                self.updates.lock().push_back(shared_update.clone());
+            }
+            ChannelDeleted { channel_id } => {
+                if let Some(mut updates) = self.updates.try_lock_for(WAIT) {
+                    updates.retain(|encoded| match &encoded.update.body {
+                        NewMessage { channel_id: id, .. } => id != channel_id,
+                        MessageEdited { channel_id: id, .. } => id != channel_id,
+                        MessageDeleted { channel_id: id, .. } => id != channel_id,
+                        _ => true,
+                    });
+                    self.preview_map
+                        .lock()
+                        .retain(|id, _| id.channel_id != *channel_id);
+                    self.members_cache
+                        .pin()
+                        .retain(|id, _| id.channel_id != *channel_id);
+                }
+            }
+            ChannelEdited { .. }
+            | Members { .. }
+            | Initialized
+            | StatusMap { .. }
+            | AppUpdated { .. }
+            | SpaceUpdated { .. }
+            | Error { .. } => {
+                // Do nothing
+            }
+        }
+        shared_update
     }
 }
 

@@ -294,18 +294,8 @@ impl Update {
                 }
             };
             {
-                let preview_map = mailbox_state.preview_map.try_lock_for(WAIT);
-                if let Some(preview_map) = preview_map {
-                    for encoded_update in preview_map.values() {
-                        updates.push(encoded_update.clone());
-                    }
-                } else {
-                    log::error!(
-                        "Failed to lock preview_map for space {} on get_from_cache",
-                        mailbox_id
-                    );
-                    return None;
-                }
+                let preview_map = mailbox_state.preview_map.pin();
+                updates.extend(preview_map.values().cloned());
             }
             updates
         };

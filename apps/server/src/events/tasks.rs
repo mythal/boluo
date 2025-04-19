@@ -49,13 +49,11 @@ async fn events_clean() {
                     return true;
                 };
 
-                let preview_map_is_empty =
-                    if let Some(mut preview_map) = mailbox.preview_map.try_lock() {
-                        preview_map.retain(|_, preview| preview.update.id.timestamp > before);
-                        preview_map.is_empty()
-                    } else {
-                        return true;
-                    };
+                let preview_map_is_empty = {
+                    let mut preview_map = mailbox.preview_map.pin();
+                    preview_map.retain(|_, preview| preview.update.id.timestamp > before);
+                    preview_map.is_empty()
+                };
 
                 !(events_is_empty && preview_map_is_empty)
             });

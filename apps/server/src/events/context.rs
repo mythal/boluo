@@ -89,7 +89,7 @@ impl ChannelUserId {
 pub struct MailBoxState {
     pub start_at: i64,
     pub updates: Mutex<VecDeque<Arc<EncodedUpdate>>>,
-    pub preview_map: Mutex<HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>>,
+    pub preview_map: papaya::HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>,
     members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
     pub status: Mutex<HashMap<Uuid, UserStatus>>,
 }
@@ -99,7 +99,7 @@ impl Default for MailBoxState {
         MailBoxState {
             start_at: timestamp(),
             updates: Mutex::new(VecDeque::new()),
-            preview_map: Mutex::new(HashMap::with_hasher(ahash::RandomState::new())),
+            preview_map: papaya::HashMap::with_hasher(ahash::RandomState::new()),
             members_cache: papaya::HashMap::builder()
                 .capacity(64)
                 .hasher(ahash::RandomState::new())
@@ -196,8 +196,16 @@ impl MailBoxState {
         use super::types::UpdateBody::*;
         match &shared_update.update.body {
             MessagePreview { preview, .. } => {
-                self.preview_map.lock().insert(
+                let preview_map = self.preview_map.pin();
+                preview_map.update_or_insert(
                     ChannelUserId::new(preview.channel_id, preview.sender_id),
+                    |existing| {
+                        if existing.update.id > shared_update.update.id {
+                            existing.clone()
+                        } else {
+                            shared_update.clone()
+                        }
+                    },
                     shared_update.clone(),
                 );
             }
@@ -262,9 +270,10 @@ impl MailBoxState {
                         MessageDeleted { channel_id: id, .. } => id != channel_id,
                         _ => true,
                     });
-                    self.preview_map
-                        .lock()
-                        .retain(|id, _| id.channel_id != *channel_id);
+                    {
+                        let mut preview_map = self.preview_map.pin();
+                        preview_map.retain(|id, _| id.channel_id != *channel_id);
+                    }
                     self.members_cache
                         .pin()
                         .retain(|id, _| id.channel_id != *channel_id);

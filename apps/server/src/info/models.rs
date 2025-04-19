@@ -57,18 +57,6 @@ pub struct ConnectionState {
 }
 
 impl ConnectionState {
-    pub async fn cache() -> Result<ConnectionState, String> {
-        pub use deadpool_redis::redis::AsyncCommands;
-        let start = std::time::Instant::now();
-        let mut conn = crate::redis::conn().await;
-        let _redis_result: bool = conn
-            .set(b"health_check", b"ok")
-            .await
-            .map_err(|err| format!("Failed to set health_check to cache: {:?}", err))?;
-        let rtt_ms = start.elapsed().as_millis() as u64;
-        Ok(ConnectionState { rtt_ms, count: 1 })
-    }
-
     pub async fn database() -> Result<ConnectionState, String> {
         let start = std::time::Instant::now();
         let pool = db::get().await;
@@ -86,7 +74,12 @@ impl HealthCheck {
     pub async fn new() -> HealthCheck {
         use sysinfo::{Disks, System};
         let mut system = System::new();
-        let cache = ConnectionState::cache().await.into();
+        let cache = CheckResult::Ok {
+            value: ConnectionState {
+                rtt_ms: 0,
+                count: 1,
+            },
+        };
         let database = ConnectionState::database().await.into();
         system.refresh_memory();
         let disks = Disks::new_with_refreshed_list();

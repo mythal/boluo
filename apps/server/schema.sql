@@ -211,3 +211,12 @@ CREATE TABLE user_sessions (
     "created" timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
     "latest_activity" timestamptz NOT NULL DEFAULT (now() at time zone 'utc')
 );
+
+CREATE TABLE reset_tokens (
+    "token" uuid NOT NULL DEFAULT uuid_generate_v4 () PRIMARY KEY,
+    "user_id" uuid NOT NULL CONSTRAINT "password_reset_user" REFERENCES users (id) ON DELETE CASCADE,
+    "created" timestamptz NOT NULL DEFAULT (now() at time zone 'utc'),
+    "used_at" timestamptz DEFAULT NULL,
+    "invalidated_at" timestamptz DEFAULT NULL
+);
+CREATE INDEX "reset_token_user" ON reset_tokens (user_id);

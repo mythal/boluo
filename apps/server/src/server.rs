@@ -34,7 +34,6 @@ mod mail;
 mod media;
 mod messages;
 mod pos;
-mod redis;
 mod s3;
 mod session;
 mod spaces;
@@ -173,9 +172,6 @@ async fn main() {
     let listener = TcpListener::bind(addr)
         .await
         .expect("Failed to bind address");
-
-    redis::check().await;
-    log::info!("Cache is ready");
     db::check().await;
     log::info!("Database is ready");
 

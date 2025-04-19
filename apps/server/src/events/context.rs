@@ -194,20 +194,17 @@ impl MailBoxState {
 
     pub fn new_update(&self, shared_update: Arc<EncodedUpdate>) -> Arc<EncodedUpdate> {
         use super::types::UpdateBody::*;
-        match &shared_update.update.body {
+        let update = &shared_update.update;
+        match &update.body {
             MessagePreview { preview, .. } => {
                 let preview_map = self.preview_map.pin();
-                preview_map.update_or_insert(
-                    ChannelUserId::new(preview.channel_id, preview.sender_id),
-                    |existing| {
-                        if existing.update.id > shared_update.update.id {
-                            existing.clone()
-                        } else {
-                            shared_update.clone()
-                        }
-                    },
-                    shared_update.clone(),
-                );
+                let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
+                preview_map.compute(key, |entry| match entry {
+                    Some((_, existing)) if existing.update.id > update.id => {
+                        papaya::Operation::Abort(())
+                    }
+                    _ => papaya::Operation::Insert(shared_update.clone()),
+                });
             }
             MessageEdited {
                 message: edited_message,

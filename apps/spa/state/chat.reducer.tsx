@@ -107,10 +107,6 @@ const handleUpdate = (
   state: ChatSpaceState,
   { payload: update }: ChatAction<'update'>,
 ): ChatSpaceState => {
-  if (update.body.type === 'BATCH') {
-    // We do not handle batch events here
-    return state;
-  }
   if (eventIdCompare(update.id, state.lastEventId) <= 0) return state;
   const lastEventId = update.id;
   const chatAction = updateToChatAction(update);

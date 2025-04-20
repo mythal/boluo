@@ -78,22 +78,9 @@ const connect = (
     }
     if (!isServerUpdate(update)) return;
     let updates: Update[];
-    if (update.body.type === 'BATCH') {
-      updates = update.body.updates.flatMap((encodedUpdate) => {
-        try {
-          return [JSON.parse(encodedUpdate) as Update];
-        } catch {
-          recordError('Failed to parse the update', { update: encodedUpdate });
-          return [];
-        }
-      });
-    } else {
-      updates = [update];
-    }
-    for (const update of updates) {
-      dispatch({ type: 'update', payload: update });
-      onUpdateReceived(update);
-    }
+
+    dispatch({ type: 'update', payload: update });
+    onUpdateReceived(update);
   };
   return newConnection;
 };
@@ -149,7 +136,6 @@ export const useConnectionEffect = (
             payload: { mailboxId, code: update.body.code ?? 'UNEXPECTED' },
           });
           return;
-        case 'BATCH':
         case 'NEW_MESSAGE':
         case 'MESSAGE_DELETED':
         case 'MESSAGE_EDITED':

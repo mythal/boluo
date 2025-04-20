@@ -125,17 +125,15 @@ async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, 
             tx.send(WsMessage::Text(error_update)).await.ok();
             return;
         };
-        if !cached_updates.is_empty() {
-            for message in cached_updates {
-                if let Err(err) = tx.send(WsMessage::Text(message)).await {
-                    log::warn!(
-                        "Failed to send batch update to mailbox {}: {}",
-                        mailbox,
-                        err
-                    );
-                    return;
-                };
-            }
+        for message in cached_updates {
+            if let Err(err) = tx.send(WsMessage::Text(message)).await {
+                log::warn!(
+                    "Failed to send initialize updates to mailbox {}: {}",
+                    mailbox,
+                    err
+                );
+                return;
+            };
         }
         let initialized = Update::initialized(mailbox).encode();
         tx.send(WsMessage::Text(initialized)).await.ok();

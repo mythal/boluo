@@ -49,7 +49,6 @@ interface Event<B> {
 }
 
 export type Events =
-  | Event<Batch>
   | Event<NewMessage>
   | Event<MessageDeleted>
   | Event<MessageEdited>
@@ -62,11 +61,6 @@ export type Events =
   | Event<SpaceUpdated>
   | Event<ConnectionError>
   | Event<AppUpdated>;
-
-export interface Batch {
-  type: 'BATCH';
-  encodedEvents: string[];
-}
 
 export interface ConnectionError {
   type: 'ERROR';

@@ -50,7 +50,6 @@ sqlx = { version = "0.8.2", features = [
 ] }
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
-deadpool-redis = "0.20.0"
 arc-swap = "1.7.1"
 quick_cache = "0.6.9"
 papaya = "0.2.1"

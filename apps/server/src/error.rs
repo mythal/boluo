@@ -1,5 +1,4 @@
 use crate::session::AuthenticateFail;
-pub use deadpool_redis::redis::RedisError as CacheError;
 use hyper::{StatusCode, Uri};
 use std::error::Error;
 use thiserror::Error;
@@ -8,11 +7,6 @@ use thiserror::Error;
 pub enum AppError {
     #[error("An unexpected database error occurred: {source}")]
     Db { source: sqlx::Error },
-    #[error("An unexpected cache database error occurred: {source}")]
-    Cache {
-        #[from]
-        source: CacheError,
-    },
     #[error("Authentication failed")]
     Unauthenticated(#[from] AuthenticateFail),
     #[error("Resource not found")]

@@ -19,7 +19,7 @@
     "clsx": "^2.1.1",
     "color2k": "^2.0.3",
     "jotai": "^2.12.2",
-    "jotai-location": "^0.5.5",
+    "jotai-location": "^0.6.0",
     "list": "^2.0.19",
     "next": "^15.2.4",
     "prando": "^6.0.1",

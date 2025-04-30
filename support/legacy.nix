@@ -2,6 +2,7 @@
   pkgs,
   version,
   pruneSource,
+  mkNpmDeps,
   ...
 }:
 let
@@ -12,14 +13,7 @@ pkgs.buildNpmPackage {
 
   inherit src version;
 
-  npmDeps = pkgs.fetchNpmDeps {
-    name = "boluo-legacy-deps";
-    hash = builtins.readFile ./hash-legacy.txt;
-    src = "${src}/package-lock.json";
-    unpackPhase = ''
-      cp $src package-lock.json
-    '';
-  };
+  npmDeps = mkNpmDeps src;
 
   installPhase = ''
     mkdir $out

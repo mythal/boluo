@@ -64,6 +64,31 @@
               '';
             };
 
+          common = {
+            inherit pkgs;
+            inherit version;
+            inherit pruneSource;
+            mkNpmDeps =
+              src:
+              pkgs.stdenvNoCC.mkDerivation {
+                name = "${src.name}-deps";
+                nativeBuildInputs = [ pkgs.prefetch-npm-deps ];
+                src = "${src}/package-lock.json";
+                unpackPhase = ":";
+
+                buildPhase = ''
+                  runHook preBuild
+                  prefetch-npm-deps $src $out
+                  runHook postBuild
+                '';
+                dontInstall = true;
+                outputHashMode = "recursive";
+                outputHashAlgo = "sha256";
+                __contentAddressed = true;
+                SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+              };
+          };
+
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
             toolchain:
             toolchain.default.override {
@@ -151,39 +176,21 @@
               };
             };
 
-            legacy = import ./support/legacy.nix {
-              inherit
-                pkgs
-                version
-                pruneSource
-                ;
-            };
+            legacy = import ./support/legacy.nix common;
 
             legacy-image = import ./support/legacy-image.nix {
               inherit pkgs;
               legacy = self'.packages.legacy;
             };
 
-            site = import ./support/site.nix {
-              inherit
-                pkgs
-                version
-                pruneSource
-                ;
-            };
+            site = import ./support/site.nix common;
 
             site-image = import ./support/site-image.nix {
               boluo-site = self'.packages.site;
               inherit pkgs certEnv commonImageContents;
             };
 
-            spa = import ./support/spa.nix {
-              inherit
-                pkgs
-                version
-                pruneSource
-                ;
-            };
+            spa = import ./support/spa.nix common;
 
             spa-image = import ./support/spa-image.nix {
               inherit pkgs;
@@ -193,36 +200,22 @@
 
           checks = {
           };
-          devShells.default =
-            let
-              turbo = "${pkgs.turbo}/bin/turbo";
-              prefetch = "${pkgs.prefetch-npm-deps}/bin/prefetch-npm-deps";
-              update-hash = pkgs.writeScriptBin "update-hash" ''
-                ${turbo} prune site
-                ${prefetch} ./out/package-lock.json > support/hash-site.txt
-                ${turbo} prune spa
-                ${prefetch} ./out/package-lock.json > support/hash-spa.txt
-                ${turbo} prune legacy
-                ${prefetch} ./out/package-lock.json > support/hash-legacy.txt
-              '';
-            in
-            pkgs.mkShell {
-              buildInputs = with pkgs; [
-                rustToolchain
-                nil
-                nodejs
-                clang
-                pgformatter
-                gnumake
-                nixfmt-rfc-style
-                sqlx-cli
-                prefetch-npm-deps
-                update-hash
-              ];
-              shellHook = ''
-                export PATH="node_modules/.bin:$PATH"
-              '';
-            };
+          devShells.default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              rustToolchain
+              nil
+              nodejs
+              clang
+              pgformatter
+              gnumake
+              nixfmt-rfc-style
+              sqlx-cli
+              prefetch-npm-deps
+            ];
+            shellHook = ''
+              export PATH="node_modules/.bin:$PATH"
+            '';
+          };
         };
     };
 }

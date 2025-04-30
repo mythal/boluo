@@ -6,6 +6,7 @@
   ...
 }:
 let
+  inherit (pkgs) lib stdenv;
   src = pruneSource "legacy";
 in
 pkgs.buildNpmPackage {
@@ -14,10 +15,10 @@ pkgs.buildNpmPackage {
   inherit src version;
 
   npmDeps = mkNpmDeps src;
+  npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
   installPhase = ''
     mkdir $out
     cp -r apps/legacy/dist/* $out
   '';
-
 }

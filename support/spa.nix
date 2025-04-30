@@ -13,6 +13,7 @@ pkgs.buildNpmPackage {
   inherit src version;
 
   npmDeps = mkNpmDeps src;
+  npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
   installPhase = ''
     mkdir -p $out/bin

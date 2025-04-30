@@ -2,7 +2,9 @@
   description = "A chat tool made for play RPG";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.11";
+    nixpkgs = {
+      url = "github:mythal/nixpkgs/production";
+    };
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane = {
       url = "github:ipetkov/crane";
@@ -70,22 +72,10 @@
             inherit pruneSource;
             mkNpmDeps =
               src:
-              pkgs.stdenvNoCC.mkDerivation {
-                name = "${src.name}-deps";
-                nativeBuildInputs = [ pkgs.prefetch-npm-deps ];
-                src = "${src}/package-lock.json";
-                unpackPhase = ":";
-
-                buildPhase = ''
-                  runHook preBuild
-                  prefetch-npm-deps $src $out
-                  runHook postBuild
-                '';
-                dontInstall = true;
-                outputHashMode = "recursive";
-                outputHashAlgo = "sha256";
-                __contentAddressed = true;
-                SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+              pkgs.importNpmLock {
+                pname = "${src.name}-deps";
+                npmRoot = src;
+                version = version;
               };
           };
 
@@ -199,6 +189,10 @@
           };
 
           checks = {
+            server = self'.packages.server;
+            legacy = self'.packages.legacy;
+            site = self'.packages.site;
+            spa = self'.packages.spa;
           };
           devShells.default = pkgs.mkShell {
             buildInputs = with pkgs; [

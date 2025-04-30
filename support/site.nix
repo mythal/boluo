@@ -13,6 +13,7 @@ pkgs.buildNpmPackage {
   pname = "boluo-site";
 
   npmDeps = mkNpmDeps src;
+  npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
   STANDALONE = "true";
   TURBO_TELEMETRY_DISABLED = 1;

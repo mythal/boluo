@@ -6,14 +6,7 @@ on:
 
 jobs:
   lints:
-    name: Build
-    strategy:
-      matrix:
-        package:
-          - legacy
-          - site
-          - spa
-          - server
+    name: Flake Check
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
@@ -31,17 +24,4 @@ jobs:
           name: boluo
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - run: nix flake check --print-build-logs '.#${{ matrix.package }}'
-
-  cargo-fmt:
-    name: Style (Rust)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt, clippy
-
-      - run: cargo fmt --all --check
+      - run: nix flake check --print-build-logs

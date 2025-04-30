@@ -2,7 +2,9 @@
   description = "A chat tool made for play RPG";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.11";
+    nixpkgs = {
+      url = "github:mythal/nixpkgs/production";
+    };
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane = {
       url = "github:ipetkov/crane";
@@ -63,6 +65,19 @@
                 cp -r out/* $out
               '';
             };
+
+          common = {
+            inherit pkgs;
+            inherit version;
+            inherit pruneSource;
+            mkNpmDeps =
+              src:
+              pkgs.importNpmLock {
+                pname = "${src.name}-deps";
+                npmRoot = src;
+                version = version;
+              };
+          };
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
             toolchain:
@@ -151,39 +166,21 @@
               };
             };
 
-            legacy = import ./support/legacy.nix {
-              inherit
-                pkgs
-                version
-                pruneSource
-                ;
-            };
+            legacy = import ./support/legacy.nix common;
 
             legacy-image = import ./support/legacy-image.nix {
               inherit pkgs;
               legacy = self'.packages.legacy;
             };
 
-            site = import ./support/site.nix {
-              inherit
-                pkgs
-                version
-                pruneSource
-                ;
-            };
+            site = import ./support/site.nix common;
 
             site-image = import ./support/site-image.nix {
               boluo-site = self'.packages.site;
               inherit pkgs certEnv commonImageContents;
             };
 
-            spa = import ./support/spa.nix {
-              inherit
-                pkgs
-                version
-                pruneSource
-                ;
-            };
+            spa = import ./support/spa.nix common;
 
             spa-image = import ./support/spa-image.nix {
               inherit pkgs;
@@ -192,37 +189,27 @@
           };
 
           checks = {
+            server = self'.packages.server;
+            legacy = self'.packages.legacy;
+            site = self'.packages.site;
+            spa = self'.packages.spa;
           };
-          devShells.default =
-            let
-              turbo = "${pkgs.turbo}/bin/turbo";
-              prefetch = "${pkgs.prefetch-npm-deps}/bin/prefetch-npm-deps";
-              update-hash = pkgs.writeScriptBin "update-hash" ''
-                ${turbo} prune site
-                ${prefetch} ./out/package-lock.json > support/hash-site.txt
-                ${turbo} prune spa
-                ${prefetch} ./out/package-lock.json > support/hash-spa.txt
-                ${turbo} prune legacy
-                ${prefetch} ./out/package-lock.json > support/hash-legacy.txt
-              '';
-            in
-            pkgs.mkShell {
-              buildInputs = with pkgs; [
-                rustToolchain
-                nil
-                nodejs
-                clang
-                pgformatter
-                gnumake
-                nixfmt-rfc-style
-                sqlx-cli
-                prefetch-npm-deps
-                update-hash
-              ];
-              shellHook = ''
-                export PATH="node_modules/.bin:$PATH"
-              '';
-            };
+          devShells.default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              rustToolchain
+              nil
+              nodejs
+              clang
+              pgformatter
+              gnumake
+              nixfmt-rfc-style
+              sqlx-cli
+              prefetch-npm-deps
+            ];
+            shellHook = ''
+              export PATH="node_modules/.bin:$PATH"
+            '';
+          };
         };
     };
 }

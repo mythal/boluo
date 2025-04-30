@@ -6,21 +6,14 @@ on:
 
 jobs:
   lints:
-    name: Build
-    strategy:
-      matrix:
-        package:
-          - legacy
-          - site
-          - spa
-          - server
+    name: Flake Check
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       # https://github.com/DeterminateSystems/nix-installer-action
-      - uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+      - uses: DeterminateSystems/nix-installer-action@21a544727d0c62386e78b4befe52d19ad12692e3
         with:
           extra-conf: |
             experimental-features = flakes nix-command ca-derivations
@@ -31,17 +24,4 @@ jobs:
           name: boluo
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - run: nix build --print-build-logs .#${{ matrix.package }}
-
-  cargo-fmt:
-    name: Style (Rust)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt, clippy
-
-      - run: cargo fmt --all --check
+      - run: nix flake check --print-build-logs

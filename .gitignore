@@ -2,6 +2,7 @@
 postgrestools.jsonc
 # nix
 result
+result-*
 
 # cloudflare
 .wrangler/

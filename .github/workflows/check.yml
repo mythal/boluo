@@ -24,4 +24,5 @@ jobs:
           name: boluo
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - run: nix flake check --print-build-logs
+      - run: nix run github:Mic92/nix-fast-build -- --skip-cached --no-nom --flake ".#checks.$(nix eval --raw --impure --expr builtins.currentSystem)"
+

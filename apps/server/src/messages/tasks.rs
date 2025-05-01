@@ -2,12 +2,12 @@ use std::{collections::BTreeMap, time::Duration};
 
 use chrono::{DateTime, Utc};
 use futures::stream::StreamExt;
-use std::sync::Mutex;
+use parking_lot::Mutex;
 use tokio::time::interval;
 use tokio_stream::wrappers::IntervalStream;
 use uuid::Uuid;
 
-use crate::db;
+use crate::{db, events::context::WAIT_MORE};
 
 pub fn start() {
     tokio::spawn(update_spaces_latest_activity());
@@ -26,7 +26,8 @@ async fn update_spaces_latest_activity() {
             };
             let space_updated_map = {
                 let mut map = BTreeMap::new();
-                let Ok(mut space_updated_map) = RECENTLY_UPDATED_SPACES.lock() else {
+                let Some(mut space_updated_map) = RECENTLY_UPDATED_SPACES.try_lock_for(WAIT_MORE)
+                else {
                     log::error!("Failed to lock RECENTLY_UPDATED_SPACES");
                     return;
                 };

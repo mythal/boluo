@@ -6,6 +6,7 @@ use types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
+use crate::events::context::WAIT_SHORTLY;
 use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
@@ -305,11 +306,15 @@ impl Message {
         );
         message.hide(None);
 
-        {
-            if let Ok(mut update_map) = super::tasks::RECENTLY_UPDATED_SPACES.try_lock() {
-                update_map.insert(*channel_id, message.created);
+        let created = message.created.clone();
+        let channel_id = *channel_id;
+        tokio::spawn(async move {
+            if let Some(mut update_map) =
+                super::tasks::RECENTLY_UPDATED_SPACES.try_lock_for(WAIT_SHORTLY)
+            {
+                update_map.insert(channel_id, created);
             }
-        }
+        });
         Ok(message)
     }
 

@@ -204,8 +204,7 @@
               gnumake
               nixfmt-rfc-style
               sqlx-cli
-              nix-output-monitor
-              nix-fast-build
+              prefetch-npm-deps
             ];
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"

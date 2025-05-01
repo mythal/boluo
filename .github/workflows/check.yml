@@ -54,4 +54,4 @@ jobs:
         run: nix registry pin nixpkgs github:mythal/nixpkgs/production
 
       - name: Nix Flake Check
-        run: nix run github:Mic92/nix-fast-build -- --no-nom --flake ".#checks.$(nix eval --raw --impure --expr builtins.currentSystem)"
+        run: nix run github:Mic92/nix-fast-build -- --skip-cached --no-nom --flake ".#checks.$(nix eval --raw --impure --expr builtins.currentSystem)"

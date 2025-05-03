@@ -45,12 +45,9 @@ mod websocket;
 use crate::cors::allow_origin;
 use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
-#[cfg(not(target_env = "msvc"))]
-use tikv_jemallocator::Jemalloc;
 
-#[cfg(not(target_env = "msvc"))]
 #[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();

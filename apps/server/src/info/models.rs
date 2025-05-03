@@ -54,6 +54,7 @@ pub struct ConnectionState {
     ///
     /// Always 1 if the connection is not pooled.
     count: usize,
+    idle: usize,
 }
 
 impl ConnectionState {
@@ -61,12 +62,27 @@ impl ConnectionState {
         let start = std::time::Instant::now();
         let pool = db::get().await;
         let count = pool.size() as usize;
-        sqlx::query!("SELECT 1 as x;")
-            .fetch_one(&pool)
-            .await
-            .map_err(|err| format!("Failed to query database: {:?}", err))?;
+        let idle = pool.num_idle();
+
+        {
+            let mut conn: sqlx::pool::PoolConnection<sqlx::Postgres> = pool
+                .acquire()
+                .await
+                .map_err(|err| format!("Failed to acquire connection: {:?}", err))?;
+            let record = sqlx::query!("SELECT 42 as x;")
+                .fetch_one(&mut *conn)
+                .await
+                .map_err(|err| format!("Failed to query database: {:?}", err))?;
+            if record.x != Some(42) {
+                return Err("Database query failed".to_string());
+            }
+        }
         let rtt_ms = start.elapsed().as_millis() as u64;
-        Ok(ConnectionState { rtt_ms, count })
+        Ok(ConnectionState {
+            rtt_ms,
+            count,
+            idle,
+        })
     }
 }
 
@@ -78,6 +94,7 @@ impl HealthCheck {
             value: ConnectionState {
                 rtt_ms: 0,
                 count: 1,
+                idle: 0,
             },
         };
         let database = ConnectionState::database().await.into();

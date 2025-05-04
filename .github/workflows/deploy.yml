@@ -14,9 +14,6 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - uses: ./.github/actions/image-tag
-        id: image-tag
-
       # https://github.com/nixbuild/nix-quick-install-action
       - name: Install Nix
         uses: mythal/nix-quick-install-action@extra-experimental-features
@@ -41,7 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
-          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+          BRANCH_NAME: ${{ github.ref_name }}
 
   deploy-staging:
     runs-on: ubuntu-latest

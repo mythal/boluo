@@ -34,7 +34,7 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Push images
-        run: nix run ".#push-images" --accept-flake-config
+        run: nix --accept-flake-config --log-format raw -L run ".#push-images"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -54,7 +54,8 @@ jobs:
           extra-conf: |
             experimental-features = flakes nix-command ca-derivations
 
-      - run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
+      - name: Deploy to staging
+        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}
           VERSION: ${{ github.sha }}

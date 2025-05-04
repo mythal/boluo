@@ -1,4 +1,9 @@
-{ pkgs, legacy, ... }:
+{
+  pkgs,
+  legacy,
+  imageLabel,
+  ...
+}:
 # https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/docker/examples.nix
 let
   webRoot = legacy;
@@ -52,5 +57,6 @@ pkgs.dockerTools.buildLayeredImage {
     ExposedPorts = {
       "${nginxPort}/tcp" = { };
     };
+    Labels = imageLabel;
   };
 }

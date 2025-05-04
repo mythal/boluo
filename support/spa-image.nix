@@ -1,4 +1,9 @@
-{ pkgs, boluo-spa, ... }:
+{
+  pkgs,
+  boluo-spa,
+  imageLabel,
+  ...
+}:
 # https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/docker/examples.nix
 let
   webRoot = boluo-spa;
@@ -52,5 +57,6 @@ pkgs.dockerTools.buildLayeredImage {
     ExposedPorts = {
       "${nginxPort}/tcp" = { };
     };
+    Labels = imageLabel;
   };
 }

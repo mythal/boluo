@@ -24,6 +24,7 @@
 
   outputs =
     inputs@{
+      self,
       flake-parts,
       crane,
       ...
@@ -55,6 +56,7 @@
             "spa"
             "site"
           ];
+          rev = if (self ? rev) then self.rev else throw "No rev provided";
           pruneSource =
             name:
             pkgs.stdenvNoCC.mkDerivation {
@@ -110,6 +112,18 @@
             "GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
           ];
+
+          revEnv = [
+            "APP_VERSION=${rev}"
+          ];
+
+          imageLabel = {
+            "org.opencontainers.image.url" = "https://github.com/mythal/boluo";
+            "org.opencontainers.image.version" = version;
+            "org.opencontainers.image.revision" = rev;
+            "org.opencontainers.image.vendor" = "Mythal";
+            "org.opencontainers.image.licenses" = "AGPL-3.0";
+          };
 
           cargo-source =
             let
@@ -168,15 +182,16 @@
               tag = "latest";
               contents = commonImageContents;
               config = {
-                env = certEnv;
+                env = certEnv ++ revEnv;
                 Cmd = [ "${self'.packages.server}/bin/server" ];
+                Labels = imageLabel;
               };
             };
 
             legacy = import ./support/legacy.nix common;
 
             legacy-image = import ./support/legacy-image.nix {
-              inherit pkgs;
+              inherit pkgs imageLabel;
               legacy = self'.packages.legacy;
             };
 
@@ -184,13 +199,18 @@
 
             site-image = import ./support/site-image.nix {
               boluo-site = self'.packages.site;
-              inherit pkgs certEnv commonImageContents;
+              inherit
+                pkgs
+                certEnv
+                commonImageContents
+                imageLabel
+                ;
             };
 
             spa = import ./support/spa.nix common;
 
             spa-image = import ./support/spa-image.nix {
-              inherit pkgs;
+              inherit pkgs imageLabel;
               boluo-spa = self'.packages.spa;
             };
 
@@ -211,7 +231,7 @@
                 config = builtins.toJSON (import ./support/server.staging.fly.nix);
               in
               pkgs.writeShellScriptBin "deploy-server-staging" ''
-                ${pkgs.flyctl}/bin/flyctl deploy --config ${pkgs.writeText "fly.json" config} --remote-only --env VERSION=$VERSION
+                ${pkgs.flyctl}/bin/flyctl deploy --config ${pkgs.writeText "fly.json" config} --remote-only
               '';
           };
 

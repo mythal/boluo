@@ -131,7 +131,7 @@ pub struct BasicInfo {
 
 impl BasicInfo {
     pub fn new() -> Self {
-        let version = std::env::var("VERSION").unwrap_or_else(|_| "unknown".to_string());
+        let version = std::env::var("APP_VERSION").unwrap_or_else(|_| "unknown".to_string());
         BasicInfo { version }
     }
 }

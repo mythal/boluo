@@ -123,6 +123,7 @@
             "org.opencontainers.image.revision" = rev;
             "org.opencontainers.image.vendor" = "Mythal";
             "org.opencontainers.image.licenses" = "AGPL-3.0";
+            "org.opencontainers.image.description" = self.description;
           };
 
           cargo-source =

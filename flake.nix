@@ -194,6 +194,14 @@
               boluo-spa = self'.packages.spa;
             };
 
+            push-images = pkgs.writeShellScriptBin "push-images" ''
+              skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://ghcr.io/mythal/boluo/server:$IMAGE_TAG
+              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://ghcr.io/mythal/boluo/legacy:$IMAGE_TAG
+              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://ghcr.io/mythal/boluo/site:$IMAGE_TAG
+              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://ghcr.io/mythal/boluo/spa:$IMAGE_TAG
+            '';
+
             deploy-server-staging =
               let
                 config = builtins.toJSON (import ./support/server.staging.fly.nix);

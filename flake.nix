@@ -1,6 +1,13 @@
 {
   description = "A chat tool made for play RPG";
-
+  nixConfig = {
+    extra-substituters = [
+      "https://boluo.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "boluo.cachix.org-1:03yc2Do5i+RFofJNpy7GPOCvYv4wHKEnnQTgFvP6o2Q="
+    ];
+  };
   inputs = {
     nixpkgs = {
       url = "github:mythal/nixpkgs/production";
@@ -186,6 +193,14 @@
               inherit pkgs;
               boluo-spa = self'.packages.spa;
             };
+
+            deploy-server-staging =
+              let
+                config = builtins.toJSON (import ./support/server.staging.fly.nix);
+              in
+              pkgs.writeShellScriptBin "deploy-server-staging" ''
+                ${pkgs.flyctl}/bin/flyctl deploy --config ${pkgs.writeText "fly.json" config} --remote-only
+              '';
           };
 
           checks = {
@@ -204,7 +219,9 @@
               gnumake
               nixfmt-rfc-style
               sqlx-cli
-              prefetch-npm-deps
+              flyctl
+              nix-fast-build
+              nix-output-monitor
             ];
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"

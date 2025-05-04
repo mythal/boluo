@@ -1,7 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 postgrestools.jsonc
+
 # nix
+.envrc
 result
+result-*
 
 # cloudflare
 .wrangler/

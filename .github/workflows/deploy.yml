@@ -57,3 +57,4 @@ jobs:
       - run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}
+          VERSION: ${{ github.sha }}

@@ -3,6 +3,7 @@
   certEnv,
   boluo-site,
   commonImageContents,
+  imageLabel,
   ...
 }:
 pkgs.dockerTools.buildLayeredImage {
@@ -17,5 +18,6 @@ pkgs.dockerTools.buildLayeredImage {
   config = {
     Env = certEnv;
     Cmd = [ "${boluo-site}/bin/boluo-site" ];
+    Labels = imageLabel;
   };
 }

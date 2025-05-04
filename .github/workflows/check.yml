@@ -44,4 +44,4 @@ jobs:
           purge-primary-key: never
 
       - name: Nix Flake Check
-        run: nix --accept-flake-config --log-format raw -L flake check
+        run: nix --accept-flake-config --show-trace --log-format raw -L flake check

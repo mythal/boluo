@@ -13,10 +13,10 @@ if not branch:
     sys.exit(1)
 
 if branch in ["main", "master"]:
-    print("latest")
+    print("latest", end="")
 elif branch.startswith("release/") or branch == "production":
-    print("production")
+    print("production", end="")
 elif branch.startswith("staging/"):
-    print("staging")
+    print("staging", end="")
 else:
-    print(branch)
+    print(branch, end="")

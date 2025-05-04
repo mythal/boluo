@@ -195,12 +195,14 @@
             };
 
             push-images = pkgs.writeShellScriptBin "push-images" ''
+              set -e
               skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
               IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./support/image-tag.py})"
+              echo "Pushing images with tag: $IMAGE_TAG"
               BASE="docker://ghcr.io/mythal/boluo"
               ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" $BASE/server:$IMAGE_TAG
               ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" $BASE/legacy:$IMAGE_TAG
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}"$BASE/site:$IMAGE_TAG
+              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" $BASE/site:$IMAGE_TAG
               ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" $BASE/spa:$IMAGE_TAG
             '';
 

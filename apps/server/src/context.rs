@@ -1,4 +1,4 @@
-use std::{env, path::Path, path::PathBuf};
+use std::env;
 
 use std::sync::OnceLock as OnceCell;
 
@@ -47,14 +47,4 @@ pub fn secret() -> &'static str {
 
 pub fn is_systemd() -> bool {
     *SYSTEMD.get_or_init(|| env::var("SYSTEMD").map(env_bool).unwrap_or(false))
-}
-
-static MEDIA_PATH: OnceCell<PathBuf> = OnceCell::new();
-
-pub fn media_path() -> &'static Path {
-    let path = PathBuf::from(env::var("MEDIA_PATH").unwrap_or("media".to_string()));
-    if !path.exists() {
-        std::fs::create_dir_all(&*path).expect("Unable to create media directory");
-    }
-    MEDIA_PATH.get_or_init(|| path)
 }

@@ -10,18 +10,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # https://github.com/actions/checkout
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      # https://github.com/DeterminateSystems/nix-installer-action
-      - uses: DeterminateSystems/nix-installer-action@21a544727d0c62386e78b4befe52d19ad12692e3
+      # https://github.com/nixbuild/nix-quick-install-action
+      - name: Install Nix
+        uses: mythal/nix-quick-install-action@extra-experimental-features
         with:
-          extra-conf: |
-            experimental-features = flakes nix-command ca-derivations
+          extra_experimental_features: ca-derivations
+          nix_conf: |
+            keep-env-derivations = true
+            keep-outputs = true
+            substituters = https://cache.nixos.org/
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
 
-      # https://github.com/cachix/cachix-action
-      - uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
+      - name: Show Nix Config
+        run: nix config show
+
+      - name: Restore and save Nix store
+        uses: nix-community/cache-nix-action@76f6697d63b7378f7161d52f3d81784130ecd90d
         with:
-          name: boluo
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          # restore and save a cache using this key
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+          # if there's no cache hit, restore a cache by this prefix
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          # collect garbage until the Nix store size (in bytes) is at most this number
+          # before trying to save a new cache
+          # 1G = 1073741824
+          gc-max-store-size-linux: 1G
+          # do purge caches
+          purge: true
+          # purge all versions of the cache
+          purge-prefixes: nix-${{ runner.os }}-
+          # created more than this number of seconds ago
+          purge-created: 0
+          # or, last accessed more than this number of seconds ago
+          # relative to the start of the `Post Restore and save Nix store` phase
+          purge-last-accessed: 0
+          # except any version with the key that is the same as the `primary-key`
+          purge-primary-key: never
 
-      - run: nix flake check --print-build-logs
+      - name: Nix Flake Check
+        run: nix --accept-flake-config flake check

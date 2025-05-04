@@ -30,18 +30,5 @@ jobs:
           name: boluo
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      # https://github.com/nix-community/cache-nix-action
-      - name: Restore and save Nix store
-        uses: nix-community/cache-nix-action@76f6697d63b7378f7161d52f3d81784130ecd90d
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-max-store-size-linux: 1G
-          purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-created: 0
-          purge-last-accessed: 0
-          purge-primary-key: never
-
       - name: Nix Flake Check
         run: nix --accept-flake-config --show-trace --log-format raw -L flake check

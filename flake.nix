@@ -211,7 +211,7 @@
                 config = builtins.toJSON (import ./support/server.staging.fly.nix);
               in
               pkgs.writeShellScriptBin "deploy-server-staging" ''
-                ${pkgs.flyctl}/bin/flyctl deploy --config ${pkgs.writeText "fly.json" config} --remote-only
+                ${pkgs.flyctl}/bin/flyctl deploy --config ${pkgs.writeText "fly.json" config} --remote-only --env VERSION=$VERSION
               '';
           };
 

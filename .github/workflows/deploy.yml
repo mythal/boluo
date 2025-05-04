@@ -1,0 +1,88 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - production
+      - master
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - uses: ./.github/actions/image-tag
+        id: image-tag
+
+      # https://github.com/nixbuild/nix-quick-install-action
+      - name: Install Nix
+        uses: mythal/nix-quick-install-action@extra-experimental-features
+        with:
+          extra_experimental_features: ca-derivations
+          nix_conf: |
+            keep-env-derivations = true
+            keep-outputs = true
+
+      - name: Show Nix Config
+        run: nix config show
+
+
+      # https://github.com/cachix/cachix-action
+      - name: Set up Cachix
+        uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
+        with:
+          name: boluo
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      # https://github.com/cachix/cachix-action
+      - uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
+        with:
+          name: boluo
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      # https://github.com/nix-community/cache-nix-action
+      - name: Restore and save Nix store
+        uses: nix-community/cache-nix-action@76f6697d63b7378f7161d52f3d81784130ecd90d
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 1G
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-
+          purge-created: 0
+          purge-last-accessed: 0
+          purge-primary-key: never
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push images
+        run: nix run ".#push-images" --accept-flake-config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: images
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # https://github.com/DeterminateSystems/nix-installer-action
+      - uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+        with:
+          extra-conf: |
+            experimental-features = flakes nix-command ca-derivations
+
+      - run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}

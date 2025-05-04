@@ -1,7 +1,5 @@
-use crate::context::media_path;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use uuid::Uuid;
 
 pub struct MediaFile {
@@ -53,12 +51,6 @@ pub struct Media {
 }
 
 impl Media {
-    pub fn path(filename: &str) -> PathBuf {
-        let mut path = media_path().to_owned();
-        path.push(filename);
-        path
-    }
-
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         media_id: &Uuid,

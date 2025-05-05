@@ -16,6 +16,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "storybook": "turbo storybook",
     "build:legacy": "turbo build --filter=legacy",
     "build:site": "turbo build --filter=site",
     "build:spa": "turbo build --filter=spa",

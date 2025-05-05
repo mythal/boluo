@@ -16,10 +16,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "storybook": "turbo storybook",
     "build:legacy": "turbo build --filter=legacy",
     "build:site": "turbo build --filter=site",
     "build:spa": "turbo build --filter=spa",
+    "build:storybook": "turbo build --filter=storybook",
     "check-types": "turbo run check-types",
     "dev": "turbo run dev",
     "dev:legacy": "turbo run dev --filter=legacy",
@@ -31,6 +31,7 @@
     "generate": "turbo run generate",
     "lint": "turbo run lint",
     "preview:site": "turbo run preview --filter=site",
+    "storybook": "turbo storybook",
     "test": "turbo run test"
   },
   "workspaces": [

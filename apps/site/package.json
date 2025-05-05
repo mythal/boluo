@@ -22,7 +22,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
-    "react-intl": "^7.1.10",
+    "react-intl": "^7.1.11",
     "server-only": "^0.0.1",
     "swr": "^2.3.3",
     "tslib": "^2.8.1",
@@ -48,7 +48,7 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "webpack": "^5.98.0"
   },
   "homepage": "https://github.com/mythal/boluo",

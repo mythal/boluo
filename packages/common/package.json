@@ -22,10 +22,10 @@
     "jotai": "^2.12.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-intl": "^7.1.10",
+    "react-intl": "^7.1.11",
     "swr": "^2.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "exports": {
     ".": "./index.ts",
@@ -40,7 +40,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
-    "react-intl": "^7.1.10",
+    "react-intl": "^7.1.11",
     "swr": "^2.3.3"
   },
   "scripts": {

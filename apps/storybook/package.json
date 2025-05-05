@@ -1,5 +1,5 @@
 {
-  "name": "storybook",
+  "name": "boluo-storybook",
   "version": "0.0.0",
   "dependencies": {
     "@boluo/ui": "*",
@@ -26,7 +26,7 @@
     "eslint-plugin-storybook": "^0.12.0",
     "globals": "^16.0.0",
     "postcss": "^8.5.3",
-    "storybook": "0.0.0",
+    "storybook": "8.6.12",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.28.0",

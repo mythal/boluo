@@ -10,14 +10,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      # https://github.com/nixbuild/nix-quick-install-action
+      # https://github.com/DeterminateSystems/nix-installer-action
       - name: Install Nix
-        uses: mythal/nix-quick-install-action@extra-experimental-features
+        uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
         with:
-          extra_experimental_features: ca-derivations
-          nix_conf: |
-            keep-env-derivations = true
-            keep-outputs = true
+          extra-conf: |
+            experimental-features = flakes nix-command ca-derivations
 
       - name: Show Nix Config
         run: nix config show

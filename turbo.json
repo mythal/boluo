@@ -29,6 +29,7 @@
     "lint": { "dependsOn": ["^lint"] },
     "test": { "dependsOn": ["^build"] },
     "check-types": { "dependsOn": ["^check-types"] },
+    "storybook": { "dependsOn": ["^build"], "cache": false, "persistent": true },
     "dev": { "dependsOn": ["^generate", "generate", "^build"], "cache": false, "persistent": true },
     "@boluo/icons#generate": { "dependsOn": [], "inputs": ["icons/**"], "outputs": ["src/**"] },
     "@boluo/icons#build": {

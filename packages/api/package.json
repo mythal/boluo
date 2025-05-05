@@ -9,7 +9,7 @@
     "@boluo/eslint-config": "*",
     "eslint": "^9.23.0",
     "jotai": "^2.12.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "exports": {
     ".": "./src/index.ts",

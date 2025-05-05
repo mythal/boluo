@@ -11,7 +11,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-turbo": "^2.4.4",
     "globals": "^16.0.0",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.28.0"
   },
   "exports": {

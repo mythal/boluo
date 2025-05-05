@@ -6,7 +6,7 @@
   },
   "devDependencies": {
     "@boluo/typescript-config": "*",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "exports": {
     ".": "./src/index.ts"

@@ -226,13 +226,13 @@
               ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" $BASE/spa:$IMAGE_TAG
             '';
 
-            deploy-server-staging =
-              let
-                config = builtins.toJSON (import ./support/server.staging.fly.nix);
-              in
-              pkgs.writeShellScriptBin "deploy-server-staging" ''
-                ${pkgs.flyctl}/bin/flyctl deploy --config ${pkgs.writeText "fly.json" config} --remote-only
-              '';
+            deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${support/fly/server-statging/fly.toml} --remote-only
+            '';
+
+            deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${support/fly/server-production/fly.toml} --remote-only
+            '';
           };
 
           checks = {

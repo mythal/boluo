@@ -56,3 +56,23 @@ jobs:
         run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/production'
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # https://github.com/DeterminateSystems/nix-installer-action
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+        with:
+          extra-conf: |
+            experimental-features = flakes nix-command ca-derivations
+
+      - name: Deploy to staging
+        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-production
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}

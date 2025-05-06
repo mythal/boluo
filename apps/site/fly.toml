@@ -10,6 +10,9 @@ swap_size_mb = 512
 [build]
   image = 'ghcr.io/mythal/boluo/site:latest'
 
+[deploy]
+  strategy = "bluegreen"
+
 [env]
   APP_URL = 'https://app.boluo.chat'
   BACKEND_URL = 'https://production.boluo.chat'

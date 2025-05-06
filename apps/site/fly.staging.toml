@@ -34,3 +34,7 @@ swap_size_mb = 256
 [[vm]]
   size = 'shared-cpu-1x'
   memory = "256mb"
+
+[[statics]]
+  guest_path = "/app/apps/site/.next/static"
+  url_prefix = "/_next/static"

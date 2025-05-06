@@ -192,10 +192,7 @@
               legacy = self'.packages.legacy;
             };
 
-            site = pkgs.writeShellScriptBin "site" ''
-              #!/bin/sh
-              exec ${pkgs.nodejs}/bin/node ${import ./support/site.nix common}/apps/site/server.js
-            '';
+            site = import ./support/site.nix common;
 
             site-image = import ./support/site-image.nix {
               boluo-site = self'.packages.site;

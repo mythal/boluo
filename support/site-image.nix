@@ -17,8 +17,7 @@ pkgs.dockerTools.buildImage {
       nodejs
     ];
   runAsRoot = ''
-    mkdir -p /app/
-    cp -r ${boluo-site}/* /app/
+    cp -r ${boluo-site} /app
   '';
   config = {
     Env = commonEnv ++ [

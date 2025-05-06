@@ -1,6 +1,6 @@
 {
   pkgs,
-  certEnv,
+  commonEnv,
   boluo-site,
   commonImageContents,
   imageLabel,
@@ -16,10 +16,12 @@ pkgs.dockerTools.buildLayeredImage {
       curl
     ];
   config = {
-    Env = certEnv ++ [
+    Env = commonEnv ++ [
       "NEXT_TELEMETRY_DISABLED=1"
     ];
-    Cmd = [ "${pkgs.nodejs}/bin/nodejs ${boluo-site}/apps/site/server.js" ];
+    Cmd = [
+      "${boluo-site}/bin/boluo-site"
+    ];
     Labels = imageLabel;
   };
 }

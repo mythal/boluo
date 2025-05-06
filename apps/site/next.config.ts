@@ -11,12 +11,12 @@ const config: NextConfig = {
     dirs: ['src', 'tests'],
   },
   output: 'standalone',
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
-      },
+  turbo: {
+    resolveAlias: {
+      '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },
+  },
+  experimental: {
     swcPlugins: [
       [
         '@swc/plugin-formatjs',

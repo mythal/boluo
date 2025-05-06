@@ -35,7 +35,6 @@
     "@mdx-js/react": "^3.0.0",
     "@next/bundle-analyzer": "^15.2.4",
     "@next/eslint-plugin-next": "^15.2.4",
-    "@opennextjs/cloudflare": "^1.0.0-beta.4",
     "@swc/plugin-formatjs": "^3.0.0",
     "@types/mdx": "^2.0.10",
     "@types/negotiator": "^0.6.3",
@@ -55,12 +54,9 @@
   "license": "GPL-3.0",
   "scripts": {
     "build": "next build",
-    "build:cloudflare": "opennextjs-cloudflare build",
     "check-types": "tsc --noEmit",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "dev": "next dev --hostname 0.0.0.0 --port 3100 --turbopack",
     "lint": "next lint",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start"
   },
   "type": "module"

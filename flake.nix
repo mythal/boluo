@@ -227,7 +227,7 @@
             '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${support/fly/server-statging/fly.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${support/fly/server-staging/fly.toml} --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''

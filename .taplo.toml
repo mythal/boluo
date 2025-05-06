@@ -1,0 +1,5 @@
+[formatting]
+  align_entries = false
+  indent_tables = true
+  indent_entries = true
+  indent_string = '  '

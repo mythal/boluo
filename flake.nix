@@ -227,11 +227,15 @@
             '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${support/fly/server-staging/fly.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${support/fly/server-production/fly.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --remote-only
+            '';
+
+            deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-production" ''
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --remote-only
             '';
           };
 

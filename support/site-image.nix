@@ -16,7 +16,9 @@ pkgs.dockerTools.buildLayeredImage {
       curl
     ];
   config = {
-    Env = certEnv;
+    Env = certEnv ++ [
+      "NEXT_TELEMETRY_DISABLED=1"
+    ];
     Cmd = [ "${boluo-site}/bin/boluo-site" ];
     Labels = imageLabel;
   };

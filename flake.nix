@@ -56,7 +56,7 @@
             "spa"
             "site"
           ];
-          rev = if (self ? rev) then self.rev else throw "No rev provided";
+          rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
           pruneSource =
             name:
             pkgs.stdenvNoCC.mkDerivation {
@@ -192,7 +192,10 @@
               legacy = self'.packages.legacy;
             };
 
-            site = import ./support/site.nix common;
+            site = pkgs.writeShellScriptBin "site" ''
+              #!/bin/sh
+              exec ${pkgs.nodejs}/bin/node ${import ./support/site.nix common}/apps/site/server.js
+            '';
 
             site-image = import ./support/site-image.nix {
               boluo-site = self'.packages.site;

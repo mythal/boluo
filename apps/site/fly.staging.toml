@@ -1,0 +1,35 @@
+# fly.toml app configuration file generated for boluo-site-staging on 2025-05-06T16:14:25+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'boluo-site-staging'
+primary_region = 'nrt'
+swap_size_mb = 256
+
+[build]
+  image = 'ghcr.io/mythal/boluo/site:latest'
+
+[env]
+  APP_URL = 'https://app-staging.boluo.chat'
+  BACKEND_URL = 'https://production.boluo.chat'
+  PUBLIC_MEDIA_URL = 'https://media.boluo.chat'
+  HOSTNAME = '0.0.0.0'
+  PORT = '3000'
+
+[http_service]
+  internal_port = 3000
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  #   [[http_service.checks]]
+  #     interval = '20s'
+  #     timeout = '5s'
+  #     grace_period = '20s'
+  #     method = 'GET'
+  #     path = '/'
+
+[[vm]]
+  size = 'shared-cpu-1x'

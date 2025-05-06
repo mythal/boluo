@@ -19,7 +19,7 @@ pkgs.dockerTools.buildLayeredImage {
     Env = certEnv ++ [
       "NEXT_TELEMETRY_DISABLED=1"
     ];
-    Cmd = [ "${boluo-site}/bin/boluo-site" ];
+    Cmd = [ "${pkgs.nodejs}/bin/nodejs ${boluo-site}/apps/site/server.js" ];
     Labels = imageLabel;
   };
 }

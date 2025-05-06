@@ -41,6 +41,7 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: images
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Check out the repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -52,7 +53,12 @@ jobs:
           extra-conf: |
             experimental-features = flakes nix-command ca-derivations
 
-      - name: Deploy to staging
+      - name: Deploy site to staging
+        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}
+
+      - name: Deploy server to staging
         run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_DEVELOPMENT_TOKEN }}

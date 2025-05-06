@@ -108,12 +108,9 @@
             fakeNss
           ];
 
-          certEnv = [
+          commonEnv = [
             "GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-          ];
-
-          revEnv = [
             "APP_VERSION=${rev}"
           ];
 
@@ -182,7 +179,7 @@
               tag = "latest";
               contents = commonImageContents;
               config = {
-                env = certEnv ++ revEnv;
+                env = commonEnv;
                 Cmd = [ "${self'.packages.server}/bin/server" ];
                 Labels = imageLabel;
               };
@@ -201,7 +198,7 @@
               boluo-site = self'.packages.site;
               inherit
                 pkgs
-                certEnv
+                commonEnv
                 commonImageContents
                 imageLabel
                 ;

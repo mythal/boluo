@@ -10,7 +10,7 @@
   };
   inputs = {
     nixpkgs = {
-      url = "github:mythal/nixpkgs/production";
+      url = "github:NixOS/nixpkgs/nixos-unstable";
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane = {

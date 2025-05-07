@@ -18,7 +18,7 @@ static SESSION_CACHE: LazyLock<quick_cache::sync::Cache<Uuid, SessionInfo>> =
     LazyLock::new(|| quick_cache::sync::Cache::new(8192));
 
 #[derive(Debug, Clone)]
-struct SessionInfo {
+pub struct SessionInfo {
     pub user_id: Uuid,
     pub created: chrono::DateTime<chrono::Utc>,
 }
@@ -78,14 +78,21 @@ fn test_session_sign() {
     assert_eq!(session, session_2);
 }
 
-pub async fn start(user_id: Uuid) -> Result<Uuid, sqlx::Error> {
+pub async fn start_with_session_id(
+    user_id: Uuid,
+    session_id: Uuid,
+) -> Result<SessionInfo, sqlx::Error> {
     let mut conn = crate::db::get().await.acquire().await?;
-    let session = Uuid::new_v4();
-    let created = sqlx::query_file_scalar!("sql/users/session_start.sql", &session, &user_id)
+    let created = sqlx::query_file_scalar!("sql/users/session_start.sql", &session_id, &user_id)
         .fetch_one(&mut *conn)
         .await?;
-    SESSION_CACHE.insert(session, SessionInfo { user_id, created });
-    Ok(session)
+    Ok(SessionInfo { user_id, created })
+}
+pub async fn start(user_id: Uuid) -> Result<SessionInfo, sqlx::Error> {
+    let session_id = Uuid::new_v4();
+    let session_info = start_with_session_id(user_id, session_id).await?;
+    SESSION_CACHE.insert(session_id, session_info.clone());
+    Ok(session_info)
 }
 
 #[derive(Debug)]
@@ -258,6 +265,38 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Result<Option<&str>, anyh
     }
 }
 
+async fn get_session_from_db(session_id: Uuid) -> Result<SessionInfo, AppError> {
+    use redis::AsyncCommands;
+
+    let mut conn = crate::db::get().await.acquire().await?;
+    let session_info = sqlx::query_file_as!(SessionInfo, "sql/users/session_fetch.sql", session_id)
+        .fetch_optional(&mut *conn)
+        .await
+        .map_err(|err| {
+            log::warn!("Failed to get session from database: {}", err);
+            AppError::Unexpected(err.into())
+        })?;
+    if let Some(session_info) = session_info {
+        return Ok(session_info);
+    };
+    std::mem::drop(conn);
+    let mut conn = crate::redis::conn().await;
+    let user_id: Uuid = conn
+        .get::<_, Vec<u8>>(crate::redis::make_key(b"session", &session_id, b"user_id"))
+        .await
+        .map_err(|_err| AppError::NotFound("session"))
+        .and_then(|user_id| {
+            Uuid::from_slice(&user_id).map_err(|err| {
+                log::warn!("Failed to convert user_id bytes to UUID: {}", err);
+                AppError::NotFound("session")
+            })
+        })?;
+
+    start_with_session_id(user_id, session_id)
+        .await
+        .map_err(|_err: sqlx::Error| AppError::NotFound("session"))
+}
+
 async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     let id = match token_verify(token) {
         Err(err) => {
@@ -267,17 +306,7 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
         Ok(id) => id,
     };
     let session_info: Result<SessionInfo, AppError> = SESSION_CACHE
-        .get_or_insert_async(&id, async {
-            let mut conn = crate::db::get().await.acquire().await?;
-            sqlx::query_file_as!(SessionInfo, "sql/users/session_fetch.sql", id)
-                .fetch_optional(&mut *conn)
-                .await
-                .map_err(|err| {
-                    log::warn!("Failed to get session from database: {}", err);
-                    AppError::Unexpected(err.into())
-                })?
-                .ok_or(AppError::NotFound("session"))
-        })
+        .get_or_insert_async(&id, async { get_session_from_db(id).await })
         .await;
     let user_id = session_info?.user_id;
     Ok(Session { id, user_id })

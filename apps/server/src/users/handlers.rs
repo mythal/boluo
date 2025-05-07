@@ -162,7 +162,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         .or_no_permission()?;
     let user_id = user.id;
     let session = session::start(user_id).await.map_err(error_unexpected!())?;
-    let token = session::token(&session);
+    let token = session::token(&session.user_id);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut *conn, &user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
@@ -177,7 +177,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
     add_settings_cookie(&settings, headers);
-    add_session_cookie(&session, is_debug, headers);
+    add_session_cookie(&session.user_id, is_debug, headers);
     Ok(response)
 }
 

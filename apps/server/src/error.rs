@@ -1,5 +1,6 @@
 use crate::session::AuthenticateFail;
 use hyper::{StatusCode, Uri};
+use redis::RedisError;
 use std::error::Error;
 use thiserror::Error;
 
@@ -36,6 +37,12 @@ pub enum AppError {
     TokioIo {
         #[from]
         source: tokio::io::Error,
+    },
+
+    #[error("An unexpected redis error occurred: {source}")]
+    Redis {
+        #[from]
+        source: RedisError,
     },
 }
 

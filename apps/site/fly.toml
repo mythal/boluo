@@ -3,40 +3,41 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'boluo-site'
-primary_region = 'nrt'
-swap_size_mb = 512
+app = "boluo-site"
+primary_region = "nrt"
 
 [build]
-  image = 'ghcr.io/mythal/boluo/site:latest'
+  image = "ghcr.io/mythal/boluo/site:latest"
 
 [deploy]
   strategy = "bluegreen"
 
 [env]
-  APP_URL = 'https://app.boluo.chat'
-  BACKEND_URL = 'https://production.boluo.chat'
-  HOSTNAME = '0.0.0.0'
-  PORT = '3000'
-  PUBLIC_MEDIA_URL = 'https://media.boluo.chat'
+  APP_URL = "https://app.boluo.chat"
+  BACKEND_URL = "https://production.boluo.chat"
+  HOSTNAME = "0.0.0.0"
+  PORT = "3000"
+  PUBLIC_MEDIA_URL = "https://media.boluo.chat"
 
 [http_service]
-  internal_port = 3000
-  auto_stop_machines = 'off'
-  auto_start_machines = false
-  min_machines_running = 1
-  processes = ['app']
+  auto_start_machines = true
+  auto_stop_machines = "suspend"
+  internal_port = 3_000
+  min_machines_running = 0
+  processes = ["app"]
 
   [[http_service.checks]]
-    interval = '20s'
+    grace_period = "20s"
     timeout = '5s'
-    grace_period = '20s'
-    method = 'GET'
-    path = '/'
+    interval = "20s"
+    method = "GET"
+    path = "/"
 
 [[vm]]
-  size = 'shared-cpu-1x'
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
 
 [[statics]]
-  guest_path = '/app/apps/site/.next/static'
-  url_prefix = '/_next/static'
+  guest_path = "/app/apps/site/.next/static"
+  url_prefix = "/_next/static"

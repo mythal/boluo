@@ -34,6 +34,7 @@ mod mail;
 mod media;
 mod messages;
 mod pos;
+mod redis;
 mod s3;
 mod session;
 mod spaces;
@@ -171,6 +172,8 @@ async fn main() {
         .expect("Failed to bind address");
     db::check().await;
     log::info!("Database is ready");
+    redis::check().await;
+    log::info!("Redis is ready");
 
     if args.check {
         return;

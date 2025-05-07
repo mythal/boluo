@@ -67,6 +67,7 @@ specta-typescript = "0.0.9"
 types = { version = "0.1.0", path = "../../packages/types" }
 governor = "0.10.0"
 mimalloc = "0.1.46"
+redis = { version = "0.30.0", features = ["streams", "ahash", "tokio-comp", "tcp_nodelay", "connection-manager"] }
 
 [dependencies.reqwest]
 version = "0.12"

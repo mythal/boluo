@@ -17,7 +17,8 @@
     "APP_URL",
     "SITE_URL",
     "SENTRY_TUNNEL",
-    "SENTRY_PROJECT"
+    "SENTRY_PROJECT",
+    "FLY_BACKEND_APP_NAME"
   ],
   "tasks": {
     "generate": { "dependsOn": ["^generate"], "inputs": ["$TURBO_DEFAULT$", ".env*"] },

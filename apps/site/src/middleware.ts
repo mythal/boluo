@@ -40,6 +40,15 @@ export function middleware(request: NextRequest): NextResponse | void {
     // eslint-disable-next-line no-restricted-globals
     const hostname = process.env.BACKEND_URL || 'https://production.boluo.chat';
     const url = new URL(hostname + pathname + request.nextUrl.search, request.url);
+
+    // eslint-disable-next-line no-restricted-globals
+    const fly_backend_app_name = process.env.FLY_BACKEND_APP_NAME;
+    if (fly_backend_app_name) {
+      // fly-replay
+      const response = NextResponse.redirect(url);
+      response.headers.set('fly-replay', `app=${fly_backend_app_name}`);
+      return response;
+    }
     return NextResponse.rewrite(url);
   }
   if (IS_STATIC_FILES.test(pathname) || pathname.startsWith('/api')) {

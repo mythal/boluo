@@ -47,6 +47,8 @@ export function middleware(request: NextRequest): NextResponse | void {
       // fly-replay
       const response = NextResponse.redirect(url);
       response.headers.set('fly-replay', `app=${fly_backend_app_name}`);
+      response.headers.set('fly-replay-cache', '/api/*');
+      response.headers.set('fly-replay-cache-ttl-secs', '60');
       return response;
     }
     return NextResponse.rewrite(url);

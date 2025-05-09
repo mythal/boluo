@@ -280,8 +280,10 @@ async fn get_session_from_db(session_id: Uuid) -> Result<SessionInfo, AppError> 
         return Ok(session_info);
     };
     std::mem::drop(conn);
-    let mut conn = crate::redis::conn().await;
-    let user_id: Uuid = conn
+    let Some(mut redis) = crate::redis::conn().await else {
+        return Err(AppError::NotFound("session"));
+    };
+    let user_id: Uuid = redis
         .get::<_, Vec<u8>>(crate::redis::make_key(b"session", &session_id, b"user_id"))
         .await
         .map_err(|_err| AppError::NotFound("session"))

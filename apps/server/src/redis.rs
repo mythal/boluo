@@ -1,18 +1,25 @@
 use uuid::fmt::Hyphenated;
 use uuid::Uuid;
 
+use crate::utils::not_whitespace_only;
+
 /// Get redis database connection.
-pub async fn conn() -> redis::aio::ConnectionManager {
-    static CLIENT: tokio::sync::OnceCell<redis::aio::ConnectionManager> =
+pub async fn conn() -> Option<redis::aio::ConnectionManager> {
+    static CLIENT: tokio::sync::OnceCell<Option<redis::aio::ConnectionManager>> =
         tokio::sync::OnceCell::const_new();
     CLIENT
         .get_or_init(|| async {
-            let redis_url = std::env::var("REDIS_URL").expect("REDIS_URL must be set");
+            let Some(redis_url) = std::env::var("REDIS_URL").ok().filter(not_whitespace_only)
+            else {
+                log::warn!("REDIS_URL not set, disabling redis");
+                return None;
+            };
             let client = redis::Client::open(redis_url).expect("Invalid Redis URL");
-            client
+            let manager = client
                 .get_connection_manager()
                 .await
-                .expect("Failed to connect to Redis")
+                .expect("Failed to connect to Redis");
+            Some(manager)
         })
         .await
         .clone()
@@ -35,6 +42,9 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
 
 pub async fn check() {
     use redis::AsyncCommands;
-    let mut redis = conn().await;
+    let Some(mut redis) = conn().await else {
+        log::warn!("Redis connection not available");
+        return;
+    };
     let _result: Option<String> = redis.get("hello").await.expect("Failed to get redis");
 }

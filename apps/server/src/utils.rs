@@ -50,6 +50,14 @@ fn key() -> &'static hmac::Key {
     })
 }
 
+pub fn whitespace_only<T: AsRef<str>>(s: &T) -> bool {
+    s.as_ref().trim().is_empty()
+}
+
+pub fn not_whitespace_only<T: AsRef<str>>(s: &T) -> bool {
+    !whitespace_only(s)
+}
+
 pub fn sign(message: &str) -> hmac::Tag {
     hmac::sign(key(), message.as_bytes())
 }

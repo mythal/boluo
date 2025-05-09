@@ -20,7 +20,6 @@ use hyper::Request;
 mod utils;
 #[macro_use]
 mod error;
-mod cache;
 mod channels;
 mod context;
 mod cors;
@@ -39,6 +38,7 @@ mod s3;
 mod session;
 mod spaces;
 mod ts;
+mod ttl;
 mod users;
 mod validators;
 mod websocket;

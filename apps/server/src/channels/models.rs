@@ -3,12 +3,12 @@ use quick_cache::sync::Cache;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::cache::CacheItem;
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::{row_not_found, ModelError};
 use crate::events::context::StateError;
 use crate::spaces::{Space, SpaceMember};
+use crate::ttl::{hour, Ttl};
 use crate::users::User;
 use crate::utils::merge_blank;
 use std::collections::HashMap;
@@ -65,10 +65,11 @@ pub struct Channel {
     pub r#type: ChannelType,
 }
 
-pub static CHANNEL_CACHE: LazyLock<Cache<Uuid, Channel>> = LazyLock::new(|| Cache::new(8192));
+pub static CHANNEL_CACHE: LazyLock<Cache<Uuid, Ttl<Channel, { hour::ONE }>>> =
+    LazyLock::new(|| Cache::new(8192));
 
 fn insert_cache(channel: &Channel) {
-    CHANNEL_CACHE.insert(channel.id, channel.clone());
+    CHANNEL_CACHE.insert(channel.id, channel.clone().into());
 }
 
 fn maybe_insert_cache(channel: &Option<Channel>) {
@@ -116,9 +117,10 @@ impl Channel {
                 sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
                     .fetch_one(db)
                     .await
+                    .map(Into::into)
             })
             .await
-            .map(Some)
+            .map(|channel| Some(channel.into_inner()))
             .or_else(row_not_found)
     }
 
@@ -129,8 +131,8 @@ impl Channel {
         let mut query_ids: Vec<Uuid> = Vec::new();
         let mut result_map: HashMap<Uuid, Channel> = HashMap::new();
         for id in id_list {
-            if let Some(user) = CHANNEL_CACHE.get(&id) {
-                result_map.insert(user.id, user);
+            if let Some(channel) = CHANNEL_CACHE.get(&id) {
+                result_map.insert(channel.id, channel.into_inner());
             } else {
                 query_ids.push(id);
             }
@@ -139,7 +141,7 @@ impl Channel {
             .fetch_all(db)
             .await?;
         for channel in channels {
-            CHANNEL_CACHE.insert(channel.id, channel.clone());
+            CHANNEL_CACHE.insert(channel.id, channel.clone().into());
             result_map.insert(channel.id, channel);
         }
         Ok(result_map)
@@ -163,8 +165,8 @@ impl Channel {
         use crate::spaces::models::SPACES_CACHE;
 
         if let Some(channel) = CHANNEL_CACHE.get(id) {
-            if let Some(space) = SPACES_CACHE.get(&channel.space_id) {
-                return Ok(Some((channel.clone(), space.payload)));
+            if let Some(space) = SPACES_CACHE.get(&channel.space_id).filter(Ttl::is_expired) {
+                return Ok(Some((channel.into_inner(), space.into_inner())));
             }
         }
         let channel_and_space = sqlx::query_file!("sql/channels/fetch_channel_with_space.sql", id)
@@ -173,7 +175,7 @@ impl Channel {
             .map(|record| (record.channel, record.space));
         if let Some((channel, space)) = &channel_and_space {
             insert_cache(channel);
-            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
+            SPACES_CACHE.insert(space.id, space.clone().into());
         }
         Ok(channel_and_space)
     }

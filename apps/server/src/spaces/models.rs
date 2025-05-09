@@ -7,16 +7,16 @@ use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use uuid::Uuid;
 
-use crate::cache::CacheItem;
 use crate::channels::ChannelMember;
 use crate::error::{row_not_found, ModelError};
 use crate::spaces::api::SpaceWithMember;
+use crate::ttl::{self, Ttl};
 use crate::users::User;
 use crate::utils::merge_blank;
 
-pub static SPACES_CACHE: LazyLock<Cache<Uuid, CacheItem<Space>>> =
+pub static SPACES_CACHE: LazyLock<Cache<Uuid, Ttl<Space, { ttl::day::HALF }>>> =
     LazyLock::new(|| Cache::new(1024));
-static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, CacheItem<serde_json::Value>>> =
+static SPACE_SETTINGS_CACHE: LazyLock<Cache<Uuid, Ttl<serde_json::Value, { ttl::day::HALF }>>> =
     LazyLock::new(|| Cache::new(1024));
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
@@ -69,7 +69,7 @@ impl Space {
         )
         .fetch_one(db)
         .await?;
-        SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
+        SPACES_CACHE.insert(space.id, space.clone().into());
         Ok(space)
     }
 
@@ -113,7 +113,7 @@ impl Space {
                 sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
                     .fetch_one(db)
                     .await
-                    .map(CacheItem::new)
+                    .map(Into::into)
             })
             .await
             .map(|item| Some(item.payload))
@@ -137,7 +137,7 @@ impl Space {
             .fetch_all(db)
             .await?;
         for space in spaces {
-            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
+            SPACES_CACHE.insert(space.id, space.clone().into());
             result_map.insert(space.id, space);
         }
         Ok(result_map)
@@ -157,7 +157,7 @@ impl Space {
             .fetch_optional(db)
             .await?;
         if let Some(space) = &space {
-            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
+            SPACES_CACHE.insert(space.id, space.clone().into());
         }
         Ok(space)
     }
@@ -227,7 +227,7 @@ impl Space {
         .fetch_optional(db)
         .await?;
         if let Some(space) = &space {
-            SPACES_CACHE.insert(space.id, CacheItem::new(space.clone()));
+            SPACES_CACHE.insert(space.id, space.clone().into());
         }
         Ok(space)
     }
@@ -264,7 +264,7 @@ impl Space {
         .fetch_all(db)
         .await?;
         for space in &space_with_member_list {
-            SPACES_CACHE.insert(space.space.id, CacheItem::new(space.space.clone()));
+            SPACES_CACHE.insert(space.space.id, space.space.clone().into());
         }
         Ok(space_with_member_list)
     }
@@ -289,7 +289,7 @@ impl Space {
                     .fetch_optional(db)
                     .await
                     .map(|settings| settings.unwrap_or(json!({})))
-                    .map(CacheItem::new)
+                    .map(Into::into)
             })
             .await
             .map(|item| item.payload)
@@ -302,7 +302,7 @@ impl Space {
         sqlx::query_file_scalar!("sql/spaces/put_settings.sql", space_id, settings)
             .execute(db)
             .await?;
-        SPACE_SETTINGS_CACHE.insert(space_id, CacheItem::new(settings.clone()));
+        SPACE_SETTINGS_CACHE.insert(space_id, settings.clone().into());
         Ok(())
     }
 }

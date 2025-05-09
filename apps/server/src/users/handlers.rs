@@ -106,10 +106,8 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
             let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
                 let cached = GET_ME_CACHE.get(&user.id);
-                if let Some(get_me) = cached {
-                    if get_me.is_expired() {
-                        return Ok(ok_response(Some(get_me.payload.clone())));
-                    }
+                if let Some(get_me) = cached.and_then(Ttl::fresh_only) {
+                    return Ok(ok_response(Some(get_me)));
                 }
                 let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
                 let my_channels = Channel::get_by_user(&mut conn, user.id).await?;

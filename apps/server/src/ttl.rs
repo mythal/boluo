@@ -1,3 +1,7 @@
+use std::future::Future;
+
+use crate::error::row_not_found;
+
 pub mod minute {
     pub const ONE: u64 = 60;
     pub const HALF: u64 = 30;
@@ -20,7 +24,7 @@ pub mod day {
 #[derive(Clone)]
 pub struct Ttl<T: Clone, const TTL_SEC: u64> {
     pub instant: std::time::Instant,
-    pub payload: T,
+    payload: T,
 }
 
 impl<T: Clone, const TTL: u64> Ttl<T, TTL> {
@@ -50,8 +54,11 @@ impl<T: Clone, const TTL: u64> Ttl<T, TTL> {
         self.instant = instant;
     }
 
-    pub fn into_inner(self) -> T {
-        self.payload
+    pub fn fresh_only(self) -> Option<T> {
+        if self.is_expired() {
+            return None;
+        }
+        Some(self.payload)
     }
 }
 
@@ -61,32 +68,48 @@ impl<T: Clone, const TTL: u64> From<T> for Ttl<T, TTL> {
     }
 }
 
-impl<T: Clone, const TTL: u64> std::ops::Deref for Ttl<T, TTL> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.payload
+pub async fn fetch_entry<T, const TTL: u64, C, F>(
+    cache: &C,
+    key: uuid::Uuid,
+    fetcher: F,
+) -> Result<T, sqlx::Error>
+where
+    F: Future<Output = Result<T, sqlx::Error>>,
+    T: Clone + Send + 'static,
+    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL>>>,
+{
+    let cache = cache.deref();
+    if let Some(entry) = cache.get(&key) {
+        if !entry.is_expired() {
+            return Ok(entry.payload);
+        }
     }
+    let payload = fetcher.await?;
+    cache.insert(key, payload.clone().into());
+    Ok(payload)
 }
 
-// pub async fn fetch_entry<T, const TTL: u64, C, F>(
-//     cache: &C,
-//     key: Uuid,
-//     fetcher: F,
-// ) -> Result<T, sqlx::Error>
-// where
-//     T: Clone + Send + 'static,
-//     F: AsyncFn() -> Result<Ttl<T, TTL>, sqlx::Error> + Send + 'static,
-//     C: Deref<Target = Cache<Uuid, Ttl<T, TTL>>>,
-// {
-//     let cache = cache.deref();
-//     let entry = cache
-//         .get_or_insert_async(&key, async move { fetcher().await })
-//         .await?;
-//     if entry.is_expired() {
-//         let new_entry = fetcher().await?;
-//         cache.insert(key, new_entry.clone());
-//         Ok(new_entry.into_inner())
-//     } else {
-//         Ok(entry.into_inner())
-//     }
-// }
+pub async fn fetch_entry_optional<T, const TTL: u64, C, F>(
+    cache: &C,
+    key: uuid::Uuid,
+    fetcher: F,
+) -> Result<Option<T>, sqlx::Error>
+where
+    F: Future<Output = Result<T, sqlx::Error>>,
+    T: Clone + Send + 'static,
+    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL>>>,
+{
+    let cache = cache.deref();
+    if let Some(entry) = cache.get(&key) {
+        if !entry.is_expired() {
+            return Ok(Some(entry.payload));
+        }
+    }
+    match fetcher.await {
+        Ok(payload) => {
+            cache.insert(key, payload.clone().into());
+            Ok(Some(payload))
+        }
+        Err(err) => row_not_found(err),
+    }
+}

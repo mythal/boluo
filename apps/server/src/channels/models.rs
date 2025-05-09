@@ -5,10 +5,10 @@ use uuid::Uuid;
 
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
-use crate::error::{row_not_found, ModelError};
+use crate::error::ModelError;
 use crate::events::context::StateError;
 use crate::spaces::{Space, SpaceMember};
-use crate::ttl::{hour, Ttl};
+use crate::ttl::{fetch_entry_optional, hour, Ttl};
 use crate::users::User;
 use crate::utils::merge_blank;
 use std::collections::HashMap;
@@ -112,16 +112,13 @@ impl Channel {
         db: T,
         id: &Uuid,
     ) -> Result<Option<Channel>, sqlx::Error> {
-        CHANNEL_CACHE
-            .get_or_insert_async(id, async {
-                sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
-                    .fetch_one(db)
-                    .await
-                    .map(Into::into)
-            })
-            .await
-            .map(|channel| Some(channel.into_inner()))
-            .or_else(row_not_found)
+        fetch_entry_optional(&CHANNEL_CACHE, *id, async move {
+            sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
+                .fetch_one(db)
+                .await
+                .map(Into::into)
+        })
+        .await
     }
 
     pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>, I: Iterator<Item = Uuid>>(
@@ -131,8 +128,8 @@ impl Channel {
         let mut query_ids: Vec<Uuid> = Vec::new();
         let mut result_map: HashMap<Uuid, Channel> = HashMap::new();
         for id in id_list {
-            if let Some(channel) = CHANNEL_CACHE.get(&id) {
-                result_map.insert(channel.id, channel.into_inner());
+            if let Some(channel) = CHANNEL_CACHE.get(&id).and_then(Ttl::fresh_only) {
+                result_map.insert(channel.id, channel);
             } else {
                 query_ids.push(id);
             }
@@ -164,9 +161,12 @@ impl Channel {
     ) -> Result<Option<(Channel, Space)>, sqlx::Error> {
         use crate::spaces::models::SPACES_CACHE;
 
-        if let Some(channel) = CHANNEL_CACHE.get(id) {
-            if let Some(space) = SPACES_CACHE.get(&channel.space_id).filter(Ttl::is_expired) {
-                return Ok(Some((channel.into_inner(), space.into_inner())));
+        if let Some(channel) = CHANNEL_CACHE.get(id).and_then(Ttl::fresh_only) {
+            if let Some(space) = SPACES_CACHE
+                .get(&channel.space_id)
+                .and_then(Ttl::fresh_only)
+            {
+                return Ok(Some((channel, space)));
             }
         }
         let channel_and_space = sqlx::query_file!("sql/channels/fetch_channel_with_space.sql", id)

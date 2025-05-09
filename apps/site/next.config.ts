@@ -11,7 +11,7 @@ const config: NextConfig = {
     dirs: ['src', 'tests'],
   },
   output: 'standalone',
-  turbo: {
+  turbopack: {
     resolveAlias: {
       '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },

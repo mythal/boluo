@@ -1,11 +1,6 @@
 name: Check
 on:
-  push:
-    branches:
-      - main
-      - master
-      - release-*
-      - production
+  workflow_call:
   pull_request:
 
 jobs:
@@ -15,7 +10,7 @@ jobs:
     steps:
       # https://github.com/actions/checkout
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@v4
 
       # https://github.com/DeterminateSystems/nix-installer-action
       - name: Install Nix
@@ -26,7 +21,6 @@ jobs:
 
       - name: Show Nix Config
         run: nix config show
-
 
       # https://github.com/cachix/cachix-action
       - name: Set up Cachix

@@ -45,6 +45,8 @@ export function middleware(request: NextRequest): NextResponse | void {
     const fly_backend_app_name = process.env.FLY_BACKEND_APP_NAME;
     if (fly_backend_app_name) {
       // fly-replay
+      // https://fly.io/docs/networking/dynamic-request-routing/
+      // https://community.fly.io/t/cacheable-fly-replay-and-better-subdomain-routing/24665
       const response = NextResponse.redirect(url);
       response.headers.set('fly-replay', `app=${fly_backend_app_name}`);
       const replayCacheTarget = `${request.nextUrl.hostname}/api/*`;

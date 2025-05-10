@@ -293,6 +293,9 @@ async fn get_session_from_db(session_id: Uuid) -> Result<SessionInfo, AppError> 
         .await
         .map_err(|_err| AppError::NotFound("session"))
         .and_then(|user_id| {
+            if user_id.is_empty() {
+                return Err(AppError::NotFound("session"));
+            }
             Uuid::from_slice(&user_id).map_err(|err| {
                 log::warn!("Failed to convert user_id bytes to UUID: {}", err);
                 AppError::NotFound("session")

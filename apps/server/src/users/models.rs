@@ -10,6 +10,7 @@ use crate::ttl::{fetch_entry, fetch_entry_optional, hour, Lifespan, Mortal};
 use crate::utils::merge_blank;
 
 #[derive(Debug, Serialize, Clone, sqlx::Type, specta::Type)]
+#[sqlx(type_name = "users")]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: Uuid,

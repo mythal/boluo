@@ -319,11 +319,13 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
-    let pool = db::get().await;
-    User::get_by_email(&pool, &email)
+    let mut conn = db::get().await.acquire().await?;
+    let user = User::get_by_email(&mut *conn, &email)
         .await?
         .ok_or(AppError::NotFound("email"))?;
-    let token = uuid::Uuid::new_v4().to_string();
+    let token = User::generate_reset_token(&mut *conn, user.id)
+        .await?
+        .to_string();
 
     let lang = lang.as_deref().unwrap_or("en");
     match lang {

@@ -40,10 +40,20 @@ pub async fn check() {
     use crate::users::{User, UserExt};
     use serde_json::json;
     let pool = get().await;
-    sqlx::query("SELECT 1 AS x")
-        .fetch_one(&pool)
-        .await
-        .expect("Cannot connect to database");
+    let real_user_id = {
+        let mut conn = pool.acquire().await.expect("Cannot acquire connection");
+
+        sqlx::query("SELECT 1 AS x")
+            .fetch_one(&mut *conn)
+            .await
+            .expect("Cannot connect to database");
+
+        sqlx::query!("SELECT id FROM users LIMIT 1")
+            .fetch_optional(&mut *conn)
+            .await
+            .expect("Failed to fetch real user id")
+            .map(|x| x.id)
+    };
     let mut trans = pool.begin().await.expect("Cannot start transaction");
     let user = sqlx::query_file_scalar!(
         "sql/users/create.sql",
@@ -153,7 +163,14 @@ pub async fn check() {
     .await
     .expect("Cannot create message");
 
-    let _session = crate::session::start(user.id)
-        .await
-        .expect("Cannot create session");
+    if let Some(real_user_id) = real_user_id {
+        let _session = crate::session::start(real_user_id)
+            .await
+            .expect("Cannot create session");
+        let _reset_token = crate::users::User::generate_reset_token(&mut *trans, real_user_id)
+            .await
+            .expect("Cannot generate reset token");
+    } else {
+        log::warn!("No real user id found, skipping session and reset token check");
+    }
 }

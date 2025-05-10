@@ -360,7 +360,7 @@ async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
     let session = authenticate(&req).await?;
     let space = Space::get_by_id(&mut *conn, &id).await.or_not_found()?;
     if space.owner_id == session.user_id {
-        Space::delete(&mut *conn, &id).await?;
+        Space::delete(&mut *conn, id).await?;
         log::info!("A space ({}) was deleted", space.id);
         return Ok(space);
     }

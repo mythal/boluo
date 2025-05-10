@@ -1,4 +1,4 @@
-use crate::cache::CACHE;
+use crate::cache::{CacheType, CACHE};
 use crate::context::domain;
 use crate::error::AppError;
 use crate::ttl::{fetch_entry, hour, Lifespan};
@@ -69,7 +69,7 @@ pub async fn revoke_session(id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query_file!("sql/users/session_revoke.sql", id)
         .execute(&mut *conn)
         .await?;
-    CACHE.SessionInfo.remove(&id);
+    CACHE.invalidate(CacheType::SessionInfo, id).await;
     Ok(())
 }
 

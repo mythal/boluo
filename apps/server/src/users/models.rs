@@ -4,7 +4,7 @@ use sqlx::{query_file_scalar, query_scalar};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::cache::CACHE;
+use crate::cache::{CacheType, CACHE};
 use crate::error::ModelError;
 use crate::ttl::{fetch_entry, fetch_entry_optional, hour, Lifespan, Mortal};
 use crate::utils::merge_blank;
@@ -214,7 +214,7 @@ impl User {
             .execute(db)
             .await?
             .rows_affected();
-        CACHE.User.remove(id);
+        CACHE.invalidate(CacheType::User, *id).await;
         Ok(affected)
     }
 

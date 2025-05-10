@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::cache::CACHE;
+use crate::cache::{CacheType, CACHE};
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::ModelError;
@@ -219,7 +219,7 @@ impl Channel {
             .await
             .map(|r| r.rows_affected())?;
         if affected > 0 {
-            CACHE.Channel.remove(id);
+            CACHE.invalidate(CacheType::Channel, *id).await;
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(id) {
                 if let Err(StateError::TimeOut) = mailbox_state.remove_channel(*id) {
@@ -339,7 +339,9 @@ impl ChannelMember {
         .await
         .map(|record| record.member)?;
 
-        CACHE.ChannelMembers.remove(&new_member.user_id);
+        CACHE
+            .invalidate(CacheType::ChannelMembers, new_member.user_id)
+            .await;
         Member::load_to_cache(space_id, channel_id);
         Ok(new_member)
     }
@@ -470,7 +472,7 @@ impl ChannelMember {
             return Err(sqlx::Error::RowNotFound);
         }
         tokio::spawn(async move {
-            CACHE.ChannelMembers.remove(&user_id);
+            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
                 mailbox_state.remove_member_from_channel(channel_id, user_id);
@@ -490,7 +492,7 @@ impl ChannelMember {
                 .await?;
 
         tokio::spawn(async move {
-            CACHE.ChannelMembers.remove(&user_id);
+            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
                 mailbox_state.remove_member(&user_id);
@@ -527,7 +529,7 @@ impl ChannelMember {
         )
         .fetch_optional(db)
         .await?;
-        CACHE.ChannelMembers.remove(&user_id);
+        CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
         if let Some(channel_member) = channel_member.clone() {
             tokio::spawn(async move {
                 let map = crate::events::context::store().mailboxes.pin();
@@ -584,7 +586,9 @@ impl ChannelMember {
         .fetch_optional(db)
         .await?;
         if let Some(channel_member) = channel_member.clone() {
-            CACHE.ChannelMembers.remove(&channel_member.user_id);
+            CACHE
+                .invalidate(CacheType::ChannelMembers, channel_member.user_id)
+                .await;
             tokio::spawn(async move {
                 let map = crate::events::context::store().mailboxes.pin();
                 if let Some(mailbox_state) = map.get(&space_id) {

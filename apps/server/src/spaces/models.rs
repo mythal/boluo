@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use uuid::Uuid;
 
-use crate::cache::CACHE;
+use crate::cache::{CacheType, CACHE};
 use crate::channels::ChannelMember;
 use crate::error::ModelError;
 use crate::spaces::api::SpaceWithMember;
@@ -83,12 +83,14 @@ impl Space {
         space_member.map(|member| member.is_admin).unwrap_or(false)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<(), sqlx::Error> {
-        sqlx::query_file!("sql/spaces/delete.sql", id)
+    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: Uuid) -> Result<(), sqlx::Error> {
+        sqlx::query_file!("sql/spaces/delete.sql", &id)
             .execute(db)
             .await?;
-        CACHE.Space.remove(id);
-        CACHE.SpaceSettings.remove(id);
+        tokio::join!(
+            CACHE.invalidate(CacheType::Space, id),
+            CACHE.invalidate(CacheType::SpaceSettings, id),
+        );
         Ok(())
     }
 
@@ -169,7 +171,7 @@ impl Space {
         let token = sqlx::query_file_scalar!("sql/spaces/refresh_token.sql", id)
             .fetch_one(db)
             .await?;
-        CACHE.Space.remove(id);
+        CACHE.invalidate(CacheType::Space, *id).await;
         Ok(token)
     }
 

@@ -11,6 +11,10 @@ use crate::users::GetMe;
 use crate::users::User;
 use crate::users::UserExt;
 
+trait GetCacheType {
+    fn tag() -> CacheType;
+}
+
 macro_rules! define_caches {
     ($(($type:ident, $capacity: expr)),* $(,)?) => {
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -36,6 +40,14 @@ macro_rules! define_caches {
                 }
             }
         }
+
+        $(
+            impl GetCacheType for $type {
+                fn tag() -> CacheType {
+                    CacheType::$type
+                }
+            }
+        )*
 
         #[allow(non_snake_case)]
         pub struct CacheStore {

@@ -289,7 +289,7 @@ async fn get_session_from_db(session_id: Uuid) -> Result<SessionInfo, AppError> 
         return Err(AppError::NotFound("session"));
     };
     let user_id: Uuid = redis
-        .get::<_, Vec<u8>>(crate::redis::make_key(b"session", &session_id, b"user_id"))
+        .get::<_, Vec<u8>>(crate::redis::make_key(b"sessions", &session_id, b"user_id"))
         .await
         .map_err(|_err| AppError::NotFound("session"))
         .and_then(|user_id| {

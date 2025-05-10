@@ -174,6 +174,22 @@ impl User {
         Ok(user)
     }
 
+    pub async fn generate_reset_token<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<Uuid, sqlx::Error> {
+        let record = sqlx::query!(
+            "
+                INSERT INTO reset_tokens (user_id) VALUES ($1)
+                RETURNING token
+            ",
+            user_id
+        )
+        .fetch_one(db)
+        .await?;
+        Ok(record.token)
+    }
+
     pub async fn get_by_reset_token<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         token: Uuid,

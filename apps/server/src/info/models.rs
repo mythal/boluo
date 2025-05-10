@@ -25,6 +25,7 @@ pub struct HealthCheck {
     pub memory_total: u64,
     pub memory_used: u64,
     pub cache: CheckResult<ConnectionState>,
+    pub redis: CheckResult<ConnectionState>,
     pub database: CheckResult<ConnectionState>,
 }
 
@@ -84,6 +85,24 @@ impl ConnectionState {
             idle,
         })
     }
+
+    pub async fn redis() -> Result<ConnectionState, String> {
+        use redis::AsyncCommands as _;
+        let start = std::time::Instant::now();
+        let mut conn = crate::redis::conn().await.ok_or("Redis is disabled")?;
+        let count = 1;
+        let idle = 0;
+        let _: Result<(), String> = conn
+            .set("madoka", "homura")
+            .await
+            .map_err(|e| e.to_string());
+        let rtt_ms = start.elapsed().as_millis() as u64;
+        Ok(ConnectionState {
+            rtt_ms,
+            count,
+            idle,
+        })
+    }
 }
 
 impl HealthCheck {
@@ -97,6 +116,7 @@ impl HealthCheck {
                 idle: 0,
             },
         };
+        let redis = ConnectionState::redis().await.into();
         let database = ConnectionState::database().await.into();
         system.refresh_memory();
         let disks = Disks::new_with_refreshed_list();
@@ -119,6 +139,7 @@ impl HealthCheck {
             memory_total: system.total_memory(),
             memory_used: system.used_memory(),
             cache,
+            redis,
             database,
         }
     }

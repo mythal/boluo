@@ -7,7 +7,7 @@ app = "boluo-site"
 primary_region = "nrt"
 
 [build]
-  image = "ghcr.io/mythal/boluo/site:latest"
+  image = "ghcr.io/mythal/boluo/site:production"
 
 [deploy]
   strategy = "bluegreen"

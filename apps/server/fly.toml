@@ -12,7 +12,7 @@ swap_size_mb = 512
 
 
 [build]
-  image = 'ghcr.io/mythal/boluo/server:latest'
+  image = 'ghcr.io/mythal/boluo/server:production'
 
 [env]
   HOST = '0.0.0.0'

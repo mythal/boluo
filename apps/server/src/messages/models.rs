@@ -65,6 +65,7 @@ impl sqlx::Type<sqlx::Postgres> for Entities {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[sqlx(type_name = "messages")]
 #[serde(rename_all = "camelCase")]
 pub struct Message {
     pub id: Uuid,

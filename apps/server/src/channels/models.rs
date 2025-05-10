@@ -292,6 +292,7 @@ impl Channel {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[sqlx(type_name = "channel_members")]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMember {
     pub user_id: Uuid,

@@ -1,19 +1,13 @@
 use chrono::prelude::*;
-use quick_cache::sync::Cache;
 use serde::Serialize;
 use sqlx::{query_file_scalar, query_scalar};
 use std::collections::HashMap;
-use std::sync::LazyLock;
 use uuid::Uuid;
 
+use crate::cache::CACHE;
 use crate::error::ModelError;
-use crate::ttl::{fetch_entry, fetch_entry_optional, hour, Ttl};
+use crate::ttl::{fetch_entry, fetch_entry_optional, hour, Lifespan, Mortal};
 use crate::utils::merge_blank;
-
-const USER_CACHE_SIZE: usize = 8192;
-
-static USERS_CACHE: LazyLock<Cache<Uuid, Ttl<User, { hour::HALF }>>> =
-    LazyLock::new(|| Cache::new(8192));
 
 #[derive(Debug, Serialize, Clone, sqlx::Type, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +26,12 @@ pub struct User {
     pub avatar_id: Option<Uuid>,
     /// See `Message::color`
     pub default_color: String,
+}
+
+impl Lifespan for User {
+    fn ttl_sec() -> u64 {
+        hour::HALF
+    }
 }
 
 impl User {
@@ -60,7 +60,7 @@ impl User {
             sqlx::query_file_scalar!("sql/users/create.sql", email, username, nickname, password)
                 .fetch_one(db)
                 .await?;
-        USERS_CACHE.insert(user.id, user.clone().into());
+        CACHE.User.insert(user.id, user.clone().into());
         Ok(user)
     }
 
@@ -93,7 +93,9 @@ impl User {
             .await?;
         if let Some(result) = result {
             if result.password_match {
-                USERS_CACHE.insert(result.user.id, result.user.clone().into());
+                CACHE
+                    .User
+                    .insert(result.user.id, result.user.clone().into());
                 Ok(Some(result.user))
             } else {
                 Ok(None)
@@ -110,7 +112,7 @@ impl User {
         let mut query_ids: Vec<Uuid> = Vec::new();
         let mut result_map: HashMap<Uuid, User> = HashMap::new();
         for id in id_list {
-            if let Some(user) = USERS_CACHE.get(&id).and_then(Ttl::fresh_only) {
+            if let Some(user) = CACHE.User.get(&id).and_then(Mortal::fresh_only) {
                 result_map.insert(user.id, user);
             } else {
                 query_ids.push(id);
@@ -120,7 +122,7 @@ impl User {
             .fetch_all(db)
             .await?;
         for user in &users {
-            USERS_CACHE.insert(user.id, user.clone().into());
+            CACHE.User.insert(user.id, user.clone().into());
             result_map.insert(user.id, user.clone());
         }
         Ok(result_map)
@@ -130,7 +132,7 @@ impl User {
         db: T,
         id: &Uuid,
     ) -> Result<Option<User>, sqlx::Error> {
-        fetch_entry_optional(&USERS_CACHE, *id, async {
+        fetch_entry_optional(&CACHE.User, *id, async {
             query_scalar!(
                 r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
                 id
@@ -151,7 +153,7 @@ impl User {
         .fetch_optional(db)
         .await?;
         if let Some(user) = &user {
-            USERS_CACHE.insert(user.id, user.clone().into());
+            CACHE.User.insert(user.id, user.clone().into());
         }
         Ok(user)
     }
@@ -167,7 +169,7 @@ impl User {
         .fetch_optional(db)
         .await?;
         if let Some(user) = &user {
-            USERS_CACHE.insert(user.id, user.clone().into());
+            CACHE.User.insert(user.id, user.clone().into());
         }
         Ok(user)
     }
@@ -179,7 +181,7 @@ impl User {
         let user: User = query_file_scalar!("sql/users/get_by_reset_token.sql", token)
             .fetch_one(db)
             .await?;
-        USERS_CACHE.insert(user.id, user.clone().into());
+        CACHE.User.insert(user.id, user.clone().into());
         Ok(user)
     }
 
@@ -212,7 +214,7 @@ impl User {
             .execute(db)
             .await?
             .rows_affected();
-        USERS_CACHE.remove(id);
+        CACHE.User.remove(id);
         Ok(affected)
     }
 
@@ -243,7 +245,7 @@ impl User {
         )
         .fetch_one(db)
         .await?;
-        USERS_CACHE.insert(user.id, user.clone().into());
+        CACHE.User.insert(user.id, user.clone().into());
         Ok(user)
     }
     pub async fn remove_avatar<'c, T: sqlx::PgExecutor<'c>>(
@@ -253,7 +255,7 @@ impl User {
         let user = sqlx::query_file_scalar!("sql/users/remove_avatar.sql", id)
             .fetch_one(db)
             .await?;
-        USERS_CACHE.insert(user.id, user.clone().into());
+        CACHE.User.insert(user.id, user.clone().into());
         Ok(user)
     }
 }
@@ -266,23 +268,27 @@ pub struct UserExt {
     pub settings: serde_json::Value,
 }
 
-static SETTINGS_CACHE: LazyLock<Cache<Uuid, Ttl<serde_json::Value, { hour::HALF }>>> =
-    LazyLock::new(|| Cache::new(4096));
-
+impl Lifespan for UserExt {
+    fn ttl_sec() -> u64 {
+        hour::HALF
+    }
+}
 impl UserExt {
     pub async fn get_settings<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
     ) -> Result<serde_json::Value, sqlx::Error> {
-        fetch_entry(&SETTINGS_CACHE, user_id, async {
+        fetch_entry(&CACHE.UserExt, user_id, async {
             sqlx::query_file_scalar!("sql/users/get_settings.sql", user_id)
                 .fetch_optional(db)
                 .await
-                .map(|settings| {
-                    settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new()))
+                .map(|settings| UserExt {
+                    settings: settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+                    user_id,
                 })
         })
         .await
+        .map(|user_ext| user_ext.settings)
     }
 
     pub async fn update_settings<'c, T: sqlx::PgExecutor<'c>>(
@@ -293,7 +299,11 @@ impl UserExt {
         let settings = sqlx::query_file_scalar!("sql/users/set_settings.sql", user_id, settings)
             .fetch_one(db)
             .await?;
-        SETTINGS_CACHE.insert(user_id, settings.clone().into());
+        let user_ext = UserExt {
+            settings: settings.clone(),
+            user_id,
+        };
+        CACHE.UserExt.insert(user_id, user_ext.into());
         Ok(settings)
     }
 
@@ -306,7 +316,11 @@ impl UserExt {
             sqlx::query_file_scalar!("sql/users/partial_set_settings.sql", user_id, settings)
                 .fetch_one(db)
                 .await?;
-        SETTINGS_CACHE.insert(user_id, settings.clone().into());
+        let user_ext = UserExt {
+            settings: settings.clone(),
+            user_id,
+        };
+        CACHE.UserExt.insert(user_id, user_ext.into());
         Ok(settings)
     }
 }

@@ -20,6 +20,7 @@ use hyper::Request;
 mod utils;
 #[macro_use]
 mod error;
+mod cache;
 mod channels;
 mod context;
 mod cors;
@@ -33,6 +34,7 @@ mod mail;
 mod media;
 mod messages;
 mod pos;
+mod pubsub;
 mod redis;
 mod s3;
 mod session;

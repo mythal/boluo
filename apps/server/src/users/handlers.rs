@@ -5,6 +5,7 @@ use super::api::{
     Login, LoginReturn, Register, ResetPassword, ResetPasswordConfirm, ResetPasswordTokenCheck,
 };
 use super::models::User;
+use crate::cache::CACHE;
 use crate::channels::Channel;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface;
@@ -15,14 +16,13 @@ use crate::session::{
     is_authenticate_use_cookie, remove_session_cookie, revoke_session,
 };
 use crate::spaces::Space;
-use crate::ttl::{self, Ttl};
+use crate::ttl::{minute, Lifespan, Mortal};
 use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
 use crate::{db, mail};
 use hyper::body::{Body, Incoming};
 use hyper::{Method, Request, Response};
-use quick_cache::sync::Cache;
 use uuid::Uuid;
 
 async fn register(req: Request<impl Body>) -> Result<User, AppError> {
@@ -86,8 +86,11 @@ pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value
     Ok(settings)
 }
 
-pub static GET_ME_CACHE: LazyLock<Cache<Uuid, Ttl<GetMe, { ttl::minute::HALF }>>> =
-    LazyLock::new(|| Cache::new(4096));
+impl Lifespan for GetMe {
+    fn ttl_sec() -> u64 {
+        minute::ONE
+    }
+}
 
 pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
@@ -105,8 +108,8 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
             let mut conn = pool.acquire().await?;
             let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
-                let cached = GET_ME_CACHE.get(&user.id);
-                if let Some(get_me) = cached.and_then(Ttl::fresh_only) {
+                let cached = CACHE.GetMe.get(&user.id);
+                if let Some(get_me) = cached.and_then(Mortal::fresh_only) {
                     return Ok(ok_response(Some(get_me)));
                 }
                 let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
@@ -118,7 +121,7 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                     my_channels,
                     my_spaces,
                 };
-                GET_ME_CACHE.insert(session.user_id, get_me.clone().into());
+                CACHE.GetMe.insert(session.user_id, get_me.clone().into());
 
                 let mut response = ok_response(Some(get_me));
                 if is_authenticate_use_cookie(req.headers()) {
@@ -169,7 +172,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         my_spaces,
         my_channels,
     };
-    GET_ME_CACHE.insert(user_id, me.clone().into());
+    CACHE.GetMe.insert(user_id, me.clone().into());
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
     add_settings_cookie(&settings, headers);

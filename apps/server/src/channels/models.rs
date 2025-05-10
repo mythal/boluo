@@ -1,18 +1,17 @@
 use chrono::prelude::*;
-use quick_cache::sync::Cache;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::cache::{CacheType, CACHE};
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::ModelError;
 use crate::events::context::StateError;
 use crate::spaces::{Space, SpaceMember};
-use crate::ttl::{fetch_entry_optional, hour, Ttl};
+use crate::ttl::{fetch_entry, fetch_entry_optional, hour, minute, Lifespan, Mortal};
 use crate::users::User;
 use crate::utils::merge_blank;
 use std::collections::HashMap;
-use std::sync::LazyLock;
 
 #[derive(
     Debug,
@@ -65,11 +64,14 @@ pub struct Channel {
     pub r#type: ChannelType,
 }
 
-pub static CHANNEL_CACHE: LazyLock<Cache<Uuid, Ttl<Channel, { hour::TWO }>>> =
-    LazyLock::new(|| Cache::new(8192));
+impl Lifespan for Channel {
+    fn ttl_sec() -> u64 {
+        hour::TWO
+    }
+}
 
 fn insert_cache(channel: &Channel) {
-    CHANNEL_CACHE.insert(channel.id, channel.clone().into());
+    CACHE.Channel.insert(channel.id, channel.clone().into());
 }
 
 fn maybe_insert_cache(channel: &Option<Channel>) {
@@ -112,7 +114,7 @@ impl Channel {
         db: T,
         id: &Uuid,
     ) -> Result<Option<Channel>, sqlx::Error> {
-        fetch_entry_optional(&CHANNEL_CACHE, *id, async move {
+        fetch_entry_optional(&CACHE.Channel, *id, async move {
             sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
                 .fetch_one(db)
                 .await
@@ -128,7 +130,7 @@ impl Channel {
         let mut query_ids: Vec<Uuid> = Vec::new();
         let mut result_map: HashMap<Uuid, Channel> = HashMap::new();
         for id in id_list {
-            if let Some(channel) = CHANNEL_CACHE.get(&id).and_then(Ttl::fresh_only) {
+            if let Some(channel) = CACHE.Channel.get(&id).and_then(Mortal::fresh_only) {
                 result_map.insert(channel.id, channel);
             } else {
                 query_ids.push(id);
@@ -138,7 +140,7 @@ impl Channel {
             .fetch_all(db)
             .await?;
         for channel in channels {
-            CHANNEL_CACHE.insert(channel.id, channel.clone().into());
+            CACHE.Channel.insert(channel.id, channel.clone().into());
             result_map.insert(channel.id, channel);
         }
         Ok(result_map)
@@ -159,12 +161,11 @@ impl Channel {
         db: T,
         id: &Uuid,
     ) -> Result<Option<(Channel, Space)>, sqlx::Error> {
-        use crate::spaces::models::SPACES_CACHE;
-
-        if let Some(channel) = CHANNEL_CACHE.get(id).and_then(Ttl::fresh_only) {
-            if let Some(space) = SPACES_CACHE
+        if let Some(channel) = CACHE.Channel.get(id).and_then(Mortal::fresh_only) {
+            if let Some(space) = CACHE
+                .Space
                 .get(&channel.space_id)
-                .and_then(Ttl::fresh_only)
+                .and_then(Mortal::fresh_only)
             {
                 return Ok(Some((channel, space)));
             }
@@ -175,7 +176,7 @@ impl Channel {
             .map(|record| (record.channel, record.space));
         if let Some((channel, space)) = &channel_and_space {
             insert_cache(channel);
-            SPACES_CACHE.insert(space.id, space.clone().into());
+            CACHE.Space.insert(space.id, space.clone().into());
         }
         Ok(channel_and_space)
     }
@@ -218,7 +219,7 @@ impl Channel {
             .await
             .map(|r| r.rows_affected())?;
         if affected > 0 {
-            CHANNEL_CACHE.remove(id);
+            CACHE.invalidate(CacheType::Channel, *id).await;
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(id) {
                 if let Err(StateError::TimeOut) = mailbox_state.remove_channel(*id) {
@@ -303,11 +304,14 @@ pub struct ChannelMember {
     pub is_master: bool,
 }
 
-/// Avoid to read values from this cache.
-///
-/// This cache only used to speed up the query from the legacy code.
-static USER_ALL_CHANNEL_MEMBER_CACHE: LazyLock<Cache<Uuid, Vec<ChannelMember>>> =
-    LazyLock::new(|| Cache::new(8192));
+#[derive(Default, Debug, Clone)]
+pub struct ChannelMembers(pub Vec<ChannelMember>);
+
+impl Lifespan for ChannelMembers {
+    fn ttl_sec() -> u64 {
+        minute::QUARTER
+    }
+}
 
 impl ChannelMember {
     pub async fn add_user<'c, T: sqlx::PgExecutor<'c>>(
@@ -335,7 +339,9 @@ impl ChannelMember {
         .await
         .map(|record| record.member)?;
 
-        USER_ALL_CHANNEL_MEMBER_CACHE.remove(&new_member.user_id);
+        CACHE
+            .invalidate(CacheType::ChannelMembers, new_member.user_id)
+            .await;
         Member::load_to_cache(space_id, channel_id);
         Ok(new_member)
     }
@@ -358,16 +364,14 @@ impl ChannelMember {
         db: T,
         user_id: Uuid,
     ) -> Result<Vec<ChannelMember>, sqlx::Error> {
-        USER_ALL_CHANNEL_MEMBER_CACHE
-            .get_or_insert_async(&user_id, async {
-                sqlx::query_file_scalar!(
-                    "sql/channels/get_channel_member_list_by_user.sql",
-                    user_id
-                )
+        fetch_entry(&CACHE.ChannelMembers, user_id, async {
+            sqlx::query_file_scalar!("sql/channels/get_channel_member_list_by_user.sql", user_id)
                 .fetch_all(db)
                 .await
-            })
-            .await
+                .map(|members| ChannelMembers(members))
+        })
+        .await
+        .map(|members| members.0)
     }
 
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
@@ -468,7 +472,7 @@ impl ChannelMember {
             return Err(sqlx::Error::RowNotFound);
         }
         tokio::spawn(async move {
-            USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
+            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
                 mailbox_state.remove_member_from_channel(channel_id, user_id);
@@ -488,7 +492,7 @@ impl ChannelMember {
                 .await?;
 
         tokio::spawn(async move {
-            USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
+            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(&space_id) {
                 mailbox_state.remove_member(&user_id);
@@ -525,7 +529,7 @@ impl ChannelMember {
         )
         .fetch_optional(db)
         .await?;
-        USER_ALL_CHANNEL_MEMBER_CACHE.remove(&user_id);
+        CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
         if let Some(channel_member) = channel_member.clone() {
             tokio::spawn(async move {
                 let map = crate::events::context::store().mailboxes.pin();
@@ -582,7 +586,9 @@ impl ChannelMember {
         .fetch_optional(db)
         .await?;
         if let Some(channel_member) = channel_member.clone() {
-            USER_ALL_CHANNEL_MEMBER_CACHE.remove(&channel_member.user_id);
+            CACHE
+                .invalidate(CacheType::ChannelMembers, channel_member.user_id)
+                .await;
             tokio::spawn(async move {
                 let map = crate::events::context::store().mailboxes.pin();
                 if let Some(mailbox_state) = map.get(&space_id) {

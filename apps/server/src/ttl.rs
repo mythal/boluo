@@ -22,12 +22,12 @@ pub mod day {
 }
 
 #[derive(Clone)]
-pub struct Ttl<T: Clone, const TTL_SEC: u64> {
+pub struct Mortal<T: Send + Sync + 'static> {
     pub instant: std::time::Instant,
     payload: T,
 }
 
-impl<T: Clone, const TTL_SEC: u64> Ttl<T, TTL_SEC> {
+impl<T: Lifespan> Mortal<T> {
     const HALF_DAY: u64 = 60 * 60 * 12;
     pub fn new(payload: T) -> Self {
         Self {
@@ -36,14 +36,14 @@ impl<T: Clone, const TTL_SEC: u64> Ttl<T, TTL_SEC> {
         }
     }
     pub fn is_expired(&self) -> bool {
-        self.instant.elapsed().as_secs() > TTL_SEC
+        self.instant.elapsed().as_secs() > T::ttl_sec()
     }
 
     pub fn is_expired_at(&self, instant: std::time::Instant) -> bool {
         if instant < self.instant {
             return true;
         }
-        instant.duration_since(self.instant).as_secs() > TTL_SEC
+        instant.duration_since(self.instant).as_secs() > T::ttl_sec()
     }
 
     pub fn reset(&mut self) {
@@ -62,23 +62,25 @@ impl<T: Clone, const TTL_SEC: u64> Ttl<T, TTL_SEC> {
     }
 }
 
-impl<T: Clone, const TTL_SEC: u64> From<T> for Ttl<T, TTL_SEC> {
+pub trait Lifespan: Send + Sync + 'static {
+    fn ttl_sec() -> u64;
+}
+
+impl<T: Lifespan> From<T> for Mortal<T> {
     fn from(payload: T) -> Self {
         Self::new(payload)
     }
 }
 
-pub async fn fetch_entry<T, const TTL_SEC: u64, C, F, E>(
-    cache: &C,
+pub async fn fetch_entry<T, F, E>(
+    cache: &quick_cache::sync::Cache<uuid::Uuid, Mortal<T>>,
     key: uuid::Uuid,
     fetcher: F,
 ) -> Result<T, E>
 where
     F: Future<Output = Result<T, E>>,
-    T: Clone + Send + 'static,
-    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL_SEC>>>,
+    T: Clone + Lifespan,
 {
-    let cache = cache.deref();
     match cache.get_value_or_guard_async(&key).await {
         Ok(entry) => {
             if !entry.is_expired() {
@@ -100,15 +102,14 @@ where
     }
 }
 
-pub async fn fetch_entry_optional<T, const TTL_SEC: u64, C, F>(
-    cache: &C,
+pub async fn fetch_entry_optional<T, F>(
+    cache: &quick_cache::sync::Cache<uuid::Uuid, Mortal<T>>,
     key: uuid::Uuid,
     fetcher: F,
 ) -> Result<Option<T>, sqlx::Error>
 where
     F: Future<Output = Result<T, sqlx::Error>>,
-    T: Clone + Send + 'static,
-    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL_SEC>>>,
+    T: Clone + Lifespan,
 {
     let fetched = fetch_entry(cache, key, fetcher).await;
     match fetched {

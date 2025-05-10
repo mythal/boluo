@@ -3,4 +3,4 @@ pub mod handlers;
 pub mod models;
 
 pub use handlers::router;
-pub use models::{Channel, ChannelMember, ChannelType};
+pub use models::{Channel, ChannelMember, ChannelMembers, ChannelType};

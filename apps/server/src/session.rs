@@ -1,8 +1,7 @@
-use std::sync::LazyLock;
-
+use crate::cache::{CacheType, CACHE};
 use crate::context::domain;
 use crate::error::AppError;
-use crate::ttl::{fetch_entry, hour, Ttl};
+use crate::ttl::{fetch_entry, hour, Lifespan};
 use crate::utils::{self, sign};
 use anyhow::Context;
 use hyper::header::HeaderValue;
@@ -15,13 +14,16 @@ use uuid::Uuid;
 
 pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
 
-static SESSION_CACHE: LazyLock<quick_cache::sync::Cache<Uuid, Ttl<SessionInfo, { hour::ONE }>>> =
-    LazyLock::new(|| quick_cache::sync::Cache::new(8192));
-
 #[derive(Debug, Clone)]
 pub struct SessionInfo {
     pub user_id: Uuid,
     pub created: chrono::DateTime<chrono::Utc>,
+}
+
+impl Lifespan for SessionInfo {
+    fn ttl_sec() -> u64 {
+        hour::ONE
+    }
 }
 
 #[derive(Error, Debug)]
@@ -67,7 +69,7 @@ pub async fn revoke_session(id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query_file!("sql/users/session_revoke.sql", id)
         .execute(&mut *conn)
         .await?;
-    SESSION_CACHE.remove(&id);
+    CACHE.invalidate(CacheType::SessionInfo, id).await;
     Ok(())
 }
 
@@ -92,7 +94,9 @@ pub async fn start_with_session_id(
 pub async fn start(user_id: Uuid) -> Result<SessionInfo, sqlx::Error> {
     let session_id = Uuid::new_v4();
     let session_info = start_with_session_id(user_id, session_id).await?;
-    SESSION_CACHE.insert(session_id, session_info.clone().into());
+    CACHE
+        .SessionInfo
+        .insert(session_id, session_info.clone().into());
     Ok(session_info)
 }
 
@@ -308,8 +312,10 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
         }
         Ok(id) => id,
     };
-    let session_info: Result<SessionInfo, AppError> =
-        fetch_entry(&SESSION_CACHE, id, async { get_session_from_db(id).await }).await;
+    let session_info: Result<SessionInfo, AppError> = fetch_entry(&CACHE.SessionInfo, id, async {
+        get_session_from_db(id).await
+    })
+    .await;
     let user_id = session_info?.user_id;
     Ok(Session { id, user_id })
 }

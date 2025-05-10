@@ -65,7 +65,7 @@ pub struct Channel {
     pub r#type: ChannelType,
 }
 
-pub static CHANNEL_CACHE: LazyLock<Cache<Uuid, Ttl<Channel, { hour::ONE }>>> =
+pub static CHANNEL_CACHE: LazyLock<Cache<Uuid, Ttl<Channel, { hour::TWO }>>> =
     LazyLock::new(|| Cache::new(8192));
 
 fn insert_cache(channel: &Channel) {

@@ -231,8 +231,12 @@
               ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --remote-only
             '';
 
-            deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-production" ''
+            deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
               ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --remote-only
+            '';
+
+            deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --remote-only
             '';
           };
 

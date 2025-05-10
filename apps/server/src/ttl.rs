@@ -1,7 +1,5 @@
 use std::future::Future;
 
-use crate::error::row_not_found;
-
 pub mod minute {
     pub const ONE: u64 = 60;
     pub const HALF: u64 = 30;
@@ -14,6 +12,8 @@ pub mod hour {
     pub const TWO: u64 = 60 * 60 * 2;
     pub const FOUR: u64 = 60 * 60 * 4;
     pub const EIGHT: u64 = 60 * 60 * 8;
+    pub const HALF: u64 = 60 * 30;
+    pub const QUARTER: u64 = 60 * 15;
 }
 
 pub mod day {
@@ -68,25 +68,36 @@ impl<T: Clone, const TTL_SEC: u64> From<T> for Ttl<T, TTL_SEC> {
     }
 }
 
-pub async fn fetch_entry<T, const TTL_SEC: u64, C, F>(
+pub async fn fetch_entry<T, const TTL_SEC: u64, C, F, E>(
     cache: &C,
     key: uuid::Uuid,
     fetcher: F,
-) -> Result<T, sqlx::Error>
+) -> Result<T, E>
 where
-    F: Future<Output = Result<T, sqlx::Error>>,
+    F: Future<Output = Result<T, E>>,
     T: Clone + Send + 'static,
     C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL_SEC>>>,
 {
     let cache = cache.deref();
-    if let Some(entry) = cache.get(&key) {
-        if !entry.is_expired() {
-            return Ok(entry.payload);
+    match cache.get_value_or_guard_async(&key).await {
+        Ok(entry) => {
+            if !entry.is_expired() {
+                return Ok(entry.payload);
+            } else {
+                let payload = fetcher.await?;
+                cache.insert(key, payload.clone().into());
+                // TODO: compare the payload with the old one, check cache consistency
+                Ok(payload)
+            }
+        }
+        Err(guard) => {
+            let payload = fetcher.await?;
+            if let Err(payload) = guard.insert(payload.clone().into()) {
+                cache.insert(key, payload);
+            }
+            Ok(payload)
         }
     }
-    let payload = fetcher.await?;
-    cache.insert(key, payload.clone().into());
-    Ok(payload)
 }
 
 pub async fn fetch_entry_optional<T, const TTL_SEC: u64, C, F>(
@@ -99,17 +110,10 @@ where
     T: Clone + Send + 'static,
     C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL_SEC>>>,
 {
-    let cache = cache.deref();
-    if let Some(entry) = cache.get(&key) {
-        if !entry.is_expired() {
-            return Ok(Some(entry.payload));
-        }
-    }
-    match fetcher.await {
-        Ok(payload) => {
-            cache.insert(key, payload.clone().into());
-            Ok(Some(payload))
-        }
-        Err(err) => row_not_found(err),
+    let fetched = fetch_entry(cache, key, fetcher).await;
+    match fetched {
+        Ok(payload) => Ok(Some(payload)),
+        Err(sqlx::Error::RowNotFound) => Ok(None),
+        Err(e) => Err(e),
     }
 }

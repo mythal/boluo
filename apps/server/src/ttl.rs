@@ -27,7 +27,7 @@ pub struct Ttl<T: Clone, const TTL_SEC: u64> {
     payload: T,
 }
 
-impl<T: Clone, const TTL: u64> Ttl<T, TTL> {
+impl<T: Clone, const TTL_SEC: u64> Ttl<T, TTL_SEC> {
     const HALF_DAY: u64 = 60 * 60 * 12;
     pub fn new(payload: T) -> Self {
         Self {
@@ -36,14 +36,14 @@ impl<T: Clone, const TTL: u64> Ttl<T, TTL> {
         }
     }
     pub fn is_expired(&self) -> bool {
-        self.instant.elapsed().as_secs() > TTL
+        self.instant.elapsed().as_secs() > TTL_SEC
     }
 
     pub fn is_expired_at(&self, instant: std::time::Instant) -> bool {
         if instant < self.instant {
             return true;
         }
-        instant.duration_since(self.instant).as_secs() > TTL
+        instant.duration_since(self.instant).as_secs() > TTL_SEC
     }
 
     pub fn reset(&mut self) {
@@ -62,13 +62,13 @@ impl<T: Clone, const TTL: u64> Ttl<T, TTL> {
     }
 }
 
-impl<T: Clone, const TTL: u64> From<T> for Ttl<T, TTL> {
+impl<T: Clone, const TTL_SEC: u64> From<T> for Ttl<T, TTL_SEC> {
     fn from(payload: T) -> Self {
         Self::new(payload)
     }
 }
 
-pub async fn fetch_entry<T, const TTL: u64, C, F>(
+pub async fn fetch_entry<T, const TTL_SEC: u64, C, F>(
     cache: &C,
     key: uuid::Uuid,
     fetcher: F,
@@ -76,7 +76,7 @@ pub async fn fetch_entry<T, const TTL: u64, C, F>(
 where
     F: Future<Output = Result<T, sqlx::Error>>,
     T: Clone + Send + 'static,
-    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL>>>,
+    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL_SEC>>>,
 {
     let cache = cache.deref();
     if let Some(entry) = cache.get(&key) {
@@ -89,7 +89,7 @@ where
     Ok(payload)
 }
 
-pub async fn fetch_entry_optional<T, const TTL: u64, C, F>(
+pub async fn fetch_entry_optional<T, const TTL_SEC: u64, C, F>(
     cache: &C,
     key: uuid::Uuid,
     fetcher: F,
@@ -97,7 +97,7 @@ pub async fn fetch_entry_optional<T, const TTL: u64, C, F>(
 where
     F: Future<Output = Result<T, sqlx::Error>>,
     T: Clone + Send + 'static,
-    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL>>>,
+    C: std::ops::Deref<Target = quick_cache::sync::Cache<uuid::Uuid, Ttl<T, TTL_SEC>>>,
 {
     let cache = cache.deref();
     if let Some(entry) = cache.get(&key) {

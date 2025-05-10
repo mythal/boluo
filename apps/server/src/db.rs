@@ -152,4 +152,8 @@ pub async fn check() {
     .fetch_one(&mut *trans)
     .await
     .expect("Cannot create message");
+
+    let _session = crate::session::start(user.id)
+        .await
+        .expect("Cannot create session");
 }

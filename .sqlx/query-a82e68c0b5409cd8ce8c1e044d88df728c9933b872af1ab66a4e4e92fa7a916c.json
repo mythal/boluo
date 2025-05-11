@@ -1,28 +1,35 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id, created FROM user_sessions\nWHERE id = $1 AND active = TRUE;\n",
+  "query": "INSERT INTO user_sessions (id, user_id)\nVALUES ($1, $2)\nRETURNING id, user_id, created;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "user_id",
+        "name": "id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
         "name": "created",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Uuid"
       ]
     },
     "nullable": [
       false,
+      false,
       false
     ]
   },
-  "hash": "1002401dd4e71b569fdd0e4052523107e5a76435109dfe873b6740e38b86d3fb"
+  "hash": "a82e68c0b5409cd8ce8c1e044d88df728c9933b872af1ab66a4e4e92fa7a916c"
 }

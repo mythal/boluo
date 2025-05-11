@@ -99,11 +99,9 @@ pub async fn start_with_session_id(
 }
 pub async fn start(user_id: Uuid) -> Result<Session, sqlx::Error> {
     let session_id = Uuid::new_v4();
-    let session_info = start_with_session_id(user_id, session_id).await?;
-    CACHE
-        .Session
-        .insert(session_id, session_info.clone().into());
-    Ok(session_info)
+    let session = start_with_session_id(user_id, session_id).await?;
+    CACHE.Session.insert(session_id, session.clone().into());
+    Ok(session)
 }
 
 pub fn is_authenticate_use_cookie(headers: &HeaderMap<HeaderValue>) -> bool {
@@ -273,7 +271,10 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
     let user_id: Uuid = redis
         .get::<_, Vec<u8>>(crate::redis::make_key(b"sessions", &session_id, b"user_id"))
         .await
-        .map_err(|_err| AppError::NotFound("session"))
+        .map_err(|err| {
+            log::warn!("Redis error while fetching session: {}", err);
+            AppError::NotFound("session")
+        })
         .and_then(|user_id| {
             if user_id.is_empty() {
                 return Err(AppError::NotFound("session"));
@@ -290,7 +291,7 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
 }
 
 async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
-    let id = match token_verify(token) {
+    let session_id = match token_verify(token) {
         Err(err) => {
             log::warn!("Failed to verify the token: {} error: {}", token, err);
             return Err(AuthenticateFail::CheckSignFail.into());
@@ -298,7 +299,10 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
         Ok(id) => id,
     };
 
-    fetch_entry(&CACHE.Session, id, async { get_session_from_db(id).await }).await
+    fetch_entry(&CACHE.Session, session_id, async {
+        get_session_from_db(session_id).await
+    })
+    .await
 }
 
 pub async fn authenticate(

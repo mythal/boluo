@@ -1,3 +1,3 @@
 INSERT INTO user_sessions (id, user_id)
 VALUES ($1, $2)
-RETURNING created;
+RETURNING id, user_id, created;

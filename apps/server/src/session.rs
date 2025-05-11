@@ -15,12 +15,13 @@ use uuid::Uuid;
 pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
 
 #[derive(Debug, Clone)]
-pub struct SessionInfo {
+pub struct Session {
     pub user_id: Uuid,
+    pub id: Uuid,
     pub created: chrono::DateTime<chrono::Utc>,
 }
 
-impl Lifespan for SessionInfo {
+impl Lifespan for Session {
     fn ttl_sec() -> u64 {
         hour::ONE
     }
@@ -31,18 +32,18 @@ pub enum AuthenticateFail {
     #[error("No authentication data found")]
     NoData,
     #[error("Invaild token format")]
-    InvaildToken,
+    MalformedToken,
     #[error("Failed to verify the session")]
     CheckSignFail,
     #[error("No session found")]
     NoSessionFound,
 }
 
-pub fn token(session: &Uuid) -> String {
+pub fn token(session_id: &Uuid) -> String {
     use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
     // [body (base64)].[sign]
     let mut buffer = String::with_capacity(64);
-    base64_engine.encode_string(session.as_bytes(), &mut buffer);
+    base64_engine.encode_string(session_id.as_bytes(), &mut buffer);
     let signature = sign(&buffer);
     buffer.push('.');
     base64_engine.encode_string(signature, &mut buffer);
@@ -54,22 +55,23 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
 
     let mut iter = token.split('.');
     let parse_failed = || anyhow::anyhow!("Failed to parse token: {}", token);
-    let session = iter.next().ok_or_else(parse_failed)?;
+    let session_id_str = iter.next().ok_or_else(parse_failed)?;
     let signature = iter.next().ok_or_else(parse_failed)?;
-    utils::verify(session, signature)?;
-    let session = general_purpose::STANDARD_NO_PAD
-        .decode(session)
-        .or_else(|_| general_purpose::STANDARD.decode(session))
+    utils::verify(session_id_str, signature)?;
+    let session_id_byte = general_purpose::STANDARD_NO_PAD
+        .decode(session_id_str)
+        .or_else(|_| general_purpose::STANDARD.decode(session_id_str))
         .context("Failed to decode base64 in session.")?;
-    Uuid::from_slice(session.as_slice()).context("Failed to convert session bytes data to UUID.")
+    Uuid::from_slice(session_id_byte.as_slice())
+        .context("Failed to convert session bytes data to UUID.")
 }
 
-pub async fn revoke_session(id: Uuid) -> Result<(), sqlx::Error> {
+pub async fn revoke_session(session_id: Uuid) -> Result<(), sqlx::Error> {
     let mut conn = crate::db::get().await.acquire().await?;
-    sqlx::query_file!("sql/users/session_revoke.sql", id)
+    sqlx::query_file!("sql/users/session_revoke.sql", session_id)
         .execute(&mut *conn)
         .await?;
-    CACHE.invalidate(CacheType::SessionInfo, id).await;
+    CACHE.invalidate(CacheType::Session, session_id).await;
     Ok(())
 }
 
@@ -84,49 +86,28 @@ fn test_session_sign() {
 pub async fn start_with_session_id(
     user_id: Uuid,
     session_id: Uuid,
-) -> Result<SessionInfo, sqlx::Error> {
+) -> Result<Session, sqlx::Error> {
     let mut conn = crate::db::get().await.acquire().await?;
-    let created = sqlx::query_file_scalar!("sql/users/session_start.sql", &session_id, &user_id)
-        .fetch_one(&mut *conn)
-        .await?;
-    Ok(SessionInfo { user_id, created })
+    sqlx::query_file_as!(
+        Session,
+        "sql/users/session_start.sql",
+        &session_id,
+        &user_id
+    )
+    .fetch_one(&mut *conn)
+    .await
 }
-pub async fn start(user_id: Uuid) -> Result<SessionInfo, sqlx::Error> {
+pub async fn start(user_id: Uuid) -> Result<Session, sqlx::Error> {
     let session_id = Uuid::new_v4();
     let session_info = start_with_session_id(user_id, session_id).await?;
     CACHE
-        .SessionInfo
+        .Session
         .insert(session_id, session_info.clone().into());
     Ok(session_info)
 }
 
-#[derive(Debug)]
-pub struct Session {
-    pub id: Uuid,
-    pub user_id: Uuid,
-}
-
 pub fn is_authenticate_use_cookie(headers: &HeaderMap<HeaderValue>) -> bool {
     !headers.contains_key(AUTHORIZATION)
-}
-
-pub async fn get_session_from_old_version_cookies(
-    headers: &HeaderMap<HeaderValue>,
-) -> Option<Session> {
-    use std::sync::OnceLock;
-    static COOKIE_PATTERN: OnceLock<Regex> = OnceLock::new();
-
-    if headers.contains_key(AUTHORIZATION) {
-        return None;
-    }
-    let value = headers.get(COOKIE)?.to_str().ok()?;
-    let cookie_pattern = COOKIE_PATTERN.get_or_init(|| {
-        let pattern = r"\bsession=([^;]+)".to_string();
-        Regex::new(&pattern).unwrap()
-    });
-    let captures = cookie_pattern.captures(value)?;
-    let token = captures.get(1)?.as_str();
-    get_session_from_token(token).await.ok()
 }
 
 pub fn add_session_cookie(
@@ -270,21 +251,22 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Result<Option<&str>, anyh
     }
 }
 
-async fn get_session_from_db(session_id: Uuid) -> Result<SessionInfo, AppError> {
+async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
     use redis::AsyncCommands;
 
-    let mut conn = crate::db::get().await.acquire().await?;
-    let session_info = sqlx::query_file_as!(SessionInfo, "sql/users/session_fetch.sql", session_id)
-        .fetch_optional(&mut *conn)
-        .await
-        .map_err(|err| {
-            log::warn!("Failed to get session from database: {}", err);
-            AppError::Unexpected(err.into())
-        })?;
-    if let Some(session_info) = session_info {
-        return Ok(session_info);
-    };
-    std::mem::drop(conn);
+    {
+        let mut conn = crate::db::get().await.acquire().await?;
+        let session = sqlx::query_file_as!(Session, "sql/users/session_fetch.sql", session_id)
+            .fetch_optional(&mut *conn)
+            .await
+            .map_err(|err| {
+                log::warn!("Database error while fetching session: {}", err);
+                AppError::Unexpected(err.into())
+            })?;
+        if let Some(session) = session {
+            return Ok(session);
+        };
+    }
     let Some(mut redis) = crate::redis::conn().await else {
         return Err(AppError::NotFound("session"));
     };
@@ -315,12 +297,8 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
         }
         Ok(id) => id,
     };
-    let session_info: Result<SessionInfo, AppError> = fetch_entry(&CACHE.SessionInfo, id, async {
-        get_session_from_db(id).await
-    })
-    .await;
-    let user_id = session_info?.user_id;
-    Ok(Session { id, user_id })
+
+    fetch_entry(&CACHE.Session, id, async { get_session_from_db(id).await }).await
 }
 
 pub async fn authenticate(
@@ -344,7 +322,7 @@ pub async fn authenticate(
                         .unwrap_or("[Failed convert the cookie to string]"),
                     err
                 );
-                return Err(AuthenticateFail::InvaildToken.into());
+                return Err(AuthenticateFail::MalformedToken.into());
             }
         }
     };

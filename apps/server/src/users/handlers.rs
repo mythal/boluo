@@ -12,8 +12,8 @@ use crate::interface;
 use crate::interface::{missing, ok_response, parse_body, parse_query};
 use crate::media::{upload, upload_params};
 use crate::session::{
-    add_session_cookie, add_settings_cookie, get_session_from_old_version_cookies,
-    is_authenticate_use_cookie, remove_session_cookie, revoke_session,
+    add_session_cookie, add_settings_cookie, is_authenticate_use_cookie, remove_session_cookie,
+    revoke_session,
 };
 use crate::spaces::Space;
 use crate::ttl::{minute, Lifespan, Mortal};
@@ -94,13 +94,7 @@ impl Lifespan for GetMe {
 
 pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
-    let mut session = authenticate(&req).await;
-    if let Err(AppError::Unauthenticated(_)) = session {
-        let maybe_session = get_session_from_old_version_cookies(req.headers()).await;
-        if let Some(some_session) = maybe_session {
-            session = Ok(some_session);
-        }
-    }
+    let session = authenticate(&req).await;
 
     match session {
         Ok(session) => {
@@ -161,7 +155,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         .or_no_permission()?;
     let user_id = user.id;
     let session = session::start(user_id).await.map_err(error_unexpected!())?;
-    let token = session::token(&session.user_id);
+    let token: String = session::token(&session.id);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut *conn, &user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
@@ -176,7 +170,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
     add_settings_cookie(&settings, headers);
-    add_session_cookie(&session.user_id, is_debug, headers);
+    add_session_cookie(&session.id, is_debug, headers);
     Ok(response)
 }
 

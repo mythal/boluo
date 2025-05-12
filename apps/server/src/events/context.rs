@@ -2,21 +2,16 @@ use crate::channels::models::Member;
 use crate::channels::ChannelMember;
 use crate::events::Update;
 use crate::spaces::SpaceMember;
-use parking_lot::Mutex;
-use std::collections::VecDeque;
+use crate::utils::timestamp;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
 use tokio::sync::broadcast;
+use tokio::sync::mpsc::error::TrySendError;
 use tokio_tungstenite::tungstenite::Utf8Bytes;
 use uuid::Uuid;
 
-use crate::utils::timestamp;
-
-use super::types::UpdateBody;
-
-pub const WAIT_SHORTLY: std::time::Duration = std::time::Duration::from_millis(6);
-pub const WAIT: std::time::Duration = std::time::Duration::from_millis(100);
-pub const WAIT_MORE: std::time::Duration = std::time::Duration::from_millis(1000);
+use super::types::EventId;
 
 #[derive(Debug, Clone)]
 pub enum StateError {
@@ -36,8 +31,7 @@ impl EncodedUpdate {
         EncodedUpdate { encoded, update }
     }
 
-    pub fn replace_body(&mut self, body: UpdateBody) {
-        self.update.body = body;
+    pub fn refresh_encoded(&mut self) {
         self.encoded = self.update.encode();
     }
 }
@@ -85,22 +79,191 @@ impl ChannelUserId {
     }
 }
 
+pub enum Action {
+    Query(tokio::sync::oneshot::Sender<BTreeMap<EventId, Arc<EncodedUpdate>>>),
+    Update(Arc<EncodedUpdate>),
+}
+
 pub struct MailBoxState {
     pub id: Uuid,
-    pub start_at: i64,
-    pub updates: Mutex<VecDeque<Arc<EncodedUpdate>>>,
-    pub preview_map: papaya::HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>,
+    pub sender: tokio::sync::mpsc::Sender<Action>,
     members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
     pub status: super::status::StatusActor,
 }
 
+type PreviewMap = std::collections::HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>;
+
+fn on_update(
+    updates: &mut BTreeMap<EventId, Arc<EncodedUpdate>>,
+    preview_map: &mut PreviewMap,
+    mut shared_update: Arc<EncodedUpdate>,
+) {
+    use super::types::UpdateBody::*;
+    let update = &shared_update.update;
+    match &update.body {
+        | MessagePreview { preview, .. } => {
+            let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
+            if let Some(existing) = preview_map.get(&key) {
+                if existing.update.id >= update.id {
+                    return;
+                }
+            }
+            preview_map.insert(key, shared_update);
+        }
+        | NewMessage {
+            channel_id,
+            message,
+            preview_id,
+        } => {
+            updates.insert(shared_update.update.id, shared_update.clone());
+            let key = ChannelUserId::new(*channel_id, message.sender_id);
+            if let Some(preview_id) = preview_id {
+                if let Some(existing) = preview_map.get(&key) {
+                    match &existing.update.body {
+                        MessagePreview { preview, .. } => {
+                            if preview.id == *preview_id {
+                                preview_map.remove(&key);
+                            }
+                        }
+                        _ => log::warn!("Expected preview, but got {:?}", existing.update.body),
+                    }
+                }
+            }
+        }
+        | MessageDeleted { message_id, .. } => {
+            updates.retain(|_, encoded| encoded.update.body.message_id() != Some(*message_id));
+        }
+        | MessageEdited {
+            channel_id,
+            message,
+            old_pos,
+        } => {
+            let channel_id = *channel_id;
+
+            let mut prev_event_id_and_old_pos: Option<(EventId, f64)> = None;
+            for (stored_update_id, stored_update) in updates.iter().rev() {
+                if let MessageEdited {
+                    message: original,
+                    old_pos: original_old_pos,
+                    ..
+                } = &stored_update.update.body
+                {
+                    if original.id == message.id
+                        && original.channel_id == channel_id
+                        && original.modified < message.modified
+                    {
+                        prev_event_id_and_old_pos =
+                            Some((stored_update_id.clone(), *original_old_pos));
+                        break;
+                    }
+                }
+            }
+            if let Some((prev_event_id, prev_old_pos)) = prev_event_id_and_old_pos {
+                updates.remove(&prev_event_id);
+                if prev_old_pos != *old_pos {
+                    let shared_update = Arc::make_mut(&mut shared_update);
+                    match shared_update.update.body {
+                        MessageEdited {
+                            ref mut old_pos, ..
+                        } => {
+                            *old_pos = prev_old_pos;
+                        }
+                        ref other_body => {
+                            log::warn!("Expected MessageEdited, but got {:?}", other_body)
+                        }
+                    }
+                    shared_update.refresh_encoded();
+                }
+                updates.insert(shared_update.update.id, shared_update);
+            }
+        }
+        | ChannelDeleted { channel_id } => {
+            updates.retain(|_, encoded| encoded.update.body.channel_id() != Some(*channel_id));
+            preview_map.retain(|id, _| id.channel_id != *channel_id);
+        }
+        | ChannelEdited { .. }
+        | Members { .. }
+        | Initialized
+        | StatusMap { .. }
+        | SpaceUpdated { .. }
+        | Error { .. }
+        | AppUpdated { .. } => {
+            // Do nothing
+        }
+    }
+}
+
+fn cleanup(updates: &mut BTreeMap<EventId, Arc<EncodedUpdate>>, preview_map: &mut PreviewMap) {
+    use super::types::UpdateBody::*;
+
+    let now = timestamp();
+    let mut has_been_cleaned = false;
+    while updates.len() > 512 {
+        updates.pop_first();
+        has_been_cleaned = true;
+    }
+    let start_at = if has_been_cleaned {
+        updates.first_key_value().map(|(id, _)| id.clone())
+    } else {
+        None
+    };
+
+    preview_map.retain(|_, preview_update| match preview_update.update.body {
+        | MessagePreview { .. } => {
+            if let Some(start_at) = start_at {
+                if preview_update.update.id < start_at {
+                    return false;
+                }
+            }
+            let elapsed = now - preview_update.update.id.timestamp;
+            elapsed < 1000 * 60 * 15 // 15 minutes
+        }
+        _ => false,
+    });
+}
+
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(256);
+        tokio::spawn(async move {
+            let mut updates = BTreeMap::new();
+            let mut preview_map = std::collections::HashMap::<
+                ChannelUserId,
+                Arc<EncodedUpdate>,
+                ahash::RandomState,
+            >::with_hasher(ahash::RandomState::new());
+            loop {
+                tokio::select! {
+                    Some(action) = rx.recv() => {
+                        match action {
+                            Action::Query(sender) => {
+                                let mut updates = updates.clone();
+                                for preview in preview_map.values() {
+                                    updates.insert(preview.update.id, preview.clone());
+                                }
+                                sender.send(updates).ok();
+                            }
+                            Action::Update(shared_update) => {
+                                on_update(&mut updates, &mut preview_map, shared_update);
+                            }
+                        }
+                    }
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
+                        cleanup(&mut updates, &mut preview_map);
+                    }
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(60 * 60 * 2)) => {
+                        store().remove(id);
+                    }
+                    else => {
+                        break;
+                    }
+                }
+            }
+        });
+
         MailBoxState {
             id,
-            start_at: timestamp(),
-            updates: Mutex::new(VecDeque::new()),
-            preview_map: papaya::HashMap::with_hasher(ahash::RandomState::new()),
+            sender: tx,
             members_cache: papaya::HashMap::builder()
                 .capacity(64)
                 .hasher(ahash::RandomState::new())
@@ -190,101 +353,29 @@ impl MailBoxState {
         members_cache.remove(&channel_user_id);
     }
 
-    pub fn new_update(&self, shared_update: Arc<EncodedUpdate>) -> Arc<EncodedUpdate> {
-        use super::types::UpdateBody::*;
-        let update = &shared_update.update;
-        match &update.body {
-            MessagePreview { preview, .. } => {
-                let preview_map = self.preview_map.pin();
-                let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
-                preview_map.compute(key, |entry| match entry {
-                    Some((_, existing)) if existing.update.id > update.id => {
-                        papaya::Operation::Abort(())
-                    }
-                    _ => papaya::Operation::Insert(shared_update.clone()),
-                });
-            }
-            MessageEdited {
-                message: edited_message,
-                ..
-            } => {
-                let mut updates = self.updates.lock();
-                for encoded in updates.iter_mut().rev() {
-                    if let NewMessage {
-                        message: original,
-                        channel_id,
-                        preview_id,
-                    } = &encoded.update.body
-                    {
-                        if original.id == edited_message.id
-                            && original.channel_id == edited_message.channel_id
-                            && original.modified < edited_message.modified
-                        {
-                            let body = NewMessage {
-                                channel_id: *channel_id,
-                                message: edited_message.clone(),
-                                preview_id: *preview_id,
-                            };
-                            Arc::make_mut(encoded).replace_body(body);
-                            break;
-                        }
-                    }
+    pub fn query(
+        &self,
+    ) -> Result<
+        tokio::sync::oneshot::Receiver<BTreeMap<EventId, Arc<EncodedUpdate>>>,
+        TrySendError<Action>,
+    > {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let action = Action::Query(tx);
+        if let Err(err) = self.sender.try_send(action) {
+            match err {
+                TrySendError::Closed(_) => {
+                    log::warn!(
+                        "Failed to send query to mailbox {}: channel closed",
+                        self.id
+                    );
+                }
+                TrySendError::Full(_) => {
+                    log::warn!("Failed to send query to mailbox {}: channel full", self.id);
                 }
             }
-            MessageDeleted {
-                message_id,
-                channel_id,
-                pos,
-            } => {
-                let mut updates = self.updates.lock();
-                for encoded in updates.iter_mut().rev() {
-                    if let NewMessage {
-                        message: original, ..
-                    } = &encoded.update.body
-                    {
-                        if original.id == *message_id && original.channel_id == *channel_id {
-                            let body = MessageDeleted {
-                                message_id: *message_id,
-                                channel_id: *channel_id,
-                                pos: *pos,
-                            };
-                            Arc::make_mut(encoded).replace_body(body);
-                            break;
-                        }
-                    }
-                }
-            }
-            NewMessage { .. } => {
-                self.updates.lock().push_back(shared_update.clone());
-            }
-            ChannelDeleted { channel_id } => {
-                if let Some(mut updates) = self.updates.try_lock_for(WAIT) {
-                    updates.retain(|encoded| match &encoded.update.body {
-                        NewMessage { channel_id: id, .. } => id != channel_id,
-                        MessageEdited { channel_id: id, .. } => id != channel_id,
-                        MessageDeleted { channel_id: id, .. } => id != channel_id,
-                        _ => true,
-                    });
-                    {
-                        let mut preview_map = self.preview_map.pin();
-                        preview_map.retain(|id, _| id.channel_id != *channel_id);
-                    }
-                    self.members_cache
-                        .pin()
-                        .retain(|id, _| id.channel_id != *channel_id);
-                }
-            }
-            ChannelEdited { .. }
-            | Members { .. }
-            | Initialized
-            | StatusMap { .. }
-            | AppUpdated { .. }
-            | SpaceUpdated { .. }
-            | Error { .. } => {
-                // Do nothing
-            }
+            return Err(err);
         }
-        shared_update
+        Ok(rx)
     }
 }
 
@@ -301,6 +392,10 @@ impl Store {
                 .resize_mode(papaya::ResizeMode::Blocking)
                 .build(),
         }
+    }
+
+    fn remove(&self, id: Uuid) {
+        self.mailboxes.pin().remove(&id);
     }
 }
 

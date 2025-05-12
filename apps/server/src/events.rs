@@ -8,4 +8,4 @@ pub mod tasks;
 mod types;
 
 pub use handlers::router;
-pub use types::Update;
+pub use types::{startup_id, Update};

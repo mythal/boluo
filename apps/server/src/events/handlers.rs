@@ -1,5 +1,5 @@
 use super::api::Token;
-use super::types::{ConnectionError, UpdateQuery};
+use super::types::{ConnectionError, Seq, UpdateQuery};
 use super::Update;
 use crate::csrf::authenticate;
 use crate::db;
@@ -90,7 +90,13 @@ async fn check_permissions(
 
 // Allow the needless return for keep some visual hints
 #[allow(clippy::needless_return)]
-async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
+async fn push_updates(
+    mailbox: Uuid,
+    outgoing: &mut Sender,
+    after: Option<i64>,
+    seq: Option<Seq>,
+    node: Option<u16>,
+) {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;
     use tokio::time::interval;
@@ -115,7 +121,7 @@ async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, 
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
-        let Some(cached_updates) = Update::get_from_cache(&mailbox, after, seq) else {
+        let Some(cached_updates) = Update::get_from_state(&mailbox, after, seq, node).await else {
             let error_update = Update::error(
                 mailbox,
                 ConnectionError::Unexpected,
@@ -223,6 +229,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         token,
         after,
         seq,
+        node,
     }) = parse_query(req.uri())
     else {
         log::warn!("Invalid query {:?}", req.uri());
@@ -285,7 +292,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         let (mut outgoing, incoming) = ws_stream.split();
 
         let push_updates_future = async move {
-            push_updates(mailbox, &mut outgoing, after, seq).await;
+            push_updates(mailbox, &mut outgoing, after, seq, node).await;
             outgoing.close().await.ok();
         };
 

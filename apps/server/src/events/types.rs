@@ -3,17 +3,19 @@ use crate::channels::Channel;
 
 use crate::events::context;
 use crate::events::context::{EncodedUpdate, WAIT};
-use crate::events::models::{space_users_status, StatusKind, UserStatus};
+use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::spawn;
 use tokio_tungstenite::tungstenite;
 use uuid::Uuid;
+
+use super::context::MailBoxState;
 
 pub type Seq = u16;
 
@@ -96,7 +98,7 @@ pub enum UpdateBody {
     Initialized,
     StatusMap {
         #[serde(rename = "statusMap")]
-        status_map: HashMap<Uuid, UserStatus>,
+        status_map: BTreeMap<Uuid, UserStatus>,
         #[serde(rename = "spaceId")]
         space_id: Uuid,
     },
@@ -195,19 +197,6 @@ impl Update {
             mailbox,
         );
     }
-    pub async fn push_status(space_id: Uuid) -> Result<(), anyhow::Error> {
-        let status_map = space_users_status(space_id).await;
-        if let Some(status_map) = status_map {
-            Update::transient(
-                space_id,
-                UpdateBody::StatusMap {
-                    status_map,
-                    space_id,
-                },
-            );
-        }
-        Ok(())
-    }
 
     pub async fn status(
         space_id: Uuid,
@@ -222,30 +211,12 @@ impl Update {
             focus,
         };
 
-        let old_value = {
-            let map = super::context::store().mailboxes.pin();
-            let Some(mailbox_state) = map.get(&space_id) else {
-                // It's ok if the mailbox is not be created yet
-
-                return Ok(());
-            };
-            let Some(mut status) = mailbox_state.status.try_lock() else {
-                log::info!(
-                    "Failed to lock mailbox for space {} on update status",
-                    space_id
-                );
-                return Ok(());
-            };
-
-            status.insert(user_id, heartbeat)
+        let map = super::context::store().mailboxes.pin();
+        let Some(mailbox_state) = map.get(&space_id) else {
+            // It's ok if the mailbox is not be created yet
+            return Ok(());
         };
-        if let Some(old_value) = old_value {
-            if old_value.kind != kind {
-                Update::push_status(space_id).await?;
-            }
-        } else {
-            Update::push_status(space_id).await?;
-        }
+        mailbox_state.status.update(user_id, heartbeat);
         Ok(())
     }
 
@@ -370,16 +341,17 @@ impl Update {
         }))
     }
 
-    async fn async_fire(body: UpdateBody, mailbox: Uuid) {
+    async fn async_fire(body: UpdateBody, mailbox_id: Uuid) {
         let update = {
             let map = super::context::store().mailboxes.pin();
-            let mailbox_state = map.get_or_insert_with(mailbox, Default::default);
+            let mailbox_state =
+                map.get_or_insert_with(mailbox_id, || MailBoxState::new(mailbox_id));
 
-            let encoded_update = Update::build(body, mailbox);
+            let encoded_update = Update::build(body, mailbox_id);
             mailbox_state.new_update(encoded_update)
         };
 
-        Update::send(mailbox, update).await;
+        Update::send(mailbox_id, update).await;
     }
 
     pub fn transient(mailbox: Uuid, body: UpdateBody) {

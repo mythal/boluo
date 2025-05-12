@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -67,7 +67,7 @@ pub struct SpaceWithRelated {
     pub members: HashMap<Uuid, super::models::SpaceMemberWithUser>,
     pub channels: Vec<crate::channels::Channel>,
     pub channel_members: HashMap<Uuid, Vec<crate::channels::ChannelMember>>,
-    pub users_status: HashMap<Uuid, UserStatus>,
+    pub users_status: BTreeMap<Uuid, UserStatus>,
 }
 
 #[derive(Serialize, Debug, Clone, specta::Type)]

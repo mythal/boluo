@@ -100,6 +100,7 @@ export type ConnectionState = {
    * Always 1 if the connection is not pooled.
    */
   count: number;
+  idle: number;
 };
 
 export type CreateChannel = {
@@ -272,6 +273,7 @@ export type HealthCheck = {
   memory_total: number;
   memory_used: number;
   cache: CheckResult<ConnectionState>;
+  redis: CheckResult<ConnectionState>;
   database: CheckResult<ConnectionState>;
 };
 

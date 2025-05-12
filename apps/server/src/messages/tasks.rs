@@ -1,52 +1,76 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::{collections::HashMap, sync::OnceLock, time::Duration};
 
 use chrono::{DateTime, Utc};
-use futures::stream::StreamExt;
-use parking_lot::Mutex;
-use tokio::time::interval;
-use tokio_stream::wrappers::IntervalStream;
 use uuid::Uuid;
 
-use crate::{db, events::context::WAIT_MORE};
+use crate::db;
 
-pub fn start() {
-    tokio::spawn(update_spaces_latest_activity());
+static NOTIFY_SPACE_ACTIVITY: OnceLock<tokio::sync::mpsc::Sender<(Uuid, DateTime<Utc>)>> =
+    OnceLock::new();
+
+pub fn notify_space_activity(channel_id: Uuid, update_time: Option<DateTime<Utc>>) {
+    let Some(tx) = NOTIFY_SPACE_ACTIVITY.get().cloned() else {
+        log::error!("NOTIFY_SPACE_ACTIVITY is not initialized");
+        return;
+    };
+
+    if let Err(_err) = tx.try_send((channel_id, update_time.unwrap_or_else(Utc::now))) {
+        log::info!(
+            "Failed to send space activity notification: {}, tokio channel is full",
+            channel_id
+        );
+    }
 }
 
-pub static RECENTLY_UPDATED_SPACES: Mutex<BTreeMap<Uuid, DateTime<Utc>>> =
-    Mutex::new(BTreeMap::new());
+pub fn start() {
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<(Uuid, DateTime<Utc>)>(64);
 
-async fn update_spaces_latest_activity() {
-    IntervalStream::new(interval(Duration::from_secs(6)))
-        .for_each(|_| async {
-            let pool = db::get().await;
-            let Ok(mut conn) = pool.acquire().await else {
-                log::error!("Failed to acquire connection from pool");
-                return;
-            };
-            let space_updated_map = {
-                let mut map = BTreeMap::new();
-                let Some(mut space_updated_map) = RECENTLY_UPDATED_SPACES.try_lock_for(WAIT_MORE)
-                else {
-                    log::error!("Failed to lock RECENTLY_UPDATED_SPACES");
-                    return;
-                };
+    if let Err(_) = NOTIFY_SPACE_ACTIVITY.set(tx) {
+        log::error!("Failed to set NOTIFY_SPACE_ACTIVITY");
+    }
 
-                std::mem::swap(&mut *space_updated_map, &mut map);
-                map
-            };
-            for (channel_id, update_time) in space_updated_map.into_iter() {
-                if let Err(err) = sqlx::query_file!(
-                    "sql/messages/update_space_latest_activity.sql",
-                    channel_id,
-                    update_time
-                )
-                .execute(&mut *conn)
-                .await
-                {
-                    log::error!("Failed to update space latest activity: {:?}", err);
-                };
+    tokio::spawn(async move {
+        let mut map: HashMap<Uuid, DateTime<Utc>, _> =
+            HashMap::with_hasher(ahash::RandomState::new());
+
+        let pool = db::get().await;
+        let mut interval = tokio::time::interval(Duration::from_secs(6));
+        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        loop {
+            tokio::select! {
+                Some((channel_id, update_time)) = rx.recv() => {
+                    map.insert(channel_id, update_time);
+                }
+                _ = interval.tick() => {
+                    if !map.is_empty() {
+                        let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
+                        std::mem::swap(&mut map, &mut taken_map);
+                        // Update the database with the latest activity
+
+                        let Ok(mut conn) = pool.acquire().await else {
+                            log::warn!("Failed to acquire connection from pool, skipping.");
+                            continue;
+                        };
+                        for (channel_id, update_time) in taken_map.into_iter() {
+                            if let Err(err) = sqlx::query_file!(
+                                "sql/messages/update_space_latest_activity.sql",
+                                channel_id,
+                                update_time
+                            )
+                            .execute(&mut *conn)
+                            .await
+                            {
+                                log::error!("Failed to update activity for channel {}: {}", channel_id, err);
+                            };
+                        }
+                    }
+                }
+
+                else => {
+                    log::warn!("Channel closed, exiting space activity task");
+                    break;
+                }
             }
-        })
-        .await;
+        }
+    });
 }

@@ -2,7 +2,7 @@ use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
 use crate::events::context;
-use crate::events::context::{EncodedUpdate, WAIT};
+use crate::events::context::EncodedUpdate;
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::messages::Message;
@@ -10,14 +10,15 @@ use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::sync::atomic::AtomicU32;
+use std::sync::{Arc, OnceLock};
 use tokio::spawn;
 use tokio_tungstenite::tungstenite;
 use uuid::Uuid;
 
 use super::context::MailBoxState;
 
-pub type Seq = u16;
+pub type Seq = u32;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -29,6 +30,8 @@ pub struct UpdateQuery {
     pub after: Option<i64>,
     #[serde(default)]
     pub seq: Option<Seq>,
+    #[serde(default)]
+    pub node: Option<u16>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -88,7 +91,7 @@ pub enum UpdateBody {
     ChannelEdited {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
-        channel: Channel,
+        channel: Box<Channel>,
     },
     Members {
         #[serde(rename = "channelId")]
@@ -104,7 +107,7 @@ pub enum UpdateBody {
     },
     SpaceUpdated {
         #[serde(rename = "spaceWithRelated")]
-        space_with_related: SpaceWithRelated,
+        space_with_related: Box<SpaceWithRelated>,
     },
     Error {
         code: ConnectionError,
@@ -113,6 +116,46 @@ pub enum UpdateBody {
     AppUpdated {
         version: String,
     },
+}
+
+impl UpdateBody {
+    pub fn channel_id(&self) -> Option<Uuid> {
+        use UpdateBody::*;
+        match self {
+            | NewMessage { channel_id, .. } => Some(*channel_id),
+            | MessageDeleted { channel_id, .. } => Some(*channel_id),
+            | MessageEdited { channel_id, .. } => Some(*channel_id),
+            | MessagePreview { channel_id, .. } => Some(*channel_id),
+            | ChannelEdited { channel_id, .. } => Some(*channel_id),
+            | Members { channel_id, .. } => Some(*channel_id),
+            | ChannelDeleted { channel_id } => Some(*channel_id),
+
+            | Initialized
+            | StatusMap { .. }
+            | SpaceUpdated { .. }
+            | Error { .. }
+            | AppUpdated { .. } => None,
+        }
+    }
+
+    pub fn message_id(&self) -> Option<Uuid> {
+        use UpdateBody::*;
+        match self {
+            | NewMessage { message, .. } => Some(message.id),
+            | MessageDeleted { message_id, .. } => Some(*message_id),
+            | MessageEdited { message, .. } => Some(message.id),
+
+            | MessagePreview { .. }
+            | ChannelEdited { .. }
+            | ChannelDeleted { .. }
+            | Members { .. }
+            | Initialized
+            | StatusMap { .. }
+            | SpaceUpdated { .. }
+            | Error { .. }
+            | AppUpdated { .. } => None,
+        }
+    }
 }
 
 #[derive(Serialize, Clone, Debug, specta::Type)]
@@ -234,61 +277,52 @@ impl Update {
         Update::transient(
             space_id,
             UpdateBody::ChannelEdited {
-                channel,
+                channel: Box::new(channel),
                 channel_id,
             },
         )
     }
 
-    pub fn get_from_cache(
+    pub async fn get_from_state(
         mailbox_id: &Uuid,
         after: Option<i64>,
         seq: Option<Seq>,
+        node: Option<u16>,
     ) -> Option<Vec<tungstenite::Utf8Bytes>> {
-        use std::cmp::Ordering;
         let after = after.unwrap_or(i64::MIN);
-        let mut updates: Vec<Arc<EncodedUpdate>> = {
+        let updates_receiver = {
             let map = super::context::store().mailboxes.pin();
             let Some(mailbox_state) = map.get(mailbox_id) else {
                 return Some(vec![]);
             };
-            let mut updates: Vec<Arc<EncodedUpdate>> = {
-                let updates_lock = mailbox_state.updates.try_lock_for(WAIT);
-                if let Some(updates_lock) = updates_lock {
-                    updates_lock.iter().cloned().collect()
-                } else {
-                    log::error!(
-                        "Failed to lock updates for space {} on get_from_cache",
-                        mailbox_id
-                    );
-                    return None;
-                }
-            };
-            {
-                let preview_map = mailbox_state.preview_map.pin();
-                updates.extend(preview_map.values().cloned());
-            }
-            updates
+            mailbox_state.query().ok()?
+        };
+        let Ok(updates) = updates_receiver.await else {
+            log::error!("Failed to receive updates for mailbox {}", mailbox_id);
+            return Some(vec![]);
         };
         if updates.is_empty() {
             return Some(vec![]);
         }
-        updates.sort_by(|a, b| a.update.id.cmp(&b.update.id));
-        let mut prev_id: Option<EventId> = None;
+        let node = node.unwrap_or(0);
         let mut encoded_updates: Vec<tungstenite::Utf8Bytes> = Vec::with_capacity(updates.len());
-        for encoded_update in updates.into_iter() {
+        for encoded_update in updates.into_values() {
+            use std::cmp::Ordering::*;
             let event_id = encoded_update.update.id;
-            if let Some(prev_id) = prev_id {
-                if event_id == prev_id {
-                    log::error!("Duplicated update: {}", encoded_update.encoded);
+            match event_id.timestamp.cmp(&after) {
+                Less => continue,
+                Equal => {
+                    if node == event_id.node {
+                        if let Some(seq) = seq {
+                            if event_id.seq <= seq {
+                                continue;
+                            }
+                        }
+                    }
                 }
+                _ => {}
             }
-            prev_id = Some(event_id);
-            let cmp = event_id.timestamp.cmp(&after);
-            let seq = seq.unwrap_or(Seq::MIN);
-            if cmp == Ordering::Greater || (cmp == Ordering::Equal && event_id.seq > seq) {
-                encoded_updates.push(encoded_update.encoded.clone());
-            }
+            encoded_updates.push(encoded_update.encoded.clone());
         }
         Some(encoded_updates)
     }
@@ -297,7 +331,9 @@ impl Update {
         tokio::spawn(async move {
             match crate::spaces::handlers::space_related(&space_id).await {
                 Ok(space_with_related) => {
-                    let body = UpdateBody::SpaceUpdated { space_with_related };
+                    let body = UpdateBody::SpaceUpdated {
+                        space_with_related: Box::new(space_with_related),
+                    };
                     Update::transient(space_id, body);
                 }
                 Err(e) => log::error!(
@@ -342,16 +378,21 @@ impl Update {
     }
 
     async fn async_fire(body: UpdateBody, mailbox_id: Uuid) {
-        let update = {
+        let encoded_update = Update::build(body, mailbox_id);
+        let update_sender = {
             let map = super::context::store().mailboxes.pin();
             let mailbox_state =
                 map.get_or_insert_with(mailbox_id, || MailBoxState::new(mailbox_id));
-
-            let encoded_update = Update::build(body, mailbox_id);
-            mailbox_state.new_update(encoded_update)
+            mailbox_state.sender.clone()
         };
-
-        Update::send(mailbox_id, update).await;
+        if let Err(_) = update_sender
+            .send(super::context::Action::Update(encoded_update.clone()))
+            .await
+        {
+            log::error!("Failed to send update to mailbox {}", mailbox_id);
+            return;
+        }
+        Update::send(mailbox_id, encoded_update).await;
     }
 
     pub fn transient(mailbox: Uuid, body: UpdateBody) {
@@ -366,6 +407,81 @@ impl Update {
     }
 }
 
+static STARTUP_ID: OnceLock<u16> = OnceLock::new();
+
+#[derive(Serialize, Debug)]
+struct StartupInfo {
+    startup: u16,
+    version: String,
+    timestamp: i64,
+    machine_id: String,
+    private_ip: String,
+}
+
+pub async fn initialize_startup_id() -> u16 {
+    use redis::AsyncCommands;
+
+    let Some(mut redis) = crate::redis::conn().await else {
+        log::info!("Redis is not available, assuming single node environment");
+        return 0;
+    };
+    const NODE_ID_KEY: &'static str = "node:startup";
+    let node_id_string: String = redis
+        .incr(NODE_ID_KEY, 1)
+        .await
+        .expect("Failed to allocate startup id");
+    let parsed = node_id_string.parse::<u16>();
+    if let Ok(startup_id) = parsed {
+        if startup_id > 0 {
+            return startup_id;
+        }
+        log::warn!("Startup id is 0");
+    } else {
+        log::warn!(
+            "Failed to parse startup id from redis, reset to 0. Redis value: {}",
+            node_id_string
+        );
+    }
+    let _: () = redis
+        .set(NODE_ID_KEY, 0)
+        .await
+        .expect("Failed to reset startup id");
+    let startup_id_string: String = redis
+        .incr(NODE_ID_KEY, 1)
+        .await
+        .expect("Failed to allocate startup id");
+
+    let startup_id = startup_id_string
+        .parse::<u16>()
+        .expect("Failed to parse startup id after reset");
+
+    let node_info = StartupInfo {
+        startup: startup_id,
+        version: std::env::var("VERSION").unwrap_or_default(),
+        timestamp: Utc::now().timestamp_millis(),
+        machine_id: std::env::var("FLY_MACHINE_ID").unwrap_or_default(),
+        private_ip: std::env::var("FLY_PRIVATE_IP").unwrap_or_default(),
+    };
+    let _: () = redis
+        .set(
+            format!("startup:{}:info", startup_id),
+            serde_json::to_string(&node_info).expect("Failed to serialize startup info"),
+        )
+        .await
+        .expect("Failed to save startup information");
+    startup_id
+}
+
+pub fn startup_id() -> u16 {
+    *STARTUP_ID.get_or_init(|| {
+        if cfg!(test) {
+            0
+        } else {
+            tokio::runtime::Handle::current().block_on(initialize_startup_id())
+        }
+    })
+}
+
 #[derive(
     Debug, Clone, Copy, Deserialize, specta::Type, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize,
 )]
@@ -373,20 +489,21 @@ pub struct EventId {
     /// The timestamp in milliseconds
     /// The value will not exceed 2^53 - 1, which is safe for JavaScript
     pub timestamp: i64,
-    /// Preserved for future use
+    /// Every start up will allocate a new node id. 0 is reserved for single node
+    /// environment or client.
     pub node: u16,
     pub seq: Seq,
 }
 
 impl EventId {
     pub fn new() -> EventId {
-        use std::sync::atomic::{AtomicI64, AtomicU16, Ordering};
-        static SEQUENCE: AtomicU16 = AtomicU16::new(Seq::MAX / 2);
+        use std::sync::atomic::{AtomicI64, Ordering};
+        static SEQUENCE: AtomicU32 = AtomicU32::new(Seq::MAX / 2);
         static PREV_TIMESTAMP: AtomicI64 = AtomicI64::new(0);
 
         let now = Utc::now();
         let mut timestamp = now.timestamp_millis();
-        let seq = SEQUENCE.fetch_add(1, Ordering::SeqCst);
+        let seq = SEQUENCE.fetch_add(1, Ordering::Relaxed);
 
         if seq < Seq::MAX / 2 {
             // A wrap-around occurred
@@ -396,22 +513,51 @@ impl EventId {
         timestamp = prev_timestamp.max(timestamp);
         EventId {
             timestamp,
-            node: 0,
+            node: startup_id(),
             seq,
         }
     }
 }
 
 #[test]
-fn test_event_id() {
-    for _ in 0..10 {
-        std::thread::spawn(|| {
-            let mut prev_id = EventId::new();
-            for _ in 0..1000000 {
-                let id = EventId::new();
-                assert!(id > prev_id);
-                prev_id = id;
+fn test_event_id_concurrent() {
+    use std::sync::{Arc, Barrier};
+
+    let thread_count = 8;
+    let ids_per_thread = 10_000;
+
+    let barrier = Arc::new(Barrier::new(thread_count));
+
+    let mut handles = Vec::with_capacity(thread_count);
+
+    for _ in 0..thread_count {
+        let barrier_clone = Arc::clone(&barrier);
+        let handle = std::thread::spawn(move || {
+            let mut thread_ids = Vec::with_capacity(ids_per_thread);
+
+            barrier_clone.wait();
+
+            for _ in 0..ids_per_thread {
+                thread_ids.push(EventId::new());
             }
+
+            for i in 1..thread_ids.len() {
+                assert!(thread_ids[i] > thread_ids[i - 1]);
+            }
+
+            thread_ids
         });
+
+        handles.push(handle);
+    }
+
+    let mut all_ids = Vec::with_capacity(thread_count * ids_per_thread);
+    for handle in handles {
+        all_ids.extend(handle.join().unwrap());
+    }
+
+    all_ids.sort();
+    for i in 1..all_ids.len() {
+        assert!(all_ids[i] > all_ids[i - 1], "Event IDs are not unique");
     }
 }

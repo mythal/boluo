@@ -198,6 +198,8 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
     let http = http1::Builder::new();
+
+    log::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
             accept_result = listener.accept() => {

@@ -1,7 +1,4 @@
-use crate::db;
 use crate::events::context::get_broadcast_table;
-use crate::events::Update;
-use crate::spaces::Space;
 use crate::utils::timestamp;
 use futures::StreamExt;
 use std::time::Duration;
@@ -11,21 +8,7 @@ use tokio_stream::wrappers::IntervalStream;
 pub fn start() {
     tokio::spawn(events_clean());
     tokio::spawn(broadcast_clean());
-    tokio::spawn(push_status());
     tokio::spawn(super::handlers::token_clean());
-}
-
-async fn push_status() {
-    IntervalStream::new(interval(Duration::from_secs(4)))
-        .for_each(|_| async {
-            let pool = db::get().await;
-            let spaces = Space::recent(&pool).await.unwrap_or_default();
-
-            for space_id in spaces {
-                Update::push_status(space_id).await.ok();
-            }
-        })
-        .await;
 }
 
 async fn events_clean() {

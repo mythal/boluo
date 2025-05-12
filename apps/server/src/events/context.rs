@@ -3,7 +3,6 @@ use crate::channels::ChannelMember;
 use crate::events::Update;
 use crate::spaces::SpaceMember;
 use parking_lot::Mutex;
-use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
@@ -13,7 +12,6 @@ use uuid::Uuid;
 
 use crate::utils::timestamp;
 
-use super::models::UserStatus;
 use super::types::UpdateBody;
 
 pub const WAIT_SHORTLY: std::time::Duration = std::time::Duration::from_millis(6);
@@ -44,8 +42,9 @@ impl EncodedUpdate {
     }
 }
 
-type BroadcastTable =
-    papaya::HashMap<Uuid, broadcast::Sender<Arc<EncodedUpdate>>, ahash::RandomState>;
+pub type EventSender = tokio::sync::broadcast::Sender<Arc<EncodedUpdate>>;
+
+type BroadcastTable = papaya::HashMap<Uuid, EventSender, ahash::RandomState>;
 
 static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
 
@@ -87,16 +86,18 @@ impl ChannelUserId {
 }
 
 pub struct MailBoxState {
+    pub id: Uuid,
     pub start_at: i64,
     pub updates: Mutex<VecDeque<Arc<EncodedUpdate>>>,
     pub preview_map: papaya::HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>,
     members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
-    pub status: Mutex<HashMap<Uuid, UserStatus>>,
+    pub status: super::status::StatusActor,
 }
 
-impl Default for MailBoxState {
-    fn default() -> Self {
+impl MailBoxState {
+    pub fn new(id: Uuid) -> Self {
         MailBoxState {
+            id,
             start_at: timestamp(),
             updates: Mutex::new(VecDeque::new()),
             preview_map: papaya::HashMap::with_hasher(ahash::RandomState::new()),
@@ -104,12 +105,9 @@ impl Default for MailBoxState {
                 .capacity(64)
                 .hasher(ahash::RandomState::new())
                 .build(),
-            status: Mutex::new(HashMap::new()),
+            status: super::status::StatusActor::new(id),
         }
     }
-}
-
-impl MailBoxState {
     pub fn get_members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
         let mut members: Vec<Member> = Vec::new();
         let members_cache = self.members_cache.pin();

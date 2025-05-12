@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -37,10 +37,10 @@ pub struct UserStatus {
     pub focus: Vec<Uuid>,
 }
 
-pub async fn space_users_status(space_id: Uuid) -> Option<HashMap<Uuid, UserStatus>> {
-    let map = crate::events::context::store().mailboxes.pin();
-    if let Some(status) = map.get(&space_id)?.status.try_lock() {
-        return Some(status.clone());
-    }
-    None
+pub async fn space_users_status(space_id: Uuid) -> Option<BTreeMap<Uuid, UserStatus>> {
+    let receiver = {
+        let map = crate::events::context::store().mailboxes.pin();
+        map.get(&space_id)?.status.query()
+    };
+    receiver.await.ok()
 }

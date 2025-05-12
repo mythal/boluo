@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
 use super::{Space, SpaceMember};
@@ -346,7 +346,7 @@ async fn members(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWit
         .map_err(Into::into)
 }
 
-async fn users_status(req: Request<impl Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
+async fn users_status(req: Request<impl Body>) -> Result<BTreeMap<Uuid, UserStatus>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     // TODO: permission check
     let users_status = space_users_status(space_id).await.unwrap_or_default();

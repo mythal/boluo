@@ -33,6 +33,7 @@ mod logger;
 mod mail;
 mod media;
 mod messages;
+mod notify;
 mod pos;
 mod pubsub;
 mod redis;
@@ -192,7 +193,7 @@ async fn main() {
     }
 
     events::tasks::start();
-    messages::tasks::start();
+
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())

@@ -10,7 +10,7 @@ use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
-use super::tasks::notify_space_activity;
+use crate::notify;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default, specta::Type)]
 pub struct Entities(pub Vec<types::entities::Entity>);
@@ -310,7 +310,7 @@ impl Message {
 
         let created = message.created.clone();
         let channel_id = *channel_id;
-        notify_space_activity(channel_id, Some(created));
+        notify::space_activity(channel_id, Some(created));
         Ok(message)
     }
 

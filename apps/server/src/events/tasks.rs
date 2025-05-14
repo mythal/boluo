@@ -6,7 +6,6 @@ use tokio_stream::wrappers::IntervalStream;
 
 pub fn start() {
     tokio::spawn(broadcast_clean());
-    tokio::spawn(super::handlers::token_clean());
 }
 
 async fn broadcast_clean() {

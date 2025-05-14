@@ -17,49 +17,14 @@ use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio_stream::StreamExt as _;
 use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::WebSocketStream;
 use uuid::Uuid;
 
 const CHUNK_SIZE: usize = 16;
-const TOKEN_VALIDITY: Duration = Duration::from_secs(10);
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
-
-struct TokenInfo {
-    user_id: Uuid,
-    created_at: Instant,
-}
-
-impl TokenInfo {
-    fn new(user_id: Uuid) -> Self {
-        Self {
-            user_id,
-            created_at: Instant::now(),
-        }
-    }
-    fn user_id(&self) -> Option<Uuid> {
-        if self.created_at.elapsed() < TOKEN_VALIDITY {
-            Some(self.user_id)
-        } else {
-            None
-        }
-    }
-}
-
-static TOKEN_STORE: std::sync::LazyLock<papaya::HashMap<Uuid, TokenInfo>> =
-    std::sync::LazyLock::new(papaya::HashMap::new);
-
-pub async fn token_clean() {
-    tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(5 * 60)))
-        .for_each(|_| async {
-            let mut token_store = TOKEN_STORE.pin();
-            let now = Instant::now();
-            token_store.retain(|_, token| now - token.created_at < TOKEN_VALIDITY);
-        })
-        .await;
-}
 
 async fn check_permissions(
     db: &mut sqlx::PgConnection,
@@ -243,10 +208,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     let mut user_id = authenticate(&req).await.map(|session| session.user_id);
     if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        if let Some(user_id_from_token) = {
-            let token_store = TOKEN_STORE.pin();
-            token_store.get(&token).and_then(TokenInfo::user_id)
-        } {
+        if let Some(user_id_from_token) = super::token::TOKEN_STORE.get_user_id(token) {
             *user_id = Ok(user_id_from_token);
         }
     }
@@ -340,13 +302,12 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     if let Ok(session) = authenticate(&req).await {
-        let token = Uuid::new_v4();
-        {
-            let token_store = TOKEN_STORE.pin();
-            token_store.insert(token, TokenInfo::new(session.user_id));
-        }
         Ok(Token {
-            token: Some(token.to_string()),
+            token: Some(
+                super::token::TOKEN_STORE
+                    .create_token(session.user_id)
+                    .to_string(),
+            ),
         })
     } else {
         Ok(Token { token: None })

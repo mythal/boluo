@@ -152,8 +152,7 @@ fn on_update(
                         && original.channel_id == channel_id
                         && original.modified < message.modified
                     {
-                        prev_event_id_and_old_pos =
-                            Some((stored_update_id.clone(), *original_old_pos));
+                        prev_event_id_and_old_pos = Some((*stored_update_id, *original_old_pos));
                         break;
                     }
                 }
@@ -203,7 +202,7 @@ fn cleanup(updates: &mut BTreeMap<EventId, Arc<EncodedUpdate>>, preview_map: &mu
         has_been_cleaned = true;
     }
     let start_at = if has_been_cleaned {
-        updates.first_key_value().map(|(id, _)| id.clone())
+        updates.first_key_value().map(|(id, _)| *id)
     } else {
         None
     };

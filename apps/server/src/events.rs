@@ -5,6 +5,7 @@ pub mod models;
 pub mod preview;
 mod status;
 pub mod tasks;
+mod token;
 mod types;
 
 pub use handlers::router;

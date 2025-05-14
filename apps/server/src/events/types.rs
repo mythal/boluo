@@ -1,7 +1,6 @@
 use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
-use crate::events::context;
 use crate::events::context::EncodedUpdate;
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
@@ -345,7 +344,7 @@ impl Update {
     }
 
     async fn send(mailbox: Uuid, update: Arc<EncodedUpdate>) {
-        let table = context::get_broadcast_table().pin();
+        let table = crate::events::get_broadcast_table().pin();
         if let Some(tx) = table.get(&mailbox) {
             tx.send(update).ok();
         }

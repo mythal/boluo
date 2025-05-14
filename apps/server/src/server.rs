@@ -39,6 +39,7 @@ mod pubsub;
 mod redis;
 mod s3;
 mod session;
+mod shutdown;
 mod spaces;
 mod ts;
 mod ttl;
@@ -192,8 +193,6 @@ async fn main() {
         return;
     }
 
-    events::tasks::start();
-
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
@@ -225,7 +224,7 @@ async fn main() {
             },
         }
     }
-
+    shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
     log::info!("Shutting down");
 }

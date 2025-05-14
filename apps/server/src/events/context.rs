@@ -6,7 +6,6 @@ use crate::utils::timestamp;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio_tungstenite::tungstenite::Utf8Bytes;
 use uuid::Uuid;
@@ -34,34 +33,6 @@ impl EncodedUpdate {
     pub fn refresh_encoded(&mut self) {
         self.encoded = self.update.encode();
     }
-}
-
-pub type EventSender = tokio::sync::broadcast::Sender<Arc<EncodedUpdate>>;
-
-type BroadcastTable = papaya::HashMap<Uuid, EventSender, ahash::RandomState>;
-
-static BROADCAST_TABLE: OnceCell<BroadcastTable> = OnceCell::new();
-
-pub fn get_broadcast_table() -> &'static BroadcastTable {
-    BROADCAST_TABLE.get_or_init(|| {
-        papaya::HashMap::builder()
-            .capacity(4096)
-            .hasher(ahash::RandomState::new())
-            .resize_mode(papaya::ResizeMode::Blocking)
-            .build()
-    })
-}
-
-pub fn get_mailbox_broadcast_rx(id: Uuid) -> broadcast::Receiver<Arc<EncodedUpdate>> {
-    let broadcast_table = get_broadcast_table();
-    let table = broadcast_table.pin();
-    table
-        .get_or_insert_with(id, || {
-            let capacity = 256;
-            let (tx, _) = broadcast::channel(capacity);
-            tx
-        })
-        .subscribe()
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

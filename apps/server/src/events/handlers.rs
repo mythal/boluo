@@ -4,7 +4,7 @@ use super::Update;
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
-use crate::events::context::get_mailbox_broadcast_rx;
+use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::types::ClientEvent;
 use crate::interface::{missing, ok_response, parse_query, Response};

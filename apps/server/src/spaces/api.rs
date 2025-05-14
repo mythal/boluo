@@ -1,10 +1,10 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::channels::ChannelType;
-use crate::events::models::UserStatus;
+use crate::events::StatusMap;
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -67,7 +67,7 @@ pub struct SpaceWithRelated {
     pub members: HashMap<Uuid, super::models::SpaceMemberWithUser>,
     pub channels: Vec<crate::channels::Channel>,
     pub channel_members: HashMap<Uuid, Vec<crate::channels::ChannelMember>>,
-    pub users_status: BTreeMap<Uuid, UserStatus>,
+    pub users_status: StatusMap,
 }
 
 #[derive(Serialize, Debug, Clone, specta::Type)]

@@ -8,7 +8,6 @@ use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::sync::atomic::AtomicU32;
 use std::sync::{Arc, OnceLock};
 use tokio::spawn;
@@ -16,6 +15,7 @@ use tokio_tungstenite::tungstenite;
 use uuid::Uuid;
 
 use super::context::MailBoxState;
+use super::status::StatusMap;
 
 pub type Seq = u32;
 
@@ -100,7 +100,7 @@ pub enum UpdateBody {
     Initialized,
     StatusMap {
         #[serde(rename = "statusMap")]
-        status_map: BTreeMap<Uuid, UserStatus>,
+        status_map: StatusMap,
         #[serde(rename = "spaceId")]
         space_id: Uuid,
     },

@@ -1,12 +1,14 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use uuid::Uuid;
 
 use super::{models::UserStatus, types::UpdateBody, Update};
 
+pub type StatusMap = Arc<HashMap<Uuid, UserStatus>>;
+
 pub enum Action {
     Update(Uuid, UserStatus),
-    Query(tokio::sync::oneshot::Sender<BTreeMap<Uuid, UserStatus>>),
+    Query(tokio::sync::oneshot::Sender<StatusMap>),
 }
 
 pub struct StatusActor {
@@ -19,7 +21,7 @@ impl StatusActor {
         let (tx, mut rx) = tokio::sync::mpsc::channel(128);
 
         let join_handle = tokio::spawn(async move {
-            let mut map: BTreeMap<Uuid, UserStatus> = BTreeMap::new();
+            let mut map: StatusMap = Arc::new(HashMap::new());
 
             let mut interval = tokio::time::interval(Duration::from_secs(6));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -30,7 +32,7 @@ impl StatusActor {
                             Update::transient(
                                 space_id,
                                 UpdateBody::StatusMap {
-                                    status_map: map.clone(),
+                                    status_map: Arc::clone(&map),
                                     space_id,
                                 },
                             )
@@ -40,14 +42,14 @@ impl StatusActor {
                         match received {
                             Some(Action::Update(user_id, status)) => {
                                 let kind = status.kind;
-                                if let Some(existing) = map.insert(user_id, status) {
+                                if let Some(existing) = Arc::make_mut(&mut map).insert(user_id, status) {
                                     if existing.kind == kind {
                                         continue;
                                     }
                                     Update::transient(
                                         space_id,
                                         UpdateBody::StatusMap {
-                                            status_map: map.clone(),
+                                            status_map: Arc::clone(&map),
                                             space_id,
                                         },
                                     )
@@ -73,7 +75,7 @@ impl StatusActor {
             log::warn!("Failed to send status update for user {}", user_id);
         }
     }
-    pub fn query(&self) -> tokio::sync::oneshot::Receiver<BTreeMap<Uuid, UserStatus>> {
+    pub fn query(&self) -> tokio::sync::oneshot::Receiver<Arc<HashMap<Uuid, UserStatus>>> {
         let (sender, receiver) = tokio::sync::oneshot::channel();
         if self.tx.try_send(Action::Query(sender)).is_err() {
             log::warn!("Failed to send status query");

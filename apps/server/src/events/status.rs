@@ -69,13 +69,13 @@ impl StatusActor {
     }
 
     pub fn update(&self, user_id: Uuid, status: UserStatus) {
-        if let Err(_) = self.tx.try_send(Action::Update(user_id, status)) {
+        if self.tx.try_send(Action::Update(user_id, status)).is_err() {
             log::warn!("Failed to send status update for user {}", user_id);
         }
     }
     pub fn query(&self) -> tokio::sync::oneshot::Receiver<BTreeMap<Uuid, UserStatus>> {
         let (sender, receiver) = tokio::sync::oneshot::channel();
-        if let Err(_) = self.tx.try_send(Action::Query(sender)) {
+        if self.tx.try_send(Action::Query(sender)).is_err() {
             log::warn!("Failed to send status query");
         }
         receiver

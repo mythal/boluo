@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::needless_return)]
 
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -58,11 +58,11 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
 
     if !path.starts_with("/api/") {
         let target = "https://old.boluo.chat".to_string() + &path;
-        return Ok(hyper::Response::builder()
+        return hyper::Response::builder()
             .status(302)
             .header("Location", target)
             .body(Vec::new())
-            .map_err(|err| AppError::Unexpected(err.into()))?);
+            .map_err(|err| AppError::Unexpected(err.into()));
     }
 
     macro_rules! table {

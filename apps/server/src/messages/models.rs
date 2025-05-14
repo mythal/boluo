@@ -308,7 +308,7 @@ impl Message {
         );
         message.hide(None);
 
-        let created = message.created.clone();
+        let created = message.created;
         let channel_id = *channel_id;
         notify::space_activity(channel_id, Some(created));
         Ok(message)

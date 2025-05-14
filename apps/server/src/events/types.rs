@@ -385,9 +385,10 @@ impl Update {
                 map.get_or_insert_with(mailbox_id, || MailBoxState::new(mailbox_id));
             mailbox_state.sender.clone()
         };
-        if let Err(_) = update_sender
+        if update_sender
             .send(super::context::Action::Update(encoded_update.clone()))
             .await
+            .is_err()
         {
             log::error!("Failed to send update to mailbox {}", mailbox_id);
             return;
@@ -425,7 +426,7 @@ pub async fn initialize_startup_id() -> u16 {
         log::info!("Redis is not available, assuming single node environment");
         return 0;
     };
-    const NODE_ID_KEY: &'static str = "node:startup";
+    const NODE_ID_KEY: &str = "node:startup";
     let node_id_string: String = redis
         .incr(NODE_ID_KEY, 1)
         .await

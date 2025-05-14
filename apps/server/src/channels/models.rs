@@ -118,7 +118,6 @@ impl Channel {
             sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
                 .fetch_one(db)
                 .await
-                .map(Into::into)
         })
         .await
     }
@@ -369,7 +368,7 @@ impl ChannelMember {
             sqlx::query_file_scalar!("sql/channels/get_channel_member_list_by_user.sql", user_id)
                 .fetch_all(db)
                 .await
-                .map(|members| ChannelMembers(members))
+                .map(ChannelMembers)
         })
         .await
         .map(|members| members.0)

@@ -497,9 +497,18 @@ pub async fn initialize_startup_id() -> u16 {
 pub fn startup_id() -> u16 {
     *STARTUP_ID.get_or_init(|| {
         if cfg!(test) {
-            0
-        } else {
-            tokio::runtime::Handle::current().block_on(initialize_startup_id())
+            return 0;
+        }
+
+        match tokio::runtime::Handle::try_current() {
+            Ok(handle) => tokio::task::block_in_place(|| handle.block_on(initialize_startup_id())),
+            Err(_) => {
+                let rt = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .expect("Failed to create Tokio runtime");
+                rt.block_on(initialize_startup_id())
+            }
         }
     })
 }

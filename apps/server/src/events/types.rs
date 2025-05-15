@@ -359,10 +359,15 @@ impl Update {
         });
     }
 
-    pub fn app_info() {
+    pub fn app_info() -> Update {
         let info = BasicInfo::new();
         let body = UpdateBody::AppInfo { info };
-        Update::transient(Uuid::nil(), body);
+        let mailbox = Uuid::nil();
+        Update {
+            mailbox,
+            id: EventId::zero(),
+            body,
+        }
     }
 
     async fn send(mailbox: Uuid, update: Arc<EncodedUpdate>) {
@@ -527,6 +532,13 @@ pub struct EventId {
 }
 
 impl EventId {
+    pub fn zero() -> EventId {
+        EventId {
+            timestamp: 0,
+            node: 0,
+            seq: 0,
+        }
+    }
     pub fn new() -> EventId {
         use std::sync::atomic::{AtomicI64, Ordering};
         static SEQUENCE: AtomicU32 = AtomicU32::new(Seq::MAX / 2);

@@ -5,23 +5,25 @@ use std::{
 
 use uuid::Uuid;
 
+use crate::session::Session;
+
 const TOKEN_VALIDITY: Duration = Duration::from_secs(10);
 
 struct TokenInfo {
-    user_id: Uuid,
+    session: Option<Session>,
     created_at: Instant,
 }
 
 impl TokenInfo {
-    fn new(user_id: Uuid) -> Self {
+    fn new(session: Option<Session>) -> Self {
         Self {
-            user_id,
+            session,
             created_at: Instant::now(),
         }
     }
-    fn user_id(&self) -> Option<Uuid> {
+    fn session(&self) -> Option<Session> {
         if self.created_at.elapsed() < TOKEN_VALIDITY {
-            Some(self.user_id)
+            self.session.clone()
         } else {
             None
         }
@@ -52,15 +54,15 @@ impl TokenStore {
         Self { tokens }
     }
 
-    pub fn get_user_id(&self, token: Uuid) -> Option<Uuid> {
+    pub fn get_session(&self, token: Uuid) -> Option<Session> {
         let token_store = self.tokens.pin();
-        token_store.get(&token).and_then(|token| token.user_id())
+        token_store.get(&token).and_then(|token| token.session())
     }
 
-    pub fn create_token(&self, user_id: Uuid) -> Uuid {
+    pub fn create_token(&self, session: Option<Session>) -> Uuid {
         let token_store = self.tokens.pin();
         let token = Uuid::new_v4();
-        token_store.insert(token, TokenInfo::new(user_id));
+        token_store.insert(token, TokenInfo::new(session));
         token
     }
 }

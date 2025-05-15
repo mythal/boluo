@@ -1,9 +1,11 @@
 use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
 
+use crate::error::AppError;
 use crate::events::context::EncodedUpdate;
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
+use crate::info::BasicInfo;
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
@@ -33,15 +35,6 @@ pub struct UpdateQuery {
     pub node: Option<u16>,
 }
 
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "type")]
-pub enum ClientEvent {
-    #[serde(rename_all = "camelCase")]
-    Preview { preview: PreviewPost },
-    #[serde(rename_all = "camelCase")]
-    Status { kind: StatusKind, focus: Vec<Uuid> },
-}
-
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, specta::Type)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ConnectionError {
@@ -49,6 +42,15 @@ pub enum ConnectionError {
     NoPermission,
     InvalidToken,
     Unexpected,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "type")]
+pub enum ClientEvent {
+    #[serde(rename_all = "camelCase")]
+    Preview { preview: PreviewPost },
+    #[serde(rename_all = "camelCase")]
+    Status { kind: StatusKind, focus: Vec<Uuid> },
 }
 
 #[derive(Serialize, Debug, Clone, specta::Type)]
@@ -115,6 +117,9 @@ pub enum UpdateBody {
     AppUpdated {
         version: String,
     },
+    AppInfo {
+        info: BasicInfo,
+    },
 }
 
 impl UpdateBody {
@@ -133,7 +138,8 @@ impl UpdateBody {
             | StatusMap { .. }
             | SpaceUpdated { .. }
             | Error { .. }
-            | AppUpdated { .. } => None,
+            | AppUpdated { .. }
+            | AppInfo { .. } => None,
         }
     }
 
@@ -152,7 +158,8 @@ impl UpdateBody {
             | StatusMap { .. }
             | SpaceUpdated { .. }
             | Error { .. }
-            | AppUpdated { .. } => None,
+            | AppUpdated { .. }
+            | AppInfo { .. } => None,
         }
     }
 }
@@ -180,11 +187,20 @@ impl Update {
         unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
     }
 
-    pub fn error(mailbox: Uuid, code: ConnectionError, reason: String) -> Update {
+    pub fn error(mailbox: Uuid, error: AppError) -> Update {
+        let code = match error {
+            AppError::NotFound(_) => ConnectionError::NotFound,
+            AppError::NoPermission(_) => ConnectionError::NoPermission,
+            AppError::Unauthenticated(_) => ConnectionError::InvalidToken,
+            _ => ConnectionError::Unexpected,
+        };
         Update {
             mailbox,
             id: EventId::new(),
-            body: UpdateBody::Error { code, reason },
+            body: UpdateBody::Error {
+                code,
+                reason: error.to_string(),
+            },
         }
     }
 
@@ -341,6 +357,12 @@ impl Update {
                 ),
             }
         });
+    }
+
+    pub fn app_info() {
+        let info = BasicInfo::new();
+        let body = UpdateBody::AppInfo { info };
+        Update::transient(Uuid::nil(), body);
     }
 
     async fn send(mailbox: Uuid, update: Arc<EncodedUpdate>) {

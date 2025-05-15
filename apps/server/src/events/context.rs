@@ -157,7 +157,8 @@ fn on_update(
         | StatusMap { .. }
         | SpaceUpdated { .. }
         | Error { .. }
-        | AppUpdated { .. } => {
+        | AppUpdated { .. }
+        | AppInfo { .. } => {
             // Do nothing
         }
     }

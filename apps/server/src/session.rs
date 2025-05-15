@@ -14,7 +14,7 @@ use uuid::Uuid;
 
 pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Session {
     pub user_id: Uuid,
     pub id: Uuid,
@@ -29,13 +29,13 @@ impl Lifespan for Session {
 
 #[derive(Error, Debug)]
 pub enum AuthenticateFail {
-    #[error("No authentication data found")]
-    NoData,
-    #[error("Invaild token format")]
+    #[error("No credentials provided")]
+    Guest,
+    #[error("Invalid token format")]
     MalformedToken,
     #[error("Failed to verify the session")]
     CheckSignFail,
-    #[error("No session found")]
+    #[error("Credentials are expired")]
     NoSessionFound,
 }
 
@@ -314,9 +314,9 @@ pub async fn authenticate(
     let token = if let Some(Ok(t)) = authorization {
         t.trim_start_matches("Bearer ").trim()
     } else {
-        let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::NoData)?;
+        let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
         match parse_cookie(cookie) {
-            Ok(None) => return Err(AuthenticateFail::NoData.into()),
+            Ok(None) => return Err(AuthenticateFail::Guest.into()),
             Ok(Some(token)) => token,
             Err(err) => {
                 log::warn!(

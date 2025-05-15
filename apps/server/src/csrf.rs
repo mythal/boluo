@@ -1,5 +1,5 @@
 use crate::error::AppError;
-use crate::session::{self, Session};
+use crate::session::{self, AuthenticateFail, Session};
 use crate::utils::sign;
 use chrono::Utc;
 use hyper::body::Body;
@@ -11,6 +11,15 @@ use uuid::Uuid;
 pub async fn authenticate(req: &Request<impl Body>) -> Result<Session, AppError> {
     let session = session::authenticate(req).await?;
     Ok(session)
+}
+
+pub async fn authenticate_optional(req: &Request<impl Body>) -> Result<Option<Session>, AppError> {
+    let session = session::authenticate(req).await;
+    match session {
+        Ok(session) => Ok(Some(session)),
+        Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 pub fn generate_csrf_token(session_key: &Uuid) -> String {

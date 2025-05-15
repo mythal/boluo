@@ -25,6 +25,7 @@ export async function appFetch<T>(url: string, params: RequestInit): Promise<Res
       const error: UnexpectedError = {
         code: 'UNEXPECTED',
         message: 'Got incorrect data from the server',
+        context: data,
       };
       result = new Err(error);
     }

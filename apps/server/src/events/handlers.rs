@@ -108,7 +108,7 @@ async fn push_updates(
 
         loop {
             let message = match mailbox_rx.recv().await {
-                Ok(update) => WsMessage::Text(update.encoded.clone()),
+                Ok(update) => WsMessage::Text(update),
                 Err(RecvError::Lagged(lagged)) => {
                     log::warn!("lagged {lagged} at {mailbox}");
                     continue;

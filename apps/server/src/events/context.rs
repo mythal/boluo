@@ -4,7 +4,6 @@ use crate::events::Update;
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
 use std::collections::BTreeMap;
-use std::sync::Arc;
 use std::sync::OnceLock as OnceCell;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio_tungstenite::tungstenite::Utf8Bytes;
@@ -51,8 +50,8 @@ impl ChannelUserId {
 }
 
 pub enum Action {
-    Query(tokio::sync::oneshot::Sender<BTreeMap<EventId, Arc<EncodedUpdate>>>),
-    Update(Arc<EncodedUpdate>),
+    Query(tokio::sync::oneshot::Sender<BTreeMap<EventId, Utf8Bytes>>),
+    Update(Box<EncodedUpdate>),
 }
 
 pub struct MailBoxState {
@@ -62,15 +61,15 @@ pub struct MailBoxState {
     pub status: super::status::StatusActor,
 }
 
-type PreviewMap = std::collections::HashMap<ChannelUserId, Arc<EncodedUpdate>, ahash::RandomState>;
+type PreviewMap = std::collections::HashMap<ChannelUserId, EncodedUpdate, ahash::RandomState>;
 
 fn on_update(
-    updates: &mut BTreeMap<EventId, Arc<EncodedUpdate>>,
+    updates: &mut BTreeMap<EventId, EncodedUpdate>,
     preview_map: &mut PreviewMap,
-    mut shared_update: Arc<EncodedUpdate>,
+    mut encoded_update: Box<EncodedUpdate>,
 ) {
     use super::types::UpdateBody::*;
-    let update = &shared_update.update;
+    let update = &encoded_update.update;
     match &update.body {
         | MessagePreview { preview, .. } => {
             let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
@@ -79,20 +78,22 @@ fn on_update(
                     return;
                 }
             }
-            preview_map.insert(key, shared_update);
+            preview_map.insert(key, *encoded_update);
         }
         | NewMessage {
             channel_id,
             message,
             preview_id,
         } => {
-            updates.insert(shared_update.update.id, shared_update.clone());
+            let id = encoded_update.update.id;
+            let preview_id = *preview_id;
             let key = ChannelUserId::new(*channel_id, message.sender_id);
+            updates.insert(id, *encoded_update);
             if let Some(preview_id) = preview_id {
                 if let Some(existing) = preview_map.get(&key) {
                     match &existing.update.body {
                         MessagePreview { preview, .. } => {
-                            if preview.id == *preview_id {
+                            if preview.id == preview_id {
                                 preview_map.remove(&key);
                             }
                         }
@@ -131,8 +132,7 @@ fn on_update(
             if let Some((prev_event_id, prev_old_pos)) = prev_event_id_and_old_pos {
                 updates.remove(&prev_event_id);
                 if prev_old_pos != *old_pos {
-                    let shared_update = Arc::make_mut(&mut shared_update);
-                    match shared_update.update.body {
+                    match encoded_update.update.body {
                         MessageEdited {
                             ref mut old_pos, ..
                         } => {
@@ -142,9 +142,9 @@ fn on_update(
                             log::warn!("Expected MessageEdited, but got {:?}", other_body)
                         }
                     }
-                    shared_update.refresh_encoded();
+                    encoded_update.refresh_encoded();
                 }
-                updates.insert(shared_update.update.id, shared_update);
+                updates.insert(encoded_update.update.id, *encoded_update);
             }
         }
         | ChannelDeleted { channel_id } => {
@@ -164,7 +164,7 @@ fn on_update(
     }
 }
 
-fn cleanup(updates: &mut BTreeMap<EventId, Arc<EncodedUpdate>>, preview_map: &mut PreviewMap) {
+fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut PreviewMap) {
     use super::types::UpdateBody::*;
 
     let now = timestamp();
@@ -197,25 +197,21 @@ impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
         let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(256);
         tokio::spawn(async move {
-            let mut updates = BTreeMap::new();
-            let mut preview_map = std::collections::HashMap::<
-                ChannelUserId,
-                Arc<EncodedUpdate>,
-                ahash::RandomState,
-            >::with_hasher(ahash::RandomState::new());
+            let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
+            let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
                         match action {
                             Action::Query(sender) => {
-                                let mut updates = updates.clone();
+                                let mut updates = updates.iter().map(|(event_id, value)| (event_id.clone(), value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
                                 for preview in preview_map.values() {
-                                    updates.insert(preview.update.id, preview.clone());
+                                    updates.insert(preview.update.id, preview.encoded.clone());
                                 }
                                 sender.send(updates).ok();
                             }
-                            Action::Update(shared_update) => {
-                                on_update(&mut updates, &mut preview_map, shared_update);
+                            Action::Update(encoded_update) => {
+                                on_update(&mut updates, &mut preview_map, encoded_update);
                             }
                         }
                     }
@@ -326,10 +322,8 @@ impl MailBoxState {
 
     pub fn query(
         &self,
-    ) -> Result<
-        tokio::sync::oneshot::Receiver<BTreeMap<EventId, Arc<EncodedUpdate>>>,
-        TrySendError<Action>,
-    > {
+    ) -> Result<tokio::sync::oneshot::Receiver<BTreeMap<EventId, Utf8Bytes>>, TrySendError<Action>>
+    {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let action = Action::Query(tx);
         if let Err(err) = self.sender.try_send(action) {

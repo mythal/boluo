@@ -10,7 +10,7 @@ type BroadcastTable = papaya::HashMap<Uuid, EventSender, ahash::RandomState>;
 static BROADCAST_TABLE: OnceLock<BroadcastTable> = OnceLock::new();
 
 pub fn get_broadcast_table() -> &'static BroadcastTable {
-    let cleanup: parking_lot::Once = parking_lot::Once::new();
+    static CLEANUP: parking_lot::Once = parking_lot::Once::new();
 
     let table = BROADCAST_TABLE.get_or_init(|| {
         papaya::HashMap::builder()
@@ -19,7 +19,7 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
             .resize_mode(papaya::ResizeMode::Blocking)
             .build()
     });
-    cleanup.call_once(|| {
+    CLEANUP.call_once(|| {
         tokio::spawn(async {
             let mut interval = tokio::time::interval(Duration::from_secs(5 * 60));
             loop {

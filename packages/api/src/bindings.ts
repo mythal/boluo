@@ -100,6 +100,7 @@ export type ConnectionState = {
    * Always 1 if the connection is not pooled.
    */
   count: number;
+  idle: number;
 };
 
 export type CreateChannel = {
@@ -220,7 +221,8 @@ export type EventId = {
    */
   timestamp: number;
   /**
-   * Preserved for future use
+   * Every start up will allocate a new node id. 0 is reserved for single node
+   * environment or client.
    */
   node: number;
   seq: number;
@@ -272,6 +274,7 @@ export type HealthCheck = {
   memory_total: number;
   memory_used: number;
   cache: CheckResult<ConnectionState>;
+  redis: CheckResult<ConnectionState>;
   database: CheckResult<ConnectionState>;
 };
 
@@ -506,7 +509,7 @@ export type StatusKind = 'OFFLINE' | 'AWAY' | 'ONLINE';
 
 export type SubExprResult = { node: ExprNode; evaluatedNode: EvaluatedExprNode; value: number };
 
-export type Token = { token: string | null };
+export type Token = { token: string };
 
 export type Update = { mailbox: string; id: EventId; body: UpdateBody };
 
@@ -522,7 +525,8 @@ export type UpdateBody =
   | { type: 'STATUS_MAP'; statusMap: Partial<{ [key in string]: UserStatus }>; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
   | { type: 'ERROR'; code: ConnectionError; reason: string }
-  | { type: 'APP_UPDATED'; version: string };
+  | { type: 'APP_UPDATED'; version: string }
+  | { type: 'APP_INFO'; info: BasicInfo };
 
 export type Upload = { filename: string; mimeType: string | null; size?: number };
 

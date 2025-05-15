@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::needless_return)]
 
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -33,11 +33,13 @@ mod logger;
 mod mail;
 mod media;
 mod messages;
+mod notify;
 mod pos;
 mod pubsub;
 mod redis;
 mod s3;
 mod session;
+mod shutdown;
 mod spaces;
 mod ts;
 mod ttl;
@@ -57,11 +59,11 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
 
     if !path.starts_with("/api/") {
         let target = "https://old.boluo.chat".to_string() + &path;
-        return Ok(hyper::Response::builder()
+        return hyper::Response::builder()
             .status(302)
             .header("Location", target)
             .body(Vec::new())
-            .map_err(|err| AppError::Unexpected(err.into()))?);
+            .map_err(|err| AppError::Unexpected(err.into()));
     }
 
     macro_rules! table {
@@ -191,13 +193,13 @@ async fn main() {
         return;
     }
 
-    events::tasks::start();
-    messages::tasks::start();
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
     let http = http1::Builder::new();
+
+    log::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
@@ -222,7 +224,7 @@ async fn main() {
             },
         }
     }
-
+    shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
     log::info!("Shutting down");
 }

@@ -110,7 +110,7 @@ impl Space {
         db: T,
         id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
-        let id = id.clone();
+        let id = *id;
         fetch_entry_optional(&CACHE.Space, id, async move {
             sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
                 .fetch_one(db)
@@ -292,7 +292,7 @@ impl Space {
                 .fetch_optional(db)
                 .await
                 .map(|settings| settings.unwrap_or(json!({})))
-                .map(|settings| SpaceSettings(settings).into())
+                .map(SpaceSettings)
         })
         .await
         .map(|settings| settings.0)

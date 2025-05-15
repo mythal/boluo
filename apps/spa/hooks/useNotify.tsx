@@ -77,14 +77,26 @@ export const useNotify = (spaceId: string) => {
           tag: message.channelId,
           renotify: true,
         } as NotificationOptions;
-        const notification = new Notification(
-          intl.formatMessage({ defaultMessage: 'New message from {name}' }, { name: message.name }),
-          options,
-        );
-        notification.onclick = () => {
-          window.focus();
-          notification.close();
-        };
+        let notification: Notification | null = null;
+        try {
+          notification = new Notification(
+            intl.formatMessage(
+              { defaultMessage: 'New message from {name}' },
+              { name: message.name },
+            ),
+            options,
+          );
+        } catch (error) {
+          // Failed to construct Notification: Illegal constructor
+          // https://stackoverflow.com/a/29915743
+          // TODO: use ServiceWorker
+        }
+        if (notification) {
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        }
       }
       startTime = new Date().getTime();
     });

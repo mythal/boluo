@@ -7,8 +7,8 @@ use crate::channels::{Channel, ChannelMember, ChannelType};
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
-use crate::events::models::{space_users_status, UserStatus};
-use crate::events::Update;
+use crate::events::models::space_users_status;
+use crate::events::{StatusMap, Update};
 use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Response};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
@@ -346,7 +346,7 @@ async fn members(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWit
         .map_err(Into::into)
 }
 
-async fn users_status(req: Request<impl Body>) -> Result<HashMap<Uuid, UserStatus>, AppError> {
+async fn users_status(req: Request<impl Body>) -> Result<StatusMap, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     // TODO: permission check
     let users_status = space_users_status(space_id).await.unwrap_or_default();

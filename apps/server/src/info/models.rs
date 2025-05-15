@@ -145,14 +145,17 @@ impl HealthCheck {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct BasicInfo {
     pub version: String,
 }
 
 impl BasicInfo {
     pub fn new() -> Self {
-        let version = std::env::var("APP_VERSION").unwrap_or_else(|_| "unknown".to_string());
+        static VERSION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+            std::env::var("APP_VERSION").unwrap_or_else(|_| "unknown".to_string())
+        });
+        let version = VERSION.clone();
         BasicInfo { version }
     }
 }

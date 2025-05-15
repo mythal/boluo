@@ -141,7 +141,7 @@ export const useConnectionEffect = (
         case 'MESSAGE_EDITED':
         case 'MESSAGE_PREVIEW':
         case 'INITIALIZED':
-        case 'APP_UPDATED':
+        case 'APP_INFO':
           return;
       }
     },

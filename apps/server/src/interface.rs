@@ -38,7 +38,7 @@ pub fn ok_response<T: Serialize>(value: T) -> hyper::Response<Vec<u8>> {
         .unwrap_or_else(err_response)
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct WebError {
     code: &'static str,
     message: String,
@@ -46,7 +46,7 @@ pub struct WebError {
 }
 
 impl WebError {
-    fn from(e: AppError) -> WebError {
+    pub fn from_app_error(e: AppError) -> WebError {
         WebError {
             code: e.error_code(),
             message: e.to_string(),
@@ -76,7 +76,7 @@ impl<T: Serialize> WebResult<T> {
         WebResult {
             is_ok: false,
             ok: None,
-            err: Some(WebError::from(err.into())),
+            err: Some(WebError::from_app_error(err.into())),
         }
     }
 }

@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use uuid::Uuid;
+
+use super::status::StatusMap;
 
 pub enum DbEventType {
     Joined,
@@ -37,10 +37,10 @@ pub struct UserStatus {
     pub focus: Vec<Uuid>,
 }
 
-pub async fn space_users_status(space_id: Uuid) -> Option<HashMap<Uuid, UserStatus>> {
-    let map = crate::events::context::store().mailboxes.pin();
-    if let Some(status) = map.get(&space_id)?.status.try_lock() {
-        return Some(status.clone());
-    }
-    None
+pub async fn space_users_status(space_id: Uuid) -> Option<StatusMap> {
+    let receiver = {
+        let map = crate::events::context::store().mailboxes.pin();
+        map.get(&space_id)?.status.query()
+    };
+    receiver.await.ok()
 }

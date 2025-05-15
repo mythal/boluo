@@ -69,7 +69,7 @@ export const updateToChatAction = (e: Update): ChatActionUnion | null => {
     case 'CHANNEL_EDITED':
     case 'MEMBERS':
     case 'STATUS_MAP':
-    case 'APP_UPDATED':
+    case 'APP_INFO':
     default:
       return null;
   }

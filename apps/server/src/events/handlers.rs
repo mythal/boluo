@@ -1,13 +1,14 @@
 use super::api::Token;
-use super::types::{ConnectionError, UpdateQuery};
+use super::types::{Seq, UpdateQuery};
 use super::Update;
-use crate::csrf::authenticate;
+use crate::csrf::authenticate_optional;
 use crate::db;
 use crate::error::{AppError, Find};
-use crate::events::context::get_mailbox_broadcast_rx;
+use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::types::ClientEvent;
 use crate::interface::{missing, ok_response, parse_query, Response};
+use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
 use crate::websocket::{establish_web_socket, WsError, WsMessage};
@@ -17,69 +18,31 @@ use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio_stream::StreamExt as _;
-use tokio_tungstenite::tungstenite;
+use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tokio_tungstenite::WebSocketStream;
 use uuid::Uuid;
 
 const CHUNK_SIZE: usize = 16;
-const TOKEN_VALIDITY: Duration = Duration::from_secs(10);
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
-
-struct TokenInfo {
-    user_id: Uuid,
-    created_at: Instant,
-}
-
-impl TokenInfo {
-    fn new(user_id: Uuid) -> Self {
-        Self {
-            user_id,
-            created_at: Instant::now(),
-        }
-    }
-    fn user_id(&self) -> Option<Uuid> {
-        if self.created_at.elapsed() < TOKEN_VALIDITY {
-            Some(self.user_id)
-        } else {
-            None
-        }
-    }
-}
-
-static TOKEN_STORE: std::sync::LazyLock<papaya::HashMap<Uuid, TokenInfo>> =
-    std::sync::LazyLock::new(papaya::HashMap::new);
-
-pub async fn token_clean() {
-    tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(5 * 60)))
-        .for_each(|_| async {
-            let mut token_store = TOKEN_STORE.pin();
-            let now = Instant::now();
-            token_store.retain(|_, token| now - token.created_at < TOKEN_VALIDITY);
-        })
-        .await;
-}
 
 async fn check_permissions(
     db: &mut sqlx::PgConnection,
     space: &Space,
-    user_id: &Result<Uuid, AppError>,
+    session: &Option<Session>,
 ) -> Result<(), AppError> {
     if space.is_public || space.allow_spectator {
         return Ok(());
     }
-    match user_id {
-        Ok(user_id) => {
-            SpaceMember::get(&mut *db, user_id, &space.id)
+    match session {
+        Some(session) => {
+            SpaceMember::get(&mut *db, &session.user_id, &space.id)
                 .await
                 .or_no_permission()?;
         }
-        Err(err) => {
-            log::warn!(
-                "A user tried to access space but did not pass authentication: {:?}",
-                err
-            );
+        None => {
+            log::warn!("A user tried to access private space but did not pass authentication");
             return Err(AppError::NoPermission(
                 "This space does not allow non-members to view it.".to_string(),
             ));
@@ -90,7 +53,13 @@ async fn check_permissions(
 
 // Allow the needless return for keep some visual hints
 #[allow(clippy::needless_return)]
-async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, seq: Option<u16>) {
+async fn push_updates(
+    mailbox: Uuid,
+    outgoing: &mut Sender,
+    after: Option<i64>,
+    seq: Option<Seq>,
+    node: Option<u16>,
+) {
     use futures::channel::mpsc::channel;
     use tokio::sync::broadcast::error::RecvError;
     use tokio::time::interval;
@@ -115,11 +84,10 @@ async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, 
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
-        let Some(cached_updates) = Update::get_from_cache(&mailbox, after, seq) else {
+        let Some(cached_updates) = Update::get_from_state(&mailbox, after, seq, node).await else {
             let error_update = Update::error(
                 mailbox,
-                ConnectionError::Unexpected,
-                "Failed to get cached updates".to_string(),
+                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
             )
             .encode();
             tx.send(WsMessage::Text(error_update)).await.ok();
@@ -140,7 +108,7 @@ async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, 
 
         loop {
             let message = match mailbox_rx.recv().await {
-                Ok(update) => WsMessage::Text(update.encoded.clone()),
+                Ok(update) => WsMessage::Text(update),
                 Err(RecvError::Lagged(lagged)) => {
                     log::warn!("lagged {lagged} at {mailbox}");
                     continue;
@@ -163,7 +131,7 @@ async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, 
             .send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥")))
             .await
         {
-            log::warn!("{}", err);
+            log::debug!("{}", err);
         }
     });
 
@@ -174,7 +142,7 @@ async fn push_updates(mailbox: Uuid, outgoing: &mut Sender, after: Option<i64>, 
     }
 }
 
-async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: &str) {
+async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &str) {
     let event: Result<ClientEvent, _> = serde_json::from_str(message);
     if let Err(event) = event {
         log::warn!("Failed to parse event from client: {}", event);
@@ -183,17 +151,19 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: &str
     let event = event.unwrap();
     match event {
         ClientEvent::Preview { preview } => {
-            let Some(user_id) = user_id else {
+            let Some(session) = session else {
                 log::warn!("An user tried to preview without authentication");
                 return;
             };
-            if let Err(err) = preview.broadcast(mailbox, user_id).await {
+            if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
                 log::warn!("Failed to broadcast preview update: {}", err);
             };
         }
         ClientEvent::Status { kind, focus } => {
-            if let Some(user_id) = user_id {
-                if let Err(err) = Update::status(mailbox, user_id, kind, timestamp(), focus).await {
+            if let Some(session) = session {
+                if let Err(err) =
+                    Update::status(mailbox, session.user_id, kind, timestamp(), focus).await
+                {
                     log::warn!("Failed to broadcast status update: {}", err);
                 }
             }
@@ -201,14 +171,9 @@ async fn handle_client_event(mailbox: Uuid, user_id: Option<Uuid>, message: &str
     }
 }
 
-fn connection_error(
-    req: Request<Incoming>,
-    mailbox: Option<Uuid>,
-    code: ConnectionError,
-    reason: String,
-) -> Response {
+fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, error: AppError) -> Response {
     let mailbox = mailbox.unwrap_or_default();
-    let error_update = Update::error(mailbox, code, reason).encode();
+    let error_update = Update::error(mailbox, error).encode();
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
         outgoing.send(WsMessage::Text(error_update)).await.ok();
@@ -216,76 +181,60 @@ fn connection_error(
 }
 
 async fn connect(req: hyper::Request<Incoming>) -> Response {
+    let Ok(query) = parse_query::<UpdateQuery>(req.uri()) else {
+        log::warn!("Failed to parse query {:?}", req.uri());
+        return connection_error(
+            req,
+            None,
+            AppError::BadRequest("Failed to parse query".to_string()),
+        );
+    };
     use futures::future;
-
-    let Ok(UpdateQuery {
+    let UpdateQuery {
         mailbox,
         token,
         after,
         seq,
-    }) = parse_query(req.uri())
-    else {
-        log::warn!("Invalid query {:?}", req.uri());
-        return connection_error(
-            req,
-            None,
-            ConnectionError::InvalidToken,
-            "Invalid query".to_string(),
-        );
+        node,
+    } = query;
+    let mut session = match authenticate_optional(&req).await {
+        Ok(session) => session,
+        Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => None,
+        Err(e) => return connection_error(req, Some(mailbox), e),
     };
 
-    let mut user_id = authenticate(&req).await.map(|session| session.user_id);
-    if let (user_id @ Err(_), Some(token)) = (&mut user_id, token) {
-        if let Some(user_id_from_token) = {
-            let token_store = TOKEN_STORE.pin();
-            token_store.get(&token).and_then(TokenInfo::user_id)
-        } {
-            *user_id = Ok(user_id_from_token);
-        }
+    if let (session @ None, Some(token)) = (&mut session, token) {
+        *session = super::token::TOKEN_STORE.get_session(token);
     }
-
-    let pool = db::get().await;
-    let Ok(mut conn) = pool.acquire().await else {
-        log::error!("Failed to connect to the database");
-        return connection_error(
-            req,
-            Some(mailbox),
-            ConnectionError::Unexpected,
-            "Failed to connect to the database".to_string(),
-        );
-    };
-    let Ok(space) = Space::get_by_id(&mut *conn, &mailbox).await else {
-        log::warn!("Invalid mailbox: {}", mailbox);
-        return connection_error(
-            req,
-            Some(mailbox),
-            ConnectionError::NotFound,
-            "Invalid mailbox".to_string(),
-        );
-    };
-    if let Some(space) = space.as_ref() {
-        let Ok(_) = check_permissions(&mut conn, space, &user_id).await else {
-            if let Ok(user_id) = user_id {
-                log::warn!(
-                    "An user ({user_id}) tried to access a space ({mailbox}) without permission"
-                );
-            } else {
-                log::warn!("An user tried to access a space ({mailbox}) without permission");
-            }
-            return connection_error(
-                req,
-                Some(mailbox),
-                ConnectionError::NoPermission,
-                "No permission".to_string(),
-            );
+    {
+        let pool = db::get().await;
+        let mut conn = match pool.acquire().await {
+            Ok(conn) => conn,
+            Err(e) => return connection_error(req, Some(mailbox), e.into()),
         };
-    }
-    let user_id = user_id.ok();
+        let space = match Space::get_by_id(&mut *conn, &mailbox).await {
+            Ok(space) => space,
+            Err(e) => return connection_error(req, Some(mailbox), e.into()),
+        };
+
+        if let Some(space) = space.as_ref() {
+            if let Err(e) = check_permissions(&mut conn, space, &session).await {
+                return connection_error(req, Some(mailbox), e);
+            }
+        }
+    };
+
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
 
+        static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
+            std::sync::LazyLock::new(|| serde_json::to_string(&Update::app_info()).unwrap().into());
+        outgoing
+            .send(WsMessage::Text(BASIC_INFO.clone()))
+            .await
+            .ok();
         let push_updates_future = async move {
-            push_updates(mailbox, &mut outgoing, after, seq).await;
+            push_updates(mailbox, &mut outgoing, after, seq, node).await;
             outgoing.close().await.ok();
         };
 
@@ -297,12 +246,11 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             })
             .and_then(future::ready)
             .try_for_each(|message: WsMessage| async move {
-                // log::debug!("Received a message from client: {:?}", message);
                 if let WsMessage::Text(message) = message {
                     if message == "♡" {
                         return Ok(());
                     }
-                    handle_client_event(mailbox, user_id, &message).await;
+                    handle_client_event(mailbox, session, &message).await;
                 }
                 Ok(())
             });
@@ -315,35 +263,42 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 log::debug!("Stop push updates");
             }
             future::Either::Right((Err(e), _)) => {
-                log::warn!("Failed to receive events: {}", e);
+                if let tungstenite::Error::Protocol(
+                    tungstenite::error::ProtocolError::ResetWithoutClosingHandshake,
+                ) = e
+                {
+                    log::debug!("Reset without closing handshake");
+                } else {
+                    log::warn!("Failed to receive events: {}", e);
+                }
             }
             future::Either::Right((Ok(_), _)) => {
                 log::debug!("Stop receiving events");
             }
         }
-        if let (Some(user_id), Some(space)) = (user_id, space) {
-            if let Err(e) =
-                Update::status(space.id, user_id, StatusKind::Offline, timestamp(), vec![]).await
-            {
-                log::warn!("Failed to broadcast offline status: {}", e);
+        if let Some(session) = session {
+            if !mailbox.is_nil() {
+                if let Err(e) = Update::status(
+                    mailbox,
+                    session.user_id,
+                    StatusKind::Offline,
+                    timestamp(),
+                    vec![],
+                )
+                .await
+                {
+                    log::warn!("Failed to broadcast offline status: {}", e);
+                }
             }
         }
     })
 }
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
-    if let Ok(session) = authenticate(&req).await {
-        let token = Uuid::new_v4();
-        {
-            let token_store = TOKEN_STORE.pin();
-            token_store.insert(token, TokenInfo::new(session.user_id));
-        }
-        Ok(Token {
-            token: Some(token.to_string()),
-        })
-    } else {
-        Ok(Token { token: None })
-    }
+    let session = authenticate_optional(&req).await?;
+    Ok(Token {
+        token: super::token::TOKEN_STORE.create_token(session),
+    })
 }
 
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {

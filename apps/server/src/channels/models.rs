@@ -6,7 +6,7 @@ use crate::cache::{CacheType, CACHE};
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::ModelError;
-use crate::events::context::StateError;
+use crate::events::context::{MailBoxState, StateError};
 use crate::spaces::{Space, SpaceMember};
 use crate::ttl::{fetch_entry, fetch_entry_optional, hour, minute, Lifespan, Mortal};
 use crate::users::User;
@@ -118,7 +118,6 @@ impl Channel {
             sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
                 .fetch_one(db)
                 .await
-                .map(Into::into)
         })
         .await
     }
@@ -369,7 +368,7 @@ impl ChannelMember {
             sqlx::query_file_scalar!("sql/channels/get_channel_member_list_by_user.sql", user_id)
                 .fetch_all(db)
                 .await
-                .map(|members| ChannelMembers(members))
+                .map(ChannelMembers)
         })
         .await
         .map(|members| members.0)
@@ -645,7 +644,7 @@ impl Member {
                 .await?;
         {
             let map = crate::events::context::store().mailboxes.pin();
-            let mailbox_state = map.get_or_insert_with(space_id, Default::default);
+            let mailbox_state = map.get_or_insert_with(space_id, || MailBoxState::new(space_id));
             mailbox_state.set_members(&members);
         }
         Ok(members)

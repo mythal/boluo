@@ -1,13 +1,9 @@
-use std::{
-    sync::{Arc, OnceLock},
-    time::Duration,
-};
+use std::{sync::OnceLock, time::Duration};
 
+use tokio_tungstenite::tungstenite::Utf8Bytes;
 use uuid::Uuid;
 
-use super::context::EncodedUpdate;
-
-pub type EventSender = tokio::sync::broadcast::Sender<Arc<EncodedUpdate>>;
+pub type EventSender = tokio::sync::broadcast::Sender<Utf8Bytes>;
 
 type BroadcastTable = papaya::HashMap<Uuid, EventSender, ahash::RandomState>;
 
@@ -52,7 +48,7 @@ async fn broadcast_clean() {
     );
 }
 
-pub fn get_mailbox_broadcast_rx(id: Uuid) -> tokio::sync::broadcast::Receiver<Arc<EncodedUpdate>> {
+pub fn get_mailbox_broadcast_rx(id: Uuid) -> tokio::sync::broadcast::Receiver<Utf8Bytes> {
     let broadcast_table = get_broadcast_table();
     let table = broadcast_table.pin();
     table

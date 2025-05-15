@@ -108,7 +108,7 @@ async fn push_updates(
 
         loop {
             let message = match mailbox_rx.recv().await {
-                Ok(update) => WsMessage::Text(update.encoded.clone()),
+                Ok(update) => WsMessage::Text(update),
                 Err(RecvError::Lagged(lagged)) => {
                     log::warn!("lagged {lagged} at {mailbox}");
                     continue;
@@ -224,7 +224,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         }
     };
 
-    let response = establish_web_socket(req, move |ws_stream| async move {
+    establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
 
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
@@ -291,8 +291,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 }
             }
         }
-    });
-    response
+    })
 }
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {

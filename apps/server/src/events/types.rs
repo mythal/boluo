@@ -11,9 +11,9 @@ use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::AtomicU32;
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
 use tokio::spawn;
-use tokio_tungstenite::tungstenite;
+use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use uuid::Uuid;
 
 use super::context::MailBoxState;
@@ -321,9 +321,8 @@ impl Update {
         }
         let node = node.unwrap_or(0);
         let mut encoded_updates: Vec<tungstenite::Utf8Bytes> = Vec::with_capacity(updates.len());
-        for encoded_update in updates.into_values() {
+        for (event_id, encoded_update) in updates.into_iter() {
             use std::cmp::Ordering::*;
-            let event_id = encoded_update.update.id;
             match event_id.timestamp.cmp(&after) {
                 Less => continue,
                 Equal => {
@@ -337,7 +336,7 @@ impl Update {
                 }
                 _ => {}
             }
-            encoded_updates.push(encoded_update.encoded.clone());
+            encoded_updates.push(encoded_update.clone());
         }
         Some(encoded_updates)
     }
@@ -370,10 +369,10 @@ impl Update {
         }
     }
 
-    async fn send(mailbox: Uuid, update: Arc<EncodedUpdate>) {
+    async fn send(mailbox: Uuid, update_encoded: Utf8Bytes) {
         let table = crate::events::get_broadcast_table().pin();
         if let Some(tx) = table.get(&mailbox) {
-            tx.send(update).ok();
+            tx.send(update_encoded).ok();
         }
     }
 
@@ -391,12 +390,12 @@ impl Update {
             id: EventId::new(),
         });
 
-        Update::send(space_id, Arc::new(encoded_update)).await;
+        Update::send(space_id, encoded_update.encoded.clone()).await;
         Ok(())
     }
 
-    fn build(body: UpdateBody, mailbox: Uuid) -> Arc<EncodedUpdate> {
-        Arc::new(EncodedUpdate::new(Update {
+    fn build(body: UpdateBody, mailbox: Uuid) -> Box<EncodedUpdate> {
+        Box::new(EncodedUpdate::new(Update {
             mailbox,
             body,
             id: EventId::new(),
@@ -419,13 +418,13 @@ impl Update {
             log::error!("Failed to send update to mailbox {}", mailbox_id);
             return;
         }
-        Update::send(mailbox_id, encoded_update).await;
+        Update::send(mailbox_id, encoded_update.encoded.clone()).await;
     }
 
     pub fn transient(mailbox: Uuid, body: UpdateBody) {
         spawn(async move {
             let update = Update::build(body, mailbox);
-            Update::send(mailbox, update).await;
+            Update::send(mailbox, update.encoded.clone()).await;
         });
     }
 

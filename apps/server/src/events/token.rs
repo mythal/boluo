@@ -23,7 +23,7 @@ impl TokenInfo {
     }
     fn session(&self) -> Option<Session> {
         if self.created_at.elapsed() < TOKEN_VALIDITY {
-            self.session.clone()
+            self.session
         } else {
             None
         }
@@ -67,5 +67,4 @@ impl TokenStore {
     }
 }
 
-pub static TOKEN_STORE: std::sync::LazyLock<TokenStore> =
-    std::sync::LazyLock::new(|| TokenStore::new());
+pub static TOKEN_STORE: std::sync::LazyLock<TokenStore> = std::sync::LazyLock::new(TokenStore::new);

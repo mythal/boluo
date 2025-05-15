@@ -66,7 +66,7 @@ type PreviewMap = std::collections::HashMap<ChannelUserId, EncodedUpdate, ahash:
 fn on_update(
     updates: &mut BTreeMap<EventId, EncodedUpdate>,
     preview_map: &mut PreviewMap,
-    mut encoded_update: Box<EncodedUpdate>,
+    mut encoded_update: EncodedUpdate,
 ) {
     use super::types::UpdateBody::*;
     let update = &encoded_update.update;
@@ -78,7 +78,7 @@ fn on_update(
                     return;
                 }
             }
-            preview_map.insert(key, *encoded_update);
+            preview_map.insert(key, encoded_update);
         }
         | NewMessage {
             channel_id,
@@ -86,10 +86,10 @@ fn on_update(
             preview_id,
         } => {
             let id = encoded_update.update.id;
-            let preview_id = *preview_id;
+            let preview_id = preview_id.unwrap_or_default();
             let key = ChannelUserId::new(*channel_id, message.sender_id);
-            updates.insert(id, *encoded_update);
-            if let Some(preview_id) = preview_id {
+            updates.insert(id, encoded_update);
+            if !preview_id.is_nil() {
                 if let Some(existing) = preview_map.get(&key) {
                     match &existing.update.body {
                         MessagePreview { preview, .. } => {
@@ -144,7 +144,7 @@ fn on_update(
                     }
                     encoded_update.refresh_encoded();
                 }
-                updates.insert(encoded_update.update.id, *encoded_update);
+                updates.insert(encoded_update.update.id, encoded_update);
             }
         }
         | ChannelDeleted { channel_id } => {
@@ -204,14 +204,14 @@ impl MailBoxState {
                     Some(action) = rx.recv() => {
                         match action {
                             Action::Query(sender) => {
-                                let mut updates = updates.iter().map(|(event_id, value)| (event_id.clone(), value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
+                                let mut updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
                                 for preview in preview_map.values() {
                                     updates.insert(preview.update.id, preview.encoded.clone());
                                 }
                                 sender.send(updates).ok();
                             }
                             Action::Update(encoded_update) => {
-                                on_update(&mut updates, &mut preview_map, encoded_update);
+                                on_update(&mut updates, &mut preview_map, *encoded_update);
                             }
                         }
                     }

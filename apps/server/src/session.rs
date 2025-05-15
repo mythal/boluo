@@ -100,7 +100,7 @@ pub async fn start_with_session_id(
 pub async fn start(user_id: Uuid) -> Result<Session, sqlx::Error> {
     let session_id = Uuid::new_v4();
     let session = start_with_session_id(user_id, session_id).await?;
-    CACHE.Session.insert(session_id, session.clone().into());
+    CACHE.Session.insert(session_id, session.into());
     Ok(session)
 }
 

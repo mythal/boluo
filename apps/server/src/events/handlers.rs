@@ -224,7 +224,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         }
     };
 
-    let response = establish_web_socket(req, move |ws_stream| async move {
+    establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
 
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
@@ -291,8 +291,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 }
             }
         }
-    });
-    response
+    })
 }
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {

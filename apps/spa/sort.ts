@@ -68,6 +68,7 @@ export const eventIdCompare = (a: EventId, b: EventId): number => {
   if (a.timestamp !== b.timestamp) {
     return a.timestamp - b.timestamp;
   } else if (a.node !== b.node) {
+    console.warn('Compare eventId with different node');
     return a.node - b.node;
   } else {
     return a.seq - b.seq;

@@ -146,6 +146,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         spaceId,
         token,
         after.current.timestamp,
+        after.current.node,
         after.current.seq,
       );
       connectionRef.current = connection;

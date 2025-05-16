@@ -50,6 +50,7 @@ export function useSpaceConnection() {
       spaceId,
       await getConnectionToken(spaceId, myId),
       after.current.timestamp,
+      after.current.node,
       after.current.seq,
     );
     connection.onerror = (e) => {

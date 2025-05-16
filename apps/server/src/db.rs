@@ -8,6 +8,8 @@ pub fn get_postgres_url() -> String {
 
 pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     static POOL: OnceLock<sqlx::Pool<sqlx::Postgres>> = OnceLock::new();
+    const LIFETIME: std::time::Duration = std::time::Duration::from_secs(60 * 60);
+    const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60 * 5);
     if let Some(pool) = POOL.get() {
         pool.clone()
     } else {
@@ -23,7 +25,9 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                     Ok(())
                 })
             })
-            .max_connections(5)
+            .max_connections(20)
+            .max_lifetime(Some(LIFETIME))
+            .idle_timeout(Some(IDLE_TIMEOUT))
             .connect(&get_postgres_url())
             .await
             .expect("Cannot connect to database");

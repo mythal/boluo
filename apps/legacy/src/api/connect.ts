@@ -5,6 +5,7 @@ export const connect = (
   id: Id,
   token: Id | null,
   after: number | null,
+  node: number | null,
   seq: number | null,
 ): WebSocket => {
   if (baseUrl.startsWith('https://')) {
@@ -16,7 +17,10 @@ export const connect = (
   if (token != null) paramsObject.token = token;
   if (after != null) {
     paramsObject.after = after.toString();
-    if (seq != null) paramsObject.seq = seq.toString();
+    if (node != null) {
+      paramsObject.node = node.toString();
+      if (seq != null) paramsObject.seq = seq.toString();
+    }
   }
   const params = new URLSearchParams(paramsObject);
   return new WebSocket(`${baseUrl}/api/events/connect?${params.toString()}`);

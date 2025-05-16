@@ -11,6 +11,7 @@ export interface NoPermissionError {
 export interface NotJsonError {
   code: 'NOT_JSON';
   cause: unknown;
+  body?: string;
 }
 
 export interface NotFoundError {

@@ -23,6 +23,7 @@ const createMailboxConnection = (
   if (token) paramsObject.token = token;
   if (after) {
     paramsObject.after = after.timestamp.toString();
+    paramsObject.node = after.node.toString();
     paramsObject.seq = after.seq.toString();
   }
   const params = new URLSearchParams(paramsObject);

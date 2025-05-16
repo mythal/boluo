@@ -144,8 +144,8 @@ fn on_update(
                     }
                     encoded_update.refresh_encoded();
                 }
-                updates.insert(encoded_update.update.id, encoded_update);
             }
+            updates.insert(encoded_update.update.id, encoded_update);
         }
         | ChannelDeleted { channel_id } => {
             updates.retain(|_, encoded| encoded.update.body.channel_id() != Some(*channel_id));

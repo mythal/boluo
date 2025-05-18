@@ -155,14 +155,19 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const store = useStore();
   const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, hideSelfPreviewTimeoutAtom } =
     useChannelAtoms();
+
+  // Filters
   const showArchived = useAtomValue(showArchivedAtom);
   const filterType = useAtomValue(filterAtom);
+
+  // Compose state
   const composeSliceAtom = useMemo(
     () => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq),
     [composeAtom],
   );
   const composeSlice = useAtomValue(composeSliceAtom);
   const showDummy = useShowDummy(store, composeAtom, hideSelfPreviewTimeoutAtom);
+
   // Intentionally quit reactivity
   const isEmpty = store.get(parsedAtom).entities.length === 0;
 
@@ -364,6 +369,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     showDummy,
   ]);
 
+  // Show a warning when the user tries to leave the page
   useEffect(() => {
     if (!myId) return;
     const optimisticMessages = Object.values(optimisticMessageMap).filter(

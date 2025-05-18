@@ -134,6 +134,35 @@ export const useShowDummy = (
   return showDummy;
 };
 
+const useFilters = (
+  filterAtom: ChannelAtoms['filterAtom'],
+  showArchivedAtom: ChannelAtoms['showArchivedAtom'],
+): {
+  filterType: ChannelFilter;
+  showArchived: boolean;
+  isFiltersChanged: boolean;
+} => {
+  const filterType = useAtomValue(filterAtom);
+  const showArchived = useAtomValue(showArchivedAtom);
+
+  const filtersBefore = useRef<{ filterType: ChannelFilter; showArchived: boolean }>({
+    filterType,
+    showArchived,
+  });
+  const isFiltersChanged = useRef(false);
+  if (
+    filtersBefore.current.filterType !== filterType ||
+    filtersBefore.current.showArchived !== showArchived
+  ) {
+    isFiltersChanged.current = true;
+    filtersBefore.current = { filterType, showArchived };
+  } else {
+    isFiltersChanged.current = false;
+  }
+
+  return { filterType, showArchived, isFiltersChanged: isFiltersChanged.current };
+};
+
 type ChannelSlice = Pick<
   ChannelState,
   'messages' | 'fullLoaded' | 'previewMap' | 'optimisticMessageMap'
@@ -155,14 +184,17 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const store = useStore();
   const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, hideSelfPreviewTimeoutAtom } =
     useChannelAtoms();
-  const showArchived = useAtomValue(showArchivedAtom);
-  const filterType = useAtomValue(filterAtom);
+
+  const { filterType, showArchived, isFiltersChanged } = useFilters(filterAtom, showArchivedAtom);
+
+  // Compose state
   const composeSliceAtom = useMemo(
     () => selectAtom(composeAtom, selectComposeSlice, isComposeSliceEq),
     [composeAtom],
   );
   const composeSlice = useAtomValue(composeSliceAtom);
   const showDummy = useShowDummy(store, composeAtom, hideSelfPreviewTimeoutAtom);
+
   // Intentionally quit reactivity
   const isEmpty = store.get(parsedAtom).entities.length === 0;
 
@@ -364,6 +396,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     showDummy,
   ]);
 
+  // Show a warning when the user tries to leave the page
   useEffect(() => {
     if (!myId) return;
     const optimisticMessages = Object.values(optimisticMessageMap).filter(
@@ -385,7 +418,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const prevChatListRef = useRef<ChatItem[] | null>(null);
   if (prevChatListRef.current !== null) {
     const prevChatList = prevChatListRef.current;
-    if (prevChatList.length > 0 && chatList.length > prevChatList.length) {
+    if (prevChatList.length > 0 && chatList.length > prevChatList.length && !isFiltersChanged) {
       const prevFirstItem = prevChatList[0]!;
       if (prevFirstItem.id !== chatList[0]!.id) {
         const prevFirstItemNewIndex = chatList.findIndex((item) => item.id === prevFirstItem.id);

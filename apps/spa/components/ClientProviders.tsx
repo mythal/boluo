@@ -24,7 +24,6 @@ const onError = (error: unknown, key: unknown) => {
       case 'UNAUTHENTICATED':
       case 'NOT_FOUND':
       case 'NO_PERMISSION':
-      case 'NOT_JSON':
       case 'FETCH_FAIL':
         return;
     }

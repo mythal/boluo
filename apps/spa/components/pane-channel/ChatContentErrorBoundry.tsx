@@ -1,7 +1,7 @@
 import React, { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Failed } from '@boluo/ui/Failed';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../../errors';
 import { isApiError } from '@boluo/api';
 
 export const ChatContentErrorBoundry: FC<{ children: ReactNode }> = ({ children }) => (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ErrorBoundary, type FallbackRender } from '@sentry/nextjs';
+import { ErrorBoundary, type FallbackRender } from '../errors';
 import { Failed } from '@boluo/ui/Failed';
 import { useIntl } from 'react-intl';
 import { errorCode } from '@boluo/api';

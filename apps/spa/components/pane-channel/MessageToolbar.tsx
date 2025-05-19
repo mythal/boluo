@@ -25,7 +25,7 @@ import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../../errors';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 
 type ToolbarDisplay =

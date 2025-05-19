@@ -6,9 +6,8 @@ import { SWRConfig, type SWRConfiguration } from 'swr';
 import type { IntlMessages, Locale } from '@boluo/common/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/common/hooks';
-import { recordWarn } from '../errors';
+import { recordException, recordWarn } from '../errors';
 import { isApiError } from '@boluo/api';
-import { captureException } from '@sentry/nextjs';
 import { backendUrlAtom } from '@boluo/api-browser';
 import { PUBLIC_BACKEND_URL } from '../const';
 
@@ -28,7 +27,7 @@ const onError = (error: unknown, key: unknown) => {
         return;
     }
   }
-  captureException(error, { extra: { key } });
+  recordException(error, { key });
 };
 
 const swrConfig: SWRConfiguration = {

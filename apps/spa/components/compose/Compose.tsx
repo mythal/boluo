@@ -14,7 +14,7 @@ import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
 import { useSettings } from '../../hooks/useSettings';
 import { FormattedMessage } from 'react-intl';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../../errors';
 import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
 

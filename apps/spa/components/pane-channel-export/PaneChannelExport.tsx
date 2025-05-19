@@ -12,9 +12,9 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';
-import * as Sentry from '@sentry/browser';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { type ExportOptions, exportChannel } from './export';
+import { recordException } from '../../errors';
 
 export interface ExportSchema {
   format: string;
@@ -87,7 +87,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
       URL.revokeObjectURL(url);
     } catch (error) {
       setError(error);
-      Sentry.captureException(error, { extra: { channel, options } });
+      recordException(error, { channel, options });
     }
   };
   let exportButtonIcon: ReactNode = <Icon icon={ScrollText} />;

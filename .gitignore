@@ -17,12 +17,13 @@ node_modules
 # next.js
 .next/
 build/
-out/
+**/out/
 .swc/
 .open-next/
 
 # misc
 .DS_Store
+**/.DS_Store
 *.pem
 
 # debug

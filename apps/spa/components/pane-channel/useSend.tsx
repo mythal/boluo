@@ -9,7 +9,7 @@ import { parse } from '../../interpreter/parser';
 import { upload } from '../../media';
 import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
-import { recordWarn } from '../../error';
+import { recordWarn } from '../../errors';
 import { type ChatActionUnion } from '../../state/chat.actions';
 import { chatAtom } from '../../state/chat.atoms';
 import { timeout } from '@boluo/utils';

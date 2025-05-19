@@ -1,4 +1,4 @@
-import { recordError } from '../error';
+import { recordError } from '../errors';
 import { type Env, parse } from './parser';
 
 export interface ParserArguments {

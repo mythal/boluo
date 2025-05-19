@@ -1,6 +1,6 @@
 import { type Channel } from '@boluo/api';
 import React from 'react';
-import { recordWarn } from '../error';
+import { recordWarn } from '../errors';
 
 export const ChannelContext = React.createContext<Channel | null>(null);
 

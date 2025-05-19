@@ -1,6 +1,6 @@
 import { type ResolvedTheme } from '@boluo/theme';
 import React from 'react';
-import { recordWarn } from '../error';
+import { recordWarn } from '../errors';
 
 export const ResolvedThemeContext = React.createContext<ResolvedTheme | null>(null);
 

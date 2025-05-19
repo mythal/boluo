@@ -1,5 +1,5 @@
 import React from 'react';
-import { recordWarn } from '../error';
+import { recordWarn } from '../errors';
 
 export const ReadObserverContext = React.createContext<(node: Element) => () => void>(() => {
   recordWarn('ReadObserverContext is not provided');

@@ -8,7 +8,7 @@ import { isUuid } from '@boluo/utils';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
-import { recordError } from '../error';
+import { recordError } from '../errors';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;

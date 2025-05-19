@@ -7,7 +7,7 @@ import { type ChatItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
 import { type ChannelAtoms, type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
-import { recordWarn } from '../error';
+import { recordWarn } from '../errors';
 import { type PreviewEdit } from '@boluo/api';
 import * as L from 'list';
 

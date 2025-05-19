@@ -2,7 +2,7 @@ import { type FetchFailError, type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Err, Ok, type Result } from '@boluo/utils';
 import { MEDIA_URL } from './const';
-import { recordError, recordWarn } from './error';
+import { recordError, recordWarn } from './errors';
 
 export const mediaMaxSizeMb = 8;
 export const mediaMaxSizeByte = mediaMaxSizeMb * 1024 * 1024;

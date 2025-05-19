@@ -21,7 +21,7 @@ import { GoButtomButton } from './GoBottomButton';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { ReadObserverContext } from '../../hooks/useReadObserve';
 import { useMember } from '../../hooks/useMember';
-import { recordWarn } from '../../error';
+import { recordWarn } from '../../errors';
 import { timeout } from '@boluo/utils';
 
 interface Props {

@@ -3,7 +3,7 @@ import { binarySearchPosList } from '../sort';
 import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
-import { recordWarn } from '../error';
+import { recordWarn } from '../errors';
 import type { List } from 'list';
 import * as L from 'list';
 

@@ -3,7 +3,7 @@ import { atomWithHash } from 'jotai-location';
 import { selectAtom } from 'jotai/utils';
 import { isUuid } from '@boluo/utils';
 import { type Pane, type Route } from './view.types';
-import { recordError } from '../error';
+import { recordError } from '../errors';
 
 export const setHash = (searchParams: string) => {
   const parsed = new URLSearchParams(searchParams);

@@ -2,7 +2,7 @@
 #![allow(clippy::too_many_arguments, clippy::needless_return)]
 
 use std::env;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 use crate::context::debug;
 use clap::Parser;
@@ -174,16 +174,32 @@ async fn main() {
         .parse()
         .expect("PORT must be a number");
     storage_check().await;
-    let addr: Ipv4Addr = env::var("HOST")
+
+    let ipv4_addr: Ipv4Addr = env::var("HOST")
         .unwrap_or("127.0.0.1".to_string())
         .parse()
-        .expect("HOST must be a IPv4 address");
+        .expect("HOST must be a valid IPv4 address");
 
-    let addr = SocketAddr::new(IpAddr::V4(addr), port);
+    let ipv4_socket = SocketAddr::new(IpAddr::V4(ipv4_addr), port);
 
-    let listener = TcpListener::bind(addr)
+    let ipv6_addr: Ipv6Addr = env::var("HOST_V6")
+        .unwrap_or("::1".to_string())
+        .parse()
+        .expect("HOST_V6 must be a valid IPv6 address");
+
+    let ipv6_socket = SocketAddr::new(IpAddr::V6(ipv6_addr), port);
+
+    let ipv4_listener = TcpListener::bind(ipv4_socket)
         .await
-        .expect("Failed to bind address");
+        .expect("Failed to bind IPv4 address");
+
+    let ipv6_listener = TcpListener::bind(ipv6_socket)
+        .await
+        .expect("Failed to bind IPv6 address");
+
+    log::info!("Server listening on IPv4: {}", ipv4_socket);
+    log::info!("Server listening on IPv6: {}", ipv6_socket);
+
     db::check().await;
     log::info!("Database is ready");
     redis::check().await;
@@ -202,21 +218,11 @@ async fn main() {
     log::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
-            accept_result = listener.accept() => {
-                match accept_result {
-                    Ok((stream, _)) => {
-                        let io = TokioIo::new(stream);
-                        let conn = http.serve_connection(io, service_fn(handler)).with_upgrades();
-                        tokio::task::spawn(async move {
-                            if let Err(err) = conn.await {
-                                log::error!("server error: {}", err);
-                            }
-                        });
-                    },
-                    Err(err) => {
-                        log::debug!("Failed to accept: {}", err);
-                    }
-                }
+            accept_result = ipv4_listener.accept() => {
+                handle_connection(accept_result, &http).await;
+            },
+            accept_result = ipv6_listener.accept() => {
+                handle_connection(accept_result, &http).await;
             },
             _ = terminate_stream.recv() => {
                 log::info!("Graceful shutdown signal received");
@@ -227,4 +233,27 @@ async fn main() {
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
     log::info!("Shutting down");
+}
+
+async fn handle_connection(
+    accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
+    http: &http1::Builder,
+) {
+    match accept_result {
+        Ok((stream, addr)) => {
+            log::debug!("Accepted connection from: {}", addr);
+            let io = TokioIo::new(stream);
+            let conn = http
+                .serve_connection(io, service_fn(handler))
+                .with_upgrades();
+            tokio::task::spawn(async move {
+                if let Err(err) = conn.await {
+                    log::error!("server error: {}", err);
+                }
+            });
+        }
+        Err(err) => {
+            log::debug!("Failed to accept: {}", err);
+        }
+    }
 }

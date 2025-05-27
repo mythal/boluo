@@ -27,10 +27,10 @@ export const SingleDice: FC<SingleDiceProps> = React.memo(
     let special: ReactNode = null;
     if (fumble && value <= fumble) {
       const title = intl.formatMessage({ defaultMessage: 'Fumble' });
-      special = <ThumbsUp className="inline text-sm" aria-label={title} />;
+      special = <ThumbsDown className="inline text-sm" aria-label={title} />;
     } else if (critical && value >= critical) {
       const title = intl.formatMessage({ defaultMessage: 'Critical' });
-      special = <ThumbsDown className="inline text-sm" aria-label={title} />;
+      special = <ThumbsUp className="inline text-sm" aria-label={title} />;
     }
 
     return (

@@ -175,30 +175,26 @@ async fn main() {
         .expect("PORT must be a number");
     storage_check().await;
 
-    let ipv4_addr: Ipv4Addr = env::var("HOST")
-        .unwrap_or("127.0.0.1".to_string())
-        .parse()
-        .expect("HOST must be a valid IPv4 address");
+    let ip_addr: IpAddr = {
+        let host_env = env::var("HOST").unwrap_or("127.0.0.1".to_string());
+        let ipv4_addr: Result<Ipv4Addr, _> = host_env.parse();
+        if let Ok(addr) = ipv4_addr {
+            IpAddr::V4(addr)
+        } else {
+            let ipv6_addr: Result<Ipv6Addr, _> = host_env.parse();
+            ipv6_addr
+                .map(IpAddr::V6)
+                .expect("HOST must be a valid IPv4 or IPv6 address")
+        }
+    };
 
-    let ipv4_socket = SocketAddr::new(IpAddr::V4(ipv4_addr), port);
+    let socket = SocketAddr::new(ip_addr, port);
 
-    let ipv6_addr: Ipv6Addr = env::var("HOST_V6")
-        .unwrap_or("::1".to_string())
-        .parse()
-        .expect("HOST_V6 must be a valid IPv6 address");
-
-    let ipv6_socket = SocketAddr::new(IpAddr::V6(ipv6_addr), port);
-
-    let ipv4_listener = TcpListener::bind(ipv4_socket)
+    let listener = TcpListener::bind(socket)
         .await
-        .expect("Failed to bind IPv4 address");
+        .expect("Failed to bind address");
 
-    let ipv6_listener = TcpListener::bind(ipv6_socket)
-        .await
-        .expect("Failed to bind IPv6 address");
-
-    log::info!("Server listening on IPv4: {}", ipv4_socket);
-    log::info!("Server listening on IPv6: {}", ipv6_socket);
+    log::info!("Server listening on: {}", socket);
 
     db::check().await;
     log::info!("Database is ready");
@@ -218,10 +214,7 @@ async fn main() {
     log::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
-            accept_result = ipv4_listener.accept() => {
-                handle_connection(accept_result, &http).await;
-            },
-            accept_result = ipv6_listener.accept() => {
+            accept_result = listener.accept() => {
                 handle_connection(accept_result, &http).await;
             },
             _ = terminate_stream.recv() => {

@@ -14,8 +14,7 @@ swap_size_mb = 512
   strategy = 'bluegreen'
 
 [env]
-  HOST = '0.0.0.0'
-  HOST_V6 = '::'
+  HOST = '[::]'
   MAILGUN_DOMAIN = 'noreply.boluo.chat'
   PORT = '3000'
   PUBLIC_MEDIA_URL = 'https://media.boluo.chat'

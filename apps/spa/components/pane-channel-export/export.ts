@@ -159,7 +159,7 @@ export const exportMessage = (intl: IntlShape, members: ChannelMemberWithUser[])
     const sender = memberMap[senderId] || makeDefaultMember(intl);
     let media: string | null = null;
     if (mediaId) {
-      media = `${location.origin}${getMediaUrl(mediaId)}`;
+      media = getMediaUrl(mediaId);
     }
     return {
       id,

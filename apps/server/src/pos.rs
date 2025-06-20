@@ -207,34 +207,60 @@ pub enum FailToFindIntermediate {
     OutOfRange,
 }
 
+/// Find the intermediate fraction between p1/q1 and p2/q2.
+///
+/// References:
+/// - https://begriffs.com/posts/2018-03-20-user-defined-order.html
+/// - https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
+/// - https://en.wikipedia.org/wiki/Stern%E2%80%93Brocot_tree
 pub fn find_intermediate(
     p1: i32,
     q1: i32,
     p2: i32,
     q2: i32,
 ) -> Result<(i32, i32), FailToFindIntermediate> {
-    let p1q2 = (p1 as i64).checked_mul(q2 as i64);
-    let p2q1 = (p2 as i64).checked_mul(q1 as i64);
-    let p1q2 = p1q2.ok_or(FailToFindIntermediate::OutOfRange)?;
-    let p2q1 = p2q1.ok_or(FailToFindIntermediate::OutOfRange)?;
+    let p1_q2 = (p1 as i64)
+        .checked_mul(q2 as i64)
+        .ok_or(FailToFindIntermediate::OutOfRange)?;
+    let p2_q1 = (p2 as i64)
+        .checked_mul(q1 as i64)
+        .ok_or(FailToFindIntermediate::OutOfRange)?;
 
-    if p1q2 == p2q1 {
+    if p1_q2 == p2_q1 {
         return Err(FailToFindIntermediate::EqualFractions);
     }
     let (mut low, mut high) = ((0, 1), (1, 0));
-    if p1q2 + 1 != p2q1 {
-        loop {
-            let x = (low.0 + high.0, low.1 + high.1);
-            if x.0 as i64 * q1 as i64 <= x.1 as i64 * p1 as i64 {
-                low = x;
-            } else if p2 as i64 * x.1 as i64 <= q2 as i64 * x.0 as i64 {
-                high = x;
-            } else {
-                return Ok(x);
-            }
+    if p1_q2 + 1 == p2_q1 {
+        return Ok((p1 + p2, q1 + q2));
+    }
+    loop {
+        let p: i64 = low.0 + high.0;
+        let q: i64 = low.1 + high.1;
+        let p_q1 = p
+            .checked_mul(q1 as i64)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        let p1_q = (p1 as i64)
+            .checked_mul(q)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        let p2_q = (p2 as i64)
+            .checked_mul(q)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        let p_q2 = p
+            .checked_mul(q2 as i64)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        if p_q1 <= p1_q {
+            low = (p, q);
+        } else if p2_q <= p_q2 {
+            high = (p, q);
+        } else {
+            return Ok((
+                p.try_into()
+                    .map_err(|_| FailToFindIntermediate::OutOfRange)?,
+                q.try_into()
+                    .map_err(|_| FailToFindIntermediate::OutOfRange)?,
+            ));
         }
     }
-    Ok((p1 + p2, q1 + q2))
 }
 
 #[cfg(test)]

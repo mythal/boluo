@@ -203,7 +203,7 @@ impl PosItem {
         }
     }
 
-    pub fn pos_avaliable(&self, now: Instant) -> bool {
+    pub fn pos_available(&self, now: Instant) -> bool {
         match self.state {
             PosItemState::Submitted => false,
             PosItemState::Cancelled => true,

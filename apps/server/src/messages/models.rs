@@ -1,12 +1,12 @@
 use chrono::prelude::*;
-use num_rational::Rational32;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
-use crate::pos::{check_pos, find_intermediate, FailToFindIntermediate, CHANNEL_POS_MAP};
+use crate::pos::{check_pos, find_intermediate, FailToFindIntermediate, CHANNEL_POS_MANAGER};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
@@ -182,38 +182,22 @@ impl Message {
         color: String,
     ) -> Result<Message, AppError> {
         let id = Uuid::now_v1(b"server");
+
         let pos: Option<(i32, i32)> = {
             match (request_pos, preview_id) {
-                (Some(pos @ (p, q)), _) => {
-                    let channel_pos_map = CHANNEL_POS_MAP.0.pin();
-                    let channel_pos_lock =
-                        channel_pos_map.get_or_insert_with(*channel_id, Default::default);
-                    let channel_pos = channel_pos_lock.read();
-                    let pos_item = channel_pos.get(&Rational32::new(p, q));
-                    let now = std::time::Instant::now();
-
-                    match (pos_item, preview_id.cloned()) {
-                        (Some(pos_item), Some(preview_id)) => {
-                            if (preview_id == pos_item.id && pos_item.is_live(now))
-                                || pos_item.pos_available(now)
-                            {
-                                Some(pos)
-                            } else {
-                                None
-                            }
-                        }
-                        (Some(pos_item), None) => {
-                            if pos_item.pos_available(now) {
-                                Some(pos)
-                            } else {
-                                None
-                            }
-                        }
-                        (None, _) => Some(pos),
+                (Some(pos), previous_id) => {
+                    if CHANNEL_POS_MANAGER
+                        .is_pos_available(*channel_id, pos.into(), previous_id.cloned())
+                        .await?
+                    {
+                        Some(pos)
+                    } else {
+                        None
                     }
                 }
-                (None, Some(preview_id)) => CHANNEL_POS_MAP
+                (None, Some(preview_id)) => CHANNEL_POS_MANAGER
                     .try_restore_pos(*channel_id, *preview_id)
+                    .await?
                     .map(|ratio| (*ratio.numer(), *ratio.denom())),
                 (None, None) => None,
             }
@@ -221,12 +205,7 @@ impl Message {
         let pos = if let Some(pos) = pos {
             pos
         } else {
-            (
-                CHANNEL_POS_MAP
-                    .get_next_pos(&mut *conn, *channel_id)
-                    .await?,
-                1,
-            )
+            (CHANNEL_POS_MANAGER.get_next_pos(*channel_id).await?, 1)
         };
         check_pos(pos)?;
 
@@ -273,9 +252,7 @@ impl Message {
                 "A conflict occurred while creating a new message at channel {}",
                 channel_id
             );
-            let p = CHANNEL_POS_MAP
-                .get_next_pos(&mut *conn, *channel_id)
-                .await?;
+            let p = CHANNEL_POS_MANAGER.get_next_pos(*channel_id).await?;
             let q = 1i32;
             row = sqlx::query_file_scalar!(
                 "sql/messages/create.sql",
@@ -308,7 +285,7 @@ impl Message {
                     "This should never happen, but a unique violation occurred again while creating a message at channel {}",
                     channel_id
                 );
-                CHANNEL_POS_MAP.reset(*channel_id);
+                CHANNEL_POS_MANAGER.shutdown(*channel_id).await;
                 return Err(AppError::Unexpected(anyhow::anyhow!(
                     "Failed to create message at channel {}: Unique violation",
                     channel_id
@@ -317,13 +294,15 @@ impl Message {
         }
 
         let mut message = row?;
-        crate::pos::CHANNEL_POS_MAP.submitted(
-            *channel_id,
-            message.id,
-            message.pos_p,
-            message.pos_q,
-            preview_id.cloned(),
-        );
+        crate::pos::CHANNEL_POS_MANAGER
+            .submitted(
+                *channel_id,
+                message.id,
+                message.pos_p,
+                message.pos_q,
+                preview_id.cloned(),
+            )
+            .await;
         message.hide(None);
 
         let created = message.created;

@@ -6,7 +6,7 @@ use types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
-use crate::pos::{check_pos, find_intermediate, CHANNEL_POS_MAP};
+use crate::pos::{check_pos, find_intermediate, FailToFindIntermediate, CHANNEL_POS_MAP};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
@@ -376,10 +376,16 @@ impl Message {
     ) -> Result<Option<Message>, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
-        let pos = if a == b {
-            a
-        } else {
-            find_intermediate(a.0, a.1, b.0, b.1)
+        let pos = match find_intermediate(a.0, a.1, b.0, b.1) {
+            Ok(pos) => pos,
+            Err(FailToFindIntermediate::EqualFractions) => {
+                log::warn!("Failed to find intermediate position: EqualFractions");
+                a
+            }
+            Err(FailToFindIntermediate::OutOfRange) => {
+                log::warn!("Failed to find intermediate position: OutOfRange");
+                return Err(ValidationFailed("Out of range position").into());
+            }
         };
 
         let message_in_pos = sqlx::query_file_scalar!(

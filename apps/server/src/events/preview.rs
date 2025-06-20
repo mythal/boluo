@@ -116,7 +116,7 @@ impl PreviewPost {
         });
 
         if should_clear {
-            crate::pos::CHANNEL_POS_MAP.cancelled(channel_id, id);
+            crate::pos::CHANNEL_POS_MAP.cancel(channel_id, id);
         }
         Update::message_preview(space_id, preview);
         Ok(())

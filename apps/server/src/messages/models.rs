@@ -401,7 +401,13 @@ impl Message {
                 a
             }
             Err(FailToFindIntermediate::OutOfRange) => {
-                log::warn!("Failed to find intermediate position: OutOfRange");
+                log::error!(
+                    "Failed to find intermediate position between ({}, {}) and ({}, {}): Out of range.",
+                    a.0,
+                    a.1,
+                    b.0,
+                    b.1
+                );
                 return Err(ValidationFailed("Out of range position").into());
             }
         };

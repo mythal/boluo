@@ -195,7 +195,7 @@ impl Message {
                     match (pos_item, preview_id.cloned()) {
                         (Some(pos_item), Some(preview_id)) => {
                             if (preview_id == pos_item.id && pos_item.is_live())
-                                || pos_item.pos_avaliable(now)
+                                || pos_item.pos_available(now)
                             {
                                 Some(pos)
                             } else {
@@ -203,7 +203,7 @@ impl Message {
                             }
                         }
                         (Some(pos_item), None) => {
-                            if pos_item.pos_avaliable(now) {
+                            if pos_item.pos_available(now) {
                                 Some(pos)
                             } else {
                                 None

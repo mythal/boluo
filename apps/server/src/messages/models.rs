@@ -296,6 +296,24 @@ impl Message {
             )
             .fetch_one(&mut *conn)
             .await;
+            let is_unique_violation = if let Err(err) = &row {
+                err.as_database_error()
+                    .map(|e| e.is_unique_violation())
+                    .unwrap_or(false)
+            } else {
+                false
+            };
+            if is_unique_violation {
+                log::error!(
+                    "This should never happen, but a unique violation occurred again while creating a message at channel {}",
+                    channel_id
+                );
+                CHANNEL_POS_MAP.reset(*channel_id);
+                return Err(AppError::Unexpected(anyhow::anyhow!(
+                    "Failed to create message at channel {}: Unique violation",
+                    channel_id
+                )));
+            }
         }
 
         let mut message = row?;

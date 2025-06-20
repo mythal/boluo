@@ -33,6 +33,11 @@ impl ChannelPosMap {
                 .build(),
         )
     }
+
+    pub fn reset(&self, channel_id: Uuid) {
+        let channel_pos_map = self.0.pin();
+        channel_pos_map.remove(&channel_id);
+    }
 }
 
 impl ChannelPosMap {
@@ -54,56 +59,38 @@ impl ChannelPosMap {
         None
     }
 
-    async fn load_max_pos(
-        &self,
-        db: &mut sqlx::PgConnection,
-        channel_id: Uuid,
-    ) -> Result<(), sqlx::Error> {
-        let (p, q, id) = match crate::messages::Message::max_pos(db, &channel_id).await {
-            Ok((p, q, id)) => (p, q, id),
-            Err(sqlx::Error::RowNotFound) => (42, 1, Uuid::nil()),
-            Err(e) => return Err(e),
-        };
-        let channel_pos_map = self.0.pin();
-        let mut channel_pos = channel_pos_map
-            .get_or_insert_with(channel_id, || {
-                parking_lot::RwLock::new(BTreeMap::from([(
-                    Rational32::new(p, q),
-                    PosItem::submitted(id),
-                )]))
-            })
-            .write();
-        if channel_pos.is_empty() {
-            channel_pos.insert(Rational32::new(p, q), PosItem::submitted(id));
-        }
-        Ok(())
-    }
-
     pub async fn get_next_pos(
         &self,
         db: &mut sqlx::PgConnection,
         channel_id: Uuid,
     ) -> Result<i32, sqlx::Error> {
-        let last_key = {
+        {
             let channel_pos_map = self.0.pin();
             let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
             let channel_pos = channel_pos_lock.read();
-            channel_pos.last_key_value().map(|(k, _)| *k)
+            let last_key = channel_pos.last_key_value().map(|(k, _)| *k);
+            if let Some(last_key) = last_key {
+                return Ok(last_key.ceil().numer() + 1);
+            }
         };
-        let next_pos = if let Some(last_key) = last_key {
-            last_key.ceil().numer() + 1
+        let max_pos_result = crate::messages::Message::max_pos(db, &channel_id).await;
+
+        let channel_pos_map = self.0.pin();
+        let mut channel_pos = channel_pos_map
+            .get_or_insert_with(channel_id, Default::default)
+            .write();
+        if let Some((key, _)) = channel_pos.last_key_value() {
+            Ok(key.ceil().numer() + 1)
         } else {
-            self.load_max_pos(db, channel_id).await?;
-            let channel_pos_map = self.0.pin();
-            let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
-            let channel_pos = channel_pos_lock.read();
-            let (key, _) = channel_pos.last_key_value().ok_or_else(|| {
-                log::error!("Unexpected: Loaded max_pos from database, but no key found");
-                sqlx::Error::RowNotFound
-            })?;
-            key.ceil().numer() + 1
-        };
-        Ok(next_pos)
+            let (p, q, id) = match max_pos_result {
+                Ok((p, q, id)) => (p, q, id),
+                Err(sqlx::Error::RowNotFound) => (42, 1, Uuid::nil()),
+                Err(e) => return Err(e),
+            };
+            let pos = Rational32::new(p, q);
+            channel_pos.insert(pos, PosItem::submitted(id));
+            Ok(pos.ceil().numer() + 1)
+        }
     }
 
     pub async fn preview_pos(

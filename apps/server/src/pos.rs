@@ -40,12 +40,13 @@ impl ChannelPosMap {
         let channel_pos_map = self.0.pin();
         if let Some(channel_pos) = channel_pos_map.get(&channel_id) {
             let channel_pos = channel_pos.read();
+            let now = Instant::now();
             if let Some((pos, pos_item)) = channel_pos
                 .iter()
                 .rev()
                 .find(|(_, pos_item)| pos_item.id == item_id)
             {
-                if pos_item.is_live() {
+                if pos_item.is_live(now) {
                     return Some(*pos);
                 }
             }
@@ -149,7 +150,7 @@ impl ChannelPosMap {
         }
     }
 
-    pub fn cancelled(&self, channel_id: Uuid, item_id: Uuid) {
+    pub fn cancel(&self, channel_id: Uuid, item_id: Uuid) {
         let now = std::time::Instant::now();
         let channel_pos_map = self.0.pin();
         let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
@@ -192,14 +193,11 @@ impl PosItem {
         }
     }
 
-    pub fn is_live(&self) -> bool {
+    pub fn is_live(&self, now: Instant) -> bool {
         match self.state {
             PosItemState::Submitted => false,
             PosItemState::Cancelled => false,
-            PosItemState::LiveIn(timeout) => {
-                let now = std::time::Instant::now();
-                (now - self.created).as_secs() < timeout as u64
-            }
+            PosItemState::LiveIn(timeout) => (now - self.created).as_secs() < timeout as u64,
         }
     }
 

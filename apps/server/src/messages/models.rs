@@ -194,7 +194,7 @@ impl Message {
 
                     match (pos_item, preview_id.cloned()) {
                         (Some(pos_item), Some(preview_id)) => {
-                            if (preview_id == pos_item.id && pos_item.is_live())
+                            if (preview_id == pos_item.id && pos_item.is_live(now))
                                 || pos_item.pos_available(now)
                             {
                                 Some(pos)
@@ -212,8 +212,8 @@ impl Message {
                         (None, _) => Some(pos),
                     }
                 }
-                (None, Some(id)) => CHANNEL_POS_MAP
-                    .try_restore_pos(*channel_id, *id)
+                (None, Some(preview_id)) => CHANNEL_POS_MAP
+                    .try_restore_pos(*channel_id, *preview_id)
                     .map(|ratio| (*ratio.numer(), *ratio.denom())),
                 (None, None) => None,
             }

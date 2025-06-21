@@ -282,8 +282,8 @@ impl Message {
             };
             if is_unique_violation {
                 log::error!(
-                    "This should never happen, but a unique violation occurred again while creating a message at channel {}",
-                    channel_id
+                    "This should never happen, but a unique violation occurred again while creating a message at channel {}: ({}, {})",
+                    channel_id, p, q
                 );
                 CHANNEL_POS_MANAGER.shutdown(*channel_id).await;
                 return Err(AppError::Unexpected(anyhow::anyhow!(

@@ -1,6 +1,10 @@
 use ahash::RandomState;
 use papaya::HashMap as PapayaHashMap;
-use std::{collections::BTreeMap, sync::LazyLock, time::Instant};
+use std::{
+    collections::BTreeMap,
+    sync::LazyLock,
+    time::{Duration, Instant},
+};
 use tokio::sync::{mpsc, oneshot};
 
 use crate::error::{AppError, ValidationFailed};
@@ -18,6 +22,10 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     }
     Ok(())
 }
+
+const PLACEHOLDER_POS_TIMEOUT_SEC: u32 = 60 * 60;
+const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60);
+const TICK_INTERVAL: Duration = Duration::from_secs(60);
 
 #[derive(Debug)]
 pub enum PosAction {
@@ -107,38 +115,61 @@ impl ChannelPosActor {
                     self.handle_submitted(item_id, pos_p, pos_q, old_item_id);
                 }
                 PosAction::Cancel { item_id } => {
-                    let now = Instant::now();
-                    self.positions.retain(|_, pos_item| {
-                        !(pos_item.id == item_id || pos_item.pos_available(now))
-                    });
+                    self.delete_by_id(Instant::now(), item_id);
                 }
                 PosAction::Shutdown => {
                     break;
                 }
                 PosAction::Tick => {
                     let now = Instant::now();
+                    let Some((last_key, last_pos_item)) = self.positions.last_key_value() else {
+                        break;
+                    };
+                    let last_key = last_key.clone();
+                    // Aucually, the last_pos_item is not latest changed item.
+                    // But it is ok for now.
+                    let recent_changed = last_pos_item.created;
+                    if now - recent_changed > INACTIVE_TIMEOUT {
+                        break;
+                    }
                     self.positions
                         .retain(|_, pos_item| !pos_item.pos_available(now));
-                    if self.positions.is_empty() && self.created.elapsed().as_secs() > 60 * 60 * 4 {
-                        break;
+                    if self.positions.is_empty() {
+                        self.positions.insert(
+                            last_key,
+                            PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC),
+                        );
                     }
                 }
             }
         }
     }
 
+    fn delete_by_id(&mut self, now: Instant, item_id: Uuid) {
+        let Some((last_key, _)) = self.positions.last_key_value() else {
+            return;
+        };
+        let last_key = last_key.clone();
+
+        self.positions.retain(|_, pos_item| {
+            !(
+                // Filter out
+                pos_item.id == item_id || pos_item.pos_available(now)
+            )
+        });
+        if self.positions.is_empty() {
+            // Keep the last pos item as a placeholder
+            self.positions.insert(
+                last_key,
+                PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC),
+            );
+        }
+    }
+
     fn handle_is_pos_available(&self, pos: Rational32, item_id: Option<Uuid>) -> bool {
         let now = Instant::now();
         if let Some(pos_item) = self.positions.get(&pos) {
-            if pos_item.pos_available(now) {
-                true
-            } else {
-                if let Some(item_id) = item_id {
-                    pos_item.id == item_id
-                } else {
-                    false
-                }
-            }
+            pos_item.id == item_id.unwrap_or_default() || pos_item.pos_available(now)
         } else {
             true
         }
@@ -151,7 +182,7 @@ impl ChannelPosActor {
             .rev()
             .find(|(_, pos_item)| pos_item.id == item_id)
             .and_then(|(pos, pos_item)| {
-                if pos_item.pos_available(now) {
+                if pos_item.id == item_id || pos_item.pos_available(now) {
                     Some(*pos)
                 } else {
                     None
@@ -172,14 +203,14 @@ impl ChannelPosActor {
         match max_pos_result {
             Ok((p, q, id)) => {
                 let pos = Rational32::new(p, q);
-                self.positions.insert(pos, PosItem::new(id, 60 * 10));
+                self.positions.insert(pos, PosItem::submitted(id));
                 Ok(pos.ceil().numer() + 1)
             }
             // If the channel has no messages, use a default pos
             Err(sqlx::Error::RowNotFound) => {
                 let pos = Rational32::new(42, 1);
                 self.positions
-                    .insert(pos, PosItem::new(Uuid::nil(), 60 * 60 * 2));
+                    .insert(pos, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC));
                 Ok(43)
             }
             Err(e) => Err(e),
@@ -204,24 +235,16 @@ impl ChannelPosActor {
 
     fn handle_submitted(
         &mut self,
-        _item_id: Uuid,
+        item_id: Uuid,
         pos_p: i32,
         pos_q: i32,
         old_item_id: Option<Uuid>,
     ) {
         let pos = Rational32::new(pos_p, pos_q);
-        let old_value = self.positions.remove(&pos);
-
         if let Some(old_item_id) = old_item_id {
-            if let Some(old_value) = old_value {
-                if old_value.id == old_item_id {
-                    return;
-                }
-            }
-            let now = Instant::now();
-            self.positions
-                .retain(|_, pos_item| !(pos_item.id == old_item_id || pos_item.pos_available(now)));
+            self.delete_by_id(Instant::now(), old_item_id);
         }
+        self.positions.insert(pos, PosItem::submitted(item_id));
     }
 }
 
@@ -257,7 +280,7 @@ impl ChannelPosManager {
                 .build(),
         };
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+            let mut interval = tokio::time::interval(TICK_INTERVAL);
             loop {
                 interval.tick().await;
                 CHANNEL_POS_MANAGER.tick();
@@ -429,6 +452,7 @@ pub static CHANNEL_POS_MANAGER: LazyLock<ChannelPosManager> = LazyLock::new(Chan
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PosItemState {
     LiveIn(u32),
+    Submitted,
 }
 
 #[derive(Debug, Clone)]
@@ -447,9 +471,21 @@ impl PosItem {
             state: PosItemState::LiveIn(timeout),
         }
     }
+    fn submitted(id: Uuid) -> Self {
+        let now = std::time::Instant::now();
+        Self {
+            id,
+            created: now,
+            state: PosItemState::Submitted,
+        }
+    }
     pub fn pos_available(&self, now: Instant) -> bool {
+        if self.id.is_nil() {
+            return true;
+        }
         match self.state {
             PosItemState::LiveIn(timeout) => (now - self.created).as_secs() >= timeout as u64,
+            PosItemState::Submitted => false,
         }
     }
 }

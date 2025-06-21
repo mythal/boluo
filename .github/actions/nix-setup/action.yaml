@@ -1,0 +1,19 @@
+name: Nix Setup
+description: Setup Nix for the workflow
+runs:
+  using: "composite"
+  steps:
+    # https://github.com/DeterminateSystems/nix-installer-action
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@999d616271516551cacca0c8b34a02e94d4f79e8
+      with:
+        diagnostic-endpoint:
+        extra-conf: |
+          experimental-features = flakes nix-command ca-derivations
+
+    # https://github.com/DeterminateSystems/magic-nix-cache
+    - name: Set up build cache
+      uses: DeterminateSystems/magic-nix-cache-action@06b5f8a297d878c1f072bffc3d5b74fa93e192ab
+      with:
+        diagnostic-endpoint:
+        use-flakehub: false

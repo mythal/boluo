@@ -61,8 +61,8 @@ pub async fn check() {
     let mut trans = pool.begin().await.expect("Cannot start transaction");
     let user = sqlx::query_file_scalar!(
         "sql/users/create.sql",
-        "madoka@low-of-cycles.com",
-        "madoka",
+        "madoka23432432432@law-of-cycles.com",
+        "madoka23432432432",
         "Madoka",
         "homura_love"
     )

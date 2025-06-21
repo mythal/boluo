@@ -216,6 +216,9 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
         message.id,
         message.pos,
     );
+    crate::pos::CHANNEL_POS_MANAGER
+        .cancel(message.channel_id, message.id)
+        .await;
     Ok(message)
 }
 

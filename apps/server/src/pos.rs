@@ -107,7 +107,10 @@ impl ChannelPosActor {
                     self.handle_submitted(item_id, pos_p, pos_q, old_item_id);
                 }
                 PosAction::Cancel { item_id } => {
-                    self.handle_cancel(item_id);
+                    let now = Instant::now();
+                    self.positions.retain(|_, pos_item| {
+                        !(pos_item.id == item_id || pos_item.pos_available(now))
+                    });
                 }
                 PosAction::Shutdown => {
                     break;
@@ -115,8 +118,8 @@ impl ChannelPosActor {
                 PosAction::Tick => {
                     let now = Instant::now();
                     self.positions
-                        .retain(|_, pos_item| !pos_item.should_delete(now));
-                    if self.positions.is_empty() && self.created.elapsed().as_secs() > 60 * 60 {
+                        .retain(|_, pos_item| !pos_item.pos_available(now));
+                    if self.positions.is_empty() && self.created.elapsed().as_secs() > 60 * 60 * 4 {
                         break;
                     }
                 }
@@ -148,7 +151,7 @@ impl ChannelPosActor {
             .rev()
             .find(|(_, pos_item)| pos_item.id == item_id)
             .and_then(|(pos, pos_item)| {
-                if pos_item.is_live(now) {
+                if pos_item.pos_available(now) {
                     Some(*pos)
                 } else {
                     None
@@ -169,12 +172,14 @@ impl ChannelPosActor {
         match max_pos_result {
             Ok((p, q, id)) => {
                 let pos = Rational32::new(p, q);
-                self.positions.insert(pos, PosItem::submitted(id));
+                self.positions.insert(pos, PosItem::new(id, 60 * 10));
                 Ok(pos.ceil().numer() + 1)
             }
+            // If the channel has no messages, use a default pos
             Err(sqlx::Error::RowNotFound) => {
                 let pos = Rational32::new(42, 1);
-                self.positions.insert(pos, PosItem::submitted(Uuid::nil()));
+                self.positions
+                    .insert(pos, PosItem::new(Uuid::nil(), 60 * 60 * 2));
                 Ok(43)
             }
             Err(e) => Err(e),
@@ -199,13 +204,13 @@ impl ChannelPosActor {
 
     fn handle_submitted(
         &mut self,
-        item_id: Uuid,
+        _item_id: Uuid,
         pos_p: i32,
         pos_q: i32,
         old_item_id: Option<Uuid>,
     ) {
         let pos = Rational32::new(pos_p, pos_q);
-        let old_value = self.positions.insert(pos, PosItem::submitted(item_id));
+        let old_value = self.positions.remove(&pos);
 
         if let Some(old_item_id) = old_item_id {
             if let Some(old_value) = old_value {
@@ -215,14 +220,8 @@ impl ChannelPosActor {
             }
             let now = Instant::now();
             self.positions
-                .retain(|_, pos_item| pos_item.id != old_item_id && !pos_item.should_delete(now));
+                .retain(|_, pos_item| !(pos_item.id == old_item_id || pos_item.pos_available(now)));
         }
-    }
-
-    fn handle_cancel(&mut self, item_id: Uuid) {
-        let now = Instant::now();
-        self.positions
-            .retain(|_, pos_item| pos_item.id != item_id && !pos_item.should_delete(now));
     }
 }
 
@@ -429,8 +428,6 @@ pub static CHANNEL_POS_MANAGER: LazyLock<ChannelPosManager> = LazyLock::new(Chan
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PosItemState {
-    Submitted,
-    Cancelled,
     LiveIn(u32),
 }
 
@@ -450,33 +447,10 @@ impl PosItem {
             state: PosItemState::LiveIn(timeout),
         }
     }
-    fn submitted(id: Uuid) -> Self {
-        let now = std::time::Instant::now();
-        Self {
-            id,
-            created: now,
-            state: PosItemState::Submitted,
-        }
-    }
-
-    pub fn is_live(&self, now: Instant) -> bool {
-        match self.state {
-            PosItemState::Submitted => false,
-            PosItemState::Cancelled => false,
-            PosItemState::LiveIn(timeout) => (now - self.created).as_secs() < timeout as u64,
-        }
-    }
-
     pub fn pos_available(&self, now: Instant) -> bool {
         match self.state {
-            PosItemState::Submitted => false,
-            PosItemState::Cancelled => true,
             PosItemState::LiveIn(timeout) => (now - self.created).as_secs() >= timeout as u64,
         }
-    }
-
-    pub fn should_delete(&self, now: Instant) -> bool {
-        self.state == PosItemState::Cancelled || (now - self.created).as_secs() >= 60 * 5
     }
 }
 

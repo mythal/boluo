@@ -20,7 +20,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/nix-setup
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Push images
         run: nix --log-format raw -L run ".#push-images"
@@ -43,7 +46,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/nix-setup
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
         run: nix --accept-flake-config --log-format raw -L run .#deploy-site-staging
@@ -69,7 +75,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/nix-setup
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to production
         run: nix --accept-flake-config --log-format raw -L run .#deploy-site-production

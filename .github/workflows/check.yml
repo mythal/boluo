@@ -7,27 +7,18 @@ jobs:
   lints:
     name: Flake Check
     runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "read"
     steps:
       # https://github.com/actions/checkout
       - name: Checkout
         uses: actions/checkout@v4
 
-      # https://github.com/DeterminateSystems/nix-installer-action
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
         with:
-          extra-conf: |
-            experimental-features = flakes nix-command ca-derivations
-
-      - name: Show Nix Config
-        run: nix config show
-
-      # https://github.com/cachix/cachix-action
-      - name: Set up Cachix
-        uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
-        with:
-          name: boluo
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Nix Flake Check
-        run: nix --accept-flake-config --show-trace --log-format raw -L flake check
+        run: nix --show-trace --log-format raw -L flake check

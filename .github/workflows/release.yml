@@ -13,31 +13,20 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       packages: write
       contents: read
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      # https://github.com/DeterminateSystems/nix-installer-action
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
         with:
-          extra-conf: |
-            experimental-features = flakes nix-command ca-derivations
-
-      - name: Show Nix Config
-        run: nix config show
-
-      # https://github.com/cachix/cachix-action
-      - name: Set up Cachix
-        uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
-        with:
-          name: boluo
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Push images
-        run: nix --accept-flake-config --log-format raw -L run ".#push-images"
+        run: nix --log-format raw -L run ".#push-images"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -45,6 +34,9 @@ jobs:
 
   staging:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     needs: images
     if: github.ref == 'refs/heads/master'
     environment:
@@ -54,12 +46,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      # https://github.com/DeterminateSystems/nix-installer-action
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
         with:
-          extra-conf: |
-            experimental-features = flakes nix-command ca-derivations
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
         run: nix --accept-flake-config --log-format raw -L run .#deploy-site-staging
@@ -73,6 +63,9 @@ jobs:
 
   production:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     needs: images
     if: github.ref == 'refs/heads/production'
     environment:
@@ -82,12 +75,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      # https://github.com/DeterminateSystems/nix-installer-action
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@78d714f6f717f43be9f3f5b867a2ce6ab84db093
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
         with:
-          extra-conf: |
-            experimental-features = flakes nix-command ca-derivations
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to production
         run: nix --accept-flake-config --log-format raw -L run .#deploy-site-production

@@ -170,13 +170,15 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     };
 
     trans.commit().await?;
-    crate::pos::CHANNEL_POS_MAP.submitted(
-        channel_id,
-        message_id,
-        moved_message.pos_p,
-        moved_message.pos_q,
-        Some(message_id),
-    );
+    crate::pos::CHANNEL_POS_MANAGER
+        .submitted(
+            channel_id,
+            message_id,
+            moved_message.pos_p,
+            moved_message.pos_q,
+            Some(message_id),
+        )
+        .await;
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
@@ -214,6 +216,9 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
         message.id,
         message.pos,
     );
+    crate::pos::CHANNEL_POS_MANAGER
+        .cancel(message.channel_id, message.id)
+        .await;
     Ok(message)
 }
 

@@ -1,13 +1,5 @@
 {
   description = "A chat tool made for play RPG";
-  nixConfig = {
-    extra-substituters = [
-      "https://boluo.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "boluo.cachix.org-1:03yc2Do5i+RFofJNpy7GPOCvYv4wHKEnnQTgFvP6o2Q="
-    ];
-  };
   inputs = {
     nixpkgs = {
       url = "github:NixOS/nixpkgs/nixos-unstable";

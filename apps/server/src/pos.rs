@@ -1,6 +1,13 @@
-use std::{collections::BTreeMap, sync::LazyLock, time::Instant};
+use ahash::RandomState;
+use papaya::HashMap as PapayaHashMap;
+use std::{
+    collections::BTreeMap,
+    sync::LazyLock,
+    time::{Duration, Instant},
+};
+use tokio::sync::{mpsc, oneshot};
 
-use crate::error::ValidationFailed;
+use crate::error::{AppError, ValidationFailed};
 use num_rational::Rational32;
 use uuid::Uuid;
 
@@ -16,115 +23,379 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     Ok(())
 }
 
-pub struct ChannelPosMap(
-    pub  papaya::HashMap<
-        Uuid,
-        parking_lot::RwLock<BTreeMap<Rational32, PosItem>>,
-        ahash::RandomState,
-    >,
-);
+const PLACEHOLDER_POS_TIMEOUT_SEC: u32 = 60 * 60;
+const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60);
+const TICK_INTERVAL: Duration = Duration::from_secs(60);
 
-impl ChannelPosMap {
-    pub fn new() -> ChannelPosMap {
-        ChannelPosMap(
-            papaya::HashMap::builder()
-                .capacity(1024)
-                .hasher(ahash::RandomState::new())
-                .build(),
-        )
-    }
+#[derive(Debug)]
+pub enum PosAction {
+    TryRestorePos {
+        item_id: Uuid,
+        respond_to: oneshot::Sender<Option<Rational32>>,
+    },
+    IsPosAvailable {
+        pos: Rational32,
+        item_id: Option<Uuid>,
+        respond_to: oneshot::Sender<bool>,
+    },
+    GetNextPos {
+        respond_to: oneshot::Sender<Result<i32, sqlx::Error>>,
+    },
+    PreviewPos {
+        item_id: Uuid,
+        timeout: u32,
+        respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
+    },
+    Submitted {
+        item_id: Uuid,
+        pos_p: i32,
+        pos_q: i32,
+        old_item_id: Option<Uuid>,
+    },
+    Cancel {
+        item_id: Uuid,
+    },
+    Tick,
+    Shutdown,
 }
 
-impl ChannelPosMap {
-    pub fn try_restore_pos(&self, channel_id: Uuid, item_id: Uuid) -> Option<Rational32> {
-        let channel_pos_map = self.0.pin();
-        if let Some(channel_pos) = channel_pos_map.get(&channel_id) {
-            let channel_pos = channel_pos.read();
-            if let Some((pos, pos_item)) = channel_pos
-                .iter()
-                .rev()
-                .find(|(_, pos_item)| pos_item.id == item_id)
-            {
-                if pos_item.is_live() {
-                    return Some(*pos);
+pub struct ChannelPosActor {
+    created: Instant,
+    channel_id: Uuid,
+    positions: BTreeMap<Rational32, PosItem>,
+    receiver: mpsc::Receiver<PosAction>,
+}
+
+impl ChannelPosActor {
+    fn new(channel_id: Uuid, receiver: mpsc::Receiver<PosAction>) -> Self {
+        Self {
+            created: Instant::now(),
+            channel_id,
+            positions: BTreeMap::new(),
+            receiver,
+        }
+    }
+
+    pub async fn run(mut self) {
+        while let Some(action) = self.receiver.recv().await {
+            match action {
+                PosAction::TryRestorePos {
+                    item_id,
+                    respond_to,
+                } => {
+                    let result = self.handle_try_restore_pos(item_id);
+                    let _ = respond_to.send(result);
+                }
+                PosAction::IsPosAvailable {
+                    pos,
+                    item_id,
+                    respond_to,
+                } => {
+                    let result = self.handle_is_pos_available(pos, item_id);
+                    let _ = respond_to.send(result);
+                }
+                PosAction::GetNextPos { respond_to } => {
+                    let result = self.handle_get_next_pos().await;
+                    let _ = respond_to.send(result);
+                }
+                PosAction::PreviewPos {
+                    item_id,
+                    timeout,
+                    respond_to,
+                } => {
+                    let result = self.handle_preview_pos(item_id, timeout).await;
+                    let _ = respond_to.send(result);
+                }
+                PosAction::Submitted {
+                    item_id,
+                    pos_p,
+                    pos_q,
+                    old_item_id,
+                } => {
+                    self.handle_submitted(item_id, pos_p, pos_q, old_item_id);
+                }
+                PosAction::Cancel { item_id } => {
+                    self.delete_by_id(Instant::now(), item_id);
+                }
+                PosAction::Shutdown => {
+                    break;
+                }
+                PosAction::Tick => {
+                    let now = Instant::now();
+                    let Some((last_key, last_pos_item)) = self.positions.last_key_value() else {
+                        break;
+                    };
+                    let last_key = last_key.clone();
+                    // Aucually, the last_pos_item is not latest changed item.
+                    // But it is ok for now.
+                    let recent_changed = last_pos_item.created;
+                    if now - recent_changed > INACTIVE_TIMEOUT {
+                        break;
+                    }
+                    self.positions
+                        .retain(|_, pos_item| !pos_item.pos_available(now));
+                    if self.positions.is_empty() {
+                        self.positions.insert(
+                            last_key,
+                            PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC),
+                        );
+                    }
                 }
             }
         }
-        None
     }
 
-    async fn load_max_pos(
-        &self,
-        db: &mut sqlx::PgConnection,
-        channel_id: Uuid,
-    ) -> Result<(), sqlx::Error> {
-        let (p, q, id) = match crate::messages::Message::max_pos(db, &channel_id).await {
-            Ok((p, q, id)) => (p, q, id),
-            Err(sqlx::Error::RowNotFound) => (42, 1, Uuid::nil()),
-            Err(e) => return Err(e),
+    fn delete_by_id(&mut self, now: Instant, item_id: Uuid) {
+        let Some((last_key, _)) = self.positions.last_key_value() else {
+            return;
         };
-        let channel_pos_map = self.0.pin();
-        let mut channel_pos = channel_pos_map
-            .get_or_insert_with(channel_id, || {
-                parking_lot::RwLock::new(BTreeMap::from([(
-                    Rational32::new(p, q),
-                    PosItem::submitted(id),
-                )]))
-            })
-            .write();
-        if channel_pos.is_empty() {
-            channel_pos.insert(Rational32::new(p, q), PosItem::submitted(id));
+        let last_key = last_key.clone();
+
+        self.positions.retain(|_, pos_item| {
+            !(
+                // Filter out
+                pos_item.id == item_id || pos_item.pos_available(now)
+            )
+        });
+        if self.positions.is_empty() {
+            // Keep the last pos item as a placeholder
+            self.positions.insert(
+                last_key,
+                PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC),
+            );
         }
-        Ok(())
     }
 
-    pub async fn get_next_pos(
-        &self,
-        db: &mut sqlx::PgConnection,
-        channel_id: Uuid,
-    ) -> Result<i32, sqlx::Error> {
-        let last_key = {
-            let channel_pos_map = self.0.pin();
-            let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
-            let channel_pos = channel_pos_lock.read();
-            channel_pos.last_key_value().map(|(k, _)| *k)
-        };
-        let next_pos = if let Some(last_key) = last_key {
-            last_key.ceil().numer() + 1
+    fn handle_is_pos_available(&self, pos: Rational32, item_id: Option<Uuid>) -> bool {
+        let now = Instant::now();
+        if let Some(pos_item) = self.positions.get(&pos) {
+            pos_item.id == item_id.unwrap_or_default() || pos_item.pos_available(now)
         } else {
-            self.load_max_pos(db, channel_id).await?;
-            let channel_pos_map = self.0.pin();
-            let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
-            let channel_pos = channel_pos_lock.read();
-            let (key, _) = channel_pos.last_key_value().ok_or_else(|| {
-                log::error!("Unexpected: Loaded max_pos from database, but no key found");
-                sqlx::Error::RowNotFound
-            })?;
-            key.ceil().numer() + 1
+            true
+        }
+    }
+
+    fn handle_try_restore_pos(&self, item_id: Uuid) -> Option<Rational32> {
+        let now = Instant::now();
+        self.positions
+            .iter()
+            .rev()
+            .find(|(_, pos_item)| pos_item.id == item_id)
+            .and_then(|(pos, pos_item)| {
+                if pos_item.id == item_id || pos_item.pos_available(now) {
+                    Some(*pos)
+                } else {
+                    None
+                }
+            })
+    }
+
+    async fn handle_get_next_pos(&mut self) -> Result<i32, sqlx::Error> {
+        if let Some((last_key, _)) = self.positions.last_key_value() {
+            return Ok(last_key.ceil().numer() + 1);
+        }
+
+        let max_pos_result = {
+            let mut db = crate::db::get().await.acquire().await?;
+            crate::messages::Message::max_pos(&mut *db, &self.channel_id).await
         };
-        Ok(next_pos)
+
+        match max_pos_result {
+            Ok((p, q, id)) => {
+                let pos = Rational32::new(p, q);
+                self.positions.insert(pos, PosItem::submitted(id));
+                Ok(pos.ceil().numer() + 1)
+            }
+            // If the channel has no messages, use a default pos
+            Err(sqlx::Error::RowNotFound) => {
+                let pos = Rational32::new(42, 1);
+                self.positions
+                    .insert(pos, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC));
+                Ok(43)
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn handle_preview_pos(
+        &mut self,
+        item_id: Uuid,
+        timeout: u32,
+    ) -> Result<Rational32, sqlx::Error> {
+        if let Some(pos) = self.handle_try_restore_pos(item_id) {
+            return Ok(pos);
+        }
+
+        let next_pos = self.handle_get_next_pos().await?;
+        let pos_item = PosItem::new(item_id, timeout);
+        let pos = Rational32::new(next_pos, 1);
+        self.positions.insert(pos, pos_item);
+        Ok(pos)
+    }
+
+    fn handle_submitted(
+        &mut self,
+        item_id: Uuid,
+        pos_p: i32,
+        pos_q: i32,
+        old_item_id: Option<Uuid>,
+    ) {
+        let pos = Rational32::new(pos_p, pos_q);
+        if let Some(old_item_id) = old_item_id {
+            self.delete_by_id(Instant::now(), old_item_id);
+        }
+        self.positions.insert(pos, PosItem::submitted(item_id));
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ChannelPosError {
+    #[error("Actor shutdown")]
+    ActorShutdown,
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] sqlx::Error),
+}
+
+impl From<ChannelPosError> for AppError {
+    fn from(error: ChannelPosError) -> Self {
+        match error {
+            ChannelPosError::ActorShutdown => {
+                AppError::Unexpected(anyhow::anyhow!("Actor shutdown"))
+            }
+            ChannelPosError::DatabaseError(err) => AppError::Db { source: err },
+        }
+    }
+}
+
+pub struct ChannelPosManager {
+    actors: PapayaHashMap<Uuid, mpsc::Sender<PosAction>, RandomState>,
+}
+
+impl ChannelPosManager {
+    pub fn new() -> Self {
+        let manager = Self {
+            actors: PapayaHashMap::builder()
+                .capacity(1024)
+                .hasher(RandomState::new())
+                .build(),
+        };
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(TICK_INTERVAL);
+            loop {
+                interval.tick().await;
+                CHANNEL_POS_MANAGER.tick();
+            }
+        });
+        manager
+    }
+    fn get_or_create_actor(&self, channel_id: Uuid) -> mpsc::Sender<PosAction> {
+        let actors = self.actors.pin();
+        let result = actors.compute(channel_id, |entry| {
+            if let Some((_, sender)) = entry {
+                if !sender.is_closed() {
+                    return papaya::Operation::Abort(sender.clone());
+                }
+            }
+            let (sender, receiver) = mpsc::channel(1000);
+            tokio::spawn(async move {
+                let actor = ChannelPosActor::new(channel_id, receiver);
+                actor.run().await;
+            });
+            papaya::Operation::Insert(sender)
+        });
+        match result {
+            papaya::Compute::Aborted(sender) => sender,
+            papaya::Compute::Updated {
+                new: (_, sender), ..
+            } => sender.clone(),
+            papaya::Compute::Inserted(_, sender) => sender.clone(),
+            papaya::Compute::Removed(_, _) => unreachable!(),
+        }
+    }
+
+    pub async fn try_restore_pos(
+        &self,
+        channel_id: Uuid,
+        item_id: Uuid,
+    ) -> Result<Option<Rational32>, ChannelPosError> {
+        let sender = self.get_or_create_actor(channel_id);
+        let (tx, rx) = oneshot::channel();
+
+        if sender
+            .send(PosAction::TryRestorePos {
+                item_id,
+                respond_to: tx,
+            })
+            .await
+            .is_err()
+        {
+            return Err(ChannelPosError::ActorShutdown);
+        }
+
+        rx.await.map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub async fn get_next_pos(&self, channel_id: Uuid) -> Result<i32, ChannelPosError> {
+        let sender = self.get_or_create_actor(channel_id);
+        let (tx, rx) = oneshot::channel();
+
+        sender
+            .send(PosAction::GetNextPos { respond_to: tx })
+            .await
+            .map_err(|_| ChannelPosError::ActorShutdown)?;
+
+        rx.await
+            .map_err(|_| ChannelPosError::ActorShutdown)?
+            .map_err(|err| ChannelPosError::DatabaseError(err))
     }
 
     pub async fn preview_pos(
         &self,
-        db: &mut sqlx::PgConnection,
         channel_id: Uuid,
         item_id: Uuid,
         timeout: u32,
-    ) -> Result<Rational32, sqlx::Error> {
-        if let Some(pos) = self.try_restore_pos(channel_id, item_id) {
+    ) -> Result<Rational32, ChannelPosError> {
+        if let Some(pos) = self.try_restore_pos(channel_id, item_id).await? {
             return Ok(pos);
         }
-        let next_pos = self.get_next_pos(db, channel_id).await?;
-        let pos_item = PosItem::new(item_id, timeout);
-        let channel_pos_map = self.0.pin();
-        let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
-        let mut channel_pos = channel_pos_lock.write();
-        channel_pos.insert(Rational32::new(next_pos, 1), pos_item);
-        Ok(Rational32::new(next_pos, 1))
+
+        let sender = self.get_or_create_actor(channel_id);
+        let (tx, rx) = oneshot::channel();
+
+        sender
+            .send(PosAction::PreviewPos {
+                item_id,
+                timeout,
+                respond_to: tx,
+            })
+            .await
+            .map_err(|_| ChannelPosError::ActorShutdown)?;
+
+        rx.await
+            .map_err(|_| ChannelPosError::ActorShutdown)?
+            .map_err(|err| ChannelPosError::DatabaseError(err))
     }
 
-    pub fn submitted(
+    pub async fn is_pos_available(
+        &self,
+        channel_id: Uuid,
+        pos: Rational32,
+        item_id: Option<Uuid>,
+    ) -> Result<bool, ChannelPosError> {
+        let sender = self.get_or_create_actor(channel_id);
+        let (tx, rx) = oneshot::channel();
+        sender
+            .send(PosAction::IsPosAvailable {
+                pos,
+                item_id,
+                respond_to: tx,
+            })
+            .await
+            .map_err(|_| ChannelPosError::ActorShutdown)?;
+        rx.await.map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub async fn submitted(
         &self,
         channel_id: Uuid,
         item_id: Uuid,
@@ -132,39 +403,56 @@ impl ChannelPosMap {
         pos_q: i32,
         old_item_id: Option<Uuid>,
     ) {
-        let channel_pos_map = self.0.pin();
-        let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
-        let mut channel_pos = channel_pos_lock.write();
-        let old_value =
-            channel_pos.insert(Rational32::new(pos_p, pos_q), PosItem::submitted(item_id));
-        if let Some(old_item_id) = old_item_id {
-            if let Some(old_value) = old_value {
-                if old_value.id == old_item_id {
-                    return;
-                }
-            }
-            let now = std::time::Instant::now();
-            channel_pos
-                .retain(|_, pos_item| pos_item.id != old_item_id && !pos_item.should_delete(now));
+        let sender = self.get_or_create_actor(channel_id);
+        let _ = sender
+            .send(PosAction::Submitted {
+                item_id,
+                pos_p,
+                pos_q,
+                old_item_id,
+            })
+            .await;
+    }
+
+    pub async fn cancel(&self, channel_id: Uuid, item_id: Uuid) {
+        let sender = self.get_or_create_actor(channel_id);
+        let _ = sender.send(PosAction::Cancel { item_id }).await;
+    }
+
+    pub async fn shutdown(&self, channel_id: Uuid) {
+        let sender = {
+            let actors = self.actors.pin();
+            let sender = actors.remove(&channel_id).cloned();
+            sender
+        };
+
+        if let Some(sender) = sender {
+            let _ = sender.send(PosAction::Shutdown).await;
         }
     }
 
-    pub fn cancelled(&self, channel_id: Uuid, item_id: Uuid) {
-        let now = std::time::Instant::now();
-        let channel_pos_map = self.0.pin();
-        let channel_pos_lock = channel_pos_map.get_or_insert_with(channel_id, Default::default);
-        let mut channel_pos = channel_pos_lock.write();
-        channel_pos.retain(|_, pos_item| pos_item.id != item_id && !pos_item.should_delete(now));
+    fn tick(&self) {
+        let mut actors = self.actors.pin();
+        actors.retain(|_, sender| {
+            if sender.is_closed() {
+                return false;
+            }
+            if let Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) =
+                sender.try_send(PosAction::Tick)
+            {
+                return false;
+            }
+            true
+        });
     }
 }
 
-pub static CHANNEL_POS_MAP: LazyLock<ChannelPosMap> = LazyLock::new(ChannelPosMap::new);
+pub static CHANNEL_POS_MANAGER: LazyLock<ChannelPosManager> = LazyLock::new(ChannelPosManager::new);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PosItemState {
-    Submitted,
-    Cancelled,
     LiveIn(u32),
+    Submitted,
 }
 
 #[derive(Debug, Clone)]
@@ -191,49 +479,77 @@ impl PosItem {
             state: PosItemState::Submitted,
         }
     }
-
-    pub fn is_live(&self) -> bool {
-        match self.state {
-            PosItemState::Submitted => false,
-            PosItemState::Cancelled => false,
-            PosItemState::LiveIn(timeout) => {
-                let now = std::time::Instant::now();
-                (now - self.created).as_secs() < timeout as u64
-            }
+    pub fn pos_available(&self, now: Instant) -> bool {
+        if self.id.is_nil() {
+            return true;
         }
-    }
-
-    pub fn pos_avaliable(&self, now: Instant) -> bool {
         match self.state {
-            PosItemState::Submitted => false,
-            PosItemState::Cancelled => true,
             PosItemState::LiveIn(timeout) => (now - self.created).as_secs() >= timeout as u64,
+            PosItemState::Submitted => false,
         }
-    }
-
-    pub fn should_delete(&self, now: Instant) -> bool {
-        self.state == PosItemState::Cancelled || (now - self.created).as_secs() >= 60 * 5
     }
 }
 
-pub fn find_intermediate(p1: i32, q1: i32, p2: i32, q2: i32) -> (i32, i32) {
-    if (p1 as i64 * q2 as i64) == (p2 as i64 * q1 as i64) {
-        return (p1, q1);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FailToFindIntermediate {
+    EqualFractions,
+    OutOfRange,
+}
+
+/// Find the intermediate fraction between p1/q1 and p2/q2.
+///
+/// References:
+/// - https://begriffs.com/posts/2018-03-20-user-defined-order.html
+/// - https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
+/// - https://en.wikipedia.org/wiki/Stern%E2%80%93Brocot_tree
+pub fn find_intermediate(
+    p1: i32,
+    q1: i32,
+    p2: i32,
+    q2: i32,
+) -> Result<(i32, i32), FailToFindIntermediate> {
+    let p1_q2 = (p1 as i64)
+        .checked_mul(q2 as i64)
+        .ok_or(FailToFindIntermediate::OutOfRange)?;
+    let p2_q1 = (p2 as i64)
+        .checked_mul(q1 as i64)
+        .ok_or(FailToFindIntermediate::OutOfRange)?;
+
+    if p1_q2 == p2_q1 {
+        return Err(FailToFindIntermediate::EqualFractions);
     }
     let (mut low, mut high) = ((0, 1), (1, 0));
-    if (p1 as i64 * q2 as i64 + 1) != (p2 as i64 * q1 as i64) {
-        loop {
-            let x = (low.0 + high.0, low.1 + high.1);
-            if x.0 as i64 * q1 as i64 <= x.1 as i64 * p1 as i64 {
-                low = x;
-            } else if p2 as i64 * x.1 as i64 <= q2 as i64 * x.0 as i64 {
-                high = x;
-            } else {
-                return x;
-            }
+    if p1_q2 + 1 == p2_q1 {
+        return Ok((p1 + p2, q1 + q2));
+    }
+    loop {
+        let p: i64 = low.0 + high.0;
+        let q: i64 = low.1 + high.1;
+        let p_q1 = p
+            .checked_mul(q1 as i64)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        let p1_q = (p1 as i64)
+            .checked_mul(q)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        let p2_q = (p2 as i64)
+            .checked_mul(q)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        let p_q2 = p
+            .checked_mul(q2 as i64)
+            .ok_or(FailToFindIntermediate::OutOfRange)?;
+        if p_q1 <= p1_q {
+            low = (p, q);
+        } else if p2_q <= p_q2 {
+            high = (p, q);
+        } else {
+            return Ok((
+                p.try_into()
+                    .map_err(|_| FailToFindIntermediate::OutOfRange)?,
+                q.try_into()
+                    .map_err(|_| FailToFindIntermediate::OutOfRange)?,
+            ));
         }
     }
-    (p1 + p2, q1 + q2)
 }
 
 #[cfg(test)]
@@ -242,41 +558,66 @@ mod tests {
 
     #[test]
     fn test_neighbors_1_3_1_2() {
-        assert_eq!(find_intermediate(1, 3, 1, 2), (2, 5));
+        assert_eq!(find_intermediate(1, 3, 1, 2), Ok((2, 5)));
     }
 
     #[test]
     fn test_neighbors_1_2_2_3() {
-        assert_eq!(find_intermediate(1, 2, 2, 3), (3, 5));
+        assert_eq!(find_intermediate(1, 2, 2, 3), Ok((3, 5)));
     }
 
     #[test]
     fn test_non_neighbors_1_4_1_2() {
-        assert_eq!(find_intermediate(1, 4, 1, 2), (1, 3));
+        assert_eq!(find_intermediate(1, 4, 1, 2), Ok((1, 3)));
     }
 
     #[test]
     fn test_non_neighbors_1_3_2_3() {
-        assert_eq!(find_intermediate(1, 3, 2, 3), (1, 2));
+        assert_eq!(find_intermediate(1, 3, 2, 3), Ok((1, 2)));
     }
 
     #[test]
     fn test_neighbors_2_3_3_4() {
-        assert_eq!(find_intermediate(2, 3, 3, 4), (5, 7));
+        assert_eq!(find_intermediate(2, 3, 3, 4), Ok((5, 7)));
     }
 
     #[test]
     fn test_edge_0_1_1_1() {
-        assert_eq!(find_intermediate(0, 1, 1, 1), (1, 2));
+        assert_eq!(find_intermediate(0, 1, 1, 1), Ok((1, 2)));
     }
 
     #[test]
     fn test_far_apart_1_100_1_1() {
-        assert_eq!(find_intermediate(1, 100, 1, 1), (1, 2));
+        assert_eq!(find_intermediate(1, 100, 1, 1), Ok((1, 2)));
     }
 
     #[test]
     fn test_equal_fractions_1_2_1_2() {
-        assert_eq!(find_intermediate(1, 2, 1, 2), (1, 2));
+        assert_eq!(
+            find_intermediate(1, 2, 1, 2),
+            Err(FailToFindIntermediate::EqualFractions)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_actor_basic_operations() {
+        let manager = ChannelPosManager::new();
+        let channel_id = Uuid::new_v4();
+        let item_id = Uuid::new_v4();
+
+        // Test try_restore_pos when no position exists
+        assert_eq!(
+            manager.try_restore_pos(channel_id, item_id).await.unwrap(),
+            None
+        );
+
+        // Test cancel operation
+        manager.cancel(channel_id, item_id).await;
+
+        // Test submitted operation
+        manager.submitted(channel_id, item_id, 42, 1, None).await;
+
+        // Test reset operation
+        manager.shutdown(channel_id).await;
     }
 }

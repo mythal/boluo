@@ -1,0 +1,31 @@
+name: Nix Setup
+description: Setup Nix for the workflow
+inputs:
+  authToken:
+    description: Cachix auth token
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    # https://github.com/DeterminateSystems/nix-installer-action
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@999d616271516551cacca0c8b34a02e94d4f79e8
+      with:
+        diagnostic-endpoint:
+        extra-conf: |
+          experimental-features = flakes nix-command ca-derivations
+
+
+    # https://github.com/cachix/cachix-action
+    - name: Set up Cachix
+      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
+      with:
+        name: boluo
+        # https://github.com/actions/runner/issues/2206#issuecomment-1532246677
+        authToken: ${{ inputs.authToken }}
+
+    - name: Show Nix Config
+      shell: bash
+      run: nix config show

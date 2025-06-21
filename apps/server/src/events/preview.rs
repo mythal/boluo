@@ -86,8 +86,8 @@ impl PreviewPost {
             edit_for = Some(time);
         } else if edit_for.is_none() && !should_clear {
             let timeout = if muted { 8 } else { 60 * 3 };
-            let pos_ratio = crate::pos::CHANNEL_POS_MAP
-                .preview_pos(&mut conn, channel_id, id, timeout)
+            let pos_ratio = crate::pos::CHANNEL_POS_MANAGER
+                .preview_pos(channel_id, id, timeout)
                 .await?;
             pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
@@ -116,7 +116,7 @@ impl PreviewPost {
         });
 
         if should_clear {
-            crate::pos::CHANNEL_POS_MAP.cancelled(channel_id, id);
+            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id).await;
         }
         Update::message_preview(space_id, preview);
         Ok(())

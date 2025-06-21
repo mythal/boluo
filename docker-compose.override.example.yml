@@ -1,0 +1,14 @@
+# Example override file for development environment
+# Copy this file to docker-compose.override.yml and edit it to your needs
+
+services:
+  db:
+    ports:
+      - 127.0.0.1:5432:5432
+  redis:
+    ports:
+      - 127.0.0.1:6379:6379
+  store:
+    ports:
+      - 127.0.0.1:9000:9000
+      - 127.0.0.1:9090:9090

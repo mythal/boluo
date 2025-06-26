@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Loading } from '@boluo/ui/Loading';
 
 const meta: Meta<typeof Loading> = { component: Loading };

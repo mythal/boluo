@@ -42,5 +42,8 @@
     "**/.open-next": true,
     "**/dist": true,
     "**/.log": true
-  }
+  },
+  // Workaround for Specta
+  // https://github.com/specta-rs/specta/issues/387#issuecomment-2952371240
+  "rust-analyzer.diagnostics.disabled": ["macro-error"]
 }

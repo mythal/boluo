@@ -26,22 +26,45 @@ export const getDefaultBaseUrl = (): string => {
   return location.origin;
 };
 
-const timeout = (ms: number): Promise<'TIMEOUT'> => {
+const timeout = (ms: number): Promise<{ type: 'TIMEOUT' }> => {
   return new Promise((resolve) => {
     window.setTimeout(() => {
-      resolve('TIMEOUT');
+      resolve({ type: 'TIMEOUT' });
     }, ms);
+  });
+};
+
+const getInfo = async (
+  baseUrl: string,
+): Promise<{ type: 'APP_INFO'; version: string } | { type: 'ERROR'; error: Event }> => {
+  const ws = new WebSocket(
+    baseUrl.replace(/^http/, 'ws') +
+      `/api/events/connect?mailbox=00000000-0000-0000-0000-000000000000`,
+  );
+  return new Promise((resolve) => {
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data) as {
+        body: { type: 'APP_INFO'; info: { version: string } };
+      };
+      if (data.body.type === 'APP_INFO') {
+        ws.close();
+        resolve({ type: 'APP_INFO', version: data.body.info.version });
+      }
+    };
+    ws.onerror = (e) => {
+      resolve({ type: 'ERROR', error: e });
+    };
   });
 };
 
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
   const start = performance.now();
   try {
-    const response = await Promise.race([fetch(baseUrl + '/api/info'), timeout(1000)]);
-    if (response === 'TIMEOUT') {
+    const response = await Promise.race([getInfo(baseUrl), timeout(1000)]);
+    if (response.type === 'TIMEOUT') {
       return FAILED;
     }
-    if (response.status > 299) {
+    if (response.type === 'ERROR') {
       return FAILED;
     }
   } catch {

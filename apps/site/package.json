@@ -35,7 +35,7 @@
     "@mdx-js/react": "^3.0.0",
     "@next/bundle-analyzer": "^15.2.4",
     "@next/eslint-plugin-next": "^15.2.4",
-    "@swc/plugin-formatjs": "^3.0.0",
+    "@swc/plugin-formatjs": "^4.0.1",
     "@types/mdx": "^2.0.10",
     "@types/negotiator": "^0.6.3",
     "@types/node": "^22.13.14",

@@ -3,3 +3,9 @@
   indent_tables = true
   indent_entries = true
   indent_string = '  '
+
+[[rule]]
+  include = ["**/Cargo.toml"]
+  [rule.formatting]
+    indent_tables = false
+    indent_entries = false

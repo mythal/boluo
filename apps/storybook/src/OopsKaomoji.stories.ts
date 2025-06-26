@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { OopsKaomoji } from '@boluo/ui/OopsKaomoji';
 
 const meta: Meta<typeof OopsKaomoji> = { component: OopsKaomoji };

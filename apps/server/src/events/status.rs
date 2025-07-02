@@ -2,7 +2,9 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use uuid::Uuid;
 
-use super::{models::UserStatus, types::UpdateBody, Update};
+use crate::utils::timestamp;
+
+use super::{Update, models::UserStatus, types::UpdateBody};
 
 pub type StatusMap = Arc<HashMap<Uuid, UserStatus>>;
 
@@ -23,11 +25,15 @@ impl StatusActor {
         let join_handle = tokio::spawn(async move {
             let mut map: StatusMap = Arc::new(HashMap::new());
 
-            let mut interval = tokio::time::interval(Duration::from_secs(6));
-            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            let mut push_interval = tokio::time::interval(Duration::from_secs(6));
+            push_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
+            let mut cleanup_interval = tokio::time::interval(Duration::from_secs(60 * 60 * 24));
+            cleanup_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             loop {
                 tokio::select! {
-                    _ = interval.tick() => {
+                    _ = push_interval.tick() => {
                         if !map.is_empty() {
                             Update::transient(
                                 space_id,
@@ -37,6 +43,14 @@ impl StatusActor {
                                 },
                             )
                         }
+                    }
+                    _ = cleanup_interval.tick() => {
+                        let one_week_ago = timestamp() - 60 * 60 * 24 * 7;
+                        let map = Arc::make_mut(&mut map);
+                        map.retain(|_, status| {
+                            use crate::events::models::StatusKind;
+                            status.kind != StatusKind::Offline || status.timestamp > one_week_ago
+                        });
                     }
                     received = rx.recv() => {
                         match received {

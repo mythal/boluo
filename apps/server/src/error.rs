@@ -77,8 +77,8 @@ impl AppError {
     }
 
     pub fn context(&self) -> serde_json::Value {
-        use serde_json::Value;
         use AppError::*;
+        use serde_json::Value;
         match self {
             NotFound(something) => Value::String(something.to_string()),
             Conflict(something) => Value::String(something.clone()),
@@ -176,21 +176,108 @@ impl From<sqlx::Error> for ModelError {
 
 pub fn log_error(e: &AppError, uri: &Uri) {
     use crate::error::AppError::*;
+
+    let error_code = e.error_code();
+    let status_code = e.status_code().as_u16();
+
     match e {
-        NotFound(_) => tracing::debug!("{} - {}", uri, e),
-        Conflict(e) => tracing::warn!("[Conflict] {} {}", uri, e),
-        Validation(_) | BadRequest(_) | MethodNotAllowed => {
-            tracing::info!("[Bad Request] {} - {}", uri, e)
+        NotFound(resource) => {
+            tracing::debug!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                resource = resource,
+                "Resource not found"
+            );
+        }
+        Conflict(detail) => {
+            tracing::warn!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                detail = detail,
+                "Conflict error"
+            );
+        }
+        Validation(validation_error) => {
+            tracing::info!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                validation_error = %validation_error,
+                "Validation failed"
+            );
+        }
+        BadRequest(detail) => {
+            tracing::info!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                detail = detail,
+                "Bad request"
+            );
+        }
+        Unauthenticated(auth_fail) => {
+            tracing::warn!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                auth_fail_reason = %auth_fail,
+                "Authentication failed"
+            );
+        }
+        NoPermission(detail) => {
+            tracing::warn!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                detail = detail,
+                "Permission denied"
+            );
+        }
+        LimitExceeded(limit_type) => {
+            tracing::warn!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                limit_type = limit_type,
+                "Rate limit exceeded"
+            );
+        }
+        MethodNotAllowed => {
+            tracing::info!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                "Method not allowed"
+            );
         }
         e => {
-            tracing::error!("{} - {}\n", uri, e);
-            // if let Some(backtrace) = e.backtrace() {
-            //     tracing::error!("{}", backtrace);
-            // }
+            tracing::error!(
+                uri = %uri,
+                error_code = error_code,
+                status_code = status_code,
+                error = %e,
+                "Internal server error"
+            );
+
+            // Log error chain for debugging
             let mut source: Option<&_> = e.source();
-            while let Some(e) = source {
-                tracing::error!("> {}", e);
-                source = e.source();
+            let mut depth = 0;
+            while let Some(source_error) = source {
+                depth += 1;
+                tracing::error!(
+                    depth = depth,
+                    source_error = %source_error,
+                    "Error source chain"
+                );
+                source = source_error.source();
+
+                // Prevent infinite loops
+                if depth > 10 {
+                    tracing::error!("Error chain too deep, stopping");
+                    break;
+                }
             }
         }
     }

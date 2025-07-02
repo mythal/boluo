@@ -30,7 +30,7 @@ cookie = "0.18"
 dotenv = "0.15"
 futures = "0.3"
 itertools = "0.14"
-tracing = "0.1"
+tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"

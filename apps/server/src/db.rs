@@ -6,6 +6,7 @@ pub fn get_postgres_url() -> String {
     std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
 }
 
+#[tracing::instrument]
 pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     static POOL: OnceLock<sqlx::Pool<sqlx::Postgres>> = OnceLock::new();
     const LIFETIME: std::time::Duration = std::time::Duration::from_secs(60 * 60);
@@ -36,6 +37,7 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
 }
 
 /// Runtime check if the database is available and can correctly deserialize data
+#[tracing::instrument]
 pub async fn check() {
     use crate::channels::{Channel, ChannelMember};
     use crate::media::models::Media;

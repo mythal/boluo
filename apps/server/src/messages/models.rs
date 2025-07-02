@@ -1,12 +1,13 @@
 use chrono::prelude::*;
 
+use num_rational::Rational32;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
-use crate::pos::{check_pos, find_intermediate, FailToFindIntermediate, CHANNEL_POS_MANAGER};
+use crate::pos::{CHANNEL_POS_MANAGER, FailToFindIntermediate, check_pos, find_intermediate};
 use crate::utils::merge_blank;
 use crate::validators::CHARACTER_NAME;
 
@@ -248,12 +249,23 @@ impl Message {
         };
 
         if is_unique_violation {
+            let record = sqlx::query_file!("sql/messages/max_pos.sql", channel_id)
+                .fetch_one(&mut *conn)
+                .await?;
             tracing::warn!(
-                "A conflict occurred while creating a new message at channel {}",
-                channel_id
+                channel_id = channel_id.to_string(),
+                pos_p = pos.0,
+                pos_q = pos.1,
+                request_pos_p = request_pos.map(|(p, _)| p),
+                request_pos_q = request_pos.map(|(_, q)| q),
+                record_p = record.pos_p,
+                record_q = record.pos_q,
+                preview_id = preview_id.cloned().unwrap_or_default().to_string(),
+                "A conflict occurred while creating a new message at channel",
             );
-            let p = CHANNEL_POS_MANAGER.get_next_pos(*channel_id).await?;
-            let q = 1i32;
+            let pos: Rational32 = (record.pos_p, record.pos_q).into();
+            let p = *pos.ceil().numer() + 1;
+            let q = 1;
             row = sqlx::query_file_scalar!(
                 "sql/messages/create.sql",
                 id,
@@ -283,7 +295,9 @@ impl Message {
             if is_unique_violation {
                 tracing::error!(
                     "This should never happen, but a unique violation occurred again while creating a message at channel {}: ({}, {})",
-                    channel_id, p, q
+                    channel_id,
+                    p,
+                    q
                 );
                 CHANNEL_POS_MANAGER.shutdown(*channel_id).await;
                 return Err(AppError::Unexpected(anyhow::anyhow!(
@@ -408,7 +422,9 @@ impl Message {
             Ok(Some(message_in_pos))
         } else {
             let message_in_pos_id = message_in_pos.id;
-            tracing::warn!("Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}");
+            tracing::warn!(
+                "Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}"
+            );
             Message::move_bottom(
                 db,
                 &channel_id,

@@ -1,13 +1,13 @@
-use crate::cache::{CacheType, CACHE};
+use crate::cache::{CACHE, CacheType};
 use crate::context::domain;
 use crate::error::AppError;
-use crate::ttl::{fetch_entry, hour, Lifespan};
+use crate::ttl::{Lifespan, fetch_entry, hour};
 use crate::utils::{self, sign};
 use anyhow::Context;
-use hyper::header::HeaderValue;
+use hyper::HeaderMap;
 use hyper::header::AUTHORIZATION;
 use hyper::header::COOKIE;
-use hyper::HeaderMap;
+use hyper::header::HeaderValue;
 use regex::Regex;
 use thiserror::Error;
 use uuid::Uuid;
@@ -40,7 +40,7 @@ pub enum AuthenticateFail {
 }
 
 pub fn token(session_id: &Uuid) -> String {
-    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+    use base64::{Engine as _, engine::general_purpose::STANDARD_NO_PAD as base64_engine};
     // [body (base64)].[sign]
     let mut buffer = String::with_capacity(64);
     base64_engine.encode_string(session_id.as_bytes(), &mut buffer);
@@ -51,7 +51,7 @@ pub fn token(session_id: &Uuid) -> String {
 }
 
 pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
-    use base64::{engine::general_purpose, Engine as _};
+    use base64::{Engine as _, engine::general_purpose};
 
     let mut iter = token.split('.');
     let parse_failed = || anyhow::anyhow!("Failed to parse token: {}", token);
@@ -137,8 +137,8 @@ pub fn add_settings_cookie(
     settings: &serde_json::Value,
     response_header: &mut HeaderMap<HeaderValue>,
 ) {
-    use cookie::time::Duration;
     use cookie::CookieBuilder;
+    use cookie::time::Duration;
     use hyper::header::SET_COOKIE;
 
     if settings.is_null() || !settings.is_object() {
@@ -176,8 +176,8 @@ pub fn add_settings_cookie(
 }
 
 pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
-    use cookie::time::Duration;
     use cookie::CookieBuilder;
+    use cookie::time::Duration;
     use hyper::header::SET_COOKIE;
     use std::sync::OnceLock;
     static SET_COOKIE_LIST_CELL: OnceLock<Vec<HeaderValue>> = OnceLock::new();
@@ -249,6 +249,7 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Result<Option<&str>, anyh
     }
 }
 
+#[tracing::instrument]
 async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
     use redis::AsyncCommands;
 
@@ -305,30 +306,50 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     .await
 }
 
+#[tracing::instrument(skip(req), fields(auth_method = tracing::field::Empty, user_id = tracing::field::Empty))]
 pub async fn authenticate(
     req: &hyper::Request<impl hyper::body::Body>,
 ) -> Result<Session, AppError> {
     let headers = req.headers();
     let authorization = headers.get(AUTHORIZATION).map(HeaderValue::to_str);
 
-    let token = if let Some(Ok(t)) = authorization {
-        t.trim_start_matches("Bearer ").trim()
+    let (token, auth_method) = if let Some(Ok(t)) = authorization {
+        tracing::Span::current().record("auth_method", "bearer_token");
+        (t.trim_start_matches("Bearer ").trim(), "bearer_token")
     } else {
+        tracing::Span::current().record("auth_method", "cookie");
         let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
         match parse_cookie(cookie) {
             Ok(None) => return Err(AuthenticateFail::Guest.into()),
-            Ok(Some(token)) => token,
+            Ok(Some(token)) => (token, "cookie"),
             Err(err) => {
                 tracing::warn!(
-                    "Failed to parse the cookie: {} error: {}",
-                    cookie
-                        .to_str()
-                        .unwrap_or("[Failed convert the cookie to string]"),
-                    err
+                    error = %err,
+                    "Failed to parse authentication cookie"
                 );
                 return Err(AuthenticateFail::MalformedToken.into());
             }
         }
     };
-    get_session_from_token(token).await
+
+    match get_session_from_token(token).await {
+        Ok(session) => {
+            tracing::Span::current().record("user_id", &tracing::field::display(session.user_id));
+            tracing::debug!(
+                user_id = %session.user_id,
+                session_id = %session.id,
+                auth_method = auth_method,
+                "User authenticated successfully"
+            );
+            Ok(session)
+        }
+        Err(e) => {
+            tracing::warn!(
+                auth_method = auth_method,
+                error = %e,
+                "Authentication failed"
+            );
+            Err(e)
+        }
+    }
 }

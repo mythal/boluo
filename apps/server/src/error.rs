@@ -113,7 +113,7 @@ impl From<sqlx::Error> for AppError {
 macro_rules! unexpected {
     ($msg: expr) => {{
         let msg = $msg.to_string();
-        ::log::error!("Unexpected error: [{}][{}]{}", file!(), line!(), msg);
+        ::tracing::error!("Unexpected error: [{}][{}]{}", file!(), line!(), msg);
         crate::error::AppError::Unexpected(::anyhow::anyhow!(msg))
     }};
 }
@@ -121,13 +121,13 @@ macro_rules! unexpected {
 macro_rules! error_unexpected {
     () => {
         |e| {
-            ::log::error!("Unexpected error: [{}][{}]{}", file!(), line!(), e);
+            ::tracing::error!("Unexpected error: [{}][{}]{}", file!(), line!(), e);
             crate::error::AppError::Unexpected(e.into())
         }
     };
     ($msg: expr) => {
         |e| {
-            ::log::error!("Unexpected error: [{}][{}]{}{}", file!(), line!(), $msg, e);
+            ::tracing::error!("Unexpected error: [{}][{}]{}{}", file!(), line!(), $msg, e);
             crate::error::AppError::Unexpected(::anyhow::anyhow!($msg))
         }
     };
@@ -177,19 +177,19 @@ impl From<sqlx::Error> for ModelError {
 pub fn log_error(e: &AppError, uri: &Uri) {
     use crate::error::AppError::*;
     match e {
-        NotFound(_) => log::debug!("{} - {}", uri, e),
-        Conflict(e) => log::warn!("[Conflict] {} {}", uri, e),
+        NotFound(_) => tracing::debug!("{} - {}", uri, e),
+        Conflict(e) => tracing::warn!("[Conflict] {} {}", uri, e),
         Validation(_) | BadRequest(_) | MethodNotAllowed => {
-            log::info!("[Bad Request] {} - {}", uri, e)
+            tracing::info!("[Bad Request] {} - {}", uri, e)
         }
         e => {
-            log::error!("{} - {}\n", uri, e);
+            tracing::error!("{} - {}\n", uri, e);
             // if let Some(backtrace) = e.backtrace() {
-            //     log::error!("{}", backtrace);
+            //     tracing::error!("{}", backtrace);
             // }
             let mut source: Option<&_> = e.source();
             while let Some(e) = source {
-                log::error!("> {}", e);
+                tracing::error!("> {}", e);
                 source = e.source();
             }
         }

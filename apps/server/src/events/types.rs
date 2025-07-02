@@ -281,7 +281,7 @@ impl Update {
     pub fn push_members(space_id: Uuid, channel_id: Uuid, members: Vec<MemberWithUser>) {
         spawn(async move {
             if let Err(e) = Update::fire_members(space_id, channel_id, members).await {
-                log::warn!("Failed to fetch member list: {}", e);
+                tracing::warn!("Failed to fetch member list: {}", e);
             }
         });
     }
@@ -313,7 +313,7 @@ impl Update {
             mailbox_state.query().ok()?
         };
         let Ok(updates) = updates_receiver.await else {
-            log::error!("Failed to receive updates for mailbox {}", mailbox_id);
+            tracing::error!("Failed to receive updates for mailbox {}", mailbox_id);
             return Some(vec![]);
         };
         if updates.is_empty() {
@@ -350,7 +350,7 @@ impl Update {
                     };
                     Update::transient(space_id, body);
                 }
-                Err(e) => log::error!(
+                Err(e) => tracing::error!(
                     "There an error occurred while preparing the `space_updated` update: {}",
                     e
                 ),
@@ -415,7 +415,7 @@ impl Update {
             .await
             .is_err()
         {
-            log::error!("Failed to send update to mailbox {}", mailbox_id);
+            tracing::error!("Failed to send update to mailbox {}", mailbox_id);
             return;
         }
         Update::send(mailbox_id, encoded_update.encoded.clone()).await;
@@ -448,7 +448,7 @@ pub async fn initialize_startup_id() -> u16 {
     use redis::AsyncCommands;
 
     let Some(mut redis) = crate::redis::conn().await else {
-        log::info!("Redis is not available, assuming single node environment");
+        tracing::info!("Redis is not available, assuming single node environment");
         return 0;
     };
     const NODE_ID_KEY: &str = "node:startup";
@@ -461,9 +461,9 @@ pub async fn initialize_startup_id() -> u16 {
         if startup_id > 0 {
             return startup_id;
         }
-        log::warn!("Startup id is 0");
+        tracing::warn!("Startup id is 0");
     } else {
-        log::warn!(
+        tracing::warn!(
             "Failed to parse startup id from redis, reset to 0. Redis value: {}",
             node_id_string
         );

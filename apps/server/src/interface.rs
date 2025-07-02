@@ -19,7 +19,7 @@ pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
     serde_json::to_vec(&WebResult::<()>::err(e))
         .map(|bytes| build_response(bytes, status))
         .unwrap_or_else(|e| {
-            log::error!("Failed to serialize error: {}", e);
+            tracing::error!("Failed to serialize error: {}", e);
             hyper::Response::builder()
                 .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
                 .body(
@@ -92,7 +92,7 @@ where
     let query = uri.query().unwrap_or("");
     serde_urlencoded::from_str(query).map_err(|e| {
         let message = format!("Failed to parse the query in the URI ({uri})");
-        log::debug!("{}: {}", message, e);
+        tracing::debug!("{}: {}", message, e);
         AppError::BadRequest(message)
     })
 }

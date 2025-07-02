@@ -175,6 +175,6 @@ pub async fn check() {
             .await
             .expect("Cannot generate reset token");
     } else {
-        log::warn!("No real user id found, skipping session and reset token check");
+        tracing::warn!("No real user id found, skipping session and reset token check");
     }
 }

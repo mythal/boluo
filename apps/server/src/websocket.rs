@@ -12,7 +12,7 @@ use tokio_tungstenite::WebSocketStream;
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
     use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
 
-    log::trace!("Checking Websocket request header: {:?}", headers);
+    tracing::trace!("Checking Websocket request header: {:?}", headers);
     let upgrade = headers
         .get(UPGRADE)
         .and_then(|v| v.to_str().ok())
@@ -26,7 +26,7 @@ pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppErr
         .ok_or_else(|| AppError::BadRequest("Missing the \"Connection\" header".to_string()))?;
 
     if !connection.contains("Upgrade") && !connection.contains("upgrade") {
-        log::error!("Can't find \"upgrade\"");
+        tracing::error!("Can't find \"upgrade\"");
     }
     let mut key = headers
         .get(SEC_WEBSOCKET_KEY)
@@ -47,7 +47,7 @@ where
     use hyper::{header, StatusCode};
     use tokio_tungstenite::tungstenite::protocol::Role;
     let Ok(accept) = check_websocket_header(req.headers()) else {
-        log::warn!("Invalid websocket header");
+        tracing::warn!("Invalid websocket header");
         return hyper::Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Vec::new())
@@ -64,13 +64,13 @@ where
                 )
                 .await;
                 handler(ws_stream).await;
-                log::debug!("WebSocket connection established");
+                tracing::debug!("WebSocket connection established");
             }
             Err(e) => {
-                log::error!("Failed to upgrade connection: {}", e);
+                tracing::error!("Failed to upgrade connection: {}", e);
             }
         }
-        log::debug!("WebSocket disconnected");
+        tracing::debug!("WebSocket disconnected");
     });
     hyper::Response::builder()
         .status(StatusCode::SWITCHING_PROTOCOLS)
@@ -79,7 +79,7 @@ where
         .header(header::SEC_WEBSOCKET_ACCEPT, accept)
         .body(Vec::new())
         .unwrap_or_else(|err| {
-            log::error!("Failed to build websocket response {}", err);
+            tracing::error!("Failed to build websocket response {}", err);
             hyper::Response::default()
         })
 }

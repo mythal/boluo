@@ -86,13 +86,13 @@ impl StatusActor {
 
     pub fn update(&self, user_id: Uuid, status: UserStatus) {
         if self.tx.try_send(Action::Update(user_id, status)).is_err() {
-            log::warn!("Failed to send status update for user {}", user_id);
+            tracing::warn!("Failed to send status update for user {}", user_id);
         }
     }
     pub fn query(&self) -> tokio::sync::oneshot::Receiver<Arc<HashMap<Uuid, UserStatus>>> {
         let (sender, receiver) = tokio::sync::oneshot::channel();
         if self.tx.try_send(Action::Query(sender)).is_err() {
-            log::warn!("Failed to send status query");
+            tracing::warn!("Failed to send status query");
         }
         receiver
     }

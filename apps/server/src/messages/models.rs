@@ -34,7 +34,7 @@ impl sqlx::Decode<'_, sqlx::Postgres> for Entities {
 
         if value.format() == sqlx::postgres::PgValueFormat::Binary {
             if buf[0] != 1 {
-                log::error!("Invalid JSONB format");
+                tracing::error!("Invalid JSONB format");
                 return Ok(Default::default());
             }
             buf = &buf[1..];
@@ -50,7 +50,7 @@ impl sqlx::Decode<'_, sqlx::Postgres> for Entities {
                     Ok(Entities(entities))
                 }
                 Err(err) => {
-                    log::error!("Failed to decode JSONB: {}", err);
+                    tracing::error!("Failed to decode JSONB: {}", err);
                     Ok(Default::default())
                 }
             },
@@ -248,7 +248,7 @@ impl Message {
         };
 
         if is_unique_violation {
-            log::warn!(
+            tracing::warn!(
                 "A conflict occurred while creating a new message at channel {}",
                 channel_id
             );
@@ -281,7 +281,7 @@ impl Message {
                 false
             };
             if is_unique_violation {
-                log::error!(
+                tracing::error!(
                     "This should never happen, but a unique violation occurred again while creating a message at channel {}: ({}, {})",
                     channel_id, p, q
                 );
@@ -376,11 +376,11 @@ impl Message {
         let pos = match find_intermediate(a.0, a.1, b.0, b.1) {
             Ok(pos) => pos,
             Err(FailToFindIntermediate::EqualFractions) => {
-                log::warn!("Failed to find intermediate position: EqualFractions");
+                tracing::warn!("Failed to find intermediate position: EqualFractions");
                 a
             }
             Err(FailToFindIntermediate::OutOfRange) => {
-                log::error!(
+                tracing::error!(
                     "Failed to find intermediate position between ({}, {}) and ({}, {}): Out of range.",
                     a.0,
                     a.1,
@@ -401,14 +401,14 @@ impl Message {
         .fetch_optional(&mut *db)
         .await?;
         let Some(message_in_pos) = message_in_pos else {
-            log::warn!("Message {} not found in channel {}", id, channel_id);
+            tracing::warn!("Message {} not found in channel {}", id, channel_id);
             return Ok(None);
         };
         if message_in_pos.id == *id {
             Ok(Some(message_in_pos))
         } else {
             let message_in_pos_id = message_in_pos.id;
-            log::warn!("Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}");
+            tracing::warn!("Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}");
             Message::move_bottom(
                 db,
                 &channel_id,

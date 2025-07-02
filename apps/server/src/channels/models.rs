@@ -222,7 +222,7 @@ impl Channel {
             let map = crate::events::context::store().mailboxes.pin();
             if let Some(mailbox_state) = map.get(id) {
                 if let Err(StateError::TimeOut) = mailbox_state.remove_channel(*id) {
-                    log::warn!("Failed to remove channel from mailbox state");
+                    tracing::warn!("Failed to remove channel from mailbox state");
                 }
             }
         }

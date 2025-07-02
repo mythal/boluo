@@ -1,5 +1,5 @@
-use crate::channels::models::Member;
 use crate::channels::ChannelMember;
+use crate::channels::models::Member;
 use crate::events::Update;
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
@@ -199,9 +199,11 @@ impl MailBoxState {
         tokio::spawn(async move {
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+            let mut last_activity_at = std::time::Instant::now();
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
+                        last_activity_at = std::time::Instant::now();
                         match action {
                             Action::Query(sender) => {
                                 let mut updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
@@ -216,10 +218,11 @@ impl MailBoxState {
                         }
                     }
                     _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
-                        cleanup(&mut updates, &mut preview_map);
-                    }
-                    _ = tokio::time::sleep(std::time::Duration::from_secs(60 * 60 * 2)) => {
-                        store().remove(id);
+                        if last_activity_at.elapsed() > std::time::Duration::from_secs(60 * 60 * 2) {
+                            store().remove(id);
+                        } else {
+                            cleanup(&mut updates, &mut preview_map);
+                        }
                     }
                     else => {
                         break;

@@ -122,13 +122,13 @@ async fn handler(
     );
 
     if has_error {
-        log::warn!("{} {} {:?}", method, &uri, start.elapsed());
+        tracing::warn!("{} {} {:?}", method, &uri, start.elapsed());
     } else if uri.path().starts_with("/api/info") {
         // do nothing
     } else if uri.path().starts_with("/api/users/get_me") {
-        log::debug!("{} {} {:?}", method, &uri, start.elapsed());
+        tracing::debug!("{} {} {:?}", method, &uri, start.elapsed());
     } else {
-        log::info!("{} {} {:?}", method, &uri, start.elapsed());
+        tracing::info!("{} {} {:?}", method, &uri, start.elapsed());
     }
     Ok(response)
 }
@@ -147,7 +147,7 @@ async fn storage_check() {
         .send()
         .await
         .expect("Cannot connect to bucket");
-    log::info!("Object Storage is ready");
+    tracing::info!("Object Storage is ready");
 }
 #[derive(Parser)]
 struct Args {
@@ -194,12 +194,12 @@ async fn main() {
         .await
         .expect("Failed to bind address");
 
-    log::info!("Server listening on: {}", socket);
+    tracing::info!("Server listening on: {}", socket);
 
     db::check().await;
-    log::info!("Database is ready");
+    tracing::info!("Database is ready");
     redis::check().await;
-    log::info!("Redis is ready");
+    tracing::info!("Redis is ready");
 
     if args.check {
         return;
@@ -211,21 +211,21 @@ async fn main() {
             .expect("Failed to create signal stream");
     let http = http1::Builder::new();
 
-    log::info!("Startup ID: {}", events::startup_id());
+    tracing::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
                 handle_connection(accept_result, &http).await;
             },
             _ = terminate_stream.recv() => {
-                log::info!("Graceful shutdown signal received");
+                tracing::info!("Graceful shutdown signal received");
                 break;
             },
         }
     }
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
-    log::info!("Shutting down");
+    tracing::info!("Shutting down");
 }
 
 async fn handle_connection(
@@ -234,19 +234,19 @@ async fn handle_connection(
 ) {
     match accept_result {
         Ok((stream, addr)) => {
-            log::debug!("Accepted connection from: {}", addr);
+            tracing::debug!("Accepted connection from: {}", addr);
             let io = TokioIo::new(stream);
             let conn = http
                 .serve_connection(io, service_fn(handler))
                 .with_upgrades();
             tokio::task::spawn(async move {
                 if let Err(err) = conn.await {
-                    log::error!("server error: {}", err);
+                    tracing::error!("server error: {}", err);
                 }
             });
         }
         Err(err) => {
-            log::debug!("Failed to accept: {}", err);
+            tracing::debug!("Failed to accept: {}", err);
         }
     }
 }

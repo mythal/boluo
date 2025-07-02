@@ -258,7 +258,7 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
             .fetch_optional(&mut *conn)
             .await
             .map_err(|err| {
-                log::warn!("Database error while fetching session: {}", err);
+                tracing::warn!("Database error while fetching session: {}", err);
                 AppError::Unexpected(err.into())
             })?;
         if let Some(session) = session {
@@ -272,7 +272,7 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
         .get::<_, Vec<u8>>(crate::redis::make_key(b"sessions", &session_id, b"user_id"))
         .await
         .map_err(|err| {
-            log::warn!("Redis error while fetching session: {}", err);
+            tracing::warn!("Redis error while fetching session: {}", err);
             AppError::NotFound("session")
         })
         .and_then(|user_id| {
@@ -280,7 +280,7 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
                 return Err(AppError::NotFound("session"));
             }
             Uuid::from_slice(&user_id).map_err(|err| {
-                log::warn!("Failed to convert user_id bytes to UUID: {}", err);
+                tracing::warn!("Failed to convert user_id bytes to UUID: {}", err);
                 AppError::NotFound("session")
             })
         })?;
@@ -293,7 +293,7 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
 async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     let session_id = match token_verify(token) {
         Err(err) => {
-            log::warn!("Failed to verify the token: {} error: {}", token, err);
+            tracing::warn!("Failed to verify the token: {} error: {}", token, err);
             return Err(AuthenticateFail::CheckSignFail.into());
         }
         Ok(id) => id,
@@ -319,7 +319,7 @@ pub async fn authenticate(
             Ok(None) => return Err(AuthenticateFail::Guest.into()),
             Ok(Some(token)) => token,
             Err(err) => {
-                log::warn!(
+                tracing::warn!(
                     "Failed to parse the cookie: {} error: {}",
                     cookie
                         .to_str()

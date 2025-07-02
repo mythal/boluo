@@ -41,7 +41,7 @@ async fn broadcast_clean() {
     let mut broadcast_table = BROADCAST_TABLE.wait().pin();
     let before_count = broadcast_table.len();
     broadcast_table.retain(|_, v| v.receiver_count() != 0);
-    log::info!(
+    tracing::info!(
         "Finish broadcast clean, {} -> {}",
         before_count,
         broadcast_table.len()

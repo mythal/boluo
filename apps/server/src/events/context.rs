@@ -97,7 +97,7 @@ fn on_update(
                                 preview_map.remove(&key);
                             }
                         }
-                        _ => log::warn!("Expected preview, but got {:?}", existing.update.body),
+                        _ => tracing::warn!("Expected preview, but got {:?}", existing.update.body),
                     }
                 }
             }
@@ -139,7 +139,7 @@ fn on_update(
                             *old_pos = prev_old_pos;
                         }
                         ref other_body => {
-                            log::warn!("Expected MessageEdited, but got {:?}", other_body)
+                            tracing::warn!("Expected MessageEdited, but got {:?}", other_body)
                         }
                     }
                     encoded_update.refresh_encoded();
@@ -332,13 +332,13 @@ impl MailBoxState {
         if let Err(err) = self.sender.try_send(action) {
             match err {
                 TrySendError::Closed(_) => {
-                    log::warn!(
+                    tracing::warn!(
                         "Failed to send query to mailbox {}: channel closed",
                         self.id
                     );
                 }
                 TrySendError::Full(_) => {
-                    log::warn!("Failed to send query to mailbox {}: channel full", self.id);
+                    tracing::warn!("Failed to send query to mailbox {}: channel full", self.id);
                 }
             }
             return Err(err);

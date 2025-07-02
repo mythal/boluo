@@ -5,9 +5,9 @@ use bytes::Bytes;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::{
-    HeaderValue, ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_HEADERS,
-    ACCESS_CONTROL_ALLOW_METHODS, ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_MAX_AGE,
-    ACCESS_CONTROL_REQUEST_HEADERS, ORIGIN,
+    ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS,
+    ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_MAX_AGE, ACCESS_CONTROL_REQUEST_HEADERS,
+    HeaderValue, ORIGIN,
 };
 use hyper::{Request, Response};
 
@@ -35,13 +35,13 @@ pub fn is_allowed_origin(origin: &str) -> bool {
             let domain = domain();
             let addr_v4: Result<std::net::Ipv4Addr, _> = domain.parse();
             if let Ok(addr) = addr_v4 {
-                log::warn!("[Security] Allowing all origins for IP address: {}", domain);
+                tracing::warn!("[Security] Allowing all origins for IP address: {}", domain);
                 return format!("http://{}", addr);
             }
 
             let addr_v6: Result<std::net::Ipv6Addr, _> = domain.parse();
             if let Ok(addr) = addr_v6 {
-                log::warn!("[Security] Allowing all origins for IP address: {}", domain);
+                tracing::warn!("[Security] Allowing all origins for IP address: {}", domain);
                 return format!("http://[{}]", addr);
             }
             format!("https://{}", domain)
@@ -67,7 +67,7 @@ pub fn allow_origin(origin: Option<&str>, mut res: Response<Full<Bytes>>) -> Res
     header.insert(
         ACCESS_CONTROL_ALLOW_ORIGIN,
         HeaderValue::from_str(origin).unwrap_or_else(|_| {
-            log::warn!(
+            tracing::warn!(
                 "[Unexpected] Failed to convert origin to HeaderValue: {:?}",
                 origin
             );

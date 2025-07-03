@@ -71,7 +71,7 @@ where
 
     tokio::spawn(async move {
         // Create a long-lived span for this WebSocket connection
-        let span = tracing::info_span!(
+        let span = tracing::trace_span!(
             "websocket_connection",
             connection_id = %connection_id,
             user_agent = %user_agent,
@@ -95,7 +95,7 @@ where
                     )
                     .await;
 
-                    tracing::info!("WebSocket connection established");
+                    tracing::trace!("WebSocket connection established");
 
                     // Run the handler within this span context
                     handler(ws_stream).await;

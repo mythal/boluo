@@ -195,7 +195,7 @@ fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut Pre
 
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
-        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(256);
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(32);
         tokio::spawn(async move {
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());

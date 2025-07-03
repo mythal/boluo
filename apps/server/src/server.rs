@@ -142,14 +142,9 @@ async fn handler(
                     // Log based on path and duration
                     if path.starts_with("/api/info") {
                         // Skip noisy info endpoints
-                    } else if duration.as_millis() > 1000 {
+                    } else if duration.as_millis() > 500 {
                         tracing::warn!("Slow request");
-                    } else if path.starts_with("/api/users/get_me") {
-                        tracing::debug!("User profile request");
-                    } else {
-                        tracing::info!("Request completed");
                     }
-
                     response.map(|bytes| Full::new(bytes.into()))
                 }
                 Err(e) => {

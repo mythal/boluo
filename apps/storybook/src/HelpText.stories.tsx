@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { HelpText } from '@boluo/ui/HelpText';
 
 const meta: Meta<typeof HelpText> = { component: HelpText };

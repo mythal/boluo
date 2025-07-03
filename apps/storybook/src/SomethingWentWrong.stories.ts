@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 
 const meta: Meta<typeof SomethingWentWrong> = { component: SomethingWentWrong };

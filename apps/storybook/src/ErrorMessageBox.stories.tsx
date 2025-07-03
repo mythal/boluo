@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 
 const meta: Meta<typeof ErrorMessageBox> = { component: ErrorMessageBox };

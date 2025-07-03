@@ -10,11 +10,11 @@ name = "types"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 specta = { version = "2.0.0-rc.22", features = [
-    "chrono",
-    "derive",
-    "export",
-    "serde",
-    "serde_json",
-    "uuid",
+  "chrono",
+  "derive",
+  "export",
+  "serde",
+  "serde_json",
+  "uuid",
 ] }
 specta-typescript = "0.0.9"

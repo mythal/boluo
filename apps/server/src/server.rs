@@ -13,8 +13,8 @@ use hyper::server::conn::http1;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 
-use hyper::service::service_fn;
 use hyper::Request;
+use hyper::service::service_fn;
 
 #[macro_use]
 mod utils;
@@ -54,6 +54,7 @@ use crate::interface::{err_response, missing, ok_response};
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+#[tracing::instrument(skip(req), fields(path = %req.uri().path()))]
 async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();
 
@@ -90,49 +91,92 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
 async fn handler(
     req: Request<Incoming>,
 ) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
-    use std::time::Instant;
-    let start = Instant::now();
     let method = req.method().clone();
-    let method = method.as_str();
+    let uri = req.uri().clone();
+    let path = uri.path();
+    let query = uri.query().unwrap_or("");
+
+    // Create a span for this HTTP request with structured fields
+    let span = tracing::info_span!(
+        "http_request",
+        method = %method,
+        path = %path,
+        query = %query,
+        status_code = tracing::field::Empty,
+        duration_ms = tracing::field::Empty,
+        user_id = tracing::field::Empty,
+        error = tracing::field::Empty,
+    );
+
+    let _guard = span.enter();
+    let start = std::time::Instant::now();
+
+    // Extract origin for CORS
     let origin = req
         .headers()
         .get(ORIGIN)
         .and_then(|x| x.to_str().ok())
         .map(|x| x.to_owned());
-    let uri = req.uri().clone();
+
+    // Handle preflight requests quickly
     if req.method() == hyper::Method::OPTIONS {
-        return Ok(cors::preflight_requests(req));
+        let response = cors::preflight_requests(req);
+        span.record("status_code", 200);
+        span.record("duration_ms", start.elapsed().as_millis() as u64);
+        return Ok(response);
     }
+
+    // Route the request
     let response = router(req).await;
-    let mut has_error = false;
+    let duration = start.elapsed();
+
     let response = allow_origin(
         origin.as_deref(),
         match response {
-            Ok(response) => response.map(|bytes| Full::new(bytes.into())),
-            Err(e) => {
-                if let AppError::NotFound(_) = e {
-                    // Do not log 404
+            Ok(response) => {
+                span.record("status_code", response.status().as_u16());
+                span.record("duration_ms", duration.as_millis() as u64);
+
+                // Log based on path and duration
+                if path.starts_with("/api/info") {
+                    // Skip noisy info endpoints
+                } else if duration.as_millis() > 1000 {
+                    tracing::warn!("Slow request");
+                } else if path.starts_with("/api/users/get_me") {
+                    tracing::debug!("User profile request");
                 } else {
-                    has_error = true;
+                    tracing::info!("Request completed");
                 }
-                error::log_error(&e, &uri);
+
+                response.map(|bytes| Full::new(bytes.into()))
+            }
+            Err(e) => {
+                let status_code = match &e {
+                    AppError::NotFound(_) => 404,
+                    AppError::BadRequest(_) => 400,
+                    AppError::Conflict(_) => 409,
+                    AppError::Unauthenticated(_) => 401,
+                    AppError::NoPermission(_) => 403,
+                    _ => 500,
+                };
+
+                span.record("status_code", status_code);
+                span.record("duration_ms", duration.as_millis() as u64);
+                span.record("error", format!("{}", e).as_str());
+
+                if !matches!(e, AppError::NotFound(_)) {
+                    error::log_error(&e, &uri);
+                }
+
                 err_response(e).map(|bytes| Full::new(bytes.into()))
             }
         },
     );
 
-    if has_error {
-        log::warn!("{} {} {:?}", method, &uri, start.elapsed());
-    } else if uri.path().starts_with("/api/info") {
-        // do nothing
-    } else if uri.path().starts_with("/api/users/get_me") {
-        log::debug!("{} {} {:?}", method, &uri, start.elapsed());
-    } else {
-        log::info!("{} {} {:?}", method, &uri, start.elapsed());
-    }
     Ok(response)
 }
 
+#[tracing::instrument]
 async fn storage_check() {
     // Skip in CI
     if context::ci() {
@@ -147,7 +191,7 @@ async fn storage_check() {
         .send()
         .await
         .expect("Cannot connect to bucket");
-    log::info!("Object Storage is ready");
+    tracing::info!("Object Storage is ready");
 }
 #[derive(Parser)]
 struct Args {
@@ -194,12 +238,12 @@ async fn main() {
         .await
         .expect("Failed to bind address");
 
-    log::info!("Server listening on: {}", socket);
+    tracing::info!("Server listening on: {}", socket);
 
     db::check().await;
-    log::info!("Database is ready");
+    tracing::info!("Database is ready");
     redis::check().await;
-    log::info!("Redis is ready");
+    tracing::info!("Redis is ready");
 
     if args.check {
         return;
@@ -211,42 +255,44 @@ async fn main() {
             .expect("Failed to create signal stream");
     let http = http1::Builder::new();
 
-    log::info!("Startup ID: {}", events::startup_id());
+    tracing::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
                 handle_connection(accept_result, &http).await;
             },
             _ = terminate_stream.recv() => {
-                log::info!("Graceful shutdown signal received");
+                tracing::info!("Graceful shutdown signal received");
                 break;
             },
         }
     }
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
-    log::info!("Shutting down");
+    tracing::info!("Shutting down");
 }
 
+#[tracing::instrument(skip(http), fields(addr = tracing::field::Empty))]
 async fn handle_connection(
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
     http: &http1::Builder,
 ) {
     match accept_result {
         Ok((stream, addr)) => {
-            log::debug!("Accepted connection from: {}", addr);
+            tracing::Span::current().record("addr", &tracing::field::display(addr));
+            tracing::debug!("Accepted connection from: {}", addr);
             let io = TokioIo::new(stream);
             let conn = http
                 .serve_connection(io, service_fn(handler))
                 .with_upgrades();
             tokio::task::spawn(async move {
                 if let Err(err) = conn.await {
-                    log::error!("server error: {}", err);
+                    tracing::error!("server error: {}", err);
                 }
             });
         }
         Err(err) => {
-            log::debug!("Failed to accept: {}", err);
+            tracing::debug!("Failed to accept: {}", err);
         }
     }
 }

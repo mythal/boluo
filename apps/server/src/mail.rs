@@ -16,7 +16,7 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
     url.set_password(Some(&*api_key)).unwrap();
     let res = client.post(url).form(&params).send().await?;
     if res.status() != reqwest::StatusCode::OK {
-        log::warn!("{}", res.text().await?);
+        tracing::warn!("{}", res.text().await?);
     }
     Ok(())
 }

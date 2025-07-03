@@ -11,7 +11,7 @@ pub async fn conn() -> Option<redis::aio::ConnectionManager> {
         .get_or_init(|| async {
             let Some(redis_url) = std::env::var("REDIS_URL").ok().filter(not_whitespace_only)
             else {
-                log::warn!("REDIS_URL not set, disabling redis");
+                tracing::warn!("REDIS_URL not set, disabling redis");
                 return None;
             };
             let client = redis::Client::open(redis_url).expect("Invalid Redis URL");
@@ -43,7 +43,7 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
 pub async fn check() {
     use redis::AsyncCommands;
     let Some(mut redis) = conn().await else {
-        log::warn!("Redis connection not available");
+        tracing::warn!("Redis connection not available");
         return;
     };
     let _result: Option<String> = redis.get("hello").await.expect("Failed to get redis");

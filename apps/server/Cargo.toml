@@ -3,7 +3,7 @@ name = "server"
 version = "0.1.0"
 authors = ["uonr"]
 default-run = "server"
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -30,16 +30,16 @@ cookie = "0.18"
 dotenv = "0.15"
 futures = "0.3"
 itertools = "0.14"
-log = "0.4"
+tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"
 serde_json = "1.0"
 serde_urlencoded = "0.7"
-sysinfo = "0.34"
+sysinfo = "0.35"
 thiserror = "2.0"
 tokio-stream = "0.1"
-tokio-tungstenite = "0.26"
+tokio-tungstenite = "0.27"
 sqlx = { version = "0.8.2", features = [
   "runtime-tokio",
   "tls-rustls",
@@ -67,7 +67,13 @@ specta-typescript = "0.0.9"
 types = { version = "0.1.0", path = "../../packages/types" }
 governor = "0.10.0"
 mimalloc = "0.1.46"
-redis = { version = "0.30.0", features = ["streams", "ahash", "tokio-comp", "tcp_nodelay", "connection-manager"] }
+redis = { version = "0.32.2", features = [
+  "streams",
+  "ahash",
+  "tokio-comp",
+  "tcp_nodelay",
+  "connection-manager",
+] }
 
 [dependencies.reqwest]
 version = "0.12"
@@ -103,9 +109,9 @@ features = [
   "parking_lot",
 ]
 
-[dependencies.fern]
-version = "0.7"
-features = ["colored"]
+[dependencies.tracing-subscriber]
+version = "0.3"
+features = ["env-filter", "time", "fmt", "chrono"]
 
 [dependencies.num-rational]
 version = "0.4.2"

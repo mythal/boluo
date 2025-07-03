@@ -1,5 +1,5 @@
-use crate::channels::models::Member;
 use crate::channels::ChannelMember;
+use crate::channels::models::Member;
 use crate::events::Update;
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
@@ -97,7 +97,7 @@ fn on_update(
                                 preview_map.remove(&key);
                             }
                         }
-                        _ => log::warn!("Expected preview, but got {:?}", existing.update.body),
+                        _ => tracing::warn!("Expected preview, but got {:?}", existing.update.body),
                     }
                 }
             }
@@ -139,7 +139,7 @@ fn on_update(
                             *old_pos = prev_old_pos;
                         }
                         ref other_body => {
-                            log::warn!("Expected MessageEdited, but got {:?}", other_body)
+                            tracing::warn!("Expected MessageEdited, but got {:?}", other_body)
                         }
                     }
                     encoded_update.refresh_encoded();
@@ -199,9 +199,11 @@ impl MailBoxState {
         tokio::spawn(async move {
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+            let mut last_activity_at = std::time::Instant::now();
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
+                        last_activity_at = std::time::Instant::now();
                         match action {
                             Action::Query(sender) => {
                                 let mut updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
@@ -216,10 +218,11 @@ impl MailBoxState {
                         }
                     }
                     _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
-                        cleanup(&mut updates, &mut preview_map);
-                    }
-                    _ = tokio::time::sleep(std::time::Duration::from_secs(60 * 60 * 2)) => {
-                        store().remove(id);
+                        if last_activity_at.elapsed() > std::time::Duration::from_secs(60 * 60 * 2) {
+                            store().remove(id);
+                        } else {
+                            cleanup(&mut updates, &mut preview_map);
+                        }
                     }
                     else => {
                         break;
@@ -329,13 +332,13 @@ impl MailBoxState {
         if let Err(err) = self.sender.try_send(action) {
             match err {
                 TrySendError::Closed(_) => {
-                    log::warn!(
+                    tracing::warn!(
                         "Failed to send query to mailbox {}: channel closed",
                         self.id
                     );
                 }
                 TrySendError::Full(_) => {
-                    log::warn!("Failed to send query to mailbox {}: channel full", self.id);
+                    tracing::warn!("Failed to send query to mailbox {}: channel full", self.id);
                 }
             }
             return Err(err);

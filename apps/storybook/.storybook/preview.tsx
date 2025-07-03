@@ -1,4 +1,4 @@
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
 import '@boluo/ui/tailwind.css';
 import { IntlProvider } from 'react-intl';
 import React from 'react';

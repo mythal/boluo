@@ -114,7 +114,7 @@ pub async fn healthcheck() -> Result<Response, AppError> {
     let task = tokio::spawn(async {
         let health_check: HealthCheck = get_healthcheck().await;
         serde_json::to_vec(&health_check).map_err(|err| {
-            log::error!(
+            tracing::error!(
                 "Unexpected failture in serialize healthcheck result: {:?}",
                 err
             );
@@ -129,7 +129,7 @@ pub async fn healthcheck() -> Result<Response, AppError> {
         .status(hyper::StatusCode::OK)
         .body(result)
         .map_err(|err| {
-            log::error!(
+            tracing::error!(
                 "Unexpected failture in build healthcheck response: {:?}",
                 err
             );

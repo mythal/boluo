@@ -44,7 +44,3 @@ pub fn secret() -> &'static str {
     };
     SECRET.get_or_init(|| secret_string)
 }
-
-pub fn is_systemd() -> bool {
-    *SYSTEMD.get_or_init(|| env::var("SYSTEMD").map(env_bool).unwrap_or(false))
-}

@@ -8,6 +8,7 @@ use hyper_util::rt::TokioIo;
 use std::future::Future;
 use tokio_tungstenite::WebSocketStream;
 pub use tokio_tungstenite::tungstenite::{Error as WsError, Message as WsMessage};
+use tracing::Instrument as _;
 
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
@@ -80,34 +81,38 @@ where
             close_reason = tracing::field::Empty,
         );
 
-        let _guard = span.enter();
         let start_time = std::time::Instant::now();
 
-        match hyper::upgrade::on(req).await {
-            Ok(upgraded) => {
-                let upgraded = TokioIo::new(upgraded);
-                let ws_stream = tokio_tungstenite::WebSocketStream::from_raw_socket(
-                    upgraded,
-                    Role::Server,
-                    None,
-                )
-                .await;
+        async {
+            let span = tracing::Span::current();
+            match hyper::upgrade::on(req).await {
+                Ok(upgraded) => {
+                    let upgraded = TokioIo::new(upgraded);
+                    let ws_stream = tokio_tungstenite::WebSocketStream::from_raw_socket(
+                        upgraded,
+                        Role::Server,
+                        None,
+                    )
+                    .await;
 
-                tracing::info!("WebSocket connection established");
+                    tracing::info!("WebSocket connection established");
 
-                // Run the handler within this span context
-                handler(ws_stream).await;
+                    // Run the handler within this span context
+                    handler(ws_stream).await;
 
-                span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                span.record("close_reason", "normal");
-                tracing::info!("WebSocket connection closed normally");
-            }
-            Err(e) => {
-                span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                span.record("close_reason", "upgrade_failed");
-                tracing::error!(error = %e, "Failed to upgrade connection");
+                    span.record("duration_ms", start_time.elapsed().as_millis() as u64);
+                    span.record("close_reason", "normal");
+                    tracing::info!("WebSocket connection closed normally");
+                }
+                Err(e) => {
+                    span.record("duration_ms", start_time.elapsed().as_millis() as u64);
+                    span.record("close_reason", "upgrade_failed");
+                    tracing::error!(error = %e, "Failed to upgrade connection");
+                }
             }
         }
+        .instrument(span)
+        .await
     });
 
     hyper::Response::builder()

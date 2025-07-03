@@ -4,7 +4,6 @@
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-use crate::context::debug;
 use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -29,7 +28,6 @@ mod db;
 mod events;
 mod info;
 mod interface;
-mod logger;
 mod mail;
 mod media;
 mod messages;
@@ -54,7 +52,6 @@ use crate::interface::{err_response, missing, ok_response};
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[tracing::instrument(skip(req), fields(path = %req.uri().path()))]
 async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();
 
@@ -91,6 +88,8 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
 async fn handler(
     req: Request<Incoming>,
 ) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
+    use tracing::Instrument as _;
+
     let method = req.method().clone();
     let uri = req.uri().clone();
     let path = uri.path();
@@ -108,7 +107,6 @@ async fn handler(
         error = tracing::field::Empty,
     );
 
-    let _guard = span.enter();
     let start = std::time::Instant::now();
 
     // Extract origin for CORS
@@ -127,53 +125,47 @@ async fn handler(
     }
 
     // Route the request
-    let response = router(req).await;
-    let duration = start.elapsed();
+    async {
+        let response = router(req).await;
+        let duration = start.elapsed();
+        let span = tracing::Span::current();
 
-    let response = allow_origin(
-        origin.as_deref(),
-        match response {
-            Ok(response) => {
-                span.record("status_code", response.status().as_u16());
-                span.record("duration_ms", duration.as_millis() as u64);
+        let response = allow_origin(
+            origin.as_deref(),
+            match response {
+                Ok(response) => {
+                    span.record("status_code", response.status().as_u16());
+                    span.record("duration_ms", duration.as_millis() as u64);
 
-                // Log based on path and duration
-                if path.starts_with("/api/info") {
-                    // Skip noisy info endpoints
-                } else if duration.as_millis() > 1000 {
-                    tracing::warn!("Slow request");
-                } else if path.starts_with("/api/users/get_me") {
-                    tracing::debug!("User profile request");
-                } else {
-                    tracing::info!("Request completed");
+                    if duration.as_millis() > 500 {
+                        tracing::warn!("Slow request: {}ms", duration.as_millis());
+                    } else if path.starts_with("/api/info")
+                        || path.starts_with("/api/users/get_me")
+                        || path.starts_with("/api/events/connect")
+                    {
+                        tracing::debug!("Request Finished");
+                    } else {
+                        tracing::info!("Request Finished");
+                    }
+                    response.map(|bytes| Full::new(bytes.into()))
                 }
+                Err(e) => {
+                    let status_code = e.status_code().as_u16();
+                    span.record("status_code", status_code);
+                    span.record("duration_ms", duration.as_millis() as u64);
+                    span.record("error", format!("{}", e).as_str());
 
-                response.map(|bytes| Full::new(bytes.into()))
-            }
-            Err(e) => {
-                let status_code = match &e {
-                    AppError::NotFound(_) => 404,
-                    AppError::BadRequest(_) => 400,
-                    AppError::Conflict(_) => 409,
-                    AppError::Unauthenticated(_) => 401,
-                    AppError::NoPermission(_) => 403,
-                    _ => 500,
-                };
-
-                span.record("status_code", status_code);
-                span.record("duration_ms", duration.as_millis() as u64);
-                span.record("error", format!("{}", e).as_str());
-
-                if !matches!(e, AppError::NotFound(_)) {
                     error::log_error(&e, &uri);
+
+                    err_response(e).map(|bytes| Full::new(bytes.into()))
                 }
+            },
+        );
 
-                err_response(e).map(|bytes| Full::new(bytes.into()))
-            }
-        },
-    );
-
-    Ok(response)
+        Ok(response)
+    }
+    .instrument(span)
+    .await
 }
 
 #[tracing::instrument]
@@ -203,9 +195,14 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+    use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+
     dotenv::from_filename(".env.local").ok();
     dotenv::dotenv().ok();
-    logger::setup_logger(debug()).unwrap();
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let args = Args::parse();
     if args.types {
@@ -272,7 +269,6 @@ async fn main() {
     tracing::info!("Shutting down");
 }
 
-#[tracing::instrument(skip(http), fields(addr = tracing::field::Empty))]
 async fn handle_connection(
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
     http: &http1::Builder,

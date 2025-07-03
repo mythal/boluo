@@ -1,27 +1,27 @@
+use super::Update;
 use super::api::Token;
 use super::types::{Seq, UpdateQuery};
-use super::Update;
 use crate::csrf::authenticate_optional;
 use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::types::ClientEvent;
-use crate::interface::{missing, ok_response, parse_query, Response};
+use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
-use crate::websocket::{establish_web_socket, WsError, WsMessage};
+use crate::websocket::{WsError, WsMessage, establish_web_socket};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
+use hyper::Request;
 use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
-use hyper::Request;
 use hyper_util::rt::TokioIo;
 use std::time::Duration;
 use tokio_stream::StreamExt as _;
-use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tokio_tungstenite::WebSocketStream;
+use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use uuid::Uuid;
 
 const CHUNK_SIZE: usize = 16;
@@ -173,6 +173,7 @@ async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &
 
 fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, error: AppError) -> Response {
     let mailbox = mailbox.unwrap_or_default();
+    tracing::error!(error = %error, "WebSocket connection error");
     let error_update = Update::error(mailbox, error).encode();
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
@@ -229,10 +230,9 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
             std::sync::LazyLock::new(|| serde_json::to_string(&Update::app_info()).unwrap().into());
-        outgoing
-            .send(WsMessage::Text(BASIC_INFO.clone()))
-            .await
-            .ok();
+        if let Err(e) = outgoing.send(WsMessage::Text(BASIC_INFO.clone())).await {
+            tracing::warn!(error = %e, "Failed to send basic info");
+        }
         let push_updates_future = async move {
             push_updates(mailbox, &mut outgoing, after, seq, node).await;
             outgoing.close().await.ok();
@@ -241,7 +241,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         let receive_client_events = incoming
             .timeout(Duration::from_secs(40))
             .map_err(|_| {
-                tracing::warn!("Incoming WebSocket connection already closed");
+                tracing::debug!("Incoming WebSocket connection already closed");
                 WsError::AlreadyClosed
             })
             .and_then(future::ready)
@@ -257,7 +257,6 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         futures::pin_mut!(push_updates_future);
         futures::pin_mut!(receive_client_events);
         let select_result = future::select(push_updates_future, receive_client_events).await;
-        tracing::debug!("WebSocket connection close");
         match select_result {
             future::Either::Left((_, _)) => {
                 tracing::debug!("Stop push updates");
@@ -269,7 +268,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 {
                     tracing::debug!("Reset without closing handshake");
                 } else {
-                    tracing::warn!("Failed to receive events: {}", e);
+                    tracing::warn!(error = %e, "Failed to receive events");
                 }
             }
             future::Either::Right((Ok(_), _)) => {

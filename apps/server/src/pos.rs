@@ -296,7 +296,7 @@ impl ChannelPosManager {
                     return papaya::Operation::Abort(sender.clone());
                 }
             }
-            let (sender, receiver) = mpsc::channel(1000);
+            let (sender, receiver) = mpsc::channel(32);
             tokio::spawn(async move {
                 let actor = ChannelPosActor::new(channel_id, receiver);
                 actor.run().await;

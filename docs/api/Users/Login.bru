@@ -1,0 +1,24 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/users/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username": "bruno",
+    "password": "BrunoBruno",
+    "withToken": true
+  }
+}
+
+script:post-response {
+  let data = res.getBody();
+  let token = bru.setEnvVar("access_token", data.ok.token);
+}

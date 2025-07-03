@@ -200,7 +200,7 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         Validation(validation_error) => {
-            tracing::info!(
+            tracing::warn!(
                 uri = %uri,
                 error_code = error_code,
                 status_code = status_code,
@@ -209,7 +209,7 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         BadRequest(detail) => {
-            tracing::info!(
+            tracing::warn!(
                 uri = %uri,
                 error_code = error_code,
                 status_code = status_code,

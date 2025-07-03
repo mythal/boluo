@@ -4,7 +4,6 @@
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-use crate::context::debug;
 use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -29,7 +28,6 @@ mod db;
 mod events;
 mod info;
 mod interface;
-mod logger;
 mod mail;
 mod media;
 mod messages;
@@ -139,31 +137,22 @@ async fn handler(
                     span.record("status_code", response.status().as_u16());
                     span.record("duration_ms", duration.as_millis() as u64);
 
-                    // Log based on path and duration
-                    if path.starts_with("/api/info") {
+                    if duration.as_millis() > 500 {
+                        tracing::warn!("Slow request: {}ms", duration.as_millis());
+                    } else if path.starts_with("/api/info") {
                         // Skip noisy info endpoints
-                    } else if duration.as_millis() > 500 {
-                        tracing::warn!("Slow request");
+                    } else {
+                        tracing::info!("Request Finished");
                     }
                     response.map(|bytes| Full::new(bytes.into()))
                 }
                 Err(e) => {
-                    let status_code = match &e {
-                        AppError::NotFound(_) => 404,
-                        AppError::BadRequest(_) => 400,
-                        AppError::Conflict(_) => 409,
-                        AppError::Unauthenticated(_) => 401,
-                        AppError::NoPermission(_) => 403,
-                        _ => 500,
-                    };
-
+                    let status_code = e.status_code().as_u16();
                     span.record("status_code", status_code);
                     span.record("duration_ms", duration.as_millis() as u64);
                     span.record("error", format!("{}", e).as_str());
 
-                    if !matches!(e, AppError::NotFound(_)) {
-                        error::log_error(&e, &uri);
-                    }
+                    error::log_error(&e, &uri);
 
                     err_response(e).map(|bytes| Full::new(bytes.into()))
                 }
@@ -203,9 +192,14 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+    use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+
     dotenv::from_filename(".env.local").ok();
     dotenv::dotenv().ok();
-    logger::setup_logger(debug()).unwrap();
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let args = Args::parse();
     if args.types {

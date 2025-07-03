@@ -69,21 +69,17 @@ where
             .unwrap_or_default();
     };
 
-    tokio::spawn(async move {
-        // Create a long-lived span for this WebSocket connection
-        let span = tracing::trace_span!(
-            "websocket_connection",
-            connection_id = %connection_id,
-            user_agent = %user_agent,
-            duration_ms = tracing::field::Empty,
-            messages_sent = tracing::field::Empty,
-            messages_received = tracing::field::Empty,
-            close_reason = tracing::field::Empty,
-        );
+    // Create a long-lived span for this WebSocket connection
+    let span = tracing::info_span!(
+        "websocket_connection",
+        connection_id = %connection_id,
+        user_agent = %user_agent,
+        duration_ms = tracing::field::Empty,
+    );
 
-        let start_time = std::time::Instant::now();
-
-        async {
+    tokio::spawn(
+        async move {
+            let start_time = std::time::Instant::now();
             let span = tracing::Span::current();
             match hyper::upgrade::on(req).await {
                 Ok(upgraded) => {
@@ -101,19 +97,15 @@ where
                     handler(ws_stream).await;
 
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    span.record("close_reason", "normal");
-                    tracing::info!("WebSocket connection closed normally");
                 }
                 Err(e) => {
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    span.record("close_reason", "upgrade_failed");
                     tracing::error!(error = %e, "Failed to upgrade connection");
                 }
             }
         }
-        .instrument(span)
-        .await
-    });
+        .instrument(span),
+    );
 
     hyper::Response::builder()
         .status(StatusCode::SWITCHING_PROTOCOLS)

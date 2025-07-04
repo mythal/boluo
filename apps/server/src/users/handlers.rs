@@ -16,7 +16,7 @@ use crate::session::{
     revoke_session,
 };
 use crate::spaces::Space;
-use crate::ttl::{minute, Lifespan, Mortal};
+use crate::ttl::{Lifespan, Mortal, minute};
 use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};

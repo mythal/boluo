@@ -1,6 +1,6 @@
 use super::{
-    models::{Channel, ChannelMember},
     ChannelType,
+    models::{Channel, ChannelMember},
 };
 use crate::spaces::Space;
 use crate::users::User;

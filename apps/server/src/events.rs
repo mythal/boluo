@@ -11,4 +11,4 @@ mod types;
 pub use broadcast::{get_broadcast_table, get_mailbox_broadcast_rx};
 pub use handlers::router;
 pub use status::StatusMap;
-pub use types::{startup_id, Update};
+pub use types::{Update, startup_id};

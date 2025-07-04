@@ -1,8 +1,8 @@
 use anyhow::Context;
 use chrono::prelude::*;
+use hyper::Request;
 use hyper::body::Body;
 use hyper::header::HeaderName;
-use hyper::Request;
 use ring::hmac;
 use ring::rand::SecureRandom;
 use std::sync::OnceLock as OnceCell;
@@ -67,7 +67,7 @@ pub fn sha1(data: &[u8]) -> ring::digest::Digest {
 }
 
 pub fn verify(message: &str, signature: &str) -> Result<(), anyhow::Error> {
-    use base64::{engine::general_purpose, Engine as _};
+    use base64::{Engine as _, engine::general_purpose};
 
     let signature = signature.trim();
 
@@ -107,7 +107,7 @@ pub fn merge_blank(s: &str) -> String {
 
 #[test]
 fn test_sign() {
-    use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+    use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
     let message = "hello, world";
     let signature = sign(message);

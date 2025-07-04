@@ -1,6 +1,7 @@
 use crate::channels::ChannelMember;
 use crate::channels::models::Member;
 use crate::events::Update;
+use crate::events::types::ChannelUserId;
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
 use std::collections::BTreeMap;
@@ -10,6 +11,10 @@ use tokio_tungstenite::tungstenite::Utf8Bytes;
 use uuid::Uuid;
 
 use super::types::EventId;
+
+mod members;
+
+pub use self::members::Action as MembersAction;
 
 #[derive(Debug, Clone)]
 pub enum StateError {
@@ -34,30 +39,79 @@ impl EncodedUpdate {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub struct ChannelUserId {
-    pub channel_id: Uuid,
-    pub user_id: Uuid,
-}
-
-impl ChannelUserId {
-    pub fn new(channel_id: Uuid, user_id: Uuid) -> Self {
-        ChannelUserId {
-            channel_id,
-            user_id,
-        }
-    }
-}
-
 pub enum Action {
     Query(tokio::sync::oneshot::Sender<BTreeMap<EventId, Utf8Bytes>>),
     Update(Box<EncodedUpdate>),
+    Members(MembersAction),
+}
+
+#[derive(Clone)]
+pub struct MailboxSender(pub tokio::sync::mpsc::Sender<Action>);
+
+impl MailboxSender {
+    pub fn new(sender: tokio::sync::mpsc::Sender<Action>) -> Self {
+        MailboxSender(sender)
+    }
+
+    pub async fn get_members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let action = Action::Members(MembersAction::QueryByChannel(channel_id, tx));
+        self.0.send(action).await.ok();
+        let members = rx.await.unwrap();
+        members
+    }
+
+    pub async fn set_members(&self, members: Vec<Member>) {
+        let action = Action::Members(MembersAction::UpdateByMembers(members.clone()));
+        self.0.send(action).await.ok();
+    }
+
+    pub async fn remove_channel(&self, channel_id: Uuid) -> Result<(), StateError> {
+        let action = Action::Members(MembersAction::RemoveChannel(channel_id));
+        self.0.send(action).await.ok();
+        Ok(())
+    }
+
+    pub async fn get_member(&self, channel_id: Uuid, user_id: Uuid) -> Result<Member, StateError> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let action = Action::Members(MembersAction::QueryByChannelUser(
+            ChannelUserId::new(channel_id, user_id),
+            tx,
+        ));
+        self.0.send(action).await.ok();
+        let member = rx.await.unwrap();
+        member.ok_or(StateError::NotFound)
+    }
+    pub async fn is_master(&self, channel_id: Uuid, user_id: Uuid) -> Result<bool, StateError> {
+        self.get_member(channel_id, user_id)
+            .await
+            .map(|member| member.channel.is_master)
+    }
+
+    pub async fn update_channel_member(&self, channel_member: ChannelMember) {
+        let action = Action::Members(MembersAction::UpdateChannelMember(channel_member));
+        self.0.send(action).await.ok();
+    }
+    pub async fn update_space_member(&self, space_member: SpaceMember) {
+        let action = Action::Members(MembersAction::UpdateSpaceMember(space_member));
+        self.0.send(action).await.ok();
+    }
+
+    pub async fn remove_member(&self, user_id: &Uuid) {
+        let action = Action::Members(MembersAction::RemoveUser(*user_id));
+        self.0.send(action).await.ok();
+    }
+
+    pub async fn remove_member_from_channel(&self, channel_id: Uuid, user_id: Uuid) {
+        let channel_user_id = ChannelUserId::new(channel_id, user_id);
+        let action = Action::Members(MembersAction::RemoveFromChannel(channel_user_id));
+        self.0.send(action).await.ok();
+    }
 }
 
 pub struct MailBoxState {
     pub id: Uuid,
-    pub sender: tokio::sync::mpsc::Sender<Action>,
-    members_cache: papaya::HashMap<ChannelUserId, Member, ahash::RandomState>,
+    pub sender: MailboxSender,
     pub status: super::status::StatusActor,
 }
 
@@ -196,10 +250,12 @@ fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut Pre
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
         let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(32);
+        let sender = MailboxSender::new(tx);
         tokio::spawn(async move {
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
             let mut last_activity_at = std::time::Instant::now();
+            let mut members_state = members::MembersCache::new();
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
@@ -214,6 +270,9 @@ impl MailBoxState {
                             }
                             Action::Update(encoded_update) => {
                                 on_update(&mut updates, &mut preview_map, *encoded_update);
+                            }
+                            Action::Members(action) => {
+                                members_state.update(action);
                             }
                         }
                     }
@@ -233,94 +292,9 @@ impl MailBoxState {
 
         MailBoxState {
             id,
-            sender: tx,
-            members_cache: papaya::HashMap::builder()
-                .capacity(64)
-                .hasher(ahash::RandomState::new())
-                .build(),
+            sender,
             status: super::status::StatusActor::new(id),
         }
-    }
-    pub fn get_members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
-        let mut members: Vec<Member> = Vec::new();
-        let members_cache = self.members_cache.pin();
-
-        for id in members_cache.keys() {
-            if id.channel_id == channel_id {
-                if let Some(member) = members_cache.get(id) {
-                    members.push(member.clone())
-                }
-            }
-        }
-        members
-    }
-
-    pub fn set_members(&self, members: &Vec<Member>) {
-        let members_cache = self.members_cache.pin();
-        for member in members {
-            let channel_user_id =
-                ChannelUserId::new(member.channel.channel_id, member.channel.user_id);
-            members_cache.insert(channel_user_id, member.clone());
-        }
-    }
-
-    pub fn remove_channel(&self, channel_id: Uuid) -> Result<(), StateError> {
-        self.members_cache
-            .pin()
-            .retain(|id, _| id.channel_id != channel_id);
-        Ok(())
-    }
-
-    pub fn is_master(&self, channel_id: Uuid, user_id: Uuid) -> Result<bool, StateError> {
-        let members_cache = self.members_cache.pin();
-        members_cache
-            .get(&ChannelUserId::new(channel_id, user_id))
-            .ok_or(StateError::NotFound)
-            .map(|member| member.channel.is_master)
-    }
-
-    pub fn get_member(&self, channel_id: Uuid, user_id: Uuid) -> Result<Member, StateError> {
-        let members_cache = self.members_cache.pin();
-        members_cache
-            .get(&ChannelUserId::new(channel_id, user_id))
-            .ok_or(StateError::NotFound)
-            .cloned()
-    }
-
-    pub fn update_channel_member(&self, channel_member: ChannelMember) {
-        let channel_user_id = ChannelUserId::new(channel_member.channel_id, channel_member.user_id);
-        self.members_cache
-            .pin()
-            .update(channel_user_id, move |member| {
-                let channel_member = channel_member.clone();
-                let mut member = member.clone();
-                member.channel = channel_member;
-                member
-            });
-    }
-    pub fn update_space_member(&self, space_member: SpaceMember) {
-        let user_id = space_member.user_id;
-        let members_cache = self.members_cache.pin();
-        for channel_user_id in members_cache.keys() {
-            if user_id == channel_user_id.user_id {
-                members_cache.update(*channel_user_id, |member| {
-                    let mut member = member.clone();
-                    member.space = space_member.clone();
-                    member
-                });
-            }
-        }
-    }
-
-    pub fn remove_member(&self, user_id: &Uuid) {
-        let mut members_cache = self.members_cache.pin();
-        members_cache.retain(|id, _| id.user_id != *user_id);
-    }
-
-    pub fn remove_member_from_channel(&self, channel_id: Uuid, user_id: Uuid) {
-        let channel_user_id = ChannelUserId::new(channel_id, user_id);
-        let members_cache = self.members_cache.pin();
-        members_cache.remove(&channel_user_id);
     }
 
     pub fn query(
@@ -329,7 +303,7 @@ impl MailBoxState {
     {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let action = Action::Query(tx);
-        if let Err(err) = self.sender.try_send(action) {
+        if let Err(err) = self.sender.0.try_send(action) {
             match err {
                 TrySendError::Closed(_) => {
                     tracing::warn!(
@@ -360,6 +334,13 @@ impl Store {
                 .resize_mode(papaya::ResizeMode::Blocking)
                 .build(),
         }
+    }
+
+    pub fn sender(&self, id: &Uuid) -> Option<MailboxSender> {
+        self.mailboxes
+            .pin()
+            .get(id)
+            .map(|state| state.sender.clone())
     }
 
     fn remove(&self, id: Uuid) {

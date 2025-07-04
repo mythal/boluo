@@ -421,6 +421,7 @@ impl Update {
             mailbox_state.sender.clone()
         };
         if update_sender
+            .0
             .send(super::context::Action::Update(encoded_update.clone()))
             .await
             .is_err()
@@ -619,5 +620,20 @@ fn test_event_id_concurrent() {
     all_ids.sort();
     for i in 1..all_ids.len() {
         assert!(all_ids[i] > all_ids[i - 1], "Event IDs are not unique");
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct ChannelUserId {
+    pub channel_id: Uuid,
+    pub user_id: Uuid,
+}
+
+impl ChannelUserId {
+    pub fn new(channel_id: Uuid, user_id: Uuid) -> Self {
+        ChannelUserId {
+            channel_id,
+            user_id,
+        }
     }
 }

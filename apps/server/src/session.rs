@@ -306,50 +306,56 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
     .await
 }
 
+pub async fn authenticate_with_cookie(
+    headers: &HeaderMap<HeaderValue>,
+) -> Result<Session, AppError> {
+    tracing::Span::current().record("auth_method", "cookie");
+    let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
+    let token = match parse_cookie(cookie) {
+        Ok(None) => return Err(AuthenticateFail::Guest.into()),
+        Ok(Some(token)) => token,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "Failed to parse authentication cookie"
+            );
+            return Err(AuthenticateFail::MalformedToken.into());
+        }
+    };
+    get_session_from_token(token).await
+}
+
 #[tracing::instrument(skip(req), fields(auth_method = tracing::field::Empty, user_id = tracing::field::Empty))]
 pub async fn authenticate(
     req: &hyper::Request<impl hyper::body::Body>,
 ) -> Result<Session, AppError> {
     let headers = req.headers();
-    let authorization = headers.get(AUTHORIZATION).map(HeaderValue::to_str);
 
-    let (token, auth_method) = if let Some(Ok(t)) = authorization {
-        tracing::Span::current().record("auth_method", "bearer_token");
-        (t.trim_start_matches("Bearer ").trim(), "bearer_token")
-    } else {
-        tracing::Span::current().record("auth_method", "cookie");
-        let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
-        match parse_cookie(cookie) {
-            Ok(None) => return Err(AuthenticateFail::Guest.into()),
-            Ok(Some(token)) => (token, "cookie"),
-            Err(err) => {
-                tracing::warn!(
-                    error = %err,
-                    "Failed to parse authentication cookie"
-                );
-                return Err(AuthenticateFail::MalformedToken.into());
+    let session = if let Some(header_value) = headers.get(AUTHORIZATION) {
+        if let Ok(authorization) = header_value.to_str() {
+            let span = tracing::Span::current();
+            let token = authorization.trim_start_matches("Bearer ").trim();
+            let session = get_session_from_token(token).await;
+            if let Ok(session) = session {
+                span.record("auth_method", "bearer_token");
+                Ok(session)
+            } else {
+                tracing::warn!("Failed to authenticate with bearer token, fallback to cookie");
+                authenticate_with_cookie(headers).await
             }
+        } else {
+            tracing::warn!("Failed to convert header value to string, fallback to cookie");
+            authenticate_with_cookie(headers).await
         }
+    } else {
+        authenticate_with_cookie(headers).await
     };
-
-    match get_session_from_token(token).await {
-        Ok(session) => {
-            tracing::Span::current().record("user_id", tracing::field::display(session.user_id));
-            tracing::debug!(
-                user_id = %session.user_id,
-                session_id = %session.id,
-                auth_method = auth_method,
-                "User authenticated successfully"
-            );
-            Ok(session)
-        }
-        Err(e) => {
-            tracing::warn!(
-                auth_method = auth_method,
-                error = %e,
-                "Authentication failed"
-            );
-            Err(e)
-        }
-    }
+    let session = session?;
+    tracing::Span::current().record("user_id", tracing::field::display(session.user_id));
+    tracing::debug!(
+        user_id = %session.user_id,
+        session_id = %session.id,
+        "User authenticated successfully"
+    );
+    return Ok(session);
 }

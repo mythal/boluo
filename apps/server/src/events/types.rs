@@ -17,7 +17,6 @@ use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tracing::Instrument as _;
 use uuid::Uuid;
 
-use super::context::MailBoxState;
 use super::status::StatusMap;
 
 pub type Seq = u32;
@@ -311,16 +310,22 @@ impl Update {
         node: Option<u16>,
     ) -> Option<Vec<tungstenite::Utf8Bytes>> {
         let after = after.unwrap_or(i64::MIN);
-        let updates_receiver = {
-            let map = super::context::store().mailboxes.pin();
-            let Some(mailbox_state) = map.get(mailbox_id) else {
-                return Some(vec![]);
-            };
-            mailbox_state.query().ok()?
-        };
-        let Ok(updates) = updates_receiver.await else {
-            tracing::error!("Failed to receive updates for mailbox {}", mailbox_id);
+        let Some(manager) = super::context::store().get_manager(mailbox_id) else {
             return Some(vec![]);
+        };
+        let updates_receiver = match manager.query_encoded_updates().await {
+            Ok(receiver) => receiver,
+            Err(err) => {
+                tracing::error!(error = ?err, "Failed to query updates for mailbox {}", mailbox_id);
+                return None;
+            }
+        };
+        let updates = match updates_receiver.await {
+            Ok(updates) => updates,
+            Err(err) => {
+                tracing::error!(error = ?err, "Failed to receive updates for mailbox {}", mailbox_id);
+                return None;
+            }
         };
         if updates.is_empty() {
             return Some(vec![]);
@@ -414,18 +419,9 @@ impl Update {
 
     async fn async_fire(body: UpdateBody, mailbox_id: Uuid) {
         let encoded_update = Update::build(body, mailbox_id);
-        let update_sender = {
-            let map = super::context::store().mailboxes.pin();
-            let mailbox_state =
-                map.get_or_insert_with(mailbox_id, || MailBoxState::new(mailbox_id));
-            mailbox_state.sender.clone()
-        };
-        if update_sender
-            .send(super::context::Action::Update(encoded_update.clone()))
-            .await
-            .is_err()
-        {
-            tracing::error!("Failed to send update to mailbox {}", mailbox_id);
+        let mailbox_manager = super::context::store().get_or_create_manager(mailbox_id);
+        if let Err(e) = mailbox_manager.fire_update(encoded_update.clone()).await {
+            tracing::error!("Failed to send update to mailbox {}: {}", mailbox_id, e);
             return;
         }
         Update::send(mailbox_id, encoded_update.encoded.clone()).await;
@@ -619,5 +615,20 @@ fn test_event_id_concurrent() {
     all_ids.sort();
     for i in 1..all_ids.len() {
         assert!(all_ids[i] > all_ids[i - 1], "Event IDs are not unique");
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct ChannelUserId {
+    pub channel_id: Uuid,
+    pub user_id: Uuid,
+}
+
+impl ChannelUserId {
+    pub fn new(channel_id: Uuid, user_id: Uuid) -> Self {
+        ChannelUserId {
+            channel_id,
+            user_id,
+        }
     }
 }

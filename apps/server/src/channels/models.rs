@@ -6,7 +6,6 @@ use crate::cache::{CACHE, CacheType};
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::ModelError;
-use crate::events::context::{MailBoxState, StateError};
 use crate::spaces::{Space, SpaceMember};
 use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour, minute};
 use crate::users::User;
@@ -212,17 +211,23 @@ impl Channel {
         Ok(channel_list)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
+    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+        space_id: &Uuid,
+    ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file_scalar!("sql/channels/delete_channel.sql", id)
             .execute(db)
             .await
             .map(|r| r.rows_affected())?;
         if affected > 0 {
             CACHE.invalidate(CacheType::Channel, *id).await;
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(id) {
-                if let Err(StateError::TimeOut) = mailbox_state.remove_channel(*id) {
-                    tracing::warn!("Failed to remove channel from mailbox state");
+            if let Some(manager) = crate::events::context::store().get_manager(space_id) {
+                if let Err(e) = manager.remove_channel(*id).await {
+                    tracing::warn!(
+                        error = ?e,
+                        "Failed to remove channel from mailbox state"
+                    );
                 }
             }
         }
@@ -396,9 +401,8 @@ impl ChannelMember {
         channel_id: Uuid,
         space_id: Uuid,
     ) -> Result<bool, sqlx::Error> {
-        let map = crate::events::context::store().mailboxes.pin();
-        if let Some(mailbox_state) = map.get(&space_id) {
-            if let Ok(is_master) = mailbox_state.is_master(channel_id, user_id) {
+        if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+            if let Ok(is_master) = manager.is_master(channel_id, user_id).await {
                 return Ok(is_master);
             }
         }
@@ -414,9 +418,8 @@ impl ChannelMember {
         space_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
         {
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(space_id) {
-                if let Ok(member) = mailbox_state.get_member(channel_id, user_id) {
+            if let Some(manager) = crate::events::context::store().get_manager(space_id) {
+                if let Ok(Some(member)) = manager.get_member(channel_id, user_id).await {
                     return Ok(Some((member.channel.clone(), member.space.clone())));
                 }
             }
@@ -438,9 +441,8 @@ impl ChannelMember {
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         {
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                if let Ok(member) = mailbox_state.get_member(channel_id, user_id) {
+            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                if let Ok(Some(member)) = manager.get_member(channel_id, user_id).await {
                     return Ok(Some(member.channel));
                 }
             }
@@ -473,9 +475,11 @@ impl ChannelMember {
         }
         tokio::spawn(async move {
             CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                mailbox_state.remove_member_from_channel(channel_id, user_id);
+            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                manager
+                    .remove_member_from_channel(channel_id, user_id)
+                    .await
+                    .ok();
             }
         });
         Ok(())
@@ -493,9 +497,8 @@ impl ChannelMember {
 
         tokio::spawn(async move {
             CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                mailbox_state.remove_member(&user_id);
+            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                manager.remove_member(&user_id).await.ok();
             }
         });
         Ok(ids)
@@ -532,9 +535,8 @@ impl ChannelMember {
         CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
         if let Some(channel_member) = channel_member.clone() {
             tokio::spawn(async move {
-                let map = crate::events::context::store().mailboxes.pin();
-                if let Some(mailbox_state) = map.get(&space_id) {
-                    mailbox_state.update_channel_member(channel_member);
+                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                    manager.update_channel_member(channel_member).await.ok();
                 }
             });
         }
@@ -590,9 +592,8 @@ impl ChannelMember {
                 .invalidate(CacheType::ChannelMembers, channel_member.user_id)
                 .await;
             tokio::spawn(async move {
-                let map = crate::events::context::store().mailboxes.pin();
-                if let Some(mailbox_state) = map.get(&space_id) {
-                    mailbox_state.update_channel_member(channel_member);
+                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                    manager.update_channel_member(channel_member).await.ok();
                 }
             });
         }
@@ -615,11 +616,12 @@ impl Member {
     ) -> Result<Vec<Member>, sqlx::Error> {
         let store = crate::events::context::store();
         {
-            let map = store.mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                let members = mailbox_state.get_members_in_channel(channel_id);
-                if !members.is_empty() {
-                    return Ok(members);
+            let manager = store.get_manager(&space_id);
+            if let Some(manager) = manager {
+                if let Ok(members) = manager.get_members_in_channel(channel_id).await {
+                    if !members.is_empty() {
+                        return Ok(members);
+                    }
                 }
             }
         }
@@ -643,9 +645,11 @@ impl Member {
                 .fetch_all(db)
                 .await?;
         {
-            let map = crate::events::context::store().mailboxes.pin();
-            let mailbox_state = map.get_or_insert_with(space_id, || MailBoxState::new(space_id));
-            mailbox_state.set_members(&members);
+            crate::events::context::store()
+                .get_or_create_manager(space_id)
+                .set_members(members.clone())
+                .await
+                .ok();
         }
         Ok(members)
     }

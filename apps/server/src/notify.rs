@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::LazyLock, time::Duration};
 
 use chrono::{DateTime, Utc};
+use tracing::Instrument as _;
 use uuid::Uuid;
 
 use crate::db;
@@ -8,7 +9,7 @@ use crate::db;
 static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime<Utc>)>> =
     LazyLock::new(|| {
         let (tx, mut rx) = tokio::sync::mpsc::channel::<(Uuid, DateTime<Utc>)>(64);
-
+        let span = tracing::info_span!("space_activity");
         tokio::spawn(async move {
             let mut map: HashMap<Uuid, DateTime<Utc>, _> =
                 HashMap::with_hasher(ahash::RandomState::new());
@@ -52,7 +53,7 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                     }
                 }
             }
-        });
+        }.instrument(span));
         tx
     });
 

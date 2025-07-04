@@ -97,6 +97,7 @@ where
                     handler(ws_stream).await;
 
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
+                    tracing::debug!("WebSocket connection closed");
                 }
                 Err(e) => {
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);

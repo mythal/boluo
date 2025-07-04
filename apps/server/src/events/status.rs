@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
+use tracing::Instrument as _;
 use uuid::Uuid;
 
 use crate::utils::timestamp;
@@ -23,6 +24,7 @@ impl StatusActor {
     pub fn new(space_id: Uuid) -> Self {
         let (tx, mut rx) = tokio::sync::mpsc::channel(128);
 
+        let span = tracing::info_span!("status_actor", space_id = %space_id);
         let join_handle = tokio::spawn(async move {
             let mut map: StatusMap = Arc::new(HashMap::new());
 
@@ -80,7 +82,7 @@ impl StatusActor {
                     }
                 }
             }
-        });
+        }.instrument(span));
 
         Self {
             tx,

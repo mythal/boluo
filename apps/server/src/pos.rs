@@ -6,6 +6,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::sync::{mpsc, oneshot};
+use tracing::Instrument as _;
 
 use crate::error::{AppError, ValidationFailed};
 use num_rational::Rational32;
@@ -279,13 +280,17 @@ impl ChannelPosManager {
                 .hasher(RandomState::new())
                 .build(),
         };
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(TICK_INTERVAL);
-            loop {
-                interval.tick().await;
-                CHANNEL_POS_MANAGER.tick();
+        let span = tracing::info_span!("channel_pos_manager_tick");
+        tokio::spawn(
+            async move {
+                let mut interval = tokio::time::interval(TICK_INTERVAL);
+                loop {
+                    interval.tick().await;
+                    CHANNEL_POS_MANAGER.tick();
+                }
             }
-        });
+            .instrument(span),
+        );
         manager
     }
     fn get_or_create_actor(&self, channel_id: Uuid) -> mpsc::Sender<PosAction> {
@@ -297,10 +302,14 @@ impl ChannelPosManager {
                 }
             }
             let (sender, receiver) = mpsc::channel(32);
-            tokio::spawn(async move {
-                let actor = ChannelPosActor::new(channel_id, receiver);
-                actor.run().await;
-            });
+            let span = tracing::info_span!("channel_pos_actor", channel_id = %channel_id);
+            tokio::spawn(
+                async move {
+                    let actor = ChannelPosActor::new(channel_id, receiver);
+                    actor.run().await;
+                }
+                .instrument(span),
+            );
             papaya::Operation::Insert(sender)
         });
         match result {

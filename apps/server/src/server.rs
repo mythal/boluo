@@ -1,5 +1,9 @@
 #![allow(dead_code)]
-#![allow(clippy::too_many_arguments, clippy::needless_return)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::needless_return,
+    clippy::collapsible_if
+)]
 
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
@@ -153,7 +157,7 @@ async fn handler(
                     let status_code = e.status_code().as_u16();
                     span.record("status_code", status_code);
                     span.record("duration_ms", duration.as_millis() as u64);
-                    span.record("error", format!("{}", e).as_str());
+                    span.record("error", format!("{e}").as_str());
 
                     error::log_error(&e, &uri);
 
@@ -275,7 +279,7 @@ async fn handle_connection(
 ) {
     match accept_result {
         Ok((stream, addr)) => {
-            tracing::Span::current().record("addr", &tracing::field::display(addr));
+            tracing::Span::current().record("addr", tracing::field::display(addr));
             tracing::debug!("Accepted connection from: {}", addr);
             let io = TokioIo::new(stream);
             let conn = http

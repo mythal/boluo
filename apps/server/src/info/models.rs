@@ -69,11 +69,11 @@ impl ConnectionState {
             let mut conn: sqlx::pool::PoolConnection<sqlx::Postgres> = pool
                 .acquire()
                 .await
-                .map_err(|err| format!("Failed to acquire connection: {:?}", err))?;
+                .map_err(|err| format!("Failed to acquire connection: {err:?}"))?;
             let record = sqlx::query!("SELECT 42 as x;")
                 .fetch_one(&mut *conn)
                 .await
-                .map_err(|err| format!("Failed to query database: {:?}", err))?;
+                .map_err(|err| format!("Failed to query database: {err:?}"))?;
             if record.x != Some(42) {
                 return Err("Database query failed".to_string());
             }

@@ -490,7 +490,7 @@ pub async fn initialize_startup_id() -> u16 {
     };
     let _: () = redis
         .set(
-            format!("startup:{}:info", startup_id),
+            format!("startup:{startup_id}:info"),
             serde_json::to_string(&node_info).expect("Failed to serialize startup info"),
         )
         .await

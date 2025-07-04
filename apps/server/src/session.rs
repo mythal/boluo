@@ -334,7 +334,7 @@ pub async fn authenticate(
 
     match get_session_from_token(token).await {
         Ok(session) => {
-            tracing::Span::current().record("user_id", &tracing::field::display(session.user_id));
+            tracing::Span::current().record("user_id", tracing::field::display(session.user_id));
             tracing::debug!(
                 user_id = %session.user_id,
                 session_id = %session.id,

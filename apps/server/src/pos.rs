@@ -125,7 +125,7 @@ impl ChannelPosActor {
                     let Some((last_key, last_pos_item)) = self.positions.last_key_value() else {
                         break;
                     };
-                    let last_key = last_key.clone();
+                    let last_key = *last_key;
                     // Aucually, the last_pos_item is not latest changed item.
                     // But it is ok for now.
                     let recent_changed = last_pos_item.created;
@@ -149,7 +149,7 @@ impl ChannelPosActor {
         let Some((last_key, _)) = self.positions.last_key_value() else {
             return;
         };
-        let last_key = last_key.clone();
+        let last_key = *last_key;
 
         self.positions.retain(|_, pos_item| {
             !(
@@ -346,7 +346,7 @@ impl ChannelPosManager {
 
         rx.await
             .map_err(|_| ChannelPosError::ActorShutdown)?
-            .map_err(|err| ChannelPosError::DatabaseError(err))
+            .map_err(ChannelPosError::DatabaseError)
     }
 
     pub async fn preview_pos(
@@ -373,7 +373,7 @@ impl ChannelPosManager {
 
         rx.await
             .map_err(|_| ChannelPosError::ActorShutdown)?
-            .map_err(|err| ChannelPosError::DatabaseError(err))
+            .map_err(ChannelPosError::DatabaseError)
     }
 
     pub async fn is_pos_available(
@@ -422,8 +422,7 @@ impl ChannelPosManager {
     pub async fn shutdown(&self, channel_id: Uuid) {
         let sender = {
             let actors = self.actors.pin();
-            let sender = actors.remove(&channel_id).cloned();
-            sender
+            actors.remove(&channel_id).cloned()
         };
 
         if let Some(sender) = sender {

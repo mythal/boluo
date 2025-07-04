@@ -2,13 +2,13 @@ use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::cache::{CacheType, CACHE};
+use crate::cache::{CACHE, CacheType};
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::db;
 use crate::error::ModelError;
 use crate::events::context::{MailBoxState, StateError};
 use crate::spaces::{Space, SpaceMember};
-use crate::ttl::{fetch_entry, fetch_entry_optional, hour, minute, Lifespan, Mortal};
+use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour, minute};
 use crate::users::User;
 use crate::utils::merge_blank;
 use std::collections::HashMap;

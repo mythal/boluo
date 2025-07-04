@@ -5,11 +5,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use uuid::Uuid;
 
-use crate::cache::{CacheType, CACHE};
+use crate::cache::{CACHE, CacheType};
 use crate::channels::ChannelMember;
 use crate::error::ModelError;
 use crate::spaces::api::SpaceWithMember;
-use crate::ttl::{self, fetch_entry, fetch_entry_optional, Lifespan, Mortal};
+use crate::ttl::{self, Lifespan, Mortal, fetch_entry, fetch_entry_optional};
 use crate::users::User;
 use crate::utils::merge_blank;
 

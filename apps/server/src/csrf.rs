@@ -2,8 +2,8 @@ use crate::error::AppError;
 use crate::session::{self, AuthenticateFail, Session};
 use crate::utils::sign;
 use chrono::Utc;
-use hyper::body::Body;
 use hyper::Request;
+use hyper::body::Body;
 use uuid::Uuid;
 
 // csrf-token:[session key(base 64)].[timestamp].[signature]
@@ -23,7 +23,7 @@ pub async fn authenticate_optional(req: &Request<impl Body>) -> Result<Option<Se
 }
 
 pub fn generate_csrf_token(session_key: &Uuid) -> String {
-    use base64::{engine::general_purpose::STANDARD_NO_PAD as base64_engine, Engine as _};
+    use base64::{Engine as _, engine::general_purpose::STANDARD_NO_PAD as base64_engine};
 
     let expire_sec = 60 * 60 * 3;
     let timestamp: i64 = Utc::now().timestamp() + expire_sec;

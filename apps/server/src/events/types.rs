@@ -1,5 +1,5 @@
-use crate::channels::api::MemberWithUser;
 use crate::channels::Channel;
+use crate::channels::api::MemberWithUser;
 
 use crate::error::AppError;
 use crate::events::context::EncodedUpdate;
@@ -10,8 +10,8 @@ use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::AtomicU32;
 use std::sync::OnceLock;
+use std::sync::atomic::AtomicU32;
 use tokio::spawn;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use uuid::Uuid;

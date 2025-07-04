@@ -2,6 +2,7 @@ import { type ApiError, type UserStatus } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import useSWR, { type SWRResponse } from 'swr';
 
+// Note: Users status will be updated by websocket events
 export const useQueryUsersStatus = (
   spaceId: string,
 ): SWRResponse<Record<string, UserStatus>, ApiError> => {
@@ -13,6 +14,10 @@ export const useQueryUsersStatus = (
       return result.unwrap();
     },
     {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: false,
+      revalidateOnMount: true,
+      revalidateIfStale: false,
       fallbackData: {},
     },
   );

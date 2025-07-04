@@ -1,6 +1,6 @@
 //! Types and functions for to help building APIs.
-use hyper::body::Body;
 use hyper::StatusCode;
+use hyper::body::Body;
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
@@ -102,20 +102,22 @@ where
     for<'de> T: Deserialize<'de>,
 {
     use http_body_util::BodyExt;
+    // TODO: limit the body size
     let body = req
         .into_body()
         .collect()
         .await
-        .map_err(|_e| {
-            // TODO: log
+        .map_err(|_| {
+            tracing::error!("Failed to read the request body");
             AppError::BadRequest("Failed to read the request body".to_string())
         })?
         .to_bytes();
-    serde_json::from_slice(&body).map_err(|_e| {
-        // TODO: log
+    serde_json::from_slice(&body).map_err(|e| {
+        tracing::error!(error = %e, "Failed to parse the request body");
         AppError::BadRequest("Failed to parse the request body".to_string())
     })
 }
+
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 pub struct IdQuery {
     pub id: uuid::Uuid,

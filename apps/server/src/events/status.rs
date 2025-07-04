@@ -14,6 +14,7 @@ pub enum Action {
 }
 
 pub struct StatusActor {
+    space_id: Uuid,
     tx: tokio::sync::mpsc::Sender<Action>,
     join_handle: tokio::task::JoinHandle<()>,
 }
@@ -81,18 +82,23 @@ impl StatusActor {
             }
         });
 
-        Self { tx, join_handle }
+        Self {
+            tx,
+            join_handle,
+            space_id,
+        }
     }
 
     pub fn update(&self, user_id: Uuid, status: UserStatus) {
-        if self.tx.try_send(Action::Update(user_id, status)).is_err() {
-            tracing::warn!("Failed to send status update for user {}", user_id);
+        if let Err(e) = self.tx.try_send(Action::Update(user_id, status)) {
+            tracing::warn!(space_id = %self.space_id, error = %e, "Failed to send status update for user {}", user_id);
         }
     }
     pub fn query(&self) -> tokio::sync::oneshot::Receiver<Arc<HashMap<Uuid, UserStatus>>> {
+        let space_id = self.space_id;
         let (sender, receiver) = tokio::sync::oneshot::channel();
-        if self.tx.try_send(Action::Query(sender)).is_err() {
-            tracing::warn!("Failed to send status query");
+        if let Err(e) = self.tx.try_send(Action::Query(sender)) {
+            tracing::warn!(space_id = %space_id, error = %e, "Failed to send status query");
         }
         receiver
     }

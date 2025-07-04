@@ -55,3 +55,4 @@ target/
 # Docs
 docs/api/environments/*
 !docs/api/environments/Local.bru
+!docs/api/environments/Staging.bru

@@ -3,6 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use tracing::Instrument as _;
 use uuid::Uuid;
 
 use crate::session::Session;
@@ -38,19 +39,24 @@ impl TokenStore {
     fn new() -> Self {
         let tokens = Arc::new(papaya::HashMap::with_hasher(ahash::RandomState::new()));
         let tokens_for_cleanup = Arc::downgrade(&tokens);
-        tokio::spawn(async move {
-            let tokens = tokens_for_cleanup;
-            let mut interval = tokio::time::interval(Duration::from_secs(60));
-            loop {
-                interval.tick().await;
-                let Some(tokens) = tokens.upgrade() else {
-                    break;
-                };
-                let mut token_store = tokens.pin();
-                let now = Instant::now();
-                token_store.retain(|_, token: &TokenInfo| now - token.created_at < TOKEN_VALIDITY);
+        let span = tracing::info_span!("token_store_cleanup");
+        tokio::spawn(
+            async move {
+                let tokens = tokens_for_cleanup;
+                let mut interval = tokio::time::interval(Duration::from_secs(60));
+                loop {
+                    interval.tick().await;
+                    let Some(tokens) = tokens.upgrade() else {
+                        break;
+                    };
+                    let mut token_store = tokens.pin();
+                    let now = Instant::now();
+                    token_store
+                        .retain(|_, token: &TokenInfo| now - token.created_at < TOKEN_VALIDITY);
+                }
             }
-        });
+            .instrument(span),
+        );
         Self { tokens }
     }
 

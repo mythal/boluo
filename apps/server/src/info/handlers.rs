@@ -6,6 +6,7 @@ use crate::{db, error::AppError, info::models::HealthCheck, interface::Response}
 use hyper::body::Incoming;
 use hyper::{Method, Request};
 use sqlx::query_as;
+use tracing::Instrument as _;
 
 #[derive(Debug, Clone, Default)]
 pub struct ProxiesCache {
@@ -111,16 +112,20 @@ async fn get_healthcheck() -> HealthCheck {
 }
 
 pub async fn healthcheck() -> Result<Response, AppError> {
-    let task = tokio::spawn(async {
-        let health_check: HealthCheck = get_healthcheck().await;
-        serde_json::to_vec(&health_check).map_err(|err| {
-            tracing::error!(
-                "Unexpected failture in serialize healthcheck result: {:?}",
-                err
-            );
-            AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
-        })
-    });
+    let span = tracing::info_span!("healthcheck");
+    let task = tokio::spawn(
+        async {
+            let health_check: HealthCheck = get_healthcheck().await;
+            serde_json::to_vec(&health_check).map_err(|err| {
+                tracing::error!(
+                    "Unexpected failture in serialize healthcheck result: {:?}",
+                    err
+                );
+                AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
+            })
+        }
+        .instrument(span),
+    );
     let result = task.await.map_err(|_err| {
         AppError::Unexpected(anyhow::anyhow!("Failed to join healthcheck task"))
     })??;

@@ -1,15 +1,15 @@
-use super::api::{EditMessage, NewMessage};
 use super::Message;
+use super::api::{EditMessage, NewMessage};
 use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::Update;
-use crate::interface::{missing, ok_response, parse_query, Response};
+use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
 use crate::spaces::SpaceMember;
 use crate::{db, interface};
-use hyper::body::Body;
 use hyper::Request;
+use hyper::body::Body;
 
 async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
@@ -152,7 +152,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
         (None, None) => {
             return Err(AppError::BadRequest(
                 "a and b cannot both be null".to_string(),
-            ))
+            ));
         }
         (Some(a), Some((0, _) | (1, 0)) | None) => {
             Message::move_bottom(&mut *trans, &channel_id, &message_id, a)

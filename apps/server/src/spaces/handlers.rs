@@ -9,13 +9,13 @@ use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
 use crate::events::{StatusMap, Update};
-use crate::interface::{self, missing, ok_response, parse_query, IdQuery, Response};
+use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
 use arc_swap::ArcSwap;
-use hyper::body::Body;
 use hyper::Request;
+use hyper::body::Body;
 use uuid::Uuid;
 
 async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {

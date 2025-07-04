@@ -4,7 +4,7 @@ use crate::context::media_public_url;
 use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find, ValidationFailed};
-use crate::interface::{missing, ok_response, parse_query, Response};
+use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
 use crate::utils::id;
@@ -15,7 +15,7 @@ use hyper::{Request, Uri};
 use uuid::Uuid;
 
 fn content_disposition(attachment: bool, filename: &str) -> HeaderValue {
-    use percent_encoding::{utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC};
+    use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
     let kind = if attachment { "attachment" } else { "inline" };
     const SET: &AsciiSet = NON_ALPHANUMERIC;
     let filename = utf8_percent_encode(filename, SET).to_string();

@@ -1,8 +1,8 @@
+use super::Channel;
 use super::api::{
     ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel, GrantOrRemoveChannelMaster,
 };
-use super::models::{members_attach_user, ChannelMember};
-use super::Channel;
+use super::models::{ChannelMember, members_attach_user};
 use crate::channels::api::{
     AddChannelMember, ChannelMemberWithUser, ChannelWithMember, ChannelWithRelated,
     CheckChannelName, EditChannelMember, Export, GrantOrRevoke, JoinChannel, KickFromChannel,
@@ -12,12 +12,12 @@ use crate::csrf::authenticate;
 use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::Update;
-use crate::interface::{self, missing, ok_response, parse_body, parse_query, IdQuery};
+use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_query};
 use crate::messages::Message;
 use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
-use hyper::body::Body;
 use hyper::Request;
+use hyper::body::Body;
 use std::collections::HashMap;
 use uuid::Uuid;
 

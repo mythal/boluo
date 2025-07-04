@@ -1,5 +1,5 @@
-use uuid::fmt::Hyphenated;
 use uuid::Uuid;
+use uuid::fmt::Hyphenated;
 
 use crate::utils::not_whitespace_only;
 

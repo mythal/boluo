@@ -4,9 +4,9 @@ use sqlx::{query_file_scalar, query_scalar};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::cache::{CacheType, CACHE};
+use crate::cache::{CACHE, CacheType};
 use crate::error::ModelError;
-use crate::ttl::{fetch_entry, fetch_entry_optional, hour, Lifespan, Mortal};
+use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour};
 use crate::utils::merge_blank;
 
 #[derive(Debug, Serialize, Clone, sqlx::Type, specta::Type)]

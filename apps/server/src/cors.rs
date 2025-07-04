@@ -19,7 +19,7 @@ pub fn is_allowed_origin(origin: &str) -> bool {
     let end = [
         DOMAIN_SUFFIX.get_or_init(|| {
             let domain = domain();
-            format!(".{}", domain)
+            format!(".{domain}")
         }),
         ".boluo-legacy.pages.dev",
         ".boluo-app.pages.dev",
@@ -36,15 +36,15 @@ pub fn is_allowed_origin(origin: &str) -> bool {
             let addr_v4: Result<std::net::Ipv4Addr, _> = domain.parse();
             if let Ok(addr) = addr_v4 {
                 tracing::warn!("[Security] Allowing all origins for IP address: {}", domain);
-                return format!("http://{}", addr);
+                return format!("http://{addr}");
             }
 
             let addr_v6: Result<std::net::Ipv6Addr, _> = domain.parse();
             if let Ok(addr) = addr_v6 {
                 tracing::warn!("[Security] Allowing all origins for IP address: {}", domain);
-                return format!("http://[{}]", addr);
+                return format!("http://[{addr}]");
             }
-            format!("https://{}", domain)
+            format!("https://{domain}")
         }),
         "http://localhost:",
         "http://127.0.0.1:",

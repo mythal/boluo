@@ -212,16 +212,20 @@ impl Channel {
         Ok(channel_list)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
+    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+        space_id: &Uuid,
+    ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file_scalar!("sql/channels/delete_channel.sql", id)
             .execute(db)
             .await
             .map(|r| r.rows_affected())?;
         if affected > 0 {
             CACHE.invalidate(CacheType::Channel, *id).await;
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(id) {
-                if let Err(StateError::TimeOut) = mailbox_state.remove_channel(*id) {
+            let sender = crate::events::context::store().sender(space_id);
+            if let Some(sender) = sender {
+                if let Err(StateError::TimeOut) = sender.remove_channel(*id).await {
                     tracing::warn!("Failed to remove channel from mailbox state");
                 }
             }
@@ -396,9 +400,9 @@ impl ChannelMember {
         channel_id: Uuid,
         space_id: Uuid,
     ) -> Result<bool, sqlx::Error> {
-        let map = crate::events::context::store().mailboxes.pin();
-        if let Some(mailbox_state) = map.get(&space_id) {
-            if let Ok(is_master) = mailbox_state.is_master(channel_id, user_id) {
+        let sender = crate::events::context::store().sender(&space_id);
+        if let Some(sender) = sender {
+            if let Ok(is_master) = sender.is_master(channel_id, user_id).await {
                 return Ok(is_master);
             }
         }
@@ -414,9 +418,9 @@ impl ChannelMember {
         space_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
         {
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(space_id) {
-                if let Ok(member) = mailbox_state.get_member(channel_id, user_id) {
+            let sender = crate::events::context::store().sender(space_id);
+            if let Some(sender) = sender {
+                if let Ok(member) = sender.get_member(channel_id, user_id).await {
                     return Ok(Some((member.channel.clone(), member.space.clone())));
                 }
             }
@@ -438,9 +442,9 @@ impl ChannelMember {
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         {
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                if let Ok(member) = mailbox_state.get_member(channel_id, user_id) {
+            let sender = crate::events::context::store().sender(&space_id);
+            if let Some(sender) = sender {
+                if let Ok(member) = sender.get_member(channel_id, user_id).await {
                     return Ok(Some(member.channel));
                 }
             }
@@ -473,9 +477,9 @@ impl ChannelMember {
         }
         tokio::spawn(async move {
             CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                mailbox_state.remove_member_from_channel(channel_id, user_id);
+            let sender = crate::events::context::store().sender(&space_id);
+            if let Some(sender) = sender {
+                sender.remove_member_from_channel(channel_id, user_id).await;
             }
         });
         Ok(())
@@ -493,9 +497,9 @@ impl ChannelMember {
 
         tokio::spawn(async move {
             CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-            let map = crate::events::context::store().mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                mailbox_state.remove_member(&user_id);
+            let sender = crate::events::context::store().sender(&space_id);
+            if let Some(sender) = sender {
+                sender.remove_member(&user_id).await;
             }
         });
         Ok(ids)
@@ -532,9 +536,9 @@ impl ChannelMember {
         CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
         if let Some(channel_member) = channel_member.clone() {
             tokio::spawn(async move {
-                let map = crate::events::context::store().mailboxes.pin();
-                if let Some(mailbox_state) = map.get(&space_id) {
-                    mailbox_state.update_channel_member(channel_member);
+                let sender = crate::events::context::store().sender(&space_id);
+                if let Some(sender) = sender {
+                    sender.update_channel_member(channel_member).await;
                 }
             });
         }
@@ -590,9 +594,9 @@ impl ChannelMember {
                 .invalidate(CacheType::ChannelMembers, channel_member.user_id)
                 .await;
             tokio::spawn(async move {
-                let map = crate::events::context::store().mailboxes.pin();
-                if let Some(mailbox_state) = map.get(&space_id) {
-                    mailbox_state.update_channel_member(channel_member);
+                let sender = crate::events::context::store().sender(&space_id);
+                if let Some(sender) = sender {
+                    sender.update_channel_member(channel_member).await;
                 }
             });
         }
@@ -615,9 +619,9 @@ impl Member {
     ) -> Result<Vec<Member>, sqlx::Error> {
         let store = crate::events::context::store();
         {
-            let map = store.mailboxes.pin();
-            if let Some(mailbox_state) = map.get(&space_id) {
-                let members = mailbox_state.get_members_in_channel(channel_id);
+            let sender = store.sender(&space_id);
+            if let Some(sender) = sender {
+                let members = sender.get_members_in_channel(channel_id).await;
                 if !members.is_empty() {
                     return Ok(members);
                 }
@@ -643,9 +647,13 @@ impl Member {
                 .fetch_all(db)
                 .await?;
         {
-            let map = crate::events::context::store().mailboxes.pin();
-            let mailbox_state = map.get_or_insert_with(space_id, || MailBoxState::new(space_id));
-            mailbox_state.set_members(&members);
+            let sender = {
+                let map = crate::events::context::store().mailboxes.pin();
+                let mailbox_state =
+                    map.get_or_insert_with(space_id, || MailBoxState::new(space_id));
+                mailbox_state.sender.clone()
+            };
+            sender.set_members(members.clone()).await;
         }
         Ok(members)
     }

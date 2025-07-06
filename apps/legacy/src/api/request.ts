@@ -91,6 +91,7 @@ export const request = async <T>(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const appResult = toResult<T, AppError>(await result.json());
     if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
+      await get('/users/logout');
       location.replace('/login');
     }
     return appResult;

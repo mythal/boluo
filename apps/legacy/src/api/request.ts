@@ -6,7 +6,6 @@ import {
   AddMember,
   Channel,
   ChannelMember,
-  ChannelMembers,
   ChannelMemberWithUser,
   ChannelWithMember,
   ChannelWithRelated,
@@ -17,7 +16,7 @@ import {
   Export,
   JoinChannel,
 } from './channels';
-import { AppError, notJson, UNAUTHENTICATED } from './error';
+import { AppError, FETCH_FAIL, notJson, UNAUTHENTICATED } from './error';
 import { Media } from './media';
 import { ByChannel, EditMessage, Message, MoveBetween, MoveTo, NewMessage } from './messages';
 import {
@@ -80,24 +79,33 @@ export const request = async <T>(
   if (isCrossOrigin) {
     headers.append('X-Debug', '1');
   }
-
-  const result = await fetch(path, {
-    method,
-    headers,
-    body,
-    credentials: 'include',
-  });
+  let result: Response;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const appResult = toResult<T, AppError>(await result.json());
-    if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
-      await get('/users/logout');
-      location.replace('/login');
-    }
-    return appResult;
+    result = await fetch(path, {
+      method,
+      headers,
+      body,
+      credentials: 'include',
+    });
+  } catch (e) {
+    return new Err({
+      code: FETCH_FAIL,
+      message: e instanceof Error ? e.message : 'Unknown error',
+      context: null,
+    });
+  }
+  let resultJson: unknown = null;
+  try {
+    resultJson = await result.json();
   } catch (e) {
     return new Err(notJson);
   }
+  const appResult = toResult<T, AppError>(resultJson as ApiOk<T> | ApiErr<AppError>);
+  if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
+    await get('/users/logout');
+    location.replace('/login');
+  }
+  return appResult;
 };
 
 export const makeUri = (path: string, query?: object, addBaseUrl = true): string => {

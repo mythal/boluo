@@ -21,12 +21,15 @@ export async function getConnectionToken(
   if (!myId) {
     return null;
   }
-  const tokenResult = await get('/events/token', { id: spaceId });
-  if (tokenResult.isOk) {
-    if (tokenResult.value.token) {
-      return tokenResult.value.token;
+  for (let i = 0; i < 3; i++) {
+    const tokenResult = await get('/events/token', { id: spaceId });
+    if (tokenResult.isOk) {
+      if (tokenResult.value.token) {
+        return tokenResult.value.token;
+      }
     }
   }
+  alert('获取链接令牌失败，请刷新页面');
   return null;
 }
 

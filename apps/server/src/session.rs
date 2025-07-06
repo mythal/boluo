@@ -228,25 +228,22 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
     }
 }
 
-fn parse_cookie(value: &hyper::header::HeaderValue) -> Result<Option<&str>, anyhow::Error> {
+fn parse_cookie(value: &hyper::header::HeaderValue) -> Option<&str> {
     use std::sync::OnceLock;
     static COOKIE_PATTERN: OnceLock<Regex> = OnceLock::new();
     let cookie_pattern = COOKIE_PATTERN.get_or_init(|| {
-        let pattern = format!(r"\b{SESSION_COOKIE_KEY}=([^;]+)");
+        let pattern = format!(r"(?:^|;\s*){SESSION_COOKIE_KEY}=([^;]+)");
         Regex::new(&pattern).unwrap()
     });
-    let value = value
-        .to_str()
-        .with_context(|| format!("Failed to convert {value:?} to string."))?;
-    let capture = cookie_pattern.captures(value);
-    if let Some(capture) = capture {
-        capture
-            .get(1)
-            .map(|m| Some(m.as_str()))
-            .ok_or_else(|| anyhow::anyhow!("Failed to parse cookie: {}", value))
-    } else {
-        Ok(None)
-    }
+    let value = match value.to_str() {
+        Ok(value) => value,
+        Err(_) => {
+            tracing::warn!("Failed to convert cookie to string");
+            return None;
+        }
+    };
+    let capture = cookie_pattern.captures(value)?;
+    Some(capture.get(1)?.as_str())
 }
 
 #[tracing::instrument]
@@ -311,17 +308,7 @@ pub async fn authenticate_with_cookie(
 ) -> Result<Session, AppError> {
     tracing::Span::current().record("auth_method", "cookie");
     let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
-    let token = match parse_cookie(cookie) {
-        Ok(None) => return Err(AuthenticateFail::Guest.into()),
-        Ok(Some(token)) => token,
-        Err(err) => {
-            tracing::warn!(
-                error = %err,
-                "Failed to parse authentication cookie"
-            );
-            return Err(AuthenticateFail::MalformedToken.into());
-        }
-    };
+    let token = parse_cookie(cookie).ok_or(AuthenticateFail::Guest)?;
     get_session_from_token(token).await
 }
 
@@ -358,4 +345,109 @@ pub async fn authenticate(
         "User authenticated successfully"
     );
     return Ok(session);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hyper::header::HeaderValue;
+
+    #[test]
+    fn test_parse_cookie_basic() {
+        let cookie_value = HeaderValue::from_static("boluo-session-v2=test-token-123");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("test-token-123"));
+    }
+
+    #[test]
+    fn test_parse_cookie_with_multiple_cookies() {
+        let cookie_value = HeaderValue::from_static(
+            "other=value; boluo-session-v2=test-token-456; another=value2",
+        );
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("test-token-456"));
+    }
+
+    #[test]
+    fn test_parse_cookie_at_beginning() {
+        let cookie_value = HeaderValue::from_static("boluo-session-v2=first-token; other=value");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("first-token"));
+    }
+
+    #[test]
+    fn test_parse_cookie_at_end() {
+        let cookie_value = HeaderValue::from_static("other=value; boluo-session-v2=last-token");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("last-token"));
+    }
+
+    #[test]
+    fn test_parse_cookie_not_found() {
+        let cookie_value = HeaderValue::from_static("other=value; another=value2");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_parse_cookie_empty() {
+        let cookie_value = HeaderValue::from_static("");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_parse_cookie_similar_name() {
+        let cookie_value =
+            HeaderValue::from_static("test-boluo-session-v2=wrong; boluo-session-v2=correct");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("correct"));
+    }
+
+    #[test]
+    fn test_parse_cookie_with_spaces() {
+        let cookie_value =
+            HeaderValue::from_static("boluo-session-v2=token with spaces and symbols!@#");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("token with spaces and symbols!@#"));
+    }
+
+    #[test]
+    fn test_parse_cookie_with_equals_in_value() {
+        let cookie_value =
+            HeaderValue::from_static("boluo-session-v2=token=with=equals; other=value");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("token=with=equals"));
+    }
+
+    #[test]
+    fn test_parse_cookie_no_space_separator() {
+        let cookie_value = HeaderValue::from_static("other=value;boluo-session-v2=no-space-token");
+        let result = parse_cookie(&cookie_value);
+        assert!(result.is_some());
+        assert_eq!(result, Some("no-space-token"));
+    }
+
+    #[test]
+    fn test_parse_cookie_regex_edge_cases() {
+        let test_cases = vec![
+            ("prefix-boluo-session-v2=should-not-match", None),
+            ("boluo-session-v2-suffix=should-not-match", None),
+            ("boluo-session-v2=", None),
+            ("boluo-session-v2=value", Some("value")),
+        ];
+
+        for (input, expected) in test_cases {
+            let cookie_value = HeaderValue::from_static(input);
+            let result = parse_cookie(&cookie_value);
+            assert_eq!(result, expected);
+        }
+    }
 }

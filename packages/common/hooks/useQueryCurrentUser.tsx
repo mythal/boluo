@@ -1,7 +1,7 @@
 import type { ApiError, User } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import useSWR, { type SWRConfiguration, type SWRResponse } from 'swr';
-import { type Result } from '@boluo/utils';
+import { sleep, type Result } from '@boluo/utils';
 
 export const useQueryCurrentUser = (
   config?: SWRConfiguration<User | null, ApiError>,
@@ -11,6 +11,7 @@ export const useQueryCurrentUser = (
     async ([path]): Promise<User | null> => {
       let result: Result<User | null, ApiError> = await get(path, { id: null });
       if (result.isErr) {
+        await sleep(100);
         result = await get(path, { id: null });
       }
       return result.unwrap();

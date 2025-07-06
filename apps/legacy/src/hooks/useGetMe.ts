@@ -5,7 +5,10 @@ import { Dispatch } from '../store';
 export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
   useEffect(() => {
     const loadMe = async () => {
-      const me = await get('/users/get_me');
+      let me = await get('/users/get_me');
+      if (me.isErr) {
+        me = await get('/users/get_me');
+      }
       if (me.isOk) {
         if (me.value) {
           const { user, mySpaces, myChannels, settings } = me.value;

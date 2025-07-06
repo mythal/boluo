@@ -152,6 +152,7 @@ export const useConnectionEffect = (
   useEffect(() => {
     if (mailboxId === '') return;
     if (isTokenLoading) return;
+    if (!token) return;
     const chatState = store.get(chatAtom);
     let ws: WebSocket | null = null;
     const unsub = store.sub(connectionStateAtom, () => {

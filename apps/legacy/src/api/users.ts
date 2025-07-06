@@ -34,6 +34,7 @@ export interface RegisterData {
 export interface LoginData {
   username: string;
   password: string;
+  withToken?: boolean;
 }
 
 export interface LoginResult {

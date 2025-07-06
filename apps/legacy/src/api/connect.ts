@@ -3,7 +3,7 @@ import { Id } from '../utils/id';
 export const connect = (
   baseUrl: string,
   id: Id,
-  token: Id | null,
+  token: Id,
   after: number | null,
   node: number | null,
   seq: number | null,

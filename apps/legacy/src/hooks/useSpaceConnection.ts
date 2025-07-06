@@ -14,13 +14,7 @@ export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
 
 export const connectStateAtom = atom<ConnectState>('CONNECTING');
 
-export async function getConnectionToken(
-  spaceId: Id,
-  myId: Id | undefined,
-): Promise<string | null> {
-  if (!myId) {
-    return null;
-  }
+export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Promise<string> {
   for (let i = 0; i < 3; i++) {
     const tokenResult = await get('/events/token', { id: spaceId });
     if (tokenResult.isOk) {
@@ -30,7 +24,7 @@ export async function getConnectionToken(
     }
   }
   alert('获取链接令牌失败，请刷新页面');
-  return null;
+  throw new Error('Failed to get connection token');
 }
 
 export function useSpaceConnection() {

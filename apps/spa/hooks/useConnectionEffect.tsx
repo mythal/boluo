@@ -2,23 +2,39 @@ import { type ChannelMembers, type EventId, type Update, type UserStatus } from 
 import { isServerUpdate } from '@boluo/api/events';
 import { webSocketUrlAtom } from '@boluo/common';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import { RefObject, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
-import { isUuid } from '@boluo/utils';
+import { isUuid, sleep } from '@boluo/utils';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
+import { get } from '@boluo/api-browser';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
 
-const createMailboxConnection = (
+const getToken = async (): Promise<string> => {
+  let token = await get('/events/token', null);
+  if (token.isErr) {
+    token = await get('/events/token', null);
+    if (token.isErr) {
+      await sleep(100);
+      token = await get('/events/token', null);
+      if (token.isErr) {
+        alert('Failed to establish connection: Cannot get connection token');
+      }
+    }
+  }
+  return token.unwrap().token;
+};
+
+const createMailboxConnection = async (
   baseUrl: string,
   id: string,
-  token?: string | null,
   after?: EventId,
-): WebSocket => {
+): Promise<WebSocket> => {
   const paramsObject: Record<string, string> = { mailbox: id };
+  const token = await getToken();
   if (token) paramsObject.token = token;
   if (after) {
     paramsObject.after = after.timestamp.toString();
@@ -30,15 +46,14 @@ const createMailboxConnection = (
   return new WebSocket(url);
 };
 
-const connect = (
+const connect = async (
   webSocketEndpoint: string,
   mailboxId: string,
   connectionState: ConnectionState,
   after: EventId,
   onUpdateReceived: (update: Update) => void,
   dispatch: ChatDispatch,
-  token: string | undefined | null,
-): WebSocket | null => {
+): Promise<WebSocket | null> => {
   if (!isUuid(mailboxId)) return null;
   if (connectionState.type !== 'CLOSED') return null;
   if (connectionState.countdown > 0) {
@@ -52,7 +67,7 @@ const connect = (
   }
   dispatch({ type: 'connecting', payload: { mailboxId } });
 
-  const newConnection = createMailboxConnection(webSocketEndpoint, mailboxId, token, after);
+  const newConnection = await createMailboxConnection(webSocketEndpoint, mailboxId, after);
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
     dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
@@ -85,7 +100,7 @@ const connect = (
   return newConnection;
 };
 
-export const useConnectionEffect = (mailboxId: string, tokenRef: RefObject<string | null>) => {
+export const useConnectionEffect = (mailboxId: string) => {
   const { mutate } = useSWRConfig();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
   const store = useStore();
@@ -146,39 +161,39 @@ export const useConnectionEffect = (mailboxId: string, tokenRef: RefObject<strin
 
   useEffect(() => {
     if (mailboxId === '') return;
-    if (!tokenRef.current) return;
-    const token = tokenRef.current;
     const chatState = store.get(chatAtom);
-    let ws: WebSocket | null = null;
+    let currentConnection: WebSocket | null = null;
     const unsub = store.sub(connectionStateAtom, () => {
       const chatState = store.get(chatAtom);
-      ws = connect(
+      connect(
         webSocketEndpoint,
         mailboxId,
         chatState.connection,
         chatState.lastEventId,
         onUpdateReceived,
         dispatch,
-        token,
-      );
+      ).then((ws) => {
+        currentConnection = ws;
+      });
     });
     const handle = window.setTimeout(() => {
-      if (ws == null) {
-        ws = connect(
+      if (currentConnection == null) {
+        connect(
           webSocketEndpoint,
           mailboxId,
           chatState.connection,
           chatState.lastEventId,
           onUpdateReceived,
           dispatch,
-          token,
-        );
+        ).then((ws) => {
+          currentConnection = ws;
+        });
       }
     });
     return () => {
       window.clearTimeout(handle);
       unsub();
-      if (ws) ws.close();
+      if (currentConnection) currentConnection.close();
     };
-  }, [onUpdateReceived, mailboxId, store, webSocketEndpoint, dispatch, tokenRef]);
+  }, [onUpdateReceived, mailboxId, store, webSocketEndpoint, dispatch]);
 };

@@ -6,7 +6,7 @@ import { SpaceContext } from '../hooks/useSpace';
 import { PaneLoading } from './PaneLoading';
 import { FailedBanner } from './common/FailedBanner';
 import { PaneFailed } from './pane-failed/PaneFailed';
-import { useQueryConnectionToken } from '../hooks/useQueryConnectionToken';
+import { useConnectionTokenRef } from '../hooks/useConnectionTokenRef';
 import { ChatView } from './ChatView';
 import { useTitle } from '../hooks/useTitle';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
@@ -17,8 +17,8 @@ interface Props {
 }
 
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
-  const { data: token, isLoading: isTokenLoading } = useQueryConnectionToken();
-  useConnectionEffect(spaceId, isTokenLoading, token?.token);
+  const tokenRef = useConnectionTokenRef();
+  useConnectionEffect(spaceId, tokenRef);
   useNotify(spaceId);
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);

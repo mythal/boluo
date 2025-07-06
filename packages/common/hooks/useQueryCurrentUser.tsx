@@ -9,8 +9,11 @@ export const useQueryCurrentUser = (
   return useSWR(
     ['/users/query' as const, null],
     async ([path]): Promise<User | null> => {
-      const result: Result<User | null, ApiError> = await get(path, { id: null });
-      return result.unwrapOr(null);
+      let result: Result<User | null, ApiError> = await get(path, { id: null });
+      if (result.isErr) {
+        result = await get(path, { id: null });
+      }
+      return result.unwrap();
     },
     config,
   );

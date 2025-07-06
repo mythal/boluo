@@ -2,13 +2,12 @@ import { type ChannelMembers, type EventId, type Update, type UserStatus } from 
 import { isServerUpdate } from '@boluo/api/events';
 import { webSocketUrlAtom } from '@boluo/common';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { RefObject, useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
 import { isUuid } from '@boluo/utils';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
-import { recordError } from '../error';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
@@ -86,11 +85,7 @@ const connect = (
   return newConnection;
 };
 
-export const useConnectionEffect = (
-  mailboxId: string,
-  isTokenLoading: boolean,
-  token: string | undefined | null,
-) => {
+export const useConnectionEffect = (mailboxId: string, tokenRef: RefObject<string | null>) => {
   const { mutate } = useSWRConfig();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
   const store = useStore();
@@ -151,8 +146,8 @@ export const useConnectionEffect = (
 
   useEffect(() => {
     if (mailboxId === '') return;
-    if (isTokenLoading) return;
-    if (!token) return;
+    if (!tokenRef.current) return;
+    const token = tokenRef.current;
     const chatState = store.get(chatAtom);
     let ws: WebSocket | null = null;
     const unsub = store.sub(connectionStateAtom, () => {
@@ -185,5 +180,5 @@ export const useConnectionEffect = (
       unsub();
       if (ws) ws.close();
     };
-  }, [onUpdateReceived, mailboxId, store, webSocketEndpoint, dispatch, token, isTokenLoading]);
+  }, [onUpdateReceived, mailboxId, store, webSocketEndpoint, dispatch, tokenRef]);
 };

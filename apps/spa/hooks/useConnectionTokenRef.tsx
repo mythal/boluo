@@ -1,17 +1,22 @@
 import { type ApiError } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import { sleep } from '@boluo/utils';
-import useSWR, { type SWRResponse } from 'swr';
+import { useRef, type RefObject } from 'react';
+import useSWR from 'swr';
 
-export const useQueryConnectionToken = (): SWRResponse<{ token: string | null }, ApiError> => {
+export const useConnectionTokenRef = (): RefObject<string | null> => {
   const key = ['/events/token'] as const;
-  return useSWR<{ token: string | null }, ApiError, typeof key>(
+  const ref = useRef<string | null>(null);
+  const { data } = useSWR<{ token: string | null }, ApiError, typeof key>(
     key,
     async ([path]) => {
       let result = await get(path, null);
       if (result.isErr) {
         await sleep(100);
         result = await get(path, null);
+      }
+      if (result.isErr) {
+        alert('Failed to establish connection, please refresh the page');
       }
       return result.unwrap();
     },
@@ -21,9 +26,8 @@ export const useQueryConnectionToken = (): SWRResponse<{ token: string | null },
       revalidateOnReconnect: true,
       revalidateIfStale: true,
       revalidateOnMount: true,
-      onError: (error) => {
-        alert('Failed to establish connection, please refresh the page');
-      },
     },
   );
+  ref.current = data?.token || null;
+  return ref;
 };

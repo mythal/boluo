@@ -66,8 +66,13 @@ async fn query(req: Request<impl Body>) -> Result<Space, AppError> {
     }
     let session = authenticate(&req).await?;
     let Some(_) = SpaceMember::get(&mut *conn, &session.user_id, &id).await? else {
+        tracing::warn!(
+            space_id = %id,
+            user_id = %session.user_id,
+            "A non-member tries to query space"
+        );
         return Err(AppError::NoPermission(
-            "A non-member tries to query space".to_string(),
+            "You are not a member of this space".to_string(),
         ));
     };
     Ok(space)
@@ -112,8 +117,13 @@ async fn token(req: Request<impl Body>) -> Result<Uuid, AppError> {
         .map(|space_member| space_member.is_admin)
         .unwrap_or(false);
     if !is_admin {
+        tracing::warn!(
+            space_id = %id,
+            user_id = %session.user_id,
+            "A non-admin tries to get invitation token"
+        );
         return Err(AppError::NoPermission(
-            "A non-admin tries to get join token".to_string(),
+            "Only admins can get space invitation token".to_string(),
         ));
     }
     Space::get_token(&mut *conn, &id).await.map_err(Into::into)
@@ -129,8 +139,13 @@ async fn refresh_token(req: Request<impl Body>) -> Result<Uuid, AppError> {
         .map(|space_member| space_member.is_admin)
         .unwrap_or(false);
     if !is_admin {
+        tracing::warn!(
+            space_id = %id,
+            user_id = %session.user_id,
+            "A non-admin tries to refresh invitation token"
+        );
         return Err(AppError::NoPermission(
-            "A non-admin tries to refresh join token".to_string(),
+            "Only admins can refresh space invitation token".to_string(),
         ));
     }
     Space::refresh_token(&mut *conn, &id)
@@ -193,7 +208,7 @@ async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     assert_eq!(channel.r#type, _type);
     ChannelMember::add_user(&mut *trans, user.id, channel.id, channel.space_id, "", true).await?;
     trans.commit().await?;
-    tracing::info!("a space ({}) was just created", space.id);
+    tracing::info!(space_id = %space.id, creator = %user.id, "A space ({}) was just created", space.name);
     Ok(SpaceWithMember {
         space,
         member,
@@ -218,12 +233,21 @@ async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
 
+    let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
+        return Err(AppError::NotFound("space"));
+    };
+
     let space_member = SpaceMember::get(&mut *trans, &session.user_id, &space_id)
         .await
         .or_no_permission()?;
-    if !space_member.is_admin {
+    if !space_member.is_admin && space.owner_id != session.user_id {
+        tracing::warn!(
+            space_id = %space_id,
+            user_id = %session.user_id,
+            "A non-admin tries to edit space"
+        );
         return Err(AppError::NoPermission(
-            "A non-admin tries to edit space".to_string(),
+            "Only admins can edit space".to_string(),
         ));
     }
     let space = Space::edit(
@@ -266,8 +290,13 @@ async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
         .await?
         .or_not_found()?;
     if !space.is_public && token != Some(space.invite_token) && space.owner_id != session.user_id {
+        tracing::warn!(
+            space_id = %space_id,
+            user_id = %session.user_id,
+            "A user tries to join group without token"
+        );
         return Err(AppError::NoPermission(
-            "A user tries to join group without token".to_string(),
+            "You have no permission to join this space".to_string(),
         ));
     }
     let user_id = &session.user_id;
@@ -305,18 +334,26 @@ async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUs
 
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
+    let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
+        return Err(AppError::NotFound("space"));
+    };
     let my_member = SpaceMember::get(&mut *trans, &session.user_id, &space_id)
         .await
         .or_not_found()?;
-    let kick_member = SpaceMember::get(&mut *trans, &user_id, &space_id)
+    let member_to_kick = SpaceMember::get(&mut *trans, &user_id, &space_id)
         .await
         .or_not_found()?;
-    if kick_member.is_admin {
+    if member_to_kick.is_admin && space.owner_id != session.user_id {
         return Err(AppError::BadRequest("Can't kick admin".to_string()));
     }
-    if !my_member.is_admin {
+    if !my_member.is_admin && space.owner_id != session.user_id {
+        tracing::warn!(
+            space_id = %space_id,
+            user_id = %session.user_id,
+            "A non-admin tries to kick"
+        );
         return Err(AppError::NoPermission(
-            "A non-admin tries to kick".to_string(),
+            "Only admins can kick members".to_string(),
         ));
     }
     SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
@@ -371,7 +408,9 @@ async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
         session.user_id,
         space.id
     );
-    Err(AppError::NoPermission("failed to delete".to_string()))
+    Err(AppError::NoPermission(
+        "You are not the owner of this space".to_string(),
+    ))
 }
 
 async fn space_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
@@ -393,13 +432,22 @@ async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Value, A
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
 
+    let Some(space) = Space::get_by_id(&mut *conn, &id).await? else {
+        return Err(AppError::NotFound("space"));
+    };
+
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
         .await?
         .map(|space_member| space_member.is_admin)
         .unwrap_or(false);
-    if !is_admin {
+    if !is_admin && space.owner_id != session.user_id {
+        tracing::warn!(
+            space_id = %id,
+            user_id = %session.user_id,
+            "A non-admin tries to update settings"
+        );
         return Err(AppError::NoPermission(
-            "A non-admin tries to update settings".to_string(),
+            "Only admins can update space settings".to_string(),
         ));
     }
     Space::put_settings(&mut *conn, id, &settings).await?;

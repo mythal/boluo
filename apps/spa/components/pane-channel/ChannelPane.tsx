@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
-import { useMemo, type FC } from 'react';
+import { ReactNode, useMemo, type FC } from 'react';
 import { memo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
@@ -25,7 +25,7 @@ import { parseDiceFace } from '../../dice';
 import { MemberContext } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
-import { type MemberWithUser } from '@boluo/api';
+import { Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
 
 interface Props {
   channelId: string;
@@ -44,8 +44,11 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const ChatPaneChannel = memo(({ channelId }: Props) => {
-  const { data: members } = useQueryChannelMembers(channelId, {});
+const ChatPaneChannelView: FC<{
+  channel: Channel;
+  members: ChannelMembers | null;
+  errorNode: ReactNode;
+}> = ({ channel, members, errorNode }) => {
   const member: MemberWithUser | null = useMemo(() => {
     if (members == null) {
       return null;
@@ -58,20 +61,15 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
   }, [members]);
   const nickname = member?.user.nickname ?? undefined;
   const characterName = member?.channel.characterName ?? '';
-  const {
-    data: channel,
-    isLoading: isChannelLoading,
-    error: queryChannelError,
-  } = useQueryChannel(channelId);
   const defaultInGame = channel?.type === 'IN_GAME';
   const atoms: ChannelAtoms = useMakeChannelAtoms(
-    channelId,
+    channel.id,
     characterName,
     defaultInGame,
     parseDiceFace(channel?.defaultDiceType),
   );
   useSendPreview(
-    channelId,
+    channel.id,
     nickname,
     characterName,
     atoms.composeAtom,
@@ -79,27 +77,8 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
     defaultInGame,
   );
   const memberListState = useAtomValue(atoms.memberListStateAtom);
-  let errorNode = null;
-  if (queryChannelError) {
-    const title = <FormattedMessage defaultMessage="Failed to query the channel" />;
-    errorNode = <FailedBanner error={queryChannelError}>{title}</FailedBanner>;
-  }
-  if (isChannelLoading) {
-    return <PaneLoading grow>{errorNode}</PaneLoading>;
-  }
 
-  if (channel == null) {
-    return (
-      <PaneFailed
-        code={queryChannelError?.code}
-        title={<FormattedMessage defaultMessage="Failed to query the channel" />}
-        message={
-          <FormattedMessage defaultMessage="Please check your network connection and try again." />
-        }
-      />
-    );
-  }
-  const iAmMember = member?.channel.channelId === channelId;
+  const iAmMember = member?.channel.channelId === channel.id;
   if (!channel.isPublic && (member == null || !iAmMember)) {
     return (
       <PaneBox
@@ -143,5 +122,41 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
       </ChannelContext>
     </MemberContext>
   );
+};
+
+export const ChatPaneChannel = memo(({ channelId }: Props) => {
+  const {
+    data: members,
+    isLoading: isMembersLoading,
+    error: queryMembersError,
+  } = useQueryChannelMembers(channelId);
+  const {
+    data: channel,
+    isLoading: isChannelLoading,
+    error: queryChannelError,
+  } = useQueryChannel(channelId);
+  let errorNode = null;
+  if (queryChannelError) {
+    const title = <FormattedMessage defaultMessage="Failed to query the channel" />;
+    errorNode = <FailedBanner error={queryChannelError}>{title}</FailedBanner>;
+  } else if (queryMembersError) {
+    const title = <FormattedMessage defaultMessage="Failed to query the channel members" />;
+    errorNode = <FailedBanner error={queryMembersError}>{title}</FailedBanner>;
+  }
+  if (isChannelLoading || isMembersLoading) {
+    return <PaneLoading grow>{errorNode}</PaneLoading>;
+  }
+  if (channel == null) {
+    return (
+      <PaneFailed
+        code={queryChannelError?.code}
+        title={<FormattedMessage defaultMessage="Failed to query the channel" />}
+        message={
+          <FormattedMessage defaultMessage="Please check your network connection and try again." />
+        }
+      />
+    );
+  }
+  return <ChatPaneChannelView channel={channel} members={members || null} errorNode={errorNode} />;
 });
 ChatPaneChannel.displayName = 'ChatPaneChannel';

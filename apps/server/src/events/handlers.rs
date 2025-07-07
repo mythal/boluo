@@ -4,6 +4,7 @@ use super::types::{Seq, UpdateQuery};
 use crate::csrf::authenticate_optional;
 use crate::db;
 use crate::error::{AppError, Find};
+use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::types::ClientEvent;
@@ -294,10 +295,36 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 }
 
 pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
+    let MakeToken { space_id, user_id } = parse_query::<MakeToken>(req.uri()).unwrap_or_default();
     let session = authenticate_optional(&req).await?;
-    Ok(Token {
-        token: super::token::TOKEN_STORE.create_token(session),
-    })
+    match (session, user_id) {
+        (Some(session), Some(user_id)) => {
+            if session.user_id != user_id {
+                tracing::warn!(
+                    session_user_id = %session.user_id,
+                    user_id = %user_id,
+                    space_id = ?space_id,
+                    "User ID does not match the authenticated user"
+                );
+                Err(AppError::Unauthenticated(AuthenticateFail::Guest))
+            } else {
+                Ok(Token {
+                    token: super::token::TOKEN_STORE.create_token(Some(session)),
+                })
+            }
+        }
+        (None, Some(user_id)) => {
+            tracing::warn!(
+                user_id = %user_id,
+                space_id = ?space_id,
+                "No session found for the user, but user_id is provided"
+            );
+            Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))
+        }
+        (session, None) => Ok(Token {
+            token: super::token::TOKEN_STORE.create_token(session),
+        }),
+    }
 }
 
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {

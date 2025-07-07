@@ -11,7 +11,6 @@ import { SpaceWithRelated } from '../../api/spaces';
 import PageLoading from '../../components/molecules/PageLoading';
 import { PaneContext } from '../../hooks/useChannelId';
 import { useMyId } from '../../hooks/useMyId';
-import { connectStateAtom } from '../../hooks/useSpaceConnection';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
 import { breakpoint, mediaQuery } from '../../styles/atoms';

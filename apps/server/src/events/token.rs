@@ -51,8 +51,14 @@ impl TokenStore {
                     };
                     let mut token_store = tokens.pin();
                     let now = Instant::now();
+                    let before = token_store.len();
                     token_store
                         .retain(|_, token: &TokenInfo| now - token.created_at < TOKEN_VALIDITY);
+                    tracing::info!(
+                        before = before,
+                        after = token_store.len(),
+                        "token store cleaned up"
+                    );
                 }
             }
             .instrument(span),

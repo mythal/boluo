@@ -15,6 +15,7 @@ import type {
   CheckEmailExists,
   CheckUsernameExists,
   User,
+  MakeToken,
 } from './bindings';
 
 export interface Get {
@@ -45,5 +46,5 @@ export interface Get {
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
   '/messages/query': { query: { id: string }; result: Message | null };
   // events
-  '/events/token': { query: null; result: { token: string } };
+  '/events/token': { query: MakeToken; result: { token: string } };
 }

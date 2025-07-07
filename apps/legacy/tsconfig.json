@@ -12,7 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "types": ["node", "@emotion/react/types/css-prop"],
     "jsx": "react-jsx",

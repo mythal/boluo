@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { useDispatch, useSelector } from '../store';
 import Flash from './organisms/Flash';
@@ -26,7 +26,11 @@ export const App: React.FC = () => {
     }, 10000);
     return () => window.clearInterval(handle);
   }, [autoSelect, dispatch]);
-  useGetMe(dispatch, () => setLoading(false));
+
+  useGetMe(
+    dispatch,
+    useCallback(() => setLoading(false), []),
+  );
   const flashState = useSelector(
     (state) => state.flash,
     (a, b) => a.equals(b),

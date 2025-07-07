@@ -10,8 +10,8 @@ export const useQueryCurrentUser = (
     ['/users/query' as const, null],
     async ([path]): Promise<User | null> => {
       let result: Result<User | null, ApiError> = await get(path, { id: null });
-      if (result.isErr) {
-        await sleep(100);
+      if (result.isErr && result.err.code === 'FETCH_FAIL') {
+        await sleep(10);
         result = await get(path, { id: null });
       }
       return result.unwrap();

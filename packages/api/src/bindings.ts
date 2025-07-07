@@ -306,6 +306,8 @@ export type Login = { username: string; password: string; withToken?: boolean };
 
 export type LoginReturn = { me: GetMe; token: string | null };
 
+export type MakeToken = { spaceId?: string | null; userId?: string | null };
+
 export type Media = {
   id: string;
   mimeType: string;

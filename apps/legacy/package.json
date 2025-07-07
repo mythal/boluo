@@ -5,6 +5,7 @@
     "> .5%, not IE 11, not op_mini all"
   ],
   "dependencies": {
+    "@boluo/api": "^0.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hello-pangea/dnd": "^18.0.1",

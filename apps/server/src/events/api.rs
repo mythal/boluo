@@ -5,3 +5,12 @@ use uuid::Uuid;
 pub struct Token {
     pub token: Uuid,
 }
+
+#[derive(Deserialize, Serialize, Default, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MakeToken {
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
+    #[serde(default)]
+    pub user_id: Option<Uuid>,
+}

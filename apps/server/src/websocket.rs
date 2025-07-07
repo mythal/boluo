@@ -7,7 +7,7 @@ use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
 use std::future::Future;
 use tokio_tungstenite::WebSocketStream;
-pub use tokio_tungstenite::tungstenite::{Error as WsError, Message as WsMessage};
+pub use tokio_tungstenite::tungstenite::Message as WsMessage;
 use tracing::Instrument as _;
 
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {

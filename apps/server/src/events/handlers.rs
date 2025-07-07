@@ -12,7 +12,7 @@ use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
-use crate::websocket::{WsError, WsMessage, establish_web_socket};
+use crate::websocket::{WsMessage, establish_web_socket};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt, TryStreamExt};
 use hyper::Request;
@@ -242,8 +242,10 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         let receive_client_events = incoming
             .timeout(Duration::from_secs(40))
             .map_err(|_| {
-                tracing::debug!("Incoming WebSocket connection already closed");
-                WsError::AlreadyClosed
+                tungstenite::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::TimedOut,
+                    "WebSocket read timeout",
+                ))
             })
             .and_then(future::ready)
             .try_for_each(|message: WsMessage| async move {
@@ -262,15 +264,27 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             future::Either::Left((_, _)) => {
                 tracing::debug!("Stop push updates");
             }
-            future::Either::Right((Err(e), _)) => {
-                if let tungstenite::Error::Protocol(
+            future::Either::Right((
+                Err(tungstenite::Error::Protocol(
                     tungstenite::error::ProtocolError::ResetWithoutClosingHandshake,
-                ) = e
-                {
-                    tracing::debug!("Reset without closing handshake");
-                } else {
-                    tracing::warn!(error = %e, "Failed to receive events");
-                }
+                )),
+                _,
+            )) => {
+                tracing::debug!("Reset without closing handshake");
+            }
+            future::Either::Right((Err(tungstenite::Error::Io(ref io_err)), _))
+                if io_err.kind() == std::io::ErrorKind::TimedOut =>
+            {
+                tracing::debug!("WebSocket read timeout after 40 seconds");
+            }
+            future::Either::Right((Err(tungstenite::Error::ConnectionClosed), _)) => {
+                tracing::debug!("WebSocket connection closed normally");
+            }
+            future::Either::Right((Err(tungstenite::Error::AlreadyClosed), _)) => {
+                tracing::warn!("Attempted to operate on already closed WebSocket connection");
+            }
+            future::Either::Right((Err(e), _)) => {
+                tracing::warn!(error = %e, "Failed to receive events");
             }
             future::Either::Right((Ok(_), _)) => {
                 tracing::debug!("Stop receiving events");

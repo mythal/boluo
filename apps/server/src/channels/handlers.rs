@@ -134,8 +134,11 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
 
     let color_list = ChannelMember::get_color_list(&mut *conn, &channel.id).await?;
 
-    if channel.is_public || my_member.is_some() {
-        // has permission
+    if channel.is_public
+        || my_member.is_some()
+        || Some(space.owner_id) == session.map(|session| session.user_id)
+    {
+        // Has permission to access the channel
     } else {
         channel.topic = String::new();
         members.clear();
@@ -383,7 +386,21 @@ async fn join(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
         .await
         .or_not_found()?;
     if !channel.is_public {
-        return Err(AppError::NoPermission("private channel".to_string()));
+        let space = Space::get_by_id(&mut *trans, &channel.space_id).await?;
+        if let Some(space) = space
+            && space.owner_id == session.user_id
+        {
+            // Allow the owner to join the private channel
+        } else {
+            tracing::warn!(
+                user_id = %session.user_id,
+                channel_id = %channel.id,
+                "A user is trying to join a private channel"
+            );
+            return Err(AppError::NoPermission(
+                "This is a private channel".to_string(),
+            ));
+        }
     }
     SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
         .await

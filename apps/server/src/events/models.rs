@@ -38,9 +38,6 @@ pub struct UserStatus {
 }
 
 pub async fn space_users_status(space_id: Uuid) -> Option<StatusMap> {
-    let receiver = {
-        let map = crate::events::context::store().mailboxes.pin();
-        map.get(&space_id)?.status.query()
-    };
-    receiver.await.ok()
+    let manager = crate::events::context::store().get_manager(&space_id)?;
+    manager.query_status().await.ok()
 }

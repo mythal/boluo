@@ -55,12 +55,18 @@ async function getConnectionToken(
 
 export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
 
-const handleEvent = (dispatch: Dispatch, event: Events) => {
+const handleEvent = (
+  dispatch: Dispatch,
+  setState: (state: ConnectState) => void,
+  event: Events,
+) => {
   const { body } = event;
   if (body.type === 'APP_UPDATED') {
     location.reload();
-  }
-  if (body.type === 'SPACE_UPDATED') {
+  } else if (body.type === 'ERROR') {
+    console.error('Connection Error', body);
+    setState('CLOSED');
+  } else if (body.type === 'SPACE_UPDATED') {
     const { spaceWithRelated } = body;
     const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
     dispatch(action);
@@ -183,11 +189,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
           return;
         }
         const event: Events = JSON.parse(received) as Events;
-        if (compareEvents(after.current, event.id) > 0) {
-          return;
-        }
+        if (compareEvents(after.current, event.id) > 0) return;
         after.current = event.id;
-        handleEvent(dispatch, event);
+        handleEvent(dispatch, setState, event);
       };
       dispatch(connectSpace(spaceId, connection));
     };

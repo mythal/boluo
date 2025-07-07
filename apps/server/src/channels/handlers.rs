@@ -8,7 +8,7 @@ use crate::channels::api::{
     CheckChannelName, EditChannelMember, Export, GrantOrRevoke, JoinChannel, KickFromChannel,
 };
 use crate::channels::models::{ChannelType, Member};
-use crate::csrf::authenticate;
+use crate::csrf::{authenticate, authenticate_optional};
 use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::Update;
@@ -61,10 +61,16 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
     let channel = Channel::get_by_id(&mut *conn, &query.id)
         .await
         .or_not_found()?;
-    let current_user_id = authenticate(&req).await.ok().map(|session| session.user_id);
+    let current_user_id = authenticate_optional(&req)
+        .await?
+        .map(|session| session.user_id);
     if !channel.is_public && current_user_id.is_none() {
+        tracing::warn!(
+            "A guest is trying to access a private channel: {:?}",
+            channel.id
+        );
         return Err(AppError::NoPermission(
-            "you are not logged in and this is a private channel".to_string(),
+            "You are not logged in and this is a private channel".to_string(),
         ));
     }
     let mut members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
@@ -84,14 +90,26 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
             .position(|member| member.channel.user_id == current_user_id)
     });
     if !channel.is_public && self_index.is_none() {
-        return Err(AppError::NoPermission(
-            "this is a private channel".to_string(),
-        ));
+        let space = Space::get_by_id(&mut *conn, &channel.space_id).await?;
+        if let Some(space) = space
+            && Some(space.owner_id) == current_user_id
+        {
+            // Allow the owner to access the private channel
+        } else {
+            tracing::warn!(
+                user_id = ?current_user_id,
+                channel_id = ?channel.id,
+                "A user is trying to access a private channel"
+            );
+            return Err(AppError::NoPermission(
+                "This is a private channel".to_string(),
+            ));
+        }
     }
 
     Ok(ChannelMembers {
         members: members_attach_user(&mut *conn, members).await?,
-        // deprecated
+        // Deprecated
         color_list: HashMap::new(),
         heartbeat_map: HashMap::new(),
         self_index,

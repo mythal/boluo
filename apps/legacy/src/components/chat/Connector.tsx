@@ -28,20 +28,29 @@ export const style = css`
   color: #1a202c;
 `;
 
-export async function getConnectionToken(
+const RETRY_SLEEP_MS = [0, 20, 100];
+
+async function getConnectionToken(
   spaceId: Id,
-  myId: Id | undefined,
-): Promise<string | null> {
-  if (!myId) {
-    return null;
-  }
-  const tokenResult = await get('/events/token', { id: spaceId });
+  userId: Id | undefined,
+  retryCount: number = 0,
+): Promise<string | 'NETWORK_ERROR' | 'UNAUTHENTICATED'> {
+  const tokenResult = await get('/events/token', { spaceId, userId });
   if (tokenResult.isOk) {
-    if (tokenResult.value.token) {
-      return tokenResult.value.token;
-    }
+    return tokenResult.value.token;
   }
-  return null;
+  const err = tokenResult.value;
+  if (err.code === 'FETCH_FAIL') {
+    if (retryCount >= RETRY_SLEEP_MS.length) {
+      return 'NETWORK_ERROR';
+    }
+    await new Promise((resolve) => setTimeout(resolve, RETRY_SLEEP_MS[retryCount]));
+    return getConnectionToken(spaceId, userId, retryCount + 1);
+  } else if (err.code === 'UNAUTHENTICATED') {
+    return 'UNAUTHENTICATED';
+  } else {
+    throw new Error(err.message);
+  }
 }
 
 export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
@@ -134,17 +143,19 @@ export const Connector = ({ spaceId, myId }: Props) => {
         connectionRef.current = null;
       };
       setState('CONNECTING');
-      let token: string | null = null;
-      try {
-        token = await getConnectionToken(spaceId, myId);
-      } catch {
+      const tokenResult = await getConnectionToken(spaceId, myId);
+      if (tokenResult === 'UNAUTHENTICATED') {
+        retry();
+        return;
+      }
+      if (tokenResult === 'NETWORK_ERROR') {
         retry();
         return;
       }
       const connection = connect(
         baseUrlRef.current,
         spaceId,
-        token,
+        tokenResult,
         after.current.timestamp,
         after.current.node,
         after.current.seq,

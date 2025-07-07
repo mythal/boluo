@@ -23,6 +23,7 @@ use std::time::Duration;
 use tokio_stream::StreamExt as _;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
+use tracing::instrument;
 use uuid::Uuid;
 
 const CHUNK_SIZE: usize = 16;
@@ -38,12 +39,18 @@ async fn check_permissions(
     }
     match session {
         Some(session) => {
+            if space.owner_id == session.user_id {
+                return Ok(());
+            }
             SpaceMember::get(&mut *db, &session.user_id, &space.id)
                 .await
                 .or_no_permission()?;
         }
         None => {
-            tracing::warn!("A user tried to access private space but did not pass authentication");
+            tracing::warn!(
+                space_id = %space.id,
+                "A user tried to access private space but did not pass authentication"
+            );
             return Err(AppError::NoPermission(
                 "This space does not allow non-members to view it.".to_string(),
             ));
@@ -54,6 +61,7 @@ async fn check_permissions(
 
 // Allow the needless return for keep some visual hints
 #[allow(clippy::needless_return)]
+#[instrument(skip(outgoing))]
 async fn push_updates(
     mailbox: Uuid,
     outgoing: &mut Sender,
@@ -73,7 +81,7 @@ async fn push_updates(
                 Ok(_) => (),
                 Err(ConnectionClosed) | Err(AlreadyClosed) => break,
                 Err(e) => {
-                    tracing::error!("Error on sending WebSocket message: {}", e);
+                    tracing::error!(error = %e, "Error on sending WebSocket message");
                     return;
                 }
             }
@@ -86,6 +94,7 @@ async fn push_updates(
         let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
         let Some(cached_updates) = Update::get_from_state(&mailbox, after, seq, node).await else {
+            tracing::warn!("Failed to get cached updates");
             let error_update = Update::error(
                 mailbox,
                 AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
@@ -96,11 +105,7 @@ async fn push_updates(
         };
         for message in cached_updates {
             if let Err(err) = tx.send(WsMessage::Text(message)).await {
-                tracing::warn!(
-                    "Failed to send initialize updates to mailbox {}: {}",
-                    mailbox,
-                    err
-                );
+                tracing::warn!(error = %err, "Failed to send initialize updates");
                 return;
             };
         }
@@ -120,7 +125,7 @@ async fn push_updates(
                 }
             };
             if let Err(e) = tx.send(message).await {
-                tracing::error!("Failed to send broadcast message to {mailbox}: {e}");
+                tracing::error!(error = %e, "Failed to send broadcast message");
                 break;
             }
         }
@@ -132,7 +137,7 @@ async fn push_updates(
             .send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥")))
             .await
         {
-            tracing::debug!("{}", err);
+            tracing::debug!(error = %err, "Failed to send ping message");
         }
     });
 
@@ -143,13 +148,15 @@ async fn push_updates(
     }
 }
 
+#[instrument(skip(session, message))]
 async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &str) {
-    let event: Result<ClientEvent, _> = serde_json::from_str(message);
-    if let Err(event) = event {
-        tracing::warn!("Failed to parse event from client: {}", event);
-        return;
-    }
-    let event = event.unwrap();
+    let event = match serde_json::from_str(message) {
+        Ok(event) => event,
+        Err(parse_error) => {
+            tracing::warn!(error = %parse_error, "Failed to parse event from client");
+            return;
+        }
+    };
     match event {
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {

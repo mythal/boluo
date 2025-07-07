@@ -106,7 +106,7 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                 if let Some(get_me) = cached.and_then(Mortal::fresh_only) {
                     return Ok(ok_response(Some(get_me)));
                 }
-                let my_spaces = Space::get_by_user(&mut *conn, &user.id).await?;
+                let my_spaces = Space::get_by_user(&mut *conn, user.id).await?;
                 let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
                 let settings = UserExt::get_settings(&mut *conn, user.id).await?;
                 let get_me = GetMe {
@@ -157,7 +157,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let session = session::start(user_id).await.map_err(error_unexpected!())?;
     let token: String = session::token(&session.id);
     let token = if form.with_token { Some(token) } else { None };
-    let my_spaces = Space::get_by_user(&mut *conn, &user_id).await?;
+    let my_spaces = Space::get_by_user(&mut *conn, user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
     let settings = UserExt::get_settings(&mut *conn, user_id).await?;
     let me = GetMe {

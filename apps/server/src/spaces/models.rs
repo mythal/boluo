@@ -13,6 +13,17 @@ use crate::ttl::{self, Lifespan, Mortal, fetch_entry, fetch_entry_optional};
 use crate::users::User;
 use crate::utils::merge_blank;
 
+#[derive(Debug, Clone)]
+pub struct UserSpaces {
+    pub space_members: Vec<SpaceMember>,
+}
+
+impl Lifespan for UserSpaces {
+    fn ttl_sec() -> u64 {
+        ttl::minute::TWO
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "spaces")]
 #[serde(rename_all = "camelCase")]
@@ -83,14 +94,22 @@ impl Space {
         space_member.map(|member| member.is_admin).unwrap_or(false)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: Uuid) -> Result<(), sqlx::Error> {
+    pub async fn delete(db: &mut sqlx::PgConnection, id: Uuid) -> Result<(), sqlx::Error> {
+        let space_members = SpaceMemberWithUser::get_by_space(&mut *db, &id).await?;
         sqlx::query_file!("sql/spaces/delete.sql", &id)
             .execute(db)
             .await?;
-        tokio::join!(
+        let mut invalidate_tasks = vec![
             CACHE.invalidate(CacheType::Space, id),
             CACHE.invalidate(CacheType::SpaceSettings, id),
-        );
+        ];
+
+        for (_, space_member_with_user) in space_members {
+            invalidate_tasks
+                .push(CACHE.invalidate(CacheType::UserSpaces, space_member_with_user.user.id));
+        }
+
+        futures::future::join_all(invalidate_tasks).await;
         Ok(())
     }
 
@@ -254,23 +273,29 @@ impl Space {
             .await
     }
 
-    pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        user_id: &Uuid,
+    pub async fn get_by_user(
+        db: &mut sqlx::PgConnection,
+        user_id: Uuid,
     ) -> Result<Vec<SpaceWithMember>, sqlx::Error> {
-        let space_with_member_list = sqlx::query_file_as!(
-            SpaceWithMember,
-            "sql/spaces/get_spaces_by_user.sql",
-            user_id
-        )
-        .fetch_all(db)
-        .await?;
-        for space in &space_with_member_list {
-            CACHE
-                .Space
-                .insert(space.space.id, space.space.clone().into());
+        let space_members = SpaceMember::get_by_user(&mut *db, user_id).await?;
+        let spaces =
+            Space::get_by_id_list(&mut *db, space_members.iter().map(|member| member.space_id))
+                .await?;
+        let Some(user) = User::get_by_id(db, &user_id).await? else {
+            return Ok(vec![]);
+        };
+        let mut spaces_with_member: Vec<SpaceWithMember> = vec![];
+        for member in space_members {
+            let Some(space) = spaces.get(&member.space_id) else {
+                continue;
+            };
+            spaces_with_member.push(SpaceWithMember {
+                space: space.clone(),
+                member,
+                user: user.clone(),
+            });
         }
-        Ok(space_with_member_list)
+        Ok(spaces_with_member)
     }
 
     pub async fn user_owned<'c, T: sqlx::PgExecutor<'c>>(
@@ -334,7 +359,23 @@ impl SpaceMember {
         space_id: &Uuid,
         is_admin: bool,
     ) -> Result<Option<SpaceMember>, sqlx::Error> {
-        SpaceMember::set(db, user_id, space_id, Some(is_admin)).await
+        let result = SpaceMember::set(db, user_id, space_id, Some(is_admin)).await?;
+        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
+        Ok(result)
+    }
+
+    pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<Vec<SpaceMember>, sqlx::Error> {
+        let user_spaces = fetch_entry(&CACHE.UserSpaces, user_id, async move {
+            sqlx::query_file_scalar!("sql/spaces/get_space_member_list_by_user.sql", user_id)
+                .fetch_all(db)
+                .await
+                .map(|space_members| UserSpaces { space_members }.into())
+        })
+        .await?;
+        Ok(user_spaces.space_members)
     }
 
     async fn set<'c, T: sqlx::PgExecutor<'c>>(
@@ -343,14 +384,16 @@ impl SpaceMember {
         space_id: &Uuid,
         is_admin: Option<bool>,
     ) -> Result<Option<SpaceMember>, sqlx::Error> {
-        sqlx::query_file_scalar!(
+        let result = sqlx::query_file_scalar!(
             "sql/spaces/set_space_member.sql",
             is_admin,
             user_id,
             space_id,
         )
         .fetch_optional(db)
-        .await
+        .await?;
+        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
+        Ok(result)
     }
 
     pub async fn remove_user(
@@ -367,6 +410,7 @@ impl SpaceMember {
         if (affected as usize) == 0 {
             return Ok(vec![]);
         }
+        CACHE.invalidate(CacheType::UserSpaces, user_id).await;
         ChannelMember::remove_user_by_space(&mut *db, user_id, space_id).await
     }
 
@@ -375,7 +419,7 @@ impl SpaceMember {
         user_id: &Uuid,
         space_id: &Uuid,
     ) -> Result<SpaceMember, sqlx::Error> {
-        sqlx::query_file_as!(
+        let result = sqlx::query_file_as!(
             AddUserToSpace,
             "sql/spaces/add_user_to_space.sql",
             user_id,
@@ -383,8 +427,9 @@ impl SpaceMember {
             true
         )
         .fetch_one(db)
-        .await
-        .map(|result| result.member)
+        .await?;
+        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
+        Ok(result.member)
     }
 
     pub async fn add_user<'c, T: sqlx::PgExecutor<'c>>(
@@ -392,7 +437,7 @@ impl SpaceMember {
         user_id: &Uuid,
         space_id: &Uuid,
     ) -> Result<SpaceMember, sqlx::Error> {
-        sqlx::query_file_as!(
+        let result = sqlx::query_file_as!(
             AddUserToSpace,
             "sql/spaces/add_user_to_space.sql",
             user_id,
@@ -400,8 +445,9 @@ impl SpaceMember {
             false
         )
         .fetch_one(db)
-        .await
-        .map(|result| result.member)
+        .await?;
+        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
+        Ok(result.member)
     }
 
     pub async fn get<'c, T: sqlx::PgExecutor<'c>>(

@@ -140,7 +140,9 @@ async fn refresh_token(req: Request<impl Body>) -> Result<Uuid, AppError> {
 
 async fn my_spaces(req: Request<impl Body>) -> Result<Vec<SpaceWithMember>, AppError> {
     let session = authenticate(&req).await?;
-    Space::get_by_user(&db::get().await, &session.user_id)
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    Space::get_by_user(&mut *conn, session.user_id)
         .await
         .map_err(Into::into)
 }

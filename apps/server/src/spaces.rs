@@ -3,4 +3,4 @@ pub mod handlers;
 pub mod models;
 
 pub use handlers::router;
-pub use models::{Space, SpaceMember, SpaceSettings};
+pub use models::{Space, SpaceMember, SpaceSettings, UserSpaces};

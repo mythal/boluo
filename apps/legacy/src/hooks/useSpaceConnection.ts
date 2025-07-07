@@ -14,15 +14,33 @@ export type ConnectState = 'CONNECTING' | 'OPEN' | 'CLOSED';
 
 export const connectStateAtom = atom<ConnectState>('CONNECTING');
 
+const sleepWithRandomDelay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, Math.floor(ms + Math.random() * ms)));
+
 export async function getConnectionToken(spaceId: Id, myId: Id | undefined): Promise<string> {
-  for (let i = 0; i < 3; i++) {
-    const tokenResult = await get('/events/token', { id: spaceId });
-    if (tokenResult.isOk) {
-      if (tokenResult.value.token) {
-        return tokenResult.value.token;
-      }
-    }
-  }
+  let tokenResult = await get('/events/token', { id: spaceId });
+  if (tokenResult.isOk) return tokenResult.value.token;
+
+  await sleepWithRandomDelay(5);
+
+  tokenResult = await get('/events/token', { id: spaceId });
+  if (tokenResult.isOk) return tokenResult.value.token;
+
+  await sleepWithRandomDelay(20);
+
+  tokenResult = await get('/events/token', { id: spaceId });
+  if (tokenResult.isOk) return tokenResult.value.token;
+
+  await sleepWithRandomDelay(100);
+
+  tokenResult = await get('/events/token', { id: spaceId });
+  if (tokenResult.isOk) return tokenResult.value.token;
+
+  await sleepWithRandomDelay(200);
+
+  tokenResult = await get('/events/token', { id: spaceId });
+  if (tokenResult.isOk) return tokenResult.value.token;
+
   alert('获取链接令牌失败，请刷新页面');
   throw new Error('Failed to get connection token');
 }

@@ -287,10 +287,7 @@ export function get(
 export function get(path: '/channels/export', query: Export): Promise<AppResult<Message[]>>;
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
-export function get(
-  path: '/events/token',
-  query: IdQuery,
-): Promise<AppResult<{ token: string | null }>>;
+export function get(path: '/events/token', query: IdQuery): Promise<AppResult<{ token: string }>>;
 
 export function get<Q extends object, T>(path: string, query?: Q): Promise<AppResult<T>> {
   return request(makeUri(path, query), 'GET', null);

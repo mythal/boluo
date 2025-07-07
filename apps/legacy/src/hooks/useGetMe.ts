@@ -8,7 +8,7 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
     const loadMe = async () => {
       let me = await get('/users/get_me');
       if (me.isErr && me.value.code === 'FETCH_FAIL') {
-        await new Promise((resolve) => setTimeout(resolve, 100, cancel.signal));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         me = await get('/users/get_me');
       }
       if (cancel.signal.aborted) return;
@@ -22,7 +22,7 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
       }
     };
     loadMe().then(() => finish());
-    const handle = setInterval(loadMe, 20 * 1000, cancel.signal);
+    const handle = setInterval(loadMe, 20 * 1000);
     return () => {
       cancel.abort();
       clearInterval(handle);

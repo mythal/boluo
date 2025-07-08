@@ -5,8 +5,7 @@ use uuid::Uuid;
 
 use crate::channels::{Channel, ChannelMembers};
 use crate::session::Session;
-use crate::spaces::Space;
-use crate::spaces::SpaceSettings;
+use crate::spaces::{Space, SpaceSettings, UserSpaces};
 use crate::users::GetMe;
 use crate::users::User;
 use crate::users::UserExt;
@@ -105,6 +104,7 @@ define_caches! {
     (SpaceSettings, 8192),
     (GetMe, 8192),
     (ChannelMembers, 8192),
+    (UserSpaces, 4096),
 }
 
 pub static CACHE: LazyLock<CacheStore> = LazyLock::new(CacheStore::new);

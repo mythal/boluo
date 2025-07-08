@@ -244,7 +244,7 @@ export function patch<T, U extends object = object, Q extends object = {}>(
   return request(makeUri(path, query), 'PATCH', JSON.stringify(payload));
 }
 
-export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User>>;
+export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User | null>>;
 export function get(path: '/users/get_me'): Promise<AppResult<GetMe | null>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(

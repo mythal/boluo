@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    sm AS \"member!: SpaceMember\"\nFROM\n    space_members sm\n    INNER JOIN spaces s ON sm.space_id = s.id\n        AND s.deleted = FALSE\n    INNER JOIN users u ON u.id = $1\nWHERE\n    sm.user_id = $1\nORDER BY\n    s.latest_activity DESC;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "member!: SpaceMember",
+        "type_info": {
+          "Custom": {
+            "name": "space_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "is_admin",
+                  "Bool"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "655152b22238e8ca20e8d1ee68459880d809f74d73cfcb2c9e60ce6d6719d611"
+}

@@ -269,12 +269,11 @@ impl Update {
             focus,
         };
 
-        let map = super::context::store().mailboxes.pin();
-        let Some(mailbox_state) = map.get(&space_id) else {
+        let Some(mailbox_manager) = super::context::store().get_manager(&space_id) else {
             // It's ok if the mailbox is not be created yet
             return Ok(());
         };
-        mailbox_state.status.update(user_id, heartbeat);
+        mailbox_manager.update_status(user_id, heartbeat)?;
         Ok(())
     }
 

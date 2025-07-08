@@ -1,7 +1,5 @@
 SELECT
-    s AS "space!: Space",
-    sm AS "member!: SpaceMember",
-    u AS "user!: User"
+    sm AS "member!: SpaceMember"
 FROM
     space_members sm
     INNER JOIN spaces s ON sm.space_id = s.id

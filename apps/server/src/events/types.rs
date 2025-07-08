@@ -344,6 +344,10 @@ impl Update {
                 return Err(GetFromStateError::FailedToQuery);
             }
         };
+
+        let span = tracing::Span::current();
+        span.record("start_at", start_at);
+
         if let Some(after) = after {
             if after > 0 && after < start_at {
                 return Err(GetFromStateError::RequestedUpdatesAreTooEarly);

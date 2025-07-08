@@ -37,7 +37,7 @@ impl EncodedUpdate {
 }
 
 pub enum Action {
-    Query(tokio::sync::oneshot::Sender<BTreeMap<EventId, Utf8Bytes>>),
+    Query(tokio::sync::oneshot::Sender<CachedUpdates>),
     Update(Box<EncodedUpdate>),
     Members(MembersAction),
     Status(super::status::StatusAction),
@@ -165,8 +165,7 @@ impl MailboxManager {
 
     pub async fn query_encoded_updates(
         &self,
-    ) -> Result<tokio::sync::oneshot::Receiver<BTreeMap<EventId, Utf8Bytes>>, MailboxManageError>
-    {
+    ) -> Result<tokio::sync::oneshot::Receiver<CachedUpdates>, MailboxManageError> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let action = Action::Query(tx);
         self.send_read_action(action).await?;
@@ -196,6 +195,11 @@ impl MailboxManager {
         }
         Ok(())
     }
+}
+
+pub struct CachedUpdates {
+    pub updates: BTreeMap<EventId, Utf8Bytes>,
+    pub start_at: i64,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -363,7 +367,9 @@ impl MailBoxState {
             let mut last_activity_at = std::time::Instant::now();
             let mut members_state = members::MembersCache::new();
             let mut status_state = super::status::StatusState::new(id);
-            let mut interval_6s = tokio::time::interval(std::time::Duration::from_secs(6));
+            let mut broadcast_status_interval = tokio::time::interval(std::time::Duration::from_secs(12));
+            let mut cleanup_interval = tokio::time::interval(std::time::Duration::from_secs(120));
+            let mut start_at = timestamp();
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
@@ -373,7 +379,10 @@ impl MailBoxState {
                                 for preview in preview_map.values() {
                                     updates.insert(preview.update.id, preview.encoded.clone());
                                 }
-                                sender.send(updates).ok();
+                                sender.send(CachedUpdates {
+                                    updates,
+                                    start_at,
+                                }).ok();
                             }
                             Action::Update(encoded_update) => {
                                 last_activity_at = std::time::Instant::now();
@@ -387,14 +396,29 @@ impl MailBoxState {
                             }
                         }
                     }
-                    _ = interval_6s.tick() => {
+                    _ = broadcast_status_interval.tick() => {
                         status_state.update(StatusAction::Broadcast);
+                    }
+                    _ = cleanup_interval.tick() => {
                         if last_activity_at.elapsed() > std::time::Duration::from_secs(60 * 60 * 2) {
                             store().remove(id);
                             tracing::info!(mailbox_id = %id, "Mailbox state is idle, shutting down");
                             break;
                         } else {
+                            let before_size = updates.len();
                             cleanup(&mut updates, &mut preview_map);
+                            let after_size = updates.len();
+                            if after_size != before_size {
+                                tracing::info!(mailbox_id = %id, "Cleaned up {} updates", before_size - after_size);
+                            }
+                            match updates.first_key_value() {
+                                Some((event_id, _)) => {
+                                    start_at = event_id.timestamp;
+                                }
+                                None => {
+                                    start_at = timestamp();
+                                }
+                            }
                         }
                     }
                     else => {

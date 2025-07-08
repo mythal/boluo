@@ -157,7 +157,7 @@ async fn my_spaces(req: Request<impl Body>) -> Result<Vec<SpaceWithMember>, AppE
     let session = authenticate(&req).await?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
-    Space::get_by_user(&mut *conn, session.user_id)
+    Space::get_by_user(&mut conn, session.user_id)
         .await
         .map_err(Into::into)
 }
@@ -399,7 +399,7 @@ async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
     let session = authenticate(&req).await?;
     let space = Space::get_by_id(&mut *conn, &id).await.or_not_found()?;
     if space.owner_id == session.user_id {
-        Space::delete(&mut *conn, id).await?;
+        Space::delete(&mut conn, id).await?;
         tracing::info!("A space ({}) was deleted", space.id);
         return Ok(space);
     }

@@ -18,7 +18,6 @@ use tokio::net::TcpListener;
 
 use hyper::Request;
 use hyper::service::service_fn;
-use tracing::Instrument;
 
 #[macro_use]
 mod utils;
@@ -281,19 +280,15 @@ async fn handle_connection(
 ) {
     match accept_result {
         Ok((stream, addr)) => {
-            let span = tracing::info_span!("http_connection", addr = %addr);
             let io = TokioIo::new(stream);
             let conn = http
                 .serve_connection(io, service_fn(handler))
                 .with_upgrades();
-            tokio::task::spawn(
-                async move {
-                    if let Err(err) = conn.await {
-                        tracing::warn!(error = %err, "HTTP connection error");
-                    }
+            tokio::task::spawn(async move {
+                if let Err(err) = conn.await {
+                    tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
                 }
-                .instrument(span),
-            );
+            });
         }
         Err(err) => {
             tracing::warn!(error = %err, "Failed to accept connection");

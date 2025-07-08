@@ -109,6 +109,7 @@ async fn handler(
         duration_ms = tracing::field::Empty,
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
+        auth_method = tracing::field::Empty,
     );
 
     let start = std::time::Instant::now();

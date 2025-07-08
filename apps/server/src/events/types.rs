@@ -21,7 +21,7 @@ use super::status::StatusMap;
 
 pub type Seq = u32;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateQuery {
     pub mailbox: Uuid,
@@ -33,6 +33,12 @@ pub struct UpdateQuery {
     pub seq: Option<Seq>,
     #[serde(default)]
     pub node: Option<u16>,
+    /// Some clients may keep logged in state but actually failed to authenticate.
+    /// On client connecting, we need to check if the user ID matches the authenticated user.
+    ///
+    /// The check is optional.
+    #[serde(default)]
+    pub user_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, specta::Type)]

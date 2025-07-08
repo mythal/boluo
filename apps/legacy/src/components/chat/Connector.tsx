@@ -164,6 +164,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
       const connection = connect(
         baseUrlRef.current,
         spaceId,
+        myId,
         tokenResult,
         after.current.timestamp,
         after.current.node,

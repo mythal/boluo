@@ -163,6 +163,11 @@ export const useConnectionEffect = (mailboxId: string) => {
           );
           return;
         case 'ERROR':
+          if (update.body.code === 'NOT_FOUND') {
+            alert(
+              'Can not find the requested updates, this may be due to the client being offline for a long time or the server has been restarted. Please refresh the page',
+            );
+          }
           dispatch({
             type: 'connectionError',
             payload: { mailboxId, code: update.body.code ?? 'UNEXPECTED' },

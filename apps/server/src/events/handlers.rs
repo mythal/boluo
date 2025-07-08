@@ -7,7 +7,7 @@ use crate::error::{AppError, Find};
 use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
-use crate::events::types::ClientEvent;
+use crate::events::types::{ClientEvent, GetFromStateError};
 use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
@@ -93,15 +93,46 @@ async fn push_updates(
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
-        let Some(cached_updates) = Update::get_from_state(&mailbox, after, seq, node).await else {
-            tracing::warn!("Failed to get cached updates");
-            let error_update = Update::error(
-                mailbox,
-                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
-            )
-            .encode();
-            tx.send(WsMessage::Text(error_update)).await.ok();
-            return;
+        let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
+            Ok(updates) => updates,
+            Err(GetFromStateError::NotFound) => {
+                if after.is_some() {
+                    tracing::info!(
+                        mailbox_id = %mailbox,
+                        after,
+                        "The user requested updates with 'after', but no cached updates found"
+                    );
+                    let error_update =
+                        Update::error(mailbox, AppError::NotFound("Updates")).encode();
+                    tx.send(WsMessage::Text(error_update)).await.ok();
+                    return;
+                }
+                tracing::debug!(mailbox_id = %mailbox, "No cached updates");
+                vec![]
+            }
+            Err(GetFromStateError::FailedToQuery) => {
+                tracing::error!(
+                    mailbox_id = %mailbox,
+                    "Failed to get cached updates"
+                );
+                let error_update = Update::error(
+                    mailbox,
+                    AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
+                )
+                .encode();
+                tx.send(WsMessage::Text(error_update)).await.ok();
+                return;
+            }
+            Err(GetFromStateError::RequestedUpdatesAreTooEarly) => {
+                tracing::info!(
+                    mailbox_id = %mailbox,
+                    after,
+                    "The user requested updates with 'after', but the cached updates are too new"
+                );
+                let error_update = Update::error(mailbox, AppError::NotFound("Updates")).encode();
+                tx.send(WsMessage::Text(error_update)).await.ok();
+                return;
+            }
         };
         for message in cached_updates {
             if let Err(err) = tx.send(WsMessage::Text(message)).await {

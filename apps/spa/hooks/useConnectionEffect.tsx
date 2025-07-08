@@ -58,6 +58,7 @@ const createMailboxConnection = async (
     paramsObject.node = after.node.toString();
     paramsObject.seq = after.seq.toString();
   }
+  if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
   const url = `${baseUrl}/events/connect?${params.toString()}`;
   return new WebSocket(url);

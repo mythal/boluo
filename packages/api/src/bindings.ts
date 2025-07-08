@@ -530,6 +530,21 @@ export type UpdateBody =
   | { type: 'APP_UPDATED'; version: string }
   | { type: 'APP_INFO'; info: BasicInfo };
 
+export type UpdateQuery = {
+  mailbox: string;
+  token?: string | null;
+  after?: number | null;
+  seq?: number | null;
+  node?: number | null;
+  /**
+   * Some clients may keep logged in state but actually failed to authenticate.
+   * On client connecting, we need to check if the user ID matches the authenticated user.
+   *
+   * The check is optional.
+   */
+  userId?: string | null;
+};
+
 export type Upload = { filename: string; mimeType: string | null; size?: number };
 
 export type User = {

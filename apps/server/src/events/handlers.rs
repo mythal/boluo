@@ -221,6 +221,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         after,
         seq,
         node,
+        user_id,
     } = query;
     let mut session = match authenticate_optional(&req).await {
         Ok(session) => session,
@@ -248,6 +249,28 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             }
         }
     };
+
+    if let Some(user_id) = user_id {
+        if session.is_none() {
+            return connection_error(
+                req,
+                Some(mailbox),
+                AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
+            );
+        }
+        if session.as_ref().map(|s| s.user_id) != Some(user_id) {
+            tracing::error!(
+                session_user_id = %session.as_ref().map(|s| s.user_id).unwrap_or_default(),
+                user_id = %user_id,
+                "User ID does not match the authenticated user"
+            );
+            return connection_error(
+                req,
+                Some(mailbox),
+                AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
+            );
+        }
+    }
 
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();

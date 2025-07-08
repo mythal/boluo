@@ -85,7 +85,13 @@ impl PreviewPost {
             pos = p as f64 / q as f64;
             edit_for = Some(time);
         } else if edit_for.is_none() && !should_clear {
-            let timeout = if muted { 8 } else { 60 * 3 };
+            use std::time::Duration;
+
+            let timeout = if muted {
+                Duration::from_secs(8)
+            } else {
+                Duration::from_secs(60 * 3)
+            };
             let pos_ratio = crate::pos::CHANNEL_POS_MANAGER
                 .preview_pos(channel_id, id, timeout)
                 .await?;

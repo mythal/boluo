@@ -2,7 +2,7 @@ use crate::channels::Channel;
 use crate::channels::api::MemberWithUser;
 
 use crate::error::AppError;
-use crate::events::context::EncodedUpdate;
+use crate::events::context::{CachedUpdates, EncodedUpdate};
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewPost};
 use crate::info::BasicInfo;
@@ -21,7 +21,7 @@ use super::status::StatusMap;
 
 pub type Seq = u32;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateQuery {
     pub mailbox: Uuid,
@@ -33,6 +33,12 @@ pub struct UpdateQuery {
     pub seq: Option<Seq>,
     #[serde(default)]
     pub node: Option<u16>,
+    /// Some clients may keep logged in state but actually failed to authenticate.
+    /// On client connecting, we need to check if the user ID matches the authenticated user.
+    ///
+    /// The check is optional.
+    #[serde(default)]
+    pub user_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, specta::Type)]
@@ -120,6 +126,14 @@ pub enum UpdateBody {
     AppInfo {
         info: BasicInfo,
     },
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum GetFromStateError {
+    #[error("Failed to query updates")]
+    FailedToQuery,
+    #[error("Requested updates are too early")]
+    RequestedUpdatesAreTooEarly,
 }
 
 impl UpdateBody {
@@ -307,29 +321,39 @@ impl Update {
         after: Option<i64>,
         seq: Option<Seq>,
         node: Option<u16>,
-    ) -> Option<Vec<tungstenite::Utf8Bytes>> {
-        let after = after.unwrap_or(i64::MIN);
+    ) -> Result<Vec<tungstenite::Utf8Bytes>, GetFromStateError> {
         let Some(manager) = super::context::store().get_manager(mailbox_id) else {
-            return Some(vec![]);
+            if let Some(after) = after
+                && after > 0
+            {
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+            }
+            return Ok(vec![]);
         };
         let updates_receiver = match manager.query_encoded_updates().await {
             Ok(receiver) => receiver,
             Err(err) => {
                 tracing::error!(error = ?err, "Failed to query updates for mailbox {}", mailbox_id);
-                return None;
+                return Err(GetFromStateError::FailedToQuery);
             }
         };
-        let updates = match updates_receiver.await {
+        let CachedUpdates { updates, start_at } = match updates_receiver.await {
             Ok(updates) => updates,
             Err(err) => {
                 tracing::error!(error = ?err, "Failed to receive updates for mailbox {}", mailbox_id);
-                return None;
+                return Err(GetFromStateError::FailedToQuery);
             }
         };
+        if let Some(after) = after {
+            if after > 0 && after < start_at {
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+            }
+        }
         if updates.is_empty() {
-            return Some(vec![]);
+            return Ok(vec![]);
         }
         let node = node.unwrap_or(0);
+        let after = after.unwrap_or(i64::MIN);
         let mut encoded_updates: Vec<tungstenite::Utf8Bytes> = Vec::with_capacity(updates.len());
         for (event_id, encoded_update) in updates.into_iter() {
             use std::cmp::Ordering::*;
@@ -348,7 +372,7 @@ impl Update {
             }
             encoded_updates.push(encoded_update.clone());
         }
-        Some(encoded_updates)
+        Ok(encoded_updates)
     }
 
     pub fn space_updated(space_id: Uuid) {

@@ -277,10 +277,11 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
 pub async fn authenticate_with_cookie(
     headers: &HeaderMap<HeaderValue>,
 ) -> Result<Session, AppError> {
-    tracing::Span::current().record("auth_method", "cookie");
     let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
     let token = parse_cookie(cookie).ok_or(AuthenticateFail::Guest)?;
-    get_session_from_token(token).await
+    let session = get_session_from_token(token).await?;
+    tracing::Span::current().record("auth_method", "cookie");
+    Ok(session)
 }
 
 pub async fn authenticate(

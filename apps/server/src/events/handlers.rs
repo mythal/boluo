@@ -7,7 +7,7 @@ use crate::error::{AppError, Find};
 use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
-use crate::events::types::ClientEvent;
+use crate::events::types::{ClientEvent, GetFromStateError};
 use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
@@ -93,15 +93,31 @@ async fn push_updates(
         let mut tx = tx.clone();
         let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
 
-        let Some(cached_updates) = Update::get_from_state(&mailbox, after, seq, node).await else {
-            tracing::warn!("Failed to get cached updates");
-            let error_update = Update::error(
-                mailbox,
-                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
-            )
-            .encode();
-            tx.send(WsMessage::Text(error_update)).await.ok();
-            return;
+        let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
+            Ok(updates) => updates,
+            Err(GetFromStateError::FailedToQuery) => {
+                tracing::error!(
+                    mailbox_id = %mailbox,
+                    "Failed to get cached updates"
+                );
+                let error_update = Update::error(
+                    mailbox,
+                    AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
+                )
+                .encode();
+                tx.send(WsMessage::Text(error_update)).await.ok();
+                return;
+            }
+            Err(GetFromStateError::RequestedUpdatesAreTooEarly) => {
+                tracing::info!(
+                    mailbox_id = %mailbox,
+                    after,
+                    "The user requested updates with 'after', but the cached updates are too new"
+                );
+                let error_update = Update::error(mailbox, AppError::NotFound("Updates")).encode();
+                tx.send(WsMessage::Text(error_update)).await.ok();
+                return;
+            }
         };
         for message in cached_updates {
             if let Err(err) = tx.send(WsMessage::Text(message)).await {
@@ -205,25 +221,33 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         after,
         seq,
         node,
+        user_id,
     } = query;
-    let mut session = match authenticate_optional(&req).await {
-        Ok(session) => session,
-        Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => None,
-        Err(e) => return connection_error(req, Some(mailbox), e),
-    };
 
-    if let (session @ None, Some(token)) = (&mut session, token) {
-        *session = super::token::TOKEN_STORE.get_session(token);
-    }
+    let session = if let Some(token) = token {
+        super::token::TOKEN_STORE.get_session(token)
+    } else {
+        match authenticate_optional(&req).await {
+            Ok(session) => session,
+            Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => None,
+            Err(e) => return connection_error(req, Some(mailbox), e),
+        }
+    };
     {
         let pool = db::get().await;
         let mut conn = match pool.acquire().await {
             Ok(conn) => conn,
-            Err(e) => return connection_error(req, Some(mailbox), e.into()),
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to acquire database connection");
+                return connection_error(req, Some(mailbox), e.into());
+            }
         };
         let space = match Space::get_by_id(&mut *conn, &mailbox).await {
             Ok(space) => space,
-            Err(e) => return connection_error(req, Some(mailbox), e.into()),
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to get space");
+                return connection_error(req, Some(mailbox), e.into());
+            }
         };
 
         if let Some(space) = space.as_ref() {
@@ -232,6 +256,32 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             }
         }
     };
+
+    if let Some(user_id) = user_id {
+        if session.is_none() {
+            tracing::warn!(
+                user_id = %user_id,
+                "No session found for the user, but 'user_id' is provided"
+            );
+            return connection_error(
+                req,
+                Some(mailbox),
+                AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
+            );
+        }
+        if session.as_ref().map(|s| s.user_id) != Some(user_id) {
+            tracing::error!(
+                session_user_id = %session.as_ref().map(|s| s.user_id).unwrap_or_default(),
+                user_id = %user_id,
+                "User ID does not match the authenticated user"
+            );
+            return connection_error(
+                req,
+                Some(mailbox),
+                AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
+            );
+        }
+    }
 
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();

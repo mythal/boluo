@@ -58,6 +58,7 @@ const createMailboxConnection = async (
     paramsObject.node = after.node.toString();
     paramsObject.seq = after.seq.toString();
   }
+  if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
   const url = `${baseUrl}/events/connect?${params.toString()}`;
   return new WebSocket(url);
@@ -163,6 +164,11 @@ export const useConnectionEffect = (mailboxId: string) => {
           );
           return;
         case 'ERROR':
+          if (update.body.code === 'NOT_FOUND') {
+            alert(
+              'Can not find the requested updates, this may be due to the client being offline for a long time or the server has been restarted. Please refresh the page',
+            );
+          }
           dispatch({
             type: 'connectionError',
             payload: { mailboxId, code: update.body.code ?? 'UNEXPECTED' },

@@ -10,7 +10,7 @@ pub enum AppError {
     Db { source: sqlx::Error },
     #[error("Authentication failed")]
     Unauthenticated(#[from] AuthenticateFail),
-    #[error("Resource not found")]
+    #[error("{0} not found")]
     NotFound(&'static str),
     #[error("Permission denied: {0}")]
     NoPermission(String),

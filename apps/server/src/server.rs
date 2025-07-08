@@ -99,6 +99,12 @@ async fn handler(
     let path = uri.path();
     let query = uri.query().unwrap_or("");
 
+    let client_version = req
+        .headers()
+        .get(hyper::header::HeaderName::from_static("x-client-version"))
+        .and_then(|x| x.to_str().ok())
+        .unwrap_or("");
+
     // Create a span for this HTTP request with structured fields
     let span = tracing::info_span!(
         "http_request",
@@ -110,6 +116,7 @@ async fn handler(
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
+        client = %client_version,
     );
 
     let start = std::time::Instant::now();

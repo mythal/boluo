@@ -8,7 +8,10 @@ use std::{
 use tokio::sync::{mpsc, oneshot};
 use tracing::Instrument as _;
 
-use crate::error::{AppError, ValidationFailed};
+use crate::{
+    error::{AppError, ValidationFailed},
+    messages::MaxPos,
+};
 use num_rational::Rational32;
 use uuid::Uuid;
 
@@ -24,27 +27,21 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     Ok(())
 }
 
-const PLACEHOLDER_POS_TIMEOUT_SEC: u32 = 60 * 60;
-const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60);
+const PLACEHOLDER_POS_TIMEOUT: Duration = Duration::from_secs(60 * 60);
+const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 12);
 const TICK_INTERVAL: Duration = Duration::from_secs(60);
 
 #[derive(Debug)]
 pub enum PosAction {
-    TryRestorePos {
-        item_id: Uuid,
-        respond_to: oneshot::Sender<Option<Rational32>>,
-    },
-    IsPosAvailable {
-        pos: Rational32,
-        item_id: Option<Uuid>,
-        respond_to: oneshot::Sender<bool>,
-    },
-    GetNextPos {
-        respond_to: oneshot::Sender<Result<i32, sqlx::Error>>,
-    },
     PreviewPos {
         item_id: Uuid,
-        timeout: u32,
+        timeout: Duration,
+        respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
+    },
+    SendingNewMessage {
+        message_id: Uuid,
+        request_pos: Option<(i32, i32)>,
+        preview_id: Option<Uuid>,
         respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
     },
     Submitted {
@@ -55,6 +52,10 @@ pub enum PosAction {
     },
     Cancel {
         item_id: Uuid,
+    },
+    OnConflict {
+        message_id: Uuid,
+        respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
     },
     Tick,
     Shutdown,
@@ -78,33 +79,37 @@ impl ChannelPosActor {
     }
 
     pub async fn run(mut self) {
+        let mut changed_at = Instant::now();
         while let Some(action) = self.receiver.recv().await {
+            let last_key = self.positions.last_key_value().map(|(key, _)| *key);
             match action {
-                PosAction::TryRestorePos {
-                    item_id,
-                    respond_to,
-                } => {
-                    let result = self.handle_try_restore_pos(item_id);
-                    let _ = respond_to.send(result);
-                }
-                PosAction::IsPosAvailable {
-                    pos,
-                    item_id,
-                    respond_to,
-                } => {
-                    let result = self.handle_is_pos_available(pos, item_id);
-                    let _ = respond_to.send(result);
-                }
-                PosAction::GetNextPos { respond_to } => {
-                    let result = self.handle_get_next_pos().await;
-                    let _ = respond_to.send(result);
-                }
                 PosAction::PreviewPos {
                     item_id,
                     timeout,
                     respond_to,
                 } => {
+                    changed_at = Instant::now();
                     let result = self.handle_preview_pos(item_id, timeout).await;
+                    let _ = respond_to.send(result);
+                }
+                PosAction::SendingNewMessage {
+                    message_id,
+                    request_pos,
+                    preview_id,
+                    respond_to,
+                } => {
+                    changed_at = Instant::now();
+                    let result = self
+                        .handle_sending_new_message(message_id, request_pos, preview_id)
+                        .await;
+                    let _ = respond_to.send(result);
+                }
+                PosAction::OnConflict {
+                    message_id,
+                    respond_to,
+                } => {
+                    changed_at = Instant::now();
+                    let result = self.handle_on_conflict(message_id).await;
                     let _ = respond_to.send(result);
                 }
                 PosAction::Submitted {
@@ -113,71 +118,111 @@ impl ChannelPosActor {
                     pos_q,
                     old_item_id,
                 } => {
+                    changed_at = Instant::now();
                     self.handle_submitted(item_id, pos_p, pos_q, old_item_id);
                 }
                 PosAction::Cancel { item_id } => {
-                    self.delete_by_id(Instant::now(), item_id);
+                    changed_at = Instant::now();
+                    self.delete_by_id(item_id);
                 }
                 PosAction::Shutdown => {
+                    tracing::info!("Shutting down signal received");
                     break;
                 }
                 PosAction::Tick => {
+                    if !self.receiver.is_empty() {
+                        tracing::debug!("Clean up skipped because of pending actions");
+                        continue;
+                    }
                     let now = Instant::now();
-                    let Some((last_key, last_pos_item)) = self.positions.last_key_value() else {
-                        break;
+                    let idle = now - changed_at;
+                    let Some((last_key, _last_pos_item)) = self.positions.last_key_value() else {
+                        if idle > INACTIVE_TIMEOUT {
+                            tracing::info!("Inactivity timeout reached");
+                            break;
+                        }
+                        continue;
                     };
                     let last_key = *last_key;
-                    // Aucually, the last_pos_item is not latest changed item.
-                    // But it is ok for now.
-                    let recent_changed = last_pos_item.created;
-                    if now - recent_changed > INACTIVE_TIMEOUT {
+                    if idle > INACTIVE_TIMEOUT {
+                        tracing::info!("Inactivity timeout reached");
                         break;
                     }
+                    let before_count = self.positions.len();
                     self.positions
                         .retain(|_, pos_item| !pos_item.pos_available(now));
-                    if self.positions.is_empty() {
-                        self.positions.insert(
-                            last_key,
-                            PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC),
+                    let after_count = self.positions.len();
+                    if before_count != after_count {
+                        tracing::info!(
+                            before = before_count,
+                            after = after_count,
+                            "Cleaned up pos items"
                         );
                     }
+                    if let Some((last_key_after, _)) = self.positions.last_key_value() {
+                        if *last_key_after >= last_key {
+                            continue;
+                        }
+                    }
+                    self.positions
+                        .insert(last_key, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT));
+                }
+            }
+            let current_last_key = self.positions.last_key_value().map(|(key, _)| *key);
+            if let (Some(last_key), Some(current_last_key)) = (last_key, current_last_key) {
+                if current_last_key < last_key {
+                    tracing::warn!(
+                        current_last_key = ?current_last_key,
+                        last_key = ?last_key,
+                        "Last key decreased"
+                    );
                 }
             }
         }
+
+        tracing::info!("Channel pos actor shutdown");
     }
 
-    fn delete_by_id(&mut self, now: Instant, item_id: Uuid) {
-        let Some((last_key, _)) = self.positions.last_key_value() else {
+    fn delete_by_id(&mut self, item_id: Uuid) {
+        let Some((last_key, last_pos_item)) = self.positions.last_key_value() else {
             return;
         };
+        let last_pos_item_id = last_pos_item.id;
         let last_key = *last_key;
+        if last_pos_item_id == item_id {
+            self.positions
+                .insert(last_key, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT));
+            return;
+        }
+        if self.positions.len() == 1 {
+            return;
+        }
 
-        self.positions.retain(|_, pos_item| {
-            !(
-                // Filter out
-                pos_item.id == item_id || pos_item.pos_available(now)
-            )
-        });
-        if self.positions.is_empty() {
-            // Keep the last pos item as a placeholder
-            self.positions.insert(
-                last_key,
-                PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC),
-            );
+        let mut iter = self.positions.iter().rev();
+        iter.next();
+        if let Some((pos, _)) = iter.find(|(_, pos_item)| pos_item.id == item_id) {
+            let pos = *pos;
+            self.positions.remove(&pos);
         }
     }
 
-    fn handle_is_pos_available(&self, pos: Rational32, item_id: Option<Uuid>) -> bool {
+    fn is_pos_available(&self, pos: Rational32, item_id: Option<Uuid>) -> bool {
         let now = Instant::now();
         if let Some(pos_item) = self.positions.get(&pos) {
-            pos_item.id == item_id.unwrap_or_default() || pos_item.pos_available(now)
+            if let Some(item_id) = item_id {
+                if pos_item.id == item_id {
+                    return pos_item.state != PosItemState::Submitting;
+                }
+            }
+            pos_item.pos_available(now)
         } else {
             true
         }
     }
 
-    fn handle_try_restore_pos(&self, item_id: Uuid) -> Option<Rational32> {
+    fn find_pos_by_id(&self, item_id: Uuid) -> Option<Rational32> {
         let now = Instant::now();
+        // TODO: optimize this
         self.positions
             .iter()
             .rev()
@@ -191,9 +236,10 @@ impl ChannelPosActor {
             })
     }
 
-    async fn handle_get_next_pos(&mut self) -> Result<i32, sqlx::Error> {
-        if let Some((last_key, _)) = self.positions.last_key_value() {
-            return Ok(last_key.ceil().numer() + 1);
+    async fn get_next_available_p(&mut self) -> Result<i32, sqlx::Error> {
+        if let Some((last_key, _last_pos_item)) = self.positions.last_key_value() {
+            let next_p = last_key.ceil().numer() + 1;
+            return Ok(next_p);
         }
 
         let max_pos_result = {
@@ -202,35 +248,103 @@ impl ChannelPosActor {
         };
 
         match max_pos_result {
-            Ok((p, q, id)) => {
-                let pos = Rational32::new(p, q);
+            Ok(MaxPos { pos_p, pos_q, id }) => {
+                let pos = Rational32::new(pos_p, pos_q);
                 self.positions.insert(pos, PosItem::submitted(id));
                 Ok(pos.ceil().numer() + 1)
             }
-            // If the channel has no messages, use a default pos
+            // If the channel has no messages, insert a placeholder pos item and return 43
             Err(sqlx::Error::RowNotFound) => {
                 let pos = Rational32::new(42, 1);
                 self.positions
-                    .insert(pos, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT_SEC));
+                    .insert(pos, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT));
                 Ok(43)
             }
-            Err(e) => Err(e),
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to get max pos from database");
+                Err(e)
+            }
+        }
+    }
+
+    fn try_remove_last_placeholder(&mut self, new_pos: Rational32) {
+        if let Some(last_key) = self
+            .positions
+            .last_key_value()
+            .and_then(|(last_key, pos_item)| {
+                if pos_item.id.is_nil() && *last_key < new_pos {
+                    Some(*last_key)
+                } else {
+                    None
+                }
+            })
+        {
+            self.positions.remove(&last_key);
         }
     }
 
     async fn handle_preview_pos(
         &mut self,
         item_id: Uuid,
-        timeout: u32,
+        timeout: Duration,
     ) -> Result<Rational32, sqlx::Error> {
-        if let Some(pos) = self.handle_try_restore_pos(item_id) {
+        if let Some(pos) = self.find_pos_by_id(item_id) {
             return Ok(pos);
         }
 
-        let next_pos = self.handle_get_next_pos().await?;
+        let next_pos = self.get_next_available_p().await?;
         let pos_item = PosItem::new(item_id, timeout);
         let pos = Rational32::new(next_pos, 1);
+        self.try_remove_last_placeholder(pos);
         self.positions.insert(pos, pos_item);
+        Ok(pos)
+    }
+
+    async fn handle_sending_new_message(
+        &mut self,
+        message_id: Uuid,
+        request_pos: Option<(i32, i32)>,
+        preview_id: Option<Uuid>,
+    ) -> Result<Rational32, sqlx::Error> {
+        let maybe_pos: Option<(i32, i32)> = {
+            match (request_pos, preview_id) {
+                (Some(request_pos), preview_id) => {
+                    if check_pos(request_pos).is_err() {
+                        None
+                    } else if self.is_pos_available(request_pos.into(), preview_id) {
+                        Some(request_pos)
+                    } else {
+                        None
+                    }
+                }
+                (None, Some(preview_id)) => {
+                    self.find_pos_by_id(preview_id).map(|ratio| ratio.into())
+                }
+                (None, None) => None,
+            }
+        };
+        let pos: Rational32 = if let Some(pos) = maybe_pos {
+            pos.into()
+        } else {
+            (self.get_next_available_p().await?, 1).into()
+        };
+        self.try_remove_last_placeholder(pos);
+        if let Some(old_item) = self.positions.insert(pos, PosItem::submitting(message_id)) {
+            if Some(old_item.id) == preview_id {
+                return Ok(pos);
+            } else if !old_item.pos_available(Instant::now()) && old_item.id != message_id {
+                tracing::warn!(
+                    pos = ?pos,
+                    old_item = ?old_item,
+                    message_id = %message_id,
+                    preview_id = ?preview_id,
+                    "Pos item overwritten by new message"
+                );
+            }
+        }
+        if let Some(preview_id) = preview_id {
+            self.delete_by_id(preview_id);
+        }
         Ok(pos)
     }
 
@@ -243,9 +357,37 @@ impl ChannelPosActor {
     ) {
         let pos = Rational32::new(pos_p, pos_q);
         if let Some(old_item_id) = old_item_id {
-            self.delete_by_id(Instant::now(), old_item_id);
+            self.delete_by_id(old_item_id);
         }
+        self.try_remove_last_placeholder(pos);
         self.positions.insert(pos, PosItem::submitted(item_id));
+    }
+
+    async fn handle_on_conflict(&mut self, message_id: Uuid) -> Result<Rational32, sqlx::Error> {
+        self.delete_by_id(message_id);
+        let max_pos = {
+            let mut db = crate::db::get().await.acquire().await?;
+            match crate::messages::Message::max_pos(&mut *db, &self.channel_id).await {
+                Ok(max_pos) => max_pos,
+                Err(sqlx::Error::RowNotFound) => {
+                    tracing::error!("Conflict occurred but no messages in channel");
+                    MaxPos {
+                        pos_p: 42,
+                        pos_q: 1,
+                        id: Uuid::nil(),
+                    }
+                }
+                Err(e) => {
+                    tracing::error!(error = %e, "Failed to get max pos from database");
+                    return Err(e);
+                }
+            }
+        };
+        self.handle_submitted(max_pos.id, max_pos.pos_p, max_pos.pos_q, None);
+        let (last_key, _) = self.positions.last_key_value().unwrap();
+        let pos = Rational32::new(last_key.ceil().numer() + 1, 1);
+        self.positions.insert(pos, PosItem::submitting(message_id));
+        Ok(pos)
     }
 }
 
@@ -322,52 +464,12 @@ impl ChannelPosManager {
         }
     }
 
-    pub async fn try_restore_pos(
-        &self,
-        channel_id: Uuid,
-        item_id: Uuid,
-    ) -> Result<Option<Rational32>, ChannelPosError> {
-        let sender = self.get_or_create_actor(channel_id);
-        let (tx, rx) = oneshot::channel();
-
-        if sender
-            .send(PosAction::TryRestorePos {
-                item_id,
-                respond_to: tx,
-            })
-            .await
-            .is_err()
-        {
-            return Err(ChannelPosError::ActorShutdown);
-        }
-
-        rx.await.map_err(|_| ChannelPosError::ActorShutdown)
-    }
-
-    pub async fn get_next_pos(&self, channel_id: Uuid) -> Result<i32, ChannelPosError> {
-        let sender = self.get_or_create_actor(channel_id);
-        let (tx, rx) = oneshot::channel();
-
-        sender
-            .send(PosAction::GetNextPos { respond_to: tx })
-            .await
-            .map_err(|_| ChannelPosError::ActorShutdown)?;
-
-        rx.await
-            .map_err(|_| ChannelPosError::ActorShutdown)?
-            .map_err(ChannelPosError::DatabaseError)
-    }
-
     pub async fn preview_pos(
         &self,
         channel_id: Uuid,
         item_id: Uuid,
-        timeout: u32,
+        timeout: Duration,
     ) -> Result<Rational32, ChannelPosError> {
-        if let Some(pos) = self.try_restore_pos(channel_id, item_id).await? {
-            return Ok(pos);
-        }
-
         let sender = self.get_or_create_actor(channel_id);
         let (tx, rx) = oneshot::channel();
 
@@ -385,23 +487,48 @@ impl ChannelPosManager {
             .map_err(ChannelPosError::DatabaseError)
     }
 
-    pub async fn is_pos_available(
+    pub async fn sending_new_message(
         &self,
         channel_id: Uuid,
-        pos: Rational32,
-        item_id: Option<Uuid>,
-    ) -> Result<bool, ChannelPosError> {
+        message_id: Uuid,
+        request_pos: Option<(i32, i32)>,
+        preview_id: Option<Uuid>,
+    ) -> Result<Rational32, ChannelPosError> {
         let sender = self.get_or_create_actor(channel_id);
         let (tx, rx) = oneshot::channel();
         sender
-            .send(PosAction::IsPosAvailable {
-                pos,
-                item_id,
+            .send(PosAction::SendingNewMessage {
+                message_id,
+                request_pos,
+                preview_id,
                 respond_to: tx,
             })
             .await
             .map_err(|_| ChannelPosError::ActorShutdown)?;
-        rx.await.map_err(|_| ChannelPosError::ActorShutdown)
+
+        rx.await
+            .map_err(|_| ChannelPosError::ActorShutdown)?
+            .map_err(ChannelPosError::DatabaseError)
+    }
+
+    pub async fn on_conflict(
+        &self,
+        channel_id: Uuid,
+        message_id: Uuid,
+    ) -> Result<Rational32, ChannelPosError> {
+        let sender = self.get_or_create_actor(channel_id);
+        let (tx, rx) = oneshot::channel();
+        sender
+            .send(PosAction::OnConflict {
+                message_id,
+                respond_to: tx,
+            })
+            .await
+            .map_err(|_| ChannelPosError::ActorShutdown)?;
+
+        rx.await
+            .map_err(|_| ChannelPosError::ActorShutdown)?
+            .map_err(ChannelPosError::DatabaseError)
     }
 
     pub async fn submitted(
@@ -459,7 +586,8 @@ pub static CHANNEL_POS_MANAGER: LazyLock<ChannelPosManager> = LazyLock::new(Chan
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PosItemState {
-    LiveIn(u32),
+    LiveIn(std::time::Duration),
+    Submitting,
     Submitted,
 }
 
@@ -470,13 +598,23 @@ pub struct PosItem {
     created: std::time::Instant,
 }
 
+const SUBMITTING_TIMEOUT: Duration = Duration::from_secs(6);
+
 impl PosItem {
-    fn new(id: Uuid, timeout: u32) -> Self {
+    fn new(id: Uuid, timeout: Duration) -> Self {
         let now = std::time::Instant::now();
         Self {
             id,
             created: now,
             state: PosItemState::LiveIn(timeout),
+        }
+    }
+    fn submitting(id: Uuid) -> Self {
+        let now = std::time::Instant::now();
+        Self {
+            id,
+            created: now,
+            state: PosItemState::Submitting,
         }
     }
     fn submitted(id: Uuid) -> Self {
@@ -492,7 +630,8 @@ impl PosItem {
             return true;
         }
         match self.state {
-            PosItemState::LiveIn(timeout) => (now - self.created).as_secs() >= timeout as u64,
+            PosItemState::LiveIn(timeout) => (now - self.created) >= timeout,
+            PosItemState::Submitting => (now - self.created) >= SUBMITTING_TIMEOUT,
             PosItemState::Submitted => false,
         }
     }
@@ -612,12 +751,6 @@ mod tests {
         let manager = ChannelPosManager::new();
         let channel_id = Uuid::new_v4();
         let item_id = Uuid::new_v4();
-
-        // Test try_restore_pos when no position exists
-        assert_eq!(
-            manager.try_restore_pos(channel_id, item_id).await.unwrap(),
-            None
-        );
 
         // Test cancel operation
         manager.cancel(channel_id, item_id).await;

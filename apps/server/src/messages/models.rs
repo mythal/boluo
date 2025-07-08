@@ -1,6 +1,5 @@
 use chrono::prelude::*;
 
-use num_rational::Rational32;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use types::legacy::LegacyEntity;
@@ -166,8 +165,8 @@ impl Message {
 
     pub async fn create(
         conn: &mut sqlx::PgConnection,
-        preview_id: Option<&Uuid>,
-        channel_id: &Uuid,
+        preview_id: Option<Uuid>,
+        channel_id: Uuid,
         _space_id: Uuid,
         sender_id: &Uuid,
         default_name: &str,
@@ -183,33 +182,6 @@ impl Message {
         color: String,
     ) -> Result<Message, AppError> {
         let id = Uuid::now_v1(b"server");
-
-        let pos: Option<(i32, i32)> = {
-            match (request_pos, preview_id) {
-                (Some(pos), previous_id) => {
-                    if CHANNEL_POS_MANAGER
-                        .is_pos_available(*channel_id, pos.into(), previous_id.cloned())
-                        .await?
-                    {
-                        Some(pos)
-                    } else {
-                        None
-                    }
-                }
-                (None, Some(preview_id)) => CHANNEL_POS_MANAGER
-                    .try_restore_pos(*channel_id, *preview_id)
-                    .await?
-                    .map(|ratio| (*ratio.numer(), *ratio.denom())),
-                (None, None) => None,
-            }
-        };
-        let pos = if let Some(pos) = pos {
-            pos
-        } else {
-            (CHANNEL_POS_MANAGER.get_next_pos(*channel_id).await?, 1)
-        };
-        check_pos(pos)?;
-
         let mut name = merge_blank(name);
         if name.is_empty() {
             name = default_name.trim().to_string();
@@ -220,6 +192,10 @@ impl Message {
         }
         let whisper_to = whisper_to.as_deref();
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
+
+        let pos = crate::pos::CHANNEL_POS_MANAGER
+            .sending_new_message(channel_id, id, request_pos, preview_id)
+            .await?;
         let mut row: Result<Message, sqlx::Error> = sqlx::query_file_scalar!(
             "sql/messages/create.sql",
             id,
@@ -233,8 +209,8 @@ impl Message {
             is_master,
             whisper_to,
             media_id,
-            pos.0,
-            pos.1,
+            pos.numer(),
+            pos.denom(),
             color
         )
         .fetch_one(&mut *conn)
@@ -249,23 +225,17 @@ impl Message {
         };
 
         if is_unique_violation {
-            let record = sqlx::query_file!("sql/messages/max_pos.sql", channel_id)
-                .fetch_one(&mut *conn)
+            let new_pos = crate::pos::CHANNEL_POS_MANAGER
+                .on_conflict(channel_id, id)
                 .await?;
             tracing::warn!(
                 channel_id = channel_id.to_string(),
-                pos_p = pos.0,
-                pos_q = pos.1,
-                request_pos_p = request_pos.map(|(p, _)| p),
-                request_pos_q = request_pos.map(|(_, q)| q),
-                record_p = record.pos_p,
-                record_q = record.pos_q,
-                preview_id = preview_id.cloned().unwrap_or_default().to_string(),
+                allocated_pos = ?pos,
+                request_pos = ?request_pos,
+                new_pos = ?new_pos,
+                preview_id = %preview_id.unwrap_or_default(),
                 "A conflict occurred while creating a new message at channel",
             );
-            let pos: Rational32 = (record.pos_p, record.pos_q).into();
-            let p = *pos.ceil().numer() + 1;
-            let q = 1;
             row = sqlx::query_file_scalar!(
                 "sql/messages/create.sql",
                 id,
@@ -279,8 +249,8 @@ impl Message {
                 is_master,
                 whisper_to,
                 media_id,
-                p,
-                q,
+                new_pos.numer(),
+                new_pos.denom(),
                 color
             )
             .fetch_one(&mut *conn)
@@ -294,33 +264,36 @@ impl Message {
             };
             if is_unique_violation {
                 tracing::error!(
-                    "This should never happen, but a unique violation occurred again while creating a message at channel {}: ({}, {})",
-                    channel_id,
-                    p,
-                    q
+                    channel_id = %channel_id,
+                    pos = ?(new_pos.numer(), new_pos.denom()),
+                    "This should never happen, but a unique violation occurred again while creating a message at channel"
                 );
-                CHANNEL_POS_MANAGER.shutdown(*channel_id).await;
+                CHANNEL_POS_MANAGER.shutdown(channel_id).await;
                 return Err(AppError::Unexpected(anyhow::anyhow!(
-                    "Failed to create message at channel {}: Unique violation",
-                    channel_id
+                    "Failed to send new message, conflict occurred",
                 )));
             }
         }
 
-        let mut message = row?;
+        let mut message = match row {
+            Ok(message) => message,
+            Err(err) => {
+                tracing::error!(
+                    channel_id = %channel_id,
+                    err = %err,
+                    "Failed to send message at channel"
+                );
+                crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id).await;
+                return Err(err.into());
+            }
+        };
         crate::pos::CHANNEL_POS_MANAGER
-            .submitted(
-                *channel_id,
-                message.id,
-                message.pos_p,
-                message.pos_q,
-                preview_id.cloned(),
-            )
+            .submitted(channel_id, message.id, message.pos_p, message.pos_q, None)
             .await;
         message.hide(None);
 
         let created = message.created;
-        let channel_id = *channel_id;
+
         notify::space_activity(channel_id, Some(created));
         Ok(message)
     }
@@ -437,11 +410,10 @@ impl Message {
     pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
-    ) -> Result<(i32, i32, Uuid), sqlx::Error> {
-        sqlx::query_file!("sql/messages/max_pos.sql", channel_id)
+    ) -> Result<MaxPos, sqlx::Error> {
+        sqlx::query_file_as!(MaxPos, "sql/messages/max_pos.sql", channel_id)
             .fetch_one(db)
             .await
-            .map(|row| (row.pos_p, row.pos_q, row.id))
     }
     pub async fn set_folded<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -494,4 +466,11 @@ impl Message {
             .await
             .map(|res| res.rows_affected())
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct MaxPos {
+    pub pos_p: i32,
+    pub pos_q: i32,
+    pub id: Uuid,
 }

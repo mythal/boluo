@@ -95,21 +95,6 @@ async fn push_updates(
 
         let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
             Ok(updates) => updates,
-            Err(GetFromStateError::NotFound) => {
-                if after.is_some() {
-                    tracing::info!(
-                        mailbox_id = %mailbox,
-                        after,
-                        "The user requested updates with 'after', but no cached updates found"
-                    );
-                    let error_update =
-                        Update::error(mailbox, AppError::NotFound("Updates")).encode();
-                    tx.send(WsMessage::Text(error_update)).await.ok();
-                    return;
-                }
-                tracing::debug!(mailbox_id = %mailbox, "No cached updates");
-                vec![]
-            }
             Err(GetFromStateError::FailedToQuery) => {
                 tracing::error!(
                     mailbox_id = %mailbox,

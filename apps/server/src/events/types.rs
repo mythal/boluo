@@ -128,8 +128,6 @@ pub enum GetFromStateError {
     FailedToQuery,
     #[error("Requested updates are too early")]
     RequestedUpdatesAreTooEarly,
-    #[error("Not found")]
-    NotFound,
 }
 
 impl UpdateBody {
@@ -319,7 +317,12 @@ impl Update {
         node: Option<u16>,
     ) -> Result<Vec<tungstenite::Utf8Bytes>, GetFromStateError> {
         let Some(manager) = super::context::store().get_manager(mailbox_id) else {
-            return Err(GetFromStateError::NotFound);
+            if let Some(after) = after
+                && after > 0
+            {
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+            }
+            return Ok(vec![]);
         };
         let updates_receiver = match manager.query_encoded_updates().await {
             Ok(receiver) => receiver,

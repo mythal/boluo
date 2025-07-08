@@ -126,7 +126,7 @@ pub fn add_session_cookie(
         .max_age(Duration::days(30));
 
     let session_cookie_domain = domain();
-    if !is_debug {
+    if !is_debug && !session_cookie_domain.is_empty() {
         builder = builder.domain(session_cookie_domain);
     }
     let session_cookie = builder.build().to_string();

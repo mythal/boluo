@@ -12,8 +12,7 @@ use crate::interface;
 use crate::interface::{missing, ok_response, parse_body, parse_query};
 use crate::media::{upload, upload_params};
 use crate::session::{
-    add_session_cookie, add_settings_cookie, is_authenticate_use_cookie, remove_session_cookie,
-    revoke_session,
+    add_session_cookie, add_settings_cookie, remove_session_cookie, revoke_session,
 };
 use crate::spaces::Space;
 use crate::ttl::{Lifespan, Mortal, minute};
@@ -34,7 +33,12 @@ async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     }: Register = interface::parse_body(req).await?;
     let pool = db::get().await;
     let user = User::register(&pool, &email, &username, &nickname, &password).await?;
-    tracing::info!("{} ({}) was registered.", user.username, user.email);
+    tracing::info!(
+        username = %user.username,
+        email = %user.email,
+        id = %user.id,
+        "A new user was registered"
+    );
     Ok(user)
 }
 
@@ -117,21 +121,13 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                 };
                 CACHE.GetMe.insert(session.user_id, get_me.clone().into());
 
-                let mut response = ok_response(Some(get_me));
-                if is_authenticate_use_cookie(req.headers()) {
-                    // refresh session cookie
-                    let is_debug = req.headers().get("X-Debug").is_some();
-                    add_session_cookie(&session.id, is_debug, response.headers_mut())
-                }
-                Ok(response)
+                Ok(ok_response(Some(get_me)))
             } else {
                 revoke_session(session.id).await?;
                 tracing::error!(
-                    "[Unexpected] session ({}) is valid and exists, \
-                    but the user ({}) to whom the session refers \
-                    cannot be found in the database.",
-                    session.id,
-                    session.user_id
+                    user_id = %session.user_id,
+                    session_id = %session.id,
+                    "The user has a valid session, but the user cannot be found in the database"
                 );
                 let mut response = ok_response::<Option<GetMe>>(None);
                 remove_session_cookie(response.headers_mut());
@@ -152,9 +148,27 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let mut conn = pool.acquire().await?;
     let user = User::login(&mut *conn, &form.username, &form.password)
         .await
+        .inspect_err(
+            |err| tracing::warn!(error = %err, username = %form.username, "Failed to login, password may be incorrect"),
+        )
+        .inspect(|user| {
+            if let Some(user) = user {
+                tracing::info!(
+                    id = %user.id,
+                    username = %user.username,
+                    email = %user.email,
+                    "A user logged in"
+                );
+            } else {
+                tracing::warn!(
+                    username = %form.username,
+                    "Failed to login, username may be incorrect"
+                );
+            }
+        })
         .or_no_permission()?;
     let user_id = user.id;
-    let session = session::start(user_id).await.map_err(error_unexpected!())?;
+    let session = session::start(user_id).await?;
     let token: String = session::token(&session.id);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut *conn, user_id).await?;

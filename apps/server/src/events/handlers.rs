@@ -223,24 +223,31 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         node,
         user_id,
     } = query;
-    let mut session = match authenticate_optional(&req).await {
-        Ok(session) => session,
-        Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => None,
-        Err(e) => return connection_error(req, Some(mailbox), e),
-    };
 
-    if let (session @ None, Some(token)) = (&mut session, token) {
-        *session = super::token::TOKEN_STORE.get_session(token);
-    }
+    let session = if let Some(token) = token {
+        super::token::TOKEN_STORE.get_session(token)
+    } else {
+        match authenticate_optional(&req).await {
+            Ok(session) => session,
+            Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => None,
+            Err(e) => return connection_error(req, Some(mailbox), e),
+        }
+    };
     {
         let pool = db::get().await;
         let mut conn = match pool.acquire().await {
             Ok(conn) => conn,
-            Err(e) => return connection_error(req, Some(mailbox), e.into()),
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to acquire database connection");
+                return connection_error(req, Some(mailbox), e.into());
+            }
         };
         let space = match Space::get_by_id(&mut *conn, &mailbox).await {
             Ok(space) => space,
-            Err(e) => return connection_error(req, Some(mailbox), e.into()),
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to get space");
+                return connection_error(req, Some(mailbox), e.into());
+            }
         };
 
         if let Some(space) = space.as_ref() {
@@ -252,6 +259,10 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     if let Some(user_id) = user_id {
         if session.is_none() {
+            tracing::warn!(
+                user_id = %user_id,
+                "No session found for the user, but 'user_id' is provided"
+            );
             return connection_error(
                 req,
                 Some(mailbox),

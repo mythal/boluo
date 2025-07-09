@@ -352,6 +352,11 @@ fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut Pre
         _ => false,
     });
     if preview_map.capacity() > 64 {
+        tracing::info!(
+            "Shrinking preview map from {} to {}",
+            preview_map.capacity(),
+            64
+        );
         preview_map.shrink_to_fit();
     }
 }

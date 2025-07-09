@@ -54,11 +54,10 @@ impl TokenStore {
                     let before = token_store.len();
                     token_store
                         .retain(|_, token: &TokenInfo| now - token.created_at < TOKEN_VALIDITY);
-                    tracing::info!(
-                        before = before,
-                        after = token_store.len(),
-                        "token store cleaned up"
-                    );
+                    let after = token_store.len();
+                    if before != after {
+                        tracing::info!(before, after, "token store cleaned up");
+                    }
                 }
             }
             .instrument(span),

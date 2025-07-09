@@ -209,8 +209,8 @@ struct Args {
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
-    dotenv::from_filename(".env.local").ok();
-    dotenv::dotenv().ok();
+    dotenvy::from_filename(".env.local").ok();
+    dotenvy::dotenv().ok();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();

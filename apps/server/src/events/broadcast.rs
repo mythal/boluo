@@ -21,7 +21,7 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
             .build()
     });
     CLEANUP.call_once(|| {
-        let span = tracing::info_span!("broadcast_clean");
+        let span = tracing::info_span!(parent: None, "broadcast_clean");
         tokio::spawn(
             async {
                 let mut interval = tokio::time::interval(Duration::from_secs(5 * 60));

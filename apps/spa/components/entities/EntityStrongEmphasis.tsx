@@ -12,5 +12,7 @@ export const EntityStrongEmphasis: FC<Props> = ({
     child: { start, len },
   },
 }) => {
-  return <strong className="EntityStrongEmphasis">{source.substring(start, start + len)}</strong>;
+  return (
+    <strong className="EntityStrongEmphasis italic">{source.substring(start, start + len)}</strong>
+  );
 };

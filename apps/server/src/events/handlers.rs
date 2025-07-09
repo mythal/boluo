@@ -8,7 +8,7 @@ use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::types::{ClientEvent, GetFromStateError};
-use crate::interface::{Response, missing, ok_response, parse_query};
+use crate::interface::{Response, err_response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
 use crate::utils::timestamp;
@@ -401,11 +401,137 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     }
 }
 
+async fn sse(req: Request<Incoming>) -> Response {
+    use hyper::{StatusCode, header};
+
+    let query = match parse_query::<UpdateQuery>(req.uri()) {
+        Ok(q) => q,
+        Err(e) => return err_response(e),
+    };
+
+    let UpdateQuery {
+        mailbox,
+        token: _,
+        after,
+        seq,
+        node,
+        user_id,
+    } = query;
+
+    let session = match authenticate_optional(&req).await {
+        Ok(s) => s,
+        Err(e) => return err_response(e),
+    };
+
+    {
+        let pool = db::get().await;
+        let mut conn = match pool.acquire().await {
+            Ok(c) => c,
+            Err(e) => return err_response(e.into()),
+        };
+        if let Ok(Some(space)) = Space::get_by_id(&mut *conn, &mailbox).await {
+            if let Err(e) = check_permissions(&mut conn, &space, &session).await {
+                return err_response(e);
+            }
+        }
+    }
+
+    if let Some(uid) = user_id {
+        if session.is_none() || session.as_ref().map(|s| s.user_id) != Some(uid) {
+            return err_response(AppError::Unauthenticated(AuthenticateFail::NoSessionFound));
+        }
+    }
+
+    let mut messages: Vec<tungstenite::Utf8Bytes> = Vec::new();
+
+    messages.push(Update::app_info().encode());
+
+    match Update::get_from_state(&mailbox, after, seq, node).await {
+        Ok(mut cached) => messages.append(&mut cached),
+        Err(GetFromStateError::FailedToQuery) => {
+            let error_update = Update::error(
+                mailbox,
+                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
+            )
+            .encode();
+            messages.push(error_update);
+        }
+        Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: _ }) => {}
+    }
+
+    messages.push(Update::initialized(mailbox).encode());
+
+    let mut body: Vec<u8> = Vec::new();
+    for msg in messages {
+        body.extend_from_slice(b"data: ");
+        body.extend_from_slice(msg.as_bytes());
+        body.extend_from_slice(b"\n\n");
+    }
+
+    hyper::Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "text/event-stream")
+        .header(header::CACHE_CONTROL, "no-cache")
+        .body(body)
+        .expect("Failed to build SSE response")
+}
+
+async fn receive_events(req: Request<Incoming>) -> Response {
+    use http_body_util::BodyExt;
+
+    let query = match parse_query::<UpdateQuery>(req.uri()) {
+        Ok(q) => q,
+        Err(e) => return err_response(e),
+    };
+    let mailbox = query.mailbox;
+
+    let session = match authenticate_optional(&req).await {
+        Ok(s) => s,
+        Err(e) => return err_response(e),
+    };
+
+    {
+        let pool = db::get().await;
+        let mut conn = match pool.acquire().await {
+            Ok(c) => c,
+            Err(e) => return err_response(e.into()),
+        };
+        if let Ok(Some(space)) = Space::get_by_id(&mut *conn, &mailbox).await {
+            if let Err(e) = check_permissions(&mut conn, &space, &session).await {
+                return err_response(e);
+            }
+        }
+    }
+
+    let body_bytes = match req.into_body().collect().await {
+        Ok(c) => c.to_bytes(),
+        Err(_) => {
+            return err_response(AppError::BadRequest(
+                "Failed to read the request body".to_string(),
+            ));
+        }
+    };
+    let body_str = match std::str::from_utf8(&body_bytes) {
+        Ok(s) => s,
+        Err(_) => {
+            return err_response(AppError::BadRequest(
+                "Request body is not valid UTF-8".to_string(),
+            ));
+        }
+    };
+
+    handle_client_event(mailbox, session, body_str).await;
+
+    ok_response(serde_json::json!({ "ok": true }))
+}
+
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
         ("/connect", Method::GET) => Ok(connect(req).await),
+        ("/sse", Method::GET) => Ok(sse(req).await),
+        ("/sse/receive", Method::POST) => Ok(receive_events(req).await),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         _ => missing(),
     }

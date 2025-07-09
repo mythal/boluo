@@ -10,6 +10,8 @@ import { ChatState, Compose, UserItem } from './reducers/chatState';
 import { MessageItem, PreviewItem } from './states/chat-item-set';
 import { Dispatch } from './store';
 import { Id, newId } from './utils/id';
+import { Err, Ok } from './utils/result';
+import { notFound } from './api/error';
 
 export interface CloseChat {
   type: 'CLOSE_CHAT';
@@ -193,7 +195,16 @@ export interface UserLoaded {
 
 export const loadUser = (id: Id) => (dispatch: Dispatch) => {
   get('/users/query', { id }).then((result) => {
-    const action: UserLoaded = { type: 'USER_LOADED', result, userId: id };
+    let action: UserLoaded;
+    if (result.isOk) {
+      if (result.value == null) {
+        action = { type: 'USER_LOADED', result: notFound('没找到用户'), userId: id };
+      } else {
+        action = { type: 'USER_LOADED', result: new Ok(result.value), userId: id };
+      }
+    } else {
+      action = { type: 'USER_LOADED', result: new Err(result.value), userId: id };
+    }
     dispatch(action);
   });
 };

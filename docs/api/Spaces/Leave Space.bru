@@ -1,0 +1,19 @@
+meta {
+  name: Leave Space
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{base_url}}/spaces/leave?id={{space_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}
+
+body:json {
+  {}
+}

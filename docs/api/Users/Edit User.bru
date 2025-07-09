@@ -1,0 +1,20 @@
+meta {
+  name: Edit User
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{base_url}}/users/edit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "nickname": "石破天惊lovelove",
+    "bio": "God is in his heaven, all is right with the world",
+    "avatar": null,
+    "defaultColor": "preset:blue"
+  }
+}

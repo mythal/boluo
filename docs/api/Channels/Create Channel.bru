@@ -1,0 +1,29 @@
+meta {
+  name: Create Channel
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/channels/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "spaceId": "{{space_id}}",
+    "name": "幻想郷",
+    "characterName": "小石",
+    "defaultDiceType": "d20",
+    "isPublic": true,
+    "type": "IN_GAME"
+  }
+}
+
+script:post-response {
+  let data = res.getBody();
+  if (data.isOk) {
+    bru.setVar("channel_id", data.ok.channel.id);
+  }
+}

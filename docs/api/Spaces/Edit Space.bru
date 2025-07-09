@@ -1,0 +1,25 @@
+meta {
+  name: Edit Space
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{base_url}}/spaces/edit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "spaceId": "{{space_id}}",
+    "name": "Yharnam",
+    "description": "Wellcome to Yharnam",
+    "defaultDiceType": "d100",
+    "explorable": true,
+    "isPublic": false,
+    "allowSpectator": true,
+    "grantAdmins": [],
+    "removeAdmins": []
+  }
+}

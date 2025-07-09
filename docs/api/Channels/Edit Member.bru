@@ -1,0 +1,19 @@
+meta {
+  name: Edit Member
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{base_url}}/channels/edit_member
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "channelId": "{{channel_id}}",
+    "characterName": "阿拉拉圾",
+    "textColor": "#ff0000"
+  }
+}

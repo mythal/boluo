@@ -1,0 +1,19 @@
+meta {
+  name: Delete Space
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{base_url}}/spaces/delete?id={{space_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}
+
+body:json {
+  {}
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Move Between
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/messages/move_between
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "messageId": "{{message_id}}",
+    "range": [null, null],
+    "channelId": "{{channel_id}}"
+  }
+}

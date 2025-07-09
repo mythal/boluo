@@ -1,0 +1,16 @@
+meta {
+  name: Query Space
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/spaces/query?id={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+  token:
+}

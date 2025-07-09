@@ -1,0 +1,19 @@
+meta {
+  name: Add Member
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{base_url}}/channels/add_member
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "channelId": "{{channel_id}}",
+    "userId": "",
+    "characterName": "路过的魔法少女"
+  }
+}

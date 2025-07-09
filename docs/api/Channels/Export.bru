@@ -1,0 +1,16 @@
+meta {
+  name: Export
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/channels/export?channelId={{channel_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  channelId: {{channel_id}}
+  after: 
+}

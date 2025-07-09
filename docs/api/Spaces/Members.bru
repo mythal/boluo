@@ -1,0 +1,15 @@
+meta {
+  name: Members
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/spaces/members?id={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}

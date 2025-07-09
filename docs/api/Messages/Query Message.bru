@@ -1,0 +1,15 @@
+meta {
+  name: Query Message
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/messages/query?id={{message_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{message_id}}
+}

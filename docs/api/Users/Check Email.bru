@@ -1,0 +1,15 @@
+meta {
+  name: Check Email
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{base_url}}/users/check_email?email=bruno@example.com
+  body: none
+  auth: inherit
+}
+
+params:query {
+  email: bruno@example.com
+}

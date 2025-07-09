@@ -1,0 +1,19 @@
+meta {
+  name: Toggle Fold
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/messages/toggle_fold?id={{message_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: {{message_id}}
+}
+
+body:json {
+  {}
+}

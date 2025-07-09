@@ -133,7 +133,7 @@ pub enum GetFromStateError {
     #[error("Failed to query updates")]
     FailedToQuery,
     #[error("Requested updates are too early")]
-    RequestedUpdatesAreTooEarly,
+    RequestedUpdatesAreTooEarly { start_at: Option<i64> },
 }
 
 impl UpdateBody {
@@ -326,7 +326,7 @@ impl Update {
             if let Some(after) = after
                 && after > 0
             {
-                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: None });
             }
             return Ok(vec![]);
         };
@@ -350,7 +350,9 @@ impl Update {
 
         if let Some(after) = after {
             if after > 0 && after < start_at {
-                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly {
+                    start_at: Some(start_at),
+                });
             }
         }
         if updates.is_empty() {

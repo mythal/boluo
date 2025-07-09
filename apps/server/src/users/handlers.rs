@@ -184,7 +184,9 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
     add_settings_cookie(&settings, headers);
-    add_session_cookie(&session.id, is_debug, headers);
+    if !form.with_token {
+        add_session_cookie(&session.id, is_debug, headers);
+    }
     Ok(response)
 }
 

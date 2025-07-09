@@ -2931,6 +2931,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
+ "smallvec",
  "specta",
  "specta-typescript",
  "sqlx",

@@ -41,7 +41,7 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                                 .execute(&mut *conn)
                                 .await
                                 {
-                                    tracing::error!("Failed to update activity for channel {}: {}", channel_id, err);
+                                    tracing::error!(error = %err, "Failed to update activity for channel {}", channel_id);
                                 };
                             }
                         }

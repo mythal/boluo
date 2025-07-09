@@ -422,7 +422,7 @@ impl ChannelPosManager {
                 .hasher(RandomState::new())
                 .build(),
         };
-        let span = tracing::info_span!("channel_pos_manager_tick");
+        let span = tracing::info_span!(parent: None, "channel_pos_manager_tick");
         tokio::spawn(
             async move {
                 let mut interval = tokio::time::interval(TICK_INTERVAL);
@@ -444,7 +444,8 @@ impl ChannelPosManager {
                 }
             }
             let (sender, receiver) = mpsc::channel(32);
-            let span = tracing::info_span!("channel_pos_actor", channel_id = %channel_id);
+            let span =
+                tracing::info_span!(parent: None, "channel_pos_actor", channel_id = %channel_id);
             tokio::spawn(
                 async move {
                     let actor = ChannelPosActor::new(channel_id, receiver);

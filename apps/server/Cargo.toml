@@ -74,6 +74,7 @@ redis = { version = "0.32.2", features = [
   "tcp_nodelay",
   "connection-manager",
 ] }
+smallvec = "1.15.1"
 
 [dependencies.reqwest]
 version = "0.12"

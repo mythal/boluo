@@ -20,13 +20,13 @@ use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
 use std::time::Duration;
+use thiserror::Error;
 use tokio_stream::StreamExt as _;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tracing::instrument;
 use uuid::Uuid;
 
-const CHUNK_SIZE: usize = 16;
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
 
 async fn check_permissions(
@@ -59,6 +59,16 @@ async fn check_permissions(
     Ok(())
 }
 
+#[derive(Debug, Error)]
+enum PushUpdatesError {
+    #[error("Failed to get cached updates")]
+    FailedToGetCachedUpdates,
+    #[error("Failed to send message")]
+    FailedToSendMessage(#[from] tokio_tungstenite::tungstenite::Error),
+    #[error("Failed to receive message")]
+    RecvError(#[from] tokio::sync::broadcast::error::RecvError),
+}
+
 // Allow the needless return for keep some visual hints
 #[allow(clippy::needless_return)]
 #[instrument(skip(outgoing))]
@@ -68,103 +78,69 @@ async fn push_updates(
     after: Option<i64>,
     seq: Option<Seq>,
     node: Option<u16>,
-) {
-    use futures::channel::mpsc::channel;
-    use tokio::sync::broadcast::error::RecvError;
-    use tokio::time::interval;
-    use tokio_stream::wrappers::IntervalStream;
-    use tokio_tungstenite::tungstenite::Error::{AlreadyClosed, ConnectionClosed};
-    let (tx, mut rx) = channel::<WsMessage>(32);
-    let message_sender = async move {
-        while let Some(message) = tokio_stream::StreamExt::next(&mut rx).await {
-            match outgoing.send(message).await {
-                Ok(_) => (),
-                Err(ConnectionClosed) | Err(AlreadyClosed) => break,
-                Err(e) => {
-                    tracing::error!(error = %e, "Error on sending WebSocket message");
-                    return;
-                }
-            }
+) -> Result<(), PushUpdatesError> {
+    let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
+
+    let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
+        Ok(updates) => updates,
+        Err(GetFromStateError::FailedToQuery) => {
+            tracing::error!(
+                mailbox_id = %mailbox,
+                "Failed to get cached updates"
+            );
+            let error_update = Update::error(
+                mailbox,
+                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
+            )
+            .encode();
+            outgoing.send(WsMessage::Text(error_update)).await?;
+            return Err(PushUpdatesError::FailedToGetCachedUpdates);
         }
-        return;
-    };
+        Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
+            let elapsed = timestamp() - after.unwrap_or(0);
+            tracing::info!(
+                mailbox_id = %mailbox,
+                after,
+                seq,
+                node,
+                start_at,
+                elapsed,
+                "The user requested updates with 'after', but the cached updates are too new"
+            );
 
-    let push = async {
-        let mut tx = tx.clone();
-        let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
-
-        let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
-            Ok(updates) => updates,
-            Err(GetFromStateError::FailedToQuery) => {
-                tracing::error!(
-                    mailbox_id = %mailbox,
-                    "Failed to get cached updates"
-                );
-                let error_update = Update::error(
-                    mailbox,
-                    AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
-                )
-                .encode();
-                tx.send(WsMessage::Text(error_update)).await.ok();
-                return;
-            }
-            Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
-                let elapsed = timestamp() - after.unwrap_or(0);
-                tracing::info!(
-                    mailbox_id = %mailbox,
-                    after,
-                    seq,
-                    node,
-                    start_at,
-                    elapsed,
-                    "The user requested updates with 'after', but the cached updates are too new"
-                );
-
-                vec![]
-            }
-        };
-        for message in cached_updates {
-            if let Err(err) = tx.send(WsMessage::Text(message)).await {
-                tracing::warn!(error = %err, "Failed to send initialize updates");
-                return;
-            };
-        }
-        let initialized = Update::initialized(mailbox).encode();
-        tx.send(WsMessage::Text(initialized)).await.ok();
-
-        loop {
-            let message = match mailbox_rx.recv().await {
-                Ok(update) => WsMessage::Text(update),
-                Err(RecvError::Lagged(lagged)) => {
-                    tracing::warn!("lagged {lagged} at {mailbox}");
-                    continue;
-                }
-                Err(RecvError::Closed) => {
-                    tracing::error!("mailbox {mailbox} closed");
-                    return;
-                }
-            };
-            if let Err(e) = tx.send(message).await {
-                tracing::error!(error = %e, "Failed to send broadcast message");
-                break;
-            }
+            vec![]
         }
     };
+    for message in cached_updates {
+        outgoing.feed(WsMessage::Text(message)).await?;
+    }
+    let initialized = Update::initialized(mailbox).encode();
+    outgoing.feed(WsMessage::Text(initialized)).await?;
+    outgoing.flush().await?;
 
-    let ping = IntervalStream::new(interval(Duration::from_secs(3))).for_each(|_| async {
-        if let Err(err) = tx
-            .clone()
-            .send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥")))
-            .await
-        {
-            tracing::debug!(error = %err, "Failed to send ping message");
+    loop {
+        tokio::select! {
+            _ = tokio::time::sleep(Duration::from_secs(8)) => {
+                outgoing.send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥"))).await?;
+            }
+            message = mailbox_rx.recv() => {
+                let first_message = message?;
+                outgoing.feed(WsMessage::Text(first_message)).await?;
+                loop {
+                    use tokio::sync::broadcast::error::{TryRecvError, RecvError};
+                    match mailbox_rx.try_recv() {
+                        Ok(message) => outgoing.feed(WsMessage::Text(message)).await?,
+                        Err(TryRecvError::Lagged(x)) => {
+                            return Err(PushUpdatesError::RecvError(RecvError::Lagged(x)));
+                        }
+                        Err(_) => {
+                            break;
+                        }
+                    }
+                }
+                outgoing.flush().await?;
+            }
         }
-    });
-
-    tokio::select! {
-        r = message_sender => { r },
-        _ = ping => {},
-        r = push => { r },
     }
 }
 
@@ -296,7 +272,14 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             tracing::warn!(error = %e, "Failed to send basic info");
         }
         let push_updates_future = async move {
-            push_updates(mailbox, &mut outgoing, after, seq, node).await;
+            use tokio_tungstenite::tungstenite::Error::{AlreadyClosed, ConnectionClosed};
+            match push_updates(mailbox, &mut outgoing, after, seq, node).await {
+                Ok(_) => tracing::debug!("Stop push updates"),
+                Err(PushUpdatesError::FailedToSendMessage(ConnectionClosed | AlreadyClosed)) => {
+                    tracing::debug!("Connection closed")
+                }
+                Err(e) => tracing::warn!(error = %e, "Failed to push updates"),
+            }
             outgoing.close().await.ok();
         };
 

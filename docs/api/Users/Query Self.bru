@@ -1,16 +1,16 @@
 meta {
-  name: Get Me
+  name: Query Self
   type: http
-  seq: 1
+  seq: 5
 }
 
 get {
-  url: {{base_url}}/users/get_me
+  url: {{base_url}}/users/query_self
   body: none
   auth: inherit
 }
 
 script:post-response {
   let data = res.getBody();
-  let token = bru.setVar("user_id", data.ok.user.id);
+  bru.setVar("user_id", data.ok.id);
 }

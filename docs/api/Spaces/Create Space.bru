@@ -1,0 +1,27 @@
+meta {
+  name: Create Space
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{base_url}}/spaces/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "始まりの台地",
+    "password": null,
+    "description": "A new space for testing",
+    "defaultDiceType": "d20",
+    "firstChannelName": "General",
+    "firstChannelType": "IN_GAME"
+  }
+}
+
+script:post-response {
+  let data = res.getBody();
+  let token = bru.setVar("space_id", data.ok.space.id);
+}

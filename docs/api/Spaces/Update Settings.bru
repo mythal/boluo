@@ -1,0 +1,21 @@
+meta {
+  name: Update Settings
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{base_url}}/spaces/update_settings?id={{space_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}
+
+body:json {
+  {
+    "nanigasuki": "チョコミント"
+  }
+}

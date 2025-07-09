@@ -1,0 +1,24 @@
+meta {
+  name: By Channel
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/messages/by_channel?channelId={{channel_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  channelId: {{channel_id}}
+  before: 
+  limit: 50
+}
+
+script:post-response {
+  let data = res.getBody();
+  if (data.isOk && data.ok.length > 0) {
+    bru.setVar("message_id", data.ok[0].id);
+  }
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Edit Channel
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{base_url}}/channels/edit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "channelId": "{{channel_id}}",
+    "name": "Middle-earth",
+    "topic": "Waaaaaagh",
+    "defaultDiceType": "d20",
+    "defaultRollCommand": "/roll",
+    "grantMasters": [],
+    "removeMasters": [],
+    "isPublic": true,
+    "isDocument": false,
+    "type": "IN_GAME"
+  }
+}

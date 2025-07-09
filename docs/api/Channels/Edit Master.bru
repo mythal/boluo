@@ -1,0 +1,19 @@
+meta {
+  name: Edit Master
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{base_url}}/channels/edit_master
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "channelId": "{{channel_id}}",
+    "userId": "",
+    "grantOrRevoke": "GRANT"
+  }
+}

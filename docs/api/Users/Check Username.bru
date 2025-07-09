@@ -1,0 +1,15 @@
+meta {
+  name: Check Username
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{base_url}}/users/check_username?username=bruno
+  body: none
+  auth: inherit
+}
+
+params:query {
+  username: bruno
+}

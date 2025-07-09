@@ -1,0 +1,21 @@
+meta {
+  name: Kick Member
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{base_url}}/channels/kick?spaceId={{space_id}}&channelId={{channel_id}}&userId
+  body: json
+  auth: inherit
+}
+
+params:query {
+  spaceId: {{space_id}}
+  channelId: {{channel_id}}
+  userId: 
+}
+
+body:json {
+  {}
+}

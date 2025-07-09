@@ -1,0 +1,16 @@
+meta {
+  name: Get Token
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/events/token?spaceId={{space_id}}&userId
+  body: none
+  auth: inherit
+}
+
+params:query {
+  spaceId: {{space_id}}
+  userId: 
+}

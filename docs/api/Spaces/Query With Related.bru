@@ -1,0 +1,15 @@
+meta {
+  name: Query With Related
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/spaces/query_with_related?id={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}

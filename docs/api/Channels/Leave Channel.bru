@@ -1,0 +1,19 @@
+meta {
+  name: Leave Channel
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{base_url}}/channels/leave?id={{channel_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: {{channel_id}}
+}
+
+body:json {
+  {}
+}

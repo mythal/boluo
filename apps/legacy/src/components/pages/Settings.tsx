@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { AppError } from '../../api/error';
 import { editAvatar, post } from '../../api/request';
 import { EditUser, Settings as SettingsData } from '../../api/users';
-import save from '../../assets/icons/save.svg';
+import Save from '../../assets/icons/save.svg';
 import { useDispatch, useSelector } from '../../store';
 import { alignRight, flex, largeInput, mR, mT, spacingN, textLg } from '../../styles/atoms';
 import { bioValidation, nicknameValidation } from '../../validators';
@@ -136,7 +136,7 @@ function Settings() {
         </div>
         <div css={[alignRight, mT(2)]}>
           <Button css={[textLg]} data-variant="primary" type="submit" disabled={submitting}>
-            <Icon sprite={save} loading={submitting} /> 保存设置
+            <Icon icon={Save} loading={submitting} /> 保存设置
           </Button>
         </div>
       </form>

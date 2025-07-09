@@ -5,10 +5,10 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Channel } from '../../api/channels';
 import { Space } from '../../api/spaces';
-import bellSlashIcon from '../../assets/icons/bell-slash-solid.svg';
-import bellIcon from '../../assets/icons/bell-solid.svg';
-import help from '../../assets/icons/help.svg';
-import plus from '../../assets/icons/plus-circle.svg';
+import BellSlashSolid from '../../assets/icons/bell-slash-solid.svg';
+import BellSolid from '../../assets/icons/bell-solid.svg';
+import HelpIcon from '../../assets/icons/help.svg';
+import PlusCircle from '../../assets/icons/plus-circle.svg';
 import { useNotificationSwitch } from '../../states/notify';
 import { useSelector } from '../../store';
 import {
@@ -103,11 +103,11 @@ function SidebarExpandItems({ space, channels }: Props) {
         <span>频道</span>
         <div>
           <SidebarButton data-active={canNotify} onClick={canNotify ? stopNotify : startNotify}>
-            <Icon sprite={canNotify ? bellIcon : bellSlashIcon} />
+            <Icon icon={canNotify ? BellSolid : BellSlashSolid} />
           </SidebarButton>
           {isSpaceAdmin && (
             <SidebarButton onClick={() => setCreateChannel(true)}>
-              <Icon sprite={plus} />
+              <Icon icon={PlusCircle} />
             </SidebarButton>
           )}
         </div>
@@ -119,7 +119,7 @@ function SidebarExpandItems({ space, channels }: Props) {
       </div>
       <div css={footer}>
         <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>
-          <Icon sprite={help} /> 格式
+          <Icon icon={HelpIcon} /> 格式
         </ChatHeaderButton>
       </div>
 

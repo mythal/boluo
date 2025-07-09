@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useMemo, useState } from 'react';
-import userPlusIcon from '../../assets/icons/user-plus.svg';
+import UserPlus from '../../assets/icons/user-plus.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useUsersStatus } from '../../hooks/useUsersStatus';
 import { useSelector } from '../../store';

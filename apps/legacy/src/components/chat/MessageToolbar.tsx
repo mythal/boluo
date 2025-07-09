@@ -4,10 +4,10 @@ import { useCallback, useState } from 'react';
 import { ChannelMember } from '../../api/channels';
 import { Message } from '../../api/messages';
 import { post } from '../../api/request';
-import editIcon from '../../assets/icons/edit.svg';
-import foldIcon from '../../assets/icons/fold.svg';
-import trashIcon from '../../assets/icons/trash.svg';
-import unfoldIcon from '../../assets/icons/unfold.svg';
+import Edit from '../../assets/icons/edit.svg';
+import Fold from '../../assets/icons/fold.svg';
+import Trash from '../../assets/icons/trash.svg';
+import Unfold from '../../assets/icons/unfold.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import store, { useDispatch } from '../../store';
@@ -62,7 +62,7 @@ function MessageToolbar({ myMember, mine, message }: Props) {
     buttonsProps.push({
       onClick: () => showDeleteDialog(true),
       disabled: loading,
-      sprite: trashIcon,
+      icon: Trash,
       title: '删除',
     });
   }
@@ -71,14 +71,14 @@ function MessageToolbar({ myMember, mine, message }: Props) {
       buttonsProps.push({
         onClick: toggleFold,
         disabled: loading,
-        sprite: unfoldIcon,
+        icon: Unfold,
         title: '取消折叠',
       });
     } else {
       buttonsProps.push({
         onClick: toggleFold,
         disabled: loading,
-        sprite: foldIcon,
+        icon: Fold,
         title: '标记折叠',
       });
     }
@@ -87,7 +87,7 @@ function MessageToolbar({ myMember, mine, message }: Props) {
     buttonsProps.push({
       onClick: startEdit,
       disabled: loading,
-      sprite: editIcon,
+      icon: Edit,
       title: '编辑',
     });
   }

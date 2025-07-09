@@ -6,9 +6,9 @@ import useSWR from 'swr';
 import { errLoading } from '../../api/error';
 import { AppResult, get } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
-import clipboard from '../../assets/icons/clipboard.svg';
-import userCog from '../../assets/icons/user-cog.svg';
-import userPlus from '../../assets/icons/user-plus.svg';
+import Clipboard from '../../assets/icons/clipboard.svg';
+import UserCog from '../../assets/icons/user-cog.svg';
+import UserPlus from '../../assets/icons/user-plus.svg';
 import GotoSpaceLink from '../../components/molecules/GotoSpaceLink';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { useDispatch, useSelector } from '../../store';
@@ -114,7 +114,7 @@ function SpacePage() {
         <div css={flex}>
           <Input ref={inviteLinkInput} value={inviteLink} readOnly />
           <Button css={mL(1)} data-size="small" onClick={copyInviteLink}>
-            <Icon sprite={clipboard} /> 复制
+            <Icon icon={Clipboard} /> 复制
           </Button>
         </div>
       )}
@@ -124,12 +124,12 @@ function SpacePage() {
         )}
         {myMember?.isAdmin && (
           <Button onClick={getInviteLink} data-size="small" css={mR(1)}>
-            <Icon sprite={userPlus} /> 邀请
+            <Icon icon={UserPlus} /> 邀请
           </Button>
         )}
         {myMember?.isAdmin && (
           <Button data-small css={mR(1)} onClick={() => setManaging(true)}>
-            <Icon sprite={userCog} /> 管理
+            <Icon icon={UserCog} /> 管理
           </Button>
         )}
         {(space.isPublic || space.ownerId === myId || token) && (

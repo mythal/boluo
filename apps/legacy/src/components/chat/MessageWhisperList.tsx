@@ -4,8 +4,8 @@ import { showFlash } from '../../actions';
 import { ChannelMember } from '../../api/channels';
 import { Message } from '../../api/messages';
 import { get } from '../../api/request';
-import eyeSlash from '../../assets/icons/eye-slash.svg';
-import eye from '../../assets/icons/eye.svg';
+import EyeSlash from '../../assets/icons/eye-slash.svg';
+import Eye from '../../assets/icons/eye.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import { mR, textSm } from '../../styles/atoms';
@@ -74,7 +74,7 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
       <div css={whisperContentWrapper} data-folded={message.folded}>
         {!shown && (
           <Button data-size="small" onClick={reveal} css={mR(2)}>
-            查看 <Icon sprite={eye} />
+            查看 <Icon icon={Eye} />
           </Button>
         )}
 
@@ -85,7 +85,7 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
     return (
       <div css={whisperContentWrapper} data-folded={message.folded}>
         <span>
-          <Icon sprite={eyeSlash} css={mR(2)} />
+          <Icon icon={EyeSlash} css={mR(2)} />
           对别的人说悄悄话
         </span>
       </div>

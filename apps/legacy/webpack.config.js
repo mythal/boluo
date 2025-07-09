@@ -9,7 +9,6 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 const rootPath = path.resolve(__dirname);
@@ -48,7 +47,6 @@ module.exports = {
       filename: '[name].[contenthash].css',
       chunkFilename: '[id].[contenthash].css',
     }),
-    new SpriteLoaderPlugin(),
     // new require('webpack-bundle-analyzer').BundleAnalyzerPlugin,
   ],
 
@@ -90,12 +88,7 @@ module.exports = {
       { test: /\.(png|jpe?g|gif|woff2)$/, use: ['file-loader'] },
       {
         test: /\.svg$/,
-        loader: 'svg-sprite-loader',
-        options: {
-          extract: true,
-          spriteFilename: '[contenthash].svg',
-          esModule: false,
-        },
+        use: ['@svgr/webpack'],
       },
     ],
   },

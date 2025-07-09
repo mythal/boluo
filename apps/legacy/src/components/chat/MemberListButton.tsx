@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import members from '../../assets/icons/members.svg';
+import Members from '../../assets/icons/members.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSend } from '../../hooks/useSend';
 import { HEARTBEAT_INTERVAL } from '../../settings';
@@ -30,7 +30,7 @@ function MemberListButton({ className, channelId }: Props) {
   return (
     <React.Fragment>
       <ChatHeaderButton data-active={open} onClick={toggle} className={className} ref={buttonRef}>
-        <Icon sprite={members} /> {onlineCount}
+        <Icon icon={Members} /> {onlineCount}
         <small>/{channelMembers.length}</small>
       </ChatHeaderButton>
     </React.Fragment>

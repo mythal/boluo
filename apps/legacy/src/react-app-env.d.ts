@@ -30,14 +30,9 @@ declare module '*.gif' {
 }
 
 declare module '*.svg' {
-  export interface SpriteSymbol {
-    id: string;
-    viewBox: string;
-    url: string;
-    node: SVGSymbolElement;
-  }
-  const spriteSymbol: SpriteSymbol;
-  export default spriteSymbol;
+  import React from 'react';
+  const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  export default ReactComponent;
 }
 
 declare module '*.woff2' {

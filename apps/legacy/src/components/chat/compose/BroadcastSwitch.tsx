@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
+import BroadcastTower from '../../../assets/icons/broadcast-tower.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -19,7 +19,7 @@ function BroadcastSwitch({ className, size }: Props) {
   }, [dispatch, pane]);
   return (
     <ChatItemToolbarButton
-      sprite={broadcastTower}
+      icon={BroadcastTower}
       className={className}
       on={broadcast}
       size={size}

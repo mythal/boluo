@@ -2,8 +2,8 @@ import styled from '@emotion/styled';
 import * as React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import newspaper from '../../assets/icons/newspaper.svg';
-import planetConquest from '../../assets/icons/planet-conquest.svg';
+import Newspaper from '../../assets/icons/newspaper.svg';
+import PlanetConquest from '../../assets/icons/planet-conquest.svg';
 import ExternalLink from '../../components/atoms/ExternalLink';
 import { useSelector } from '../../store';
 import { link, mB, spacingN } from '../../styles/atoms';
@@ -31,7 +31,7 @@ function My() {
     <Container>
       <div>
         <Title>
-          <Icon sprite={planetConquest} /> 我在的位面
+          <Icon icon={PlanetConquest} /> 我在的位面
         </Title>
         <SpaceGrid>
           <NewSpaceCard />
@@ -40,7 +40,7 @@ function My() {
       </div>
       <div>
         <Title>
-          <Icon sprite={newspaper} /> 新闻
+          <Icon icon={Newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
           现在会根据延迟自动选择线路，改进了断线重连。重写的

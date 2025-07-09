@@ -1,6 +1,6 @@
 import * as React from 'react';
-import binoculars from '../../assets/icons/binoculars.svg';
-import teleport from '../../assets/icons/teleport.svg';
+import Binoculars from '../../assets/icons/binoculars.svg';
+import Teleport from '../../assets/icons/teleport.svg';
 import Icon from '../../components/atoms/Icon';
 import { encodeUuid, Id } from '../../utils/id';
 import { ButtonLink } from '../atoms/Button';
@@ -16,13 +16,13 @@ function GotoSpaceLink({ isMember, spaceId, className }: Props) {
   if (isMember) {
     return (
       <ButtonLink data-small data-variant="primary" className={className} to={chatPath}>
-        <Icon sprite={teleport} /> 进入位面
+        <Icon icon={Teleport} /> 进入位面
       </ButtonLink>
     );
   } else {
     return (
       <ButtonLink data-small className={className} to={chatPath}>
-        <Icon sprite={binoculars} /> 作为旁观者进入
+        <Icon icon={Binoculars} /> 作为旁观者进入
       </ButtonLink>
     );
   }

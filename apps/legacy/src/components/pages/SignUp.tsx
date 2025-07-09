@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppError, errorText } from '../../api/error';
 import { post } from '../../api/request';
 import { RegisterData } from '../../api/users';
-import signUpIcon from '../../assets/icons/sign-up.svg';
+import SignUpIcon from '../../assets/icons/sign-up.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
 import {
@@ -170,7 +170,7 @@ function SignUp() {
               data-variant="primary"
               type="submit"
             >
-              <Icon sprite={signUpIcon} loading={submitting} />
+              <Icon icon={SignUpIcon} loading={submitting} />
               注册账号
             </Button>
           </div>

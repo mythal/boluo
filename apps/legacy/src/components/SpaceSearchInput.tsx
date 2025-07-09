@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import searchSpaces from '../assets/icons/search-spaces.svg';
+import SearchSpaces from '../assets/icons/search-spaces.svg';
 import { flex, mR } from '../styles/atoms';
 import Icon from './atoms/Icon';
 import Input from './atoms/Input';
@@ -25,7 +25,7 @@ function SpaceSearchInput({ search, className }: Props) {
 
   return (
     <div css={flex} className={className}>
-      <Icon css={mR(2)} sprite={searchSpaces} />
+      <Icon css={mR(2)} icon={SearchSpaces} />
       <Input
         value={searchValue}
         placeholder="搜索公开位面"

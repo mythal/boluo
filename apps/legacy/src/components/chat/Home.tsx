@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Channel } from '../../api/channels';
 import { Space, SpaceMemberWithUser } from '../../api/spaces';
-import userCog from '../../assets/icons/user-cog.svg';
+import UserCog from '../../assets/icons/user-cog.svg';
 import { useTitle } from '../../hooks/useTitle';
 import { useSelector } from '../../store';
 import { breakpoint, flex, fontBold, mediaQuery, mL, p, pX, pY, textLg } from '../../styles/atoms';
@@ -87,7 +87,7 @@ function Home({ space, members, channels }: Props) {
         <Buttons>
           {myMember?.isAdmin && (
             <ChatHeaderButton onClick={startManage}>
-              <Icon sprite={userCog} /> 管理
+              <Icon icon={UserCog} /> 管理
             </ChatHeaderButton>
           )}
           {space.isPublic && (

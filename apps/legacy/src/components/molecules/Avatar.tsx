@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { mediaUrl } from '../../api/request';
-import defaultAvatar from '../../assets/cultist.svg';
-import SpriteSvg from '../atoms/SpriteSvg';
+import Cultist from '../../assets/cultist.svg';
 
 interface Props {
   size?: string;
@@ -27,15 +26,7 @@ function Avatar({ className, size, id, src, onClick }: Props) {
       />
     );
   } else {
-    return (
-      <SpriteSvg
-        onClick={onClick}
-        className={className}
-        width={size}
-        height={size}
-        sprite={defaultAvatar}
-      />
-    );
+    return <Cultist onClick={onClick} className={className} width={size} height={size} />;
   }
 }
 

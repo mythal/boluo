@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback } from 'react';
-import mask from '../../../assets/icons/theater-masks.svg';
+import TheaterMasks from '../../../assets/icons/theater-masks.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import { relative, textXs } from '../../../styles/atoms';
@@ -38,7 +38,7 @@ function InGameButton({ className }: Props) {
         <div>游戏内</div>
         <div css={[textXs]}>Esc</div>
       </Tooltip>
-      <ChatItemToolbarButton on={inGame} onClick={toggleInGame} sprite={mask} size="large" />
+      <ChatItemToolbarButton on={inGame} onClick={toggleInGame} icon={TheaterMasks} size="large" />
     </div>
   );
 }

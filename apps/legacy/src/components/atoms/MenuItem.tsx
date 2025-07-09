@@ -1,4 +1,3 @@
-import { SpriteSymbol } from '*.svg';
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
@@ -10,7 +9,7 @@ import { menuItemHoverColor, textColor } from '../../styles/colors';
 
 export interface IMenuItem {
   children: React.ReactNode;
-  icon?: SpriteSymbol;
+  icon?: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
   onClick?: () => void;
 }
 
@@ -52,14 +51,14 @@ export function MenuItem({ children, icon, onClick }: IMenuItem) {
   return (
     <MenuItemContainer onClick={onClick}>
       <div>{children}</div>
-      {icon && <TextIcon sprite={icon} />}
+      {icon && <TextIcon icon={icon} />}
     </MenuItemContainer>
   );
 }
 
 export interface IMenuItemLink {
   children: React.ReactNode;
-  icon?: SpriteSymbol;
+  icon?: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
   to: string;
   exact?: boolean;
 }
@@ -72,21 +71,21 @@ export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
       className={({ isActive }) => (isActive ? 'active' : '')}
     >
       <div>{children}</div>
-      {icon && <TextIcon sprite={icon} />}
+      {icon && <TextIcon icon={icon} />}
     </MenuItemLinkContainer>
   );
 }
 
 export interface IMenuItemDisabled {
   children: React.ReactNode;
-  icon?: SpriteSymbol;
+  icon?: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 }
 
 export function MenuItemDisabled({ children, icon }: IMenuItemDisabled) {
   return (
     <MenuItemContainer data-disabled={true} onClick={(e) => e.stopPropagation()}>
       <div>{children}</div>
-      {icon && <TextIcon sprite={icon} />}
+      {icon && <TextIcon icon={icon} />}
     </MenuItemContainer>
   );
 }

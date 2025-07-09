@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import { darken, lighten } from 'polished';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import plus from '../../assets/icons/plus-circle.svg';
+import PlusCircle from '../../assets/icons/plus-circle.svg';
 import { flex, pY, roundedPx, text3Xl } from '../../styles/atoms';
 import { bgColor, textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
@@ -23,7 +23,7 @@ const style = css`
 function NewSpaceCard() {
   return (
     <Link to="/space/new" css={style}>
-      <Icon sprite={plus} />
+      <Icon icon={PlusCircle} />
     </Link>
   );
 }

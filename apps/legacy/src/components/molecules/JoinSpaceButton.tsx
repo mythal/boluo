@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { post } from '../../api/request';
-import rocket from '../../assets/icons/rocket.svg';
+import Rocket from '../../assets/icons/rocket.svg';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 import { useDispatch, useSelector } from '../../store';
 import { Id } from '../../utils/id';
@@ -36,7 +36,7 @@ function JoinSpaceButton({ id, token, ...props }: Props) {
 
   return (
     <button onClick={join} {...props} data-variant="primary" disabled={loading}>
-      <Icon sprite={rocket} loading={loading} /> 加入位面
+      <Icon icon={Rocket} loading={loading} /> 加入位面
     </button>
   );
 }

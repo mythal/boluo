@@ -1,7 +1,10 @@
 'use strict';
 // https://webpack.js.org/guides/
 
-require('dotenv').config();
+require('dotenv').config({
+  quiet: true,
+  path: ['.env.local', '.env', '../../.env.local', '../../.env'],
+});
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -88,7 +91,14 @@ module.exports = {
       { test: /\.(png|jpe?g|gif|woff2)$/, use: ['file-loader'] },
       {
         test: /\.svg$/,
-        use: ['@svgr/webpack'],
+        use: [
+          {
+            loader: '@svgr/webpack',
+            options: {
+              icon: true,
+            },
+          },
+        ],
       },
     ],
   },

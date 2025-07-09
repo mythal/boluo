@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef } from 'react';
-import fileImage from '../../../assets/icons/file-image.svg';
-import removeFileImage from '../../../assets/icons/remove-file-image.svg';
+import FileImage from '../../../assets/icons/file-image.svg';
+import RemoveFileImage from '../../../assets/icons/remove-file-image.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -40,7 +40,7 @@ function ImageUploadButton({ className, size }: Props) {
         <ChatItemToolbarButton
           className={className}
           onClick={removeMedia}
-          sprite={removeFileImage}
+          icon={RemoveFileImage}
           size={size}
           title="清除图片"
         />
@@ -48,7 +48,7 @@ function ImageUploadButton({ className, size }: Props) {
         <ChatItemToolbarButton
           className={className}
           onClick={startUpload}
-          sprite={fileImage}
+          icon={FileImage}
           size={size}
           title="上传图片"
           info="也可以拖放或粘贴"

@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import styled from '@emotion/styled';
 import * as React from 'react';
-import mushroomCloud from '../../assets/icons/mushroom-cloud.svg';
-import rotateIcon from '../../assets/icons/rotate-cw.svg';
+import MushroomCloud from '../../assets/icons/mushroom-cloud.svg';
+import RotateCw from '../../assets/icons/rotate-cw.svg';
 import Button from '../../components/atoms/Button';
 import Icon from '../../components/atoms/Icon';
 import Text from '../../components/atoms/Text';
@@ -52,12 +52,12 @@ class PageError extends React.Component<Props, State> {
         <Mask>
           <Container>
             <Title>
-              <Icon sprite={mushroomCloud} /> 哎哟！
+              <Icon icon={MushroomCloud} /> 哎哟！
             </Title>
             <Text css={mY(1)}>
               发生未知错误。这通常是网络原因导致页面载入出错。请
               <Button css={[mX(1)]} data-small onClick={this.onClick}>
-                <Icon sprite={rotateIcon} />
+                <Icon icon={RotateCw} />
                 刷新
               </Button>
               重试，如果依然错误请联系网站管理员。

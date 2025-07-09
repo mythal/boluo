@@ -1,7 +1,7 @@
 import { css, keyframes } from '@emotion/react';
 import styled from '@emotion/styled';
 import React from 'react';
-import rotateIcon from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { fontMono, pY, spacingN, textSm, textXl } from '../../styles/atoms';
 import TextIcon from '../atoms/Icon';
 
@@ -45,7 +45,7 @@ const rotateIconStyle = css`
 export default function Loading({ className, text = 'loading' }: Props) {
   return (
     <Container className={className}>
-      <TextIcon sprite={rotateIcon} spin css={rotateIconStyle} /> <span>{text}</span>
+      <TextIcon icon={RotateCw} spin css={rotateIconStyle} /> <span>{text}</span>
     </Container>
   );
 }

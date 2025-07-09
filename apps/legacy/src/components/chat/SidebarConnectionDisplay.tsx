@@ -10,8 +10,6 @@ import { green } from '../../styles/colors';
 import { Delay } from '../atoms/Delay';
 import { ConnectionSelectDialog } from './ConnectionSelectDialog';
 
-interface Props {}
-
 const connected = css`
   display: flex;
   align-items: center;
@@ -65,7 +63,7 @@ const Closed = () => {
   );
 };
 
-export const SidebarConnectionDisplay = (props: Props) => {
+export const SidebarConnectionDisplay = () => {
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const [open, setOpen] = useState(false);
   const dismiss = () => setOpen(false);

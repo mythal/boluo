@@ -1,22 +1,20 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useCallback } from 'react';
-import broadcastTower from '../../../assets/icons/broadcast-tower.svg';
-import running from '../../../assets/icons/running.svg';
-import mask from '../../../assets/icons/theater-masks.svg';
+import BroadcastTower from '../../../assets/icons/broadcast-tower.svg';
+import Running from '../../../assets/icons/running.svg';
+import TheaterMasks from '../../../assets/icons/theater-masks.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import { flexRowReverse, mR } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
-
-interface Props {}
 
 const Toolbar = styled.div`
   ${[flexRowReverse]};
   grid-area: toolbar;
 `;
 
-function ComposeToolbar(props: Props) {
+function ComposeToolbar() {
   const dispatch = useDispatch();
   const channelId = useChannelId();
   const pane = channelId;
@@ -40,7 +38,7 @@ function ComposeToolbar(props: Props) {
       <ChatItemToolbarButton
         on={inGame}
         onClick={toggleInGame}
-        sprite={mask}
+        icon={TheaterMasks}
         title="游戏内"
         info="Esc"
       />
@@ -48,12 +46,12 @@ function ComposeToolbar(props: Props) {
         css={mR(1)}
         on={isAction}
         onClick={toggleIsAction}
-        sprite={running}
+        icon={Running}
         title="描述动作"
       />
       <ChatItemToolbarButton
         css={mR(1)}
-        sprite={broadcastTower}
+        icon={BroadcastTower}
         on={broadcast}
         onClick={toggleBroadcast}
         title="输入中广播"

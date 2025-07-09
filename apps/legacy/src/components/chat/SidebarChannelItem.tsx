@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { Channel } from '../../api/channels';
-import lockIcon from '../../assets/icons/lock.svg';
+import Lock from '../../assets/icons/lock.svg';
 import { useSelector } from '../../store';
 import { fontMono, mR, pY, textSm } from '../../styles/atoms';
 import { gray } from '../../styles/colors';
@@ -63,7 +63,7 @@ export function SidebarChannelItem({ channel }: Props) {
   return (
     <SidebarItemLink css={itemStyle} to={chatPath(channel.spaceId, channel.id)}>
       <ChannelName>
-        {!channel.isPublic && <Icon css={mR(1)} sprite={lockIcon} />}
+        {!channel.isPublic && <Icon css={mR(1)} icon={Lock} />}
         {channel.name}
       </ChannelName>
       {channel.isPublic && name && text && (

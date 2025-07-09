@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import diceIcon from '../../../assets/icons/d20.svg';
+import D20 from '../../../assets/icons/d20.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import { mL } from '../../../styles/atoms';
@@ -28,7 +28,7 @@ export const AddDiceButton = ({ inCompose = false, className }: Props) => {
       size={inCompose ? 'large' : 'normal'}
       onClick={addDice}
       title="添加骰子"
-      sprite={diceIcon}
+      icon={D20}
     />
   );
 };

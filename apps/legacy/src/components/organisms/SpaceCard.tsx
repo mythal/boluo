@@ -4,7 +4,7 @@ import { lighten } from 'polished';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Space } from '../../api/spaces';
-import lockIcon from '../../assets/icons/lock.svg';
+import Lock from '../../assets/icons/lock.svg';
 import { fontNormal, m, mR, mT, p, pX, pY, roundedPx, textXl, uiShadow } from '../../styles/atoms';
 import { bgColor, textColor } from '../../styles/colors';
 import { encodeUuid } from '../../utils/id';
@@ -48,7 +48,7 @@ function SpaceCard({ space }: Props) {
   return (
     <Link css={cardStyle} to={`/space/${encodeUuid(space.id)}`}>
       <SpaceName>
-        {!space.isPublic && <Icon css={mR(1)} sprite={lockIcon} />}
+        {!space.isPublic && <Icon css={mR(1)} icon={Lock} />}
         {space.name}
       </SpaceName>
       <div css={[mT(2)]}>

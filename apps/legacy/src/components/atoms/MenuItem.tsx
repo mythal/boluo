@@ -1,16 +1,15 @@
-import { SpriteSymbol } from '*.svg';
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
-import TextIcon from '../../components/atoms/Icon';
+import TextIcon, { type SvgIcon } from '../../components/atoms/Icon';
 import { mY, roundedSm, spacingN } from '../../styles/atoms';
 import { menuItemHoverColor, textColor } from '../../styles/colors';
 
 export interface IMenuItem {
   children: React.ReactNode;
-  icon?: SpriteSymbol;
+  icon?: SvgIcon;
   onClick?: () => void;
 }
 
@@ -52,14 +51,14 @@ export function MenuItem({ children, icon, onClick }: IMenuItem) {
   return (
     <MenuItemContainer onClick={onClick}>
       <div>{children}</div>
-      {icon && <TextIcon sprite={icon} />}
+      {icon && <TextIcon icon={icon} />}
     </MenuItemContainer>
   );
 }
 
 export interface IMenuItemLink {
   children: React.ReactNode;
-  icon?: SpriteSymbol;
+  icon?: SvgIcon;
   to: string;
   exact?: boolean;
 }
@@ -72,21 +71,21 @@ export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
       className={({ isActive }) => (isActive ? 'active' : '')}
     >
       <div>{children}</div>
-      {icon && <TextIcon sprite={icon} />}
+      {icon && <TextIcon icon={icon} />}
     </MenuItemLinkContainer>
   );
 }
 
 export interface IMenuItemDisabled {
   children: React.ReactNode;
-  icon?: SpriteSymbol;
+  icon?: SvgIcon;
 }
 
 export function MenuItemDisabled({ children, icon }: IMenuItemDisabled) {
   return (
     <MenuItemContainer data-disabled={true} onClick={(e) => e.stopPropagation()}>
       <div>{children}</div>
-      {icon && <TextIcon sprite={icon} />}
+      {icon && <TextIcon icon={icon} />}
     </MenuItemContainer>
   );
 }

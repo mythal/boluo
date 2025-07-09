@@ -19,6 +19,7 @@ export const getBaseUrlList = async (): Promise<string[]> => {
 const FAILED = Number.MAX_SAFE_INTEGER;
 
 export const getDefaultBaseUrl = (): string => {
+  // eslint-disable-next-line no-restricted-globals
   const BASE_URL = process.env.PUBLIC_BACKEND_URL;
   if (typeof BASE_URL === 'string') {
     return BASE_URL;

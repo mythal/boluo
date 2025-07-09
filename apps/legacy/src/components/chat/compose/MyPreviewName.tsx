@@ -4,7 +4,7 @@ import Prando from 'prando';
 import * as React from 'react';
 import { useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import masterIcon from '../../../assets/icons/gamemaster.svg';
+import Gamemaster from '../../../assets/icons/gamemaster.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import { fontBold, gap, inline, mL, mR, relative, spacingN, textSm } from '../../../styles/atoms';
@@ -102,7 +102,7 @@ function MyPreviewName() {
           </Tooltip>
         )}
       </div>
-      {isMaster && <Icon css={masterIconStyle} sprite={masterIcon} />}
+      {isMaster && <Icon css={masterIconStyle} icon={Gamemaster} />}
     </Container>
   );
 }

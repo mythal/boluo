@@ -3,11 +3,11 @@ import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Prando from 'prando';
 import React, { MouseEventHandler, ReactNode, useState } from 'react';
-import dicePoolIcon from '../../assets/icons/cubes.svg';
-import D20Icon from '../../assets/icons/d20.svg';
-import elderSign from '../../assets/icons/elder-sign.svg';
-import thumbDown from '../../assets/icons/thumb-down.svg';
-import thumbUp from '../../assets/icons/thumb-up.svg';
+import Cubes from '../../assets/icons/cubes.svg';
+import D20 from '../../assets/icons/d20.svg';
+import ElderSign from '../../assets/icons/elder-sign.svg';
+import ThumbDown from '../../assets/icons/thumb-down.svg';
+import ThumbUp from '../../assets/icons/thumb-up.svg';
 import {
   CocRollResult,
   DicePoolResult,
@@ -137,14 +137,14 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
         (
         {fumble && (
           <React.Fragment>
-            <Icon title="大失败" sprite={thumbDown} />
+            <Icon title="大失败" icon={ThumbDown} />
             {fumbleCount}
             {critical && ' '}
           </React.Fragment>
         )}
         {critical && (
           <React.Fragment>
-            <Icon sprite={thumbUp} title="大成功" />
+            <Icon icon={ThumbUp} title="大成功" />
             {criticalCount}
           </React.Fragment>
         )}
@@ -154,7 +154,7 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
   }
   return (
     <Roll onClick={handleMouse} className="roll">
-      <Icon sprite={dicePoolIcon} />
+      <Icon icon={Cubes} />
       {node.counter}d{node.face}{' '}
       {expand && <React.Fragment>[{node.values.join(', ')}]</React.Fragment>} ≥ {node.min} ⇒{' '}
       {node.value}
@@ -193,7 +193,7 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
 
   return (
     <Roll onMouseDown={handleMouse} className="roll">
-      <Icon sprite={elderSign} />
+      <Icon icon={ElderSign} />
       {node.value}
       {expand && <span>= {node.rolled}</span>}
       {modifierName && <span css={[mL(1)]}>{modifierName}</span>}
@@ -238,7 +238,7 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
 
   return (
     <Roll onMouseDown={handleMouse} className="roll">
-      <Icon sprite={D20Icon} />
+      <Icon icon={D20} />
       {node.counter}D{node.face}
       {filter}
       {expand && (

@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import React from 'react';
-import cancelIcon from '../../../assets/icons/cancel.svg';
+import Cancel from '../../../assets/icons/cancel.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -17,7 +17,7 @@ export const Editing = ({ className }: Props) => {
   const cancel = () => dispatch({ type: 'CANCEL_EDIT', pane });
   return (
     <div css={style} className={className}>
-      <ChatItemToolbarButton onClick={cancel} sprite={cancelIcon} title="取消编辑" />
+      <ChatItemToolbarButton onClick={cancel} icon={Cancel} title="取消编辑" />
       <span>编辑消息中…</span>
     </div>
   );

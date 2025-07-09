@@ -6,9 +6,9 @@ import useSWR from 'swr';
 import { errLoading } from '../../api/error';
 import { AppResult, get } from '../../api/request';
 import { SpaceWithRelated } from '../../api/spaces';
-import clipboard from '../../assets/icons/clipboard.svg';
-import userCog from '../../assets/icons/user-cog.svg';
-import userPlus from '../../assets/icons/user-plus.svg';
+import Clipboard from '../../assets/icons/clipboard.svg';
+import UserCog from '../../assets/icons/user-cog.svg';
+import UserPlus from '../../assets/icons/user-plus.svg';
 import GotoSpaceLink from '../../components/molecules/GotoSpaceLink';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { useDispatch, useSelector } from '../../store';
@@ -60,17 +60,7 @@ const SpaceTitle = styled.h1`
   line-height: 1.25em;
 `;
 
-function SpacePage() {
-  let { id, token } = useParams();
-  if (!id) {
-    const result: AppResult<SpaceWithRelated> = errLoading();
-    if (!result.isOk) {
-      return <RenderError error={result.value} more404 />;
-    }
-    return null;
-  }
-  id = decodeUuid(id);
-  token = token ? decodeUuid(token) : undefined;
+function SpacePageRender({ id, token }: { id: string; token: string | undefined }) {
   const [managing, setManaging] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const inviteLinkInput = useRef<HTMLInputElement>(null);
@@ -114,7 +104,7 @@ function SpacePage() {
         <div css={flex}>
           <Input ref={inviteLinkInput} value={inviteLink} readOnly />
           <Button css={mL(1)} data-size="small" onClick={copyInviteLink}>
-            <Icon sprite={clipboard} /> 复制
+            <Icon icon={Clipboard} /> 复制
           </Button>
         </div>
       )}
@@ -124,12 +114,12 @@ function SpacePage() {
         )}
         {myMember?.isAdmin && (
           <Button onClick={getInviteLink} data-size="small" css={mR(1)}>
-            <Icon sprite={userPlus} /> 邀请
+            <Icon icon={UserPlus} /> 邀请
           </Button>
         )}
         {myMember?.isAdmin && (
           <Button data-small css={mR(1)} onClick={() => setManaging(true)}>
-            <Icon sprite={userCog} /> 管理
+            <Icon icon={UserCog} /> 管理
           </Button>
         )}
         {(space.isPublic || space.ownerId === myId || token) && (
@@ -148,6 +138,20 @@ function SpacePage() {
       )}
     </React.Fragment>
   );
+}
+
+function SpacePage() {
+  let { id, token } = useParams();
+  if (!id) {
+    const result: AppResult<SpaceWithRelated> = errLoading();
+    if (!result.isOk) {
+      return <RenderError error={result.value} more404 />;
+    }
+    return null;
+  }
+  id = decodeUuid(id);
+  token = token ? decodeUuid(token) : undefined;
+  return <SpacePageRender id={id} token={token} />;
 }
 
 export default SpacePage;

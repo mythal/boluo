@@ -79,7 +79,6 @@ export class Ok<T> {
     return this.value;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   unwrapOr(other: T): T {
     return this.value;
   }

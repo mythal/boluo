@@ -1,12 +1,11 @@
-import { SpriteSymbol } from '*.svg';
 import { css } from '@emotion/react';
 import { darken } from 'polished';
 import * as React from 'react';
-import rotateIcon from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { fontBase, fontNormal, p, textBase, textLg, textXs } from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import { isMobile } from '../../utils/browser';
-import Icon from '../atoms/Icon';
+import Icon, { type SvgIcon } from '../atoms/Icon';
 import Tooltip, { TooltipProps } from '../atoms/Tooltip';
 import { toolbarRadius } from './ItemToolbar';
 
@@ -69,7 +68,7 @@ export interface ToolbarButtonProps {
   className?: string;
   on?: boolean;
   onClick: React.MouseEventHandler;
-  sprite: SpriteSymbol;
+  icon: SvgIcon;
   title?: string;
   size?: 'normal' | 'large';
   disabled?: boolean;
@@ -92,7 +91,7 @@ const container = css`
 
 function ChatItemToolbarButton({
   onClick,
-  sprite,
+  icon,
   className,
   on,
   title = '',
@@ -117,7 +116,7 @@ function ChatItemToolbarButton({
         onClick={onClick}
         disabled={loading || disabled}
       >
-        <Icon spin={loading} sprite={loading ? rotateIcon : sprite} />
+        <Icon spin={loading} icon={loading ? RotateCw : icon} />
       </button>
     </div>
   );

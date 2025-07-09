@@ -4,8 +4,8 @@ import * as React from 'react';
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import { Channel } from '../../api/channels';
 import { Space } from '../../api/spaces';
-import bars from '../../assets/icons/bars.svg';
-import logo from '../../assets/logo.svg';
+import Bars from '../../assets/icons/bars.svg';
+import Logo from '../../assets/logo.svg';
 import { useSelector } from '../../store';
 import { mR, pT, textLg } from '../../styles/atoms';
 import { chatSidebarColor, headerBgColor } from '../../styles/colors';
@@ -114,13 +114,13 @@ function Sidebar({ space, channels }: Props) {
     <React.Fragment>
       <div css={sidebarHeader}>
         <ChatHeaderButton onClick={toggle} css={[textLg]} data-active={expand}>
-          <Icon sprite={bars} />
+          <Icon icon={Bars} />
         </ChatHeaderButton>
         {state === 'entered' && (
           <Fragment>
             <UserStatusButton spaceId={space.id} active={showMember} toggle={toggleShowMember} />
             <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
-              <Icon sprite={logo} />
+              <Icon icon={Logo} />
               菠萝
             </ChatHeaderButtonLink>
           </Fragment>

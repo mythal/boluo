@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../../api/request';
-import removeMember from '../../assets/icons/user-minus.svg';
+import UserMinus from '../../assets/icons/user-minus.svg';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
 import { color, flex, fontBold, mB, mR, mT, pX, roundedSm, textXl } from '../../styles/atoms';
@@ -114,7 +114,7 @@ function MemberDialog({ userId, spaceId, dismiss }: Props) {
           <div css={[mT(4)]}>
             {!spaceMember.isAdmin && (
               <Button data-variant="danger" onClick={() => showKickDialog(true)}>
-                <Icon css={mR(1)} sprite={removeMember} />
+                <Icon css={mR(1)} icon={UserMinus} />
                 从位面中放逐
               </Button>
             )}

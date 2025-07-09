@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import { darken } from 'polished';
 import * as React from 'react';
 import { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
-import handle from '../../assets/icons/handle.svg';
+import Handle from '../../assets/icons/handle.svg';
 import { p, pY, roundedMd, textXs } from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import { parseDateString } from '../../utils/helper';
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const handleContainerStyle = css`
-  grid-area: handle;
+  grid-area: Handle;
   color: ${darken(0.6, textColor)};
   display: flex;
   justify-content: stretch;
@@ -42,7 +42,7 @@ function ItemMoveHandle({ timestamp, handleProps }: Props) {
   return (
     <time dateTime={now.toISOString()} css={handleContainerStyle} title={dateTimeFormat(now)}>
       <div css={handleStyle} {...handleProps}>
-        <Icon className="handle" sprite={handle} />
+        <Icon className="Handle" icon={Handle} />
       </div>
     </time>
   );

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { loadExploreSpace, searchSpaces } from '../../actions';
 import { Space } from '../../api/spaces';
-import spaceIcon from '../../assets/icons/star-sattelites.svg';
+import StarSattelites from '../../assets/icons/star-sattelites.svg';
 import { useDispatch, useSelector } from '../../store';
 import { mY } from '../../styles/atoms';
 import Icon from '../atoms/Icon';
@@ -29,7 +29,7 @@ function ExploreSpace() {
   return (
     <>
       <Title>
-        <Icon sprite={spaceIcon} /> 探索位面
+        <Icon icon={StarSattelites} /> 探索位面
       </Title>
       <SpaceSearchInput css={mY(4)} search={setSearchText} />
       {result.isOk ? (

@@ -2,14 +2,12 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { useIsLoggedIn } from '../hooks/useIsLoggedIn';
 
-interface Props {}
-
 const Design = React.lazy(() => import('./pages/Design'));
 const Chat = React.lazy(() => import('./pages/Chat'));
 const LoggedInRouter = React.lazy(() => import('./LoggedInRouter'));
 const GuestRouter = React.lazy(() => import('./GuestRouter'));
 
-export const Router: React.FC<Props> = () => {
+export const Router: React.FC = () => {
   const isLoggedIn = useIsLoggedIn();
 
   return (

@@ -38,7 +38,7 @@
     "@boluo/typescript-config": "*",
     "@next/bundle-analyzer": "^15.2.4",
     "@next/eslint-plugin-next": "^15.2.4",
-    "@swc/plugin-formatjs": "^4.0.1",
+    "@swc/plugin-formatjs": "^5.1.1",
     "@types/eslint": "^9.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.13.14",

@@ -108,10 +108,15 @@ async fn push_updates(
                 tx.send(WsMessage::Text(error_update)).await.ok();
                 return;
             }
-            Err(GetFromStateError::RequestedUpdatesAreTooEarly) => {
+            Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
+                let elapsed = timestamp() - after.unwrap_or(0);
                 tracing::info!(
                     mailbox_id = %mailbox,
                     after,
+                    seq,
+                    node,
+                    start_at,
+                    elapsed,
                     "The user requested updates with 'after', but the cached updates are too new"
                 );
 

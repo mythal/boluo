@@ -41,7 +41,7 @@
     "@swc/plugin-formatjs": "^5.1.1",
     "@types/eslint": "^9.6.1",
     "@types/jest": "^30.0.0",
-    "@types/node": "^22.13.14",
+    "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.21",

@@ -38,7 +38,7 @@
     "@swc/plugin-formatjs": "^5.1.1",
     "@types/mdx": "^2.0.10",
     "@types/negotiator": "^0.6.3",
-    "@types/node": "^22.13.14",
+    "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@types/uuid": "^10.0.0",

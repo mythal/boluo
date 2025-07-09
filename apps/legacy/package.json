@@ -32,7 +32,7 @@
   "devDependencies": {
     "@boluo/eslint-config": "^0.0.0",
     "@emotion/babel-plugin": "^11.11.0",
-    "@types/node": "^22.13.14",
+    "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@types/react-redux": "^7.1.33",

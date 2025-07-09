@@ -3,13 +3,13 @@ import styled from '@emotion/styled';
 import { darken } from 'polished';
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
-import TextIcon from '../../components/atoms/Icon';
+import TextIcon, { type SvgIcon } from '../../components/atoms/Icon';
 import { mY, roundedSm, spacingN } from '../../styles/atoms';
 import { menuItemHoverColor, textColor } from '../../styles/colors';
 
 export interface IMenuItem {
   children: React.ReactNode;
-  icon?: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  icon?: SvgIcon;
   onClick?: () => void;
 }
 
@@ -58,7 +58,7 @@ export function MenuItem({ children, icon, onClick }: IMenuItem) {
 
 export interface IMenuItemLink {
   children: React.ReactNode;
-  icon?: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  icon?: SvgIcon;
   to: string;
   exact?: boolean;
 }
@@ -78,7 +78,7 @@ export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
 
 export interface IMenuItemDisabled {
   children: React.ReactNode;
-  icon?: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  icon?: SvgIcon;
 }
 
 export function MenuItemDisabled({ children, icon }: IMenuItemDisabled) {

@@ -3,8 +3,10 @@ import React from 'react';
 import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { spacingN, spin as spinStyle } from '../../styles/atoms';
 
+export type SvgIcon = React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+
 interface Props {
-  icon: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  icon: SvgIcon;
   title?: string;
   className?: string;
   noStrut?: boolean;

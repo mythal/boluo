@@ -5,7 +5,7 @@ import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { fontBase, fontNormal, p, textBase, textLg, textXs } from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import { isMobile } from '../../utils/browser';
-import Icon from '../atoms/Icon';
+import Icon, { type SvgIcon } from '../atoms/Icon';
 import Tooltip, { TooltipProps } from '../atoms/Tooltip';
 import { toolbarRadius } from './ItemToolbar';
 
@@ -68,7 +68,7 @@ export interface ToolbarButtonProps {
   className?: string;
   on?: boolean;
   onClick: React.MouseEventHandler;
-  icon: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  icon: SvgIcon;
   title?: string;
   size?: 'normal' | 'large';
   disabled?: boolean;

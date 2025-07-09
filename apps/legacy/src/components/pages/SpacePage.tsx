@@ -60,17 +60,7 @@ const SpaceTitle = styled.h1`
   line-height: 1.25em;
 `;
 
-function SpacePage() {
-  let { id, token } = useParams();
-  if (!id) {
-    const result: AppResult<SpaceWithRelated> = errLoading();
-    if (!result.isOk) {
-      return <RenderError error={result.value} more404 />;
-    }
-    return null;
-  }
-  id = decodeUuid(id);
-  token = token ? decodeUuid(token) : undefined;
+function SpacePageRender({ id, token }: { id: string; token: string | undefined }) {
   const [managing, setManaging] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const inviteLinkInput = useRef<HTMLInputElement>(null);
@@ -148,6 +138,20 @@ function SpacePage() {
       )}
     </React.Fragment>
   );
+}
+
+function SpacePage() {
+  let { id, token } = useParams();
+  if (!id) {
+    const result: AppResult<SpaceWithRelated> = errLoading();
+    if (!result.isOk) {
+      return <RenderError error={result.value} more404 />;
+    }
+    return null;
+  }
+  id = decodeUuid(id);
+  token = token ? decodeUuid(token) : undefined;
+  return <SpacePageRender id={id} token={token} />;
 }
 
 export default SpacePage;

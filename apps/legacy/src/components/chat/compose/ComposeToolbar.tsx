@@ -9,14 +9,12 @@ import { useDispatch, useSelector } from '../../../store';
 import { flexRowReverse, mR } from '../../../styles/atoms';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 
-interface Props {}
-
 const Toolbar = styled.div`
   ${[flexRowReverse]};
   grid-area: toolbar;
 `;
 
-function ComposeToolbar(props: Props) {
+function ComposeToolbar() {
   const dispatch = useDispatch();
   const channelId = useChannelId();
   const pane = channelId;

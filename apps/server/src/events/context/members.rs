@@ -87,7 +87,7 @@ impl MembersCache {
                             })
                     })
                     .collect();
-                if let Err(_) = sender.send(members) {
+                if sender.send(members).is_err() {
                     tracing::error!(channel_id = %channel_id, "Failed to send members query");
                 }
             }
@@ -106,7 +106,7 @@ impl MembersCache {
                     channel: channel_member.clone(),
                     space: space_member.clone(),
                 });
-                if let Err(_) = sender.send(member) {
+                if sender.send(member).is_err() {
                     tracing::error!(channel_user_id = ?channel_user_id, "Failed to send members query");
                 }
             }

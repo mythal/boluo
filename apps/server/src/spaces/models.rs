@@ -372,7 +372,7 @@ impl SpaceMember {
             sqlx::query_file_scalar!("sql/spaces/get_space_member_list_by_user.sql", user_id)
                 .fetch_all(db)
                 .await
-                .map(|space_members| UserSpaces { space_members }.into())
+                .map(|space_members| UserSpaces { space_members })
         })
         .await?;
         Ok(user_spaces.space_members)

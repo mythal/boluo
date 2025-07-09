@@ -375,6 +375,7 @@ impl MailBoxState {
                     Some(action) = rx.recv() => {
                         match action {
                             Action::Query(sender) => {
+                                last_activity_at = std::time::Instant::now();
                                 let mut updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
                                 for preview in preview_map.values() {
                                     updates.insert(preview.update.id, preview.encoded.clone());
@@ -400,6 +401,9 @@ impl MailBoxState {
                         status_state.update(StatusAction::Broadcast);
                     }
                     _ = cleanup_interval.tick() => {
+                        if !rx.is_empty() {
+                            continue;
+                        }
                         if last_activity_at.elapsed() > std::time::Duration::from_secs(60 * 60 * 2) {
                             store().remove(id);
                             tracing::info!(mailbox_id = %id, "Mailbox state is idle, shutting down");

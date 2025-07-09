@@ -4,4 +4,4 @@ mod models;
 
 pub use handlers::router;
 pub use models::Entities;
-pub use models::Message;
+pub use models::{MaxPos, Message};

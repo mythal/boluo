@@ -18,7 +18,6 @@ use tokio::net::TcpListener;
 
 use hyper::Request;
 use hyper::service::service_fn;
-use tracing::Instrument;
 
 #[macro_use]
 mod utils;
@@ -100,6 +99,12 @@ async fn handler(
     let path = uri.path();
     let query = uri.query().unwrap_or("");
 
+    let client_version = req
+        .headers()
+        .get(hyper::header::HeaderName::from_static("x-client-version"))
+        .and_then(|x| x.to_str().ok())
+        .unwrap_or("");
+
     // Create a span for this HTTP request with structured fields
     let span = tracing::info_span!(
         "http_request",
@@ -111,6 +116,7 @@ async fn handler(
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
+        client = %client_version,
     );
 
     let start = std::time::Instant::now();
@@ -281,19 +287,15 @@ async fn handle_connection(
 ) {
     match accept_result {
         Ok((stream, addr)) => {
-            let span = tracing::info_span!("http_connection", addr = %addr);
             let io = TokioIo::new(stream);
             let conn = http
                 .serve_connection(io, service_fn(handler))
                 .with_upgrades();
-            tokio::task::spawn(
-                async move {
-                    if let Err(err) = conn.await {
-                        tracing::warn!(error = %err, "HTTP connection error");
-                    }
+            tokio::task::spawn(async move {
+                if let Err(err) = conn.await {
+                    tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
                 }
-                .instrument(span),
-            );
+            });
         }
         Err(err) => {
             tracing::warn!(error = %err, "Failed to accept connection");

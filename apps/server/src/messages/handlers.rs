@@ -42,8 +42,8 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
     .or_no_permission()?;
     let message = Message::create(
         &mut conn,
-        preview_id.as_ref(),
-        &channel_id,
+        preview_id,
+        channel_id,
         channel.space_id,
         &session.user_id,
         &channel_member.character_name,

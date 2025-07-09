@@ -114,9 +114,8 @@ async fn push_updates(
                     after,
                     "The user requested updates with 'after', but the cached updates are too new"
                 );
-                let error_update = Update::error(mailbox, AppError::NotFound("Updates")).encode();
-                tx.send(WsMessage::Text(error_update)).await.ok();
-                return;
+
+                vec![]
             }
         };
         for message in cached_updates {

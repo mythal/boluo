@@ -52,6 +52,7 @@ pub enum Entity {
     CodeBlock(SpanWithChild),
     Strong(SpanWithChild),
     Emphasis(SpanWithChild),
+    StrongEmphasis(SpanWithChild),
     Expr(ExprEntity),
 }
 

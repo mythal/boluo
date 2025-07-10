@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Proxy } from '../../base-url';
 import { useBaseUrlDelay } from '../../hooks/useBaseUrlDelay';
 import { useProxyList } from '../../hooks/useProxyList';
@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from '../../store';
 import { flexCol, gap, pT, pX, pY, textXl } from '../../styles/atoms';
 import { primary } from '../../styles/colors';
 import { Delay } from '../atoms/Delay';
+import { DelayWithStats } from '../atoms/DelayWithStats';
 import Dialog from '../molecules/Dialog';
 
 interface Props {
@@ -42,10 +43,12 @@ const ProxyItem = ({
   proxy,
   current,
   changeBaseUrl,
+  showStats,
 }: {
   proxy: Proxy;
   current: boolean;
   changeBaseUrl: (baseUrl: string) => void;
+  showStats: boolean;
 }) => {
   const delay = useBaseUrlDelay(proxy.url);
   return (
@@ -54,13 +57,18 @@ const ProxyItem = ({
       onClick={() => changeBaseUrl(proxy.url)}
     >
       <span>{proxy.name}</span>
-      <Delay delay={delay} />
+      {showStats ? (
+        <DelayWithStats delay={delay} url={proxy.url} showStats={true} />
+      ) : (
+        <Delay delay={delay} />
+      )}
     </div>
   );
 };
 
 export const ConnectionSelectDialog = ({ dismiss }: Props) => {
   const [autoSelect, setAutoSelect] = useAtom(autoSelectAtom);
+  const [showStats, setShowStats] = useState(false);
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const dispatch = useDispatch();
   const proxyList = useProxyList();
@@ -78,6 +86,14 @@ export const ConnectionSelectDialog = ({ dismiss }: Props) => {
         />{' '}
         自动选择线路
       </label>
+      <label style={{ marginLeft: '16px' }}>
+        <input
+          type="checkbox"
+          checked={showStats}
+          onChange={(e) => setShowStats(e.target.checked)}
+        />{' '}
+        显示统计信息
+      </label>
       <div css={[flexCol, gap(1), pT(2)]}>
         {proxyList.map((proxy) => (
           <ProxyItem
@@ -85,6 +101,7 @@ export const ConnectionSelectDialog = ({ dismiss }: Props) => {
             proxy={proxy}
             current={baseUrl === proxy.url}
             changeBaseUrl={changeBaseUrl}
+            showStats={showStats}
           />
         ))}
       </div>

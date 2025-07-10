@@ -58,8 +58,6 @@ export const selectBestBaseUrl = async (block?: string): Promise<string> => {
   const baseUrlList = await getBaseUrlList();
   const list = baseUrlList.filter((url) => url !== block);
 
-  console.log(`🔍 Auto route selection started (excluding: ${block || 'none'})`);
-
   // Use moving average scores instead of real-time measurements for route selection
   let bestUrl = list[0];
   let bestScore = getRouteScore(bestUrl);
@@ -80,23 +78,10 @@ export const selectBestBaseUrl = async (block?: string): Promise<string> => {
 
   // Sort by score and log results
   routeScores.sort((a, b) => a.score - b.score);
-  console.log('📊 Route ranking by score (based on moving average):');
-  routeScores.forEach((item, index) => {
-    const stats = getAllRouteStats().get(item.url);
-    const isSelected = item.url === bestUrl;
-    console.log(
-      `${isSelected ? '✅' : '  '} ${index + 1}. ${item.url} ` +
-        `(Score: ${item.score.toFixed(0)}, ` +
-        `Moving Avg: ${stats?.ema.toFixed(1) || 'N/A'}ms, ` +
-        `Success Rate: ${stats ? (stats.successRate * 100).toFixed(1) : 'N/A'}%)`,
-    );
-  });
 
   // If best route score is too high (>3000ms), fallback to real-time measurement
   if (bestScore > 3000) {
-    console.warn(
-      '⚠️ All route moving average scores too high, falling back to real-time measurement',
-    );
+    console.warn('All route moving average scores too high, falling back to real-time measurement');
     const responseMsList = await Promise.all(list.map((url) => testBaseUrl(url)));
     let bestIndex = 0;
     let bestMs = responseMsList[0];
@@ -107,10 +92,9 @@ export const selectBestBaseUrl = async (block?: string): Promise<string> => {
         bestMs = ms;
       }
     }
-    console.log(`🚨 Real-time measurement selection: ${list[bestIndex]} (${bestMs.toFixed(0)}ms)`);
     return list[bestIndex];
   }
 
-  console.log(`🎯 Final selection: ${bestUrl} (Score: ${bestScore.toFixed(0)})`);
+  console.log(`Final selection: ${bestUrl} (Score: ${bestScore.toFixed(0)})`);
   return bestUrl;
 };

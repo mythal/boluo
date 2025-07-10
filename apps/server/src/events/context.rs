@@ -58,6 +58,14 @@ impl MailboxManager {
     }
 
     async fn send_read_action(&self, action: Action) -> Result<(), MailboxManageError> {
+        let action = match self.sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("MailboxManager::send_read_action: full");
+                action
+            }
+        };
         tokio::time::timeout(MAILBOX_STATE_READ_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
@@ -71,6 +79,14 @@ impl MailboxManager {
     }
 
     async fn send_write_action(&self, action: Action) -> Result<(), MailboxManageError> {
+        let action = match self.sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("MailboxManager::send_write_action: full");
+                action
+            }
+        };
         tokio::time::timeout(MAILBOX_STATE_WRITE_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
@@ -378,6 +394,7 @@ impl MailBoxState {
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
+                        let start = std::time::Instant::now();
                         match action {
                             Action::Query(sender) => {
                                 last_activity_at = std::time::Instant::now();
@@ -392,7 +409,12 @@ impl MailBoxState {
                             }
                             Action::Update(encoded_update) => {
                                 last_activity_at = std::time::Instant::now();
+                                let update_name = encoded_update.update.name();
                                 on_update(&mut updates, &mut preview_map, *encoded_update);
+                                let elapsed = start.elapsed();
+                                if elapsed > std::time::Duration::from_millis(100) {
+                                    tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
+                                }
                             }
                             Action::Members(action) => {
                                 members_state.update(action);

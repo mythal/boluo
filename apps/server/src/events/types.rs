@@ -474,6 +474,24 @@ impl Update {
         let span = tracing::info_span!("fire", mailbox = %mailbox);
         spawn(Update::async_fire(body, mailbox).instrument(span));
     }
+
+    pub fn name(&self) -> &'static str {
+        match &self.body {
+            UpdateBody::NewMessage { .. } => "NewMessage",
+            UpdateBody::MessageDeleted { .. } => "MessageDeleted",
+            UpdateBody::MessageEdited { .. } => "MessageEdited",
+            UpdateBody::MessagePreview { .. } => "MessagePreview",
+            UpdateBody::ChannelDeleted { .. } => "ChannelDeleted",
+            UpdateBody::ChannelEdited { .. } => "ChannelEdited",
+            UpdateBody::Members { .. } => "Members",
+            UpdateBody::Initialized => "Initialized",
+            UpdateBody::StatusMap { .. } => "StatusMap",
+            UpdateBody::SpaceUpdated { .. } => "SpaceUpdated",
+            UpdateBody::Error { .. } => "Error",
+            UpdateBody::AppUpdated { .. } => "AppUpdated",
+            UpdateBody::AppInfo { .. } => "AppInfo",
+        }
+    }
 }
 
 static STARTUP_ID: OnceLock<u16> = OnceLock::new();

@@ -391,9 +391,15 @@ impl MailBoxState {
             let mut broadcast_status_interval = tokio::time::interval(std::time::Duration::from_secs(12));
             let mut cleanup_interval = tokio::time::interval(std::time::Duration::from_secs(120));
             let mut start_at = timestamp();
+            let mut last_pending_actions_warned = 0;
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
+                        let pending = rx.len();
+                        if pending > 256 && (pending - last_pending_actions_warned) > 8 {
+                            tracing::info!(pending, "Too many pending actions");
+                            last_pending_actions_warned = pending;
+                        }
                         let start = std::time::Instant::now();
                         match action {
                             Action::Query(sender) => {

@@ -5,7 +5,10 @@ use std::{
     sync::LazyLock,
     time::{Duration, Instant},
 };
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{
+    mpsc::{self, error::TrySendError},
+    oneshot,
+};
 use tracing::Instrument as _;
 
 use crate::{
@@ -61,6 +64,20 @@ pub enum PosAction {
     Shutdown,
 }
 
+impl PosAction {
+    fn name(&self) -> &'static str {
+        match self {
+            PosAction::PreviewPos { .. } => "PreviewPos",
+            PosAction::SendingNewMessage { .. } => "SendingNewMessage",
+            PosAction::Submitted { .. } => "Submitted",
+            PosAction::Cancel { .. } => "Cancel",
+            PosAction::OnConflict { .. } => "OnConflict",
+            PosAction::Tick => "Tick",
+            PosAction::Shutdown => "Shutdown",
+        }
+    }
+}
+
 pub struct ChannelPosActor {
     created: Instant,
     channel_id: Uuid,
@@ -81,6 +98,12 @@ impl ChannelPosActor {
     pub async fn run(mut self) {
         let mut changed_at = Instant::now();
         while let Some(action) = self.receiver.recv().await {
+            let pending = self.receiver.len();
+            if pending > 16 {
+                tracing::info!(pending, "Too many pending actions");
+            }
+            let start = Instant::now();
+            let action_name = action.name();
             let last_key = self.positions.last_key_value().map(|(key, _)| *key);
             match action {
                 PosAction::PreviewPos {
@@ -131,7 +154,7 @@ impl ChannelPosActor {
                 }
                 PosAction::Tick => {
                     if !self.receiver.is_empty() {
-                        tracing::debug!("Clean up skipped because of pending actions");
+                        tracing::info!("Clean up skipped because of pending actions");
                         continue;
                     }
                     let now = Instant::now();
@@ -177,6 +200,14 @@ impl ChannelPosActor {
                         "Last key decreased"
                     );
                 }
+            }
+            let elapsed = start.elapsed();
+            if elapsed > std::time::Duration::from_millis(8) {
+                tracing::warn!(
+                    action_name,
+                    "Pos action took too long to process: {:?}",
+                    elapsed
+                );
             }
         }
 
@@ -397,6 +428,8 @@ pub enum ChannelPosError {
     ActorShutdown,
     #[error("Database error: {0}")]
     DatabaseError(#[from] sqlx::Error),
+    #[error("Timeout")]
+    Timeout,
 }
 
 impl From<ChannelPosError> for AppError {
@@ -405,8 +438,35 @@ impl From<ChannelPosError> for AppError {
             ChannelPosError::ActorShutdown => {
                 AppError::Unexpected(anyhow::anyhow!("Actor shutdown"))
             }
+            ChannelPosError::Timeout => AppError::Timeout,
             ChannelPosError::DatabaseError(err) => AppError::Db { source: err },
         }
+    }
+}
+
+struct PosActionSender {
+    sender: mpsc::Sender<PosAction>,
+}
+
+impl PosActionSender {
+    async fn send(&self, action: PosAction) -> Result<(), ChannelPosError> {
+        let action = match self.sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => {
+                return Err(ChannelPosError::ActorShutdown);
+            }
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("PosActionSender::send: full");
+                action
+            }
+        };
+        tokio::time::timeout(TICK_INTERVAL, self.sender.send(action))
+            .await
+            .map_err(|_| {
+                tracing::warn!("PosActionSender::send: timeout");
+                ChannelPosError::Timeout
+            })?
+            .map_err(|_| ChannelPosError::ActorShutdown)
     }
 }
 
@@ -435,7 +495,7 @@ impl ChannelPosManager {
         );
         manager
     }
-    fn get_or_create_actor(&self, channel_id: Uuid) -> mpsc::Sender<PosAction> {
+    fn get_or_create_actor(&self, channel_id: Uuid) -> PosActionSender {
         let actors = self.actors.pin();
         let result = actors.compute(channel_id, |entry| {
             if let Some((_, sender)) = entry {
@@ -443,7 +503,7 @@ impl ChannelPosManager {
                     return papaya::Operation::Abort(sender.clone());
                 }
             }
-            let (sender, receiver) = mpsc::channel(32);
+            let (sender, receiver) = mpsc::channel(256);
             let span =
                 tracing::info_span!(parent: None, "channel_pos_actor", channel_id = %channel_id);
             tokio::spawn(
@@ -455,14 +515,15 @@ impl ChannelPosManager {
             );
             papaya::Operation::Insert(sender)
         });
-        match result {
+        let sender = match result {
             papaya::Compute::Aborted(sender) => sender,
             papaya::Compute::Updated {
                 new: (_, sender), ..
             } => sender.clone(),
             papaya::Compute::Inserted(_, sender) => sender.clone(),
             papaya::Compute::Removed(_, _) => unreachable!(),
-        }
+        };
+        PosActionSender { sender }
     }
 
     pub async fn preview_pos(

@@ -28,6 +28,8 @@ pub enum AppError {
     Conflict(String),
     #[error("Limit exceed")]
     LimitExceeded(&'static str),
+    #[error("Timeout")]
+    Timeout,
     #[error("An I/O error occurred")]
     Hyper {
         #[from]

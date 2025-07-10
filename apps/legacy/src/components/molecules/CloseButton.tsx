@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
-import XCircle from '../../assets/icons/x-circle.svg';
+import X from '../../assets/icons/x.svg';
 import { closeButtonActiveColor, closeButtonHoverColor, textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
 
@@ -33,7 +33,7 @@ const style = css`
 function CloseButton({ onClick, className }: Props) {
   return (
     <button css={style} className={className} onClick={() => onClick()}>
-      <Icon icon={XCircle} />
+      <Icon icon={X} />
     </button>
   );
 }

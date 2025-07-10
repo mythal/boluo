@@ -123,7 +123,7 @@ pub fn add_session_cookie(
         .secure(!is_debug)
         .http_only(true)
         .path("/")
-        .max_age(Duration::days(30));
+        .max_age(Duration::days(120));
 
     let session_cookie_domain = domain();
     if !is_debug && !session_cookie_domain.is_empty() {

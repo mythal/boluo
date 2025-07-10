@@ -15,6 +15,7 @@ export const useProxyList = (): Proxy[] => {
     if (!data) {
       return [defaultProxy];
     }
-    return [defaultProxy, ...data];
+    const filtered = data.filter((proxy) => proxy.url !== getDefaultBaseUrl());
+    return [defaultProxy, ...filtered];
   }, [data]);
 };

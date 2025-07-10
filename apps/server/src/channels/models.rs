@@ -1,5 +1,6 @@
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
+use tracing::Instrument as _;
 use uuid::Uuid;
 
 use crate::cache::{CACHE, CacheType};
@@ -473,15 +474,19 @@ impl ChannelMember {
         if query_result.rows_affected() == 0 {
             return Err(sqlx::Error::RowNotFound);
         }
-        tokio::spawn(async move {
-            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                manager
-                    .remove_member_from_channel(channel_id, user_id)
-                    .await
-                    .ok();
+        let span = tracing::info_span!("remove_user_from_channel", %user_id, %channel_id);
+        tokio::spawn(
+            async move {
+                CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
+                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                    manager
+                        .remove_member_from_channel(channel_id, user_id)
+                        .await
+                        .ok();
+                }
             }
-        });
+            .instrument(span),
+        );
         Ok(())
     }
 
@@ -495,12 +500,16 @@ impl ChannelMember {
                 .fetch_all(db)
                 .await?;
 
-        tokio::spawn(async move {
-            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                manager.remove_member(&user_id).await.ok();
+        let span = tracing::info_span!("remove_user_by_space", %user_id, %space_id);
+        tokio::spawn(
+            async move {
+                CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
+                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                    manager.remove_member(&user_id).await.ok();
+                }
             }
-        });
+            .instrument(span),
+        );
         Ok(ids)
     }
 
@@ -534,11 +543,15 @@ impl ChannelMember {
         .await?;
         CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
         if let Some(channel_member) = channel_member.clone() {
-            tokio::spawn(async move {
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager.update_channel_member(channel_member).await.ok();
+            let span = tracing::info_span!("set_master", %user_id, %channel_id);
+            tokio::spawn(
+                async move {
+                    if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                        manager.update_channel_member(channel_member).await.ok();
+                    }
                 }
-            });
+                .instrument(span),
+            );
         }
 
         Ok(channel_member)
@@ -591,11 +604,15 @@ impl ChannelMember {
             CACHE
                 .invalidate(CacheType::ChannelMembers, channel_member.user_id)
                 .await;
-            tokio::spawn(async move {
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager.update_channel_member(channel_member).await.ok();
+            let span = tracing::info_span!("set_master", %user_id, %channel_id);
+            tokio::spawn(
+                async move {
+                    if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                        manager.update_channel_member(channel_member).await.ok();
+                    }
                 }
-            });
+                .instrument(span),
+            );
         }
         Ok(channel_member)
     }
@@ -629,10 +646,14 @@ impl Member {
     }
 
     pub fn load_to_cache(space_id: Uuid, channel_id: Uuid) {
-        tokio::spawn(async move {
-            let db = db::get().await;
-            let _ = Member::get_by_channel_from_db(&db, space_id, channel_id).await;
-        });
+        let span = tracing::info_span!("load_to_cache", %space_id, %channel_id);
+        tokio::spawn(
+            async move {
+                let db = db::get().await;
+                let _ = Member::get_by_channel_from_db(&db, space_id, channel_id).await;
+            }
+            .instrument(span),
+        );
     }
 
     pub async fn get_by_channel_from_db<'c, T: sqlx::PgExecutor<'c>>(

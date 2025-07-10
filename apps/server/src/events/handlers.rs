@@ -118,12 +118,19 @@ async fn push_updates(
     outgoing.feed(WsMessage::Text(initialized)).await?;
     outgoing.flush().await?;
 
+    let mut last_pending_updates_warned = 0;
+
     loop {
         tokio::select! {
             _ = tokio::time::sleep(Duration::from_secs(8)) => {
                 outgoing.send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥"))).await?;
             }
             message = mailbox_rx.recv() => {
+                let pending = mailbox_rx.len();
+                if pending > 64 && (pending - last_pending_updates_warned) > 4 {
+                    tracing::info!(pending, "Too many pending updates");
+                    last_pending_updates_warned = pending;
+                }
                 let first_message = message?;
                 outgoing.feed(WsMessage::Text(first_message)).await?;
                 loop {

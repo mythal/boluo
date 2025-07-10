@@ -1,4 +1,4 @@
-import { upload } from '../../../api/request';
+import { uploadWithPresigned } from '../../../api/request';
 import { Dispatch } from '../../../store';
 import { throwErr } from '../../../utils/errors';
 import { Id } from '../../../utils/id';
@@ -13,10 +13,10 @@ export const uploadMedia = async (
   if (typeof media === 'string') {
     return media;
   }
-  const result = await upload(media, media.name, media.type);
+  const result = await uploadWithPresigned(media, media.name, media.type);
   if (!result.isOk) {
     throwErr(dispatch)(result.value);
     return null;
   }
-  return result.value.id;
+  return result.value.mediaId;
 };

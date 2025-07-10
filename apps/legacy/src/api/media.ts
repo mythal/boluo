@@ -10,3 +10,14 @@ export interface Media {
   description: string;
   created: number;
 }
+
+export interface PreSign {
+  filename: string;
+  mimeType: string;
+  size: number;
+}
+
+export interface PreSignResult {
+  url: string;
+  mediaId: string;
+}

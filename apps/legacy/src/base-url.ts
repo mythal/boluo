@@ -1,3 +1,5 @@
+import { getRouteScore, getAllRouteStats } from './hooks/useBaseUrlMovingAverage';
+
 export interface Proxy {
   name: string;
   url: string;
@@ -55,15 +57,44 @@ const testBaseUrl = async (baseUrl: string): Promise<number> => {
 export const selectBestBaseUrl = async (block?: string): Promise<string> => {
   const baseUrlList = await getBaseUrlList();
   const list = baseUrlList.filter((url) => url !== block);
-  const responseMsList = await Promise.all(list.map((url) => testBaseUrl(url)));
-  let bestIndex = 0;
-  let bestMs = responseMsList[0];
-  for (let i = 1; i < responseMsList.length; i++) {
-    const ms = responseMsList[i];
-    if (ms < bestMs) {
-      bestIndex = i;
-      bestMs = ms;
+
+  // Use moving average scores instead of real-time measurements for route selection
+  let bestUrl = list[0];
+  let bestScore = getRouteScore(bestUrl);
+
+  // Collect all route scores for logging
+  const routeScores: Array<{ url: string; score: number }> = [];
+
+  for (let i = 0; i < list.length; i++) {
+    const url = list[i];
+    const score = getRouteScore(url);
+    routeScores.push({ url, score });
+
+    if (score < bestScore) {
+      bestUrl = url;
+      bestScore = score;
     }
   }
-  return baseUrlList[bestIndex];
+
+  // Sort by score and log results
+  routeScores.sort((a, b) => a.score - b.score);
+
+  // If best route score is too high (>3000ms), fallback to real-time measurement
+  if (bestScore > 3000) {
+    console.warn('All route moving average scores too high, falling back to real-time measurement');
+    const responseMsList = await Promise.all(list.map((url) => testBaseUrl(url)));
+    let bestIndex = 0;
+    let bestMs = responseMsList[0];
+    for (let i = 1; i < responseMsList.length; i++) {
+      const ms = responseMsList[i];
+      if (ms < bestMs && ms !== FAILED) {
+        bestIndex = i;
+        bestMs = ms;
+      }
+    }
+    return list[bestIndex];
+  }
+
+  console.log(`Final selection: ${bestUrl} (Score: ${bestScore.toFixed(0)})`);
+  return bestUrl;
 };

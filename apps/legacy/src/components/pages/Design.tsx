@@ -6,7 +6,7 @@ import { css, Global } from '@emotion/react';
 import styled from '@emotion/styled';
 import ChevronDown from '../../assets/icons/chevron-down.svg';
 import Fan from '../../assets/icons/fan.svg';
-import XCircle from '../../assets/icons/x-circle.svg';
+import X from '../../assets/icons/x.svg';
 import { baseStyle, flex, flexCol, gap, mY, spacingN } from '../../styles/atoms';
 import Button from '../atoms/Button';
 import Input from '../atoms/Input';
@@ -75,7 +75,7 @@ function Design() {
             图标
           </Button>
           <Button data-small data-icon>
-            <Icon icon={XCircle} />
+            <Icon icon={X} />
           </Button>
           <Button data-small data-variant="primary">
             主要

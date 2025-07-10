@@ -19,7 +19,7 @@ import {
   JoinChannel,
 } from './channels';
 import { AppError, FETCH_FAIL, notJson, UNAUTHENTICATED } from './error';
-import { Media } from './media';
+import { Media, PreSign, PreSignResult } from './media';
 import { ByChannel, EditMessage, Message, MoveBetween, MoveTo, NewMessage } from './messages';
 import {
   CreateSpace,
@@ -227,6 +227,11 @@ export function post(
   path: '/messages/move_between',
   payload: MoveBetween,
 ): Promise<AppResult<Message>>;
+export function post(
+  path: '/media/presigned',
+  payload: {},
+  query: PreSign,
+): Promise<AppResult<PreSignResult>>;
 export function post<T, U extends object = object, Q extends object = {}>(
   path: string,
   payload: U,
@@ -323,4 +328,48 @@ export function mediaHead(id: string): Promise<Response> {
     mode: 'cors',
     cache: 'no-store',
   });
+}
+
+export async function uploadWithPresigned(
+  file: Blob,
+  filename: string,
+  mimeType: string,
+): Promise<AppResult<{ mediaId: string }>> {
+  const presignQuery: PreSign = {
+    filename,
+    mimeType,
+    size: file.size,
+  };
+
+  const presignResult = await post('/media/presigned', {}, presignQuery);
+  if (!presignResult.isOk) {
+    return new Err(presignResult.value);
+  }
+
+  const { url, mediaId } = presignResult.value as PreSignResult;
+  try {
+    const uploadResponse = await fetch(url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': mimeType,
+      },
+    });
+
+    if (!uploadResponse.ok) {
+      return new Err({
+        code: FETCH_FAIL,
+        message: `S3 upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`,
+        context: null,
+      });
+    }
+
+    return new Ok({ mediaId });
+  } catch (e) {
+    return new Err({
+      code: FETCH_FAIL,
+      message: e instanceof Error ? e.message : 'S3 upload failed',
+      context: null,
+    });
+  }
 }

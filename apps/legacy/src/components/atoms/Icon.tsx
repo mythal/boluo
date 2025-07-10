@@ -43,7 +43,6 @@ function Icon({ icon: IconComponent, className, noStrut, title, spin, loading }:
         className={className}
         width="1em"
         height="1em"
-        fill="currentColor"
       />
     </Strut>
   );

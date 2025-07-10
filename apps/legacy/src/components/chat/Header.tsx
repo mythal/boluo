@@ -8,7 +8,7 @@ import FileExport from '../../assets/icons/file-export.svg';
 import Lock from '../../assets/icons/lock.svg';
 import Sliders from '../../assets/icons/sliders.svg';
 import UserPlus from '../../assets/icons/user-plus.svg';
-import XCircle from '../../assets/icons/x-circle.svg';
+import X from '../../assets/icons/x.svg';
 import { useChannelId, usePane } from '../../hooks/useChannelId';
 import { useTitle } from '../../hooks/useTitle';
 import { useNotify } from '../../states/notify';
@@ -123,7 +123,7 @@ function Header({ focus }: Props) {
 
         {close && (
           <ChatHeaderButton css={[mL(1)]} onClick={close}>
-            <Icon icon={XCircle} />
+            <Icon icon={X} />
           </ChatHeaderButton>
         )}
 

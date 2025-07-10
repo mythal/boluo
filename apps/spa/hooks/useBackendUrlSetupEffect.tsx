@@ -13,6 +13,7 @@ import { useEffect, useRef } from 'react';
 import { type Proxy } from '@boluo/api';
 import { connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
+import { updateRouteStats, getRouteScore, convertTestResult } from './useRouteMovingAverage';
 
 type ResultWithScore = BaseUrlTestResult & { score: number };
 
@@ -28,23 +29,41 @@ export const useBackendUrlSetupEffect = () => {
   useEffect(() => {
     const onSuccess = (result: BaseUrlTestResult[] | null) => {
       if (!result) return;
+
+      // Update EMA statistics for all tested routes
+      result.forEach((record) => {
+        const measureResult = convertTestResult(record.rtt);
+        updateRouteStats(record.proxy.url, measureResult);
+      });
+
       setBackendUrl((prev) => {
         const withScores: ResultWithScore[] = result.map((record) => {
           if (record.rtt === 'FAILED' || record.rtt === 'TIMEOUT') {
-            return { ...record, score: 0 };
+            // Use EMA score even for failed routes
+            const emaScore = getRouteScore(record.proxy.url);
+            return { ...record, score: -emaScore }; // Negative because lower EMA score is better
           }
+
+          const emaScore = getRouteScore(record.proxy.url);
           const extraScore = prev === record.proxy.url ? EXTRA_SCORE_FOR_PREVIOUS : 0;
-          return { ...record, score: TIMEOUT - record.rtt + extraScore };
+
+          // Lower EMA score is better, so we negate it and add extra score
+          return { ...record, score: -emaScore + extraScore };
         });
+
         if (withScores.length === 0) return prev;
         const best = withScores.reduce(
           (bestSoFar, record) => (bestSoFar.score > record.score ? bestSoFar : record),
           withScores[0]!,
         );
-        if (best.score <= 0) {
-          // TODO: notify user
+
+        // Check if the best route has a reasonable EMA score
+        const bestEmaScore = getRouteScore(best.proxy.url);
+        if (bestEmaScore > 10000) {
+          alert('Network is not stable, please try again later');
           return prev;
         }
+
         return best.proxy.url;
       });
     };
@@ -53,6 +72,11 @@ export const useBackendUrlSetupEffect = () => {
     };
     const testOrSelectBest = async (proxy: Proxy) => {
       const result = await testProxy(proxy);
+
+      // Update EMA statistics for the single proxy test
+      const measureResult = convertTestResult(result.rtt);
+      updateRouteStats(proxy.url, measureResult);
+
       if (result.rtt === 'FAILED' || result.rtt === 'TIMEOUT') {
         selectBest();
       } else {

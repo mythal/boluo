@@ -74,7 +74,7 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
     const exportEntities: ExportEntity[] = !rng
       ? []
       : entities.map((item): ExportEntity => {
-          const entity = 'offset' in item ? fromLegacyEntity(item) : item;
+          const entity = item;
           if (entity.type === 'Expr') {
             const { type, start, len } = entity;
             const node = evaluate(entity.node, rng);
@@ -127,10 +127,10 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
       sender,
       name,
       mediaUrl: media,
-      inGame,
-      isAction,
-      isMaster,
-      folded,
+      inGame: inGame ?? false,
+      isAction: isAction ?? false,
+      isMaster: isMaster ?? false,
+      folded: folded ?? false,
       created,
       modified,
       text,

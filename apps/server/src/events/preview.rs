@@ -14,18 +14,28 @@ pub struct Preview {
     pub id: Uuid,
     pub sender_id: Uuid,
     pub channel_id: Uuid,
+    #[serde(default)]
     pub parent_message_id: Option<Uuid>,
     pub name: String,
+    #[serde(default)]
     pub media_id: Option<Uuid>,
+    #[serde(default)]
     pub in_game: bool,
+    #[serde(default)]
     pub is_action: bool,
+    #[serde(default)]
     pub is_master: bool,
+    #[serde(default)]
     pub clear: bool,
+    #[serde(default)]
     pub text: Option<String>,
+    #[serde(default)]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
     pub pos: f64,
+    #[serde(default)]
     pub edit_for: Option<DateTime<Utc>>,
+    #[serde(default)]
     pub edit: Option<PreviewEdit>,
 }
 

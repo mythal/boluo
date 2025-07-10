@@ -39,7 +39,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       (preview) =>
         preview.senderId !== myId &&
         now - preview.timestamp < TYPEING_TIMEOUT &&
-        (preview.text === null || preview.text.length > 0),
+        (preview.text == null || preview.text.length > 0),
     );
     previews.sort((a, b) => a.timestamp - b.timestamp);
     setRecentPreviews((oldPreviews): PreviewItem[] => {

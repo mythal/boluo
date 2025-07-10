@@ -41,7 +41,7 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
   const { whisperToUsers } = message;
 
   const canAccess =
-    whisperToUsers === null ||
+    whisperToUsers == null ||
     (myMember && (myMember.isMaster || whisperToUsers.indexOf(myMember.userId) !== -1));
   const reveal = async () => {
     const result = await get('/messages/query', { id: message.id });

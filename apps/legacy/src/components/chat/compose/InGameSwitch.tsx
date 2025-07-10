@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import mask from '../../../assets/icons/theater-masks.svg';
+import TheaterMasks from '../../../assets/icons/theater-masks.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -23,7 +23,7 @@ function InGameSwitch({ className, size }: Props) {
       on={inGame}
       className={className}
       onClick={toggleInGame}
-      sprite={mask}
+      icon={TheaterMasks}
       title="游戏内"
       size={size}
       info="Esc"

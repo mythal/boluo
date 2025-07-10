@@ -65,7 +65,6 @@ const handleLeftSpace = (
       if (!userId) {
         return { ...rest, members };
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [userId]: _, ...restMembers } = members;
       return { ...rest, members: restMembers };
     }),

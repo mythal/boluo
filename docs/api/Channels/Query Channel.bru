@@ -1,0 +1,15 @@
+meta {
+  name: Query Channel
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/channels/query?id={{channel_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{channel_id}}
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Delete Channel
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{base_url}}/channels/delete?id={{channel_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: {{channel_id}}
+}
+
+body:json {
+  {}
+}

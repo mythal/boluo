@@ -169,6 +169,8 @@ function entityBbCode(entity: ExportEntity, color: string): string {
       return `[/color]\n[code]${entity.text}[/code]\n[color=${color}]`;
     case 'Emphasis':
       return `[i]${entity.text}[/i]`;
+    case 'StrongEmphasis':
+      return `[b][i]${entity.text}[/i][/b]`;
     case 'ExportLink':
       return `[url=${entity.href}]${entity.text}[/url]`;
     case 'Strong':
@@ -189,6 +191,8 @@ function entityMarkdown(entity: ExportEntity): string {
       return `\n\`\`\`\n${entity.text}\n\`\`\`\n`;
     case 'Emphasis':
       return `*${entity.text}*`;
+    case 'StrongEmphasis':
+      return `***${entity.text}***`;
     case 'ExportLink':
       return `[${entity.text}](${entity.href})`;
     case 'Strong':

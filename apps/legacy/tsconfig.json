@@ -1,25 +1,44 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "target": "esnext",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "noEmit": true,
-    "allowJs": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
-    "sourceMap": true,
+
+    /* Bundler mode */
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "types": ["node", "@emotion/react/types/css-prop"],
+    "isolatedModules": true,
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false,
+
+    /* React */
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
-    "isolatedModules": true,
+
+    /* Path mapping */
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Other */
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
     "downlevelIteration": true,
-    "baseUrl": "./src"
+    "types": ["node", "@emotion/react/types/css-prop", "vite/client"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -4,9 +4,9 @@ import 'sanitize.css';
 import 'sanitize.css/typography.css';
 import { css, Global } from '@emotion/react';
 import styled from '@emotion/styled';
-import chevronDown from '../../assets/icons/chevron-down.svg';
-import fan from '../../assets/icons/fan.svg';
-import close from '../../assets/icons/x-circle.svg';
+import ChevronDown from '../../assets/icons/chevron-down.svg';
+import Fan from '../../assets/icons/fan.svg';
+import XCircle from '../../assets/icons/x-circle.svg';
 import { baseStyle, flex, flexCol, gap, mY, spacingN } from '../../styles/atoms';
 import Button from '../atoms/Button';
 import Input from '../atoms/Input';
@@ -56,11 +56,11 @@ function Design() {
         <ButtonList>
           <Button>普通</Button>
           <Button>
-            <Icon sprite={fan} />
+            <Icon icon={Fan} />
             图标
           </Button>
           <Button data-variant="dark">
-            <Icon sprite={fan} />
+            <Icon icon={Fan} />
             图标
           </Button>
           <Button data-variant="primary">Primary</Button>
@@ -71,11 +71,11 @@ function Design() {
         <ButtonList>
           <Button data-small>普通</Button>
           <Button data-small>
-            <Icon sprite={fan} />
+            <Icon icon={Fan} />
             图标
           </Button>
           <Button data-small data-icon>
-            <Icon sprite={close} />
+            <Icon icon={XCircle} />
           </Button>
           <Button data-small data-variant="primary">
             主要
@@ -183,7 +183,7 @@ function Design() {
           onClick={() => setShowMenu((value) => !value)}
         >
           菜单
-          <Icon sprite={chevronDown} />
+          <Icon icon={ChevronDown} />
         </Button>
 
         {showMenu && (
@@ -198,8 +198,8 @@ function Design() {
             <Menu dismiss={() => setShowMenu(false)}>
               <MenuItem onClick={() => alert('hello')}>Hello</MenuItem>
               <MenuItem onClick={() => alert('hello')}>World</MenuItem>
-              <MenuItemDisabled icon={fan}>Disabled</MenuItemDisabled>
-              <MenuItem icon={fan}>Fan</MenuItem>
+              <MenuItemDisabled icon={Fan}>Disabled</MenuItemDisabled>
+              <MenuItem icon={Fan}>Fan</MenuItem>
             </Menu>
           </Overlay>
         )}

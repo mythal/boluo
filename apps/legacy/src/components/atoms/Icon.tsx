@@ -1,12 +1,12 @@
-import { SpriteSymbol } from '*.svg';
 import styled from '@emotion/styled';
 import React from 'react';
-import rotate from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { spacingN, spin as spinStyle } from '../../styles/atoms';
-import SpriteSvg from './SpriteSvg';
+
+export type SvgIcon = React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 
 interface Props {
-  sprite: SpriteSymbol;
+  icon: SvgIcon;
   title?: string;
   className?: string;
   noStrut?: boolean;
@@ -31,16 +31,15 @@ const Strut = styled.span`
   padding: 0 ${spacingN(0.5)};
 `;
 
-function Icon({ sprite, className, noStrut, title, spin, loading }: Props) {
+function Icon({ icon: IconComponent, className, noStrut, title, spin, loading }: Props) {
   if (loading) {
     spin = true;
-    sprite = rotate;
+    IconComponent = RotateCw;
   }
   return (
     <Strut data-strut={!noStrut} title={title}>
-      <SpriteSvg
+      <IconComponent
         css={[spin ? spinStyle : undefined]}
-        sprite={sprite}
         className={className}
         width="1em"
         height="1em"

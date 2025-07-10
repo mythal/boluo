@@ -1,0 +1,15 @@
+meta {
+  name: Get Token
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/spaces/token?id={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}

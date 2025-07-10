@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Id } from '../utils/id';
@@ -129,7 +130,6 @@ export const makeUri = (path: string, query?: object, addBaseUrl = true): string
   }
   const searchParams = new URLSearchParams();
   for (const entry of entities) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [key, value] = entry;
     if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
       searchParams.set(key, String(value));

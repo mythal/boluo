@@ -30,6 +30,11 @@ const Emphasis = styled.em`
   color: ${white};
 `;
 
+const StrongEmphasis = styled.strong`
+  white-space: pre-wrap;
+  font-style: italic;
+`;
+
 const Expr = styled.span`
   ${fontMono};
 `;
@@ -65,6 +70,12 @@ function ItemContent({ text, entities, seed }: Props) {
     } else if (entity.type === 'Emphasis') {
       content.push(
         <Emphasis key={key}>{text.substr(entity.child.start, entity.child.len)}</Emphasis>,
+      );
+    } else if (entity.type === 'StrongEmphasis') {
+      content.push(
+        <StrongEmphasis key={key}>
+          {text.substr(entity.child.start, entity.child.len)}
+        </StrongEmphasis>,
       );
     } else if (entity.type === 'Code') {
       content.push(<Code key={key}>{text.substr(entity.child.start, entity.child.len)}</Code>);

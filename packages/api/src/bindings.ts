@@ -199,6 +199,7 @@ export type Entity =
   | ({ type: 'CodeBlock' } & SpanWithChild)
   | ({ type: 'Strong' } & SpanWithChild)
   | ({ type: 'Emphasis' } & SpanWithChild)
+  | ({ type: 'StrongEmphasis' } & SpanWithChild)
   | ({ type: 'Expr' } & ExprEntity);
 
 export type EvaluatedExprNode =

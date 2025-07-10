@@ -3,12 +3,12 @@ import styled from '@emotion/styled';
 import { darken } from 'polished';
 import * as React from 'react';
 import { useState } from 'react';
-import columnsIcon from '../../assets/icons/columns.svg';
-import exportIcon from '../../assets/icons/file-export.svg';
-import lockIcon from '../../assets/icons/lock.svg';
-import sliders from '../../assets/icons/sliders.svg';
-import userPlusIcon from '../../assets/icons/user-plus.svg';
-import closeIcon from '../../assets/icons/x-circle.svg';
+import Columns from '../../assets/icons/columns.svg';
+import FileExport from '../../assets/icons/file-export.svg';
+import Lock from '../../assets/icons/lock.svg';
+import Sliders from '../../assets/icons/sliders.svg';
+import UserPlus from '../../assets/icons/user-plus.svg';
+import XCircle from '../../assets/icons/x-circle.svg';
 import { useChannelId, usePane } from '../../hooks/useChannelId';
 import { useTitle } from '../../hooks/useTitle';
 import { useNotify } from '../../states/notify';
@@ -91,39 +91,39 @@ function Header({ focus }: Props) {
   return (
     <div css={chatHeaderStyle} onClick={focus}>
       <ChannelName>
-        {!channel.isPublic && <Icon sprite={lockIcon} css={mR(1)} />}
+        {!channel.isPublic && <Icon icon={Lock} css={mR(1)} />}
         <span css={name}>{channel.name}</span>
         <Topic>{channel.topic}</Topic>
       </ChannelName>
       <div css={toolbar}>
         {/*<ChatHeaderButton css={[mL(1), showOnMd]} data-active={isPaneSplit} onClick={toggleSplit}>*/}
-        {/*  <Icon sprite={columns} />*/}
+        {/*  <Icon icon={columns} />*/}
         {/*</ChatHeaderButton>*/}
         {isSpaceAdmin && (
           <ChatHeaderButton css={[mL(1)]} onClick={() => setManagePanel(true)}>
-            <Icon sprite={sliders} />
+            <Icon icon={Sliders} />
           </ChatHeaderButton>
         )}
         {(isSpaceAdmin || myMember?.isMaster) && (
           <ChatHeaderButton css={[mL(1)]} onClick={() => showExportDialog(true)}>
-            <Icon sprite={exportIcon} />
+            <Icon icon={FileExport} />
           </ChatHeaderButton>
         )}
 
         <Filter css={[mL(1)]} />
         {(isSpaceAdmin || myMember?.isMaster) && (
           <ChatHeaderButton css={[mL(1)]} onClick={() => showInviteDialog(true)}>
-            <Icon sprite={userPlusIcon} />
+            <Icon icon={UserPlus} />
           </ChatHeaderButton>
         )}
 
         <ChatHeaderButton css={[mL(1)]} onClick={split}>
-          <Icon sprite={columnsIcon} />
+          <Icon icon={Columns} />
         </ChatHeaderButton>
 
         {close && (
           <ChatHeaderButton css={[mL(1)]} onClick={close}>
-            <Icon sprite={closeIcon} />
+            <Icon icon={XCircle} />
           </ChatHeaderButton>
         )}
 

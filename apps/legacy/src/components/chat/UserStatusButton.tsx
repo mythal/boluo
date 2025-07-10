@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Fragment, useMemo } from 'react';
 import { UserStatus } from '../../api/spaces';
-import members from '../../assets/icons/members.svg';
+import Members from '../../assets/icons/members.svg';
 import { useSelector } from '../../store';
 import { Id } from '../../utils/id';
 import Icon from '../atoms/Icon';
@@ -36,7 +36,7 @@ function MemberListButton({ className, spaceId, folded, active, toggle }: Props)
 
   return (
     <ChatHeaderButton data-active={active} onClick={toggle} className={className}>
-      <Icon sprite={members} />
+      <Icon icon={Members} />
       {!folded && (
         <Fragment>
           {onlineCount}

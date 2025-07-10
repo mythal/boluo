@@ -1,0 +1,18 @@
+meta {
+  name: My Spaces
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/spaces/my
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  let data = res.getBody();
+  if (data.isOk && data.ok.length > 0) {
+    bru.setVar("space_id", data.ok[0].space.id);
+  }
+}

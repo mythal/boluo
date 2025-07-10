@@ -5,10 +5,10 @@ import { useForm } from 'react-hook-form';
 import { ChannelMemberEdited } from '../../actions';
 import { EditChannelMember } from '../../api/channels';
 import { post } from '../../api/request';
-import cog from '../../assets/icons/cog.svg';
-import doorOpen from '../../assets/icons/door-open.svg';
-import editIcon from '../../assets/icons/edit.svg';
-import ninja from '../../assets/icons/ninja.svg';
+import Cog from '../../assets/icons/cog.svg';
+import DoorOpen from '../../assets/icons/door-open.svg';
+import Edit from '../../assets/icons/edit.svg';
+import Ninja from '../../assets/icons/ninja.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import store, { useDispatch, useSelector } from '../../store';
 import { alignRight, mL, mR, mT } from '../../styles/atoms';
@@ -182,7 +182,7 @@ function ChannelMemberButton({ className }: Props) {
         onClick={toggleMenu}
         className={className}
       >
-        <Icon sprite={ninja} css={[mR(1)]} />
+        <Icon icon={Ninja} css={[mR(1)]} />
         {name}
       </ChatHeaderButton>
       {menu && (
@@ -196,13 +196,13 @@ function ChannelMemberButton({ className }: Props) {
           onClick={(e) => e.stopPropagation()}
         >
           <Menu dismiss={dismissMenu}>
-            <MenuItem icon={editIcon} onClick={openDialog}>
+            <MenuItem icon={Edit} onClick={openDialog}>
               编辑频道身份
             </MenuItem>
-            <MenuItemLink to="/settings" icon={cog}>
+            <MenuItemLink to="/settings" icon={Cog}>
               设置
             </MenuItemLink>
-            <MenuItem icon={doorOpen} onClick={() => setLeaveConfirmDialog(true)}>
+            <MenuItem icon={DoorOpen} onClick={() => setLeaveConfirmDialog(true)}>
               退出频道
             </MenuItem>
           </Menu>

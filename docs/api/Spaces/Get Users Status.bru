@@ -1,0 +1,15 @@
+meta {
+  name: Get Users Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/spaces/users_status?id={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{space_id}}
+}

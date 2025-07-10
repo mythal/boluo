@@ -39,7 +39,7 @@ impl TokenStore {
     fn new() -> Self {
         let tokens = Arc::new(papaya::HashMap::with_hasher(ahash::RandomState::new()));
         let tokens_for_cleanup = Arc::downgrade(&tokens);
-        let span = tracing::info_span!("token_store_cleanup");
+        let span = tracing::info_span!(parent: None, "token_store_cleanup");
         tokio::spawn(
             async move {
                 let tokens = tokens_for_cleanup;
@@ -54,11 +54,10 @@ impl TokenStore {
                     let before = token_store.len();
                     token_store
                         .retain(|_, token: &TokenInfo| now - token.created_at < TOKEN_VALIDITY);
-                    tracing::info!(
-                        before = before,
-                        after = token_store.len(),
-                        "token store cleaned up"
-                    );
+                    let after = token_store.len();
+                    if before != after {
+                        tracing::info!(before, after, "token store cleaned up");
+                    }
                 }
             }
             .instrument(span),

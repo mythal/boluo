@@ -1,0 +1,21 @@
+meta {
+  name: Presigned
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/media/presigned?filename=malice.png&mimeType=image/png&size=1024
+  body: json
+  auth: inherit
+}
+
+params:query {
+  filename: malice.png
+  mimeType: image/png
+  size: 1024
+}
+
+body:json {
+  {}
+}

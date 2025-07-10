@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Select from 'react-select';
 import { Channel, Export } from '../../api/channels';
 import { get } from '../../api/request';
-import exportIcon from '../../assets/icons/file-export.svg';
+import FileExport from '../../assets/icons/file-export.svg';
 import { bbCodeTextBlob, csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';
 import { useDispatch } from '../../store';
 import { mB, mT, selectTheme, uiShadow, widthFull } from '../../styles/atoms';
@@ -171,7 +171,7 @@ function ExportDialog({ dismiss, channel }: Props) {
         disabled={loading}
       >
         <span>
-          <Icon loading={loading} sprite={exportIcon} /> 导出
+          <Icon loading={loading} icon={FileExport} /> 导出
         </span>
       </Button>
     </Dialog>

@@ -1,0 +1,39 @@
+meta {
+  name: Send Message
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/messages/send
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "messageId": null,
+    "previewId": null,
+    "channelId": "{{channel_id}}",
+    "name": "DM",
+    "text": "Rocks Fall, Everyone Dies",
+    "entities": [{
+      "type": "Text",
+      "start": 0,
+      "len": 25
+    }],
+    "inGame": true,
+    "isAction": false,
+    "mediaId": null,
+    "whisperToUsers": null,
+    "pos": null,
+    "color": "preset:default"
+  }
+}
+
+script:post-response {
+  let data = res.getBody();
+  if (data.isOk) {
+    bru.setVar("message_id", data.ok.id);
+  }
+}

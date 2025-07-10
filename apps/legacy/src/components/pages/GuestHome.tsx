@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../../assets/logo.svg';
+import Logo from '../../assets/logo.svg';
 import ExternalLink from '../../components/atoms/ExternalLink';
 import Text from '../../components/atoms/Text';
 import {
@@ -35,9 +35,7 @@ const SubTitle = styled.h2`
 function GuestHome() {
   return (
     <>
-      <svg css={[mY(8), sm(floatRight), mX(4)]} width="14rem" height="14rem" viewBox={logo.viewBox}>
-        <use xlinkHref={logo.url} />
-      </svg>
+      <Logo css={[mY(8), sm(floatRight), mX(4)]} width="14rem" height="14rem" />
 
       {isIe && (
         <InformationBar variant="WARNING">

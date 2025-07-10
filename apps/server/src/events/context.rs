@@ -58,6 +58,14 @@ impl MailboxManager {
     }
 
     async fn send_read_action(&self, action: Action) -> Result<(), MailboxManageError> {
+        let action = match self.sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("MailboxManager::send_read_action: full");
+                action
+            }
+        };
         tokio::time::timeout(MAILBOX_STATE_READ_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
@@ -71,6 +79,14 @@ impl MailboxManager {
     }
 
     async fn send_write_action(&self, action: Action) -> Result<(), MailboxManageError> {
+        let action = match self.sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("MailboxManager::send_write_action: full");
+                action
+            }
+        };
         tokio::time::timeout(MAILBOX_STATE_WRITE_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
@@ -352,13 +368,18 @@ fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut Pre
         _ => false,
     });
     if preview_map.capacity() > 64 {
+        tracing::info!(
+            "Shrinking preview map from {} to {}",
+            preview_map.capacity(),
+            64
+        );
         preview_map.shrink_to_fit();
     }
 }
 
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
-        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(32);
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(1024);
         let manager = MailboxManager::new(id, tx);
         let span = tracing::info_span!("MailboxState", mailbox_id = %id);
         tokio::spawn(async move {
@@ -373,6 +394,7 @@ impl MailBoxState {
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
+                        let start = std::time::Instant::now();
                         match action {
                             Action::Query(sender) => {
                                 last_activity_at = std::time::Instant::now();
@@ -387,7 +409,12 @@ impl MailBoxState {
                             }
                             Action::Update(encoded_update) => {
                                 last_activity_at = std::time::Instant::now();
+                                let update_name = encoded_update.update.name();
                                 on_update(&mut updates, &mut preview_map, *encoded_update);
+                                let elapsed = start.elapsed();
+                                if elapsed > std::time::Duration::from_millis(100) {
+                                    tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
+                                }
                             }
                             Action::Members(action) => {
                                 members_state.update(action);
@@ -401,6 +428,7 @@ impl MailBoxState {
                         status_state.update(StatusAction::Broadcast);
                     }
                     _ = cleanup_interval.tick() => {
+                        // If there are still actions to process, skip cleanup
                         if !rx.is_empty() {
                             continue;
                         }

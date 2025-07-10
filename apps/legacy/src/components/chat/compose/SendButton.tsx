@@ -1,6 +1,6 @@
 import React from 'react';
-import paperPlane from '../../../assets/icons/paper-plane.svg';
-import save from '../../../assets/icons/save.svg';
+import PaperPlane from '../../../assets/icons/paper-plane.svg';
+import Save from '../../../assets/icons/save.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useSelector } from '../../../store';
 import { isMac } from '../../../utils/browser';
@@ -37,7 +37,7 @@ export const SendButton = ({ onSend, editing = false }: Props) => {
   return (
     <ChatItemToolbarButton
       loading={sending}
-      sprite={editing ? save : paperPlane}
+      icon={editing ? Save : PaperPlane}
       onClick={onSend}
       disabled={cannotSendReason !== null}
       title={editing ? '编辑' : '发送'}

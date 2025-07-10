@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { LoadMessages } from '../../actions';
 import { get } from '../../api/request';
-import rotateIcon from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import { bgColor } from '../../styles/colors';
@@ -82,7 +82,7 @@ function LoadMore() {
   return (
     <LoadMoreContainer>
       <Button data-small ref={button} onClick={loadMore} disabled={loading || moving}>
-        {loading ? <Icon sprite={rotateIcon} loading /> : '载入更多'}
+        {loading ? <Icon icon={RotateCw} loading /> : '载入更多'}
       </Button>
     </LoadMoreContainer>
   );

@@ -3,10 +3,10 @@ import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { Channel } from '../../api/channels';
 import { Space } from '../../api/spaces';
-import bellSlashIcon from '../../assets/icons/bell-slash-solid.svg';
-import bellIcon from '../../assets/icons/bell-solid.svg';
-import help from '../../assets/icons/help.svg';
-import nightSky from '../../assets/icons/night-sky.svg';
+import BellSlashSolid from '../../assets/icons/bell-slash-solid.svg';
+import BellSolid from '../../assets/icons/bell-solid.svg';
+import HelpIcon from '../../assets/icons/help.svg';
+import NightSky from '../../assets/icons/night-sky.svg';
 import { useNotificationSwitch } from '../../states/notify';
 import { mB, pY } from '../../styles/atoms';
 import { chatPath } from '../../utils/path';
@@ -48,7 +48,7 @@ function SidebarFoldedItems({ space, channels }: Props) {
         css={[mB(1), sidebarIconButton]}
         to={chatPath(space.id)}
       >
-        <Icon sprite={nightSky} />
+        <Icon icon={NightSky} />
       </ChatHeaderButtonNavLink>
       <ChatHeaderButton ref={channelButton} css={[mB(1), sidebarIconButton]} onClick={toggleMenu}>
         #
@@ -65,11 +65,11 @@ function SidebarFoldedItems({ space, channels }: Props) {
         css={[sidebarIconButton]}
         onClick={canNotify ? stopNotify : startNotify}
       >
-        <Icon sprite={canNotify ? bellIcon : bellSlashIcon} />
+        <Icon icon={canNotify ? BellSolid : BellSlashSolid} />
       </ChatHeaderButton>
       <div css={footer}>
         <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton]}>
-          <Icon sprite={help} />
+          <Icon icon={HelpIcon} />
         </ChatHeaderButton>
       </div>
       {channelMenu && (

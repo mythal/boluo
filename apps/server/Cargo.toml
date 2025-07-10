@@ -16,7 +16,7 @@ name = "init"
 path = "src/init.rs"
 
 [build-dependencies]
-dotenv = "0.15"
+dotenvy = "0.15"
 
 [dependencies]
 anyhow = "1"
@@ -27,7 +27,7 @@ bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.4.12", features = ["derive"] }
 cookie = "0.18"
-dotenv = "0.15"
+dotenvy = "0.15"
 futures = "0.3"
 itertools = "0.14"
 tracing = { version = "0.1", features = ["attributes"] }
@@ -74,6 +74,7 @@ redis = { version = "0.32.2", features = [
   "tcp_nodelay",
   "connection-manager",
 ] }
+smallvec = "1.15.1"
 
 [dependencies.reqwest]
 version = "0.12"

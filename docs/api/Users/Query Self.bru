@@ -1,0 +1,16 @@
+meta {
+  name: Query Self
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/users/query_self
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  let data = res.getBody();
+  bru.setVar("user_id", data.ok.id);
+}

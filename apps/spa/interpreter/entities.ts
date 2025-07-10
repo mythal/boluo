@@ -19,6 +19,7 @@ export type ExportEntity = (
   | ExportLink
   | EntityOf<'Strong'>
   | EntityOf<'Emphasis'>
+  | EntityOf<'StrongEmphasis'>
   | EntityOf<'Code'>
   | EntityOf<'CodeBlock'>
   | ExportExpr

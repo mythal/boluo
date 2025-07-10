@@ -5,7 +5,7 @@ import { LoggedIn } from '../../actions';
 import { AppError, NO_PERMISSION } from '../../api/error';
 import { get, post } from '../../api/request';
 import { LoginData } from '../../api/users';
-import loginIcon from '../../assets/icons/sign-in.svg';
+import SignIn from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
@@ -102,7 +102,7 @@ function Login() {
             忘记密码？
           </Link>
           <Button css={[mT(4), textLg]} data-variant="primary" type="submit" disabled={loggingIn}>
-            <Icon sprite={loginIcon} loading={loggingIn} />
+            <Icon icon={SignIn} loading={loggingIn} />
             登录
           </Button>
         </div>

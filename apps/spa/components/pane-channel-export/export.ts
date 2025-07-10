@@ -103,7 +103,8 @@ const entityToExportEntity =
       entity.type === 'Emphasis' ||
       entity.type === 'Strong' ||
       entity.type === 'Code' ||
-      entity.type === 'CodeBlock'
+      entity.type === 'CodeBlock' ||
+      entity.type === 'StrongEmphasis'
     ) {
       return {
         ...entity,

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import running from '../../../assets/icons/running.svg';
+import Running from '../../../assets/icons/running.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -23,7 +23,7 @@ function ActionSwitch({ className, size }: Props) {
       on={isAction}
       className={className}
       onClick={toggle}
-      sprite={running}
+      icon={Running}
       title="描述动作"
       size={size}
     />

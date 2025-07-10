@@ -133,7 +133,7 @@ pub enum GetFromStateError {
     #[error("Failed to query updates")]
     FailedToQuery,
     #[error("Requested updates are too early")]
-    RequestedUpdatesAreTooEarly,
+    RequestedUpdatesAreTooEarly { start_at: Option<i64> },
 }
 
 impl UpdateBody {
@@ -326,7 +326,7 @@ impl Update {
             if let Some(after) = after
                 && after > 0
             {
-                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: None });
             }
             return Ok(vec![]);
         };
@@ -350,7 +350,9 @@ impl Update {
 
         if let Some(after) = after {
             if after > 0 && after < start_at {
-                return Err(GetFromStateError::RequestedUpdatesAreTooEarly);
+                return Err(GetFromStateError::RequestedUpdatesAreTooEarly {
+                    start_at: Some(start_at),
+                });
             }
         }
         if updates.is_empty() {
@@ -471,6 +473,24 @@ impl Update {
     pub fn fire(body: UpdateBody, mailbox: Uuid) {
         let span = tracing::info_span!("fire", mailbox = %mailbox);
         spawn(Update::async_fire(body, mailbox).instrument(span));
+    }
+
+    pub fn name(&self) -> &'static str {
+        match &self.body {
+            UpdateBody::NewMessage { .. } => "NewMessage",
+            UpdateBody::MessageDeleted { .. } => "MessageDeleted",
+            UpdateBody::MessageEdited { .. } => "MessageEdited",
+            UpdateBody::MessagePreview { .. } => "MessagePreview",
+            UpdateBody::ChannelDeleted { .. } => "ChannelDeleted",
+            UpdateBody::ChannelEdited { .. } => "ChannelEdited",
+            UpdateBody::Members { .. } => "Members",
+            UpdateBody::Initialized => "Initialized",
+            UpdateBody::StatusMap { .. } => "StatusMap",
+            UpdateBody::SpaceUpdated { .. } => "SpaceUpdated",
+            UpdateBody::Error { .. } => "Error",
+            UpdateBody::AppUpdated { .. } => "AppUpdated",
+            UpdateBody::AppInfo { .. } => "AppInfo",
+        }
     }
 }
 

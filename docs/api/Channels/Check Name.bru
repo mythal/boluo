@@ -1,0 +1,16 @@
+meta {
+  name: Check Name
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/channels/check_name?name&spaceId={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  name: 
+  spaceId: {{space_id}}
+}

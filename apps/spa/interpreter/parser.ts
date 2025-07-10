@@ -221,6 +221,27 @@ const strong: P<Entity> = regex(STRONG_REGEX).then(([match, { text, rest }]) => 
   return [entity, { text, rest }];
 });
 
+const STRONG_EM_REGEX = /^\*\*\*(.+?)\*\*\*/;
+
+const strongEmphasis: P<Entity> = regex(STRONG_EM_REGEX).then(([match, { text, rest }]) => {
+  const [entire, content = ''] = match;
+
+  const entity: EntityOf<'StrongEmphasis'> = {
+    type: 'StrongEmphasis',
+    start: text.length,
+    len: entire.length,
+
+    child: {
+      type: 'Text',
+      start: text.length,
+      len: entire.length,
+    },
+  };
+
+  text += entire;
+  return [entity, { text, rest }];
+});
+
 const URL_REGEX =
   /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/;
 
@@ -641,9 +662,17 @@ const exprNodeToEntity =
     return [entity, { text: state.text + consumed, rest: next.rest }];
   };
 
-const ROLL_COMMAND = /^[.。]r\s*/;
-
-const entity = choice<Entity>([codeBlock, code, strong, emphasis, link, autoUrl, expression, span]);
+const entity = choice<Entity>([
+  codeBlock,
+  code,
+  strongEmphasis,
+  strong,
+  emphasis,
+  link,
+  autoUrl,
+  expression,
+  span,
+]);
 
 const message: P<Entity[]> = many(entity).map((entityList) =>
   entityList.reduce(mergeTextEntitiesReducer, []),
@@ -660,6 +689,7 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
   const entity = choice<Entity>([
     codeBlock,
     code,
+    strongEmphasis,
     strong,
     emphasis,
     link,

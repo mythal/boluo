@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useState } from 'react';
-import d20 from '../../assets/icons/d20.svg';
+import D20 from '../../assets/icons/d20.svg';
 import rollExample from '../../assets/roll-example.png';
 import { fontBold, mY, roundedSm, spacingN, textSm } from '../../styles/atoms';
 import { black, blue, textColor } from '../../styles/colors';
@@ -56,12 +56,12 @@ function Advance() {
   return (
     <div>
       <Text>
-        <Code>.r 1d20 = 1d = d20 = d</Code> 可以省略数字，频道可以设置骰子默认的面数。
+        <Code>.r 1d20 = 1d = D20 = d</Code> 可以省略数字，频道可以设置骰子默认的面数。
       </Text>
 
       <Text>
         按下「
-        <Icon sprite={d20} /> 插入骰子」按钮将自动插入骰子。频道可以设置默认插入什么指令。
+        <Icon icon={D20} /> 插入骰子」按钮将自动插入骰子。频道可以设置默认插入什么指令。
       </Text>
 
       <Text>

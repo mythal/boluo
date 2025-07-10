@@ -2,12 +2,12 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import chevronDown from '../../assets/icons/chevron-down.svg';
-import chevronUp from '../../assets/icons/chevron-up.svg';
-import cog from '../../assets/icons/cog.svg';
-import logoutIcon from '../../assets/icons/logout.svg';
-import plus from '../../assets/icons/plus-circle.svg';
-import logo from '../../assets/logo.svg';
+import ChevronDown from '../../assets/icons/chevron-down.svg';
+import ChevronUp from '../../assets/icons/chevron-up.svg';
+import Cog from '../../assets/icons/cog.svg';
+import Logout from '../../assets/icons/logout.svg';
+import PlusCircle from '../../assets/icons/plus-circle.svg';
+import Logo from '../../assets/logo.svg';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 import { useSelector } from '../../store';
 import { headerHeight, headerShadow, mainP, mainWidth, mR } from '../../styles/atoms';
@@ -46,7 +46,7 @@ function Guest() {
     <HeaderInner>
       <Nav>
         <HeaderLink css={mR(1)} exact to="/">
-          <Icon css={mR(1)} sprite={logo} />
+          <Icon css={mR(1)} icon={Logo} />
           菠萝
         </HeaderLink>
         <HeaderLink to="/space/explore">探索位面</HeaderLink>
@@ -74,28 +74,28 @@ function User() {
     <HeaderInner>
       <Nav>
         <HeaderLink css={mR(1)} exact to="/">
-          <Icon css={mR(1)} sprite={logo} />
+          <Icon css={mR(1)} icon={Logo} />
           我的
         </HeaderLink>
         <HeaderLink css={mR(1)} to="/space/explore">
           探索位面
         </HeaderLink>
         <HeaderLink to="/space/new">
-          <Icon sprite={plus} />
+          <Icon icon={PlusCircle} />
         </HeaderLink>
       </Nav>
       <Nav>
         <HeaderButton css={mR(1)} onClick={toggle} ref={menuAnchor}>
-          {nickname} <Icon sprite={menu ? chevronUp : chevronDown} />
+          {nickname} <Icon icon={menu ? ChevronUp : ChevronDown} />
         </HeaderButton>
         {menu && (
           <Overlay x={1} y={1} selfY={1} selfX={-1} anchor={menuAnchor} onOuter={dismiss}>
             <Menu dismiss={dismiss}>
               <MenuItemLink to="/profile">个人资料页</MenuItemLink>
-              <MenuItemLink to="/settings" icon={cog}>
+              <MenuItemLink to="/settings" icon={Cog}>
                 设置
               </MenuItemLink>
-              <MenuItemLink to="/logout" icon={logoutIcon}>
+              <MenuItemLink to="/logout" icon={Logout}>
                 登出
               </MenuItemLink>
             </Menu>

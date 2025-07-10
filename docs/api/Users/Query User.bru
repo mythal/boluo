@@ -1,0 +1,15 @@
+meta {
+  name: Query User
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/users/query?id={{user_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: {{user_id}}
+}

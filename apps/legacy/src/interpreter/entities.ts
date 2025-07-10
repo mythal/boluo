@@ -52,7 +52,12 @@ export interface Emphasis extends BaseEntity {
   child: Text;
 }
 
-export type Entity = Text | Link | Expr | Strong | Emphasis | Code | CodeBlock;
+export interface StrongEmphasis extends BaseEntity {
+  type: 'StrongEmphasis';
+  child: Text;
+}
+
+export type Entity = Text | Link | Expr | Strong | Emphasis | StrongEmphasis | Code | CodeBlock;
 
 export interface Unknown {
   type: 'Unknown';
@@ -207,7 +212,7 @@ export interface ExportExpr extends BaseEntity {
 }
 
 export type ExportEntity =
-  | ((Text | ExportLink | Strong | Emphasis | Code | CodeBlock) & { text: string })
+  | ((Text | ExportLink | Strong | Emphasis | StrongEmphasis | Code | CodeBlock) & { text: string })
   | ExportExpr;
 
 export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { post } from '../../api/request';
-import doorOpen from '../../assets/icons/door-open.svg';
+import DoorOpen from '../../assets/icons/door-open.svg';
 import Dialog from '../../components/molecules/Dialog';
 import { useDispatch, useSelector } from '../../store';
 import { Id } from '../../utils/id';
@@ -41,7 +41,7 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
         disabled={leaving}
         {...props}
       >
-        <Icon sprite={doorOpen} loading={leaving} />
+        <Icon icon={DoorOpen} loading={leaving} />
         退出
       </button>
       {confirmDialog && (

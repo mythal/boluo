@@ -9,3 +9,8 @@ get {
   body: none
   auth: inherit
 }
+
+script:post-response {
+  let data = res.getBody();
+  let token = bru.setVar("user_id", data.ok.user.id);
+}

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import sayIcon from '../../../assets/icons/comment-solid.svg';
-import actionIcon from '../../../assets/icons/running.svg';
+import CommentSolid from '../../../assets/icons/comment-solid.svg';
+import Running from '../../../assets/icons/running.svg';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
@@ -22,7 +22,7 @@ export const InPreviewActionButton = ({ className }: Props) => {
     <ChatItemToolbarButton
       className={className}
       onClick={toggle}
-      sprite={isAction ? sayIcon : actionIcon}
+      icon={isAction ? CommentSolid : Running}
       title={isAction ? '描述发言' : '描述动作'}
       size="normal"
       info={isAction ? '从消息开头把 .me 去掉' : '在消息开头加上 .me'}

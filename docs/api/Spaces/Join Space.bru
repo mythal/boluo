@@ -1,0 +1,20 @@
+meta {
+  name: Join Space
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{base_url}}/spaces/join?spaceId={{space_id}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  spaceId: {{space_id}}
+  token:
+}
+
+body:json {
+  {}
+}

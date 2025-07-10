@@ -4,7 +4,7 @@ import Prando from 'prando';
 import * as React from 'react';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import masterIcon from '../../assets/icons/gamemaster.svg';
+import Gamemaster from '../../assets/icons/gamemaster.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { fontBold, inline, mL, mR, relative, textSm } from '../../styles/atoms';
@@ -77,7 +77,7 @@ function ChatItemName({ name, userId, master }: Props) {
           </Tooltip>
         )}
       </div>
-      {master && <Icon css={masterIconStyle} sprite={masterIcon} />}
+      {master && <Icon css={masterIconStyle} icon={Gamemaster} />}
     </Container>
   );
 }

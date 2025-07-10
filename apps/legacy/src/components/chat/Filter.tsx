@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions';
-import check from '../../assets/icons/check.svg';
-import circle from '../../assets/icons/circle.svg';
-import dotCircle from '../../assets/icons/dot-circle.svg';
-import filterIcon from '../../assets/icons/filter.svg';
-import uncheck from '../../assets/icons/uncheck.svg';
+import Check from '../../assets/icons/check.svg';
+import Circle from '../../assets/icons/circle.svg';
+import DotCircle from '../../assets/icons/dot-circle.svg';
+import FilterIcon from '../../assets/icons/filter.svg';
+import Uncheck from '../../assets/icons/uncheck.svg';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../atoms/Icon';
@@ -34,32 +34,32 @@ function Filter({ className }: Props) {
         ref={button}
         className={className}
       >
-        <Icon sprite={filterIcon} />
+        <Icon icon={FilterIcon} />
       </ChatHeaderButton>
       {open && (
         <Overlay x={1} y={1} selfX={-1} anchor={button} onOuter={dismiss}>
           <Menu dismiss={dismiss}>
             <MenuItem
               onClick={() => dispatch(chatInGameFilter(pane))}
-              icon={filter === 'IN_GAME' ? dotCircle : circle}
+              icon={filter === 'IN_GAME' ? DotCircle : Circle}
             >
               游戏内消息
             </MenuItem>
             <MenuItem
               onClick={() => dispatch(chatOutGameFilter(pane))}
-              icon={filter === 'OUT_GAME' ? dotCircle : circle}
+              icon={filter === 'OUT_GAME' ? DotCircle : Circle}
             >
               游戏外消息
             </MenuItem>
             <MenuItem
               onClick={() => dispatch(chatNoneFilter(pane))}
-              icon={filter === 'NONE' ? dotCircle : circle}
+              icon={filter === 'NONE' ? DotCircle : Circle}
             >
               所有消息
             </MenuItem>
             <MenuItem
               onClick={() => dispatch({ type: 'TOGGLE_SHOW_FOLDED' })}
-              icon={showFolded ? check : uncheck}
+              icon={showFolded ? Check : Uncheck}
             >
               显示折叠的消息
             </MenuItem>

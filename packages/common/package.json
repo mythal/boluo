@@ -15,7 +15,7 @@
     "@boluo/typescript-config": "*",
     "@boluo/utils": "*",
     "@formatjs/intl": "^3.1.6",
-    "@types/node": "^22.13.14",
+    "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "eslint": "^9.23.0",

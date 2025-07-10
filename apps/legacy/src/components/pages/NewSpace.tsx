@@ -6,8 +6,8 @@ import { JoinedSpace } from '../../actions';
 import { AppError } from '../../api/error';
 import { post } from '../../api/request';
 import { CreateSpace } from '../../api/spaces';
-import implosion from '../../assets/icons/implosion.svg';
-import nightSky from '../../assets/icons/night-sky.svg';
+import Implosion from '../../assets/icons/implosion.svg';
+import NightSky from '../../assets/icons/night-sky.svg';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
 import {
@@ -74,7 +74,7 @@ function NewSpace() {
   return (
     <>
       <Title>
-        <Icon sprite={implosion} /> 开辟新的位面
+        <Icon icon={Implosion} /> 开辟新的位面
       </Title>
       {creationError && <RenderError error={creationError} variant="component" />}
 
@@ -121,7 +121,7 @@ function NewSpace() {
         </div>
         <div css={[alignRight]}>
           <Button css={[mT(4), textLg]} type="submit" data-variant="primary" disabled={submitting}>
-            <Icon sprite={nightSky} loading={submitting} />
+            <Icon icon={NightSky} loading={submitting} />
             创建位面
           </Button>
         </div>

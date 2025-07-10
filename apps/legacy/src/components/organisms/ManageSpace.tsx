@@ -6,7 +6,7 @@ import { Channel } from '../../api/channels';
 import { AppError } from '../../api/error';
 import { post } from '../../api/request';
 import { EditSpace, Space, SpaceMember, SpaceMemberWithUser } from '../../api/spaces';
-import deleteSpaceIcon from '../../assets/icons/earth-crack.svg';
+import EarthCrack from '../../assets/icons/earth-crack.svg';
 import { useDispatch } from '../../store';
 import {
   alignRight,
@@ -169,7 +169,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
             type="button"
             onClick={() => showDeleteDialog(true)}
           >
-            <Icon sprite={deleteSpaceIcon} /> 摧毁位面
+            <Icon icon={EarthCrack} /> 摧毁位面
           </Button>
         </div>
         <Button data-variant="primary" disabled={submitting} css={widthFull} type="submit">

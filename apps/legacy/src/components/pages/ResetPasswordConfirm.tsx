@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { RegisterOptions as ValidationRules } from 'react-hook-form/dist/types/validator';
+import { RegisterOptions, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { post } from '../../api/request';
 import { useTitle } from '../../hooks/useTitle';
@@ -47,7 +46,7 @@ function ResetPasswordConfirm() {
   const passwordRepeatValidation = {
     ...passwordValidation,
     validate: (value: string) => value === watch('password') || '两次输入的密码不相同',
-  } satisfies ValidationRules;
+  } satisfies RegisterOptions;
   return (
     <>
       <Title>重设密码</Title>

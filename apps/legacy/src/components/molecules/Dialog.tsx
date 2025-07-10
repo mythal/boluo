@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback, useEffect } from 'react';
-import rotateIcon from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../../styles/atoms';
 import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '../../styles/colors';
 import Button, { ButtonVariant } from '../atoms/Button';
@@ -109,7 +109,7 @@ function Dialog({
             data-variant={confirmButtonVariant}
             onClick={confirm}
           >
-            {loading && <Icon sprite={rotateIcon} spin />}
+            {loading && <Icon icon={RotateCw} spin />}
             {confirmText}
           </Button>
         </div>

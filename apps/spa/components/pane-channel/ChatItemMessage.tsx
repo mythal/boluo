@@ -51,9 +51,9 @@ export const ChatItemMessage: FC<{
   const nameNode = useMemo(
     () => (
       <Name
-        inGame={message.inGame}
+        inGame={message.inGame ?? false}
         name={message.name}
-        isMaster={isMaster}
+        isMaster={isMaster ?? false}
         self={sendBySelf}
         user={user}
       />
@@ -76,7 +76,7 @@ export const ChatItemMessage: FC<{
   return (
     <MessageBox
       sendBySelf={sendBySelf}
-      inGame={message.inGame}
+      inGame={message.inGame ?? false}
       message={message}
       draggable={draggable}
       overlay={overlay}
@@ -113,9 +113,9 @@ export const ChatItemMessage: FC<{
             <Content
               source={parsed.text}
               entities={parsed.entities}
-              isAction={isAction}
+              isAction={isAction ?? false}
               nameNode={nameNode}
-              isArchived={message.folded}
+              isArchived={message.folded ?? false}
               seed={message.seed}
               onContextMenu={stopPropagation}
               onDoubleClick={stopPropagation}

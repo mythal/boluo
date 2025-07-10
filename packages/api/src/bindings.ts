@@ -332,18 +332,18 @@ export type Message = {
   id: string;
   senderId: string;
   channelId: string;
-  parentMessageId: string | null;
+  parentMessageId?: string | null;
   name: string;
-  mediaId: string | null;
+  mediaId?: string | null;
   seed: number[];
-  inGame: boolean;
-  isAction: boolean;
-  isMaster: boolean;
-  pinned: boolean;
-  tags: string[];
-  folded: boolean;
+  inGame?: boolean;
+  isAction?: boolean;
+  isMaster?: boolean;
+  pinned?: boolean;
+  tags?: string[];
+  folded?: boolean;
   text: string;
-  whisperToUsers: string[] | null;
+  whisperToUsers?: string[] | null;
   entities: Entities;
   created: string;
   modified: string;
@@ -392,32 +392,53 @@ export type PreSignResult = { url: string; mediaId: string };
 
 export type Preview = {
   id: string;
+  /**
+   * The version of the preview
+   *
+   * Every edit will increase the version.
+   */
+  v?: number;
   senderId: string;
   channelId: string;
-  parentMessageId: string | null;
+  parentMessageId?: string | null;
   name: string;
-  mediaId: string | null;
-  inGame: boolean;
-  isAction: boolean;
-  isMaster: boolean;
-  clear: boolean;
-  text: string | null;
-  whisperToUsers: string[] | null;
+  mediaId?: string | null;
+  inGame?: boolean;
+  isAction?: boolean;
+  isMaster?: boolean;
+  clear?: boolean;
+  text?: string | null;
+  whisperToUsers?: string[] | null;
   entities: Entities;
   pos: number;
-  editFor: string | null;
-  edit: PreviewEdit | null;
+  editFor?: string | null;
+  edit?: PreviewEdit | null;
 };
+
+export type PreviewDiff = {
+  /**
+   * The version of the diff reference
+   */
+  v: number;
+  /**
+   * The final length after the diff
+   */
+  len: number;
+  op: PreviewDiffOp;
+};
+
+export type PreviewDiffOp = { End: [string, number] };
 
 export type PreviewEdit = { time: string; p: number; q: number };
 
 export type PreviewPost = {
   id: string;
+  v?: number;
   channelId: string;
   name: string;
   mediaId: string | null;
-  inGame: boolean;
-  isAction: boolean;
+  inGame?: boolean;
+  isAction?: boolean;
   text: string | null;
   clear?: boolean;
   entities: Entities;

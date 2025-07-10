@@ -72,19 +72,28 @@ pub struct Message {
     pub id: Uuid,
     pub sender_id: Uuid,
     pub channel_id: Uuid,
+    #[serde(default)]
     pub parent_message_id: Option<Uuid>,
     pub name: String,
+    #[serde(default)]
     pub media_id: Option<Uuid>,
     pub seed: Vec<u8>,
     #[serde(skip)]
     pub deleted: bool,
+    #[serde(default)]
     pub in_game: bool,
+    #[serde(default)]
     pub is_action: bool,
+    #[serde(default)]
     pub is_master: bool,
+    #[serde(default)]
     pub pinned: bool,
+    #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
     pub folded: bool,
     pub text: String,
+    #[serde(default)]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
     pub created: DateTime<Utc>,

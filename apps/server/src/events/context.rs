@@ -363,7 +363,7 @@ fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut Pre
 
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
-        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(32);
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(1024);
         let manager = MailboxManager::new(id, tx);
         let span = tracing::info_span!("MailboxState", mailbox_id = %id);
         tokio::spawn(async move {
@@ -406,6 +406,7 @@ impl MailBoxState {
                         status_state.update(StatusAction::Broadcast);
                     }
                     _ = cleanup_interval.tick() => {
+                        // If there are still actions to process, skip cleanup
                         if !rx.is_empty() {
                             continue;
                         }

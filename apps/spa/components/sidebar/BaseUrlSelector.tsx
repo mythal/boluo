@@ -6,6 +6,7 @@ import { useProxies } from '../../hooks/useProxies';
 import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 import useSWR from 'swr';
 import { backendUrlConfigAtom, testProxies } from '../../base-url';
+import { updateRouteStats, convertTestResult } from '../../hooks/useRouteMovingAverage';
 
 export const BaseUrlSelector: FC = () => {
   const proxies = useProxies();
@@ -13,6 +14,15 @@ export const BaseUrlSelector: FC = () => {
     refreshInterval: 2000,
     fallbackData: [],
     suspense: false,
+    onSuccess: (testResults) => {
+      // Update EMA statistics when UI test results are received
+      if (testResults) {
+        testResults.forEach((record) => {
+          const measureResult = convertTestResult(record.rtt);
+          updateRouteStats(record.proxy.url, measureResult);
+        });
+      }
+    },
   });
   const [backendUrlConfig, setBackendUrlConfig] = useAtom(backendUrlConfigAtom);
   const [backendUrl, setBackendUrl] = useAtom(backendUrlAtom);

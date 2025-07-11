@@ -4,7 +4,7 @@ use crate::channels::api::MemberWithUser;
 use crate::error::AppError;
 use crate::events::context::{CachedUpdates, EncodedUpdate};
 use crate::events::models::{StatusKind, UserStatus};
-use crate::events::preview::{Preview, PreviewPost};
+use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost};
 use crate::info::BasicInfo;
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
@@ -56,6 +56,8 @@ pub enum ClientEvent {
     #[serde(rename_all = "camelCase")]
     Preview { preview: PreviewPost },
     #[serde(rename_all = "camelCase")]
+    Diff { preview: PreviewDiffPost },
+    #[serde(rename_all = "camelCase")]
     Status { kind: StatusKind, focus: Vec<Uuid> },
 }
 
@@ -90,6 +92,11 @@ pub enum UpdateBody {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
         preview: Box<Preview>,
+    },
+    Diff {
+        #[serde(rename = "channelId")]
+        channel_id: Uuid,
+        diff: Box<PreviewDiff>,
     },
     ChannelDeleted {
         #[serde(rename = "channelId")]
@@ -147,6 +154,7 @@ impl UpdateBody {
             | ChannelEdited { channel_id, .. } => Some(*channel_id),
             | Members { channel_id, .. } => Some(*channel_id),
             | ChannelDeleted { channel_id } => Some(*channel_id),
+            | Diff { channel_id, .. } => Some(*channel_id),
 
             | Initialized
             | StatusMap { .. }
@@ -165,6 +173,7 @@ impl UpdateBody {
             | MessageEdited { message, .. } => Some(message.id),
 
             | MessagePreview { .. }
+            | Diff { .. }
             | ChannelEdited { .. }
             | ChannelDeleted { .. }
             | Members { .. }
@@ -268,6 +277,16 @@ impl Update {
             },
             mailbox,
         );
+    }
+
+    pub fn preview_diff(mailbox: Uuid, diff: PreviewDiff) {
+        Update::fire(
+            UpdateBody::Diff {
+                channel_id: diff.payload.channel_id,
+                diff: Box::new(diff),
+            },
+            mailbox,
+        )
     }
 
     pub async fn status(
@@ -481,6 +500,7 @@ impl Update {
             UpdateBody::MessageDeleted { .. } => "MessageDeleted",
             UpdateBody::MessageEdited { .. } => "MessageEdited",
             UpdateBody::MessagePreview { .. } => "MessagePreview",
+            UpdateBody::Diff { .. } => "Diff",
             UpdateBody::ChannelDeleted { .. } => "ChannelDeleted",
             UpdateBody::ChannelEdited { .. } => "ChannelEdited",
             UpdateBody::Members { .. } => "Members",

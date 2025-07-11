@@ -77,6 +77,7 @@ export type ChildText = { type: 'Text' } & Span;
 
 export type ClientEvent =
   | { type: 'PREVIEW'; preview: PreviewPost }
+  | { type: 'DIFF'; preview: PreviewDiffPost }
   | { type: 'STATUS'; kind: StatusKind; focus: string[] };
 
 export type CocRoll = { subType: CocRollSubType; target?: PureExprNode | null };
@@ -396,6 +397,8 @@ export type Preview = {
    * The version of the preview
    *
    * Every edit will increase the version.
+   *
+   * Start from 1.
    */
   v?: number;
   senderId: string;
@@ -415,19 +418,41 @@ export type Preview = {
   edit?: PreviewEdit | null;
 };
 
-export type PreviewDiff = {
+export type PreviewDiff = { sender: string; _: PreviewDiffPost };
+
+export type PreviewDiffOp =
+  | { type: 'SPLICE'; i: number; len: number; _: string }
+  | { type: 'A'; _: string }
+  | { type: 'NAME'; name: string };
+
+export type PreviewDiffPost = {
+  /**
+   * Channel ID
+   */
+  ch: string;
+  /**
+   * The id of the preview that is being edited
+   */
+  id: string;
   /**
    * The version of the diff reference
    */
-  v: number;
+  ref: number;
   /**
-   * The final length after the diff
+   * The version of the diff
+   *
+   * Every edit will increase the version.
    */
-  len: number;
+  v?: number;
+  /**
+   * The operation of the diff
+   */
   op: PreviewDiffOp;
+  /**
+   * Changed entities
+   */
+  '~'?: [number, Entity][];
 };
-
-export type PreviewDiffOp = { End: [string, number] };
 
 export type PreviewEdit = { time: string; p: number; q: number };
 
@@ -542,6 +567,7 @@ export type UpdateBody =
   | { type: 'MESSAGE_DELETED'; messageId: string; channelId: string; pos: number }
   | { type: 'MESSAGE_EDITED'; channelId: string; message: Message; oldPos: number }
   | { type: 'MESSAGE_PREVIEW'; channelId: string; preview: Preview }
+  | { type: 'DIFF'; channelId: string; diff: PreviewDiff }
   | { type: 'CHANNEL_DELETED'; channelId: string }
   | { type: 'CHANNEL_EDITED'; channelId: string; channel: Channel }
   | { type: 'MEMBERS'; channelId: string; members: MemberWithUser[] }

@@ -170,6 +170,15 @@ async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &
                 tracing::warn!("Failed to broadcast preview update: {}", err);
             };
         }
+        ClientEvent::Diff { preview } => {
+            let Some(session) = session else {
+                tracing::warn!("An user tried to diff preview without authentication");
+                return;
+            };
+            if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
+                tracing::warn!(error = %err, "Failed to broadcast preview diff update");
+            }
+        }
         ClientEvent::Status { kind, focus } => {
             if let Some(session) = session {
                 if let Err(err) =

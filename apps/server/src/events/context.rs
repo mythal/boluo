@@ -2,7 +2,7 @@ use crate::channels::ChannelMember;
 use crate::channels::models::Member;
 use crate::events::models::UserStatus;
 use crate::events::status::StatusAction;
-use crate::events::types::ChannelUserId;
+use crate::events::types::{ChannelUserId, UpdateBody};
 use crate::events::{StatusMap, Update};
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
@@ -238,10 +238,12 @@ pub struct MailBoxState {
 }
 
 type PreviewMap = std::collections::HashMap<ChannelUserId, EncodedUpdate, ahash::RandomState>;
+type DiffMap = std::collections::HashMap<ChannelUserId, EncodedUpdate, ahash::RandomState>;
 
 fn on_update(
     updates: &mut BTreeMap<EventId, EncodedUpdate>,
     preview_map: &mut PreviewMap,
+    diff_map: &mut DiffMap,
     mut encoded_update: EncodedUpdate,
 ) {
     use super::types::UpdateBody::*;
@@ -254,7 +256,39 @@ fn on_update(
                     return;
                 }
             }
+            if let Some(diff) = diff_map.get(&key) {
+                if let UpdateBody::Diff { diff, .. } = &diff.update.body {
+                    if diff.payload.id != preview.id
+                        || diff.payload.reference_version != preview.version
+                    {
+                        diff_map.remove(&key);
+                    }
+                };
+            }
             preview_map.insert(key, encoded_update);
+        }
+        | Diff {
+            channel_id, diff, ..
+        } => {
+            let key = ChannelUserId::new(*channel_id, diff.sender);
+            let Some(reference_preview_update) = preview_map.get(&key) else {
+                return;
+            };
+            if reference_preview_update.update.id >= update.id {
+                return;
+            }
+            let UpdateBody::MessagePreview {
+                preview: reference_preview,
+                ..
+            } = &reference_preview_update.update.body
+            else {
+                return;
+            };
+            if reference_preview.version != diff.payload.reference_version {
+                return;
+            }
+
+            diff_map.insert(key, encoded_update);
         }
         | NewMessage {
             channel_id,
@@ -340,7 +374,11 @@ fn on_update(
     }
 }
 
-fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut PreviewMap) {
+fn cleanup(
+    updates: &mut BTreeMap<EventId, EncodedUpdate>,
+    preview_map: &mut PreviewMap,
+    diff_map: &mut DiffMap,
+) {
     use super::types::UpdateBody::*;
 
     let now = timestamp();
@@ -375,6 +413,22 @@ fn cleanup(updates: &mut BTreeMap<EventId, EncodedUpdate>, preview_map: &mut Pre
         );
         preview_map.shrink_to_fit();
     }
+    diff_map.retain(|_, diff_update| match &diff_update.update.body {
+        | Diff {
+            channel_id, diff, ..
+        } => {
+            let key = ChannelUserId::new(*channel_id, diff.sender);
+            let Some(reference_preview_update) = preview_map.get(&key) else {
+                return false;
+            };
+            let UpdateBody::MessagePreview { preview, .. } = &reference_preview_update.update.body
+            else {
+                return false;
+            };
+            diff.payload.id == preview.id && diff.payload.reference_version == preview.version
+        }
+        _ => false,
+    });
 }
 
 impl MailBoxState {
@@ -385,6 +439,7 @@ impl MailBoxState {
         tokio::spawn(async move {
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+            let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
             let mut last_activity_at = std::time::Instant::now();
             let mut members_state = members::MembersCache::new();
             let mut status_state = super::status::StatusState::new(id);
@@ -408,6 +463,9 @@ impl MailBoxState {
                                 for preview in preview_map.values() {
                                     updates.insert(preview.update.id, preview.encoded.clone());
                                 }
+                                for diff in diff_map.values() {
+                                    updates.insert(diff.update.id, diff.encoded.clone());
+                                }
                                 sender.send(CachedUpdates {
                                     updates,
                                     start_at,
@@ -416,7 +474,7 @@ impl MailBoxState {
                             Action::Update(encoded_update) => {
                                 last_activity_at = std::time::Instant::now();
                                 let update_name = encoded_update.update.name();
-                                on_update(&mut updates, &mut preview_map, *encoded_update);
+                                on_update(&mut updates, &mut preview_map, &mut diff_map, *encoded_update);
                                 let elapsed = start.elapsed();
                                 if elapsed > std::time::Duration::from_millis(100) {
                                     tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
@@ -444,7 +502,7 @@ impl MailBoxState {
                             break;
                         } else {
                             let before_size = updates.len();
-                            cleanup(&mut updates, &mut preview_map);
+                            cleanup(&mut updates, &mut preview_map, &mut diff_map);
                             let after_size = updates.len();
                             if after_size != before_size {
                                 tracing::info!(mailbox_id = %id, "Cleaned up {} updates", before_size - after_size);

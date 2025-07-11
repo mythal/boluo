@@ -476,7 +476,7 @@ impl MailBoxState {
                                 let update_name = encoded_update.update.name();
                                 on_update(&mut updates, &mut preview_map, &mut diff_map, *encoded_update);
                                 let elapsed = start.elapsed();
-                                if elapsed > std::time::Duration::from_millis(100) {
+                                if elapsed > std::time::Duration::from_millis(25) {
                                     tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
                                 }
                             }

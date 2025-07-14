@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users_extension (user_id, settings)\n    VALUES ($1, $2)\nON CONFLICT (user_id)\n    DO UPDATE SET\n        settings = $2\n    RETURNING\n        users_extension AS \"user_ext!: UserExt\";\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_ext!: UserExt",
+        "type_info": {
+          "Custom": {
+            "name": "users_extension",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "settings",
+                  "Jsonb"
+                ],
+                [
+                  "email_verified_at",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9e009e558adbeedc149439433424be47333b21ec534ce38f24131bfab2c332d1"
+}

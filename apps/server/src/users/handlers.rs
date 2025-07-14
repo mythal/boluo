@@ -510,6 +510,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         email: user.email,
         username: user.username,
         name: user.nickname,
+        require_activation: true,
         bio: if user.bio.is_empty() {
             None
         } else {

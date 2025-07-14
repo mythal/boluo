@@ -13,7 +13,6 @@ swap_size_mb = 256
 [env]
   APP_URL = 'https://app.boluo-staging.mythal.net'
   BACKEND_URL = 'https://server.boluo-staging.mythal.net'
-  LOGIN_URL = "https://site.boluo-staging.mythal.net/account/login"
   PUBLIC_MEDIA_URL = 'https://media.boluo.chat'
   FLY_BACKEND_APP_NAME = 'boluo-server-staging'
   HOSTNAME = '0.0.0.0'

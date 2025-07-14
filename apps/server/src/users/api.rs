@@ -93,3 +93,27 @@ pub struct ResetPasswordConfirm {
 pub struct ResetPasswordTokenCheck {
     pub token: String,
 }
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscourseConnect {
+    pub sso: String,
+    pub sig: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DiscoursePayload {
+    pub nonce: String,
+    pub return_sso_url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DiscourseResponse {
+    pub nonce: String,
+    pub external_id: String,
+    pub email: String,
+    pub username: String,
+    pub name: String,
+    pub bio: Option<String>,
+    pub avatar_url: Option<String>,
+}

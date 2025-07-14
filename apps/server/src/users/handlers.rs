@@ -603,7 +603,8 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
 
     // Get user data
     let pool = db::get().await;
-    let user = User::get_by_id(&pool, &session.user_id)
+    let mut conn = pool.acquire().await?;
+    let user = User::get_by_id(&mut *conn, &session.user_id)
         .await
         .or_not_found()?;
 
@@ -618,7 +619,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         .avatar_id
         .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
-    let email_verified: bool = UserExt::is_email_verified(&pool, user.id).await?;
+    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
 
     // Create response payload
     let response_data = DiscourseResponse {

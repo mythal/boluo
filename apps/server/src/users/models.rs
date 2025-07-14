@@ -275,6 +275,94 @@ impl User {
         CACHE.User.insert(user.id, user.clone().into());
         Ok(user)
     }
+
+    pub fn generate_email_verification_token(user_id: &Uuid) -> String {
+        use crate::utils::sign;
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
+        use chrono::Utc;
+
+        // Token expires in 24 hours
+        let expire_sec = 60 * 60 * 24;
+        let timestamp = Utc::now().timestamp() + expire_sec;
+
+        // Format: user_id.timestamp.signature
+        let mut buffer = String::with_capacity(128);
+        base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
+        buffer.push('.');
+        buffer.push_str(&timestamp.to_string());
+
+        let signature = sign(&buffer);
+        buffer.push('.');
+        base64_engine.encode_string(signature, &mut buffer);
+        buffer
+    }
+
+    pub fn verify_email_verification_token(token: &str) -> Result<Uuid, anyhow::Error> {
+        use crate::utils::verify;
+        use anyhow::Context;
+        use base64::{Engine as _, engine::general_purpose};
+        use chrono::Utc;
+
+        let mut iter = token.split('.');
+        let parse_failed =
+            || anyhow::anyhow!("Failed to parse email verification token: {}", token);
+
+        let user_id_str = iter.next().ok_or_else(parse_failed)?;
+        let timestamp_str = iter.next().ok_or_else(parse_failed)?;
+        let signature = iter.next().ok_or_else(parse_failed)?;
+
+        // Verify signature
+        let message = format!("{}.{}", user_id_str, timestamp_str);
+        verify(&message, signature)?;
+
+        // Check expiration
+        let timestamp: i64 = timestamp_str
+            .parse()
+            .context("Failed to parse timestamp in email verification token")?;
+        let now = Utc::now().timestamp();
+        if now > timestamp {
+            return Err(anyhow::anyhow!("Email verification token has expired"));
+        }
+
+        // Decode user ID
+        let user_id_bytes = general_purpose::URL_SAFE_NO_PAD
+            .decode(user_id_str)
+            .or_else(|_| general_purpose::URL_SAFE.decode(user_id_str))
+            .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(user_id_str))
+            .or_else(|_| general_purpose::STANDARD.decode(user_id_str))
+            .context("Failed to decode user ID in email verification token")?;
+
+        Uuid::from_slice(&user_id_bytes).context("Failed to convert user ID bytes to UUID")
+    }
+
+    pub async fn verify_email(
+        db: &mut sqlx::PgConnection,
+        user_id: &Uuid,
+    ) -> Result<User, ModelError> {
+        // Update email_verified_at in users_extension table
+        sqlx::query!(
+            r#"INSERT INTO users_extension (user_id, email_verified_at, settings)
+               VALUES ($1, now() at time zone 'utc', '{}')
+               ON CONFLICT (user_id)
+               DO UPDATE SET email_verified_at = now() at time zone 'utc'"#,
+            user_id
+        )
+        .execute(&mut *db)
+        .await?;
+
+        // Get the user
+        let user = User::get_by_id(&mut *db, user_id)
+            .await?
+            .ok_or_else(|| sqlx::Error::RowNotFound)?;
+
+        // Invalidate cache
+        CACHE.User.insert(user.id, user.clone().into());
+        CACHE
+            .invalidate(crate::cache::CacheType::UserExt, *user_id)
+            .await;
+
+        Ok(user)
+    }
 }
 
 #[derive(Debug, Serialize, Clone, sqlx::Type)]
@@ -283,6 +371,7 @@ impl User {
 pub struct UserExt {
     pub user_id: Uuid,
     pub settings: serde_json::Value,
+    pub email_verified_at: Option<DateTime<Utc>>,
 }
 
 impl Lifespan for UserExt {
@@ -302,6 +391,7 @@ impl UserExt {
                 .map(|settings| UserExt {
                     settings: settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
                     user_id,
+                    email_verified_at: None, // Will be fetched separately
                 })
         })
         .await
@@ -319,6 +409,7 @@ impl UserExt {
         let user_ext = UserExt {
             settings: settings.clone(),
             user_id,
+            email_verified_at: None, // Settings update doesn't change email verification
         };
         CACHE.UserExt.insert(user_id, user_ext.into());
         Ok(settings)
@@ -336,8 +427,37 @@ impl UserExt {
         let user_ext = UserExt {
             settings: settings.clone(),
             user_id,
+            email_verified_at: None, // Settings update doesn't change email verification
         };
         CACHE.UserExt.insert(user_id, user_ext.into());
         Ok(settings)
+    }
+
+    pub async fn is_email_verified<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query_scalar!(
+            "SELECT email_verified_at FROM users_extension WHERE user_id = $1",
+            user_id
+        )
+        .fetch_optional(db)
+        .await?;
+
+        Ok(result.flatten().is_some())
+    }
+
+    pub async fn get_email_verified_at<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+        let result = sqlx::query_scalar!(
+            "SELECT email_verified_at FROM users_extension WHERE user_id = $1",
+            user_id
+        )
+        .fetch_optional(db)
+        .await?;
+
+        Ok(result.flatten())
     }
 }

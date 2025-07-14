@@ -96,6 +96,19 @@ pub struct ResetPasswordTokenCheck {
 
 #[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
+pub struct VerifyEmail {
+    pub token: String,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ResendEmailVerification {
+    #[serde(default)]
+    pub lang: Option<String>,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DiscourseConnect {
     pub sso: String,
     pub sig: String,

@@ -140,6 +140,8 @@ export type DicePoolResult = {
   fumble?: number | null;
 } & { value: number; values: number[] };
 
+export type DiscourseConnect = { sso: string; sig: string };
+
 export type DiskInfo = { name: string; mount_point: string; available: number; total: number };
 
 export type EditChannel = {
@@ -497,6 +499,8 @@ export type RepeatResult = { node: ExprNode; count: number } & {
   value: number;
 };
 
+export type ResendEmailVerification = { lang?: string | null };
+
 export type ResetPassword = { email: string; lang: string | null };
 
 export type ResetPasswordConfirm = { token: string; password: string };
@@ -609,3 +613,5 @@ export type User = {
 };
 
 export type UserStatus = { timestamp: number; kind: StatusKind; focus: string[] };
+
+export type VerifyEmail = { token: string };

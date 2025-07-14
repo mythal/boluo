@@ -116,4 +116,5 @@ pub struct DiscourseResponse {
     pub name: String,
     pub bio: Option<String>,
     pub avatar_url: Option<String>,
+    pub require_activation: bool,
 }

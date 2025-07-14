@@ -446,7 +446,45 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
 
     // Authenticate the user
-    let session = authenticate(&req).await?;
+    let session = match authenticate(&req).await {
+        Ok(session) => session,
+        Err(AppError::Unauthenticated(_)) => {
+            // User not authenticated, redirect to login with next parameter
+            let login_url = std::env::var("LOGIN_URL")
+                .map_err(|_| AppError::BadRequest("LOGIN_URL not configured".to_string()))?;
+
+            // Encode the current request URL as the next parameter
+            use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'<')
+                .add(b'>')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=');
+
+            let current_url = format!(
+                "/api/users/discourse/start?sso={}&sig={}",
+                utf8_percent_encode(&sso, QUERY).to_string(),
+                utf8_percent_encode(&sig, QUERY).to_string()
+            );
+            let encoded_next = utf8_percent_encode(&current_url, QUERY).to_string();
+            let redirect_url = format!("{}?next={}", login_url, encoded_next);
+
+            tracing::info!(
+                redirect_url = %redirect_url,
+                "Redirecting unauthenticated user to login"
+            );
+
+            return hyper::Response::builder()
+                .status(hyper::StatusCode::FOUND)
+                .header(hyper::header::LOCATION, redirect_url)
+                .body(Vec::new())
+                .map_err(|e| AppError::Unexpected(e.into()));
+        }
+        Err(e) => return Err(e),
+    };
 
     // Get user data
     let pool = db::get().await;

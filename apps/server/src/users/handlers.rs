@@ -33,11 +33,15 @@ async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     }: Register = interface::parse_body(req).await?;
     let pool = db::get().await;
     let user = User::register(&pool, &email, &username, &nickname, &password).await?;
+
+    // Send email verification
+    send_email_verification(&user.email, &user.id, None).await?;
+
     tracing::info!(
         username = %user.username,
         email = %user.email,
         id = %user.id,
-        "A new user was registered"
+        "A new user was registered and verification email sent"
     );
     Ok(user)
 }
@@ -410,6 +414,114 @@ pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppEr
     Ok(())
 }
 
+async fn send_email_verification(
+    email: &str,
+    user_id: &Uuid,
+    lang: Option<&str>,
+) -> Result<(), AppError> {
+    let token = User::generate_email_verification_token(user_id);
+    let lang = lang.unwrap_or("en");
+
+    match lang {
+        "zh" | "zh-CN" | "zh_CN" => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.zh-CN.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.zh-CN.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "zh-TW" | "zh_TW" => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.zh-TW.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.zh-TW.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "ja" => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.ja.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.ja.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        _ => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.en.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.en.html"),
+                    token
+                ),
+            )
+            .await
+        }
+    }
+    .map_err(AppError::Unexpected)?;
+    Ok(())
+}
+
+pub async fn verify_email(req: Request<impl Body>) -> Result<(), AppError> {
+    use crate::users::api::VerifyEmail;
+    let VerifyEmail { token } = parse_query(req.uri())?;
+
+    let user_id = User::verify_email_verification_token(&token)
+        .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
+
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    User::verify_email(&mut *conn, &user_id).await?;
+
+    tracing::info!(
+        user_id = %user_id,
+        "User email verified successfully"
+    );
+
+    Ok(())
+}
+
+pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), AppError> {
+    use crate::session::authenticate;
+    use crate::users::api::ResendEmailVerification;
+
+    let session = authenticate(&req).await?;
+    let ResendEmailVerification { lang } = parse_body(req).await?;
+
+    let pool = db::get().await;
+    let user = User::get_by_id(&pool, &session.user_id)
+        .await
+        .or_not_found()?;
+
+    // Check if email is already verified
+    let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
+    if is_verified {
+        return Err(AppError::BadRequest(
+            "Email is already verified".to_string(),
+        ));
+    }
+
+    send_email_verification(&user.email, &user.id, lang.as_deref()).await?;
+
+    tracing::info!(
+        user_id = %user.id,
+        email = %user.email,
+        "Resent email verification"
+    );
+
+    Ok(())
+}
+
 /// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
 pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
@@ -576,6 +688,10 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u
         }
         ("/discourse/start", Method::GET) => discourse_login(req).await,
         ("/discourse/start", Method::POST) => discourse_login(req).await,
+        ("/verify_email", Method::GET) => verify_email(req).await.map(ok_response),
+        ("/resend_email_verification", Method::POST) => {
+            resend_email_verification(req).await.map(ok_response)
+        }
         _ => missing(),
     }
 }

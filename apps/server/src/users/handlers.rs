@@ -90,8 +90,8 @@ pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value
     };
 
     let pool = db::get().await;
-    let settings = UserExt::get_settings(&pool, session.user_id).await?;
-    Ok(settings)
+    let user_ext = UserExt::get(&pool, session.user_id).await?;
+    Ok(user_ext.settings)
 }
 
 impl Lifespan for GetMe {
@@ -116,10 +116,10 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                 }
                 let my_spaces = Space::get_by_user(&mut conn, user.id).await?;
                 let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
-                let settings = UserExt::get_settings(&mut *conn, user.id).await?;
+                let user_ext = UserExt::get(&mut *conn, user.id).await?;
                 let get_me = GetMe {
                     user,
-                    settings,
+                    settings: user_ext.settings,
                     my_channels,
                     my_spaces,
                 };
@@ -177,17 +177,17 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut conn, user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
-    let settings = UserExt::get_settings(&mut *conn, user_id).await?;
+    let user_ext = UserExt::get(&mut *conn, user_id).await?;
     let me = GetMe {
         user,
-        settings: settings.clone(),
+        settings: user_ext.settings.clone(),
         my_spaces,
         my_channels,
     };
     CACHE.GetMe.insert(user_id, me.clone().into());
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
-    add_settings_cookie(&settings, headers);
+    add_settings_cookie(&user_ext.settings, headers);
     if !form.with_token {
         add_session_cookie(&session.id, is_debug, headers);
     }
@@ -241,9 +241,8 @@ pub async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Valu
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
     let pool = db::get().await;
-    UserExt::update_settings(&pool, session.user_id, settings)
-        .await
-        .map_err(Into::into)
+    let user_ext = UserExt::update_settings(&pool, session.user_id, settings).await?;
+    Ok(user_ext.settings)
 }
 
 pub async fn partial_update_settings(
@@ -253,9 +252,8 @@ pub async fn partial_update_settings(
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
     let pool = db::get().await;
-    UserExt::partial_update_settings(&pool, session.user_id, settings)
-        .await
-        .map_err(Into::into)
+    let user_ext = UserExt::partial_update_settings(&pool, session.user_id, settings).await?;
+    Ok(user_ext.settings)
 }
 
 pub async fn edit_avatar(req: Request<Incoming>) -> Result<User, AppError> {

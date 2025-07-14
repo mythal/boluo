@@ -380,57 +380,41 @@ impl Lifespan for UserExt {
     }
 }
 impl UserExt {
-    pub async fn get_settings<'c, T: sqlx::PgExecutor<'c>>(
+    pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
-    ) -> Result<serde_json::Value, sqlx::Error> {
+    ) -> Result<UserExt, sqlx::Error> {
         fetch_entry(&CACHE.UserExt, user_id, async {
-            sqlx::query_file_scalar!("sql/users/get_settings.sql", user_id)
-                .fetch_optional(db)
+            sqlx::query_file_scalar!("sql/users/get_users_extension.sql", user_id)
+                .fetch_one(db)
                 .await
-                .map(|settings| UserExt {
-                    settings: settings.unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
-                    user_id,
-                    email_verified_at: None, // Will be fetched separately
-                })
         })
         .await
-        .map(|user_ext| user_ext.settings)
     }
 
     pub async fn update_settings<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
         settings: serde_json::Value,
-    ) -> Result<serde_json::Value, sqlx::Error> {
-        let settings = sqlx::query_file_scalar!("sql/users/set_settings.sql", user_id, settings)
+    ) -> Result<UserExt, sqlx::Error> {
+        let user_ext = sqlx::query_file_scalar!("sql/users/set_settings.sql", user_id, settings)
             .fetch_one(db)
             .await?;
-        let user_ext = UserExt {
-            settings: settings.clone(),
-            user_id,
-            email_verified_at: None, // Settings update doesn't change email verification
-        };
-        CACHE.UserExt.insert(user_id, user_ext.into());
-        Ok(settings)
+        CACHE.UserExt.insert(user_id, user_ext.clone().into());
+        Ok(user_ext)
     }
 
     pub async fn partial_update_settings<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
         settings: serde_json::Value,
-    ) -> Result<serde_json::Value, sqlx::Error> {
-        let settings =
+    ) -> Result<UserExt, sqlx::Error> {
+        let user_ext =
             sqlx::query_file_scalar!("sql/users/partial_set_settings.sql", user_id, settings)
                 .fetch_one(db)
                 .await?;
-        let user_ext = UserExt {
-            settings: settings.clone(),
-            user_id,
-            email_verified_at: None, // Settings update doesn't change email verification
-        };
-        CACHE.UserExt.insert(user_id, user_ext.into());
-        Ok(settings)
+        CACHE.UserExt.insert(user_id, user_ext.clone().into());
+        Ok(user_ext)
     }
 
     pub async fn is_email_verified<'c, T: sqlx::PgExecutor<'c>>(

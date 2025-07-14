@@ -16,7 +16,6 @@ import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
 import { type StyleProps } from '@boluo/utils';
-import { useRouter } from 'next/router';
 
 interface Props extends StyleProps {
   onSuccess?: () => void;
@@ -121,7 +120,6 @@ const FormContent: FC = () => {
 
 export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => {
   const { mutate } = useSWRConfig();
-  const router = useRouter();
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
@@ -142,13 +140,6 @@ export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => 
       undefined,
       { revalidate: true },
     );
-    // Check if there's a "next" parameter from DiscourseConnect
-    const nextUrl = router.query.next;
-    if (typeof nextUrl === 'string' && nextUrl.trim() !== '') {
-      // Redirect to the next URL
-      window.location.href = nextUrl;
-      return;
-    }
 
     if (onSuccess) {
       onSuccess();

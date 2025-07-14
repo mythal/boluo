@@ -410,6 +410,107 @@ pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppEr
     Ok(())
 }
 
+/// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
+pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
+    use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
+    use crate::context::media_public_url;
+    use crate::session::authenticate;
+    use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
+    use ring::hmac;
+
+    // Parse the SSO request
+    let DiscourseConnect { sso, sig } = parse_query(req.uri())?;
+
+    tracing::info!("Starting DiscourseConnect SSO authentication");
+
+    // Get the SSO secret from environment
+    let sso_secret = std::env::var("DISCOURSE_SSO_SECRET")
+        .map_err(|_| AppError::BadRequest("DISCOURSE_SSO_SECRET not configured".to_string()))?;
+
+    // Verify the signature
+    let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
+    let expected_sig = hex::encode(hmac::sign(&key, sso.as_bytes()).as_ref());
+    if sig != expected_sig {
+        return Err(AppError::BadRequest("Invalid signature".to_string()));
+    }
+
+    // Decode the SSO payload
+    let payload_bytes = base64_engine
+        .decode(&sso)
+        .map_err(|_| AppError::BadRequest("Invalid base64 payload".to_string()))?;
+    let payload_str = String::from_utf8(payload_bytes)
+        .map_err(|_| AppError::BadRequest("Invalid UTF-8 payload".to_string()))?;
+
+    // Parse the payload parameters
+    let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
+        .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
+
+    // Authenticate the user
+    let session = authenticate(&req).await?;
+
+    // Get user data
+    let pool = db::get().await;
+    let user = User::get_by_id(&pool, &session.user_id)
+        .await
+        .or_not_found()?;
+
+    tracing::info!(
+        user_id = %user.id,
+        username = %user.username,
+        "User authenticated for DiscourseConnect SSO"
+    );
+
+    // Build avatar URL if user has avatar
+    let avatar_url = user
+        .avatar_id
+        .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
+
+    // Create response payload
+    let response_data = DiscourseResponse {
+        nonce: payload.nonce,
+        external_id: user.id.to_string(),
+        email: user.email,
+        username: user.username,
+        name: user.nickname,
+        bio: if user.bio.is_empty() {
+            None
+        } else {
+            Some(user.bio)
+        },
+        avatar_url,
+    };
+
+    // Encode the response
+    let response_payload = serde_urlencoded::to_string(&response_data)
+        .map_err(|_| AppError::BadRequest("Failed to encode response".to_string()))?;
+    let response_base64 = base64_engine.encode(&response_payload);
+
+    // Sign the response
+    let response_sig = hex::encode(hmac::sign(&key, response_base64.as_bytes()).as_ref());
+
+    // Build the redirect URL
+    use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+    const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
+
+    let encoded_sso = utf8_percent_encode(&response_base64, FRAGMENT).to_string();
+    let redirect_url = format!(
+        "{}?sso={}&sig={}",
+        payload.return_sso_url, encoded_sso, response_sig
+    );
+
+    tracing::info!(
+        redirect_url = %redirect_url,
+        "Redirecting user back to Discourse"
+    );
+
+    // Return redirect response
+    hyper::Response::builder()
+        .status(hyper::StatusCode::FOUND)
+        .header(hyper::header::LOCATION, redirect_url)
+        .body(Vec::new())
+        .map_err(|e| AppError::Unexpected(e.into()))
+}
+
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u8>>, AppError> {
     match (path, req.method().clone()) {
         ("/login", Method::POST) => login(req).await,
@@ -434,6 +535,8 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u
         ("/reset_password_confirm", Method::POST) => {
             reset_password_confirm(req).await.map(ok_response)
         }
+        ("/discourse/start", Method::GET) => discourse_login(req).await,
+        ("/discourse/start", Method::POST) => discourse_login(req).await,
         _ => missing(),
     }
 }

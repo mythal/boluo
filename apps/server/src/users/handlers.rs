@@ -536,8 +536,11 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     tracing::info!("Starting DiscourseConnect SSO authentication");
 
     // Get the SSO secret from environment
-    let sso_secret = std::env::var("DISCOURSE_SSO_SECRET")
-        .map_err(|_| AppError::BadRequest("DISCOURSE_SSO_SECRET not configured".to_string()))?;
+    static DISCOURSE_SSO_SECRET: LazyLock<Option<String>> =
+        LazyLock::new(|| std::env::var("DISCOURSE_SSO_SECRET").ok());
+    let sso_secret = DISCOURSE_SSO_SECRET.as_ref().ok_or(AppError::BadRequest(
+        "DISCOURSE_SSO_SECRET not configured".to_string(),
+    ))?;
 
     // Verify the signature
     let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
@@ -615,6 +618,8 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         .avatar_id
         .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
+    let email_verified: bool = UserExt::is_email_verified(&pool, user.id).await?;
+
     // Create response payload
     let response_data = DiscourseResponse {
         nonce: payload.nonce,
@@ -622,7 +627,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         email: user.email,
         username: user.username,
         name: user.nickname,
-        require_activation: true,
+        require_activation: !email_verified,
         bio: if user.bio.is_empty() {
             None
         } else {

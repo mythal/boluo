@@ -33,11 +33,15 @@ async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     }: Register = interface::parse_body(req).await?;
     let pool = db::get().await;
     let user = User::register(&pool, &email, &username, &nickname, &password).await?;
+
+    // Send email verification
+    send_email_verification(&user.email, &user.id, None).await?;
+
     tracing::info!(
         username = %user.username,
         email = %user.email,
         id = %user.id,
-        "A new user was registered"
+        "A new user was registered and verification email sent"
     );
     Ok(user)
 }
@@ -86,8 +90,8 @@ pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value
     };
 
     let pool = db::get().await;
-    let settings = UserExt::get_settings(&pool, session.user_id).await?;
-    Ok(settings)
+    let user_ext = UserExt::get(&pool, session.user_id).await?;
+    Ok(user_ext.settings)
 }
 
 impl Lifespan for GetMe {
@@ -112,10 +116,10 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                 }
                 let my_spaces = Space::get_by_user(&mut conn, user.id).await?;
                 let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
-                let settings = UserExt::get_settings(&mut *conn, user.id).await?;
+                let user_ext = UserExt::get(&mut *conn, user.id).await?;
                 let get_me = GetMe {
                     user,
-                    settings,
+                    settings: user_ext.settings,
                     my_channels,
                     my_spaces,
                 };
@@ -173,17 +177,17 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut conn, user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
-    let settings = UserExt::get_settings(&mut *conn, user_id).await?;
+    let user_ext = UserExt::get(&mut *conn, user_id).await?;
     let me = GetMe {
         user,
-        settings: settings.clone(),
+        settings: user_ext.settings.clone(),
         my_spaces,
         my_channels,
     };
     CACHE.GetMe.insert(user_id, me.clone().into());
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
-    add_settings_cookie(&settings, headers);
+    add_settings_cookie(&user_ext.settings, headers);
     if !form.with_token {
         add_session_cookie(&session.id, is_debug, headers);
     }
@@ -237,9 +241,8 @@ pub async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Valu
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
     let pool = db::get().await;
-    UserExt::update_settings(&pool, session.user_id, settings)
-        .await
-        .map_err(Into::into)
+    let user_ext = UserExt::update_settings(&pool, session.user_id, settings).await?;
+    Ok(user_ext.settings)
 }
 
 pub async fn partial_update_settings(
@@ -249,9 +252,8 @@ pub async fn partial_update_settings(
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
     let pool = db::get().await;
-    UserExt::partial_update_settings(&pool, session.user_id, settings)
-        .await
-        .map_err(Into::into)
+    let user_ext = UserExt::partial_update_settings(&pool, session.user_id, settings).await?;
+    Ok(user_ext.settings)
 }
 
 pub async fn edit_avatar(req: Request<Incoming>) -> Result<User, AppError> {
@@ -410,6 +412,260 @@ pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppEr
     Ok(())
 }
 
+async fn send_email_verification(
+    email: &str,
+    user_id: &Uuid,
+    lang: Option<&str>,
+) -> Result<(), AppError> {
+    let token = User::generate_email_verification_token(user_id);
+    let lang = lang.unwrap_or("en");
+
+    match lang {
+        "zh" | "zh-CN" | "zh_CN" => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.zh-CN.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.zh-CN.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "zh-TW" | "zh_TW" => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.zh-TW.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.zh-TW.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "ja" => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.ja.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.ja.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        _ => {
+            mail::send(
+                email,
+                include_str!("../../text/email-verification/title.en.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-verification/content.en.html"),
+                    token
+                ),
+            )
+            .await
+        }
+    }
+    .map_err(AppError::Unexpected)?;
+    Ok(())
+}
+
+pub async fn verify_email(req: Request<impl Body>) -> Result<(), AppError> {
+    use crate::users::api::VerifyEmail;
+    let VerifyEmail { token } = parse_query(req.uri())?;
+
+    let user_id = User::verify_email_verification_token(&token)
+        .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
+
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    User::verify_email(&mut *conn, &user_id).await?;
+
+    tracing::info!(
+        user_id = %user_id,
+        "User email verified successfully"
+    );
+
+    Ok(())
+}
+
+pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), AppError> {
+    use crate::session::authenticate;
+    use crate::users::api::ResendEmailVerification;
+
+    let session = authenticate(&req).await?;
+    let ResendEmailVerification { lang } = parse_body(req).await?;
+
+    let pool = db::get().await;
+    let user = User::get_by_id(&pool, &session.user_id)
+        .await
+        .or_not_found()?;
+
+    // Check if email is already verified
+    let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
+    if is_verified {
+        return Err(AppError::BadRequest(
+            "Email is already verified".to_string(),
+        ));
+    }
+
+    send_email_verification(&user.email, &user.id, lang.as_deref()).await?;
+
+    tracing::info!(
+        user_id = %user.id,
+        email = %user.email,
+        "Resent email verification"
+    );
+
+    Ok(())
+}
+
+/// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
+pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
+    use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
+    use crate::context::media_public_url;
+    use crate::session::authenticate;
+    use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
+    use ring::hmac;
+
+    // Parse the SSO request
+    let DiscourseConnect { sso, sig } = parse_query(req.uri())?;
+
+    tracing::info!("Starting DiscourseConnect SSO authentication");
+
+    // Get the SSO secret from environment
+    static DISCOURSE_SSO_SECRET: LazyLock<Option<String>> =
+        LazyLock::new(|| std::env::var("DISCOURSE_SSO_SECRET").ok());
+    let sso_secret = DISCOURSE_SSO_SECRET.as_ref().ok_or(AppError::BadRequest(
+        "DISCOURSE_SSO_SECRET not configured".to_string(),
+    ))?;
+
+    // Verify the signature
+    let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
+    let expected_sig = hex::encode(hmac::sign(&key, sso.as_bytes()).as_ref());
+    if sig != expected_sig {
+        return Err(AppError::BadRequest("Invalid signature".to_string()));
+    }
+
+    // Decode the SSO payload
+    let payload_bytes = base64_engine
+        .decode(&sso)
+        .map_err(|_| AppError::BadRequest("Invalid base64 payload".to_string()))?;
+    let payload_str = String::from_utf8(payload_bytes)
+        .map_err(|_| AppError::BadRequest("Invalid UTF-8 payload".to_string()))?;
+
+    // Parse the payload parameters
+    let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
+        .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
+
+    // Authenticate the user
+    let session = match authenticate(&req).await {
+        Ok(session) => session,
+        Err(AppError::Unauthenticated(_)) => {
+            // User not authenticated, redirect to login with next parameter
+            let login_url = std::env::var("LOGIN_URL")
+                .map_err(|_| AppError::BadRequest("LOGIN_URL not configured".to_string()))?;
+
+            // Encode the current request URL as the next parameter
+            use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'<')
+                .add(b'>')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=');
+
+            let current_url = format!(
+                "/api/users/discourse/start?sso={}&sig={}",
+                utf8_percent_encode(&sso, QUERY).to_string(),
+                utf8_percent_encode(&sig, QUERY).to_string()
+            );
+            let encoded_next = utf8_percent_encode(&current_url, QUERY).to_string();
+            let redirect_url = format!("{}?next={}", login_url, encoded_next);
+
+            tracing::info!(
+                redirect_url = %redirect_url,
+                "Redirecting unauthenticated user to login"
+            );
+
+            return hyper::Response::builder()
+                .status(hyper::StatusCode::FOUND)
+                .header(hyper::header::LOCATION, redirect_url)
+                .body(Vec::new())
+                .map_err(|e| AppError::Unexpected(e.into()));
+        }
+        Err(e) => return Err(e),
+    };
+
+    // Get user data
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+    let user = User::get_by_id(&mut *conn, &session.user_id)
+        .await
+        .or_not_found()?;
+
+    tracing::info!(
+        user_id = %user.id,
+        username = %user.username,
+        "User authenticated for DiscourseConnect SSO"
+    );
+
+    // Build avatar URL if user has avatar
+    let avatar_url = user
+        .avatar_id
+        .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
+
+    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
+
+    // Create response payload
+    let response_data = DiscourseResponse {
+        nonce: payload.nonce,
+        external_id: user.id.to_string(),
+        email: user.email,
+        username: user.username,
+        name: user.nickname,
+        require_activation: !email_verified,
+        bio: if user.bio.is_empty() {
+            None
+        } else {
+            Some(user.bio)
+        },
+        avatar_url,
+    };
+
+    // Encode the response
+    let response_payload = serde_urlencoded::to_string(&response_data)
+        .map_err(|_| AppError::BadRequest("Failed to encode response".to_string()))?;
+    let response_base64 = base64_engine.encode(&response_payload);
+
+    // Sign the response
+    let response_sig = hex::encode(hmac::sign(&key, response_base64.as_bytes()).as_ref());
+
+    // Build the redirect URL
+    use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+    const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
+
+    let encoded_sso = utf8_percent_encode(&response_base64, FRAGMENT).to_string();
+    let redirect_url = format!(
+        "{}?sso={}&sig={}",
+        payload.return_sso_url, encoded_sso, response_sig
+    );
+
+    tracing::info!(
+        redirect_url = %redirect_url,
+        "Redirecting user back to Discourse"
+    );
+
+    // Return redirect response
+    hyper::Response::builder()
+        .status(hyper::StatusCode::FOUND)
+        .header(hyper::header::LOCATION, redirect_url)
+        .body(Vec::new())
+        .map_err(|e| AppError::Unexpected(e.into()))
+}
+
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u8>>, AppError> {
     match (path, req.method().clone()) {
         ("/login", Method::POST) => login(req).await,
@@ -433,6 +689,12 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u
         }
         ("/reset_password_confirm", Method::POST) => {
             reset_password_confirm(req).await.map(ok_response)
+        }
+        ("/discourse/start", Method::GET) => discourse_login(req).await,
+        ("/discourse/start", Method::POST) => discourse_login(req).await,
+        ("/verify_email", Method::GET) => verify_email(req).await.map(ok_response),
+        ("/resend_email_verification", Method::POST) => {
+            resend_email_verification(req).await.map(ok_response)
         }
         _ => missing(),
     }

@@ -105,18 +105,18 @@ export interface Preview {
   id: string;
   senderId: Id;
   channelId: Id;
-  parentMessageId: string | null;
+  parentMessageId?: string | null;
   name: string;
-  mediaId: Id | null;
-  inGame: boolean;
-  isAction: boolean;
-  isMaster: boolean;
-  clear: boolean;
-  text: string | null;
-  whisperToUsers: Id[] | null;
+  mediaId?: Id | null;
+  inGame?: boolean;
+  isAction?: boolean;
+  isMaster?: boolean;
+  clear?: boolean;
+  text?: string | null;
+  whisperToUsers?: Id[] | null;
   entities: Entity[];
   pos: number;
-  edit: EditPreview | null;
+  edit?: EditPreview | null;
 }
 
 export interface PreviewPost {
@@ -180,7 +180,8 @@ export interface SendStatus {
 export type ClientEvent = SendPreview | SendStatus;
 
 export const isEmptyPreview = (preview: Preview): boolean =>
-  preview.text === '' || (preview.text !== null && preview.entities.length === 0);
+  preview.text === '' ||
+  (preview.text !== null && (preview.entities == null || preview.entities.length === 0));
 
 export const compareEvents = (a: EventId, b: EventId): number => {
   if (a.timestamp !== b.timestamp) {

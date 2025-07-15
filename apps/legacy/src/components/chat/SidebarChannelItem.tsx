@@ -55,7 +55,7 @@ export function SidebarChannelItem({ channel }: Props) {
         name = latestMessage.message.name;
         break;
       case 'PREVIEW':
-        text = latestMessage.preview.text;
+        text = latestMessage.preview.text ?? null;
         name = latestMessage.preview.name;
         break;
     }

@@ -140,6 +140,7 @@ export const LoginForm: FC<Props> = ({ onSuccess, onError, className = '' }) => 
       undefined,
       { revalidate: true },
     );
+
     if (onSuccess) {
       onSuccess();
     }

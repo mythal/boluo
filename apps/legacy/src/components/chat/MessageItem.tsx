@@ -40,9 +40,9 @@ function MessageItem({
   }, []);
   const name = (
     <ChatItemName
-      inGame={message.inGame}
-      action={message.isAction}
-      master={message.isMaster}
+      inGame={message.inGame ?? false}
+      action={message.isAction ?? false}
+      master={message.isMaster ?? false}
       name={message.name}
       userId={message.senderId}
     />

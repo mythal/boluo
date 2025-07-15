@@ -2914,6 +2914,7 @@ dependencies = [
  "dotenvy",
  "futures",
  "governor",
+ "hex",
  "http-body-util",
  "hyper 1.6.0",
  "hyper-util",

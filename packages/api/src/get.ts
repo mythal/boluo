@@ -26,6 +26,7 @@ export interface Get {
   '/users/settings': { query: null; result: unknown };
   '/users/check_username': { query: CheckUsernameExists; result: boolean };
   '/users/check_email': { query: CheckEmailExists; result: boolean };
+  '/users/verify_email': { query: { token: string }; result: null };
   // spaces
   '/spaces/users_status': { query: { id: string }; result: Record<string, UserStatus> };
   '/spaces/query': { query: { id: string; token?: string }; result: Space };

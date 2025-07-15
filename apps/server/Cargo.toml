@@ -29,6 +29,7 @@ clap = { version = "4.4.12", features = ["derive"] }
 cookie = "0.18"
 dotenvy = "0.15"
 futures = "0.3"
+hex = "0.4"
 itertools = "0.14"
 tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"

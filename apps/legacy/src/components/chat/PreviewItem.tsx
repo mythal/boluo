@@ -22,7 +22,7 @@ const previewChatItem = css`
 function PreviewItem({ preview }: Props) {
   let { text, isAction, entities } = preview;
 
-  if (text === null) {
+  if (text == null) {
     text = '……（预览广播已关闭）……';
     entities = [{ type: 'Text', start: 0, len: text.length }];
     isAction = true;
@@ -30,9 +30,9 @@ function PreviewItem({ preview }: Props) {
 
   const name = (
     <ChatItemName
-      inGame={preview.inGame}
-      action={isAction}
-      master={preview.isMaster}
+      inGame={preview.inGame ?? false}
+      action={isAction ?? false}
+      master={preview.isMaster ?? false}
       name={preview.name || '无名氏'}
       userId={preview.senderId}
     />

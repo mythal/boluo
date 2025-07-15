@@ -105,6 +105,14 @@ pub fn merge_blank(s: &str) -> String {
     regex!(r"\s+").replace_all(s, " ").trim().to_string()
 }
 
+pub fn is_false(v: &bool) -> bool {
+    !v
+}
+
+pub fn is_true(v: &bool) -> bool {
+    *v
+}
+
 #[test]
 fn test_sign() {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};

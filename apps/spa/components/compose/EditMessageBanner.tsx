@@ -60,9 +60,9 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
     if (!message) return null;
     return (
       <Name
-        inGame={message.inGame}
+        inGame={message.inGame ?? false}
         name={message.name}
-        isMaster={message.isMaster}
+        isMaster={message.isMaster ?? false}
         self={currentUser.id === message.senderId}
         user={null}
       />
@@ -99,7 +99,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
             <Content
               source={message.text}
               entities={parsed.entities}
-              isAction={message.isAction}
+              isAction={message.isAction ?? false}
               isArchived={false}
               nameNode={nameNode}
             />

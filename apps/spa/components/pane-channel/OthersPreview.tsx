@@ -24,7 +24,14 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
 
   const nameNode = useMemo(() => {
     return (
-      <Name inGame={preview.inGame} name={name} isMaster={isMaster} user={sender} isPreview self />
+      <Name
+        inGame={preview.inGame ?? false}
+        name={name}
+        isMaster={isMaster ?? false}
+        user={sender}
+        isPreview
+        self
+      />
     );
   }, [isMaster, name, preview.inGame, sender]);
 
@@ -35,7 +42,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
       id={preview.id}
       editMode={preview.edit !== null}
       isSelf={false}
-      inGame={preview.inGame}
+      inGame={preview.inGame ?? false}
       isLast={isLast}
       pos={preview.pos}
       className="text-text-light pr-message-small @2xl:pr-message"
@@ -50,7 +57,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
           <Content
             source={source}
             entities={entities}
-            isAction={preview.isAction}
+            isAction={preview.isAction ?? false}
             isArchived={false}
             nameNode={nameNode}
           />

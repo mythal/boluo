@@ -36,6 +36,7 @@ export interface Post {
   '/users/remove_avatar': { payload: null; query: null; result: User };
   '/users/reset_password': { payload: ResetPassword; query: null; result: null };
   '/users/reset_password_confirm': { payload: ResetPasswordConfirm; query: null; result: null };
+  '/users/resend_email_verification': { payload: { lang?: string }; query: null; result: null };
   // spaces
   '/spaces/create': { payload: CreateSpace; query: null; result: SpaceWithMember };
   '/spaces/edit': { payload: EditSpace; query: null; result: Space };

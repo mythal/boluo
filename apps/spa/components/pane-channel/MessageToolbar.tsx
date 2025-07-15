@@ -87,7 +87,11 @@ export const MessageToolbar: FC<{
           </MessageToolbarButton>
         }
       >
-        <MessageArchive messageId={message.id} archived={message.folded} variant="toolbar" />
+        <MessageArchive
+          messageId={message.id}
+          archived={message.folded ?? false}
+          variant="toolbar"
+        />
       </Delay>
     );
   }, [message.folded, message.id, optimistic, permsArchive]);
@@ -393,7 +397,7 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
   const setDisplay = useSetAtom(useContext(DisplayContext));
   const archived = message.folded;
   const archiveButton = useMemo(
-    () => <MessageArchive variant="more" messageId={message.id} archived={archived} />,
+    () => <MessageArchive variant="more" messageId={message.id} archived={archived ?? false} />,
     [archived, message.id],
   );
   const confirmDeleteButton = useMemo(

@@ -80,7 +80,8 @@ ALTER TABLE media
 
 CREATE TABLE users_extension (
     "user_id" uuid NOT NULL PRIMARY KEY CONSTRAINT "extension_user" REFERENCES users (id) ON DELETE CASCADE,
-    "settings" jsonb NOT NULL DEFAULT '{}'
+    "settings" jsonb NOT NULL DEFAULT '{}',
+    "email_verified_at" timestamptz DEFAULT NULL
 );
 
 CREATE TABLE spaces (

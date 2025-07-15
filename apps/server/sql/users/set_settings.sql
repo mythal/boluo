@@ -4,5 +4,5 @@ ON CONFLICT (user_id)
     DO UPDATE SET
         settings = $2
     RETURNING
-        users_extension.settings;
+        users_extension AS "user_ext!: UserExt";
 

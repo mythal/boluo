@@ -2,7 +2,7 @@
 import type { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useErrorExplain } from '@boluo/common/hooks';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';
 import { useState } from 'react';
@@ -135,6 +135,8 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
 };
 
 export const LoginForm: FC<Props> = () => {
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get('next');
   const { mutate } = useSWRConfig();
   const methods = useForm<Inputs>();
   const { handleSubmit } = methods;
@@ -146,8 +148,12 @@ export const LoginForm: FC<Props> = () => {
       return setError(result.err);
     }
     setError(null);
-    void mutate(() => true, undefined, { revalidate: true });
-    router.push('/');
+    if (typeof nextUrl === 'string' && nextUrl.trim() !== '') {
+      window.location.href = nextUrl;
+    } else {
+      void mutate(() => true, undefined, { revalidate: true });
+      router.push('/');
+    }
   };
 
   return (

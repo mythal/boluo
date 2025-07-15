@@ -9,23 +9,105 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+#[serde(tag = "type")]
+pub enum PreviewDiffOp {
+    #[serde(rename = "SPLICE")]
+    Splice {
+        /// The start index for inserting
+        i: u16,
+        /// The length of the text to be replaced
+        len: u16,
+        /// The text to be inserted
+        #[serde(rename = "_")]
+        text: String,
+    },
+    #[serde(rename = "A")]
+    Append {
+        /// The text to be appended
+        #[serde(rename = "_")]
+        text: String,
+    },
+    #[serde(rename = "NAME")]
+    ChangeName { name: String },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+pub struct PreviewDiffPost {
+    /// Channel ID
+    #[serde(rename = "ch")]
+    pub channel_id: Uuid,
+    /// The id of the preview that is being edited
+    pub id: Uuid,
+    /// The version of the diff reference
+    #[serde(rename = "ref")]
+    pub reference_version: u16,
+    /// The version of the diff
+    ///
+    /// Every edit will increase the version.
+    #[serde(default, rename = "v")]
+    pub version: u16,
+    /// The operation of the diff
+    pub op: PreviewDiffOp,
+    /// Changed entities
+    #[serde(default, rename = "~")]
+    pub entities: Vec<(u16, types::entities::Entity)>,
+}
+
+impl PreviewDiffPost {
+    pub async fn broadcast(self, space_id: Uuid, user_id: Uuid) -> Result<(), AppError> {
+        Update::preview_diff(
+            space_id,
+            PreviewDiff {
+                sender: user_id,
+                payload: self,
+            },
+        );
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+pub struct PreviewDiff {
+    pub sender: Uuid,
+    #[serde(rename = "_")]
+    pub payload: PreviewDiffPost,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Preview {
     pub id: Uuid,
+    /// The version of the preview
+    ///
+    /// Every edit will increase the version.
+    ///
+    /// Start from 1.
+    #[serde(default, rename = "v")]
+    pub version: u16,
     pub sender_id: Uuid,
     pub channel_id: Uuid,
+    #[serde(default)]
     pub parent_message_id: Option<Uuid>,
     pub name: String,
+    #[serde(default)]
     pub media_id: Option<Uuid>,
+    #[serde(default)]
     pub in_game: bool,
+    #[serde(default)]
     pub is_action: bool,
+    #[serde(default)]
     pub is_master: bool,
+    #[serde(default)]
     pub clear: bool,
+    #[serde(default)]
     pub text: Option<String>,
+    #[serde(default)]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
     pub pos: f64,
+    #[serde(default)]
     pub edit_for: Option<DateTime<Utc>>,
+    #[serde(default)]
     pub edit: Option<PreviewEdit>,
 }
 
@@ -41,10 +123,14 @@ pub struct PreviewEdit {
 #[serde(rename_all = "camelCase")]
 pub struct PreviewPost {
     pub id: Uuid,
+    #[serde(default, rename = "v")]
+    pub version: u16,
     pub channel_id: Uuid,
     pub name: String,
     pub media_id: Option<Uuid>,
+    #[serde(default)]
     pub in_game: bool,
+    #[serde(default)]
     pub is_action: bool,
     pub text: Option<String>,
     #[serde(default)]
@@ -60,6 +146,7 @@ impl PreviewPost {
     pub async fn broadcast(self, space_id: Uuid, user_id: Uuid) -> Result<(), AppError> {
         let PreviewPost {
             id,
+            version,
             channel_id,
             name,
             media_id,
@@ -104,6 +191,7 @@ impl PreviewPost {
         let whisper_to_users = None;
         let preview = Box::new(Preview {
             id,
+            version,
             sender_id: user_id,
             channel_id,
             parent_message_id: None,

@@ -166,9 +166,9 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
     ...state.compose,
     messageId: message.id,
     edit: { time: message.modified, p: message.posP, q: message.posQ },
-    isAction: message.isAction,
+    isAction: message.isAction ?? false,
     inputName: message.inGame ? message.name : '',
-    inGame: message.inGame,
+    inGame: message.inGame ?? false,
     media: message.mediaId ?? undefined,
     source: message.text,
     whisperTo,
@@ -310,7 +310,7 @@ const handleChatInitialized = (
     return compose;
   }
   const { preview } = item;
-  if (preview.text === '' || preview.text === null || preview.channelId !== channelId) {
+  if (preview.text === '' || preview.text == null || preview.channelId !== channelId) {
     return compose;
   }
   if (preview.edit) {
@@ -318,7 +318,7 @@ const handleChatInitialized = (
     compose.edit = preview.edit;
   }
   compose.source = preview.text;
-  compose.inGame = preview.inGame;
+  compose.inGame = preview.inGame ?? false;
   if (
     compose.inGame &&
     preview.name &&

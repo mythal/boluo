@@ -12,7 +12,7 @@ export interface ComposeState {
   inputedName: string;
   previewId: string;
   source: string;
-  media: File | string | null;
+  media: File | string | null | undefined;
   whisperTo: // Represents whisper to the Game Master
   | null
     // Represents whisper to users (Game Master always can read all whisper messages)

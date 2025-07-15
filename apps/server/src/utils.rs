@@ -71,8 +71,10 @@ pub fn verify(message: &str, signature: &str) -> Result<(), anyhow::Error> {
 
     let signature = signature.trim();
 
-    let signature = general_purpose::STANDARD_NO_PAD
+    let signature = general_purpose::URL_SAFE_NO_PAD
         .decode(signature)
+        .or_else(|_| general_purpose::URL_SAFE.decode(signature))
+        .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(signature))
         .or_else(|_| general_purpose::STANDARD.decode(signature))
         .context("Failed to decode signature")?;
     hmac::verify(key(), message.as_bytes(), &signature)
@@ -121,6 +123,77 @@ fn test_sign() {
     let signature = sign(message);
     let signature = base64_engine.encode(signature);
     verify(message, &signature).unwrap();
+}
+
+#[test]
+fn test_verify_url_safe_base64() {
+    use base64::{Engine as _, engine::general_purpose};
+
+    let message = "hello, world";
+    let signature = sign(message);
+
+    // Test all supported base64 formats
+    let formats = vec![
+        ("URL_SAFE_NO_PAD", general_purpose::URL_SAFE_NO_PAD),
+        ("URL_SAFE", general_purpose::URL_SAFE),
+        ("STANDARD_NO_PAD", general_purpose::STANDARD_NO_PAD),
+        ("STANDARD", general_purpose::STANDARD),
+    ];
+
+    for (format_name, encoder) in formats {
+        let encoded_signature = encoder.encode(signature.as_ref());
+        let result = verify(message, &encoded_signature);
+        assert!(
+            result.is_ok(),
+            "Verification failed for format {}: {}",
+            format_name,
+            encoded_signature
+        );
+    }
+}
+
+#[test]
+fn test_verify_mixed_base64_formats() {
+    use base64::{Engine as _, engine::general_purpose};
+
+    let message = "test.message.1234567890";
+    let signature = sign(message);
+
+    // Test that URL_SAFE format works (this is what email verification uses)
+    let url_safe_signature = general_purpose::URL_SAFE_NO_PAD.encode(signature.as_ref());
+    assert!(
+        verify(message, &url_safe_signature).is_ok(),
+        "URL_SAFE_NO_PAD format should work"
+    );
+
+    // Test that the signature doesn't contain URL-unsafe characters
+    assert!(
+        !url_safe_signature.contains('+'),
+        "URL safe signature should not contain '+'"
+    );
+    assert!(
+        !url_safe_signature.contains('/'),
+        "URL safe signature should not contain '/'"
+    );
+    assert!(
+        !url_safe_signature.contains('='),
+        "URL safe signature should not contain '='"
+    );
+}
+
+#[test]
+fn test_verify_invalid_base64() {
+    let message = "hello, world";
+    let invalid_signatures = vec!["invalid-base64!", "=invalid=", "inv@lid#sig", ""];
+
+    for invalid_sig in invalid_signatures {
+        let result = verify(message, invalid_sig);
+        assert!(
+            result.is_err(),
+            "Invalid signature '{}' should fail verification",
+            invalid_sig
+        );
+    }
 }
 
 pub fn get_ip(req: &Request<impl Body>) -> Result<std::net::IpAddr, AppError> {

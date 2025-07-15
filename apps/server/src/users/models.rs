@@ -445,3 +445,215 @@ impl UserExt {
         Ok(result.flatten())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use uuid::Uuid;
+
+    #[test]
+    fn test_email_verification_token_generation_and_verification() {
+        let user_id = Uuid::new_v4();
+
+        // Generate token
+        let token = User::generate_email_verification_token(&user_id);
+
+        // Verify token should succeed
+        let verified_user_id = User::verify_email_verification_token(&token)
+            .expect("Token verification should succeed");
+
+        // Should return the same user ID
+        assert_eq!(user_id, verified_user_id);
+    }
+
+    #[test]
+    fn test_email_verification_token_invalid_format() {
+        // Test with invalid token format
+        let invalid_tokens = vec![
+            "invalid",
+            "invalid.token",
+            "invalid.token.format.extra",
+            "",
+            "...",
+        ];
+
+        for invalid_token in invalid_tokens {
+            let result = User::verify_email_verification_token(invalid_token);
+            assert!(
+                result.is_err(),
+                "Invalid token '{}' should fail verification",
+                invalid_token
+            );
+        }
+    }
+
+    #[test]
+    fn test_email_verification_token_invalid_signature() {
+        let user_id = Uuid::new_v4();
+        let token = User::generate_email_verification_token(&user_id);
+
+        // Tamper with the signature
+        let mut parts: Vec<&str> = token.split('.').collect();
+        assert_eq!(parts.len(), 3);
+        parts[2] = "invalid_signature";
+        let tampered_token = parts.join(".");
+
+        let result = User::verify_email_verification_token(&tampered_token);
+        assert!(
+            result.is_err(),
+            "Token with invalid signature should fail verification"
+        );
+    }
+
+    #[test]
+    fn test_email_verification_token_expired() {
+        use crate::utils::sign;
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
+        use chrono::Utc;
+
+        let user_id = Uuid::new_v4();
+
+        // Create an expired token (timestamp in the past)
+        let expired_timestamp = Utc::now().timestamp() - 60; // 1 minute ago
+        let mut buffer = String::with_capacity(128);
+        base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
+        buffer.push('.');
+        buffer.push_str(&expired_timestamp.to_string());
+
+        let signature = sign(&buffer);
+        buffer.push('.');
+        base64_engine.encode_string(signature, &mut buffer);
+
+        let result = User::verify_email_verification_token(&buffer);
+        assert!(result.is_err(), "Expired token should fail verification");
+
+        // Check that the error message mentions expiration
+        let error_message = result.unwrap_err().to_string();
+        assert!(
+            error_message.contains("expired"),
+            "Error should mention token expiration"
+        );
+    }
+
+    #[test]
+    fn test_email_verification_token_url_safe_encoding() {
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+
+        let user_id = Uuid::new_v4();
+        let token = User::generate_email_verification_token(&user_id);
+
+        // Split the token into parts
+        let parts: Vec<&str> = token.split('.').collect();
+        assert_eq!(parts.len(), 3);
+
+        // All parts should be valid URL-safe base64
+        for (i, part) in parts.iter().enumerate() {
+            let decode_result = if i == 1 {
+                // Timestamp is plain text, not base64
+                continue;
+            } else {
+                URL_SAFE_NO_PAD.decode(part)
+            };
+
+            assert!(
+                decode_result.is_ok(),
+                "Part {} should be valid URL-safe base64: {}",
+                i,
+                part
+            );
+
+            // Should not contain URL-unsafe characters
+            assert!(
+                !part.contains('+'),
+                "Part {} should not contain '+': {}",
+                i,
+                part
+            );
+            assert!(
+                !part.contains('/'),
+                "Part {} should not contain '/': {}",
+                i,
+                part
+            );
+            assert!(
+                !part.contains('='),
+                "Part {} should not contain '=': {}",
+                i,
+                part
+            );
+        }
+    }
+
+    #[test]
+    fn test_email_verification_token_different_users() {
+        let user_id1 = Uuid::new_v4();
+        let user_id2 = Uuid::new_v4();
+
+        let token1 = User::generate_email_verification_token(&user_id1);
+        let token2 = User::generate_email_verification_token(&user_id2);
+
+        // Tokens should be different
+        assert_ne!(token1, token2);
+
+        // Each token should verify to its respective user
+        let verified_id1 = User::verify_email_verification_token(&token1).unwrap();
+        let verified_id2 = User::verify_email_verification_token(&token2).unwrap();
+
+        assert_eq!(user_id1, verified_id1);
+        assert_eq!(user_id2, verified_id2);
+        assert_ne!(verified_id1, verified_id2);
+    }
+
+    #[test]
+    fn test_problematic_token_analysis() {
+        // Test the specific token that was failing
+        let problematic_token =
+            "si8iZGESEfCV9wssn9pMIg.1752625737.-w-N9SFk29XKvkzlcudLciTdfU9q9kuKGp95s8vELAY";
+
+        // Split the token and examine parts
+        let parts: Vec<&str> = problematic_token.split('.').collect();
+        println!("Token parts: {:?}", parts);
+        println!("Number of parts: {}", parts.len());
+
+        // Should be exactly 3 parts
+        assert_eq!(
+            parts.len(),
+            3,
+            "Token should have exactly 3 parts separated by '.'"
+        );
+
+        let user_id_str = parts[0];
+        let timestamp_str = parts[1];
+        let signature = parts[2];
+
+        println!("User ID part: '{}'", user_id_str);
+        println!("Timestamp part: '{}'", timestamp_str);
+        println!("Signature part: '{}'", signature);
+
+        // Check if user_id_str is valid base64
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+        let user_id_decode = URL_SAFE_NO_PAD.decode(user_id_str);
+        assert!(
+            user_id_decode.is_ok(),
+            "User ID part should be valid URL-safe base64"
+        );
+
+        // Check if timestamp is valid
+        let timestamp_parse: Result<i64, _> = timestamp_str.parse();
+        assert!(timestamp_parse.is_ok(), "Timestamp should be valid i64");
+
+        // Check if signature is valid base64
+        let signature_decode = URL_SAFE_NO_PAD.decode(signature);
+        assert!(
+            signature_decode.is_ok(),
+            "Signature should be valid URL-safe base64"
+        );
+
+        println!("All parts are valid format");
+
+        // Now test the actual verification (this should fail due to wrong secret/expired)
+        let result = User::verify_email_verification_token(problematic_token);
+        println!("Verification result: {:?}", result);
+        // We expect this to fail because it's likely expired or signed with different secret
+    }
+}

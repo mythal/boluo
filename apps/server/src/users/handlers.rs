@@ -90,8 +90,10 @@ pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value
     };
 
     let pool = db::get().await;
-    let user_ext = UserExt::get(&pool, session.user_id).await?;
-    Ok(user_ext.settings)
+    let user_ext = UserExt::get(&pool, session.user_id).await;
+    Ok(user_ext
+        .map(|ext| ext.settings)
+        .unwrap_or(serde_json::json!({})))
 }
 
 impl Lifespan for GetMe {
@@ -116,14 +118,15 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
                 }
                 let my_spaces = Space::get_by_user(&mut conn, user.id).await?;
                 let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
-                let user_ext = UserExt::get(&mut *conn, user.id).await?;
+                let user_ext = UserExt::get(&mut *conn, user.id).await.ok();
                 let get_me = GetMe {
                     user,
-                    settings: user_ext.settings,
+                    settings: user_ext
+                        .map(|ext| ext.settings)
+                        .unwrap_or(serde_json::json!({})),
                     my_channels,
                     my_spaces,
                 };
-                CACHE.GetMe.insert(session.user_id, get_me.clone().into());
 
                 Ok(ok_response(Some(get_me)))
             } else {
@@ -177,17 +180,20 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user(&mut conn, user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
-    let user_ext = UserExt::get(&mut *conn, user_id).await?;
+    let user_ext = UserExt::get(&mut *conn, user_id).await;
+    let settings = user_ext
+        .map(|ext| ext.settings)
+        .unwrap_or(serde_json::json!({}));
     let me = GetMe {
         user,
-        settings: user_ext.settings.clone(),
+        settings: settings.clone(),
         my_spaces,
         my_channels,
     };
     CACHE.GetMe.insert(user_id, me.clone().into());
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
-    add_settings_cookie(&user_ext.settings, headers);
+    add_settings_cookie(&settings, headers);
     if !form.with_token {
         add_session_cookie(&session.id, is_debug, headers);
     }

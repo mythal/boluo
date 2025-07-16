@@ -551,6 +551,8 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
     use crate::context::media_public_url;
     use crate::session::authenticate;
+
+    let current_url = req.uri().to_string();
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
     use ring::hmac;
 
@@ -584,31 +586,21 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
         .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
 
+    static SITE_URL: LazyLock<Option<String>> = LazyLock::new(|| std::env::var("SITE_URL").ok());
+    let site_url = SITE_URL
+        .as_ref()
+        .ok_or(AppError::BadRequest("SITE_URL not configured".to_string()))?;
+
     // Authenticate the user
     let session = match authenticate(&req).await {
         Ok(session) => session,
         Err(AppError::Unauthenticated(_)) => {
             // User not authenticated, redirect to login with next parameter
-            let login_url = std::env::var("LOGIN_URL")
-                .map_err(|_| AppError::BadRequest("LOGIN_URL not configured".to_string()))?;
 
             // Encode the current request URL as the next parameter
-            use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-            const QUERY: &AsciiSet = &CONTROLS
-                .add(b' ')
-                .add(b'"')
-                .add(b'<')
-                .add(b'>')
-                .add(b'`')
-                .add(b'&')
-                .add(b'=');
-
-            let current_url = format!(
-                "/api/users/discourse/start?sso={}&sig={}",
-                utf8_percent_encode(&sso, QUERY).to_string(),
-                utf8_percent_encode(&sig, QUERY).to_string()
-            );
-            let encoded_next = utf8_percent_encode(&current_url, QUERY).to_string();
+            use crate::utils::url_percent_encode;
+            let encoded_next = url_percent_encode(&current_url);
+            let login_url = format!("{site_url}/account/login",);
             let redirect_url = format!("{}?next={}", login_url, encoded_next);
 
             tracing::info!(
@@ -631,6 +623,25 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     let user = User::get_by_id(&mut *conn, &session.user_id)
         .await
         .or_not_found()?;
+    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
+
+    if !email_verified {
+        use crate::utils::url_percent_encode;
+        let encoded_next = url_percent_encode(&current_url);
+        let redirect_url = format!("{site_url}/account/verify-email?next={}", encoded_next);
+
+        tracing::info!(
+            user_id = %user.id,
+            redirect_url = %redirect_url,
+            "Redirecting unverified user to verify email"
+        );
+
+        return hyper::Response::builder()
+            .status(hyper::StatusCode::FOUND)
+            .header(hyper::header::LOCATION, redirect_url)
+            .body(Vec::new())
+            .map_err(|e| AppError::Unexpected(e.into()));
+    }
 
     tracing::info!(
         user_id = %user.id,
@@ -643,8 +654,6 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         .avatar_id
         .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
-    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
-
     // Create response payload
     let response_data = DiscourseResponse {
         nonce: payload.nonce,
@@ -652,7 +661,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         email: user.email,
         username: user.username,
         name: user.nickname,
-        require_activation: !email_verified,
+        require_activation: false,
         bio: if user.bio.is_empty() {
             None
         } else {

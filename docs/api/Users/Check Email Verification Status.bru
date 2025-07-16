@@ -1,0 +1,11 @@
+meta {
+  name: Check Email Verification Status
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{base_url}}/users/email_verification_status
+  body: none
+  auth: inherit
+}

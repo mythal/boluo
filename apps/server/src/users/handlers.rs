@@ -17,7 +17,7 @@ use crate::session::{
 use crate::spaces::Space;
 use crate::ttl::{Lifespan, Mortal, minute};
 use crate::users::api::{
-    CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser,
+    CheckEmailExists, CheckUsernameExists, EditUser, EmailVerificationStatus, GetMe, QueryUser,
     ResendEmailVerificationResult,
 };
 use crate::users::models::UserExt;
@@ -534,6 +534,18 @@ pub async fn resend_email_verification(
     Ok(ResendEmailVerificationResult::Sent)
 }
 
+pub async fn check_email_verification_status(
+    req: Request<impl Body>,
+) -> Result<EmailVerificationStatus, AppError> {
+    use crate::session::authenticate;
+
+    let session = authenticate(&req).await?;
+    let pool = db::get().await;
+    let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
+
+    Ok(EmailVerificationStatus { is_verified })
+}
+
 /// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
 pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
@@ -709,6 +721,9 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u
         ("/verify_email", Method::GET) => verify_email(req).await.map(ok_response),
         ("/resend_email_verification", Method::POST) => {
             resend_email_verification(req).await.map(ok_response)
+        }
+        ("/email_verification_status", Method::GET) => {
+            check_email_verification_status(req).await.map(ok_response)
         }
         _ => missing(),
     }

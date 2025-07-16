@@ -36,7 +36,8 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
     url.set_password(Some(&*api_key)).unwrap();
     let res = client.post(url).form(&params).send().await?;
     if !res.status().is_success() {
-        tracing::warn!(error = res.text().await?, "Failed to send email");
+        let error = res.text().await?;
+        tracing::warn!(error, "Failed to send email");
         return Err(anyhow::anyhow!("Failed to send email"));
     }
     Ok(())

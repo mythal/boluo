@@ -501,6 +501,8 @@ export type RepeatResult = { node: ExprNode; count: number } & {
 
 export type ResendEmailVerification = { lang?: string | null };
 
+export type ResendEmailVerificationResult = 'ALREADY_VERIFIED' | 'SENT';
+
 export type ResetPassword = { email: string; lang: string | null };
 
 export type ResetPasswordConfirm = { token: string; password: string };

@@ -131,3 +131,10 @@ pub struct DiscourseResponse {
     pub avatar_url: Option<String>,
     pub require_activation: bool,
 }
+
+#[derive(Debug, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ResendEmailVerificationResult {
+    AlreadyVerified,
+    Sent,
+}

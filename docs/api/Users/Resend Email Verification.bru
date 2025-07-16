@@ -1,0 +1,20 @@
+meta {
+  name: Resend Email Verification
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{base_url}}/users/resend_email_verification
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "lang": "zh-CN"
+  }
+}
+
+docs {
+}

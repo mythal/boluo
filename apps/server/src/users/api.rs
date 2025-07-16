@@ -138,3 +138,9 @@ pub enum ResendEmailVerificationResult {
     AlreadyVerified,
     Sent,
 }
+
+#[derive(Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EmailVerificationStatus {
+    pub is_verified: bool,
+}

@@ -17,6 +17,7 @@ import type {
   User,
   MakeToken,
   VerifyEmail,
+  EmailVerificationStatus,
 } from './bindings';
 
 export interface Get {
@@ -28,6 +29,7 @@ export interface Get {
   '/users/check_username': { query: CheckUsernameExists; result: boolean };
   '/users/check_email': { query: CheckEmailExists; result: boolean };
   '/users/verify_email': { query: VerifyEmail; result: null };
+  '/users/email_verification_status': { query: null; result: EmailVerificationStatus };
   // spaces
   '/spaces/users_status': { query: { id: string }; result: Record<string, UserStatus> };
   '/spaces/query': { query: { id: string; token?: string }; result: Space };

@@ -193,6 +193,8 @@ export type EditUser = {
   defaultColor: string | null;
 };
 
+export type EmailVerificationStatus = { isVerified: boolean };
+
 export type Entities = Entity[];
 
 export type Entity =

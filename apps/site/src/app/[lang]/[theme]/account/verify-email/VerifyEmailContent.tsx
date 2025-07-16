@@ -24,9 +24,9 @@ export function VerifyEmailContent() {
     error: verifyError,
     data: verifyResult,
   } = useSWRMutation(
-    token ? ['verify-email', token] : null,
-    async ([, token]: [string, string]) => {
-      const result = await get('/users/verify_email', { token });
+    token ? (['/users/verify_email', token] as const) : null,
+    async ([path, token]) => {
+      const result = await get(path, { token });
       return result.unwrap();
     },
     {
@@ -41,10 +41,13 @@ export function VerifyEmailContent() {
     trigger: triggerResend,
     isMutating: isResending,
     error: resendError,
-  } = useSWRMutation('resend-email-verification', async () => {
-    const result = await post('/users/resend_email_verification', null, { lang: intl.locale });
-    return result.unwrap();
-  });
+  } = useSWRMutation(
+    ['/users/resend_email_verification', intl.locale] as const,
+    async ([path, lang]) => {
+      const result = await post(path, null, { lang });
+      return result.unwrap();
+    },
+  );
 
   // Auto-trigger verification when component mounts
   useEffect(() => {

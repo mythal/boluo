@@ -95,7 +95,7 @@ export function VerifyEmailContent() {
   }
 
   // Success state
-  if (verifyResult != null) {
+  if (!isVerifying && !verifyError && token) {
     return (
       <div className="text-center">
         <div className="mb-4 text-4xl text-green-600">✓</div>

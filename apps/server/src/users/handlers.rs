@@ -16,7 +16,10 @@ use crate::session::{
 };
 use crate::spaces::Space;
 use crate::ttl::{Lifespan, Mortal, minute};
-use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
+use crate::users::api::{
+    CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser,
+    ResendEmailVerificationResult,
+};
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
 use crate::{db, mail};
@@ -495,7 +498,9 @@ pub async fn verify_email(req: Request<impl Body>) -> Result<(), AppError> {
     Ok(())
 }
 
-pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), AppError> {
+pub async fn resend_email_verification(
+    req: Request<impl Body>,
+) -> Result<ResendEmailVerificationResult, AppError> {
     use crate::session::authenticate;
     use crate::users::api::ResendEmailVerification;
 
@@ -510,11 +515,14 @@ pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), Ap
     // Check if email is already verified
     let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
     if is_verified {
-        return Err(AppError::BadRequest(
-            "Email is already verified".to_string(),
-        ));
+        return Ok(ResendEmailVerificationResult::AlreadyVerified);
     }
 
+    tracing::debug!(
+        user_id = %user.id,
+        email = %user.email,
+        "Resending email verification"
+    );
     send_email_verification(&user.email, &user.id, lang.as_deref()).await?;
 
     tracing::info!(
@@ -523,7 +531,7 @@ pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), Ap
         "Resent email verification"
     );
 
-    Ok(())
+    Ok(ResendEmailVerificationResult::Sent)
 }
 
 /// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045

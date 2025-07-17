@@ -91,6 +91,8 @@ export type CocRollResult = { subType: CocRollSubType; target?: PureExprNode | n
 
 export type CocRollSubType = 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENALTY_2';
 
+export type ConfirmEmailChange = { token: string };
+
 export type ConnectionError = 'NOT_FOUND' | 'NO_PERMISSION' | 'INVALID_TOKEN' | 'UNEXPECTED';
 
 export type ConnectionState = {
@@ -500,6 +502,8 @@ export type RepeatResult = { node: ExprNode; count: number } & {
   evaluated: EvaluatedExprNode[];
   value: number;
 };
+
+export type RequestEmailChange = { newEmail: string; lang?: string | null };
 
 export type ResendEmailVerification = { lang?: string | null };
 

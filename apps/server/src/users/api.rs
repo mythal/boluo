@@ -144,3 +144,17 @@ pub enum ResendEmailVerificationResult {
 pub struct EmailVerificationStatus {
     pub is_verified: bool,
 }
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestEmailChange {
+    pub new_email: String,
+    #[serde(default)]
+    pub lang: Option<String>,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfirmEmailChange {
+    pub token: String,
+}

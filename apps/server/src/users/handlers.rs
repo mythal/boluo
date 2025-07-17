@@ -546,6 +546,152 @@ pub async fn check_email_verification_status(
     Ok(EmailVerificationStatus { is_verified })
 }
 
+async fn send_email_change_verification(
+    new_email: &str,
+    user_id: &Uuid,
+    lang: Option<&str>,
+) -> Result<(), AppError> {
+    let token = User::generate_email_change_token(user_id, new_email);
+    let lang = lang.unwrap_or("en");
+
+    match lang {
+        "zh" | "zh-CN" | "zh_CN" => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.zh-CN.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.zh-CN.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "zh-TW" | "zh_TW" => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.zh-TW.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.zh-TW.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "ja" => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.ja.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.ja.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        _ => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.en.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.en.html"),
+                    token
+                ),
+            )
+            .await
+        }
+    }
+    .map_err(AppError::Unexpected)?;
+    Ok(())
+}
+
+pub async fn request_email_change(req: Request<impl Body>) -> Result<(), AppError> {
+    use crate::session::authenticate;
+    use crate::users::api::RequestEmailChange;
+    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
+    use std::net::IpAddr;
+
+    static IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
+        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(10).unwrap()))
+    });
+    let ip = get_ip(&req)?;
+    IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
+
+    let session = authenticate(&req).await?;
+    let RequestEmailChange { new_email, lang } = parse_body(req).await?;
+
+    let new_email = new_email.trim().to_lowercase();
+    crate::validators::EMAIL.run(&new_email)?;
+
+    static EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> = LazyLock::new(|| {
+        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(5).unwrap()))
+    });
+    EMAIL_LIMITER
+        .check_key(&new_email)
+        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
+
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+
+    let current_user = User::get_by_id(&mut *conn, &session.user_id)
+        .await
+        .or_not_found()?;
+
+    if current_user.email == new_email {
+        return Err(AppError::BadRequest(
+            "New email is the same as current email".to_string(),
+        ));
+    }
+
+    if User::get_by_email(&mut *conn, &new_email).await?.is_some() {
+        return Err(AppError::Conflict(
+            "Email address is already in use".to_string(),
+        ));
+    }
+
+    send_email_change_verification(&new_email, &session.user_id, lang.as_deref()).await?;
+
+    tracing::info!(
+        user_id = %session.user_id,
+        current_email = %current_user.email,
+        new_email = %new_email,
+        "Email change verification sent"
+    );
+
+    Ok(())
+}
+
+pub async fn confirm_email_change(req: Request<impl Body>) -> Result<User, AppError> {
+    use crate::users::api::ConfirmEmailChange;
+
+    let ConfirmEmailChange { token } = parse_body(req).await?;
+
+    let (user_id, new_email) = User::verify_email_change_token(&token)
+        .map_err(|e| AppError::BadRequest(format!("Invalid email change token: {}", e)))?;
+
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+
+    let current_user = User::get_by_id(&mut *conn, &user_id).await.or_not_found()?;
+
+    let updated_user = User::change_email(&mut *conn, &user_id, &new_email).await?;
+
+    // Mark the new email as verified since user confirmed the change via email
+    User::mark_email_verified(&mut *conn, &user_id).await?;
+
+    CACHE.User.insert(user_id, updated_user.clone().into());
+
+    tracing::info!(
+        user_id = %user_id,
+        old_email = %current_user.email,
+        new_email = %new_email,
+        "User email changed successfully"
+    );
+
+    Ok(updated_user)
+}
+
 /// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
 pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
@@ -734,6 +880,8 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u
         ("/email_verification_status", Method::GET) => {
             check_email_verification_status(req).await.map(ok_response)
         }
+        ("/request_email_change", Method::POST) => request_email_change(req).await.map(ok_response),
+        ("/confirm_email_change", Method::POST) => confirm_email_change(req).await.map(ok_response),
         _ => missing(),
     }
 }

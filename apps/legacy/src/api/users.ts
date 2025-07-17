@@ -39,7 +39,7 @@ export interface LoginData {
 
 export interface LoginResult {
   me: GetMe;
-  token: null;
+  token: string | null;
 }
 
 export interface CheckEmail {

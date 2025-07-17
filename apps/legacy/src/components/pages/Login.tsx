@@ -9,6 +9,7 @@ import SignIn from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
+import { setAuthToken } from '../../utils/token';
 import {
   alignRight,
   flex,
@@ -48,9 +49,14 @@ function Login() {
   const [loggingIn, setLoggingIn] = useState(false);
   const onSubmit = async (data: LoginData) => {
     setLoggingIn(true);
-    const result = await post('/users/login', data);
+    const loginData = { ...data, withToken: true };
+    const result = await post('/users/login', loginData);
     setLoggingIn(false);
     if (result.isOk) {
+      if (result.value.token) {
+        setAuthToken(result.value.token);
+      }
+
       // Double check if the login is successful
       const querySelf = await get('/users/query', {});
       if (querySelf.isErr) {

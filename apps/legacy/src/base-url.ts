@@ -13,8 +13,17 @@ export const getBaseUrlList = async (): Promise<string[]> => {
   }
   const response = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`);
   const proxies = (await response.json()) as Proxy[];
-  const urls = [getDefaultBaseUrl(), ...proxies.map((proxy) => proxy.url)];
-  urlListCache = urls;
+  const urls = [
+    getDefaultBaseUrl(),
+    ...proxies.map((proxy) => {
+      if (proxy.url.endsWith('.boluo.chat') && window.location.origin.endsWith('boluochat.com')) {
+        // Replace boluo.chat with boluochat.com
+        return proxy.url.replace('.boluo.chat', '.boluochat.com');
+      } else {
+        return proxy.url;
+      }
+    }),
+  ];
   return urls;
 };
 
@@ -26,6 +35,7 @@ export const getDefaultBaseUrl = (): string => {
   if (typeof BASE_URL === 'string') {
     return BASE_URL;
   }
+  console.warn('No PUBLIC_BACKEND_URL found, using location.origin');
   return location.origin;
 };
 

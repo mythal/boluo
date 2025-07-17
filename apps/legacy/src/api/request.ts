@@ -3,6 +3,7 @@ import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Id } from '../utils/id';
 import { Err, Ok, Result } from '../utils/result';
+import { getAuthToken, clearAuthToken } from '../utils/token';
 import type { MakeToken } from '@boluo/api/bindings';
 import {
   AddMember,
@@ -81,13 +82,19 @@ export const request = async <T>(
   if (isCrossOrigin) {
     headers.append('X-Debug', '1');
   }
+
+  const token = getAuthToken();
+  if (token) {
+    headers.append('Authorization', `Bearer ${token}`);
+  }
+
   let result: Response;
   try {
     result = await fetch(path, {
       method,
       headers,
       body,
-      credentials: 'include',
+      credentials: token ? 'omit' : 'include',
     });
   } catch (e) {
     return new Err({
@@ -104,6 +111,9 @@ export const request = async <T>(
   }
   const appResult = toResult<T, AppError>(resultJson as ApiOk<T> | ApiErr<AppError>);
   if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
+    if (token) {
+      clearAuthToken();
+    }
     await get('/users/logout');
     location.replace('/login');
   }

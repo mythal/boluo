@@ -172,11 +172,10 @@ pub struct AppSettings {
 impl AppSettings {
     pub fn new() -> Self {
         let media_url = std::env::var("PUBLIC_MEDIA_URL")
-            .unwrap_or_else(|_| "https://media.boluo.chat".to_string());
+            .unwrap_or_else(|_| "https://media.boluochat.com".to_string());
         let app_url =
-            std::env::var("APP_URL").unwrap_or_else(|_| "https://app.boluo.chat".to_string());
-        let site_url =
-            std::env::var("SITE_URL").unwrap_or_else(|_| "https://site.boluo.chat".to_string());
+            std::env::var("APP_URL").unwrap_or_else(|_| "https://app.boluochat.com".to_string());
+        let site_url = crate::context::SITE_URL.clone();
         let sentry_dsn = std::env::var("SENTRY_DSN").ok();
         AppSettings {
             media_url,

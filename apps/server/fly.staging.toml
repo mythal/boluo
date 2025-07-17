@@ -8,7 +8,6 @@ swap_size_mb = 512
 [env]
   HOST = '::'
   PORT = "3000"
-  DOMAIN = "boluo-staging.mythal.net"
   SITE_URL = "https://site.boluo-staging.mythal.net"
   PUBLIC_MEDIA_URL = "http://media.dev.boluo.chat"
   S3_BUCKET_NAME = "boluo-development"

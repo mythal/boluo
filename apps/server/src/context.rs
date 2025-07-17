@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::LazyLock;
 
 use std::sync::OnceLock as OnceCell;
 
@@ -19,10 +20,6 @@ pub fn debug() -> bool {
     *DEBUG.get_or_init(|| env::var("BOLUO_DEBUG").map(env_bool).unwrap_or(false))
 }
 
-fn get_domain() -> String {
-    env::var("DOMAIN").unwrap_or("boluo.chat".to_string())
-}
-
 pub fn media_public_url() -> &'static str {
     static MEDIA_PUBLIC_URL: OnceCell<String> = OnceCell::new();
     MEDIA_PUBLIC_URL.get_or_init(|| {
@@ -31,10 +28,9 @@ pub fn media_public_url() -> &'static str {
     })
 }
 
-pub fn domain() -> &'static str {
-    static DOMAIN: OnceCell<String> = OnceCell::new();
-    DOMAIN.get_or_init(get_domain)
-}
+pub static SITE_URL: LazyLock<String> = LazyLock::new(|| {
+    env::var("SITE_URL").unwrap_or_else(|_| "https://site.boluochat.com".to_string())
+});
 
 pub fn secret() -> &'static str {
     let secret_string = if cfg!(test) {

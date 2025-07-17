@@ -1,5 +1,4 @@
 use crate::cache::{CACHE, CacheType};
-use crate::context::domain;
 use crate::error::AppError;
 use crate::ttl::{Lifespan, fetch_entry, hour};
 use crate::utils::{self, sign};
@@ -109,6 +108,7 @@ pub fn is_authenticate_use_cookie(headers: &HeaderMap<HeaderValue>) -> bool {
 }
 
 pub fn add_session_cookie(
+    origin: Option<&str>,
     session: &Uuid,
     is_debug: bool,
     response_header: &mut HeaderMap<HeaderValue>,
@@ -125,9 +125,15 @@ pub fn add_session_cookie(
         .path("/")
         .max_age(Duration::days(120));
 
-    let session_cookie_domain = domain();
-    if !is_debug && !session_cookie_domain.is_empty() {
-        builder = builder.domain(session_cookie_domain);
+    // TODO: do not hardcode the domain
+    if let Some(origin) = origin {
+        if origin.ends_with("boluochat.com") {
+            builder = builder.domain(".boluochat.com");
+        } else if origin.ends_with("boluo-staging.mythal.net") {
+            builder = builder.domain(".boluo-staging.mythal.net");
+        } else {
+            builder = builder.domain(".boluo.chat");
+        }
     }
     let session_cookie = builder.build().to_string();
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
@@ -183,17 +189,24 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
     static SET_COOKIE_LIST_CELL: OnceLock<Vec<HeaderValue>> = OnceLock::new();
     let set_cookie_list = SET_COOKIE_LIST_CELL.get_or_init(|| {
         let zero = Duration::seconds(0);
-        vec![
-            HeaderValue::from_str(
-                &CookieBuilder::new(SESSION_COOKIE_KEY, "")
-                    .http_only(true)
-                    .domain(domain())
-                    .path("/")
-                    .max_age(zero)
-                    .build()
-                    .to_string(),
-            )
-            .unwrap(),
+        // TODO: do not hardcode the domain
+        let domain_list = [".boluo.chat", ".boluochat.com", ".boluo-staging.mythal.net"];
+        let mut cookies: Vec<HeaderValue> = domain_list
+            .iter()
+            .map(|&domain| {
+                HeaderValue::from_str(
+                    &CookieBuilder::new(SESSION_COOKIE_KEY, "")
+                        .http_only(true)
+                        .domain(domain)
+                        .path("/")
+                        .max_age(zero)
+                        .build()
+                        .to_string(),
+                )
+                .unwrap()
+            })
+            .collect();
+        cookies.extend(vec![
             HeaderValue::from_str(
                 &CookieBuilder::new(SESSION_COOKIE_KEY, "")
                     .http_only(true)
@@ -221,7 +234,8 @@ pub fn remove_session_cookie(headers: &mut HeaderMap<HeaderValue>) {
                     .to_string(),
             )
             .unwrap(),
-        ]
+        ]);
+        cookies
     });
     for cookie in set_cookie_list {
         headers.append(SET_COOKIE, cookie.clone());

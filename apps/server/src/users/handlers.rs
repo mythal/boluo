@@ -151,7 +151,11 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
 
 pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session;
-
+    let origin = req
+        .headers()
+        .get(hyper::header::ORIGIN)
+        .and_then(|x| x.to_str().ok())
+        .map(|s| s.to_string());
     let is_debug = req.headers().get("X-Debug").is_some();
     let form: Login = interface::parse_body(req).await?;
     let pool = db::get().await;
@@ -198,7 +202,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let headers = response.headers_mut();
     add_settings_cookie(&settings, headers);
     if !form.with_token {
-        add_session_cookie(&session.id, is_debug, headers);
+        add_session_cookie(origin.as_deref(), &session.id, is_debug, headers);
     }
     Ok(response)
 }
@@ -732,10 +736,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
         .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
 
-    static SITE_URL: LazyLock<Option<String>> = LazyLock::new(|| std::env::var("SITE_URL").ok());
-    let site_url = SITE_URL
-        .as_ref()
-        .ok_or(AppError::BadRequest("SITE_URL not configured".to_string()))?;
+    let site_url = crate::context::SITE_URL.as_str();
 
     // Authenticate the user
     let session = match authenticate(&req).await {

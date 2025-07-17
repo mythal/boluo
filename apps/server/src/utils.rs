@@ -66,6 +66,19 @@ pub fn sha1(data: &[u8]) -> ring::digest::Digest {
     ring::digest::digest(&ring::digest::SHA1_FOR_LEGACY_USE_ONLY, data)
 }
 
+pub fn url_percent_encode(s: &str) -> String {
+    use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+    const QUERY: &AsciiSet = &CONTROLS
+        .add(b' ')
+        .add(b'"')
+        .add(b'<')
+        .add(b'>')
+        .add(b'`')
+        .add(b'&')
+        .add(b'=');
+    utf8_percent_encode(s, QUERY).to_string()
+}
+
 pub fn verify(message: &str, signature: &str) -> Result<(), anyhow::Error> {
     use base64::{Engine as _, engine::general_purpose};
 

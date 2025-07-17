@@ -56,8 +56,8 @@ export default async function Page({ params }: { params: Promise<Params> }) {
             defaultMessage:
               'This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit',
           })}{' '}
-          <Link className={classes.link} href="https://old.boluo.chat">
-            old.boluo.chat
+          <Link className={classes.link} href="https://old.boluochat.com">
+            old.boluochat.com
           </Link>
         </Para>
       </Card>

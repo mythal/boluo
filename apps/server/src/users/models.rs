@@ -363,6 +363,123 @@ impl User {
 
         Ok(user)
     }
+
+    pub fn generate_email_change_token(user_id: &Uuid, new_email: &str) -> String {
+        use crate::utils::sign;
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
+        use chrono::Utc;
+
+        // Token expires in 24 hours
+        let expire_sec = 60 * 60 * 24;
+        let timestamp = Utc::now().timestamp() + expire_sec;
+
+        // Format: user_id.new_email.timestamp.signature
+        let mut buffer = String::with_capacity(256);
+        base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
+        buffer.push('.');
+        base64_engine.encode_string(new_email.as_bytes(), &mut buffer);
+        buffer.push('.');
+        buffer.push_str(&timestamp.to_string());
+
+        let signature = sign(&buffer);
+        buffer.push('.');
+        base64_engine.encode_string(signature, &mut buffer);
+        buffer
+    }
+
+    pub fn verify_email_change_token(token: &str) -> Result<(Uuid, String), anyhow::Error> {
+        use crate::utils::verify;
+        use anyhow::Context;
+        use base64::{Engine as _, engine::general_purpose};
+        use chrono::Utc;
+
+        let mut iter = token.split('.');
+        let parse_failed = || anyhow::anyhow!("Failed to parse email change token: {}", token);
+
+        let user_id_str = iter.next().ok_or_else(parse_failed)?;
+        let new_email_str = iter.next().ok_or_else(parse_failed)?;
+        let timestamp_str = iter.next().ok_or_else(parse_failed)?;
+        let signature = iter.next().ok_or_else(parse_failed)?;
+
+        // Verify signature
+        let message = format!("{}.{}.{}", user_id_str, new_email_str, timestamp_str);
+        verify(&message, signature)?;
+
+        // Check expiration
+        let timestamp: i64 = timestamp_str
+            .parse()
+            .context("Failed to parse timestamp in email change token")?;
+        let now = Utc::now().timestamp();
+        if now > timestamp {
+            return Err(anyhow::anyhow!("Email change token has expired"));
+        }
+
+        // Decode user ID
+        let user_id_bytes = general_purpose::URL_SAFE_NO_PAD
+            .decode(user_id_str)
+            .or_else(|_| general_purpose::URL_SAFE.decode(user_id_str))
+            .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(user_id_str))
+            .or_else(|_| general_purpose::STANDARD.decode(user_id_str))
+            .context("Failed to decode user ID in email change token")?;
+
+        // Decode new email
+        let new_email_bytes = general_purpose::URL_SAFE_NO_PAD
+            .decode(new_email_str)
+            .or_else(|_| general_purpose::URL_SAFE.decode(new_email_str))
+            .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(new_email_str))
+            .or_else(|_| general_purpose::STANDARD.decode(new_email_str))
+            .context("Failed to decode new email in email change token")?;
+
+        let user_id =
+            Uuid::from_slice(&user_id_bytes).context("Failed to convert user ID bytes to UUID")?;
+        let new_email = String::from_utf8(new_email_bytes)
+            .context("Failed to convert new email bytes to string")?;
+
+        Ok((user_id, new_email))
+    }
+
+    pub async fn change_email<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: &Uuid,
+        new_email: &str,
+    ) -> Result<User, ModelError> {
+        use crate::validators::EMAIL;
+
+        let new_email = new_email.to_ascii_lowercase();
+        EMAIL.run(&new_email)?;
+
+        let user = sqlx::query_scalar!(
+            r#"UPDATE users SET email = $1 WHERE id = $2 AND deactivated = false RETURNING users as "users!: User""#,
+            new_email,
+            user_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        CACHE.User.insert(user.id, user.clone().into());
+        Ok(user)
+    }
+
+    pub async fn mark_email_verified<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: &Uuid,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"INSERT INTO users_extension (user_id, email_verified_at)
+               VALUES ($1, now() at time zone 'utc')
+               ON CONFLICT (user_id)
+               DO UPDATE SET email_verified_at = now() at time zone 'utc'"#,
+            user_id
+        )
+        .execute(db)
+        .await?;
+
+        CACHE
+            .invalidate(crate::cache::CacheType::UserExt, *user_id)
+            .await;
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Serialize, Clone, sqlx::Type)]
@@ -655,5 +772,169 @@ mod tests {
         let result = User::verify_email_verification_token(problematic_token);
         println!("Verification result: {:?}", result);
         // We expect this to fail because it's likely expired or signed with different secret
+    }
+
+    #[test]
+    fn test_email_change_token_generation_and_verification() {
+        let user_id = Uuid::new_v4();
+        let new_email = "new@example.com";
+
+        // Generate token
+        let token = User::generate_email_change_token(&user_id, new_email);
+
+        // Verify token should succeed
+        let (verified_user_id, verified_email) =
+            User::verify_email_change_token(&token).expect("Token verification should succeed");
+
+        // Should return the same user ID and email
+        assert_eq!(user_id, verified_user_id);
+        assert_eq!(new_email, verified_email);
+    }
+
+    #[test]
+    fn test_email_change_token_invalid_format() {
+        // Test with invalid token format
+        let invalid_tokens = vec![
+            "invalid",
+            "invalid.token",
+            "invalid.token.format",
+            "invalid.token.format.extra.parts",
+            "",
+            "....",
+        ];
+
+        for invalid_token in invalid_tokens {
+            let result = User::verify_email_change_token(invalid_token);
+            assert!(
+                result.is_err(),
+                "Invalid token '{}' should fail verification",
+                invalid_token
+            );
+        }
+    }
+
+    #[test]
+    fn test_email_change_token_invalid_signature() {
+        let user_id = Uuid::new_v4();
+        let new_email = "test@example.com";
+        let token = User::generate_email_change_token(&user_id, new_email);
+
+        // Tamper with the signature
+        let mut parts: Vec<&str> = token.split('.').collect();
+        assert_eq!(parts.len(), 4);
+        parts[3] = "invalid_signature";
+        let tampered_token = parts.join(".");
+
+        let result = User::verify_email_change_token(&tampered_token);
+        assert!(
+            result.is_err(),
+            "Token with invalid signature should fail verification"
+        );
+    }
+
+    #[test]
+    fn test_email_change_token_expired() {
+        use crate::utils::sign;
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
+        use chrono::Utc;
+
+        let user_id = Uuid::new_v4();
+        let new_email = "expired@example.com";
+
+        // Create an expired token (timestamp in the past)
+        let expired_timestamp = Utc::now().timestamp() - 60; // 1 minute ago
+        let mut buffer = String::with_capacity(256);
+        base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
+        buffer.push('.');
+        base64_engine.encode_string(new_email.as_bytes(), &mut buffer);
+        buffer.push('.');
+        buffer.push_str(&expired_timestamp.to_string());
+
+        let signature = sign(&buffer);
+        buffer.push('.');
+        base64_engine.encode_string(signature, &mut buffer);
+
+        let result = User::verify_email_change_token(&buffer);
+        assert!(result.is_err(), "Expired token should fail verification");
+
+        // Check that the error message mentions expiration
+        let error_message = result.unwrap_err().to_string();
+        assert!(
+            error_message.contains("expired"),
+            "Error should mention token expiration"
+        );
+    }
+
+    #[test]
+    fn test_email_change_token_different_emails() {
+        let user_id = Uuid::new_v4();
+        let email1 = "test1@example.com";
+        let email2 = "test2@example.com";
+
+        let token1 = User::generate_email_change_token(&user_id, email1);
+        let token2 = User::generate_email_change_token(&user_id, email2);
+
+        // Tokens should be different
+        assert_ne!(token1, token2);
+
+        // Each token should verify to its respective email
+        let (verified_id1, verified_email1) = User::verify_email_change_token(&token1).unwrap();
+        let (verified_id2, verified_email2) = User::verify_email_change_token(&token2).unwrap();
+
+        assert_eq!(user_id, verified_id1);
+        assert_eq!(user_id, verified_id2);
+        assert_eq!(email1, verified_email1);
+        assert_eq!(email2, verified_email2);
+        assert_ne!(verified_email1, verified_email2);
+    }
+
+    #[test]
+    fn test_email_change_token_url_safe_encoding() {
+        use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+
+        let user_id = Uuid::new_v4();
+        let new_email = "test+special@example.com"; // Email with special characters
+        let token = User::generate_email_change_token(&user_id, new_email);
+
+        // Split the token into parts
+        let parts: Vec<&str> = token.split('.').collect();
+        assert_eq!(parts.len(), 4);
+
+        // All base64 parts should be valid URL-safe base64
+        for (i, part) in parts.iter().enumerate() {
+            let decode_result = if i == 2 {
+                // Timestamp is plain text, not base64
+                continue;
+            } else {
+                URL_SAFE_NO_PAD.decode(part)
+            };
+
+            assert!(
+                decode_result.is_ok(),
+                "Part {} should be valid URL-safe base64: {}",
+                i,
+                part
+            );
+
+            // Should not contain URL-unsafe characters
+            assert!(
+                !part.contains('+'),
+                "Part {} should not contain '+': {}",
+                i,
+                part
+            );
+            assert!(
+                !part.contains('/'),
+                "Part {} should not contain '/': {}",
+                i,
+                part
+            );
+            assert!(
+                !part.contains('='),
+                "Part {} should not contain '=': {}",
+                i,
+                part
+            );
+        }
     }
 }

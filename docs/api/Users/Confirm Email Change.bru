@@ -1,0 +1,17 @@
+meta {
+  name: Confirm Email Change
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{base_url}}/users/confirm_email_change
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "token": "email_change_token_here"
+  }
+}

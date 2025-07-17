@@ -70,7 +70,7 @@ jobs:
     if: github.ref == 'refs/heads/production'
     environment:
       name: production
-      url: https://site.boluo.chat
+      url: https://site.boluochat.com
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4

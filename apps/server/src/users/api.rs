@@ -131,3 +131,30 @@ pub struct DiscourseResponse {
     pub avatar_url: Option<String>,
     pub require_activation: bool,
 }
+
+#[derive(Debug, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ResendEmailVerificationResult {
+    AlreadyVerified,
+    Sent,
+}
+
+#[derive(Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EmailVerificationStatus {
+    pub is_verified: bool,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestEmailChange {
+    pub new_email: String,
+    #[serde(default)]
+    pub lang: Option<String>,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfirmEmailChange {
+    pub token: String,
+}

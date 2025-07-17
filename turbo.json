@@ -4,7 +4,6 @@
   "globalEnv": [
     "NODE_ENV",
     "PUBLIC_BACKEND_URL",
-    "DOMAIN",
     "BACKEND_URL",
     "SENTRY_URL",
     "SENTRY_DSN",

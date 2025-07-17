@@ -91,6 +91,8 @@ export type CocRollResult = { subType: CocRollSubType; target?: PureExprNode | n
 
 export type CocRollSubType = 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENALTY_2';
 
+export type ConfirmEmailChange = { token: string };
+
 export type ConnectionError = 'NOT_FOUND' | 'NO_PERMISSION' | 'INVALID_TOKEN' | 'UNEXPECTED';
 
 export type ConnectionState = {
@@ -192,6 +194,8 @@ export type EditUser = {
   avatar: string | null;
   defaultColor: string | null;
 };
+
+export type EmailVerificationStatus = { isVerified: boolean };
 
 export type Entities = Entity[];
 
@@ -499,7 +503,11 @@ export type RepeatResult = { node: ExprNode; count: number } & {
   value: number;
 };
 
+export type RequestEmailChange = { newEmail: string; lang?: string | null };
+
 export type ResendEmailVerification = { lang?: string | null };
+
+export type ResendEmailVerificationResult = 'ALREADY_VERIFIED' | 'SENT';
 
 export type ResetPassword = { email: string; lang: string | null };
 

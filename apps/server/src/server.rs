@@ -60,7 +60,7 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
     let path = req.uri().path().to_string();
 
     if !path.starts_with("/api/") {
-        let target = "https://old.boluo.chat".to_string() + &path;
+        let target = "https://old.boluochat.com".to_string() + &path;
         return hyper::Response::builder()
             .status(302)
             .header("Location", target)

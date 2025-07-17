@@ -16,7 +16,10 @@ use crate::session::{
 };
 use crate::spaces::Space;
 use crate::ttl::{Lifespan, Mortal, minute};
-use crate::users::api::{CheckEmailExists, CheckUsernameExists, EditUser, GetMe, QueryUser};
+use crate::users::api::{
+    CheckEmailExists, CheckUsernameExists, EditUser, EmailVerificationStatus, GetMe, QueryUser,
+    ResendEmailVerificationResult,
+};
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
 use crate::{db, mail};
@@ -148,7 +151,11 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
 
 pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session;
-
+    let origin = req
+        .headers()
+        .get(hyper::header::ORIGIN)
+        .and_then(|x| x.to_str().ok())
+        .map(|s| s.to_string());
     let is_debug = req.headers().get("X-Debug").is_some();
     let form: Login = interface::parse_body(req).await?;
     let pool = db::get().await;
@@ -195,7 +202,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let headers = response.headers_mut();
     add_settings_cookie(&settings, headers);
     if !form.with_token {
-        add_session_cookie(&session.id, is_debug, headers);
+        add_session_cookie(origin.as_deref(), &session.id, is_debug, headers);
     }
     Ok(response)
 }
@@ -495,7 +502,9 @@ pub async fn verify_email(req: Request<impl Body>) -> Result<(), AppError> {
     Ok(())
 }
 
-pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), AppError> {
+pub async fn resend_email_verification(
+    req: Request<impl Body>,
+) -> Result<ResendEmailVerificationResult, AppError> {
     use crate::session::authenticate;
     use crate::users::api::ResendEmailVerification;
 
@@ -510,11 +519,14 @@ pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), Ap
     // Check if email is already verified
     let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
     if is_verified {
-        return Err(AppError::BadRequest(
-            "Email is already verified".to_string(),
-        ));
+        return Ok(ResendEmailVerificationResult::AlreadyVerified);
     }
 
+    tracing::debug!(
+        user_id = %user.id,
+        email = %user.email,
+        "Resending email verification"
+    );
     send_email_verification(&user.email, &user.id, lang.as_deref()).await?;
 
     tracing::info!(
@@ -523,7 +535,165 @@ pub async fn resend_email_verification(req: Request<impl Body>) -> Result<(), Ap
         "Resent email verification"
     );
 
+    Ok(ResendEmailVerificationResult::Sent)
+}
+
+pub async fn check_email_verification_status(
+    req: Request<impl Body>,
+) -> Result<EmailVerificationStatus, AppError> {
+    use crate::session::authenticate;
+
+    let session = authenticate(&req).await?;
+    let pool = db::get().await;
+    let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
+
+    Ok(EmailVerificationStatus { is_verified })
+}
+
+async fn send_email_change_verification(
+    new_email: &str,
+    user_id: &Uuid,
+    lang: Option<&str>,
+) -> Result<(), AppError> {
+    let token = User::generate_email_change_token(user_id, new_email);
+    let lang = lang.unwrap_or("en");
+
+    match lang {
+        "zh" | "zh-CN" | "zh_CN" => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.zh-CN.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.zh-CN.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "zh-TW" | "zh_TW" => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.zh-TW.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.zh-TW.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        "ja" => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.ja.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.ja.html"),
+                    token
+                ),
+            )
+            .await
+        }
+        _ => {
+            mail::send(
+                new_email,
+                include_str!("../../text/email-change/title.en.txt").trim(),
+                &format!(
+                    include_str!("../../text/email-change/content.en.html"),
+                    token
+                ),
+            )
+            .await
+        }
+    }
+    .map_err(AppError::Unexpected)?;
     Ok(())
+}
+
+pub async fn request_email_change(req: Request<impl Body>) -> Result<(), AppError> {
+    use crate::session::authenticate;
+    use crate::users::api::RequestEmailChange;
+    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
+    use std::net::IpAddr;
+
+    static IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
+        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(10).unwrap()))
+    });
+    let ip = get_ip(&req)?;
+    IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
+
+    let session = authenticate(&req).await?;
+    let RequestEmailChange { new_email, lang } = parse_body(req).await?;
+
+    let new_email = new_email.trim().to_lowercase();
+    crate::validators::EMAIL.run(&new_email)?;
+
+    static EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> = LazyLock::new(|| {
+        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(5).unwrap()))
+    });
+    EMAIL_LIMITER
+        .check_key(&new_email)
+        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
+
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+
+    let current_user = User::get_by_id(&mut *conn, &session.user_id)
+        .await
+        .or_not_found()?;
+
+    if current_user.email == new_email {
+        return Err(AppError::BadRequest(
+            "New email is the same as current email".to_string(),
+        ));
+    }
+
+    if User::get_by_email(&mut *conn, &new_email).await?.is_some() {
+        return Err(AppError::Conflict(
+            "Email address is already in use".to_string(),
+        ));
+    }
+
+    send_email_change_verification(&new_email, &session.user_id, lang.as_deref()).await?;
+
+    tracing::info!(
+        user_id = %session.user_id,
+        current_email = %current_user.email,
+        new_email = %new_email,
+        "Email change verification sent"
+    );
+
+    Ok(())
+}
+
+pub async fn confirm_email_change(req: Request<impl Body>) -> Result<User, AppError> {
+    use crate::users::api::ConfirmEmailChange;
+
+    let ConfirmEmailChange { token } = parse_body(req).await?;
+
+    let (user_id, new_email) = User::verify_email_change_token(&token)
+        .map_err(|e| AppError::BadRequest(format!("Invalid email change token: {}", e)))?;
+
+    let pool = db::get().await;
+    let mut conn = pool.acquire().await?;
+
+    let current_user = User::get_by_id(&mut *conn, &user_id).await.or_not_found()?;
+
+    let updated_user = User::change_email(&mut *conn, &user_id, &new_email).await?;
+
+    // Mark the new email as verified since user confirmed the change via email
+    User::mark_email_verified(&mut *conn, &user_id).await?;
+
+    CACHE.User.insert(user_id, updated_user.clone().into());
+
+    tracing::info!(
+        user_id = %user_id,
+        old_email = %current_user.email,
+        new_email = %new_email,
+        "User email changed successfully"
+    );
+
+    Ok(updated_user)
 }
 
 /// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
@@ -531,6 +701,8 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
     use crate::context::media_public_url;
     use crate::session::authenticate;
+
+    let current_url = req.uri().to_string();
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
     use ring::hmac;
 
@@ -564,31 +736,18 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
         .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
 
+    let site_url = crate::context::SITE_URL.as_str();
+
     // Authenticate the user
     let session = match authenticate(&req).await {
         Ok(session) => session,
         Err(AppError::Unauthenticated(_)) => {
             // User not authenticated, redirect to login with next parameter
-            let login_url = std::env::var("LOGIN_URL")
-                .map_err(|_| AppError::BadRequest("LOGIN_URL not configured".to_string()))?;
 
             // Encode the current request URL as the next parameter
-            use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-            const QUERY: &AsciiSet = &CONTROLS
-                .add(b' ')
-                .add(b'"')
-                .add(b'<')
-                .add(b'>')
-                .add(b'`')
-                .add(b'&')
-                .add(b'=');
-
-            let current_url = format!(
-                "/api/users/discourse/start?sso={}&sig={}",
-                utf8_percent_encode(&sso, QUERY).to_string(),
-                utf8_percent_encode(&sig, QUERY).to_string()
-            );
-            let encoded_next = utf8_percent_encode(&current_url, QUERY).to_string();
+            use crate::utils::url_percent_encode;
+            let encoded_next = url_percent_encode(&current_url);
+            let login_url = format!("{site_url}/account/login",);
             let redirect_url = format!("{}?next={}", login_url, encoded_next);
 
             tracing::info!(
@@ -611,6 +770,25 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     let user = User::get_by_id(&mut *conn, &session.user_id)
         .await
         .or_not_found()?;
+    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
+
+    if !email_verified {
+        use crate::utils::url_percent_encode;
+        let encoded_next = url_percent_encode(&current_url);
+        let redirect_url = format!("{site_url}/account/verify-email?next={}", encoded_next);
+
+        tracing::info!(
+            user_id = %user.id,
+            redirect_url = %redirect_url,
+            "Redirecting unverified user to verify email"
+        );
+
+        return hyper::Response::builder()
+            .status(hyper::StatusCode::FOUND)
+            .header(hyper::header::LOCATION, redirect_url)
+            .body(Vec::new())
+            .map_err(|e| AppError::Unexpected(e.into()));
+    }
 
     tracing::info!(
         user_id = %user.id,
@@ -623,8 +801,6 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         .avatar_id
         .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
-    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
-
     // Create response payload
     let response_data = DiscourseResponse {
         nonce: payload.nonce,
@@ -632,7 +808,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         email: user.email,
         username: user.username,
         name: user.nickname,
-        require_activation: !email_verified,
+        require_activation: false,
         bio: if user.bio.is_empty() {
             None
         } else {
@@ -702,6 +878,11 @@ pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u
         ("/resend_email_verification", Method::POST) => {
             resend_email_verification(req).await.map(ok_response)
         }
+        ("/email_verification_status", Method::GET) => {
+            check_email_verification_status(req).await.map(ok_response)
+        }
+        ("/request_email_change", Method::POST) => request_email_change(req).await.map(ok_response),
+        ("/confirm_email_change", Method::POST) => confirm_email_change(req).await.map(ok_response),
         _ => missing(),
     }
 }

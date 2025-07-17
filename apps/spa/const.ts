@@ -1,9 +1,6 @@
 /* eslint-disable no-restricted-globals */
 export const IS_BROWSER = typeof window !== 'undefined';
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
-export const PUBLIC_BACKEND_URL = process.env.PUBLIC_BACKEND_URL;
-export const DEFAULT_BACKEND_URL =
-  PUBLIC_BACKEND_URL || (typeof window === 'undefined' ? '' : window.location.origin);
 
 export const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 export const APP_URL = process.env.APP_URL;

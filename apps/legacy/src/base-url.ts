@@ -1,4 +1,5 @@
 import { getRouteScore, getAllRouteStats } from './hooks/useBaseUrlMovingAverage';
+import { originMap } from '@boluo/api/origin-map';
 
 export interface Proxy {
   name: string;
@@ -16,9 +17,10 @@ export const getBaseUrlList = async (): Promise<string[]> => {
   const urls = [
     getDefaultBaseUrl(),
     ...proxies.map((proxy) => {
-      if (proxy.url.endsWith('.boluo.chat') && window.location.origin.endsWith('boluochat.com')) {
+      // TODO: Remove this hack
+      if (proxy.url.endsWith('boluo.chat') && window.location.origin.endsWith('boluochat.com')) {
         // Replace boluo.chat with boluochat.com
-        return proxy.url.replace('.boluo.chat', '.boluochat.com');
+        return proxy.url.replace('boluo.chat', 'boluochat.com');
       } else {
         return proxy.url;
       }
@@ -30,13 +32,14 @@ export const getBaseUrlList = async (): Promise<string[]> => {
 const FAILED = Number.MAX_SAFE_INTEGER;
 
 export const getDefaultBaseUrl = (): string => {
-  // eslint-disable-next-line no-restricted-globals
-  const BASE_URL = process.env.PUBLIC_BACKEND_URL;
-  if (typeof BASE_URL === 'string') {
-    return BASE_URL;
+  const { origin } = window.location;
+  for (const [key, value] of Object.entries(originMap)) {
+    if (origin.endsWith(key)) {
+      return value;
+    }
   }
-  console.warn('No PUBLIC_BACKEND_URL found, using location.origin');
-  return location.origin;
+  console.warn('Unknown origin, using location.origin', origin);
+  return origin;
 };
 
 const timeout = (ms: number): Promise<'TIMEOUT'> => {

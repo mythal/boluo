@@ -13,20 +13,11 @@ import {
 } from '@boluo/theme';
 import type { ChildrenProps } from '@boluo/utils';
 import { LocaleProvider } from './LocaleProvider';
-import { backendUrlAtom } from '@boluo/api-browser';
-import { PUBLIC_BACKEND_URL } from '../../const';
 
 interface Props extends ChildrenProps {
   locale: Locale;
   messages: IntlMessages;
 }
-
-store.set(backendUrlAtom, (prev): string => {
-  if (prev || !PUBLIC_BACKEND_URL) {
-    return prev;
-  }
-  return PUBLIC_BACKEND_URL;
-});
 
 export const ClientProviders: FC<Props> = ({ children, locale, messages }) => {
   useEffect(() => {

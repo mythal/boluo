@@ -44,7 +44,7 @@ function My() {
         </Title>
         <News css={[mB(2)]}>
           现在会根据延迟自动选择线路，改进了断线重连。重写的
-          <ExternalLink css={link} to="https://next.boluo.chat">
+          <ExternalLink css={link} to="https://site.boluochat.com">
             新版菠萝
           </ExternalLink>
           可以试用。

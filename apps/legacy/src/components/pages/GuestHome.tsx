@@ -74,7 +74,7 @@ function GuestHome() {
       </ul>
       <Text>
         想要了解更多，也可以
-        <ExternalLink to="https://forum.boluo.chat/" css={link}>
+        <ExternalLink to="https://forum.mythal.net/" css={link}>
           访问菠萝讨论版
         </ExternalLink>
         。

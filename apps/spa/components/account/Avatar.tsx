@@ -31,6 +31,6 @@ export const Avatar: FC<Props> = (props) => {
     );
   }
 
-  const src = `https://avatars.boluo.chat/${encodeURIComponent(id + name)}`;
+  const src = `https://avatars.boluochat.com/${encodeURIComponent(id + name)}`;
   return <img className={className} style={style} onClick={onClick} alt={name} src={src} />;
 };

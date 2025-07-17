@@ -38,9 +38,8 @@ function addToken(params: RequestInit): RequestInit {
   }
   const token = getToken();
   if (token) {
-    headers.set('Authorization', token);
+    headers.set('Authorization', `Bearer ${token}`);
   }
-  // headers.set('Authorization', `Bearer ${token}`);
   return { ...params, headers };
 }
 
@@ -88,7 +87,7 @@ export async function login(
   username: string,
   password: string,
 ): Promise<Result<LoginReturn, ApiError>> {
-  const withToken = isCrossOrigin();
+  const withToken = true;
   const result = await post('/users/login', null, { password, username, withToken });
   if (result.isOk && result.some.token) {
     setToken(result.some.token);

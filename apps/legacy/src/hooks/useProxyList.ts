@@ -6,8 +6,9 @@ const fetchList = async (): Promise<Proxy[]> => {
   const response = await fetch(getDefaultBaseUrl() + '/api/info/proxies');
   const proxies = (await response.json()) as Proxy[];
   return proxies.map((proxy) => {
-    if (proxy.url.endsWith('.boluo.chat') && window.location.origin.endsWith('boluochat.com')) {
-      return { ...proxy, url: proxy.url.replace('.boluo.chat', '.boluochat.com') };
+    // TODO: Remove this hack
+    if (proxy.url.endsWith('boluo.chat') && window.location.origin.endsWith('boluochat.com')) {
+      return { ...proxy, url: proxy.url.replace('boluo.chat', 'boluochat.com') };
     }
     return proxy;
   });

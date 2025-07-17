@@ -32,7 +32,6 @@ const config: NextConfig = {
   },
   env: {
     PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
-    PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL,
     SITE_URL: process.env.SITE_URL,
     APP_URL: process.env.APP_URL,
     SENTRY_DSN: process.env.SENTRY_DSN,

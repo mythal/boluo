@@ -5,13 +5,25 @@ import type { Result } from '@boluo/utils/result';
 import { isCrossOrigin } from '@boluo/utils/browser';
 import { ApiError } from '@boluo/api/errors';
 import type { LoginReturn, User, Media } from '@boluo/api/bindings';
+import { originMap } from '@boluo/api/origin-map';
 
 export const backendUrlAtom = atom('');
+
+export const getDefaultBaseUrl = (): string => {
+  const origin = window.location.origin;
+  for (const [key, value] of Object.entries(originMap)) {
+    if (origin.endsWith(key)) {
+      return value;
+    }
+  }
+  console.warn('Unknown origin, using location.origin', origin);
+  return origin;
+};
 
 export const apiUrlAtom = atom((get) => {
   const url = get(backendUrlAtom).trim() || '';
   if (url === '') {
-    return window.location.origin + '/api';
+    return `${getDefaultBaseUrl()}/api`;
   } else if (url.endsWith('/api')) {
     return url;
   } else if (url.endsWith('/')) {

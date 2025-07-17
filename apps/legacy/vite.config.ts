@@ -36,10 +36,6 @@ export default defineConfig({
     },
   },
 
-  define: {
-    'process.env.PUBLIC_BACKEND_URL': JSON.stringify(process.env.PUBLIC_BACKEND_URL),
-  },
-
   build: {
     sourcemap: true,
     rollupOptions: {

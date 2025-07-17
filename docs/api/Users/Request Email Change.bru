@@ -1,0 +1,18 @@
+meta {
+  name: Request Email Change
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{base_url}}/users/request_email_change
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "newEmail": "new@example.com",
+    "lang": "zh-CN"
+  }
+}

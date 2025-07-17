@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET email = $1 WHERE id = $2 AND deactivated = false RETURNING users as \"users!: User\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "users!: User",
+        "type_info": {
+          "Custom": {
+            "name": "users",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "email",
+                  "Text"
+                ],
+                [
+                  "username",
+                  "Text"
+                ],
+                [
+                  "nickname",
+                  "Text"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "bio",
+                  "Text"
+                ],
+                [
+                  "joined",
+                  "Timestamptz"
+                ],
+                [
+                  "deactivated",
+                  "Bool"
+                ],
+                [
+                  "avatar_id",
+                  "Uuid"
+                ],
+                [
+                  "default_color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ef2593b66ee91ebdb917d303fbc1ab9fa5c1c580d10f56ce1f8e42b3a6c373e0"
+}

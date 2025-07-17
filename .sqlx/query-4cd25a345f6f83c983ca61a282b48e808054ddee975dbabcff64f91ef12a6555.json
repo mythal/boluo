@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users_extension (user_id, email_verified_at)\n               VALUES ($1, now() at time zone 'utc')\n               ON CONFLICT (user_id)\n               DO UPDATE SET email_verified_at = now() at time zone 'utc'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4cd25a345f6f83c983ca61a282b48e808054ddee975dbabcff64f91ef12a6555"
+}

@@ -59,8 +59,14 @@
   "1iEPTM": {
     "message": "General"
   },
+  "2FQR6Z": {
+    "message": "Invalid verification link"
+  },
   "2J8G6R": {
     "message": "File size must be less than {sizeLimit}M"
+  },
+  "2gxYvc": {
+    "message": "The verification link may have expired or is invalid. You can request a new verification email."
   },
   "2pzTGC": {
     "message": "Critical"
@@ -128,6 +134,9 @@
   "6QRlW8": {
     "message": "Waiting for reconnection ({countdown}s)"
   },
+  "6QtXvB": {
+    "message": "Verification email sent! Please check your inbox."
+  },
   "6q3tCn": {
     "message": "Connecting"
   },
@@ -149,8 +158,17 @@
   "8+j66D": {
     "message": "Are you sure you want to delete this message?"
   },
+  "82Y7Sa": {
+    "message": "Sending..."
+  },
   "88cMEG": {
     "message": "Destory Space"
+  },
+  "8be59M": {
+    "message": "Email verified successfully!"
+  },
+  "8mVcs0": {
+    "message": "Verify Email"
   },
   "8pN86+": {
     "message": "{name} is composing…"
@@ -203,6 +221,9 @@
   "C81/uG": {
     "message": "Logout"
   },
+  "CNLipo": {
+    "message": "Verification failed. Please try again or contact support."
+  },
   "CW7jWC": {
     "message": "(me)"
   },
@@ -229,6 +250,9 @@
   },
   "DBP+Od": {
     "message": "Echo"
+  },
+  "EX+XpL": {
+    "message": "Resend verification email"
   },
   "F3Wc9W": {
     "message": "Last {day} days"
@@ -344,6 +368,9 @@
   "L01rMU": {
     "message": "By default member will speak on their own behalf."
   },
+  "LQcfcb": {
+    "message": "Email verification failed"
+  },
   "LUrJwE": {
     "message": "Channels"
   },
@@ -425,8 +452,14 @@
   "Q+Af6H": {
     "message": "Out of Game"
   },
+  "Q3y8oz": {
+    "message": "Go to Home"
+  },
   "Q8Qw5B": {
     "message": "Description"
+  },
+  "Q8hmJq": {
+    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
@@ -448,6 +481,9 @@
   },
   "R5iTJ0": {
     "message": "If you see this text, please try to swipe down ↓ to display the content."
+  },
+  "RgG2YP": {
+    "message": "The verification link is missing or invalid."
   },
   "RraqCg": {
     "message": "Username and password do not match"
@@ -505,6 +541,9 @@
   },
   "UhsO+i": {
     "message": "Message not found"
+  },
+  "UizMy7": {
+    "message": "Failed to resend verification email. Please try again later."
   },
   "Ujs8Kg": {
     "message": "Message from server"
@@ -821,6 +860,9 @@
   "nmSKJK": {
     "message": "Can't be empty."
   },
+  "oGBmRj": {
+    "message": "Failed to query the channel members"
+  },
   "oSgCYv": {
     "message": "You are not a member of this space"
   },
@@ -895,6 +937,9 @@
   },
   "rl4pg7": {
     "message": "Reorder channel"
+  },
+  "ro9oGh": {
+    "message": "Verifying your email..."
   },
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
@@ -982,6 +1027,9 @@
   },
   "xWN20+": {
     "message": "You can't see"
+  },
+  "xesJVv": {
+    "message": "Go to App"
   },
   "xgZgnO": {
     "message": "Wrong request method."

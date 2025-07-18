@@ -12,6 +12,8 @@ const config: NextConfig = {
   },
   output: 'standalone',
   turbopack: {
+    // Workaround for https://github.com/vercel/next.js/issues/81628
+    root: path.join(__dirname, '../..'),
     resolveAlias: {
       '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },

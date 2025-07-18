@@ -7,6 +7,7 @@ use super::api::{
 use super::models::User;
 use crate::cache::CACHE;
 use crate::channels::Channel;
+use crate::context::SITE_URL;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface;
 use crate::interface::{missing, ok_response, parse_body, parse_query};
@@ -352,6 +353,8 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
         .await?
         .to_string();
 
+    let site_url = SITE_URL.as_str();
+
     let lang = lang.as_deref().unwrap_or("en");
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
@@ -360,7 +363,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
                 include_str!("../../text/reset-password/title.zh-CN.txt").trim(),
                 &format!(
                     include_str!("../../text/reset-password/content.zh-CN.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -371,7 +374,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
                 include_str!("../../text/reset-password/title.zh-TW.txt").trim(),
                 &format!(
                     include_str!("../../text/reset-password/content.zh-TW.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -382,7 +385,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
                 include_str!("../../text/reset-password/title.ja.txt").trim(),
                 &format!(
                     include_str!("../../text/reset-password/content.ja.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -393,7 +396,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
                 include_str!("../../text/reset-password/title.en.txt").trim(),
                 &format!(
                     include_str!("../../text/reset-password/content.en.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -433,6 +436,8 @@ async fn send_email_verification(
     let token = User::generate_email_verification_token(user_id);
     let lang = lang.unwrap_or("en");
 
+    let site_url = SITE_URL.as_str();
+
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
             mail::send(
@@ -440,7 +445,7 @@ async fn send_email_verification(
                 include_str!("../../text/email-verification/title.zh-CN.txt").trim(),
                 &format!(
                     include_str!("../../text/email-verification/content.zh-CN.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -451,7 +456,7 @@ async fn send_email_verification(
                 include_str!("../../text/email-verification/title.zh-TW.txt").trim(),
                 &format!(
                     include_str!("../../text/email-verification/content.zh-TW.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -462,7 +467,7 @@ async fn send_email_verification(
                 include_str!("../../text/email-verification/title.ja.txt").trim(),
                 &format!(
                     include_str!("../../text/email-verification/content.ja.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -473,7 +478,7 @@ async fn send_email_verification(
                 include_str!("../../text/email-verification/title.en.txt").trim(),
                 &format!(
                     include_str!("../../text/email-verification/content.en.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -558,6 +563,8 @@ async fn send_email_change_verification(
     let token = User::generate_email_change_token(user_id, new_email);
     let lang = lang.unwrap_or("en");
 
+    let site_url = SITE_URL.as_str();
+
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
             mail::send(
@@ -565,7 +572,7 @@ async fn send_email_change_verification(
                 include_str!("../../text/email-change/title.zh-CN.txt").trim(),
                 &format!(
                     include_str!("../../text/email-change/content.zh-CN.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -576,7 +583,7 @@ async fn send_email_change_verification(
                 include_str!("../../text/email-change/title.zh-TW.txt").trim(),
                 &format!(
                     include_str!("../../text/email-change/content.zh-TW.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -587,7 +594,7 @@ async fn send_email_change_verification(
                 include_str!("../../text/email-change/title.ja.txt").trim(),
                 &format!(
                     include_str!("../../text/email-change/content.ja.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await
@@ -598,7 +605,7 @@ async fn send_email_change_verification(
                 include_str!("../../text/email-change/title.en.txt").trim(),
                 &format!(
                     include_str!("../../text/email-change/content.en.html"),
-                    token
+                    site_url, token
                 ),
             )
             .await

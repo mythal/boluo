@@ -31,14 +31,14 @@
     "rich-textarea": "^0.26.4",
     "swr": "^2.3.3",
     "uuid": "^11.1.0",
-    "zod": "^3.24.2"
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@boluo/eslint-config": "*",
     "@boluo/typescript-config": "*",
     "@next/bundle-analyzer": "^15.2.4",
     "@next/eslint-plugin-next": "^15.2.4",
-    "@swc/plugin-formatjs": "^5.1.1",
+    "@swc/plugin-formatjs": "^6.0.0",
     "@types/eslint": "^9.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.12",

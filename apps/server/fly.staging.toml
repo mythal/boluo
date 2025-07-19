@@ -1,6 +1,5 @@
 app = "boluo-server-staging"
 primary_region = "nrt"
-swap_size_mb = 512
 
 [build]
   image = "ghcr.io/mythal/boluo/server:latest"
@@ -22,6 +21,8 @@ swap_size_mb = 512
   internal_port = 3_000
   min_machines_running = 0
   processes = ["app"]
+  [http_service.http_options]
+    h2_backend = true
 
   [[http_service.checks]]
     grace_period = "20s"

@@ -221,6 +221,9 @@
   "C81/uG": {
     "message": "Logout"
   },
+  "C8PHob": {
+    "message": "Connection lost due to inactivity, please refresh the page."
+  },
   "CNLipo": {
     "message": "Verification failed. Please try again or contact support."
   },

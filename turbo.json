@@ -26,6 +26,7 @@
     "check-types": { "dependsOn": ["^check-types"] },
     "storybook": { "dependsOn": ["^build"], "cache": false, "persistent": true },
     "dev": { "dependsOn": ["^generate", "generate", "^build"], "cache": false, "persistent": true },
+    "@boluo/lang#generate": { "cache": false },
     "@boluo/icons#generate": { "dependsOn": [], "inputs": ["icons/**"], "outputs": ["src/**"] },
     "@boluo/icons#build": {
       "dependsOn": ["^build", "generate"],

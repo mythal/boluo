@@ -12,7 +12,7 @@ use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::ORIGIN;
-use hyper::server::conn::http2;
+use hyper::server::conn::http1;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 
@@ -331,7 +331,7 @@ async fn handle_connection(
         Ok((stream, addr)) => {
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
-                if let Err(err) = http2::Builder::new(TokioExecutor)
+                if let Err(err) = http1::Builder::new()
                     .serve_connection(io, service_fn(handler))
                     .await
                 {

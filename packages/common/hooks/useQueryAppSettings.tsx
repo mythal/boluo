@@ -10,11 +10,10 @@ export const useQueryAppSettings = (): AppSettings => {
       return result.unwrap();
     },
     {
-      suspense: true,
+      suspense: false,
       revalidateIfStale: false,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      fallbackData: {},
     },
   );
   return data || {};

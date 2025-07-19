@@ -782,7 +782,10 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     if !email_verified {
         use crate::utils::url_percent_encode;
         let encoded_next = url_percent_encode(&current_url);
-        let redirect_url = format!("{site_url}/account/verify-email?next={}", encoded_next);
+        let redirect_url = format!(
+            "{site_url}/account/verify-email?source=forum_login&next={}",
+            encoded_next
+        );
 
         tracing::info!(
             user_id = %user.id,

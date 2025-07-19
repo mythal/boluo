@@ -45,3 +45,7 @@ primary_region = 'nrt'
   memory = '512mb'
   cpu_kind = 'shared'
   cpus = 2
+
+[metrics]
+  port = 9000
+  path = '/metrics'

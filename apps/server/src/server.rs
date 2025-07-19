@@ -286,6 +286,22 @@ async fn main() {
         return;
     }
 
+    if let Ok(exporter_listen) = std::env::var("PROMETHEUS_EXPORTER") {
+        let addr = exporter_listen
+            .parse::<SocketAddr>()
+            .expect("Invalid address for Prometheus exporter");
+        metrics_exporter_prometheus::PrometheusBuilder::new()
+            .with_http_listener(addr)
+            .install()
+            .expect("Failed to install Prometheus metrics exporter");
+        tracing::info!("Prometheus metrics exporter installed on {}", addr);
+
+        tokio::task::spawn(
+            tokio_metrics::RuntimeMetricsReporterBuilder::default()
+                .with_interval(std::time::Duration::from_secs(15))
+                .describe_and_run(),
+        );
+    }
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())

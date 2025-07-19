@@ -254,6 +254,16 @@ async fn main() {
     redis::check().await;
     tracing::info!("Redis is ready");
 
+    if context::SITE_URL.is_none() {
+        tracing::error!("SITE_URL is not set");
+    }
+    if context::APP_URL.is_none() {
+        tracing::error!("APP_URL is not set");
+    }
+    if context::PUBLIC_MEDIA_URL.is_none() {
+        tracing::error!("PUBLIC_MEDIA_URL is not set");
+    }
+
     if args.check {
         return;
     }

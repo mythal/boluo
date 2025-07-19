@@ -7,7 +7,7 @@ use super::api::{
 use super::models::User;
 use crate::cache::CACHE;
 use crate::channels::Channel;
-use crate::context::SITE_URL;
+use crate::context::get_site_url;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface;
 use crate::interface::{missing, ok_response, parse_body, parse_query};
@@ -353,7 +353,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
         .await?
         .to_string();
 
-    let site_url = SITE_URL.as_str();
+    let site_url = get_site_url()?;
 
     let lang = lang.as_deref().unwrap_or("en");
     match lang {
@@ -436,7 +436,7 @@ async fn send_email_verification(
     let token = User::generate_email_verification_token(user_id);
     let lang = lang.unwrap_or("en");
 
-    let site_url = SITE_URL.as_str();
+    let site_url = get_site_url()?;
 
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
@@ -563,7 +563,7 @@ async fn send_email_change_verification(
     let token = User::generate_email_change_token(user_id, new_email);
     let lang = lang.unwrap_or("en");
 
-    let site_url = SITE_URL.as_str();
+    let site_url = get_site_url()?;
 
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
@@ -743,7 +743,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
         .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
 
-    let site_url = crate::context::SITE_URL.as_str();
+    let site_url = get_site_url()?;
 
     // Authenticate the user
     let session = match authenticate(&req).await {

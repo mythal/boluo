@@ -13,11 +13,9 @@ primary_region = "nrt"
   strategy = "bluegreen"
 
 [env]
-  APP_URL = "https://app.boluochat.com"
   BACKEND_URL = "https://production.boluochat.com"
   HOSTNAME = "0.0.0.0"
   PORT = "3000"
-  PUBLIC_MEDIA_URL = "https://media.boluochat.com"
 
 [http_service]
   auto_start_machines = true

@@ -28,7 +28,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.BACKEND_URL || 'https://production.boluochat.com',
+        target: process.env.BACKEND_URL,
         changeOrigin: true,
         secure: false,
         ws: true,

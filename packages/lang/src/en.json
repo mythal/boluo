@@ -59,20 +59,17 @@
   "1iEPTM": {
     "message": "General"
   },
-  "2FQR6Z": {
-    "message": "Invalid verification link"
-  },
   "2J8G6R": {
     "message": "File size must be less than {sizeLimit}M"
-  },
-  "2gxYvc": {
-    "message": "The verification link may have expired or is invalid. You can request a new verification email."
   },
   "2pzTGC": {
     "message": "Critical"
   },
   "2s3EZW": {
     "message": "Need A Name"
+  },
+  "2tXtyi": {
+    "message": "Please verify your email to continue."
   },
   "39AHJm": {
     "message": "Sign Up"
@@ -100,6 +97,9 @@
   },
   "4udfbj": {
     "message": "Export Channel"
+  },
+  "56x7wR": {
+    "message": "verify it"
   },
   "5HUwAy": {
     "message": "Only letters, numbers, and underscores are allowed."
@@ -254,9 +254,6 @@
   "DBP+Od": {
     "message": "Echo"
   },
-  "EX+XpL": {
-    "message": "Resend verification email"
-  },
   "F3Wc9W": {
     "message": "Last {day} days"
   },
@@ -310,6 +307,9 @@
   },
   "INVcoD": {
     "message": "It's currently in active development and everything is unstable."
+  },
+  "IPvPs7": {
+    "message": "Send verification email"
   },
   "IQwWyF": {
     "message": "You must be logged in to join a channel."
@@ -368,6 +368,9 @@
   "Kp8wZw": {
     "message": "Have not set a bio yet"
   },
+  "KzpV1w": {
+    "message": "Your email is not verified, please {verifyEmail}."
+  },
   "L01rMU": {
     "message": "By default member will speak on their own behalf."
   },
@@ -406,6 +409,9 @@
   },
   "N97hnL": {
     "message": "No permission."
+  },
+  "NA+vcf": {
+    "message": "Please verify your email to login to the forum."
   },
   "NXI/XL": {
     "message": "Auto"
@@ -455,9 +461,6 @@
   "Q+Af6H": {
     "message": "Out of Game"
   },
-  "Q3y8oz": {
-    "message": "Go to Home"
-  },
   "Q8Qw5B": {
     "message": "Description"
   },
@@ -484,9 +487,6 @@
   },
   "R5iTJ0": {
     "message": "If you see this text, please try to swipe down ↓ to display the content."
-  },
-  "RgG2YP": {
-    "message": "The verification link is missing or invalid."
   },
   "RraqCg": {
     "message": "Username and password do not match"
@@ -683,6 +683,9 @@
   "bT0FEQ": {
     "message": "Are you sure you want to delete the \"{channelName}\" channel?"
   },
+  "bqyi2y": {
+    "message": "Please {login} to verify your email."
+  },
   "c1nBz9": {
     "message": "As the character of …"
   },
@@ -815,6 +818,9 @@
   "jRANBd": {
     "message": "Edit message"
   },
+  "jd7fUZ": {
+    "message": "Resend in {countdown} seconds"
+  },
   "jtLNcT": {
     "message": "Failed to move the message, the target is lost. Please try again."
   },
@@ -844,6 +850,9 @@
   },
   "lx+ssX": {
     "message": "Leave Space"
+  },
+  "mLZ+cF": {
+    "message": "Your email has been verified."
   },
   "mYgmal": {
     "message": "Out of Character"
@@ -1030,9 +1039,6 @@
   },
   "xWN20+": {
     "message": "You can't see"
-  },
-  "xesJVv": {
-    "message": "Go to App"
   },
   "xgZgnO": {
     "message": "Wrong request method."

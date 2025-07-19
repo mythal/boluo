@@ -1,6 +1,6 @@
 'use client';
 
-import { useQueryCurrentUser } from '@boluo/common/hooks';
+import { useQueryCurrentUser, useQueryIsEmailVerified } from '@boluo/common/hooks';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLogout } from '@boluo/common/hooks/useLogout';
@@ -13,20 +13,19 @@ export const UserOperations = () => {
   const intl = useIntl();
   const { data: currentUser, isLoading } = useQueryCurrentUser();
   const appSettings = useQueryAppSettings();
+  const { data: isEmailVerified } = useQueryIsEmailVerified();
   const logout = useLogout();
   const router = useRouter();
   const onClick = () => {
     logout();
     router.refresh();
   };
-  if (isLoading) {
+  if (isLoading || !appSettings.appUrl) {
     return (
       <div>
         <LoadingText />
       </div>
     );
-  } else if (!appSettings.appUrl) {
-    return <div>APP_URL is not set.</div>;
   } else if (!currentUser)
     return (
       <div>
@@ -69,6 +68,20 @@ export const UserOperations = () => {
           Open Boluo
         </Link>
       </div>
+      {isEmailVerified != null && !isEmailVerified && (
+        <div className="">
+          <FormattedMessage
+            defaultMessage="Your email is not verified, please {verifyEmail}."
+            values={{
+              verifyEmail: (
+                <Link className={classes.link} href="/account/verify-email">
+                  <FormattedMessage defaultMessage="verify it" />
+                </Link>
+              ),
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

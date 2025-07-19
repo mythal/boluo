@@ -333,6 +333,7 @@ async fn handle_connection(
             tokio::task::spawn(async move {
                 if let Err(err) = http1::Builder::new()
                     .serve_connection(io, service_fn(handler))
+                    .with_upgrades()
                     .await
                 {
                     tracing::warn!(error = %err, addr = %addr, "HTTP/2 connection error");

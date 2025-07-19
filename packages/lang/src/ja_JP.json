@@ -68,6 +68,9 @@
   "2s3EZW": {
     "message": "名前が必要"
   },
+  "2tXtyi": {
+    "message": "Please verify your email to continue."
+  },
   "39AHJm": {
     "message": "新規登録"
   },
@@ -94,6 +97,9 @@
   },
   "4udfbj": {
     "message": "チャネルをエクスポート"
+  },
+  "56x7wR": {
+    "message": "verify it"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
@@ -128,6 +134,9 @@
   "6QRlW8": {
     "message": "再接続を待っています ({countdown}s)"
   },
+  "6QtXvB": {
+    "message": "Verification email sent! Please check your inbox."
+  },
   "6q3tCn": {
     "message": "接続中"
   },
@@ -149,8 +158,17 @@
   "8+j66D": {
     "message": "このメッセージを削除しますか？"
   },
+  "82Y7Sa": {
+    "message": "Sending..."
+  },
   "88cMEG": {
     "message": "次元を破壊する"
+  },
+  "8be59M": {
+    "message": "Email verified successfully!"
+  },
+  "8mVcs0": {
+    "message": "Verify Email"
   },
   "8pN86+": {
     "message": "{name} は入力している…"
@@ -202,6 +220,12 @@
   },
   "C81/uG": {
     "message": "ログアウト"
+  },
+  "C8PHob": {
+    "message": "Connection lost due to inactivity, please refresh the page."
+  },
+  "CNLipo": {
+    "message": "Verification failed. Please try again or contact support."
   },
   "CW7jWC": {
     "message": "(自分)"
@@ -284,6 +308,9 @@
   "INVcoD": {
     "message": "現在開発中なので、全てでか安定ではない。"
   },
+  "IPvPs7": {
+    "message": "Send verification email"
+  },
   "IQwWyF": {
     "message": "チャンネルに参加するにはログインが必要です。"
   },
@@ -341,8 +368,14 @@
   "Kp8wZw": {
     "message": "バイオはまだ設定していません"
   },
+  "KzpV1w": {
+    "message": "Your email is not verified, please {verifyEmail}."
+  },
   "L01rMU": {
     "message": "デフォルトでは、メンバーは自分として話す。"
+  },
+  "LQcfcb": {
+    "message": "Email verification failed"
   },
   "LUrJwE": {
     "message": "チャンネル"
@@ -376,6 +409,9 @@
   },
   "N97hnL": {
     "message": "権限がありません"
+  },
+  "NA+vcf": {
+    "message": "Please verify your email to login to the forum."
   },
   "NXI/XL": {
     "message": "Auto"
@@ -427,6 +463,9 @@
   },
   "Q8Qw5B": {
     "message": "説明"
+  },
+  "Q8hmJq": {
+    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
@@ -505,6 +544,9 @@
   },
   "UhsO+i": {
     "message": "メッセージが見つかりません"
+  },
+  "UizMy7": {
+    "message": "Failed to resend verification email. Please try again later."
   },
   "Ujs8Kg": {
     "message": "サーバーからのメッセージ"
@@ -641,6 +683,9 @@
   "bT0FEQ": {
     "message": "Are you sure you want to delete the \"{channelName}\" channel?"
   },
+  "bqyi2y": {
+    "message": "Please {login} to verify your email."
+  },
   "c1nBz9": {
     "message": "As the character of …"
   },
@@ -773,6 +818,9 @@
   "jRANBd": {
     "message": "メッセージを編集"
   },
+  "jd7fUZ": {
+    "message": "Resend in {countdown} seconds"
+  },
   "jtLNcT": {
     "message": "Failed to move the message, the target is lost. Please try again."
   },
@@ -803,6 +851,9 @@
   "lx+ssX": {
     "message": "次元を離れる"
   },
+  "mLZ+cF": {
+    "message": "Your email has been verified."
+  },
   "mYgmal": {
     "message": "キャラクター外"
   },
@@ -820,6 +871,9 @@
   },
   "nmSKJK": {
     "message": "入力必須です。"
+  },
+  "oGBmRj": {
+    "message": "Failed to query the channel members"
   },
   "oSgCYv": {
     "message": "You are not a member of this space"
@@ -895,6 +949,9 @@
   },
   "rl4pg7": {
     "message": "Reorder channel"
+  },
+  "ro9oGh": {
+    "message": "Verifying your email..."
   },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"

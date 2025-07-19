@@ -131,8 +131,6 @@ pub fn add_session_cookie(
             builder = builder.domain(".boluochat.com");
         } else if origin.ends_with("boluo-staging.mythal.net") {
             builder = builder.domain(".boluo-staging.mythal.net");
-        } else {
-            builder = builder.domain(".boluo.chat");
         }
     }
     let session_cookie = builder.build().to_string();

@@ -2,9 +2,32 @@
 import generateWithBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 import { NextConfig } from 'next';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({
+  path: ['.env.local', '.env'].flatMap((filename) => [
+    path.join(__dirname, filename),
+    path.join(__dirname, '../..', filename),
+  ]),
+  quiet: true,
+});
+
+const env = {
+  BACKEND_URL: process.env.BACKEND_URL,
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  SENTRY_TUNNEL: process.env.SENTRY_TUNNEL,
+  SENTRY_ORG: process.env.SENTRY_ORG,
+  SENTRY_URL: process.env.SENTRY_URL,
+  SENTRY_PROJECT: process.env.SENTRY_PROJECT,
+  SENTRY_TOKEN: process.env.SENTRY_TOKEN,
+  ANALYZE: process.env.ANALYZE,
+};
+
+// console.log(env);
 
 const withBundleAnalyzer = generateWithBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: env.ANALYZE === 'true',
 });
 
 const config: NextConfig = {
@@ -31,11 +54,9 @@ const config: NextConfig = {
     ],
   },
   env: {
-    PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
-    SITE_URL: process.env.SITE_URL,
-    APP_URL: process.env.APP_URL,
-    SENTRY_DSN: process.env.SENTRY_DSN,
-    SENTRY_TUNNEL: process.env.SENTRY_TUNNEL,
+    BACKEND_URL: env.BACKEND_URL,
+    SENTRY_DSN: env.SENTRY_DSN,
+    SENTRY_TUNNEL: env.SENTRY_TUNNEL,
   },
   webpack: (config) => {
     // `react-intl` without parser
@@ -47,10 +68,10 @@ const config: NextConfig = {
     return config;
   },
 };
-if (process.env.SENTRY_DSN) {
+if (env.SENTRY_DSN) {
   module.exports = withSentryConfig(config, {
-    org: process.env.SENTRY_ORG ?? 'mythal',
-    sentryUrl: process.env.SENTRY_URL ?? 'https://sentry.io/',
+    org: env.SENTRY_ORG ?? 'mythal',
+    sentryUrl: env.SENTRY_URL ?? 'https://sentry.io/',
     project: process.env.SENTRY_PROJECT ?? 'boluo-spa',
     autoInstrumentServerFunctions: false,
     autoInstrumentMiddleware: false,

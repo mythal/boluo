@@ -68,6 +68,9 @@
   "2s3EZW": {
     "message": "需要名字"
   },
+  "2tXtyi": {
+    "message": "Please verify your email to continue."
+  },
   "39AHJm": {
     "message": "註冊"
   },
@@ -94,6 +97,9 @@
   },
   "4udfbj": {
     "message": "匯出頻道"
+  },
+  "56x7wR": {
+    "message": "verify it"
   },
   "5HUwAy": {
     "message": "只允許字母，數字和下劃線。"
@@ -128,6 +134,9 @@
   "6QRlW8": {
     "message": "正在等待重新連接 ({countdown}s)"
   },
+  "6QtXvB": {
+    "message": "Verification email sent! Please check your inbox."
+  },
   "6q3tCn": {
     "message": "正在連接"
   },
@@ -149,8 +158,17 @@
   "8+j66D": {
     "message": "確實要刪除這條訊息？"
   },
+  "82Y7Sa": {
+    "message": "Sending..."
+  },
   "88cMEG": {
     "message": "摧毀位面"
+  },
+  "8be59M": {
+    "message": "Email verified successfully!"
+  },
+  "8mVcs0": {
+    "message": "Verify Email"
   },
   "8pN86+": {
     "message": "{name} 在撰寫…"
@@ -202,6 +220,12 @@
   },
   "C81/uG": {
     "message": "登出"
+  },
+  "C8PHob": {
+    "message": "Connection lost due to inactivity, please refresh the page."
+  },
+  "CNLipo": {
+    "message": "Verification failed. Please try again or contact support."
   },
   "CW7jWC": {
     "message": "(自己)"
@@ -284,6 +308,9 @@
   "INVcoD": {
     "message": "目前正在積極開發，一切都不穩定。"
   },
+  "IPvPs7": {
+    "message": "Send verification email"
+  },
   "IQwWyF": {
     "message": "你必須登入後才能加入頻道。"
   },
@@ -341,8 +368,14 @@
   "Kp8wZw": {
     "message": "還沒有設定簡介"
   },
+  "KzpV1w": {
+    "message": "Your email is not verified, please {verifyEmail}."
+  },
   "L01rMU": {
     "message": "成員預設將作為本人發言。"
+  },
+  "LQcfcb": {
+    "message": "Email verification failed"
   },
   "LUrJwE": {
     "message": "頻道"
@@ -376,6 +409,9 @@
   },
   "N97hnL": {
     "message": "沒有權限。"
+  },
+  "NA+vcf": {
+    "message": "Please verify your email to login to the forum."
   },
   "NXI/XL": {
     "message": "Auto"
@@ -427,6 +463,9 @@
   },
   "Q8Qw5B": {
     "message": "描述"
+  },
+  "Q8hmJq": {
+    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "查詢位面成員失敗"
@@ -505,6 +544,9 @@
   },
   "UhsO+i": {
     "message": "未找到訊息"
+  },
+  "UizMy7": {
+    "message": "Failed to resend verification email. Please try again later."
   },
   "Ujs8Kg": {
     "message": "來自服務器的訊息"
@@ -641,6 +683,9 @@
   "bT0FEQ": {
     "message": "你確定要刪除「{channelName}」頻道嗎？"
   },
+  "bqyi2y": {
+    "message": "Please {login} to verify your email."
+  },
   "c1nBz9": {
     "message": "以 … 角色"
   },
@@ -773,6 +818,9 @@
   "jRANBd": {
     "message": "編輯訊息"
   },
+  "jd7fUZ": {
+    "message": "Resend in {countdown} seconds"
+  },
   "jtLNcT": {
     "message": "移動訊息失敗，找不到目的地，請再試一下。"
   },
@@ -803,6 +851,9 @@
   "lx+ssX": {
     "message": "離開位面"
   },
+  "mLZ+cF": {
+    "message": "Your email has been verified."
+  },
   "mYgmal": {
     "message": "角色外身分"
   },
@@ -820,6 +871,9 @@
   },
   "nmSKJK": {
     "message": "不能為空。"
+  },
+  "oGBmRj": {
+    "message": "Failed to query the channel members"
   },
   "oSgCYv": {
     "message": "You are not a member of this space"
@@ -895,6 +949,9 @@
   },
   "rl4pg7": {
     "message": "重排頻道"
+  },
+  "ro9oGh": {
+    "message": "Verifying your email..."
   },
   "s+ixvA": {
     "message": "確定，摧毀「{spaceName}」"

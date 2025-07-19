@@ -8,7 +8,7 @@ import Icon from '@boluo/ui/Icon';
 import { Loading } from '@boluo/ui/Loading';
 import { TextInput } from '@boluo/ui/TextInput';
 import { unwrap } from '@boluo/utils';
-import { APP_URL, SITE_URL } from '../const';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 
 interface Props {
   spaceId: string;
@@ -18,6 +18,7 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   const { data: token, mutate } = useSWR(['/spaces/token' as const, spaceId], ([path, id]) =>
     get(path, { id }).then(unwrap),
   );
+  const { appUrl, siteUrl } = useQueryAppSettings();
   const intl = useIntl();
   const id = useId();
   const inviteLinkRef = useRef<HTMLInputElement>(null);
@@ -47,10 +48,16 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   }
 
   let link;
-  if (SITE_URL) {
-    link = `${SITE_URL}/space/invite/${spaceId}/${token}`;
+  if (siteUrl) {
+    link = `${siteUrl}/space/invite/${spaceId}/${token}`;
   } else {
-    const base = typeof window !== 'undefined' ? window.location.origin : APP_URL;
+    let base = appUrl;
+    if (!base && typeof window !== 'undefined') {
+      base = window.location.origin;
+    }
+    if (!base) {
+      return <div>APP_URL is not set.</div>;
+    }
     link = `${base}/${intl.locale}#route=invite?spaceId=${spaceId}&token=${token}`;
   }
   return (

@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { Params } from '../../../../../server';
 import { getIntl } from '@boluo/common/locale';
-import { VerifyEmailContent } from './VerifyEmailContent';
+import { EmailVerification } from './EmailVerification';
 
 type Props = {
   params: Promise<Params>;
@@ -16,5 +16,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function Page() {
-  return <VerifyEmailContent />;
+  return <EmailVerification />;
 }

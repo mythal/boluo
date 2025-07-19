@@ -38,7 +38,10 @@ export function middleware(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
   if (pathname.startsWith('/api')) {
     // eslint-disable-next-line no-restricted-globals
-    const hostname = process.env.BACKEND_URL || 'https://production.boluochat.com';
+    const hostname = process.env.BACKEND_URL;
+    if (!hostname) {
+      throw new Error('BACKEND_URL is not set');
+    }
     const url = new URL(hostname + pathname + request.nextUrl.search, request.url);
 
     // eslint-disable-next-line no-restricted-globals

@@ -3,17 +3,13 @@
   "ui": "tui",
   "globalEnv": [
     "NODE_ENV",
+    "ANALYZE",
     "BACKEND_URL",
     "SENTRY_URL",
     "SENTRY_DSN",
     "SENTRY_ORG",
     "SENTRY_PROJECT_SITE",
-    "ANALYZE",
     "SENTRY_TOKEN",
-    "STANDALONE",
-    "PUBLIC_MEDIA_URL",
-    "APP_URL",
-    "SITE_URL",
     "SENTRY_TUNNEL",
     "SENTRY_PROJECT",
     "FLY_BACKEND_APP_NAME"
@@ -30,6 +26,7 @@
     "check-types": { "dependsOn": ["^check-types"] },
     "storybook": { "dependsOn": ["^build"], "cache": false, "persistent": true },
     "dev": { "dependsOn": ["^generate", "generate", "^build"], "cache": false, "persistent": true },
+    "@boluo/lang#generate": { "cache": false },
     "@boluo/icons#generate": { "dependsOn": [], "inputs": ["icons/**"], "outputs": ["src/**"] },
     "@boluo/icons#build": {
       "dependsOn": ["^build", "generate"],

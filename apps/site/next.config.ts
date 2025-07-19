@@ -3,6 +3,27 @@ import path from 'path';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 import { NextConfig } from 'next';
+import dotenv from 'dotenv';
+
+dotenv.config({
+  path: ['.env.local', '.env'].flatMap((filename) => [
+    path.join(__dirname, filename),
+    path.join(__dirname, '../..', filename),
+  ]),
+  quiet: true,
+});
+
+const env = {
+  BACKEND_URL: process.env.BACKEND_URL,
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  SENTRY_ORG: process.env.SENTRY_ORG,
+  SENTRY_URL: process.env.SENTRY_URL,
+  SENTRY_PROJECT_SITE: process.env.SENTRY_PROJECT_SITE,
+  SENTRY_TOKEN: process.env.SENTRY_TOKEN,
+  ANALYZE: process.env.ANALYZE,
+};
+
+// console.log(env);
 
 const config: NextConfig = {
   reactStrictMode: true,
@@ -12,6 +33,8 @@ const config: NextConfig = {
   },
   output: 'standalone',
   turbopack: {
+    // Workaround for https://github.com/vercel/next.js/issues/81628
+    root: path.join(__dirname, '../..'),
     resolveAlias: {
       '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },
@@ -28,9 +51,7 @@ const config: NextConfig = {
     ],
   },
   env: {
-    PUBLIC_MEDIA_URL: process.env.PUBLIC_MEDIA_URL,
-    APP_URL: process.env.APP_URL ?? 'https://app.boluochat.com',
-    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_DSN: env.SENTRY_DSN,
   },
   outputFileTracingRoot: path.join(__dirname, '../../'),
   webpack: (config) => {
@@ -44,17 +65,17 @@ const config: NextConfig = {
   },
 };
 
-if (process.env.SENTRY_DSN) {
+if (env.SENTRY_DSN) {
   module.exports = withSentryConfig(config, {
-    org: process.env.SENTRY_ORG ?? 'mythal',
-    sentryUrl: process.env.SENTRY_URL ?? 'https://sentry.io/',
-    project: process.env.SENTRY_PROJECT_SITE ?? 'boluo-site',
+    org: env.SENTRY_ORG ?? 'mythal',
+    sentryUrl: env.SENTRY_URL ?? 'https://sentry.io/',
+    project: env.SENTRY_PROJECT_SITE ?? 'boluo-site',
     disableLogger: true,
-    authToken: process.env.SENTRY_TOKEN,
+    authToken: env.SENTRY_TOKEN,
     widenClientFileUpload: true,
     silent: true,
   });
-} else if (process.env.ANALYZE === 'true') {
+} else if (env.ANALYZE === 'true') {
   module.exports = withBundleAnalyzer()(config);
 } else {
   module.exports = config;

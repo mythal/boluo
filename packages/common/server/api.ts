@@ -6,22 +6,22 @@ import type { Result } from '@boluo/utils';
 
 // eslint-disable-next-line no-restricted-globals
 const BACKEND_URL = process.env.BACKEND_URL;
-let backEndUrl: string | undefined;
+let cachedBackEndUrl: string | undefined;
 
 const getBackEndUrl = () => {
-  if (backEndUrl) {
-    return backEndUrl;
+  if (cachedBackEndUrl) {
+    return cachedBackEndUrl;
   } else if (BACKEND_URL) {
     if (BACKEND_URL.endsWith('/api/')) {
-      backEndUrl = BACKEND_URL.slice(0, -1);
+      cachedBackEndUrl = BACKEND_URL.slice(0, -1);
     } else if (BACKEND_URL.endsWith('/')) {
-      backEndUrl = BACKEND_URL + 'api';
+      cachedBackEndUrl = BACKEND_URL + 'api';
     } else if (BACKEND_URL.endsWith('/api')) {
-      backEndUrl = BACKEND_URL;
+      cachedBackEndUrl = BACKEND_URL;
     } else {
-      backEndUrl = BACKEND_URL + '/api';
+      cachedBackEndUrl = BACKEND_URL + '/api';
     }
-    return backEndUrl;
+    return cachedBackEndUrl;
   } else {
     throw new Error('BACKEND_URL is not set');
   }

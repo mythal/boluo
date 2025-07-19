@@ -1,13 +1,12 @@
 'use client';
 
 import { post } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common/hooks';
+import { useQueryAppSettings, useQueryCurrentUser } from '@boluo/common/hooks';
 import Link from 'next/link';
 import type { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import * as classes from '@boluo/ui/classes';
-import { APP_URL } from '../../../../../../../const';
 
 interface Props {
   spaceId: string;
@@ -17,10 +16,16 @@ interface Props {
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   const { data: currentUser, isLoading } = useQueryCurrentUser();
   const intl = useIntl();
+  const appSettings = useQueryAppSettings();
   const handleClick = async () => {
+    const appUrl = appSettings.appUrl;
+    if (!appUrl) {
+      alert('APP_URL is not set.');
+      return;
+    }
     const result = await post('/spaces/join', { spaceId, token }, {});
     const { space } = result.unwrap();
-    window.open(`${APP_URL}/${intl.locale}/#route=${space.id}`, '_blank');
+    window.open(`${appUrl}/${intl.locale}/#route=${space.id}`, '_blank');
   };
   const loginLink = (
     <span>

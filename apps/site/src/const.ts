@@ -22,5 +22,3 @@ export const SENTRY_CONFIG: SentryConfig = (() => {
     };
   }
 })();
-
-export const APP_URL: string | null = process.env.APP_URL || null;

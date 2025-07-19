@@ -3,8 +3,9 @@ use std::sync::LazyLock;
 
 use std::sync::OnceLock as OnceCell;
 
+use crate::error::AppError;
+
 static DEBUG: OnceCell<bool> = OnceCell::new();
-static SYSTEMD: OnceCell<bool> = OnceCell::new();
 static SECRET: OnceCell<String> = OnceCell::new();
 
 fn env_bool<T: AsRef<str>>(s: T) -> bool {
@@ -28,9 +29,20 @@ pub fn media_public_url() -> &'static str {
     })
 }
 
-pub static SITE_URL: LazyLock<String> = LazyLock::new(|| {
-    env::var("SITE_URL").unwrap_or_else(|_| "https://site.boluochat.com".to_string())
-});
+pub static PUBLIC_MEDIA_URL: LazyLock<Option<String>> =
+    LazyLock::new(|| env::var("PUBLIC_MEDIA_URL").ok());
+
+pub static APP_URL: LazyLock<Option<String>> = LazyLock::new(|| env::var("APP_URL").ok());
+
+pub static SITE_URL: LazyLock<Option<String>> = LazyLock::new(|| env::var("SITE_URL").ok());
+
+pub static SENTRY_DSN: LazyLock<Option<String>> = LazyLock::new(|| env::var("SENTRY_DSN").ok());
+
+pub fn get_site_url() -> Result<&'static str, AppError> {
+    SITE_URL
+        .as_deref()
+        .ok_or(AppError::Unexpected(anyhow::anyhow!("site_url not set")))
+}
 
 pub fn secret() -> &'static str {
     let secret_string = if cfg!(test) {

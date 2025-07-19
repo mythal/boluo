@@ -15,6 +15,7 @@ import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
+import { IntlShape, useIntl } from 'react-intl';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
@@ -65,6 +66,7 @@ const createMailboxConnection = async (
 };
 
 const connect = async (
+  intl: IntlShape,
   webSocketEndpoint: string,
   mailboxId: string,
   userId: string | null,
@@ -80,7 +82,11 @@ const connect = async (
     return null;
   }
   if (Date.now() - lastPongTime > RELOAD_TIMEOUT) {
-    alert('Connection lost due to inactivity.');
+    alert(
+      intl.formatMessage({
+        defaultMessage: 'Connection lost due to inactivity, please refresh the page.',
+      }),
+    );
     dispatch({ type: 'resetChatState', payload: {} });
     return null;
   }
@@ -127,7 +133,7 @@ export const useConnectionEffect = (mailboxId: string) => {
   const userId = user?.id ?? null;
   const store = useStore();
   const dispatch = useSetAtom(chatAtom);
-
+  const intl = useIntl();
   const onUpdateReceived = useCallback(
     (update: Update) => {
       switch (update.body.type) {
@@ -193,6 +199,7 @@ export const useConnectionEffect = (mailboxId: string) => {
     const performConnect = () => {
       const chatState = store.get(chatAtom);
       connect(
+        intl,
         webSocketEndpoint,
         mailboxId,
         userId,
@@ -227,5 +234,14 @@ export const useConnectionEffect = (mailboxId: string) => {
       unsub();
       if (currentConnection) currentConnection.close();
     };
-  }, [onUpdateReceived, userId, mailboxId, store, webSocketEndpoint, dispatch, isQueryingUser]);
+  }, [
+    onUpdateReceived,
+    userId,
+    mailboxId,
+    store,
+    webSocketEndpoint,
+    dispatch,
+    isQueryingUser,
+    intl,
+  ]);
 };

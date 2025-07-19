@@ -56,6 +56,24 @@ use crate::interface::{err_response, missing, ok_response};
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+#[derive(Clone)]
+// An Executor that uses the tokio runtime.
+pub struct TokioExecutor;
+
+// Implement the `hyper::rt::Executor` trait for `TokioExecutor` so that it can be used to spawn
+// tasks in the hyper runtime.
+// An Executor allows us to manage execution of tasks which can help us improve the efficiency and
+// scalability of the server.
+impl<F> hyper::rt::Executor<F> for TokioExecutor
+where
+    F: std::future::Future + Send + 'static,
+    F::Output: Send + 'static,
+{
+    fn execute(&self, fut: F) {
+        tokio::task::spawn(fut);
+    }
+}
+
 async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();
 
@@ -254,21 +272,46 @@ async fn main() {
     redis::check().await;
     tracing::info!("Redis is ready");
 
+    if context::SITE_URL.is_none() {
+        tracing::error!("SITE_URL is not set");
+    }
+    if context::APP_URL.is_none() {
+        tracing::error!("APP_URL is not set");
+    }
+    if context::PUBLIC_MEDIA_URL.is_none() {
+        tracing::error!("PUBLIC_MEDIA_URL is not set");
+    }
+
     if args.check {
         return;
     }
 
+    if let Ok(exporter_listen) = std::env::var("PROMETHEUS_EXPORTER") {
+        let addr = exporter_listen
+            .parse::<SocketAddr>()
+            .expect("Invalid address for Prometheus exporter");
+        metrics_exporter_prometheus::PrometheusBuilder::new()
+            .with_http_listener(addr)
+            .install()
+            .expect("Failed to install Prometheus metrics exporter");
+        tracing::info!("Prometheus metrics exporter installed on {}", addr);
+
+        tokio::task::spawn(
+            tokio_metrics::RuntimeMetricsReporterBuilder::default()
+                .with_interval(std::time::Duration::from_secs(15))
+                .describe_and_run(),
+        );
+    }
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
-    let http = http1::Builder::new();
 
     tracing::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
-                handle_connection(accept_result, &http).await;
+                handle_connection(accept_result).await;
             },
             _ = terminate_stream.recv() => {
                 tracing::info!("Graceful shutdown signal received");
@@ -283,17 +326,16 @@ async fn main() {
 
 async fn handle_connection(
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
-    http: &http1::Builder,
 ) {
     match accept_result {
         Ok((stream, addr)) => {
             let io = TokioIo::new(stream);
-            let conn = http
-                .serve_connection(io, service_fn(handler))
-                .with_upgrades();
             tokio::task::spawn(async move {
-                if let Err(err) = conn.await {
-                    tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
+                if let Err(err) = http1::Builder::new()
+                    .serve_connection(io, service_fn(handler))
+                    .await
+                {
+                    tracing::warn!(error = %err, addr = %addr, "HTTP/2 connection error");
                 }
             });
         }

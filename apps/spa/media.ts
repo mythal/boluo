@@ -1,7 +1,6 @@
 import { type FetchFailError, type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Err, Ok, type Result } from '@boluo/utils';
-import { MEDIA_URL } from './const';
 import { recordError, recordWarn } from './error';
 
 export const mediaMaxSizeMb = 8;
@@ -30,16 +29,7 @@ export const makeMeidaPublicUrl = (raw: unknown) => {
   return url;
 };
 
-const getMediaPublicUrl = () => {
-  const url = makeMeidaPublicUrl(MEDIA_URL);
-  if (url == null) {
-    throw new Error('PUBLIC_MEDIA_URL is not defined');
-  }
-  return url;
-};
-
-export function getMediaUrl(mediaId: string): string {
-  const mediaPublicUrl = getMediaPublicUrl();
+export function getMediaUrl(mediaPublicUrl: string, mediaId: string): string {
   return `${mediaPublicUrl}/${mediaId}`;
 }
 

@@ -1,6 +1,5 @@
 app = "boluo-server-staging"
 primary_region = "nrt"
-swap_size_mb = 512
 
 [build]
   image = "ghcr.io/mythal/boluo/server:latest"
@@ -13,6 +12,7 @@ swap_size_mb = 512
   S3_BUCKET_NAME = "boluo-development"
   S3_ENDPOINT_URL = "https://9a7f9f4ce45406e8224c0f1e9e6785b5.r2.cloudflarestorage.com"
   RUST_LOG = 'debug'
+  PROMETHEUS_EXPORTER = "0.0.0.0:9000"
 
 [http_service]
   auto_start_machines = true
@@ -21,6 +21,8 @@ swap_size_mb = 512
   internal_port = 3_000
   min_machines_running = 0
   processes = ["app"]
+  [http_service.http_options]
+    h2_backend = true
 
   [[http_service.checks]]
     grace_period = "20s"
@@ -33,3 +35,11 @@ swap_size_mb = 512
   cpu_kind = "shared"
   cpus = 1
   memory = "256mb"
+  kernel_args = [
+    "sysctl.net.core.somaxconn=65535",
+    "sysctl.net.core.netdev_max_backlog=16384",
+    "sysctl.net.ipv4.tcp_fastopen=3",
+    "sysctl.net.ipv4.tcp_max_syn_backlog=65535",
+    "sysctl.net.ipv4.tcp_max_tw_buckets=2000000",
+    "sysctl.net.ipv4.tcp_tw_reuse=1",
+  ]

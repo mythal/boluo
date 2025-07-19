@@ -1,33 +1,32 @@
 'use client';
 
-import { useQueryCurrentUser } from '@boluo/common/hooks';
+import { useQueryCurrentUser, useQueryIsEmailVerified } from '@boluo/common/hooks';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLogout } from '@boluo/common/hooks/useLogout';
 import { LoadingText } from '@boluo/ui/LoadingText';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 import * as classes from '@boluo/ui/classes';
-import { APP_URL } from '../const';
 import { useRouter } from 'next/navigation';
 
 export const UserOperations = () => {
   const intl = useIntl();
   const { data: currentUser, isLoading } = useQueryCurrentUser();
+  const appSettings = useQueryAppSettings();
+  const { data: isEmailVerified } = useQueryIsEmailVerified();
   const logout = useLogout();
   const router = useRouter();
   const onClick = () => {
     logout();
     router.refresh();
   };
-  if (!APP_URL) {
-    return <div>APP_URL is not set.</div>;
-  }
-  if (isLoading)
+  if (isLoading || !appSettings.appUrl) {
     return (
       <div>
         <LoadingText />
       </div>
     );
-  if (!currentUser)
+  } else if (!currentUser)
     return (
       <div>
         <FormattedMessage
@@ -61,10 +60,28 @@ export const UserOperations = () => {
         )
       </div>
       <div className="text-lg">
-        <Link className={classes.link} href={`${APP_URL}/${intl.locale}`} target="_blank">
+        <Link
+          className={classes.link}
+          href={`${appSettings.appUrl}/${intl.locale}`}
+          target="_blank"
+        >
           Open Boluo
         </Link>
       </div>
+      {isEmailVerified != null && !isEmailVerified && (
+        <div className="">
+          <FormattedMessage
+            defaultMessage="Your email is not verified, please {verifyEmail}."
+            values={{
+              verifyEmail: (
+                <Link className={classes.link} href="/account/verify-email">
+                  <FormattedMessage defaultMessage="verify it" />
+                </Link>
+              ),
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

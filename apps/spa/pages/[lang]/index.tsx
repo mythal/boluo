@@ -1,7 +1,6 @@
 import { type IntlMessages, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
 import { ClientProviders } from '../../components/ClientProviders';
 import { type GetStaticPaths } from 'next';
-import { getMessages } from '@boluo/common/server/locale';
 import { type Locale } from '@boluo/common';
 import Head from 'next/head';
 import { useIntl } from 'react-intl';
@@ -12,7 +11,6 @@ import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
 import { useDetectBrowserSupport } from '../../hooks/useDetectBrowserSupport';
 import { getOS } from '@boluo/utils';
-import { SITE_URL } from '../../const';
 
 export const getStaticPaths = (() => {
   return {
@@ -65,11 +63,7 @@ export default function Page({ lang, messages }: Props) {
     <ClientProviders lang={lang} messages={messages}>
       <PageHead />
       <ChatErrorBoundary>
-        {isSupportedBrowser ? (
-          <Chat />
-        ) : (
-          <UnsupportedBrowser isIos={getOS() === 'iOS'} siteUrl={SITE_URL} />
-        )}
+        {isSupportedBrowser ? <Chat /> : <UnsupportedBrowser isIos={getOS() === 'iOS'} />}
       </ChatErrorBoundary>
     </ClientProviders>
   );

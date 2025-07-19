@@ -68,6 +68,9 @@
   "2s3EZW": {
     "message": "需要名字"
   },
+  "2tXtyi": {
+    "message": "请验证您的电子邮件以继续。"
+  },
   "39AHJm": {
     "message": "注册"
   },
@@ -94,6 +97,9 @@
   },
   "4udfbj": {
     "message": "导出频道"
+  },
+  "56x7wR": {
+    "message": "验证"
   },
   "5HUwAy": {
     "message": "只允许字母，数字和下划线。"
@@ -128,6 +134,9 @@
   "6QRlW8": {
     "message": "正在等待重新连接 ({countdown}s)"
   },
+  "6QtXvB": {
+    "message": "验证邮件已发送！请检查收件箱。"
+  },
   "6q3tCn": {
     "message": "正在连接"
   },
@@ -149,8 +158,17 @@
   "8+j66D": {
     "message": "确实要删除这条消息？"
   },
+  "82Y7Sa": {
+    "message": "发送中..."
+  },
   "88cMEG": {
     "message": "摧毁位面"
+  },
+  "8be59M": {
+    "message": "邮箱验证成功！"
+  },
+  "8mVcs0": {
+    "message": "验证邮箱"
   },
   "8pN86+": {
     "message": "{name} 在撰写…"
@@ -202,6 +220,12 @@
   },
   "C81/uG": {
     "message": "登出"
+  },
+  "C8PHob": {
+    "message": "连接因不活动而丢失，请刷新页面。"
+  },
+  "CNLipo": {
+    "message": "验证失败。请重试或联系开发者。"
   },
   "CW7jWC": {
     "message": "(自己)"
@@ -284,6 +308,9 @@
   "INVcoD": {
     "message": "目前正在积极开发，一切都不稳定。"
   },
+  "IPvPs7": {
+    "message": "发送验证邮件"
+  },
   "IQwWyF": {
     "message": "你必须登录后才能加入频道。"
   },
@@ -341,8 +368,14 @@
   "Kp8wZw": {
     "message": "还没有设置简介"
   },
+  "KzpV1w": {
+    "message": "你的邮箱还没验证，请{verifyEmail}。"
+  },
   "L01rMU": {
     "message": "成员默认将作为本人发言。"
+  },
+  "LQcfcb": {
+    "message": "邮箱验证失败"
   },
   "LUrJwE": {
     "message": "频道"
@@ -376,6 +409,9 @@
   },
   "N97hnL": {
     "message": "没有权限"
+  },
+  "NA+vcf": {
+    "message": "请验证您的邮箱以登录论坛。"
   },
   "NXI/XL": {
     "message": "自动"
@@ -427,6 +463,9 @@
   },
   "Q8Qw5B": {
     "message": "描述"
+  },
+  "Q8hmJq": {
+    "message": "电子邮件已被验证。您将很快被重定向到主页。"
   },
   "QBYqL5": {
     "message": "查询位面成员失败"
@@ -505,6 +544,9 @@
   },
   "UhsO+i": {
     "message": "未找到消息"
+  },
+  "UizMy7": {
+    "message": "无法重新发送验证邮件。请稍后再试。"
   },
   "Ujs8Kg": {
     "message": "来自服务器的消息"
@@ -641,6 +683,9 @@
   "bT0FEQ": {
     "message": "你确定要删除「{channelName}」频道吗？"
   },
+  "bqyi2y": {
+    "message": "请{login}以验证邮箱。"
+  },
   "c1nBz9": {
     "message": "以 … 角色"
   },
@@ -773,6 +818,9 @@
   "jRANBd": {
     "message": "编辑消息"
   },
+  "jd7fUZ": {
+    "message": "在{countdown}秒后可以重发"
+  },
   "jtLNcT": {
     "message": "移动消息失败，找不到目的地，请再试一下。"
   },
@@ -803,6 +851,9 @@
   "lx+ssX": {
     "message": "离开位面"
   },
+  "mLZ+cF": {
+    "message": "您的电子邮件已验证。"
+  },
   "mYgmal": {
     "message": "角色外身份"
   },
@@ -820,6 +871,9 @@
   },
   "nmSKJK": {
     "message": "不能为空。"
+  },
+  "oGBmRj": {
+    "message": "查询频道成员失败"
   },
   "oSgCYv": {
     "message": "你不属于这个位面"
@@ -895,6 +949,9 @@
   },
   "rl4pg7": {
     "message": "重排频道"
+  },
+  "ro9oGh": {
+    "message": "正在验证邮箱…"
   },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"

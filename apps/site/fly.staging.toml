@@ -11,9 +11,7 @@ swap_size_mb = 256
   image = 'ghcr.io/mythal/boluo/site:latest'
 
 [env]
-  APP_URL = 'https://app.boluo-staging.mythal.net'
   BACKEND_URL = 'https://server.boluo-staging.mythal.net'
-  PUBLIC_MEDIA_URL = 'https://media.boluochat.com'
   FLY_BACKEND_APP_NAME = 'boluo-server-staging'
   HOSTNAME = '0.0.0.0'
   PORT = '3000'

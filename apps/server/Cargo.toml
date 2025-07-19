@@ -76,6 +76,8 @@ redis = { version = "0.32.2", features = [
   "connection-manager",
 ] }
 smallvec = "1.15.1"
+tokio-metrics = { version = "0.4.3", features = ["metrics-rs-integration"] }
+metrics-exporter-prometheus = "0.17.2"
 
 [dependencies.reqwest]
 version = "0.12"

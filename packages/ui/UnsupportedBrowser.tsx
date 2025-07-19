@@ -1,14 +1,10 @@
 import { FormattedMessage } from 'react-intl';
 import { BackToHomepage } from './BackToHomepage';
 import * as classes from './classes';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 
-export const UnsupportedBrowser = ({
-  isIos,
-  siteUrl,
-}: {
-  isIos: boolean;
-  siteUrl: string | undefined | null;
-}) => {
+export const UnsupportedBrowser = ({ isIos }: { isIos: boolean }) => {
+  const { siteUrl } = useQueryAppSettings();
   const chromeLink = (
     <a
       href="https://www.google.com/chrome/"

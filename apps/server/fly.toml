@@ -5,7 +5,6 @@
 
 app = 'boluo-server'
 primary_region = 'nrt'
-swap_size_mb = 512
 
 [build]
   image = 'ghcr.io/mythal/boluo/server:production'
@@ -29,7 +28,10 @@ swap_size_mb = 512
   auto_start_machines = false
   min_machines_running = 1
   processes = ['app']
-
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 400
+    hard_limit = 1000
   [[http_service.checks]]
     interval = '20s'
     timeout = '5s'

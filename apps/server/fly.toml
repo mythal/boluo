@@ -28,6 +28,8 @@ primary_region = 'nrt'
   auto_start_machines = false
   min_machines_running = 1
   processes = ['app']
+  [http_service.http_options]
+    h2_backend = true
   [http_service.concurrency]
     type = "requests"
     soft_limit = 400

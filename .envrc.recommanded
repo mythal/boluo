@@ -1,1 +1,1 @@
-use flake . --accept-flake-config
+use flake

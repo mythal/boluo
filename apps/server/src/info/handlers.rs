@@ -2,6 +2,7 @@ use std::cell::RefCell;
 
 use super::models::{BasicInfo, Proxy};
 use crate::info::models::AppSettings;
+use crate::interface::ok_response;
 use crate::{db, error::AppError, info::models::HealthCheck, interface::Response};
 use hyper::body::Incoming;
 use hyper::{Method, Request};
@@ -79,18 +80,9 @@ pub fn basic_info() -> Response {
 }
 
 pub fn settings() -> Response {
-    use std::sync::OnceLock;
-    static SETTINGS: OnceLock<String> = OnceLock::new();
-    let body = SETTINGS.get_or_init(|| {
-        serde_json::to_string(&AppSettings::new())
-            .expect("Unexpected failture in serialize settings information")
-    });
-
-    hyper::Response::builder()
-        .header(hyper::header::CONTENT_TYPE, "application/json")
-        .status(hyper::StatusCode::OK)
-        .body(body.as_str().into())
-        .expect("Unexpected failture in build version response")
+    use std::sync::LazyLock;
+    static SETTINGS: LazyLock<Response> = LazyLock::new(|| ok_response(AppSettings::new()));
+    SETTINGS.clone()
 }
 
 async fn get_healthcheck() -> HealthCheck {

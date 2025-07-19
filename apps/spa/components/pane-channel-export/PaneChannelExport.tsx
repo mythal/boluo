@@ -15,6 +15,7 @@ import { Spinner } from '@boluo/ui/Spinner';
 import * as Sentry from '@sentry/browser';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { type ExportOptions, exportChannel } from './export';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 
 export interface ExportSchema {
   format: string;
@@ -60,6 +61,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   const intl = useIntl();
   const id = useId();
   const linkRef = useRef<HTMLAnchorElement>(null);
+  const { mediaUrl } = useQueryAppSettings();
   const [error, setError] = useState<unknown>(null);
   const {
     register,
@@ -70,10 +72,14 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   const format = watch('format');
   const onSubmit = async (options: ExportSchema) => {
     if (isSubmitting) return;
+    if (!mediaUrl) {
+      alert('MEDIA_URL is not set.');
+      return;
+    }
     setError(null);
     const exportOptions = parseExportOptions(options);
     try {
-      const { blob, filename } = await exportChannel(intl, channel, exportOptions);
+      const { blob, filename } = await exportChannel(intl, mediaUrl, channel, exportOptions);
       const url = URL.createObjectURL(blob);
       const link = linkRef.current;
       if (!link) {

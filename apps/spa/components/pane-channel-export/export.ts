@@ -115,7 +115,11 @@ const entityToExportEntity =
     }
   };
 
-export const exportMessage = (intl: IntlShape, members: ChannelMemberWithUser[]) => {
+export const exportMessage = (
+  intl: IntlShape,
+  publicMediaUrl: string,
+  members: ChannelMemberWithUser[],
+) => {
   const memberMap: Record<string, ExportMember | undefined> = {};
   for (const member of members) {
     const userId = member.user.id;
@@ -160,7 +164,7 @@ export const exportMessage = (intl: IntlShape, members: ChannelMemberWithUser[])
     const sender = memberMap[senderId] || makeDefaultMember(intl);
     let media: string | null = null;
     if (mediaId) {
-      media = getMediaUrl(mediaId);
+      media = getMediaUrl(publicMediaUrl, mediaId);
     }
     return {
       id,
@@ -435,6 +439,7 @@ export function txtBlob(
 
 export const exportChannel = async (
   intl: IntlShape,
+  publicMediaUrl: string,
   channel: Channel,
   options: ExportOptions,
 ): Promise<ExportResult> => {
@@ -453,7 +458,7 @@ export const exportChannel = async (
   const exportResult = await get('/channels/export', exportQuery);
   const messages = exportResult
     .unwrap()
-    .map(exportMessage(intl, members))
+    .map(exportMessage(intl, publicMediaUrl, members))
     .filter((message) => {
       if (!includeArchived && message.folded) {
         return false;

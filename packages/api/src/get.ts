@@ -18,6 +18,7 @@ import type {
   MakeToken,
   VerifyEmail,
   EmailVerificationStatus,
+  AppSettings,
 } from './bindings';
 
 export interface Get {
@@ -51,4 +52,6 @@ export interface Get {
   '/messages/query': { query: { id: string }; result: Message | null };
   // events
   '/events/token': { query: MakeToken; result: { token: string } };
+  // info
+  '/info/settings': { query: null; result: AppSettings };
 }

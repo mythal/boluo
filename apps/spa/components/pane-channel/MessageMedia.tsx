@@ -5,6 +5,7 @@ import { type ReactNode, memo, useState } from 'react';
 import Icon from '@boluo/ui/Icon';
 import { showFileSize } from '@boluo/utils';
 import { getMediaUrl, supportedMediaType } from '../../media';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 
 type Props = {
   className?: string;
@@ -13,12 +14,16 @@ type Props = {
 };
 
 export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
+  const { mediaUrl } = useQueryAppSettings();
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
   let src: string | null = null;
   if (media instanceof File) {
     src = URL.createObjectURL(media);
+  } else if (mediaUrl) {
+    src = getMediaUrl(mediaUrl, media);
   } else {
-    src = getMediaUrl(media);
+    console.error('MEDIA_URL is not set.');
+    src = '';
   }
   if (
     media instanceof File &&

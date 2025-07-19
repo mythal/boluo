@@ -16,6 +16,7 @@
     "@next/mdx": "^15.2.4",
     "@sentry/nextjs": "^9.10.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.0",
     "jotai": "^2.12.2",
     "negotiator": "^1.0.0",
     "next": "^15.2.4",

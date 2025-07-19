@@ -3,10 +3,10 @@
 export type AddChannelMember = { channelId: string; userId: string; characterName?: string };
 
 export type AppSettings = {
-  mediaUrl: string;
-  appUrl: string;
-  siteUrl: string;
-  sentryDsn: string | null;
+  mediaUrl?: string | null;
+  appUrl?: string | null;
+  siteUrl?: string | null;
+  sentryDsn?: string | null;
 };
 
 export type BasicInfo = { version: string };

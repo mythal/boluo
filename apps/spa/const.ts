@@ -2,9 +2,6 @@
 export const IS_BROWSER = typeof window !== 'undefined';
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
-export const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-export const APP_URL = process.env.APP_URL;
-export const SITE_URL = process.env.SITE_URL;
 export const IS_SAFARI = IS_BROWSER && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 export const PING = '♥';

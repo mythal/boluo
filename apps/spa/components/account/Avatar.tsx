@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { type FC, useMemo } from 'react';
 import { getMediaUrl } from '../../media';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 interface Props {
   id: string;
   name: string;
@@ -13,12 +14,26 @@ interface Props {
 // TODO: loading style
 export const Avatar: FC<Props> = (props) => {
   const { id, size = '1em', name, className, avatarId, onClick } = props;
+  const appSettings = useQueryAppSettings();
   const style = useMemo(() => {
     if (size == null || size === '') {
       return undefined;
     }
     return { width: size, height: size };
   }, [size]);
+  if (!appSettings.mediaUrl) {
+    console.error('MEDIA_URL is not set.');
+    return (
+      <img
+        title="Failed to load avatar"
+        alt={name}
+        style={style}
+        onClick={onClick}
+        className={className}
+        src={`https://avatars.boluochat.com/${encodeURIComponent(id + name)}`}
+      />
+    );
+  }
   if (avatarId) {
     return (
       <img
@@ -26,7 +41,7 @@ export const Avatar: FC<Props> = (props) => {
         style={style}
         onClick={onClick}
         className={className}
-        src={getMediaUrl(avatarId)}
+        src={getMediaUrl(appSettings.mediaUrl, avatarId)}
       />
     );
   }

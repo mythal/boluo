@@ -167,12 +167,21 @@
               }
             );
             server-image = pkgs.dockerTools.buildLayeredImage {
+
               name = "boluo-server";
               tag = "latest";
               contents = commonImageContents;
               config = {
                 env = commonEnv;
-                Cmd = [ "${self'.packages.server}/bin/server" ];
+                Cmd =
+                  let
+                    entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
+                      set -e
+                      ulimit -n 262140
+                      ${self'.packages.server}/bin/server
+                    '';
+                  in
+                  [ "${entrypoint}/bin/entrypoint" ];
                 Labels = imageLabel;
               };
             };

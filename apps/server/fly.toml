@@ -21,6 +21,7 @@ primary_region = 'nrt'
   S3_BUCKET_NAME = 'boluo'
   S3_ENDPOINT_URL = 'https://9a7f9f4ce45406e8224c0f1e9e6785b5.r2.cloudflarestorage.com'
   RUST_LOG = 'info'
+  PROMETHEUS_EXPORTER = "0.0.0.0:9000"
 
 [http_service]
   internal_port = 3000

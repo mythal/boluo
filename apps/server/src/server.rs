@@ -228,14 +228,6 @@ struct Args {
 async fn main() {
     use sysinfo::System;
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
-
-    tracing::info!("Kernel: {}", System::kernel_long_version());
-
-    tracing::info!(
-        "Open file limit: {}",
-        System::open_files_limit().unwrap_or(0)
-    );
-
     dotenvy::from_filename(".env.local").ok();
     dotenvy::dotenv().ok();
     let filter = EnvFilter::builder()
@@ -312,6 +304,14 @@ async fn main() {
 
     metrics::start_update_metrics();
     tracing::info!("Startup ID: {}", events::startup_id());
+
+    tracing::info!("Kernel: {}", System::kernel_long_version());
+
+    tracing::info!(
+        "Open file limit: {}",
+        System::open_files_limit().unwrap_or(0)
+    );
+
     loop {
         tokio::select! {
             accept_result = listener.accept() => {

@@ -170,7 +170,11 @@
 
               name = "boluo-server";
               tag = "latest";
-              contents = commonImageContents;
+              contents = commonImageContents ++ [
+                pkgs.prometheus-node-exporter
+                pkgs.coreutils
+                pkgs.neovim
+              ];
               config = {
                 env = commonEnv;
                 Cmd =

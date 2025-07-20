@@ -42,3 +42,7 @@ primary_region = "nrt"
     "sysctl.net.ipv4.tcp_max_tw_buckets=2000000",
     "sysctl.net.ipv4.tcp_tw_reuse=1",
   ]
+
+[metrics]
+  port = 9000
+  path = '/metrics'

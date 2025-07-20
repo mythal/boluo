@@ -6,7 +6,7 @@
 )]
 
 use std::env;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, SocketAddr};
 
 use clap::Parser;
 use http_body_util::Full;
@@ -35,6 +35,7 @@ mod interface;
 mod mail;
 mod media;
 mod messages;
+mod metrics;
 mod notify;
 mod pos;
 mod pubsub;
@@ -225,8 +226,8 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+    use sysinfo::System;
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
-
     dotenvy::from_filename(".env.local").ok();
     dotenvy::dotenv().ok();
     let filter = EnvFilter::builder()
@@ -248,15 +249,7 @@ async fn main() {
 
     let ip_addr: IpAddr = {
         let host_env = env::var("HOST").unwrap_or("127.0.0.1".to_string());
-        let ipv4_addr: Result<Ipv4Addr, _> = host_env.parse();
-        if let Ok(addr) = ipv4_addr {
-            IpAddr::V4(addr)
-        } else {
-            let ipv6_addr: Result<Ipv6Addr, _> = host_env.parse();
-            ipv6_addr
-                .map(IpAddr::V6)
-                .expect("HOST must be a valid IPv4 or IPv6 address")
-        }
+        host_env.parse().expect("HOST must be a valid IP address")
     };
 
     let socket = SocketAddr::new(ip_addr, port);
@@ -281,6 +274,8 @@ async fn main() {
     if context::PUBLIC_MEDIA_URL.is_none() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
+
+    metrics::init_metrics();
 
     if args.check {
         return;
@@ -307,7 +302,16 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
+    metrics::start_update_metrics();
     tracing::info!("Startup ID: {}", events::startup_id());
+
+    tracing::info!("Kernel: {}", System::kernel_long_version());
+
+    tracing::info!(
+        "Open file limit: {}",
+        System::open_files_limit().unwrap_or(0)
+    );
+
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
@@ -331,13 +335,27 @@ async fn handle_connection(
         Ok((stream, addr)) => {
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
-                if let Err(err) = http1::Builder::new()
+                metrics::tcp_connection_established();
+
+                let connection_timeout = std::time::Duration::from_secs(30);
+
+                let connection_future = http1::Builder::new()
                     .serve_connection(io, service_fn(handler))
-                    .with_upgrades()
-                    .await
-                {
-                    tracing::warn!(error = %err, addr = %addr, "HTTP/2 connection error");
+                    .with_upgrades();
+
+                let result = tokio::time::timeout(connection_timeout, connection_future).await;
+
+                match result {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        tracing::warn!(error = %err, addr = %addr, "HTTP/1 connection error");
+                    }
+                    Err(_) => {
+                        tracing::warn!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                    }
                 }
+
+                metrics::tcp_connection_closed();
             });
         }
         Err(err) => {

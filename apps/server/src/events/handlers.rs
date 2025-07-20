@@ -125,6 +125,9 @@ async fn push_updates(
             _ = tokio::time::sleep(Duration::from_secs(8)) => {
                 outgoing.send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥"))).await?;
             }
+            _ = crate::shutdown::SHUTDOWN.notified() => {
+                break Ok(());
+            }
             message = mailbox_rx.recv() => {
                 let pending = mailbox_rx.len();
                 if pending > 64 && (pending - last_pending_updates_warned) > 4 {

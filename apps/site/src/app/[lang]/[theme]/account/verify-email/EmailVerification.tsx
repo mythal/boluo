@@ -50,7 +50,6 @@ export function VerifyEmailContent({
   currentUser: User | null | undefined;
 }) {
   const router = useRouter();
-  const intl = useIntl();
 
   const backHome = useCallback(() => {
     router.push('/');
@@ -75,10 +74,14 @@ export function VerifyEmailContent({
     },
   );
 
+  useEffect(() => {
+    triggerVerify();
+  }, [triggerVerify]);
+
   // Success state
   if (!isVerifying && !verifyError && verifyResult) {
     return (
-      <div className="text-center">
+      <div className="">
         <div className="mb-4 text-4xl text-green-600">✓</div>
         <h1 className="mb-2 text-lg font-semibold">
           <FormattedMessage defaultMessage="Email verified successfully!" />
@@ -90,10 +93,9 @@ export function VerifyEmailContent({
     );
   }
 
-  // Verifying state
-  if (!isVerifying) {
+  if (!isVerifying && verifyError) {
     return (
-      <div className="text-center">
+      <div className="">
         <h1 className="mb-4 text-lg font-semibold">
           <FormattedMessage defaultMessage="Email verification failed" />
         </h1>
@@ -110,7 +112,7 @@ export function VerifyEmailContent({
   }
 
   return (
-    <div className="text-center">
+    <div className="">
       <h1 className="mb-4 text-lg font-semibold">
         <FormattedMessage defaultMessage="Verifying your email..." />
       </h1>

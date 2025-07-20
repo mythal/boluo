@@ -79,6 +79,7 @@ where
 
     tokio::spawn(
         async move {
+            crate::metrics::websocket_connection_established();
             let start_time = std::time::Instant::now();
             let span = tracing::Span::current();
             match hyper::upgrade::on(req).await {
@@ -104,6 +105,7 @@ where
                     tracing::error!(error = %e, "Failed to upgrade connection");
                 }
             }
+            crate::metrics::websocket_connection_closed();
         }
         .instrument(span),
     );

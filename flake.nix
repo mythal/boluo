@@ -174,6 +174,7 @@
                 pkgs.prometheus-node-exporter
                 pkgs.coreutils
                 pkgs.neovim
+                pkgs.sysctl
               ];
               config = {
                 env = commonEnv;

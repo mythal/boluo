@@ -283,8 +283,6 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
     }
 
     establish_web_socket(req, move |ws_stream| async move {
-        crate::metrics::websocket_connection_established();
-
         let (mut outgoing, incoming) = ws_stream.split();
 
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
@@ -370,8 +368,6 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 }
             }
         }
-
-        crate::metrics::websocket_connection_closed();
     })
 }
 

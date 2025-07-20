@@ -175,6 +175,7 @@
                 pkgs.coreutils
                 pkgs.neovim
                 pkgs.sysctl
+                pkgs.bash
               ];
               config = {
                 env = commonEnv;

@@ -22,6 +22,9 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                     Some((channel_id, update_time)) = rx.recv() => {
                         map.insert(channel_id, update_time);
                     }
+                    _ = crate::shutdown::SHUTDOWN.notified() => {
+                        break;
+                    }
                     _ = interval.tick() => {
                         if !map.is_empty() {
                             let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());

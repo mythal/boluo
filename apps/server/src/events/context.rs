@@ -517,6 +517,9 @@ impl MailBoxState {
                             }
                         }
                     }
+                    _ = crate::shutdown::SHUTDOWN.notified() => {
+                        break;
+                    }
                     else => {
                         tracing::info!(mailbox_id = %id, "The channel is closed, shutting down");
                         break;

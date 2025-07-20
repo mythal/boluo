@@ -14,7 +14,6 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60 * 5);
     if let Some(pool) = POOL.get() {
         let pool = pool.clone();
-        metrics::update_db_pool_metrics(&pool);
         pool
     } else {
         let pool = sqlx::postgres::PgPoolOptions::new()
@@ -45,7 +44,6 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
             .expect("Cannot connect to database");
 
         let pool = POOL.get_or_init(move || pool).clone();
-        metrics::update_db_pool_metrics(&pool);
         pool
     }
 }

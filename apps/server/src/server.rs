@@ -302,6 +302,7 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
+    metrics::start_update_metrics();
     tracing::info!("Startup ID: {}", events::startup_id());
     loop {
         tokio::select! {

@@ -74,11 +74,6 @@ pub fn db_connection_released() {
     tracing::trace!("Database connection released");
 }
 
-pub fn db_query_executed(query_type: &str) {
-    counter!("db_queries_total").increment(1);
-    counter!("db_queries_by_type_total", "type" => query_type).increment(1);
-}
-
 pub fn init_metrics() {
     gauge!("websocket_connections_active").set(0.0);
     counter!("websocket_connections_total").absolute(0);

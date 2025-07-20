@@ -226,7 +226,15 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+    use sysinfo::System;
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+
+    tracing::info!("Kernel: {}", System::kernel_long_version());
+
+    tracing::info!(
+        "Open file limit: {}",
+        System::open_files_limit().unwrap_or(0)
+    );
 
     dotenvy::from_filename(".env.local").ok();
     dotenvy::dotenv().ok();

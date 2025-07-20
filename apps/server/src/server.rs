@@ -6,7 +6,7 @@
 )]
 
 use std::env;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, SocketAddr};
 
 use clap::Parser;
 use http_body_util::Full;
@@ -248,15 +248,7 @@ async fn main() {
 
     let ip_addr: IpAddr = {
         let host_env = env::var("HOST").unwrap_or("127.0.0.1".to_string());
-        let ipv4_addr: Result<Ipv4Addr, _> = host_env.parse();
-        if let Ok(addr) = ipv4_addr {
-            IpAddr::V4(addr)
-        } else {
-            let ipv6_addr: Result<Ipv6Addr, _> = host_env.parse();
-            ipv6_addr
-                .map(IpAddr::V6)
-                .expect("HOST must be a valid IPv4 or IPv6 address")
-        }
+        host_env.parse().expect("HOST must be a valid IP address")
     };
 
     let socket = SocketAddr::new(ip_addr, port);

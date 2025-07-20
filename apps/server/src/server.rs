@@ -35,6 +35,7 @@ mod interface;
 mod mail;
 mod media;
 mod messages;
+mod metrics;
 mod notify;
 mod pos;
 mod pubsub;
@@ -274,6 +275,8 @@ async fn main() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
 
+    metrics::init_metrics();
+
     if args.check {
         return;
     }
@@ -323,13 +326,18 @@ async fn handle_connection(
         Ok((stream, addr)) => {
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
-                if let Err(err) = http1::Builder::new()
+                metrics::tcp_connection_established();
+
+                let result = http1::Builder::new()
                     .serve_connection(io, service_fn(handler))
                     .with_upgrades()
-                    .await
-                {
+                    .await;
+
+                if let Err(err) = result {
                     tracing::warn!(error = %err, addr = %addr, "HTTP/2 connection error");
                 }
+
+                metrics::tcp_connection_closed();
             });
         }
         Err(err) => {

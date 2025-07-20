@@ -5,7 +5,7 @@ primary_region = "nrt"
   image = "ghcr.io/mythal/boluo/server:latest"
 
 [env]
-  HOST = '::'
+  HOST = '0.0.0.0'
   PORT = "3000"
   SITE_URL = "https://site.boluo-staging.mythal.net"
   APP_URL = "https://app.boluochat.com"
@@ -22,8 +22,6 @@ primary_region = "nrt"
   internal_port = 3_000
   min_machines_running = 0
   processes = ["app"]
-  [http_service.http_options]
-    h2_backend = true
 
   [[http_service.checks]]
     grace_period = "20s"

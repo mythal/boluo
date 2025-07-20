@@ -2984,6 +2984,7 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "itertools 0.14.0",
+ "metrics",
  "metrics-exporter-prometheus",
  "mimalloc",
  "num-rational",

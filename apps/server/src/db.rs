@@ -1,6 +1,7 @@
 use std::sync::OnceLock;
 
 use crate::channels::ChannelType;
+use crate::metrics;
 
 pub fn get_postgres_url() -> String {
     std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
@@ -12,7 +13,9 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     const LIFETIME: std::time::Duration = std::time::Duration::from_secs(60 * 60);
     const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60 * 5);
     if let Some(pool) = POOL.get() {
-        pool.clone()
+        let pool = pool.clone();
+        metrics::update_db_pool_metrics(&pool);
+        pool
     } else {
         let pool = sqlx::postgres::PgPoolOptions::new()
             .after_connect(|conn, _meta| {
@@ -23,7 +26,15 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                     )
                     .await?;
 
+                    metrics::db_connection_acquired();
+
                     Ok(())
+                })
+            })
+            .after_release(|_conn, _meta| {
+                Box::pin(async move {
+                    metrics::db_connection_released();
+                    Ok(true)
                 })
             })
             .max_connections(20)
@@ -32,7 +43,10 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
             .connect(&get_postgres_url())
             .await
             .expect("Cannot connect to database");
-        POOL.get_or_init(move || pool).clone()
+
+        let pool = POOL.get_or_init(move || pool).clone();
+        metrics::update_db_pool_metrics(&pool);
+        pool
     }
 }
 

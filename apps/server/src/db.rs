@@ -37,7 +37,7 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                     Ok(true)
                 })
             })
-            .max_connections(20)
+            .max_connections(64)
             .max_lifetime(Some(LIFETIME))
             .idle_timeout(Some(IDLE_TIMEOUT))
             .connect(&get_postgres_url())

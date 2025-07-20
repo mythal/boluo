@@ -328,13 +328,22 @@ async fn handle_connection(
             tokio::task::spawn(async move {
                 metrics::tcp_connection_established();
 
-                let result = http1::Builder::new()
-                    .serve_connection(io, service_fn(handler))
-                    .with_upgrades()
-                    .await;
+                let connection_timeout = std::time::Duration::from_secs(30);
 
-                if let Err(err) = result {
-                    tracing::warn!(error = %err, addr = %addr, "HTTP/2 connection error");
+                let connection_future = http1::Builder::new()
+                    .serve_connection(io, service_fn(handler))
+                    .with_upgrades();
+
+                let result = tokio::time::timeout(connection_timeout, connection_future).await;
+
+                match result {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        tracing::warn!(error = %err, addr = %addr, "HTTP/1 connection error");
+                    }
+                    Err(_) => {
+                        tracing::warn!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                    }
                 }
 
                 metrics::tcp_connection_closed();

@@ -13,7 +13,7 @@ primary_region = 'nrt'
   strategy = 'bluegreen'
 
 [env]
-  HOST = '::'
+  HOST = '0.0.0.0'
   MAILGUN_DOMAIN = 'noreply.boluo.chat'
   PORT = '3000'
   SITE_URL = 'https://site.boluochat.com'

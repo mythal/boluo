@@ -190,6 +190,8 @@ impl Message {
         request_pos: Option<(i32, i32)>,
         color: String,
     ) -> Result<Message, AppError> {
+        metrics::counter!("boluo_server_messages_created_total").increment(1);
+        let start_time = std::time::Instant::now();
         let id = Uuid::now_v1(b"server");
         let mut name = merge_blank(name);
         if name.is_empty() {
@@ -234,6 +236,7 @@ impl Message {
         };
 
         if is_unique_violation {
+            metrics::counter!("boluo_server_messages_pos_conflict_total").increment(1);
             let new_pos = crate::pos::CHANNEL_POS_MANAGER
                 .on_conflict(channel_id, id)
                 .await?;
@@ -304,6 +307,8 @@ impl Message {
         let created = message.created;
 
         notify::space_activity(channel_id, Some(created));
+        metrics::histogram!("boluo_server_messages_create_duration_ms")
+            .record(start_time.elapsed().as_millis() as f64);
         Ok(message)
     }
 

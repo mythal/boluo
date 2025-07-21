@@ -1,7 +1,6 @@
 use std::sync::OnceLock;
 
 use crate::channels::ChannelType;
-use crate::metrics;
 
 pub fn get_postgres_url() -> String {
     std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
@@ -25,17 +24,10 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                     )
                     .await?;
 
-                    metrics::db_connection_acquired();
-
                     Ok(())
                 })
             })
-            .after_release(|_conn, _meta| {
-                Box::pin(async move {
-                    metrics::db_connection_released();
-                    Ok(true)
-                })
-            })
+            .after_release(|_conn, _meta| Box::pin(async move { Ok(true) }))
             .max_connections(64)
             .max_lifetime(Some(LIFETIME))
             .idle_timeout(Some(IDLE_TIMEOUT))

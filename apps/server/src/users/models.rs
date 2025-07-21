@@ -263,6 +263,8 @@ impl User {
         .fetch_one(db)
         .await?;
         CACHE.User.insert(user.id, user.clone().into());
+        let edit_counter = metrics::counter!("boluo_server_users_edit_total");
+        edit_counter.increment(1);
         Ok(user)
     }
     pub async fn remove_avatar<'c, T: sqlx::PgExecutor<'c>>(

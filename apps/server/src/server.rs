@@ -8,13 +8,13 @@
 use std::env;
 use std::net::{IpAddr, SocketAddr};
 
-use ::metrics::{counter, gauge};
 use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::ORIGIN;
 use hyper::server::conn::http1;
 use hyper_util::rt::TokioIo;
+use metrics::{counter, gauge};
 use tokio::net::TcpListener;
 
 use hyper::Request;
@@ -36,12 +36,12 @@ mod interface;
 mod mail;
 mod media;
 mod messages;
-mod metrics;
 mod notify;
 mod pos;
 mod pubsub;
 mod redis;
 mod s3;
+mod server_metrics;
 mod session;
 mod shutdown;
 mod spaces;
@@ -276,7 +276,7 @@ async fn main() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
 
-    metrics::init_metrics().await;
+    server_metrics::init_metrics().await;
 
     if args.check {
         return;
@@ -303,7 +303,7 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
-    metrics::start_update_metrics();
+    server_metrics::start_update_metrics();
     tracing::info!("Startup ID: {}", events::startup_id());
 
     tracing::info!("Kernel: {}", System::kernel_long_version());
@@ -360,7 +360,7 @@ async fn handle_connection(
                 }
 
                 tcp_connections_active.decrement(1);
-                ::metrics::histogram!("boluo_server_tcp_connection_duration_ms")
+                metrics::histogram!("boluo_server_tcp_connection_duration_ms")
                     .record(start_time.elapsed().as_millis() as f64);
             });
         }

@@ -80,6 +80,7 @@ async fn push_updates(
     node: Option<u16>,
 ) -> Result<(), PushUpdatesError> {
     let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
+    let start_time = std::time::Instant::now();
 
     let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
         Ok(updates) => updates,
@@ -98,6 +99,10 @@ async fn push_updates(
         }
         Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
             let elapsed = timestamp() - after.unwrap_or(0);
+            metrics::histogram!(
+                "boluo_server_events_push_updates_requested_updates_are_too_early_duration_ms"
+            )
+            .record(elapsed as f64);
             tracing::info!(
                 mailbox_id = %mailbox,
                 after,
@@ -111,6 +116,7 @@ async fn push_updates(
             vec![]
         }
     };
+    let cached_updates_count = cached_updates.len();
     for message in cached_updates {
         outgoing.feed(WsMessage::Text(message)).await?;
     }
@@ -118,7 +124,14 @@ async fn push_updates(
     outgoing.feed(WsMessage::Text(initialized)).await?;
     outgoing.flush().await?;
 
+    metrics::histogram!("boluo_server_events_push_initial_updates_duration_ms")
+        .record(start_time.elapsed().as_millis() as f64);
+    metrics::histogram!("boluo_server_events_push_initial_updates_count")
+        .record(cached_updates_count as f64);
+
     let mut last_pending_updates_warned = 0;
+    let pending_updates = metrics::histogram!("boluo_server_events_pending_updates");
+    let events_sent_counter = metrics::counter!("boluo_server_events_events_sent_total");
 
     loop {
         tokio::select! {
@@ -130,16 +143,23 @@ async fn push_updates(
             }
             message = mailbox_rx.recv() => {
                 let pending = mailbox_rx.len();
+                if pending > 0 {
+                    pending_updates.record(pending as f64);
+                }
                 if pending > 64 && (pending - last_pending_updates_warned) > 4 {
                     tracing::info!(pending, "Too many pending updates");
                     last_pending_updates_warned = pending;
                 }
                 let first_message = message?;
                 outgoing.feed(WsMessage::Text(first_message)).await?;
+                events_sent_counter.increment(1);
                 loop {
                     use tokio::sync::broadcast::error::{TryRecvError, RecvError};
                     match mailbox_rx.try_recv() {
-                        Ok(message) => outgoing.feed(WsMessage::Text(message)).await?,
+                        Ok(message) => {
+                            events_sent_counter.increment(1);
+                            outgoing.feed(WsMessage::Text(message)).await?
+                        },
                         Err(TryRecvError::Lagged(x)) => {
                             return Err(PushUpdatesError::RecvError(RecvError::Lagged(x)));
                         }
@@ -167,8 +187,11 @@ async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {
                 tracing::warn!("An user tried to preview without authentication");
+                metrics::counter!("boluo_server_events_preview_without_authentication_total")
+                    .increment(1);
                 return;
             };
+            metrics::counter!("boluo_server_events_preview_total").increment(1);
             if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
                 tracing::warn!("Failed to broadcast preview update: {}", err);
             };
@@ -383,6 +406,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
                     space_id = ?space_id,
                     "User ID does not match the authenticated user"
                 );
+                metrics::counter!("boluo_server_events_token_user_id_mismatch_total").increment(1);
                 Err(AppError::Unauthenticated(AuthenticateFail::Guest))
             } else {
                 Ok(Token {
@@ -396,6 +420,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
                 space_id = ?space_id,
                 "No session found for the user, but user_id is provided"
             );
+            metrics::counter!("boluo_server_events_token_no_session_found_total").increment(1);
             Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))
         }
         (session, None) => Ok(Token {

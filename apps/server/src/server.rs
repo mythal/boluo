@@ -8,6 +8,7 @@
 use std::env;
 use std::net::{IpAddr, SocketAddr};
 
+use ::metrics::{counter, gauge};
 use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -275,7 +276,7 @@ async fn main() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
 
-    metrics::init_metrics();
+    metrics::init_metrics().await;
 
     if args.check {
         return;
@@ -335,7 +336,10 @@ async fn handle_connection(
         Ok((stream, addr)) => {
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
-                metrics::tcp_connection_established();
+                let start_time = std::time::Instant::now();
+                let tcp_connections_active = gauge!("boluo_server_tcp_connections_active");
+                counter!("boluo_server_tcp_connections_total").increment(1);
+                tcp_connections_active.increment(1);
 
                 let connection_timeout = std::time::Duration::from_secs(30);
 
@@ -355,7 +359,9 @@ async fn handle_connection(
                     }
                 }
 
-                metrics::tcp_connection_closed();
+                tcp_connections_active.decrement(1);
+                ::metrics::histogram!("boluo_server_tcp_connection_duration_ms")
+                    .record(start_time.elapsed().as_millis() as f64);
             });
         }
         Err(err) => {

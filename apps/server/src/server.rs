@@ -313,10 +313,13 @@ async fn main() {
         System::open_files_limit().unwrap_or(0)
     );
 
+    let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
+    let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
+
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
-                handle_connection(accept_result).await;
+                handle_connection(accept_result, timeout_counter.clone(), error_counter.clone()).await;
             },
             _ = terminate_stream.recv() => {
                 tracing::info!("Graceful shutdown signal received");
@@ -331,6 +334,8 @@ async fn main() {
 
 async fn handle_connection(
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
+    timeout_counter: metrics::Counter,
+    error_counter: metrics::Counter,
 ) {
     match accept_result {
         Ok((stream, addr)) => {
@@ -353,9 +358,11 @@ async fn handle_connection(
                     Ok(Ok(())) => {}
                     Ok(Err(err)) => {
                         tracing::warn!(error = %err, addr = %addr, "HTTP/1 connection error");
+                        error_counter.increment(1);
                     }
                     Err(_) => {
                         tracing::warn!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                        timeout_counter.increment(1);
                     }
                 }
 

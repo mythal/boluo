@@ -318,6 +318,8 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             match push_updates(mailbox, &mut outgoing, after, seq, node).await {
                 Ok(_) => tracing::debug!("Stop push updates"),
                 Err(PushUpdatesError::FailedToSendMessage(ConnectionClosed | AlreadyClosed)) => {
+                    metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
+                        .increment(1);
                     tracing::debug!("Connection closed")
                 }
                 Err(e) => tracing::warn!(error = %e, "Failed to push updates"),
@@ -356,20 +358,34 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 )),
                 _,
             )) => {
+                metrics::counter!(
+                    "boluo_server_events_push_updates_reset_without_closing_handshake_total"
+                )
+                .increment(1);
                 tracing::debug!("Reset without closing handshake");
             }
             future::Either::Right((Err(tungstenite::Error::Io(ref io_err)), _))
                 if io_err.kind() == std::io::ErrorKind::TimedOut =>
             {
+                metrics::counter!("boluo_server_events_push_updates_read_timeout_total")
+                    .increment(1);
                 tracing::debug!("WebSocket read timeout after 40 seconds");
             }
             future::Either::Right((Err(tungstenite::Error::ConnectionClosed), _)) => {
+                metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
+                    .increment(1);
                 tracing::debug!("WebSocket connection closed normally");
             }
             future::Either::Right((Err(tungstenite::Error::AlreadyClosed), _)) => {
+                metrics::counter!("boluo_server_events_push_updates_already_closed_total")
+                    .increment(1);
                 tracing::warn!("Attempted to operate on already closed WebSocket connection");
             }
             future::Either::Right((Err(e), _)) => {
+                metrics::counter!(
+                    "boluo_server_events_push_updates_failed_to_receive_events_total"
+                )
+                .increment(1);
                 tracing::warn!(error = %e, "Failed to receive events");
             }
             future::Either::Right((Ok(_), _)) => {

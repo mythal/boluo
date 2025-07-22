@@ -12,8 +12,8 @@ use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::ORIGIN;
-use hyper::server::conn::http1;
-use hyper_util::rt::TokioIo;
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn::auto::Builder as AutoBuilder;
 use metrics::{counter, gauge};
 use tokio::net::TcpListener;
 
@@ -57,24 +57,6 @@ use crate::interface::{err_response, missing, ok_response};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-#[derive(Clone)]
-// An Executor that uses the tokio runtime.
-pub struct TokioExecutor;
-
-// Implement the `hyper::rt::Executor` trait for `TokioExecutor` so that it can be used to spawn
-// tasks in the hyper runtime.
-// An Executor allows us to manage execution of tasks which can help us improve the efficiency and
-// scalability of the server.
-impl<F> hyper::rt::Executor<F> for TokioExecutor
-where
-    F: std::future::Future + Send + 'static,
-    F::Output: Send + 'static,
-{
-    fn execute(&self, fut: F) {
-        tokio::task::spawn(fut);
-    }
-}
 
 async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();
@@ -348,10 +330,12 @@ async fn handle_connection(
 
                 let connection_timeout = std::time::Duration::from_secs(30);
 
-                let connection_future = http1::Builder::new()
-                    .serve_connection(io, service_fn(handler))
-                    .with_upgrades();
+                let builder = AutoBuilder::new(TokioExecutor::new());
+                let connection_future =
+                    builder.serve_connection_with_upgrades(io, service_fn(handler));
 
+                // Maybe we should use hyper-timeout
+                // https://crates.io/crates/hyper-timeout
                 let result = tokio::time::timeout(connection_timeout, connection_future).await;
 
                 match result {
@@ -361,7 +345,7 @@ async fn handle_connection(
                         error_counter.increment(1);
                     }
                     Err(_) => {
-                        tracing::warn!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                        tracing::info!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
                         timeout_counter.increment(1);
                     }
                 }
@@ -372,7 +356,7 @@ async fn handle_connection(
             });
         }
         Err(err) => {
-            tracing::warn!(error = %err, "Failed to accept connection");
+            tracing::error!(error = %err, "Failed to accept connection");
         }
     }
 }

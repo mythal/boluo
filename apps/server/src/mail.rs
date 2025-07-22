@@ -38,7 +38,10 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
     if !res.status().is_success() {
         let error = res.text().await?;
         tracing::warn!(error, "Failed to send email");
+        metrics::counter!("boluo_server_mail_send_failed_total").increment(1);
         return Err(anyhow::anyhow!("Failed to send email"));
     }
+
+    metrics::counter!("boluo_server_mail_sent_total").increment(1);
     Ok(())
 }

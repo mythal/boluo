@@ -65,6 +65,8 @@ pub async fn upload(
         mime_type,
         size,
     } = params;
+    metrics::counter!("boluo_server_media_upload_total").increment(1);
+    metrics::histogram!("boluo_server_media_upload_size_bytes").record(size as f64);
 
     let mime_type = mime_type.unwrap_or_default();
 
@@ -111,6 +113,7 @@ async fn get(req: Request<impl Body>) -> Result<Response, AppError> {
         filename,
         download: _,
     } = parse_query(req.uri())?;
+    metrics::counter!("boluo_server_media_get_total").increment(1);
     let _method = req.method().clone();
 
     let pool = db::get().await;
@@ -195,6 +198,8 @@ async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
         size,
     } = parse_query(req.uri())?;
     let client = s3::get_client();
+    metrics::counter!("boluo_server_media_presigned_total").increment(1);
+    metrics::histogram!("boluo_server_media_upload_size_bytes").record(size as f64);
 
     let db = db::get().await;
     if size <= 0 {

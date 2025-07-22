@@ -234,6 +234,7 @@ impl Message {
         };
 
         if is_unique_violation {
+            metrics::counter!("boluo_server_messages_pos_conflict_total").increment(1);
             let new_pos = crate::pos::CHANNEL_POS_MANAGER
                 .on_conflict(channel_id, id)
                 .await?;

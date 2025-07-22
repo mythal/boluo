@@ -97,8 +97,17 @@ impl ChannelPosActor {
 
     pub async fn run(mut self) {
         let mut changed_at = Instant::now();
+        let labels = vec![metrics::Label::new(
+            "channel_id",
+            self.channel_id.to_string(),
+        )];
+        let pending_gauge = metrics::gauge!("boluo_server_pos_pending_actions", labels.clone());
+        let action_duration_histogram =
+            metrics::histogram!("boluo_server_pos_action_duration_ms", labels.clone());
+
         while let Some(action) = self.receiver.recv().await {
             let pending = self.receiver.len();
+            pending_gauge.set(pending as f64);
             if pending > 16 {
                 tracing::info!(pending, "Too many pending actions");
             }
@@ -202,6 +211,7 @@ impl ChannelPosActor {
                 }
             }
             let elapsed = start.elapsed();
+            action_duration_histogram.record(elapsed.as_millis() as f64);
             if elapsed > std::time::Duration::from_millis(8) {
                 tracing::warn!(
                     action_name,

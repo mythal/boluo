@@ -23,6 +23,8 @@ primary_region = "nrt"
   min_machines_running = 0
   processes = ["app"]
 
+  [http_service.http_options]
+    h2_backend = true
   [[http_service.checks]]
     grace_period = "20s"
     interval = "20s"

@@ -5,6 +5,7 @@ use hyper::body::Incoming;
 use hyper::header::{CONNECTION, HeaderMap, HeaderValue, SEC_WEBSOCKET_KEY, UPGRADE};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
+use metrics::{counter, gauge};
 use std::future::Future;
 use tokio_tungstenite::WebSocketStream;
 pub use tokio_tungstenite::tungstenite::Message as WsMessage;
@@ -79,7 +80,9 @@ where
 
     tokio::spawn(
         async move {
-            crate::metrics::websocket_connection_established();
+            let websocket_connections_active = gauge!("boluo_server_websocket_connections_active");
+            websocket_connections_active.increment(1);
+            counter!("boluo_server_websocket_connections_total").increment(1);
             let start_time = std::time::Instant::now();
             let span = tracing::Span::current();
             match hyper::upgrade::on(req).await {
@@ -105,7 +108,9 @@ where
                     tracing::error!(error = %e, "Failed to upgrade connection");
                 }
             }
-            crate::metrics::websocket_connection_closed();
+            metrics::histogram!("boluo_server_websocket_connection_duration_ms")
+                .record(start_time.elapsed().as_millis() as f64);
+            websocket_connections_active.decrement(1);
         }
         .instrument(span),
     );

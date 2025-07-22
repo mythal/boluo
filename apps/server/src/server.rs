@@ -12,8 +12,9 @@ use clap::Parser;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::ORIGIN;
-use hyper::server::conn::http1;
-use hyper_util::rt::TokioIo;
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn::auto::Builder as AutoBuilder;
+use metrics::{counter, gauge};
 use tokio::net::TcpListener;
 
 use hyper::Request;
@@ -35,12 +36,12 @@ mod interface;
 mod mail;
 mod media;
 mod messages;
-mod metrics;
 mod notify;
 mod pos;
 mod pubsub;
 mod redis;
 mod s3;
+mod server_metrics;
 mod session;
 mod shutdown;
 mod spaces;
@@ -56,24 +57,6 @@ use crate::interface::{err_response, missing, ok_response};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-#[derive(Clone)]
-// An Executor that uses the tokio runtime.
-pub struct TokioExecutor;
-
-// Implement the `hyper::rt::Executor` trait for `TokioExecutor` so that it can be used to spawn
-// tasks in the hyper runtime.
-// An Executor allows us to manage execution of tasks which can help us improve the efficiency and
-// scalability of the server.
-impl<F> hyper::rt::Executor<F> for TokioExecutor
-where
-    F: std::future::Future + Send + 'static,
-    F::Output: Send + 'static,
-{
-    fn execute(&self, fut: F) {
-        tokio::task::spawn(fut);
-    }
-}
 
 async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError> {
     let path = req.uri().path().to_string();
@@ -275,7 +258,7 @@ async fn main() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
 
-    metrics::init_metrics();
+    server_metrics::init_metrics().await;
 
     if args.check {
         return;
@@ -302,7 +285,7 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
-    metrics::start_update_metrics();
+    server_metrics::start_update_metrics();
     tracing::info!("Startup ID: {}", events::startup_id());
 
     tracing::info!("Kernel: {}", System::kernel_long_version());
@@ -312,10 +295,13 @@ async fn main() {
         System::open_files_limit().unwrap_or(0)
     );
 
+    let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
+    let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
+
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
-                handle_connection(accept_result).await;
+                handle_connection(accept_result, timeout_counter.clone(), error_counter.clone()).await;
             },
             _ = terminate_stream.recv() => {
                 tracing::info!("Graceful shutdown signal received");
@@ -330,36 +316,47 @@ async fn main() {
 
 async fn handle_connection(
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
+    timeout_counter: metrics::Counter,
+    error_counter: metrics::Counter,
 ) {
     match accept_result {
         Ok((stream, addr)) => {
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
-                metrics::tcp_connection_established();
+                let start_time = std::time::Instant::now();
+                let tcp_connections_active = gauge!("boluo_server_tcp_connections_active");
+                counter!("boluo_server_tcp_connections_total").increment(1);
+                tcp_connections_active.increment(1);
 
                 let connection_timeout = std::time::Duration::from_secs(30);
 
-                let connection_future = http1::Builder::new()
-                    .serve_connection(io, service_fn(handler))
-                    .with_upgrades();
+                let builder = AutoBuilder::new(TokioExecutor::new());
+                let connection_future =
+                    builder.serve_connection_with_upgrades(io, service_fn(handler));
 
+                // Maybe we should use hyper-timeout
+                // https://crates.io/crates/hyper-timeout
                 let result = tokio::time::timeout(connection_timeout, connection_future).await;
 
                 match result {
                     Ok(Ok(())) => {}
                     Ok(Err(err)) => {
                         tracing::warn!(error = %err, addr = %addr, "HTTP/1 connection error");
+                        error_counter.increment(1);
                     }
                     Err(_) => {
-                        tracing::warn!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                        tracing::info!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                        timeout_counter.increment(1);
                     }
                 }
 
-                metrics::tcp_connection_closed();
+                tcp_connections_active.decrement(1);
+                metrics::histogram!("boluo_server_tcp_connection_duration_ms")
+                    .record(start_time.elapsed().as_millis() as f64);
             });
         }
         Err(err) => {
-            tracing::warn!(error = %err, "Failed to accept connection");
+            tracing::error!(error = %err, "Failed to accept connection");
         }
     }
 }

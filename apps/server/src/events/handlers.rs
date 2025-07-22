@@ -75,11 +75,13 @@ enum PushUpdatesError {
 async fn push_updates(
     mailbox: Uuid,
     outgoing: &mut Sender,
+    mut error_receiver: tokio::sync::mpsc::Receiver<AppError>,
     after: Option<i64>,
     seq: Option<Seq>,
     node: Option<u16>,
 ) -> Result<(), PushUpdatesError> {
     let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
+    let start_time = std::time::Instant::now();
 
     let cached_updates = match Update::get_from_state(&mailbox, after, seq, node).await {
         Ok(updates) => updates,
@@ -98,6 +100,10 @@ async fn push_updates(
         }
         Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
             let elapsed = timestamp() - after.unwrap_or(0);
+            metrics::histogram!(
+                "boluo_server_events_push_updates_requested_updates_are_too_early_duration_ms"
+            )
+            .record(elapsed as f64);
             tracing::info!(
                 mailbox_id = %mailbox,
                 after,
@@ -111,6 +117,7 @@ async fn push_updates(
             vec![]
         }
     };
+    let cached_updates_count = cached_updates.len();
     for message in cached_updates {
         outgoing.feed(WsMessage::Text(message)).await?;
     }
@@ -118,7 +125,14 @@ async fn push_updates(
     outgoing.feed(WsMessage::Text(initialized)).await?;
     outgoing.flush().await?;
 
+    metrics::histogram!("boluo_server_events_push_initial_updates_duration_ms")
+        .record(start_time.elapsed().as_millis() as f64);
+    metrics::histogram!("boluo_server_events_push_initial_updates_count")
+        .record(cached_updates_count as f64);
+
     let mut last_pending_updates_warned = 0;
+    let pending_updates = metrics::histogram!("boluo_server_events_pending_updates");
+    let events_sent_counter = metrics::counter!("boluo_server_events_events_sent_total");
 
     loop {
         tokio::select! {
@@ -128,18 +142,31 @@ async fn push_updates(
             _ = crate::shutdown::SHUTDOWN.notified() => {
                 break Ok(());
             }
+            error = error_receiver.recv() => {
+                if let Some(error) = error {
+                    outgoing.send(WsMessage::Text(Update::error(mailbox, error).encode())).await?;
+                    break Ok(());
+                }
+            }
             message = mailbox_rx.recv() => {
                 let pending = mailbox_rx.len();
+                if pending > 0 {
+                    pending_updates.record(pending as f64);
+                }
                 if pending > 64 && (pending - last_pending_updates_warned) > 4 {
                     tracing::info!(pending, "Too many pending updates");
                     last_pending_updates_warned = pending;
                 }
                 let first_message = message?;
                 outgoing.feed(WsMessage::Text(first_message)).await?;
+                events_sent_counter.increment(1);
                 loop {
                     use tokio::sync::broadcast::error::{TryRecvError, RecvError};
                     match mailbox_rx.try_recv() {
-                        Ok(message) => outgoing.feed(WsMessage::Text(message)).await?,
+                        Ok(message) => {
+                            events_sent_counter.increment(1);
+                            outgoing.feed(WsMessage::Text(message)).await?
+                        },
                         Err(TryRecvError::Lagged(x)) => {
                             return Err(PushUpdatesError::RecvError(RecvError::Lagged(x)));
                         }
@@ -155,7 +182,12 @@ async fn push_updates(
 }
 
 #[instrument(skip(session, message))]
-async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &str) {
+async fn handle_client_event(
+    mailbox: Uuid,
+    error_sender: tokio::sync::mpsc::Sender<AppError>,
+    session: Option<Session>,
+    message: &str,
+) {
     let event = match serde_json::from_str(message) {
         Ok(event) => event,
         Err(parse_error) => {
@@ -167,8 +199,17 @@ async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {
                 tracing::warn!("An user tried to preview without authentication");
+                metrics::counter!("boluo_server_events_preview_without_authentication_total")
+                    .increment(1);
+
+                error_sender
+                    .send(AppError::Unauthenticated(AuthenticateFail::Guest))
+                    .await
+                    .ok();
+
                 return;
             };
+            metrics::counter!("boluo_server_events_preview_total").increment(1);
             if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
                 tracing::warn!("Failed to broadcast preview update: {}", err);
             };
@@ -176,6 +217,11 @@ async fn handle_client_event(mailbox: Uuid, session: Option<Session>, message: &
         ClientEvent::Diff { preview } => {
             let Some(session) = session else {
                 tracing::warn!("An user tried to diff preview without authentication");
+                error_sender
+                    .send(AppError::Unauthenticated(AuthenticateFail::Guest))
+                    .await
+                    .ok();
+
                 return;
             };
             if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
@@ -284,6 +330,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
 
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
+        let (error_sender, error_receiver) = tokio::sync::mpsc::channel(1);
 
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
             std::sync::LazyLock::new(|| serde_json::to_string(&Update::app_info()).unwrap().into());
@@ -292,9 +339,11 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         }
         let push_updates_future = async move {
             use tokio_tungstenite::tungstenite::Error::{AlreadyClosed, ConnectionClosed};
-            match push_updates(mailbox, &mut outgoing, after, seq, node).await {
+            match push_updates(mailbox, &mut outgoing, error_receiver, after, seq, node).await {
                 Ok(_) => tracing::debug!("Stop push updates"),
                 Err(PushUpdatesError::FailedToSendMessage(ConnectionClosed | AlreadyClosed)) => {
+                    metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
+                        .increment(1);
                     tracing::debug!("Connection closed")
                 }
                 Err(e) => tracing::warn!(error = %e, "Failed to push updates"),
@@ -311,14 +360,17 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 ))
             })
             .and_then(future::ready)
-            .try_for_each(|message: WsMessage| async move {
-                if let WsMessage::Text(message) = message {
-                    if message == "♡" {
-                        return Ok(());
+            .try_for_each(|message: WsMessage| {
+                let error_sender = error_sender.clone();
+                async move {
+                    if let WsMessage::Text(message) = message {
+                        if message == "♡" {
+                            return Ok(());
+                        }
+                        handle_client_event(mailbox, error_sender, session, &message).await
                     }
-                    handle_client_event(mailbox, session, &message).await;
+                    Ok(())
                 }
-                Ok(())
             });
         futures::pin_mut!(push_updates_future);
         futures::pin_mut!(receive_client_events);
@@ -333,20 +385,34 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                 )),
                 _,
             )) => {
+                metrics::counter!(
+                    "boluo_server_events_push_updates_reset_without_closing_handshake_total"
+                )
+                .increment(1);
                 tracing::debug!("Reset without closing handshake");
             }
             future::Either::Right((Err(tungstenite::Error::Io(ref io_err)), _))
                 if io_err.kind() == std::io::ErrorKind::TimedOut =>
             {
+                metrics::counter!("boluo_server_events_push_updates_read_timeout_total")
+                    .increment(1);
                 tracing::debug!("WebSocket read timeout after 40 seconds");
             }
             future::Either::Right((Err(tungstenite::Error::ConnectionClosed), _)) => {
+                metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
+                    .increment(1);
                 tracing::debug!("WebSocket connection closed normally");
             }
             future::Either::Right((Err(tungstenite::Error::AlreadyClosed), _)) => {
+                metrics::counter!("boluo_server_events_push_updates_already_closed_total")
+                    .increment(1);
                 tracing::warn!("Attempted to operate on already closed WebSocket connection");
             }
             future::Either::Right((Err(e), _)) => {
+                metrics::counter!(
+                    "boluo_server_events_push_updates_failed_to_receive_events_total"
+                )
+                .increment(1);
                 tracing::warn!(error = %e, "Failed to receive events");
             }
             future::Either::Right((Ok(_), _)) => {
@@ -383,6 +449,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
                     space_id = ?space_id,
                     "User ID does not match the authenticated user"
                 );
+                metrics::counter!("boluo_server_events_token_user_id_mismatch_total").increment(1);
                 Err(AppError::Unauthenticated(AuthenticateFail::Guest))
             } else {
                 Ok(Token {
@@ -396,6 +463,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
                 space_id = ?space_id,
                 "No session found for the user, but user_id is provided"
             );
+            metrics::counter!("boluo_server_events_token_no_session_found_total").increment(1);
             Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))
         }
         (session, None) => Ok(Token {
@@ -523,7 +591,9 @@ async fn receive_events(req: Request<Incoming>) -> Response {
         }
     };
 
-    handle_client_event(mailbox, session, body_str).await;
+    let (error_sender, _error_receiver) = tokio::sync::mpsc::channel(1);
+
+    handle_client_event(mailbox, error_sender, session, body_str).await;
 
     ok_response(serde_json::json!({ "ok": true }))
 }

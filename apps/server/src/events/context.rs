@@ -447,10 +447,14 @@ impl MailBoxState {
             let mut cleanup_interval = tokio::time::interval(std::time::Duration::from_secs(120));
             let mut start_at = timestamp();
             let mut last_pending_actions_warned = 0;
+            let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
+            let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
+            let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms", labels.clone());
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
                         let pending = rx.len();
+                        pending_gauge.set(pending as f64);
                         if pending > 256 && (pending - last_pending_actions_warned) > 8 {
                             tracing::info!(pending, "Too many pending actions");
                             last_pending_actions_warned = pending;
@@ -476,6 +480,7 @@ impl MailBoxState {
                                 let update_name = encoded_update.update.name();
                                 on_update(&mut updates, &mut preview_map, &mut diff_map, *encoded_update);
                                 let elapsed = start.elapsed();
+                                action_duration_histogram.record(elapsed.as_millis() as f64);
                                 if elapsed > std::time::Duration::from_millis(25) {
                                     tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
                                 }

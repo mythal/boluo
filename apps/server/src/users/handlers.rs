@@ -37,6 +37,7 @@ async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     }: Register = interface::parse_body(req).await?;
     let pool = db::get().await;
     let user = User::register(&pool, &email, &username, &nickname, &password).await?;
+    metrics::counter!("boluo_server_users_total").increment(1);
 
     // Send email verification
     send_email_verification(&user.email, &user.id, None).await?;
@@ -161,10 +162,14 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     let form: Login = interface::parse_body(req).await?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
+    let login_failed_counter = metrics::counter!("boluo_server_users_login_failed_total");
     let user = User::login(&mut *conn, &form.username, &form.password)
         .await
         .inspect_err(
-            |err| tracing::warn!(error = %err, username = %form.username, "Failed to login, password may be incorrect"),
+            |err| {
+                tracing::warn!(error = %err, username = %form.username, "Failed to login, password may be incorrect");
+                login_failed_counter.increment(1);
+            },
         )
         .inspect(|user| {
             if let Some(user) = user {
@@ -175,6 +180,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
                     "A user logged in"
                 );
             } else {
+                login_failed_counter.increment(1);
                 tracing::warn!(
                     username = %form.username,
                     "Failed to login, username may be incorrect"

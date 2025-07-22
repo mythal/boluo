@@ -30,6 +30,7 @@ primary_region = 'nrt'
   auto_start_machines = false
   min_machines_running = 1
   processes = ['app']
+  idle_timeout = 300
   [http_service.concurrency]
     type = "requests"
     soft_limit = 400

@@ -12,6 +12,7 @@ use hyper::Request;
 use hyper::body::Body;
 
 async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
+    let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
     let NewMessage {
         message_id: _,
@@ -58,12 +59,20 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         request_pos,
         color,
     )
-    .await?;
+    .await
+    .inspect_err(|_| {
+        metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
+    })?;
     Update::new_message(space_member.space_id, message.clone(), preview_id);
+
+    metrics::counter!("boluo_server_messages_created_total").increment(1);
+    metrics::histogram!("boluo_server_messages_create_duration_ms")
+        .record(start_time.elapsed().as_millis() as f64);
     Ok(message)
 }
 
 async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
+    let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
     let EditMessage {
         message_id,
@@ -111,11 +120,14 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     .await?
     .ok_or_else(|| unexpected!("The message had been delete."))?;
     trans.commit().await?;
+    metrics::counter!("boluo_server_messages_edited_total").increment(1);
     Update::message_edited(
         space_member.space_id,
         edited_message.clone(),
         edited_message.pos,
     );
+    metrics::histogram!("boluo_server_messages_edit_duration_ms")
+        .record(start_time.elapsed().as_millis() as f64);
     Ok(edited_message)
 }
 
@@ -183,6 +195,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
         moved_message.hide(None);
     }
     Update::message_edited(channel.space_id, moved_message, message.pos);
+    metrics::counter!("boluo_server_messages_moved_total").increment(1);
     Ok(true)
 }
 
@@ -219,6 +232,7 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
     crate::pos::CHANNEL_POS_MANAGER
         .cancel(message.channel_id, message.id)
         .await;
+    metrics::counter!("boluo_server_messages_deleted_total").increment(1);
     Ok(message)
 }
 
@@ -248,6 +262,7 @@ async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
     Update::message_edited(channel.space_id, edited_message.clone(), message.pos);
+    metrics::counter!("boluo_server_messages_folded_total").increment(1);
     Ok(edited_message)
 }
 

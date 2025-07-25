@@ -211,7 +211,7 @@ struct Args {
     types: bool,
 }
 
-#[tokio::main]
+#[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
     dotenvy::from_filename(".env.local").ok();

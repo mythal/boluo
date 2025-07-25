@@ -1,9 +1,9 @@
 use metrics::{counter, gauge};
 
-pub async fn get_current_file_descriptors() -> u64 {
+pub fn get_current_file_descriptors() -> u64 {
     #[cfg(target_os = "linux")]
     {
-        match tokio::fs::read_dir("/proc/self/fd").await {
+        match std::fs::read_dir("/proc/self/fd") {
             Ok(entries) => entries.count() as u64,
             Err(e) => {
                 tracing::debug!("Failed to read file descriptors: {}", e);
@@ -18,7 +18,9 @@ pub async fn get_current_file_descriptors() -> u64 {
 }
 
 pub async fn update_file_descriptor_metrics() {
-    let fd_count = get_current_file_descriptors().await;
+    let fd_count = tokio::task::spawn_blocking(get_current_file_descriptors)
+        .await
+        .unwrap_or(0);
     gauge!("boluo_server_file_descriptors_used").set(fd_count as f64);
 }
 

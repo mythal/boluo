@@ -12,6 +12,7 @@ import { EntityText } from '../entities/EntityText';
 import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
 import { ZERO_WIDTH_SPACE } from '../../const';
 import { EntityUnknown } from '../entities/EntityUnknown';
+import { EntityStrongEmphasis } from '../entities/EntityStrongEmphasis';
 
 interface Props {
   source: string;
@@ -75,6 +76,8 @@ export const Content = memo<Props>(
               return <EntityText key={index} source={source} entity={entity} />;
             case 'Link':
               return <EntityLink key={index} source={source} entity={entity} />;
+            case 'StrongEmphasis':
+              return <EntityStrongEmphasis key={index} source={source} entity={entity} />;
             case 'Strong':
               return <EntityStrong key={index} source={source} entity={entity} />;
             case 'Emphasis':

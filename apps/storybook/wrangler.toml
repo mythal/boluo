@@ -1,0 +1,6 @@
+name = "boluo-storybook"
+compatibility_date = "2025-07-25"
+
+[assets]
+  directory = "./storybook-static/"
+  not_found_handling = "single-page-application"

@@ -9,7 +9,7 @@ use crate::cache::CACHE;
 use crate::channels::Channel;
 use crate::context::get_site_url;
 use crate::error::{AppError, Find, ValidationFailed};
-use crate::interface;
+use crate::interface::{self, response};
 use crate::interface::{missing, ok_response, parse_body, parse_query};
 use crate::media::{upload, upload_params};
 use crate::session::{
@@ -867,38 +867,38 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u8>>, AppError> {
     match (path, req.method().clone()) {
         ("/login", Method::POST) => login(req).await,
-        ("/register", Method::POST) => register(req).await.map(ok_response),
+        ("/register", Method::POST) => response(register(req).await).await,
         ("/logout", _) => logout(req).await,
-        ("/query", Method::GET) => query_user(req).await.map(ok_response),
-        ("/query_self", Method::GET) => query_self(req).await.map(ok_response),
+        ("/query", Method::GET) => response(query_user(req).await).await,
+        ("/query_self", Method::GET) => response(query_self(req).await).await,
         ("/get_me", Method::GET) => get_me(req).await,
         ("/settings", Method::GET) => query_settings(req).await.map(ok_response),
-        ("/edit", Method::POST) => edit(req).await.map(ok_response),
-        ("/edit_avatar", Method::POST) => edit_avatar(req).await.map(ok_response),
-        ("/remove_avatar", Method::POST) => remove_avatar(req).await.map(ok_response),
-        ("/update_settings", Method::POST) => update_settings(req).await.map(ok_response),
-        ("/update_settings", Method::PUT) => update_settings(req).await.map(ok_response),
-        ("/update_settings", Method::PATCH) => partial_update_settings(req).await.map(ok_response),
-        ("/check_username", Method::GET) => check_username_exists(req).await.map(ok_response),
-        ("/check_email", Method::GET) => check_email_exists(req).await.map(ok_response),
-        ("/reset_password", Method::POST) => reset_password(req).await.map(ok_response),
+        ("/edit", Method::POST) => response(edit(req).await).await,
+        ("/edit_avatar", Method::POST) => response(edit_avatar(req).await).await,
+        ("/remove_avatar", Method::POST) => response(remove_avatar(req).await).await,
+        ("/update_settings", Method::POST) => response(update_settings(req).await).await,
+        ("/update_settings", Method::PUT) => response(update_settings(req).await).await,
+        ("/update_settings", Method::PATCH) => response(partial_update_settings(req).await).await,
+        ("/check_username", Method::GET) => response(check_username_exists(req).await).await,
+        ("/check_email", Method::GET) => response(check_email_exists(req).await).await,
+        ("/reset_password", Method::POST) => response(reset_password(req).await).await,
         ("/reset_password_token_check", Method::GET) => {
-            reset_password_token_check(req).await.map(ok_response)
+            response(reset_password_token_check(req).await).await
         }
         ("/reset_password_confirm", Method::POST) => {
-            reset_password_confirm(req).await.map(ok_response)
+            response(reset_password_confirm(req).await).await
         }
         ("/discourse/start", Method::GET) => discourse_login(req).await,
         ("/discourse/start", Method::POST) => discourse_login(req).await,
-        ("/verify_email", Method::GET) => verify_email(req).await.map(ok_response),
+        ("/verify_email", Method::GET) => response(verify_email(req).await).await,
         ("/resend_email_verification", Method::POST) => {
-            resend_email_verification(req).await.map(ok_response)
+            response(resend_email_verification(req).await).await
         }
         ("/email_verification_status", Method::GET) => {
-            check_email_verification_status(req).await.map(ok_response)
+            response(check_email_verification_status(req).await).await
         }
-        ("/request_email_change", Method::POST) => request_email_change(req).await.map(ok_response),
-        ("/confirm_email_change", Method::POST) => confirm_email_change(req).await.map(ok_response),
+        ("/request_email_change", Method::POST) => response(request_email_change(req).await).await,
+        ("/confirm_email_change", Method::POST) => response(confirm_email_change(req).await).await,
         _ => missing(),
     }
 }

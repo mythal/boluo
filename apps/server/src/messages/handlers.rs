@@ -4,7 +4,7 @@ use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::Update;
-use crate::interface::{Response, missing, ok_response, parse_query};
+use crate::interface::{Response, missing, ok_response, parse_query, response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
 use crate::spaces::SpaceMember;
 use crate::{db, interface};
@@ -302,15 +302,15 @@ pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, App
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/query", Method::GET) => query(req).await.map(ok_response),
-        ("/by_channel", Method::GET) => by_channel(req).await.map(ok_response),
-        ("/send", Method::POST) => send(req).await.map(ok_response),
-        ("/edit", Method::POST) => edit(req).await.map(ok_response),
-        ("/edit", Method::PUT) => edit(req).await.map(ok_response),
-        ("/edit", Method::PATCH) => edit(req).await.map(ok_response),
+        ("/query", Method::GET) => response(query(req).await).await,
+        ("/by_channel", Method::GET) => response(by_channel(req).await).await,
+        ("/send", Method::POST) => response(send(req).await).await,
+        ("/edit", Method::POST) => response(edit(req).await).await,
+        ("/edit", Method::PUT) => response(edit(req).await).await,
+        ("/edit", Method::PATCH) => response(edit(req).await).await,
         ("/move_between", Method::POST) => move_between(req).await.map(ok_response),
-        ("/toggle_fold", Method::POST) => toggle_fold(req).await.map(ok_response),
-        ("/delete", Method::POST) => delete(req).await.map(ok_response),
+        ("/toggle_fold", Method::POST) => response(toggle_fold(req).await).await,
+        ("/delete", Method::POST) => response(delete(req).await).await,
         _ => missing(),
     }
 }

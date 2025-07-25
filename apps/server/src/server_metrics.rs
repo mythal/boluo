@@ -17,8 +17,10 @@ pub fn get_current_file_descriptors() -> u64 {
     }
 }
 
-pub fn update_file_descriptor_metrics() {
-    let fd_count = get_current_file_descriptors();
+pub async fn update_file_descriptor_metrics() {
+    let fd_count = tokio::task::spawn_blocking(get_current_file_descriptors)
+        .await
+        .unwrap_or(0);
     gauge!("boluo_server_file_descriptors_used").set(fd_count as f64);
 }
 
@@ -30,15 +32,15 @@ pub fn update_db_pool_metrics(pool: &sqlx::Pool<sqlx::Postgres>) {
 pub fn start_update_metrics() {
     tokio::task::spawn(async {
         let mut interval_4s = tokio::time::interval(std::time::Duration::from_secs(4));
-        let mut interval_16s = tokio::time::interval(std::time::Duration::from_secs(16));
+        let mut interval_8s = tokio::time::interval(std::time::Duration::from_secs(8));
         loop {
             tokio::select! {
                 _ = interval_4s.tick() => {
-                    update_file_descriptor_metrics();
+                    update_file_descriptor_metrics().await;
                     update_db_pool_metrics(&crate::db::get().await);
                 }
-                _ = interval_16s.tick() => {
-                    if let Err(e) = update_network_metrics() {
+                _ = interval_8s.tick() => {
+                    if let Ok(Err(e)) = tokio::task::spawn_blocking(update_network_metrics).await {
                         tracing::error!("Failed to update network metrics: {}", e);
                     }
                 }

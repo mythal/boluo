@@ -41,6 +41,7 @@ mod pos;
 mod pubsub;
 mod redis;
 mod s3;
+mod sentry_tunnel;
 mod server_metrics;
 mod session;
 mod shutdown;
@@ -80,6 +81,9 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
     }
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(req).await.map(ok_response);
+    }
+    if path.starts_with("/api/tunnel") {
+        return Ok(sentry_tunnel::handler(req).await);
     }
     table!("/api/info", info::router);
     table!("/api/messages", messages::router);
@@ -207,9 +211,8 @@ struct Args {
     types: bool,
 }
 
-#[tokio::main]
+#[tokio::main(worker_threads = 5)]
 async fn main() {
-    use sysinfo::System;
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
     dotenvy::from_filename(".env.local").ok();
     dotenvy::dotenv().ok();
@@ -287,13 +290,6 @@ async fn main() {
 
     server_metrics::start_update_metrics();
     tracing::info!("Startup ID: {}", events::startup_id());
-
-    tracing::info!("Kernel: {}", System::kernel_long_version());
-
-    tracing::info!(
-        "Open file limit: {}",
-        System::open_files_limit().unwrap_or(0)
-    );
 
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");

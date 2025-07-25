@@ -38,6 +38,17 @@ pub fn ok_response<T: Serialize>(value: T) -> hyper::Response<Vec<u8>> {
         .unwrap_or_else(err_response)
 }
 
+/// Serialize the value in a blocking task.
+pub async fn response<T: Serialize + Send + 'static>(
+    value: Result<T, AppError>,
+) -> Result<hyper::Response<Vec<u8>>, AppError> {
+    let value = value?;
+    let response = tokio::task::spawn_blocking(move || ok_response(value))
+        .await
+        .map_err(|e| AppError::Unexpected(e.into()))?;
+    Ok(response)
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct WebError {
     code: &'static str,

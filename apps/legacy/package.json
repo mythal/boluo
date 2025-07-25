@@ -44,7 +44,6 @@
     "vite-plugin-svgr": "^4.3.0"
   },
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "vite build",
     "check-types": "tsc --project tsconfig.json",
@@ -52,5 +51,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "preview": "vite preview"
-  }
+  },
+  "type": "module"
 }

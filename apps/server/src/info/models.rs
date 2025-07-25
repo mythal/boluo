@@ -20,11 +20,6 @@ pub struct DiskInfo {
 
 #[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct HealthCheck {
-    pub timestamp_sec: u64,
-    pub disks: Vec<DiskInfo>,
-    pub memory_total: u64,
-    pub memory_used: u64,
-    pub cache: CheckResult<ConnectionState>,
     pub redis: CheckResult<ConnectionState>,
     pub database: CheckResult<ConnectionState>,
 }
@@ -107,41 +102,9 @@ impl ConnectionState {
 
 impl HealthCheck {
     pub async fn new() -> HealthCheck {
-        use sysinfo::{Disks, System};
-        let mut system = System::new();
-        let cache = CheckResult::Ok {
-            value: ConnectionState {
-                rtt_ms: 0,
-                count: 1,
-                idle: 0,
-            },
-        };
         let redis = ConnectionState::redis().await.into();
         let database = ConnectionState::database().await.into();
-        system.refresh_memory();
-        let disks = Disks::new_with_refreshed_list();
-        let gib_in_bytes = 1024 * 1024 * 1024;
-        HealthCheck {
-            timestamp_sec: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|x| x.as_secs())
-                .unwrap_or(0),
-            disks: disks
-                .iter()
-                .map(|disk| DiskInfo {
-                    name: disk.name().to_string_lossy().to_string(),
-                    mount_point: disk.mount_point().to_string_lossy().to_string(),
-                    available: disk.available_space(),
-                    total: disk.total_space(),
-                })
-                .filter(|disk| disk.total > gib_in_bytes)
-                .collect(),
-            memory_total: system.total_memory(),
-            memory_used: system.used_memory(),
-            cache,
-            redis,
-            database,
-        }
+        HealthCheck { redis, database }
     }
 }
 

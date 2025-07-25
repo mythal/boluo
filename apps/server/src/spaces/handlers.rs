@@ -9,7 +9,7 @@ use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
 use crate::events::{StatusMap, Update};
-use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query};
+use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query, response};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
@@ -458,25 +458,25 @@ pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, App
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/list", Method::GET) => list(req).await.map(ok_response),
-        ("/query", Method::GET) => query(req).await.map(ok_response),
-        ("/users_status", Method::GET) => users_status(req).await.map(ok_response),
-        ("/query_with_related", Method::GET) => query_with_related(req).await.map(ok_response),
+        ("/list", Method::GET) => response(list(req).await).await,
+        ("/query", Method::GET) => response(query(req).await).await,
+        ("/users_status", Method::GET) => response(users_status(req).await).await,
+        ("/query_with_related", Method::GET) => response(query_with_related(req).await).await,
         ("/settings", Method::GET) => space_settings(req).await.map(ok_response),
         ("/update_settings", Method::POST) => update_settings(req).await.map(ok_response),
         ("/update_settings", Method::PUT) => update_settings(req).await.map(ok_response),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         ("/refresh_token", Method::POST) => refresh_token(req).await.map(ok_response),
-        ("/my", Method::GET) => my_spaces(req).await.map(ok_response),
-        ("/search", Method::GET) => search(req).await.map(ok_response),
-        ("/create", Method::POST) => create(req).await.map(ok_response),
-        ("/edit", Method::POST) => edit(req).await.map(ok_response),
-        ("/join", Method::POST) => join(req).await.map(ok_response),
+        ("/my", Method::GET) => response(my_spaces(req).await).await,
+        ("/search", Method::GET) => response(search(req).await).await,
+        ("/create", Method::POST) => response(create(req).await).await,
+        ("/edit", Method::POST) => response(edit(req).await).await,
+        ("/join", Method::POST) => response(join(req).await).await,
         ("/leave", Method::POST) => leave(req).await.map(ok_response),
-        ("/kick", Method::POST) => kick(req).await.map(ok_response),
-        ("/my_space_member", Method::GET) => my_space_member(req).await.map(ok_response),
-        ("/members", Method::GET) => members(req).await.map(ok_response),
-        ("/delete", Method::POST) => delete(req).await.map(ok_response),
+        ("/kick", Method::POST) => response(kick(req).await).await,
+        ("/my_space_member", Method::GET) => response(my_space_member(req).await).await,
+        ("/members", Method::GET) => response(members(req).await).await,
+        ("/delete", Method::POST) => response(delete(req).await).await,
         _ => missing(),
     }
 }

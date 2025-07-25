@@ -463,15 +463,15 @@ impl MailBoxState {
                         match action {
                             Action::Query(sender) => {
                                 last_activity_at = std::time::Instant::now();
-                                let mut updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
+                                let mut response_updates: BTreeMap<EventId, Utf8Bytes> = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect();
                                 for preview in preview_map.values() {
-                                    updates.insert(preview.update.id, preview.encoded.clone());
+                                    response_updates.insert(preview.update.id, preview.encoded.clone());
                                 }
                                 for diff in diff_map.values() {
-                                    updates.insert(diff.update.id, diff.encoded.clone());
+                                    response_updates.insert(diff.update.id, diff.encoded.clone());
                                 }
                                 sender.send(CachedUpdates {
-                                    updates,
+                                    updates: response_updates,
                                     start_at,
                                 }).ok();
                             }

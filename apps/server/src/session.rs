@@ -272,13 +272,14 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
 }
 
 async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
-    let session_id = match token_verify(token) {
-        Err(err) => {
-            tracing::warn!(error = %err, "Failed to verify the token: {}", token);
-            return Err(AuthenticateFail::CheckSignFail.into());
-        }
-        Ok(id) => id,
-    };
+    let token = token.to_string();
+    let session_id = tokio::task::spawn_blocking(move || token_verify(&token))
+        .await
+        .map_err(|err| AppError::Unexpected(err.into()))?
+        .map_err(|err| {
+            tracing::warn!(error = %err, "Failed to verify the token");
+            AuthenticateFail::CheckSignFail
+        })?;
 
     fetch_entry(&CACHE.Session, session_id, async {
         get_session_from_db(session_id).await

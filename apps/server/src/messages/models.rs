@@ -147,15 +147,17 @@ impl Message {
         limit: i64,
         current_user_id: Option<&Uuid>,
     ) -> Result<Vec<Message>, ModelError> {
+        use futures::TryStreamExt as _;
         if !(1..=256).contains(&limit) {
             return Err(ValidationFailed("illegal limit range").into());
         }
-        let mut messages =
+        let mut stream =
             sqlx::query_file_scalar!("sql/messages/get_by_channel.sql", channel_id, before, limit)
-                .fetch_all(db)
-                .await?;
-        for message in messages.iter_mut() {
+                .fetch(db);
+        let mut messages = Vec::new();
+        while let Some(mut message) = stream.try_next().await? {
             message.hide(current_user_id);
+            messages.push(message);
         }
         Ok(messages)
     }
@@ -166,10 +168,23 @@ impl Message {
         _hide: bool,
         after: Option<DateTime<Utc>>,
     ) -> Result<Vec<Message>, sqlx::Error> {
-        // TODO: chunk
-        sqlx::query_file_scalar!("sql/messages/export.sql", channel_id, after)
-            .fetch_all(db)
-            .await
+        use futures::TryStreamExt as _;
+
+        let mut stream =
+            sqlx::query_file_scalar!("sql/messages/export.sql", channel_id, after).fetch(db);
+
+        static UP_TO: usize = 65535;
+
+        let mut messages = Vec::new();
+
+        while let Some(message) = stream.try_next().await? {
+            if messages.len() >= UP_TO {
+                break;
+            }
+            messages.push(message);
+        }
+
+        Ok(messages)
     }
 
     pub async fn create(

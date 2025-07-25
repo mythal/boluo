@@ -30,7 +30,7 @@ interface SettingsForm extends EditUser, SettingsData {}
 
 function Settings() {
   const dispatch = useDispatch();
-   
+
   const user = useSelector((state) => state.profile!.user);
   const settings = useSelector((state) => state.profile!.settings);
   const {

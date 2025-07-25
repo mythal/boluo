@@ -463,22 +463,29 @@ impl MailBoxState {
                         match action {
                             Action::Query(sender) => {
                                 last_activity_at = std::time::Instant::now();
-                                let mut updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect::<BTreeMap<EventId, Utf8Bytes>>();
-                                for preview in preview_map.values() {
-                                    updates.insert(preview.update.id, preview.encoded.clone());
-                                }
-                                for diff in diff_map.values() {
-                                    updates.insert(diff.update.id, diff.encoded.clone());
-                                }
+                                let mut response_updates: BTreeMap<EventId, Utf8Bytes> = BTreeMap::new();
+                                tokio::task::block_in_place(|| {
+                                    response_updates = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect();
+
+                                    for preview in preview_map.values() {
+                                        response_updates.insert(preview.update.id, preview.encoded.clone());
+                                    }
+                                    for diff in diff_map.values() {
+                                        response_updates.insert(diff.update.id, diff.encoded.clone());
+                                    }
+                                });
+
                                 sender.send(CachedUpdates {
-                                    updates,
+                                    updates: response_updates,
                                     start_at,
                                 }).ok();
                             }
                             Action::Update(encoded_update) => {
                                 last_activity_at = std::time::Instant::now();
                                 let update_name = encoded_update.update.name();
-                                on_update(&mut updates, &mut preview_map, &mut diff_map, *encoded_update);
+                                tokio::task::block_in_place(|| {
+                                    on_update(&mut updates, &mut preview_map, &mut diff_map, *encoded_update);
+                                });
                                 let elapsed = start.elapsed();
                                 action_duration_histogram.record(elapsed.as_millis() as f64);
                                 if elapsed > std::time::Duration::from_millis(25) {
@@ -507,7 +514,9 @@ impl MailBoxState {
                             break;
                         } else {
                             let before_size = updates.len();
-                            cleanup(&mut updates, &mut preview_map, &mut diff_map);
+                            tokio::task::block_in_place(|| {
+                                cleanup(&mut updates, &mut preview_map, &mut diff_map);
+                            });
                             let after_size = updates.len();
                             if after_size != before_size {
                                 tracing::info!(mailbox_id = %id, "Cleaned up {} updates", before_size - after_size);

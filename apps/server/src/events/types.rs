@@ -379,24 +379,32 @@ impl Update {
         }
         let node = node.unwrap_or(0);
         let after = after.unwrap_or(i64::MIN);
-        let mut encoded_updates: Vec<tungstenite::Utf8Bytes> = Vec::with_capacity(updates.len());
-        for (event_id, encoded_update) in updates.into_iter() {
-            use std::cmp::Ordering::*;
-            match event_id.timestamp.cmp(&after) {
-                Less => continue,
-                Equal => {
-                    if node == event_id.node {
-                        if let Some(seq) = seq {
-                            if event_id.seq <= seq {
-                                continue;
+        let Ok(encoded_updates) = tokio::task::spawn_blocking(move || {
+            let mut encoded_updates: Vec<tungstenite::Utf8Bytes> =
+                Vec::with_capacity(updates.len());
+            for (event_id, encoded_update) in updates.into_iter() {
+                use std::cmp::Ordering::*;
+                match event_id.timestamp.cmp(&after) {
+                    Less => continue,
+                    Equal => {
+                        if node == event_id.node {
+                            if let Some(seq) = seq {
+                                if event_id.seq <= seq {
+                                    continue;
+                                }
                             }
                         }
                     }
+                    _ => {}
                 }
-                _ => {}
+                encoded_updates.push(encoded_update.clone());
             }
-            encoded_updates.push(encoded_update.clone());
-        }
+            encoded_updates
+        })
+        .await
+        else {
+            return Err(GetFromStateError::FailedToQuery);
+        };
         Ok(encoded_updates)
     }
 
@@ -444,16 +452,22 @@ impl Update {
         channel_id: Uuid,
         members: Vec<MemberWithUser>,
     ) -> Result<(), anyhow::Error> {
-        let encoded_update = EncodedUpdate::new(Update {
-            mailbox: space_id,
-            body: UpdateBody::Members {
-                members,
-                channel_id,
-            },
-            id: EventId::new(),
-        });
-
-        Update::send(space_id, encoded_update.encoded.clone()).await;
+        let Ok(payload) = tokio::task::spawn_blocking(move || {
+            let encoded_update = EncodedUpdate::new(Update {
+                mailbox: space_id,
+                body: UpdateBody::Members {
+                    members,
+                    channel_id,
+                },
+                id: EventId::new(),
+            });
+            encoded_update.encoded.clone()
+        })
+        .await
+        else {
+            return Err(anyhow::anyhow!("Failed to build update"));
+        };
+        Update::send(space_id, payload).await;
         Ok(())
     }
 
@@ -466,7 +480,12 @@ impl Update {
     }
 
     async fn async_fire(body: UpdateBody, mailbox_id: Uuid) {
-        let encoded_update = Update::build(body, mailbox_id);
+        let Ok(encoded_update) =
+            tokio::task::spawn_blocking(move || Update::build(body, mailbox_id)).await
+        else {
+            tracing::error!("Failed to build update");
+            return;
+        };
         let mailbox_manager = super::context::store().get_or_create_manager(mailbox_id);
         if let Err(e) = mailbox_manager.fire_update(encoded_update.clone()).await {
             tracing::error!("Failed to send update to mailbox {}: {}", mailbox_id, e);
@@ -482,7 +501,12 @@ impl Update {
         let span = tracing::info_span!("transient", mailbox = %mailbox);
         spawn(
             async move {
-                let update = Update::build(body, mailbox);
+                let Ok(update) =
+                    tokio::task::spawn_blocking(move || Update::build(body, mailbox)).await
+                else {
+                    tracing::error!("Failed to build update");
+                    return;
+                };
                 Update::send(mailbox, update.encoded.clone()).await;
             }
             .instrument(span),

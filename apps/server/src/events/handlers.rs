@@ -181,17 +181,34 @@ async fn push_updates(
     }
 }
 
-#[instrument(skip(session, message))]
 async fn handle_client_event(
     mailbox: Uuid,
     error_sender: tokio::sync::mpsc::Sender<AppError>,
     session: Option<Session>,
-    message: &str,
+    message: Utf8Bytes,
 ) {
-    let event = match serde_json::from_str(message) {
+    let Ok(deserialize_result) =
+        tokio::task::spawn_blocking(move || serde_json::from_str::<ClientEvent>(&message)).await
+    else {
+        tracing::warn!("Failed to parse event from client");
+        error_sender
+            .send(AppError::BadRequest(
+                "Failed to parse event from client".to_string(),
+            ))
+            .await
+            .ok();
+        return;
+    };
+    let event = match deserialize_result {
         Ok(event) => event,
-        Err(parse_error) => {
-            tracing::warn!(error = %parse_error, "Failed to parse event from client");
+        Err(e) => {
+            tracing::warn!(error = %e, "Failed to parse event from client");
+            error_sender
+                .send(AppError::BadRequest(
+                    "Failed to parse event from client".to_string(),
+                ))
+                .await
+                .ok();
             return;
         }
     };
@@ -367,7 +384,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
                         if message == "♡" {
                             return Ok(());
                         }
-                        handle_client_event(mailbox, error_sender, session, &message).await
+                        handle_client_event(mailbox, error_sender, session, message).await
                     }
                     Ok(())
                 }
@@ -593,7 +610,7 @@ async fn receive_events(req: Request<Incoming>) -> Response {
 
     let (error_sender, _error_receiver) = tokio::sync::mpsc::channel(1);
 
-    handle_client_event(mailbox, error_sender, session, body_str).await;
+    handle_client_event(mailbox, error_sender, session, body_str.into()).await;
 
     ok_response(serde_json::json!({ "ok": true }))
 }

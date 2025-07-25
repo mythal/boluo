@@ -47,15 +47,7 @@ primary_region = 'nrt'
 [[vm]]
   memory = '512mb'
   cpu_kind = 'shared'
-  cpus = 2
-  kernel_args = [
-    "sysctl.net.core.somaxconn=65535",
-    "sysctl.net.core.netdev_max_backlog=16384",
-    "sysctl.net.ipv4.tcp_fastopen=3",
-    "sysctl.net.ipv4.tcp_max_syn_backlog=65535",
-    "sysctl.net.ipv4.tcp_max_tw_buckets=2000000",
-    "sysctl.net.ipv4.tcp_tw_reuse=1",
-  ]
+  cpus = 4
 
 [metrics]
   port = 9000

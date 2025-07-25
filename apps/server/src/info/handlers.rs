@@ -54,7 +54,12 @@ pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
 
 pub async fn proxies() -> Result<Response, AppError> {
     let proxies: Vec<Proxy> = get_proxies().await?;
-    let body = serde_json::to_string(&proxies).expect("Unexpected failture in serialize proxies");
+    let Ok(Ok(body)) = tokio::task::spawn_blocking(move || serde_json::to_string(&proxies)).await
+    else {
+        return Err(AppError::Unexpected(anyhow::anyhow!(
+            "Failed to serialize proxies"
+        )));
+    };
     let response = hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)

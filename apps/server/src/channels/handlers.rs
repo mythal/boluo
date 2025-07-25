@@ -75,20 +75,30 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
     }
     let mut members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
 
-    members.sort_unstable_by(|a, b| {
-        if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
-            std::cmp::Ordering::Less
-        } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
-            std::cmp::Ordering::Greater
-        } else {
-            a.channel.join_date.cmp(&b.channel.join_date)
-        }
-    });
-    let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
-        members
-            .iter()
-            .position(|member| member.channel.user_id == current_user_id)
-    });
+    let Ok((members, self_index)) = tokio::task::spawn_blocking(move || {
+        members.sort_unstable_by(|a, b| {
+            if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
+                std::cmp::Ordering::Less
+            } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
+                std::cmp::Ordering::Greater
+            } else {
+                a.channel.join_date.cmp(&b.channel.join_date)
+            }
+        });
+        let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
+            members
+                .iter()
+                .position(|member| member.channel.user_id == current_user_id)
+        });
+        (members, self_index)
+    })
+    .await
+    else {
+        return Err(AppError::Unexpected(anyhow::anyhow!(
+            "Failed to sort members"
+        )));
+    };
+
     if !channel.is_public && self_index.is_none() {
         let space = Space::get_by_id(&mut *conn, &channel.space_id).await?;
         if let Some(space) = space

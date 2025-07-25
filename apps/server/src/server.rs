@@ -41,6 +41,7 @@ mod pos;
 mod pubsub;
 mod redis;
 mod s3;
+mod sentry_tunnel;
 mod server_metrics;
 mod session;
 mod shutdown;
@@ -80,6 +81,9 @@ async fn router(req: Request<Incoming>) -> Result<interface::Response, AppError>
     }
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(req).await.map(ok_response);
+    }
+    if path.starts_with("/api/tunnel") {
+        return Ok(sentry_tunnel::handler(req).await);
     }
     table!("/api/info", info::router);
     table!("/api/messages", messages::router);

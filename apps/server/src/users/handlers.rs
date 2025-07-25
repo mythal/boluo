@@ -9,7 +9,7 @@ use crate::cache::CACHE;
 use crate::channels::Channel;
 use crate::context::get_site_url;
 use crate::error::{AppError, Find, ValidationFailed};
-use crate::interface;
+use crate::interface::{self, response};
 use crate::interface::{missing, ok_response, parse_body, parse_query};
 use crate::media::{upload, upload_params};
 use crate::session::{
@@ -731,19 +731,29 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         "DISCOURSE_SSO_SECRET not configured".to_string(),
     ))?;
 
-    // Verify the signature
-    let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
-    let expected_sig = hex::encode(hmac::sign(&key, sso.as_bytes()).as_ref());
-    if sig != expected_sig {
-        return Err(AppError::BadRequest("Invalid signature".to_string()));
-    }
-
     // Decode the SSO payload
     let payload_bytes = base64_engine
         .decode(&sso)
         .map_err(|_| AppError::BadRequest("Invalid base64 payload".to_string()))?;
     let payload_str = String::from_utf8(payload_bytes)
         .map_err(|_| AppError::BadRequest("Invalid UTF-8 payload".to_string()))?;
+
+    // Verify the signature
+    let Ok((key, expected_sig)) = tokio::task::spawn_blocking(move || {
+        let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
+        let expected_sig = hex::encode(hmac::sign(&key, sso.as_bytes()).as_ref());
+        (key, expected_sig)
+    })
+    .await
+    else {
+        return Err(AppError::Unexpected(anyhow::anyhow!(
+            "Failed to verify signature"
+        )));
+    };
+
+    if sig != expected_sig {
+        return Err(AppError::BadRequest("Invalid signature".to_string()));
+    }
 
     // Parse the payload parameters
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
@@ -811,45 +821,52 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         username = %user.username,
         "User authenticated for DiscourseConnect SSO"
     );
+    let Ok(redirect_url) = tokio::task::spawn_blocking(move || {
+        // Build avatar URL if user has avatar
+        let avatar_url = user
+            .avatar_id
+            .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
-    // Build avatar URL if user has avatar
-    let avatar_url = user
-        .avatar_id
-        .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
+        // Create response payload
+        let response_data = DiscourseResponse {
+            nonce: payload.nonce,
+            external_id: user.id.to_string(),
+            email: user.email,
+            username: user.username,
+            name: user.nickname,
+            require_activation: false,
+            bio: if user.bio.is_empty() {
+                None
+            } else {
+                Some(user.bio)
+            },
+            avatar_url,
+        };
 
-    // Create response payload
-    let response_data = DiscourseResponse {
-        nonce: payload.nonce,
-        external_id: user.id.to_string(),
-        email: user.email,
-        username: user.username,
-        name: user.nickname,
-        require_activation: false,
-        bio: if user.bio.is_empty() {
-            None
-        } else {
-            Some(user.bio)
-        },
-        avatar_url,
+        // Encode the response
+        let response_payload = serde_urlencoded::to_string(&response_data).unwrap_or_default();
+        let response_base64 = base64_engine.encode(&response_payload);
+
+        // Sign the response
+        let response_sig = hex::encode(hmac::sign(&key, response_base64.as_bytes()).as_ref());
+
+        // Build the redirect URL
+        use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+        const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
+
+        let encoded_sso = utf8_percent_encode(&response_base64, FRAGMENT).to_string();
+        let redirect_url = format!(
+            "{}?sso={}&sig={}",
+            payload.return_sso_url, encoded_sso, response_sig
+        );
+        redirect_url
+    })
+    .await
+    else {
+        return Err(AppError::Unexpected(anyhow::anyhow!(
+            "Failed to build redirect URL"
+        )));
     };
-
-    // Encode the response
-    let response_payload = serde_urlencoded::to_string(&response_data)
-        .map_err(|_| AppError::BadRequest("Failed to encode response".to_string()))?;
-    let response_base64 = base64_engine.encode(&response_payload);
-
-    // Sign the response
-    let response_sig = hex::encode(hmac::sign(&key, response_base64.as_bytes()).as_ref());
-
-    // Build the redirect URL
-    use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-    const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
-
-    let encoded_sso = utf8_percent_encode(&response_base64, FRAGMENT).to_string();
-    let redirect_url = format!(
-        "{}?sso={}&sig={}",
-        payload.return_sso_url, encoded_sso, response_sig
-    );
 
     tracing::info!(
         redirect_url = %redirect_url,
@@ -867,38 +884,38 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
 pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u8>>, AppError> {
     match (path, req.method().clone()) {
         ("/login", Method::POST) => login(req).await,
-        ("/register", Method::POST) => register(req).await.map(ok_response),
+        ("/register", Method::POST) => response(register(req).await).await,
         ("/logout", _) => logout(req).await,
-        ("/query", Method::GET) => query_user(req).await.map(ok_response),
-        ("/query_self", Method::GET) => query_self(req).await.map(ok_response),
+        ("/query", Method::GET) => response(query_user(req).await).await,
+        ("/query_self", Method::GET) => response(query_self(req).await).await,
         ("/get_me", Method::GET) => get_me(req).await,
         ("/settings", Method::GET) => query_settings(req).await.map(ok_response),
-        ("/edit", Method::POST) => edit(req).await.map(ok_response),
-        ("/edit_avatar", Method::POST) => edit_avatar(req).await.map(ok_response),
-        ("/remove_avatar", Method::POST) => remove_avatar(req).await.map(ok_response),
-        ("/update_settings", Method::POST) => update_settings(req).await.map(ok_response),
-        ("/update_settings", Method::PUT) => update_settings(req).await.map(ok_response),
-        ("/update_settings", Method::PATCH) => partial_update_settings(req).await.map(ok_response),
-        ("/check_username", Method::GET) => check_username_exists(req).await.map(ok_response),
-        ("/check_email", Method::GET) => check_email_exists(req).await.map(ok_response),
-        ("/reset_password", Method::POST) => reset_password(req).await.map(ok_response),
+        ("/edit", Method::POST) => response(edit(req).await).await,
+        ("/edit_avatar", Method::POST) => response(edit_avatar(req).await).await,
+        ("/remove_avatar", Method::POST) => response(remove_avatar(req).await).await,
+        ("/update_settings", Method::POST) => response(update_settings(req).await).await,
+        ("/update_settings", Method::PUT) => response(update_settings(req).await).await,
+        ("/update_settings", Method::PATCH) => response(partial_update_settings(req).await).await,
+        ("/check_username", Method::GET) => response(check_username_exists(req).await).await,
+        ("/check_email", Method::GET) => response(check_email_exists(req).await).await,
+        ("/reset_password", Method::POST) => response(reset_password(req).await).await,
         ("/reset_password_token_check", Method::GET) => {
-            reset_password_token_check(req).await.map(ok_response)
+            response(reset_password_token_check(req).await).await
         }
         ("/reset_password_confirm", Method::POST) => {
-            reset_password_confirm(req).await.map(ok_response)
+            response(reset_password_confirm(req).await).await
         }
         ("/discourse/start", Method::GET) => discourse_login(req).await,
         ("/discourse/start", Method::POST) => discourse_login(req).await,
-        ("/verify_email", Method::GET) => verify_email(req).await.map(ok_response),
+        ("/verify_email", Method::GET) => response(verify_email(req).await).await,
         ("/resend_email_verification", Method::POST) => {
-            resend_email_verification(req).await.map(ok_response)
+            response(resend_email_verification(req).await).await
         }
         ("/email_verification_status", Method::GET) => {
-            check_email_verification_status(req).await.map(ok_response)
+            response(check_email_verification_status(req).await).await
         }
-        ("/request_email_change", Method::POST) => request_email_change(req).await.map(ok_response),
-        ("/confirm_email_change", Method::POST) => confirm_email_change(req).await.map(ok_response),
+        ("/request_email_change", Method::POST) => response(request_email_change(req).await).await,
+        ("/confirm_email_change", Method::POST) => response(confirm_email_change(req).await).await,
         _ => missing(),
     }
 }

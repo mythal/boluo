@@ -12,7 +12,7 @@ use crate::csrf::{authenticate, authenticate_optional};
 use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::Update;
-use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_query};
+use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_query, response};
 use crate::messages::Message;
 use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
@@ -75,20 +75,30 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
     }
     let mut members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
 
-    members.sort_unstable_by(|a, b| {
-        if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
-            std::cmp::Ordering::Less
-        } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
-            std::cmp::Ordering::Greater
-        } else {
-            a.channel.join_date.cmp(&b.channel.join_date)
-        }
-    });
-    let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
-        members
-            .iter()
-            .position(|member| member.channel.user_id == current_user_id)
-    });
+    let Ok((members, self_index)) = tokio::task::spawn_blocking(move || {
+        members.sort_unstable_by(|a, b| {
+            if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
+                std::cmp::Ordering::Less
+            } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
+                std::cmp::Ordering::Greater
+            } else {
+                a.channel.join_date.cmp(&b.channel.join_date)
+            }
+        });
+        let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
+            members
+                .iter()
+                .position(|member| member.channel.user_id == current_user_id)
+        });
+        (members, self_index)
+    })
+    .await
+    else {
+        return Err(AppError::Unexpected(anyhow::anyhow!(
+            "Failed to sort members"
+        )));
+    };
+
     if !channel.is_public && self_index.is_none() {
         let space = Space::get_by_id(&mut *conn, &channel.space_id).await?;
         if let Some(space) = space
@@ -541,22 +551,22 @@ pub async fn router(
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/query", Method::GET) => query(req).await.map(ok_response),
-        ("/query_with_related", Method::GET) => query_with_related(req).await.map(ok_response),
-        ("/members", Method::GET) => members(req).await.map(ok_response),
-        ("/by_space", Method::GET) => by_space(req).await.map(ok_response),
-        ("/create", Method::POST) => create(req).await.map(ok_response),
-        ("/edit", Method::POST) => edit(req).await.map(ok_response),
+        ("/query", Method::GET) => response(query(req).await).await,
+        ("/query_with_related", Method::GET) => response(query_with_related(req).await).await,
+        ("/members", Method::GET) => response(members(req).await).await,
+        ("/by_space", Method::GET) => response(by_space(req).await).await,
+        ("/create", Method::POST) => response(create(req).await).await,
+        ("/edit", Method::POST) => response(edit(req).await).await,
         ("/edit_master", Method::POST) => edit_masters(req).await.map(ok_response),
-        ("/add_member", Method::POST) => add_member(req).await.map(ok_response),
-        ("/edit_member", Method::POST) => edit_member(req).await.map(ok_response),
-        ("/all_members", Method::GET) => all_members(req).await.map(ok_response),
-        ("/join", Method::POST) => join(req).await.map(ok_response),
+        ("/add_member", Method::POST) => response(add_member(req).await).await,
+        ("/edit_member", Method::POST) => response(edit_member(req).await).await,
+        ("/all_members", Method::GET) => response(all_members(req).await).await,
+        ("/join", Method::POST) => response(join(req).await).await,
         ("/leave", Method::POST) => leave(req).await.map(ok_response),
         ("/kick", Method::POST) => kick(req).await.map(ok_response),
-        ("/delete", Method::POST) => delete(req).await.map(ok_response),
+        ("/delete", Method::POST) => response(delete(req).await).await,
         ("/check_name", Method::GET) => check_channel_name_exists(req).await.map(ok_response),
-        ("/export", Method::GET) => export(req).await.map(ok_response),
+        ("/export", Method::GET) => response(export(req).await).await,
         _ => missing(),
     }
 }

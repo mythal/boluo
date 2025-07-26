@@ -10,7 +10,6 @@ export interface Message {
   name: string;
   mediaId?: Id | null;
   seed: number[];
-  deleted?: boolean;
   inGame?: boolean;
   isAction?: boolean;
   isMaster?: boolean;

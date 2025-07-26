@@ -4,6 +4,7 @@ use crate::error::AppError;
 use crate::error::Find;
 use crate::events::Update;
 use crate::messages::Entities;
+use crate::utils::is_false;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -86,28 +87,28 @@ pub struct Preview {
     pub version: u16,
     pub sender_id: Uuid,
     pub channel_id: Uuid,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent_message_id: Option<Uuid>,
     pub name: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_id: Option<Uuid>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub in_game: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub is_action: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub is_master: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_false")]
     pub clear: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
     pub pos: f64,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edit_for: Option<DateTime<Utc>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edit: Option<PreviewEdit>,
 }
 

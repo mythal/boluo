@@ -46,8 +46,8 @@ export type ChannelMemberWithUser = { member: ChannelMember; user: User };
 
 export type ChannelMembers = {
   members: MemberWithUser[];
-  colorList: Partial<{ [key in string]: string }>;
-  heartbeatMap: Partial<{ [key in string]: number }>;
+  colorList: { [key in string]: string };
+  heartbeatMap: { [key in string]: number };
   selfIndex: number | null;
 };
 
@@ -61,8 +61,8 @@ export type ChannelWithRelated = {
   channel: Channel;
   members: MemberWithUser[];
   space: Space;
-  colorList: Partial<{ [key in string]: string }>;
-  heartbeatMap: Partial<{ [key in string]: number }>;
+  colorList: { [key in string]: string };
+  heartbeatMap: { [key in string]: number };
 };
 
 export type CheckChannelName = { spaceId: string; name: string };
@@ -82,7 +82,7 @@ export type ClientEvent =
 
 export type CocRoll = { subType: CocRollSubType; target?: PureExprNode | null };
 
-export type CocRollResult = { subType: CocRollSubType; target?: PureExprNode | null } & {
+export type CocRollResult = CocRoll & {
   targetValue?: number | null;
   value: number;
   rolled: number;
@@ -133,14 +133,7 @@ export type DicePool = {
   fumble?: number | null;
 };
 
-export type DicePoolResult = {
-  counter: number;
-  face: number;
-  min: number;
-  addition: number;
-  critical?: number | null;
-  fumble?: number | null;
-} & { value: number; values: number[] };
+export type DicePoolResult = DicePool & { value: number; values: number[] };
 
 export type DiscourseConnect = { sso: string; sig: string };
 
@@ -238,7 +231,7 @@ export type EventId = {
 
 export type Export = { channelId: string; after?: string | null };
 
-export type ExprEntity = { start: number; len: number } & { node: ExprNode };
+export type ExprEntity = Span & { node: ExprNode };
 
 export type ExprNode =
   | ({ type: 'Roll' } & Roll)
@@ -277,11 +270,6 @@ export type GrantOrRemoveChannelMaster = {
 export type GrantOrRevoke = 'GRANT' | 'REVOKE';
 
 export type HealthCheck = {
-  timestamp_sec: number;
-  disks: DiskInfo[];
-  memory_total: number;
-  memory_used: number;
-  cache: CheckResult<ConnectionState>;
   redis: CheckResult<ConnectionState>;
   database: CheckResult<ConnectionState>;
 };
@@ -298,17 +286,13 @@ export type JsonValue =
   | number
   | string
   | JsonValue[]
-  | Partial<{ [key in string]: JsonValue }>;
+  | { [key in string]: JsonValue };
 
 export type KickFromChannel = { spaceId: string; channelId: string; userId: string };
 
 export type KickFromSpace = { spaceId: string; userId: string };
 
-export type LinkEntity = { start: number; len: number } & {
-  href: Href;
-  child: ChildText;
-  title?: string | null;
-};
+export type LinkEntity = Span & { href: Href; child: ChildText; title?: string | null };
 
 export type Login = { username: string; password: string; withToken?: boolean };
 
@@ -498,10 +482,7 @@ export type Register = { email: string; username: string; nickname: string; pass
 
 export type Repeat = { node: ExprNode; count: number };
 
-export type RepeatResult = { node: ExprNode; count: number } & {
-  evaluated: EvaluatedExprNode[];
-  value: number;
-};
+export type RepeatResult = Repeat & { evaluated: EvaluatedExprNode[]; value: number };
 
 export type RequestEmailChange = { newEmail: string; lang?: string | null };
 
@@ -521,11 +502,7 @@ export type RollFilterType = 'LOW' | 'HIGH';
 
 export type RollNode = { type: 'Roll' } & Roll;
 
-export type RollResult = {
-  face: number;
-  counter: number;
-  filter?: [RollFilterType, number] | null;
-} & { values: number[]; filtered?: number[] | null; value: number };
+export type RollResult = Roll & { values: number[]; filtered?: number[] | null; value: number };
 
 export type RollResultNode = { type: 'Roll' } & RollResult;
 
@@ -556,15 +533,15 @@ export type SpaceWithMember = { space: Space; member: SpaceMember; user: User };
 
 export type SpaceWithRelated = {
   space: Space;
-  members: Partial<{ [key in string]: SpaceMemberWithUser }>;
+  members: { [key in string]: SpaceMemberWithUser };
   channels: Channel[];
-  channelMembers: Partial<{ [key in string]: ChannelMember[] }>;
-  usersStatus: Partial<{ [key in string]: UserStatus }>;
+  channelMembers: { [key in string]: ChannelMember[] };
+  usersStatus: { [key in string]: UserStatus };
 };
 
 export type Span = { start: number; len: number };
 
-export type SpanWithChild = { start: number; len: number } & { child: ChildText };
+export type SpanWithChild = Span & { child: ChildText };
 
 export type StatusKind = 'OFFLINE' | 'AWAY' | 'ONLINE';
 
@@ -584,7 +561,7 @@ export type UpdateBody =
   | { type: 'CHANNEL_EDITED'; channelId: string; channel: Channel }
   | { type: 'MEMBERS'; channelId: string; members: MemberWithUser[] }
   | { type: 'INITIALIZED' }
-  | { type: 'STATUS_MAP'; statusMap: Partial<{ [key in string]: UserStatus }>; spaceId: string }
+  | { type: 'STATUS_MAP'; statusMap: { [key in string]: UserStatus }; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
   | { type: 'ERROR'; code: ConnectionError; reason: string }
   | { type: 'APP_UPDATED'; version: string }

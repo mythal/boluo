@@ -8,3 +8,9 @@ panic = "abort"
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3
+
+[patch.crates-io]
+specta-macros = { git = "https://github.com/uonr/specta.git", branch = "skip-optional" }
+specta = { git = "https://github.com/uonr/specta.git", branch = "skip-optional" }
+specta-serde = { git = "https://github.com/uonr/specta.git", branch = "skip-optional" }
+specta-typescript = { git = "https://github.com/uonr/specta.git", branch = "skip-optional" }

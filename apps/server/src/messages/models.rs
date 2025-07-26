@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
 use crate::pos::{CHANNEL_POS_MANAGER, FailToFindIntermediate, check_pos, find_intermediate};
-use crate::utils::merge_blank;
+use crate::utils::{is_false, merge_blank};
 use crate::validators::CHARACTER_NAME;
 
 use crate::notify;
@@ -72,28 +72,28 @@ pub struct Message {
     pub id: Uuid,
     pub sender_id: Uuid,
     pub channel_id: Uuid,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent_message_id: Option<Uuid>,
     pub name: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_id: Option<Uuid>,
     pub seed: Vec<u8>,
     #[serde(skip)]
     pub deleted: bool,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub in_game: bool,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub is_action: bool,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub is_master: bool,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub pinned: bool,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub folded: bool,
     pub text: String,
-    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
     pub created: DateTime<Utc>,

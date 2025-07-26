@@ -129,6 +129,33 @@ where
     })
 }
 
+pub async fn parse_large_body<T: Send + 'static>(
+    req: hyper::Request<impl Body>,
+) -> Result<Box<T>, AppError>
+where
+    for<'de> T: Deserialize<'de>,
+{
+    use http_body_util::BodyExt;
+    let body = req
+        .into_body()
+        .collect()
+        .await
+        .map_err(|_| {
+            tracing::error!("Failed to read the request body");
+            AppError::BadRequest("Failed to read the request body".to_string())
+        })?
+        .to_bytes();
+    tokio::task::spawn_blocking(move || {
+        serde_json::from_slice(&body).map(Box::new).map_err(|e| {
+            tracing::error!(error = %e, "Failed to parse the request body");
+            AppError::BadRequest("Failed to parse the request body".to_string())
+        })
+    })
+    .await
+    .map_err(|e| AppError::Unexpected(e.into()))
+    .flatten()
+}
+
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 pub struct IdQuery {
     pub id: uuid::Uuid,

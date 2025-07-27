@@ -47,7 +47,7 @@ primary_region = 'nrt'
 [[vm]]
   memory = '512mb'
   cpu_kind = 'shared'
-  cpus = 4
+  cpus = 2
 
 [metrics]
   port = 9000

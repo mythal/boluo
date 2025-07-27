@@ -14,6 +14,7 @@ use hyper::body::Body;
 async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
+    let new_message = interface::parse_large_body::<NewMessage>(req).await?;
     let NewMessage {
         message_id: _,
         preview_id,
@@ -27,7 +28,7 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         whisper_to_users,
         pos: request_pos,
         color,
-    } = interface::parse_body(req).await?;
+    } = *new_message;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
     let channel = Channel::get_by_id(&mut *conn, &channel_id)
@@ -74,6 +75,7 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
 async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
+    let edit_message = interface::parse_large_body::<EditMessage>(req).await?;
     let EditMessage {
         message_id,
         name,
@@ -83,7 +85,7 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
         is_action,
         media_id,
         color,
-    } = interface::parse_body(req).await?;
+    } = *edit_message;
     let pool = db::get().await;
     let mut trans = pool.begin().await?;
     let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))

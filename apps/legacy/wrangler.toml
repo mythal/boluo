@@ -1,6 +1,6 @@
 name = "boluo-legacy"
 compatibility_date = "2025-07-25"
-main = "./worker.js"
+main = "../../packages/backend-proxy/dist/worker.js"
 
 [assets]
   directory = "./dist/"

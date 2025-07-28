@@ -1,5 +1,7 @@
+import { ExportedHandler } from '@cloudflare/workers-types';
+
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
     const BACKEND_HOST = env.BACKEND_HOST;
     url.host = BACKEND_HOST;
@@ -8,4 +10,6 @@ export default {
     const backendRequest = new Request(url, request);
     return await fetch(backendRequest);
   },
-};
+} satisfies ExportedHandler<{
+  BACKEND_HOST: string;
+}>;

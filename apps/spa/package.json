@@ -4,6 +4,7 @@
   "dependencies": {
     "@boluo/api": "*",
     "@boluo/api-browser": "*",
+    "@boluo/backend-proxy": "^0.0.0",
     "@boluo/common": "*",
     "@boluo/icons": "*",
     "@boluo/lang": "*",

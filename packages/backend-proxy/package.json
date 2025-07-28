@@ -1,0 +1,12 @@
+{
+  "name": "@boluo/backend-proxy",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20250726.0",
+    "typescript": "^5.8.3"
+  },
+  "license": "AGPL-3.0",
+  "scripts": {
+    "build": "tsc"
+  }
+}

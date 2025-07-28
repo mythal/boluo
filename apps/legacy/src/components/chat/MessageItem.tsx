@@ -52,9 +52,9 @@ function MessageItem({
   if (message.whisperToUsers === null || message.entities.length > 0) {
     content = (
       <ChatItemContentContainer
-        data-in-game={message.inGame}
-        data-action={message.isAction}
-        data-folded={message.folded}
+        data-in-game={message.inGame ?? false}
+        data-action={message.isAction ?? false}
+        data-folded={message.folded ?? false}
       >
         <MessageMedia css={itemImage} mediaId={message.mediaId} />
         {message.isAction && name}
@@ -74,7 +74,7 @@ function MessageItem({
       css={chatItemContainer}
       style={style}
       data-no-name={!renderName}
-      data-in-game={message.inGame}
+      data-in-game={message.inGame ?? false}
       data-moving={moving}
     >
       {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}

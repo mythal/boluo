@@ -20,7 +20,7 @@ const previewChatItem = css`
 `;
 
 function PreviewItem({ preview }: Props) {
-  let { text, isAction, entities } = preview;
+  let { text, isAction = false, entities } = preview;
 
   if (text == null) {
     text = '……（预览广播已关闭）……';
@@ -41,10 +41,10 @@ function PreviewItem({ preview }: Props) {
   return (
     <div
       css={[chatItemContainer, previewChatItem, preview.inGame ? previewInGame : previewOutGame]}
-      data-in-game={preview.inGame}
+      data-in-game={preview.inGame ?? false}
     >
       {!isAction && <div css={nameContainer}>{name}</div>}
-      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
+      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame ?? false}>
         {isAction && name}
         <ChatItemContent entities={entities} text={text} />
       </ChatItemContentContainer>

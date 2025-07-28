@@ -327,24 +327,22 @@ async fn handle_connection(
                 counter!("boluo_server_tcp_connections_total").increment(1);
                 tcp_connections_active.increment(1);
 
-                let connection_timeout = std::time::Duration::from_secs(30);
+                let connection_timeout = std::time::Duration::from_secs(200);
 
                 let builder = AutoBuilder::new(TokioExecutor::new());
                 let connection_future =
                     builder.serve_connection_with_upgrades(io, service_fn(handler));
 
-                // Maybe we should use hyper-timeout
-                // https://crates.io/crates/hyper-timeout
                 let result = tokio::time::timeout(connection_timeout, connection_future).await;
 
                 match result {
                     Ok(Ok(())) => {}
                     Ok(Err(err)) => {
-                        tracing::warn!(error = %err, addr = %addr, "HTTP/1 connection error");
+                        tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
                         error_counter.increment(1);
                     }
                     Err(_) => {
-                        tracing::info!(addr = %addr, "HTTP/1 connection timeout after {}s", connection_timeout.as_secs());
+                        tracing::info!(addr = %addr, "HTTP connection timeout after {}s", connection_timeout.as_secs());
                         timeout_counter.increment(1);
                     }
                 }

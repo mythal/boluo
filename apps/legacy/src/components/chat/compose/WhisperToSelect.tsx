@@ -33,7 +33,7 @@ function WhisperToSelect({ dismiss }: Props) {
     dispatch({ type: 'SET_WHISPER_TO', pane: channelId, whisperTo: values });
     dismiss();
   };
-  const isWhisper = values !== undefined && values !== null;
+  const isWhisper = values !== undefined && values != null;
   const toggleIsWhisper: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     if (e.target.checked) {
       setValues([]);

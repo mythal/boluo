@@ -298,7 +298,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         let pos = dummyPos;
         let posP = pos;
         let posQ = 1;
-        if (composeSlice.edit !== null) {
+        if (composeSlice.edit != null) {
           const editTargetPos = composeSlice.edit.p / composeSlice.edit.q;
           const result = findMessage(messages, composeSlice.previewId, editTargetPos);
           if (result) {
@@ -308,7 +308,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             posQ = message.posQ;
           }
         }
-        if (composeSlice.edit !== null || showDummy) {
+        if (composeSlice.edit != null || showDummy) {
           optimisticPreviewList.push(
             makeDummyPreview(
               composeSlice.previewId,
@@ -330,7 +330,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       else if (preview.senderId === myId) {
         /* Always show the user's own preview */
       } else if (
-        (preview.entities.length === 0 && preview.text !== null) ||
+        (preview.entities.length === 0 && preview.text != null) ||
         preview.id === composeSlice.prevPreviewId
       ) {
         continue;
@@ -416,7 +416,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   // Compute firstItemIndex for prepending items
   // https://virtuoso.dev/prepend-items/
   const prevChatListRef = useRef<ChatItem[] | null>(null);
-  if (prevChatListRef.current !== null) {
+  if (prevChatListRef.current != null) {
     const prevChatList = prevChatListRef.current;
     if (prevChatList.length > 0 && chatList.length > prevChatList.length && !isFiltersChanged) {
       const prevFirstItem = prevChatList[0]!;

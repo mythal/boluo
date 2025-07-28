@@ -71,7 +71,7 @@ export const useNotify = () => {
         prev = parsed;
       }
     }
-    if (prev === null) {
+    if (prev == null) {
       localStorage.setItem(storageKey, item.message.created);
       continue;
     }

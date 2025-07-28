@@ -27,7 +27,7 @@ const hasOwnProperty = (obj: unknown, key: string): boolean =>
 
 export const isApiError = (error: unknown): error is ApiError =>
   typeof error === 'object' &&
-  error !== null &&
+  error != null &&
   hasOwnProperty(error, 'code') &&
   (hasOwnProperty(error, 'message') || hasOwnProperty(error, 'cause'));
 

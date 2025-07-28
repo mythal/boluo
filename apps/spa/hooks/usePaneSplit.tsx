@@ -12,7 +12,7 @@ export const usePaneSplit = () => {
   return useCallback(
     () =>
       setPanes((panes) => {
-        if (key === null || paneLimit < 2) return panes;
+        if (key == null || paneLimit < 2) return panes;
         const index = panes.findIndex((pane) => pane.key === key);
         if (index === -1) return panes;
         const pane = panes[index]!;

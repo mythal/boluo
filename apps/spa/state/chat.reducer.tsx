@@ -110,7 +110,7 @@ const handleUpdate = (
   if (eventIdCompare(update.id, state.lastEventId) <= 0) return state;
   const lastEventId = update.id;
   const chatAction = updateToChatAction(update);
-  if (chatAction === null) {
+  if (chatAction == null) {
     return { ...state, lastEventId };
   }
   return { ...chatReducer(state, chatAction), lastEventId };

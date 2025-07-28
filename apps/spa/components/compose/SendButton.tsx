@@ -30,7 +30,7 @@ export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
       ref={refs.setReference}
       {...getReferenceProps()}
     >
-      <InComposeButton onClick={() => send()} disabled={composeError !== null} label={title}>
+      <InComposeButton onClick={() => send()} disabled={composeError != null} label={title}>
         {isEditing ? <Edit /> : <PaperPlane />}
       </InComposeButton>
       <TooltipBox

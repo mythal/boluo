@@ -102,7 +102,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       const active = activeRef.current;
       const chatList = chatListRef.current;
       const messagesCount = chatList.length;
-      if (active === null) return;
+      if (active == null) return;
       resetDragging();
       if (messagesCount < 2 || !event.over) {
         return;
@@ -271,7 +271,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
   const readObserve = useCallback(
     (node: Element): UnregisterOberver => {
       // Create the observer if not exists
-      if (positionObserverRef.current === null) {
+      if (positionObserverRef.current == null) {
         const scroller = scrollerRef.current;
         if (!scroller) {
           return () => {};
@@ -324,7 +324,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
   );
 
   useEffect(() => {
-    if (scheduledGcLowerPos === null) return;
+    if (scheduledGcLowerPos == null) return;
     const [a] = renderRangeRef.current;
     const chatItem = chatList[a];
     if (chatItem && scheduledGcLowerPos > chatItem.pos) {

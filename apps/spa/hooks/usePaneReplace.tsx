@@ -27,7 +27,7 @@ export const usePaneReplace = () => {
           return [pane];
         }
         let replace = true;
-        if (key === null) {
+        if (key == null) {
           replace = false;
         }
         const index = panes.findIndex((pane) => pane.key === key);

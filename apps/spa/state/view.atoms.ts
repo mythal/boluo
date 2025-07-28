@@ -82,7 +82,7 @@ export const focusPaneAtom = atom<number | null, [number], void>(
       return null;
     }
     const [firstKey, firstTime] = first;
-    if (focusRecord !== null) {
+    if (focusRecord != null) {
       const { timestamp, key } = focusRecord;
       if (creationMap.has(key) && timestamp > firstTime) {
         return key;

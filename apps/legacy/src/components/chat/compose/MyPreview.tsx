@@ -29,7 +29,7 @@ const previewChatItem = css`
 `;
 
 function MyPreview({ preview }: Props) {
-  const enableBroadcast = preview.text !== null;
+  const enableBroadcast = preview.text != null;
   const channelId = useChannelId();
   const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
   const isAction = useSelector((state) => state.chatStates.get(channelId)!.compose.isAction);

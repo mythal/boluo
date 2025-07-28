@@ -226,7 +226,7 @@ export const showFlash =
       type: 'SHOW_FLASH',
       information: { content, level, id },
     });
-    if (timeout !== null) {
+    if (timeout != null) {
       setTimeout(() => {
         dispatch({
           type: 'DISMISS_FLASH',

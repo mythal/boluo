@@ -45,7 +45,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
         const uploadResult = await upload(avatar);
         const media = uploadResult.unwrap();
         avatarId = media.mediaId;
-      } else if (avatar === null && me.avatarId) {
+      } else if (avatar == null && me.avatarId) {
         const result = await post('/users/remove_avatar', null, null);
         result.unwrap();
       }

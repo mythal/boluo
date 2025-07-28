@@ -28,7 +28,7 @@ const sendPreview = (
     const inGame = parsedInGame ?? defaultInGame;
     const inGameName = inputedName || characterName;
     if (!previewId) return;
-    const doNotBroadcast = !broadcast || whisperToUsernames !== null;
+    const doNotBroadcast = !broadcast || whisperToUsernames != null;
     const resetPreview = parsed.text === '' || parsed.entities.length === 0;
     const text: string | null = doNotBroadcast ? null : parsed.text;
     const preview: PreviewPost = {

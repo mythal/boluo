@@ -40,7 +40,7 @@ export const useMakeChannelAtoms = (
   defaultDiceFace: number,
 ): ChannelAtoms => {
   const paneKey = usePaneKey();
-  if (paneKey === null) {
+  if (paneKey == null) {
     throw new Error('Access channel atoms outside pane');
   }
   const defaultDiceFaceRef = useRef(defaultDiceFace);
@@ -75,7 +75,7 @@ export const useMakeChannelAtoms = (
       const isEditingAtom = selectAtom(composeAtom, ({ edit }) => edit != null);
       const isWhisperAtom = selectAtom(
         parsedAtom,
-        ({ whisperToUsernames }) => whisperToUsernames !== null,
+        ({ whisperToUsernames }) => whisperToUsernames != null,
       );
       const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
       return {
@@ -112,7 +112,7 @@ export const useMakeChannelAtoms = (
 
 export const useChannelAtoms = (): ChannelAtoms => {
   const atoms = useContext(ChannelAtomsContext);
-  if (atoms === null) {
+  if (atoms == null) {
     throw new Error('Access channel atoms outside context');
   }
   return atoms;

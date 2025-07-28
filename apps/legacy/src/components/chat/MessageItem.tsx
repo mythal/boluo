@@ -49,7 +49,7 @@ function MessageItem({
   );
 
   let content: React.ReactNode;
-  if (message.whisperToUsers === null || message.entities.length > 0) {
+  if (message.whisperToUsers == null || message.entities.length > 0) {
     content = (
       <ChatItemContentContainer
         data-in-game={message.inGame ?? false}

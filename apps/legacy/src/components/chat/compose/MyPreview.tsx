@@ -41,10 +41,10 @@ function MyPreview({ preview }: Props) {
   return (
     <div
       css={[chatItemContainer, previewChatItem, preview.inGame ? previewInGame : previewOutGame]}
-      data-in-game={preview.inGame}
+      data-in-game={preview.inGame ?? false}
     >
       {!isAction && <div css={nameContainer}>{name}</div>}
-      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
+      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame ?? false}>
         {isAction && name}
         {!enableBroadcast && <BroadcastAreClosed css={mR(1)} />}
         {text && <ChatItemContent entities={entities} text={text} />}

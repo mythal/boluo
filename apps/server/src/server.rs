@@ -16,6 +16,7 @@ use hyper_util::rt::{TokioExecutor, TokioIo};
 use hyper_util::server::conn::auto::Builder as AutoBuilder;
 use metrics::{counter, gauge};
 use tokio::net::TcpListener;
+use tokio::sync::watch;
 
 use hyper::Request;
 use hyper::service::service_fn;
@@ -327,25 +328,64 @@ async fn handle_connection(
                 counter!("boluo_server_tcp_connections_total").increment(1);
                 tcp_connections_active.increment(1);
 
-                let connection_timeout = std::time::Duration::from_secs(200);
+                let connection_timeout = std::time::Duration::from_secs(60);
+
+                let (timeout_reset_tx, mut timeout_reset_rx) =
+                    watch::channel(std::time::Instant::now());
+
+                let handler_with_reset = move |req: Request<Incoming>| {
+                    let tx = timeout_reset_tx.clone();
+                    async move {
+                        // Reset timeout on each request
+                        let _ = tx.send(std::time::Instant::now());
+                        handler(req).await
+                    }
+                };
 
                 let builder = AutoBuilder::new(TokioExecutor::new());
                 let connection_future =
-                    builder.serve_connection_with_upgrades(io, service_fn(handler));
+                    builder.serve_connection_with_upgrades(io, service_fn(handler_with_reset));
 
-                let result = tokio::time::timeout(connection_timeout, connection_future).await;
+                let timeout_task = async move {
+                    let mut last_reset = std::time::Instant::now();
+                    loop {
+                        let remaining_time =
+                            connection_timeout.saturating_sub(last_reset.elapsed());
 
-                match result {
-                    Ok(Ok(())) => {}
-                    Ok(Err(err)) => {
-                        tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
-                        error_counter.increment(1);
+                        if remaining_time.is_zero() {
+                            break;
+                        }
+
+                        tokio::select! {
+                            _ = tokio::time::sleep(remaining_time) => {
+                                break;
+                            }
+                            result = timeout_reset_rx.changed() => {
+                                if result.is_ok() {
+                                    last_reset = *timeout_reset_rx.borrow_and_update();
+                                } else {
+                                    tracing::warn!(addr = %addr, "HTTP connection timeout reset channel closed");
+                                    break;
+                                }
+                            }
+                        }
                     }
-                    Err(_) => {
+                };
+                tokio::select! {
+                    conn_result = connection_future => {
+                        match conn_result {
+                            Ok(()) => {},
+                            Err(err) => {
+                                tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
+                                error_counter.increment(1);
+                            },
+                        }
+                    }
+                    _ = timeout_task => {
                         tracing::info!(addr = %addr, "HTTP connection timeout after {}s", connection_timeout.as_secs());
                         timeout_counter.increment(1);
                     }
-                }
+                };
 
                 tcp_connections_active.decrement(1);
                 metrics::histogram!("boluo_server_tcp_connection_duration_ms")

@@ -65,7 +65,7 @@ export const parseColorPart = (color: string): GameColor => {
     return { type: 'random', seed: color.slice(RANDOM_PREFIX.length) };
   }
   const hexColor = parseHexColor(color);
-  if (hexColor !== null) {
+  if (hexColor != null) {
     return { type: 'hex', color: hexColor };
   }
   return { type: 'random', seed: '' };

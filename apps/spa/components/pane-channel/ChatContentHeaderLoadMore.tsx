@@ -112,7 +112,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
       if (!isVisibleRef.current) return;
       if (e.changedTouches.length !== 1) return;
       const start = touchStartPoint.current;
-      if (start === null) return;
+      if (start == null) return;
       const touch = e.changedTouches[0]!;
       if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
         setTouchState('WILL_LOAD');
@@ -126,7 +126,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
       if (!isVisibleRef.current) return;
       if (e.changedTouches.length !== 1) return;
       const start = touchStartPoint.current;
-      if (start === null) return;
+      if (start == null) return;
       const touch = e.changedTouches[0]!;
       if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
         setTimeout(() => {

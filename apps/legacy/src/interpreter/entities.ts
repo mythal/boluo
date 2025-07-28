@@ -243,7 +243,7 @@ export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {
 };
 
 function isEntity(raw: unknown): raw is Entity {
-  if (typeof raw !== 'object' || raw === null || !('type' in raw)) {
+  if (typeof raw !== 'object' || raw == null || !('type' in raw)) {
     return false;
   }
   return 'len' in raw && 'start' in raw;

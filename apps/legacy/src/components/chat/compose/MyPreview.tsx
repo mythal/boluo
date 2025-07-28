@@ -29,7 +29,7 @@ const previewChatItem = css`
 `;
 
 function MyPreview({ preview }: Props) {
-  const enableBroadcast = preview.text !== null;
+  const enableBroadcast = preview.text != null;
   const channelId = useChannelId();
   const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
   const isAction = useSelector((state) => state.chatStates.get(channelId)!.compose.isAction);
@@ -41,10 +41,10 @@ function MyPreview({ preview }: Props) {
   return (
     <div
       css={[chatItemContainer, previewChatItem, preview.inGame ? previewInGame : previewOutGame]}
-      data-in-game={preview.inGame}
+      data-in-game={preview.inGame ?? false}
     >
       {!isAction && <div css={nameContainer}>{name}</div>}
-      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame}>
+      <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame ?? false}>
         {isAction && name}
         {!enableBroadcast && <BroadcastAreClosed css={mR(1)} />}
         {text && <ChatItemContent entities={entities} text={text} />}

@@ -32,7 +32,7 @@ function EditAvatar({ className, mediaId, selectFile, size }: Props) {
   };
 
   const onFileSelected = () => {
-    if (!input.current || input.current.files === null || input.current.files.length === 0) {
+    if (!input.current || input.current.files == null || input.current.files.length === 0) {
       return;
     }
     const file: File = input.current.files[0];

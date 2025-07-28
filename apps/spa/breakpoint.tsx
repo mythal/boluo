@@ -60,7 +60,7 @@ export const BreakpointProvider: FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useBreakpoint = (): Breakpoint => {
   const breakpoint = useContext(BreakpointContext);
-  if (breakpoint === null) {
+  if (breakpoint == null) {
     return windowBreakpoint();
   } else {
     return breakpoint;

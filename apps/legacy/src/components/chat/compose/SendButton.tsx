@@ -39,7 +39,7 @@ export const SendButton = ({ onSend, editing = false }: Props) => {
       loading={sending}
       icon={editing ? Save : PaperPlane}
       onClick={onSend}
-      disabled={cannotSendReason !== null}
+      disabled={cannotSendReason != null}
       title={editing ? '编辑' : '发送'}
       size="large"
       info={sendButtonInfo}

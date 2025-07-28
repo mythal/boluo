@@ -56,7 +56,7 @@ function Overlay({
   const [node, setNode] = useState(anchor.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => setNode(anchor.current), [anchor.current]);
-  if (node === null) {
+  if (node == null) {
     return null;
   }
   const rect = node.getBoundingClientRect();

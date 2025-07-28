@@ -93,7 +93,7 @@ function ExportDialog({ dismiss, channel }: Props) {
     } else if (format.value === 'CSV') {
       blob = csvBlob(messages);
     }
-    if (blob === null) {
+    if (blob == null) {
       return;
     }
     const href = URL.createObjectURL(blob);

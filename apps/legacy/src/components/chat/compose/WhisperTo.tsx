@@ -15,7 +15,7 @@ function WhisperTo({ className }: Props) {
   return (
     <span className={className}>
       <Button data-variant="normal" data-size="small" onClick={() => setDialog(true)}>
-        {whisperTo === null || whisperTo === undefined ? (
+        {whisperTo == null || whisperTo === undefined ? (
           <span>对所有人...</span>
         ) : (
           <span>悄悄说给 ({whisperTo.length}人)...</span>

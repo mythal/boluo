@@ -461,7 +461,7 @@ const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T):
       });
 
     const result = p().run(state, env);
-    if (result === null) {
+    if (result == null) {
       return null;
     }
     const [node, state2] = result;
@@ -529,7 +529,7 @@ const repeat = (): P<ExprNode> =>
       return null;
     }
     const result = expr().run(state, env);
-    if (result === null) {
+    if (result == null) {
       return null;
     }
     const [node, next] = result;
@@ -607,7 +607,7 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
   const next: State = { text: '.r ', rest: state.rest.substring(prefix[0].length) };
   const exprEntity = new P((state, env) => {
     const result = expr().run(state, env);
-    if (result === null) {
+    if (result == null) {
       return null;
     }
     return exprNodeToEntity(state)(result);

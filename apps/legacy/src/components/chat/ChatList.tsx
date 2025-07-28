@@ -80,7 +80,7 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
   });
 
   useEffect(() => {
-    if (chatListRef.current === null) {
+    if (chatListRef.current == null) {
       return;
     }
     const chatList = chatListRef.current;

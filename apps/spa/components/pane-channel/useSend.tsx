@@ -49,10 +49,10 @@ export const useSend = (me: User) => {
     }
     const compose = store.get(composeAtom);
     const parsed = store.get(parsedAtom);
-    if (store.get(checkComposeAtom) !== null) return;
+    if (store.get(checkComposeAtom) != null) return;
     const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
-    const isEditing = compose.edit !== null;
+    const isEditing = compose.edit != null;
     dispatch({ type: 'sent', payload: { edit: isEditing } });
     const { text, entities, whisperToUsernames } = parse(compose.source, true, {
       defaultDiceFace: defaultDiceFaceRef.current,

@@ -286,7 +286,7 @@ export function csvBlob(intl: IntlShape, messages: ExportMessage[]): Blob {
       booleanToText(intl, isAction),
       booleanToText(intl, inGame),
       entities.map(entityMarkdown).join(''),
-      whisperTo === null ? 'N/A' : whisperToText(intl, whisperTo, inGame),
+      whisperTo == null ? 'N/A' : whisperToText(intl, whisperTo, inGame),
       mediaUrl || '',
       booleanToText(intl, folded),
     ].map((cell) => {

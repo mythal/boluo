@@ -6,7 +6,7 @@ export const useAutoHeight = (
   maxHeight = 128,
 ) => {
   useEffect(() => {
-    if (inputRef.current === null || !enable) {
+    if (inputRef.current == null || !enable) {
       return;
     }
     const input = inputRef.current;

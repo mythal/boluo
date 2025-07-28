@@ -12,7 +12,7 @@ interface Props {
 
 function Avatar({ className, size, id, src, onClick }: Props) {
   size = size || '4rem';
-  if (src !== undefined || id !== null) {
+  if (src !== undefined || id != null) {
     if (src === undefined) {
       src = mediaUrl(id!);
     }

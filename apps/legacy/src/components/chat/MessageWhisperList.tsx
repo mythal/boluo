@@ -48,7 +48,7 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
     if (result.isErr) {
       throwErr(dispatch)(result.value);
       return;
-    } else if (result.value === null) {
+    } else if (result.value == null) {
       dispatch(showFlash('WARNING', '没有找到消息，可能已经删除'));
       return;
     }
@@ -71,7 +71,7 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
       );
     }
     return (
-      <div css={whisperContentWrapper} data-folded={message.folded}>
+      <div css={whisperContentWrapper} data-folded={message.folded ?? false}>
         {!shown && (
           <Button data-size="small" onClick={reveal} css={mR(2)}>
             查看 <Icon icon={Eye} />
@@ -83,7 +83,7 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
     );
   } else {
     return (
-      <div css={whisperContentWrapper} data-folded={message.folded}>
+      <div css={whisperContentWrapper} data-folded={message.folded ?? false}>
         <span>
           <Icon icon={EyeSlash} css={mR(2)} />
           对别的人说悄悄话

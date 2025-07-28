@@ -12,13 +12,13 @@ export function useOutside(
   const handleClickOutside = useCallback(
     function (event: MouseEvent) {
       const target = event.target as Element;
-      if (!callback || !overlayRef.current || target === null) {
+      if (!callback || !overlayRef.current || target == null) {
         return;
       } else if (overlayRef.current.contains(target)) {
         return;
       }
       if (triggerRef) {
-        if (triggerRef.current === null || triggerRef.current.contains(target)) {
+        if (triggerRef.current == null || triggerRef.current.contains(target)) {
           return;
         }
       }

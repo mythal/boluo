@@ -122,7 +122,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       style={{ overflowY: 'scroll', overscrollBehavior: 'none' }}
       ref={virtuosoRef}
       scrollerRef={(ref) => {
-        if (ref instanceof HTMLDivElement || ref === null) scrollerRef.current = ref;
+        if (ref instanceof HTMLDivElement || ref == null) scrollerRef.current = ref;
       }}
       isScrolling={setIsScrolling}
       rangeChanged={handleRangeChange}

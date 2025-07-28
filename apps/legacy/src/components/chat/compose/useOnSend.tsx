@@ -70,7 +70,7 @@ export const useOnSend = () => {
       }
     }
     const reason = whyCannotSend(inGame, name, source);
-    if (reason !== null) {
+    if (reason != null) {
       showFlash('ERROR', reason)(dispatch);
     }
     if (!edit) {

@@ -40,7 +40,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
   return (
     <PreviewBox
       id={preview.id}
-      editMode={preview.edit !== null}
+      editMode={preview.edit != null}
       isSelf={false}
       inGame={preview.inGame ?? false}
       isLast={isLast}
@@ -50,7 +50,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
       <div className="@2xl:flex-col flex gap-1">
         <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>
       </div>
-      {preview.text === null ? (
+      {preview.text == null ? (
         <OthersPreviewNoBroadcast timestamp={preview.timestamp} />
       ) : (
         <div>

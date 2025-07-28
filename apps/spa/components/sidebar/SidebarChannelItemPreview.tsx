@@ -90,7 +90,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     if (typeof latestMessage === 'string') {
       return '';
     }
-    if (latestMessage.whisperToUsers !== null) {
+    if (latestMessage.whisperToUsers != null) {
       return `[${intl.formatMessage({ defaultMessage: 'Whisper' })}]`;
     }
     const parsed = messageToParsed(latestMessage.text, latestMessage.entities);

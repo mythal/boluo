@@ -39,7 +39,7 @@ interface Emphasis extends LegacyBaseEntity {
 export type LegacyEntity = Text | Link | Expr | Strong | Emphasis | Code | CodeBlock;
 
 export function isLegacyEntity(raw: unknown): raw is LegacyEntity {
-  if (typeof raw !== 'object' || raw === null || !('type' in raw)) {
+  if (typeof raw !== 'object' || raw == null || !('type' in raw)) {
     return false;
   }
   return 'offset' in raw && 'start' in raw;

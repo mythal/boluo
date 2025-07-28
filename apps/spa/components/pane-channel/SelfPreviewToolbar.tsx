@@ -98,12 +98,12 @@ const SendButton: FC<{ currentUser: User }> = ({ currentUser }) => {
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
   const editAtom = useMemo(() => selectAtom(composeAtom, ({ edit }) => edit), [composeAtom]);
-  const editMode = useAtomValue(editAtom) !== null;
+  const editMode = useAtomValue(editAtom) != null;
   const composeError = useComposeError();
   const send = useSend(currentUser);
   return (
     <>
-      <ToolbarButton disabled={composeError !== null} onClick={send}>
+      <ToolbarButton disabled={composeError != null} onClick={send}>
         <Icon icon={editMode ? Edit : PaperPlane} />
         {editMode ? (
           <FormattedMessage defaultMessage="Edit" />

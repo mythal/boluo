@@ -45,7 +45,7 @@ const handleSetComposeSource = (
 ): ComposeState => {
   const { source } = action.payload;
   let { previewId } = state;
-  if ((source === '' || state.source === '') && state.edit === null) {
+  if ((source === '' || state.source === '') && state.edit == null) {
     previewId = makeId();
   }
   return { ...state, source: action.payload.source, previewId };

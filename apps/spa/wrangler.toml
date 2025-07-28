@@ -1,4 +1,4 @@
-name = "boluo-spa"
+name = "boluo-app"
 compatibility_date = "2025-07-25"
 main = "../../packages/backend-proxy/dist/worker.js"
 

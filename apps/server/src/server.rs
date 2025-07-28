@@ -317,6 +317,9 @@ async fn handle_connection(
 ) {
     match accept_result {
         Ok((stream, addr)) => {
+            if let Err(e) = stream.set_nodelay(true) {
+                tracing::error!(error = %e, "Failed to set TCP_NODELAY");
+            }
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
                 let start_time = std::time::Instant::now();

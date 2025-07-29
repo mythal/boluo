@@ -9,6 +9,7 @@ use std::env;
 use std::net::{IpAddr, SocketAddr};
 
 use clap::Parser;
+use futures::pin_mut;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::ORIGIN;
@@ -328,7 +329,7 @@ async fn handle_connection(
                 counter!("boluo_server_tcp_connections_total").increment(1);
                 tcp_connections_active.increment(1);
 
-                let connection_timeout = std::time::Duration::from_secs(60);
+                let connection_timeout = std::time::Duration::from_secs(32);
 
                 let (timeout_reset_tx, mut timeout_reset_rx) =
                     watch::channel(std::time::Instant::now());
@@ -345,6 +346,8 @@ async fn handle_connection(
                 let builder = AutoBuilder::new(TokioExecutor::new());
                 let connection_future =
                     builder.serve_connection_with_upgrades(io, service_fn(handler_with_reset));
+
+                pin_mut!(connection_future);
 
                 let timeout_task = async move {
                     let mut last_reset = std::time::Instant::now();
@@ -371,8 +374,9 @@ async fn handle_connection(
                         }
                     }
                 };
+
                 tokio::select! {
-                    conn_result = connection_future => {
+                    conn_result = &mut connection_future => {
                         match conn_result {
                             Ok(()) => {},
                             Err(err) => {
@@ -382,8 +386,15 @@ async fn handle_connection(
                         }
                     }
                     _ = timeout_task => {
-                        tracing::info!(addr = %addr, "HTTP connection timeout after {}s", connection_timeout.as_secs());
                         timeout_counter.increment(1);
+
+                        connection_future.as_mut().graceful_shutdown();
+
+                        if let Err(err) = connection_future.await {
+                            tracing::warn!(error = %err, addr = %addr, "Error during graceful shutdown");
+                        }
+
+                        tracing::info!(addr = %addr, "HTTP connection timeout after {}s", start_time.elapsed().as_secs());
                     }
                 };
 

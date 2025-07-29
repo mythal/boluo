@@ -385,6 +385,9 @@ async fn handle_connection(
                             },
                         }
                     }
+                    _ = shutdown::SHUTDOWN.notified() => {
+                        connection_future.as_mut().graceful_shutdown();
+                    }
                     _ = timeout_task => {
                         timeout_counter.increment(1);
 

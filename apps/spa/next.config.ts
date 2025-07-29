@@ -35,14 +35,25 @@ const config: NextConfig = {
   poweredByHeader: false,
   output: 'export',
   productionBrowserSourceMaps: true,
-  experimental: {
-    // Turn off it if the app switched to `app` router.
-    externalDir: true,
-    turbo: {
-      resolveAlias: {
-        '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
+  rewrites: async () => {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${env.BACKEND_URL}/api/:path*`,
       },
+    ];
+  },
+  turbopack: {
+    // Remove the parser from `react-intl` to reduce the bundle size
+    // https://formatjs.github.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller
+    // https://github.com/vercel/next.js/issues/30434
+    resolveAlias: {
+      '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },
+  },
+  experimental: {
+    // TODO: Turn off it if the app switched to `app` router.
+    externalDir: true,
     swcPlugins: [
       [
         '@swc/plugin-formatjs',
@@ -59,9 +70,7 @@ const config: NextConfig = {
     SENTRY_TUNNEL: env.SENTRY_TUNNEL,
   },
   webpack: (config) => {
-    // `react-intl` without parser
-    // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller
-    // https://github.com/vercel/next.js/issues/30434
+    // See `config.turbo.resolveAlias`
     config.resolve.alias['@formatjs/icu-messageformat-parser'] =
       '@formatjs/icu-messageformat-parser/no-parser';
 

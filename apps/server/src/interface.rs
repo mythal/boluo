@@ -114,10 +114,16 @@ where
 {
     use http_body_util::BodyExt;
     // TODO: limit the body size
-    let body = req
-        .into_body()
-        .collect()
-        .await
+    let collected = tokio::time::timeout(
+        std::time::Duration::from_secs(10),
+        req.into_body().collect(),
+    )
+    .await
+    .map_err(|_| {
+        tracing::warn!("Timeout when reading the request body");
+        AppError::Timeout
+    })?;
+    let body = collected
         .map_err(|_| {
             tracing::error!("Failed to read the request body");
             AppError::BadRequest("Failed to read the request body".to_string())
@@ -136,10 +142,16 @@ where
     for<'de> T: Deserialize<'de>,
 {
     use http_body_util::BodyExt;
-    let body = req
-        .into_body()
-        .collect()
-        .await
+    let collected = tokio::time::timeout(
+        std::time::Duration::from_secs(10),
+        req.into_body().collect(),
+    )
+    .await
+    .map_err(|_| {
+        tracing::warn!("Timeout when reading the request body");
+        AppError::Timeout
+    })?;
+    let body = collected
         .map_err(|_| {
             tracing::error!("Failed to read the request body");
             AppError::BadRequest("Failed to read the request body".to_string())

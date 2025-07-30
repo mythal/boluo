@@ -30,19 +30,21 @@ const withBundleAnalyzer = generateWithBundleAnalyzer({
   enabled: env.ANALYZE === 'true',
 });
 
+const rewrites = async () => {
+  return [
+    {
+      source: '/api/:path*',
+      destination: `${env.BACKEND_URL}/api/:path*`,
+    },
+  ];
+};
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: 'export',
   productionBrowserSourceMaps: true,
-  rewrites: async () => {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${env.BACKEND_URL}/api/:path*`,
-      },
-    ];
-  },
+  rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   turbopack: {
     // Remove the parser from `react-intl` to reduce the bundle size
     // https://formatjs.github.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller

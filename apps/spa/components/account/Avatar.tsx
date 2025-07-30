@@ -14,27 +14,15 @@ interface Props {
 // TODO: loading style
 export const Avatar: FC<Props> = (props) => {
   const { id, size = '1em', name, className, avatarId, onClick } = props;
-  const appSettings = useQueryAppSettings();
+  const { data: appSettings } = useQueryAppSettings();
   const style = useMemo(() => {
     if (size == null || size === '') {
       return undefined;
     }
     return { width: size, height: size };
   }, [size]);
-  if (!appSettings.mediaUrl) {
-    console.error('MEDIA_URL is not set.');
-    return (
-      <img
-        title="Failed to load avatar"
-        alt={name}
-        style={style}
-        onClick={onClick}
-        className={className}
-        src={`https://avatars.boluochat.com/${encodeURIComponent(id + name)}`}
-      />
-    );
-  }
-  if (avatarId) {
+
+  if (avatarId && appSettings?.mediaUrl) {
     return (
       <img
         alt={name}

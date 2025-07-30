@@ -14,13 +14,16 @@ type Props = {
 };
 
 export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
-  const { mediaUrl } = useQueryAppSettings();
+  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
+  const mediaUrl = appSettings?.mediaUrl;
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
   let src: string | null = null;
   if (media instanceof File) {
     src = URL.createObjectURL(media);
   } else if (mediaUrl) {
     src = getMediaUrl(mediaUrl, media);
+  } else if (isLoadingAppSettings) {
+    src = '';
   } else {
     console.error('MEDIA_URL is not set.');
     src = '';

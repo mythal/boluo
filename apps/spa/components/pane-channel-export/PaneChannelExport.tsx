@@ -61,7 +61,8 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   const intl = useIntl();
   const id = useId();
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const { mediaUrl } = useQueryAppSettings();
+  const { data: appSettings } = useQueryAppSettings();
+  const mediaUrl = appSettings?.mediaUrl;
   const [error, setError] = useState<unknown>(null);
   const {
     register,

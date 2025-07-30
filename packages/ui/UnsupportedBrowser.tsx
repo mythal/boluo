@@ -4,7 +4,8 @@ import * as classes from './classes';
 import { useQueryAppSettings } from '@boluo/common/hooks';
 
 export const UnsupportedBrowser = ({ isIos }: { isIos: boolean }) => {
-  const { siteUrl } = useQueryAppSettings();
+  const { data: appSettings } = useQueryAppSettings();
+  const siteUrl = appSettings?.siteUrl;
   const chromeLink = (
     <a
       href="https://www.google.com/chrome/"

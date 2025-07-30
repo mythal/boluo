@@ -18,7 +18,9 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
   const { data: token, mutate } = useSWR(['/spaces/token' as const, spaceId], ([path, id]) =>
     get(path, { id }).then(unwrap),
   );
-  const { appUrl, siteUrl } = useQueryAppSettings();
+  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
+  const appUrl = appSettings?.appUrl;
+  const siteUrl = appSettings?.siteUrl;
   const intl = useIntl();
   const id = useId();
   const inviteLinkRef = useRef<HTMLInputElement>(null);
@@ -39,7 +41,7 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
     }
   }, [mutate, spaceId]);
 
-  if (!token) {
+  if (!token || isLoadingAppSettings) {
     return (
       <div className="py-2">
         <Loading />

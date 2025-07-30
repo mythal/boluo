@@ -16,9 +16,9 @@ interface Props {
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   const { data: currentUser, isLoading } = useQueryCurrentUser();
   const intl = useIntl();
-  const appSettings = useQueryAppSettings();
+  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
   const handleClick = async () => {
-    const appUrl = appSettings.appUrl;
+    const appUrl = appSettings?.appUrl;
     if (!appUrl) {
       alert('APP_URL is not set.');
       return;
@@ -34,7 +34,7 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
       </Link>
     </span>
   );
-  if (isLoading) {
+  if (isLoading || isLoadingAppSettings) {
     return null;
   }
   return (

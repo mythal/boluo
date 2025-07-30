@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 export const UserOperations = () => {
   const intl = useIntl();
   const { data: currentUser, isLoading } = useQueryCurrentUser();
-  const appSettings = useQueryAppSettings();
+  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
   const { data: isEmailVerified } = useQueryIsEmailVerified();
   const logout = useLogout();
   const router = useRouter();
@@ -20,7 +20,7 @@ export const UserOperations = () => {
     logout();
     router.refresh();
   };
-  if (isLoading || !appSettings.appUrl) {
+  if (isLoading || isLoadingAppSettings || !appSettings?.appUrl) {
     return (
       <div>
         <LoadingText />

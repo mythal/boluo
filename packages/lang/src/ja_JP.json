@@ -20,6 +20,9 @@
   "/DfISw": {
     "message": "編集をキャンセル"
   },
+  "/FW+vJ": {
+    "message": "You can found the source code at {githubUrl}."
+  },
   "/I//hN": {
     "message": "メッセージの読み込みに失敗しました ({errorCode})"
   },
@@ -139,6 +142,9 @@
   },
   "6QtXvB": {
     "message": "Verification email sent! Please check your inbox."
+  },
+  "6WiliO": {
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "接続中"
@@ -308,9 +314,6 @@
   "IN8rCW": {
     "message": "無効な招待リンク"
   },
-  "INVcoD": {
-    "message": "現在開発中なので、全てでか安定ではない。"
-  },
   "IPvPs7": {
     "message": "Send verification email"
   },
@@ -472,9 +475,6 @@
   },
   "Q8Qw5B": {
     "message": "説明"
-  },
-  "Q8hmJq": {
-    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
@@ -643,6 +643,9 @@
   },
   "Yf3xiD": {
     "message": "{days} 日前"
+  },
+  "Yh4Uqn": {
+    "message": "Your email has been verified. You will be redirected shortly."
   },
   "YjO/0+": {
     "message": "ご自身"

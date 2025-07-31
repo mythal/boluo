@@ -14,9 +14,11 @@ import type { ResendEmailVerificationResult, User } from '@boluo/api';
 import { useQueryIsEmailVerified } from '@boluo/common/hooks';
 import Link from 'next/link';
 
-const useSendVerificationEmail = (
-  config?: SWRMutationConfiguration<ResendEmailVerificationResult, Error, [string, string]>,
-): SWRMutationResponse<ResendEmailVerificationResult, Error, [string, string]> => {
+const useSendVerificationEmail = (): SWRMutationResponse<
+  ResendEmailVerificationResult,
+  Error,
+  [string, string]
+> => {
   const intl = useIntl();
   return useSWRMutation(
     ['/users/resend_email_verification', intl.locale] as const,
@@ -24,7 +26,6 @@ const useSendVerificationEmail = (
       const result = await post(path, null, { lang });
       return result.unwrap();
     },
-    config,
   );
 };
 

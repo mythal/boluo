@@ -29,7 +29,7 @@ export interface Get {
   '/users/settings': { query: null; result: unknown };
   '/users/check_username': { query: CheckUsernameExists; result: boolean };
   '/users/check_email': { query: CheckEmailExists; result: boolean };
-  '/users/verify_email': { query: VerifyEmail; result: null };
+  '/users/verify_email': { query: VerifyEmail; result: boolean };
   '/users/email_verification_status': { query: null; result: EmailVerificationStatus };
   // spaces
   '/spaces/users_status': { query: { id: string }; result: Record<string, UserStatus> };

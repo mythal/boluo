@@ -14,9 +14,11 @@ import type { ResendEmailVerificationResult, User } from '@boluo/api';
 import { useQueryIsEmailVerified } from '@boluo/common/hooks';
 import Link from 'next/link';
 
-const useSendVerificationEmail = (
-  config?: SWRMutationConfiguration<ResendEmailVerificationResult, Error, [string, string]>,
-): SWRMutationResponse<ResendEmailVerificationResult, Error, [string, string]> => {
+const useSendVerificationEmail = (): SWRMutationResponse<
+  ResendEmailVerificationResult,
+  Error,
+  [string, string]
+> => {
   const intl = useIntl();
   return useSWRMutation(
     ['/users/resend_email_verification', intl.locale] as const,
@@ -50,11 +52,6 @@ export function VerifyEmailContent({
   currentUser: User | null | undefined;
 }) {
   const router = useRouter();
-
-  const backHome = useCallback(() => {
-    router.push('/');
-  }, [router]);
-
   // Email verification mutation
   const {
     trigger: triggerVerify,
@@ -69,7 +66,13 @@ export function VerifyEmailContent({
     },
     {
       onSuccess: () => {
-        setTimeout(backHome, 3000);
+        setTimeout(() => {
+          if (currentUser) {
+            router.push('/');
+          } else {
+            router.push('/account/login');
+          }
+        }, 3000);
       },
     },
   );
@@ -81,13 +84,13 @@ export function VerifyEmailContent({
   // Success state
   if (!isVerifying && !verifyError && verifyResult) {
     return (
-      <div className="">
-        <div className="mb-4 text-4xl text-green-600">✓</div>
+      <div className="py-4">
         <h1 className="mb-2 text-lg font-semibold">
+          <span className="mr-2 text-green-600">✓</span>
           <FormattedMessage defaultMessage="Email verified successfully!" />
         </h1>
-        <p className="mb-4 text-sm">
-          <FormattedMessage defaultMessage="Your email has been verified. You will be redirected to the home page shortly." />
+        <p className="text-sm">
+          <FormattedMessage defaultMessage="Your email has been verified. You will be redirected shortly." />
         </p>
       </div>
     );
@@ -95,12 +98,12 @@ export function VerifyEmailContent({
 
   if (!isVerifying && verifyError) {
     return (
-      <div className="">
-        <h1 className="mb-4 text-lg font-semibold">
+      <div className="py-4">
+        <h1 className="mb-2 text-lg font-semibold">
           <FormattedMessage defaultMessage="Email verification failed" />
         </h1>
         {verifyError && (
-          <div className="mb-4">
+          <div className="">
             <ErrorMessageBox>
               <FormattedMessage defaultMessage="Verification failed. Please try again or contact support." />
             </ErrorMessageBox>
@@ -112,8 +115,8 @@ export function VerifyEmailContent({
   }
 
   return (
-    <div className="">
-      <h1 className="mb-4 text-lg font-semibold">
+    <div className="py-4">
+      <h1 className="text-lg font-semibold">
         <FormattedMessage defaultMessage="Verifying your email..." />
       </h1>
     </div>
@@ -137,7 +140,6 @@ function StartVerifyEmail({
 
   const [watingResendSeconds, setWatingResendSeconds] = useState(0);
   const countdown = useCountdown(watingResendSeconds);
-  console.log('countdown', countdown);
 
   if (isEmailVerified) {
     return (

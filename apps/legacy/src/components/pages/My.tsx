@@ -43,21 +43,27 @@ function My() {
           <Icon icon={Newspaper} /> 新闻
         </Title>
         <News css={[mB(2)]}>
+          建立了
+          <ExternalLink css={link} to="https://zh.mythal.net">
+            新的论坛
+          </ExternalLink>
+          ，可以在论坛里反馈问题和讨论了！（登录需要验证电子邮箱）
+        </News>
+
+        <News css={[mB(2)]}>
+          非常遗憾，由于 boluo.chat 域名被墙了，国内访问域名改成{' '}
+          <ExternalLink css={link} to="https://old.boluochat.com">
+            boluochat.com
+          </ExternalLink>
+          ，以后可以访问论坛获取最新消息。
+        </News>
+
+        <News css={[mB(2)]}>
           现在会根据延迟自动选择线路，改进了断线重连。重写的
           <ExternalLink css={link} to="https://site.boluochat.com">
             新版菠萝
           </ExternalLink>
           可以试用。
-        </News>
-        <News css={[mB(2)]}>
-          如果有什么问题可以到QQ群（1107382038）反馈，也可以提交{' '}
-          <ExternalLink css={link} to="https://github.com/mythal/boluo/issues">
-            GitHub Issues
-          </ExternalLink>
-          ，或者直接给我发邮件：<Code>admin@boluo.chat</Code>。
-        </News>
-        <News css={[mB(2)]}>
-          导出功能现在可以选择时间，导出最近的消息了。切换游戏内外的按键改为<code>Esc</code>键。
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

@@ -20,6 +20,9 @@
   "/DfISw": {
     "message": "Cancel edit"
   },
+  "/FW+vJ": {
+    "message": "You can found the source code at {githubUrl}."
+  },
   "/I//hN": {
     "message": "Failed to load messages ({errorCode})"
   },
@@ -116,6 +119,9 @@
   "60KMrS": {
     "message": "As Default"
   },
+  "62nsdy": {
+    "message": "Retry"
+  },
   "64sfSN": {
     "message": "Nevermind"
   },
@@ -136,6 +142,9 @@
   },
   "6QtXvB": {
     "message": "Verification email sent! Please check your inbox."
+  },
+  "6WiliO": {
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "Connecting"
@@ -305,9 +314,6 @@
   "IN8rCW": {
     "message": "Invalid invitation link"
   },
-  "INVcoD": {
-    "message": "It's currently in active development and everything is unstable."
-  },
   "IPvPs7": {
     "message": "Send verification email"
   },
@@ -386,11 +392,17 @@
   "LnM0On": {
     "message": "{a} and {b} are composing…"
   },
+  "Lzb4s2": {
+    "message": "Move failed"
+  },
   "MWO2zy": {
     "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
+  },
+  "MjKIej": {
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
@@ -463,9 +475,6 @@
   },
   "Q8Qw5B": {
     "message": "Description"
-  },
-  "Q8hmJq": {
-    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
@@ -635,11 +644,17 @@
   "Yf3xiD": {
     "message": "{days} days ago"
   },
+  "Yh4Uqn": {
+    "message": "Your email has been verified. You will be redirected shortly."
+  },
   "YjO/0+": {
     "message": "Myself"
   },
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
+  },
+  "Yw/mtA": {
+    "message": "Edit failed"
   },
   "Yy/yDL": {
     "message": "Reset password"
@@ -745,6 +760,12 @@
   },
   "ea+WlP": {
     "message": "You must be invited to join a private channel."
+  },
+  "ecjViF": {
+    "message": "Delete failed"
+  },
+  "f00p/7": {
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "Add a file"

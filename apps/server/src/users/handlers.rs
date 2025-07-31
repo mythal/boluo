@@ -494,7 +494,7 @@ async fn send_email_verification(
     Ok(())
 }
 
-pub async fn verify_email(req: Request<impl Body>) -> Result<(), AppError> {
+pub async fn verify_email(req: Request<impl Body>) -> Result<bool, AppError> {
     use crate::users::api::VerifyEmail;
     let VerifyEmail { token } = parse_query(req.uri())?;
 
@@ -510,7 +510,7 @@ pub async fn verify_email(req: Request<impl Body>) -> Result<(), AppError> {
         "User email verified successfully"
     );
 
-    Ok(())
+    Ok(true)
 }
 
 pub async fn resend_email_verification(

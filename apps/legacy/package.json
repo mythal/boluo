@@ -11,6 +11,7 @@
     "@emotion/styled": "^11.14.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@redux-devtools/extension": "^3.3.0",
+    "dotenv": "^17.2.1",
     "immutable": "^5.0.3",
     "jotai": "^2.12.2",
     "optics-ts": "^2.4.1",

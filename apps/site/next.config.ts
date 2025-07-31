@@ -23,7 +23,14 @@ const env = {
   ANALYZE: process.env.ANALYZE,
 };
 
-// console.log(env);
+const rewrites = async () => {
+  return [
+    {
+      source: '/api/:path*',
+      destination: `${env.BACKEND_URL}/api/:path*`,
+    },
+  ];
+};
 
 const config: NextConfig = {
   reactStrictMode: true,
@@ -32,6 +39,7 @@ const config: NextConfig = {
     dirs: ['src', 'tests'],
   },
   output: 'standalone',
+  rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   turbopack: {
     // Workaround for https://github.com/vercel/next.js/issues/81628
     root: path.join(__dirname, '../..'),

@@ -9,6 +9,8 @@ import { originMap } from '@boluo/api/origin-map';
 
 export const backendUrlAtom = atom('');
 
+let warningShown = false;
+
 export const getDefaultBaseUrl = (): string => {
   const origin = window.location.origin;
   for (const [key, value] of Object.entries(originMap)) {
@@ -16,7 +18,10 @@ export const getDefaultBaseUrl = (): string => {
       return value;
     }
   }
-  console.warn('Unknown origin, using location.origin', origin);
+  if (!warningShown) {
+    console.warn('Unknown origin, using location.origin', origin);
+    warningShown = true;
+  }
   return origin;
 };
 

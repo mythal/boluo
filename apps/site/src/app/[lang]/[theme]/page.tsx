@@ -22,6 +22,10 @@ const Para: FC<{ children: ReactNode; className?: string }> = ({ children, class
   return <p className={['py-1', className].join(' ')}>{children}</p>;
 };
 
+const NewsItem: FC<{ children: ReactNode }> = ({ children }) => {
+  return <li className="py-1 text-sm">{children}</li>;
+};
+
 export default async function Page({ params }: { params: Promise<Params> }) {
   const intl = await getIntl(await params);
   return (
@@ -48,7 +52,32 @@ export default async function Page({ params }: { params: Promise<Params> }) {
       </Card>
       <Card>
         <div className="font-bold">{intl.formatMessage({ defaultMessage: 'News' })}</div>
-        <Para>Nothing new here.</Para>
+        <ul className="list-disc py-4 pl-4">
+          <NewsItem>
+            建立了
+            <a
+              href="https://zh.mythal.net"
+              target="_blank"
+              rel="noreferrer"
+              className={classes.link}
+            >
+              新的论坛
+            </a>
+            ，可以在论坛里反馈问题和讨论了！（登录需要验证电子邮箱）
+          </NewsItem>
+          <NewsItem>
+            非常遗憾，由于 boluo.chat 域名被墙了，国内访问域名改成{' '}
+            <a
+              className={classes.link}
+              href="https://old.boluochat.com"
+              target="_blank"
+              rel="noreferrer"
+            >
+              boluochat.com
+            </a>
+            ，以后可以访问论坛获取最新消息。
+          </NewsItem>
+        </ul>
       </Card>
       <Card>
         <Para className="text-sm">

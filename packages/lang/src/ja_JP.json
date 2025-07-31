@@ -20,6 +20,9 @@
   "/DfISw": {
     "message": "編集をキャンセル"
   },
+  "/FW+vJ": {
+    "message": "You can found the source code at {githubUrl}."
+  },
   "/I//hN": {
     "message": "メッセージの読み込みに失敗しました ({errorCode})"
   },
@@ -116,6 +119,9 @@
   "60KMrS": {
     "message": "デフォルトとして"
   },
+  "62nsdy": {
+    "message": "Retry"
+  },
   "64sfSN": {
     "message": "やめる"
   },
@@ -136,6 +142,9 @@
   },
   "6QtXvB": {
     "message": "Verification email sent! Please check your inbox."
+  },
+  "6WiliO": {
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "接続中"
@@ -305,9 +314,6 @@
   "IN8rCW": {
     "message": "無効な招待リンク"
   },
-  "INVcoD": {
-    "message": "現在開発中なので、全てでか安定ではない。"
-  },
   "IPvPs7": {
     "message": "Send verification email"
   },
@@ -386,11 +392,17 @@
   "LnM0On": {
     "message": "{a} と {b} は入力しています…"
   },
+  "Lzb4s2": {
+    "message": "Move failed"
+  },
   "MWO2zy": {
     "message": "何か問題が起きています."
   },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
+  },
+  "MjKIej": {
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "メッセージを送信するには、どのキーを使用しますか？"
@@ -463,9 +475,6 @@
   },
   "Q8Qw5B": {
     "message": "説明"
-  },
-  "Q8hmJq": {
-    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
@@ -635,11 +644,17 @@
   "Yf3xiD": {
     "message": "{days} 日前"
   },
+  "Yh4Uqn": {
+    "message": "Your email has been verified. You will be redirected shortly."
+  },
   "YjO/0+": {
     "message": "ご自身"
   },
   "Yq91Dy": {
     "message": "「{channelName}」をエクスポート"
+  },
+  "Yw/mtA": {
+    "message": "Edit failed"
   },
   "Yy/yDL": {
     "message": "パスワードをリセット"
@@ -745,6 +760,12 @@
   },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
+  },
+  "ecjViF": {
+    "message": "Delete failed"
+  },
+  "f00p/7": {
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "ファイルを追加"

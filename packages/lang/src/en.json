@@ -116,6 +116,9 @@
   "60KMrS": {
     "message": "As Default"
   },
+  "62nsdy": {
+    "message": "Retry"
+  },
   "64sfSN": {
     "message": "Nevermind"
   },
@@ -386,11 +389,17 @@
   "LnM0On": {
     "message": "{a} and {b} are composing…"
   },
+  "Lzb4s2": {
+    "message": "Move failed"
+  },
   "MWO2zy": {
     "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
+  },
+  "MjKIej": {
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "Which key to use to send a message?"
@@ -641,6 +650,9 @@
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
   },
+  "Yw/mtA": {
+    "message": "Edit failed"
+  },
   "Yy/yDL": {
     "message": "Reset password"
   },
@@ -745,6 +757,12 @@
   },
   "ea+WlP": {
     "message": "You must be invited to join a private channel."
+  },
+  "ecjViF": {
+    "message": "Delete failed"
+  },
+  "f00p/7": {
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "Add a file"

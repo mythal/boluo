@@ -116,6 +116,9 @@
   "60KMrS": {
     "message": "设作默认"
   },
+  "62nsdy": {
+    "message": "Retry"
+  },
   "64sfSN": {
     "message": "罢了"
   },
@@ -386,11 +389,17 @@
   "LnM0On": {
     "message": "{a} 和 {b} 正撰写…"
   },
+  "Lzb4s2": {
+    "message": "Move failed"
+  },
   "MWO2zy": {
     "message": "出了点问题。"
   },
   "MgRaWS": {
     "message": "频道名不可为空"
+  },
+  "MjKIej": {
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "用哪个按键发送消息？"
@@ -641,6 +650,9 @@
   "Yq91Dy": {
     "message": "导出「{channelName}」"
   },
+  "Yw/mtA": {
+    "message": "Edit failed"
+  },
   "Yy/yDL": {
     "message": "重置密码"
   },
@@ -745,6 +757,12 @@
   },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
+  },
+  "ecjViF": {
+    "message": "Delete failed"
+  },
+  "f00p/7": {
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "添加文件"

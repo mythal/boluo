@@ -1,6 +1,7 @@
 import { type FC } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { PaneBox } from './PaneBox';
+import * as classes from '@boluo/ui/classes';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { GreetingHeader } from './GreetingHeader';
 
@@ -20,7 +21,38 @@ export const PaneWelcome: FC = () => {
           <FormattedMessage defaultMessage="This is Boluo, a chat app designed for tabletop roleplaying games." />
         </p>
         <p className="py-2">
-          <FormattedMessage defaultMessage="It's currently in active development and everything is unstable." />
+          <FormattedMessage
+            defaultMessage="The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
+            values={{
+              forumUrl: (
+                <a
+                  href="https://zh.mythal.net"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={classes.link}
+                >
+                  zh.mythal.net
+                </a>
+              ),
+            }}
+          />
+        </p>
+        <p className="py-2">
+          <FormattedMessage
+            defaultMessage="You can found the source code at {githubUrl}."
+            values={{
+              githubUrl: (
+                <a
+                  href="https://github.com/mythal/boluo"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={classes.link}
+                >
+                  github.com/mythal/boluo
+                </a>
+              ),
+            }}
+          />
         </p>
       </div>
     </PaneBox>

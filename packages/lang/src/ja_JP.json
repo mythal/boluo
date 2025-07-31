@@ -116,6 +116,9 @@
   "60KMrS": {
     "message": "デフォルトとして"
   },
+  "62nsdy": {
+    "message": "Retry"
+  },
   "64sfSN": {
     "message": "やめる"
   },
@@ -386,11 +389,17 @@
   "LnM0On": {
     "message": "{a} と {b} は入力しています…"
   },
+  "Lzb4s2": {
+    "message": "Move failed"
+  },
   "MWO2zy": {
     "message": "何か問題が起きています."
   },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
+  },
+  "MjKIej": {
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "メッセージを送信するには、どのキーを使用しますか？"
@@ -641,6 +650,9 @@
   "Yq91Dy": {
     "message": "「{channelName}」をエクスポート"
   },
+  "Yw/mtA": {
+    "message": "Edit failed"
+  },
   "Yy/yDL": {
     "message": "パスワードをリセット"
   },
@@ -745,6 +757,12 @@
   },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
+  },
+  "ecjViF": {
+    "message": "Delete failed"
+  },
+  "f00p/7": {
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "ファイルを追加"

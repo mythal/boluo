@@ -20,6 +20,9 @@
   "/DfISw": {
     "message": "取消编辑"
   },
+  "/FW+vJ": {
+    "message": "You can found the source code at {githubUrl}."
+  },
   "/I//hN": {
     "message": "载入消息失败 ({errorCode})"
   },
@@ -139,6 +142,9 @@
   },
   "6QtXvB": {
     "message": "验证邮件已发送！请检查收件箱。"
+  },
+  "6WiliO": {
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "正在连接"
@@ -308,9 +314,6 @@
   "IN8rCW": {
     "message": "无效的邀请链接"
   },
-  "INVcoD": {
-    "message": "目前正在积极开发，一切都不稳定。"
-  },
   "IPvPs7": {
     "message": "发送验证邮件"
   },
@@ -472,9 +475,6 @@
   },
   "Q8Qw5B": {
     "message": "描述"
-  },
-  "Q8hmJq": {
-    "message": "电子邮件已被验证。您将很快被重定向到主页。"
   },
   "QBYqL5": {
     "message": "查询位面成员失败"
@@ -643,6 +643,9 @@
   },
   "Yf3xiD": {
     "message": "{days} 天前"
+  },
+  "Yh4Uqn": {
+    "message": "Your email has been verified. You will be redirected shortly."
   },
   "YjO/0+": {
     "message": "我自己"

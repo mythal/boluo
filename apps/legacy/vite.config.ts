@@ -2,6 +2,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config({
+  path: ['.env.local', '.env'].flatMap((filename) => [
+    path.join(__dirname, filename),
+    path.join(__dirname, '../..', filename),
+  ]),
+});
 
 export default defineConfig({
   plugins: [

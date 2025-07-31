@@ -20,6 +20,9 @@
   "/DfISw": {
     "message": "取消编辑"
   },
+  "/FW+vJ": {
+    "message": "你可以在{githubUrl}查看源代码。"
+  },
   "/I//hN": {
     "message": "载入消息失败 ({errorCode})"
   },
@@ -116,6 +119,9 @@
   "60KMrS": {
     "message": "设作默认"
   },
+  "62nsdy": {
+    "message": "重试"
+  },
   "64sfSN": {
     "message": "罢了"
   },
@@ -136,6 +142,9 @@
   },
   "6QtXvB": {
     "message": "验证邮件已发送！请检查收件箱。"
+  },
+  "6WiliO": {
+    "message": "可以访问论坛 {forumUrl} 进行讨论和反馈。"
   },
   "6q3tCn": {
     "message": "正在连接"
@@ -305,9 +314,6 @@
   "IN8rCW": {
     "message": "无效的邀请链接"
   },
-  "INVcoD": {
-    "message": "目前正在积极开发，一切都不稳定。"
-  },
   "IPvPs7": {
     "message": "发送验证邮件"
   },
@@ -386,11 +392,17 @@
   "LnM0On": {
     "message": "{a} 和 {b} 正撰写…"
   },
+  "Lzb4s2": {
+    "message": "移动失败"
+  },
   "MWO2zy": {
     "message": "出了点问题。"
   },
   "MgRaWS": {
     "message": "频道名不可为空"
+  },
+  "MjKIej": {
+    "message": "发送失败"
   },
   "MoRJdV": {
     "message": "用哪个按键发送消息？"
@@ -463,9 +475,6 @@
   },
   "Q8Qw5B": {
     "message": "描述"
-  },
-  "Q8hmJq": {
-    "message": "电子邮件已被验证。您将很快被重定向到主页。"
   },
   "QBYqL5": {
     "message": "查询位面成员失败"
@@ -635,11 +644,17 @@
   "Yf3xiD": {
     "message": "{days} 天前"
   },
+  "Yh4Uqn": {
+    "message": "电子邮件已被验证。您将很快被重定向。"
+  },
   "YjO/0+": {
     "message": "我自己"
   },
   "Yq91Dy": {
     "message": "导出「{channelName}」"
+  },
+  "Yw/mtA": {
+    "message": "编辑失败"
   },
   "Yy/yDL": {
     "message": "重置密码"
@@ -745,6 +760,12 @@
   },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
+  },
+  "ecjViF": {
+    "message": "删除失败"
+  },
+  "f00p/7": {
+    "message": "上传失败"
   },
   "f0Sf6g": {
     "message": "添加文件"

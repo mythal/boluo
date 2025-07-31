@@ -20,6 +20,9 @@
   "/DfISw": {
     "message": "取消編輯"
   },
+  "/FW+vJ": {
+    "message": "You can found the source code at {githubUrl}."
+  },
   "/I//hN": {
     "message": "載入訊息失敗 ({errorCode})"
   },
@@ -116,6 +119,9 @@
   "60KMrS": {
     "message": "設作預設"
   },
+  "62nsdy": {
+    "message": "Retry"
+  },
   "64sfSN": {
     "message": "沒差"
   },
@@ -136,6 +142,9 @@
   },
   "6QtXvB": {
     "message": "Verification email sent! Please check your inbox."
+  },
+  "6WiliO": {
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "正在連接"
@@ -305,9 +314,6 @@
   "IN8rCW": {
     "message": "無效的邀請連結"
   },
-  "INVcoD": {
-    "message": "目前正在積極開發，一切都不穩定。"
-  },
   "IPvPs7": {
     "message": "Send verification email"
   },
@@ -386,11 +392,17 @@
   "LnM0On": {
     "message": "{a} 和 {b} 正撰寫…"
   },
+  "Lzb4s2": {
+    "message": "Move failed"
+  },
   "MWO2zy": {
     "message": "出了點問題。"
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
+  },
+  "MjKIej": {
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "用哪個按鍵發送訊息？"
@@ -463,9 +475,6 @@
   },
   "Q8Qw5B": {
     "message": "描述"
-  },
-  "Q8hmJq": {
-    "message": "Your email has been verified. You will be redirected to the home page shortly."
   },
   "QBYqL5": {
     "message": "查詢位面成員失敗"
@@ -635,11 +644,17 @@
   "Yf3xiD": {
     "message": "{days} 天前"
   },
+  "Yh4Uqn": {
+    "message": "Your email has been verified. You will be redirected shortly."
+  },
   "YjO/0+": {
     "message": "我自己"
   },
   "Yq91Dy": {
     "message": "匯出「{channelName}」"
+  },
+  "Yw/mtA": {
+    "message": "Edit failed"
   },
   "Yy/yDL": {
     "message": "重設密碼"
@@ -745,6 +760,12 @@
   },
   "ea+WlP": {
     "message": "加入私人頻道需要邀請"
+  },
+  "ecjViF": {
+    "message": "Delete failed"
+  },
+  "f00p/7": {
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "添加檔案"

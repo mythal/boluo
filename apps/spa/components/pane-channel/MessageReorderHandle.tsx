@@ -1,15 +1,18 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
 import { MoveVertical, TriangleAlert } from '@boluo/icons';
-import { type ReactNode } from 'react';
+import { FC, type ReactNode } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { Delay } from '../Delay';
 import { type FailTo } from '../../state/channel.types';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
+import { ChatItemMessageFail } from './ChatItemMessageFail';
+import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 
 type UseSortableReturn = ReturnType<typeof useSortable>;
 
 interface Props {
+  draggable: boolean;
   listeners?: UseSortableReturn['listeners'];
   attributes?: UseSortableReturn['attributes'];
   children?: React.ReactNode;
@@ -17,18 +20,24 @@ interface Props {
   ref?: React.Ref<HTMLDivElement>;
 }
 
-export const MessageReorderHandle = ({ listeners, attributes, failTo, ref }: Props) => {
+export const MessageReorderHandle: FC<Props> = ({
+  listeners,
+  attributes,
+  draggable,
+  failTo,
+  ref,
+}) => {
   const loading = useIsOptimistic();
-  if (loading) {
+  if (loading || !draggable) {
     listeners = undefined;
     attributes = undefined;
   }
-  let icon: ReactNode;
+  let icon: ReactNode = null;
   if (failTo) {
-    icon = <TriangleAlert className="text-text-danger inline text-xs" />;
+    icon = <ChatItemMessageFail failTo={failTo} />;
   } else if (loading) {
     icon = <Spinner className="inline text-xs" />;
-  } else {
+  } else if (draggable) {
     icon = <MoveVertical className="inline text-xs" />;
   }
   return (
@@ -39,8 +48,12 @@ export const MessageReorderHandle = ({ listeners, attributes, failTo, ref }: Pro
         {...attributes}
         className={clsx(
           'text-message-handle-text rounded-sm pl-2 text-right',
-          !loading && 'hover:text-message-handle-hover-text cursor-move',
-          loading && 'cursor-not-allowed',
+          draggable &&
+            !loading &&
+            failTo == null &&
+            'hover:text-message-handle-hover-text cursor-move',
+          failTo != null && 'cursor-not-allowed',
+          loading && 'cursor-wait',
         )}
       >
         <Delay>

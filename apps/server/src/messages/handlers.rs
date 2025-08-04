@@ -139,18 +139,35 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
         message_id,
         channel_id,
         range,
+        expect_pos,
     } = interface::parse_body(req).await?;
 
     let pool = db::get().await;
-    let mut trans = pool.begin().await?;
-    let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
+    let mut conn = pool.acquire().await?;
+    let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
+    crate::pos::CHANNEL_POS_MANAGER
+        .submitted(
+            channel_id,
+            message_id,
+            message.pos_p,
+            message.pos_q,
+            Some(message_id),
+        )
+        .await;
+    if let Some((expect_p, expect_q)) = expect_pos {
+        if message.pos_p != expect_p || message.pos_q != expect_q {
+            return Err(AppError::BadRequest(
+                "The message already moved".to_string(),
+            ));
+        }
+    }
+    let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
         .await
         .or_not_found()?;
     let channel_member = ChannelMember::get(
-        &mut *trans,
+        &mut *conn,
         session.user_id,
         channel.space_id,
         message.channel_id,
@@ -169,30 +186,19 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
             ));
         }
         (Some(a), Some((0, _) | (1, 0)) | None) => {
-            Message::move_bottom(&mut *trans, &channel_id, &message_id, a)
+            Message::move_bottom(&mut *conn, &channel_id, &message_id, a)
                 .await?
                 .or_not_found()?
         }
         (Some((_, 0) | (0, 1)) | None, Some(b)) => {
-            Message::move_above(&mut *trans, &channel_id, &message_id, b)
+            Message::move_above(&mut *conn, &channel_id, &message_id, b)
                 .await?
                 .or_not_found()?
         }
-        (Some(a), Some(b)) => Message::move_between(&mut trans, &message_id, channel_id, a, b)
+        (Some(a), Some(b)) => Message::move_between(&mut conn, &message_id, channel_id, a, b)
             .await?
             .or_not_found()?,
     };
-
-    trans.commit().await?;
-    crate::pos::CHANNEL_POS_MANAGER
-        .submitted(
-            channel_id,
-            message_id,
-            moved_message.pos_p,
-            moved_message.pos_q,
-            Some(message_id),
-        )
-        .await;
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }

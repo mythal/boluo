@@ -181,6 +181,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
           post('/messages/move_between', null, {
             channelId,
             messageId: draggingMessage.id,
+            expectPos: [draggingMessage.posP, draggingMessage.posQ],
             range,
           }),
           timeout(8000),

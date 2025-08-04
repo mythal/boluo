@@ -345,7 +345,7 @@ impl Message {
     ) -> Result<Option<Message>, ModelError> {
         check_pos(pos)?;
 
-        sqlx::query_file_scalar!(
+        let moved_message = sqlx::query_file_scalar!(
             "sql/messages/move_above.sql",
             channel_id,
             message_id,
@@ -353,8 +353,21 @@ impl Message {
             pos.1
         )
         .fetch_optional(db)
-        .await
-        .map_err(Into::into)
+        .await?;
+        if let Some(moved_message) = moved_message {
+            crate::pos::CHANNEL_POS_MANAGER
+                .submitted(
+                    moved_message.channel_id,
+                    moved_message.id,
+                    moved_message.pos_p,
+                    moved_message.pos_q,
+                    Some(moved_message.id),
+                )
+                .await;
+            Ok(Some(moved_message))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn move_bottom<'c, T: sqlx::PgExecutor<'c>>(
@@ -364,7 +377,7 @@ impl Message {
         pos: (i32, i32),
     ) -> Result<Option<Message>, ModelError> {
         check_pos(pos)?;
-        sqlx::query_file_scalar!(
+        let moved_message = sqlx::query_file_scalar!(
             "sql/messages/move_bottom.sql",
             channel_id,
             message_id,
@@ -372,8 +385,21 @@ impl Message {
             pos.1
         )
         .fetch_optional(db)
-        .await
-        .map_err(Into::into)
+        .await?;
+        if let Some(moved_message) = moved_message {
+            crate::pos::CHANNEL_POS_MANAGER
+                .submitted(
+                    moved_message.channel_id,
+                    moved_message.id,
+                    moved_message.pos_p,
+                    moved_message.pos_q,
+                    Some(moved_message.id),
+                )
+                .await;
+            Ok(Some(moved_message))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn move_between(
@@ -417,19 +443,54 @@ impl Message {
             return Ok(None);
         };
         if message_in_pos.id == *id {
+            crate::pos::CHANNEL_POS_MANAGER
+                .submitted(
+                    message_in_pos.channel_id,
+                    message_in_pos.id,
+                    message_in_pos.pos_p,
+                    message_in_pos.pos_q,
+                    Some(message_in_pos.id),
+                )
+                .await;
             Ok(Some(message_in_pos))
         } else {
+            crate::pos::CHANNEL_POS_MANAGER
+                .cancel(channel_id, *id)
+                .await;
             let message_in_pos_id = message_in_pos.id;
+            crate::pos::CHANNEL_POS_MANAGER
+                .submitted(
+                    channel_id,
+                    message_in_pos_id,
+                    message_in_pos.pos_p,
+                    message_in_pos.pos_q,
+                    Some(message_in_pos.id),
+                )
+                .await;
             tracing::warn!(
                 "Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}"
             );
-            Message::move_bottom(
+            let moved_message = Message::move_bottom(
                 db,
                 &channel_id,
                 id,
                 (message_in_pos.pos_p, message_in_pos.pos_q),
             )
-            .await
+            .await?;
+            if let Some(moved_message) = moved_message {
+                crate::pos::CHANNEL_POS_MANAGER
+                    .submitted(
+                        channel_id,
+                        moved_message.id,
+                        moved_message.pos_p,
+                        moved_message.pos_q,
+                        Some(moved_message.id),
+                    )
+                    .await;
+                Ok(Some(moved_message))
+            } else {
+                Ok(None)
+            }
         }
     }
     pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(

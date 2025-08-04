@@ -357,6 +357,7 @@ export type MessageMoveToMode = 'TOP' | 'BOTTOM';
 export type MoveMessageBetween = {
   messageId: string;
   range: [[number, number] | null, [number, number] | null];
+  expectPos?: [number, number] | null;
   channelId: string;
 };
 

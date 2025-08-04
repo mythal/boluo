@@ -48,6 +48,8 @@ pub struct MoveMessageBetween {
     pub message_id: Uuid,
     #[allow(clippy::type_complexity)]
     pub range: (Option<(i32, i32)>, Option<(i32, i32)>),
+    #[serde(default)]
+    pub expect_pos: Option<(i32, i32)>,
     pub channel_id: Uuid,
 }
 

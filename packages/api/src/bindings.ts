@@ -162,10 +162,10 @@ export type EditMessage = {
   messageId: string;
   name: string;
   text: string;
-  entities: Entities;
-  inGame: boolean;
-  isAction: boolean;
-  mediaId: string | null;
+  entities?: Entities;
+  inGame?: boolean;
+  isAction?: boolean;
+  mediaId?: string | null;
   color?: string;
 };
 
@@ -357,22 +357,25 @@ export type MessageMoveToMode = 'TOP' | 'BOTTOM';
 export type MoveMessageBetween = {
   messageId: string;
   range: [[number, number] | null, [number, number] | null];
+  /**
+   * The original position of the message, at the time of the client sending the request.
+   */
   expectPos?: [number, number] | null;
   channelId: string;
 };
 
 export type NewMessage = {
-  messageId: string | null;
-  previewId: string | null;
+  messageId?: string | null;
+  previewId?: string | null;
   channelId: string;
   name: string;
   text: string;
-  entities: Entities;
+  entities?: Entities;
   inGame: boolean;
-  isAction: boolean;
-  mediaId: string | null;
-  whisperToUsers: string[] | null;
-  pos: [number, number] | null;
+  isAction?: boolean;
+  mediaId?: string | null;
+  whisperToUsers?: string[] | null;
+  pos?: [number, number] | null;
   color?: string;
 };
 

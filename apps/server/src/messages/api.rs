@@ -6,16 +6,23 @@ use super::models::Entities;
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct NewMessage {
+    #[serde(default)]
     pub message_id: Option<Uuid>,
+    #[serde(default)]
     pub preview_id: Option<Uuid>,
     pub channel_id: Uuid,
     pub name: String,
     pub text: String,
+    #[serde(default)]
     pub entities: Entities,
     pub in_game: bool,
+    #[serde(default)]
     pub is_action: bool,
+    #[serde(default)]
     pub media_id: Option<Uuid>,
+    #[serde(default)]
     pub whisper_to_users: Option<Vec<Uuid>>,
+    #[serde(default)]
     pub pos: Option<(i32, i32)>,
     #[serde(default)]
     pub color: String,
@@ -27,9 +34,13 @@ pub struct EditMessage {
     pub message_id: Uuid,
     pub name: String,
     pub text: String,
+    #[serde(default)]
     pub entities: Entities,
+    #[serde(default)]
     pub in_game: bool,
+    #[serde(default)]
     pub is_action: bool,
+    #[serde(default)]
     pub media_id: Option<Uuid>,
     #[serde(default)]
     pub color: String,
@@ -48,6 +59,7 @@ pub struct MoveMessageBetween {
     pub message_id: Uuid,
     #[allow(clippy::type_complexity)]
     pub range: (Option<(i32, i32)>, Option<(i32, i32)>),
+    /// The original position of the message, at the time of the client sending the request.
     #[serde(default)]
     pub expect_pos: Option<(i32, i32)>,
     pub channel_id: Uuid,

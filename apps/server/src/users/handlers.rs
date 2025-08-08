@@ -153,6 +153,9 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
 
 pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session;
+    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
+    use std::num::NonZeroU32;
+
     let origin = req
         .headers()
         .get(hyper::header::ORIGIN)
@@ -160,10 +163,24 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         .map(|s| s.to_string());
     let is_debug = req.headers().get("X-Debug").is_some();
     let form: Login = interface::parse_body(req).await?;
+
+    // Rate limiting for login attempts: 10 attempts per minute per username
+    static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
+        LazyLock::new(|| RateLimiter::keyed(Quota::per_minute(NonZeroU32::new(10).unwrap())));
+
+    // Normalize username for consistent rate limiting (case-insensitive, trimmed)
+    let username = form.username.trim().to_lowercase();
+    LOGIN_LIMITER.check_key(&username).map_err(|_| {
+        tracing::warn!(
+            username = %form.username,
+            "Login rate limit exceeded for username"
+        );
+        AppError::LimitExceeded("Too many login attempts, please try again later.")
+    })?;
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
     let login_failed_counter = metrics::counter!("boluo_server_users_login_failed_total");
-    let user = User::login(&mut *conn, &form.username, &form.password)
+    let user = User::login(&mut *conn, &username, &form.password)
         .await
         .inspect_err(
             |err| {

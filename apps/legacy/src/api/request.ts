@@ -4,7 +4,7 @@ import store from '../store';
 import { Id } from '../utils/id';
 import { Err, Ok, Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
-import type { MakeToken } from '@boluo/api/bindings';
+import type { MakeToken, MoveMessageBetween } from '@boluo/api/bindings';
 import {
   AddMember,
   Channel,
@@ -235,7 +235,7 @@ export function post(
 export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<Message>>;
 export function post(
   path: '/messages/move_between',
-  payload: MoveBetween,
+  payload: MoveMessageBetween,
 ): Promise<AppResult<Message>>;
 export function post(
   path: '/media/presigned',

@@ -129,7 +129,12 @@ function useOnDragEnd(
         return;
       }
 
-      const result = await post('/messages/move_between', { messageId, channelId, range: [a, b] });
+      const result = await post('/messages/move_between', {
+        messageId,
+        channelId,
+        expectPos: [sourceItem.message.posP, sourceItem.message.posQ],
+        range: [a, b],
+      });
       if (!result.isOk) {
         const reset: ResetMessageMoving = {
           type: 'RESET_MESSAGE_MOVING',

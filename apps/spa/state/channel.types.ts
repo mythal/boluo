@@ -1,4 +1,5 @@
 import { type Message, type Preview } from '@boluo/api';
+import { ComposeState } from './compose.reducer';
 
 export type PreviewItem = Preview & {
   type: 'PREVIEW';
@@ -11,8 +12,8 @@ export type PreviewItem = Preview & {
 };
 
 export type FailTo =
-  | { type: 'SEND'; onUpload?: boolean }
-  | { type: 'EDIT'; onUpload?: boolean }
+  | { type: 'SEND'; onUpload?: boolean; composeState: ComposeState }
+  | { type: 'EDIT'; onUpload?: boolean; composeState: ComposeState }
   | { type: 'DELETE' }
   | { type: 'UPLOAD' }
   | { type: 'MOVE' };

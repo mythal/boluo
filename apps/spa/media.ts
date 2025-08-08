@@ -1,6 +1,6 @@
 import { type FetchFailError, type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Err, Ok, type Result } from '@boluo/utils';
+import { Err, Ok, timeout, type Result } from '@boluo/utils';
 import { recordError, recordWarn } from './error';
 
 export const mediaMaxSizeMb = 8;
@@ -13,7 +13,7 @@ interface S3Error {
   err: Response;
 }
 
-export const makeMeidaPublicUrl = (raw: unknown) => {
+export const makeMediaPublicUrl = (raw: unknown) => {
   if (typeof raw !== 'string') {
     throw new Error('The public media URL is not defined');
   }
@@ -87,24 +87,38 @@ interface MediaValidationError {
   err: MediaError;
 }
 
-type UploadError = PreSignFail | MediaValidationError | FetchFailError | S3Error;
+interface TimeoutError {
+  type: 'TIMEOUT';
+}
+
+const PRESIGN_TIMEOUT = 2000;
+const UPLOAD_TIMEOUT = 10000;
+
+type UploadError = PreSignFail | MediaValidationError | FetchFailError | S3Error | TimeoutError;
 
 export const upload = async (file: File): Promise<Result<{ mediaId: string }, UploadError>> => {
   const validateResult = validateMedia(file);
   if (!validateResult.isOk) {
     return new Err({ type: 'MEDIA_VALIDATION_ERROR', err: validateResult.err });
   }
-  const presignResult = await post(
+  const presignPromise = post(
     '/media/presigned',
     { filename: file.name, mimeType: file.type, size: file.size },
     {},
   );
+  const presignResult = await Promise.race([presignPromise, timeout(PRESIGN_TIMEOUT)]);
+  if (presignResult === 'TIMEOUT') {
+    return new Err({ type: 'TIMEOUT' });
+  }
   if (!presignResult.isOk) {
     recordError('Failed to get presigned url', { error: presignResult.err });
     return new Err({ type: 'PRESIGN_FAIL', err: presignResult.err });
   }
   const { url, mediaId } = presignResult.some;
-  const uploadResult = await uploadImageToS3(file, url);
+  const uploadResult = await Promise.race([uploadImageToS3(file, url), timeout(UPLOAD_TIMEOUT)]);
+  if (uploadResult === 'TIMEOUT') {
+    return new Err({ type: 'TIMEOUT' });
+  }
   if (uploadResult.isErr) return uploadResult;
   return new Ok({ mediaId });
 };

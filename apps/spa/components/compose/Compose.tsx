@@ -49,7 +49,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const { inGameAtom, isWhisperAtom, parsedAtom, isEditingAtom } = channelAtoms;
   const settings = useSettings();
   const enterSend = settings?.enterSend === true;
-  const send = useSend(member.user);
+  const send = useSend();
   const { onDrop } = useMediaDrop();
   useEffect(() => {
     const { virtualKeyboard } = navigator;

@@ -1,7 +1,7 @@
-import { type NewMessage, type User, type EditMessage, JsonValue } from '@boluo/api';
+import { type NewMessage, type EditMessage, type MemberWithUser } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
@@ -14,49 +14,53 @@ import { type ChatActionUnion } from '../../state/chat.actions';
 import { chatAtom } from '../../state/chat.atoms';
 import { timeout } from '@boluo/utils';
 import { type FailTo } from '../../state/channel.types';
+import { useIntl } from 'react-intl';
 
-export const useSend = (me: User) => {
+const SEND_TIMEOUT = 8000;
+
+export const useSend = () => {
   const channelId = useChannelId();
   const defaultInGame = useDefaultInGame();
+  const intl = useIntl();
   const { composeAtom, parsedAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
   const store = useStore();
+
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
-  const queryChannelMembersRef = useRef(queryChannelMembers);
-  queryChannelMembersRef.current = queryChannelMembers;
-  const { nickname } = me;
   const myMember = useMemo(() => {
     if (queryChannelMembers == null) return null;
-    return queryChannelMembers.members.find((member) => member.user.id === me.id) ?? null;
-  }, [me.id, queryChannelMembers]);
-
-  const usernameListToUserIdList = useCallback((usernames: string[]): string[] => {
-    const queryChannelMembers = queryChannelMembersRef.current;
-    if (queryChannelMembers == null) return [];
-    return usernames.flatMap((username) => {
-      const member = queryChannelMembers.members.find(
-        (member) => member.user.username === username,
-      );
-      if (member == null) return [];
-      return [member.user.id];
-    });
-  }, []);
+    if (queryChannelMembers.selfIndex == null) return null;
+    return queryChannelMembers.members[queryChannelMembers.selfIndex] ?? null;
+  }, [queryChannelMembers]);
+  const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
+    if (queryChannelMembers == null) return new Map();
+    return new Map(queryChannelMembers.members.map((member) => [member.user.username, member]));
+  }, [queryChannelMembers]);
 
   const send = useCallback(async () => {
     const sendStartTime = Date.now();
     if (myMember == null) {
-      recordWarn('Cannot find my channel member');
+      recordWarn('Can not find current user in channel');
+      alert(
+        intl.formatMessage({
+          defaultMessage: 'Can not send message, please check if you are in the channel.',
+        }),
+      );
       return;
     }
+    const nickname = myMember.user.nickname;
     const compose = store.get(composeAtom);
     const parsed = store.get(parsedAtom);
     if (store.get(checkComposeAtom) != null) return;
-    const dispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
+    const composeDispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
-    const isEditing = compose.edit != null;
-    dispatch({ type: 'sent', payload: { edit: isEditing } });
+    composeDispatch({ type: 'sent', payload: { edit: compose.edit != null } });
     const { text, entities, whisperToUsernames } = parse(compose.source, true, {
       defaultDiceFace: defaultDiceFaceRef.current,
-      resolveUsername: (username) => null,
+      resolveUsername: (username) => {
+        const member = channelMembersMap.get(username);
+        if (member == null) return null;
+        return member.user.nickname;
+      },
     });
     let name = nickname;
     const inGame = parsed.inGame ?? defaultInGame;
@@ -71,7 +75,17 @@ export const useSend = (me: User) => {
     let payload:
       | { type: 'NEW'; newMessage: NewMessage }
       | { type: 'EDIT'; editMessage: EditMessage };
-    if (!isEditing) {
+    if (compose.edit == null) {
+      const usernameListToUserIdList = (usernames: string[]): string[] => {
+        if (channelMembersMap.size === 0 || usernames.length === 0) {
+          return [];
+        }
+        return usernames.flatMap((username) => {
+          const member = channelMembersMap.get(username);
+          if (member == null) return [];
+          return [member.user.id];
+        });
+      };
       payload = {
         type: 'NEW',
         newMessage: {
@@ -83,10 +97,9 @@ export const useSend = (me: User) => {
           entities,
           inGame,
           isAction: parsed.isAction,
-          mediaId: null,
-          pos: null,
-          whisperToUsers: whisperToUsernames ? usernameListToUserIdList(whisperToUsernames) : null,
-          color: '',
+          whisperToUsers: whisperToUsernames
+            ? usernameListToUserIdList(whisperToUsernames)
+            : undefined,
         },
       };
       chatDispatch({
@@ -101,10 +114,11 @@ export const useSend = (me: User) => {
       payload = {
         type: 'EDIT',
         editMessage: {
+          // In edit mode, the `compose.previewId` is the message id.
           messageId: compose.previewId,
           name,
-          text: parsed.text,
-          entities: parsed.entities,
+          text,
+          entities,
           inGame,
           isAction: parsed.isAction,
           mediaId: typeof compose.media === 'string' ? compose.media : null,
@@ -130,10 +144,10 @@ export const useSend = (me: User) => {
       let failTo: FailTo;
       if (payload.type === 'NEW') {
         key = compose.previewId;
-        failTo = { type: 'SEND', onUpload: true };
+        failTo = { type: 'SEND', onUpload: true, composeState: compose };
       } else {
         key = payload.editMessage.messageId;
-        failTo = { type: 'EDIT', onUpload: true };
+        failTo = { type: 'EDIT', onUpload: true, composeState: compose };
       }
       chatDispatch({ type: 'fail', payload: { failTo, key } });
       return;
@@ -147,12 +161,15 @@ export const useSend = (me: User) => {
       });
       const result = await Promise.race([
         patch('/messages/edit', null, payload.editMessage),
-        timeout(8000),
+        timeout(SEND_TIMEOUT),
       ]);
       if (result === 'TIMEOUT' || !result.isOk) {
         chatDispatch({
           type: 'fail',
-          payload: { failTo: { type: 'EDIT' }, key: payload.editMessage.messageId },
+          payload: {
+            failTo: { type: 'EDIT', composeState: compose },
+            key: payload.editMessage.messageId,
+          },
         });
       }
     } else {
@@ -163,26 +180,29 @@ export const useSend = (me: User) => {
       });
       const result = await Promise.race([
         post('/messages/send', null, payload.newMessage),
-        timeout(8000),
+        timeout(SEND_TIMEOUT),
       ]);
       if ((result === 'TIMEOUT' || !result.isOk) && payload.newMessage.previewId) {
         chatDispatch({
           type: 'fail',
-          payload: { failTo: { type: 'SEND' }, key: payload.newMessage.previewId },
+          payload: {
+            failTo: { type: 'SEND', composeState: compose },
+            key: payload.newMessage.previewId,
+          },
         });
       }
     }
   }, [
-    channelId,
-    checkComposeAtom,
+    myMember,
+    store,
     composeAtom,
+    parsedAtom,
+    checkComposeAtom,
     defaultDiceFaceRef,
     defaultInGame,
-    myMember,
-    nickname,
-    parsedAtom,
-    store,
-    usernameListToUserIdList,
+    intl,
+    channelMembersMap,
+    channelId,
   ]);
 
   return send;

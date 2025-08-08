@@ -25,7 +25,7 @@ export interface OptimisticMessage {
 }
 
 const editMessageOptimisticItem = (
-  { name, text, entities, inGame, isAction, mediaId, color }: EditMessage,
+  { name, text, entities = [], inGame, isAction, mediaId, color }: EditMessage,
   previousMessage: MessageItem,
   sendTime: number,
   media: File | null,
@@ -81,7 +81,7 @@ const newMessageOptimisticItem = (
     text: newMessage.text,
     folded: false,
     modified: created,
-    entities: newMessage.entities,
+    entities: newMessage.entities ?? [],
     whisperToUsers: newMessage.whisperToUsers,
     created,
     tags: [],

@@ -186,12 +186,12 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
             ));
         }
         (Some(a), Some((0, _) | (1, 0)) | None) => {
-            Message::move_bottom(&mut *conn, &channel_id, &message_id, a)
+            Message::move_bottom(&mut conn, &channel_id, &message_id, a)
                 .await?
                 .or_not_found()?
         }
         (Some((_, 0) | (0, 1)) | None, Some(b)) => {
-            Message::move_above(&mut *conn, &channel_id, &message_id, b)
+            Message::move_above(&mut conn, &channel_id, &message_id, b)
                 .await?
                 .or_not_found()?
         }

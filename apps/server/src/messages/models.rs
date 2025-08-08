@@ -337,8 +337,8 @@ impl Message {
         self.entities = Default::default();
     }
 
-    pub async fn move_above<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn move_above(
+        db: &mut sqlx::PgConnection,
         channel_id: &Uuid,
         message_id: &Uuid,
         pos: (i32, i32),
@@ -370,8 +370,8 @@ impl Message {
         }
     }
 
-    pub async fn move_bottom<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn move_bottom(
+        db: &mut sqlx::PgConnection,
         channel_id: &Uuid,
         message_id: &Uuid,
         pos: (i32, i32),

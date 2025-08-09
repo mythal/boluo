@@ -6,6 +6,7 @@ import type { ChatReducerContext } from './chat.reducer';
 import { recordWarn } from '../error';
 import type { List } from 'list';
 import * as L from 'list';
+import { ComposeState } from './compose.reducer';
 
 export type UserId = string;
 
@@ -17,6 +18,7 @@ export interface OptimisticItem {
   optimisticPos: number;
   timestamp: number;
   item: MessageItem | PreviewItem;
+  composeState?: ComposeState;
 }
 
 export interface OptimisticMessage {
@@ -29,6 +31,7 @@ const editMessageOptimisticItem = (
   previousMessage: MessageItem,
   sendTime: number,
   media: File | null,
+  composeState?: ComposeState,
 ): OptimisticMessage => {
   const message: MessageItem = {
     ...previousMessage,
@@ -46,6 +49,7 @@ const editMessageOptimisticItem = (
     optimisticPos: previousMessage.pos,
     timestamp: sendTime,
     item: message,
+    composeState,
   };
   return { ref: previousMessage, item };
 };
@@ -55,6 +59,7 @@ const newMessageOptimisticItem = (
   preview: PreviewItem,
   sendTime: number,
   media: File | null,
+  composeState?: ComposeState,
 ): OptimisticMessage => {
   const created = new Date(sendTime).toISOString();
   const id = newMessage.previewId ?? preview.id;
@@ -86,7 +91,12 @@ const newMessageOptimisticItem = (
     created,
     tags: [],
   };
-  const item: OptimisticItem = { optimisticPos: preview.pos, timestamp: sendTime, item: message };
+  const item: OptimisticItem = {
+    optimisticPos: preview.pos,
+    timestamp: sendTime,
+    item: message,
+    composeState,
+  };
   return { ref: preview, item };
 };
 
@@ -241,14 +251,20 @@ const handleMessagesLoaded = (
 
 const handleMessageSending = (
   state: ChannelState,
-  { payload: { newMessage, sendTime, media } }: ChatAction<'messageSending'>,
+  { payload: { newMessage, sendTime, media, composeState } }: ChatAction<'messageSending'>,
 ): ChannelState => {
   if (!newMessage.previewId) return state;
   const preview = Object.values(state.previewMap).find(
     (preview) => preview.id === newMessage.previewId,
   );
   if (!preview) return state;
-  const optimisticItem = newMessageOptimisticItem(newMessage, preview, sendTime, media);
+  const optimisticItem = newMessageOptimisticItem(
+    newMessage,
+    preview,
+    sendTime,
+    media,
+    composeState,
+  );
   return {
     ...state,
     optimisticMessageMap: { ...state.optimisticMessageMap, [newMessage.previewId]: optimisticItem },
@@ -257,11 +273,17 @@ const handleMessageSending = (
 
 const handleMessageEditing = (
   state: ChannelState,
-  { payload: { editMessage, sendTime, media } }: ChatAction<'messageEditing'>,
+  { payload: { editMessage, sendTime, media, composeState } }: ChatAction<'messageEditing'>,
 ): ChannelState => {
   const previousMessage = L.find(({ id }) => id === editMessage.messageId, state.messages);
   if (!previousMessage) return state;
-  const optimisticItem = editMessageOptimisticItem(editMessage, previousMessage, sendTime, media);
+  const optimisticItem = editMessageOptimisticItem(
+    editMessage,
+    previousMessage,
+    sendTime,
+    media,
+    composeState,
+  );
   return {
     ...state,
     optimisticMessageMap: {

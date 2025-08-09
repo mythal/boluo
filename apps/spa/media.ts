@@ -94,7 +94,12 @@ interface TimeoutError {
 const PRESIGN_TIMEOUT = 2000;
 const UPLOAD_TIMEOUT = 10000;
 
-type UploadError = PreSignFail | MediaValidationError | FetchFailError | S3Error | TimeoutError;
+export type UploadError =
+  | PreSignFail
+  | MediaValidationError
+  | FetchFailError
+  | S3Error
+  | TimeoutError;
 
 export const upload = async (file: File): Promise<Result<{ mediaId: string }, UploadError>> => {
   const validateResult = validateMedia(file);

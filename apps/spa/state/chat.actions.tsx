@@ -12,11 +12,22 @@ import type { Empty } from '@boluo/utils';
 import { type MakeAction } from './actions';
 import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';
+import { ComposeState } from './compose.reducer';
 
 export type ChatActionMap = {
   receiveMessage: UpdateBody & { type: 'NEW_MESSAGE' };
-  messageSending: { newMessage: NewMessage; sendTime: number; media: File | null };
-  messageEditing: { editMessage: EditMessage; sendTime: number; media: File | null };
+  messageSending: {
+    newMessage: NewMessage;
+    sendTime: number;
+    media: File | null;
+    composeState: ComposeState;
+  };
+  messageEditing: {
+    editMessage: EditMessage;
+    sendTime: number;
+    media: File | null;
+    composeState: ComposeState;
+  };
   setOptimisticMessage: OptimisticMessage;
   removeOptimisticMessage: { id: string };
   fail: { failTo: FailTo; key: string };

@@ -923,6 +923,9 @@
   "pm/HIR": {
     "message": "Channel name is required."
   },
+  "po7PV2": {
+    "message": "Can not send message, please check if you are in the channel."
+  },
   "q7JBy1": {
     "message": "Change Settings"
   },

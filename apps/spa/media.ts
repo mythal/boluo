@@ -1,4 +1,4 @@
-import { type FetchFailError, type ApiError } from '@boluo/api';
+import { type FetchFailError, type ApiError, PreSignResult } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { Err, Ok, timeout, type Result } from '@boluo/utils';
 import { recordError, recordWarn } from './error';
@@ -101,28 +101,47 @@ export type UploadError =
   | S3Error
   | TimeoutError;
 
+const TIMEOUT = 'TIMEOUT';
+
+export const presign = async (
+  file: File,
+): Promise<Result<{ url: string; mediaId: string }, UploadError>> => {
+  const validateResult = validateMedia(file);
+  if (!validateResult.isOk) {
+    return new Err({ type: 'MEDIA_VALIDATION_ERROR', err: validateResult.err });
+  }
+  const makePresignPromise = () =>
+    post('/media/presigned', { filename: file.name, mimeType: file.type, size: file.size }, {});
+  const makeTimeoutPromise = () => timeout(PRESIGN_TIMEOUT);
+
+  let presignResult = await Promise.race([makePresignPromise(), makeTimeoutPromise()]);
+  if (presignResult === TIMEOUT || !presignResult.isOk) {
+    // Retry
+    presignResult = await Promise.race([makePresignPromise(), makeTimeoutPromise()]);
+  }
+  if (presignResult === TIMEOUT) {
+    return new Err({ type: TIMEOUT });
+  }
+  if (presignResult.isErr) {
+    return new Err({ type: 'PRESIGN_FAIL', err: presignResult.err });
+  }
+  const { url, mediaId } = presignResult.some;
+  return new Ok({ url, mediaId });
+};
+
 export const upload = async (file: File): Promise<Result<{ mediaId: string }, UploadError>> => {
   const validateResult = validateMedia(file);
   if (!validateResult.isOk) {
     return new Err({ type: 'MEDIA_VALIDATION_ERROR', err: validateResult.err });
   }
-  const presignPromise = post(
-    '/media/presigned',
-    { filename: file.name, mimeType: file.type, size: file.size },
-    {},
-  );
-  const presignResult = await Promise.race([presignPromise, timeout(PRESIGN_TIMEOUT)]);
-  if (presignResult === 'TIMEOUT') {
-    return new Err({ type: 'TIMEOUT' });
-  }
+  const presignResult = await presign(file);
   if (!presignResult.isOk) {
-    recordError('Failed to get presigned url', { error: presignResult.err });
-    return new Err({ type: 'PRESIGN_FAIL', err: presignResult.err });
+    return new Err(presignResult.err);
   }
   const { url, mediaId } = presignResult.some;
   const uploadResult = await Promise.race([uploadImageToS3(file, url), timeout(UPLOAD_TIMEOUT)]);
-  if (uploadResult === 'TIMEOUT') {
-    return new Err({ type: 'TIMEOUT' });
+  if (uploadResult === TIMEOUT) {
+    return new Err({ type: TIMEOUT });
   }
   if (uploadResult.isErr) return uploadResult;
   return new Ok({ mediaId });

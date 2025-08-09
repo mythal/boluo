@@ -186,36 +186,209 @@
               };
             };
 
-            legacy = import ./support/legacy.nix common;
+            legacy =
+              let
+                src = pruneSource "legacy";
+              in
+              pkgs.buildNpmPackage {
+                pname = "boluo-legacy";
 
-            legacy-image = import ./support/legacy-image.nix {
-              inherit pkgs imageLabel;
-              legacy = self'.packages.legacy;
-            };
+                inherit src version;
 
-            site = import ./support/site.nix common;
+                npmDeps = common.mkNpmDeps src;
+                npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
-            site-image = import ./support/site-image.nix {
-              boluo-site = self'.packages.site;
-              inherit
-                pkgs
-                commonEnv
+                installPhase = ''
+                  mkdir $out
+                  cp -r apps/legacy/dist/* $out
+                '';
+              };
+
+            legacy-image =
+              let
+                webRoot = self'.packages.legacy;
+                nginxPort = "80";
+                nginxConf = pkgs.writeText "nginx.conf" ''
+                  user nobody nobody;
+                  daemon off;
+                  error_log /dev/stdout info;
+                  pid /dev/null;
+                  events {}
+                  http {
+                    include ${pkgs.nginx}/conf/mime.types;
+                    access_log /dev/stdout;
+                    server {
+                      server_name _;
+                      listen ${nginxPort};
+                      listen [::]:${nginxPort};
+                      index index.html index.htm;
+                      location / {
+                        root ${webRoot};
+                        try_files $uri $uri/ $uri.html /index.html;
+                      }
+                      location /api {
+                        return 404;
+                      }
+                    }
+                  }
+                '';
+              in
+              pkgs.dockerTools.buildLayeredImage {
+                name = "boluo-legacy";
+                tag = "latest";
+
+                contents = [
+                  pkgs.fakeNss
+                  pkgs.nginx
+                ];
+                extraCommands = ''
+                  mkdir -p tmp/nginx_client_body
+
+                  # nginx still tries to read this directory even if error_log
+                  # directive is specifying another file :/
+                  mkdir -p var/log/nginx
+                '';
+                config = {
+                  Cmd = [
+                    "nginx"
+                    "-c"
+                    nginxConf
+                  ];
+                  ExposedPorts = {
+                    "${nginxPort}/tcp" = { };
+                  };
+                  Labels = imageLabel;
+                };
+              };
+
+            site =
+              let
+                src = pruneSource "site";
+              in
+              pkgs.buildNpmPackage {
+                inherit version src;
+                pname = "boluo-site";
+
+                npmDeps = common.mkNpmDeps src;
+                npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+
+                TURBO_TELEMETRY_DISABLED = 1;
+                NEXT_TELEMETRY_DISABLED = 1;
+
+                installPhase = ''
+                  mkdir -p $out/bin
+                  cp -r apps/site/.next/standalone/* $out
+                  cp -r apps/site/.next/static $out/apps/site/.next/static
+                  echo '#!/bin/sh' > $out/bin/boluo-site
+                  echo 'exec ${pkgs.nodejs}/bin/node' '"$(dirname $0)"'"/../apps/site/server.js" >> $out/bin/boluo-site
+                  chmod +x $out/bin/boluo-site
+                '';
+              };
+
+            site-image = pkgs.dockerTools.buildImage {
+              name = "boluo-site";
+              tag = "latest";
+              copyToRoot =
+                with pkgs;
                 commonImageContents
-                imageLabel
-                ;
+                ++ [
+                  curl
+                  nodejs
+                ];
+              runAsRoot = ''
+                cp -r ${self'.packages.site} /app
+              '';
+              config = {
+                Env = commonEnv ++ [
+                  "NEXT_TELEMETRY_DISABLED=1"
+                  "NODE_ENV=production"
+                ];
+                Cmd = [
+                  "node"
+                  "/app/apps/site/server.js"
+                ];
+                Labels = imageLabel;
+              };
             };
 
-            spa = import ./support/spa.nix common;
+            spa =
+              let
+                src = pruneSource "spa";
+              in
+              pkgs.buildNpmPackage {
+                pname = "boluo-spa";
+                inherit src version;
 
-            spa-image = import ./support/spa-image.nix {
-              inherit pkgs imageLabel;
-              boluo-spa = self'.packages.spa;
-            };
+                npmDeps = common.mkNpmDeps src;
+                npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+
+                installPhase = ''
+                  mkdir -p $out/bin
+                  cp -r apps/spa/out/* $out
+                '';
+              };
+
+            spa-image =
+              let
+                webRoot = self'.packages.spa;
+                nginxPort = "80";
+                nginxConf = pkgs.writeText "nginx.conf" ''
+                  user nobody nobody;
+                  daemon off;
+                  error_log /dev/stdout info;
+                  pid /dev/null;
+                  events {}
+                  http {
+                    include ${pkgs.nginx}/conf/mime.types;
+                    access_log /dev/stdout;
+                    server {
+                      server_name _;
+                      listen ${nginxPort};
+                      listen [::]:${nginxPort};
+                      index index.html index.htm;
+                      location / {
+                        root ${webRoot};
+                        try_files $uri $uri/ $uri.html /index.html;
+                      }
+                      location /api {
+                        return 404;
+                      }
+                    }
+                  }
+                '';
+              in
+              pkgs.dockerTools.buildLayeredImage {
+                name = "boluo-spa";
+                tag = "latest";
+
+                contents = [
+                  pkgs.fakeNss
+                  pkgs.nginx
+                ];
+                extraCommands = ''
+                  mkdir -p tmp/nginx_client_body
+
+                  # nginx still tries to read this directory even if error_log
+                  # directive is specifying another file :/
+                  mkdir -p var/log/nginx
+                '';
+                config = {
+                  Cmd = [
+                    "nginx"
+                    "-c"
+                    nginxConf
+                  ];
+                  ExposedPorts = {
+                    "${nginxPort}/tcp" = { };
+                  };
+                  Labels = imageLabel;
+                };
+              };
 
             push-images = pkgs.writeShellScriptBin "push-images" ''
               set -e
               skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
-              IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./support/image-tag.py})"
+              IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
               echo "Pushing images with tag: $IMAGE_TAG"
               BASE="docker://ghcr.io/mythal/boluo"
               ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" $BASE/server:$IMAGE_TAG

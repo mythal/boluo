@@ -923,6 +923,9 @@
   "pm/HIR": {
     "message": "必須填寫頻道名。"
   },
+  "po7PV2": {
+    "message": "Can not send message, please check if you are in the channel."
+  },
   "q7JBy1": {
     "message": "變更設定"
   },

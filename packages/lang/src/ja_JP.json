@@ -923,6 +923,9 @@
   "pm/HIR": {
     "message": "チャンネル名が必要です。"
   },
+  "po7PV2": {
+    "message": "Can not send message, please check if you are in the channel."
+  },
   "q7JBy1": {
     "message": "設定を変更"
   },

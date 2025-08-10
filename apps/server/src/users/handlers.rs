@@ -169,7 +169,11 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         LazyLock::new(|| RateLimiter::keyed(Quota::per_minute(NonZeroU32::new(10).unwrap())));
 
     // Normalize username for consistent rate limiting (case-insensitive, trimmed)
-    let username = form.username.trim().to_lowercase();
+    let username = if form.username.contains('@') {
+        form.username.trim().to_lowercase()
+    } else {
+        form.username.trim().to_string()
+    };
     LOGIN_LIMITER.check_key(&username).map_err(|_| {
         tracing::warn!(
             username = %form.username,

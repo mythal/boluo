@@ -752,29 +752,19 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         "DISCOURSE_SSO_SECRET not configured".to_string(),
     ))?;
 
+    // Verify the signature
+    let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
+    let expected_sig = hex::encode(hmac::sign(&key, sso.as_bytes()).as_ref());
+    if sig != expected_sig {
+        return Err(AppError::BadRequest("Invalid signature".to_string()));
+    }
+
     // Decode the SSO payload
     let payload_bytes = base64_engine
         .decode(&sso)
         .map_err(|_| AppError::BadRequest("Invalid base64 payload".to_string()))?;
     let payload_str = String::from_utf8(payload_bytes)
         .map_err(|_| AppError::BadRequest("Invalid UTF-8 payload".to_string()))?;
-
-    // Verify the signature
-    let Ok((key, expected_sig)) = tokio::task::spawn_blocking(move || {
-        let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
-        let expected_sig = hex::encode(hmac::sign(&key, sso.as_bytes()).as_ref());
-        (key, expected_sig)
-    })
-    .await
-    else {
-        return Err(AppError::Unexpected(anyhow::anyhow!(
-            "Failed to verify signature"
-        )));
-    };
-
-    if sig != expected_sig {
-        return Err(AppError::BadRequest("Invalid signature".to_string()));
-    }
 
     // Parse the payload parameters
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
@@ -842,52 +832,45 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         username = %user.username,
         "User authenticated for DiscourseConnect SSO"
     );
-    let Ok(redirect_url) = tokio::task::spawn_blocking(move || {
-        // Build avatar URL if user has avatar
-        let avatar_url = user
-            .avatar_id
-            .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
-        // Create response payload
-        let response_data = DiscourseResponse {
-            nonce: payload.nonce,
-            external_id: user.id.to_string(),
-            email: user.email,
-            username: user.username,
-            name: user.nickname,
-            require_activation: false,
-            bio: if user.bio.is_empty() {
-                None
-            } else {
-                Some(user.bio)
-            },
-            avatar_url,
-        };
+    // Build avatar URL if user has avatar
+    let avatar_url = user
+        .avatar_id
+        .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
 
-        // Encode the response
-        let response_payload = serde_urlencoded::to_string(&response_data).unwrap_or_default();
-        let response_base64 = base64_engine.encode(&response_payload);
-
-        // Sign the response
-        let response_sig = hex::encode(hmac::sign(&key, response_base64.as_bytes()).as_ref());
-
-        // Build the redirect URL
-        use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-        const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
-
-        let encoded_sso = utf8_percent_encode(&response_base64, FRAGMENT).to_string();
-        let redirect_url = format!(
-            "{}?sso={}&sig={}",
-            payload.return_sso_url, encoded_sso, response_sig
-        );
-        redirect_url
-    })
-    .await
-    else {
-        return Err(AppError::Unexpected(anyhow::anyhow!(
-            "Failed to build redirect URL"
-        )));
+    // Create response payload
+    let response_data = DiscourseResponse {
+        nonce: payload.nonce,
+        external_id: user.id.to_string(),
+        email: user.email,
+        username: user.username,
+        name: user.nickname,
+        require_activation: false,
+        bio: if user.bio.is_empty() {
+            None
+        } else {
+            Some(user.bio)
+        },
+        avatar_url,
     };
+
+    // Encode the response
+    let response_payload = serde_urlencoded::to_string(&response_data)
+        .map_err(|_| AppError::BadRequest("Failed to encode response".to_string()))?;
+    let response_base64 = base64_engine.encode(&response_payload);
+
+    // Sign the response
+    let response_sig = hex::encode(hmac::sign(&key, response_base64.as_bytes()).as_ref());
+
+    // Build the redirect URL
+    use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+    const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
+
+    let encoded_sso = utf8_percent_encode(&response_base64, FRAGMENT).to_string();
+    let redirect_url = format!(
+        "{}?sso={}&sig={}",
+        payload.return_sso_url, encoded_sso, response_sig
+    );
 
     tracing::info!(
         redirect_url = %redirect_url,

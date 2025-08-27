@@ -14,7 +14,7 @@
     "@boluo/utils": "*",
     "@formatjs/intl": "^3.1.6",
     "@next/mdx": "^15.2.4",
-    "@sentry/nextjs": "^9.10.0",
+    "@sentry/nextjs": "^10.6.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.0",
     "jotai": "^2.12.2",

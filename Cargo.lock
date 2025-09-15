@@ -3174,7 +3174,7 @@ dependencies = [
 [[package]]
 name = "specta"
 version = "2.0.0-rc.22"
-source = "git+https://github.com/uonr/specta.git?branch=skip-optional#8abc03a25ce6ecd360346ad581ee53b237cc4c00"
+source = "git+https://github.com/specta-rs/specta.git#40dfe49b1f0e18edb30406404b1441120a9e647b"
 dependencies = [
  "chrono",
  "ctor",
@@ -3187,7 +3187,7 @@ dependencies = [
 [[package]]
 name = "specta-macros"
 version = "2.0.0-rc.18"
-source = "git+https://github.com/uonr/specta.git?branch=skip-optional#8abc03a25ce6ecd360346ad581ee53b237cc4c00"
+source = "git+https://github.com/specta-rs/specta.git#40dfe49b1f0e18edb30406404b1441120a9e647b"
 dependencies = [
  "Inflector",
  "proc-macro2",
@@ -3198,7 +3198,7 @@ dependencies = [
 [[package]]
 name = "specta-serde"
 version = "0.0.9"
-source = "git+https://github.com/uonr/specta.git?branch=skip-optional#8abc03a25ce6ecd360346ad581ee53b237cc4c00"
+source = "git+https://github.com/specta-rs/specta.git#40dfe49b1f0e18edb30406404b1441120a9e647b"
 dependencies = [
  "specta",
 ]
@@ -3206,7 +3206,7 @@ dependencies = [
 [[package]]
 name = "specta-typescript"
 version = "0.0.9"
-source = "git+https://github.com/uonr/specta.git?branch=skip-optional#8abc03a25ce6ecd360346ad581ee53b237cc4c00"
+source = "git+https://github.com/specta-rs/specta.git#40dfe49b1f0e18edb30406404b1441120a9e647b"
 dependencies = [
  "specta",
  "specta-serde",

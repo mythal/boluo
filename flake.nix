@@ -80,15 +80,8 @@
               };
           };
 
-          rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
-            toolchain:
-            toolchain.default.override {
-              extensions = [
-                "rust-src"
-                "rust-analyzer"
-              ];
-            }
-          );
+          # Workaround: https://github.com/oxalica/rust-overlay/issues/233
+          rustToolchain = pkgs.rust-bin.nightly."2025-09-13".default;
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 

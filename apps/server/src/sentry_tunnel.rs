@@ -64,9 +64,9 @@ pub async fn handler(req: Request<Incoming>) -> crate::interface::Response {
 
     let Ok(body_str) = String::from_utf8(body.to_vec()) else {
         tracing::error!("Invalid UTF-8 in request body");
-        return error(AppError::BadRequest(format!(
-            "Invalid UTF-8 in request body"
-        )));
+        return error(AppError::BadRequest(
+            "Invalid UTF-8 in request body".to_string(),
+        ));
     };
 
     let lines: Vec<&str> = body_str.lines().collect();

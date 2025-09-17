@@ -135,10 +135,9 @@ where
     })
 }
 
-pub async fn parse_large_body<T: Send + 'static>(
-    req: hyper::Request<impl Body>,
-) -> Result<Box<T>, AppError>
+pub async fn parse_large_body<T>(req: hyper::Request<impl Body>) -> Result<Box<T>, AppError>
 where
+    T: Send + 'static,
     for<'de> T: Deserialize<'de>,
 {
     use http_body_util::BodyExt;

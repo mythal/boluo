@@ -11,7 +11,7 @@ runs:
   steps:
     # https://github.com/DeterminateSystems/nix-installer-action
     - name: Install Nix
-      uses: DeterminateSystems/nix-installer-action@999d616271516551cacca0c8b34a02e94d4f79e8
+      uses: DeterminateSystems/nix-installer-action@786fff0690178f1234e4e1fe9b536e94f5433196
       with:
         diagnostic-endpoint:
         extra-conf: |

@@ -15,6 +15,9 @@ jobs:
     name: Cargo Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      CARGO_INCREMENTAL: 0
+
     steps:
     - uses: actions/checkout@v5
 
@@ -25,17 +28,18 @@ jobs:
         cache: ${{ github.ref != 'refs/heads/production' }}
         components: clippy, rustfmt
 
+    # https://github.com/marketplace/actions/install-development-tools
+    - name: Install cargo-nextest
+      uses: taiki-e/install-action@nextest
+
     - name: Build
-      run: cargo build
+      run: cargo build --locked
+
+    - name: Check
+      run: cargo clippy --locked
 
     - name: Run tests
-      run: cargo clippy
-
-    - name: Run tests
-      run: cargo test
-
-    - name: Check formatting
-      run: cargo fmt -- --check
+      run: cargo nextest run
 
   nodejs:
     name: Node.js Checks

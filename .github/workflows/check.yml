@@ -10,6 +10,11 @@ on:
       - master
       - production
 
+env:
+  DO_NOT_TRACK: 1
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+
 jobs:
   cargo:
     name: Cargo Checks

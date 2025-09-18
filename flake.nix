@@ -426,8 +426,7 @@
               nixfmt-rfc-style
               sqlx-cli
               flyctl
-              nix-fast-build
-              nix-output-monitor
+              cargo-nextest
             ];
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"

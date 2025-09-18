@@ -74,5 +74,11 @@ jobs:
     - name: Run tests
       run: npm run test
 
+    - name: Check types
+      run: npm run check-types
+
+    - name: Lint
+      run: npm run lint
+
     - name: Check version consistency
       run: npm run lint:versions

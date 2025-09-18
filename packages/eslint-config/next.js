@@ -47,4 +47,7 @@ export const nextJsConfig = [
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },
+  {
+    ignores: ['**/next-env.d.ts'],
+  },
 ];

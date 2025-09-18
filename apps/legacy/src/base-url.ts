@@ -6,7 +6,7 @@ export interface Proxy {
   url: string;
 }
 
-let urlListCache: string[] = [];
+const urlListCache: string[] = [];
 
 export const getBaseUrlList = async (): Promise<string[]> => {
   if (urlListCache.length > 0) {

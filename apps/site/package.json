@@ -56,7 +56,7 @@
     "build": "next build",
     "check-types": "tsc --noEmit",
     "dev": "next dev --hostname 0.0.0.0 --port 3100 --turbopack",
-    "lint": "next lint",
+    "lint": "eslint",
     "start": "next start"
   },
   "type": "module"

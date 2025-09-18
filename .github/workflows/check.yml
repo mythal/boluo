@@ -32,9 +32,6 @@ jobs:
     - name: Install cargo-nextest
       uses: taiki-e/install-action@nextest
 
-    - name: Build
-      run: cargo build --locked
-
     - name: Check
       run: cargo clippy --locked
 

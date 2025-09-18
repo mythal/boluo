@@ -4,7 +4,7 @@
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.26.9",
-    "@boluo/typescript-config": "*",
+    "@boluo/typescript-config": "0.0.0",
     "@svgr/cli": "^8.1.0",
     "@types/react": "^19.0.12",
     "prettier": "^3.5.3",

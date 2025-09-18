@@ -2,7 +2,7 @@
   "name": "@boluo/tailwind-config",
   "version": "0.0.0",
   "devDependencies": {
-    "@boluo/typescript-config": "*",
+    "@boluo/typescript-config": "0.0.0",
     "tailwindcss": "^3.4.17"
   },
   "exports": {

@@ -5,8 +5,8 @@
     "> .5%, not IE 11, not op_mini all"
   ],
   "dependencies": {
-    "@boluo/api": "^0.0.0",
-    "@boluo/backend-proxy": "^0.0.0",
+    "@boluo/api": "0.0.0",
+    "@boluo/backend-proxy": "0.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hello-pangea/dnd": "^18.0.1",
@@ -32,7 +32,7 @@
     "uuid": "^13"
   },
   "devDependencies": {
-    "@boluo/eslint-config": "^0.0.0",
+    "@boluo/eslint-config": "0.0.0",
     "@emotion/babel-plugin": "^11.11.0",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",

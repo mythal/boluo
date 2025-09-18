@@ -5,7 +5,7 @@
     "jotai": "^2.12.2"
   },
   "devDependencies": {
-    "@boluo/typescript-config": "*",
+    "@boluo/typescript-config": "0.0.0",
     "typescript": "^5.8.3"
   },
   "exports": {

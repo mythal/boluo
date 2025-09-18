@@ -2,14 +2,14 @@
   "name": "@boluo/api-browser",
   "version": "0.0.0",
   "dependencies": {
-    "@boluo/api": "*",
-    "@boluo/store": "*",
-    "@boluo/utils": "*",
+    "@boluo/api": "0.0.0",
+    "@boluo/store": "0.0.0",
+    "@boluo/utils": "0.0.0",
     "jotai": "^2.12.2"
   },
   "devDependencies": {
-    "@boluo/eslint-config": "*",
-    "@boluo/typescript-config": "*",
+    "@boluo/eslint-config": "0.0.0",
+    "@boluo/typescript-config": "0.0.0",
     "eslint": "^9.23.0",
     "typescript": "^5.8.3"
   },

@@ -2,6 +2,8 @@ use std::sync::OnceLock;
 
 use crate::channels::ChannelType;
 
+pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
+
 pub fn get_postgres_url() -> String {
     std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
 }
@@ -183,5 +185,27 @@ pub async fn check() {
             .expect("Cannot generate reset token");
     } else {
         tracing::warn!("No real user id found, skipping session and reset token check");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[sqlx::test(migrator = "super::MIGRATOR")]
+    async fn db_test_check(pool: sqlx::PgPool) {
+        use crate::users::User;
+        let mut conn = pool.acquire().await.expect("Cannot acquire connection");
+
+        let user = sqlx::query_file_scalar!(
+            "sql/users/create.sql",
+            "madoka23432432432@law-of-cycles.com",
+            "madoka23432432432",
+            "Madoka",
+            "homura_love"
+        )
+        .fetch_one(&mut *conn)
+        .await
+        .expect("Cannot create user");
+
+        assert_eq!(user.nickname, "Madoka");
     }
 }

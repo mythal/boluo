@@ -20,9 +20,24 @@ jobs:
     name: Cargo Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    container: node:20-bookworm
     env:
       CARGO_INCREMENTAL: 0
+      DATABASE_URL: postgres://postgres:postgres@postgres/boluo_test
 
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: boluo_test
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v5
 
@@ -36,6 +51,9 @@ jobs:
     # https://github.com/marketplace/actions/install-development-tools
     - name: Install cargo-nextest
       uses: taiki-e/install-action@nextest
+
+    - name: Init database
+      run: cargo run --package server --bin init
 
     - name: Check
       run: cargo clippy --locked

@@ -119,7 +119,6 @@
                 (path: _type: lib.hasInfix "/apps/server/src/" path)
                 (path: _type: lib.hasInfix "/apps/server/text/" path)
                 craneLib.filterCargoSources
-                (path: _type: lib.hasSuffix "/apps/server/schema.sql" path)
               ];
             in
             pkgs.lib.cleanSourceWith {
@@ -159,6 +158,8 @@
 
                 inherit cargoArtifacts version;
                 cargoExtraArgs = "--package=server";
+
+                cargoTestExtraArgs = "-- --skip db_test_";
               }
             );
             server-image = pkgs.dockerTools.buildLayeredImage {

@@ -55,6 +55,7 @@ mod validators;
 mod websocket;
 
 use crate::cors::allow_origin;
+use crate::db::MIGRATOR;
 use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
@@ -248,6 +249,14 @@ async fn main() {
 
     tracing::info!("Server listening on: {}", socket);
 
+    {
+        // Database Migrations
+        let pool = db::get().await;
+        MIGRATOR
+            .run(&pool)
+            .await
+            .expect("Failed to run database migrations");
+    }
     db::check().await;
     tracing::info!("Database is ready");
     redis::check().await;

@@ -721,52 +721,54 @@ pub enum FailToFindIntermediate {
 /// - https://begriffs.com/posts/2018-03-20-user-defined-order.html
 /// - https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
 /// - https://en.wikipedia.org/wiki/Stern%E2%80%93Brocot_tree
+/// - https://en.oi-wiki.org/math/stern-brocot/
 pub fn find_intermediate(
-    p1: i32,
-    q1: i32,
-    p2: i32,
-    q2: i32,
+    mut p1: i32,
+    mut q1: i32,
+    mut p2: i32,
+    mut q2: i32,
 ) -> Result<(i32, i32), FailToFindIntermediate> {
-    let p1_q2 = (p1 as i64)
-        .checked_mul(q2 as i64)
-        .ok_or(FailToFindIntermediate::OutOfRange)?;
-    let p2_q1 = (p2 as i64)
-        .checked_mul(q1 as i64)
-        .ok_or(FailToFindIntermediate::OutOfRange)?;
-
+    use FailToFindIntermediate::{EqualFractions, OutOfRange};
+    // It is safe to multiply two i32 and store in i64.
+    let mut p1_q2 = (p1 as i64) * (q2 as i64);
+    let mut p2_q1 = (p2 as i64) * (q1 as i64);
+    // Two fractions are equal only if p1*q2 == p2*q1
     if p1_q2 == p2_q1 {
-        return Err(FailToFindIntermediate::EqualFractions);
+        return Err(EqualFractions);
     }
-    let (mut low, mut high) = ((0, 1), (1, 0));
+
+    // Ensure the interval is ordered ascending; if reversed, swap to avoid
+    // non-terminating search behavior.
+    if p1_q2 > p2_q1 {
+        // Swap (p1/q1) and (p2/q2)
+        std::mem::swap(&mut p1, &mut p2);
+        std::mem::swap(&mut q1, &mut q2);
+        std::mem::swap(&mut p1_q2, &mut p2_q1);
+    }
+
+    // Check if they are Farey neighbors
     if p1_q2 + 1 == p2_q1 {
-        return Ok((p1 + p2, q1 + q2));
+        let p_sum: i32 = p1.checked_add(p2).ok_or(OutOfRange)?;
+        let q_sum: i32 = q1.checked_add(q2).ok_or(OutOfRange)?;
+        // Returns mediant
+        return Ok((p_sum, q_sum));
     }
+
+    let mut low: (i32, i32) = (0, 1);
+    let mut high: (i32, i32) = (1, 0);
+
+    // Binary search in the Stern-Brocot tree
     loop {
-        let p: i64 = low.0 + high.0;
-        let q: i64 = low.1 + high.1;
-        let p_q1 = p
-            .checked_mul(q1 as i64)
-            .ok_or(FailToFindIntermediate::OutOfRange)?;
-        let p1_q = (p1 as i64)
-            .checked_mul(q)
-            .ok_or(FailToFindIntermediate::OutOfRange)?;
-        let p2_q = (p2 as i64)
-            .checked_mul(q)
-            .ok_or(FailToFindIntermediate::OutOfRange)?;
-        let p_q2 = p
-            .checked_mul(q2 as i64)
-            .ok_or(FailToFindIntermediate::OutOfRange)?;
-        if p_q1 <= p1_q {
+        let p: i32 = low.0.checked_add(high.0).ok_or(OutOfRange)?;
+        let q: i32 = low.1.checked_add(high.1).ok_or(OutOfRange)?;
+        // p/q <= p1/q1
+        if (p as i64) * (q1 as i64) <= (p1 as i64) * (q as i64) {
             low = (p, q);
-        } else if p2_q <= p_q2 {
+        // p2/q2 <= p/q
+        } else if (p2 as i64) * (q as i64) <= (p as i64) * (q2 as i64) {
             high = (p, q);
         } else {
-            return Ok((
-                p.try_into()
-                    .map_err(|_| FailToFindIntermediate::OutOfRange)?,
-                q.try_into()
-                    .map_err(|_| FailToFindIntermediate::OutOfRange)?,
-            ));
+            return Ok((p, q));
         }
     }
 }
@@ -816,6 +818,107 @@ mod tests {
             find_intermediate(1, 2, 1, 2),
             Err(FailToFindIntermediate::EqualFractions)
         );
+    }
+
+    #[test]
+    fn test_equal_fractions_unreduced_2_4_1_2() {
+        // 2/4 == 1/2 should be detected as equal
+        assert_eq!(
+            find_intermediate(2, 4, 1, 2),
+            Err(FailToFindIntermediate::EqualFractions)
+        );
+    }
+
+    // Potential edge case: reversed inputs could cause non-terminating search
+    // in naive implementations. Ensure it still returns a valid intermediate.
+    #[test]
+    fn test_reversed_order_2_3_1_2() {
+        let res = find_intermediate(2, 3, 1, 2).expect("should find intermediate");
+        // Should be 3/5 between 1/2 and 2/3
+        assert_eq!(res, (3, 5));
+    }
+
+    #[test]
+    fn test_reversed_order_0_1_1_3() {
+        // Between 0/1 and 1/3, mediant is 1/4; also check reversed order handling
+        let direct = find_intermediate(0, 1, 1, 3).expect("should find intermediate");
+        let reversed = find_intermediate(1, 3, 0, 1).expect("should find intermediate");
+        assert_eq!(direct, (1, 4));
+        assert_eq!(direct, reversed);
+    }
+
+    // Close but non-neighbor fractions: ensures the loop path is exercised
+    // (if implemented), and still returns a valid intermediate.
+    #[test]
+    fn test_close_non_neighbors_large_denoms() {
+        // These are close but not neighbors.
+        let (p1, q1) = (500_000_000, 1_000_000_001);
+        let (p2, q2) = (500_000_001, 1_000_000_002);
+        let (p, q) = find_intermediate(p1, q1, p2, q2).expect("should find intermediate");
+        // Validate p/q is strictly between p1/q1 and p2/q2 to avoid false positives
+        // due to direction/order.
+        let left = num_rational::Rational32::new(p1, q1);
+        let right = num_rational::Rational32::new(p2, q2);
+        let mid = num_rational::Rational32::new(p, q);
+        let (lo, hi) = if left <= right {
+            (left, right)
+        } else {
+            (right, left)
+        };
+        assert!(
+            lo < mid && mid < hi,
+            "intermediate not strictly between bounds"
+        );
+    }
+
+    #[test]
+    fn test_neighbors_overflow_out_of_range() {
+        // Choose Farey neighbors where mediant denominator overflows i32:
+        // a = 2147483646/2147483647, b = 1/1 are neighbors because
+        // a_p*b_q + 1 == b_p*a_q  => 2147483646*1 + 1 == 1*2147483647
+        // Mediant would be (2147483647, 2147483648) which doesn't fit in i32
+        let a = (2_147_483_646, 2_147_483_647);
+        let b = (1, 1);
+        let err = find_intermediate(a.0, a.1, b.0, b.1).unwrap_err();
+        assert_eq!(err, FailToFindIntermediate::OutOfRange);
+    }
+
+    #[test]
+    fn test_result_is_reduced_gcd_is_one() {
+        fn gcd(mut a: i32, mut b: i32) -> i32 {
+            if a < 0 {
+                a = -a;
+            }
+            if b < 0 {
+                b = -b;
+            }
+            while b != 0 {
+                let t = a % b;
+                a = b;
+                b = t;
+            }
+            a
+        }
+        let cases = [
+            ((0, 1), (1, 2)),
+            ((1, 3), (2, 5)),
+            ((3, 7), (4, 9)),
+            ((7, 10), (9, 11)),
+        ];
+        for &((p1, q1), (p2, q2)) in &cases {
+            let (p, q) = find_intermediate(p1, q1, p2, q2).expect("should find intermediate");
+            assert_eq!(
+                gcd(p, q),
+                1,
+                "result not in lowest terms for inputs {p1}/{q1} and {p2}/{q2}"
+            );
+            // Also assert strictly between
+            let a = num_rational::Rational32::new(p1, q1);
+            let b = num_rational::Rational32::new(p2, q2);
+            let m = num_rational::Rational32::new(p, q);
+            let (lo, hi) = if a <= b { (a, b) } else { (b, a) };
+            assert!(lo < m && m < hi);
+        }
     }
 
     #[tokio::test]

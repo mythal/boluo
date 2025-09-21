@@ -495,7 +495,7 @@ impl ChannelPosManager {
         let span = tracing::info_span!(parent: None, "channel_pos_manager_tick");
         tokio::spawn(
             async move {
-                let mut interval = tokio::time::interval(TICK_INTERVAL);
+                let mut interval = crate::utils::cleaner_interval(TICK_INTERVAL.as_secs());
                 loop {
                     interval.tick().await;
                     CHANNEL_POS_MANAGER.tick();

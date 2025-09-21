@@ -337,6 +337,195 @@ impl Space {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::users::User;
+    use serde_json::json;
+
+    fn unique_space_name(prefix: &str) -> String {
+        let raw = uuid::Uuid::new_v4().simple().to_string();
+        format!("{prefix}_{}", &raw[..6])
+    }
+
+    async fn create_test_user(pool: &sqlx::PgPool, prefix: &str) -> User {
+        let raw = uuid::Uuid::new_v4().simple().to_string();
+        let username = format!("{prefix}_{}", &raw[..8]);
+        let email = format!("{prefix}_{raw}@example.com");
+        User::register(pool, &email, &username, "Space Tester", "SpacePass123!")
+            .await
+            .expect("failed to create test user")
+    }
+
+    async fn create_test_space(pool: &sqlx::PgPool, owner: &User, prefix: &str) -> Space {
+        let name = unique_space_name(prefix);
+        let description = format!("Description for {name}");
+        Space::create(pool, name, &owner.id, description, None, Some("d20"))
+            .await
+            .expect("failed to create space")
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_space_create_and_update(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "space").await;
+
+        assert_eq!(space.owner_id, owner.id);
+        assert!(!space.name.is_empty());
+
+        let fetched = Space::get_by_id(&pool, &space.id)
+            .await
+            .expect("get by id failed")
+            .expect("space not found by id");
+        assert_eq!(fetched.id, space.id);
+
+        let token = Space::get_token(&pool, &space.id)
+            .await
+            .expect("get token failed");
+        assert_eq!(token, space.invite_token);
+
+        let new_token = Space::refresh_token(&pool, &space.id)
+            .await
+            .expect("refresh token failed");
+        assert_ne!(new_token, token);
+
+        let updated = Space::edit(
+            &pool,
+            space.id,
+            Some("Updated Space".to_string()),
+            Some("Updated description".to_string()),
+            Some("d12".to_string()),
+            Some(true),
+            Some(true),
+            Some(true),
+        )
+        .await
+        .expect("edit failed")
+        .expect("space should exist");
+
+        assert_eq!(updated.name, "Updated Space");
+        assert_eq!(updated.default_dice_type, "d12");
+        assert!(updated.is_public);
+        assert!(updated.allow_spectator);
+
+        let owned = Space::user_owned(&pool, &owner.id)
+            .await
+            .expect("user_owned failed");
+        assert!(owned.iter().any(|item| item.id == space.id));
+
+        let all = Space::all(&pool).await.expect("all spaces query failed");
+        assert!(all.iter().any(|item| item.id == space.id));
+
+        let recent = Space::recent(&pool)
+            .await
+            .expect("recent spaces query failed");
+        assert!(recent.contains(&space.id));
+
+        let public_status = Space::is_public(&pool, &space.id)
+            .await
+            .expect("is_public failed");
+        assert_eq!(public_status, Some(true));
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_space_membership_flow(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let member = create_test_user(&pool, "member").await;
+        let space = create_test_space(&pool, &owner, "membership").await;
+
+        let owner_member = SpaceMember::add_admin(&pool, &owner.id, &space.id)
+            .await
+            .expect("failed to add owner as admin");
+        assert!(owner_member.is_admin);
+        assert!(space.is_admin(&pool, &owner.id).await);
+
+        let member_record = SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add member");
+        assert!(!member_record.is_admin);
+
+        let fetched_member = SpaceMember::get(&pool, &member.id, &space.id)
+            .await
+            .expect("get member failed")
+            .expect("member should exist");
+        assert_eq!(fetched_member.space_id, space.id);
+
+        let assigned_admin = SpaceMember::set_admin(&pool, &member.id, &space.id, true)
+            .await
+            .expect("set_admin failed")
+            .expect("expected updated member");
+        assert!(assigned_admin.is_admin);
+
+        let members = SpaceMember::get_by_user(&pool, member.id)
+            .await
+            .expect("get_by_user failed");
+        assert_eq!(members.len(), 1);
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let spaces = Space::get_by_user(&mut conn, member.id)
+            .await
+            .expect("get_by_user spaces failed");
+        assert_eq!(spaces.len(), 1);
+        assert_eq!(spaces[0].space.id, space.id);
+        drop(conn);
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let channels_removed = SpaceMember::remove_user(&mut conn, member.id, space.id)
+            .await
+            .expect("remove_user failed");
+        assert!(channels_removed.is_empty());
+        drop(conn);
+
+        let after_remove = SpaceMember::get(&pool, &member.id, &space.id)
+            .await
+            .expect("get member after removal failed");
+        assert!(after_remove.is_none());
+
+        let members_after = SpaceMember::get_by_user(&pool, member.id)
+            .await
+            .expect("get_by_user after removal failed");
+        assert!(members_after.is_empty());
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_space_settings_flow(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "settings").await;
+
+        let initial_settings = json!({
+            "theme": "dark",
+            "notifications": {"email": true}
+        });
+        Space::put_settings(&pool, space.id, &initial_settings)
+            .await
+            .expect("put_settings failed");
+
+        let stored_settings = Space::get_settings(&pool, space.id)
+            .await
+            .expect("get_settings failed");
+        assert_eq!(stored_settings, initial_settings);
+
+        let updated_settings = json!({
+            "theme": "light",
+            "notifications": {"email": false},
+            "language": "ja"
+        });
+        Space::put_settings(&pool, space.id, &updated_settings)
+            .await
+            .expect("second put_settings failed");
+
+        let stored_again = Space::get_settings(&pool, space.id)
+            .await
+            .expect("get_settings after update failed");
+        assert_eq!(stored_again, updated_settings);
+
+        let search_results = Space::search(&pool, space.name.clone())
+            .await
+            .expect("search failed");
+        assert!(search_results.iter().any(|item| item.id == space.id));
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "space_members")]
 #[serde(rename_all = "camelCase")]

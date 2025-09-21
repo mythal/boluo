@@ -1,4 +1,4 @@
-use std::{sync::OnceLock, time::Duration};
+use std::sync::OnceLock;
 
 use tokio_tungstenite::tungstenite::Utf8Bytes;
 use tracing::Instrument as _;
@@ -24,7 +24,7 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
         let span = tracing::info_span!(parent: None, "broadcast_clean");
         tokio::spawn(
             async {
-                let mut interval = tokio::time::interval(Duration::from_secs(5 * 60));
+                let mut interval = crate::utils::cleaner_interval(5 * 60);
                 loop {
                     tokio::select! {
                         _ = crate::shutdown::SHUTDOWN.notified() => {

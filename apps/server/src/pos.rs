@@ -729,7 +729,7 @@ pub fn find_intermediate(
     mut q2: i32,
 ) -> Result<(i32, i32), FailToFindIntermediate> {
     use FailToFindIntermediate::{EqualFractions, OutOfRange};
-    // It is safe to multiply two i32 and store in i64.
+    // It is safe to multiply two i32 and store in i64/i128 for comparisons.
     let mut p1_q2 = (p1 as i64) * (q2 as i64);
     let mut p2_q1 = (p2 as i64) * (q1 as i64);
     // Two fractions are equal only if p1*q2 == p2*q1
@@ -754,22 +754,64 @@ pub fn find_intermediate(
         return Ok((p_sum, q_sum));
     }
 
-    let mut low: (i32, i32) = (0, 1);
-    let mut high: (i32, i32) = (1, 0);
+    // Accelerated Stern–Brocot binary search with jump counts.
+    // Maintain neighbors low = (left_p/left_q) and high = (right_p/right_q).
+    let mut left_p: i128 = 0;
+    let mut left_q: i128 = 1;
+    let mut right_p: i128 = 1;
+    let mut right_q: i128 = 0;
 
-    // Binary search in the Stern-Brocot tree
+    let p1 = p1 as i128;
+    let q1 = q1 as i128;
+    let p2 = p2 as i128;
+    let q2 = q2 as i128;
+
+    // Jump until mediant lies strictly between (p1/q1, p2/q2)
     loop {
-        let p: i32 = low.0.checked_add(high.0).ok_or(OutOfRange)?;
-        let q: i32 = low.1.checked_add(high.1).ok_or(OutOfRange)?;
-        // p/q <= p1/q1
-        if (p as i64) * (q1 as i64) <= (p1 as i64) * (q as i64) {
-            low = (p, q);
-        // p2/q2 <= p/q
-        } else if (p2 as i64) * (q as i64) <= (p as i64) * (q2 as i64) {
-            high = (p, q);
-        } else {
-            return Ok((p, q));
+        // mediant m = (ln+rn)/(ld+rd)
+        let mediant_p: i128 = left_p + right_p;
+        let mediant_q: i128 = left_q + right_q;
+
+        // Is mediant_p/mediant_q <= p1/q1
+        if mediant_p * q1 <= p1 * mediant_q {
+            // Move low upward by t steps: low = low + t * high
+            // Find maximum t such that (low + t*high) <= p1/q1.
+            // Derivation:
+            // (ln + t*rn)/(ld + t*rd) <= p1/q1
+            // => t * (rn*q1 - p1*rd) <= p1*ld - ln*q1
+            let a = right_p * q1 - p1 * right_q; // strictly > 0 in this branch
+            let b = p1 * left_q - left_p * q1; // >= 0
+            debug_assert!(a > 0 && b >= 0);
+            let mut t = b / a; // floor
+            if t < 1 {
+                t = 1; // be defensive; though branch condition implies t >= 1
+            }
+            left_p += t * right_p;
+            left_q += t * right_q;
+            continue;
         }
+
+        // Is p2/q2 <= mediant_p/mediant_q
+        if p2 * mediant_q <= mediant_p * q2 {
+            // Move high downward by t steps: high = high + t * low
+            // Find maximum t such that p2/q2 <= (high + t*low)
+            // => t * (p2*ld - q2*ln) <= q2*rn - p2*rd
+            let c = p2 * left_q - q2 * left_p; // >= 0
+            let d = q2 * right_p - p2 * right_q; // >= 0, and d >= c in this branch
+            debug_assert!(d >= c);
+            let mut t = if c == 0 { d } else { d / c }; // when c==0, take all d steps
+            if t < 1 {
+                t = 1; // be defensive
+            }
+            right_p += t * left_p;
+            right_q += t * left_q;
+            continue;
+        }
+
+        return Ok((
+            mediant_p.try_into().map_err(|_| OutOfRange)?,
+            mediant_q.try_into().map_err(|_| OutOfRange)?,
+        ));
     }
 }
 

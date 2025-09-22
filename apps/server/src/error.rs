@@ -147,6 +147,8 @@ pub enum ModelError {
     Db(sqlx::Error),
     #[error("{0} already exists")]
     Conflict(String),
+    #[error("An unexpected error occurred: {0}")]
+    Unexpected(#[from] anyhow::Error),
 }
 
 impl From<ModelError> for AppError {
@@ -155,6 +157,7 @@ impl From<ModelError> for AppError {
             ModelError::Validation(e) => AppError::Validation(e),
             ModelError::Db(source) => AppError::Db { source },
             ModelError::Conflict(type_) => AppError::Conflict(type_),
+            ModelError::Unexpected(e) => AppError::Unexpected(e),
         }
     }
 }

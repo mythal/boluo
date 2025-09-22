@@ -411,7 +411,18 @@ impl Message {
     ) -> Result<Option<Message>, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
-        let pos = match find_intermediate(a.0, a.1, b.0, b.1) {
+        let find_intermediate_task =
+            tokio::task::spawn_blocking(move || find_intermediate(a.0, a.1, b.0, b.1));
+        let find_intermediate_task_with_timeout =
+            tokio::time::timeout(std::time::Duration::from_secs(8), find_intermediate_task);
+        let pos = match find_intermediate_task_with_timeout
+            .await
+            .map_err(|_| {
+                tracing::error!(a = ?a, b = ?b, ?id, ?channel_id, "Timeout when finding position");
+                ModelError::Unexpected(anyhow::anyhow!("Timeout when finding position"))
+            })?
+            .map_err(|e| ModelError::Unexpected(e.into()))?
+        {
             Ok(pos) => pos,
             Err(FailToFindIntermediate::EqualFractions) => {
                 tracing::warn!("Failed to find intermediate position: EqualFractions");

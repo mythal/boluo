@@ -1,0 +1,32 @@
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'boluo-db-staging'
+primary_region = 'nrt'
+[env]
+  POSTGRES_DB = 'boluo'
+  POSTGRES_USER = 'boluo'
+
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[[services]]
+  internal_port = 5432
+  protocol = "tcp"
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  max_machines_running = 1
+  [[services.ports]]
+    port = 5432
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[mounts]
+  source = "pgdata"
+  destination = "/var/lib/postgresql"
+  initial_size = "2gb"

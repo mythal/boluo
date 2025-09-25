@@ -6,6 +6,10 @@ struct Options {
     /// Database URL
     #[clap(long, env)]
     database_url: String,
+
+    /// Whether to load fixtures
+    #[clap(long, default_value_t = false)]
+    fixtures: bool,
 }
 
 #[tokio::main]
@@ -21,4 +25,19 @@ async fn main() {
         .run(&pool)
         .await
         .expect("Failed to run database migrations");
+
+    if options.fixtures {
+        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./apps/server/fixtures")
+            .expect("Cannot read fixtures directory")
+            .map(|res| res.expect("Cannot read fixture file"))
+            .collect();
+        paths.sort_by_key(|entry| entry.file_name());
+        for path in paths {
+            let sql = std::fs::read_to_string(path.path()).expect("Cannot read fixture file");
+            sqlx::raw_sql(&sql)
+                .execute(&pool)
+                .await
+                .expect("Failed to execute fixture SQL");
+        }
+    }
 }

@@ -639,6 +639,19 @@ mod tests {
         );
     }
 
+    #[sqlx::test(
+        migrator = "crate::db::MIGRATOR",
+        fixtures(path = "../../fixtures", scripts("0-users"))
+    )]
+    async fn db_test_user_fixture(pool: sqlx::PgPool) {
+        let username: String =
+            query_scalar!("SELECT username FROM users WHERE email = 'cloudberry@example.com'")
+                .fetch_one(&pool)
+                .await
+                .expect("fetch user failed");
+        assert_eq!(username, "cloudberry");
+    }
+
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_user_reset_password_flow(pool: sqlx::PgPool) {
         let (email, username) = unique_identity("reset_", "resetuser_");

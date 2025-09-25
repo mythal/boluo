@@ -115,6 +115,7 @@
                 (path: _type: lib.hasSuffix "Cargo.toml" path)
                 (path: _type: lib.hasInfix "/.sqlx/" path)
                 (path: _type: lib.hasInfix "/apps/server/migrations/" path)
+                (path: _type: lib.hasInfix "/apps/server/fixtures/" path)
                 (path: _type: lib.hasInfix "/apps/server/sql/" path)
                 (path: _type: lib.hasInfix "/apps/server/src/" path)
                 (path: _type: lib.hasInfix "/apps/server/text/" path)

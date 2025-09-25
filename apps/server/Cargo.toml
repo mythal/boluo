@@ -25,7 +25,7 @@ aws-sdk-s3 = "1.17.0"
 base64 = "0.22"
 bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
-clap = { version = "4.4.12", features = ["derive"] }
+clap = { version = "4.4.12", features = ["derive", "env"] }
 cookie = "0.18"
 dotenvy = "0.15"
 futures = "0.3"

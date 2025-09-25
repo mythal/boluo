@@ -28,6 +28,7 @@ mod utils;
 mod error;
 mod cache;
 mod channels;
+mod config;
 mod context;
 mod cors;
 mod csrf;
@@ -217,8 +218,7 @@ struct Args {
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
-    dotenvy::from_filename(".env.local").ok();
-    dotenvy::dotenv().ok();
+    config::load();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();

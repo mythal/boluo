@@ -52,12 +52,13 @@
             "spa"
             "site"
           ];
+          unfilteredRoot = ./.;
           rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
           pruneSource =
             name:
             pkgs.stdenvNoCC.mkDerivation {
               name = "boluo-${name}-source";
-              src = lib.cleanSource ./.;
+              src = lib.cleanSource unfilteredRoot;
               __contentAddressed = true;
 
               outputHashMode = "recursive";
@@ -103,26 +104,43 @@
             "org.opencontainers.image.licenses" = "AGPL-3.0";
           };
 
-          cargo-source =
+          # https://crane.dev/source-filtering.html#fileset-filtering
+          # https://nixos.org/manual/nixpkgs/unstable/#sec-functions-library-fileset
+          cargoSource =
             let
-              filters = [
-                (path: _type: lib.hasSuffix "Cargo.toml" path)
-                (path: _type: lib.hasInfix "/.sqlx/" path)
-                (path: _type: lib.hasInfix "/apps/server/migrations/" path)
-                (path: _type: lib.hasInfix "/apps/server/fixtures/" path)
-                (path: _type: lib.hasInfix "/apps/server/sql/" path)
-                (path: _type: lib.hasInfix "/apps/server/src/" path)
-                (path: _type: lib.hasInfix "/apps/server/text/" path)
-                craneLib.filterCargoSources
+              inherit (lib.fileset)
+                unions
+                difference
+                fileFilter
+                maybeMissing
+                ;
+              ignoreFilenames = [
+                "wrangler.toml"
+                ".rustfmt.toml"
+                ".taplo.toml"
+                "fly.toml"
+                "fly.staging.toml"
+                "schema.sql"
               ];
+              filesetToIgnore = unions (
+                map (name: fileFilter (file: file.name == name) unfilteredRoot) ignoreFilenames
+              );
+              fileset = difference (unions [
+                (craneLib.fileset.commonCargoSources unfilteredRoot)
+                (fileFilter (file: file.hasExt "sql") unfilteredRoot)
+                (maybeMissing ./.sqlx)
+                (maybeMissing ./apps/server/text)
+              ]) filesetToIgnore;
             in
-            pkgs.lib.cleanSourceWith {
-              src = craneLib.path ./.;
-              filter = path: type: builtins.any (f: f path type) filters;
+            lib.fileset.toSource {
+              root = unfilteredRoot;
+              inherit fileset;
+              # Debugging:
+              # fileset = lib.fileset.trace fileset fileset;
             };
 
           commonArgs = {
-            src = cargo-source;
+            src = cargoSource;
             inherit version;
             strictDeps = true;
 

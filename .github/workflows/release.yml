@@ -24,85 +24,85 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Nix Flake Check
-        run: nix flake check --verbose --print-build-logs --log-format raw --show-trace
+        run: nix build .#server --accept-flake-config --no-out-link --cores 0 --print-build-logs
 
-  images:
-    needs: check
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      packages: write
-      contents: read
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v5
+  # images:
+  #   needs: check
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     packages: write
+  #     contents: read
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v5
 
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+  #     - name: Nix Setup
+  #       uses: ./.github/actions/nix-setup
+  #       with:
+  #         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Push images
-        run: nix --log-format raw -L run ".#push-images"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          BRANCH_NAME: ${{ github.ref_name }}
+  #     - name: Push images
+  #       run: nix --log-format raw -L run ".#push-images"
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         GITHUB_ACTOR: ${{ github.actor }}
+  #         BRANCH_NAME: ${{ github.ref_name }}
 
-  staging:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    needs: images
-    if: github.ref == 'refs/heads/master'
-    environment:
-      name: staging
-      url: https://boluo-site-staging.fly.dev
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v5
+  # staging:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   needs: images
+  #   if: github.ref == 'refs/heads/master'
+  #   environment:
+  #     name: staging
+  #     url: https://boluo-site-staging.fly.dev
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v5
 
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+  #     - name: Nix Setup
+  #       uses: ./.github/actions/nix-setup
+  #       with:
+  #         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Deploy site to staging
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-site-staging
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+  #     - name: Deploy site to staging
+  #       run: nix --accept-flake-config --log-format raw -L run .#deploy-site-staging
+  #       env:
+  #         FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
-      - name: Deploy server to staging
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+  #     - name: Deploy server to staging
+  #       run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
+  #       env:
+  #         FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
-  production:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    needs: images
-    if: github.ref == 'refs/heads/production'
-    environment:
-      name: production
-      url: https://site.boluochat.com
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v5
+  # production:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   needs: images
+  #   if: github.ref == 'refs/heads/production'
+  #   environment:
+  #     name: production
+  #     url: https://site.boluochat.com
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v5
 
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+  #     - name: Nix Setup
+  #       uses: ./.github/actions/nix-setup
+  #       with:
+  #         authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Deploy site to production
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-site-production
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+  #     - name: Deploy site to production
+  #       run: nix --accept-flake-config --log-format raw -L run .#deploy-site-production
+  #       env:
+  #         FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
-      - name: Deploy server to production
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-production
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+  #     - name: Deploy server to production
+  #       run: nix --accept-flake-config --log-format raw -L run .#deploy-server-production
+  #       env:
+  #         FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}

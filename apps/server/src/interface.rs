@@ -23,7 +23,7 @@ pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
             hyper::Response::builder()
                 .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
                 .body(
-                    include_str!("error_serialize_error.json")
+                    include_str!("../text/error_serialize_error.json")
                         .as_bytes()
                         .to_vec(),
                 )

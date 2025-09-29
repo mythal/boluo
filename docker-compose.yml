@@ -1,6 +1,9 @@
 services:
   db:
-    image: postgres:17
+    image: ghcr.io/mythal/boluo-postgres:latest
+    build:
+      context: ./db
+      dockerfile: Dockerfile
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

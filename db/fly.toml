@@ -15,19 +15,23 @@ primary_region = 'nrt'
 [[services]]
   internal_port = 5432
   protocol = "tcp"
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
-  min_machines_running = 0
+  auto_stop_machines = 'off'
+  auto_start_machines = false
+  min_machines_running = 1
   max_machines_running = 1
   [[services.ports]]
     port = 5432
 
 [[vm]]
-  memory = '512mb'
+  memory = '1GB'
   cpu_kind = 'shared'
-  cpus = 1
+  cpus = 2
 
 [mounts]
   source = "pgdata"
   destination = "/var/lib/postgresql"
-  initial_size = "2gb"
+  initial_size = "10gb"
+  snapshot_retention = 14
+  auto_extend_size_threshold = 90
+  auto_extend_size_increment = "1gb"
+  auto_extend_size_limit = "64GB"

@@ -1,0 +1,3 @@
+ALTER TABLE messages DROP CONSTRAINT IF EXISTS message_parent;
+ALTER TABLE messages DROP CONSTRAINT IF EXISTS message_channel;
+ALTER TABLE messages DROP CONSTRAINT IF EXISTS message_sender;

@@ -43,6 +43,26 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     }
 }
 
+pub async fn check_db_host() {
+    use std::str::FromStr;
+
+    let options = sqlx::postgres::PgConnectOptions::from_str(&get_postgres_url())
+        .expect("Cannot parse Postgres connect URL");
+
+    tracing::info!(
+        "Connecting to database at {}:{}",
+        options.get_host(),
+        options.get_port()
+    );
+    let resolved = tokio::net::lookup_host((options.get_host(), options.get_port()))
+        .await
+        .expect("Cannot resolve database host");
+
+    for addr in resolved {
+        tracing::info!("Resolved database address: {}", addr);
+    }
+}
+
 /// Runtime check if the database is available and can correctly deserialize data
 #[tracing::instrument]
 pub async fn check() {
@@ -52,6 +72,7 @@ pub async fn check() {
     use crate::spaces::{Space, SpaceMember};
     use crate::users::{User, UserExt};
     use serde_json::json;
+
     let pool = get().await;
     let real_user_id = {
         let mut conn = pool.acquire().await.expect("Cannot acquire connection");

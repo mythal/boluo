@@ -5,6 +5,7 @@
 
 app = 'boluo-server'
 primary_region = 'nrt'
+swap_size_mb = 512
 
 [build]
   image = 'ghcr.io/mythal/boluo/server:production'

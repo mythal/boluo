@@ -249,6 +249,8 @@ async fn main() {
 
     tracing::info!("Server listening on: {}", socket);
 
+    db::check_db_host().await;
+
     {
         // Database Migrations
         let pool = db::get().await;

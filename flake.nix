@@ -418,17 +418,24 @@
                 };
               };
 
-            push-images = pkgs.writeShellScriptBin "push-images" ''
-              set -e
-              skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
-              IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
-              echo "Pushing images with tag: $IMAGE_TAG"
-              BASE="docker://ghcr.io/mythal/boluo"
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" $BASE/server:$IMAGE_TAG --additional-tag $BASE/server:${self.rev}
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" $BASE/legacy:$IMAGE_TAG --additional-tag $BASE/legacy:${self.rev}
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" $BASE/site:$IMAGE_TAG --additional-tag $BASE/site:${self.rev}
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" $BASE/spa:$IMAGE_TAG --additional-tag $BASE/spa:${self.rev}
-            '';
+            push-images =
+              let
+                tagPrefix = "ghcr.io/mythal/boluo";
+                serverImage = "${tagPrefix}/server";
+                legacyImage = "${tagPrefix}/legacy";
+                siteImage = "${tagPrefix}/site";
+                spaImage = "${tagPrefix}/spa";
+              in
+              pkgs.writeShellScriptBin "push-images" ''
+                set -e
+                ${pkgs.skopeo}/bin/skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+                IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
+                echo "Pushing images with tag: $IMAGE_TAG"
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:$IMAGE_TAG --additional-tag ${serverImage}:${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:$IMAGE_TAG --additional-tag ${legacyImage}:${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:$IMAGE_TAG --additional-tag ${siteImage}:${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:$IMAGE_TAG --additional-tag ${spaImage}:${self.rev}
+              '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
               ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image $BASE/server:${self.rev} --remote-only

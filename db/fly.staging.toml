@@ -22,8 +22,8 @@ primary_region = 'nrt'
 [[services]]
   protocol = 'tcp'
   internal_port = 5432
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
+  auto_stop_machines = 'off'
+  auto_start_machines = false
   min_machines_running = 0
 
   [[services.ports]]

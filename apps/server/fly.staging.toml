@@ -8,7 +8,7 @@ primary_region = "nrt"
   HOST = '0.0.0.0'
   PORT = "3000"
   SITE_URL = "https://site.boluo-staging.mythal.net"
-  # DATABASE_URL = "postgresql://boluo:boluo-staging@boluo-db-staging.internal:5432/boluo?sslmode=disable"
+  DATABASE_URL = "postgresql://boluo:boluo-staging@boluo-db-staging.internal:5432/boluo"
   APP_URL = "https://app.boluochat.com"
   PUBLIC_MEDIA_URL = "http://media.dev.boluo.chat"
   S3_BUCKET_NAME = "boluo-development"

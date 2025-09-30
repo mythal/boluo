@@ -54,6 +54,11 @@ pub async fn check_db_host() {
         options.get_host(),
         options.get_port()
     );
+
+    if let Ok(_addr) = options.get_host().parse::<std::net::IpAddr>() {
+        return;
+    }
+
     let resolved = tokio::net::lookup_host((options.get_host(), options.get_port()))
         .await
         .expect("Cannot resolve database host");

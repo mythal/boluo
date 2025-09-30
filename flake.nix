@@ -438,19 +438,19 @@
               '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image $BASE/server:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image ghcr.io/mythal/boluo/server:${self.rev} --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image $BASE/server:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:${self.rev} --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --image $BASE/site:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --image ghcr.io/mythal/boluo/site:${self.rev} --remote-only
             '';
 
             deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image $BASE/site:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:${self.rev} --remote-only
             '';
           };
 

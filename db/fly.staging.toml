@@ -9,7 +9,7 @@ primary_region = 'nrt'
 
 
 [build]
-  # TODO: Use ghcr.io/mythal/boluo-postgres:latest
+  # TODO: Use ghcr.io/mythal/boluo/boluo-postgres:latest
   dockerfile = 'Dockerfile'
 
 [[services]]

@@ -431,26 +431,30 @@
                 ${pkgs.skopeo}/bin/skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
                 IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
                 echo "Pushing images with tag: $IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:$IMAGE_TAG --additional-tag ${serverImage}:${self.rev}
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:$IMAGE_TAG --additional-tag ${legacyImage}:${self.rev}
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:$IMAGE_TAG --additional-tag ${siteImage}:${self.rev}
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:$IMAGE_TAG --additional-tag ${spaImage}:${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:v${self.rev}
               '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image ghcr.io/mythal/boluo/server:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --image ghcr.io/mythal/boluo/site:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
 
             deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
           };
 

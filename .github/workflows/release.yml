@@ -5,7 +5,7 @@ on:
       - production
       - master
       - main
-      - release-*
+      # - release-*
 jobs:
   check:
     name: Flake Check

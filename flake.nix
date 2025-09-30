@@ -94,9 +94,7 @@
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
-          commonEnv = [
-            "APP_VERSION=${rev}"
-          ];
+          versionEnv = "APP_VERSION=${rev}";
 
           imageLabel = {
             "org.opencontainers.image.url" = "https://github.com/mythal/boluo";
@@ -189,6 +187,10 @@
                 ];
               };
               config = {
+                Env = [
+                  "APP_VERSION=${rev}"
+                  "PATH=/bin:/usr/bin"
+                ];
                 Cmd = [ "/bin/bash" ];
                 Labels = imageLabel;
               };
@@ -205,7 +207,7 @@
                 ];
               };
               config = {
-                env = commonEnv;
+                Env = [ versionEnv ];
                 Cmd = [ "/bin/server" ];
                 Labels = imageLabel;
               };
@@ -327,7 +329,8 @@
                 cp -r ${self'.packages.site} /app
               '';
               config = {
-                Env = commonEnv ++ [
+                Env = [
+                  versionEnv
                   "NEXT_TELEMETRY_DISABLED=1"
                   "NODE_ENV=production"
                 ];
@@ -413,32 +416,43 @@
                 };
               };
 
-            push-images = pkgs.writeShellScriptBin "push-images" ''
-              set -e
-              skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
-              IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
-              echo "Pushing images with tag: $IMAGE_TAG"
-              BASE="docker://ghcr.io/mythal/boluo"
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" $BASE/server:$IMAGE_TAG
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" $BASE/legacy:$IMAGE_TAG
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" $BASE/site:$IMAGE_TAG
-              ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" $BASE/spa:$IMAGE_TAG
-            '';
+            push-images =
+              let
+                tagPrefix = "ghcr.io/mythal/boluo";
+                serverImage = "${tagPrefix}/server";
+                legacyImage = "${tagPrefix}/legacy";
+                siteImage = "${tagPrefix}/site";
+                spaImage = "${tagPrefix}/spa";
+              in
+              pkgs.writeShellScriptBin "push-images" ''
+                set -e
+                ${pkgs.skopeo}/bin/skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+                IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
+                echo "Pushing images with tag: $IMAGE_TAG"
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:$IMAGE_TAG
+                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:v${self.rev}
+              '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
 
             deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
           };
 

@@ -94,9 +94,7 @@
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
-          commonEnv = [
-            "APP_VERSION=${rev}"
-          ];
+          versionEnv = "APP_VERSION=${rev}";
 
           imageLabel = {
             "org.opencontainers.image.url" = "https://github.com/mythal/boluo";
@@ -209,7 +207,7 @@
                 ];
               };
               config = {
-                Env = commonEnv;
+                Env = [ versionEnv ];
                 Cmd = [ "/bin/server" ];
                 Labels = imageLabel;
               };
@@ -331,7 +329,8 @@
                 cp -r ${self'.packages.site} /app
               '';
               config = {
-                Env = commonEnv ++ [
+                Env = [
+                  versionEnv
                   "NEXT_TELEMETRY_DISABLED=1"
                   "NODE_ENV=production"
                 ];

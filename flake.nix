@@ -189,6 +189,10 @@
                 ];
               };
               config = {
+                env = [
+                  "APP_VERSION=${rev}"
+                  "PATH=/bin:/usr/bin"
+                ];
                 Cmd = [ "/bin/bash" ];
                 Labels = imageLabel;
               };

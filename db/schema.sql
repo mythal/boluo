@@ -1,9 +1,3 @@
---
--- PostgreSQL database dump
---
-
-\restrict 1cyJTSGVDOTVgge3cBGbbC5GswAf8L9xpI4ByRCj2I6FElJsa261XF8IvQBKPLG
-
 -- Dumped from database version 17.6 (Debian 17.6-1.pgdg13+1)
 -- Dumped by pg_dump version 17.6 (Debian 17.6-1.pgdg13+1)
 
@@ -639,31 +633,6 @@ ALTER TABLE ONLY public.users_extension
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_uploader FOREIGN KEY (uploader_id) REFERENCES public.users(id) ON DELETE RESTRICT;
 
-
---
--- Name: messages message_channel; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT message_channel FOREIGN KEY (channel_id) REFERENCES public.channels(id) ON DELETE CASCADE;
-
-
---
--- Name: messages message_parent; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT message_parent FOREIGN KEY (parent_message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
-
-
---
--- Name: messages message_sender; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT message_sender FOREIGN KEY (sender_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
 --
 -- Name: reset_tokens password_reset_user; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -739,6 +708,3 @@ ALTER TABLE ONLY public.users
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict 1cyJTSGVDOTVgge3cBGbbC5GswAf8L9xpI4ByRCj2I6FElJsa261XF8IvQBKPLG
-

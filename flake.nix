@@ -189,7 +189,7 @@
                 ];
               };
               config = {
-                env = [
+                Env = [
                   "APP_VERSION=${rev}"
                   "PATH=/bin:/usr/bin"
                 ];
@@ -210,7 +210,7 @@
                 ];
               };
               config = {
-                env = commonEnv;
+                Env = commonEnv;
                 Cmd = [ "/bin/server" ];
                 Labels = imageLabel;
               };

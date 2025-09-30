@@ -206,7 +206,6 @@
                 name = "boluo-server-root";
                 paths = with pkgs; [
                   self'.packages.server
-                  pgcli
                 ];
               };
               config = {

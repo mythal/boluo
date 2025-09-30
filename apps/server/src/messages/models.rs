@@ -411,7 +411,18 @@ impl Message {
     ) -> Result<Option<Message>, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
-        let pos = match find_intermediate(a.0, a.1, b.0, b.1) {
+        let find_intermediate_task =
+            tokio::task::spawn_blocking(move || find_intermediate(a.0, a.1, b.0, b.1));
+        let find_intermediate_task_with_timeout =
+            tokio::time::timeout(std::time::Duration::from_secs(8), find_intermediate_task);
+        let pos = match find_intermediate_task_with_timeout
+            .await
+            .map_err(|_| {
+                tracing::error!(a = ?a, b = ?b, ?id, ?channel_id, "Timeout when finding position");
+                ModelError::Unexpected(anyhow::anyhow!("Timeout when finding position"))
+            })?
+            .map_err(|e| ModelError::Unexpected(e.into()))?
+        {
             Ok(pos) => pos,
             Err(FailToFindIntermediate::EqualFractions) => {
                 tracing::warn!("Failed to find intermediate position: EqualFractions");
@@ -559,4 +570,368 @@ pub struct MaxPos {
     pub pos_p: i32,
     pub pos_q: i32,
     pub id: Uuid,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::channels::{Channel, ChannelMember, ChannelType};
+    use crate::spaces::{Space, SpaceMember};
+    use crate::users::User;
+    use types::entities::{Entity as RichEntity, Span};
+
+    fn unique_name(prefix: &str) -> String {
+        let raw = Uuid::new_v4().simple().to_string();
+        format!("{prefix}_{}", &raw[..6])
+    }
+
+    async fn create_test_user(pool: &sqlx::PgPool, prefix: &str) -> User {
+        let raw = Uuid::new_v4().simple().to_string();
+        let username = format!("{prefix}_usr_{}", &raw[..6]);
+        let email = format!("{prefix}_{raw}@example.com");
+        User::register(pool, &email, &username, "Message Tester", "MessagePass123!")
+            .await
+            .expect("failed to create test user")
+    }
+
+    async fn create_test_space(pool: &sqlx::PgPool, owner: &User, prefix: &str) -> Space {
+        let name = unique_name(prefix);
+        let description = format!("Description for {name}");
+        let space = Space::create(pool, name, &owner.id, description, None, Some("d20"))
+            .await
+            .expect("failed to create space");
+        SpaceMember::add_admin(pool, &owner.id, &space.id)
+            .await
+            .expect("failed to grant owner admin");
+        space
+    }
+
+    async fn create_test_channel(
+        pool: &sqlx::PgPool,
+        space: &Space,
+        owner: &User,
+        name: &str,
+    ) -> Channel {
+        let channel = Channel::create(
+            pool,
+            &space.id,
+            name,
+            true,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create channel");
+        ChannelMember::add_user(pool, owner.id, channel.id, space.id, "GM", true)
+            .await
+            .expect("failed to add owner to channel");
+        channel
+    }
+
+    fn sample_entities(text: &str) -> Entities {
+        let span = Span {
+            start: 0,
+            len: text.chars().count() as i32,
+        };
+        Entities(vec![RichEntity::Text(span)])
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_create_and_fetch_flow(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let other = create_test_user(&pool, "member").await;
+        let bystander = create_test_user(&pool, "bystander").await;
+        let space = create_test_space(&pool, &owner, "message_space").await;
+        SpaceMember::add_user(&pool, &other.id, &space.id)
+            .await
+            .expect("failed to add member to space");
+        SpaceMember::add_user(&pool, &bystander.id, &space.id)
+            .await
+            .expect("failed to add bystander to space");
+        let channel = create_test_channel(&pool, &space, &owner, "Story Time").await;
+        ChannelMember::add_user(&pool, other.id, channel.id, space.id, "Player", false)
+            .await
+            .expect("failed to add member to channel");
+        ChannelMember::add_user(&pool, bystander.id, channel.id, space.id, "Watcher", false)
+            .await
+            .expect("failed to add bystander to channel");
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let text = "Hello world";
+        let entities = sample_entities(text);
+        let message = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            text,
+            entities.clone(),
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#abcdef".to_string(),
+        )
+        .await
+        .expect("failed to create message");
+        assert_eq!(message.channel_id, channel.id);
+        assert_eq!(message.sender_id, owner.id);
+        assert_eq!(message.text, text);
+        let pos_one = (message.pos_p, message.pos_q);
+        drop(conn);
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let whisper_text = "Secret";
+        let whisper_message = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            whisper_text,
+            sample_entities(whisper_text),
+            false,
+            false,
+            true,
+            Some(vec![other.id]),
+            None,
+            None,
+            "preset:orange".to_string(),
+        )
+        .await
+        .expect("failed to create whisper message");
+        assert!(whisper_message.text.is_empty());
+        drop(conn);
+
+        let fetched = Message::get(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("get failed")
+            .expect("message not found");
+        assert_eq!(fetched.text, text);
+
+        let fetched_master = Message::get(&pool, &whisper_message.id, Some(&owner.id))
+            .await
+            .expect("get whisper failed")
+            .expect("whisper message missing for master");
+        assert_eq!(fetched_master.text, whisper_text);
+
+        let fetched_hidden = Message::get(&pool, &whisper_message.id, Some(&bystander.id))
+            .await
+            .expect("get whisper for bystander failed")
+            .expect("whisper message missing for bystander");
+        assert!(fetched_hidden.text.is_empty());
+
+        let fetched_visible = Message::get(&pool, &whisper_message.id, Some(&other.id))
+            .await
+            .expect("get whisper for member failed")
+            .expect("whisper message missing for member");
+        assert_eq!(fetched_visible.text, whisper_text);
+
+        let channel_messages_for_owner =
+            Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))
+                .await
+                .expect("get_by_channel for owner failed");
+        assert_eq!(channel_messages_for_owner.len(), 2);
+        assert!(
+            channel_messages_for_owner
+                .iter()
+                .any(|msg| msg.id == message.id && msg.text == text)
+        );
+        assert!(
+            channel_messages_for_owner
+                .iter()
+                .any(|msg| msg.id == whisper_message.id && msg.text.is_empty())
+        );
+
+        let channel_messages_for_member =
+            Message::get_by_channel(&pool, &channel.id, None, 10, Some(&other.id))
+                .await
+                .expect("get_by_channel for member failed");
+        assert!(
+            channel_messages_for_member
+                .iter()
+                .any(|msg| msg.id == whisper_message.id && msg.text == whisper_text)
+        );
+
+        let channel_messages_for_bystander =
+            Message::get_by_channel(&pool, &channel.id, None, 10, Some(&bystander.id))
+                .await
+                .expect("get_by_channel for bystander failed");
+        assert!(
+            channel_messages_for_bystander
+                .iter()
+                .any(|msg| msg.id == whisper_message.id && msg.text.is_empty())
+        );
+
+        let pos_lookup = Message::query_by_pos(&pool, &channel.id, pos_one)
+            .await
+            .expect("query_by_pos failed")
+            .expect("message not found by position");
+        assert_eq!(pos_lookup.id, message.id);
+
+        let exported = Message::export(&pool, &channel.id, false, None)
+            .await
+            .expect("export failed");
+        assert_eq!(exported.len(), 2);
+
+        let folded = Message::set_folded(&pool, &message.id, true)
+            .await
+            .expect("set_folded failed")
+            .expect("message should exist");
+        assert!(folded.folded);
+
+        let edited_entities = sample_entities("Updated text");
+        let edited = Message::edit(
+            &pool,
+            "GM Updated",
+            &message.id,
+            "Updated text",
+            edited_entities,
+            false,
+            true,
+            None,
+            "char:GM".to_string(),
+        )
+        .await
+        .expect("edit failed")
+        .expect("edited message missing");
+        assert_eq!(edited.text, "Updated text");
+        assert!(edited.is_action);
+
+        let deleted = Message::delete(&pool, &message.id)
+            .await
+            .expect("delete failed");
+        assert_eq!(deleted, 1);
+
+        let after_delete = Message::get(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("get after delete failed");
+        assert!(after_delete.is_none());
+
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id).await;
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_position_flow(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "message_pos").await;
+        let channel = create_test_channel(&pool, &space, &owner, "Moves").await;
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let msg1 = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Message A",
+            sample_entities("Message A"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create message 1");
+        let msg2 = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Message B",
+            sample_entities("Message B"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create message 2");
+        let msg3 = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Message C",
+            sample_entities("Message C"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create message 3");
+        drop(conn);
+
+        let max_pos = Message::max_pos(&pool, &channel.id)
+            .await
+            .expect("max_pos failed");
+        assert_eq!(max_pos.id, msg3.id);
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let moved_above =
+            Message::move_above(&mut conn, &channel.id, &msg3.id, (msg2.pos_p, msg2.pos_q))
+                .await
+                .expect("move_above errored")
+                .expect("move_above returned none");
+        assert!(moved_above.pos < msg2.pos);
+
+        let moved_bottom = Message::move_bottom(
+            &mut conn,
+            &channel.id,
+            &msg1.id,
+            (moved_above.pos_p, moved_above.pos_q),
+        )
+        .await
+        .expect("move_bottom errored")
+        .expect("move_bottom returned none");
+        assert!(moved_bottom.pos > moved_above.pos);
+
+        let between = Message::move_between(
+            &mut conn,
+            &msg2.id,
+            channel.id,
+            (moved_above.pos_p, moved_above.pos_q),
+            (moved_bottom.pos_p, moved_bottom.pos_q),
+        )
+        .await
+        .expect("move_between errored")
+        .expect("move_between returned none");
+        assert!(between.pos > moved_above.pos && between.pos < moved_bottom.pos);
+        drop(conn);
+
+        let ordered = Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))
+            .await
+            .expect("get_by_channel after moves failed");
+        assert_eq!(ordered.len(), 3);
+        assert_eq!(ordered[0].id, moved_bottom.id);
+        assert_eq!(ordered[1].id, between.id);
+        assert_eq!(ordered[2].id, moved_above.id);
+
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id).await;
+    }
 }

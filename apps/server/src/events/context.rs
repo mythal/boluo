@@ -443,8 +443,8 @@ impl MailBoxState {
             let mut last_activity_at = std::time::Instant::now();
             let mut members_state = members::MembersCache::new();
             let mut status_state = super::status::StatusState::new(id);
-            let mut broadcast_status_interval = tokio::time::interval(std::time::Duration::from_secs(12));
-            let mut cleanup_interval = tokio::time::interval(std::time::Duration::from_secs(120));
+            let mut broadcast_status_interval = crate::utils::cleaner_interval(12);
+            let mut cleanup_interval = crate::utils::cleaner_interval(120);
             let mut start_at = timestamp();
             let mut last_pending_actions_warned = 0;
             let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];

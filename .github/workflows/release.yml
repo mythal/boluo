@@ -8,7 +8,24 @@ on:
       - release-*
 jobs:
   check:
-    uses: ./.github/workflows/check.yml
+    name: Flake Check
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "read"
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Nix Flake Check
+        run: nix flake check --verbose --print-build-logs --log-format raw --show-trace
+
   images:
     needs: check
     runs-on: ubuntu-latest
@@ -18,7 +35,7 @@ jobs:
       contents: read
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
@@ -44,7 +61,7 @@ jobs:
       url: https://boluo-site-staging.fly.dev
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
@@ -73,7 +90,7 @@ jobs:
       url: https://site.boluochat.com
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup

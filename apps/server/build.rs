@@ -4,5 +4,6 @@ fn main() {
 
     if let Ok(url) = std::env::var("DATABASE_URL") {
         println!("cargo::rustc-env=DATABASE_URL={url}");
+        println!("cargo:rerun-if-changed=migrations");
     }
 }

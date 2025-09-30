@@ -28,6 +28,7 @@ mod utils;
 mod error;
 mod cache;
 mod channels;
+mod config;
 mod context;
 mod cors;
 mod csrf;
@@ -55,6 +56,7 @@ mod validators;
 mod websocket;
 
 use crate::cors::allow_origin;
+use crate::db::MIGRATOR;
 use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
@@ -216,8 +218,7 @@ struct Args {
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
-    dotenvy::from_filename(".env.local").ok();
-    dotenvy::dotenv().ok();
+    config::load();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
@@ -248,6 +249,14 @@ async fn main() {
 
     tracing::info!("Server listening on: {}", socket);
 
+    {
+        // Database Migrations
+        let pool = db::get().await;
+        MIGRATOR
+            .run(&pool)
+            .await
+            .expect("Failed to run database migrations");
+    }
     db::check().await;
     tracing::info!("Database is ready");
     redis::check().await;

@@ -43,7 +43,7 @@ impl TokenStore {
         tokio::spawn(
             async move {
                 let tokens = tokens_for_cleanup;
-                let mut interval = tokio::time::interval(Duration::from_secs(60));
+                let mut interval = crate::utils::cleaner_interval(60);
                 loop {
                     interval.tick().await;
                     let Some(tokens) = tokens.upgrade() else {

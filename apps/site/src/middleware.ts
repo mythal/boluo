@@ -44,7 +44,7 @@ export function middleware(request: NextRequest): NextResponse | void {
     }
     const url = new URL(hostname + pathname + request.nextUrl.search, request.url);
 
-    // eslint-disable-next-line no-restricted-globals
+    // eslint-disable-next-line no-restricted-globals, turbo/no-undeclared-env-vars
     const backEndApp = process.env.FLY_BACKEND_APP_NAME;
     const hostInHeader = request.headers.get('host');
     if (backEndApp && hostInHeader) {

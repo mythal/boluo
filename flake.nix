@@ -1,3 +1,7 @@
+# Reference:
+# - https://crane.dev/index.html
+# - https://nixos.org/manual/nixpkgs/unstable/#sec-pkgs-dockerTools
+# - https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/build-support/docker/examples.nix
 {
   description = "A chat tool made for play RPG";
   inputs = {
@@ -48,12 +52,13 @@
             "spa"
             "site"
           ];
+          unfilteredRoot = ./.;
           rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
           pruneSource =
             name:
             pkgs.stdenvNoCC.mkDerivation {
               name = "boluo-${name}-source";
-              src = lib.cleanSource ./.;
+              src = lib.cleanSource unfilteredRoot;
               __contentAddressed = true;
 
               outputHashMode = "recursive";
@@ -83,26 +88,13 @@
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
             toolchain:
             toolchain.default.override {
-              extensions = [
-                "rust-src"
-                "rust-analyzer"
-              ];
+              extensions = [ "rust-src" ];
             }
           );
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
-          commonImageContents = with pkgs.dockerTools; [
-            usrBinEnv
-            binSh
-            pkgs.cacert
-            caCertificates
-            fakeNss
-          ];
-
           commonEnv = [
-            "GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-            "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             "APP_VERSION=${rev}"
           ];
 
@@ -114,30 +106,46 @@
             "org.opencontainers.image.licenses" = "AGPL-3.0";
           };
 
-          cargo-source =
+          # https://crane.dev/source-filtering.html#fileset-filtering
+          # https://nixos.org/manual/nixpkgs/unstable/#sec-functions-library-fileset
+          cargoSource =
             let
-              filters = [
-                (path: _type: lib.hasSuffix "Cargo.toml" path)
-                (path: _type: lib.hasInfix "/.sqlx/" path)
-                (path: _type: lib.hasInfix "/apps/server/migrations/" path)
-                (path: _type: lib.hasInfix "/apps/server/sql/" path)
-                (path: _type: lib.hasInfix "/apps/server/src/" path)
-                (path: _type: lib.hasInfix "/apps/server/text/" path)
-                craneLib.filterCargoSources
-                (path: _type: lib.hasSuffix "/apps/server/schema.sql" path)
+              inherit (lib.fileset)
+                unions
+                difference
+                fileFilter
+                maybeMissing
+                ;
+              ignoreFilenames = [
+                "wrangler.toml"
+                ".rustfmt.toml"
+                ".taplo.toml"
+                "fly.toml"
+                "fly.staging.toml"
+                "schema.sql"
               ];
+              filesetToIgnore = unions (
+                map (name: fileFilter (file: file.name == name) unfilteredRoot) ignoreFilenames
+              );
+              fileset = difference (unions [
+                (craneLib.fileset.commonCargoSources unfilteredRoot)
+                (fileFilter (file: file.hasExt "sql") unfilteredRoot)
+                (maybeMissing ./.sqlx)
+                (maybeMissing ./apps/server/text)
+              ]) filesetToIgnore;
             in
-            pkgs.lib.cleanSourceWith {
-              src = craneLib.path ./.;
-              filter = path: type: builtins.any (f: f path type) filters;
+            lib.fileset.toSource {
+              root = unfilteredRoot;
+              inherit fileset;
+              # Debugging:
+              # fileset = lib.fileset.trace fileset fileset;
             };
 
           commonArgs = {
-            src = cargo-source;
+            src = cargoSource;
             inherit version;
             strictDeps = true;
 
-            nativeBuildInputs = [ pkgs.pkg-config ];
             buildInputs = [ ];
           };
 
@@ -162,26 +170,43 @@
               // {
                 pname = "server";
 
-                inherit cargoArtifacts version;
+                inherit cargoArtifacts;
                 cargoExtraArgs = "--package=server";
+                cargoTestExtraArgs = "-- --skip db_test_";
               }
             );
-            server-image = pkgs.dockerTools.buildLayeredImage {
 
+            base-image = pkgs.dockerTools.buildImage {
+              name = "boluo-base";
+              tag = "latest";
+              copyToRoot = pkgs.buildEnv {
+                name = "boluo-base-root";
+                paths = with pkgs; [
+                  busybox
+                  bashInteractive
+                  dockerTools.caCertificates
+                  dockerTools.fakeNss
+                ];
+              };
+              config = {
+                Cmd = [ "/bin/bash" ];
+                Labels = imageLabel;
+              };
+            };
+
+            server-image = pkgs.dockerTools.buildImage {
               name = "boluo-server";
               tag = "latest";
-              contents = commonImageContents;
+              fromImage = self'.packages.base-image;
+              copyToRoot = pkgs.buildEnv {
+                name = "boluo-server-root";
+                paths = with pkgs; [
+                  self'.packages.server
+                ];
+              };
               config = {
                 env = commonEnv;
-                Cmd =
-                  let
-                    entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
-                      set -e
-                      ulimit -n 262140
-                      ${self'.packages.server}/bin/server
-                    '';
-                  in
-                  [ "${entrypoint}/bin/entrypoint" ];
+                Cmd = [ "/bin/server" ];
                 Labels = imageLabel;
               };
             };
@@ -288,13 +313,16 @@
             site-image = pkgs.dockerTools.buildImage {
               name = "boluo-site";
               tag = "latest";
+              fromImage = self'.packages.base-image;
               copyToRoot =
                 with pkgs;
-                commonImageContents
-                ++ [
-                  curl
-                  nodejs
-                ];
+                buildEnv {
+                  name = "boluo-site-root";
+                  paths = [
+                    curl
+                    nodejs
+                  ];
+                };
               runAsRoot = ''
                 cp -r ${self'.packages.site} /app
               '';
@@ -431,8 +459,7 @@
               nixfmt-rfc-style
               sqlx-cli
               flyctl
-              nix-fast-build
-              nix-output-monitor
+              cargo-nextest
             ];
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"

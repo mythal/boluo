@@ -524,7 +524,7 @@ pub async fn verify_email(req: Request<impl Body>) -> Result<bool, AppError> {
 
     let pool = db::get().await;
     let mut conn = pool.acquire().await?;
-    User::verify_email(&mut *conn, &user_id).await?;
+    User::verify_email(&mut conn, &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,

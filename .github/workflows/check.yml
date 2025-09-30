@@ -1,24 +1,105 @@
 name: Check
 on:
-  workflow_call:
   pull_request:
+    types:
+      - opened
+      - synchronize
+  push:
+    branches:
+      - main
+      - master
+      - production
+
+env:
+  DO_NOT_TRACK: 1
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
 
 jobs:
-  lints:
-    name: Flake Check
+  cargo:
+    name: Cargo Checks
     runs-on: ubuntu-latest
-    permissions:
-      id-token: "write"
-      contents: "read"
+    timeout-minutes: 15
+    container: node:20-bookworm
+    env:
+      CARGO_INCREMENTAL: 0
+
+    services:
+      postgres:
+        image: postgres:18-trixie
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: boluo_test
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+    # https://github.com/actions-rust-lang/setup-rust-toolchain
+    - name: Setup Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@2fcdc490d667999e01ddbbf0f2823181beef6b39
+      with:
+        cache: ${{ github.ref != 'refs/heads/production' }}
+        components: clippy, rustfmt
 
-      - name: Nix Flake Check
-        run: nix flake check --verbose --print-build-logs --log-format raw --show-trace
+    # https://github.com/marketplace/actions/install-development-tools
+    - name: Install cargo-nextest
+      uses: taiki-e/install-action@nextest
+
+    - name: Init database
+      run: cargo run --package server --bin init
+      env:
+        DATABASE_URL: postgres://postgres:postgres@postgres/boluo_test
+
+    - name: Check
+      run: cargo clippy --locked
+
+    - name: Run tests
+      run: cargo nextest run
+      env:
+        DATABASE_URL: postgres://postgres:postgres@postgres/boluo_test
+
+  nodejs:
+    name: Node.js Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Cache turbo build setup
+      if: github.ref != 'refs/heads/production'
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: ${{ runner.os }}-turbo-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: "24"
+        cache: "npm"
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run build
+      run: npm run build
+
+    - name: Run tests
+      run: npm run test
+
+    - name: Check types
+      run: npm run check-types
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Check version consistency
+      run: npm run lint:versions

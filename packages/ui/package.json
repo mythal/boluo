@@ -2,8 +2,8 @@
   "name": "@boluo/ui",
   "version": "0.0.0",
   "dependencies": {
-    "@boluo/common": "*",
-    "@boluo/icons": "*",
+    "@boluo/common": "0.0.0",
+    "@boluo/icons": "0.0.0",
     "@floating-ui/react": "^0.27.5",
     "clsx": "^2.1.1",
     "color2k": "^2.0.3",
@@ -11,11 +11,11 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@boluo/api": "*",
-    "@boluo/eslint-config": "*",
-    "@boluo/theme": "*",
-    "@boluo/typescript-config": "*",
-    "@boluo/utils": "*",
+    "@boluo/api": "0.0.0",
+    "@boluo/eslint-config": "0.0.0",
+    "@boluo/theme": "0.0.0",
+    "@boluo/typescript-config": "0.0.0",
+    "@boluo/utils": "0.0.0",
     "@formatjs/ts-transformer": "^3.13.34",
     "@tailwindcss/container-queries": "^0.1.1",
     "@types/node": "^24.0.12",

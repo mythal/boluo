@@ -2,11 +2,11 @@
   "name": "@boluo/api",
   "version": "0.0.0",
   "dependencies": {
-    "@boluo/typescript-config": "*",
-    "@boluo/utils": "*"
+    "@boluo/typescript-config": "0.0.0",
+    "@boluo/utils": "0.0.0"
   },
   "devDependencies": {
-    "@boluo/eslint-config": "*",
+    "@boluo/eslint-config": "0.0.0",
     "eslint": "^9.23.0",
     "jotai": "^2.12.2",
     "typescript": "^5.8.3"

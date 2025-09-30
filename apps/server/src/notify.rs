@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::LazyLock, time::Duration};
+use std::{collections::HashMap, sync::LazyLock};
 
 use chrono::{DateTime, Utc};
 use tracing::Instrument as _;
@@ -15,8 +15,7 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                 HashMap::with_hasher(ahash::RandomState::new());
 
             let pool = db::get().await;
-            let mut interval = tokio::time::interval(Duration::from_secs(6));
-            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            let mut interval = crate::utils::cleaner_interval(6);
             loop {
                 tokio::select! {
                     Some((channel_id, update_time)) = rx.recv() => {

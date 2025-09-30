@@ -1,13 +1,43 @@
+mod config;
+use clap::Parser;
+
+#[derive(Parser)]
+struct Options {
+    /// Database URL
+    #[clap(long, env)]
+    database_url: String,
+
+    /// Whether to load fixtures
+    #[clap(long, default_value_t = false)]
+    fixtures: bool,
+}
+
 #[tokio::main]
 async fn main() {
-    let schema = include_str!("../schema.sql");
+    config::load();
+    let options = Options::parse();
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(1)
-        .connect(&std::env::var("DATABASE_URL").expect("DATABASE_URL must be set"))
+        .connect(&options.database_url)
         .await
         .expect("Cannot connect to database");
-    sqlx::raw_sql(schema)
-        .execute(&pool)
+    sqlx::migrate!("./migrations")
+        .run(&pool)
         .await
-        .expect("Cannot create schema");
+        .expect("Failed to run database migrations");
+
+    if options.fixtures {
+        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./apps/server/fixtures")
+            .expect("Cannot read fixtures directory")
+            .map(|res| res.expect("Cannot read fixture file"))
+            .collect();
+        paths.sort_by_key(|entry| entry.file_name());
+        for path in paths {
+            let sql = std::fs::read_to_string(path.path()).expect("Cannot read fixture file");
+            sqlx::raw_sql(&sql)
+                .execute(&pool)
+                .await
+                .expect("Failed to execute fixture SQL");
+        }
+    }
 }

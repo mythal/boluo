@@ -568,6 +568,183 @@ mod tests {
     use super::*;
     use uuid::Uuid;
 
+    fn unique_identity(email_prefix: &str, username_prefix: &str) -> (String, String) {
+        let raw = Uuid::new_v4().simple().to_string();
+        let short = &raw[..8];
+        (
+            format!("{email_prefix}{raw}@example.com"),
+            format!("{username_prefix}{short}"),
+        )
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_user_register_and_lookup(pool: sqlx::PgPool) {
+        let (email, username) = unique_identity("dbtest_", "dbuser_");
+        let nickname = "DB Tester";
+        let password = "SuperSafePass123!";
+
+        let user = User::register(&pool, &email, &username, nickname, password)
+            .await
+            .expect("user registration failed");
+        assert_ne!(user.password, password, "password should be hashed");
+
+        let fetched = User::get_by_id(&pool, &user.id)
+            .await
+            .expect("query by id failed")
+            .expect("user not found by id");
+        assert_eq!(fetched.id, user.id);
+        assert_eq!(fetched.username, username);
+        assert_eq!(fetched.nickname, nickname);
+        assert_eq!(fetched.email, email);
+
+        let by_username = User::get_by_username(&pool, &username)
+            .await
+            .expect("query by username failed");
+        assert!(by_username.is_some());
+
+        let by_email = User::get_by_email(&pool, &email)
+            .await
+            .expect("query by email failed");
+        assert!(by_email.is_some());
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_user_login_by_username_and_email(pool: sqlx::PgPool) {
+        let (email, username) = unique_identity("login_", "loginuser_");
+        let nickname = "Login User";
+        let password = "LoginPass123!";
+
+        let registered = User::register(&pool, &email, &username, nickname, password)
+            .await
+            .expect("user registration failed");
+
+        let login_with_username = User::login(&pool, &username, password)
+            .await
+            .expect("login by username failed")
+            .expect("valid credentials must return user");
+        assert_eq!(login_with_username.id, registered.id);
+
+        let login_with_email = User::login(&pool, &email, password)
+            .await
+            .expect("login by email failed")
+            .expect("email login should return user");
+        assert_eq!(login_with_email.id, registered.id);
+
+        let failed_login = User::login(&pool, &username, "WrongPassword999")
+            .await
+            .expect("login query should succeed");
+        assert!(
+            failed_login.is_none(),
+            "invalid password should not authenticate"
+        );
+    }
+
+    #[sqlx::test(
+        migrator = "crate::db::MIGRATOR",
+        fixtures(path = "../../fixtures", scripts("0-users"))
+    )]
+    async fn db_test_user_fixture(pool: sqlx::PgPool) {
+        let username: String =
+            query_scalar!("SELECT username FROM users WHERE email = 'cloudberry@example.com'")
+                .fetch_one(&pool)
+                .await
+                .expect("fetch user failed");
+        assert_eq!(username, "cloudberry");
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_user_reset_password_flow(pool: sqlx::PgPool) {
+        let (email, username) = unique_identity("reset_", "resetuser_");
+        let nickname = "Reset User";
+        let original_password = "ResetPass123!";
+        let new_password = "ResetPass456!";
+
+        let user = User::register(&pool, &email, &username, nickname, original_password)
+            .await
+            .expect("user registration failed");
+
+        let token = User::generate_reset_token(&pool, user.id)
+            .await
+            .expect("generate reset token failed");
+        let token_user = User::get_by_reset_token(&pool, token)
+            .await
+            .expect("fetch by reset token failed");
+        assert_eq!(token_user.id, user.id);
+
+        {
+            let mut conn = pool.acquire().await.expect("failed to acquire connection");
+            User::reset_password(&mut conn, user.id, token, new_password)
+                .await
+                .expect("reset password failed");
+        }
+
+        let login_new_password = User::login(&pool, &username, new_password)
+            .await
+            .expect("login with new password failed")
+            .expect("new password should authenticate");
+        assert_eq!(login_new_password.id, user.id);
+
+        let login_old_password = User::login(&pool, &username, original_password)
+            .await
+            .expect("login with old password failed");
+        assert!(
+            login_old_password.is_none(),
+            "old password should no longer authenticate"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_user_ext_settings_flow(pool: sqlx::PgPool) {
+        let (email, username) = unique_identity("settings_", "settings_");
+        let nickname = "Settings User";
+        let password = "SettingsPass123!";
+
+        let user = User::register(&pool, &email, &username, nickname, password)
+            .await
+            .expect("user registration failed");
+
+        let initial_settings = serde_json::json!({
+            "theme": "dark",
+            "enter_send": true
+        });
+        let user_ext = UserExt::update_settings(&pool, user.id, initial_settings.clone())
+            .await
+            .expect("failed to store settings");
+        assert_eq!(user_ext.settings, initial_settings);
+
+        let partial_settings = serde_json::json!({
+            "enter_send": false,
+            "expand_dice": true
+        });
+        let merged = UserExt::partial_update_settings(&pool, user.id, partial_settings.clone())
+            .await
+            .expect("failed to merge settings");
+        assert_eq!(merged.settings["theme"], initial_settings["theme"]);
+        assert_eq!(
+            merged.settings["enter_send"],
+            partial_settings["enter_send"]
+        );
+        assert_eq!(
+            merged.settings["expand_dice"],
+            partial_settings["expand_dice"]
+        );
+
+        let fetched = UserExt::get(&pool, user.id)
+            .await
+            .expect("failed to load settings");
+        assert_eq!(fetched.settings, merged.settings);
+
+        let is_verified = UserExt::is_email_verified(&pool, user.id)
+            .await
+            .expect("failed to check verification status");
+        assert!(!is_verified);
+
+        let verified_at = UserExt::get_email_verified_at(&pool, user.id)
+            .await
+            .expect("failed to get verification timestamp");
+        assert!(verified_at.is_none());
+    }
+
     #[test]
     fn test_email_verification_token_generation_and_verification() {
         let user_id = Uuid::new_v4();

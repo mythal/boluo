@@ -98,6 +98,14 @@ pub fn timestamp() -> i64 {
     Utc::now().timestamp_millis()
 }
 
+/// Create a tokio interval for periodic cleaners/maintenance.
+/// It skips missed ticks to avoid burst catch-up loops that can spike CPU.
+pub fn cleaner_interval(seconds: u64) -> tokio::time::Interval {
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(seconds));
+    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    interval
+}
+
 pub fn inner_map<T, E, U, F: Fn(T) -> U>(
     x: Result<Option<T>, E>,
     mapper: F,

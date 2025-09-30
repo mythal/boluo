@@ -23,7 +23,7 @@ pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
             hyper::Response::builder()
                 .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
                 .body(
-                    include_str!("error_serialize_error.json")
+                    include_str!("../text/error_serialize_error.json")
                         .as_bytes()
                         .to_vec(),
                 )
@@ -135,10 +135,9 @@ where
     })
 }
 
-pub async fn parse_large_body<T: Send + 'static>(
-    req: hyper::Request<impl Body>,
-) -> Result<Box<T>, AppError>
+pub async fn parse_large_body<T>(req: hyper::Request<impl Body>) -> Result<Box<T>, AppError>
 where
+    T: Send + 'static,
     for<'de> T: Deserialize<'de>,
 {
     use http_body_util::BodyExt;

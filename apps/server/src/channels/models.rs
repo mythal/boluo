@@ -694,3 +694,282 @@ pub async fn members_attach_user<'c, T: sqlx::PgExecutor<'c>>(
     }
     Ok(members_with_user)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cache::{CACHE, CacheType};
+    use crate::spaces::{Space, SpaceMember};
+    use crate::users::User;
+    use uuid::Uuid;
+
+    fn unique_name(prefix: &str) -> String {
+        let raw = Uuid::new_v4().simple().to_string();
+        format!("{prefix}_{}", &raw[..6])
+    }
+
+    async fn create_test_user(pool: &sqlx::PgPool, prefix: &str) -> User {
+        let raw = Uuid::new_v4().simple().to_string();
+        let username = format!("{prefix}_usr_{}", &raw[..6]);
+        let email = format!("{prefix}_{raw}@example.com");
+        User::register(pool, &email, &username, "Channel Tester", "ChannelPass123!")
+            .await
+            .expect("failed to create test user")
+    }
+
+    async fn create_test_space(pool: &sqlx::PgPool, owner: &User, prefix: &str) -> Space {
+        let name = unique_name(prefix);
+        let description = format!("Description for {name}");
+        let space = Space::create(pool, name, &owner.id, description, None, Some("d20"))
+            .await
+            .expect("failed to create space");
+        SpaceMember::add_admin(pool, &owner.id, &space.id)
+            .await
+            .expect("failed to add owner as admin");
+        space
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_channel_create_and_query_flow(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "channel_space").await;
+
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "General Chat",
+            true,
+            Some("d12"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create channel");
+
+        assert_eq!(channel.space_id, space.id);
+        assert_eq!(channel.default_dice_type, "d12");
+        assert!(channel.is_public);
+        assert_eq!(channel.r#type, ChannelType::InGame);
+
+        let fetched = Channel::get_by_id(&pool, &channel.id)
+            .await
+            .expect("get_by_id failed")
+            .expect("channel not found by id");
+        assert_eq!(fetched.id, channel.id);
+
+        let fetched_by_name = Channel::get_by_name(&pool, space.id, &channel.name)
+            .await
+            .expect("get_by_name failed")
+            .expect("channel not found by name");
+        assert_eq!(fetched_by_name.id, channel.id);
+
+        let map = Channel::get_by_id_list(&pool, std::iter::once(channel.id))
+            .await
+            .expect("get_by_id_list failed");
+        assert_eq!(map.len(), 1);
+        assert!(map.get(&channel.id).is_some());
+
+        let with_space = Channel::get_with_space(&pool, &channel.id)
+            .await
+            .expect("get_with_space failed")
+            .expect("channel with space not found");
+        assert_eq!(with_space.0.id, channel.id);
+        assert_eq!(with_space.1.id, space.id);
+
+        let channels_in_space = Channel::get_by_space(&pool, &space.id)
+            .await
+            .expect("get_by_space failed");
+        assert!(channels_in_space.iter().any(|item| item.id == channel.id));
+
+        let owner_member =
+            ChannelMember::add_user(&pool, owner.id, channel.id, space.id, "GM", true)
+                .await
+                .expect("failed to add owner to channel");
+        assert!(owner_member.is_master);
+
+        let channels_for_owner = Channel::get_by_space_and_user(&pool, &space.id, &owner.id)
+            .await
+            .expect("get_by_space_and_user failed");
+        assert!(
+            channels_for_owner
+                .iter()
+                .any(|entry| entry.channel.id == channel.id
+                    && entry.member.as_ref().map(|m| m.user_id) == Some(owner.id))
+        );
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let channels_with_member = Channel::get_by_user(&mut conn, owner.id)
+            .await
+            .expect("get_by_user failed");
+        assert!(
+            channels_with_member
+                .iter()
+                .any(|entry| entry.channel.id == channel.id && entry.member.user_id == owner.id)
+        );
+        drop(conn);
+
+        let edited = Channel::edit(
+            &pool,
+            &channel.id,
+            Some("Renamed Channel"),
+            Some("Discuss strategies"),
+            Some("d6"),
+            Some("/roll 2d6"),
+            Some(false),
+            Some(true),
+            Some(ChannelType::Document),
+        )
+        .await
+        .expect("failed to edit channel");
+
+        assert_eq!(edited.name, "Renamed Channel");
+        assert_eq!(edited.topic, "Discuss strategies");
+        assert_eq!(edited.default_dice_type, "d6");
+        assert_eq!(edited.default_roll_command, "/roll 2d6");
+        assert!(!edited.is_public);
+        assert!(edited.is_document);
+        assert_eq!(edited.r#type, ChannelType::Document);
+
+        let deleted = Channel::delete(&pool, &channel.id, &space.id)
+            .await
+            .expect("delete failed");
+        assert_eq!(deleted, 1);
+
+        let after_delete = Channel::get_by_id(&pool, &channel.id)
+            .await
+            .expect("get after delete failed");
+        assert!(after_delete.is_none());
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_channel_member_flow(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let member = create_test_user(&pool, "member").await;
+        let space = create_test_space(&pool, &owner, "channel_member").await;
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add member to space");
+
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Adventures",
+            true,
+            Some("d20"),
+            ChannelType::OutOfGame,
+        )
+        .await
+        .expect("failed to create member test channel");
+
+        let owner_member =
+            ChannelMember::add_user(&pool, owner.id, channel.id, space.id, "GM", true)
+                .await
+                .expect("failed to add owner to channel");
+        assert!(owner_member.is_master);
+
+        let member_record =
+            ChannelMember::add_user(&pool, member.id, channel.id, space.id, "Player", false)
+                .await
+                .expect("failed to add member to channel");
+        assert!(!member_record.is_master);
+
+        let members_with_user = ChannelMember::get_by_channel(&pool, &channel.id, false)
+            .await
+            .expect("get_by_channel failed");
+        assert_eq!(members_with_user.len(), 2);
+
+        let owner_channels = ChannelMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("get_by_user failed for owner");
+        assert_eq!(owner_channels.len(), 1);
+
+        let color_list_before = ChannelMember::get_color_list(&pool, &channel.id)
+            .await
+            .expect("get_color_list failed before edit");
+        assert!(color_list_before.is_empty());
+
+        let updated_member = ChannelMember::edit(
+            &pool,
+            member.id,
+            channel.id,
+            space.id,
+            Some("Player One"),
+            Some("#112233"),
+        )
+        .await
+        .expect("failed to edit member")
+        .expect("member should exist after edit");
+        assert_eq!(updated_member.character_name, "Player One");
+        assert_eq!(updated_member.text_color.as_deref(), Some("#112233"));
+
+        let color_list_after = ChannelMember::get_color_list(&pool, &channel.id)
+            .await
+            .expect("get_color_list failed after edit");
+        assert_eq!(
+            color_list_after.get(&member.id).map(String::as_str),
+            Some("#112233")
+        );
+
+        let promoted = ChannelMember::set_master(&pool, &member.id, &channel.id, space.id, true)
+            .await
+            .expect("set_master failed")
+            .expect("expected updated member");
+        assert!(promoted.is_master);
+
+        let is_master_flag = ChannelMember::is_master(&pool, member.id, channel.id, space.id)
+            .await
+            .expect("is_master failed");
+        assert!(is_master_flag);
+
+        let with_space_member =
+            ChannelMember::get_with_space_member(&pool, member.id, channel.id, &space.id)
+                .await
+                .expect("get_with_space_member failed")
+                .expect("expected channel member with space");
+        assert_eq!(with_space_member.0.user_id, member.id);
+        assert_eq!(with_space_member.1.user_id, member.id);
+        assert_eq!(with_space_member.1.space_id, space.id);
+
+        let fetched_member = ChannelMember::get(&pool, member.id, space.id, channel.id)
+            .await
+            .expect("get member failed")
+            .expect("member should exist");
+        assert_eq!(fetched_member.user_id, member.id);
+
+        let members_state = Member::get_by_channel_from_db(&pool, space.id, channel.id)
+            .await
+            .expect("get_by_channel_from_db failed");
+        assert_eq!(members_state.len(), 2);
+
+        let attached = members_attach_user(&pool, members_state.clone())
+            .await
+            .expect("members_attach_user failed");
+        assert_eq!(attached.len(), 2);
+        assert!(attached.iter().any(|item| item.user.id == member.id));
+
+        ChannelMember::remove_user(&pool, member.id, channel.id, space.id)
+            .await
+            .expect("remove_user failed");
+
+        let member_channels_after_remove = ChannelMember::get_by_user(&pool, member.id)
+            .await
+            .expect("get_by_user failed after remove");
+        assert!(member_channels_after_remove.is_empty());
+
+        let remaining_members = ChannelMember::get_by_channel(&pool, &channel.id, false)
+            .await
+            .expect("get_by_channel failed after remove");
+        assert_eq!(remaining_members.len(), 1);
+        assert_eq!(remaining_members[0].member.user_id, owner.id);
+
+        let removed_channels = ChannelMember::remove_user_by_space(&pool, owner.id, space.id)
+            .await
+            .expect("remove_user_by_space failed");
+        assert_eq!(removed_channels, vec![channel.id]);
+
+        CACHE.invalidate(CacheType::ChannelMembers, owner.id).await;
+        let owner_channels_after = ChannelMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("owner channels after space removal failed");
+        assert!(owner_channels_after.is_empty());
+    }
+}

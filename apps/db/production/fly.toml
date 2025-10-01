@@ -8,7 +8,7 @@ primary_region = 'nrt'
 swap_size_mb = 512
 
 [build]
-  dockerfile = 'Dockerfile'
+  image = 'ghcr.io/mythal/boluo/boluo-postgres:latest'
 
 [env]
   POSTGRES_DB = 'boluo'
@@ -36,4 +36,4 @@ swap_size_mb = 512
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
-  cpus = 2
+  cpus = 1

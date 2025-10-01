@@ -5,9 +5,10 @@
 
 app = 'boluo-db-staging'
 primary_region = 'nrt'
+swap_size_mb = 512
 
 [build]
-  dockerfile = 'Dockerfile'
+  image = 'ghcr.io/mythal/boluo/boluo-postgres:latest'
 
 [env]
   POSTGRES_DB = 'boluo'

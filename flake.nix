@@ -444,7 +444,7 @@
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/production/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
@@ -452,7 +452,7 @@
             '';
 
             deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/production/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
           };
 

@@ -1,6 +1,6 @@
 services:
   db:
-    image: ghcr.io/mythal/boluo/boluo-postgres:latest
+    image: postgres:18-trixie
     build:
       context: ./db
       dockerfile: Dockerfile

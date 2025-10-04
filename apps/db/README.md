@@ -3,7 +3,7 @@
 ## Schema
 
 ```
-pg_dump --schema-only -U postgres --no-owner --no-privileges boluo > db/schema.sql
+pg_dump --schema-only -U postgres --no-owner --no-privileges boluo > apps/db/schema.sql
 ```
 
 ## Dump

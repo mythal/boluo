@@ -1,3 +1,6 @@
+-- Dumped from database version 17.6 (Debian 17.6-1.pgdg13+1)
+-- Dumped by pg_dump version 17.6 (Debian 17.6-1.pgdg13+1)
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -9,6 +12,13 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: _sqlx_test; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA _sqlx_test;
+
 
 --
 -- Name: hstore; Type: EXTENSION; Schema: -; Owner: -
@@ -104,9 +114,32 @@ END;
 $$;
 
 
+--
+-- Name: database_ids; Type: SEQUENCE; Schema: _sqlx_test; Owner: -
+--
+
+CREATE SEQUENCE _sqlx_test.database_ids
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: databases; Type: TABLE; Schema: _sqlx_test; Owner: -
+--
+
+CREATE TABLE _sqlx_test.databases (
+    db_name text NOT NULL,
+    test_path text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
 
 --
 -- Name: _sqlx_migrations; Type: TABLE; Schema: public; Owner: -
@@ -349,6 +382,14 @@ CREATE TABLE public.users_extension (
 
 
 --
+-- Name: databases databases_pkey; Type: CONSTRAINT; Schema: _sqlx_test; Owner: -
+--
+
+ALTER TABLE ONLY _sqlx_test.databases
+    ADD CONSTRAINT databases_pkey PRIMARY KEY (db_name);
+
+
+--
 -- Name: _sqlx_migrations _sqlx_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -381,19 +422,11 @@ ALTER TABLE ONLY public.media
 
 
 --
--- Name: messages messages_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_id_unique UNIQUE (id);
-
-
---
 -- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_pkey PRIMARY KEY (channel_id, id);
+    ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
 
 
 --
@@ -509,6 +542,13 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: databases_created_at; Type: INDEX; Schema: _sqlx_test; Owner: -
+--
+
+CREATE INDEX databases_created_at ON _sqlx_test.databases USING btree (created_at);
+
+
+--
 -- Name: message_tags; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -592,7 +632,6 @@ ALTER TABLE ONLY public.users_extension
 
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_uploader FOREIGN KEY (uploader_id) REFERENCES public.users(id) ON DELETE RESTRICT;
-
 
 --
 -- Name: reset_tokens password_reset_user; Type: FK CONSTRAINT; Schema: public; Owner: -

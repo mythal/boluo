@@ -48,7 +48,7 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "webpack": "^5.98.0"
   },
   "homepage": "https://github.com/mythal/boluo",

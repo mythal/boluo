@@ -9,7 +9,7 @@
     "@types/react": "^19.0.12",
     "prettier": "^3.5.3",
     "react": "^19.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "exports": {
     ".": "./src/index.ts",

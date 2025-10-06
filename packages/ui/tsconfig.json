@@ -4,6 +4,6 @@
     "moduleResolution": "bundler",
     "module": "esnext"
   },
-  "include": ["**/*.ts", "**/*.tsx", "tailwindcss-theme-swapper.d.ts", "tailwind.config.mjs"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "build", "node_modules"]
 }

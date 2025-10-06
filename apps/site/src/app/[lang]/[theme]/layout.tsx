@@ -1,7 +1,7 @@
 import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../../components/global/Providers';
-import '@boluo/ui/tailwind.css';
+import '@boluo/tailwind-config';
 import { getIntl, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
 import { toTheme } from '@boluo/theme';
 import { Params } from '../../../server';

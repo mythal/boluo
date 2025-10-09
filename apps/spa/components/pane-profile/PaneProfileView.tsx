@@ -28,7 +28,7 @@ export const PaneProfileView: FC<Props> = ({ user }) => {
           {user.bio !== '' ? (
             <div className="max-w-md whitespace-pre-line">{user.bio}</div>
           ) : (
-            <div className="text-text-lighter text-sm">
+            <div className="text-text-muted text-sm">
               <FormattedMessage defaultMessage="Have not set a bio yet" />
             </div>
           )}

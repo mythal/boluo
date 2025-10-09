@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/react-vite';
-import '@boluo/ui/tailwind.css';
+import '@boluo/tailwind-config';
 import { IntlProvider } from 'react-intl';
 import React from 'react';
 
@@ -11,7 +11,7 @@ const preview: Preview = {
 };
 
 export const decorators = [
-  (Story) => (
+  (Story: React.FC) => (
     <IntlProvider locale="en">
       <Story />
     </IntlProvider>

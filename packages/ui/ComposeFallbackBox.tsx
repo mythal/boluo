@@ -8,9 +8,9 @@ interface Props {
 export const ComposeFallbackBox: FC<Props> = ({ description, source }) => {
   const descriptionOnly = !source;
   return (
-    <div className="bg-compose-outer-bg border-t p-2 text-sm">
-      {descriptionOnly ? null : <div className="text-text-light pb-1">{description}</div>}
-      <div className="bg-compose-bg border-compose-border w-full rounded-sm border">
+    <div className="bg-surface-default border-t border-border-subtle p-2 text-sm">
+      {descriptionOnly ? null : <div className="text-text-secondary pb-1">{description}</div>}
+      <div className="bg-surface-raised border-border-default w-full rounded-sm border">
         {descriptionOnly ? (
           <div className="p-2 text-center">{description}</div>
         ) : (

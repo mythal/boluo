@@ -16,7 +16,7 @@ import { useErrorExplain } from '@boluo/common/hooks';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();
-  return <div className="text-error-700 my-1">{explain(error)}</div>;
+  return <div className="text-state-danger-text my-1">{explain(error)}</div>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {

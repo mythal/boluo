@@ -17,8 +17,10 @@ export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected
     <button
       onClick={() => setUrl(url)}
       className={clsx(
-        'BaseUrlSelectorItem flex items-center justify-between rounded px-4 py-2',
-        selected ? 'bg-selectBox-active-bg' : 'bg-selectBox-bg hover:bg-selectBox-hover-bg',
+        'BaseUrlSelectorItem flex items-center justify-between rounded px-4 py-2 transition-colors',
+        selected
+          ? 'bg-surface-selectable-selected'
+          : 'bg-surface-selectable-default hover:bg-surface-selectable-hover',
       )}
     >
       <div>
@@ -28,7 +30,7 @@ export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected
       <div className="min-w-[6em] text-right">
         {result == null && <span>...</span>}
         {result === 'FAILED' && (
-          <span className="text-text-danger">
+          <span className="text-state-danger-text">
             <FormattedMessage defaultMessage="Failed" />
           </span>
         )}

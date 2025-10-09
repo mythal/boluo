@@ -9,7 +9,7 @@ const Card: FC<{ children: ReactNode; className?: string }> = ({ children, class
   return (
     <div
       className={[
-        'bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-lg rounded-sm border p-6',
+        'bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow max-w-lg rounded-sm border p-6',
         className,
       ].join(' ')}
     >
@@ -41,7 +41,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
         </h1>
 
         <div className="py-2">
-          <div className="bg-highest/5 flex h-20 w-full items-center justify-center italic">
+          <div className="bg-surface-muted text-text-secondary flex h-20 w-full items-center justify-center italic">
             An Awesome Logo
           </div>
         </div>

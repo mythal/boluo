@@ -43,7 +43,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
     return notFound();
   }
   return (
-    <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
+    <div className="bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow max-w-md rounded-sm border p-4">
       <div>
         <BackLink />
       </div>

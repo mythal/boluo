@@ -12,10 +12,10 @@ export const PaneBanner: FC<Props> = ({ banner }) => {
   return (
     <div
       className={clsx(
-        'pl-pane group/banner flex items-center justify-between py-2 pr-[6px] text-sm',
-        level === 'INFO' && 'bg-banner-info-bg',
-        level === 'WARNING' && 'bg-banner-warning-bg',
-        level === 'ERROR' && 'bg-banner-error-bg',
+        'pl-pane group/banner flex items-center justify-between py-2 pr-[6px] text-sm [&_a]:underline [&_a]:decoration-text-link-decoration [&_a]:text-text-link [&_a:hover]:text-text-link-hover [&_a:active]:text-text-link-active',
+        level === 'INFO' && 'bg-state-info-bg',
+        level === 'WARNING' && 'bg-state-warning-bg',
+        level === 'ERROR' && 'bg-state-danger-bg',
       )}
     >
       {banner.content}
@@ -33,7 +33,7 @@ export const CloseBannerButton: FC = () => {
     <button
       aria-label={label}
       onClick={closeBanner}
-      className="bg-banner-close-bg/50 group-hover/banner:bg-banner-close-bg inline-flex rounded-sm p-1.5 text-sm"
+      className="bg-surface-muted/50 group-hover/banner:bg-surface-muted inline-flex rounded-sm p-1.5 text-sm"
     >
       <X />
     </button>

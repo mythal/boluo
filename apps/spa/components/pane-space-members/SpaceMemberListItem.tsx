@@ -45,7 +45,7 @@ export const SpaceMemberListItem: FC<Props> = ({
         />
       </a>
       <div>
-        <a href={profileUrl} onClick={openProfile} className="text-brand-700 text-lg">
+        <a href={profileUrl} onClick={openProfile} className="text-brand-strong text-lg">
           {user.nickname}
         </a>
 
@@ -69,7 +69,7 @@ export const SpaceMemberListItem: FC<Props> = ({
         )}
       </div>
 
-      <div className="text-surface-400">{user.username}</div>
+      <div className="text-text-subtle">{user.username}</div>
       {amIAdmin && !thisIsMe && (
         <div className="relative row-span-full">
           <InListButton active={isShowOperation} onClick={() => setShowOperation((x) => !x)}>

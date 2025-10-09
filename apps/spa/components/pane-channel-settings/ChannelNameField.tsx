@@ -28,7 +28,9 @@ export const ChannelNameField: FC<Props> = ({ spaceId, channelName }) => {
           {...register('name', channelNameValidation(intl, spaceId, channelName))}
         />
       </div>
-      {errors.name && <div className="text-error-700 pt-1 text-sm">{errors.name.message}</div>}
+      {errors.name && (
+        <div className="text-state-danger-text pt-1 text-sm">{errors.name.message}</div>
+      )}
     </div>
   );
 };

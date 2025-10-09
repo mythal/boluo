@@ -1,5 +1,5 @@
 import clsx from 'clsx';
 
 export const link = clsx(
-  'text-link-normal hover:text-link-hover active:text-link-active underline decoration-link-decoration',
+  'text-text-link hover:text-text-link-hover active:text-text-link-active underline decoration-text-link-decoration',
 );

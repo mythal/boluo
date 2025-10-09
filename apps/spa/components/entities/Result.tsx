@@ -12,7 +12,7 @@ export const Result: FC<{ children: ReactNode; final?: boolean; noEqual?: boolea
       <span
         className={clsx(
           'Result',
-          final ? 'text-expr-result font-bold' : 'decoration-expr-decoration underline',
+          final ? 'text-state-success-text font-bold' : 'underline decoration-border-strong',
         )}
       >
         {children}

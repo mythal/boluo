@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import '@boluo/ui/tailwind.css';
+import '@boluo/tailwind-config';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return <>{children}</>;

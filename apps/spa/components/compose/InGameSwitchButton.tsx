@@ -32,7 +32,7 @@ export const InGameSwitchButton: FC = () => {
         }
         label={title}
       >
-        <Mask className={inGame ? '' : 'text-text-lighter'} />
+        <Mask className={inGame ? '' : 'text-text-muted'} />
       </InComposeButton>
       <TooltipBox
         show={showTooltip}

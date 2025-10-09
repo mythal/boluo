@@ -25,7 +25,7 @@
     "react-intl": "^7.1.11",
     "swr": "^2.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "exports": {
     ".": "./index.ts",

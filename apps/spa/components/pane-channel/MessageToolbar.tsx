@@ -127,7 +127,7 @@ export const MessageToolbar: FC<{
     <div
       ref={toolbarRef}
       className={clsx(
-        'border-message-toolbar-border hover:border-message-toolbar-hover-border bg-message-toolbar-bg absolute -top-3 right-2 z-10 flex select-none flex-row rounded border p-0.5 shadow-sm',
+        'bg-surface-raised border border-border-default hover:border-border-strong absolute -top-3 right-2 z-10 flex select-none flex-row rounded p-0.5 shadow-sm transition-colors',
       )}
     >
       <>
@@ -162,12 +162,13 @@ const MessageToolbarButton = ({
       aria-pressed={pressed}
       disabled={optimistic || props.disabled}
       className={clsx(
-        'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base',
+        'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base text-action-toggle-text transition-colors',
+        'bg-action-toggle-bg',
         optimistic ? 'cursor-progress' : '',
         pressed
-          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
-          : 'enabled:hover:bg-switch-hover-bg',
-        loading ? 'text-text-lighter cursor-progress' : '',
+          ? 'bg-action-toggle-selected-bg shadow-inner'
+          : 'enabled:hover:bg-action-toggle-bg-hover',
+        loading ? 'text-text-muted cursor-progress' : '',
       )}
       {...props}
     >
@@ -215,7 +216,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
         optimistic={optimistic}
         onClick={isToggling ? empty : toggle}
         label={intl.formatMessage({ defaultMessage: 'Archive' })}
-        className={clsx('flex-1', isToggling ? 'text-text-lighter cursor-progress' : '')}
+        className={clsx('flex-1', isToggling ? 'text-text-muted cursor-progress' : '')}
       />
     );
   }
@@ -303,7 +304,7 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
           style={floatingStyles}
           ref={refs.setFloating}
           {...getFloatingProps()}
-          className="border-message-toolbar-more-border bg-message-toolbar-more-bg z-20 flex w-[14rem] flex-col gap-1 rounded-md border p-2 shadow-md"
+          className="bg-surface-raised border border-border-default z-20 flex w-[14rem] flex-col gap-1 rounded-md p-2 shadow-md transition-colors"
         >
           {more}
         </div>
@@ -321,13 +322,13 @@ const MessageToolbarMore: FC<{ message: Message }> = ({ message }) => {
   if (display.type === 'ERROR') {
     return (
       <div className="flex gap-2 p-1 text-sm">
-        <TriangleAlert className="text-text-warning h-6 w-6 self-center" />
+        <TriangleAlert className="text-state-warning-text h-6 w-6 self-center" />
         {display.message}
       </div>
     );
   }
   return (
-    <ErrorBoundary fallback={<SomethingWentWrong className="text-text-warning text-sm" />}>
+    <ErrorBoundary fallback={<SomethingWentWrong className="text-state-warning-text text-sm" />}>
       {detailDate}
       {display.type === 'CONFIRM_DELETE' ? (
         <MessageDeleteConfirm message={message} />
@@ -359,7 +360,7 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
       icon={Trash}
       label={intl.formatMessage({ defaultMessage: 'Delete' })}
       onClick={deleting ? empty : deleteMessage}
-      className={deleting ? 'text-text-lighter cursor-progress' : 'text-text-danger'}
+      className={deleting ? 'text-text-muted cursor-progress' : 'text-state-danger-text'}
     />
   );
 };
@@ -371,7 +372,7 @@ const MessageDeleteConfirm: FC<{ message: Message }> = ({ message }) => {
   const setDisplay = useSetAtom(useContext(DisplayContext));
   return (
     <div className="px-1.5">
-      <div className="text-text-lighter py-1 text-xs">
+      <div className="text-text-muted py-1 text-xs">
         <FormattedMessage defaultMessage="Are you sure you want to delete this message?" />
       </div>
       <div className="truncate text-nowrap py-1.5 text-sm">{simpleText}</div>
@@ -380,7 +381,7 @@ const MessageDeleteConfirm: FC<{ message: Message }> = ({ message }) => {
           label={intl.formatMessage({ defaultMessage: 'Nevermind' })}
           icon={X}
           onClick={() => setDisplay(MORE)}
-          className="text-text-lighter"
+          className="text-text-muted"
         />
         <MessageDeleteButton messageId={message.id} />
       </div>
@@ -446,7 +447,7 @@ const MessageDetailDate: FC<{ created: string; edited: string }> = ({ created, e
   const createdDate = generateDetailDate(new Date(created));
   const editedDate = generateDetailDate(new Date(edited));
   return (
-    <div className="text-text-lighter select-text pb-2 text-right text-xs">
+    <div className="text-text-muted select-text pb-2 text-right text-xs">
       <div className="">
         <FormattedMessage defaultMessage="Created at" />{' '}
         <time className="font-mono">{createdDate}</time>
@@ -474,11 +475,12 @@ const MoreMenuItem: FC<{
       aria-pressed={pressed}
       disabled={optimistic}
       className={clsx(
-        'flex gap-1 rounded-sm p-1.5 text-sm',
+        'flex gap-1 rounded-sm p-1.5 text-sm text-text-primary transition-colors',
+        'bg-surface-selectable-default',
         optimistic ? 'cursor-progress' : '',
         pressed
-          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
-          : 'enabled:hover:bg-switch-hover-bg',
+          ? 'bg-surface-selectable-selected shadow-inner'
+          : 'enabled:hover:bg-surface-selectable-hover',
         className,
       )}
       onClick={optimistic ? empty : onClick}

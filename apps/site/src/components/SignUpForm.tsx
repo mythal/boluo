@@ -139,7 +139,11 @@ const PasswordField = () => {
             <FormattedMessage defaultMessage="Password" />
           </label>
 
-          <button type="button" onClick={() => setShow((show) => !show)} className="text-brand-700">
+          <button
+            type="button"
+            onClick={() => setShow((show) => !show)}
+            className="text-text-link hover:text-text-link-hover"
+          >
             {show ? (
               <FormattedMessage defaultMessage="Hide" />
             ) : (
@@ -173,7 +177,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       <NicknameField />
       <PasswordField />
       {error && (
-        <div className="text-error-700 my-1">
+        <div className="text-state-danger-text my-1">
           <FormErrorDisplay error={error} />
         </div>
       )}

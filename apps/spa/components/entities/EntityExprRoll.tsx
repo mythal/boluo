@@ -16,7 +16,7 @@ const RollFilter: FC<{ filter: ExprOf<'Roll'>['filter'] | undefined | null }> = 
   if (filter == null) return null;
   const [type, mount] = filter;
   return (
-    <span className="text-surface-500 mx-0.5 text-sm">
+    <span className="text-text-muted mx-0.5 text-sm">
       (
       <FormattedMessage defaultMessage="take" />{' '}
       <Delay fallback={<FallbackIcon />}>
@@ -37,7 +37,7 @@ const ShowRollResult: FC<{ node: EvaluatedExprOf<'Roll'> }> = ({ node }) => {
   }
   return (
     <span>
-      =<span className="text-text-lighter">[{node.values.join(', ')}]</span>
+      =<span className="text-text-muted">[{node.values.join(', ')}]</span>
       <Result final={topLevel}>{node.value}</Result>
     </span>
   );

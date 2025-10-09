@@ -120,7 +120,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       </div>
 
       {error && (
-        <div className="text-error-700 my-1">
+        <div className="text-state-danger-text my-1">
           <FormErrorDisplay error={error} />
         </div>
       )}

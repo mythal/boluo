@@ -12,9 +12,9 @@ export const Badge: FC<Props> = ({ icon, children, onClick }) => {
     <div
       onClick={onClick}
       className={clsx(
-        'Badge bg-surface-100 border-surface-300 inline-flex gap-1 rounded-lg border px-1 py-0.5 text-sm',
+        'Badge bg-surface-muted border-border-strong inline-flex gap-1 rounded-lg border px-1 py-0.5 text-sm',
         onClick != null
-          ? 'hover:bg-surface-50 hover:border-surface-500 cursor-pointer select-none'
+          ? 'hover:bg-surface-default hover:border-border-strong cursor-pointer select-none'
           : '',
       )}
     >

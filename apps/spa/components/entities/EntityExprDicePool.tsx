@@ -36,7 +36,7 @@ export const SingleDice: FC<SingleDiceProps> = React.memo(
     return (
       <span>
         <span>{value}</span>
-        <span className="text-surface-700 text-xs">{special}</span>
+        <span className="text-text-secondary text-xs">{special}</span>
         {!last && ', '}
       </span>
     );
@@ -52,9 +52,9 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }: Props) =>
       <Delay fallback={<FallbackIcon />}>
         <Cubes className="inline" />
       </Delay>
-      <span className="decoration-surface-600 group/dice-pool relative cursor-help px-1 underline decoration-dotted">
+      <span className="decoration-text-secondary group/dice-pool relative cursor-help px-1 underline decoration-dotted">
         <FormattedMessage defaultMessage="Dice Pool" />
-        <span className="bg-highest/75 text-lowest absolute bottom-full left-0 hidden w-max rounded-sm px-2 py-1 text-sm shadow group-hover/dice-pool:inline-block">
+        <span className="bg-tooltip-surface text-tooltip-text absolute bottom-full left-0 hidden w-max rounded-sm px-2 py-1 text-sm shadow group-hover/dice-pool:inline-block">
           <FormattedMessage
             defaultMessage="Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
             values={{
@@ -72,7 +72,7 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }: Props) =>
       </span>
       <span>=</span>
       {'values' in node ? (
-        <span className="text-surface-500">
+        <span className="text-text-muted">
           [
           {node.values.map((value, index) => (
             <SingleDice

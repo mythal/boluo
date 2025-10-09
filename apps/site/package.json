@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
+    "@boluo/tailwind-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@mdx-js/loader": "^3.0.0",
     "@mdx-js/react": "^3.0.0",
@@ -42,12 +43,11 @@
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "autoprefixer": "^10.4.21",
     "eslint": "^9.23.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "webpack": "^5.98.0"
   },
   "homepage": "https://github.com/mythal/boluo",

@@ -25,7 +25,7 @@ const ColorCell: FC<{
 }> = ({ color, selected, onClick, isLoading }) => {
   return (
     <button
-      className={`h-10 w-10 rounded border-[2px] ${isLoading ? 'grayscale' : ''} ${selected ? 'border-highest' : 'border-lowest'}`}
+      className={`h-10 w-10 rounded border-[2px] ${isLoading ? 'grayscale' : ''} ${selected ? 'border-border-strong' : 'border-border-subtle'}`}
       style={{ backgroundColor: color }}
       onClick={() => onClick(color)}
     />

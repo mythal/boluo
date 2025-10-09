@@ -16,7 +16,7 @@ interface Props {
 const UndecidedCocRoll: FC<{ node: ExprOf<'CocRoll'> }> = ({ node }) => {
   let target: ReactNode = null;
   if (node.target && node.target.type === 'Num') {
-    target = <span className="text-surface-500 ml-0.5">≤{node.target.value}</span>;
+    target = <span className="text-text-muted ml-0.5">≤{node.target.value}</span>;
   }
   return (
     <span>
@@ -34,7 +34,7 @@ const CocResult: FC<{ node: EvaluatedExprOf<'CocRoll'> }> = ({ node }) => {
   let modifiers: ReactNode = null;
   if (node.modifiers.length > 0) {
     modifiers = (
-      <span className="text-surface-500 mx-0.5 text-sm">
+      <span className="text-text-muted mx-0.5 text-sm">
         (
         <Delay fallback={<FallbackIcon />}>
           <Dice className="inline h-4 w-4" />
@@ -47,7 +47,7 @@ const CocResult: FC<{ node: EvaluatedExprOf<'CocRoll'> }> = ({ node }) => {
   }
   if (node.targetValue) {
     target = (
-      <span className="text-surface-500 mx-0.5">
+      <span className="text-text-muted mx-0.5">
         {node.value <= node.targetValue ? '≤' : '>'}
         {node.targetValue}
       </span>

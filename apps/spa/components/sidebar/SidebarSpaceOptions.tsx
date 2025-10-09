@@ -25,7 +25,7 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
   return (
     <div className="h-pane-header group flex w-full items-center gap-1 px-4 text-sm">
       <button
-        className="hover:text-text-light inline min-w-0 flex-grow items-center gap-2 truncate text-left font-bold"
+        className="hover:text-text-secondary inline min-w-0 flex-grow items-center gap-2 truncate text-left font-bold"
         onClick={handleClickSpaceName}
       >
         {space.name}
@@ -34,8 +34,8 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
         className={clsx(
           'inline-block flex-none rounded-sm px-1 py-0.5 text-sm',
           sidebarState === 'SPACES'
-            ? 'bg-sidebar-folder-active-bg'
-            : 'hover:bg-sidebar-folder-hover-bg',
+            ? 'bg-surface-selectable-selected'
+            : 'bg-surface-selectable-default hover:bg-surface-selectable-hover',
         )}
         onClick={handleClickSwitchSpace}
       >

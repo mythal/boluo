@@ -30,7 +30,7 @@ export const SidebarButton: FC = () => {
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        <div className="bg-sidebar-float-bg text-sidebar-float-text flex h-full w-full items-center justify-center rounded-sm shadow">
+        <div className="bg-surface-floating text-text-on-floating flex h-full w-full items-center justify-center rounded-sm shadow">
           {isSidebarExpanded ? <PanelLeftClose /> : <PanelLeftOpen />}
         </div>
       </button>

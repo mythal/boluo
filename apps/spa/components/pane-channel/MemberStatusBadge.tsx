@@ -29,7 +29,8 @@ export const MemberStatusBadge = React.memo(({ status }: { status: UserStatus })
       <span
         className={clsx(
           'box-content inline-block h-[0.5em] w-[0.5em] rounded-full border-[0.125em]',
-          status.kind === 'ONLINE' && 'border-green-500 bg-green-400',
+          status.kind === 'ONLINE' &&
+            'border-presence-online-indicator-border bg-presence-online-indicator-bg',
         )}
         aria-label={text}
       />

@@ -104,13 +104,13 @@ export const Content = memo<Props>(
     return (
       <span
         className={clsx(
-          'Content relative whitespace-pre-wrap break-words',
-          isArchived ? 'decoration-highest/50 line-through' : '',
+          'Content relative break-words whitespace-pre-wrap',
+          isArchived ? 'decoration-text-secondary decoration-opacity-50 line-through' : '',
         )}
         onContextMenu={onContextMenu}
         onDoubleClick={onDoubleClick}
       >
-        {isAction && <span className="text-message-action mr-1">*</span>}
+        {isAction && <span className="text-text-muted mr-1">*</span>}
         {isAction && nameNode}
         {entityNodeList}
       </span>

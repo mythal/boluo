@@ -153,12 +153,12 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
 };
 
 const placeHolderColors = [
-  'bg-text-lighter/30',
-  'bg-text-lighter/30',
-  'bg-text-lighter/50',
-  'bg-text-lighter/10',
-  'bg-text-lighter/30',
-  'bg-text-lighter/60',
+  'bg-text-subtle/30',
+  'bg-text-subtle/30',
+  'bg-text-subtle/50',
+  'bg-text-subtle/10',
+  'bg-text-subtle/30',
+  'bg-text-subtle/60',
 ];
 
 const ScrollSeekPlaceholder: FC<ScrollSeekPlaceholderProps> = ({ height, index }) => (

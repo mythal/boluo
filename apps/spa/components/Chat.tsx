@@ -76,7 +76,7 @@ const Chat: FC = () => {
         <BannerContext value={bannerRef}>
           <IsTouchContext value={isTouch}>
             <BreakpointProvider>
-              <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
+              <div className="view-height accent-brand-strong grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
                 <div ref={bannerRef} className="col-span-full"></div>
                 <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
                 <ChatContentBox>
@@ -133,7 +133,7 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       onTouchStart={autoFoldSidebar}
       onClick={autoFoldSidebar}
       className={clsx(
-        'md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
+        'md:divide-border-subtle relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
         showMask ? 'cursor-pointer brightness-50' : '',
       )}
     >

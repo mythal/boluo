@@ -111,7 +111,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     <button
       className={clsx(
         'group/icon relative row-span-2 h-full self-center',
-        active ? 'text-surface-900' : 'text-surface-400 group-hover:text-surface-700',
+        active ? 'text-text-primary' : 'text-text-subtle group-hover:text-text-secondary',
         isReordering ? 'cursor-grab' : 'cursor-pointer',
       )}
       onClick={handleClickButton}
@@ -128,7 +128,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
   );
   const channelName = (
     <span className="text-left">
-      {channel.isPublic ? '' : <Icon className="text-text-light mr-1" icon={Lock} />}
+      {channel.isPublic ? '' : <Icon className="text-text-secondary mr-1" icon={Lock} />}
       {channel.name}
     </span>
   );
@@ -155,9 +155,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         <span
           className={clsx(
             'group grid w-full grid-cols-[1rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-            active
-              ? 'bg-sidebar-channels-active-bg hover:bg-sidebar-channels-active-hover'
-              : 'hover:bg-sidebar-channels-hover',
+            active ? 'bg-surface-selectable-selected' : 'hover:bg-surface-selectable-hover',
           )}
           onClick={handleClick}
         >
@@ -175,9 +173,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         href={`#route=${channel.spaceId}&panes=${paneUrlPart}`}
         className={clsx(
           'group grid w-full cursor-pointer grid-cols-[1rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-          active
-            ? 'bg-sidebar-channels-active-bg hover:bg-sidebar-channels-active-hover'
-            : 'hover:bg-sidebar-channels-hover',
+          active ? 'bg-surface-selectable-selected' : 'hover:bg-surface-selectable-hover',
         )}
         onClick={handleClick}
       >

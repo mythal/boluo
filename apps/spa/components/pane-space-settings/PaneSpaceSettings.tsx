@@ -306,7 +306,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           </PaneHeaderBox>
         }
       >
-        <div className="text-surface-400 flex items-center justify-center p-8">
+        <div className="text-text-subtle flex items-center justify-center p-8">
           <FormattedMessage defaultMessage="You are not logged in" />
         </div>
       </PaneBox>

@@ -35,7 +35,7 @@ export const PaneHeaderBox: FC<Props> = ({
         <span
           className={clsx(
             'inline-flex flex-shrink-0 items-center justify-center pr-1',
-            isFocused ? 'text-text-lighter' : 'text-text-lighter/50',
+            isFocused ? 'text-text-muted' : 'text-text-muted/50',
           )}
         >
           {icon}
@@ -44,7 +44,7 @@ export const PaneHeaderBox: FC<Props> = ({
           <div
             className={clsx(
               'flex-shrink overflow-hidden text-ellipsis whitespace-nowrap',
-              isFocused ? 'text-surface-950' : 'text-surface-400',
+              isFocused ? 'text-text-primary' : 'text-text-subtle',
             )}
           >
             {children}

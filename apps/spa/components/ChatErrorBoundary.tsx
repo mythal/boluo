@@ -15,10 +15,10 @@ const ChatError: FC<{ error: unknown; eventId: string }> = ({ eventId }) => {
     <div className="flex flex-col gap-2 p-8">
       <h1 className="font-bold">Oops</h1>
 
-      <p className="text-text-light">The application crash due to an unexpected error.</p>
-      <p className="text-text-light">
+      <p className="text-text-secondary">The application crash due to an unexpected error.</p>
+      <p className="text-text-secondary">
         Please send this code to the system administrator:{' '}
-        <span className="text-text-base font-mono">{eventId}</span>
+        <span className="text-text-primary font-mono">{eventId}</span>
       </p>
       <p className="font-pixel">.·°՞(つ ≧□≦)つ՞°·.</p>
     </div>

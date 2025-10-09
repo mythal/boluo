@@ -19,7 +19,7 @@ export const OthersPreviewNoBroadcast = React.memo<Props>(({ timestamp }: Props)
   return (
     <div
       ref={ref}
-      className="text-surface-600 data-[highlight=true]:text-surface-300 transition-colors duration-100"
+      className="text-text-secondary data-[highlight=true]:text-text-subtle transition-colors duration-100"
     >
       *
       <span className="px-1 italic">

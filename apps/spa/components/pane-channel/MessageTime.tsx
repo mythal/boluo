@@ -21,7 +21,7 @@ export const MessageTime: FC<Props> = ({ message, failTo }) => {
   const edited = message.modified !== message.created;
   if (failTo) {
     return (
-      <span className="text-text-danger text-xs">
+      <span className="text-state-danger-text text-xs">
         <Delay fallback={<FallbackIcon />}>
           <Icon icon={AlertTriangle} />
         </Delay>
@@ -34,7 +34,7 @@ export const MessageTime: FC<Props> = ({ message, failTo }) => {
   return (
     <time
       data-edited={edited}
-      className="text-text-lighter text-xs decoration-dotted data-[edited=true]:underline"
+      className="text-text-muted text-xs decoration-dotted data-[edited=true]:underline"
       dateTime={message.created}
       title={generateDetailDate(date)}
       onTouchEnd={(e) => {

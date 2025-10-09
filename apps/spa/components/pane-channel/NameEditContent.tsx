@@ -117,7 +117,7 @@ export const NameEditContent: FC<Props> = ({ member }) => {
             {nameHistory.map((name) => (
               <button
                 key={name}
-                className="bg-name-history-bg hover:bg-name-history-hover-bg inline-block max-w-[10rem] truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
+                className="bg-surface-selectable-default hover:bg-surface-selectable-hover border-border-subtle inline-block max-w-[10rem] truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
                 onClick={() => {
                   dispatch({
                     type: 'setInputedName',
@@ -147,7 +147,7 @@ export const NameEditContent: FC<Props> = ({ member }) => {
       <label className="block cursor-pointer select-none" htmlFor={id.inGame}>
         <div>
           <FormattedMessage defaultMessage="Out of Character" />
-          <span className="text-text-light ml-1">({member.user.nickname})</span>
+          <span className="text-text-secondary ml-1">({member.user.nickname})</span>
         </div>
       </label>
     </div>

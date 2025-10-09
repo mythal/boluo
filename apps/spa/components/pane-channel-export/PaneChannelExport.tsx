@@ -109,7 +109,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
       <a hidden ref={linkRef} />
       <div className="p-pane mx-auto grid max-w-screen-sm grid-cols-[auto_1fr] items-baseline gap-2">
         {error != null && (
-          <div className="bg-failed-banner-bg col-span-full rounded-sm px-4 py-2">
+          <div className="bg-state-warning-bg col-span-full rounded-sm px-4 py-2">
             <Failed
               code={errorCode(error)}
               title={<FormattedMessage defaultMessage="Failed to export the channel" />}

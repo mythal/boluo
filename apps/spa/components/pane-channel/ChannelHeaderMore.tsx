@@ -29,12 +29,12 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
       onClick={edit}
       className={clsx(
         'flex items-center gap-0.5 whitespace-nowrap rounded-sm px-2 py-1',
-        'hover:bg-pin-brand-700/10',
+        'hover:bg-brand-strong/10',
       )}
     >
       {member.characterName ? (
         <>
-          <span className="text-surface-700 @md:inline hidden text-sm">
+          <span className="text-text-secondary @md:inline hidden text-sm">
             <FormattedMessage defaultMessage="Character Name:" />
           </span>
           <span>{member.characterName}</span>
@@ -44,7 +44,7 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
           <FormattedMessage defaultMessage="No Character Name" />
         </span>
       )}
-      <Icon icon={Edit} className="text-brand-700 ml-1" />
+      <Icon icon={Edit} className="text-brand-strong ml-1" />
     </button>
   );
 };

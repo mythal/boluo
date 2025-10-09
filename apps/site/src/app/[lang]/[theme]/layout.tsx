@@ -46,7 +46,7 @@ export default async function RootLayout({
   const messages = await loadMessages(locale);
   return (
     <html lang={locale} className={theme}>
-      <body className="bg-bg text-text-base">
+      <body className="bg-bg text-text-primary">
         <ClientProviders locale={locale} messages={messages}>
           <div className="p-4 md:container md:mx-auto md:p-8">{children}</div>
           <div id="portal" />

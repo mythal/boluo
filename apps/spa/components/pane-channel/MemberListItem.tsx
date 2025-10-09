@@ -53,7 +53,7 @@ export const MemberListItem: FC<Props> = ({
         className={clsx(
           'grid grid-flow-col grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1',
           hasCharacterName ? 'grid-rows-2' : 'grid-rows-1',
-          'hover:bg-surface-100 active:bg-surface-200 group relative w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
+          'hover:bg-surface-muted active:bg-surface-interactive-active group relative w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -68,7 +68,7 @@ export const MemberListItem: FC<Props> = ({
           />
         </div>
         {hasCharacterName && (
-          <span className={clsx(offline ? 'text-surface-500' : '', 'text-left', 'truncate')}>
+          <span className={clsx(offline ? 'text-text-muted' : '', 'text-left', 'truncate')}>
             <Icon icon={Mask} /> {channelMember.characterName}
           </span>
         )}
@@ -76,7 +76,7 @@ export const MemberListItem: FC<Props> = ({
           {
             <span
               className={clsx(
-                offline ? 'text-text-light' : hasCharacterName ? 'text-surface-600' : '',
+                offline ? 'text-text-secondary' : hasCharacterName ? 'text-text-secondary' : '',
                 'truncate',
               )}
             >

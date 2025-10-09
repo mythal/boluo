@@ -12,13 +12,13 @@ type TextAreaProps = React.ComponentPropsWithoutRef<'textarea'> &
 
 export const inputStyle = (variant: Variant['variant'] = 'normal') =>
   clsx(
-    'rounded-sm border-[1px] border-solid px-3 py-2 focus:outline-none disabled:cursor-not-allowed disabled:brightness-125 disabled:contrast-50 dark:disabled:brightness-75',
+    'rounded-sm border border-solid px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 disabled:cursor-not-allowed disabled:brightness-125 disabled:contrast-50 dark:disabled:brightness-75',
     variant === 'normal' &&
-      'border-input-normal-border-default bg-lowest placeholder:text-input-normal-placeholder focus:border-input-normal-border-focus hover:enabled:border-input-normal-border-hover focus:ring-input-normal-ring',
+      'border-border-default bg-surface-default focus:border-border-focus hover:enabled:border-border-strong focus:ring-[color:var(--color-border-focus)]',
     variant === 'error' &&
-      'border-input-error-border-default bg-input-error-bg ring-input-error-ring placeholder:text-input-error-placeholder focus:border-input-error-border-focus hover:enabled:border-input-error-border-hover',
+      'border-state-danger-border bg-state-danger-bg placeholder:text-state-danger-text focus:border-state-danger-border hover:enabled:border-state-danger-border focus:ring-[color:var(--color-state-danger-border)]',
     variant === 'warning' &&
-      'border-input-warning-border-default bg-input-warning-bg ring-input-warning-ring placeholder:text-input-warning-placeholder focus:border-input-warning-border-focus hover:enabled:border-input-warning-border-hover',
+      'border-state-warning-border bg-state-warning-bg placeholder:text-state-warning-text focus:border-state-warning-border hover:enabled:border-state-warning-border focus:ring-[color:var(--color-state-warning-border)]',
   );
 
 export const TextInput: FC<InputProps> = ({ variant, className, ref, ...props }: InputProps) => {

@@ -37,7 +37,7 @@ export const UnsupportedBrowser = ({ isIos }: { isIos: boolean }) => {
     </a>
   );
   return (
-    <div className="text-text-base max-w-md p-8">
+    <div className="text-text-primary max-w-md p-8">
       <h1 className="pb-4 text-xl">
         <FormattedMessage defaultMessage="Your browser is not supported" />
       </h1>

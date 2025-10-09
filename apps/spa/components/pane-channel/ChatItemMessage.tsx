@@ -95,7 +95,7 @@ export const ChatItemMessage: FC<{
         data-is-last={isLast}
       >
         {message.whisperToUsers != null && (
-          <span className="text-surface-600 text-sm italic">
+          <span className="text-text-secondary text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />
             {parsed.text === '' && (
               <ChatItemMessageShowWhisper
@@ -226,7 +226,10 @@ const MessageBox: FC<{
           !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
           inGame
             ? 'bg-message-inGame-bg'
-            : ['bg-lowest', isInGameChannel ? 'text-text-light hover:text-text-base text-sm' : ''],
+            : [
+                'bg-surface-default',
+                isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
+              ],
           'data-[overlay=true]:shadow-lg',
           isDragging && 'opacity-0',
           className,

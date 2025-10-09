@@ -48,9 +48,9 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
         <span>
           <FormattedMessage defaultMessage="Game Master" />
         </span>
-        <Icon icon={Gamemaster} className={channelMember.isMaster ? '' : 'text-surface-400'} />
+        <Icon icon={Gamemaster} className={channelMember.isMaster ? '' : 'text-text-subtle'} />
       </span>
-      <span className="text-surface-600 group-hover:text-surface-900 col-start-2 text-sm">
+      <span className="text-text-secondary group-hover:text-text-primary col-start-2 text-sm">
         A game master can read whispers, kick members, move messages, and other.
       </span>
     </label>
@@ -217,7 +217,7 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
     return (
       <div className="space-x-1">
         <span className="font-bold">{nickname}</span>
-        <span className="text-text-light">{username}</span>
+        <span className="text-text-secondary">{username}</span>
       </div>
     );
   }
@@ -227,8 +227,8 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
         <Icon icon={Mask} /> <span className="font-bold">{characterName}</span>
       </div>
       <div className="space-x-1 text-sm">
-        <span className="text-surface-600">{nickname}</span>
-        <span className="text-text-light">{username}</span>
+        <span className="text-text-secondary">{nickname}</span>
+        <span className="text-text-secondary">{username}</span>
       </div>
     </div>
   );
@@ -333,11 +333,11 @@ export const MemberCard: React.FC<Props> = ({
             {status != null && (
               <div className="space-x-1 text-sm">
                 {status.kind === 'ONLINE' ? (
-                  <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>
+                  <span className={clsx(status.kind === 'ONLINE' ? 'text-presence-online-text' : '')}>
                     {statusText}
                   </span>
                 ) : (
-                  <LastSeen timestamp={status.timestamp} className="text-surface-500" />
+                  <LastSeen timestamp={status.timestamp} className="text-text-muted" />
                 )}
               </div>
             )}

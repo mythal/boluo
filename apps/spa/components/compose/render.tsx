@@ -15,7 +15,7 @@ export const composeRender =
       }
       const end = modifier.start + modifier.len;
       nodes.push(
-        <span key={key} className="text-compose-highlight-modifiers-text">
+        <span key={key} className="text-text-muted">
           {text.slice(modifier.start, end)}
         </span>,
       );
@@ -31,25 +31,25 @@ export const composeRender =
       const segment = text.slice(entity.start, end);
       if (entity.type === 'Strong' || entity.type === 'Emphasis') {
         nodes.push(
-          <span key={key} className="bg-compose-highlight-strong-bg rounded-sm">
+          <span key={key} className="bg-surface-muted rounded-sm">
             {segment}
           </span>,
         );
       } else if (entity.type === 'Link') {
         nodes.push(
-          <span key={key} className="decoration-compose-highlight-link-underline underline">
+          <span key={key} className="decoration-text-link-decoration underline">
             {segment}
           </span>,
         );
       } else if (entity.type === 'Code' || entity.type === 'CodeBlock') {
         nodes.push(
-          <span key={key} className="bg-compose-highlight-code-bg rounded-sm">
+          <span key={key} className="bg-surface-muted rounded-sm">
             {segment}
           </span>,
         );
       } else if (entity.type === 'Expr') {
         nodes.push(
-          <span key={key} className="bg-compose-highlight-expr-bg rounded-sm">
+          <span key={key} className="bg-state-info-bg rounded-sm">
             {segment}
           </span>,
         );

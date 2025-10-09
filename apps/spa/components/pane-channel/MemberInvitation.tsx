@@ -45,7 +45,7 @@ export const MemberInvitation: FC<Props> = ({ members, myMember, channel, userSt
       ));
     } else {
       membersToInvite = (
-        <div className="text-surface-600 px-1 text-sm">
+        <div className="text-text-secondary px-1 text-sm">
           <FormattedMessage defaultMessage="No one to invite" />
         </div>
       );

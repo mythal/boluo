@@ -75,14 +75,14 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 
   if (whisperToMembers.length === 0) {
     return (
-      <span className="text-text-light text-sm">
+      <span className="text-text-secondary text-sm">
         <FormattedMessage defaultMessage="Whisper to the Master only" /> {whisperToAdd}
       </span>
     );
   }
 
   return (
-    <span className="text-text-light text-sm">
+    <span className="text-text-secondary text-sm">
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToMembers.map((member) => (
@@ -119,7 +119,7 @@ export const WhisperToItem: FC<{
   }
   return (
     <button
-      className="bg-preview-whisper-item-bg border-preview-whisper-item-border decoration-preview-whisper-item-decoration rounded border px-1 decoration-2 hover:line-through"
+      className="bg-surface-selectable-default border border-border-subtle decoration-border-strong rounded px-1 decoration-2 text-text-primary transition-colors hover:line-through"
       onClick={remove}
     >
       {name}
@@ -149,10 +149,10 @@ export const WhisperToItemAdd: FC<{
       <button
         ref={refs.setReference}
         className={clsx(
-          'bg-preview-whisper-add-bg text-preview-whisper-add-text inline-flex rounded border px-0.5',
+          'bg-surface-raised text-text-primary inline-flex rounded border px-0.5 transition-all',
           open
-            ? 'border-preview-whisper-add-border translate-y-px'
-            : 'border-transprent group-hover/item:border-preview-whisper-add-border shadow-sm active:translate-y-px active:shadow-none',
+            ? 'border-border-default translate-y-px shadow-inner'
+            : 'border-border-subtle group-hover/item:border-border-default shadow-sm active:translate-y-px active:shadow-none',
         )}
         {...getReferenceProps()}
       >
@@ -164,7 +164,7 @@ export const WhisperToItemAdd: FC<{
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="bg-menu-panel-bg max-h-72 overflow-y-auto rounded shadow-md"
+            className="bg-surface-raised border border-border-default max-h-72 overflow-y-auto rounded shadow-md"
           >
             {members.map((member) => (
               <MemberItem inGame={inGame} key={member.user.id} member={member} add={add} />
@@ -182,13 +182,13 @@ const MemberItem: FC<{
   add: (username: string) => void;
 }> = ({ member, add, inGame }) => {
   const characterName: ReactNode = member.channel.characterName || (
-    <span className="font-pixel text-text-lighter text-[12.5px]">[empty]</span>
+    <span className="font-pixel text-text-muted text-[12.5px]">[empty]</span>
   );
   const mainName: ReactNode = inGame ? characterName : member.user.nickname;
   const subName: ReactNode = inGame ? member.user.nickname : characterName;
   return (
     <button
-      className="hover:bg-menu-item-hover-bg grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
+      className="bg-surface-selectable-default hover:bg-surface-selectable-hover grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
       onClick={() => {
         add(member.user.username);
       }}
@@ -202,7 +202,7 @@ const MemberItem: FC<{
       />
 
       <div className="w-full truncate text-sm">{mainName}</div>
-      <div className="text-text-light w-full truncate text-xs">{subName}</div>
+      <div className="text-text-secondary w-full truncate text-xs">{subName}</div>
     </button>
   );
 };

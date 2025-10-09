@@ -27,7 +27,7 @@ export const GoButtomButton = memo<Props>(({ onClick, channelId, chatList }: Pro
     >
       <ChevronsDown />
       {unreadCount > 0 && (
-        <span className="bg-bottom-badge-bg text-bottom-badge-text absolute right-0 top-0 flex h-6 min-w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full px-1 text-sm shadow">
+        <span className="bg-action-primary-bg text-action-primary-text absolute right-0 top-0 flex h-6 min-w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full px-1 text-sm shadow">
           {unreadCount}
         </span>
       )}

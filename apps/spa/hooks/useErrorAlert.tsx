@@ -11,7 +11,7 @@ export const useErrorAlert = () => {
     (e: ApiError) => {
       const content = (
         <div className="flex items-center gap-2">
-          <AlertCircle className="text-error-500" />
+          <AlertCircle className="text-state-danger-text" />
           {explain(e)}
         </div>
       );

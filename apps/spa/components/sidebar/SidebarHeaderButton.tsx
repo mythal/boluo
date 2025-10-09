@@ -29,8 +29,8 @@ export const SidebarHeaderButton = ({
       className={clsx(
         'inline-flex items-center gap-1 rounded-sm px-1.5 py-1.5',
         active
-          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
-          : 'hover:bg-button-light-hover-bg active:bg-surface-200',
+          ? 'bg-action-toggle-selected-bg text-action-toggle-text shadow-inner'
+          : 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active',
         isLoading ? 'animate-pulse cursor-wait' : 'cursor-pointer',
         size === 'medium' ? 'text-sm' : '',
         size === 'small' ? 'text-xs' : '',

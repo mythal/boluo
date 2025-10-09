@@ -27,15 +27,12 @@ export const MediaLine: FC = () => {
     const isSizeValid = composeMedia.size < mediaMaxSizeByte;
     content = (
       <>
-        <div
-          data-valid={isTypeValid}
-          className="data-[valid=false]:text-compose-media-invalid truncate"
-        >
+        <div data-valid={isTypeValid} className="data-[valid=false]:text-state-danger-text truncate">
           {composeMedia.name}
         </div>
         <div
           data-valid={isSizeValid}
-          className="text-text-light data-[valid=false]:text-compose-media-invalid flex-shrink-0"
+          className="text-text-secondary data-[valid=false]:text-state-danger-text flex-shrink-0"
         >
           ({showFileSize(composeMedia.size)})
         </div>
@@ -51,14 +48,14 @@ export const MediaLine: FC = () => {
 
   return (
     <div className="flex gap-1 px-1 pt-1 text-sm">
-      <Icon className="text-text-light" icon={Paperclip} />
-      <div className="text-text-lighter">
+      <Icon className="text-text-secondary" icon={Paperclip} />
+      <div className="text-text-muted">
         <FormattedMessage defaultMessage="Attachment" />:
       </div>
       {content}
       <button
         onClick={handleRemove}
-        className="text-compose-media-remove-text hover:text-compose-media-remove-hover"
+        className="text-state-danger-text hover:text-state-danger-text"
       >
         <Icon icon={Trash} />
       </button>

@@ -31,23 +31,23 @@ export const Button: React.FC<ButtonProps> = function Button({
         'm-0 gap-1 rounded-sm',
         small ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
         (variant === 'default' || variant === 'detail') && [
-          'bg-button-default-bg text-button-default-text',
-          'hover:enabled:bg-button-default-hover-bg active-enabled:bg-button-default-active-bg',
-          'disabled:text-button-default-disabled-text disabled:bg-button-default-disabled-bg',
+          'bg-action-secondary-bg text-action-secondary-text',
+          'hover:enabled:bg-action-secondary-bg-hover active-enabled:bg-action-secondary-bg-active',
+          'disabled:text-action-secondary-text-disabled disabled:bg-action-secondary-bg-disabled',
         ],
         variant === 'danger' &&
-          'bg-button-danger-bg text-button-danger-text hover:enabled:bg-button-danger-hover-bg active-enabled:bg-button-danger-active-bg',
+          'bg-action-danger-bg text-action-danger-text hover:enabled:bg-action-danger-bg-hover active-enabled:bg-action-danger-bg-active',
         variant === 'primary' && [
-          'bg-button-primary-bg text-button-primary-text',
-          'hover:enabled:bg-button-primary-hover-bg active-enabled:bg-button-primary-active-bg',
-          'disabled:bg-button-primary-disabled-bg disabled:text-button-primary-text',
+          'bg-action-primary-bg text-action-primary-text',
+          'hover:enabled:bg-action-primary-bg-hover active-enabled:bg-action-primary-bg-active',
+          'disabled:bg-action-primary-bg-disabled disabled:text-action-primary-text-disabled',
         ],
         variant === 'switch' && [
-          'bg-button-switch-bg text-button-switch-text',
-          'hover:enabled:bg-button-switch-hover-bg active-enabled:bg-button-switch-active-bg',
-          'border-r-1 border-r-button-switch-off-hint',
-          'on:border-r-button-switch-on-hint on:bg-button-switch-on-bg on:hover:enabled:to-button-switch-bg',
-          'disabled:text-button-switch-disabled-text disabled:bg-button-switch-disabled-bg',
+          'bg-action-toggle-bg text-action-toggle-text',
+          'hover:enabled:bg-action-toggle-bg-hover active-enabled:bg-action-toggle-bg-active',
+          'border-r-1 border-r-action-toggle-indicator-off',
+          'on:border-r-action-toggle-indicator-on on:bg-action-toggle-selected-bg on:hover:enabled:to-action-toggle-bg',
+          'disabled:text-action-toggle-disabled-text disabled:bg-action-toggle-disabled-bg',
         ],
         className,
       )}
@@ -61,7 +61,7 @@ export const Button: React.FC<ButtonProps> = function Button({
       {variant === 'detail' && (
         <span
           data-on={on}
-          className="duration-1500 text-button-switch-detail-icon transform transition-transform data-[on=true]:rotate-180"
+          className="duration-1500 text-action-toggle-icon transform transition-transform data-[on=true]:rotate-180"
         >
           <ChevronDown />
         </span>

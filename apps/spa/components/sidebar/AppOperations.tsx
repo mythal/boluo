@@ -34,10 +34,10 @@ export const NotificationSwitch: FC = () => {
       onClick={handleClick}
       title={title}
       className={clsx(
-        'relative rounded p-2',
+        'relative rounded p-2 text-action-toggle-text transition-colors',
         canNotify
-          ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
-          : 'hover:bg-switch-hover-bg bg-switch-bg shadow-sm',
+          ? 'bg-action-toggle-selected-bg shadow-inner'
+          : 'bg-action-toggle-bg hover:bg-action-toggle-bg-hover shadow-sm',
       )}
     >
       <Bell />
@@ -45,7 +45,7 @@ export const NotificationSwitch: FC = () => {
         aria-hidden
         className={clsx(
           'absolute right-1 top-1 block h-1 w-1 rounded-full',
-          canNotify ? 'bg-switch-pressed-indicator' : 'bg-switch-indicator',
+          canNotify ? 'bg-action-toggle-indicator-on' : 'bg-action-toggle-indicator-off',
         )}
       />
     </button>

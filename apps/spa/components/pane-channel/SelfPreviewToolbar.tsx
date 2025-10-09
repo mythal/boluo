@@ -51,9 +51,10 @@ const ToolbarButton = ({
       ref={ref}
       disabled={disabled}
       className={clsx(
-        'bg-preview-toolbar-bg hover:enabled:bg-preview-toolbar-hover border-transprent text-text-base inline-flex items-center gap-0.5 rounded-sm border px-1 py-0.5 text-xs shadow-sm',
-        'data-[active="true"]:border-preview-toolbar-active-border data-[active="true"]:bg-preview-toolbar-active-bg data-[active="true"]:hover:enabled:bg-preview-toolbar-active-bgHover data-[active="true"]:translate-y-px',
-        'disabled:text-text-light disabled:bg-surface-200 disabled:cursor-not-allowed',
+        'bg-action-toggle-bg text-action-toggle-text inline-flex items-center gap-0.5 rounded-sm border border-transparent px-1 py-0.5 text-xs shadow-sm',
+        'hover:enabled:bg-action-toggle-bg-hover active-enabled:bg-action-toggle-bg-active',
+        'data-[active="true"]:border-border-strong data-[active="true"]:bg-action-toggle-selected-bg data-[active="true"]:hover:enabled:bg-action-toggle-selected-bg data-[active="true"]:translate-y-px',
+        'disabled:text-action-toggle-disabled-text disabled:bg-action-toggle-disabled-bg disabled:cursor-not-allowed',
       )}
     >
       {children}
@@ -117,8 +118,8 @@ const SendButton: FC = () => {
         </ToolbarButton>
       )}
       {composeError && composeError !== 'TEXT_EMPTY' && (
-        <div className="bg-lowest border-text-warning absolute right-0 top-0 z-10 -translate-y-[calc(100%-2px)] rounded-sm border px-2 py-1 text-sm">
-          <Icon icon={TriangleAlert} className="text-text-warning mr-1" />
+        <div className="bg-state-warning-bg border-state-warning-border text-state-warning-text absolute right-0 top-0 z-10 -translate-y-[calc(100%-2px)] rounded-sm border px-2 py-1 text-sm">
+          <Icon icon={TriangleAlert} className="mr-1" />
           <ComposeErrorReason error={composeError} />
         </div>
       )}

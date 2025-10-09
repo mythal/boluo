@@ -21,8 +21,8 @@ export const UserCard = ({ user }: Props) => {
         </div>
         <div className="flex flex-col gap-1">
           <div className="font-bold">{user.nickname}</div>
-          <div className="text-text-lighter text-sm">{user.username}</div>
-          {user.bio && <div className="text-text-light">{user.bio}</div>}
+          <div className="text-text-muted text-sm">{user.username}</div>
+          {user.bio && <div className="text-text-secondary">{user.bio}</div>}
         </div>
       </div>
     </FloatingBox>

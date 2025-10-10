@@ -13,6 +13,6 @@ const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
   addons: [getAbsolutePath('@storybook/addon-docs')],
   framework: { name: getAbsolutePath('@storybook/react-vite'), options: {} },
-  core: { disableTelemetry: true },
+  core: { disableTelemetry: true, disableWhatsNewNotifications: true },
 };
 export default config;

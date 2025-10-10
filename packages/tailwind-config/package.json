@@ -10,5 +10,6 @@
     ".": "./tailwind.css",
     "./postcss": "./postcss.config.js"
   },
+  "type": "module",
   "private": true
 }

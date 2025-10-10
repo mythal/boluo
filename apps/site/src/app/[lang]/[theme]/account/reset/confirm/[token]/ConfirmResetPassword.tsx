@@ -1,7 +1,7 @@
 'use client';
 
 import { TextInput } from '@boluo/ui/TextInput';
-import { isUuid } from '@boluo/utils';
+import { isUuid } from '@boluo/utils/id';
 import Link from 'next/link';
 import { type FC, useId, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';

@@ -2,7 +2,7 @@ import { type ApiError, type Space } from '@boluo/api';
 import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { type Result } from '@boluo/utils';
+import { type Result } from '@boluo/utils/result';
 import { get } from '@boluo/common/server/api';
 import { AcceptButton } from './AcceptButton';
 import { BackLink } from '../../../../../../../components/BackLink';

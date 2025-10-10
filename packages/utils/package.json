@@ -13,7 +13,6 @@
     "typescript": "^5.9.3"
   },
   "exports": {
-    ".": "./dist/index.js",
     "./*": "./dist/*.js"
   },
   "homepage": "https://github.com/mythal/boluo",

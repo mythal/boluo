@@ -22,7 +22,7 @@ import { channelReadFamily } from '../../state/unread.atoms';
 import { ReadObserverContext } from '../../hooks/useReadObserve';
 import { useMember } from '../../hooks/useMember';
 import { recordWarn } from '../../error';
-import { timeout } from '@boluo/utils';
+import { timeout } from '@boluo/utils/async';
 
 interface Props {
   setIsScrolling: (isScrolling: boolean) => void;

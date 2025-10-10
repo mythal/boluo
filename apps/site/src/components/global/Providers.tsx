@@ -11,7 +11,7 @@ import {
   setThemeToDom,
   watchSystemTheme,
 } from '@boluo/theme';
-import type { ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
 import { LocaleProvider } from './LocaleProvider';
 
 interface Props extends ChildrenProps {

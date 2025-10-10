@@ -1,6 +1,7 @@
 import { type FetchFailError, type ApiError, PreSignResult } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Err, Ok, timeout, type Result } from '@boluo/utils';
+import { Err, Ok, type Result } from '@boluo/utils/result';
+import { timeout } from '@boluo/utils/async';
 import { recordError, recordWarn } from './error';
 
 export const mediaMaxSizeMb = 8;

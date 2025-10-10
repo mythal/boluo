@@ -25,7 +25,7 @@ import {
   makeMessageToolbarDisplayAtom,
 } from './MessageToolbar';
 import { useStore } from 'jotai';
-import { stopPropagation } from '@boluo/utils';
+import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 
 export const ChatItemMessage: FC<{

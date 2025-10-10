@@ -1,4 +1,4 @@
-import { getOS } from '@boluo/utils';
+import { getOS } from '@boluo/utils/browser';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 export const useDetectIsTouch = (): boolean => {

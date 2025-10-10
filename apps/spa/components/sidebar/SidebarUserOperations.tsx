@@ -4,7 +4,7 @@ import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { toggle } from '@boluo/utils';
+import { toggle } from '@boluo/utils/function';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { panesAtom } from '../../state/view.atoms';
 import { Avatar } from '../account/Avatar';

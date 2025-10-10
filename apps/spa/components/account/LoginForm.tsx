@@ -15,7 +15,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
-import { type StyleProps } from '@boluo/utils';
+import { type StyleProps } from '@boluo/utils/types';
 
 interface Props extends StyleProps {
   onSuccess?: () => void;

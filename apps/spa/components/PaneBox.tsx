@@ -1,6 +1,6 @@
 import { type FC, type ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
 import { Loading } from '@boluo/ui/Loading';
-import { type ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
 import { usePaneFocus } from '../hooks/usePaneFocus';
 import { Delay } from './Delay';
 import { PaneBodyError } from './PaneBodyError';

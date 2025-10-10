@@ -30,8 +30,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
-  "homepage": "https://github.com/mythal/boluo",
-  "license": "AGPL-3.0",
   "exports": {
     "./package.json": "./package.json",
     "./screens.json": "./src/screens.json",
@@ -41,6 +39,8 @@
       "default": "./src/*.tsx"
     }
   },
+  "homepage": "https://github.com/mythal/boluo",
+  "license": "AGPL-3.0",
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

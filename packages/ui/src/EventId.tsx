@@ -45,6 +45,8 @@ export const EventId: FC<{ eventId: string }> = ({ eventId }) => {
       <TooltipBox
         defaultStyle
         show={isOpen}
+        // False positive
+        // eslint-disable-next-line react-hooks/refs
         ref={refs.setFloating}
         style={floatingStyles}
         {...getFloatingProps()}

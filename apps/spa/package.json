@@ -17,7 +17,6 @@
     "@floating-ui/react": "^0.27.5",
     "@sentry/nextjs": "^10.11.0",
     "clsx": "^2.1.1",
-    "color2k": "^2.0.3",
     "dotenv": "^17.2.1",
     "jotai": "^2.12.2",
     "jotai-location": "^0.6.0",

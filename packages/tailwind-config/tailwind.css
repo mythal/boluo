@@ -1,4 +1,5 @@
-@import 'tailwindcss' source('../../');
+@import 'tailwindcss';
+@source "../../{apps,packages}/**/*.{ts,tsx,js,jsx,html,htm}";
 @source not "../../apps/server";
 @source not "../../apps/legacy";
 

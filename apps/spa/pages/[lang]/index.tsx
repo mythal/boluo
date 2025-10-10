@@ -11,6 +11,7 @@ import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
 import { useDetectBrowserSupport } from '../../hooks/useDetectBrowserSupport';
 import { getOS } from '@boluo/utils';
+import { useQueryAppSettings } from '@boluo/common/hooks';
 
 export const getStaticPaths = (() => {
   return {
@@ -59,11 +60,16 @@ const PageHead = () => {
 
 export default function Page({ lang, messages }: Props) {
   const isSupportedBrowser = useDetectBrowserSupport();
+  const { data: appSettings } = useQueryAppSettings();
   return (
     <ClientProviders lang={lang} messages={messages}>
       <PageHead />
       <ChatErrorBoundary>
-        {isSupportedBrowser ? <Chat /> : <UnsupportedBrowser isIos={getOS() === 'iOS'} />}
+        {isSupportedBrowser ? (
+          <Chat />
+        ) : (
+          <UnsupportedBrowser isIos={getOS() === 'iOS'} siteUrl={appSettings?.siteUrl} />
+        )}
       </ChatErrorBoundary>
     </ClientProviders>
   );

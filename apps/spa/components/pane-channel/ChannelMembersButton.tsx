@@ -36,7 +36,7 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
     >
       <Users />
       {membersInfo != null && (
-        <span className="@xl:inline hidden text-xs">
+        <span className="hidden text-xs @xl:inline">
           {onlineCount}/{membersInfo.members.length}
         </span>
       )}

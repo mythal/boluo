@@ -163,7 +163,7 @@ const placeHolderColors = [
 
 const ScrollSeekPlaceholder: FC<ScrollSeekPlaceholderProps> = ({ height, index }) => (
   <div
-    className={`@2xl:pl-[17.5rem] py-2 pl-20 pr-4 ${index % 2 === 0 ? 'bg-message-inGame-bg' : ''}`}
+    className={`py-2 pr-4 pl-20 @2xl:pl-[17.5rem] ${index % 2 === 0 ? 'bg-message-inGame-bg' : ''}`}
     style={{
       height,
       boxSizing: 'border-box',

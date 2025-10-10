@@ -18,11 +18,11 @@ export const PaneProfileView: FC<Props> = ({ user }) => {
           avatarId={user.avatarId}
           name={user.nickname}
           size="6rem"
-          className={clsx('@xs:float-right rounded-md')}
+          className={clsx('rounded-md @xs:float-right')}
         />
         <div className="">
           <ShowUsername username={user.username} />
-          <div className="overflow-hidden text-ellipsis whitespace-nowrap py-2 pr-2 text-xl">
+          <div className="overflow-hidden py-2 pr-2 text-xl text-ellipsis whitespace-nowrap">
             {user.nickname}
           </div>
           {user.bio !== '' ? (

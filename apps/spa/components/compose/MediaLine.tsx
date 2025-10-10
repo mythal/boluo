@@ -27,7 +27,10 @@ export const MediaLine: FC = () => {
     const isSizeValid = composeMedia.size < mediaMaxSizeByte;
     content = (
       <>
-        <div data-valid={isTypeValid} className="data-[valid=false]:text-state-danger-text truncate">
+        <div
+          data-valid={isTypeValid}
+          className="data-[valid=false]:text-state-danger-text truncate"
+        >
           {composeMedia.name}
         </div>
         <div

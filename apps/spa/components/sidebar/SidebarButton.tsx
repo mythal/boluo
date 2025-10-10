@@ -23,7 +23,7 @@ export const SidebarButton: FC = () => {
         className={clsx(
           'fixed z-20 h-10 w-10',
           isTouch
-            ? '-left-2 bottom-[30%] p-1'
+            ? 'bottom-[30%] -left-2 p-1'
             : [isSidebarExpanded ? 'left-[15rem]' : '-left-[10px]', 'top-[20%] p-1.5'],
         )}
         onClick={() => setSidebarExpanded((x) => !x)}

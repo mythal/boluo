@@ -47,7 +47,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
       pos={preview.pos}
       className="text-text-secondary pr-message-small @2xl:pr-message"
     >
-      <div className="@2xl:flex-col flex gap-1">
+      <div className="flex gap-1 @2xl:flex-col">
         <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>
       </div>
       {preview.text == null ? (

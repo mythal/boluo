@@ -36,7 +36,7 @@ const SidebarSpaceItem: FC<{ space: Space; currentSpaceId: string | null }> = ({
         <div className={`truncate ${isCurrent ? '' : 'text-text-secondary'}`}>{space.name}</div>
         <div
           className={clsx(
-            'w-full overflow-hidden text-ellipsis text-nowrap text-xs',
+            'w-full overflow-hidden text-xs text-nowrap text-ellipsis',
             isCurrent ? 'text-text-secondary' : 'text-text-muted',
           )}
         >

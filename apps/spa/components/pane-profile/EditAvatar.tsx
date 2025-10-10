@@ -30,7 +30,7 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
     return URL.createObjectURL(avatar);
   }, [avatar]);
   return (
-    <div className="@xs:float-right relative inline-flex">
+    <div className="relative inline-flex @xs:float-right">
       {selectedFileDataUrl ? (
         <img
           alt={avatarLabel}
@@ -48,7 +48,7 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
           onClick={triggerUpload}
         />
       )}
-      <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 hover:opacity-100 group-hover:opacity-75">
+      <div className="absolute right-1 bottom-1 flex gap-1 opacity-0 group-hover:opacity-75 hover:opacity-100">
         <input
           hidden
           aria-hidden

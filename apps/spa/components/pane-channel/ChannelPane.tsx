@@ -104,7 +104,7 @@ const ChatPaneChannelView: FC<{
                 'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
                 memberListState === 'CLOSED'
                   ? 'grid-cols-1'
-                  : '@2xl:grid-cols-[1fr_14rem] grid-cols-[1fr_10rem]',
+                  : 'grid-cols-[1fr_10rem] @2xl:grid-cols-[1fr_14rem]',
               )}
             >
               <ChatContent />

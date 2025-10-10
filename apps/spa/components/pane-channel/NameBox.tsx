@@ -27,7 +27,7 @@ export const NameBox = ({
       role={interactive ? 'button' : undefined}
       aria-pressed={pressed}
       className={clsx(
-        '@xl:w-[10rem] @2xl:w-[12rem] bg-name-bg aria-[pressed=true]:bg-name-editable-hover relative mr-1 w-[8rem] flex-none break-all rounded-sm font-bold',
+        'bg-name-bg aria-[pressed=true]:bg-name-editable-hover relative mr-1 w-[8rem] flex-none rounded-sm font-bold break-all @xl:w-[10rem] @2xl:w-[12rem]',
         interactive && 'hover:bg-name-editable-hover cursor-pointer select-text',
       )}
       {...props}

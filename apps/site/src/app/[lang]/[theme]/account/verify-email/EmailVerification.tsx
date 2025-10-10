@@ -86,7 +86,7 @@ export function VerifyEmailContent({
     return (
       <div className="py-4">
         <h1 className="mb-2 text-lg font-semibold">
-          <span className="mr-2 text-state-success-text">✓</span>
+          <span className="text-state-success-text mr-2">✓</span>
           <FormattedMessage defaultMessage="Email verified successfully!" />
         </h1>
         <p className="text-sm">

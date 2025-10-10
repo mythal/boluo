@@ -28,13 +28,13 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
     <button
       onClick={edit}
       className={clsx(
-        'flex items-center gap-0.5 whitespace-nowrap rounded-sm px-2 py-1',
+        'flex items-center gap-0.5 rounded-sm px-2 py-1 whitespace-nowrap',
         'hover:bg-brand-strong/10',
       )}
     >
       {member.characterName ? (
         <>
-          <span className="text-text-secondary @md:inline hidden text-sm">
+          <span className="text-text-secondary hidden text-sm @md:inline">
             <FormattedMessage defaultMessage="Character Name:" />
           </span>
           <span>{member.characterName}</span>

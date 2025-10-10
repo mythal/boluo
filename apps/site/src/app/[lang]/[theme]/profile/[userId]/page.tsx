@@ -48,7 +48,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
         <BackLink />
       </div>
       <div className="text-center text-xl">{user.nickname}</div>
-      {user.bio !== '' && <div className="max-w-md whitespace-pre-line py-4">{user.bio}</div>}
+      {user.bio !== '' && <div className="max-w-md py-4 whitespace-pre-line">{user.bio}</div>}
     </div>
   );
 }

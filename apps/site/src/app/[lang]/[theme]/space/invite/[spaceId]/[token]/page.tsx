@@ -75,7 +75,7 @@ export default async function Page({ params }: Props) {
       <div className="py-2 italic">{title}</div>
       <div className="py-4 text-center text-xl font-bold">{space.name}</div>
       {space.description !== '' && (
-        <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>
+        <div className="max-w-md py-4 whitespace-pre-line">{space.description}</div>
       )}
       <div className="mt-8 flex items-end justify-between">
         <BackLink />

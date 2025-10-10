@@ -33,10 +33,6 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
     "./package.json": "./package.json",
     "./screens.json": "./src/screens.json",
     "./tailwind.css": "./src/tailwind.css",
@@ -54,6 +50,5 @@
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,
-  "type": "module",
-  "types": "./src/index.ts"
+  "type": "module"
 }

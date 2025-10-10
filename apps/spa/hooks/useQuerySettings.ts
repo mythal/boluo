@@ -1,6 +1,6 @@
 import { type ApiError } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import { type Settings } from '@boluo/common';
+import type { Settings } from '@boluo/common/settings';
 import { defaultSettings, toSettings } from '@boluo/common/settings';
 import useSWR, { type SWRResponse } from 'swr';
 

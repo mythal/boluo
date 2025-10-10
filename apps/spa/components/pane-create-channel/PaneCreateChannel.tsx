@@ -1,6 +1,6 @@
 import { type ApiError, type ChannelWithMember, type Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
 import { Plus } from '@boluo/icons';
 import type { FC } from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';

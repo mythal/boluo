@@ -1,4 +1,5 @@
-import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
 import { Edit, LogOut, User } from '@boluo/icons';
 import { type FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

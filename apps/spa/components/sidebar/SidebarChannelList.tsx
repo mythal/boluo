@@ -21,7 +21,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQuerySpaceSettings } from '../../hooks/useQuerySpaceSettings';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { useMutateSpaceSettings } from '../../hooks/useMutateSpaceSettings';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 
 interface Props {
   spaceId: string;

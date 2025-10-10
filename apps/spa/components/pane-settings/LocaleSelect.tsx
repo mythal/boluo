@@ -1,4 +1,4 @@
-import { useLocale } from '@boluo/common';
+import { useLocale } from '@boluo/common/hooks/useLocale';
 import { toLocale } from '@boluo/common/locale';
 import React, { useMemo } from 'react';
 import { Select } from '@boluo/ui/Select';

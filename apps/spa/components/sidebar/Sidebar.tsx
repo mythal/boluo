@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, type FC, type ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';

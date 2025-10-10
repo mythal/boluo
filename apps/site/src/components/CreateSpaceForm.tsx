@@ -12,7 +12,7 @@ import { Button } from '@boluo/ui/Button';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required, spaceName } from '@boluo/common/validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
 
 const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
   const explain = useErrorExplain();

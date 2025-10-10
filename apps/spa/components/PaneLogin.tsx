@@ -1,5 +1,5 @@
 import { type ApiError } from '@boluo/api';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
 import { LogIn } from '@boluo/icons';
 import { type FC, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

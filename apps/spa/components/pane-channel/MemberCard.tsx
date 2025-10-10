@@ -7,7 +7,7 @@ import {
 } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

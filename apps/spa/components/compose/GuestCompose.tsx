@@ -1,4 +1,4 @@
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { FormattedMessage } from 'react-intl';
 import { ComposeFallbackBox } from '@boluo/ui/ComposeFallbackBox';
 import { type ReactNode, type FC } from 'react';

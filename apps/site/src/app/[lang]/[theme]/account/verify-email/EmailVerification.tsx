@@ -1,15 +1,13 @@
 'use client';
 import { get, post } from '@boluo/api-browser';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
-import useSWRMutation, {
-  type SWRMutationConfiguration,
-  type SWRMutationResponse,
-} from 'swr/mutation';
+import useSWRMutation, { type SWRMutationResponse } from 'swr/mutation';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useCountdown } from '@boluo/common/hooks/useCountdown';
 import type { ResendEmailVerificationResult, User } from '@boluo/api';
 import { useQueryIsEmailVerified } from '@boluo/common/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
@@ -27,21 +25,6 @@ const useSendVerificationEmail = (): SWRMutationResponse<
       return result.unwrap();
     },
   );
-};
-
-const useCountdown = (seconds: number) => {
-  const [countdown, setCountdown] = useState(seconds);
-  const interval = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    setCountdown(seconds);
-    interval.current = window.setInterval(() => {
-      setCountdown((prev) => Math.max(prev - 1, 0));
-    }, 1000);
-    return () => {
-      window.clearInterval(interval.current);
-    };
-  }, [seconds]);
-  return countdown;
 };
 
 export function VerifyEmailContent({

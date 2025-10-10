@@ -11,7 +11,7 @@ import { ChannelHeaderFilter } from './ChannelHeaderFilter';
 import { ChannelHeaderFilterShowArchive } from './ChannelHeaderFilterShowArchive';
 import { MemberJoinButton } from './MemberJoinButton';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { ChannelExportButton } from './ChannelExportButton';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 

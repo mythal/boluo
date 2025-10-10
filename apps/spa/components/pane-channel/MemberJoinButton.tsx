@@ -6,7 +6,7 @@ import {
   type User,
 } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { UserPlus } from '@boluo/icons';
 import { type FC, type ReactNode, useState } from 'react';
 import { FormattedMessage } from 'react-intl';

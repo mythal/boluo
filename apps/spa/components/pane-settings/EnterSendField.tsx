@@ -1,5 +1,5 @@
 import { patch } from '@boluo/api-browser';
-import { type Settings } from '@boluo/common';
+import type { Settings } from '@boluo/common/settings';
 import { toSettings } from '@boluo/common/settings';
 import { type FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';

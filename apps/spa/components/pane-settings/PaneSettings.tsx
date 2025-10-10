@@ -1,4 +1,4 @@
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { type FC } from 'react';

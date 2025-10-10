@@ -15,7 +15,7 @@ import { Spinner } from '@boluo/ui/Spinner';
 import * as Sentry from '@sentry/browser';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { type ExportOptions, exportChannel } from './export';
-import { useQueryAppSettings } from '@boluo/common/hooks';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 export interface ExportSchema {
   format: string;

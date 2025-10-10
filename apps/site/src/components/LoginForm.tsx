@@ -1,7 +1,7 @@
 'use client';
 import type { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { useId } from 'react';

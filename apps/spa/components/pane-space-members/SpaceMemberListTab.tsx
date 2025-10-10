@@ -1,4 +1,4 @@
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { type FC, useMemo } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';

@@ -1,7 +1,7 @@
 import { type IntlMessages, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
 import { ClientProviders } from '../../components/ClientProviders';
 import { type GetStaticPaths } from 'next';
-import { type Locale } from '@boluo/common';
+import type { Locale } from '@boluo/common/locale';
 import Head from 'next/head';
 import { useIntl } from 'react-intl';
 import { useEffect } from 'react';
@@ -11,7 +11,7 @@ import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
 import { useDetectBrowserSupport } from '../../hooks/useDetectBrowserSupport';
 import { getOS } from '@boluo/utils/browser';
-import { useQueryAppSettings } from '@boluo/common/hooks';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 export const getStaticPaths = (() => {
   return {

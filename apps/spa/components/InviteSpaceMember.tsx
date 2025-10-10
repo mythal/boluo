@@ -8,7 +8,7 @@ import Icon from '@boluo/ui/Icon';
 import { Loading } from '@boluo/ui/Loading';
 import { TextInput } from '@boluo/ui/TextInput';
 import { unwrap } from '@boluo/utils/result';
-import { useQueryAppSettings } from '@boluo/common/hooks';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   spaceId: string;

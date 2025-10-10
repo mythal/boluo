@@ -29,7 +29,7 @@ import { useIsClient } from '../hooks/useIsClient';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
-import { type Settings } from '@boluo/common';
+import type { Settings } from '@boluo/common/settings';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;

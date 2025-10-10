@@ -7,7 +7,7 @@ import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
-import { useQueryUser } from '@boluo/common';
+import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';

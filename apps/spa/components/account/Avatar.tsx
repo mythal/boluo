@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { type FC, useMemo } from 'react';
 import { getMediaUrl } from '../../media';
-import { useQueryAppSettings } from '@boluo/common/hooks';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 interface Props {
   id: string;
   name: string;

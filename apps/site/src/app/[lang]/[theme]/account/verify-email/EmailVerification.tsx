@@ -9,9 +9,9 @@ import useSWRMutation, {
   type SWRMutationConfiguration,
   type SWRMutationResponse,
 } from 'swr/mutation';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import type { ResendEmailVerificationResult, User } from '@boluo/api';
-import { useQueryIsEmailVerified } from '@boluo/common/hooks';
+import { useQueryIsEmailVerified } from '@boluo/common/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
 
 const useSendVerificationEmail = (): SWRMutationResponse<

@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:18-trixie
     build:
-      context: ./db
+      context: ./apps/db
       dockerfile: Dockerfile
     environment:
       POSTGRES_USER: postgres

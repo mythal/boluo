@@ -6,7 +6,7 @@ import { type FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
-import { unwrap } from '@boluo/utils';
+import { unwrap } from '@boluo/utils/result';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useSWRConfig } from 'swr';

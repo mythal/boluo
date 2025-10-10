@@ -15,7 +15,7 @@ import {
 import { type ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
 import { ChatItemSwitch } from './ChatItemSwitch';
-import { getOS } from '@boluo/utils';
+import { getOS } from '@boluo/utils/browser';
 import {
   type OnVirtualKeybroadChange,
   useVirtualKeybroadChange,

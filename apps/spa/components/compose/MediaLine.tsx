@@ -6,7 +6,7 @@ import { Paperclip, Trash } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
 import { FormattedMessage } from 'react-intl';
 import { mediaUrl } from '@boluo/api-browser';
-import { showFileSize } from '@boluo/utils';
+import { showFileSize } from '@boluo/utils/files';
 import { mediaMaxSizeByte, supportedMediaType } from '../../media';
 import * as classes from '@boluo/ui/classes';
 

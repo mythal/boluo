@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { Paperclip, Refresh } from '@boluo/icons';
 import { type ReactNode, memo, useState } from 'react';
 import Icon from '@boluo/ui/Icon';
-import { showFileSize } from '@boluo/utils';
+import { showFileSize } from '@boluo/utils/files';
 import { getMediaUrl, supportedMediaType } from '../../media';
 import { useQueryAppSettings } from '@boluo/common/hooks';
 

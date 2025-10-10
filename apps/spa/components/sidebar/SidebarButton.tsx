@@ -9,7 +9,7 @@ import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { FormattedMessage } from 'react-intl';
 import { Kbd } from '@boluo/ui/Kbd';
-import { isApple } from '@boluo/utils';
+import { isApple } from '@boluo/utils/browser';
 
 export const SidebarButton: FC = () => {
   const isTouch = useIsTouch();

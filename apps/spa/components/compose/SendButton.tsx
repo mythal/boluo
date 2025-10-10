@@ -7,7 +7,7 @@ import { useTooltip } from '../../hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { useSettings } from '../../hooks/useSettings';
 import { Kbd } from '@boluo/ui/Kbd';
-import { isApple } from '@boluo/utils';
+import { isApple } from '@boluo/utils/browser';
 
 interface Props {
   isEditing?: boolean;

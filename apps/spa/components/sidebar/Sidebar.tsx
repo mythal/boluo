@@ -12,7 +12,7 @@ import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { type User } from '@boluo/api';
 import { AppOperations } from './AppOperations';
 import { useIsClient } from '../../hooks/useIsClient';
-import { isApple } from '@boluo/utils';
+import { isApple } from '@boluo/utils/browser';
 import { SidebarButton } from './SidebarButton';
 import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 import { SidebarGuestContent } from './SidebarGuestContent';

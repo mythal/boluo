@@ -1,5 +1,5 @@
 import type { MoveMessageBetween, PreSign, PreSignResult } from '@boluo/api';
-import type { Empty } from '@boluo/utils';
+import { type Empty } from '@boluo/utils/types';
 import type {
   AddChannelMember,
   Channel,

@@ -12,7 +12,7 @@ import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { recordWarn } from '../../error';
 import { type ChatActionUnion } from '../../state/chat.actions';
 import { chatAtom } from '../../state/chat.atoms';
-import { timeout } from '@boluo/utils';
+import { timeout } from '@boluo/utils/async';
 import { type FailTo } from '../../state/channel.types';
 import { useIntl } from 'react-intl';
 import { useSetBanner } from '../../hooks/useBanner';

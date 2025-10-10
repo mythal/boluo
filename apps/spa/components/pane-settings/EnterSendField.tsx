@@ -6,7 +6,8 @@ import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { Kbd } from '@boluo/ui/Kbd';
-import { identity, isApple } from '@boluo/utils';
+import { identity } from '@boluo/utils/function';
+import { isApple } from '@boluo/utils/browser';
 import { useSettings } from '../../hooks/useSettings';
 import { SelectBox } from '@boluo/ui/SelectBox';
 

@@ -8,7 +8,8 @@ import { FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
 import { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { ChildrenProps, identity } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
+import { identity } from '@boluo/utils/function';
 
 interface Props extends ChildrenProps {
   locale: Locale;

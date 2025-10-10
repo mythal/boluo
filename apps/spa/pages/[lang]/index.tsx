@@ -10,7 +10,7 @@ import Chat from '../../components/Chat';
 import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
 import { useDetectBrowserSupport } from '../../hooks/useDetectBrowserSupport';
-import { getOS } from '@boluo/utils';
+import { getOS } from '@boluo/utils/browser';
 import { useQueryAppSettings } from '@boluo/common/hooks';
 
 export const getStaticPaths = (() => {

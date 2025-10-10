@@ -9,7 +9,7 @@ import useSWRMutation from 'swr/mutation';
 import { setThemeToDom, type Theme, writeThemeToCookie } from '@boluo/theme';
 import { useTheme } from '@boluo/theme/react';
 import { Select } from '@boluo/ui/Select';
-import { identity } from '@boluo/utils';
+import { identity } from '@boluo/utils/function';
 
 interface Props {
   id?: string;

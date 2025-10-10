@@ -1,7 +1,7 @@
 import type { ApiError, SpaceMember } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import useSWR, { type SWRResponse } from 'swr';
-import { unwrap } from '@boluo/utils';
+import { unwrap } from '@boluo/utils/result';
 
 export const useMySpaceMember = (
   spaceId: string | null,

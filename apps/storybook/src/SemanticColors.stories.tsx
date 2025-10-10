@@ -234,16 +234,16 @@ const ColorSwatch = ({ token, theme }: { token: string; theme: 'light' | 'dark' 
   return (
     <div className="overflow-hidden rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] shadow-sm">
       <div
-        ref={chipRef}
         className="h-16"
         style={{
-          backgroundColor: `var(${token})`,
           backgroundImage:
             'linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.08) 75%), linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.08) 75%)',
           backgroundPosition: '0 0, 0.5rem 0.5rem',
           backgroundSize: '1rem 1rem',
         }}
-      />
+      >
+        <div ref={chipRef} className="h-full w-full" style={{ backgroundColor: `var(${token})` }} />
+      </div>
       <div className="relative flex flex-col gap-1 px-3 py-2 text-xs text-[var(--color-text-muted)]">
         <span className="text-sm font-medium text-[var(--color-text-primary)]">
           {formatTokenLabel(token)}

@@ -149,6 +149,7 @@ export const LoginForm: FC<Props> = () => {
     }
     setError(null);
     if (typeof nextUrl === 'string' && nextUrl.trim() !== '') {
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = nextUrl;
     } else {
       void mutate(() => true, undefined, { revalidate: true });

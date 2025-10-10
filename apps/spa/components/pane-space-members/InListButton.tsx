@@ -13,7 +13,7 @@ export const InListButton = ({ children, active = false, ref, ...props }: Props)
       ref={ref}
       {...props}
       className={clsx(
-        'group-hover:border-border-strong min-w-[2rem] rounded-sm border border-border-default px-2 py-1',
+        'group-hover:border-border-strong border-border-default min-w-[2rem] rounded-sm border px-2 py-1',
         'active-enabled:translate-y-px active-enable:border-border-strong active-enabled:bg-action-toggle-selected-bg',
         'inline-flex gap-1',
         active

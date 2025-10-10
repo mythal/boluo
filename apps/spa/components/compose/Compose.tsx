@@ -81,7 +81,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
       <div
         onDrop={onDrop}
         onDragOver={handleDragOver}
-        className="bg-surface-muted standalone-bottom-padding col-span-full border-border-subtle border-t p-2"
+        className="bg-surface-muted standalone-bottom-padding border-border-subtle col-span-full border-t p-2"
       >
         {editMessageBanner}
         <div

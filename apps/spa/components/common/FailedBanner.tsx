@@ -24,7 +24,7 @@ export const FailedBanner: FC<Props> = ({ icon, error, children, onDismiss }) =>
   };
   if (!show || !banner) return null;
   return ReactDOM.createPortal(
-    <div className="bg-state-warning-bg border-state-warning-border flex items-center gap-2 border-y px-3 py-2 [&_a]:underline [&_a]:decoration-text-link-decoration [&_a]:text-text-link [&_a:hover]:text-text-link-hover [&_a:active]:text-text-link-active">
+    <div className="bg-state-warning-bg border-state-warning-border [&_a]:decoration-text-link-decoration [&_a]:text-text-link [&_a:hover]:text-text-link-hover [&_a:active]:text-text-link-active flex items-center gap-2 border-y px-3 py-2 [&_a]:underline">
       <span className="text-text-muted">{icon ?? <AlertCircle />}</span>
       {children}
 

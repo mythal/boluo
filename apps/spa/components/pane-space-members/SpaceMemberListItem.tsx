@@ -76,7 +76,7 @@ export const SpaceMemberListItem: FC<Props> = ({
             <span>…</span>
           </InListButton>
           {isShowOperation && (
-            <div className="absolute right-full top-0 px-1">
+            <div className="absolute top-0 right-full px-1">
               <ExileButton spaceId={spaceMembership.spaceId} userId={user.id} />
             </div>
           )}

@@ -127,7 +127,7 @@ export const MessageToolbar: FC<{
     <div
       ref={toolbarRef}
       className={clsx(
-        'bg-surface-raised border border-border-default hover:border-border-strong absolute -top-3 right-2 z-10 flex select-none flex-row rounded p-0.5 shadow-sm transition-colors',
+        'bg-surface-raised border-border-default hover:border-border-strong absolute -top-3 right-2 z-10 flex flex-row rounded border p-0.5 shadow-sm transition-colors select-none',
       )}
     >
       <>
@@ -162,7 +162,7 @@ const MessageToolbarButton = ({
       aria-pressed={pressed}
       disabled={optimistic || props.disabled}
       className={clsx(
-        'inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base text-action-toggle-text transition-colors',
+        'text-action-toggle-text inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base transition-colors',
         'bg-action-toggle-bg',
         optimistic ? 'cursor-progress' : '',
         pressed
@@ -304,7 +304,7 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
           style={floatingStyles}
           ref={refs.setFloating}
           {...getFloatingProps()}
-          className="bg-surface-raised border border-border-default z-20 flex w-[14rem] flex-col gap-1 rounded-md p-2 shadow-md transition-colors"
+          className="bg-surface-raised border-border-default z-20 flex w-[14rem] flex-col gap-1 rounded-md border p-2 shadow-md transition-colors"
         >
           {more}
         </div>
@@ -375,7 +375,7 @@ const MessageDeleteConfirm: FC<{ message: Message }> = ({ message }) => {
       <div className="text-text-muted py-1 text-xs">
         <FormattedMessage defaultMessage="Are you sure you want to delete this message?" />
       </div>
-      <div className="truncate text-nowrap py-1.5 text-sm">{simpleText}</div>
+      <div className="truncate py-1.5 text-sm text-nowrap">{simpleText}</div>
       <div className="flex justify-end">
         <MoreMenuItem
           label={intl.formatMessage({ defaultMessage: 'Nevermind' })}
@@ -447,7 +447,7 @@ const MessageDetailDate: FC<{ created: string; edited: string }> = ({ created, e
   const createdDate = generateDetailDate(new Date(created));
   const editedDate = generateDetailDate(new Date(edited));
   return (
-    <div className="text-text-muted select-text pb-2 text-right text-xs">
+    <div className="text-text-muted pb-2 text-right text-xs select-text">
       <div className="">
         <FormattedMessage defaultMessage="Created at" />{' '}
         <time className="font-mono">{createdDate}</time>
@@ -475,7 +475,7 @@ const MoreMenuItem: FC<{
       aria-pressed={pressed}
       disabled={optimistic}
       className={clsx(
-        'flex gap-1 rounded-sm p-1.5 text-sm text-text-primary transition-colors',
+        'text-text-primary flex gap-1 rounded-sm p-1.5 text-sm transition-colors',
         'bg-surface-selectable-default',
         optimistic ? 'cursor-progress' : '',
         pressed

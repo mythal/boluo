@@ -72,7 +72,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
     if (media == null) return null;
     return (
       <MessageMedia media={media} className="relative w-fit py-2">
-        <div className="absolute right-full top-2 -translate-x-1">
+        <div className="absolute top-2 right-full -translate-x-1">
           <RemoveMediaButton />
         </div>
       </MessageMedia>

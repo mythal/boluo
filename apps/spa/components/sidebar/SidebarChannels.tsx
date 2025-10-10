@@ -43,7 +43,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
           <button
             aria-pressed={isReordering}
             className={clsx(
-              'rounded-sm px-1 text-action-toggle-text transition-colors',
+              'text-action-toggle-text rounded-sm px-1 transition-colors',
               isReordering
                 ? 'bg-action-toggle-selected-bg shadow-inner'
                 : 'bg-action-toggle-bg hover:bg-action-toggle-bg-hover text-text-muted hover:text-text-primary shadow-sm',

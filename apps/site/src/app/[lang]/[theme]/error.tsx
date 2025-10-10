@@ -21,7 +21,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
       <div className="py-2">
         <Link
           href="/"
-          className="text-text-link underline decoration-text-link-decoration hover:text-text-link-hover"
+          className="text-text-link decoration-text-link-decoration hover:text-text-link-hover underline"
         >
           Back to Home
         </Link>

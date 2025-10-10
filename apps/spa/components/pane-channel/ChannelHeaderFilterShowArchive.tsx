@@ -19,7 +19,7 @@ export const ChannelHeaderFilterShowArchive: FC = () => {
           <span>
             <Icon icon={Archive} />
           </span>
-          <span className="@xl:inline hidden">
+          <span className="hidden @xl:inline">
             <FormattedMessage defaultMessage="Archived" />
           </span>
         </SidebarHeaderButton>

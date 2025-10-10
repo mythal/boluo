@@ -119,7 +119,7 @@ export const WhisperToItem: FC<{
   }
   return (
     <button
-      className="bg-surface-selectable-default border border-border-subtle decoration-border-strong rounded px-1 decoration-2 text-text-primary transition-colors hover:line-through"
+      className="bg-surface-selectable-default border-border-subtle decoration-border-strong text-text-primary rounded border px-1 decoration-2 transition-colors hover:line-through"
       onClick={remove}
     >
       {name}
@@ -164,7 +164,7 @@ export const WhisperToItemAdd: FC<{
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="bg-surface-raised border border-border-default max-h-72 overflow-y-auto rounded shadow-md"
+            className="bg-surface-raised border-border-default max-h-72 overflow-y-auto rounded border shadow-md"
           >
             {members.map((member) => (
               <MemberItem inGame={inGame} key={member.user.id} member={member} add={add} />

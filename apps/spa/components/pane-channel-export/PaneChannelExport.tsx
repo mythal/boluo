@@ -116,7 +116,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
             />
           </div>
         )}
-        <label htmlFor={id + 'format'} className="select-none justify-self-end">
+        <label htmlFor={id + 'format'} className="justify-self-end select-none">
           <FormattedMessage defaultMessage="Format" />
         </label>
         <Select id={id + 'format'} {...register('format')}>
@@ -129,7 +129,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           </option>
           <option value="json">JSON</option>
         </Select>
-        <label htmlFor={id + 'range'} className="select-none justify-self-end">
+        <label htmlFor={id + 'range'} className="justify-self-end select-none">
           <FormattedMessage defaultMessage="Time Range" />
         </label>
         <Select id={id + 'range'} {...register('range')}>

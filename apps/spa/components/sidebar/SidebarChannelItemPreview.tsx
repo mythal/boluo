@@ -132,7 +132,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
         <div
           data-unread={hasUnread}
           data-is-action={latestMessage.isAction}
-          className="truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
+          className="truncate text-sm data-[is-action=true]:italic data-[unread=true]:font-bold"
         >
           <span className="text-text-secondary group-hover:text-text-primary mr-1">
             {latestMessage.name}

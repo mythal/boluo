@@ -333,7 +333,9 @@ export const MemberCard: React.FC<Props> = ({
             {status != null && (
               <div className="space-x-1 text-sm">
                 {status.kind === 'ONLINE' ? (
-                  <span className={clsx(status.kind === 'ONLINE' ? 'text-presence-online-text' : '')}>
+                  <span
+                    className={clsx(status.kind === 'ONLINE' ? 'text-presence-online-text' : '')}
+                  >
                     {statusText}
                   </span>
                 ) : (
@@ -350,7 +352,7 @@ export const MemberCard: React.FC<Props> = ({
         </div>
         {user.bio !== '' && (
           <div className="pt-4">
-            <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
+            <div className="max-h-32 overflow-y-auto text-sm whitespace-pre-line">{user.bio}</div>
           </div>
         )}
         {uiState === 'VIEW' && canIManage && (
@@ -372,7 +374,7 @@ export const MemberCard: React.FC<Props> = ({
         )}
 
         {uiState === 'MANAGE' && (
-          <div className="pb-2 pt-4">
+          <div className="pt-4 pb-2">
             {canIEditMaster && channelMember?.channelId === channel.id && (
               <EditMasterCheckBox channelMember={channelMember} />
             )}

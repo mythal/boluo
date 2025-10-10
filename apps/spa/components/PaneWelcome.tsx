@@ -17,7 +17,7 @@ export const PaneWelcome: FC = () => {
     >
       <div className="p-pane">
         <GreetingHeader />
-        <p className="pb-2 pt-8">
+        <p className="pt-8 pb-2">
           <FormattedMessage defaultMessage="This is Boluo, a chat app designed for tabletop roleplaying games." />
         </p>
         <p className="py-2">

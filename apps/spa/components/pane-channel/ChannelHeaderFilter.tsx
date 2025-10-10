@@ -22,7 +22,7 @@ export const ChannelHeaderFilter: FC = () => {
     <label className="flex items-center gap-1">
       <Icon icon={Filter} />
 
-      <span className="@xl:inline hidden flex-none">
+      <span className="hidden flex-none @xl:inline">
         <FormattedMessage defaultMessage="Filter" />
       </span>
       <div className="w-20">

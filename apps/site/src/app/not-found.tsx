@@ -19,7 +19,7 @@ export default function NotFound() {
               Back
             </Link>
           </p>
-        <div className="font-pixel text-text-muted text-center text-sm">(/ﾟДﾟ)/</div>
+          <div className="font-pixel text-text-muted text-center text-sm">(/ﾟДﾟ)/</div>
         </div>
       </body>
     </html>

@@ -48,10 +48,7 @@ export const MessageReorderHandle: FC<Props> = ({
         {...attributes}
         className={clsx(
           'text-text-muted rounded-sm pl-2 text-right',
-          draggable &&
-            !loading &&
-            failTo == null &&
-            'hover:text-text-secondary cursor-move',
+          draggable && !loading && failTo == null && 'hover:text-text-secondary cursor-move',
           failTo != null && 'cursor-not-allowed',
           loading && 'cursor-wait',
         )}

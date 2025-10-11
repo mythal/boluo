@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const ChannelHeaderFilterShowArchive: FC = () => {

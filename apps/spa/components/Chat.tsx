@@ -12,7 +12,7 @@ import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
 import { BannerContext } from '../hooks/useBannerNode';
-import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
+import { useDetectIsTouch, IsTouchContext } from '@boluo/common/hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
 import {
   type ResolvedTheme,
@@ -25,7 +25,7 @@ import {
 import { useQuerySettings } from '../hooks/useQuerySettings';
 import { ChatInvite } from './ChatInvite';
 import { PaneEmpty } from './PaneEmpty';
-import { useIsClient } from '../hooks/useIsClient';
+import { useIsClient } from '@boluo/common/hooks/useIsClient';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';

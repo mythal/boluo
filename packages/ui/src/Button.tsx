@@ -25,29 +25,24 @@ export const Button: React.FC<ButtonProps> = function Button({
   return (
     <button
       className={clsx(
-        'enabled:cursor-pointer disabled:cursor-not-allowed',
+        'Button enabled:cursor-pointer disabled:cursor-not-allowed',
         'appearance-none select-none focus-visible:outline-none',
-        'inline-flex items-center justify-center focus:ring',
+        'ring-border-focus/75 inline-flex items-center justify-center focus:ring',
         'm-0 gap-1 rounded-sm',
         small ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
         (variant === 'default' || variant === 'detail') && [
           'bg-action-secondary-bg text-action-secondary-text',
-          'hover:enabled:bg-action-secondary-bg-hover active-enabled:bg-action-secondary-bg-active',
-          'disabled:text-action-secondary-text-disabled disabled:bg-action-secondary-bg-disabled',
+          'hover:enabled:bg-action-secondary-bg-hover active:enabled:bg-action-secondary-bg-active',
+          'disabled:text-text-inverted-secondary disabled:bg-action-secondary-bg-disabled',
         ],
-        variant === 'danger' &&
-          'bg-action-danger-bg text-action-danger-text hover:enabled:bg-action-danger-bg-hover active-enabled:bg-action-danger-bg-active',
+        variant === 'danger' && [
+          'bg-action-danger-bg text-action-primary-text hover:enabled:bg-action-danger-bg-hover active:enabled:bg-action-danger-bg-active',
+          'disabled:bg-action-danger-bg-disabled disabled:text-text-inverted-secondary',
+        ],
         variant === 'primary' && [
           'bg-action-primary-bg text-action-primary-text',
-          'hover:enabled:bg-action-primary-bg-hover active-enabled:bg-action-primary-bg-active',
-          'disabled:bg-action-primary-bg-disabled disabled:text-action-primary-text-disabled',
-        ],
-        variant === 'switch' && [
-          'bg-action-toggle-bg text-action-toggle-text',
-          'hover:enabled:bg-action-toggle-bg-hover active-enabled:bg-action-toggle-bg-active',
-          'border-r-action-toggle-indicator-off border-r-1',
-          'on:border-r-action-toggle-indicator-on on:bg-action-toggle-selected-bg on:hover:enabled:to-action-toggle-bg',
-          'disabled:text-action-toggle-disabled-text disabled:bg-action-toggle-disabled-bg',
+          'hover:enabled:bg-action-primary-bg-hover active:enabled:bg-action-primary-bg-active',
+          'disabled:bg-action-primary-bg-disabled disabled:text-text-inverted-secondary',
         ],
         className,
       )}

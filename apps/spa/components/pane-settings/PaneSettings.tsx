@@ -118,6 +118,7 @@ export const PaneSettings: FC = () => {
         <div>
           <SectionTitle>Developer Mode</SectionTitle>
           <div>
+            {/* TODO: Style */}
             <Button variant="switch" on={devMode} onClick={() => setDevMode(!devMode)}>
               Turn On Developer Mode
             </Button>

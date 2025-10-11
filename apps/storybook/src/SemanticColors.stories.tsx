@@ -70,7 +70,6 @@ const semanticGroups: SemanticTokenGroup[] = [
           '--color-action-secondary-bg-hover',
           '--color-action-secondary-bg-active',
           '--color-action-secondary-bg-disabled',
-          '--color-action-secondary-text-disabled',
           '--color-action-outline-border',
         ],
       },

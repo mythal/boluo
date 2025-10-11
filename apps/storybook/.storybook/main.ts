@@ -11,7 +11,7 @@ function getAbsolutePath(value: string): string {
 }
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: [getAbsolutePath('@storybook/addon-docs')],
+  addons: [getAbsolutePath('@storybook/addon-docs'), getAbsolutePath('@storybook/addon-themes')],
   framework: { name: getAbsolutePath('@storybook/react-vite'), options: {} },
   core: { disableTelemetry: true, disableWhatsNewNotifications: true },
 };

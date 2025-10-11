@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use super::models::{BasicInfo, Proxy};
 use crate::info::models::AppSettings;
 use crate::interface::ok_response;
-use crate::{db, error::AppError, info::models::HealthCheck, interface::Response};
+use crate::{error::AppError, info::models::HealthCheck, interface::Response};
 use hyper::body::Incoming;
 use hyper::{Method, Request};
 use sqlx::query_as;
@@ -18,7 +18,7 @@ thread_local! {
     pub static PROXIES: RefCell<ProxiesCache> = RefCell::new(ProxiesCache::default());
 }
 
-pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
+pub async fn get_proxies(ctx: &crate::context::AppContext) -> Result<Vec<Proxy>, AppError> {
     fn make_timestamp() -> u64 {
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -36,13 +36,11 @@ pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
         }
     }
 
-    let pool = db::get().await;
-
     let proxies: Vec<Proxy> = query_as!(
         Proxy,
         r#"SELECT "name", "url", "region" FROM "proxies" WHERE "is_enabled" = TRUE;"#
     )
-    .fetch_all(&pool)
+    .fetch_all(&ctx.db)
     .await
     .map_err(AppError::from)?;
     PROXIES.with(|x| {
@@ -52,8 +50,8 @@ pub async fn get_proxies() -> Result<Vec<Proxy>, AppError> {
     Ok(proxies)
 }
 
-pub async fn proxies() -> Result<Response, AppError> {
-    let proxies: Vec<Proxy> = get_proxies().await?;
+pub async fn proxies(ctx: &crate::context::AppContext) -> Result<Response, AppError> {
+    let proxies: Vec<Proxy> = get_proxies(ctx).await?;
     let Ok(Ok(body)) = tokio::task::spawn_blocking(move || serde_json::to_string(&proxies)).await
     else {
         return Err(AppError::Unexpected(anyhow::anyhow!(
@@ -89,8 +87,8 @@ pub fn settings() -> Response {
     SETTINGS.clone()
 }
 
-pub async fn healthcheck() -> Result<Response, AppError> {
-    let health_check: HealthCheck = HealthCheck::new().await;
+pub async fn healthcheck(ctx: &crate::context::AppContext) -> Result<Response, AppError> {
+    let health_check: HealthCheck = HealthCheck::new(ctx).await;
     let result = serde_json::to_vec(&health_check).map_err(|err| {
         tracing::error!(
             "Unexpected failture in serialize healthcheck result: {:?}",
@@ -120,10 +118,14 @@ pub fn echo(req: Request<Incoming>) -> Response {
         .unwrap_or(hyper::Response::default())
 }
 
-pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
+pub async fn router(
+    ctx: &crate::context::AppContext,
+    req: Request<Incoming>,
+    path: &str,
+) -> Result<Response, AppError> {
     match (path, req.method().clone()) {
-        ("/proxies", Method::GET) => proxies().await,
-        ("/healthcheck", Method::GET) => healthcheck().await,
+        ("/proxies", Method::GET) => proxies(ctx).await,
+        ("/healthcheck", Method::GET) => healthcheck(ctx).await,
         ("/settings", Method::GET) => Ok(settings()),
         ("/echo", Method::GET) => Ok(echo(req)),
         _ => Ok(basic_info()),

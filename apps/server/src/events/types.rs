@@ -408,11 +408,12 @@ impl Update {
         Ok(encoded_updates)
     }
 
-    pub fn space_updated(space_id: Uuid) {
+    pub fn space_updated(ctx: &crate::context::AppContext, space_id: Uuid) {
         let span = tracing::info_span!("space_updated", space_id = %space_id);
+        let ctx = ctx.clone();
         spawn(
             async move {
-                match crate::spaces::handlers::space_related(&space_id).await {
+                match crate::spaces::handlers::space_related(&ctx, &space_id).await {
                     Ok(space_with_related) => {
                         let body = UpdateBody::SpaceUpdated {
                             space_with_related: Box::new(space_with_related),

@@ -5,7 +5,6 @@ use super::{Space, SpaceMember};
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember, ChannelType};
 use crate::csrf::authenticate;
-use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
 use crate::events::{StatusMap, Update};
@@ -18,14 +17,16 @@ use hyper::Request;
 use hyper::body::Body;
 use uuid::Uuid;
 
-async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
+async fn list(
+    ctx: &crate::context::AppContext,
+    _req: Request<impl Body>,
+) -> Result<Vec<Space>, AppError> {
     struct SpaceList {
         spaces: Vec<Space>,
         instant: std::time::Instant,
     }
-    async fn init_spaces() -> ArcSwap<SpaceList> {
-        let pool = db::get().await;
-        let spaces = Space::all(&pool).await.unwrap_or_default();
+    async fn init_spaces(ctx: &crate::context::AppContext) -> ArcSwap<SpaceList> {
+        let spaces = Space::all(&ctx.db).await.unwrap_or_default();
         ArcSwap::new(std::sync::Arc::new(SpaceList {
             spaces,
             instant: std::time::Instant::now(),
@@ -33,7 +34,7 @@ async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
     }
 
     static CACHE: tokio::sync::OnceCell<ArcSwap<SpaceList>> = tokio::sync::OnceCell::const_new();
-    let space_list_lock = CACHE.get_or_init(init_spaces).await;
+    let space_list_lock = CACHE.get_or_init(|| init_spaces(ctx)).await;
 
     {
         let space_list = space_list_lock.load();
@@ -41,8 +42,7 @@ async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
             return Ok(space_list.spaces.clone());
         }
     }
-    let pool = db::get().await;
-    let spaces = Space::all(&pool).await?;
+    let spaces = Space::all(&ctx.db).await?;
     let space_list = SpaceList {
         spaces: spaces.clone(),
         instant: std::time::Instant::now(),
@@ -51,10 +51,12 @@ async fn list(_req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
     Ok(spaces)
 }
 
-async fn query(req: Request<impl Body>) -> Result<Space, AppError> {
+async fn query(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Space, AppError> {
     let QuerySpace { id, token } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let space = Space::get_by_id(&mut *conn, &id).await?.or_not_found()?;
     if space.is_public || space.allow_spectator {
         return Ok(space);
@@ -78,9 +80,11 @@ async fn query(req: Request<impl Body>) -> Result<Space, AppError> {
     Ok(space)
 }
 
-pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+pub async fn space_related(
+    ctx: &crate::context::AppContext,
+    id: &Uuid,
+) -> Result<SpaceWithRelated, AppError> {
+    let mut conn = ctx.db.acquire().await?;
     let space = Space::get_by_id(&mut *conn, id).await?.or_not_found()?;
     let members = SpaceMemberWithUser::get_by_space(&mut *conn, id).await?;
     let channels = Channel::get_by_space(&mut *conn, id).await?;
@@ -102,16 +106,21 @@ pub async fn space_related(id: &Uuid) -> Result<SpaceWithRelated, AppError> {
     })
 }
 
-async fn query_with_related(req: Request<impl Body>) -> Result<SpaceWithRelated, AppError> {
+async fn query_with_related(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<SpaceWithRelated, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    space_related(&id).await
+    space_related(ctx, &id).await
 }
 
-async fn token(req: Request<impl Body>) -> Result<Uuid, AppError> {
+async fn token(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Uuid, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
         .await?
         .map(|space_member| space_member.is_admin)
@@ -129,11 +138,13 @@ async fn token(req: Request<impl Body>) -> Result<Uuid, AppError> {
     Space::get_token(&mut *conn, &id).await.map_err(Into::into)
 }
 
-async fn refresh_token(req: Request<impl Body>) -> Result<Uuid, AppError> {
+async fn refresh_token(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Uuid, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
         .await?
         .map(|space_member| space_member.is_admin)
@@ -153,22 +164,29 @@ async fn refresh_token(req: Request<impl Body>) -> Result<Uuid, AppError> {
         .map_err(Into::into)
 }
 
-async fn my_spaces(req: Request<impl Body>) -> Result<Vec<SpaceWithMember>, AppError> {
+async fn my_spaces(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<SpaceWithMember>, AppError> {
     let session = authenticate(&req).await?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     Space::get_by_user(&mut conn, session.user_id)
         .await
         .map_err(Into::into)
 }
 
-async fn search(req: Request<impl Body>) -> Result<Vec<Space>, AppError> {
+async fn search(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<Space>, AppError> {
     let SearchParams { search } = parse_query(req.uri()).unwrap();
-    let pool = db::get().await;
-    Space::search(&pool, search).await.map_err(Into::into)
+    Space::search(&ctx.db, search).await.map_err(Into::into)
 }
 
-async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
+async fn create(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
     let CreateSpace {
         name,
@@ -179,10 +197,9 @@ async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
         first_channel_type,
     }: CreateSpace = interface::parse_body(req).await?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
     let default_dice_type = default_dice_type.as_deref();
-    let user = User::get_by_id(&pool, &session.user_id)
+    let user = User::get_by_id(&ctx.db, &session.user_id)
         .await?
         .ok_or(AppError::NotFound("user"))?;
     let space = Space::create(
@@ -216,7 +233,10 @@ async fn create(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     })
 }
 
-async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
+async fn edit(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Space, AppError> {
     let session = authenticate(&req).await?;
     let EditSpace {
         space_id,
@@ -230,8 +250,7 @@ async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
         remove_admins,
     }: EditSpace = interface::parse_body(req).await?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
@@ -275,16 +294,18 @@ async fn edit(req: Request<impl Body>) -> Result<Space, AppError> {
     }
     trans.commit().await?;
 
-    Update::space_updated(space_id);
+    Update::space_updated(ctx, space_id);
     Ok(space)
 }
 
-async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
+async fn join(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
     let JoinSpace { space_id, token } = parse_query(req.uri())?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
 
     let space = Space::get_by_id(&mut *conn, &space_id)
         .await?
@@ -308,7 +329,7 @@ async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     } else {
         SpaceMember::add_user(&mut *conn, user_id, &space_id).await?
     };
-    Update::space_updated(space_id);
+    Update::space_updated(ctx, space_id);
     Ok(SpaceWithMember {
         space,
         member,
@@ -316,24 +337,28 @@ async fn join(req: Request<impl Body>) -> Result<SpaceWithMember, AppError> {
     })
 }
 
-async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
+async fn leave(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
     SpaceMember::remove_user(&mut trans, session.user_id, id).await?;
     trans.commit().await?;
-    Update::space_updated(id);
+    Update::space_updated(ctx, id);
     Ok(true)
 }
 
-async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
+async fn kick(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let session = authenticate(&req).await?;
     let KickFromSpace { space_id, user_id } = parse_query(req.uri())?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
     let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
     };
@@ -358,28 +383,32 @@ async fn kick(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUs
     }
     SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
     trans.commit().await?;
-    Update::space_updated(space_id);
-    Ok(SpaceMemberWithUser::get_by_space(&pool, &space_id).await?)
+    Update::space_updated(ctx, space_id);
+    Ok(SpaceMemberWithUser::get_by_space(&ctx.db, &space_id).await?)
 }
 
-async fn my_space_member(req: Request<impl Body>) -> Result<Option<SpaceMember>, AppError> {
+async fn my_space_member(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Option<SpaceMember>, AppError> {
     let session = if let Ok(session) = authenticate(&req).await {
         session
     } else {
         return Ok(None);
     };
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut db = pool.acquire().await?;
+    let mut db = ctx.db.acquire().await?;
     SpaceMember::get(&mut *db, &session.user_id, &id)
         .await
         .map_err(Into::into)
 }
 
-async fn members(req: Request<impl Body>) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
+async fn members(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     SpaceMemberWithUser::get_by_space(&mut *conn, &id)
         .await
         .map_err(Into::into)
@@ -392,10 +421,12 @@ async fn users_status(req: Request<impl Body>) -> Result<StatusMap, AppError> {
     Ok(users_status)
 }
 
-async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
+async fn delete(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let session = authenticate(&req).await?;
     let space = Space::get_by_id(&mut *conn, &id).await.or_not_found()?;
     if space.owner_id == session.user_id {
@@ -413,24 +444,28 @@ async fn delete(req: Request<impl Body>) -> Result<Space, AppError> {
     ))
 }
 
-async fn space_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
+async fn space_settings(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<serde_json::Value, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     // TODO: check whether the user is a member of the space
     let extension = Space::get_settings(&mut *conn, id).await?;
     Ok(extension)
 }
 
-async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
+async fn update_settings(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<serde_json::Value, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let settings: serde_json::Value = interface::parse_body(req).await?;
     if !settings.is_object() {
         return Err(AppError::BadRequest("Invalid settings".to_string()));
     }
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
 
     let Some(space) = Space::get_by_id(&mut *conn, &id).await? else {
         return Err(AppError::NotFound("space"));
@@ -454,29 +489,33 @@ async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Value, A
     Ok(settings)
 }
 
-pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+    path: &str,
+) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/list", Method::GET) => response(list(req).await).await,
-        ("/query", Method::GET) => response(query(req).await).await,
+        ("/list", Method::GET) => response(list(ctx, req).await).await,
+        ("/query", Method::GET) => response(query(ctx, req).await).await,
         ("/users_status", Method::GET) => response(users_status(req).await).await,
-        ("/query_with_related", Method::GET) => response(query_with_related(req).await).await,
-        ("/settings", Method::GET) => space_settings(req).await.map(ok_response),
-        ("/update_settings", Method::POST) => update_settings(req).await.map(ok_response),
-        ("/update_settings", Method::PUT) => update_settings(req).await.map(ok_response),
-        ("/token", Method::GET) => token(req).await.map(ok_response),
-        ("/refresh_token", Method::POST) => refresh_token(req).await.map(ok_response),
-        ("/my", Method::GET) => response(my_spaces(req).await).await,
-        ("/search", Method::GET) => response(search(req).await).await,
-        ("/create", Method::POST) => response(create(req).await).await,
-        ("/edit", Method::POST) => response(edit(req).await).await,
-        ("/join", Method::POST) => response(join(req).await).await,
-        ("/leave", Method::POST) => leave(req).await.map(ok_response),
-        ("/kick", Method::POST) => response(kick(req).await).await,
-        ("/my_space_member", Method::GET) => response(my_space_member(req).await).await,
-        ("/members", Method::GET) => response(members(req).await).await,
-        ("/delete", Method::POST) => response(delete(req).await).await,
+        ("/query_with_related", Method::GET) => response(query_with_related(ctx, req).await).await,
+        ("/settings", Method::GET) => space_settings(ctx, req).await.map(ok_response),
+        ("/update_settings", Method::POST) => update_settings(ctx, req).await.map(ok_response),
+        ("/update_settings", Method::PUT) => update_settings(ctx, req).await.map(ok_response),
+        ("/token", Method::GET) => token(ctx, req).await.map(ok_response),
+        ("/refresh_token", Method::POST) => refresh_token(ctx, req).await.map(ok_response),
+        ("/my", Method::GET) => response(my_spaces(ctx, req).await).await,
+        ("/search", Method::GET) => response(search(ctx, req).await).await,
+        ("/create", Method::POST) => response(create(ctx, req).await).await,
+        ("/edit", Method::POST) => response(edit(ctx, req).await).await,
+        ("/join", Method::POST) => response(join(ctx, req).await).await,
+        ("/leave", Method::POST) => leave(ctx, req).await.map(ok_response),
+        ("/kick", Method::POST) => response(kick(ctx, req).await).await,
+        ("/my_space_member", Method::GET) => response(my_space_member(ctx, req).await).await,
+        ("/members", Method::GET) => response(members(ctx, req).await).await,
+        ("/delete", Method::POST) => response(delete(ctx, req).await).await,
         _ => missing(),
     }
 }

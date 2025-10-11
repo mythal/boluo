@@ -74,7 +74,7 @@ pub async fn check_db_host() {
 
 /// Runtime check if the database is available and can correctly deserialize data
 #[tracing::instrument]
-pub async fn check() {
+pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     use crate::channels::{Channel, ChannelMember};
     use crate::media::models::Media;
     use crate::messages::Message;
@@ -82,7 +82,6 @@ pub async fn check() {
     use crate::users::{User, UserExt};
     use serde_json::json;
 
-    let pool = get().await;
     let real_user_id = {
         let mut conn = pool.acquire().await.expect("Cannot acquire connection");
 

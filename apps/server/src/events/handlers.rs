@@ -2,7 +2,6 @@ use super::Update;
 use super::api::Token;
 use super::types::{Seq, UpdateQuery};
 use crate::csrf::authenticate_optional;
-use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
@@ -182,6 +181,7 @@ async fn push_updates(
 }
 
 async fn handle_client_event(
+    pool: &sqlx::PgPool,
     mailbox: Uuid,
     error_sender: tokio::sync::mpsc::Sender<AppError>,
     session: Option<Session>,
@@ -227,7 +227,7 @@ async fn handle_client_event(
                 return;
             };
             metrics::counter!("boluo_server_events_preview_total").increment(1);
-            if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
+            if let Err(err) = preview.broadcast(pool, mailbox, session.user_id).await {
                 tracing::warn!("Failed to broadcast preview update: {}", err);
             };
         }
@@ -267,7 +267,7 @@ fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, error: AppErr
     })
 }
 
-async fn connect(req: hyper::Request<Incoming>) -> Response {
+async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>) -> Response {
     let Ok(query) = parse_query::<UpdateQuery>(req.uri()) else {
         tracing::warn!("Failed to parse query {:?}", req.uri());
         return connection_error(
@@ -296,8 +296,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         }
     };
     {
-        let pool = db::get().await;
-        let mut conn = match pool.acquire().await {
+        let mut conn = match ctx.db.acquire().await {
             Ok(conn) => conn,
             Err(e) => {
                 tracing::error!(error = %e, "Failed to acquire database connection");
@@ -345,6 +344,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
         }
     }
 
+    let pool = ctx.db.clone();
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
         let (error_sender, error_receiver) = tokio::sync::mpsc::channel(1);
@@ -368,6 +368,7 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             outgoing.close().await.ok();
         };
 
+        let pool = pool.clone();
         let receive_client_events = incoming
             .timeout(Duration::from_secs(40))
             .map_err(|_| {
@@ -379,12 +380,12 @@ async fn connect(req: hyper::Request<Incoming>) -> Response {
             .and_then(future::ready)
             .try_for_each(|message: WsMessage| {
                 let error_sender = error_sender.clone();
-                async move {
+                async {
                     if let WsMessage::Text(message) = message {
                         if message == "♡" {
                             return Ok(());
                         }
-                        handle_client_event(mailbox, error_sender, session, message).await
+                        handle_client_event(&pool, mailbox, error_sender, session, message).await
                     }
                     Ok(())
                 }
@@ -489,7 +490,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
     }
 }
 
-async fn sse(req: Request<Incoming>) -> Response {
+async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Response {
     use hyper::{StatusCode, header};
 
     let query = match parse_query::<UpdateQuery>(req.uri()) {
@@ -512,8 +513,7 @@ async fn sse(req: Request<Incoming>) -> Response {
     };
 
     {
-        let pool = db::get().await;
-        let mut conn = match pool.acquire().await {
+        let mut conn = match ctx.db.acquire().await {
             Ok(c) => c,
             Err(e) => return err_response(e.into()),
         };
@@ -564,7 +564,7 @@ async fn sse(req: Request<Incoming>) -> Response {
         .expect("Failed to build SSE response")
 }
 
-async fn receive_events(req: Request<Incoming>) -> Response {
+async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Response {
     use http_body_util::BodyExt;
 
     let query = match parse_query::<UpdateQuery>(req.uri()) {
@@ -579,8 +579,7 @@ async fn receive_events(req: Request<Incoming>) -> Response {
     };
 
     {
-        let pool = db::get().await;
-        let mut conn = match pool.acquire().await {
+        let mut conn = match ctx.db.acquire().await {
             Ok(c) => c,
             Err(e) => return err_response(e.into()),
         };
@@ -610,18 +609,22 @@ async fn receive_events(req: Request<Incoming>) -> Response {
 
     let (error_sender, _error_receiver) = tokio::sync::mpsc::channel(1);
 
-    handle_client_event(mailbox, error_sender, session, body_str.into()).await;
+    handle_client_event(&ctx.db, mailbox, error_sender, session, body_str.into()).await;
 
     ok_response(serde_json::json!({ "ok": true }))
 }
 
-pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
+pub async fn router(
+    ctx: &crate::context::AppContext,
+    req: Request<Incoming>,
+    path: &str,
+) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/connect", Method::GET) => Ok(connect(req).await),
-        ("/sse", Method::GET) => Ok(sse(req).await),
-        ("/sse/receive", Method::POST) => Ok(receive_events(req).await),
+        ("/connect", Method::GET) => Ok(connect(ctx, req).await),
+        ("/sse", Method::GET) => Ok(sse(ctx, req).await),
+        ("/sse/receive", Method::POST) => Ok(receive_events(ctx, req).await),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         _ => missing(),
     }

@@ -65,8 +65,8 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
         .context("Failed to convert session bytes data to UUID.")
 }
 
-pub async fn revoke_session(session_id: Uuid) -> Result<(), sqlx::Error> {
-    let mut conn = crate::db::get().await.acquire().await?;
+pub async fn revoke_session(pool: &sqlx::PgPool, session_id: Uuid) -> Result<(), sqlx::Error> {
+    let mut conn = pool.acquire().await?;
     sqlx::query_file!("sql/users/session_revoke.sql", session_id)
         .execute(&mut *conn)
         .await?;

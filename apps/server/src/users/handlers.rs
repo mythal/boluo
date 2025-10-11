@@ -11,6 +11,7 @@ use crate::context::get_site_url;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{self, response};
 use crate::interface::{missing, ok_response, parse_body, parse_query};
+use crate::mail;
 use crate::media::{upload, upload_params};
 use crate::session::{
     add_session_cookie, add_settings_cookie, remove_session_cookie, revoke_session,
@@ -23,20 +24,21 @@ use crate::users::api::{
 };
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
-use crate::{db, mail};
 use hyper::body::{Body, Incoming};
 use hyper::{Method, Request, Response};
 use uuid::Uuid;
 
-async fn register(req: Request<impl Body>) -> Result<User, AppError> {
+async fn register(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<User, AppError> {
     let Register {
         email,
         username,
         nickname,
         password,
     }: Register = interface::parse_body(req).await?;
-    let pool = db::get().await;
-    let user = User::register(&pool, &email, &username, &nickname, &password).await?;
+    let user = User::register(&ctx.db, &email, &username, &nickname, &password).await?;
     metrics::counter!("boluo_server_users_total").increment(1);
 
     // Send email verification
@@ -51,7 +53,10 @@ async fn register(req: Request<impl Body>) -> Result<User, AppError> {
     Ok(user)
 }
 
-pub async fn query_user(req: Request<impl Body>) -> Result<Option<User>, AppError> {
+pub async fn query_user(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Option<User>, AppError> {
     use crate::session::authenticate;
 
     let QueryUser { id } = parse_query(req.uri())?;
@@ -66,36 +71,37 @@ pub async fn query_user(req: Request<impl Body>) -> Result<Option<User>, AppErro
         }
     };
 
-    let pool = db::get().await;
-    User::get_by_id(&pool, &id).await.or_not_found().map(Some)
+    User::get_by_id(&ctx.db, &id).await.or_not_found().map(Some)
 }
 
-pub async fn query_self(req: Request<impl Body>) -> Result<Option<User>, AppError> {
+pub async fn query_self(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Option<User>, AppError> {
     use crate::session::authenticate;
 
     let session = authenticate(&req).await;
     match session {
-        Ok(session) => {
-            let pool = db::get().await;
-            Ok(Some(
-                User::get_by_id(&pool, &session.user_id)
-                    .await
-                    .or_not_found()?,
-            ))
-        }
+        Ok(session) => Ok(Some(
+            User::get_by_id(&ctx.db, &session.user_id)
+                .await
+                .or_not_found()?,
+        )),
         Err(AppError::Unauthenticated(_)) => Ok(None),
         Err(e) => Err(e),
     }
 }
 
-pub async fn query_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
+pub async fn query_settings(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<serde_json::Value, AppError> {
     use crate::session::authenticate;
     let Ok(session) = authenticate(&req).await else {
         return Ok(serde_json::json!({}));
     };
 
-    let pool = db::get().await;
-    let user_ext = UserExt::get(&pool, session.user_id).await;
+    let user_ext = UserExt::get(&ctx.db, session.user_id).await;
     Ok(user_ext
         .map(|ext| ext.settings)
         .unwrap_or(serde_json::json!({})))
@@ -107,14 +113,16 @@ impl Lifespan for GetMe {
     }
 }
 
-pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
+pub async fn get_me(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
     let session = authenticate(&req).await;
 
     match session {
         Ok(session) => {
-            let pool = db::get().await;
-            let mut conn = pool.acquire().await?;
+            let mut conn = ctx.db.acquire().await?;
             let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
                 let cached = CACHE.GetMe.get(&user.id);
@@ -135,7 +143,7 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
 
                 Ok(ok_response(Some(get_me)))
             } else {
-                revoke_session(session.id).await?;
+                revoke_session(&ctx.db.clone(), session.id).await?;
                 tracing::error!(
                     user_id = %session.user_id,
                     session_id = %session.id,
@@ -151,7 +159,10 @@ pub async fn get_me(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppErr
     }
 }
 
-pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppError> {
+pub async fn login<B: Body>(
+    ctx: &crate::context::AppContext,
+    req: Request<B>,
+) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session;
     use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
     use std::num::NonZeroU32;
@@ -181,8 +192,7 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
         );
         AppError::LimitExceeded("Too many login attempts, please try again later.")
     })?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let login_failed_counter = metrics::counter!("boluo_server_users_login_failed_total");
     let user = User::login(&mut *conn, &username, &form.password)
         .await
@@ -235,18 +245,24 @@ pub async fn login<B: Body>(req: Request<B>) -> Result<Response<Vec<u8>>, AppErr
     Ok(response)
 }
 
-pub async fn logout(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
+pub async fn logout(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
 
     if let Ok(session) = authenticate(&req).await {
-        revoke_session(session.id).await?;
+        revoke_session(&ctx.db, session.id).await?;
     }
     let mut response = ok_response(true);
     remove_session_cookie(response.headers_mut());
     Ok(response)
 }
 
-pub async fn edit(req: Request<impl Body>) -> Result<User, AppError> {
+pub async fn edit(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let EditUser {
@@ -255,9 +271,8 @@ pub async fn edit(req: Request<impl Body>) -> Result<User, AppError> {
         avatar,
         default_color,
     }: EditUser = parse_body(req).await?;
-    let pool = db::get().await;
     User::edit(
-        &pool,
+        &ctx.db,
         &session.user_id,
         nickname,
         bio,
@@ -277,27 +292,32 @@ pub fn is_image(mime: &Option<String>) -> bool {
     false
 }
 
-pub async fn update_settings(req: Request<impl Body>) -> Result<serde_json::Value, AppError> {
-    use crate::csrf::authenticate;
-    let session = authenticate(&req).await?;
-    let settings: serde_json::Value = parse_body(req).await?;
-    let pool = db::get().await;
-    let user_ext = UserExt::update_settings(&pool, session.user_id, settings).await?;
-    Ok(user_ext.settings)
-}
-
-pub async fn partial_update_settings(
+pub async fn update_settings(
+    ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<serde_json::Value, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
-    let pool = db::get().await;
-    let user_ext = UserExt::partial_update_settings(&pool, session.user_id, settings).await?;
+    let user_ext = UserExt::update_settings(&ctx.db, session.user_id, settings).await?;
     Ok(user_ext.settings)
 }
 
-pub async fn edit_avatar(req: Request<Incoming>) -> Result<User, AppError> {
+pub async fn partial_update_settings(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<serde_json::Value, AppError> {
+    use crate::csrf::authenticate;
+    let session = authenticate(&req).await?;
+    let settings: serde_json::Value = parse_body(req).await?;
+    let user_ext = UserExt::partial_update_settings(&ctx.db, session.user_id, settings).await?;
+    Ok(user_ext.settings)
+}
+
+pub async fn edit_avatar(
+    ctx: &crate::context::AppContext,
+    req: Request<Incoming>,
+) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
     let params = upload_params(req.uri())?;
@@ -306,8 +326,7 @@ pub async fn edit_avatar(req: Request<Incoming>) -> Result<User, AppError> {
     }
     let media_id = id();
     let media = upload(req, media_id, params, 1024 * 1024).await?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let media = media.create(&mut *conn, session.user_id, "avatar").await?;
     User::edit(
         &mut *conn,
@@ -321,27 +340,33 @@ pub async fn edit_avatar(req: Request<Incoming>) -> Result<User, AppError> {
     .map_err(Into::into)
 }
 
-pub async fn remove_avatar(req: Request<impl Body>) -> Result<User, AppError> {
+pub async fn remove_avatar(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
 
-    let pool = db::get().await;
-    User::remove_avatar(&pool, &session.user_id)
+    User::remove_avatar(&ctx.db, &session.user_id)
         .await
         .map_err(Into::into)
 }
 
-pub async fn check_email_exists(req: Request<impl Body>) -> Result<bool, AppError> {
+pub async fn check_email_exists(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let CheckEmailExists { email } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let user = User::get_by_email(&pool, &email).await?;
+    let user = User::get_by_email(&ctx.db, &email).await?;
     Ok(user.is_some())
 }
 
-pub async fn check_username_exists(req: Request<impl Body>) -> Result<bool, AppError> {
+pub async fn check_username_exists(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let CheckUsernameExists { username } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let user = User::get_by_username(&pool, &username).await?;
+    let user = User::get_by_username(&ctx.db, &username).await?;
     Ok(user.is_some())
 }
 
@@ -351,7 +376,10 @@ pub fn token_key(token: &str) -> Vec<u8> {
     key
 }
 
-pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
+pub async fn reset_password(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<(), AppError> {
     use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
     static IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
         RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(32).unwrap()))
@@ -372,7 +400,7 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
-    let mut conn = db::get().await.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let user = User::get_by_email(&mut *conn, &email)
         .await?
         .ok_or(AppError::NotFound("email"))?;
@@ -433,20 +461,24 @@ pub async fn reset_password(req: Request<impl Body>) -> Result<(), AppError> {
     Ok(())
 }
 
-pub async fn reset_password_token_check(req: Request<impl Body>) -> Result<bool, AppError> {
+pub async fn reset_password_token_check(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let ResetPasswordTokenCheck { token } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let token = token
         .parse::<Uuid>()
         .map_err(|_| AppError::BadRequest("Invalid token".to_string()))?;
     Ok(User::get_by_reset_token(&mut *conn, token).await.is_ok())
 }
 
-pub async fn reset_password_confirm(req: Request<impl Body>) -> Result<(), AppError> {
+pub async fn reset_password_confirm(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<(), AppError> {
     let ResetPasswordConfirm { token, password } = parse_body(req).await?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let token = token
         .parse::<Uuid>()
         .map_err(|_| AppError::BadRequest("Invalid token".to_string()))?;
@@ -515,15 +547,17 @@ async fn send_email_verification(
     Ok(())
 }
 
-pub async fn verify_email(req: Request<impl Body>) -> Result<bool, AppError> {
+pub async fn verify_email(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     use crate::users::api::VerifyEmail;
     let VerifyEmail { token } = parse_query(req.uri())?;
 
     let user_id = User::verify_email_verification_token(&token)
         .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     User::verify_email(&mut conn, &user_id).await?;
 
     tracing::info!(
@@ -535,6 +569,7 @@ pub async fn verify_email(req: Request<impl Body>) -> Result<bool, AppError> {
 }
 
 pub async fn resend_email_verification(
+    ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<ResendEmailVerificationResult, AppError> {
     use crate::session::authenticate;
@@ -543,13 +578,12 @@ pub async fn resend_email_verification(
     let session = authenticate(&req).await?;
     let ResendEmailVerification { lang } = parse_body(req).await?;
 
-    let pool = db::get().await;
-    let user = User::get_by_id(&pool, &session.user_id)
+    let user = User::get_by_id(&ctx.db, &session.user_id)
         .await
         .or_not_found()?;
 
     // Check if email is already verified
-    let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
+    let is_verified = UserExt::is_email_verified(&ctx.db, session.user_id).await?;
     if is_verified {
         return Ok(ResendEmailVerificationResult::AlreadyVerified);
     }
@@ -571,13 +605,13 @@ pub async fn resend_email_verification(
 }
 
 pub async fn check_email_verification_status(
+    ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<EmailVerificationStatus, AppError> {
     use crate::session::authenticate;
 
     let session = authenticate(&req).await?;
-    let pool = db::get().await;
-    let is_verified = UserExt::is_email_verified(&pool, session.user_id).await?;
+    let is_verified = UserExt::is_email_verified(&ctx.db, session.user_id).await?;
 
     Ok(EmailVerificationStatus { is_verified })
 }
@@ -642,7 +676,10 @@ async fn send_email_change_verification(
     Ok(())
 }
 
-pub async fn request_email_change(req: Request<impl Body>) -> Result<(), AppError> {
+pub async fn request_email_change(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<(), AppError> {
     use crate::session::authenticate;
     use crate::users::api::RequestEmailChange;
     use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
@@ -669,8 +706,7 @@ pub async fn request_email_change(req: Request<impl Body>) -> Result<(), AppErro
         .check_key(&new_email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
 
     let current_user = User::get_by_id(&mut *conn, &session.user_id)
         .await
@@ -700,7 +736,10 @@ pub async fn request_email_change(req: Request<impl Body>) -> Result<(), AppErro
     Ok(())
 }
 
-pub async fn confirm_email_change(req: Request<impl Body>) -> Result<User, AppError> {
+pub async fn confirm_email_change(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<User, AppError> {
     use crate::users::api::ConfirmEmailChange;
 
     let ConfirmEmailChange { token } = parse_body(req).await?;
@@ -708,8 +747,7 @@ pub async fn confirm_email_change(req: Request<impl Body>) -> Result<User, AppEr
     let (user_id, new_email) = User::verify_email_change_token(&token)
         .map_err(|e| AppError::BadRequest(format!("Invalid email change token: {}", e)))?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
 
     let current_user = User::get_by_id(&mut *conn, &user_id).await.or_not_found()?;
 
@@ -731,7 +769,10 @@ pub async fn confirm_email_change(req: Request<impl Body>) -> Result<User, AppEr
 }
 
 /// https://meta.discourse.org/t/setup-discourseconnect-official-single-sign-on-for-discourse-sso/13045
-pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>>, AppError> {
+pub async fn discourse_login(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Response<Vec<u8>>, AppError> {
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
     use crate::context::media_public_url;
     use crate::session::authenticate;
@@ -799,8 +840,7 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
     };
 
     // Get user data
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let user = User::get_by_id(&mut *conn, &session.user_id)
         .await
         .or_not_found()?;
@@ -885,41 +925,51 @@ pub async fn discourse_login(req: Request<impl Body>) -> Result<Response<Vec<u8>
         .map_err(|e| AppError::Unexpected(e.into()))
 }
 
-pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response<Vec<u8>>, AppError> {
+pub async fn router(
+    ctx: &crate::context::AppContext,
+    req: Request<Incoming>,
+    path: &str,
+) -> Result<Response<Vec<u8>>, AppError> {
     match (path, req.method().clone()) {
-        ("/login", Method::POST) => login(req).await,
-        ("/register", Method::POST) => response(register(req).await).await,
-        ("/logout", _) => logout(req).await,
-        ("/query", Method::GET) => response(query_user(req).await).await,
-        ("/query_self", Method::GET) => response(query_self(req).await).await,
-        ("/get_me", Method::GET) => get_me(req).await,
-        ("/settings", Method::GET) => query_settings(req).await.map(ok_response),
-        ("/edit", Method::POST) => response(edit(req).await).await,
-        ("/edit_avatar", Method::POST) => response(edit_avatar(req).await).await,
-        ("/remove_avatar", Method::POST) => response(remove_avatar(req).await).await,
-        ("/update_settings", Method::POST) => response(update_settings(req).await).await,
-        ("/update_settings", Method::PUT) => response(update_settings(req).await).await,
-        ("/update_settings", Method::PATCH) => response(partial_update_settings(req).await).await,
-        ("/check_username", Method::GET) => response(check_username_exists(req).await).await,
-        ("/check_email", Method::GET) => response(check_email_exists(req).await).await,
-        ("/reset_password", Method::POST) => response(reset_password(req).await).await,
+        ("/login", Method::POST) => login(ctx, req).await,
+        ("/register", Method::POST) => response(register(ctx, req).await).await,
+        ("/logout", _) => logout(ctx, req).await,
+        ("/query", Method::GET) => response(query_user(ctx, req).await).await,
+        ("/query_self", Method::GET) => response(query_self(ctx, req).await).await,
+        ("/get_me", Method::GET) => get_me(ctx, req).await,
+        ("/settings", Method::GET) => query_settings(ctx, req).await.map(ok_response),
+        ("/edit", Method::POST) => response(edit(ctx, req).await).await,
+        ("/edit_avatar", Method::POST) => response(edit_avatar(ctx, req).await).await,
+        ("/remove_avatar", Method::POST) => response(remove_avatar(ctx, req).await).await,
+        ("/update_settings", Method::POST) => response(update_settings(ctx, req).await).await,
+        ("/update_settings", Method::PUT) => response(update_settings(ctx, req).await).await,
+        ("/update_settings", Method::PATCH) => {
+            response(partial_update_settings(ctx, req).await).await
+        }
+        ("/check_username", Method::GET) => response(check_username_exists(ctx, req).await).await,
+        ("/check_email", Method::GET) => response(check_email_exists(ctx, req).await).await,
+        ("/reset_password", Method::POST) => response(reset_password(ctx, req).await).await,
         ("/reset_password_token_check", Method::GET) => {
-            response(reset_password_token_check(req).await).await
+            response(reset_password_token_check(ctx, req).await).await
         }
         ("/reset_password_confirm", Method::POST) => {
-            response(reset_password_confirm(req).await).await
+            response(reset_password_confirm(ctx, req).await).await
         }
-        ("/discourse/start", Method::GET) => discourse_login(req).await,
-        ("/discourse/start", Method::POST) => discourse_login(req).await,
-        ("/verify_email", Method::GET) => response(verify_email(req).await).await,
+        ("/discourse/start", Method::GET) => discourse_login(ctx, req).await,
+        ("/discourse/start", Method::POST) => discourse_login(ctx, req).await,
+        ("/verify_email", Method::GET) => response(verify_email(ctx, req).await).await,
         ("/resend_email_verification", Method::POST) => {
-            response(resend_email_verification(req).await).await
+            response(resend_email_verification(ctx, req).await).await
         }
         ("/email_verification_status", Method::GET) => {
-            response(check_email_verification_status(req).await).await
+            response(check_email_verification_status(ctx, req).await).await
         }
-        ("/request_email_change", Method::POST) => response(request_email_change(req).await).await,
-        ("/confirm_email_change", Method::POST) => response(confirm_email_change(req).await).await,
+        ("/request_email_change", Method::POST) => {
+            response(request_email_change(ctx, req).await).await
+        }
+        ("/confirm_email_change", Method::POST) => {
+            response(confirm_email_change(ctx, req).await).await
+        }
         _ => missing(),
     }
 }

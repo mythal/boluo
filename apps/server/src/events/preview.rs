@@ -1,5 +1,4 @@
 use crate::channels::ChannelMember;
-use crate::db;
 use crate::error::AppError;
 use crate::error::Find;
 use crate::events::Update;
@@ -144,7 +143,12 @@ pub struct PreviewPost {
 }
 
 impl PreviewPost {
-    pub async fn broadcast(self, space_id: Uuid, user_id: Uuid) -> Result<(), AppError> {
+    pub async fn broadcast(
+        self,
+        pool: &sqlx::PgPool,
+        space_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<(), AppError> {
         let PreviewPost {
             id,
             version,
@@ -159,7 +163,6 @@ impl PreviewPost {
             clear,
             edit,
         } = self;
-        let pool = db::get().await;
         let mut conn = pool.acquire().await?;
         let mut should_clear = false;
         if let Some(text) = text.as_ref() {

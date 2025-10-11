@@ -11,6 +11,7 @@
     "@boluo/tailwind-config": "0.0.0",
     "@eslint/js": "^9.23.0",
     "@storybook/addon-docs": "^9.0.13",
+    "@storybook/addon-themes": "^9.1.10",
     "@storybook/react-vite": "^9.0.13",
     "@tailwindcss/vite": "^4.1.14",
     "@types/react": "^19.0.12",

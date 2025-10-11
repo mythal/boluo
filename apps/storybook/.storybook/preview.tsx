@@ -1,7 +1,7 @@
 import type { Preview } from '@storybook/react-vite';
 import '@boluo/tailwind-config';
 import { IntlProvider } from 'react-intl';
-import { withThemeByClassName, withThemeByDataAttribute } from '@storybook/addon-themes';
+import { withThemeByDataAttribute } from '@storybook/addon-themes';
 import React from 'react';
 
 const preview: Preview = {

@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const InGameSwitchButton: FC = () => {

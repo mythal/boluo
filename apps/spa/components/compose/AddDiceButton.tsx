@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { InComposeButton } from './InComposeButton';
 import { useDefaultRollCommand } from '../../hooks/useDefaultRollCommand';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const AddDiceButton: FC = () => {

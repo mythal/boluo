@@ -11,7 +11,7 @@ import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { type User } from '@boluo/api';
 import { AppOperations } from './AppOperations';
-import { useIsClient } from '../../hooks/useIsClient';
+import { useIsClient } from '@boluo/common/hooks/useIsClient';
 import { isApple } from '@boluo/utils/browser';
 import { SidebarButton } from './SidebarButton';
 import { useSetThemeColor } from '../../hooks/useSetThemeColor';

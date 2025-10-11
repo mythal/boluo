@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const GameMasterBadge: FC = React.memo(() => {

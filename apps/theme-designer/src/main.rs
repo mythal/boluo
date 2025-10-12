@@ -77,9 +77,7 @@ impl ThemeDesigner {
 
     fn ensure_new_var_placeholders(&mut self) {
         for theme in &self.theme_names {
-            self.new_var_values
-                .entry(theme.clone())
-                .or_default();
+            self.new_var_values.entry(theme.clone()).or_default();
         }
     }
 
@@ -228,6 +226,11 @@ impl ThemeDesigner {
 
 impl eframe::App for ThemeDesigner {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Handle keyboard shortcuts
+        if ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S)) {
+            self.save();
+        }
+
         egui::TopBottomPanel::top("top_controls").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Update Stats").clicked() {
@@ -331,10 +334,7 @@ impl eframe::App for ThemeDesigner {
 
                         for theme in &self.theme_names {
                             row.col(|ui| {
-                                let value = variable
-                                    .values
-                                    .entry(theme.clone())
-                                    .or_default();
+                                let value = variable.values.entry(theme.clone()).or_default();
                                 let width = ui.available_width().max(60.0);
                                 ui.set_width(width);
                                 let response =
@@ -363,10 +363,7 @@ impl eframe::App for ThemeDesigner {
             });
 
             for theme in &self.theme_names {
-                let entry = self
-                    .new_var_values
-                    .entry(theme.clone())
-                    .or_default();
+                let entry = self.new_var_values.entry(theme.clone()).or_default();
                 ui.horizontal(|ui| {
                     ui.label(format!("{theme} value"));
                     let width = ui.available_width().max(80.0);

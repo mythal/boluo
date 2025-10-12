@@ -19,8 +19,10 @@ export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
     <button
       className={clsx(
         className,
-        'bg-action-inline-bg inline-block -translate-y-[1px] rounded px-[0.5em] transition-shadow duration-100 active:translate-y-0',
-        'shadow-action-inline-border/50 active:shadow-action-inline-border/25 shadow-[0_2px_0_0] active:shadow-[0_0px_0_1px]',
+        'ButtonInline inline-block -translate-y-[1px] rounded-sm px-[0.5em] transition-shadow duration-100 active:translate-y-0',
+        'bg-action-secondary-bg shadow-border-default ring-border-focus/75 focus:ring',
+        'hover:bg-action-secondary-bg-hover pressed:bg-action-secondary-bg-active',
+        'active:shadow-border-strong/25 shadow-[0_1px_0_0] active:shadow-[0_0px_0_1px]',
       )}
       ref={ref}
       {...props}

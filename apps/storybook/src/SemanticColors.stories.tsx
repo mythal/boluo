@@ -12,7 +12,6 @@ const semanticGroups: SemanticTokenGroup[] = [
       '--color-surface-default',
       '--color-surface-muted',
       '--color-surface-raised',
-      '--color-surface-overlay',
       '--color-surface-inverted',
       '--color-surface-floating',
       '--color-surface-interactive-hover',
@@ -45,7 +44,6 @@ const semanticGroups: SemanticTokenGroup[] = [
       '--color-border-subtle',
       '--color-border-focus',
       '--color-border-raised',
-      '--color-divider',
     ],
   },
   {
@@ -86,7 +84,6 @@ const semanticGroups: SemanticTokenGroup[] = [
         title: 'Inline & Toggle',
         tokens: [
           '--color-action-inline-bg',
-          '--color-action-inline-border',
           '--color-action-toggle-bg',
           '--color-action-toggle-bg-hover',
           '--color-action-toggle-bg-active',
@@ -104,38 +101,30 @@ const semanticGroups: SemanticTokenGroup[] = [
   {
     title: 'Status Messaging',
     tokens: [
-      '--color-state-success-bg',
       '--color-state-success-text',
       '--color-state-warning-bg',
       '--color-state-warning-text',
       '--color-state-danger-bg',
       '--color-state-danger-text',
       '--color-state-info-bg',
-      '--color-state-info-text',
-      '--color-state-success-border',
       '--color-state-warning-border',
       '--color-state-danger-border',
-      '--color-state-info-border',
     ],
   },
   {
     title: 'Elevation & Brand',
     tokens: [
       '--color-elevation-raised-shadow',
-      '--color-elevation-floating-shadow',
       '--color-brand-strong',
-      '--color-brand-muted',
       '--color-backdrop',
       '--color-ring',
-      '--color-ring-offset',
     ],
   },
   {
     title: 'Component Tokens',
     tokens: [
-      '--color-tooltip-surface',
+      '--color-surface-tooltip',
       '--color-tooltip-text',
-      '--color-tooltip-shadow',
       '--color-presence-online-indicator-bg',
       '--color-presence-online-indicator-border',
       '--color-presence-online-text',
@@ -250,7 +239,7 @@ const ColorSwatch = ({ token, theme }: { token: string; theme: 'light' | 'dark' 
         <button
           type="button"
           onClick={handleCopy}
-          className="w-fit rounded bg-transparent py-0.5 text-left font-mono text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-ring-offset)] focus-visible:outline-none"
+          className="w-fit rounded bg-transparent py-0.5 text-left font-mono text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none"
         >
           {tokenWithoutPrefix}
         </button>

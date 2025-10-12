@@ -15,11 +15,12 @@ export const SelectBox: FC<{
   };
   return (
     <label
+      role="radio"
       className={clsx(
         selected
           ? 'bg-surface-selectable-selected'
-          : 'bg-surface-selectable-default hover:bg-surface-selectable-hover',
-        'grid grid-cols-[1rem_auto] gap-x-2 gap-y-1 rounded px-4 py-3 transition-colors',
+          : 'bg-surface-default hover:bg-surface-selectable-hover',
+        'grid cursor-pointer grid-cols-[1rem_auto] gap-x-2 gap-y-1 rounded px-4 py-3 transition-colors',
       )}
     >
       <div className="self-start pt-1">

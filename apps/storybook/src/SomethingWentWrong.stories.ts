@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 
-const meta: Meta<typeof SomethingWentWrong> = { component: SomethingWentWrong };
+const meta: Meta<typeof SomethingWentWrong> = {
+  title: 'Feedback/SomethingWentWrong',
+  component: SomethingWentWrong,
+};
 
 export default meta;
 type Story = StoryObj<typeof SomethingWentWrong>;

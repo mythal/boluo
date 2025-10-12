@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DangerZone } from '@boluo/ui/DangerZone';
 import { Button } from '@boluo/ui/Button';
 
-const meta: Meta<typeof DangerZone> = { component: DangerZone };
+const meta: Meta<typeof DangerZone> = {
+  title: 'Base/DangerZone',
+  component: DangerZone,
+};
 
 export default meta;
 type Story = StoryObj<typeof DangerZone>;

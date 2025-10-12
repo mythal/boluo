@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from '@boluo/ui/Badge';
 import { Gamemaster } from '@boluo/icons';
 
-const meta: Meta<typeof Badge> = { component: Badge };
+const meta: Meta<typeof Badge> = {
+  title: 'Base/Badge',
+  component: Badge,
+};
 
 const dummyOnClick = () => {
   // do nothing

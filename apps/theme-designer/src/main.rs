@@ -60,7 +60,10 @@ impl ThemeDesigner {
     fn load_from_disk() -> Result<Self> {
         let path = default_theme_file_path();
         let theme_file = ThemeFile::load(&path)?;
-        let (theme_names, variable_rows) = theme_file.collect_rows();
+        let (theme_names, mut variable_rows) = theme_file.collect_rows();
+
+        // Sort variables alphabetically by name
+        variable_rows.sort_by(|a, b| a.name.cmp(&b.name));
 
         let mut designer = ThemeDesigner {
             theme_file,
@@ -87,7 +90,10 @@ impl ThemeDesigner {
     fn reload_from_disk(&mut self) -> Result<()> {
         let path = self.theme_file.path.clone();
         let theme_file = ThemeFile::load(&path)?;
-        let (theme_names, variable_rows) = theme_file.collect_rows();
+        let (theme_names, mut variable_rows) = theme_file.collect_rows();
+
+        // Sort variables alphabetically by name
+        variable_rows.sort_by(|a, b| a.name.cmp(&b.name));
 
         self.theme_file = theme_file;
         self.theme_names = theme_names;
@@ -137,6 +143,10 @@ impl ThemeDesigner {
             values,
             usage_count: None,
         });
+
+        // Sort to maintain alphabetical order
+        self.variable_rows.sort_by(|a, b| a.name.cmp(&b.name));
+
         self.dirty = true;
         self.status_message = Some(format!("Added {name}."));
         self.new_var_name.clear();

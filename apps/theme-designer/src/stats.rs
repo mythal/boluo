@@ -58,6 +58,8 @@ fn ripgrep_count(pattern: &str) -> Result<usize> {
     command
         .arg("--glob")
         .arg(format!("!{THEME_FILE_RELATIVE}"))
+        .arg("--glob")
+        .arg("!apps/storybook/src/SemanticColors.stories.tsx")
         .arg("--fixed-strings")
         .arg("--no-heading")
         .arg("--count")
@@ -72,9 +74,10 @@ fn ripgrep_count(pattern: &str) -> Result<usize> {
         let mut total = 0usize;
         for line in stdout.lines() {
             if let Some((_, count_str)) = line.rsplit_once(':')
-                && let Ok(count) = count_str.trim().parse::<usize>() {
-                    total += count;
-                }
+                && let Ok(count) = count_str.trim().parse::<usize>()
+            {
+                total += count;
+            }
         }
         Ok(total)
     } else {

@@ -32,6 +32,7 @@ struct ThemeDesigner {
     dirty: bool,
     status_message: Option<String>,
     error_message: Option<String>,
+    was_focused: bool,
 }
 
 impl ThemeDesigner {
@@ -48,6 +49,7 @@ impl ThemeDesigner {
                     dirty: false,
                     status_message: None,
                     error_message: Some(err.to_string()),
+                    was_focused: false,
                 };
                 designer.ensure_new_var_placeholders();
                 designer
@@ -69,6 +71,7 @@ impl ThemeDesigner {
             dirty: false,
             status_message: None,
             error_message: None,
+            was_focused: false,
         };
 
         designer.ensure_new_var_placeholders();
@@ -230,6 +233,21 @@ impl eframe::App for ThemeDesigner {
         if ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S)) {
             self.save();
         }
+
+        // Auto-reload when window gains focus
+        let is_focused = ctx.input(|i| i.viewport().focused.unwrap_or(false));
+        if is_focused && !self.was_focused {
+            // Window just gained focus - reload from disk
+            match self.reload_from_disk() {
+                Ok(()) => {
+                    // Silent reload - don't show status message for auto-reload
+                }
+                Err(err) => {
+                    self.error_message = Some(format!("Auto-reload failed: {err}"));
+                }
+            }
+        }
+        self.was_focused = is_focused;
 
         egui::TopBottomPanel::top("top_controls").show(ctx, |ui| {
             ui.horizontal(|ui| {

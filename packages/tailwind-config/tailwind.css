@@ -5,6 +5,8 @@
 
 @import './theme.tailwind.css';
 
+@custom-variant pressed (&:is([data-active="true"],:active):not(:disabled));
+
 @theme {
   /* Breakpoints */
   --breakpoint-sm: 640px;

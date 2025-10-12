@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Kbd } from '@boluo/ui/Kbd';
 
-const meta: Meta<typeof Kbd> = { component: Kbd };
+const meta: Meta<typeof Kbd> = {
+  title: 'Base/Kbd',
+  component: Kbd,
+};
 
 export default meta;
 type Story = StoryObj<typeof Kbd>;

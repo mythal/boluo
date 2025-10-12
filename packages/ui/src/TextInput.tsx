@@ -12,7 +12,9 @@ type TextAreaProps = React.ComponentPropsWithoutRef<'textarea'> &
 
 export const inputStyle = (variant: Variant['variant'] = 'normal') =>
   clsx(
-    'rounded-sm border border-solid px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 disabled:cursor-not-allowed disabled:brightness-125 disabled:contrast-50 dark:disabled:brightness-75',
+    'rounded-sm border border-solid px-3 py-2',
+    'text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1',
+    'disabled:cursor-not-allowed disabled:brightness-125 disabled:contrast-50 dark:disabled:brightness-75',
     variant === 'normal' &&
       'border-border-default bg-surface-default focus:border-border-focus hover:enabled:border-border-strong focus:ring-[color:var(--color-border-focus)]',
     variant === 'error' &&

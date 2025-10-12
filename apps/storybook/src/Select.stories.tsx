@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Select } from '@boluo/ui/Select';
 
-const meta: Meta<typeof Select> = { component: Select };
+const meta: Meta<typeof Select> = {
+  title: 'Base/Select',
+  component: Select,
+};
 
 export default meta;
 type Story = StoryObj<typeof Select>;

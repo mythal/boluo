@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
 
 const meta: Meta<typeof UnsupportedBrowser> = {
+  title: 'Feedback/UnsupportedBrowser',
   component: UnsupportedBrowser,
   decorators: [(Story) => <Story />],
 };
@@ -15,5 +16,6 @@ export const Desktop: Story = {
 };
 
 export const Ios: Story = {
+  name: 'iOS',
   args: { isIos: true },
 };

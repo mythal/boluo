@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
-const meta: Meta<typeof TooltipBox> = { component: TooltipBox, parameters: { layout: 'padded' } };
+const meta: Meta<typeof TooltipBox> = {
+  title: 'Base/TooltipBox',
+  component: TooltipBox,
+  parameters: { layout: 'padded' },
+};
 
 export default meta;
 type Story = StoryObj<typeof TooltipBox>;

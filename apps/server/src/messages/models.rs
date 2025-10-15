@@ -465,6 +465,11 @@ impl Message {
                 .await;
             Ok(Some(message_in_pos))
         } else {
+            // Capture current Postgres transaction id to correlate conflicts across logs.
+            let txid_current = sqlx::query_scalar::<sqlx::Postgres, i64>("select txid_current()")
+                .fetch_one(&mut *db)
+                .await
+                .ok();
             crate::pos::CHANNEL_POS_MANAGER
                 .cancel(channel_id, *id)
                 .await;
@@ -479,7 +484,19 @@ impl Message {
                 )
                 .await;
             tracing::warn!(
-                "Conflict occurred while moving message {id} in channel {channel_id}, same position as {message_in_pos_id}"
+                conflict_txid = txid_current,
+                attempted_pos_p = pos.0,
+                attempted_pos_q = pos.1,
+                lower_bound_pos_p = a.0,
+                lower_bound_pos_q = a.1,
+                upper_bound_pos_p = b.0,
+                upper_bound_pos_q = b.1,
+                conflicting_pos_p = message_in_pos.pos_p,
+                conflicting_pos_q = message_in_pos.pos_q,
+                conflicting_message_id = %message_in_pos_id,
+                attempted_message_id = %id,
+                channel_id = %channel_id,
+                "Conflict occurred while moving message; falling back to move_bottom"
             );
             let moved_message = Message::move_bottom(
                 db,

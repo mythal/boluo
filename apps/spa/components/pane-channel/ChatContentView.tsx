@@ -112,7 +112,13 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       const { sortable } = overData.current;
       const { realIndex, message: draggingMessage } = active;
       const targetIndex = Math.min(messagesCount - 1, sortable.index);
-      if (realIndex === targetIndex) return;
+      const currentIndex = chatList.findIndex(
+        (chatItem) => chatItem.type === 'MESSAGE' && chatItem.id === draggingMessage.id,
+      );
+      const sourceIndex = currentIndex === -1 ? realIndex : currentIndex;
+      const messageForOptimistic =
+        currentIndex === -1 ? draggingMessage : (chatList[currentIndex] as MessageItem);
+      if (sourceIndex === targetIndex) return;
       resetDragging();
       const targetItem = chatList[targetIndex];
       if (!targetItem) {
@@ -122,66 +128,74 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
             <FormattedMessage defaultMessage="Failed to move the message, the target is lost. Please try again." />
           ),
         });
-        recordWarn('Lost the target item when drag end', { realIndex, targetIndex, messagesCount });
+        recordWarn('Lost the target item when drag end', {
+          realIndex,
+          sourceIndex,
+          targetIndex,
+          messagesCount,
+        });
         return;
       }
-      const timestamp = new Date().getTime();
-      const item: MessageItem = { ...draggingMessage, optimistic: true };
-      let range: [[number, number] | null, [number, number] | null] | null = null;
-      if (realIndex < targetIndex) {
-        range = [[targetItem.posP, targetItem.posQ], null];
+      const timestamp = Date.now();
+      // Move to the position between lower and upper
+      let rangeLower: [number, number] | null = null;
+      let rangeUpper: [number, number] | null = null;
+      if (sourceIndex < targetIndex) {
+        rangeLower = [targetItem.posP, targetItem.posQ];
         const targetNext = chatList[targetIndex + 1];
         if (!targetNext) {
           if (targetItem.type === 'PREVIEW' && isDummySelfPreview(targetItem)) {
             // Dummy preview at the end
             const targetBefore = chatList[targetIndex - 1];
             if (!targetBefore) return;
-            range = [[targetBefore.posP, targetBefore.posQ], null];
+            rangeLower = [targetBefore.posP, targetBefore.posQ];
           }
           // Move to the end
         } else if (
           targetItem.type === 'PREVIEW' ||
           (targetNext.type === 'PREVIEW' && !isDummySelfPreview(targetNext))
         ) {
-          range = [
-            [targetItem.posP, targetItem.posQ],
-            [targetNext.posP, targetNext.posQ],
-          ];
+          rangeUpper = [targetNext.posP, targetNext.posQ];
         }
-        const optimisticPos = targetNext
-          ? (targetNext.pos + targetItem.pos) / 2
-          : (targetItem.posP + 1) / targetItem.posQ;
-        dispatch({
-          type: 'setOptimisticMessage',
-          payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
-        });
       } else {
-        range = [null, [targetItem.posP, targetItem.posQ]];
-
+        rangeUpper = [targetItem.posP, targetItem.posQ];
         const targetBefore = chatList[targetIndex - 1];
         if (!targetBefore) {
-          // Move to the beginning
+          // Keep `rangeLower` be null, Move to the beginning
         } else if (targetItem.type === 'PREVIEW' || targetBefore.type === 'PREVIEW') {
-          range = [
-            [targetBefore.posP, targetBefore.posQ],
-            [targetItem.posP, targetItem.posQ],
-          ];
+          rangeLower = [targetBefore.posP, targetBefore.posQ];
         }
-
-        const optimisticPos = targetBefore
-          ? (targetBefore.posP + targetItem.posP) / (targetBefore.posQ + targetItem.posQ)
-          : targetItem.posP / (targetItem.posQ + 1);
-        dispatch({
-          type: 'setOptimisticMessage',
-          payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
-        });
       }
+      if (rangeLower == null && rangeUpper == null) {
+        return;
+      }
+      const lowerForCalc = rangeLower ?? (rangeUpper ? ([0, 1] as [number, number]) : null);
+      const upperForCalc = rangeUpper ?? (rangeLower ? ([1, 0] as [number, number]) : null);
+      if (!lowerForCalc || !upperForCalc) {
+        return;
+      }
+      const nextPosP = lowerForCalc[0] + upperForCalc[0];
+      const nextPosQ = lowerForCalc[1] + upperForCalc[1];
+      const optimisticPos = nextPosQ === 0 ? messageForOptimistic.pos : nextPosP / nextPosQ;
+      const item: MessageItem = {
+        ...messageForOptimistic,
+        optimistic: true,
+        pos: optimisticPos,
+        posP: nextPosP,
+        posQ: nextPosQ,
+      };
+      const range: [[number, number] | null, [number, number] | null] = [rangeLower, rangeUpper];
+      dispatch({
+        type: 'setOptimisticMessage',
+        payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
+      });
+      const expectPos: [number, number] = [draggingMessage.posP, draggingMessage.posQ];
       if (range) {
         const result = await Promise.race([
           post('/messages/move_between', null, {
             channelId,
             messageId: draggingMessage.id,
-            expectPos: [draggingMessage.posP, draggingMessage.posQ],
+            expectPos,
             range,
           }),
           timeout(8000),

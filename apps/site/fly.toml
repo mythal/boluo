@@ -11,7 +11,7 @@ swap_size_mb = 256
   image = 'ghcr.io/mythal/boluo/site:latest'
 
 [env]
-  BACKEND_URL = 'https://server.boluo-staging.mythal.net'
+  BACKEND_URL = 'http://boluo-server-staging.internal'
   FLY_BACKEND_APP_NAME = 'boluo-server-staging'
   HOSTNAME = '0.0.0.0'
   PORT = '3000'

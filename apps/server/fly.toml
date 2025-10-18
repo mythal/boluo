@@ -1,53 +1,59 @@
-app = "boluo-server-staging"
-primary_region = "nrt"
+# fly.toml app configuration file generated for boluo-server-staging on 2025-10-19T07:08:22+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'boluo-server-staging'
+primary_region = 'nrt'
 
 [build]
-  image = "ghcr.io/mythal/boluo/server:latest"
+  image = 'ghcr.io/mythal/boluo/server:latest'
 
 [env]
+  APP_URL = 'https://boluo-app.mythal.workers.dev'
+  DATABASE_URL = 'postgresql://boluo:boluo-staging@boluo-db-staging.internal:5432/boluo'
   HOST = '0.0.0.0'
-  PORT = "3000"
-  SITE_URL = "https://site.boluo-staging.mythal.net"
-  DATABASE_URL = "postgresql://boluo:boluo-staging@boluo-db-staging.internal:5432/boluo"
-  APP_URL = "https://app.boluochat.com"
-  PUBLIC_MEDIA_URL = "http://media.dev.boluo.chat"
-  S3_BUCKET_NAME = "boluo-development"
-  S3_ENDPOINT_URL = "https://9a7f9f4ce45406e8224c0f1e9e6785b5.r2.cloudflarestorage.com"
+  PORT = '3000'
+  PROMETHEUS_EXPORTER = '0.0.0.0:9000'
+  PUBLIC_MEDIA_URL = 'http://media.dev.boluo.chat'
   RUST_LOG = 'debug'
-  PROMETHEUS_EXPORTER = "0.0.0.0:9000"
+  S3_BUCKET_NAME = 'boluo-development'
+  S3_ENDPOINT_URL = 'https://9a7f9f4ce45406e8224c0f1e9e6785b5.r2.cloudflarestorage.com'
+  SITE_URL = 'https://site.boluo-staging.mythal.net'
 
 [http_service]
+  internal_port = 3000
+  auto_stop_machines = 'stop'
   auto_start_machines = true
-  auto_stop_machines = "stop"
-  force_https = false
-  internal_port = 3_000
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
   [http_service.tls_options]
-    alpn = ["h2", "http/1.1"]
+    alpn = ['h2', 'http/1.1']
+
   [http_service.http_options]
     h2_backend = true
+
   [[http_service.checks]]
-    grace_period = "20s"
-    interval = "20s"
-    method = "GET"
-    path = "/api/info/healthcheck"
-    timeout = "5s"
+    interval = '20s'
+    timeout = '5s'
+    grace_period = '20s'
+    method = 'GET'
+    path = '/api/info/healthcheck'
 
 [[vm]]
-  cpu_kind = "shared"
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
-  memory = "256mb"
   kernel_args = [
-    "sysctl.net.core.somaxconn=65535",
-    "sysctl.net.core.netdev_max_backlog=16384",
-    "sysctl.net.ipv4.tcp_fastopen=3",
-    "sysctl.net.ipv4.tcp_max_syn_backlog=65535",
-    "sysctl.net.ipv4.tcp_max_tw_buckets=2000000",
-    "sysctl.net.ipv4.tcp_tw_reuse=1",
+    'sysctl.net.core.somaxconn=65535',
+    'sysctl.net.core.netdev_max_backlog=16384',
+    'sysctl.net.ipv4.tcp_fastopen=3',
+    'sysctl.net.ipv4.tcp_max_syn_backlog=65535',
+    'sysctl.net.ipv4.tcp_max_tw_buckets=2000000',
+    'sysctl.net.ipv4.tcp_tw_reuse=1',
   ]
 
-[metrics]
+[[metrics]]
   port = 9000
   path = '/metrics'

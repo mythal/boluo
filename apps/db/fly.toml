@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for boluo-db-staging on 2025-09-30T14:24:17+09:00
+# fly.toml app configuration file generated for boluo-db-staging on 2025-10-19T06:55:49+09:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -15,11 +15,6 @@ swap_size_mb = 512
   POSTGRES_PASSWORD = 'boluo-staging'
   POSTGRES_USER = 'boluo'
 
-[[mounts]]
-  source = 'pgdata'
-  destination = '/var/lib/postgresql'
-  initial_size = '2gb'
-
 [[services]]
   protocol = 'tcp'
   internal_port = 5432
@@ -34,3 +29,4 @@ swap_size_mb = 512
   memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
+  persist_rootfs = 'restart'

@@ -55,7 +55,7 @@
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit",
-    "dev": "next dev --port 3200",
+    "dev": "next dev --turbopack --port 3200",
     "lint": "eslint",
     "test": "jest"
   },

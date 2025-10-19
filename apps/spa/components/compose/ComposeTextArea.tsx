@@ -74,7 +74,7 @@ const MAX_FIND_LENGTH = 64;
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
   const { composeAtom, parsedAtom, composeFocusedAtom, hideSelfPreviewTimeoutAtom } =
     useChannelAtoms();
-  const fixHeight = useAtomValue(composeFocusedAtom) && window.innerWidth < screens.md;
+  const isMobileLayout = useAtomValue(composeFocusedAtom) && window.innerWidth < screens.md;
   const setSelfPreviewLock = useSetAtom(hideSelfPreviewTimeoutAtom);
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
@@ -84,14 +84,13 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
   const style = useMemo(
     (): React.CSSProperties => ({
       width: '100%',
-      height: fixHeight ? '12rem' : undefined,
-      maxHeight: fixHeight ? undefined : '10rem',
+      maxHeight: isMobileLayout ? '12rem' : '10rem', // -> 为移动端和桌面端都设置一个最大高度
       scrollbarWidth: 'none',
       WebkitTextSizeAdjust: 'none',
       MozTextSizeAdjust: 'none',
       textSizeAdjust: 'none',
     }),
-    [fixHeight],
+    [isMobileLayout],
   );
   const lastMessageAtom = useMemo(
     () =>
@@ -131,7 +130,6 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
   useReflectRangeChange(composeAtom, lock, ref);
 
   const handleChange: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-    const { value } = e.target;
     updateRange();
     dispatch({
       type: 'setSource',
@@ -192,7 +190,6 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       ref={ref}
       value={source}
       onChange={handleChange}
-      onFocus={() => dispatch(focusAction)}
       onBlur={() => dispatch(blurAction)}
       onClick={() => setSelfPreviewLock(Date.now() + 1000 * 6)}
       onPasteCapture={handlePaste}
@@ -202,7 +199,7 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       data-variant="normal"
       onSelectionChange={updateRange}
       style={style}
-      autoHeight={!fixHeight}
+      autoHeight={true}
       rows={1}
       className="resize-none px-2 py-2 outline-none"
     >

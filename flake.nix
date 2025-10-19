@@ -182,6 +182,7 @@
                 paths = with pkgs; [
                   busybox
                   bashInteractive
+                  pgcli
                   dockerTools.caCertificates
                   dockerTools.fakeNss
                 ];

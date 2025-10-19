@@ -164,6 +164,9 @@
   "7q87xo": {
     "message": "Channel Settings"
   },
+  "7tSUe8": {
+    "message": "Back to login"
+  },
   "8+j66D": {
     "message": "Are you sure you want to delete this message?"
   },
@@ -205,6 +208,9 @@
   },
   "AVI/0j": {
     "message": "Split"
+  },
+  "AYIKp4": {
+    "message": "Already have an account? Log in"
   },
   "AbXVP4": {
     "message": "Created at"
@@ -289,6 +295,9 @@
   },
   "HH8O0c": {
     "message": "Request failed, possible network anomaly."
+  },
+  "HOuWsl": {
+    "message": "Developer Options"
   },
   "HSaR2M": {
     "message": "Is secret channel?"
@@ -841,6 +850,9 @@
   },
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
+  },
+  "jsy7pk": {
+    "message": "Try Again"
   },
   "jtLNcT": {
     "message": "Failed to move the message, the target is lost. Please try again."

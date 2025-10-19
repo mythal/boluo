@@ -7,25 +7,6 @@ on:
       - main
       # - release-*
 jobs:
-  check:
-    name: Flake Check
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: "write"
-      contents: "read"
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: Nix Flake Check
-        run: nix flake check --verbose --print-build-logs --log-format raw --show-trace
-
   images:
     needs: check
     runs-on: ubuntu-latest
@@ -43,7 +24,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Push images
-        run: nix --log-format raw -L run ".#push-images"
+        run: nix run --print-build-logs ".#push-images"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -69,12 +50,12 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-site-staging
+        run: nix run .#deploy-site-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy server to staging
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-staging
+        run: nix run .#deploy-server-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
@@ -98,11 +79,11 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to production
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-site-production
+        run: nix run .#deploy-site-production
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy server to production
-        run: nix --accept-flake-config --log-format raw -L run .#deploy-server-production
+        run: nix run .#deploy-server-production
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}

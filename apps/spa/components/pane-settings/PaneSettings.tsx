@@ -5,6 +5,7 @@ import { type FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
+import { ButtonWithLamp } from '@boluo/ui/ButtonWithLamp';
 import { type ChildrenProps } from '@boluo/utils/types';
 import { useLogout } from '@boluo/common/hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
@@ -16,6 +17,7 @@ import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
 import { type User } from '@boluo/api';
 import { EditDefaultColor } from './EditDefaultColor';
+import { HelpText } from '@boluo/ui/HelpText';
 
 const SectionTitle: FC<ChildrenProps> = ({ children }) => (
   <h3 className="mb-2 font-bold">{children}</h3>
@@ -116,12 +118,18 @@ export const PaneSettings: FC = () => {
           </>
         )}
         <div>
-          <SectionTitle>Developer Mode</SectionTitle>
+          <SectionTitle>
+            <FormattedMessage defaultMessage="Developer Options" />
+          </SectionTitle>
           <div>
-            {/* TODO: Style */}
-            <Button variant="switch" on={devMode} onClick={() => setDevMode(!devMode)}>
-              Turn On Developer Mode
-            </Button>
+            <div className="py-2">
+              <HelpText>
+                <FormattedMessage defaultMessage="Enable this if you want to debug or develop features." />
+              </HelpText>
+            </div>
+            <ButtonWithLamp on={devMode} onClick={() => setDevMode(!devMode)}>
+              <FormattedMessage defaultMessage="Dev Mode" />
+            </ButtonWithLamp>
           </div>
         </div>
       </div>

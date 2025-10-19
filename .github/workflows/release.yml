@@ -8,7 +8,6 @@ on:
       # - release-*
 jobs:
   images:
-    needs: check
     runs-on: ubuntu-latest
     permissions:
       id-token: write

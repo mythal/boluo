@@ -6,7 +6,6 @@ import { usePaneReplace } from '../hooks/usePaneReplace';
 import { LoginForm } from './account/LoginForm';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
-import { Todo } from './common/Todo';
 import * as classes from '@boluo/ui/classes';
 
 export const PaneLogin: FC = () => {
@@ -14,6 +13,9 @@ export const PaneLogin: FC = () => {
   const replacePane = usePaneReplace();
   const handleForgotPassword = useCallback(() => {
     replacePane({ type: 'RESET_PASSWORD' }, (pane) => pane.type === 'LOGIN');
+  }, [replacePane]);
+  const handleOpenSignUp = useCallback(() => {
+    replacePane({ type: 'SIGN_UP' }, (pane) => pane.type === 'LOGIN');
   }, [replacePane]);
   return (
     <PaneBox
@@ -25,13 +27,13 @@ export const PaneLogin: FC = () => {
     >
       <div className="p-pane">
         <LoginForm onSuccess={close} className="w-full" />
-        <div className="mt-3 text-right">
+        <div className="mt-3 flex justify-between">
+          <button type="button" className={classes.link} onClick={handleOpenSignUp}>
+            <FormattedMessage defaultMessage="Sign Up" />
+          </button>
           <button type="button" className={classes.link} onClick={handleForgotPassword}>
             <FormattedMessage defaultMessage="Forgot password?" />
           </button>
-        </div>
-        <div>
-          <Todo>Sign Up</Todo>
         </div>
       </div>
     </PaneBox>

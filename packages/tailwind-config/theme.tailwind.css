@@ -118,6 +118,11 @@
   --color-border-primary: var(--color-sky-700);
   --color-border-danger: var(--color-red-700);
   --color-action-danger-bg-disabled: var(--color-red-800);
+
+  --color-lamp-on-border: var(--color-yellow-500);
+  --color-lamp-on-bg: var(--color-yellow-200);
+  --color-lamp-off-border: var(--color-neutral-800);
+  --color-lamp-off-bg: var(--color-neutral-700);
 }
 
 @theme {
@@ -243,4 +248,9 @@
   --color-theme-light: var(--color-white);
   --color-theme-system: var(--color-white);
   --color-ring: var(--color-green-400);
+
+  --color-lamp-on-border: var(--color-yellow-500);
+  --color-lamp-on-bg: var(--color-yellow-400);
+  --color-lamp-off-border: var(--color-neutral-300);
+  --color-lamp-off-bg: var(--color-neutral-200);
 }

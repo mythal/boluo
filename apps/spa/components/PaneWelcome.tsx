@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { PaneBox } from './PaneBox';
 import * as classes from '@boluo/ui/classes';
 import { PaneHeaderBox } from './PaneHeaderBox';
@@ -26,6 +26,7 @@ export const PaneWelcome: FC = () => {
             values={{
               forumUrl: (
                 <a
+                  key="forumUrl"
                   href="https://zh.mythal.net"
                   target="_blank"
                   rel="noreferrer"
@@ -43,6 +44,7 @@ export const PaneWelcome: FC = () => {
             values={{
               githubUrl: (
                 <a
+                  key="githubUrl"
                   href="https://github.com/mythal/boluo"
                   target="_blank"
                   rel="noreferrer"

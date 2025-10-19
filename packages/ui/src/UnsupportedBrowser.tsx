@@ -11,6 +11,7 @@ export const UnsupportedBrowser = ({
 }) => {
   const chromeLink = (
     <a
+      key="chromeLink"
       href="https://www.google.com/chrome/"
       target="_blank"
       rel="noreferrer"
@@ -21,6 +22,7 @@ export const UnsupportedBrowser = ({
   );
   const firefoxLink = (
     <a
+      key="firefoxLink"
       href="https://www.mozilla.org/firefox/"
       target="_blank"
       rel="noreferrer"
@@ -31,6 +33,7 @@ export const UnsupportedBrowser = ({
   );
   const edgeLink = (
     <a
+      key="edgeLink"
       href="https://www.microsoft.com/edge"
       target="_blank"
       rel="noreferrer"

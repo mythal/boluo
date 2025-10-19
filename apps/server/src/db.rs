@@ -13,7 +13,7 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     const LIFETIME: std::time::Duration = std::time::Duration::from_secs(60 * 60);
     const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60 * 5);
     const ACQUIRE_SLOW_THRESHOLD: std::time::Duration = std::time::Duration::from_millis(800);
-    const ACQUIRE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(2000);
+    const ACQUIRE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
     if let Some(pool) = POOL.get() {
         pool.clone()
     } else {

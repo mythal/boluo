@@ -4,8 +4,8 @@ use clap::Parser;
 #[derive(Parser)]
 struct Options {
     /// Database URL
-    #[clap(long, env)]
-    database_url: String,
+    #[clap(long)]
+    database_url: Option<String>,
 
     /// Whether to load fixtures
     #[clap(long, default_value_t = false)]
@@ -16,9 +16,15 @@ struct Options {
 async fn main() {
     config::load();
     let options = Options::parse();
+    let Some(database_url) = options
+        .database_url
+        .or_else(|| std::env::var("DATABASE_URL").ok())
+    else {
+        panic!("--database-url or DATABASE_URL is required");
+    };
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(1)
-        .connect(&options.database_url)
+        .connect(&database_url)
         .await
         .expect("Cannot connect to database");
     sqlx::migrate!("./migrations")

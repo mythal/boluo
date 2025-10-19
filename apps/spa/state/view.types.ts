@@ -15,6 +15,10 @@ export interface LoginPane {
   type: 'LOGIN';
 }
 
+export interface ResetPasswordPane {
+  type: 'RESET_PASSWORD';
+}
+
 export interface WelcomePane {
   type: 'WELCOME';
 }
@@ -79,6 +83,7 @@ export type PaneData =
   | CreateChannelPane
   | CreateSpacePane
   | LoginPane
+  | ResetPasswordPane
   | ProfilePane
   | ChannelExportPane
   | SpaceMembersPane;

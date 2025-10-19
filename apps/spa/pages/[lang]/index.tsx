@@ -5,7 +5,6 @@ import type { Locale } from '@boluo/common/locale';
 import Head from 'next/head';
 import { useIntl } from 'react-intl';
 import { useEffect } from 'react';
-import '@boluo/tailwind-config';
 import Chat from '../../components/Chat';
 import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';

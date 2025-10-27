@@ -34,7 +34,8 @@ const isLocale = (locale: string = ''): locale is Locale =>
 
 const IS_STATIC_FILES = /^\/\w+\.(png|ico|svg)/;
 const themePrefix = 'theme:';
-export function middleware(request: NextRequest): NextResponse | void {
+
+export function proxy(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
   if (pathname.startsWith('/api')) {
     // eslint-disable-next-line no-restricted-globals

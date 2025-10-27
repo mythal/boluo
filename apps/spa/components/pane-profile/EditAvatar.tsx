@@ -4,8 +4,9 @@ import { type FC, useCallback, useMemo, useRef } from 'react';
 import { useWatch } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
 import type { ProfileEditSchema } from './PaneProfileEdit';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   userId: string;
@@ -17,6 +18,7 @@ interface Props {
 const ALLOW_AVATAR_MIME = ['image/gif', 'image/jpeg', 'image/png'];
 
 export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const intl = useIntl();
   const avatarLabel = intl.formatMessage({ defaultMessage: 'Avatar' });
   const changeAvatarLabel = intl.formatMessage({ defaultMessage: 'Change Avatar' });
@@ -46,6 +48,7 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
           size="6rem"
           className="cursor-pointer rounded-md"
           onClick={triggerUpload}
+          mediaUrl={appSettings?.mediaUrl}
         />
       )}
       <div className="absolute right-1 bottom-1 flex gap-1 opacity-0 group-hover:opacity-75 hover:opacity-100">

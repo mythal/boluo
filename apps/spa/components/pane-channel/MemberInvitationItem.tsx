@@ -8,9 +8,10 @@ import {
 } from '@floating-ui/react';
 import { type Channel, type SpaceMember, type User, type UserStatus } from '@boluo/api';
 import { type FC, useState } from 'react';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
 import { MemberCard } from './MemberCard';
 import { MemberStatusBadge } from './MemberStatusBadge';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   user: User;
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, status }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,
@@ -47,6 +49,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
             id={user.id}
             avatarId={user.avatarId}
             className="rounded-sm"
+            mediaUrl={appSettings?.mediaUrl}
           />
         </div>
         <span className="space-x-1">

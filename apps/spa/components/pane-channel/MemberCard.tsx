@@ -15,8 +15,9 @@ import useSWRMutation from 'swr/mutation';
 import { Badge } from '@boluo/ui/Badge';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 const JUST_NOW = 1000 * 10;
 const SECONDS_IN_MS = 1000;
@@ -156,7 +157,7 @@ const ConfirmKick: FC<{
 
 const LastSeen = React.memo(
   ({ timestamp: lastSeenTimeStamp, className }: { timestamp: number; className?: string }) => {
-    const [now, setNow] = useState(Date.now());
+    const [now, setNow] = useState(0);
     useEffect(() => {
       const interval = setInterval(() => {
         setNow(Date.now());
@@ -292,6 +293,7 @@ export const MemberCard: React.FC<Props> = ({
   ...props
 }) => {
   const { data: currentUser } = useQueryCurrentUser();
+  const { data: appSettings } = useQueryAppSettings();
   const thisIsMe = user.id === currentUser?.id;
   const canIManage = canIKick || canIInvite || canIEditMaster;
   const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>(
@@ -322,6 +324,7 @@ export const MemberCard: React.FC<Props> = ({
             id={user.id}
             avatarId={user.avatarId}
             name={user.nickname}
+            mediaUrl={appSettings?.mediaUrl}
           />
           <div className="space-y-1">
             <Names

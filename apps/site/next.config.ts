@@ -37,9 +37,6 @@ const root = path.join(__dirname, '../..');
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  eslint: {
-    dirs: ['src', 'tests'],
-  },
   output: 'standalone',
   rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   turbopack: {

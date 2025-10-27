@@ -15,7 +15,8 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import clsx from 'clsx';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   inGame: boolean;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame, myId }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
@@ -54,8 +56,15 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
       (member) => !whisperToUsernames.includes(member.user.username),
     );
     if (members.length === 0) return null;
-    return <WhisperToItemAdd inGame={inGame} members={members} add={addUsername} />;
-  }, [addUsername, channelMembers, inGame, whisperToUsernames]);
+    return (
+      <WhisperToItemAdd
+        inGame={inGame}
+        members={members}
+        add={addUsername}
+        mediaUrl={appSettings?.mediaUrl}
+      />
+    );
+  }, [addUsername, channelMembers, inGame, whisperToUsernames, appSettings?.mediaUrl]);
 
   const whisperToMembers: MemberWithUser[] = useMemo(() => {
     return whisperToUsernames.flatMap((username) => {
@@ -132,7 +141,8 @@ export const WhisperToItemAdd: FC<{
   inGame: boolean;
   members: MemberWithUser[];
   add: (username: string) => void;
-}> = ({ inGame, members, add }) => {
+  mediaUrl?: string | null | undefined;
+}> = ({ inGame, members, add, mediaUrl }) => {
   const [open, setOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     placement: 'top-start',
@@ -167,7 +177,13 @@ export const WhisperToItemAdd: FC<{
             className="bg-surface-raised border-border-default max-h-72 overflow-y-auto rounded border shadow-md"
           >
             {members.map((member) => (
-              <MemberItem inGame={inGame} key={member.user.id} member={member} add={add} />
+              <MemberItem
+                inGame={inGame}
+                key={member.user.id}
+                member={member}
+                add={add}
+                mediaUrl={mediaUrl}
+              />
             ))}
           </div>
         </FloatingPortal>
@@ -180,7 +196,8 @@ const MemberItem: FC<{
   member: MemberWithUser;
   inGame: boolean;
   add: (username: string) => void;
-}> = ({ member, add, inGame }) => {
+  mediaUrl?: string | null | undefined;
+}> = ({ member, add, inGame, mediaUrl }) => {
   const characterName: ReactNode = member.channel.characterName || (
     <span className="font-pixel text-text-muted text-[12.5px]">[empty]</span>
   );
@@ -199,6 +216,7 @@ const MemberItem: FC<{
         avatarId={member.user.avatarId}
         className="row-span-2 rounded-sm"
         size="2rem"
+        mediaUrl={mediaUrl}
       />
 
       <div className="w-full truncate text-sm">{mainName}</div>

@@ -3,9 +3,10 @@ import { type FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
 import { ExileButton } from './ExileButton';
 import { InListButton } from './InListButton';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   myId: string | null;
@@ -20,6 +21,7 @@ export const SpaceMemberListItem: FC<Props> = ({
   amIAdmin,
   myId,
 }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const isAdmin = spaceMembership.isAdmin || spaceOwnerId === user.id;
   const [isShowOperation, setShowOperation] = useState(false);
   const profileUrl = `/profile/${user.id}`;
@@ -42,6 +44,7 @@ export const SpaceMemberListItem: FC<Props> = ({
           avatarId={user.avatarId}
           size="3rem"
           className="rounded-sm"
+          mediaUrl={appSettings?.mediaUrl}
         />
       </a>
       <div>

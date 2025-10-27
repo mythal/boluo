@@ -1,20 +1,20 @@
-/* eslint-disable @next/next/no-img-element */
 import { type FC, useMemo } from 'react';
-import { getMediaUrl } from '../../media';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { getMediaUrl } from '@boluo/utils/media';
+import { useIntl } from 'react-intl';
+
 interface Props {
   id: string;
   name: string;
+  mediaUrl?: string | null | undefined;
   avatarId: string | null;
   onClick?: () => void;
   className?: string;
   size?: number | string;
 }
 
-// TODO: loading style
 export const Avatar: FC<Props> = (props) => {
-  const { id, size = '1em', name, className, avatarId, onClick } = props;
-  const { data: appSettings } = useQueryAppSettings();
+  const intl = useIntl();
+  const { id, size = '1em', name, className, avatarId, onClick, mediaUrl } = props;
   const style = useMemo(() => {
     if (size == null || size === '') {
       return undefined;
@@ -22,18 +22,20 @@ export const Avatar: FC<Props> = (props) => {
     return { width: size, height: size };
   }, [size]);
 
-  if (avatarId && appSettings?.mediaUrl) {
+  const alt = intl.formatMessage({ defaultMessage: 'Avatar of {name}' }, { name });
+
+  if (avatarId && mediaUrl) {
     return (
       <img
-        alt={name}
+        alt={alt}
         style={style}
         onClick={onClick}
         className={className}
-        src={getMediaUrl(appSettings.mediaUrl, avatarId)}
+        src={getMediaUrl(mediaUrl, avatarId)}
       />
     );
   }
 
   const src = `https://avatars.boluochat.com/${encodeURIComponent(id + name)}`;
-  return <img className={className} style={style} onClick={onClick} alt={name} src={src} />;
+  return <img className={className} style={style} onClick={onClick} alt={alt} src={src} />;
 };

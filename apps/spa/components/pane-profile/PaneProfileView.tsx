@@ -1,15 +1,17 @@
 import type { User } from '@boluo/api';
 import clsx from 'clsx';
 import type { FC } from 'react';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
 import { ShowUsername } from './ShowUsername';
 import { FormattedMessage } from 'react-intl';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   user: User;
 }
 
 export const PaneProfileView: FC<Props> = ({ user }) => {
+  const { data: appSettings } = useQueryAppSettings();
   return (
     <div className="p-pane">
       <div className="">
@@ -19,6 +21,7 @@ export const PaneProfileView: FC<Props> = ({ user }) => {
           name={user.nickname}
           size="6rem"
           className={clsx('rounded-md @xs:float-right')}
+          mediaUrl={appSettings?.mediaUrl}
         />
         <div className="">
           <ShowUsername username={user.username} />

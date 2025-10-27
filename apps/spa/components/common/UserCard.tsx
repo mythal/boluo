@@ -1,12 +1,14 @@
 import { type User } from '@boluo/api';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/Avatar';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   user: User;
 }
 
 export const UserCard = ({ user }: Props) => {
+  const { data: appSettings } = useQueryAppSettings();
   return (
     <FloatingBox>
       <div className="flex gap-2">
@@ -17,6 +19,7 @@ export const UserCard = ({ user }: Props) => {
             id={user.id}
             name={user.nickname}
             avatarId={user.avatarId}
+            mediaUrl={appSettings?.mediaUrl}
           />
         </div>
         <div className="flex flex-col gap-1">

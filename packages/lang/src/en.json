@@ -731,6 +731,9 @@
   "clpFBW": {
     "message": "Space Publicity"
   },
+  "cnenZ4": {
+    "message": "Enable this if you want to debug or develop features."
+  },
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
@@ -772,6 +775,9 @@
   },
   "ecjViF": {
     "message": "Delete failed"
+  },
+  "eqOw+7": {
+    "message": "Dev Mode"
   },
   "f00p/7": {
     "message": "Upload failed"

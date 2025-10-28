@@ -4,12 +4,14 @@ import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useQuerySpace } from '../hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { PaneLoading } from './PaneLoading';
-import { FailedBanner } from './common/FailedBanner';
+import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { PaneFailed } from './pane-failed/PaneFailed';
 import { ChatView } from './ChatView';
 import { useTitle } from '../hooks/useTitle';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 import { useNotify } from '../hooks/useNotify';
+import { useBannerNode } from '../hooks/useBannerNode';
+import ReactDOM from 'react-dom';
 
 interface Props {
   spaceId: string;
@@ -21,6 +23,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);
   useTitle(spaceId, space);
+  const banner = useBannerNode();
 
   let defaultPane = useMemo(() => <PaneSpaceGreeting spaceId={spaceId} />, [spaceId]);
   let errorNode = null;
@@ -47,7 +50,9 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
         />
       );
     } else {
-      errorNode = <FailedBanner error={error}>{title}</FailedBanner>;
+      errorNode = banner
+        ? ReactDOM.createPortal(<FailedBanner error={error}>{title}</FailedBanner>, banner)
+        : null;
     }
   }
   if (!space && isLoading) {

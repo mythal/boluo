@@ -14,10 +14,12 @@ import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Spinner } from '@boluo/ui/Spinner';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
-import { FailedBanner } from '../common/FailedBanner';
+import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { useBannerNode } from '../../hooks/useBannerNode';
+import ReactDOM from 'react-dom';
 
 interface Props {
   channel: Channel;
@@ -60,6 +62,7 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
   const { data: channelMembers } = useQueryChannelMembers(channel.id);
   const paneAdd = usePaneAdd();
   const [showError, setShowError] = useState(false);
+  const banner = useBannerNode();
 
   const checkResult = check(currentUser, channel, spaceMember, channelMembers);
   const handleClick = async () => {
@@ -105,7 +108,12 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
         content = <FormattedMessage defaultMessage="You are already a member of this channel." />;
         break;
     }
-    errorNode = <FailedBanner onDismiss={() => setShowError(false)}>{content}</FailedBanner>;
+    errorNode = banner
+      ? ReactDOM.createPortal(
+          <FailedBanner onDismiss={() => setShowError(false)}>{content}</FailedBanner>,
+          banner,
+        )
+      : null;
   }
 
   return (

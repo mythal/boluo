@@ -87,15 +87,15 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
   } else {
     content = (
       <div className="relative flex items-center gap-2">
-        <div className="text-text-secondary w-[4.5rem] flex-initial text-sm">
+        <div className="text-text-secondary w-18 flex-initial text-sm">
           <Icon className="mr-1" icon={Edit} />
           <span>
             <FormattedMessage defaultMessage="Editing" />
           </span>
         </div>
-        <div className="flex-grow">
+        <div className="grow">
           <div className="text-text-secondary text-xs"></div>
-          <div className="text-text-secondary max-h-[3rem] overflow-y-auto text-sm">
+          <div className="text-text-secondary max-h-12 overflow-y-auto text-sm">
             <Content
               source={message.text}
               entities={parsed.entities}

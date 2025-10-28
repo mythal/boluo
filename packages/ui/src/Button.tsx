@@ -27,10 +27,10 @@ export const Button: React.FC<ButtonProps> = function Button({
       className={clsx(
         'Button enabled:cursor-pointer disabled:cursor-not-allowed',
         'appearance-none select-none focus-visible:outline-none',
-        'ring-border-focus/75 inline-flex items-center justify-center border-b-[1px] focus:ring',
+        'ring-border-focus/75 inline-flex items-center justify-center border-b focus:ring',
         'm-0 gap-1 rounded-sm',
         'pressed:[&_.detail-arrow]:rotate-180',
-        small ? 'min-h-[1.75rem] px-[0.75rem] py-0.5 text-sm' : 'px-4 py-2 text-base',
+        small ? 'min-h-7 px-3 py-0.5 text-sm' : 'px-4 py-2 text-base',
         (variant === 'default' || variant === 'detail') && [
           'bg-action-secondary-bg border-b-border-default',
           'hover:enabled:bg-action-secondary-bg-hover',

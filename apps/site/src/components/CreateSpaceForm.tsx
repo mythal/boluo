@@ -100,7 +100,6 @@ const FirstChannelNameField: FC = () => {
 };
 
 const DescriptionField: FC = () => {
-  const intl = useIntl();
   const id = useId();
   const {
     register,

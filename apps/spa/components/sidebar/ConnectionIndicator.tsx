@@ -98,7 +98,7 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
             </span>
           </span>
         )}
-        <div className="flex-grow text-right">
+        <div className="grow text-right">
           <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
             <FormattedMessage defaultMessage="Switch" />
           </span>

@@ -6,7 +6,7 @@ interface Props {
 
 export const RollBox: FC<Props> = ({ children }) => {
   return (
-    <span className="bg-surface-selectable-default border-border-subtle hover:bg-surface-selectable-hover hover:border-border-default rounded-sm border px-1 py-[1px] text-sm">
+    <span className="bg-surface-selectable-default border-border-subtle hover:bg-surface-selectable-hover hover:border-border-default rounded-sm border px-1 py-px text-sm">
       {children}
     </span>
   );

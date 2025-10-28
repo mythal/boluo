@@ -35,7 +35,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="text-text-secondary flex items-center gap-2 px-4 py-2 text-sm">
-        <div className="flex-grow">
+        <div className="grow">
           <FormattedMessage defaultMessage="Channels" />
         </div>
 

@@ -19,7 +19,7 @@ export const InGameSwitchButton: FC = () => {
   const dispatch = useSetAtom(composeAtom);
   const title = intl.formatMessage({ defaultMessage: 'Toggle In Game' });
   return (
-    <div className="flex-shrink-0 py-1" ref={refs.setReference} {...getReferenceProps()}>
+    <div className="shrink-0 py-1" ref={refs.setReference} {...getReferenceProps()}>
       <InComposeButton
         pressed={inGame}
         onClick={() =>

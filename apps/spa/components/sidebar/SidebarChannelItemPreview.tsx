@@ -69,6 +69,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       const handle = window.setTimeout(updateRecentPreviews, TYPEING_TIMEOUT - distance);
       return () => window.clearTimeout(handle);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       updateRecentPreviews();
     }
   }, [oldestRecentPreviewTimestamp, updateRecentPreviews]);

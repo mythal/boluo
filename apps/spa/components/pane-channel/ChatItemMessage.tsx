@@ -154,7 +154,7 @@ const MessageBox: FC<{
   pos,
 }) => {
   const isInGameChannel = useIsInGameChannel();
-  const toolbarDisplayAtom = useMemo(makeMessageToolbarDisplayAtom, []);
+  const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
   const store = useStore();
   const ref = useRef<HTMLDivElement | null>(null);
   const {

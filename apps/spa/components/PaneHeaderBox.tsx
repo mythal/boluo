@@ -34,13 +34,13 @@ export const PaneHeaderBox: FC<Props> = ({
       <div className="min-h-pane-header bg-pane-header-bg pl-pane flex items-center pr-[6px] text-sm">
         <span
           className={clsx(
-            'inline-flex flex-shrink-0 items-center justify-center pr-1',
+            'inline-flex shrink-0 items-center justify-center pr-1',
             isFocused ? 'text-text-muted' : 'text-text-muted/50',
           )}
         >
           {icon}
         </span>
-        <div className="inline-flex min-w-0 flex-grow flex-nowrap items-center">
+        <div className="inline-flex min-w-0 grow flex-nowrap items-center">
           <div
             className={clsx(
               'flex-shrink overflow-hidden text-ellipsis whitespace-nowrap',

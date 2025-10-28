@@ -48,7 +48,7 @@ export const SidebarItem: FC<Props> = ({
         {icon && (
           <span className={active ? 'text-text-secondary' : 'text-text-subtle'}>{icon}</span>
         )}
-        <span className={clsx('flex-grow text-left')}>{children}</span>
+        <span className={clsx('grow text-left')}>{children}</span>
 
         {extraNode}
       </button>

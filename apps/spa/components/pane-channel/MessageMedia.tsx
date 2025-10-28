@@ -26,7 +26,7 @@ const Attachment = ({
 }) => {
   return (
     <div className={className}>
-      <div className="bg-surface-default border-border-default flex h-[6rem] flex-col justify-between rounded border px-3 py-2">
+      <div className="bg-surface-default border-border-default flex h-24 flex-col justify-between rounded border px-3 py-2">
         <div className="flex items-center gap-1 font-mono text-lg">
           <Paperclip />
           {name}
@@ -104,9 +104,9 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
     <div className={className}>
       <div
         className={clsx(
-          'h-[6rem] rounded-sm',
-          isLoading ? 'bg-surface-interactive-active w-[6rem] animate-pulse' : '',
-          isError ? 'bg-state-danger-bg w-[6rem]' : '',
+          'h-24 rounded-sm',
+          isLoading ? 'bg-surface-interactive-active w-24 animate-pulse' : '',
+          isError ? 'bg-state-danger-bg w-24' : '',
         )}
       >
         {content}

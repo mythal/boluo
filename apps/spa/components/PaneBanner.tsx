@@ -12,7 +12,7 @@ export const PaneBanner: FC<Props> = ({ banner }) => {
   return (
     <div
       className={clsx(
-        'pl-pane group/banner [&_a]:decoration-text-link-decoration [&_a]:text-text-link [&_a:hover]:text-text-link-hover [&_a:active]:text-text-link-active flex items-center justify-between py-2 pr-[6px] text-sm [&_a]:underline',
+        'pl-pane group/banner [&_a]:decoration-text-link-decoration [&_a]:text-text-link [&_a:hover]:text-text-link-hover [&_a:active]:text-text-link-active flex items-center justify-between py-2 pr-1.5 text-sm [&_a]:underline',
         level === 'INFO' && 'bg-state-info-bg',
         level === 'WARNING' && 'bg-state-warning-bg',
         level === 'ERROR' && 'bg-state-danger-bg',

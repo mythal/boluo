@@ -117,7 +117,7 @@ export const NameEditContent: FC<Props> = ({ member }) => {
             {nameHistory.map((name) => (
               <button
                 key={name}
-                className="bg-surface-selectable-default hover:bg-surface-selectable-hover border-border-subtle inline-block max-w-[10rem] truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
+                className="bg-surface-selectable-default hover:bg-surface-selectable-hover border-border-subtle inline-block max-w-40 truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
                 onClick={() => {
                   dispatch({
                     type: 'setInputedName',

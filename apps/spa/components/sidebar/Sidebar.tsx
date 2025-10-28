@@ -91,9 +91,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
       )}
     >
       <div
-        className={clsx(
-          'w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden',
-        )}
+        className={clsx('w-sidebar relative flex grow flex-col justify-between overflow-hidden')}
       >
         {content}
 

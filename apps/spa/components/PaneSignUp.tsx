@@ -135,7 +135,7 @@ const PasswordField = () => {
   return (
     <div>
       <div className="flex items-center py-1">
-        <label htmlFor={id} className="flex-grow">
+        <label htmlFor={id} className="grow">
           <FormattedMessage defaultMessage="Password" />
         </label>
         <button type="button" className={classes.link} onClick={() => setShow((next) => !next)}>

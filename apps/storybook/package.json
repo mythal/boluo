@@ -38,10 +38,10 @@
   },
   "private": true,
   "scripts": {
-    "build": "storybook build",
+    "build": "storybook build --disable-telemetry",
     "dev": "vite",
     "lint": "eslint .",
-    "storybook": "storybook dev -p 6006"
+    "storybook": "storybook dev -p 6006 --disable-telemetry --no-version-updates --no-open"
   },
   "type": "module"
 }

@@ -28,7 +28,7 @@
     "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}' '!**/next-env.d.ts'",
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
-    "lint": "turbo run lint --no-cache",
+    "lint": "turbo run lint --cache=local:r,remote:r",
     "lint:versions": "syncpack lint",
     "preview:site": "turbo run preview --filter=site",
     "storybook": "turbo storybook",

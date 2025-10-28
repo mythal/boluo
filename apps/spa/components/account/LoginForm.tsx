@@ -2,7 +2,7 @@
 
 import { type ApiError } from '@boluo/api';
 import { login } from '@boluo/api-browser';
-import { explainError } from '@boluo/errors-explain';
+import { explainError } from '@boluo/locale/errors';
 import { type FC, type ReactNode, useId, useState } from 'react';
 import {
   type FieldError,

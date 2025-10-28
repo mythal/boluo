@@ -1,6 +1,6 @@
 import type { ApiError, CreateSpace, Space, SpaceWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { explainError } from '@boluo/errors-explain';
+import { explainError } from '@boluo/locale/errors';
 import { channelNameValidation, spaceName } from '@boluo/common/validations';
 import type { FC } from 'react';
 import { useId } from 'react';

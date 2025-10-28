@@ -5,7 +5,7 @@ import React from 'react';
 import { get } from '@boluo/common/server/api';
 import { BackLink } from '../../../../../components/BackLink';
 import { Params as BaseParams } from '../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 
 interface Params extends BaseParams {
   userId: string;

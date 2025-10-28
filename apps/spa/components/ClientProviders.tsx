@@ -3,7 +3,7 @@ import { Provider as JotaiProvider } from 'jotai';
 import React, { type ReactNode, useCallback } from 'react';
 import { store } from '@boluo/store';
 import { SWRConfig, type SWRConfiguration } from 'swr';
-import type { IntlMessages, Locale } from '@boluo/common/locale';
+import type { IntlMessages, Locale } from '@boluo/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 import { recordWarn } from '../error';

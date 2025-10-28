@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "@boluo/api": "0.0.0",
-    "@boluo/errors-explain": "0.0.0",
     "@boluo/eslint-config": "0.0.0",
+    "@boluo/locale": "0.0.0",
     "@boluo/theme": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@boluo/utils": "0.0.0",

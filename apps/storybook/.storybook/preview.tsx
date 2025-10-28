@@ -1,12 +1,6 @@
 import type { Preview } from '@storybook/react-vite';
 import '@boluo/tailwind-config';
-import {
-  defaultLocale,
-  LOCALES,
-  onIntlError,
-  type IntlMessages,
-  type Locale,
-} from '@boluo/common/locale';
+import { defaultLocale, LOCALES, onIntlError, type IntlMessages, type Locale } from '@boluo/locale';
 import en from '@boluo/lang/en.json';
 import ja from '@boluo/lang/ja_JP.json';
 import zhCN from '@boluo/lang/zh_CN.json';

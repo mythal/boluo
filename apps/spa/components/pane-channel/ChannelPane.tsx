@@ -18,7 +18,7 @@ import { PaneLoading } from '../PaneLoading';
 import { ChannelHeader } from './ChannelHeader';
 import { ChatContent } from './ChatContent';
 import { MemberList } from './MemberList';
-import { FailedBanner } from '../common/FailedBanner';
+import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
 import { parseDiceFace } from '../../dice';
@@ -26,6 +26,8 @@ import { MemberContext } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
 import { Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
+import { useBannerNode } from '../../hooks/useBannerNode';
+import ReactDOM from 'react-dom';
 
 interface Props {
   channelId: string;
@@ -135,13 +137,24 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
     isLoading: isChannelLoading,
     error: queryChannelError,
   } = useQueryChannel(channelId);
+  const banner = useBannerNode();
   let errorNode = null;
   if (queryChannelError) {
     const title = <FormattedMessage defaultMessage="Failed to query the channel" />;
-    errorNode = <FailedBanner error={queryChannelError}>{title}</FailedBanner>;
+    errorNode = banner
+      ? ReactDOM.createPortal(
+          <FailedBanner error={queryChannelError}>{title}</FailedBanner>,
+          banner,
+        )
+      : null;
   } else if (queryMembersError) {
     const title = <FormattedMessage defaultMessage="Failed to query the channel members" />;
-    errorNode = <FailedBanner error={queryMembersError}>{title}</FailedBanner>;
+    errorNode = banner
+      ? ReactDOM.createPortal(
+          <FailedBanner error={queryMembersError}>{title}</FailedBanner>,
+          banner,
+        )
+      : null;
   }
   if (isChannelLoading || isMembersLoading) {
     return <PaneLoading grow>{errorNode}</PaneLoading>;

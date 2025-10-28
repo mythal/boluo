@@ -1,25 +1,24 @@
 import { type User } from '@boluo/api';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { Avatar } from '@boluo/ui/Avatar';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   user: User;
+  mediaUrl: string | null | undefined;
 }
 
-export const UserCard = ({ user }: Props) => {
-  const { data: appSettings } = useQueryAppSettings();
+export const UserCard = ({ user, mediaUrl }: Props) => {
   return (
     <FloatingBox>
-      <div className="flex gap-2">
-        <div>
+      <div className="flex max-w-[200px] gap-2 overflow-clip md:max-w-sm">
+        <div className="flex-none">
           <Avatar
             className="rounded-sm"
             size="4rem"
             id={user.id}
             name={user.nickname}
             avatarId={user.avatarId}
-            mediaUrl={appSettings?.mediaUrl}
+            mediaUrl={mediaUrl}
           />
         </div>
         <div className="flex flex-col gap-1">

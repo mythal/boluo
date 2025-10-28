@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl';
 interface Props {
   id: string;
   name: string;
-  mediaUrl?: string | null | undefined;
+  mediaUrl: string | null | undefined;
   avatarId: string | null;
   onClick?: () => void;
   className?: string;

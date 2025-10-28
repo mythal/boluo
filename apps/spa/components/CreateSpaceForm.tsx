@@ -1,12 +1,12 @@
 import type { ApiError, CreateSpace, Space, SpaceWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
+import { explainError } from '@boluo/errors-explain';
 import { channelNameValidation, spaceName } from '@boluo/common/validations';
 import type { FC } from 'react';
 import { useId } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
@@ -15,9 +15,8 @@ import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { PaneFooterBox } from './PaneFooterBox';
 
-const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
-  const explain = useErrorExplain();
-  return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
+const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ error, intl }) => {
+  return <ErrorMessageBox>{explainError(intl, error)}</ErrorMessageBox>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
@@ -169,7 +168,7 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
           <FirstChannelNameField />
           <DescriptionField />
           <DefaultDiceField />
-          {creationError && <FormErrorDispay error={creationError} />}
+          {creationError && <FormErrorDispay error={creationError} intl={intl} />}
         </div>
         <PaneFooterBox>
           {close && (

@@ -1,23 +1,25 @@
 import { type ApiError } from '@boluo/api';
-import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
+import { explainError } from '@boluo/errors-explain';
 import { AlertCircle } from '@boluo/icons';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useIntl } from 'react-intl';
 import { useSetBanner } from './useBanner';
 
 export const useErrorAlert = () => {
-  const explain = useErrorExplain();
+  const intl = useIntl();
   const setBanner = useSetBanner();
   return useCallback(
     (e: ApiError) => {
+      const errorMessage = explainError(intl, e);
       const content = (
         <div className="flex items-center gap-2">
           <AlertCircle className="text-state-danger-text" />
-          {explain(e)}
+          {errorMessage}
         </div>
       );
       setBanner({ level: 'ERROR', content });
       return e;
     },
-    [explain, setBanner],
+    [intl, setBanner],
   );
 };

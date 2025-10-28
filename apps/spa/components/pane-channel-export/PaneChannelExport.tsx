@@ -8,7 +8,6 @@ import { errorCode, type Channel } from '@boluo/api';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { Check, ScrollText } from '@boluo/icons';
 import { Select } from '@boluo/ui/Select';
-import { useForm } from 'react-hook-form';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';
@@ -64,21 +63,25 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   const { data: appSettings } = useQueryAppSettings();
   const mediaUrl = appSettings?.mediaUrl;
   const [error, setError] = useState<unknown>(null);
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { isSubmitting, isSubmitSuccessful },
-  } = useForm<ExportSchema>({ defaultValues });
-  const format = watch('format');
-  const onSubmit = async (options: ExportSchema) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false);
+  const [formData, setFormData] = useState<ExportSchema>(defaultValues);
+
+  const handleInputChange = (field: keyof ExportSchema, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (isSubmitting) return;
     if (!mediaUrl) {
       alert('MEDIA_URL is not set.');
       return;
     }
     setError(null);
-    const exportOptions = parseExportOptions(options);
+    setIsSubmitting(true);
+    setIsSubmitSuccessful(false);
+    const exportOptions = parseExportOptions(formData);
     try {
       const { blob, filename } = await exportChannel(intl, mediaUrl, channel, exportOptions);
       const url = URL.createObjectURL(blob);
@@ -92,11 +95,15 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
       link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
+      setIsSubmitSuccessful(true);
     } catch (error) {
       setError(error);
-      Sentry.captureException(error, { extra: { channel, options } });
+      Sentry.captureException(error, { extra: { channel, options: formData } });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
   let exportButtonIcon: ReactNode = <Icon icon={ScrollText} />;
   if (isSubmitting) {
     exportButtonIcon = <Spinner />;
@@ -105,7 +112,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={onSubmit}>
       <a hidden ref={linkRef} />
       <div className="p-pane mx-auto grid max-w-screen-sm grid-cols-[auto_1fr] items-baseline gap-2">
         {error != null && (
@@ -119,7 +126,11 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
         <label htmlFor={id + 'format'} className="justify-self-end select-none">
           <FormattedMessage defaultMessage="Format" />
         </label>
-        <Select id={id + 'format'} {...register('format')}>
+        <Select
+          id={id + 'format'}
+          value={formData.format}
+          onChange={(e) => handleInputChange('format', e.target.value)}
+        >
           <option value="txt">
             <FormattedMessage defaultMessage="Plain Text" />
           </option>
@@ -132,7 +143,11 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
         <label htmlFor={id + 'range'} className="justify-self-end select-none">
           <FormattedMessage defaultMessage="Time Range" />
         </label>
-        <Select id={id + 'range'} {...register('range')}>
+        <Select
+          id={id + 'range'}
+          value={formData.range}
+          onChange={(e) => handleInputChange('range', e.target.value)}
+        >
           <option value="30d">
             <FormattedMessage defaultMessage="Last {day} days" values={{ day: 30 }} />
           </option>
@@ -150,7 +165,8 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           id={id + 'archived'}
           type="checkbox"
           className="justify-self-end"
-          {...register('includeArchived')}
+          checked={formData.includeArchived}
+          onChange={(e) => handleInputChange('includeArchived', e.target.checked)}
         />
         <label className="select-none" htmlFor={id + 'archived'}>
           <FormattedMessage defaultMessage="Include archived messages" />
@@ -159,7 +175,8 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           id={id + 'out-game'}
           type="checkbox"
           className="justify-self-end"
-          {...register('includeOutGame')}
+          checked={formData.includeOutGame}
+          onChange={(e) => handleInputChange('includeOutGame', e.target.checked)}
         />
         <label htmlFor={id + 'out-game'} className="select-none">
           <FormattedMessage defaultMessage="Include out-of-game messages" />
@@ -168,7 +185,9 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           id={id + 'simple'}
           type="checkbox"
           className="justify-self-end"
-          {...register('simple', { disabled: format !== 'txt' && format !== 'bbcode' })}
+          checked={formData.simple}
+          disabled={formData.format !== 'txt' && formData.format !== 'bbcode'}
+          onChange={(e) => handleInputChange('simple', e.target.checked)}
         />
         <label htmlFor={id + 'simple'} className="select-none">
           <FormattedMessage defaultMessage="Without rich-text informations" />
@@ -177,7 +196,9 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           id={id + 'split'}
           type="checkbox"
           className="justify-self-end"
-          {...register('splitByLineBreak', { disabled: format !== 'txt' && format !== 'bbcode' })}
+          checked={formData.splitByLineBreak}
+          disabled={formData.format !== 'txt' && formData.format !== 'bbcode'}
+          onChange={(e) => handleInputChange('splitByLineBreak', e.target.checked)}
         />
         <label htmlFor={id + 'split'} className="select-none">
           <FormattedMessage defaultMessage="Split the message into multiple ones at line breaks" />

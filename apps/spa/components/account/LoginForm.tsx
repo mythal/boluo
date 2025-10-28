@@ -2,7 +2,7 @@
 
 import { type ApiError } from '@boluo/api';
 import { login } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
+import { explainError } from '@boluo/errors-explain';
 import { type FC, type ReactNode, useId, useState } from 'react';
 import {
   type FieldError,
@@ -12,7 +12,7 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
@@ -28,14 +28,13 @@ interface Inputs {
   password: string;
 }
 
-const FormErrorDisplay: FC<{ error: ApiError }> = ({ error }) => {
-  const explain = useErrorExplain();
+const FormErrorDisplay: FC<{ error: ApiError; intl: IntlShape }> = ({ error, intl }) => {
   let errorMessage: ReactNode;
 
   if (error.code === 'NO_PERMISSION') {
     errorMessage = <FormattedMessage defaultMessage="Username and password do not match" />;
   } else {
-    errorMessage = <span>{explain(error)}</span>;
+    errorMessage = <span>{explainError(intl, error)}</span>;
   }
 
   return <ErrorMessageBox>{errorMessage}</ErrorMessageBox>;
@@ -110,6 +109,7 @@ const PasswordField = () => {
 };
 
 const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
+  const intl = useIntl();
   const { isSubmitting, isDirty } = useFormState();
   return (
     <div className="flex flex-col gap-2">
@@ -126,7 +126,7 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
 
       {error && (
         <div className="text-state-danger-text my-1">
-          <FormErrorDisplay error={error} />
+          <FormErrorDisplay error={error} intl={intl} />
         </div>
       )}
 

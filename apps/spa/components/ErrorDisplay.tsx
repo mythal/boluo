@@ -1,6 +1,7 @@
 import { type ApiError, isApiError } from '@boluo/api';
-import { useErrorExplain } from '@boluo/common/hooks/useErrorExplain';
+import { explainError } from '@boluo/errors-explain';
 import { type FC, type ReactNode, useMemo } from 'react';
+import { useIntl } from 'react-intl';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 
 interface Props {
@@ -11,7 +12,7 @@ interface Props {
 }
 
 export const ErrorDisplay: FC<Props> = ({ error, type = 'unstyled', className = '', custom }) => {
-  const explain = useErrorExplain();
+  const intl = useIntl();
   const message: ReactNode = useMemo(() => {
     if (custom && isApiError(error)) {
       const customMessage = custom(error);
@@ -19,12 +20,12 @@ export const ErrorDisplay: FC<Props> = ({ error, type = 'unstyled', className = 
         return customMessage;
       }
     }
-    return explain(error);
-  }, [custom, error, explain]);
+    return explainError(intl, error);
+  }, [custom, error, intl]);
 
   switch (type) {
     case 'banner':
-      return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
+      return <ErrorMessageBox>{message}</ErrorMessageBox>;
     case 'block':
       return <div>{message}</div>;
     default:

@@ -164,6 +164,9 @@
   "7q87xo": {
     "message": "頻道設定"
   },
+  "7tSUe8": {
+    "message": "Back to login"
+  },
   "8+j66D": {
     "message": "確實要刪除這條訊息？"
   },
@@ -205,6 +208,9 @@
   },
   "AVI/0j": {
     "message": "拆分"
+  },
+  "AYIKp4": {
+    "message": "Already have an account? Log in"
   },
   "AbXVP4": {
     "message": "創建於"
@@ -289,6 +295,9 @@
   },
   "HH8O0c": {
     "message": "請求失敗，可能是網路異常。"
+  },
+  "HOuWsl": {
+    "message": "Developer Options"
   },
   "HSaR2M": {
     "message": "是否為秘密頻道？"
@@ -533,6 +542,9 @@
   "TAyWna": {
     "message": "邀請你到此位面"
   },
+  "TBI2DU": {
+    "message": "Avatar of {name}"
+  },
   "TDaF6J": {
     "message": "知道了"
   },
@@ -722,6 +734,9 @@
   "clpFBW": {
     "message": "位面公開性"
   },
+  "cnenZ4": {
+    "message": "Enable this if you want to debug or develop features."
+  },
   "cpFKi9": {
     "message": "主題可以用來記錄和提醒您當前關注的內容。"
   },
@@ -763,6 +778,9 @@
   },
   "ecjViF": {
     "message": "Delete failed"
+  },
+  "eqOw+7": {
+    "message": "Dev Mode"
   },
   "f00p/7": {
     "message": "Upload failed"
@@ -841,6 +859,9 @@
   },
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
+  },
+  "jsy7pk": {
+    "message": "Try Again"
   },
   "jtLNcT": {
     "message": "移動訊息失敗，找不到目的地，請再試一下。"

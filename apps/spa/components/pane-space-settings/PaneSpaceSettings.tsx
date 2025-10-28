@@ -122,7 +122,7 @@ const PublicityField: FC = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-[1.5em_minmax(0,_1fr)] gap-x-1 gap-y-0">
+      <div className="grid grid-cols-[1.5em_minmax(0,1fr)] gap-x-1 gap-y-0">
         <input
           id={fieldId.public}
           type="radio"

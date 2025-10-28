@@ -304,7 +304,7 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
           style={floatingStyles}
           ref={refs.setFloating}
           {...getFloatingProps()}
-          className="bg-surface-raised border-border-default z-20 flex w-[14rem] flex-col gap-1 rounded-md border p-2 shadow-md transition-colors"
+          className="bg-surface-raised border-border-default z-20 flex w-56 flex-col gap-1 rounded-md border p-2 shadow-md transition-colors"
         >
           {more}
         </div>

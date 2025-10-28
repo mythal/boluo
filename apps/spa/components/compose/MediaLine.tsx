@@ -35,7 +35,7 @@ export const MediaLine: FC = () => {
         </div>
         <div
           data-valid={isSizeValid}
-          className="text-text-secondary data-[valid=false]:text-state-danger-text flex-shrink-0"
+          className="text-text-secondary data-[valid=false]:text-state-danger-text shrink-0"
         >
           ({showFileSize(composeMedia.size)})
         </div>

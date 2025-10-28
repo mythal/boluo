@@ -23,9 +23,9 @@ import {
 
 interface Props {
   firstItemIndex: number;
-  renderRangeRef: MutableRefObject<[number, number]>;
-  virtuosoRef: MutableRefObject<VirtuosoHandle | null>;
-  scrollerRef: MutableRefObject<HTMLDivElement | null>;
+  renderRangeRef: RefObject<[number, number]>;
+  virtuosoRef: RefObject<VirtuosoHandle | null>;
+  scrollerRef: RefObject<HTMLDivElement | null>;
   chatList: ChatItem[];
   filteredMessagesCount: number;
   handleBottomStateChange?: (bottom: boolean) => void;
@@ -107,6 +107,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       continuous = isContinuous(prevItem, item);
     }
 
+    // eslint-disable-next-line react-hooks/immutability
     prevOffsetIndex = offsetIndex;
     prevItem = item;
     return (
@@ -163,7 +164,7 @@ const placeHolderColors = [
 
 const ScrollSeekPlaceholder: FC<ScrollSeekPlaceholderProps> = ({ height, index }) => (
   <div
-    className={`py-2 pr-4 pl-20 @2xl:pl-[17.5rem] ${index % 2 === 0 ? 'bg-message-inGame-bg' : ''}`}
+    className={`py-2 pr-4 pl-20 @2xl:pl-70 ${index % 2 === 0 ? 'bg-message-inGame-bg' : ''}`}
     style={{
       height,
       boxSizing: 'border-box',

@@ -108,9 +108,9 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
   const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
   const noPane = useAtomValue(isNoPaneAtom);
   const [shouldAutoFold, setShouldAutoFold] = useState(false);
-  useEffect(() => {
-    setShouldAutoFold(window.innerWidth < screens.sm);
-  }, []);
+  if (typeof window !== 'undefined' && window.innerWidth < screens.sm) {
+    setShouldAutoFold(true);
+  }
   useEffect(() => {
     let timeout: number | undefined;
     const observer = new ResizeObserver((entries) => {
@@ -133,7 +133,7 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       onTouchStart={autoFoldSidebar}
       onClick={autoFoldSidebar}
       className={clsx(
-        'md:divide-border-subtle relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
+        'md:divide-border-subtle relative -col-end-1 flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
         showMask ? 'cursor-pointer brightness-50' : '',
       )}
     >

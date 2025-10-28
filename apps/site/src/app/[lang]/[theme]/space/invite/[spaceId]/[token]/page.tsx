@@ -7,7 +7,7 @@ import { get } from '@boluo/common/server/api';
 import { AcceptButton } from './AcceptButton';
 import { BackLink } from '../../../../../../../components/BackLink';
 import { type Params as BaseParams } from '../../../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 
 interface Params extends BaseParams {
   spaceId: string;

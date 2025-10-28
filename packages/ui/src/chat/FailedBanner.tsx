@@ -1,7 +1,7 @@
 import { AlertCircle } from '@boluo/icons';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '../Button';
-import { explainError } from '@boluo/errors-explain';
+import { explainError } from '@boluo/locale/errors';
 import { Activity, useMemo, useState } from 'react';
 
 interface Props {

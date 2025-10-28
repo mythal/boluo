@@ -1,5 +1,5 @@
 import { type ApiError, isApiError } from '@boluo/api';
-import { explainError } from '@boluo/errors-explain';
+import { explainError } from '@boluo/locale/errors';
 import { type FC, type ReactNode, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';

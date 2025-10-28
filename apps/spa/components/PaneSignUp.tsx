@@ -1,6 +1,6 @@
 import { type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { explainError } from '@boluo/errors-explain';
+import { explainError } from '@boluo/locale/errors';
 import * as validators from '@boluo/common/validations';
 import { UserPlus } from '@boluo/icons';
 import { type FC, useCallback, useId, useState } from 'react';

@@ -12,7 +12,7 @@ import { Button } from '@boluo/ui/Button';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required, spaceName } from '@boluo/common/validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
-import { explainError } from '@boluo/errors-explain';
+import { explainError } from '@boluo/locale/errors';
 
 const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ intl, error }) => {
   return <div className="text-state-danger-text my-1">{explainError(intl, error)}</div>;

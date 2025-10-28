@@ -2,7 +2,10 @@ import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../../components/global/Providers';
 import '@boluo/tailwind-config';
-import { getIntl, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
+import { LOCALES, toLocale } from '@boluo/locale';
+import { loadMessages } from '@boluo/locale/dynamic';
+import { getIntl } from '@boluo/locale/server';
+
 import { toTheme } from '@boluo/theme';
 import { Params } from '../../../server';
 

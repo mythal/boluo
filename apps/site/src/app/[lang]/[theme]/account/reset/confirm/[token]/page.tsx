@@ -1,4 +1,4 @@
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 import { Params } from '../../../../../../../server';
 import { ConfirmResetPassword } from './ConfirmResetPassword';
 import { Metadata } from 'next';

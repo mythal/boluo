@@ -1,7 +1,8 @@
-import { type IntlMessages, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
+import { type IntlMessages, LOCALES, toLocale } from '@boluo/locale';
+import { loadMessages } from '@boluo/locale/dynamic';
 import { ClientProviders } from '../../components/ClientProviders';
 import { type GetStaticPaths } from 'next';
-import type { Locale } from '@boluo/common/locale';
+import type { Locale } from '@boluo/locale';
 import Head from 'next/head';
 import { useIntl } from 'react-intl';
 import { useEffect } from 'react';

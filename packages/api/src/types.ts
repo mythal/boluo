@@ -16,3 +16,5 @@ export interface IdWithToken {
   id: string;
   token?: string;
 }
+
+export type Locale = 'en' | 'ja' | 'zh-CN' | 'zh-TW';

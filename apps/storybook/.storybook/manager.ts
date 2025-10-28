@@ -2,7 +2,7 @@ if (typeof document !== 'undefined') {
   const head = document.head;
   if (head) {
     const selectors = ["link[rel='icon']", "link[rel='shortcut icon']"];
-    const faviconUrl = '/public/boluo-pixel.png';
+    const faviconUrl = '/boluo-pixel.png';
 
     selectors.forEach((selector) => {
       const existing = head.querySelector<HTMLLinkElement>(selector);

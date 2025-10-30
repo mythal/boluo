@@ -1,18 +1,18 @@
 import clsx from 'clsx';
 import { memo, type ReactNode, useMemo, type MouseEventHandler } from 'react';
-import type { Entity, EvaluatedExprNode, Entities } from '@boluo/api';
+import type { Entity, EvaluatedExprNode, Entities, EvaluatedExpr } from '@boluo/api';
 import { evaluate, makeRng } from '../../interpreter/eval';
-import { EntityCode } from '../entities/EntityCode';
-import { EntityCodeBlock } from '../entities/EntityCodeBlock';
-import { EntityEmphasis } from '../entities/EntityEmphasis';
-import { EntityExpr } from '../entities/EntityExpr';
-import { EntityLink } from '../entities/EntityLink';
-import { EntityStrong } from '../entities/EntityStrong';
-import { EntityText } from '../entities/EntityText';
-import { EntityEvaluatedExpr } from '../entities/EntityEvaluatedExpr';
+import { EntityExpr } from '@boluo/ui/entities/EntityExpr';
+import { EntityEvaluatedExpr } from '@boluo/ui/entities/EntityEvaluatedExpr';
 import { ZERO_WIDTH_SPACE } from '../../const';
-import { EntityUnknown } from '../entities/EntityUnknown';
-import { EntityStrongEmphasis } from '../entities/EntityStrongEmphasis';
+import { EntityCode } from '@boluo/ui/entities/EntityCode';
+import { EntityCodeBlock } from '@boluo/ui/entities/EntityCodeBlock';
+import { EntityEmphasis } from '@boluo/ui/entities/EntityEmphasis';
+import { EntityLink } from '@boluo/ui/entities/EntityLink';
+import { EntityStrong } from '@boluo/ui/entities/EntityStrong';
+import { EntityText } from '@boluo/ui/entities/EntityText';
+import { EntityStrongEmphasis } from '@boluo/ui/entities/EntityStrongEmphasis';
+import { EntityUnknown } from '@boluo/ui/entities/EntityUnknown';
 
 interface Props {
   source: string;
@@ -24,13 +24,6 @@ interface Props {
   onDoubleClick?: MouseEventHandler<HTMLSpanElement>;
   onContextMenu?: MouseEventHandler<HTMLSpanElement>;
 }
-
-export type EvaluatedExpr = {
-  type: 'EvaluatedExpr';
-  node: EvaluatedExprNode;
-  start: number;
-  len: number;
-};
 
 export const Content = memo<Props>(
   ({

@@ -1,5 +1,5 @@
 import { EntityExprNode } from './EntityExprNode';
-import { IsTopLevelContext, useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { IsTopLevelContext, useIsTopLevel } from './top-level';
 import { type ReactNode } from 'react';
 import { Result } from './Result';
 import type { MaybeEvalutedExprOf } from '@boluo/api';

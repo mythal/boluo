@@ -1,7 +1,7 @@
 import { type ReactNode, type FC } from 'react';
 import { EntityExprNode } from './EntityExprNode';
 import { Result } from './Result';
-import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { useIsTopLevel } from './top-level';
 import type { MaybeEvalutedExprOf } from '@boluo/api';
 
 interface Props {

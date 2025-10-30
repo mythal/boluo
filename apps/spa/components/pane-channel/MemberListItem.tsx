@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { Mask } from '@boluo/icons';
 import { type FC, useState } from 'react';
 import Icon from '@boluo/ui/Icon';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { GameMasterBadge } from './GameMasterBadge';
 import { MemberCard } from './MemberCard';
 import { MemberStatusBadge } from './MemberStatusBadge';

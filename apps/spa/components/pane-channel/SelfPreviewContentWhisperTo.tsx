@@ -15,7 +15,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import clsx from 'clsx';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {

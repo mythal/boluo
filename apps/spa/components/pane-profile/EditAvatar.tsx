@@ -4,7 +4,7 @@ import { type FC, useCallback, useMemo, useRef } from 'react';
 import { useWatch } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import type { ProfileEditSchema } from './PaneProfileEdit';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 

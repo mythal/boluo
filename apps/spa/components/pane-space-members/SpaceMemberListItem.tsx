@@ -3,7 +3,7 @@ import { type FC, useCallback, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { ExileButton } from './ExileButton';
 import { InListButton } from './InListButton';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';

@@ -77,6 +77,9 @@
   "39AHJm": {
     "message": "Sign Up"
   },
+  "3VG8rb": {
+    "message": "An unknown error occurred"
+  },
   "3VI9mt": {
     "message": "Save Changes"
   },
@@ -403,9 +406,6 @@
   },
   "Lzb4s2": {
     "message": "Move failed"
-  },
-  "MWO2zy": {
-    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."

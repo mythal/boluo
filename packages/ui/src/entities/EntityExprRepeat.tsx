@@ -2,7 +2,7 @@ import { type FC } from 'react';
 import { type EvaluatedExprNode, type ExprNode } from '@boluo/api';
 import { EntityExprNode } from './EntityExprNode';
 import { EntityExprNodeUnknown } from './EntityExprUnknown';
-import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { useIsTopLevel } from './top-level';
 import { Result } from './Result';
 import type { MaybeEvalutedExprOf } from '@boluo/api';
 

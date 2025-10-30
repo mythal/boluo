@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { EntityExprNode } from './EntityExprNode';
-import { type EvaluatedExpr } from '../pane-channel/Content';
+import { type EvaluatedExpr } from '@boluo/api';
 
 interface Props {
   source: string;

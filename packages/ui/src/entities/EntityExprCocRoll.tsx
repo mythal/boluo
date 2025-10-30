@@ -1,13 +1,48 @@
 import { Dice, FlexibleStar } from '@boluo/icons';
 import { type FC, type ReactNode } from 'react';
-import { useIntl } from 'react-intl';
-import { EvaluatedExprOf, ExprOf, MaybeEvalutedExprOf } from '@boluo/api';
-import { cocRollSubTypeDisplay, cocSuccessLevelDisplay } from '../../interpreter/eval';
+import { IntlShape, useIntl } from 'react-intl';
+import { CocRoll, EvaluatedExprOf, ExprOf, MaybeEvalutedExprOf } from '@boluo/api';
 import { Delay } from '../Delay';
-import { FallbackIcon } from '@boluo/ui/FallbackIcon';
+import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';
 import { Result } from './Result';
-import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { useIsTopLevel } from './top-level';
+
+export const cocRollSubTypeDisplay = (subType: CocRoll['subType']): string | null => {
+  let modifierName: string | null = null;
+  if (subType === 'BONUS') {
+    modifierName = '↥';
+  } else if (subType === 'BONUS_2') {
+    modifierName = '⇈';
+  } else if (subType === 'PENALTY') {
+    modifierName = '↧';
+  } else if (subType === 'PENALTY_2') {
+    modifierName = '⇊';
+  }
+  return modifierName;
+};
+
+export const cocSuccessLevelDisplay = (
+  intl: IntlShape,
+  value: number,
+  targetValue: number,
+): string => {
+  let successName: string;
+  if (value === 100 || (targetValue < 50 && value > 95)) {
+    successName = intl.formatMessage({ defaultMessage: 'Fumble' });
+  } else if (value === 1) {
+    successName = intl.formatMessage({ defaultMessage: 'Critical' });
+  } else if (value > targetValue) {
+    successName = intl.formatMessage({ defaultMessage: 'Failure' });
+  } else if (value <= Math.floor(targetValue / 5)) {
+    successName = '⅕ ' + intl.formatMessage({ defaultMessage: 'Extreme Success' });
+  } else if (value <= targetValue >> 1) {
+    successName = '½ ' + intl.formatMessage({ defaultMessage: 'Hard Success' });
+  } else {
+    successName = intl.formatMessage({ defaultMessage: 'Success' });
+  }
+  return successName;
+};
 
 interface Props {
   node: MaybeEvalutedExprOf<'CocRoll'>;

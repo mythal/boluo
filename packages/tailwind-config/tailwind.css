@@ -15,9 +15,6 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 
-  /* Font family */
-  --font-pixel: 'Fusion-Pixel-12', monospace;
-
   /* Sizes */
   --spacing-sidebar: 16rem;
   --spacing-pane-padding: 2rem;

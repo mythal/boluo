@@ -7,7 +7,7 @@ import { Delay } from '../Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { RollBox } from './RollBox';
 import { Result } from './Result';
-import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { useIsTopLevel } from './top-level';
 
 interface Props {
   node: MaybeEvalutedExprOf<'DicePool'>;

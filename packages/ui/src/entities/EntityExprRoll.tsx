@@ -3,9 +3,9 @@ import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import type { ExprOf, EvaluatedExprOf, MaybeEvalutedExprOf } from '@boluo/api';
 import { Delay } from '../Delay';
-import { FallbackIcon } from '@boluo/ui/FallbackIcon';
+import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';
-import { useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { useIsTopLevel } from './top-level';
 import { Result } from './Result';
 
 interface Props {

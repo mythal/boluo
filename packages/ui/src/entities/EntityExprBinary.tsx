@@ -1,7 +1,7 @@
 import { type ReactNode, type FC } from 'react';
 import { type Binary, type BinaryResult } from '@boluo/api';
 import { EntityExprNode } from './EntityExprNode';
-import { IsTopLevelContext, useIsTopLevel } from '../../hooks/useIsTopLevel';
+import { IsTopLevelContext, useIsTopLevel } from './top-level';
 import { Result } from './Result';
 
 interface Props {

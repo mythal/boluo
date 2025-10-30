@@ -15,7 +15,7 @@ import useSWRMutation from 'swr/mutation';
 import { Badge } from '@boluo/ui/Badge';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 

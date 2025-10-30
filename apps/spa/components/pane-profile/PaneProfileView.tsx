@@ -1,7 +1,7 @@
 import type { User } from '@boluo/api';
 import clsx from 'clsx';
 import type { FC } from 'react';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { ShowUsername } from './ShowUsername';
 import { FormattedMessage } from 'react-intl';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';

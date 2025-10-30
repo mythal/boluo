@@ -8,7 +8,7 @@ import {
 } from '@floating-ui/react';
 import { type Channel, type SpaceMember, type User, type UserStatus } from '@boluo/api';
 import { type FC, useState } from 'react';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { MemberCard } from './MemberCard';
 import { MemberStatusBadge } from './MemberStatusBadge';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';

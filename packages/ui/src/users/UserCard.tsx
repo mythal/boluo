@@ -1,6 +1,6 @@
 import { type User } from '@boluo/api';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from './Avatar';
 
 interface Props {
   user: User;

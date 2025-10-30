@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { UserCard } from '@boluo/ui/chat/UserCard';
+import { UserCard } from '@boluo/ui/users/UserCard';
 import {
   baseUser,
   mediaUrl,
@@ -11,7 +11,7 @@ import {
 } from './examples';
 
 const meta: Meta<typeof UserCard> = {
-  title: 'Chat/UserCard',
+  title: 'Users/UserCard',
   component: UserCard,
 };
 

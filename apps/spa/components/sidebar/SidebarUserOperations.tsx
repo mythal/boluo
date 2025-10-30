@@ -7,7 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { toggle } from '@boluo/utils/function';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { panesAtom } from '../../state/view.atoms';
-import { Avatar } from '@boluo/ui/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 import { type User } from '@boluo/api';

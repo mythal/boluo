@@ -77,6 +77,9 @@
   "39AHJm": {
     "message": "注册"
   },
+  "3VG8rb": {
+    "message": "An unknown error occurred"
+  },
   "3VI9mt": {
     "message": "保存更改"
   },
@@ -382,6 +385,9 @@
   },
   "Kp8wZw": {
     "message": "还没有设置简介"
+  },
+  "KqJr7f": {
+    "message": "Click to copy"
   },
   "KzpV1w": {
     "message": "你的邮箱还没验证，请{verifyEmail}。"
@@ -934,6 +940,9 @@
   },
   "onmBf2": {
     "message": "换一个随机颜色"
+  },
+  "p556q3": {
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "编辑中"

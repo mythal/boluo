@@ -386,6 +386,9 @@
   "Kp8wZw": {
     "message": "Have not set a bio yet"
   },
+  "KqJr7f": {
+    "message": "Click to copy"
+  },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
   },
@@ -406,6 +409,9 @@
   },
   "Lzb4s2": {
     "message": "Move failed"
+  },
+  "MWO2zy": {
+    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
@@ -934,6 +940,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "p556q3": {
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "Editing"

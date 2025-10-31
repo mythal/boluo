@@ -47,29 +47,41 @@
   }
 
   @font-face {
+    font-family: 'VT323';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./fonts/VT323/VT323-Regular.ttf') format('truetype');
+  }
+
+  .font-terminal {
+    font-family: 'VT323', monospace;
+  }
+
+  @font-face {
     font-family: fusion-pixel-ja;
-    src: url('./fonts/fusion-pixel-10px-monospaced-ja.woff2');
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-ja.woff2');
   }
   :lang(ja) .font-pixel {
     font-family: fusion-pixel-ja, monospace;
   }
   @font-face {
     font-family: fusion-pixel-latin;
-    src: url('./fonts/fusion-pixel-10px-monospaced-latin.woff2');
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-latin.woff2');
   }
   :lang(en) .font-pixel {
     font-family: fusion-pixel-latin, monospace;
   }
   @font-face {
     font-family: fusion-pixel-zh-hans;
-    src: url('./fonts/fusion-pixel-10px-monospaced-zh_hans.woff2');
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-zh_hans.woff2');
   }
   :lang(zh-CN) .font-pixel {
     font-family: fusion-pixel-zh-hans, monospace;
   }
   @font-face {
     font-family: fusion-pixel-zh-hant;
-    src: url('./fonts/fusion-pixel-10px-monospaced-zh_hant.woff2');
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-zh_hant.woff2');
   }
   :lang(zh-TW) .font-pixel {
     font-family: fusion-pixel-zh-hans, monospace;

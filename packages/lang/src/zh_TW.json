@@ -77,6 +77,9 @@
   "39AHJm": {
     "message": "註冊"
   },
+  "3VG8rb": {
+    "message": "An unknown error occurred"
+  },
   "3VI9mt": {
     "message": "保存變更"
   },
@@ -382,6 +385,9 @@
   },
   "Kp8wZw": {
     "message": "還沒有設定簡介"
+  },
+  "KqJr7f": {
+    "message": "Click to copy"
   },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
@@ -934,6 +940,9 @@
   },
   "onmBf2": {
     "message": "換一個隨機顏色"
+  },
+  "p556q3": {
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "編輯中"

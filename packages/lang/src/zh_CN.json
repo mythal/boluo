@@ -78,7 +78,7 @@
     "message": "注册"
   },
   "3VG8rb": {
-    "message": "An unknown error occurred"
+    "message": "发生未知错误"
   },
   "3VI9mt": {
     "message": "保存更改"
@@ -168,7 +168,7 @@
     "message": "频道设置"
   },
   "7tSUe8": {
-    "message": "Back to login"
+    "message": "返回登入"
   },
   "8+j66D": {
     "message": "确实要删除这条消息？"
@@ -213,7 +213,7 @@
     "message": "拆分"
   },
   "AYIKp4": {
-    "message": "Already have an account? Log in"
+    "message": "已经有账户了？登入"
   },
   "AbXVP4": {
     "message": "创建于"
@@ -300,7 +300,7 @@
     "message": "请求失败，可能是网络异常。"
   },
   "HOuWsl": {
-    "message": "Developer Options"
+    "message": "开发者选项"
   },
   "HSaR2M": {
     "message": "是否为秘密频道？"
@@ -387,7 +387,7 @@
     "message": "还没有设置简介"
   },
   "KqJr7f": {
-    "message": "Click to copy"
+    "message": "点击复制"
   },
   "KzpV1w": {
     "message": "你的邮箱还没验证，请{verifyEmail}。"
@@ -549,7 +549,7 @@
     "message": "邀请你到此位面"
   },
   "TBI2DU": {
-    "message": "Avatar of {name}"
+    "message": "{name} 的头像"
   },
   "TDaF6J": {
     "message": "知道了"
@@ -741,7 +741,7 @@
     "message": "位面公开性"
   },
   "cnenZ4": {
-    "message": "Enable this if you want to debug or develop features."
+    "message": "如果您想要调试或开发功能，请启用此功能。"
   },
   "cpFKi9": {
     "message": "主题可以用来记录和提醒您当前关注的内容。"
@@ -786,7 +786,7 @@
     "message": "删除失败"
   },
   "eqOw+7": {
-    "message": "Dev Mode"
+    "message": "开发模式"
   },
   "f00p/7": {
     "message": "上传失败"
@@ -867,7 +867,7 @@
     "message": "在{countdown}秒后可以重发"
   },
   "jsy7pk": {
-    "message": "Try Again"
+    "message": "重试"
   },
   "jtLNcT": {
     "message": "移动消息失败，找不到目的地，请再试一下。"
@@ -942,7 +942,7 @@
     "message": "换一个随机颜色"
   },
   "p556q3": {
-    "message": "Copied"
+    "message": "已复制"
   },
   "pBQ5bd": {
     "message": "编辑中"

@@ -78,7 +78,7 @@
     "message": "註冊"
   },
   "3VG8rb": {
-    "message": "An unknown error occurred"
+    "message": "發生未知錯誤"
   },
   "3VI9mt": {
     "message": "保存變更"
@@ -105,7 +105,7 @@
     "message": "匯出頻道"
   },
   "56x7wR": {
-    "message": "verify it"
+    "message": "驗證"
   },
   "5HUwAy": {
     "message": "只允許字母，數字和下劃線。"
@@ -123,7 +123,7 @@
     "message": "設作預設"
   },
   "62nsdy": {
-    "message": "Retry"
+    "message": "重試"
   },
   "64sfSN": {
     "message": "沒差"
@@ -168,22 +168,22 @@
     "message": "頻道設定"
   },
   "7tSUe8": {
-    "message": "Back to login"
+    "message": "返回登入"
   },
   "8+j66D": {
     "message": "確實要刪除這條訊息？"
   },
   "82Y7Sa": {
-    "message": "Sending..."
+    "message": "發送中..."
   },
   "88cMEG": {
     "message": "摧毀位面"
   },
   "8be59M": {
-    "message": "Email verified successfully!"
+    "message": "電子郵件驗證成功。"
   },
   "8mVcs0": {
-    "message": "Verify Email"
+    "message": "驗證郵箱"
   },
   "8pN86+": {
     "message": "{name} 在撰寫…"
@@ -213,7 +213,7 @@
     "message": "拆分"
   },
   "AYIKp4": {
-    "message": "Already have an account? Log in"
+    "message": "已有帳號？登入"
   },
   "AbXVP4": {
     "message": "創建於"
@@ -300,7 +300,7 @@
     "message": "請求失敗，可能是網路異常。"
   },
   "HOuWsl": {
-    "message": "Developer Options"
+    "message": "開發人員選項"
   },
   "HSaR2M": {
     "message": "是否為秘密頻道？"
@@ -387,7 +387,7 @@
     "message": "還沒有設定簡介"
   },
   "KqJr7f": {
-    "message": "Click to copy"
+    "message": "點擊複製"
   },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
@@ -672,7 +672,7 @@
     "message": "匯出「{channelName}」"
   },
   "Yw/mtA": {
-    "message": "Edit failed"
+    "message": "編輯失敗"
   },
   "Yy/yDL": {
     "message": "重設密碼"
@@ -783,13 +783,13 @@
     "message": "加入私人頻道需要邀請"
   },
   "ecjViF": {
-    "message": "Delete failed"
+    "message": "刪除失敗"
   },
   "eqOw+7": {
-    "message": "Dev Mode"
+    "message": "開發模式"
   },
   "f00p/7": {
-    "message": "Upload failed"
+    "message": "上傳失敗"
   },
   "f0Sf6g": {
     "message": "添加檔案"
@@ -867,7 +867,7 @@
     "message": "Resend in {countdown} seconds"
   },
   "jsy7pk": {
-    "message": "Try Again"
+    "message": "再試一次"
   },
   "jtLNcT": {
     "message": "移動訊息失敗，找不到目的地，請再試一下。"
@@ -900,7 +900,7 @@
     "message": "離開位面"
   },
   "mLZ+cF": {
-    "message": "Your email has been verified."
+    "message": "您的電子信箱已經驗證。"
   },
   "mYgmal": {
     "message": "角色外身分"
@@ -942,7 +942,7 @@
     "message": "換一個隨機顏色"
   },
   "p556q3": {
-    "message": "Copied"
+    "message": "已拷貝"
   },
   "pBQ5bd": {
     "message": "編輯中"
@@ -1005,7 +1005,7 @@
     "message": "重排頻道"
   },
   "ro9oGh": {
-    "message": "Verifying your email..."
+    "message": "正在驗證您的電子郵件…"
   },
   "s+ixvA": {
     "message": "確定，摧毀「{spaceName}」"

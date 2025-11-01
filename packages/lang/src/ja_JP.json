@@ -77,6 +77,9 @@
   "39AHJm": {
     "message": "新規登録"
   },
+  "3VG8rb": {
+    "message": "An unknown error occurred"
+  },
   "3VI9mt": {
     "message": "変更を保存"
   },
@@ -164,6 +167,9 @@
   "7q87xo": {
     "message": "チャンネル設定"
   },
+  "7tSUe8": {
+    "message": "Back to login"
+  },
   "8+j66D": {
     "message": "このメッセージを削除しますか？"
   },
@@ -205,6 +211,9 @@
   },
   "AVI/0j": {
     "message": "分割"
+  },
+  "AYIKp4": {
+    "message": "Already have an account? Log in"
   },
   "AbXVP4": {
     "message": "作成"
@@ -290,6 +299,9 @@
   "HH8O0c": {
     "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
+  "HOuWsl": {
+    "message": "Developer Options"
+  },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
   },
@@ -373,6 +385,9 @@
   },
   "Kp8wZw": {
     "message": "バイオはまだ設定していません"
+  },
+  "KqJr7f": {
+    "message": "Click to copy"
   },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
@@ -532,6 +547,9 @@
   },
   "TAyWna": {
     "message": "あなたは次元に招待されています"
+  },
+  "TBI2DU": {
+    "message": "Avatar of {name}"
   },
   "TDaF6J": {
     "message": "消去"
@@ -722,6 +740,9 @@
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
+  "cnenZ4": {
+    "message": "Enable this if you want to debug or develop features."
+  },
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
@@ -763,6 +784,9 @@
   },
   "ecjViF": {
     "message": "Delete failed"
+  },
+  "eqOw+7": {
+    "message": "Dev Mode"
   },
   "f00p/7": {
     "message": "Upload failed"
@@ -842,6 +866,9 @@
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
   },
+  "jsy7pk": {
+    "message": "Try Again"
+  },
   "jtLNcT": {
     "message": "Failed to move the message, the target is lost. Please try again."
   },
@@ -913,6 +940,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "p556q3": {
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "編集中"

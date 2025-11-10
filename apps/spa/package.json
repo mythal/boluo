@@ -40,7 +40,7 @@
     "@boluo/typescript-config": "0.0.0",
     "@next/bundle-analyzer": "^16.0.0",
     "@next/eslint-plugin-next": "^16.0.0",
-    "@swc/plugin-formatjs": "^8.0.0",
+    "@swc/plugin-formatjs": "^6.0.0",
     "@types/eslint": "^9.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.12",

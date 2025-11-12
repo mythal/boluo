@@ -19,6 +19,7 @@ import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 import * as L from 'list';
 import screens from '@boluo/ui/screens.json';
+import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 
 interface Props {
   myId: string;
@@ -74,6 +75,7 @@ const MAX_FIND_LENGTH = 64;
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
   const { composeAtom, parsedAtom, composeFocusedAtom, hideSelfPreviewTimeoutAtom } =
     useChannelAtoms();
+  const defaultInGame = useDefaultInGame();
   const fixHeight = useAtomValue(composeFocusedAtom) && window.innerWidth < screens.md;
   const setSelfPreviewLock = useSetAtom(hideSelfPreviewTimeoutAtom);
   const ref = useRef<RichTextareaHandle | null>(null);
@@ -152,8 +154,12 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       return;
     }
     const compose = store.get(composeAtom);
-    if (e.code === 'Escape' && compose.edit != null) {
-      dispatch({ type: 'reset', payload: {} });
+    if (e.code === 'Escape') {
+      e.preventDefault();
+      dispatch({
+        type: 'toggleInGame',
+        payload: { defaultInGame },
+      });
       return;
     }
     if (e.code === 'ArrowUp' && compose.edit == null) {

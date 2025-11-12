@@ -7,6 +7,7 @@ import { InComposeButton } from './InComposeButton';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
+import { Kbd } from '@boluo/ui/Kbd';
 
 export const InGameSwitchButton: FC = () => {
   const defaultInGame = useDefaultInGame();
@@ -18,6 +19,7 @@ export const InGameSwitchButton: FC = () => {
   const inGame = useAtomValue(inGameAtom);
   const dispatch = useSetAtom(composeAtom);
   const title = intl.formatMessage({ defaultMessage: 'Toggle In Game' });
+  const tooltipLabel = intl.formatMessage({ defaultMessage: 'Toggle In Game' });
   return (
     <div className="shrink-0 py-1" ref={refs.setReference} {...getReferenceProps()}>
       <InComposeButton
@@ -41,7 +43,10 @@ export const InGameSwitchButton: FC = () => {
         {...getFloatingProps()}
         defaultStyle
       >
-        {title}
+        {tooltipLabel}
+        <div className="py-2 text-right text-sm">
+          <Kbd>Esc</Kbd>
+        </div>
       </TooltipBox>
     </div>
   );

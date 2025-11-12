@@ -17,6 +17,7 @@ import { FormattedMessage } from 'react-intl';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
+import clsx from 'clsx';
 
 interface Props {
   member: MemberWithUser;
@@ -81,13 +82,17 @@ export const Compose = ({ member, channelAtoms }: Props) => {
       <div
         onDrop={onDrop}
         onDragOver={handleDragOver}
-        className="Compose bg-surface-muted standalone-bottom-padding border-border-subtle col-span-full border-t p-2"
+        className="Compose bg-surface-default standalone-bottom-padding border-border-subtle col-span-full border-t p-2"
       >
         {editMessageBanner}
         <div
           data-in-game={inGame}
           data-whisper={isWhisper}
-          className="bg-surface-raised focus-within:border-border-strong data-[in-game=true]:bg-message-inGame-bg border-border-default relative flex items-end gap-1 rounded border data-[whisper=true]:border-dashed"
+          className={clsx(
+            'focus-within:border-border-strong border-border-default relative flex items-end gap-1 rounded border',
+            inGame ? 'bg-message-in-game-bg' : 'bg-message-out-of-game-bg',
+            isWhisper && 'border-dashed',
+          )}
         >
           {fileButton}
           {inGameSwitchButton}

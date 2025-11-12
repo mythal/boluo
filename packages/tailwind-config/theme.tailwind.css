@@ -102,7 +102,13 @@
   --color-kbd-shadow: var(--color-neutral-800);
   --color-kbd-text: var(--color-white);
   --color-light-bg: var(--color-neutral-100);
-  --color-message-inGame-bg: var(--color-zinc-700);
+  --color-message-in-game-bg: var(--color-zinc-700);
+  --color-message-out-of-game-bg: color-mix(
+    in srgb,
+    var(--color-zinc-800) 75%,
+    var(--color-zinc-700) 25%
+  );
+  --color-message-preview-dot: var(--color-gray-700);
   --color-name-bg: color-mix(in srgb, var(--color-neutral-600) 35%, transparent 65%);
   --color-name-editable-hover: color-mix(in srgb, var(--color-neutral-500) 50%, transparent 50%);
   --color-pane-bg: color-mix(in srgb, var(--color-zinc-800) 75%, var(--color-zinc-700) 25%);
@@ -235,7 +241,9 @@
   --color-kbd-bg: var(--color-stone-50);
   --color-kbd-shadow: var(--color-stone-300);
   --color-kbd-text: var(--color-black);
-  --color-message-inGame-bg: #fbfdf6;
+  --color-message-in-game-bg: #fbfdf6;
+  --color-message-out-of-game-bg: var(--color-white);
+  --color-message-preview-dot: var(--color-gray-200);
   --color-name-bg: color-mix(in srgb, var(--color-neutral-200) 35%, transparent 65%);
   --color-name-editable-hover: color-mix(in srgb, var(--color-neutral-300) 50%, transparent 50%);
   --color-pane-bg: var(--color-white);

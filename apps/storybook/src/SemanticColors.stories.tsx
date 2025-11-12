@@ -137,7 +137,7 @@ const semanticGroups: SemanticTokenGroup[] = [
     sections: [
       {
         title: 'Backgrounds',
-        tokens: ['--color-bg', '--color-light-bg', '--color-dark-bg', '--color-message-inGame-bg'],
+        tokens: ['--color-bg', '--color-light-bg', '--color-dark-bg', '--color-message-in-game-bg'],
       },
       {
         title: 'Connection States',

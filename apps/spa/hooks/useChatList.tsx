@@ -36,7 +36,6 @@ const selectComposeSlice = (
       prevPreviewId = prevSlice.prevPreviewId;
     }
   }
-
   return { previewId, edit, prevPreviewId };
 };
 
@@ -193,6 +192,12 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     [composeAtom],
   );
   const composeSlice = useAtomValue(composeSliceAtom);
+  const isWhisper = useAtomValue(
+    useMemo(
+      () => selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames != null),
+      [parsedAtom],
+    ),
+  );
   const showDummy = useShowDummy(store, composeAtom, hideSelfPreviewTimeoutAtom);
 
   // Intentionally quit reactivity
@@ -311,7 +316,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             posQ = message.posQ;
           }
         }
-        if (composeSlice.edit != null || showDummy) {
+        if (composeSlice.edit != null || showDummy || isWhisper) {
           optimisticPreviewList.push(
             makeDummyPreview(
               composeSlice.previewId,
@@ -391,6 +396,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     filterType,
     fullLoaded,
     isEmpty,
+    isWhisper,
     messages,
     myId,
     optimisticMessageMap,

@@ -1,5 +1,14 @@
 import clsx from 'clsx';
-import React, { type FC, Ref, type RefObject, useContext, useEffect, useMemo, useRef } from 'react';
+import React, {
+  Activity,
+  type FC,
+  Ref,
+  type RefObject,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { type Message } from '@boluo/api';
 import { type ReactNode } from 'react';
 import {
@@ -127,6 +136,7 @@ export const MessageToolbar: FC<{
     <div
       ref={toolbarRef}
       className={clsx(
+        'MessageToolbar',
         'bg-surface-raised border-border-default hover:border-border-strong absolute -top-3 right-2 z-10 flex flex-row rounded border p-0.5 shadow-sm transition-colors select-none',
       )}
     >
@@ -162,6 +172,7 @@ const MessageToolbarButton = ({
       aria-pressed={pressed}
       disabled={optimistic || props.disabled}
       className={clsx(
+        'MessageToolbarButton',
         'text-action-toggle-text inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base transition-colors',
         'bg-action-toggle-bg',
         optimistic ? 'cursor-progress' : '',
@@ -299,16 +310,16 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
       <MessageToolbarButton pressed={open} ref={refs.setReference} {...getReferenceProps()}>
         <EllipsisVertical />
       </MessageToolbarButton>
-      {open && (
+      <Activity mode={open ? 'visible' : 'hidden'}>
         <div
           style={floatingStyles}
           ref={refs.setFloating}
           {...getFloatingProps()}
-          className="bg-surface-raised border-border-default z-20 flex w-56 flex-col gap-1 rounded-md border p-2 shadow-md transition-colors"
+          className="bg-surface-default border-border-default z-20 flex w-56 flex-col gap-1 rounded-md border p-2 shadow-md transition-colors"
         >
           {more}
         </div>
-      )}
+      </Activity>
     </>
   );
 };
@@ -371,7 +382,7 @@ const MessageDeleteConfirm: FC<{ message: Message }> = ({ message }) => {
   const simpleText = toSimpleText(parsed.text, parsed.entities);
   const setDisplay = useSetAtom(useContext(DisplayContext));
   return (
-    <div className="px-1.5">
+    <div className="MessageDeleteConfirm px-1.5">
       <div className="text-text-muted py-1 text-xs">
         <FormattedMessage defaultMessage="Are you sure you want to delete this message?" />
       </div>
@@ -418,7 +429,7 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
   if (!premsDelete && !premsArchive) return null;
   if (!premsDelete) return archiveButton;
   return (
-    <div className="flex gap-1">
+    <div className="MessageArchiveOrDelete flex gap-1">
       {archived ? <MessageDeleteButton messageId={message.id} /> : confirmDeleteButton}
       {archiveButton}
     </div>
@@ -447,7 +458,7 @@ const MessageDetailDate: FC<{ created: string; edited: string }> = ({ created, e
   const createdDate = generateDetailDate(new Date(created));
   const editedDate = generateDetailDate(new Date(edited));
   return (
-    <div className="text-text-muted pb-2 text-right text-xs select-text">
+    <div className="MessageDetailDate text-text-muted pb-2 text-right text-xs select-text">
       <div className="">
         <FormattedMessage defaultMessage="Created at" />{' '}
         <time className="font-mono">{createdDate}</time>
@@ -475,12 +486,11 @@ const MoreMenuItem: FC<{
       aria-pressed={pressed}
       disabled={optimistic}
       className={clsx(
-        'text-text-primary flex gap-1 rounded-sm p-1.5 text-sm transition-colors',
-        'bg-surface-selectable-default',
+        'MoreMenuItem text-text-primary flex gap-1 rounded-sm p-1.5 text-sm transition-colors',
         optimistic ? 'cursor-progress' : '',
         pressed
-          ? 'bg-surface-selectable-selected shadow-inner'
-          : 'enabled:hover:bg-surface-selectable-hover',
+          ? 'bg-surface-interactive-active shadow-inner'
+          : 'enabled:hover:bg-surface-interactive-hover',
         className,
       )}
       onClick={optimistic ? empty : onClick}

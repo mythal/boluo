@@ -220,6 +220,7 @@ const MessageBox: FC<{
         data-in-game={inGame}
         data-pos={pos}
         className={clsx(
+          'MessageBox',
           'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pr-2 pl-2',
           'grid-cols-[1.5rem_minmax(0,1fr)]',
           '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
@@ -227,7 +228,7 @@ const MessageBox: FC<{
           inGame
             ? 'bg-message-inGame-bg'
             : [
-                'bg-surface-default',
+                'bg-pane-bg',
                 isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
               ],
           'data-[overlay=true]:shadow-lg',

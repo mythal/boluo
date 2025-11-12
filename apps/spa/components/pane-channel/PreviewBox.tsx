@@ -50,11 +50,11 @@ export const PreviewBox: FC<Props> = ({
     transform: CSS.Transform.toString(transform),
     transition,
     '--bg-angle': isSelf ? '135deg' : '225deg',
-    backgroundImage: 'radial-gradient(var(--color-border-subtle) 1px, transparent 1px)',
+    backgroundImage: 'radial-gradient(var(--color-message-preview-dot) 1px, transparent 1px)',
     backgroundSize: '10px 10px',
     boxShadow: inGame
-      ? 'inset 0 0 12px 10px var(--color-message-inGame-bg)'
-      : 'inset 0 0 12px 10px var(--color-surface-muted)',
+      ? 'inset 0 0 12px 10px var(--color-message-in-game-bg)'
+      : 'inset 0 0 12px 10px var(--color-message-out-of-game-bg)',
   };
   const handlePlaceHolder = useMemo(
     () => <PreviewHandlePlaceHolder editMode={editMode} />,
@@ -70,9 +70,9 @@ export const PreviewBox: FC<Props> = ({
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
         inGame
-          ? 'bg-message-inGame-bg'
+          ? 'bg-message-in-game-bg'
           : [
-              'bg-surface-muted',
+              'bg-message-out-of-game-bg',
               isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
             ],
         className,

@@ -226,7 +226,7 @@ const MessageBox: FC<{
           '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
           !mini && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
           inGame
-            ? 'bg-message-inGame-bg'
+            ? 'bg-message-in-game-bg'
             : [
                 'bg-pane-bg',
                 isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',

@@ -107,10 +107,10 @@ const Chat: FC = () => {
 export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
   const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
   const noPane = useAtomValue(isNoPaneAtom);
-  const [shouldAutoFold, setShouldAutoFold] = useState(false);
-  if (typeof window !== 'undefined' && window.innerWidth < screens.sm) {
-    setShouldAutoFold(true);
-  }
+  const [shouldAutoFold, setShouldAutoFold] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < screens.sm;
+  });
   useEffect(() => {
     let timeout: number | undefined;
     const observer = new ResizeObserver((entries) => {

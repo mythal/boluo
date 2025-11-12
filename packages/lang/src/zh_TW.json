@@ -333,7 +333,7 @@
     "message": "無效的邀請連結"
   },
   "IPvPs7": {
-    "message": "Send verification email"
+    "message": "寄送驗證郵件"
   },
   "IQwWyF": {
     "message": "你必須登入後才能加入頻道。"
@@ -414,16 +414,16 @@
     "message": "{a} 和 {b} 正撰寫…"
   },
   "Lzb4s2": {
-    "message": "Move failed"
+    "message": "移動失敗"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "出了點問題。"
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
   },
   "MjKIej": {
-    "message": "Send failed"
+    "message": "發送失敗"
   },
   "MoRJdV": {
     "message": "用哪個按鍵發送訊息？"
@@ -555,7 +555,7 @@
     "message": "邀請你到此位面"
   },
   "TBI2DU": {
-    "message": "Avatar of {name}"
+    "message": "{name} 的頭像"
   },
   "TDaF6J": {
     "message": "知道了"
@@ -819,7 +819,7 @@
     "message": "遊戲內/外"
   },
   "fxvXUy": {
-    "message": "Reveal"
+    "message": "揭示"
   },
   "gEes7R": {
     "message": "為了接受邀請，你需要先 {loginLink}。"

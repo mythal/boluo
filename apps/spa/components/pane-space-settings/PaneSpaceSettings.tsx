@@ -24,6 +24,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 import { Failed } from '@boluo/ui/Failed';
+import { PaneFooterBox } from '../PaneFooterBox';
 
 interface Props {
   spaceId: string;
@@ -178,10 +179,6 @@ const FieldDefaultDice: FC = () => {
     </div>
   );
 };
-
-const PaneFooterBox: FC<ChildrenProps> = ({ children }) => (
-  <div className="bg-pane-bg sticky bottom-0 flex justify-end gap-2 border-t p-4">{children}</div>
-);
 
 const spaceToForm = (space: Space): FormSchema => ({
   spaceId: space.id,

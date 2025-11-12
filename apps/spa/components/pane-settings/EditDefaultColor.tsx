@@ -50,7 +50,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
   );
 
   const handleEditDefaultColor = useCallback(
-    (color: string) => () => {
+    (color: string) => {
       if (color !== currentUser.defaultColor) {
         void trigger(color);
       }
@@ -86,7 +86,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
         <ColorCell
           color={generateColor(currentUser.id + randomColorSeedSuffix)}
           selected={parsedColors[theme].type === 'random'}
-          onClick={handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
+          onClick={() => handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
           isLoading={isMutating}
         />
         <Button onClick={() => handleEditDefaultColor(RANDOM_PREFIX + Math.random().toString())}>
@@ -102,7 +102,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
               key={color}
               color={palette[color][theme]}
               selected={selected}
-              onClick={handleEditDefaultColor(`${PALETTE_PREFIX}${color}`)}
+              onClick={() => handleEditDefaultColor(`${PALETTE_PREFIX}${color}`)}
               isLoading={isMutating}
             />
           );

@@ -314,6 +314,7 @@ async fn main() {
     server_metrics::start_update_metrics(pool.clone());
     tracing::info!("Startup ID: {}", events::startup_id());
 
+    cache::start_expiry_task();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

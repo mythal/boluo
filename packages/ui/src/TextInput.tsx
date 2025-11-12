@@ -5,8 +5,12 @@ interface Variant {
   variant?: 'normal' | 'error' | 'warning';
 }
 
+interface EnablePasswordManagerAutoComplete {
+  enablePasswordManagerAutoComplete?: boolean;
+}
+
 type InputProps = React.ComponentPropsWithoutRef<'input'> &
-  Variant & { ref?: React.Ref<HTMLInputElement> };
+  Variant & { ref?: React.Ref<HTMLInputElement> } & EnablePasswordManagerAutoComplete;
 type TextAreaProps = React.ComponentPropsWithoutRef<'textarea'> &
   Variant & { ref?: React.Ref<HTMLTextAreaElement> };
 
@@ -23,9 +27,20 @@ export const inputStyle = (variant: Variant['variant'] = 'normal') =>
       'border-state-warning-border bg-state-warning-bg placeholder:text-state-warning-text focus:border-state-warning-border hover:enabled:border-state-warning-border focus:ring-[color:var(--color-state-warning-border)]',
   );
 
-export const TextInput: FC<InputProps> = ({ variant, className, ref, ...props }: InputProps) => {
+export const TextInput: FC<InputProps> = ({
+  variant,
+  className,
+  ref,
+  enablePasswordManagerAutoComplete = false,
+  ...props
+}: InputProps) => {
   return (
-    <input ref={ref} {...props} className={clsx('TextInput', inputStyle(variant), className)} />
+    <input
+      ref={ref}
+      {...props}
+      className={clsx('TextInput', inputStyle(variant), className)}
+      data-1p-ignore={!enablePasswordManagerAutoComplete}
+    />
   );
 };
 

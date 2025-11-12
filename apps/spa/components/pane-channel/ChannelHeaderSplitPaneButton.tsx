@@ -12,7 +12,11 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
     useTooltip('bottom');
   return (
-    <div className="inline-flex" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="ChannelHeaderSplitPaneButton inline-flex"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <SidebarHeaderButton
         onClick={dup}
         title={intl.formatMessage({ defaultMessage: 'Split pane' })}

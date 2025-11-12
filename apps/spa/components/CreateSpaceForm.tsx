@@ -41,7 +41,7 @@ const NameField: FC = () => {
     },
   } = useFormContext<CreateSpace>();
   return (
-    <div>
+    <div className="NameField">
       <label className="block pb-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Space Name" />
       </label>
@@ -67,7 +67,7 @@ const DefaultDiceField: FC = () => {
     defaultValue: 'd20',
   });
   return (
-    <div>
+    <div className="DefaultDiceField">
       <label className="block pb-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Default Dice" />
       </label>
@@ -89,7 +89,7 @@ const FirstChannelNameField: FC = () => {
     },
   } = useFormContext<CreateSpace>();
   return (
-    <div>
+    <div className="FirstChannelNameField">
       <label htmlFor={id} className="block pb-1">
         <FormattedMessage defaultMessage="Initial Channel Name" />
       </label>
@@ -114,7 +114,7 @@ const DescriptionField: FC = () => {
     },
   } = useFormContext<CreateSpace>();
   return (
-    <div>
+    <div className="DescriptionField">
       <label htmlFor={id} className="block pb-1">
         <FormattedMessage defaultMessage="Description" />
       </label>
@@ -162,7 +162,7 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
   };
   return (
     <FormProvider {...form}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form className="CreateSpaceForm" onSubmit={handleSubmit(onSubmit)}>
         <div className="p-pane flex h-full max-w-md flex-col gap-2">
           <NameField />
           <FirstChannelNameField />

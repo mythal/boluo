@@ -14,7 +14,11 @@ export const ChannelHeaderFilterShowArchive: FC = () => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
   return (
     <>
-      <div ref={refs.setReference} {...getReferenceProps()}>
+      <div
+        className="ChannelHeaderFilterShowArchive"
+        ref={refs.setReference}
+        {...getReferenceProps()}
+      >
         <SidebarHeaderButton size="small" active={show} onClick={() => setShow((x) => !x)}>
           <span>
             <Icon icon={Archive} />

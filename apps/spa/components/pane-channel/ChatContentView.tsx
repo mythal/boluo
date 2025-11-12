@@ -17,7 +17,7 @@ import { type ChatItem, type MessageItem } from '../../state/channel.types';
 import { chatAtom } from '../../state/chat.atoms';
 import { ChatListDndContext } from './ChatContentDndContext';
 import { ChatContentVirtualList } from './ChatContentVirtualList';
-import { GoButtomButton } from './GoBottomButton';
+import { GoBottomButton } from './GoBottomButton';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { ReadObserverContext } from '../../hooks/useReadObserve';
 import { useMember } from '../../hooks/useMember';
@@ -346,7 +346,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
   });
 
   return (
-    <div className="@container relative" ref={wrapperRef}>
+    <div className="ChatContentView @container relative" ref={wrapperRef}>
       <ScrollerRefContext value={scrollerRef}>
         <ReadObserverContext value={readObserve}>
           <ChatListDndContext
@@ -366,7 +366,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
                 chatList={chatList}
               />
               {showButton && (
-                <GoButtomButton channelId={channelId} chatList={chatList} onClick={goBottom} />
+                <GoBottomButton channelId={channelId} chatList={chatList} onClick={goBottom} />
               )}
             </SortableContext>
           </ChatListDndContext>

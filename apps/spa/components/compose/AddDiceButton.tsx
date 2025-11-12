@@ -24,7 +24,11 @@ export const AddDiceButton: FC = () => {
     });
   const title = intl.formatMessage({ defaultMessage: 'Add a dice roll' });
   return (
-    <div className="shrink-0 self-end py-1" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="AddDiceButton shrink-0 self-end py-1"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <InComposeButton onClick={handleAddDice} label={title}>
         <Dice />
       </InComposeButton>

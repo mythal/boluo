@@ -25,7 +25,11 @@ export const MemberStatusBadge = React.memo(({ status }: { status: UserStatus })
   if (status.kind === 'OFFLINE') return null;
 
   return (
-    <div className="inline-flex h-6 items-center" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="MemberStatusBadge inline-flex h-6 items-center"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <span
         className={clsx(
           'box-content inline-block h-[0.5em] w-[0.5em] rounded-full border-[0.125em]',

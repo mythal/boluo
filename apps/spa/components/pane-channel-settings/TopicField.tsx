@@ -13,7 +13,7 @@ export const TopicField: FC = () => {
   });
 
   return (
-    <div>
+    <div className="TopicField">
       <label className="block pb-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Topic" />
       </label>

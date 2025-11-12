@@ -5,7 +5,7 @@ import { LocaleSelect } from './pane-settings/LocaleSelect';
 
 export const GreetingHeader: FC = () => {
   return (
-    <div className="flex justify-end gap-4 text-sm">
+    <div className="GreetingHeader flex justify-end gap-4 text-sm">
       <label className="flex items-baseline gap-2">
         <span className="flex-none">
           <FormattedMessage defaultMessage="Theme" />

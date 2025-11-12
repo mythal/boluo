@@ -27,7 +27,7 @@ export const ErrorDisplay: FC<Props> = ({ error, type = 'unstyled', className = 
     case 'banner':
       return <ErrorMessageBox>{message}</ErrorMessageBox>;
     case 'block':
-      return <div>{message}</div>;
+      return <div className="ErrorDisplay">{message}</div>;
     default:
       // unstyled
       return <div className={className}>{message}</div>;

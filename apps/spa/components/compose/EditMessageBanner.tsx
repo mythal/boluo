@@ -113,5 +113,5 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
       </div>
     );
   }
-  return <div className="border-transprent border px-1 pb-1">{content}</div>;
+  return <div className="border border-transparent px-1 pb-1">{content}</div>;
 };

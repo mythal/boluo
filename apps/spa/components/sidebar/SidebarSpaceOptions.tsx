@@ -23,19 +23,19 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
     setSidebarState((prevState) => (prevState === 'SPACES' ? 'CHANNELS' : 'SPACES'));
   };
   return (
-    <div className="h-pane-header group flex w-full items-center gap-1 px-4 text-sm">
+    <div className="SpaceOptions h-pane-header group flex w-full items-center gap-1 px-4 text-sm">
       <button
         className="hover:text-text-secondary inline min-w-0 grow items-center gap-2 truncate text-left font-bold"
         onClick={handleClickSpaceName}
       >
-        {space.name}
+        <span className="cursor-pointer">{space.name}</span>
       </button>
       <button
         className={clsx(
-          'inline-block flex-none rounded-sm px-1 py-0.5 text-sm',
+          'inline-block flex-none cursor-pointer rounded-sm px-1 py-0.5 text-sm',
           sidebarState === 'SPACES'
-            ? 'bg-surface-selectable-selected'
-            : 'bg-surface-selectable-default hover:bg-surface-selectable-hover',
+            ? 'bg-surface-interactive-active'
+            : 'hover:bg-surface-interactive-hover',
         )}
         onClick={handleClickSwitchSpace}
       >

@@ -103,6 +103,7 @@ const ChatPaneChannelView: FC<{
             {errorNode}
             <div
               className={clsx(
+                'ChatPaneChannelView',
                 'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
                 memberListState === 'CLOSED'
                   ? 'grid-cols-1'

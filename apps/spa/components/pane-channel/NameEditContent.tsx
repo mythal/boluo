@@ -1,5 +1,5 @@
 import { type FC, useId, useMemo } from 'react';
-import { useAtomValue, useSetAtom, useStore } from 'jotai';
+import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
 import { NameEditInput } from './NameInput';
@@ -8,6 +8,7 @@ import { chatAtom } from '../../state/chat.atoms';
 import { type MemberWithUser } from '@boluo/api';
 import { type ChannelState } from '../../state/channel.reducer';
 import { backwards, last } from 'list';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   member: MemberWithUser;
@@ -69,6 +70,37 @@ const chatStateToNameList = (
   return names;
 };
 
+const NameButton: FC<{ name: string; defaultCharacterName: string }> = ({
+  name,
+  defaultCharacterName,
+}) => {
+  const { composeAtom, inputedNameAtom } = useChannelAtoms();
+  const dispatch = useSetAtom(composeAtom);
+  const pressedAtom = useMemo(
+    () =>
+      atom((read) => {
+        const inputedName = read(inputedNameAtom);
+        return inputedName === name;
+      }),
+    [inputedNameAtom, name],
+  );
+  const pressed = useAtomValue(pressedAtom);
+  return (
+    <ButtonInline
+      key={name}
+      data-active={pressed}
+      onClick={() => {
+        dispatch({
+          type: 'setInputedName',
+          payload: { inputedName: name, setInGame: true },
+        });
+      }}
+    >
+      {name}
+    </ButtonInline>
+  );
+};
+
 export const NameEditContent: FC<Props> = ({ member }) => {
   const { inGameAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
@@ -115,18 +147,7 @@ export const NameEditContent: FC<Props> = ({ member }) => {
         {nameHistory.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {nameHistory.map((name) => (
-              <button
-                key={name}
-                className="bg-surface-selectable-default hover:bg-surface-selectable-hover border-border-subtle inline-block max-w-40 truncate rounded-sm border px-2 py-1 text-sm shadow-sm"
-                onClick={() => {
-                  dispatch({
-                    type: 'setInputedName',
-                    payload: { inputedName: name, setInGame: true },
-                  });
-                }}
-              >
-                {name}
-              </button>
+              <NameButton key={name} name={name} defaultCharacterName={defaultCharacterName} />
             ))}
           </div>
         )}

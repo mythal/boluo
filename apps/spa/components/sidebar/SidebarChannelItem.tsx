@@ -155,7 +155,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         <span
           className={clsx(
             'group grid w-full grid-cols-[1rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-            active ? 'bg-surface-selectable-selected' : 'hover:bg-surface-selectable-hover',
+            active ? 'bg-surface-interactive-active/50' : 'hover:bg-surface-interactive-hover',
           )}
           onClick={handleClick}
         >
@@ -168,12 +168,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
   }
 
   return (
-    <div className="px-3 py-0.5">
+    <div className="SidebarChannelItem px-3 py-0.5">
       <a
         href={`#route=${channel.spaceId}&panes=${paneUrlPart}`}
         className={clsx(
           'group grid w-full cursor-pointer grid-cols-[1rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-          active ? 'bg-surface-selectable-selected' : 'hover:bg-surface-selectable-hover',
+          active ? 'bg-surface-interactive-active/50' : 'hover:bg-surface-interactive-hover',
         )}
         onClick={handleClick}
       >
@@ -198,7 +198,10 @@ const ChannelItemIcon: FC<{ channel: Channel; interactive: boolean; isReordering
   }
   return (
     <Icon
-      className={!interactive || isReordering ? '' : 'group-hover/icon:opacity-0'}
+      className={clsx(
+        'ChannelItemIcon',
+        !interactive || isReordering ? '' : 'group-hover/icon:opacity-0',
+      )}
       icon={icon}
     />
   );

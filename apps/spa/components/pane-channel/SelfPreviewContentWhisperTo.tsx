@@ -128,7 +128,7 @@ export const WhisperToItem: FC<{
   }
   return (
     <button
-      className="bg-surface-selectable-default border-border-subtle decoration-border-strong text-text-primary rounded border px-1 decoration-2 transition-colors hover:line-through"
+      className="bg-surface-default border-border-subtle decoration-border-strong text-text-primary rounded border px-1 decoration-2 transition-colors hover:line-through"
       onClick={remove}
     >
       {name}
@@ -205,7 +205,7 @@ const MemberItem: FC<{
   const subName: ReactNode = inGame ? member.user.nickname : characterName;
   return (
     <button
-      className="bg-surface-selectable-default hover:bg-surface-selectable-hover grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
+      className="bg-surface-default hover:bg-surface-interactive-hover grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
       onClick={() => {
         add(member.user.username);
       }}

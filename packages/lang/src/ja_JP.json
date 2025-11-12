@@ -32,6 +32,9 @@
   "/iUStU": {
     "message": "例: 霧雨魔理沙"
   },
+  "/jxJyw": {
+    "message": "The position you are trying to place the message is changed."
+  },
   "01eQoz": {
     "message": "接続地域の変更"
   },
@@ -115,6 +118,9 @@
   },
   "5jeq8P": {
     "message": "不明"
+  },
+  "5lqSZ6": {
+    "message": "The message you are trying to move is no longer available."
   },
   "5sg7KC": {
     "message": "パスワード"
@@ -411,7 +417,7 @@
     "message": "Move failed"
   },
   "MWO2zy": {
-    "message": "何か問題が起きています."
+    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
@@ -812,6 +818,9 @@
   "ftsMiH": {
     "message": "ゲーム内の切り替え"
   },
+  "fxvXUy": {
+    "message": "Reveal"
+  },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
   },
@@ -868,9 +877,6 @@
   },
   "jsy7pk": {
     "message": "Try Again"
-  },
-  "jtLNcT": {
-    "message": "Failed to move the message, the target is lost. Please try again."
   },
   "k1s9UW": {
     "message": "見つかりませんでした"

@@ -104,31 +104,40 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       const messagesCount = chatList.length;
       if (active == null) return;
       resetDragging();
-      if (messagesCount < 2 || !event.over) {
-        return;
-      }
+      if (messagesCount < 2) return;
+      if (!event.over) return;
       const overData = event.over.data as DataRef<SortableData>;
       if (!overData.current) return;
       const { sortable } = overData.current;
-      const { realIndex, message: draggingMessage } = active;
+      const { message: draggingMessage } = active;
       const targetIndex = Math.min(messagesCount - 1, sortable.index);
-      if (realIndex === targetIndex) return;
-      resetDragging();
+      const sourceIndex = chatList.findIndex(
+        (chatItem) => chatItem.type === 'MESSAGE' && chatItem.id === draggingMessage.id,
+      );
+      if (sourceIndex === -1) {
+        setBanner({
+          level: 'WARNING',
+          content: (
+            <FormattedMessage defaultMessage="The message you are trying to move is no longer available." />
+          ),
+        });
+        return;
+      }
+      if (sourceIndex === targetIndex) return;
       const targetItem = chatList[targetIndex];
       if (!targetItem) {
         setBanner({
           level: 'WARNING',
           content: (
-            <FormattedMessage defaultMessage="Failed to move the message, the target is lost. Please try again." />
+            <FormattedMessage defaultMessage="The position you are trying to place the message is changed." />
           ),
         });
-        recordWarn('Lost the target item when drag end', { realIndex, targetIndex, messagesCount });
         return;
       }
-      const timestamp = new Date().getTime();
+      const timestamp = Date.now();
       const item: MessageItem = { ...draggingMessage, optimistic: true };
       let range: [[number, number] | null, [number, number] | null] | null = null;
-      if (realIndex < targetIndex) {
+      if (sourceIndex < targetIndex) {
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
         if (!targetNext) {

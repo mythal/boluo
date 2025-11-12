@@ -19,6 +19,7 @@ import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageTime } from './MessageTime';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '../Delay';
+import { ContentGuard } from '@boluo/ui/chat/ContentGuard';
 import {
   DisplayContext as ToolbarDisplayContext,
   MessageToolbar,
@@ -72,6 +73,8 @@ export const ChatItemMessage: FC<{
   } else if (message.optimisticMedia != null) {
     media = <MessageMedia className="pt-2" media={message.optimisticMedia} />;
   }
+  const shouldGuardContent =
+    message.whisperToUsers != null && (parsed.text !== '' || media != null);
 
   return (
     <MessageBox
@@ -108,21 +111,23 @@ export const ChatItemMessage: FC<{
           </span>
         )}
 
-        {parsed.text !== '' && (
-          <div>
-            <Content
-              source={parsed.text}
-              entities={parsed.entities}
-              isAction={isAction ?? false}
-              nameNode={nameNode}
-              isArchived={message.folded ?? false}
-              seed={message.seed}
-              onContextMenu={stopPropagation}
-              onDoubleClick={stopPropagation}
-            />
-          </div>
-        )}
-        {media}
+        <ContentGuard active={shouldGuardContent}>
+          {parsed.text !== '' && (
+            <div>
+              <Content
+                source={parsed.text}
+                entities={parsed.entities}
+                isAction={isAction ?? false}
+                nameNode={nameNode}
+                isArchived={message.folded ?? false}
+                seed={message.seed}
+                onContextMenu={stopPropagation}
+                onDoubleClick={stopPropagation}
+              />
+            </div>
+          )}
+          {media}
+        </ContentGuard>
       </div>
     </MessageBox>
   );

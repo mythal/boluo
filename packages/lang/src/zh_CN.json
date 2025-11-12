@@ -33,7 +33,7 @@
     "message": "例如: 哪吒"
   },
   "/jxJyw": {
-    "message": "The position you are trying to place the message is changed."
+    "message": "试图放置消息的位置发生了变化。"
   },
   "01eQoz": {
     "message": "更换线路"
@@ -120,7 +120,7 @@
     "message": "未知"
   },
   "5lqSZ6": {
-    "message": "The message you are trying to move is no longer available."
+    "message": "正在移动的消息不再存在。"
   },
   "5sg7KC": {
     "message": "密码"
@@ -417,7 +417,7 @@
     "message": "移动失败"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "出错了。"
   },
   "MgRaWS": {
     "message": "频道名不可为空"
@@ -819,7 +819,7 @@
     "message": "游戏内/外"
   },
   "fxvXUy": {
-    "message": "Reveal"
+    "message": "揭开"
   },
   "gEes7R": {
     "message": "为了接受邀请，你需要先 {loginLink}。"

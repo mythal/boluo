@@ -1,7 +1,7 @@
 import { patch } from '@boluo/api-browser';
 import type { Settings } from '@boluo/common/settings';
 import { toSettings } from '@boluo/common/settings';
-import { type FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
@@ -47,7 +47,7 @@ export const EneterSendField: FC = () => {
         title={
           <FormattedMessage
             defaultMessage="Use the {enter} key to send messages"
-            values={{ enter: <Kbd>Enter</Kbd> }}
+            values={{ enter: <Kbd key="enter">Enter</Kbd> }}
           />
         }
         description={
@@ -55,11 +55,11 @@ export const EneterSendField: FC = () => {
             defaultMessage="Use {key} to make a line break."
             values={{
               key: (
-                <>
-                  <Kbd variant="small">Shift</Kbd>
+                <React.Fragment key="key-indicator">
+                  <Kbd variant="small">Shift Shift</Kbd>
                   <span> + </span>
                   <Kbd variant="small">↵</Kbd>
-                </>
+                </React.Fragment>
               ),
             }}
           />
@@ -74,11 +74,11 @@ export const EneterSendField: FC = () => {
             defaultMessage="Use {key} to send messages"
             values={{
               key: (
-                <>
+                <React.Fragment key="key-indicator">
                   <Kbd>{useCommand ? '⌘' : 'Ctrl'}</Kbd>
                   <span> + </span>
                   <Kbd>↵</Kbd>
-                </>
+                </React.Fragment>
               ),
             }}
           />

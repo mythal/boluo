@@ -133,6 +133,7 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       onTouchStart={autoFoldSidebar}
       onClick={autoFoldSidebar}
       className={clsx(
+        'ChatContentBox',
         'md:divide-border-subtle relative -col-end-1 flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
         showMask ? 'cursor-pointer brightness-50' : '',
       )}

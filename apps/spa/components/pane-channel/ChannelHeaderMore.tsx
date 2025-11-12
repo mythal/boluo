@@ -28,6 +28,7 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
     <button
       onClick={edit}
       className={clsx(
+        'CharacterName',
         'flex items-center gap-0.5 rounded-sm px-2 py-1 whitespace-nowrap',
         'hover:bg-brand-strong/10',
       )}

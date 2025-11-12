@@ -97,7 +97,7 @@ export const Content = memo<Props>(
     return (
       <span
         className={clsx(
-          'Content relative break-words whitespace-pre-wrap',
+          'Content relative wrap-break-word whitespace-pre-wrap',
           isArchived ? 'decoration-text-secondary decoration-opacity-50 line-through' : '',
         )}
         onContextMenu={onContextMenu}

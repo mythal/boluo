@@ -17,7 +17,7 @@ export const ChannelNameField: FC<Props> = ({ spaceId, channelName }) => {
   const intl = useIntl();
   const id = useId();
   return (
-    <div>
+    <div className="ChannelNameField">
       <label className="block pb-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Channel Name" />
       </label>

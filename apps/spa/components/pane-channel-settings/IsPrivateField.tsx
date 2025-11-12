@@ -7,7 +7,7 @@ import { type FormSchema } from '../pane-create-channel/PaneCreateChannel';
 export const IsSecretField: FC = () => {
   const { register } = useFormContext<FormSchema, 'isSecret'>();
   return (
-    <div>
+    <div className="IsSecretField">
       <label className="grid grid-cols-[auto_1fr] grid-rows-2 items-center gap-x-2">
         <input type="checkbox" {...register('isSecret')} />
         <FormattedMessage defaultMessage="Is secret channel?" />

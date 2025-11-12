@@ -13,7 +13,7 @@ interface Props {
 }
 
 const Dot: FC = () => (
-  <div className="absolute -top-0.5 -right-0.5 h-[6px] w-[6px] rounded-full bg-blue-600 shadow-md" />
+  <div className="Dot absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-blue-600 shadow-md" />
 );
 
 export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
@@ -22,7 +22,11 @@ export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
 
   return (
-    <div className="inline-flex" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="ChannelHeaderMoreButton inline-flex"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <SidebarHeaderButton onClick={toggle} active={on} className="relative">
         <EllipsisVertical
           className={`transition-transform duration-100 ${on ? 'rotate-0' : 'rotate-90'}`}

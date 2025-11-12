@@ -112,7 +112,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form className="ExportForm" onSubmit={onSubmit}>
       <a hidden ref={linkRef} />
       <div className="p-pane mx-auto grid max-w-screen-sm grid-cols-[auto_1fr] items-baseline gap-2">
         {error != null && (

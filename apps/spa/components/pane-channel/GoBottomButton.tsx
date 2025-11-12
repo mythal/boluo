@@ -11,7 +11,7 @@ interface Props {
   channelId: string;
 }
 
-export const GoButtomButton = memo<Props>(({ onClick, channelId, chatList }: Props) => {
+export const GoBottomButton = memo<Props>(({ onClick, channelId, chatList }: Props) => {
   const readPosition = useAtomValue(channelReadFamily(channelId));
   const unreadCount = useMemo(
     () =>
@@ -23,7 +23,7 @@ export const GoButtomButton = memo<Props>(({ onClick, channelId, chatList }: Pro
   return (
     <Button
       onClick={onClick}
-      className="absolute right-1/2 bottom-4 z-30 translate-x-1/2 text-lg shadow"
+      className="GoBottomButton absolute right-1/2 bottom-4 z-30 translate-x-1/2 text-lg shadow"
     >
       <ChevronsDown />
       {unreadCount > 0 && (
@@ -34,4 +34,4 @@ export const GoButtomButton = memo<Props>(({ onClick, channelId, chatList }: Pro
     </Button>
   );
 });
-GoButtomButton.displayName = 'GoButtomButton';
+GoBottomButton.displayName = 'GoBottomButton';

@@ -32,6 +32,9 @@
   "/iUStU": {
     "message": "例如： 媽祖"
   },
+  "/jxJyw": {
+    "message": "The position you are trying to place the message is changed."
+  },
   "01eQoz": {
     "message": "更換線路"
   },
@@ -115,6 +118,9 @@
   },
   "5jeq8P": {
     "message": "未知"
+  },
+  "5lqSZ6": {
+    "message": "The message you are trying to move is no longer available."
   },
   "5sg7KC": {
     "message": "密碼"
@@ -409,6 +415,9 @@
   },
   "Lzb4s2": {
     "message": "Move failed"
+  },
+  "MWO2zy": {
+    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
@@ -865,9 +874,6 @@
   },
   "jsy7pk": {
     "message": "再試一次"
-  },
-  "jtLNcT": {
-    "message": "移動訊息失敗，找不到目的地，請再試一下。"
   },
   "k1s9UW": {
     "message": "未找到"

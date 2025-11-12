@@ -65,6 +65,7 @@ const UsernameField = () => {
           className="w-full"
           id={id}
           autoComplete="username"
+          enablePasswordManagerAutoComplete
           variant={error ? 'error' : 'normal'}
           {...register('username', required(intl))}
         />
@@ -93,6 +94,7 @@ const PasswordField = () => {
           id={id}
           type="password"
           autoComplete="current-password"
+          enablePasswordManagerAutoComplete
           className="w-full"
           variant={error ? 'error' : 'normal'}
           {...register('password', required(intl))}
